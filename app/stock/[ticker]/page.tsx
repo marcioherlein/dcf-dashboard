@@ -1,13 +1,19 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import PriceHeader from '@/components/stock/PriceHeader'
-import PriceChart from '@/components/stock/PriceChart'
 import WACCBreakdown from '@/components/stock/WACCBreakdown'
 import DCFModel from '@/components/stock/DCFModel'
 import NewsPanel from '@/components/stock/NewsPanel'
 import InsiderTable from '@/components/stock/InsiderTable'
 import ValuationHistory from '@/components/stock/ValuationHistory'
+
+// Recharts uses browser DOM APIs — must be loaded client-side only
+const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
+  ssr: false,
+  loading: () => <div className="h-64 animate-pulse rounded-2xl bg-gray-100" />,
+})
 
 interface FinancialsData {
   ticker: string
