@@ -1,0 +1,59 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const yf = require('yahoo-finance2').default as typeof import('yahoo-finance2').default
+
+export async function searchTicker(query: string) {
+  const result = await yf.search(query, { newsCount: 0 })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (result as any).quotes?.filter((q: any) => q.quoteType === 'EQUITY').slice(0, 8) ?? []
+}
+
+export async function getQuote(ticker: string) {
+  return yf.quote(ticker)
+}
+
+export async function getFinancials(ticker: string) {
+  return yf.quoteSummary(ticker, {
+    modules: [
+      'incomeStatementHistory',
+      'balanceSheetHistory',
+      'cashflowStatementHistory',
+      'financialData',
+      'defaultKeyStatistics',
+      'summaryDetail',
+      'earningsTrend',
+      'recommendationTrend',
+      'insiderTransactions',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ] as any,
+  })
+}
+
+export async function getHistorical(ticker: string, period: '1mo' | '3mo' | '1y' | '5y' = '5y') {
+  const period2 = new Date()
+  const period1 = new Date()
+  if (period === '1mo') period1.setMonth(period1.getMonth() - 1)
+  else if (period === '3mo') period1.setMonth(period1.getMonth() - 3)
+  else if (period === '1y') period1.setFullYear(period1.getFullYear() - 1)
+  else period1.setFullYear(period1.getFullYear() - 5)
+
+  return yf.historical(ticker, {
+    period1: period1.toISOString().split('T')[0],
+    period2: period2.toISOString().split('T')[0],
+    interval: period === '5y' ? '1wk' : '1d',
+  })
+}
+
+export async function getSPYHistorical() {
+  const period1 = new Date()
+  period1.setFullYear(period1.getFullYear() - 5)
+  return yf.historical('SPY', {
+    period1: period1.toISOString().split('T')[0],
+    interval: '1wk',
+  })
+}
+
+export async function getNews(ticker: string) {
+  const result = await yf.search(ticker, { newsCount: 10, quotesCount: 0 })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (result as any).news ?? []
+}

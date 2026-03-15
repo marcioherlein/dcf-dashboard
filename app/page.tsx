@@ -1,101 +1,115 @@
-import Image from "next/image";
+'use client'
+import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 
-export default function Home() {
+interface SearchResult {
+  symbol: string
+  longname?: string
+  shortname?: string
+  exchDisp?: string
+}
+
+export default function HomePage() {
+  const router = useRouter()
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<SearchResult[]>([])
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const debounce = useRef<ReturnType<typeof setTimeout>>()
+
+  useEffect(() => {
+    if (query.length < 1) { setResults([]); setOpen(false); return }
+    clearTimeout(debounce.current)
+    debounce.current = setTimeout(() => {
+      setLoading(true)
+      fetch(`/api/search?q=${encodeURIComponent(query)}`)
+        .then((r) => r.json())
+        .then((d) => { setResults(d); setOpen(d.length > 0); setLoading(false) })
+        .catch(() => setLoading(false))
+    }, 300)
+  }, [query])
+
+  const select = (symbol: string) => {
+    setOpen(false)
+    setQuery('')
+    router.push(`/stock/${symbol}`)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && query.trim()) select(query.trim().toUpperCase())
+  }
+
+  const examples = ['AAPL', 'MSFT', 'NVDA', 'TGS', 'YPFD', 'GGAL', 'JPM', 'META']
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-xl">
+        <div className="mb-10 text-center">
+          <h1 className="text-4xl font-bold text-gray-900">DCF Dashboard</h1>
+          <p className="mt-3 text-base text-gray-500">
+            Enter any ticker — WACC, Beta, and fair value are calculated automatically.
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+
+        <div className="relative">
+          <div className="flex items-center rounded-2xl border border-gray-300 bg-white shadow-md focus-within:border-gray-500 focus-within:ring-2 focus-within:ring-gray-200">
+            <span className="pl-5 text-gray-400">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
+              </svg>
+            </span>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Search ticker or company name…"
+              className="flex-1 bg-transparent py-4 pl-3 pr-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none"
+              autoFocus
+            />
+            {loading && (
+              <span className="pr-4">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-700" />
+              </span>
+            )}
+          </div>
+
+          {open && (
+            <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
+              {results.map((r) => (
+                <button
+                  key={r.symbol}
+                  onClick={() => select(r.symbol)}
+                  className="flex w-full items-center justify-between px-5 py-3.5 text-left hover:bg-gray-50"
+                >
+                  <div>
+                    <span className="text-sm font-bold text-gray-900">{r.symbol}</span>
+                    <span className="ml-3 text-sm text-gray-500">{r.longname ?? r.shortname}</span>
+                  </div>
+                  <span className="text-xs text-gray-400">{r.exchDisp}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          <span className="text-xs text-gray-400">Try:</span>
+          {examples.map((ex) => (
+            <button
+              key={ex}
+              onClick={() => select(ex)}
+              className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 hover:border-gray-400 hover:text-gray-900"
+            >
+              {ex}
+            </button>
+          ))}
+        </div>
+
+        <p className="mt-12 text-center text-xs text-gray-400">
+          Educational use only — not investment advice. Data via Yahoo Finance. WACC auto-calculated from public financials.
+        </p>
+      </div>
+    </main>
+  )
 }
