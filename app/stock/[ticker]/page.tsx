@@ -7,13 +7,37 @@ import WACCBreakdown from '@/components/stock/WACCBreakdown'
 import DCFModel from '@/components/stock/DCFModel'
 import NewsPanel from '@/components/stock/NewsPanel'
 import InsiderTable from '@/components/stock/InsiderTable'
-import ValuationHistory from '@/components/stock/ValuationHistory'
+import ValuationHistory, { saveLocal } from '@/components/stock/ValuationHistory'
+import CAGRAnalysis from '@/components/stock/CAGRAnalysis'
+import BusinessModel from '@/components/stock/BusinessModel'
 
 // Recharts uses browser DOM APIs — must be loaded client-side only
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
   loading: () => <div className="h-64 animate-pulse rounded-2xl bg-gray-100" />,
 })
+
+interface CAGRAnalysisData {
+  historicalCagr3y: number
+  analystEstimate1y: number
+  analystEstimate2y: number
+  blended: number
+  confidence: number
+  confidenceLabel: 'High' | 'Medium' | 'Low'
+  numAnalysts: number
+  drivers: string[]
+}
+
+interface BusinessProfile {
+  description: string
+  industry: string
+  country: string
+  employees: number | null
+  grossMargin: number | null
+  netMargin: number | null
+  fcfMargin: number | null
+  revenueM: number
+}
 
 interface FinancialsData {
   ticker: string
@@ -44,7 +68,11 @@ interface FinancialsData {
   }
   baseFCF: number
   cagr: number
+  cagrAnalysis: CAGRAnalysisData
+  isNegativeFCF: boolean
   terminalG: number
+  historicalRevenues: number[]
+  businessProfile: BusinessProfile
   analystRecommendation: string
 }
 
@@ -70,11 +98,11 @@ export default function StockPage() {
       .catch((e) => { setError(String(e)); setLoading(false) })
   }, [ticker])
 
-  const handleSave = useCallback(async () => {
-    if (!data) return
+  const handleSave = useCallback(async (): Promise<{ ok: boolean; error?: string }> => {
+    if (!data) return { ok: false, error: 'No data loaded' }
     setSaving(true)
     try {
-      await fetch('/api/valuations', {
+      const res = await fetch('/api/valuations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -91,6 +119,23 @@ export default function StockPage() {
           scenarios: data.scenarios,
         }),
       })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        // API failed — save to localStorage as fallback
+        saveLocal(data.ticker, {
+          id: `local_${Date.now()}`,
+          saved_at: new Date().toISOString(),
+          price_at_save: data.quote.price,
+          fair_value: data.fairValue.fairValuePerShare,
+          wacc: waccOverride ?? data.wacc.wacc,
+          cagr: data.cagr,
+          upside_pct: data.fairValue.upsidePct,
+        })
+        return { ok: false, error: body.error ?? `Server error ${res.status}` }
+      }
+      return { ok: true }
+    } catch (e) {
+      return { ok: false, error: String(e) }
     } finally {
       setSaving(false)
     }
@@ -141,10 +186,27 @@ export default function StockPage() {
 
             <PriceChart ticker={ticker} />
 
+            {/* Business model — appears right after price chart */}
+            {(data.businessProfile.description || data.historicalRevenues.length >= 2) && (
+              <BusinessModel
+                businessProfile={data.businessProfile}
+                historicalRevenues={data.historicalRevenues}
+                ticker={ticker}
+              />
+            )}
+
             <WACCBreakdown
               wacc={data.wacc}
               onWACCChange={(w) => setWaccOverride(w)}
             />
+
+            {/* CAGR Analysis — between WACC and DCF model */}
+            {data.cagrAnalysis && (
+              <CAGRAnalysis
+                cagrAnalysis={data.cagrAnalysis}
+                isNegativeFCF={data.isNegativeFCF ?? false}
+              />
+            )}
 
             <DCFModel
               projections={data.dcf.projections}

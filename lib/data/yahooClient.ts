@@ -28,6 +28,7 @@ export async function getFinancials(ticker: string): Promise<any> {
       'earningsTrend',
       'recommendationTrend',
       'insiderTransactions',
+      'summaryProfile',
     ],
   })
 }

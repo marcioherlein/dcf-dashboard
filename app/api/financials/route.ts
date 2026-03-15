@@ -32,9 +32,9 @@ export async function GET(req: NextRequest) {
     const waccInputs = extractWACCInputs(financials as any, rfRate, beta)
     const waccResult = calculateWACC(waccInputs)
 
-    // FCF + CAGR
+    // FCF + CAGR (enhanced with negative FCF handling and analysis)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { baseFCF, cagr, historicalRevenues } = extractFCFInputs(financials as any)
+    const { baseFCF, cagr, cagrAnalysis, historicalRevenues, isNegativeFCF } = extractFCFInputs(financials as any)
 
     // DCF
     const terminalG = 0.01
@@ -57,6 +57,22 @@ export async function GET(req: NextRequest) {
     // Scenarios
     const scenarios = buildScenarios(waccResult, cagr, terminalG, baseFCF, cashM, debtM, sharesM, 0)
 
+    // Business profile from summaryProfile module
+    const fd = fin.financialData ?? {}
+    const profile = fin.summaryProfile ?? {}
+    const rawFCF = ((fd.freeCashflow ?? 0) as number) / 1e6
+    const rawRevM = ((fd.totalRevenue ?? 0) as number) / 1e6
+    const businessProfile = {
+      description: (profile.longBusinessSummary ?? '') as string,
+      industry: (profile.industry ?? '') as string,
+      country: (profile.country ?? '') as string,
+      employees: (profile.fullTimeEmployees ?? null) as number | null,
+      grossMargin: (fd.grossMargins ?? null) as number | null,
+      netMargin: (fd.profitMargins ?? null) as number | null,
+      fcfMargin: rawRevM > 0 ? rawFCF / rawRevM : null,
+      revenueM: rawRevM,
+    }
+
     return NextResponse.json({
       ticker,
       companyName: q.longName ?? q.shortName ?? ticker,
@@ -78,8 +94,11 @@ export async function GET(req: NextRequest) {
       scenarios,
       baseFCF,
       cagr,
+      cagrAnalysis,
+      isNegativeFCF,
       terminalG,
       historicalRevenues,
+      businessProfile,
       analystRecommendation: fin.financialData?.recommendationKey ?? '',
     })
   } catch (err) {

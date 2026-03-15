@@ -14,27 +14,66 @@ interface Snapshot {
 
 interface Props {
   ticker: string
-  onSave: () => Promise<void>
+  onSave: () => Promise<{ ok: boolean; error?: string }>
   saving: boolean
+}
+
+// localStorage helpers (client-only)
+const localKey = (ticker: string) => `valuations_${ticker}`
+
+function loadLocal(ticker: string): Snapshot[] {
+  if (typeof window === 'undefined') return []
+  try { return JSON.parse(localStorage.getItem(localKey(ticker)) ?? '[]') } catch { return [] }
+}
+
+export function saveLocal(ticker: string, snap: Snapshot) {
+  if (typeof window === 'undefined') return
+  const existing = loadLocal(ticker)
+  const merged = [snap, ...existing.filter((s) => s.saved_at !== snap.saved_at)].slice(0, 20)
+  localStorage.setItem(localKey(ticker), JSON.stringify(merged))
 }
 
 export default function ValuationHistory({ ticker, onSave, saving }: Props) {
   const [history, setHistory] = useState<Snapshot[]>([])
   const [loading, setLoading] = useState(true)
+  const [saveError, setSaveError] = useState('')
+  const [saveSuccess, setSaveSuccess] = useState(false)
 
   const load = () => {
     setLoading(true)
     fetch(`/api/valuations?ticker=${ticker}`)
       .then((r) => r.json())
-      .then((d) => { setHistory(Array.isArray(d) ? d : []); setLoading(false) })
-      .catch(() => setLoading(false))
+      .then((d) => {
+        const remote: Snapshot[] = Array.isArray(d) ? d : []
+        const local = loadLocal(ticker)
+        // merge: remote first, append local-only entries
+        const remoteIds = new Set(remote.map((s) => s.id))
+        const merged = [...remote, ...local.filter((s) => !remoteIds.has(s.id))]
+        merged.sort((a, b) => new Date(b.saved_at).getTime() - new Date(a.saved_at).getTime())
+        setHistory(merged)
+        setLoading(false)
+      })
+      .catch(() => {
+        // API failed — fall back to localStorage only
+        setHistory(loadLocal(ticker))
+        setLoading(false)
+      })
   }
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load() }, [ticker])
 
   const handleSave = async () => {
-    await onSave()
+    setSaveError('')
+    setSaveSuccess(false)
+    const result = await onSave()
+    if (result.ok) {
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
+    } else {
+      // page.tsx already saved to localStorage; show advisory message
+      setSaveError(result.error ?? 'Save failed — snapshot stored locally (configure Supabase to persist across devices)')
+    }
     load()
   }
 
@@ -50,6 +89,13 @@ export default function ValuationHistory({ ticker, onSave, saving }: Props) {
           {saving ? 'Saving…' : '+ Save snapshot'}
         </button>
       </div>
+
+      {saveSuccess && (
+        <p className="mt-2 text-xs font-medium text-emerald-600">Snapshot saved successfully.</p>
+      )}
+      {saveError && (
+        <p className="mt-2 text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">{saveError}</p>
+      )}
 
       {loading ? (
         <p className="mt-4 text-sm text-gray-400">Loading…</p>
@@ -74,13 +120,13 @@ export default function ValuationHistory({ ticker, onSave, saving }: Props) {
                   <td className="py-2 text-gray-600">
                     {new Date(s.saved_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}
                   </td>
-                  <td className="py-2 text-right text-gray-700">${fmt(s.price_at_save)}</td>
-                  <td className="py-2 text-right font-semibold text-gray-800">${fmt(s.fair_value)}</td>
+                  <td className="py-2 text-right text-gray-700">{s.price_at_save ? `$${fmt(s.price_at_save)}` : '—'}</td>
+                  <td className="py-2 text-right font-semibold text-gray-800">{s.fair_value ? `$${fmt(s.fair_value)}` : '—'}</td>
                   <td className={`py-2 text-right font-medium ${s.upside_pct >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-                    {s.upside_pct >= 0 ? '+' : ''}{fmtPct(s.upside_pct)}
+                    {s.upside_pct ? `${s.upside_pct >= 0 ? '+' : ''}${fmtPct(s.upside_pct)}` : '—'}
                   </td>
-                  <td className="py-2 text-right text-gray-500">{fmtPct(s.wacc)}</td>
-                  <td className="py-2 text-right text-gray-500">{fmtPct(s.cagr)}</td>
+                  <td className="py-2 text-right text-gray-500">{s.wacc ? fmtPct(s.wacc) : '—'}</td>
+                  <td className="py-2 text-right text-gray-500">{s.cagr ? fmtPct(s.cagr) : '—'}</td>
                 </tr>
               ))}
             </tbody>
