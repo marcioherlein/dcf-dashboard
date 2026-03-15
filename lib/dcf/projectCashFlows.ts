@@ -5,20 +5,20 @@ export interface CFProjection {
 }
 
 export interface ProjectionInputs {
-  baseFCF: number       // starting FCF (millions) — most recent year
+  baseFCF: number       // starting FCF (millions)
   cagr: number          // annual growth rate, e.g. 0.12
   wacc: number          // discount rate, e.g. 0.0938
   terminalG: number     // terminal growth rate, e.g. 0.01
   years?: number        // projection years, default 10
-  startYear?: number    // first forecast year, default current year
+  startYear?: number    // first forecast year
 }
 
 export interface DCFResult {
   projections: CFProjection[]
   terminalValue: number
   terminalValueDiscounted: number
-  sumPV: number         // Σ discounted FCFs
-  ev: number            // Enterprise Value = sumPV + TV_discounted
+  sumPV: number
+  ev: number
 }
 
 export function projectCashFlows(inputs: ProjectionInputs): DCFResult {
@@ -34,7 +34,7 @@ export function projectCashFlows(inputs: ProjectionInputs): DCFResult {
   }
 
   const lastCF = projections[projections.length - 1].cashFlow
-  const terminalValue = (lastCF * (1 + terminalG)) / (wacc - terminalG)
+  const terminalValue = wacc > terminalG ? (lastCF * (1 + terminalG)) / (wacc - terminalG) : lastCF * 15
   const terminalValueDiscounted = terminalValue / Math.pow(1 + wacc, years)
   const sumPV = projections.reduce((sum, p) => sum + p.discounted, 0)
   const ev = sumPV + terminalValueDiscounted
@@ -48,46 +48,28 @@ export function projectCashFlows(inputs: ProjectionInputs): DCFResult {
   }
 }
 
-export function extractFCFInputs(financials: {
-  cashflowStatementHistory?: { cashflowStatements?: { totalCashFromOperatingActivities?: number | null, capitalExpenditures?: number | null }[] }
-  incomeStatementHistory?: { incomeStatementHistory?: { totalRevenue?: number | null }[] }
-  earningsTrend?: { trend?: { period: string; revenueEstimate?: { avg?: number | null } | null }[] }
-}): { baseFCF: number; cagr: number; historicalRevenues: number[] } {
-  const cfStmts = financials.cashflowStatementHistory?.cashflowStatements ?? []
-  const incomeStmts = financials.incomeStatementHistory?.incomeStatementHistory ?? []
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function extractFCFInputs(financials: any): { baseFCF: number; cagr: number; historicalRevenues: number[] } {
+  const fd = financials.financialData ?? {}
 
-  // FCF = Operating CF - Capex (capex is usually negative in Yahoo)
-  const fcfs: number[] = cfStmts.slice(0, 4).map((s) => {
-    const opCF = s.totalCashFromOperatingActivities ?? 0
-    const capex = Math.abs(s.capitalExpenditures ?? 0)
-    return (opCF - capex) / 1e6 // convert to millions
-  }).filter((f) => f !== 0)
+  // FCF directly from financialData (most reliable in v3)
+  const baseFCF = ((fd.freeCashflow ?? fd.operatingCashflow ?? 0) as number) / 1e6
 
-  const baseFCF = fcfs[0] ?? 100 // most recent FCF in millions
+  // CAGR: blend current YoY revenue growth + analyst +1y estimate
+  const currentGrowth: number = fd.revenueGrowth ?? 0.07
+  const trends: any[] = financials.earningsTrend?.trend ?? []
+  const nextYearTrend = trends.find((t: any) => t.period === '+1y')
+  const analystGrowth: number = nextYearTrend?.revenueEstimate?.growth ?? currentGrowth
 
-  // Revenue history for CAGR
-  const revenues = incomeStmts.slice(0, 5).map((s) => (s.totalRevenue ?? 0) / 1e6).filter((r) => r > 0)
+  // Blend and cap: avoid projecting the most recent anomalous year forever
+  const blendedCagr = (currentGrowth + analystGrowth) / 2
+  const cagr = Math.min(Math.max(blendedCagr, -0.10), 0.30)
 
-  // CAGR from analyst estimates if available, else historical
-  const trends = financials.earningsTrend?.trend ?? []
-  const analystRevEstimates = trends
-    .filter((t) => t.period.startsWith('+') && t.revenueEstimate?.avg)
-    .map((t) => (t.revenueEstimate!.avg ?? 0) / 1e6)
+  // Historical revenues for display (income stmt if available, else empty)
+  const incStmts: any[] = financials.incomeStatementHistory?.incomeStatementHistory ?? []
+  const historicalRevenues = incStmts
+    .map((s: any) => ((s.totalRevenue ?? 0) as number) / 1e6)
     .filter((r) => r > 0)
 
-  let cagr = 0.07 // default
-  if (revenues.length >= 2) {
-    const n = revenues.length - 1
-    cagr = Math.pow(revenues[0] / revenues[n], 1 / n) - 1
-    cagr = Math.min(Math.max(cagr, -0.10), 0.30) // cap at ±30%
-  }
-
-  // If analyst estimates exist, blend with historical
-  if (analystRevEstimates.length >= 1 && revenues.length >= 1) {
-    const analystGrowth = analystRevEstimates[0] / revenues[0] - 1
-    cagr = (cagr + analystGrowth) / 2
-    cagr = Math.min(Math.max(cagr, -0.10), 0.35)
-  }
-
-  return { baseFCF, cagr: Math.round(cagr * 1000) / 1000, historicalRevenues: revenues }
+  return { baseFCF, cagr: Math.round(cagr * 1000) / 1000, historicalRevenues }
 }

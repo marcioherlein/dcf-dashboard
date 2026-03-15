@@ -1,17 +1,22 @@
+// yahoo-finance2 v3: default export is a class, must instantiate
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const yf = require('yahoo-finance2').default as typeof import('yahoo-finance2').default
+const YahooFinance = require('yahoo-finance2').default
+const yf = new YahooFinance({ suppressNotices: ['ripHistorical', 'yahooSurvey'] })
 
 export async function searchTicker(query: string) {
-  const result = await yf.search(query, { newsCount: 0 })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (result as any).quotes?.filter((q: any) => q.quoteType === 'EQUITY').slice(0, 8) ?? []
+  const result: any = await yf.search(query, { newsCount: 0 })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (result.quotes ?? []).filter((q: any) => q.quoteType === 'EQUITY').slice(0, 8)
 }
 
-export async function getQuote(ticker: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function getQuote(ticker: string): Promise<any> {
   return yf.quote(ticker)
 }
 
-export async function getFinancials(ticker: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function getFinancials(ticker: string): Promise<any> {
   return yf.quoteSummary(ticker, {
     modules: [
       'incomeStatementHistory',
@@ -23,12 +28,12 @@ export async function getFinancials(ticker: string) {
       'earningsTrend',
       'recommendationTrend',
       'insiderTransactions',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ] as any,
+    ],
   })
 }
 
-export async function getHistorical(ticker: string, period: '1mo' | '3mo' | '1y' | '5y' = '5y') {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function getHistorical(ticker: string, period: '1mo' | '3mo' | '1y' | '5y' = '5y'): Promise<any[]> {
   const period2 = new Date()
   const period1 = new Date()
   if (period === '1mo') period1.setMonth(period1.getMonth() - 1)
@@ -43,17 +48,20 @@ export async function getHistorical(ticker: string, period: '1mo' | '3mo' | '1y'
   })
 }
 
-export async function getSPYHistorical() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function getSPYHistorical(): Promise<any[]> {
+  const period2 = new Date()
   const period1 = new Date()
   period1.setFullYear(period1.getFullYear() - 5)
   return yf.historical('SPY', {
     period1: period1.toISOString().split('T')[0],
+    period2: period2.toISOString().split('T')[0],
     interval: '1wk',
   })
 }
 
-export async function getNews(ticker: string) {
-  const result = await yf.search(ticker, { newsCount: 10, quotesCount: 0 })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (result as any).news ?? []
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function getNews(ticker: string): Promise<any[]> {
+  const result: any = await yf.search(ticker, { newsCount: 10, quotesCount: 0 })
+  return result.news ?? []
 }

@@ -3,7 +3,7 @@ export interface WACCInputs {
   beta: number          // levered beta from regression
   erp: number           // equity risk premium (Damodaran), e.g. 0.046
   costOfDebt: number    // interest expense / avg gross debt, e.g. 0.0445
-  taxRate: number       // effective tax rate (3Y avg), e.g. 0.21
+  taxRate: number       // effective tax rate, e.g. 0.21
   debtToEquity: number  // total debt / market cap, e.g. 0.46
 }
 
@@ -22,7 +22,6 @@ export function calculateWACC(inputs: WACCInputs): WACCResult {
   const costOfEquity = rfRate + beta * erp
   const afterTaxCostOfDebt = costOfDebt * (1 - taxRate)
 
-  // D/E → weights
   const debtRatio = debtToEquity / (1 + debtToEquity)
   const equityRatio = 1 - debtRatio
 
@@ -38,49 +37,39 @@ export function calculateWACC(inputs: WACCInputs): WACCResult {
   }
 }
 
-export function extractWACCInputs(financials: {
-  incomeStatementHistory?: { incomeStatementHistory?: {interestExpense?: number | null, incomeTaxExpense?: number | null, incomeBeforeTax?: number | null}[] }
-  balanceSheetHistory?: { balanceSheetStatements?: { totalDebt?: number | null, longTermDebt?: number | null }[] }
-  summaryDetail?: { marketCap?: number | null }
-  defaultKeyStatistics?: { beta?: number | null }
-}, rfRate: number, betaFromRegression: number): WACCInputs {
-  const incomeStmts = financials.incomeStatementHistory?.incomeStatementHistory ?? []
-  const balanceSheets = financials.balanceSheetHistory?.balanceSheetStatements ?? []
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function extractWACCInputs(financials: any, rfRate: number, betaFromRegression: number): WACCInputs {
+  const fd = financials.financialData ?? {}
+  const ks = financials.defaultKeyStatistics ?? {}
+  const sd = financials.summaryDetail ?? {}
+  const inc0 = financials.incomeStatementHistory?.incomeStatementHistory?.[0] ?? {}
 
-  // Cost of debt: avg interest expense / avg gross debt over available years
-  let totalInterest = 0, totalDebt = 0, debtCount = 0
-  for (const stmt of incomeStmts.slice(0, 3)) {
-    totalInterest += Math.abs(stmt.interestExpense ?? 0)
-  }
-  for (const bs of balanceSheets.slice(0, 3)) {
-    const d = bs.totalDebt ?? bs.longTermDebt ?? 0
-    if (d > 0) { totalDebt += d; debtCount++ }
-  }
-  const avgDebt = debtCount > 0 ? totalDebt / debtCount : 0
-  const avgInterest = incomeStmts.length > 0 ? totalInterest / Math.min(incomeStmts.length, 3) : 0
-  const costOfDebt = avgDebt > 0 ? avgInterest / avgDebt : 0.045
+  // Debt & equity
+  const totalDebt: number = fd.totalDebt ?? 0
+  const marketCap: number = sd.marketCap ?? ks.enterpriseValue ?? 0
+  const debtToEquity = marketCap > 0 ? totalDebt / marketCap : 0.30
 
-  // Tax rate: 3Y average effective
-  let totalTax = 0, totalPreTax = 0
-  for (const stmt of incomeStmts.slice(0, 3)) {
-    totalTax += stmt.incomeTaxExpense ?? 0
-    totalPreTax += stmt.incomeBeforeTax ?? 0
-  }
-  const taxRate = totalPreTax > 0 ? Math.min(Math.max(totalTax / totalPreTax, 0), 0.40) : 0.21
+  // Beta: regression first, then Yahoo's published beta
+  const beta = betaFromRegression > 0 ? betaFromRegression : (ks.beta ?? 1.0)
 
-  // D/E ratio
-  const marketCap = financials.summaryDetail?.marketCap ?? 0
-  const latestDebt = balanceSheets[0]?.totalDebt ?? balanceSheets[0]?.longTermDebt ?? 0
-  const debtToEquity = marketCap > 0 ? latestDebt / marketCap : 0.30
+  // Cost of debt: try income statement, else RF + 1.5% credit spread (investment grade default)
+  const interestExpense = Math.abs(inc0.interestExpense ?? 0)
+  const costOfDebt = (interestExpense > 0 && totalDebt > 0)
+    ? Math.min(interestExpense / totalDebt, 0.15)  // cap at 15%
+    : rfRate + 0.015
 
-  // Use regression beta; fall back to Yahoo's published beta
-  const beta = betaFromRegression > 0 ? betaFromRegression : (financials.defaultKeyStatistics?.beta ?? 1.0)
+  // Tax rate: income stmt if available, else 21% US statutory
+  const incomeTax: number = inc0.incomeTaxExpense ?? 0
+  const preTaxIncome: number = inc0.incomeBeforeTax ?? 0
+  const taxRate = (incomeTax > 0 && preTaxIncome > 0)
+    ? Math.min(Math.max(incomeTax / preTaxIncome, 0.05), 0.40)
+    : 0.21
 
   return {
     rfRate,
     beta,
-    erp: 0.046, // Damodaran ERP — update annually
-    costOfDebt: Math.max(costOfDebt, 0.02),
+    erp: 0.046,   // Damodaran ERP — update annually
+    costOfDebt,
     taxRate,
     debtToEquity,
   }
