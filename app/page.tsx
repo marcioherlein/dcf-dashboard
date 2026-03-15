@@ -16,6 +16,9 @@ export default function HomePage() {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const debounce = useRef<ReturnType<typeof setTimeout>>()
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => { inputRef.current?.focus() }, [])
 
   useEffect(() => {
     if (query.length < 1) { setResults([]); setOpen(false); return }
@@ -65,7 +68,7 @@ export default function HomePage() {
               onKeyDown={handleKeyDown}
               placeholder="Search ticker or company name…"
               className="flex-1 bg-transparent py-4 pl-3 pr-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none"
-              autoFocus
+              ref={inputRef}
             />
             {loading && (
               <span className="pr-4">

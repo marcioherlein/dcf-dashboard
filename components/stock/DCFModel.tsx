@@ -49,7 +49,7 @@ export default function DCFModel({
           <thead className="bg-gray-50">
             <tr>
               <td className="px-4 py-2 text-xs font-medium text-gray-500">DCF MODEL</td>
-              {projections.map((p) => (
+              {(projections ?? []).map((p) => (
                 <td key={p.year} className="px-3 py-2 text-center text-xs font-medium text-gray-500">{p.year}</td>
               ))}
               <td className="px-3 py-2 text-center text-xs font-medium text-gray-500">TV</td>
@@ -58,7 +58,7 @@ export default function DCFModel({
           <tbody>
             <tr className="border-t border-gray-100">
               <td className="px-4 py-2.5 text-xs text-gray-500">CF (M)</td>
-              {projections.map((p) => (
+              {(projections ?? []).map((p) => (
                 <td key={p.year} className="px-3 py-2.5 text-center text-sm font-medium text-gray-800">
                   {fmt(p.cashFlow, 0)}
                 </td>
@@ -67,7 +67,7 @@ export default function DCFModel({
             </tr>
             <tr className="border-t border-gray-100 bg-gray-50">
               <td className="px-4 py-2.5 text-xs text-gray-500">DCF (M)</td>
-              {projections.map((p) => (
+              {(projections ?? []).map((p) => (
                 <td key={p.year} className="px-3 py-2.5 text-center text-sm text-gray-600">
                   {fmt(p.discounted, 0)}
                 </td>
