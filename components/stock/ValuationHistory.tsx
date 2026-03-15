@@ -26,7 +26,7 @@ export default function ValuationHistory({ ticker, onSave, saving }: Props) {
     setLoading(true)
     fetch(`/api/valuations?ticker=${ticker}`)
       .then((r) => r.json())
-      .then((d) => { setHistory(d); setLoading(false) })
+      .then((d) => { setHistory(Array.isArray(d) ? d : []); setLoading(false) })
       .catch(() => setLoading(false))
   }
 
