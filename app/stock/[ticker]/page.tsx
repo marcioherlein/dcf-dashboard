@@ -12,6 +12,7 @@ import CAGRAnalysis from '@/components/stock/CAGRAnalysis'
 import BusinessModel from '@/components/stock/BusinessModel'
 import RatingsPanel from '@/components/stock/RatingsPanel'
 import ValuationMethods from '@/components/stock/ValuationMethods'
+import FinancialStatements from '@/components/stock/FinancialStatements'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
@@ -78,6 +79,23 @@ interface FinancialsData {
   ratings: import('@/lib/dcf/calculateRatings').StockRatings
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   valuationMethods?: any
+  financialStatements?: {
+    incomeStatement: Array<{
+      year: string; revenue: number | null; grossProfit: number | null
+      operatingIncome: number | null; ebitda: number | null
+      netIncome: number | null; eps: number | null; isProjected: boolean
+    }>
+    balanceSheet: Array<{
+      year: string; cash: number | null; totalCurrentAssets: number | null
+      totalAssets: number | null; longTermDebt: number | null
+      totalCurrentLiabilities: number | null; totalEquity: number | null; isProjected: boolean
+    }>
+    cashFlow: Array<{
+      year: string; operatingCF: number | null; capex: number | null
+      freeCashFlow: number | null; investingCF: number | null
+      financingCF: number | null; dividendsPaid: number | null; isProjected: boolean
+    }>
+  }
 }
 
 function ThemeToggle({ isDark, onToggle }: { isDark: boolean; onToggle: () => void }) {
@@ -270,6 +288,16 @@ export default function StockPage() {
                 <ValuationMethods
                   valuationMethods={data.valuationMethods}
                   currency={currency}
+                />
+              )}
+
+              {data.financialStatements && (
+                <FinancialStatements
+                  incomeStatement={data.financialStatements.incomeStatement}
+                  balanceSheet={data.financialStatements.balanceSheet}
+                  cashFlow={data.financialStatements.cashFlow}
+                  currency={currency}
+                  cagr={data.cagr}
                 />
               )}
 

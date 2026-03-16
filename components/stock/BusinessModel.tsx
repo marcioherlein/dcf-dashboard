@@ -125,18 +125,21 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
         {chartData.length >= 2 && (
           <div>
             <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-white/25">Revenue History ($M)</p>
-            <ResponsiveContainer width="100%" height={120}>
-              <BarChart data={chartData} margin={{ top: 0, right: 4, left: 4, bottom: 0 }}>
-                <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
-                <YAxis hide />
-                <Tooltip
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  formatter={(v: any) => [`$${fmt(Number(v), 0)}M`, 'Revenue']}
-                  contentStyle={tooltipStyle}
-                />
-                <Bar dataKey="revenue" fill={isDark ? '#818cf8' : '#6366f1'} radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="overflow-visible">
+              <ResponsiveContainer width="100%" height={120}>
+                <BarChart data={chartData} margin={{ top: 0, right: 4, left: 4, bottom: 0 }}>
+                  <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
+                  <YAxis hide />
+                  <Tooltip
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    formatter={(v: any) => [`$${fmt(Number(v), 0)}M`, 'Revenue']}
+                    contentStyle={tooltipStyle}
+                    wrapperStyle={{ zIndex: 50 }}
+                  />
+                  <Bar dataKey="revenue" fill={isDark ? '#818cf8' : '#6366f1'} radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         )}
       </div>

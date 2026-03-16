@@ -84,13 +84,13 @@ function ModelCard({
   return (
     <div className={`rounded-xl border p-4 flex flex-col gap-1.5 ${
       isPrimary
-        ? 'border-gray-300 dark:border-white/20 bg-gray-50 dark:bg-white/8 ring-1 ring-gray-300 dark:ring-white/20'
-        : 'border-gray-200 dark:border-white/8 bg-white dark:bg-white/[0.03]'
+        ? 'bg-gray-50 dark:bg-[#1f1f21] border-gray-300 dark:border-white/20 ring-1 ring-gray-300 dark:ring-white/20'
+        : 'bg-white dark:bg-[#161618] border-gray-200 dark:border-white/[0.06]'
     } ${!applicable ? 'opacity-50' : ''}`}>
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-semibold text-gray-700 dark:text-white/70 leading-tight">{label}</p>
         {isPrimary && (
-          <span className="text-[10px] font-medium bg-gray-200 dark:bg-white/15 text-gray-600 dark:text-white/60 rounded px-1.5 py-0.5">primary</span>
+          <span className="text-[10px] font-medium bg-gray-200 dark:bg-white/[0.12] text-gray-600 dark:text-white/60 rounded px-1.5 py-0.5">primary</span>
         )}
       </div>
       {subtitle && <p className="text-[10px] text-gray-400 dark:text-white/25 leading-tight">{subtitle}</p>}

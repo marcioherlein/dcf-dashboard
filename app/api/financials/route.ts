@@ -242,6 +242,186 @@ export async function GET(req: NextRequest) {
       },
     }
 
+    // ─── Financial Statements ──────────────────────────────────────────────────
+
+    // --- Income Statement ---
+    const rawISHistory: any[] = fin.incomeStatementHistory?.incomeStatementHistory ?? []
+    const isHistorical = rawISHistory.slice(-4).reverse()
+
+    // Compute historical average margins for projections
+    const avgGrossMarginRatio = isHistorical.length > 0
+      ? isHistorical.reduce((s: number, s2: any) => {
+          const rev = (s2.totalRevenue ?? 0) as number
+          const gp = (s2.grossProfit ?? 0) as number
+          return s + (rev > 0 ? gp / rev : 0)
+        }, 0) / isHistorical.length
+      : 0.4
+    const avgOpMarginRatio = isHistorical.length > 0
+      ? isHistorical.reduce((s: number, s2: any) => {
+          const rev = (s2.totalRevenue ?? 0) as number
+          const op = (s2.ebit ?? 0) as number
+          return s + (rev > 0 ? op / rev : 0)
+        }, 0) / isHistorical.length
+      : 0.15
+    const avgEbitdaMarginRatio = isHistorical.length > 0
+      ? isHistorical.reduce((s: number, s2: any) => {
+          const rev = (s2.totalRevenue ?? 0) as number
+          const eb = (s2.ebitda ?? 0) as number
+          return s + (rev > 0 ? eb / rev : 0)
+        }, 0) / isHistorical.length
+      : 0.2
+    const avgNetMarginRatio = isHistorical.length > 0
+      ? isHistorical.reduce((s: number, s2: any) => {
+          const rev = (s2.totalRevenue ?? 0) as number
+          const ni = (s2.netIncome ?? 0) as number
+          return s + (rev > 0 ? ni / rev : 0)
+        }, 0) / isHistorical.length
+      : 0.1
+
+    const latestRevM = isHistorical.length > 0
+      ? ((isHistorical[isHistorical.length - 1].totalRevenue ?? 0) as number) / 1e6 * fxRate
+      : historicalRevenues[0] ?? 0
+
+    const isHistoricalRows = isHistorical.map((s: any) => ({
+      year: String(new Date(s.endDate).getFullYear()),
+      revenue: s.totalRevenue != null ? (s.totalRevenue as number) / 1e6 * fxRate : null,
+      grossProfit: s.grossProfit != null ? (s.grossProfit as number) / 1e6 * fxRate : null,
+      operatingIncome: s.ebit != null ? (s.ebit as number) / 1e6 * fxRate : null,
+      ebitda: s.ebitda != null ? (s.ebitda as number) / 1e6 * fxRate : null,
+      netIncome: s.netIncome != null ? (s.netIncome as number) / 1e6 * fxRate : null,
+      eps: s.dilutedEps != null ? (s.dilutedEps as number) : null,
+      isProjected: false,
+    }))
+
+    const baseYear = isHistorical.length > 0
+      ? new Date(isHistorical[isHistorical.length - 1].endDate).getFullYear()
+      : new Date().getFullYear()
+
+    const isProjectedRows = Array.from({ length: 5 }, (_, idx) => {
+      const t = idx + 1
+      const projRevM = latestRevM * Math.pow(1 + cagr, t)
+      const projNetIncomeM = projRevM * avgNetMarginRatio
+      return {
+        year: `${baseYear + t}E`,
+        revenue: projRevM,
+        grossProfit: projRevM * avgGrossMarginRatio,
+        operatingIncome: projRevM * avgOpMarginRatio,
+        ebitda: projRevM * avgEbitdaMarginRatio,
+        netIncome: projNetIncomeM,
+        eps: sharesM > 0 ? (projNetIncomeM / sharesM) : null,
+        isProjected: true,
+      }
+    })
+
+    const incomeStatement = [...isHistoricalRows, ...isProjectedRows]
+
+    // --- Balance Sheet ---
+    const rawBSHistory: any[] = fin.balanceSheetHistory?.balanceSheetStatements ?? []
+    const bsHistorical = rawBSHistory.slice(-4).reverse()
+
+    const bsHistoricalRows = bsHistorical.map((s: any) => ({
+      year: String(new Date(s.endDate).getFullYear()),
+      cash: (s.cash ?? s.cashAndCashEquivalents) != null ? ((s.cash ?? s.cashAndCashEquivalents) as number) / 1e6 * fxRate : null,
+      totalCurrentAssets: s.totalCurrentAssets != null ? (s.totalCurrentAssets as number) / 1e6 * fxRate : null,
+      totalAssets: s.totalAssets != null ? (s.totalAssets as number) / 1e6 * fxRate : null,
+      longTermDebt: s.longTermDebt != null ? (s.longTermDebt as number) / 1e6 * fxRate : null,
+      totalCurrentLiabilities: s.totalCurrentLiabilities != null ? (s.totalCurrentLiabilities as number) / 1e6 * fxRate : null,
+      totalEquity: (s.totalStockholderEquity ?? s.stockholdersEquity) != null ? ((s.totalStockholderEquity ?? s.stockholdersEquity) as number) / 1e6 * fxRate : null,
+      isProjected: false,
+    }))
+
+    // Projected balance sheet (only if sufficient history)
+    let bsProjectedRows: typeof bsHistoricalRows = []
+    if (bsHistoricalRows.length >= 2) {
+      const lastBS = bsHistoricalRows[bsHistoricalRows.length - 1]
+      // Estimate historical avg dividends from cash flow for balance sheet projections
+      const rawCFHistForBS: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
+      const avgDivPaidM = rawCFHistForBS.length > 0
+        ? rawCFHistForBS.reduce((s: number, s2: any) => s + Math.abs((s2.dividendsPaid ?? 0) as number) / 1e6 * fxRate, 0) / rawCFHistForBS.length
+        : 0
+
+      let prevCash = lastBS.cash ?? 0
+      let prevEquity = lastBS.totalEquity ?? 0
+      let prevAssets = lastBS.totalAssets ?? 0
+      const projDebt = lastBS.longTermDebt
+
+      bsProjectedRows = Array.from({ length: 5 }, (_, idx) => {
+        const t = idx + 1
+        const projFCF = dcfResult.projections[t - 1]?.cashFlow ?? 0
+        const projRevM = latestRevM * Math.pow(1 + cagr, t)
+        const projNetIncomeM = projRevM * avgNetMarginRatio
+
+        const newCash = prevCash + projFCF - avgDivPaidM
+        const newEquity = prevEquity + projNetIncomeM - avgDivPaidM
+        const newAssets = prevAssets + projFCF
+
+        const row = {
+          year: `${baseYear + t}E`,
+          cash: newCash,
+          totalCurrentAssets: null,
+          totalAssets: newAssets,
+          longTermDebt: projDebt,
+          totalCurrentLiabilities: null,
+          totalEquity: newEquity,
+          isProjected: true,
+        }
+
+        prevCash = newCash
+        prevEquity = newEquity
+        prevAssets = newAssets
+        return row
+      })
+    }
+
+    const balanceSheet = [...bsHistoricalRows, ...bsProjectedRows]
+
+    // --- Cash Flow ---
+    const rawCFHistory: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
+    const cfHistorical = rawCFHistory.slice(-4).reverse()
+
+    const avgCapexM = cfHistorical.length > 0
+      ? cfHistorical.reduce((s: number, s2: any) => s + ((s2.capitalExpenditures ?? 0) as number) / 1e6 * fxRate, 0) / cfHistorical.length
+      : 0
+    const avgDivPaidM = cfHistorical.length > 0
+      ? cfHistorical.reduce((s: number, s2: any) => s + ((s2.dividendsPaid ?? 0) as number) / 1e6 * fxRate, 0) / cfHistorical.length
+      : 0
+
+    const cfHistoricalRows = cfHistorical.map((s: any) => {
+      const opCF = s.totalCashFromOperatingActivities != null ? (s.totalCashFromOperatingActivities as number) / 1e6 * fxRate : null
+      const capex = s.capitalExpenditures != null ? (s.capitalExpenditures as number) / 1e6 * fxRate : null
+      return {
+        year: String(new Date(s.endDate).getFullYear()),
+        operatingCF: opCF,
+        capex: capex,
+        freeCashFlow: opCF != null && capex != null ? opCF + capex : null,
+        investingCF: s.totalCashFromInvestingActivities != null ? (s.totalCashFromInvestingActivities as number) / 1e6 * fxRate : null,
+        financingCF: s.totalCashFromFinancingActivities != null ? (s.totalCashFromFinancingActivities as number) / 1e6 * fxRate : null,
+        dividendsPaid: s.dividendsPaid != null ? (s.dividendsPaid as number) / 1e6 * fxRate : null,
+        isProjected: false,
+      }
+    })
+
+    const cfProjectedRows = Array.from({ length: 5 }, (_, idx) => {
+      const t = idx + 1
+      const projFCF = dcfResult.projections[t - 1]?.cashFlow ?? 0
+      // operating CF = FCF + |capex| (capex is negative, so operating = FCF - capex)
+      const projOpCF = projFCF - avgCapexM
+      return {
+        year: `${baseYear + t}E`,
+        operatingCF: projOpCF,
+        capex: avgCapexM,
+        freeCashFlow: projFCF,
+        investingCF: null,
+        financingCF: null,
+        dividendsPaid: avgDivPaidM !== 0 ? avgDivPaidM : null,
+        isProjected: true,
+      }
+    })
+
+    const cashFlow = [...cfHistoricalRows, ...cfProjectedRows]
+
+    const financialStatements = { incomeStatement, balanceSheet, cashFlow }
+
     return NextResponse.json({
       ticker,
       companyName: q.longName ?? q.shortName ?? ticker,
@@ -272,6 +452,7 @@ export async function GET(req: NextRequest) {
       financialCurrencyNote,
       ratings,
       valuationMethods,
+      financialStatements,
     })
   } catch (err) {
     console.error(`Financials error for ${ticker}:`, err)
