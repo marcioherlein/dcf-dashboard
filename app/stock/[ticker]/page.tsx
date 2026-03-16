@@ -246,7 +246,13 @@ export default function StockPage() {
                 analystRec={data.analystRecommendation}
               />
 
-              <PriceChart ticker={ticker} isDark={isDark} />
+              <PriceChart
+                ticker={ticker}
+                isDark={isDark}
+                fcffFairValue={data.fairValue.fairValuePerShare}
+                triangulatedFairValue={data.valuationMethods?.triangulatedFairValue}
+                analystTarget={data.quote.analystTargetMean}
+              />
 
               {data.ratings && <RatingsPanel ratings={data.ratings} />}
 

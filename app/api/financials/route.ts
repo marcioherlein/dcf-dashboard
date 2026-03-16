@@ -106,9 +106,10 @@ export async function GET(req: NextRequest) {
       industry: (profile.industry ?? '') as string,
       country: (profile.country ?? '') as string,
       employees: (profile.fullTimeEmployees ?? null) as number | null,
-      grossMargin: (fd.grossMargins ?? null) as number | null,
+      // Treat 0 as null — Yahoo returns 0 for banks/fintechs that don't have COGS
+      grossMargin: (fd.grossMargins != null && fd.grossMargins !== 0) ? (fd.grossMargins as number) : null,
       netMargin: (fd.profitMargins ?? null) as number | null,
-      fcfMargin: rawRevMLocal > 0 ? rawFCFLocal / rawRevMLocal : null,
+      fcfMargin: rawRevMLocal > 0 && rawFCFLocal !== 0 ? rawFCFLocal / rawRevMLocal : null,
       revenueM: rawRevMLocal * fxRate,
     }
 
@@ -282,16 +283,38 @@ export async function GET(req: NextRequest) {
       ? ((isHistorical[isHistorical.length - 1].totalRevenue ?? 0) as number) / 1e6 * fxRate
       : historicalRevenues[0] ?? 0
 
-    const isHistoricalRows = isHistorical.map((s: any) => ({
-      year: String(new Date(s.endDate).getFullYear()),
-      revenue: s.totalRevenue != null ? (s.totalRevenue as number) / 1e6 * fxRate : null,
-      grossProfit: s.grossProfit != null ? (s.grossProfit as number) / 1e6 * fxRate : null,
-      operatingIncome: s.ebit != null ? (s.ebit as number) / 1e6 * fxRate : null,
-      ebitda: s.ebitda != null ? (s.ebitda as number) / 1e6 * fxRate : null,
-      netIncome: s.netIncome != null ? (s.netIncome as number) / 1e6 * fxRate : null,
-      eps: s.dilutedEps != null ? (s.dilutedEps as number) : null,
-      isProjected: false,
-    }))
+    // Build depreciation lookup from cashflow history for EBITDA = EBIT + D&A
+    const rawCFForEbitda: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
+    const depreciationByYear: Record<string, number> = {}
+    for (const cf of rawCFForEbitda) {
+      const yr = String(new Date(cf.endDate).getFullYear())
+      const da = ((cf.depreciation ?? cf.depreciationAndAmortization ?? 0) as number) / 1e6 * fxRate
+      if (da > 0) depreciationByYear[yr] = da
+    }
+
+    // Helper: treat 0 the same as null for non-revenue income fields.
+    // Yahoo returns 0 for banks/fintechs that lack traditional COGS / EBIT structure.
+    const nonzero = (v: number | null | undefined) => (v != null && v !== 0) ? v : null
+
+    const isHistoricalRows = isHistorical.map((s: any) => {
+      const yr = String(new Date(s.endDate).getFullYear())
+      const revRaw = nonzero(s.totalRevenue)
+      const gpRaw  = nonzero(s.grossProfit)
+      const ebitRaw = nonzero(s.ebit ?? s.operatingIncome)
+      // EBITDA: prefer Yahoo's field, else compute EBIT + D&A
+      const ebitdaRaw = nonzero(s.ebitda) ??
+        (ebitRaw != null && depreciationByYear[yr] ? ebitRaw + depreciationByYear[yr] * 1e6 : null)
+      return {
+        year: yr,
+        revenue: revRaw != null ? revRaw / 1e6 * fxRate : null,
+        grossProfit: gpRaw != null ? gpRaw / 1e6 * fxRate : null,
+        operatingIncome: ebitRaw != null ? ebitRaw / 1e6 * fxRate : null,
+        ebitda: ebitdaRaw != null ? ebitdaRaw / 1e6 * fxRate : null,
+        netIncome: s.netIncome != null ? (s.netIncome as number) / 1e6 * fxRate : null,
+        eps: s.dilutedEps != null ? (s.dilutedEps as number) : null,
+        isProjected: false,
+      }
+    })
 
     const baseYear = isHistorical.length > 0
       ? new Date(isHistorical[isHistorical.length - 1].endDate).getFullYear()
@@ -301,14 +324,15 @@ export async function GET(req: NextRequest) {
       const t = idx + 1
       const projRevM = latestRevM * Math.pow(1 + cagr, t)
       const projNetIncomeM = projRevM * avgNetMarginRatio
+      // Only show margin-derived lines if historical data existed (non-zero avg margin)
       return {
         year: `${baseYear + t}E`,
-        revenue: projRevM,
-        grossProfit: projRevM * avgGrossMarginRatio,
-        operatingIncome: projRevM * avgOpMarginRatio,
-        ebitda: projRevM * avgEbitdaMarginRatio,
-        netIncome: projNetIncomeM,
-        eps: sharesM > 0 ? (projNetIncomeM / sharesM) : null,
+        revenue: Math.round(projRevM),
+        grossProfit: avgGrossMarginRatio > 0 ? Math.round(projRevM * avgGrossMarginRatio) : null,
+        operatingIncome: avgOpMarginRatio !== 0 ? Math.round(projRevM * avgOpMarginRatio) : null,
+        ebitda: avgEbitdaMarginRatio > 0 ? Math.round(projRevM * avgEbitdaMarginRatio) : null,
+        netIncome: Math.round(projNetIncomeM),
+        eps: sharesM > 0 ? Math.round((projNetIncomeM / sharesM) * 100) / 100 : null,
         isProjected: true,
       }
     })
@@ -387,16 +411,24 @@ export async function GET(req: NextRequest) {
       : 0
 
     const cfHistoricalRows = cfHistorical.map((s: any) => {
-      const opCF = s.totalCashFromOperatingActivities != null ? (s.totalCashFromOperatingActivities as number) / 1e6 * fxRate : null
-      const capex = s.capitalExpenditures != null ? (s.capitalExpenditures as number) / 1e6 * fxRate : null
+      // Yahoo Finance / yahoo-finance2 uses varying field names across versions and company types
+      const rawOpCF = s.totalCashFromOperatingActivities ?? s.operatingCashflow ?? s.netCashProvidedByOperatingActivities
+      const rawCapex = s.capitalExpenditures ?? s.purchaseOfPlantPropertyEquipment
+      const rawInvCF = s.totalCashflowsFromInvestingActivities ?? s.totalCashFromInvestingActivities ?? s.netCashUsedForInvestingActivities
+      const rawFinCF = s.totalCashFromFinancingActivities ?? s.netCashUsedProvidedByFinancingActivities
+      const rawDivPaid = s.dividendsPaid ?? s.paymentOfDividends
+
+      const opCF   = rawOpCF  != null ? (rawOpCF  as number) / 1e6 * fxRate : null
+      const capex  = rawCapex != null ? (rawCapex as number) / 1e6 * fxRate : null
       return {
         year: String(new Date(s.endDate).getFullYear()),
         operatingCF: opCF,
         capex: capex,
-        freeCashFlow: opCF != null && capex != null ? opCF + capex : null,
-        investingCF: s.totalCashFromInvestingActivities != null ? (s.totalCashFromInvestingActivities as number) / 1e6 * fxRate : null,
-        financingCF: s.totalCashFromFinancingActivities != null ? (s.totalCashFromFinancingActivities as number) / 1e6 * fxRate : null,
-        dividendsPaid: s.dividendsPaid != null ? (s.dividendsPaid as number) / 1e6 * fxRate : null,
+        // FCF = OCF + capex (capex is negative in Yahoo's data)
+        freeCashFlow: opCF != null && capex != null ? Math.round(opCF + capex) : opCF,
+        investingCF: rawInvCF != null ? (rawInvCF as number) / 1e6 * fxRate : null,
+        financingCF: rawFinCF != null ? (rawFinCF as number) / 1e6 * fxRate : null,
+        dividendsPaid: rawDivPaid != null ? (rawDivPaid as number) / 1e6 * fxRate : null,
         isProjected: false,
       }
     })
@@ -404,16 +436,17 @@ export async function GET(req: NextRequest) {
     const cfProjectedRows = Array.from({ length: 5 }, (_, idx) => {
       const t = idx + 1
       const projFCF = dcfResult.projections[t - 1]?.cashFlow ?? 0
-      // operating CF = FCF + |capex| (capex is negative, so operating = FCF - capex)
-      const projOpCF = projFCF - avgCapexM
+      // capex is negative in Yahoo data; avgCapexM is negative (or 0 for fintechs)
+      const hasCapex = avgCapexM !== 0
+      const projOpCF = hasCapex ? projFCF - avgCapexM : projFCF
       return {
         year: `${baseYear + t}E`,
-        operatingCF: projOpCF,
-        capex: avgCapexM,
-        freeCashFlow: projFCF,
+        operatingCF: Math.round(projOpCF),
+        capex: hasCapex ? Math.round(avgCapexM) : null,
+        freeCashFlow: Math.round(projFCF),
         investingCF: null,
         financingCF: null,
-        dividendsPaid: avgDivPaidM !== 0 ? avgDivPaidM : null,
+        dividendsPaid: avgDivPaidM !== 0 ? Math.round(avgDivPaidM) : null,
         isProjected: true,
       }
     })
