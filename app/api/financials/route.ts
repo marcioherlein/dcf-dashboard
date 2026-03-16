@@ -4,6 +4,7 @@ import { calculateBeta } from '@/lib/dcf/calculateBeta'
 import { calculateWACC, extractWACCInputs } from '@/lib/dcf/calculateWACC'
 import { projectCashFlows, extractFCFInputs } from '@/lib/dcf/projectCashFlows'
 import { calculateFairValue, buildScenarios } from '@/lib/dcf/calculateFairValue'
+import { calculateRatings } from '@/lib/dcf/calculateRatings'
 import { getRfRate } from '@/lib/data/fredClient'
 
 export async function GET(req: NextRequest) {
@@ -84,6 +85,26 @@ export async function GET(req: NextRequest) {
       revenueM: rawRevMLocal * fxRate,
     }
 
+    // Ratings
+    const ratings = calculateRatings({
+      grossMargin: (fd.grossMargins ?? null) as number | null,
+      netMargin: (fd.profitMargins ?? null) as number | null,
+      fcfMargin: rawRevMLocal > 0 ? rawFCFLocal / rawRevMLocal : null,
+      operatingMargin: (fd.operatingMargins ?? null) as number | null,
+      roe: (fd.returnOnEquity ?? null) as number | null,
+      roa: (fd.returnOnAssets ?? null) as number | null,
+      currentRatio: (fd.currentRatio ?? null) as number | null,
+      quickRatio: (fd.quickRatio ?? null) as number | null,
+      cashM,
+      debtM,
+      historicalCagr3y: cagrAnalysis.historicalCagr3y,
+      analystGrowth1y: cagrAnalysis.analystEstimate1y,
+      earningsGrowth: (fd.earningsGrowth ?? null) as number | null,
+      beta: waccResult.inputs.beta,
+      marketCapB: (q.marketCap ?? 0) / 1e9,
+      upsidePct: fvResult.upsidePct,
+    })
+
     return NextResponse.json({
       ticker,
       companyName: q.longName ?? q.shortName ?? ticker,
@@ -112,6 +133,7 @@ export async function GET(req: NextRequest) {
       businessProfile,
       analystRecommendation: fin.financialData?.recommendationKey ?? '',
       financialCurrencyNote,
+      ratings,
     })
   } catch (err) {
     console.error(`Financials error for ${ticker}:`, err)

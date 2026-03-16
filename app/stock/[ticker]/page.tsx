@@ -10,6 +10,7 @@ import InsiderTable from '@/components/stock/InsiderTable'
 import ValuationHistory, { saveLocal } from '@/components/stock/ValuationHistory'
 import CAGRAnalysis from '@/components/stock/CAGRAnalysis'
 import BusinessModel from '@/components/stock/BusinessModel'
+import RatingsPanel from '@/components/stock/RatingsPanel'
 
 // Recharts uses browser DOM APIs — must be loaded client-side only
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
@@ -74,6 +75,7 @@ interface FinancialsData {
   historicalRevenues: number[]
   businessProfile: BusinessProfile
   analystRecommendation: string
+  ratings: import('@/lib/dcf/calculateRatings').StockRatings
 }
 
 export default function StockPage() {
@@ -185,6 +187,9 @@ export default function StockPage() {
             />
 
             <PriceChart ticker={ticker} />
+
+            {/* Ratings panel — right after price chart for immediate context */}
+            {data.ratings && <RatingsPanel ratings={data.ratings} />}
 
             {/* Business model — appears right after price chart */}
             {(data.businessProfile.description || data.historicalRevenues.length >= 2) && (
