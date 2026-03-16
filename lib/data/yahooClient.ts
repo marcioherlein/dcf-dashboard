@@ -61,6 +61,21 @@ export async function getSPYHistorical(): Promise<any[]> {
   })
 }
 
+// Returns the spot FX rate to convert fromCurrency → toCurrency (e.g. CNY → USD = 0.138)
+// Uses Yahoo Finance FX pairs (e.g. "CNYUSD=X")
+export async function getFXRate(fromCurrency: string, toCurrency: string): Promise<number> {
+  if (fromCurrency === toCurrency) return 1
+  try {
+    const pair = `${fromCurrency}${toCurrency}=X`
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const q: any = await yf.quote(pair)
+    const rate = q?.regularMarketPrice ?? null
+    return typeof rate === 'number' && rate > 0 ? rate : 1
+  } catch {
+    return 1
+  }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getNews(ticker: string): Promise<any[]> {
   const result: any = await yf.search(ticker, { newsCount: 10, quotesCount: 0 })
