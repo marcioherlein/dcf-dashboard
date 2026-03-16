@@ -69,15 +69,33 @@ export function extractFCFInputs(financials: any): {
 } {
   const fd = financials.financialData ?? {}
 
-  // --- BASE FCF: handle negative FCF companies (e.g. high-growth fintechs like NU) ---
+  // --- SECTOR DETECTION: financial companies have OCF distorted by loan/client fund flows ---
+  const sector = ((financials.summaryProfile?.sector ?? '') as string).toLowerCase()
+  const industry = ((financials.summaryProfile?.industry ?? '') as string).toLowerCase()
+  const isFinancialSector = /bank|insurance|financ|fintech|payment|credit|lending|capital|asset management/i.test(sector + ' ' + industry)
+
+  // --- BASE FCF ---
   const rawFCF = ((fd.freeCashflow ?? 0) as number) / 1e6
   const rawOCF = ((fd.operatingCashflow ?? 0) as number) / 1e6
   const rawRevM = ((fd.totalRevenue ?? 0) as number) / 1e6
+  const rawNetIncomeM = ((fd.netIncomeToCommon ?? 0) as number) / 1e6
 
   let baseFCF: number
   let isNegativeFCF = false
 
-  if (rawFCF > 0) {
+  if (isFinancialSector) {
+    // For banks/fintechs/payment processors, OCF includes loan disbursements and client fund flows
+    // which are not real operating costs. Net income × haircut is a better proxy for distributable earnings.
+    if (rawNetIncomeM > 0) {
+      baseFCF = rawNetIncomeM * 0.85
+      isNegativeFCF = rawFCF <= 0
+    } else if (rawFCF > 0) {
+      baseFCF = rawFCF
+    } else {
+      baseFCF = Math.max(rawRevM * 0.02, 1)
+      isNegativeFCF = true
+    }
+  } else if (rawFCF > 0) {
     baseFCF = rawFCF
   } else if (rawOCF > 0) {
     // OCF proxy: high-growth companies spend FCF on expansion CapEx; OCF is closer to earnings power
@@ -135,8 +153,9 @@ export function extractFCFInputs(financials: any): {
 
   // 5. Growth drivers: derived from numeric signals
   const drivers: string[] = []
-  if (isNegativeFCF && rawOCF > 0) drivers.push('Operating cash flow positive — growth CapEx drives negative FCF')
-  if (isNegativeFCF && rawOCF <= 0) drivers.push('Pre-profitability stage — FCF seeded from revenue base')
+  if (isFinancialSector) drivers.push('Financial sector — model uses net income × 0.85 (OCF unreliable for banks/fintechs)')
+  if (!isFinancialSector && isNegativeFCF && rawOCF > 0) drivers.push('Operating cash flow positive — growth CapEx drives negative FCF')
+  if (!isFinancialSector && isNegativeFCF && rawOCF <= 0) drivers.push('Pre-profitability stage — FCF seeded from revenue base')
   if (historicalCagr3y > 0.30) drivers.push(`Strong historical revenue growth: ${(historicalCagr3y * 100).toFixed(0)}% 3Y CAGR`)
   else if (historicalCagr3y > 0.10) drivers.push(`Steady historical growth: ${(historicalCagr3y * 100).toFixed(0)}% 3Y CAGR`)
   if (analyst1y > historicalCagr3y * 1.1) drivers.push('Analyst estimates above historical trend — positive revision cycle')

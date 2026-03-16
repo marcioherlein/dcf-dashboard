@@ -6,6 +6,10 @@ import { projectCashFlows, extractFCFInputs } from '@/lib/dcf/projectCashFlows'
 import { calculateFairValue, buildScenarios } from '@/lib/dcf/calculateFairValue'
 import { calculateRatings } from '@/lib/dcf/calculateRatings'
 import { getRfRate } from '@/lib/data/fredClient'
+import { detectCompanyType, primaryModelLabel, companyTypeLabel, companyTypeRationale, getModelWeights } from '@/lib/dcf/detectCompanyType'
+import { calculateDDM } from '@/lib/dcf/calculateDDM'
+import { calculateFCFE } from '@/lib/dcf/calculateFCFE'
+import { calculateMultiples } from '@/lib/dcf/calculateMultiples'
 
 export async function GET(req: NextRequest) {
   const ticker = req.nextUrl.searchParams.get('ticker')?.toUpperCase()
@@ -50,10 +54,16 @@ export async function GET(req: NextRequest) {
 
     // FCF + CAGR — values are in financial currency; convert to quote currency
     const { baseFCF: baseFCFLocal, cagr, cagrAnalysis, historicalRevenues: historicalRevenuesLocal, isNegativeFCF } = extractFCFInputs(fin)
-    const baseFCF = baseFCFLocal * fxRate
+    let baseFCF = baseFCFLocal * fxRate
     const historicalRevenues = historicalRevenuesLocal.map((r) => r * fxRate)
 
-    // DCF
+    // Sanity check: FCF yield > 30% vs market cap is unrealistic — cap to 15%
+    const marketCapM = (q.marketCap ?? 0) / 1e6
+    if (marketCapM > 0 && baseFCF / marketCapM > 0.30) {
+      baseFCF = marketCapM * 0.15
+    }
+
+    // DCF (FCFF)
     const terminalG = 0.01
     const dcfResult = projectCashFlows({ baseFCF, cagr, wacc: waccResult.wacc, terminalG })
 
@@ -63,7 +73,7 @@ export async function GET(req: NextRequest) {
     const debtM = ((bs.totalDebt ?? bs.longTermDebt ?? 0) as number) / 1e6 * fxRate
     const sharesM = ((fin.defaultKeyStatistics?.sharesOutstanding ?? 0) as number) / 1e6
 
-    // Fair value
+    // Fair value (FCFF)
     const fvResult = calculateFairValue(dcfResult, cashM, debtM, sharesM, currentPrice)
 
     // Scenarios
@@ -72,6 +82,8 @@ export async function GET(req: NextRequest) {
     // Business profile
     const fd = fin.financialData ?? {}
     const profile = fin.summaryProfile ?? {}
+    const sd = fin.summaryDetail ?? {}
+    const ks = fin.defaultKeyStatistics ?? {}
     const rawFCFLocal = ((fd.freeCashflow ?? 0) as number) / 1e6
     const rawRevMLocal = ((fd.totalRevenue ?? 0) as number) / 1e6
     const businessProfile = {
@@ -105,6 +117,111 @@ export async function GET(req: NextRequest) {
       upsidePct: fvResult.upsidePct,
     })
 
+    // ─── Multi-model valuation ─────────────────────────────────────────────────
+
+    // Dividend data (from summaryDetail)
+    const dividendPerShare = ((sd.dividendRate ?? sd.trailingAnnualDividendRate ?? 0) as number)
+    const dividendYield = (sd.dividendYield ?? null) as number | null
+    const payoutRatio = ((sd.payoutRatio ?? 0) as number)
+
+    // Current multiples (from existing modules)
+    const trailingPE = (q.trailingPE ?? null) as number | null
+    const priceToBook = (ks.priceToBook ?? null) as number | null
+    const priceToSales = (ks.priceToSalesTrailing12Months ?? null) as number | null
+    const evToEbitda = (fd.enterpriseToEbitda ?? null) as number | null
+    const evToRevenue = (fd.enterpriseToRevenue ?? null) as number | null
+
+    // Net income for FCFE
+    const netIncomeM = ((fd.netIncomeToCommon ?? 0) as number) / 1e6 * fxRate
+
+    // Company type detection
+    const companyType = detectCompanyType({
+      sector: profile.sector ?? q.sector ?? '',
+      industry: profile.industry ?? '',
+      dividendYield,
+      payoutRatio,
+      historicalCagr3y: cagrAnalysis.historicalCagr3y,
+      analystEstimate1y: cagrAnalysis.analystEstimate1y,
+      isNegativeFCF,
+      revenueM: rawRevMLocal * fxRate,
+    })
+
+    const hasDividend = dividendPerShare > 0
+
+    // DDM
+    const roe = (fd.returnOnEquity ?? null) as number | null
+    const ddmResult = calculateDDM(dividendPerShare, waccResult.costOfEquity, roe, payoutRatio, currentPrice)
+
+    // FCFE
+    const fcfeResult = calculateFCFE(netIncomeM, cagr, waccResult.costOfEquity, terminalG, cashM, debtM, sharesM, currentPrice)
+
+    // Relative multiples
+    const multiplesResult = calculateMultiples({
+      sector: profile.sector ?? q.sector ?? '',
+      companyType,
+      currentPrice,
+      trailingPE,
+      priceToBook,
+      priceToSales,
+      evToEbitda,
+      evToRevenue,
+    })
+
+    // Triangulation
+    const weights = getModelWeights(companyType, hasDividend)
+    const modelValues: { weight: number; value: number }[] = []
+
+    // FCFF always applicable
+    modelValues.push({ weight: weights.fcff, value: fvResult.fairValuePerShare })
+
+    if (fcfeResult.applicable) {
+      modelValues.push({ weight: weights.fcfe, value: fcfeResult.fairValuePerShare })
+    }
+    if (ddmResult.applicable) {
+      modelValues.push({ weight: weights.ddm, value: ddmResult.fairValuePerShare })
+    }
+    if (multiplesResult.blendedFairValue !== null) {
+      modelValues.push({ weight: weights.multiples, value: multiplesResult.blendedFairValue })
+    }
+
+    // Normalize weights to what's actually applicable
+    const totalWeight = modelValues.reduce((s, m) => s + m.weight, 0)
+    const triangulatedFairValue = totalWeight > 0
+      ? Math.round(modelValues.reduce((s, m) => s + (m.value * m.weight) / totalWeight, 0) * 100) / 100
+      : fvResult.fairValuePerShare
+    const triangulatedUpsidePct = currentPrice > 0
+      ? Math.round((triangulatedFairValue - currentPrice) / currentPrice * 1000) / 1000
+      : 0
+
+    const effectiveWeights = {
+      fcff: totalWeight > 0 ? Math.round(weights.fcff / totalWeight * 100) : 100,
+      fcfe: fcfeResult.applicable && totalWeight > 0 ? Math.round(weights.fcfe / totalWeight * 100) : 0,
+      ddm: ddmResult.applicable && totalWeight > 0 ? Math.round(weights.ddm / totalWeight * 100) : 0,
+      multiples: multiplesResult.blendedFairValue !== null && totalWeight > 0
+        ? Math.round(weights.multiples / totalWeight * 100) : 0,
+    }
+
+    const valuationMethods = {
+      companyType,
+      companyTypeLabel: companyTypeLabel(companyType),
+      primaryModelLabel: primaryModelLabel(companyType, hasDividend),
+      rationale: companyTypeRationale(companyType),
+      triangulatedFairValue,
+      triangulatedUpsidePct,
+      effectiveWeights,
+      models: {
+        fcff: {
+          fairValue: fvResult.fairValuePerShare,
+          upsidePct: fvResult.upsidePct,
+          applicable: true,
+          reason: 'FCFF DCF: Free Cash Flow to Firm discounted at WACC',
+        },
+        fcfe: fcfeResult,
+        ddm: ddmResult,
+        multiples: multiplesResult,
+      },
+    }
+
     return NextResponse.json({
       ticker,
       companyName: q.longName ?? q.shortName ?? ticker,
@@ -134,6 +251,7 @@ export async function GET(req: NextRequest) {
       analystRecommendation: fin.financialData?.recommendationKey ?? '',
       financialCurrencyNote,
       ratings,
+      valuationMethods,
     })
   } catch (err) {
     console.error(`Financials error for ${ticker}:`, err)

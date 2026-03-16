@@ -29,6 +29,7 @@ export async function getFinancials(ticker: string): Promise<any> {
       'recommendationTrend',
       'insiderTransactions',
       'summaryProfile',
+      'summaryDetail',
     ],
   })
 }
@@ -62,18 +63,36 @@ export async function getSPYHistorical(): Promise<any[]> {
 }
 
 // Returns the spot FX rate to convert fromCurrency → toCurrency (e.g. CNY → USD = 0.138)
-// Uses Yahoo Finance FX pairs (e.g. "CNYUSD=X")
+// Tries direct pair, then inverse pair, then legacy single-currency format
 export async function getFXRate(fromCurrency: string, toCurrency: string): Promise<number> {
   if (fromCurrency === toCurrency) return 1
-  try {
-    const pair = `${fromCurrency}${toCurrency}=X`
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const q: any = await yf.quote(pair)
-    const rate = q?.regularMarketPrice ?? null
-    return typeof rate === 'number' && rate > 0 ? rate : 1
-  } catch {
-    return 1
+
+  // Helper: fetch a Yahoo FX quote and return the price, or null on failure
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function tryPair(symbol: string): Promise<number | null> {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const q: any = await yf.quote(symbol)
+      const rate = q?.regularMarketPrice ?? null
+      return typeof rate === 'number' && rate > 0 ? rate : null
+    } catch {
+      return null
+    }
   }
+
+  // 1. Direct: e.g. BRLУSD=X
+  const direct = await tryPair(`${fromCurrency}${toCurrency}=X`)
+  if (direct !== null) return direct
+
+  // 2. Inverse: e.g. USDBRL=X → return 1/rate
+  const inverse = await tryPair(`${toCurrency}${fromCurrency}=X`)
+  if (inverse !== null && inverse > 0) return 1 / inverse
+
+  // 3. Legacy single-currency format: e.g. BRL=X (price is already in terms of USD)
+  const legacy = await tryPair(`${fromCurrency}=X`)
+  if (legacy !== null) return legacy
+
+  return 1  // fallback: assume parity (will be wrong but won't crash)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

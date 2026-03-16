@@ -11,6 +11,7 @@ import ValuationHistory, { saveLocal } from '@/components/stock/ValuationHistory
 import CAGRAnalysis from '@/components/stock/CAGRAnalysis'
 import BusinessModel from '@/components/stock/BusinessModel'
 import RatingsPanel from '@/components/stock/RatingsPanel'
+import ValuationMethods from '@/components/stock/ValuationMethods'
 
 // Recharts uses browser DOM APIs — must be loaded client-side only
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
@@ -76,6 +77,8 @@ interface FinancialsData {
   businessProfile: BusinessProfile
   analystRecommendation: string
   ratings: import('@/lib/dcf/calculateRatings').StockRatings
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  valuationMethods?: any
 }
 
 export default function StockPage() {
@@ -225,6 +228,13 @@ export default function StockPage() {
               terminalG={data.terminalG}
               scenarios={data.scenarios}
             />
+
+            {data.valuationMethods && (
+              <ValuationMethods
+                valuationMethods={data.valuationMethods}
+                currency={data.quote.currency === 'USD' ? '$' : data.quote.currency + ' '}
+              />
+            )}
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <NewsPanel ticker={ticker} />
