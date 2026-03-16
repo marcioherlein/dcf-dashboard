@@ -53,9 +53,10 @@ export async function GET(req: NextRequest) {
     const waccResult = calculateWACC(waccInputs)
 
     // FCF + CAGR — values are in financial currency; convert to quote currency
-    const { baseFCF: baseFCFLocal, cagr, cagrAnalysis, historicalRevenues: historicalRevenuesLocal, isNegativeFCF } = extractFCFInputs(fin)
+    const { baseFCF: baseFCFLocal, cagr, cagrAnalysis, historicalRevenues: historicalRevenuesLocal, isNegativeFCF, normalizedNetIncomeM: normalizedNetIncomeMLocal } = extractFCFInputs(fin)
     let baseFCF = baseFCFLocal * fxRate
     const historicalRevenues = historicalRevenuesLocal.map((r) => r * fxRate)
+    const normalizedNetIncomeM = normalizedNetIncomeMLocal * fxRate
 
     // Sanity check: FCF yield > 30% vs market cap is unrealistic — cap to 15%
     const marketCapM = (q.marketCap ?? 0) / 1e6
@@ -70,7 +71,21 @@ export async function GET(req: NextRequest) {
     // Balance sheet items — convert to quote currency
     const bs = fin.balanceSheetHistory?.balanceSheetStatements?.[0] ?? {}
     const cashM = ((bs.cash ?? bs.cashAndCashEquivalents ?? 0) as number) / 1e6 * fxRate
-    const debtM = ((bs.totalDebt ?? bs.longTermDebt ?? 0) as number) / 1e6 * fxRate
+
+    // Detect financial sector here for balance sheet treatment
+    const isBankOrInsurer = /bank|insurance|financ|fintech|payment|credit|lending|capital market|asset management|brokerage/i.test(
+      ((fin.summaryProfile?.sector ?? '') as string) + ' ' + ((fin.summaryProfile?.industry ?? '') as string)
+    )
+    // For financial companies: use only long-term issued debt (bonds/notes).
+    // fd.totalDebt and bs.totalDebt for banks can include deposit liabilities or
+    // interbank borrowings that inflate D/V, collapse WACC, and produce a gigantic
+    // EV that is then wiped out by subtracting that same "debt" → negative equity.
+    const rawDebtM = isBankOrInsurer
+      ? ((bs.longTermDebt ?? bs.longTermDebtNoncurrent ?? bs.totalDebt ?? 0) as number) / 1e6 * fxRate
+      : ((bs.totalDebt ?? bs.longTermDebt ?? 0) as number) / 1e6 * fxRate
+    // Safety cap: debt should not exceed 3× market cap (prevents extreme leverage edge cases)
+    const debtM = marketCapM > 0 ? Math.min(rawDebtM, marketCapM * 3) : rawDebtM
+
     const sharesM = ((fin.defaultKeyStatistics?.sharesOutstanding ?? 0) as number) / 1e6
 
     // Fair value (FCFF)
@@ -131,8 +146,13 @@ export async function GET(req: NextRequest) {
     const evToEbitda = (fd.enterpriseToEbitda ?? null) as number | null
     const evToRevenue = (fd.enterpriseToRevenue ?? null) as number | null
 
-    // Net income for FCFE
-    const netIncomeM = ((fd.netIncomeToCommon ?? 0) as number) / 1e6 * fxRate
+    // Net income for FCFE — use normalizedNetIncomeM (2-year avg from income stmt).
+    // fd.netIncomeToCommon from financialData is null for many banks (Yahoo doesn't always
+    // populate it) and can be 0, causing FCFE to incorrectly report "net income is negative".
+    // The income statement history is a more reliable source.
+    const netIncomeM = normalizedNetIncomeM > 0
+      ? normalizedNetIncomeM
+      : Math.max(((fd.netIncomeToCommon ?? 0) as number) / 1e6 * fxRate, 0)
 
     // Company type detection
     const companyType = detectCompanyType({

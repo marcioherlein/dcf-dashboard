@@ -17,7 +17,7 @@ export interface FCFEResult {
  * - Capital expenditure is minimal (software/people businesses)
  * - Net income ≈ the cash available to equity holders after reinvestment
  *
- * @param netIncomeM     Net income to common stockholders in millions
+ * @param netIncomeM     Net income to common stockholders in millions (normalized, 2-year avg)
  * @param cagr           Annual growth rate for projections
  * @param costOfEquity   Discount rate (cost of equity, NOT WACC)
  * @param terminalG      Terminal growth rate
@@ -36,6 +36,8 @@ export function calculateFCFE(
   shares: number,
   currentPrice: number,
 ): FCFEResult {
+  // Net income must be positive for FCFE to be meaningful.
+  // If it's ≤ 0 after all our fallback chains, the model cannot run.
   if (netIncomeM <= 0) {
     return {
       fairValuePerShare: 0,
@@ -43,15 +45,23 @@ export function calculateFCFE(
       baseFCFE: netIncomeM,
       discountRate: costOfEquity,
       applicable: false,
-      reason: 'Net income is negative — FCFE model not applicable',
+      reason: 'Net income not available — FCFE model not applicable',
     }
   }
 
   const baseFCFE = netIncomeM * 0.90
 
+  // Guard: if FCFE yield (baseFCFE / implied equity) is implausibly high,
+  // cap baseFCFE to prevent model explosion.
+  // Equity value proxy = currentPrice × shares; 20% yield floor before capping.
+  const impliedEquityM = currentPrice > 0 && shares > 0 ? currentPrice * shares : null
+  const cappedBaseFCFE = (impliedEquityM && baseFCFE / impliedEquityM > 0.20)
+    ? impliedEquityM * 0.15
+    : baseFCFE
+
   // Discount at cost of equity (not WACC) — equity-only model
   const dcfResult = projectCashFlows({
-    baseFCF: baseFCFE,
+    baseFCF: cappedBaseFCFE,
     cagr,
     wacc: costOfEquity,
     terminalG,
@@ -61,12 +71,28 @@ export function calculateFCFE(
   // (debt is already excluded because we started from net income, not EBIT)
   const fvResult = calculateFairValue(dcfResult, 0, 0, shares, currentPrice)
 
+  // Sanity check: if fair value > 10× current price, something is still miscalibrated.
+  // Cap at 5× and flag with a note rather than silently inflating the result.
+  const rawFV = fvResult.fairValuePerShare
+  const maxFV = currentPrice > 0 ? currentPrice * 5 : rawFV
+  const clampedFV = Math.min(rawFV, maxFV)
+  const wasCapped = clampedFV < rawFV
+
+  const finalFV = Math.round(clampedFV * 100) / 100
+  const finalUpside = currentPrice > 0 ? (finalFV - currentPrice) / currentPrice : 0
+
+  const baseReason = cappedBaseFCFE < baseFCFE
+    ? `Net Income × 0.90 (yield-capped), discounted at Ke = ${(costOfEquity * 100).toFixed(1)}%`
+    : `Net Income × 0.90 as FCFE proxy, discounted at Ke = ${(costOfEquity * 100).toFixed(1)}%`
+
   return {
-    fairValuePerShare: Math.round(fvResult.fairValuePerShare * 100) / 100,
-    upsidePct: Math.round(fvResult.upsidePct * 1000) / 1000,
-    baseFCFE: Math.round(baseFCFE),
+    fairValuePerShare: finalFV,
+    upsidePct: Math.round(finalUpside * 1000) / 1000,
+    baseFCFE: Math.round(cappedBaseFCFE),
     discountRate: Math.round(costOfEquity * 10000) / 10000,
     applicable: true,
-    reason: `Net Income × 0.90 as FCFE proxy, discounted at Ke = ${(costOfEquity * 100).toFixed(1)}%`,
+    reason: wasCapped
+      ? `${baseReason} (result capped at 5× price — verify inputs)`
+      : baseReason,
   }
 }

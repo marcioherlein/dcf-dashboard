@@ -43,10 +43,30 @@ export function extractWACCInputs(financials: any, rfRate: number, betaFromRegre
   const ks = financials.defaultKeyStatistics ?? {}
   const sd = financials.summaryDetail ?? {}
   const inc0 = financials.incomeStatementHistory?.incomeStatementHistory?.[0] ?? {}
+  const bs0 = financials.balanceSheetHistory?.balanceSheetStatements?.[0] ?? {}
 
-  // Debt & equity
-  const totalDebt: number = fd.totalDebt ?? 0
+  // Detect financial sector — Yahoo's totalDebt for banks includes deposit liabilities
+  // which are a product/service, not financial leverage. Use longTermDebt only.
+  const sector = ((financials.summaryProfile?.sector ?? '') as string).toLowerCase()
+  const industry = ((financials.summaryProfile?.industry ?? '') as string).toLowerCase()
+  const isFinancialSector = /bank|insurance|financ|fintech|payment|credit|lending|capital market|asset management|brokerage/i.test(sector + ' ' + industry)
+
   const marketCap: number = sd.marketCap ?? ks.enterpriseValue ?? 0
+
+  let totalDebt: number
+  if (isFinancialSector) {
+    // For banks/insurers: use only issued long-term debt (bonds, notes).
+    // totalDebt from financialData can include deposit liabilities or off-balance-sheet
+    // items that inflate D/E to 3-5x, collapsing WACC to ~4% and exploding DCF value.
+    totalDebt = (bs0.longTermDebt ?? bs0.longTermDebtNoncurrent ?? 0) as number
+    // Absolute safety cap: D/E ≤ 1.5 for financial companies (pure financial debt only)
+    if (marketCap > 0 && totalDebt / marketCap > 1.5) {
+      totalDebt = marketCap * 1.5
+    }
+  } else {
+    totalDebt = (fd.totalDebt ?? 0) as number
+  }
+
   const debtToEquity = marketCap > 0 ? totalDebt / marketCap : 0.30
 
   // Beta: regression first, then Yahoo's published beta
