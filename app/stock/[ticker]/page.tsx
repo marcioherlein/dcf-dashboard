@@ -13,10 +13,9 @@ import BusinessModel from '@/components/stock/BusinessModel'
 import RatingsPanel from '@/components/stock/RatingsPanel'
 import ValuationMethods from '@/components/stock/ValuationMethods'
 
-// Recharts uses browser DOM APIs — must be loaded client-side only
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
-  loading: () => <div className="h-64 animate-pulse rounded-2xl bg-gray-100" />,
+  loading: () => <div className="h-64 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" />,
 })
 
 interface CAGRAnalysisData {
@@ -81,6 +80,21 @@ interface FinancialsData {
   valuationMethods?: any
 }
 
+function ThemeToggle({ isDark, onToggle }: { isDark: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      className="flex items-center gap-2 rounded-full px-2 py-1 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+      aria-label="Toggle theme"
+    >
+      <span className="text-sm">{isDark ? '☀︎' : '☾'}</span>
+      <div className={`relative flex h-5 w-9 items-center rounded-full transition-colors duration-300 ${isDark ? 'bg-white/20' : 'bg-gray-200'}`}>
+        <span className={`absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${isDark ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
+      </div>
+    </button>
+  )
+}
+
 export default function StockPage() {
   const { ticker } = useParams<{ ticker: string }>()
   const router = useRouter()
@@ -89,6 +103,20 @@ export default function StockPage() {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [waccOverride, setWaccOverride] = useState<number | null>(null)
+  const [isDark, setIsDark] = useState(false)
+
+  // Persist theme preference
+  useEffect(() => {
+    const saved = localStorage.getItem('theme')
+    if (saved === 'dark') setIsDark(true)
+  }, [])
+
+  const toggleTheme = () => {
+    setIsDark((d) => {
+      localStorage.setItem('theme', !d ? 'dark' : 'light')
+      return !d
+    })
+  }
 
   useEffect(() => {
     setLoading(true)
@@ -126,7 +154,6 @@ export default function StockPage() {
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
-        // API failed — save to localStorage as fallback
         saveLocal(data.ticker, {
           id: `local_${Date.now()}`,
           saved_at: new Date().toISOString(),
@@ -146,108 +173,119 @@ export default function StockPage() {
     }
   }, [data, waccOverride])
 
+  const currency = data?.quote.currency === 'USD' ? '$' : (data?.quote.currency ?? '$') + ' '
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top nav */}
-      <nav className="sticky top-0 z-10 border-b border-gray-200 bg-white px-6 py-3">
-        <div className="mx-auto flex max-w-7xl items-center gap-4">
-          <button onClick={() => router.push('/')} className="text-sm text-gray-400 hover:text-gray-700">← Search</button>
-          <span className="text-sm font-bold text-gray-900">{ticker}</span>
-          {data && <span className="text-sm text-gray-400">{data.companyName}</span>}
-        </div>
-      </nav>
+    <div className={isDark ? 'dark' : ''}>
+      <div className="min-h-screen bg-[#f5f5f7] dark:bg-black" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif' }}>
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {loading && (
-          <div className="flex flex-col items-center justify-center py-32 gap-3">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-800" />
-            <p className="text-sm text-gray-400">Calculating WACC, Beta, DCF… this takes ~10s</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
-            <strong>Error:</strong> {error}. Yahoo Finance may be temporarily unavailable — try again in a moment.
-          </div>
-        )}
-
-        {data && !loading && (
-          <div className="space-y-6">
-            <PriceHeader
-              ticker={data.ticker}
-              companyName={data.companyName}
-              price={data.quote.price}
-              change={data.quote.change}
-              changePct={data.quote.changePct}
-              marketCap={data.quote.marketCap}
-              peRatio={data.quote.peRatio}
-              high52={data.quote.fiftyTwoWeekHigh}
-              low52={data.quote.fiftyTwoWeekLow}
-              analystTarget={data.quote.analystTargetMean}
-              currency={data.quote.currency ?? 'USD'}
-              sector={data.quote.sector ?? ''}
-              analystRec={data.analystRecommendation}
-            />
-
-            <PriceChart ticker={ticker} />
-
-            {/* Ratings panel — right after price chart for immediate context */}
-            {data.ratings && <RatingsPanel ratings={data.ratings} />}
-
-            {/* Business model — appears right after price chart */}
-            {(data.businessProfile.description || data.historicalRevenues.length >= 2) && (
-              <BusinessModel
-                businessProfile={data.businessProfile}
-                historicalRevenues={data.historicalRevenues}
-                ticker={ticker}
-              />
-            )}
-
-            <WACCBreakdown
-              wacc={data.wacc}
-              onWACCChange={(w) => setWaccOverride(w)}
-            />
-
-            {/* CAGR Analysis — between WACC and DCF model */}
-            {data.cagrAnalysis && (
-              <CAGRAnalysis
-                cagrAnalysis={data.cagrAnalysis}
-                isNegativeFCF={data.isNegativeFCF ?? false}
-              />
-            )}
-
-            <DCFModel
-              projections={data.dcf.projections}
-              terminalValue={data.dcf.terminalValue}
-              terminalValueDiscounted={data.dcf.terminalValueDiscounted}
-              sumPV={data.dcf.sumPV}
-              ev={data.dcf.ev}
-              fairValue={data.fairValue}
-              wacc={waccOverride ?? data.wacc.wacc}
-              cagr={data.cagr}
-              terminalG={data.terminalG}
-              scenarios={data.scenarios}
-            />
-
-            {data.valuationMethods && (
-              <ValuationMethods
-                valuationMethods={data.valuationMethods}
-                currency={data.quote.currency === 'USD' ? '$' : data.quote.currency + ' '}
-              />
-            )}
-
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <NewsPanel ticker={ticker} />
-              <InsiderTable ticker={ticker} />
+        {/* Nav */}
+        <nav className="sticky top-0 z-10 border-b border-black/[0.06] bg-white/80 px-6 py-3 backdrop-blur-xl dark:border-white/8 dark:bg-black/80">
+          <div className="mx-auto flex max-w-7xl items-center gap-4">
+            <button
+              onClick={() => router.push('/')}
+              className="text-sm text-gray-400 transition hover:text-gray-700 dark:text-white/30 dark:hover:text-white/70"
+            >
+              ← Search
+            </button>
+            <span className="text-sm font-bold text-gray-900 dark:text-white">{ticker}</span>
+            {data && <span className="text-sm text-gray-400 dark:text-white/40">{data.companyName}</span>}
+            <div className="ml-auto">
+              <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
             </div>
-
-            <ValuationHistory
-              ticker={ticker}
-              onSave={handleSave}
-              saving={saving}
-            />
           </div>
-        )}
+        </nav>
+
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          {loading && (
+            <div className="flex flex-col items-center justify-center py-32 gap-3">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-800 dark:border-white/10 dark:border-t-white/60" />
+              <p className="text-sm text-gray-400 dark:text-white/30">Calculating WACC, Beta, DCF… this takes ~10s</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">
+              <strong>Error:</strong> {error}. Yahoo Finance may be temporarily unavailable — try again in a moment.
+            </div>
+          )}
+
+          {data && !loading && (
+            <div className="space-y-4">
+              <PriceHeader
+                ticker={data.ticker}
+                companyName={data.companyName}
+                price={data.quote.price}
+                change={data.quote.change}
+                changePct={data.quote.changePct}
+                marketCap={data.quote.marketCap}
+                peRatio={data.quote.peRatio}
+                high52={data.quote.fiftyTwoWeekHigh}
+                low52={data.quote.fiftyTwoWeekLow}
+                analystTarget={data.quote.analystTargetMean}
+                currency={data.quote.currency ?? 'USD'}
+                sector={data.quote.sector ?? ''}
+                analystRec={data.analystRecommendation}
+              />
+
+              <PriceChart ticker={ticker} isDark={isDark} />
+
+              {data.ratings && <RatingsPanel ratings={data.ratings} />}
+
+              {(data.businessProfile.description || data.historicalRevenues.length >= 2) && (
+                <BusinessModel
+                  businessProfile={data.businessProfile}
+                  historicalRevenues={data.historicalRevenues}
+                  ticker={ticker}
+                  isDark={isDark}
+                />
+              )}
+
+              <WACCBreakdown
+                wacc={data.wacc}
+                onWACCChange={(w) => setWaccOverride(w)}
+              />
+
+              {data.cagrAnalysis && (
+                <CAGRAnalysis
+                  cagrAnalysis={data.cagrAnalysis}
+                  isNegativeFCF={data.isNegativeFCF ?? false}
+                />
+              )}
+
+              <DCFModel
+                projections={data.dcf.projections}
+                terminalValue={data.dcf.terminalValue}
+                terminalValueDiscounted={data.dcf.terminalValueDiscounted}
+                sumPV={data.dcf.sumPV}
+                ev={data.dcf.ev}
+                fairValue={data.fairValue}
+                wacc={waccOverride ?? data.wacc.wacc}
+                cagr={data.cagr}
+                terminalG={data.terminalG}
+                scenarios={data.scenarios}
+              />
+
+              {data.valuationMethods && (
+                <ValuationMethods
+                  valuationMethods={data.valuationMethods}
+                  currency={currency}
+                />
+              )}
+
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <NewsPanel ticker={ticker} />
+                <InsiderTable ticker={ticker} />
+              </div>
+
+              <ValuationHistory
+                ticker={ticker}
+                onSave={handleSave}
+                saving={saving}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

@@ -2,23 +2,9 @@
 import { useState, useEffect } from 'react'
 import { fmt, fmtPct } from '@/lib/utils'
 
-interface Snapshot {
-  id: string
-  saved_at: string
-  price_at_save: number
-  fair_value: number
-  wacc: number
-  cagr: number
-  upside_pct: number
-}
+interface Snapshot { id: string; saved_at: string; price_at_save: number; fair_value: number; wacc: number; cagr: number; upside_pct: number }
+interface Props { ticker: string; onSave: () => Promise<{ ok: boolean; error?: string }>; saving: boolean }
 
-interface Props {
-  ticker: string
-  onSave: () => Promise<{ ok: boolean; error?: string }>
-  saving: boolean
-}
-
-// localStorage helpers (client-only)
 const localKey = (ticker: string) => `valuations_${ticker}`
 
 function loadLocal(ticker: string): Snapshot[] {
@@ -46,87 +32,71 @@ export default function ValuationHistory({ ticker, onSave, saving }: Props) {
       .then((d) => {
         const remote: Snapshot[] = Array.isArray(d) ? d : []
         const local = loadLocal(ticker)
-        // merge: remote first, append local-only entries
         const remoteIds = new Set(remote.map((s) => s.id))
         const merged = [...remote, ...local.filter((s) => !remoteIds.has(s.id))]
         merged.sort((a, b) => new Date(b.saved_at).getTime() - new Date(a.saved_at).getTime())
-        setHistory(merged)
-        setLoading(false)
+        setHistory(merged); setLoading(false)
       })
-      .catch(() => {
-        // API failed — fall back to localStorage only
-        setHistory(loadLocal(ticker))
-        setLoading(false)
-      })
+      .catch(() => { setHistory(loadLocal(ticker)); setLoading(false) })
   }
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load() }, [ticker])
 
   const handleSave = async () => {
-    setSaveError('')
-    setSaveSuccess(false)
+    setSaveError(''); setSaveSuccess(false)
     const result = await onSave()
     if (result.ok) {
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 3000)
     } else {
-      // page.tsx already saved to localStorage; show advisory message
-      setSaveError(result.error ?? 'Save failed — snapshot stored locally (configure Supabase to persist across devices)')
+      setSaveError(result.error ?? 'Save failed — snapshot stored locally')
     }
     load()
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+    <div className="rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/8 dark:bg-[#111]">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-gray-700">Valuation History</h2>
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-white/70">Valuation History</h2>
         <button
-          onClick={handleSave}
-          disabled={saving}
-          className="rounded-xl bg-gray-900 px-4 py-2 text-xs font-medium text-white hover:bg-gray-700 disabled:opacity-50"
+          onClick={handleSave} disabled={saving}
+          className="rounded-xl bg-gray-900 px-4 py-2 text-xs font-medium text-white transition hover:bg-gray-700 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/80"
         >
           {saving ? 'Saving…' : '+ Save snapshot'}
         </button>
       </div>
 
-      {saveSuccess && (
-        <p className="mt-2 text-xs font-medium text-emerald-600">Snapshot saved successfully.</p>
-      )}
-      {saveError && (
-        <p className="mt-2 text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">{saveError}</p>
-      )}
+      {saveSuccess && <p className="mt-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">Snapshot saved successfully.</p>}
+      {saveError && <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">{saveError}</p>}
 
       {loading ? (
-        <p className="mt-4 text-sm text-gray-400">Loading…</p>
+        <p className="mt-4 text-sm text-gray-400 dark:text-white/25">Loading…</p>
       ) : history.length === 0 ? (
-        <p className="mt-4 text-sm text-gray-400">No saved valuations yet. Click &ldquo;Save snapshot&rdquo; to record today&apos;s model.</p>
+        <p className="mt-4 text-sm text-gray-400 dark:text-white/25">No saved valuations yet. Click &ldquo;Save snapshot&rdquo; to record today&apos;s model.</p>
       ) : (
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-100">
-                <th className="pb-2 text-left text-xs font-medium text-gray-400">Date</th>
-                <th className="pb-2 text-right text-xs font-medium text-gray-400">Price</th>
-                <th className="pb-2 text-right text-xs font-medium text-gray-400">Fair Value</th>
-                <th className="pb-2 text-right text-xs font-medium text-gray-400">Upside</th>
-                <th className="pb-2 text-right text-xs font-medium text-gray-400">WACC</th>
-                <th className="pb-2 text-right text-xs font-medium text-gray-400">CAGR</th>
+              <tr className="border-b border-gray-100 dark:border-white/8">
+                {['Date', 'Price', 'Fair Value', 'Upside', 'WACC', 'CAGR'].map((h, i) => (
+                  <th key={h} className={`pb-2 text-xs font-medium text-gray-400 dark:text-white/25 ${i === 0 ? 'text-left' : 'text-right'}`}>{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {history.map((s) => (
-                <tr key={s.id} className="border-b border-gray-50">
-                  <td className="py-2 text-gray-600">
+                <tr key={s.id} className="border-b border-gray-50 dark:border-white/5">
+                  <td className="py-2 text-gray-600 dark:text-white/50">
                     {new Date(s.saved_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}
                   </td>
-                  <td className="py-2 text-right text-gray-700">{s.price_at_save ? `$${fmt(s.price_at_save)}` : '—'}</td>
-                  <td className="py-2 text-right font-semibold text-gray-800">{s.fair_value ? `$${fmt(s.fair_value)}` : '—'}</td>
-                  <td className={`py-2 text-right font-medium ${s.upside_pct >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                  <td className="py-2 text-right text-gray-700 dark:text-white/60">{s.price_at_save ? `$${fmt(s.price_at_save)}` : '—'}</td>
+                  <td className="py-2 text-right font-semibold text-gray-800 dark:text-white/80">{s.fair_value ? `$${fmt(s.fair_value)}` : '—'}</td>
+                  <td className={`py-2 text-right font-medium ${s.upside_pct >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
                     {s.upside_pct ? `${s.upside_pct >= 0 ? '+' : ''}${fmtPct(s.upside_pct)}` : '—'}
                   </td>
-                  <td className="py-2 text-right text-gray-500">{s.wacc ? fmtPct(s.wacc) : '—'}</td>
-                  <td className="py-2 text-right text-gray-500">{s.cagr ? fmtPct(s.cagr) : '—'}</td>
+                  <td className="py-2 text-right text-gray-500 dark:text-white/30">{s.wacc ? fmtPct(s.wacc) : '—'}</td>
+                  <td className="py-2 text-right text-gray-500 dark:text-white/30">{s.cagr ? fmtPct(s.cagr) : '—'}</td>
                 </tr>
               ))}
             </tbody>

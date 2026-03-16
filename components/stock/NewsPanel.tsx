@@ -1,12 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 
-interface NewsItem {
-  title: string
-  link: string
-  publisher: string
-  providerPublishTime: number
-}
+interface NewsItem { title: string; link: string; publisher: string; providerPublishTime: number }
 
 export default function NewsPanel({ ticker }: { ticker: string }) {
   const [news, setNews] = useState<NewsItem[]>([])
@@ -20,19 +15,21 @@ export default function NewsPanel({ ticker }: { ticker: string }) {
   }, [ticker])
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-      <h2 className="text-sm font-semibold text-gray-700">Latest News</h2>
+    <div className="rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/8 dark:bg-[#111]">
+      <h2 className="text-sm font-semibold text-gray-700 dark:text-white/70">Latest News</h2>
       {loading ? (
-        <p className="mt-4 text-sm text-gray-400">Loading…</p>
+        <p className="mt-4 text-sm text-gray-400 dark:text-white/25">Loading…</p>
       ) : news.length === 0 ? (
-        <p className="mt-4 text-sm text-gray-400">No news found.</p>
+        <p className="mt-4 text-sm text-gray-400 dark:text-white/25">No news found.</p>
       ) : (
-        <ul className="mt-4 divide-y divide-gray-100">
+        <ul className="mt-4 divide-y divide-gray-100 dark:divide-white/5">
           {news.map((item, i) => (
             <li key={i} className="py-3">
               <a href={item.link} target="_blank" rel="noreferrer" className="group block">
-                <p className="text-sm font-medium text-gray-800 group-hover:text-blue-600 leading-snug">{item.title}</p>
-                <div className="mt-1 flex gap-3 text-xs text-gray-400">
+                <p className="text-sm font-medium leading-snug text-gray-800 transition group-hover:text-blue-600 dark:text-white/70 dark:group-hover:text-blue-400">
+                  {item.title}
+                </p>
+                <div className="mt-1 flex gap-3 text-xs text-gray-400 dark:text-white/25">
                   <span>{item.publisher}</span>
                   <span>·</span>
                   <span>{new Date(item.providerPublishTime * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
