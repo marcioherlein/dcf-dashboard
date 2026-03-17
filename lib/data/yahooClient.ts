@@ -30,6 +30,7 @@ export async function getFinancials(ticker: string): Promise<any> {
       'insiderTransactions',
       'summaryProfile',
       'summaryDetail',
+      'majorHoldersBreakdown',
     ],
   })
 }
@@ -99,4 +100,33 @@ export async function getFXRate(fromCurrency: string, toCurrency: string): Promi
 export async function getNews(ticker: string): Promise<any[]> {
   const result: any = await yf.search(ticker, { newsCount: 10, quotesCount: 0 })
   return result.news ?? []
+}
+
+export interface PeerQuoteRaw {
+  ticker: string
+  trailingPE: number | null
+  priceToBook: number | null
+  priceToSales: number | null
+  evToEbitda: number | null
+  evToRevenue: number | null
+}
+
+// Fetch live multiples for a list of peer tickers in parallel; silently drops failures
+export async function getPeerQuotes(tickers: string[]): Promise<PeerQuoteRaw[]> {
+  const results = await Promise.allSettled(tickers.map((t) => yf.quote(t)))
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return results.flatMap((r): PeerQuoteRaw[] => {
+    if (r.status !== 'fulfilled') return []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const q = r.value as any
+    if (!q || !q.symbol) return []
+    return [{
+      ticker: q.symbol as string,
+      trailingPE: typeof q.trailingPE === 'number' ? q.trailingPE : null,
+      priceToBook: typeof q.priceToBook === 'number' ? q.priceToBook : null,
+      priceToSales: typeof q.priceToSalesTrailing12Months === 'number' ? q.priceToSalesTrailing12Months : null,
+      evToEbitda: typeof q.enterpriseToEbitda === 'number' ? q.enterpriseToEbitda : null,
+      evToRevenue: typeof q.enterpriseToRevenue === 'number' ? q.enterpriseToRevenue : null,
+    }]
+  })
 }

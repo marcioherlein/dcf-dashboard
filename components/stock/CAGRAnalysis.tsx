@@ -6,7 +6,12 @@ interface CAGRAnalysis {
   blended: number; confidence: number; confidenceLabel: 'High' | 'Medium' | 'Low'
   numAnalysts: number; drivers: string[]
 }
-interface Props { cagrAnalysis: CAGRAnalysis; isNegativeFCF: boolean }
+interface Props {
+  cagrAnalysis: CAGRAnalysis
+  isNegativeFCF: boolean
+  growthModel?: 'two-stage' | 'three-stage'
+  terminalG?: number
+}
 
 const confColor: Record<string, string> = {
   High:   'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20',
@@ -14,7 +19,7 @@ const confColor: Record<string, string> = {
   Low:    'bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20',
 }
 
-export default function CAGRAnalysis({ cagrAnalysis, isNegativeFCF }: Props) {
+export default function CAGRAnalysis({ cagrAnalysis, isNegativeFCF, growthModel = 'two-stage', terminalG }: Props) {
   const { historicalCagr3y, analystEstimate1y, analystEstimate2y, blended, confidence, confidenceLabel, numAnalysts, drivers } = cagrAnalysis
   const rows = [
     { label: 'Historical 3Y Revenue CAGR', value: historicalCagr3y,  note: 'From income statement',                       bold: false },
@@ -69,6 +74,35 @@ export default function CAGRAnalysis({ cagrAnalysis, isNegativeFCF }: Props) {
           </li>
         ))}
       </ul>
+
+      <div className="mt-4 rounded-xl border border-gray-100 dark:border-white/8 bg-gray-50 dark:bg-white/5 px-4 py-3">
+        <div className="flex items-center gap-2">
+          <p className="text-xs font-semibold text-gray-600 dark:text-white/50">DCF Growth Model</p>
+          {growthModel === 'three-stage' ? (
+            <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400">
+              Three-Stage (Damodaran)
+            </span>
+          ) : (
+            <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-white/40">
+              Two-Stage (Standard)
+            </span>
+          )}
+        </div>
+        {growthModel === 'three-stage' ? (
+          <p className="mt-1.5 text-[11px] text-gray-400 dark:text-white/25 leading-relaxed">
+            <span className="text-gray-600 dark:text-white/50">Years 1–5</span> grow at full blended CAGR ({fmtPct(cagrAnalysis.blended)}).{' '}
+            <span className="text-violet-500 dark:text-violet-400">Years 6–10</span> linearly fade to terminal growth
+            {terminalG != null ? ` (${fmtPct(terminalG)})` : ''}.
+            Applied because growth rate exceeds 15% — Damodaran&apos;s reversion-to-mean principle prevents the
+            &quot;growth cliff&quot; artifact of a single-stage model.
+          </p>
+        ) : (
+          <p className="mt-1.5 text-[11px] text-gray-400 dark:text-white/25 leading-relaxed">
+            Constant CAGR ({fmtPct(cagrAnalysis.blended)}) applied for all 10 projection years, then terminal value.
+            Growth is already near sustainable levels — no deceleration phase needed.
+          </p>
+        )}
+      </div>
     </div>
   )
 }

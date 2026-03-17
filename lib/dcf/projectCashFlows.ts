@@ -4,6 +4,8 @@ export interface CFProjection {
   discounted: number // PV of FCF
 }
 
+export type GrowthModel = 'two-stage' | 'three-stage'
+
 export interface ProjectionInputs {
   baseFCF: number       // starting FCF (millions)
   cagr: number          // annual growth rate, e.g. 0.12
@@ -11,6 +13,7 @@ export interface ProjectionInputs {
   terminalG: number     // terminal growth rate, e.g. 0.01
   years?: number        // projection years, default 10
   startYear?: number    // first forecast year
+  growthModel?: GrowthModel  // 'two-stage' (default) or 'three-stage' (Damodaran fade)
 }
 
 export interface DCFResult {
@@ -19,6 +22,8 @@ export interface DCFResult {
   terminalValueDiscounted: number
   sumPV: number
   ev: number
+  growthModel: GrowthModel
+  yearlyGrowthRates: number[]  // per-year growth rate used (length === projections.length)
 }
 
 export interface CAGRAnalysis {
@@ -33,13 +38,25 @@ export interface CAGRAnalysis {
 }
 
 export function projectCashFlows(inputs: ProjectionInputs): DCFResult {
-  const { baseFCF, cagr, wacc, terminalG, years = 10, startYear = new Date().getFullYear() } = inputs
+  const { baseFCF, cagr, wacc, terminalG, years = 10, startYear = new Date().getFullYear(), growthModel = 'two-stage' } = inputs
 
   const projections: CFProjection[] = []
+  const yearlyGrowthRates: number[] = []
   let cf = baseFCF
+  const halfway = Math.ceil(years / 2)  // year 5 for 10-year projection
 
   for (let t = 1; t <= years; t++) {
-    cf = cf * (1 + cagr)
+    let g: number
+    if (growthModel === 'three-stage' && t > halfway) {
+      // Linear fade from cagr → terminalG over the second half
+      const fadeStep = t - halfway
+      const fadePeriods = years - halfway
+      g = cagr - (cagr - terminalG) * (fadeStep / fadePeriods)
+    } else {
+      g = cagr
+    }
+    yearlyGrowthRates.push(Math.round(g * 1000) / 1000)
+    cf = cf * (1 + g)
     const discounted = cf / Math.pow(1 + wacc, t)
     projections.push({ year: startYear + t - 1, cashFlow: Math.round(cf), discounted: Math.round(discounted) })
   }
@@ -56,6 +73,8 @@ export function projectCashFlows(inputs: ProjectionInputs): DCFResult {
     terminalValueDiscounted: Math.round(terminalValueDiscounted),
     sumPV: Math.round(sumPV),
     ev: Math.round(ev),
+    growthModel,
+    yearlyGrowthRates,
   }
 }
 

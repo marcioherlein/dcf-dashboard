@@ -3,18 +3,15 @@ import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { fmt, fmtPct } from '@/lib/utils'
 
-const BarChart = dynamic(
-  () => import('recharts').then((m) => m.BarChart),
-  { ssr: false }
-)
+const BarChart = dynamic(() => import('recharts').then((m) => m.BarChart), { ssr: false })
 const Bar = dynamic(() => import('recharts').then((m) => m.Bar), { ssr: false })
+const LineChart = dynamic(() => import('recharts').then((m) => m.LineChart), { ssr: false })
+const Line = dynamic(() => import('recharts').then((m) => m.Line), { ssr: false })
 const XAxis = dynamic(() => import('recharts').then((m) => m.XAxis), { ssr: false })
 const YAxis = dynamic(() => import('recharts').then((m) => m.YAxis), { ssr: false })
 const Tooltip = dynamic(() => import('recharts').then((m) => m.Tooltip), { ssr: false })
-const ResponsiveContainer = dynamic(
-  () => import('recharts').then((m) => m.ResponsiveContainer),
-  { ssr: false }
-)
+const Legend = dynamic(() => import('recharts').then((m) => m.Legend), { ssr: false })
+const ResponsiveContainer = dynamic(() => import('recharts').then((m) => m.ResponsiveContainer), { ssr: false })
 
 interface BusinessProfile {
   description: string
@@ -27,11 +24,21 @@ interface BusinessProfile {
   revenueM: number
 }
 
+interface IncomeRow {
+  year: string; revenue: number | null; grossProfit: number | null
+  netIncome: number | null; isProjected: boolean
+}
+interface CashFlowRow {
+  year: string; freeCashFlow: number | null; isProjected: boolean
+}
+
 interface Props {
   businessProfile: BusinessProfile
   historicalRevenues: number[]
   ticker: string
   isDark?: boolean
+  incomeStatement?: IncomeRow[]
+  cashFlow?: CashFlowRow[]
 }
 
 function marginColor(v: number | null): string {
@@ -42,7 +49,7 @@ function marginColor(v: number | null): string {
   return 'text-red-600 dark:text-red-400'
 }
 
-export default function BusinessModel({ businessProfile, historicalRevenues, ticker, isDark }: Props) {
+export default function BusinessModel({ businessProfile, historicalRevenues, ticker, isDark, incomeStatement, cashFlow }: Props) {
   const [expanded, setExpanded] = useState(false)
   const { description, industry, country, employees, grossMargin, netMargin, fcfMargin } = businessProfile
 
@@ -74,6 +81,20 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
   const tooltipStyle = isDark
     ? { background: '#1c1c1e', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, fontSize: 11, color: '#fff' }
     : { borderRadius: 8, fontSize: 11 }
+
+  // Margin trend data from financial statements (historical only)
+  const marginTrendData = (incomeStatement ?? [])
+    .filter((r) => !r.isProjected && r.revenue && r.revenue > 0)
+    .map((r) => {
+      const cfRow = (cashFlow ?? []).find((c) => c.year === r.year && !c.isProjected)
+      return {
+        year: r.year,
+        gross: r.grossProfit && r.revenue ? Math.round(r.grossProfit / r.revenue * 1000) / 10 : null,
+        net: r.netIncome && r.revenue ? Math.round(r.netIncome / r.revenue * 1000) / 10 : null,
+        fcf: cfRow?.freeCashFlow && r.revenue ? Math.round(cfRow.freeCashFlow / r.revenue * 1000) / 10 : null,
+      }
+    })
+    .filter((d) => d.gross !== null || d.net !== null)
 
   return (
     <div className="rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/8 dark:bg-[#111]">
@@ -125,24 +146,51 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
         {chartData.length >= 2 && (
           <div>
             <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-white/25">Revenue History ($M)</p>
-            <div className="overflow-visible">
-              <ResponsiveContainer width="100%" height={120}>
-                <BarChart data={chartData} margin={{ top: 0, right: 4, left: 4, bottom: 0 }}>
-                  <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
-                  <YAxis hide />
-                  <Tooltip
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    formatter={(v: any) => [`$${fmt(Number(v), 0)}M`, 'Revenue']}
-                    contentStyle={tooltipStyle}
-                    wrapperStyle={{ zIndex: 50 }}
-                  />
-                  <Bar dataKey="revenue" fill={isDark ? '#818cf8' : '#6366f1'} radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <ResponsiveContainer width="100%" height={120}>
+              <BarChart data={chartData} margin={{ top: 0, right: 4, left: 4, bottom: 0 }}>
+                <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
+                <YAxis hide />
+                <Tooltip
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  formatter={(v: any) => [`$${fmt(Number(v), 0)}M`, 'Revenue']}
+                  contentStyle={tooltipStyle}
+                  wrapperStyle={{ zIndex: 50 }}
+                />
+                <Bar dataKey="revenue" fill={isDark ? '#818cf8' : '#6366f1'} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         )}
       </div>
+
+      {/* Margin Trends Chart */}
+      {marginTrendData.length >= 2 && (
+        <div className="mt-5">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-white/25">Margin Trends (%)</p>
+          <ResponsiveContainer width="100%" height={110}>
+            <LineChart data={marginTrendData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+              <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
+              <Tooltip
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                formatter={(v: any, name: any) => [
+                  typeof v === 'number' ? `${v.toFixed(1)}%` : v,
+                  name === 'gross' ? 'Gross Margin' : name === 'net' ? 'Net Margin' : 'FCF Margin',
+                ]}
+                contentStyle={tooltipStyle}
+                wrapperStyle={{ zIndex: 50 }}
+              />
+              <Legend
+                formatter={(v) => v === 'gross' ? 'Gross' : v === 'net' ? 'Net' : 'FCF'}
+                wrapperStyle={{ fontSize: '10px', color: tickFill }}
+              />
+              <Line type="monotone" dataKey="gross" stroke="#6366f1" strokeWidth={2} dot={false} connectNulls />
+              <Line type="monotone" dataKey="net" stroke="#10b981" strokeWidth={2} dot={false} connectNulls />
+              <Line type="monotone" dataKey="fcf" stroke="#f59e0b" strokeWidth={2} dot={false} connectNulls strokeDasharray="4 2" />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   )
 }

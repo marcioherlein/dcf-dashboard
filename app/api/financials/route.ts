@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getFinancials, getQuote, getHistorical, getSPYHistorical, getFXRate } from '@/lib/data/yahooClient'
+import { getFinancials, getQuote, getHistorical, getSPYHistorical, getFXRate, getPeerQuotes } from '@/lib/data/yahooClient'
 import { calculateBeta } from '@/lib/dcf/calculateBeta'
 import { calculateWACC, extractWACCInputs } from '@/lib/dcf/calculateWACC'
 import { projectCashFlows, extractFCFInputs } from '@/lib/dcf/projectCashFlows'
@@ -9,7 +9,8 @@ import { getRfRate } from '@/lib/data/fredClient'
 import { detectCompanyType, primaryModelLabel, companyTypeLabel, companyTypeRationale, getModelWeights } from '@/lib/dcf/detectCompanyType'
 import { calculateDDM } from '@/lib/dcf/calculateDDM'
 import { calculateFCFE } from '@/lib/dcf/calculateFCFE'
-import { calculateMultiples } from '@/lib/dcf/calculateMultiples'
+import { calculateMultiples, PEER_TICKERS } from '@/lib/dcf/calculateMultiples'
+import { calculatePiotroski, calculateAltman, calculateBeneish, calculateROIC } from '@/lib/dcf/calculateScores'
 
 export async function GET(req: NextRequest) {
   const ticker = req.nextUrl.searchParams.get('ticker')?.toUpperCase()
@@ -66,7 +67,10 @@ export async function GET(req: NextRequest) {
 
     // DCF (FCFF)
     const terminalG = 0.01
-    const dcfResult = projectCashFlows({ baseFCF, cagr, wacc: waccResult.wacc, terminalG })
+    // Growth model selection (Damodaran): three-stage when growth >> stable (CAGR > 15% or pre-profit).
+    // companyType is detected later; cagr + isNegativeFCF covers all practical cases before that.
+    const growthModel = (cagr > 0.15 || isNegativeFCF) ? 'three-stage' as const : 'two-stage' as const
+    const dcfResult = projectCashFlows({ baseFCF, cagr, wacc: waccResult.wacc, terminalG, growthModel })
 
     // Balance sheet items — convert to quote currency
     const bs = fin.balanceSheetHistory?.balanceSheetStatements?.[0] ?? {}
@@ -92,7 +96,7 @@ export async function GET(req: NextRequest) {
     const fvResult = calculateFairValue(dcfResult, cashM, debtM, sharesM, currentPrice)
 
     // Scenarios
-    const scenarios = buildScenarios(waccResult, cagr, terminalG, baseFCF, cashM, debtM, sharesM, 0)
+    const scenarios = buildScenarios(waccResult, cagr, terminalG, baseFCF, cashM, debtM, sharesM, 0, growthModel)
 
     // Business profile
     const fd = fin.financialData ?? {}
@@ -132,6 +136,42 @@ export async function GET(req: NextRequest) {
       marketCapB: (q.marketCap ?? 0) / 1e9,
       upsidePct: fvResult.upsidePct,
     })
+
+    // ─── Financial Quality Scores ─────────────────────────────────────────────
+
+    const rawBSStmts: any[] = fin.balanceSheetHistory?.balanceSheetStatements ?? []
+    const rawISStmts: any[] = fin.incomeStatementHistory?.incomeStatementHistory ?? []
+    const rawCFStmts: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
+
+    // Market cap in financial (reporting) currency for Altman Z-Score comparability
+    const marketCapLocal = (q.marketCap ?? 0) / fxRate
+    const sharesNow = (ks.sharesOutstanding ?? 0) as number
+    // Estimate prior-year shares: check cash flow for net buybacks/issuances as signal
+    // If net repurchases > 0 (Yahoo shows buybacks as negative), shares fell → pass dilution check
+    const netBuybackM = Math.abs(((rawCFStmts[0]?.repurchaseOfStock ?? 0) as number) / 1e6)
+    const netIssuanceM = ((rawCFStmts[0]?.issuanceOfStock ?? 0) as number) / 1e6
+    // Approximate prior shares: add back net dilution (positive = more shares, negative = fewer)
+    const sharesPrior = sharesNow + (netIssuanceM - netBuybackM) * 1e6
+
+    const piotroski = calculatePiotroski(rawBSStmts, rawISStmts, rawCFStmts, sharesNow, sharesPrior)
+    const altman = calculateAltman(rawBSStmts[0] ?? {}, rawISStmts[0] ?? {}, marketCapLocal)
+    const beneish = rawBSStmts.length >= 2 && rawISStmts.length >= 2
+      ? calculateBeneish(rawBSStmts[0], rawBSStmts[1], rawISStmts[0], rawISStmts[1], rawCFStmts[0] ?? {})
+      : null
+    const roicResult = calculateROIC(rawBSStmts[0] ?? {}, rawBSStmts[1] ?? {}, rawISStmts[0] ?? {}, waccResult.inputs.taxRate, waccResult.wacc, fxRate)
+
+    const scores = { piotroski, altman, beneish, roic: roicResult }
+
+    // ─── Ownership & Short Interest ───────────────────────────────────────────
+
+    const holders = fin.majorHoldersBreakdown ?? {}
+    const ownership = {
+      insiderPct: (holders.insidersPercentHeld ?? null) as number | null,
+      institutionalPct: (holders.institutionsPercentHeld ?? null) as number | null,
+      shortPct: (ks.shortPercentOfFloat ?? null) as number | null,
+      shortRatio: (ks.shortRatio ?? null) as number | null,
+      sharesShort: (ks.sharesShort ?? null) as number | null,
+    }
 
     // ─── Multi-model valuation ─────────────────────────────────────────────────
 
@@ -176,9 +216,21 @@ export async function GET(req: NextRequest) {
     // FCFE
     const fcfeResult = calculateFCFE(netIncomeM, cagr, waccResult.costOfEquity, terminalG, cashM, debtM, sharesM, currentPrice)
 
-    // Relative multiples
+    // Relative multiples — with live peer comparison
+    const industry = (profile.industry ?? '') as string
+    const candidatePeers = (PEER_TICKERS[industry] ?? []).filter(
+      (t) => t !== ticker
+    ).slice(0, 6)
+
+    let livePeers: Awaited<ReturnType<typeof getPeerQuotes>> = []
+    if (candidatePeers.length >= 3) {
+      // Non-blocking: peer fetch failure falls back to static medians
+      livePeers = await getPeerQuotes(candidatePeers).catch(() => [])
+    }
+
     const multiplesResult = calculateMultiples({
-      sector: profile.sector ?? q.sector ?? '',
+      sector: (profile.sector ?? q.sector ?? '') as string,
+      industry,
       companyType,
       currentPrice,
       trailingPE,
@@ -186,6 +238,7 @@ export async function GET(req: NextRequest) {
       priceToSales,
       evToEbitda,
       evToRevenue,
+      livePeers,
     })
 
     // Triangulation
@@ -483,7 +536,10 @@ export async function GET(req: NextRequest) {
       businessProfile,
       analystRecommendation: fin.financialData?.recommendationKey ?? '',
       financialCurrencyNote,
+      growthModel,
       ratings,
+      scores,
+      ownership,
       valuationMethods,
       financialStatements,
     })

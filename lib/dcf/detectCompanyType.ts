@@ -72,6 +72,17 @@ export function companyTypeRationale(type: CompanyType): string {
   }
 }
 
+// Growth model selection per Damodaran's life-cycle framework:
+// Three-stage (high growth → linear fade → terminal) applies when current growth >> stable growth.
+// Two-stage (constant CAGR → terminal) applies when growth is already near sustainable levels.
+import type { GrowthModel } from './projectCashFlows'
+
+export function getGrowthModel(companyType: CompanyType, cagr: number): GrowthModel {
+  if (companyType === 'growth' || companyType === 'startup') return 'three-stage'
+  if (cagr > 0.15) return 'three-stage'
+  return 'two-stage'
+}
+
 // Triangulation weights by company type
 export function getModelWeights(type: CompanyType, hasDividend: boolean): {
   fcff: number; fcfe: number; ddm: number; multiples: number

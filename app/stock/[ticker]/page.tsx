@@ -13,6 +13,8 @@ import BusinessModel from '@/components/stock/BusinessModel'
 import RatingsPanel from '@/components/stock/RatingsPanel'
 import ValuationMethods from '@/components/stock/ValuationMethods'
 import FinancialStatements from '@/components/stock/FinancialStatements'
+import FinancialScores from '@/components/stock/FinancialScores'
+import OwnershipPanel from '@/components/stock/OwnershipPanel'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
@@ -57,7 +59,9 @@ interface FinancialsData {
   dcf: {
     projections: { year: number; cashFlow: number; discounted: number }[]
     terminalValue: number; terminalValueDiscounted: number; sumPV: number; ev: number
+    yearlyGrowthRates?: number[]
   }
+  growthModel?: 'two-stage' | 'three-stage'
   fairValue: {
     ev: number; cash: number; debt: number; marketCap: number
     equityValue: number; sharesOutstanding: number
@@ -79,6 +83,23 @@ interface FinancialsData {
   ratings: import('@/lib/dcf/calculateRatings').StockRatings
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   valuationMethods?: any
+  scores?: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    piotroski: any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    altman: any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    beneish: any | null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    roic: any
+  }
+  ownership?: {
+    insiderPct: number | null
+    institutionalPct: number | null
+    shortPct: number | null
+    shortRatio: number | null
+    sharesShort: number | null
+  }
   financialStatements?: {
     incomeStatement: Array<{
       year: string; revenue: number | null; grossProfit: number | null
@@ -121,6 +142,7 @@ export default function StockPage() {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [waccOverride, setWaccOverride] = useState<number | null>(null)
+  const [terminalGOverride, setTerminalGOverride] = useState<number | null>(null)
   const [isDark, setIsDark] = useState(false)
 
   // Persist theme preference
@@ -139,6 +161,8 @@ export default function StockPage() {
   useEffect(() => {
     setLoading(true)
     setError('')
+    setWaccOverride(null)
+    setTerminalGOverride(null)
     fetch(`/api/financials?ticker=${ticker}`)
       .then((r) => r.json())
       .then((d) => {
@@ -163,7 +187,7 @@ export default function StockPage() {
           fair_value: data.fairValue.fairValuePerShare,
           wacc: waccOverride ?? data.wacc.wacc,
           beta: data.wacc.inputs.beta,
-          terminal_g: data.terminalG,
+          terminal_g: terminalGOverride ?? data.terminalG,
           cagr: data.cagr,
           upside_pct: data.fairValue.upsidePct,
           inputs: data.wacc.inputs,
@@ -189,7 +213,7 @@ export default function StockPage() {
     } finally {
       setSaving(false)
     }
-  }, [data, waccOverride])
+  }, [data, waccOverride, terminalGOverride])
 
   const currency = data?.quote.currency === 'USD' ? '$' : (data?.quote.currency ?? '$') + ' '
 
@@ -256,12 +280,16 @@ export default function StockPage() {
 
               {data.ratings && <RatingsPanel ratings={data.ratings} />}
 
+              {data.scores && <FinancialScores scores={data.scores} />}
+
               {(data.businessProfile.description || data.historicalRevenues.length >= 2) && (
                 <BusinessModel
                   businessProfile={data.businessProfile}
                   historicalRevenues={data.historicalRevenues}
                   ticker={ticker}
                   isDark={isDark}
+                  incomeStatement={data.financialStatements?.incomeStatement}
+                  cashFlow={data.financialStatements?.cashFlow}
                 />
               )}
 
@@ -274,6 +302,8 @@ export default function StockPage() {
                 <CAGRAnalysis
                   cagrAnalysis={data.cagrAnalysis}
                   isNegativeFCF={data.isNegativeFCF ?? false}
+                  growthModel={data.growthModel}
+                  terminalG={data.terminalG}
                 />
               )}
 
@@ -288,6 +318,11 @@ export default function StockPage() {
                 cagr={data.cagr}
                 terminalG={data.terminalG}
                 scenarios={data.scenarios}
+                baseFCF={data.baseFCF}
+                terminalGOverride={terminalGOverride}
+                onTerminalGChange={setTerminalGOverride}
+                growthModel={data.growthModel}
+                yearlyGrowthRates={data.dcf.yearlyGrowthRates}
               />
 
               {data.valuationMethods && (
@@ -311,6 +346,8 @@ export default function StockPage() {
                 <NewsPanel ticker={ticker} />
                 <InsiderTable ticker={ticker} />
               </div>
+
+              {data.ownership && <OwnershipPanel ownership={data.ownership} />}
 
               <ValuationHistory
                 ticker={ticker}

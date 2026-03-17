@@ -1,4 +1,4 @@
-import { DCFResult, projectCashFlows } from './projectCashFlows'
+import { DCFResult, projectCashFlows, GrowthModel } from './projectCashFlows'
 import { WACCResult } from './calculateWACC'
 
 export interface FairValueResult {
@@ -61,6 +61,7 @@ export function buildScenarios(
   shares: number,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _currentPrice: number,
+  growthModel: GrowthModel = 'two-stage',
 ): Scenarios {
   const scenarios = [
     { label: 'bull', waccAdj: -0.01, cagrAdj: +0.02, tgAdj: +0.005 },
@@ -73,7 +74,7 @@ export function buildScenarios(
     const w = Math.max(wacc.wacc + s.waccAdj, 0.04)
     const c = Math.max(baseCagr + s.cagrAdj, -0.05)
     const g = Math.min(Math.max(baseTerminalG + s.tgAdj, 0), w - 0.005)
-    const dcf = projectCashFlows({ baseFCF, cagr: c, wacc: w, terminalG: g })
+    const dcf = projectCashFlows({ baseFCF, cagr: c, wacc: w, terminalG: g, growthModel })
     const equityValue = dcf.ev + cash - debt
     const fv = shares > 0 ? Math.round((equityValue / shares) * 100) / 100 : 0
     result[s.label] = { fairValue: fv, wacc: w, cagr: c, terminalG: g }

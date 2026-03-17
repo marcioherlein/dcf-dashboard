@@ -1,6 +1,16 @@
 'use client'
 import { useState } from 'react'
-import type { MultiplesResult, MultipleEstimate } from '@/lib/dcf/calculateMultiples'
+import dynamic from 'next/dynamic'
+import type { MultiplesResult, MultipleEstimate, BenchmarkSource } from '@/lib/dcf/calculateMultiples'
+
+const BarChart = dynamic(() => import('recharts').then((m) => m.BarChart), { ssr: false })
+const Bar = dynamic(() => import('recharts').then((m) => m.Bar), { ssr: false })
+const XAxis = dynamic(() => import('recharts').then((m) => m.XAxis), { ssr: false })
+const YAxis = dynamic(() => import('recharts').then((m) => m.YAxis), { ssr: false })
+const Cell = dynamic(() => import('recharts').then((m) => m.Cell), { ssr: false })
+const ReferenceLine = dynamic(() => import('recharts').then((m) => m.ReferenceLine), { ssr: false })
+const Tooltip = dynamic(() => import('recharts').then((m) => m.Tooltip), { ssr: false })
+const ResponsiveContainer = dynamic(() => import('recharts').then((m) => m.ResponsiveContainer), { ssr: false })
 import type { DDMResult } from '@/lib/dcf/calculateDDM'
 import type { FCFEResult } from '@/lib/dcf/calculateFCFE'
 import type { CompanyType } from '@/lib/dcf/detectCompanyType'
@@ -111,16 +121,40 @@ function ModelCard({
   )
 }
 
+function BenchmarkBadge({ source, count }: { source: BenchmarkSource; count: number }) {
+  if (source === 'live-peers') {
+    return (
+      <span className="inline-flex items-center gap-0.5 rounded px-1 py-0.5 text-[9px] font-semibold bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400">
+        <span className="inline-block h-1 w-1 rounded-full bg-blue-500 dark:bg-blue-400" />
+        {count} peers
+      </span>
+    )
+  }
+  if (source === 'industry-median') {
+    return (
+      <span className="inline-flex items-center gap-0.5 rounded px-1 py-0.5 text-[9px] font-medium bg-gray-100 text-gray-500 dark:bg-white/8 dark:text-white/35">
+        industry
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center gap-0.5 rounded px-1 py-0.5 text-[9px] font-medium bg-gray-100 text-gray-400 dark:bg-white/5 dark:text-white/25">
+      sector
+    </span>
+  )
+}
+
 function MultipleRow({ est, currency }: { est: MultipleEstimate; currency: string }) {
   if (!est.applicable) return null
   const up = est.upsidePct >= 0
   return (
-    <div className="flex items-center justify-between py-1.5 border-b border-gray-50 dark:border-white/5 last:border-0 text-xs">
-      <span className="font-medium text-gray-600 dark:text-white/50 w-20 shrink-0">{est.multiple}</span>
-      <span className="text-gray-500 dark:text-white/40 tabular-nums">{est.actualValue.toFixed(1)}x</span>
-      <span className="text-gray-400 dark:text-white/25">vs {est.sectorMedian}x sector</span>
-      <span className="font-semibold text-gray-800 dark:text-white/70 tabular-nums">{currency}{fmt(est.impliedFairValue)}</span>
-      <span className={`font-semibold tabular-nums ${up ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
+    <div className="flex items-center gap-2 py-1.5 border-b border-gray-50 dark:border-white/5 last:border-0 text-xs">
+      <span className="font-medium text-gray-600 dark:text-white/50 w-16 shrink-0">{est.multiple}</span>
+      <span className="text-gray-500 dark:text-white/40 tabular-nums w-12 shrink-0">{est.actualValue.toFixed(1)}x</span>
+      <span className="text-gray-400 dark:text-white/25 shrink-0">vs {est.sectorMedian.toFixed(1)}x</span>
+      <BenchmarkBadge source={est.benchmarkSource} count={est.peerTickers.length} />
+      <span className="font-semibold text-gray-800 dark:text-white/70 tabular-nums ml-auto">{currency}{fmt(est.impliedFairValue)}</span>
+      <span className={`font-semibold tabular-nums w-14 text-right shrink-0 ${up ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
         {fmtPct(est.upsidePct)}
       </span>
     </div>
@@ -233,6 +267,65 @@ export default function ValuationMethods({ valuationMethods: vm, currency = '$' 
         </div>
       </div>
 
+      {/* Peer Comparison Chart */}
+      {applicableMultiples.length > 0 && (() => {
+        const chartData = applicableMultiples
+          .filter((e) => e.sectorMedian > 0 && e.actualValue > 0)
+          .map((e) => {
+            const ratio = e.actualValue / e.sectorMedian
+            const pct = Math.round((ratio - 1) * 1000) / 10
+            return {
+              name: e.multiple,
+              pct,
+              fill: pct <= 0 ? '#10b981' : '#ef4444',
+            }
+          })
+
+        if (chartData.length < 2) return null
+        return (
+          <div className="mb-4 rounded-xl border border-gray-100 dark:border-white/8 bg-gray-50 dark:bg-white/5 px-4 py-3">
+            <p className="mb-2 text-xs font-semibold text-gray-500 dark:text-white/40">vs Peer Median (% premium/discount)</p>
+            <ResponsiveContainer width="100%" height={90}>
+              <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 40, left: 0, bottom: 0 }}>
+                <XAxis
+                  type="number"
+                  tick={{ fontSize: 9, fill: '#9ca3af' }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => `${v > 0 ? '+' : ''}${v}%`}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  tick={{ fontSize: 10, fill: '#9ca3af' }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={60}
+                />
+                <ReferenceLine x={0} stroke="#d1d5db" strokeDasharray="3 3" strokeWidth={1} />
+                <Tooltip
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  formatter={(v: any) => [typeof v === 'number' ? `${v > 0 ? '+' : ''}${v.toFixed(1)}% vs median` : v]}
+                  contentStyle={{
+                    background: 'rgba(15,15,15,0.9)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px',
+                    fontSize: '11px',
+                    color: '#fff',
+                  }}
+                />
+                <Bar dataKey="pct" radius={[0, 3, 3, 0]}>
+                  {chartData.map((entry, i) => (
+                    <Cell key={i} fill={entry.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            <p className="mt-1 text-[9px] text-gray-300 dark:text-white/20">Green = cheaper than peers · Red = more expensive</p>
+          </div>
+        )
+      })()}
+
       {/* Multiples detail */}
       {applicableMultiples.length > 0 && (
         <div className="mb-3">
@@ -248,6 +341,11 @@ export default function ValuationMethods({ valuationMethods: vm, currency = '$' 
               {vm.models.multiples.estimates.map((est) => (
                 <MultipleRow key={est.multiple} est={est} currency={currency} />
               ))}
+              {vm.models.multiples.peerTickers && vm.models.multiples.peerTickers.length > 0 && (
+                <p className="mt-2 pt-1.5 border-t border-gray-100 dark:border-white/5 text-[10px] text-gray-400 dark:text-white/25 leading-relaxed">
+                  <span className="font-medium">Peers:</span> {vm.models.multiples.peerTickers.join(', ')}
+                </p>
+              )}
             </div>
           )}
         </div>
