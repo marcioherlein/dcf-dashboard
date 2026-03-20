@@ -15,6 +15,7 @@ import ValuationMethods from '@/components/stock/ValuationMethods'
 import FinancialStatements from '@/components/stock/FinancialStatements'
 import FinancialScores from '@/components/stock/FinancialScores'
 import OwnershipPanel from '@/components/stock/OwnershipPanel'
+import TabNav, { type TabId } from '@/components/stock/TabNav'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
@@ -84,14 +85,10 @@ interface FinancialsData {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   valuationMethods?: any
   scores?: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    piotroski: any
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    altman: any
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    beneish: any | null
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    roic: any
+    piotroski: import('@/lib/dcf/calculateScores').PiotroskiResult
+    altman: import('@/lib/dcf/calculateScores').AltmanResult | null
+    beneish: import('@/lib/dcf/calculateScores').BeneishResult | null
+    roic: import('@/lib/dcf/calculateScores').ROICResult
   }
   ownership?: {
     insiderPct: number | null
@@ -144,6 +141,7 @@ export default function StockPage() {
   const [waccOverride, setWaccOverride] = useState<number | null>(null)
   const [terminalGOverride, setTerminalGOverride] = useState<number | null>(null)
   const [isDark, setIsDark] = useState(false)
+  const [activeTab, setActiveTab] = useState<TabId>('summary')
 
   // Persist theme preference
   useEffect(() => {
@@ -163,6 +161,7 @@ export default function StockPage() {
     setError('')
     setWaccOverride(null)
     setTerminalGOverride(null)
+    setActiveTab('summary')
     fetch(`/api/financials?ticker=${ticker}`)
       .then((r) => r.json())
       .then((d) => {
@@ -253,7 +252,8 @@ export default function StockPage() {
           )}
 
           {data && !loading && (
-            <div className="space-y-4">
+            <div>
+              {/* Always-visible price header */}
               <PriceHeader
                 ticker={data.ticker}
                 companyName={data.companyName}
@@ -270,90 +270,109 @@ export default function StockPage() {
                 analystRec={data.analystRecommendation}
               />
 
-              <PriceChart
-                ticker={ticker}
-                isDark={isDark}
-                fcffFairValue={data.fairValue.fairValuePerShare}
-                triangulatedFairValue={data.valuationMethods?.triangulatedFairValue}
-                analystTarget={data.quote.analystTargetMean}
-              />
+              {/* Tab navigation — sticky below main nav */}
+              <div className="-mx-4 sm:-mx-6 lg:-mx-8 mt-4">
+                <TabNav activeTab={activeTab} onChange={setActiveTab} />
+              </div>
 
-              {data.ratings && <RatingsPanel ratings={data.ratings} />}
-
-              {data.scores && <FinancialScores scores={data.scores} />}
-
-              {(data.businessProfile.description || data.historicalRevenues.length >= 2) && (
-                <BusinessModel
-                  businessProfile={data.businessProfile}
-                  historicalRevenues={data.historicalRevenues}
+              {/* ── Summary ── */}
+              <div className={`pt-4 space-y-4 ${activeTab === 'summary' ? 'block' : 'hidden'}`}>
+                <PriceChart
                   ticker={ticker}
                   isDark={isDark}
-                  incomeStatement={data.financialStatements?.incomeStatement}
-                  cashFlow={data.financialStatements?.cashFlow}
+                  fcffFairValue={data.fairValue.fairValuePerShare}
+                  triangulatedFairValue={data.valuationMethods?.triangulatedFairValue}
+                  analystTarget={data.quote.analystTargetMean}
                 />
-              )}
+                {data.ratings && <RatingsPanel ratings={data.ratings} />}
+              </div>
 
-              <WACCBreakdown
-                wacc={data.wacc}
-                onWACCChange={(w) => setWaccOverride(w)}
-              />
+              {/* ── Financials ── */}
+              <div className={`pt-4 space-y-4 ${activeTab === 'financials' ? 'block' : 'hidden'}`}>
+                {data.financialStatements && (
+                  <FinancialStatements
+                    incomeStatement={data.financialStatements.incomeStatement}
+                    balanceSheet={data.financialStatements.balanceSheet}
+                    cashFlow={data.financialStatements.cashFlow}
+                    currency={currency}
+                    cagr={data.cagr}
+                  />
+                )}
+                {(data.businessProfile.description || data.historicalRevenues.length >= 2) && (
+                  <BusinessModel
+                    businessProfile={data.businessProfile}
+                    historicalRevenues={data.historicalRevenues}
+                    ticker={ticker}
+                    isDark={isDark}
+                    incomeStatement={data.financialStatements?.incomeStatement}
+                    cashFlow={data.financialStatements?.cashFlow}
+                  />
+                )}
+              </div>
 
-              {data.cagrAnalysis && (
-                <CAGRAnalysis
-                  cagrAnalysis={data.cagrAnalysis}
-                  isNegativeFCF={data.isNegativeFCF ?? false}
-                  growthModel={data.growthModel}
-                  terminalG={data.terminalG}
-                />
-              )}
-
-              <DCFModel
-                projections={data.dcf.projections}
-                terminalValue={data.dcf.terminalValue}
-                terminalValueDiscounted={data.dcf.terminalValueDiscounted}
-                sumPV={data.dcf.sumPV}
-                ev={data.dcf.ev}
-                fairValue={data.fairValue}
-                wacc={waccOverride ?? data.wacc.wacc}
-                cagr={data.cagr}
-                terminalG={data.terminalG}
-                scenarios={data.scenarios}
-                baseFCF={data.baseFCF}
-                terminalGOverride={terminalGOverride}
-                onTerminalGChange={setTerminalGOverride}
-                growthModel={data.growthModel}
-                yearlyGrowthRates={data.dcf.yearlyGrowthRates}
-              />
-
-              {data.valuationMethods && (
-                <ValuationMethods
-                  valuationMethods={data.valuationMethods}
-                  currency={currency}
-                />
-              )}
-
-              {data.financialStatements && (
-                <FinancialStatements
-                  incomeStatement={data.financialStatements.incomeStatement}
-                  balanceSheet={data.financialStatements.balanceSheet}
-                  cashFlow={data.financialStatements.cashFlow}
-                  currency={currency}
+              {/* ── Valuation ── */}
+              <div className={`pt-4 space-y-4 ${activeTab === 'valuation' ? 'block' : 'hidden'}`}>
+                {data.valuationMethods && (
+                  <ValuationMethods
+                    valuationMethods={data.valuationMethods}
+                    currency={currency}
+                  />
+                )}
+                <DCFModel
+                  projections={data.dcf.projections}
+                  terminalValue={data.dcf.terminalValue}
+                  terminalValueDiscounted={data.dcf.terminalValueDiscounted}
+                  sumPV={data.dcf.sumPV}
+                  ev={data.dcf.ev}
+                  fairValue={data.fairValue}
+                  wacc={waccOverride ?? data.wacc.wacc}
                   cagr={data.cagr}
+                  terminalG={data.terminalG}
+                  scenarios={data.scenarios}
+                  baseFCF={data.baseFCF}
+                  terminalGOverride={terminalGOverride}
+                  onTerminalGChange={setTerminalGOverride}
+                  growthModel={data.growthModel}
+                  yearlyGrowthRates={data.dcf.yearlyGrowthRates}
                 />
-              )}
+                <WACCBreakdown
+                  wacc={data.wacc}
+                  onWACCChange={(w) => setWaccOverride(w)}
+                />
+                {data.cagrAnalysis && (
+                  <CAGRAnalysis
+                    cagrAnalysis={data.cagrAnalysis}
+                    isNegativeFCF={data.isNegativeFCF ?? false}
+                    growthModel={data.growthModel}
+                    terminalG={data.terminalG}
+                  />
+                )}
+              </div>
 
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <NewsPanel ticker={ticker} />
+              {/* ── Quality ── */}
+              <div className={`pt-4 space-y-4 ${activeTab === 'quality' ? 'block' : 'hidden'}`}>
+                {data.scores && <FinancialScores scores={data.scores} />}
+              </div>
+
+              {/* ── Ownership ── */}
+              <div className={`pt-4 space-y-4 ${activeTab === 'ownership' ? 'block' : 'hidden'}`}>
+                {data.ownership && <OwnershipPanel ownership={data.ownership} />}
                 <InsiderTable ticker={ticker} />
               </div>
 
-              {data.ownership && <OwnershipPanel ownership={data.ownership} />}
+              {/* ── News ── */}
+              <div className={`pt-4 space-y-4 ${activeTab === 'news' ? 'block' : 'hidden'}`}>
+                <NewsPanel ticker={ticker} />
+              </div>
 
-              <ValuationHistory
-                ticker={ticker}
-                onSave={handleSave}
-                saving={saving}
-              />
+              {/* Always-visible save/history */}
+              <div className="pt-4">
+                <ValuationHistory
+                  ticker={ticker}
+                  onSave={handleSave}
+                  saving={saving}
+                />
+              </div>
             </div>
           )}
         </div>

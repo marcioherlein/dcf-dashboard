@@ -128,9 +128,9 @@ export function calculateAltman(
   bs: any,
   inc: any,
   marketCapRaw: number,   // in same raw currency units as balance sheet (not millions)
-): AltmanResult {
-  const ta = (bs.totalAssets ?? 1) as number
-  if (ta === 0) return { zScore: 0, zone: 'Grey', components: { x1: 0, x2: 0, x3: 0, x4: 0, x5: 0 } }
+): AltmanResult | null {
+  const ta = (bs.totalAssets ?? 0) as number
+  if (ta <= 0) return null
 
   const ca = (bs.totalCurrentAssets ?? 0) as number
   const cl = (bs.totalCurrentLiabilities ?? 0) as number
@@ -138,8 +138,8 @@ export function calculateAltman(
   const tl = (bs.totalLiab ?? bs.totalLiabilities ?? 0) as number
   const rev = (inc.totalRevenue ?? 0) as number
 
-  // EBIT: use ebit field first, then operatingIncome, then fallback
-  const ebit = (inc.ebit ?? inc.operatingIncome ?? inc.totalRevenue ?? 0) as number
+  // EBIT: use ebit field first, then operatingIncome — do NOT fall back to totalRevenue
+  const ebit = (inc.ebit ?? inc.operatingIncome ?? 0) as number
 
   const x1 = (ca - cl) / ta
   const x2 = re / ta
@@ -148,6 +148,7 @@ export function calculateAltman(
   const x5 = rev / ta
 
   const zScore = 1.2 * x1 + 1.4 * x2 + 3.3 * x3 + 0.6 * x4 + 1.0 * x5
+  if (!isFinite(zScore) || zScore > 50 || zScore < -20) return null
   const rounded = Math.round(zScore * 100) / 100
   const zone: AltmanResult['zone'] = rounded >= 3.0 ? 'Safe' : rounded >= 1.8 ? 'Grey' : 'Distress'
 
@@ -184,8 +185,9 @@ export function calculateBeneish(
   const rev1 = (inc1.totalRevenue ?? 0) as number
   if (rev0 === 0 || rev1 === 0) return null
 
-  const ta0 = (bs0.totalAssets ?? 1) as number
-  const ta1 = (bs1.totalAssets ?? 1) as number
+  const ta0 = (bs0.totalAssets ?? 0) as number
+  const ta1 = (bs1.totalAssets ?? 0) as number
+  if (ta0 <= 0 || ta1 <= 0) return null
 
   // Receivables
   const rec0 = (bs0.netReceivables ?? bs0.accountsReceivable ?? 0) as number
@@ -271,6 +273,7 @@ export function calculateBeneish(
     + 4.679 * tata
     - 0.327 * lvgi
 
+  if (!isFinite(mScore) || mScore > 50 || mScore < -50) return null
   const rounded = Math.round(mScore * 100) / 100
   const flag: BeneishResult['flag'] =
     rounded <= -1.78 ? 'Clean' : rounded <= -1.50 ? 'Warning' : 'Manipulator'
@@ -297,7 +300,7 @@ export function calculateROIC(
 ): ROICResult {
   const toM = (n: number) => n / 1e6 * fxRate
 
-  const opIncome = (inc.ebit ?? inc.operatingIncome ?? 0) as number
+  const opIncome = (inc.ebit ?? inc.operatingIncome ?? inc.operatingIncomeBeforeDepreciation ?? inc.incomeBeforeTax ?? 0) as number
   const nopat = toM(opIncome) * (1 - taxRate)
 
   function investedCapital(bs: any): number {
