@@ -78,7 +78,14 @@ export async function GET(req: NextRequest) {
 
     // Balance sheet items — convert to quote currency
     const bs = fin.balanceSheetHistory?.balanceSheetStatements?.[0] ?? {}
-    const cashM = ((bs.cash ?? bs.cashAndCashEquivalents ?? 0) as number) / 1e6 * fxRate
+    const cashM = ((
+      bs.cash
+      ?? bs.cashAndCashEquivalents
+      ?? bs.cashAndShortTermInvestments
+      ?? bs.cashCashEquivalentsAndShortTermInvestments
+      ?? bs.cashAndCashEquivalentsAtCarryingValue
+      ?? 0
+    ) as number) / 1e6 * fxRate
 
     // Detect financial sector here for balance sheet treatment
     const isBankOrInsurer = /bank|insurance|financ|fintech|payment|credit|lending|capital market|asset management|brokerage/i.test(
@@ -92,7 +99,7 @@ export async function GET(req: NextRequest) {
     // Extend fallback chains to catch all known variants.
     const rawDebtM = isBankOrInsurer
       ? ((bs.longTermDebt ?? bs.longTermDebtNoncurrent ?? bs.longTermDebtAndCapitalLeaseObligation ?? bs.totalDebt ?? 0) as number) / 1e6 * fxRate
-      : ((bs.totalDebt ?? bs.longTermDebt ?? bs.longTermDebtAndCapitalLeaseObligation ?? bs.totalLongTermDebt ?? bs.currentDebt ?? 0) as number) / 1e6 * fxRate
+      : ((bs.totalDebt ?? bs.longTermDebt ?? bs.longTermDebtAndCapitalLeaseObligation ?? bs.totalLongTermDebt ?? bs.shortLongTermDebtTotal ?? bs.longTermDebtTotal ?? bs.currentDebt ?? 0) as number) / 1e6 * fxRate
     // Safety cap: debt should not exceed 3× market cap (prevents extreme leverage edge cases)
     const debtM = marketCapM > 0 ? Math.min(rawDebtM, marketCapM * 3) : rawDebtM
 
@@ -367,10 +374,15 @@ export async function GET(req: NextRequest) {
     const isHistoricalRows = isHistorical.map((s: any) => {
       const yr = String(new Date(s.endDate).getFullYear())
       const revRaw = nonzero(s.totalRevenue)
-      const gpRaw  = nonzero(s.grossProfit)
+      // Gross profit: use direct field or compute Revenue − COGS
+      const gpDirect = nonzero(s.grossProfit)
+      const gpComputed = (s.totalRevenue != null && (s.costOfRevenue ?? s.costOfGoodsSold) != null)
+        ? s.totalRevenue - (s.costOfRevenue ?? s.costOfGoodsSold ?? 0)
+        : null
+      const gpRaw = gpDirect ?? nonzero(gpComputed)
       const ebitRaw = nonzero(s.ebit ?? s.operatingIncome)
       // EBITDA: prefer Yahoo's field, else compute EBIT + D&A
-      const ebitdaRaw = nonzero(s.ebitda) ??
+      const ebitdaRaw = nonzero(s.ebitda) ?? nonzero(s.normalizedEbitda) ??
         (ebitRaw != null && depreciationByYear[yr] ? ebitRaw + depreciationByYear[yr] * 1e6 : null)
       return {
         year: yr,
@@ -413,7 +425,10 @@ export async function GET(req: NextRequest) {
 
     const bsHistoricalRows = bsHistorical.map((s: any) => ({
       year: String(new Date(s.endDate).getFullYear()),
-      cash: (s.cash ?? s.cashAndCashEquivalents) != null ? ((s.cash ?? s.cashAndCashEquivalents) as number) / 1e6 * fxRate : null,
+      cash: (() => {
+        const v = s.cash ?? s.cashAndCashEquivalents ?? s.cashAndShortTermInvestments ?? s.cashCashEquivalentsAndShortTermInvestments ?? s.cashAndCashEquivalentsAtCarryingValue
+        return v != null ? (v as number) / 1e6 * fxRate : null
+      })(),
       totalCurrentAssets: s.totalCurrentAssets != null ? (s.totalCurrentAssets as number) / 1e6 * fxRate : null,
       totalAssets: s.totalAssets != null ? (s.totalAssets as number) / 1e6 * fxRate : null,
       longTermDebt: s.longTermDebt != null ? (s.longTermDebt as number) / 1e6 * fxRate : null,
@@ -472,7 +487,7 @@ export async function GET(req: NextRequest) {
     const cfHistorical = rawCFHistory.slice(-4).reverse()
 
     const avgCapexM = cfHistorical.length > 0
-      ? cfHistorical.reduce((s: number, s2: any) => s + ((s2.capitalExpenditures ?? 0) as number) / 1e6 * fxRate, 0) / cfHistorical.length
+      ? cfHistorical.reduce((s: number, s2: any) => s + ((s2.capitalExpenditures ?? s2.capitalExpenditure ?? s2.purchaseOfPlantPropertyEquipment ?? 0) as number) / 1e6 * fxRate, 0) / cfHistorical.length
       : 0
     const avgDivPaidM = cfHistorical.length > 0
       ? cfHistorical.reduce((s: number, s2: any) => s + ((s2.dividendsPaid ?? 0) as number) / 1e6 * fxRate, 0) / cfHistorical.length
@@ -480,11 +495,11 @@ export async function GET(req: NextRequest) {
 
     const cfHistoricalRows = cfHistorical.map((s: any) => {
       // Yahoo Finance / yahoo-finance2 uses varying field names across versions and company types
-      const rawOpCF = s.totalCashFromOperatingActivities ?? s.operatingCashflow ?? s.netCashProvidedByOperatingActivities
-      const rawCapex = s.capitalExpenditures ?? s.purchaseOfPlantPropertyEquipment
-      const rawInvCF = s.totalCashflowsFromInvestingActivities ?? s.totalCashFromInvestingActivities ?? s.netCashUsedForInvestingActivities
-      const rawFinCF = s.totalCashFromFinancingActivities ?? s.netCashUsedProvidedByFinancingActivities
-      const rawDivPaid = s.dividendsPaid ?? s.paymentOfDividends
+      const rawOpCF = s.operatingCashflow ?? s.totalCashFromOperatingActivities ?? s.netCashProvidedByOperatingActivities ?? s.cashFromOperations ?? s.cashGeneratedFromOperations
+      const rawCapex = s.capitalExpenditures ?? s.capitalExpenditure ?? s.purchaseOfPlantPropertyEquipment ?? s.paymentsToAcquirePropertyPlantAndEquipment
+      const rawInvCF = s.totalCashflowsFromInvestingActivities ?? s.totalCashFromInvestingActivities ?? s.netCashUsedForInvestingActivities ?? s.cashUsedForInvestingActivities
+      const rawFinCF = s.totalCashFromFinancingActivities ?? s.netCashUsedProvidedByFinancingActivities ?? s.cashUsedProvidedByFinancingActivities
+      const rawDivPaid = s.dividendsPaid ?? s.paymentOfDividends ?? s.paymentsForDividends
 
       const opCF   = rawOpCF  != null ? (rawOpCF  as number) / 1e6 * fxRate : null
       const capex  = rawCapex != null ? (rawCapex as number) / 1e6 * fxRate : null

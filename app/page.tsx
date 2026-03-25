@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import MarketMonitor from '@/components/home/MarketMonitor'
 
 interface SearchResult {
   symbol: string
@@ -215,6 +216,9 @@ export default function HomePage() {
           </svg>
         </div>
       </section>
+
+      {/* ── Market Monitor ────────────────────────────────────────────────── */}
+      <MarketMonitor />
 
       {/* ── The right model for every company ─────────────────────────────── */}
       <section className="px-4 py-32">
