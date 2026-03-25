@@ -1,16 +1,6 @@
 'use client'
 import { useState } from 'react'
-import dynamic from 'next/dynamic'
 import type { MultiplesResult, MultipleEstimate, BenchmarkSource } from '@/lib/dcf/calculateMultiples'
-
-const BarChart = dynamic(() => import('recharts').then((m) => m.BarChart), { ssr: false })
-const Bar = dynamic(() => import('recharts').then((m) => m.Bar), { ssr: false })
-const XAxis = dynamic(() => import('recharts').then((m) => m.XAxis), { ssr: false })
-const YAxis = dynamic(() => import('recharts').then((m) => m.YAxis), { ssr: false })
-const Cell = dynamic(() => import('recharts').then((m) => m.Cell), { ssr: false })
-const ReferenceLine = dynamic(() => import('recharts').then((m) => m.ReferenceLine), { ssr: false })
-const Tooltip = dynamic(() => import('recharts').then((m) => m.Tooltip), { ssr: false })
-const ResponsiveContainer = dynamic(() => import('recharts').then((m) => m.ResponsiveContainer), { ssr: false })
 import type { DDMResult } from '@/lib/dcf/calculateDDM'
 import type { FCFEResult } from '@/lib/dcf/calculateFCFE'
 import type { CompanyType } from '@/lib/dcf/detectCompanyType'
@@ -272,56 +262,63 @@ export default function ValuationMethods({ valuationMethods: vm, currency = '$' 
         const chartData = applicableMultiples
           .filter((e) => e.sectorMedian > 0 && e.actualValue > 0)
           .map((e) => {
-            const ratio = e.actualValue / e.sectorMedian
-            const pct = Math.round((ratio - 1) * 1000) / 10
-            return {
-              name: e.multiple,
-              pct,
-              fill: pct <= 0 ? '#10b981' : '#ef4444',
-            }
+            const pct = Math.round((e.actualValue / e.sectorMedian - 1) * 1000) / 10
+            return { name: e.multiple, pct, actual: e.actualValue, median: e.sectorMedian }
           })
 
         if (chartData.length < 2) return null
+
+        // Visual cap: ±60% so extreme values don't crush other bars
+        const CAP = 60
         return (
           <div className="mb-4 rounded-xl border border-gray-100 dark:border-white/8 bg-gray-50 dark:bg-white/5 px-4 py-3">
-            <p className="mb-2 text-xs font-semibold text-gray-500 dark:text-white/40">vs Peer Median (% premium/discount)</p>
-            <ResponsiveContainer width="100%" height={90}>
-              <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 40, left: 0, bottom: 0 }}>
-                <XAxis
-                  type="number"
-                  tick={{ fontSize: 9, fill: '#9ca3af' }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(v) => `${v > 0 ? '+' : ''}${v}%`}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  tick={{ fontSize: 10, fill: '#9ca3af' }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={60}
-                />
-                <ReferenceLine x={0} stroke="#d1d5db" strokeDasharray="3 3" strokeWidth={1} />
-                <Tooltip
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  formatter={(v: any) => [typeof v === 'number' ? `${v > 0 ? '+' : ''}${v.toFixed(1)}% vs median` : v]}
-                  contentStyle={{
-                    background: 'rgba(15,15,15,0.9)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '8px',
-                    fontSize: '11px',
-                    color: '#fff',
-                  }}
-                />
-                <Bar dataKey="pct" radius={[0, 3, 3, 0]}>
-                  {chartData.map((entry, i) => (
-                    <Cell key={i} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-            <p className="mt-1 text-[9px] text-gray-300 dark:text-white/20">Green = cheaper than peers · Red = more expensive</p>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold text-gray-500 dark:text-white/40">vs Peer Median</p>
+              <span className="text-[10px] text-gray-400 dark:text-white/25">
+                <span className="inline-block w-2 h-2 rounded-sm bg-emerald-500 mr-1" />cheaper
+                <span className="inline-block w-2 h-2 rounded-sm bg-red-400 ml-3 mr-1" />pricier
+              </span>
+            </div>
+            <div className="space-y-2">
+              {chartData.map((d) => {
+                const clamped = Math.max(-CAP, Math.min(CAP, d.pct))
+                const cheap = d.pct <= 0
+                // Bar position: center line is at 50% of the track
+                const barLeft  = cheap ? 50 + clamped / CAP * 50 : 50
+                const barWidth = Math.abs(clamped) / CAP * 50
+                const overflowed = Math.abs(d.pct) > CAP
+                return (
+                  <div key={d.name} className="flex items-center gap-3 text-xs">
+                    {/* Label */}
+                    <span className="w-16 shrink-0 font-medium text-gray-600 dark:text-white/50">{d.name}</span>
+                    {/* Actual vs median */}
+                    <span className="w-28 shrink-0 text-[10px] text-gray-400 dark:text-white/30 tabular-nums">
+                      {d.actual.toFixed(1)}x vs {d.median.toFixed(1)}x
+                    </span>
+                    {/* Diverging bar track */}
+                    <div className="relative flex-1 h-5 rounded bg-gray-100 dark:bg-white/8 overflow-hidden">
+                      {/* Center line */}
+                      <div className="absolute left-1/2 top-0 h-full w-px bg-gray-300 dark:bg-white/20" />
+                      {/* Bar */}
+                      <div
+                        className={`absolute top-1/2 -translate-y-1/2 h-3 rounded-sm ${cheap ? 'bg-emerald-500' : 'bg-red-400'}`}
+                        style={{ left: `${barLeft}%`, width: `${barWidth}%` }}
+                      />
+                    </div>
+                    {/* Percentage */}
+                    <span className={`w-16 shrink-0 text-right font-semibold tabular-nums text-[11px] ${cheap ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
+                      {d.pct > 0 ? '+' : ''}{d.pct.toFixed(1)}%
+                      {overflowed && <span className="text-[9px] text-gray-400 dark:text-white/25 ml-0.5">*</span>}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+            <div className="mt-2 flex items-center justify-between text-[9px] text-gray-300 dark:text-white/20">
+              <span>−{CAP}%</span>
+              <span>0%</span>
+              <span>+{CAP}%</span>
+            </div>
           </div>
         )
       })()}
