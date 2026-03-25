@@ -66,7 +66,11 @@ export async function GET(req: NextRequest) {
     }
 
     // DCF (FCFF)
-    const terminalG = 0.01
+    // Terminal growth aligned with Damodaran: should approximate long-run nominal GDP growth.
+    // High-growth companies (>15% CAGR) → 2.5% (emerging/global nominal GDP)
+    // Standard companies (5–15% CAGR) → 2.0% (developed market nominal GDP)
+    // Mature / low-growth (<5%) → 1.5% (conservative / real GDP)
+    const terminalG = cagr > 0.15 ? 0.025 : cagr > 0.05 ? 0.020 : 0.015
     // Growth model selection (Damodaran): three-stage when growth >> stable (CAGR > 15% or pre-profit).
     // companyType is detected later; cagr + isNegativeFCF covers all practical cases before that.
     const growthModel = (cagr > 0.15 || isNegativeFCF) ? 'three-stage' as const : 'two-stage' as const
@@ -84,9 +88,11 @@ export async function GET(req: NextRequest) {
     // fd.totalDebt and bs.totalDebt for banks can include deposit liabilities or
     // interbank borrowings that inflate D/V, collapse WACC, and produce a gigantic
     // EV that is then wiped out by subtracting that same "debt" → negative equity.
+    // Yahoo Finance uses inconsistent field names across company types and regions.
+    // Extend fallback chains to catch all known variants.
     const rawDebtM = isBankOrInsurer
-      ? ((bs.longTermDebt ?? bs.longTermDebtNoncurrent ?? bs.totalDebt ?? 0) as number) / 1e6 * fxRate
-      : ((bs.totalDebt ?? bs.longTermDebt ?? 0) as number) / 1e6 * fxRate
+      ? ((bs.longTermDebt ?? bs.longTermDebtNoncurrent ?? bs.longTermDebtAndCapitalLeaseObligation ?? bs.totalDebt ?? 0) as number) / 1e6 * fxRate
+      : ((bs.totalDebt ?? bs.longTermDebt ?? bs.longTermDebtAndCapitalLeaseObligation ?? bs.totalLongTermDebt ?? bs.currentDebt ?? 0) as number) / 1e6 * fxRate
     // Safety cap: debt should not exceed 3× market cap (prevents extreme leverage edge cases)
     const debtM = marketCapM > 0 ? Math.min(rawDebtM, marketCapM * 3) : rawDebtM
 
@@ -131,7 +137,16 @@ export async function GET(req: NextRequest) {
       debtM,
       historicalCagr3y: cagrAnalysis.historicalCagr3y,
       analystGrowth1y: cagrAnalysis.analystEstimate1y,
-      earningsGrowth: (fd.earningsGrowth ?? null) as number | null,
+      // Suppress TTM earnings growth from the rating SCORE when the company has strong
+      // historical revenue CAGR (>15%) but negative TTM EPS — common for high-growth
+      // companies hit by FX headwinds, fintech loan-loss provisions, or one-time charges.
+      // earningsGrowthDisplay preserves the raw value so the UI still shows the actual number.
+      earningsGrowth: (() => {
+        const eg = (fd.earningsGrowth ?? null) as number | null
+        if (eg !== null && eg < 0 && cagrAnalysis.historicalCagr3y > 0.15) return null
+        return eg
+      })(),
+      earningsGrowthDisplay: (fd.earningsGrowth ?? null) as number | null,
       beta: waccResult.inputs.beta,
       marketCapB: (q.marketCap ?? 0) / 1e9,
       upsidePct: fvResult.upsidePct,

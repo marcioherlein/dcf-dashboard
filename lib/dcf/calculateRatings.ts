@@ -171,7 +171,8 @@ export function calculateRatings(input: {
   debtM: number
   historicalCagr3y: number
   analystGrowth1y: number
-  earningsGrowth: number | null
+  earningsGrowth: number | null          // used for scoring (may be null to suppress distorted TTM)
+  earningsGrowthDisplay?: number | null  // raw value shown in UI; falls back to earningsGrowth
   beta: number
   marketCapB: number
   upsidePct: number
@@ -179,7 +180,10 @@ export function calculateRatings(input: {
   const { grossMargin, netMargin, fcfMargin, operatingMargin, roe, roa,
           currentRatio, quickRatio, cashM, debtM,
           historicalCagr3y, analystGrowth1y, earningsGrowth,
+          earningsGrowthDisplay,
           beta, marketCapB, upsidePct } = input
+  // Raw TTM value for display — may differ from earningsGrowth (which is scoring-adjusted)
+  const egDisplay = earningsGrowthDisplay !== undefined ? earningsGrowthDisplay : earningsGrowth
 
   // ── Profitability ──
   const profScores = [
@@ -252,7 +256,7 @@ export function calculateRatings(input: {
     metrics: [
       { name: '3Y Revenue CAGR', value: pct(historicalCagr3y), score: clamp(scoreGrowthRate(historicalCagr3y)) },
       { name: 'Analyst Revenue +1Y', value: pct(analystGrowth1y), score: clamp(scoreGrowthRate(analystGrowth1y)) },
-      { name: 'Earnings Growth (TTM)', value: earningsGrowth !== null ? pct(earningsGrowth) : 'N/A', score: earningsGrowth !== null ? clamp(scoreGrowthRate(earningsGrowth)) : 2.5 },
+      { name: 'Earnings Growth (TTM)', value: egDisplay !== null ? pct(egDisplay) : 'N/A', score: earningsGrowth !== null ? clamp(scoreGrowthRate(earningsGrowth)) : 2.5 },
     ],
     summary: growScore >= 4
       ? 'Exceptional growth trajectory with strong analyst conviction.'

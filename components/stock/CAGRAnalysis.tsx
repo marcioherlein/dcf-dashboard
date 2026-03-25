@@ -37,12 +37,24 @@ export default function CAGRAnalysis({ cagrAnalysis, isNegativeFCF, growthModel 
         </span>
       </div>
 
-      {isNegativeFCF && (
-        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400">
-          <span className="font-semibold">⚠ Negative free cash flow detected.</span>{' '}
-          Model uses operating cash flow or revenue base as proxy.
-        </div>
-      )}
+      {isNegativeFCF && (() => {
+        const ocfProxy = drivers.some((d) => d.toLowerCase().includes('operating cash flow positive'))
+        return (
+          <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400">
+            {ocfProxy ? (
+              <>
+                <span className="font-semibold">ℹ FCF negative (growth investments).</span>{' '}
+                Operating cash flow is positive — FCF is suppressed by capex or fintech lending flows. OCF × 0.6 used as distributable earnings proxy.
+              </>
+            ) : (
+              <>
+                <span className="font-semibold">⚠ Negative operating cash flow.</span>{' '}
+                Pre-profitability stage — model seeds FCF from revenue base (2% margin assumption).
+              </>
+            )}
+          </div>
+        )
+      })()}
 
       <div className="mb-4 overflow-x-auto">
         <table className="w-full text-sm">
