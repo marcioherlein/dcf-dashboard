@@ -1,11 +1,11 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenAI } from '@google/genai'
 import { writeFileSync, mkdirSync, readFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
 
 // Date in ART (UTC-3)
 const artNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }))
@@ -41,14 +41,17 @@ Then generate the complete Morning Brief HTML for War Day ${warDay}. Output ONLY
 
 console.log(`Generating brief for ${dateStr} (War Day ${warDay}, ${isPM ? 'Evening' : 'Morning'})...`)
 
-const model = genAI.getGenerativeModel({
+const response = await ai.models.generateContent({
   model: 'gemini-2.0-flash',
-  tools: [{ googleSearch: {} }],
-  systemInstruction: systemPrompt,
+  contents: userPrompt,
+  config: {
+    systemInstruction: systemPrompt,
+    tools: [{ googleSearch: {} }],
+    maxOutputTokens: 8192,
+  },
 })
 
-const result = await model.generateContent(userPrompt)
-let html = result.response.text().trim()
+let html = response.text.trim()
 
 // Strip markdown fences if Gemini wraps the output despite instructions
 if (html.startsWith('```')) {
