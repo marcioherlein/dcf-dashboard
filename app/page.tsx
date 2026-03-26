@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import MarketMonitor from '@/components/home/MarketMonitor'
+import MorningBrief from '@/components/home/MorningBrief'
 
 interface SearchResult {
   symbol: string
@@ -164,6 +165,9 @@ export default function HomePage() {
 
       {/* ── Market Monitor ────────────────────────────────────────────────── */}
       <MarketMonitor />
+
+      {/* ── Morning Brief ─────────────────────────────────────────────────── */}
+      <MorningBrief />
 
       {/* ── Footer ────────────────────────────────────────────────────────── */}
       <footer className="border-t border-white/5 px-4 py-8">
