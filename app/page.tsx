@@ -5,53 +5,59 @@ import MarketMonitor from '@/components/home/MarketMonitor'
 import MorningBrief from '@/components/home/MorningBrief'
 import Portfolio from '@/components/home/Portfolio'
 
-type Tab = 'brief' | 'portfolio'
+type Tab = 'brief' | 'valuation' | 'portfolio'
+
+const TABS: { id: Tab; icon: string; label: string }[] = [
+  { id: 'brief',     icon: '☀️', label: 'Morning Brief' },
+  { id: 'valuation', icon: '📊', label: 'Valuation'     },
+  { id: 'portfolio', icon: '💼', label: 'Portfolio'     },
+]
 
 export default function HomePage() {
   const [tab, setTab] = useState<Tab>('brief')
 
   return (
-    <div className="min-h-screen bg-black text-white" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif' }}>
-
+    <div
+      className="min-h-screen bg-[#080808] text-white"
+      style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif' }}
+    >
       <Header />
 
       {/* Tab bar */}
-      <div className="border-b border-white/8 bg-black">
-        <div className="mx-auto flex max-w-6xl gap-1 px-4">
-          <button
-            onClick={() => setTab('brief')}
-            className={`px-4 py-3 text-sm font-semibold transition-all border-b-2 ${
-              tab === 'brief'
-                ? 'border-white text-white'
-                : 'border-transparent text-white/40 hover:text-white/70'
-            }`}
-          >
-            ☀️ Morning Brief
-          </button>
-          <button
-            onClick={() => setTab('portfolio')}
-            className={`px-4 py-3 text-sm font-semibold transition-all border-b-2 ${
-              tab === 'portfolio'
-                ? 'border-white text-white'
-                : 'border-transparent text-white/40 hover:text-white/70'
-            }`}
-          >
-            💼 My Portfolio
-          </button>
+      <div className="sticky top-[53px] z-30 border-b border-white/[0.06] bg-[#080808]/95 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl px-4">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`relative flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-colors ${
+                tab === t.id
+                  ? 'text-white'
+                  : 'text-white/30 hover:text-white/55'
+              }`}
+            >
+              <span className="text-[15px] leading-none">{t.icon}</span>
+              <span>{t.label}</span>
+              {/* Active indicator */}
+              {tab === t.id && (
+                <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-t-full bg-white/90" />
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Market monitor — always visible */}
-      <MarketMonitor />
-
       {/* Tab content */}
-      {tab === 'brief' && <MorningBrief />}
-      {tab === 'portfolio' && <Portfolio />}
+      <main>
+        {tab === 'brief'     && <MorningBrief />}
+        {tab === 'valuation' && <MarketMonitor />}
+        {tab === 'portfolio' && <Portfolio />}
+      </main>
 
-      <footer className="border-t border-white/5 px-4 py-8">
-        <div className="mx-auto max-w-5xl flex flex-col items-center gap-2 text-center sm:flex-row sm:justify-between">
-          <p className="text-xs text-white/20">Educational use only — not investment advice.</p>
-          <p className="text-xs text-white/20">Data via Yahoo Finance · RF rate via FRED · Methodology: Damodaran</p>
+      <footer className="border-t border-white/[0.04] px-4 py-8">
+        <div className="mx-auto max-w-5xl flex flex-col items-center gap-1.5 text-center sm:flex-row sm:justify-between">
+          <p className="text-[11px] text-white/15">Educational use only — not investment advice.</p>
+          <p className="text-[11px] text-white/15">Data via Yahoo Finance · RF rate via FRED · Methodology: Damodaran</p>
         </div>
       </footer>
     </div>
