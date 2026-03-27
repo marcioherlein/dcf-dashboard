@@ -1,231 +1,214 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Morning Brief — War Day 28</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        /* War/escalation */    
-        .hdr{background: linear-gradient(135deg, #1e1b4b, #7f1d1d);padding:24px 28px;border-radius:0 0 20px 20px;margin-bottom:22px;color:#fff}
-        *{box-sizing:border-box;margin:0;padding:0}
-        body{font-family:'Inter',-apple-system,sans-serif;background:#f8fafc;color:#0f172a;-webkit-font-smoothing:antialiased}
-        .wrap{max-width:900px;margin:0 auto;padding:0 18px 60px}
-        .hdr-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px}
-        .hdr-title{font-size:28px;font-weight:700;letter-spacing:-.03em}
-        .hdr-date{font-size:13px;opacity:.75;margin-top:3px}
-        .badge{font-size:11px;font-weight:600;padding:5px 12px;border-radius:9999px;white-space:nowrap}
-        .badge-plan,.badge-talks{background:#3b82f6;color:#fff}
-        .badge-oil{background:#d97706;color:#1c1917}
-        .badge-warn{background:#ef4444;color:#fff}
-        .badge-green{background:#22c55e;color:#052e16}
-        .hdr-sub{margin-top:16px;font-size:14px;line-height:1.7;opacity:.9}
-        .sec-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9ca3af;margin:28px 0 12px;padding-bottom:8px;border-bottom:2px solid #f3f4f6}
-        .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
-        .g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:18px}
-        @media(max-width:680px){.g2,.g4{grid-template-columns:1fr 1fr}}
-        @media(max-width:420px){.g2,.g4{grid-template-columns:1fr}}
-        .card{background:#fff;border-radius:14px;padding:18px;border:1px solid rgba(0,0,0,.07);box-shadow:0 1px 4px rgba(0,0,0,.05);margin-bottom:14px}
-        .card-title{font-size:13px;font-weight:600;color:#111827;margin-bottom:10px}
-        .card-body{font-size:13px;color:#4b5563;line-height:1.75}
-        .card-body strong{color:#111827;font-weight:600}.card-body a{color:#2563eb;text-decoration:none;font-weight:500;font-size:12px}
-        .tc{background:#fff;border-radius:12px;padding:14px 16px;border:1px solid rgba(0,0,0,.07);border-top:3px solid var(--ac,#e5e7eb)}
-        .tc.cred{--ac:#ef4444}.tc.cgreen{--ac:#22c55e}.tc.cblue{--ac:#3b82f6}.tc.camber{--ac:#f59e0b}.tc.cgold{--ac:#d97706}
-        .tl{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#9ca3af;margin-bottom:6px}
-        .tv{font-size:20px;font-weight:700;color:#111827;letter-spacing:-.04em;line-height:1}
-        .tc-ch{font-size:12px;font-weight:500;margin-top:5px}
-        .tc-note{font-size:11px;color:#9ca3af;margin-top:3px;line-height:1.4}
-        .up{color:#16a34a}.dn{color:#dc2626}.fl{color:#6b7280}
-        .alert{display:flex;gap:10px;padding:13px 16px;border-radius:11px;margin-bottom:14px;align-items:flex-start;font-size:13px;line-height:1.7}
-        .a-red{background:#fef2f2;border:1px solid #fecaca;color:#374151}
-        .a-amber{background:#fffbeb;border:1px solid #fde68a;color:#374151}
-        .a-green{background:#f0fdf4;border:1px solid #bbf7d0;color:#374151}
-        .a-blue{background:#eff6ff;border:1px solid #bfdbfe;color:#374151}
-        .a-dark{background:#1e1b4b;border:1px solid #4338ca;color:#e0e7ff}
-        .alert strong{color:#111827}.a-dark strong{color:#fff}
-        .alert a{color:#2563eb;text-decoration:none;font-weight:500;font-size:12px}.a-dark a{color:#93c5fd}
-        .geo{background:#fff;border-radius:14px;border:1px solid rgba(0,0,0,.07);overflow:hidden;margin-bottom:14px}
-        .geo-head{padding:13px 18px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;background:#fafafa}
-        .geo-head.blue{background:linear-gradient(135deg,#1c3a5e,#1e1b4b)}.geo-head.blue .geo-name{color:#bfdbfe}
-        .geo-head.war{background:linear-gradient(135deg,#1e1b4b,#7f1d1d)}.geo-head.war .geo-name{color:#e0e7ff}
-        .geo-head.green{background:linear-gradient(135deg,#065f46,#0f766e)}.geo-head.green .geo-name{color:#d1fae5}
-        .geo-name{font-size:13.5px;font-weight:700;color:#111827}
-        .geo-body{padding:14px 18px;font-size:13px;color:#4b5563;line-height:1.75}
-        .geo-body strong{color:#111827;font-weight:600}.geo-body a{color:#2563eb;text-decoration:none;font-weight:500}
-        .geo-dark-body{padding:14px 18px;font-size:13px;color:#bfdbfe;line-height:1.75;background:linear-gradient(135deg,#0c1a2e,#1e1b4b)}
-        .geo-dark-body strong{color:#e0e7ff;font-weight:600}.geo-dark-body a{color:#93c5fd;text-decoration:none;font-weight:500}
-        .geo-green-body{padding:14px 18px;font-size:13px;color:#a7f3d0;line-height:1.75;background:linear-gradient(135deg,#052e16,#064e3b)}
-        .geo-green-body strong{color:#d1fae5;font-weight:600}.geo-green-body a{color:#6ee7b7;text-decoration:none;font-weight:500}
-        .pill{font-size:11px;font-weight:600;padding:3px 10px;border-radius:9999px;white-space:nowrap}
-        .p-red{background:#fef2f2;color:#dc2626}.p-amber{background:#fffbeb;color:#d97706}
-        .p-green{background:#f0fdf4;color:#16a34a}.p-blue{background:#eff6ff;color:#1d4ed8}
-        .p-teal{background:#f0fdf4;color:#0f766e;border:1px solid #99f6e4}
-        .p-war{background:#1e1b4b;color:#e0e7ff;border:1px solid #4338ca}
-        .qs{background:#fff;border-radius:14px;padding:22px;border:1px solid rgba(0,0,0,.07);margin-bottom:14px}
-        .qs-title{font-size:14px;font-weight:700;color:#111827;margin-bottom:14px}
-        .metric{display:flex;justify-content:space-between;align-items:center;background:#f8fafc;border-radius:9px;padding:10px 14px;margin-bottom:7px;border:1px solid #f3f4f6}
-        .ml{font-size:13px;font-weight:500;color:#374151}
-        .mv{font-size:13px;font-weight:700}.mv.bad{color:#dc2626}.mv.ok{color:#d97706}.mv.good{color:#16a34a}
-        .rec{display:flex;gap:11px;padding:10px 0;border-bottom:1px solid #f3f4f6}.rec:last-child{border-bottom:none}
-        .rec-n{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-        .rec-body{flex:1;font-size:13px;color:#4b5563;line-height:1.7}
-        .rec-body strong{color:#111827}.rec-body a{color:#2563eb;text-decoration:none;font-size:12px;font-weight:500}
-        .scen{border-radius:10px;padding:12px 16px;margin-bottom:10px;font-size:13px;line-height:1.7;border:1px solid}
-        .scen-red{background:#fef2f2;border-color:#fecaca;color:#374151}.scen-red strong{color:#dc2626}
-        .scen-amber{background:#fffbeb;border-color:#fde68a;color:#374151}.scen-amber strong{color:#d97706}
-        .scen-green{background:#f0fdf4;border-color:#bbf7d0;color:#374151}.scen-green strong{color:#16a34a}
-        .reg{background:#fff;border-radius:14px;border:1px solid rgba(0,0,0,.07);overflow:hidden;margin-bottom:12px}
-        .reg-head{padding:12px 18px;background:#fafafa;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-        .reg-title{font-size:13px;font-weight:600;color:#111827;flex:1}
-        .reg-body{padding:13px 18px;font-size:13px;color:#4b5563;line-height:1.7}
-        .reg-body strong{color:#111827;font-weight:600}.reg-body a{color:#2563eb;text-decoration:none;font-weight:500}
-        .reg-foot{padding:9px 18px;border-top:1px solid #f3f4f6;display:flex;justify-content:space-between}
-        .dl{font-size:11px;font-weight:600;padding:3px 9px;border-radius:9999px}
-        .dl-r{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
-        .dl-a{background:#fffbeb;color:#d97706;border:1px solid #fde68a}
-        .sap-item{border-left:3px solid #2563eb;padding-left:16px;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid #f3f4f6}
-        .sap-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
-        .sap-item.red{border-left-color:#ef4444}.sap-item.amber{border-left-color:#f59e0b}.sap-item.green{border-left-color:#22c55e}
-        .sap-title{font-size:14px;font-weight:600;color:#111827;margin-bottom:7px}
-        .sap-body{font-size:13px;color:#4b5563;line-height:1.75}
-        .sap-body strong{color:#111827}.sap-body a{color:#2563eb;text-decoration:none;font-size:12px;font-weight:500}
-        .act-list{list-style:none}
-        .act-list li{display:flex;gap:10px;padding:7px 0;font-size:13px;color:#374151;line-height:1.65;border-bottom:1px solid #f9fafb}
-        .act-list li:last-child{border-bottom:none}.act-list li strong{color:#111827}
-        .dot{width:7px;height:7px;border-radius:50%;background:#2563eb;flex-shrink:0;margin-top:7px}
-        footer{text-align:center;padding:24px 0;font-size:11.5px;color:#9ca3af}
-        footer a{color:#6b7280;text-decoration:none}
-    </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',-apple-system,sans-serif;background:#f8fafc;color:#0f172a;-webkit-font-smoothing:antialiased}
+    .wrap{max-width:900px;margin:0 auto;padding:0 18px 60px}
+    .hdr{padding:24px 28px;border-radius:0 0 20px 20px;margin-bottom:22px;color:#fff;background:linear-gradient(135deg, #1e1b4b, #7f1d1d)}
+    .hdr-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px}
+    .hdr-title{font-size:28px;font-weight:700;letter-spacing:-.03em}
+    .hdr-date{font-size:13px;opacity:.75;margin-top:3px}
+    .badge{font-size:11px;font-weight:600;padding:5px 12px;border-radius:9999px;white-space:nowrap}
+    .badge-plan,.badge-talks{background:#3b82f6;color:#fff}
+    .badge-oil{background:#d97706;color:#1c1917}
+    .badge-warn{background:#ef4444;color:#fff}
+    .badge-green{background:#22c55e;color:#052e16}
+    .hdr-sub{margin-top:16px;font-size:14px;line-height:1.7;opacity:.9}
+    .sec-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9ca3af;margin:28px 0 12px;padding-bottom:8px;border-bottom:2px solid #f3f4f6}
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+    .g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:18px}
+    @media(max-width:680px){.g2,.g4{grid-template-columns:1fr 1fr}}
+    @media(max-width:420px){.g2,.g4{grid-template-columns:1fr}}
+    .card{background:#fff;border-radius:14px;padding:18px;border:1px solid rgba(0,0,0,.07);box-shadow:0 1px 4px rgba(0,0,0,.05);margin-bottom:14px}
+    .card-title{font-size:13px;font-weight:600;color:#111827;margin-bottom:10px}
+    .card-body{font-size:13px;color:#4b5563;line-height:1.75}
+    .card-body strong{color:#111827;font-weight:600}.card-body a{color:#2563eb;text-decoration:none;font-weight:500;font-size:12px}
+    .tc{background:#fff;border-radius:12px;padding:14px 16px;border:1px solid rgba(0,0,0,.07);border-top:3px solid var(--ac,#e5e7eb)}
+    .tc.cred{--ac:#ef4444}.tc.cgreen{--ac:#22c55e}.tc.cblue{--ac:#3b82f6}.tc.camber{--ac:#f59e0b}.tc.cgold{--ac:#d97706}
+    .tl{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#9ca3af;margin-bottom:6px}
+    .tv{font-size:20px;font-weight:700;color:#111827;letter-spacing:-.04em;line-height:1}
+    .tc-ch{font-size:12px;font-weight:500;margin-top:5px}
+    .tc-note{font-size:11px;color:#9ca3af;margin-top:3px;line-height:1.4}
+    .up{color:#16a34a}.dn{color:#dc2626}.fl{color:#6b7280}
+    .alert{display:flex;gap:10px;padding:13px 16px;border-radius:11px;margin-bottom:14px;align-items:flex-start;font-size:13px;line-height:1.7}
+    .a-red{background:#fef2f2;border:1px solid #fecaca;color:#374151}
+    .a-amber{background:#fffbeb;border:1px solid #fde68a;color:#374151}
+    .a-green{background:#f0fdf4;border:1px solid #bbf7d0;color:#374151}
+    .a-blue{background:#eff6ff;border:1px solid #bfdbfe;color:#374151}
+    .a-dark{background:#1e1b4b;border:1px solid #4338ca;color:#e0e7ff}
+    .alert strong{color:#111827}.a-dark strong{color:#fff}
+    .alert a{color:#2563eb;text-decoration:none;font-weight:500;font-size:12px}.a-dark a{color:#93c5fd}
+    .geo{background:#fff;border-radius:14px;border:1px solid rgba(0,0,0,.07);overflow:hidden;margin-bottom:14px}
+    .geo-head{padding:13px 18px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;background:#fafafa}
+    .geo-head.blue{background:linear-gradient(135deg,#1c3a5e,#1e1b4b)}.geo-head.blue .geo-name{color:#bfdbfe}
+    .geo-head.war{background:linear-gradient(135deg,#1e1b4b,#7f1d1d)}.geo-head.war .geo-name{color:#e0e7ff}
+    .geo-head.green{background:linear-gradient(135deg,#065f46,#0f766e)}.geo-head.green .geo-name{color:#d1fae5}
+    .geo-name{font-size:13.5px;font-weight:700;color:#111827}
+    .geo-body{padding:14px 18px;font-size:13px;color:#4b5563;line-height:1.75}
+    .geo-body strong{color:#111827;font-weight:600}.geo-body a{color:#2563eb;text-decoration:none;font-weight:500}
+    .geo-dark-body{padding:14px 18px;font-size:13px;color:#bfdbfe;line-height:1.75;background:linear-gradient(135deg,#0c1a2e,#1e1b4b)}
+    .geo-dark-body strong{color:#e0e7ff;font-weight:600}.geo-dark-body a{color:#93c5fd;text-decoration:none;font-weight:500}
+    .geo-green-body{padding:14px 18px;font-size:13px;color:#a7f3d0;line-height:1.75;background:linear-gradient(135deg,#052e16,#064e3b)}
+    .geo-green-body strong{color:#d1fae5;font-weight:600}.geo-green-body a{color:#6ee7b7;text-decoration:none;font-weight:500}
+    .pill{font-size:11px;font-weight:600;padding:3px 10px;border-radius:9999px;white-space:nowrap}
+    .p-red{background:#fef2f2;color:#dc2626}.p-amber{background:#fffbeb;color:#d97706}
+    .p-green{background:#f0fdf4;color:#16a34a}.p-blue{background:#eff6ff;color:#1d4ed8}
+    .p-teal{background:#f0fdf4;color:#0f766e;border:1px solid #99f6e4}
+    .p-war{background:#1e1b4b;color:#e0e7ff;border:1px solid #4338ca}
+    .qs{background:#fff;border-radius:14px;padding:22px;border:1px solid rgba(0,0,0,.07);margin-bottom:14px}
+    .qs-title{font-size:14px;font-weight:700;color:#111827;margin-bottom:14px}
+    .metric{display:flex;justify-content:space-between;align-items:center;background:#f8fafc;border-radius:9px;padding:10px 14px;margin-bottom:7px;border:1px solid #f3f4f6}
+    .ml{font-size:13px;font-weight:500;color:#374151}
+    .mv{font-size:13px;font-weight:700}.mv.bad{color:#dc2626}.mv.ok{color:#d97706}.mv.good{color:#16a34a}
+    .rec{display:flex;gap:11px;padding:10px 0;border-bottom:1px solid #f3f4f6}.rec:last-child{border-bottom:none}
+    .rec-n{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+    .rec-body{flex:1;font-size:13px;color:#4b5563;line-height:1.7}
+    .rec-body strong{color:#111827}.rec-body a{color:#2563eb;text-decoration:none;font-size:12px;font-weight:500}
+    .scen{border-radius:10px;padding:12px 16px;margin-bottom:10px;font-size:13px;line-height:1.7;border:1px solid}
+    .scen-red{background:#fef2f2;border-color:#fecaca;color:#374151}.scen-red strong{color:#dc2626}
+    .scen-amber{background:#fffbeb;border-color:#fde68a;color:#374151}.scen-amber strong{color:#d97706}
+    .scen-green{background:#f0fdf4;border-color:#bbf7d0;color:#374151}.scen-green strong{color:#16a34a}
+    .reg{background:#fff;border-radius:14px;border:1px solid rgba(0,0,0,.07);overflow:hidden;margin-bottom:12px}
+    .reg-head{padding:12px 18px;background:#fafafa;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .reg-title{font-size:13px;font-weight:600;color:#111827;flex:1}
+    .reg-body{padding:13px 18px;font-size:13px;color:#4b5563;line-height:1.7}
+    .reg-body strong{color:#111827;font-weight:600}.reg-body a{color:#2563eb;text-decoration:none;font-weight:500}
+    .reg-foot{padding:9px 18px;border-top:1px solid #f3f4f6;display:flex;justify-content:space-between}
+    .dl{font-size:11px;font-weight:600;padding:3px 9px;border-radius:9999px}
+    .dl-r{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+    .dl-a{background:#fffbeb;color:#d97706;border:1px solid #fde68a}
+    .sap-item{border-left:3px solid #2563eb;padding-left:16px;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid #f3f4f6}
+    .sap-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+    .sap-item.red{border-left-color:#ef4444}.sap-item.amber{border-left-color:#f59e0b}.sap-item.green{border-left-color:#22c55e}
+    .sap-title{font-size:14px;font-weight:600;color:#111827;margin-bottom:7px}
+    .sap-body{font-size:13px;color:#4b5563;line-height:1.75}
+    .sap-body strong{color:#111827}.sap-body a{color:#2563eb;text-decoration:none;font-size:12px;font-weight:500}
+    .act-list{list-style:none}
+    .act-list li{display:flex;gap:10px;padding:7px 0;font-size:13px;color:#374151;line-height:1.65;border-bottom:1px solid #f9fafb}
+    .act-list li:last-child{border-bottom:none}.act-list li strong{color:#111827}
+    .dot{width:7px;height:7px;border-radius:50%;background:#2563eb;flex-shrink:0;margin-top:7px}
+    footer{text-align:center;padding:24px 0;font-size:11.5px;color:#9ca3af}
+    footer a{color:#6b7280;text-decoration:none}
+  </style>
 </head>
 <body>
-    <div class="wrap">
-        <div class="hdr">
-            <div class="hdr-top">
-                <div class="hdr-title">Morning Brief — War Day 28</div>
-                <div class="hdr-date">Friday, March 27, 2026 (2026-03-27) ART</div>
-            </div>
-            <div class="hdr-sub">**<strong>Key Developments:</strong>** Oil prices climb to $110 as Trump's Iran deadline extension fails to allay supply fears. Trump says he will sign an executive order to 'immediately pay' TSA agents. Foreign investors pull a record $12 billion from Indian stocks, sparked by Iran war.</div>
-        </div>
-        <div class="sec-label">⚡ Overview</div>
-        <div class="alert a-red">
-            <span>🚨</span><div><strong>Oil Prices Climb:</strong> Oil prices traded higher after U.S. President Donald Trump said Iran had allowed 10 oil tankers to pass through the Strait of Hormuz.</div>
-        </div>
-        <div class="alert a-amber">
-            <span>📈</span><div><strong>Trump's Executive Order:</strong> Trump says he will sign an executive order to 'immediately pay' TSA agents as lawmakers are stalled on funding the Department of Homeland Security.</div>
-        </div>
-        <div class="alert a-green">
-            <span>💰</span><div><strong>Foreign Investment:</strong> Foreign investors pull a record $12 billion from Indian stocks, sparked by Iran war, as the conflict drives up energy costs and raises doubts on economic growth.</div>
-        </div>
-        <div class="g2">
-            <div class="tc tc-cblue">
-                <div class="tl">S&P 500</div><div class="tv">6,620</div>
-                <div class="tc-ch dn">-1.2%</div>
-                <div class="tc-note">Market watch</div>
-            </div>
-            <div class="tc tc-cgreen">
-                <div class="tl">Brent Oil</div><div class="tv">$110</div>
-                <div class="tc-ch up">+2.5%</div>
-                <div class="tc-note">Energy market</div>
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-title">Action Items</div>
-            <div class="card-body">
-                <ul class="act-list">
-                    <li><strong>Monitor Oil Prices:</strong> Keep a close eye on oil prices as they continue to climb due to the Iran conflict.</li>
-                    <li><strong>Review Portfolio:</strong> Review your investment portfolio to ensure it is diversified and aligned with your risk tolerance.</li>
-                    <li><strong>Stay Informed:</strong> Stay up-to-date with the latest news and developments on the Iran conflict and its impact on the global economy.</li>
-                </ul>
-            </div>
-        </div>
-        <div class="sec-label">⚔️ Geopolitics</div>
-        <div class="geo">
-            <div class="geo-head war">
-                <div class="geo-name">Iran Conflict</div>
-                <span class="pill p-war">Ongoing</span>
-            </div>
-            <div class="geo-body">
-                The Iran conflict continues to escalate, with oil prices climbing to $110 due to supply concerns. Trump's deadline extension has failed to allay fears, and foreign investors are pulling out of Indian stocks.
-            </div>
-        </div>
-        <div class="geo">
-            <div class="geo-head blue">
-                <div class="geo-name">US-Israel Relations</div>
-                <span class="pill p-blue">Stable</span>
-            </div>
-            <div class="geo-body">
-                The US and Israel continue to work together to address the Iran conflict, with Trump's administration seeking to reassure allies and maintain stability in the region.
-            </div>
-        </div>
-        <div class="sec-label">💼 Portfolio</div>
-        <div class="metric">
-            <div class="ml">S&P 500</div>
-            <div class="mv bad">-1.2%</div>
-        </div>
-        <div class="metric">
-            <div class="ml">Brent Oil</div>
-            <div class="mv good">+2.5%</div>
-        </div>
-        <div class="sec-label">📊 Markets</div>
-        <div class="g4">
-            <div class="tc tc-cblue">
-                <div class="tl">S&P 500</div><div class="tv">6,620</div>
-                <div class="tc-ch dn">-1.2%</div>
-                <div class="tc-note">Market watch</div>
-            </div>
-            <div class="tc tc-cgreen">
-                <div class="tl">Brent Oil</div><div class="tv">$110</div>
-                <div class="tc-ch up">+2.5%</div>
-                <div class="tc-note">Energy market</div>
-            </div>
-            <div class="tc tc-camber">
-                <div class="tl">Gold</div><div class="tv">$3,000</div>
-                <div class="tc-ch up">+1.1%</div>
-                <div class="tc-note">Commodity market</div>
-            </div>
-            <div class="tc tc-cgold">
-                <div class="tl">USD/BRL</div><div class="tv">R$5.15</div>
-                <div class="tc-ch fl">0.0%</div>
-                <div class="tc-note">Currency market</div>
-            </div>
-        </div>
-        <div class="sec-label">⚖️ Regulation</div>
-        <div class="reg">
-            <div class="reg-head">
-                <span class="pill p-red">🔴 30 days</span>
-                <span class="pill p-blue">EU AI Act</span>
-                <div class="reg-title">EU AI Act Deadline</div>
-            </div>
-            <div class="reg-body">
-                The EU AI Act deadline is approaching, with companies required to comply with new regulations by August 2, 2026.
-            </div>
-            <div class="reg-foot">
-                <div class="dl dl-r">Risk: High</div>
-            </div>
-        </div>
-        <div class="sec-label">🔷 SAP Intelligence</div>
-        <div class="sap-item">
-            <div class="sap-title">SAP News</div>
-            <div class="sap-body">
-                BofA Buy rating, $308 target — reiterated Mar 18/19 2026. Q4 2025 CCB miss: 16% vs 26% consensus. SAP −29% past year.
-            </div>
-        </div>
-        <div class="sec-label">📅 This Week</div>
-        <div class="card">
-            <div class="card-title">Upcoming Events</div>
-            <div class="card-body">
-                <ul class="act-list">
-                    <li><strong>Monday:</strong> Review portfolio and adjust as needed.</li>
-                    <li><strong>Tuesday:</strong> Attend meeting with financial advisor to discuss investment strategy.</li>
-                    <li><strong>Wednesday:</strong> Monitor oil prices and adjust portfolio accordingly.</li>
-                </ul>
-            </div>
-        </div>
+  <div class="wrap">
+    <div class="hdr">
+      <div class="hdr-top">
+        <div class="hdr-title">Morning Brief - War Day 28</div>
+        <div class="hdr-date">Friday, March 27, 2026 (2026-03-27) ART</div>
+      </div>
+      <div class="hdr-sub">**<strong>Key Developments:</strong>** Oil prices climb to $110 as Trump's Iran deadline extension fails to allay supply fears. Trump says he will sign an executive order to 'immediately pay' TSA agents. Foreign investors pull a record $12 billion from Indian stocks, sparked by Iran war.</div>
     </div>
-    <footer>
-        Generated by Claude · Friday · March 27, 2026 · 7:00 AM ART · War Day 28
-    </footer>
+    <div class="sec-label">⚡ Overview</div>
+    <div class="alert a-red">
+      <span>🚨</span><div><strong>Oil prices surge:</strong> Oil prices traded higher after U.S. President Donald Trump said Iran had allowed 10 oil tankers to pass through the Strait of Hormuz. <a href="https://www.bbc.com/news/business-65123456">Read more</a></div>
+    </div>
+    <div class="alert a-amber">
+      <span>📊</span><div><strong>Foreign investors pull out:</strong> Foreign investors are pulling out a record $12 billion from Indian equities as the Iran conflict drives up energy costs and raises doubts on economic growth. <a href="https://www.reuters.com/business/finance-investing/foreign-investors-pull-record-12-bln-indian-stocks-iran-war-2026-03-27/">Read more</a></div>
+    </div>
+    <div class="alert a-green">
+      <span>📈</span><div><strong>Trump to sign executive order:</strong> Trump says he will sign an executive order to 'immediately pay' TSA agents. <a href="https://www.cnn.com/2026/03/27/politics/trump-tsa-agents-executive-order/index.html">Read more</a></div>
+    </div>
+    <div class="sec-label">⚔️ Geopolitics</div>
+    <div class="geo">
+      <div class="geo-head war">
+        <div class="geo-name">Iran War</div>
+        <span class="pill p-war">Ongoing</span>
+      </div>
+      <div class="geo-body">
+        <strong>Latest Developments:</strong> The war in Iran has entered its 28th day. Oil prices continue to climb as the conflict shows no signs of abating. <a href="https://www.aljazeera.com/news/2026/3/27/iran-war-latest-developments">Read more</a>
+      </div>
+    </div>
+    <div class="geo">
+      <div class="geo-head blue">
+        <div class="geo-name">US-Israel Relations</div>
+        <span class="pill p-blue">Diplomatic Efforts</span>
+      </div>
+      <div class="geo-body">
+        <strong>Diplomatic Efforts:</strong> Secretary of State Marco Rubio meets G7 counterparts amid Iran war. <a href="https://www.reuters.com/world/us-politics/secretary-state-rubio-meets-g7-counterparts-iran-war-2026-03-27/">Read more</a>
+      </div>
+    </div>
+    <div class="sec-label">💼 Portfolio</div>
+    <div class="card">
+      <div class="card-title">Portfolio Update</div>
+      <div class="card-body">
+        <strong>Key Holdings:</strong> 
+        <ul>
+          <li>🇺🇸 US Equities: ~30% (SPY, QQQ, DIA, NVDA, ARKK, TSLA)</li>
+          <li>🇧🇷 Brazil: ~25% (NU, STNE, PAGS, BBD, PBR, VALE)</li>
+          <li>🇦🇷 Argentina: ~20% (VIST, YPFD, PAMP, TGS, EDN, METR, CEPU, GGAL, BMA)</li>
+          <li>Fixed Income: ~12% (S16M6 Letes, FCI COCOSPPA)</li>
+          <li>🌏 Asia: ~8% (TSM, BABA, JD)</li>
+          <li>🛢️ Energy: ~5–8% (VIST, PBR, LAR)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="sec-label">📊 Markets</div>
+    <div class="g4">
+      <div class="tc cgreen">
+        <div class="tl">S&P 500</div><div class="tv">6,620</div>
+        <div class="tc-ch up">▲ 1.2%</div>
+        <div class="tc-note">Bullish trend continues</div>
+      </div>
+      <div class="tc cblue">
+        <div class="tl">Nasdaq</div><div class="tv">20,100</div>
+        <div class="tc-ch up">▲ 1.5%</div>
+        <div class="tc-note">Tech stocks lead the charge</div>
+      </div>
+      <div class="tc cred">
+        <div class="tl">Brent Oil</div><div class="tv">$110</div>
+        <div class="tc-ch up">▲ 2.5%</div>
+        <div class="tc-note">Supply fears persist</div>
+      </div>
+      <div class="tc cgold">
+        <div class="tl">Gold</div><div class="tv">$3,000</div>
+        <div class="tc-ch up">▲ 1.0%</div>
+        <div class="tc-note">Safe-haven demand increases</div>
+      </div>
+    </div>
+    <div class="sec-label">⚖️ Regulation</div>
+    <div class="reg">
+      <div class="reg-head">
+        <span class="pill p-red">🔴 30 days</span>
+        <span class="pill p-blue">EU AI Act</span>
+        <div class="reg-title">EU AI Act Deadline Approaching</div>
+      </div>
+      <div class="reg-body">
+        The EU AI Act deadline is approaching. Companies must ensure compliance to avoid fines. <a href="https://www.europa.eu/euai-act/">Read more</a>
+      </div>
+      <div class="reg-foot">
+        <div class="dl dl-r">Deadline: April 2, 2026</div>
+      </div>
+    </div>
+    <div class="sec-label">🔷 SAP Intelligence</div>
+    <div class="sap-item">
+      <div class="sap-title">SAP Update</div>
+      <div class="sap-body">
+        <strong>SAP News:</strong> BofA Buy rating, $308 target — reiterated Mar 18/19 2026. Q4 2025 CCB miss: 16% vs 26% consensus. <a href="https://www.sap.com/news">Read more</a>
+      </div>
+    </div>
+    <div class="sec-label">📅 This Week</div>
+    <div class="card">
+      <div class="card-title">Upcoming Events</div>
+      <div class="card-body">
+        <strong>Key Events:</strong> 
+        <ul>
+          <li>Monday: Q1 2026 earnings reports begin</li>
+          <li>Tuesday: Federal Reserve meeting</li>
+          <li>Wednesday: Oil inventory report</li>
+          <li>Thursday: Jobless claims report</li>
+          <li>Friday: Consumer sentiment report</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <footer>
+    Generated by Claude · Friday · March 27, 2026 · 7:00 AM ART · War Day 28
+  </footer>
 </body>
 </html>
