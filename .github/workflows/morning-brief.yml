@@ -25,7 +25,7 @@ jobs:
 
       - name: Generate brief
         env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: node scripts/generate-brief.mjs
 
       - name: Commit & push
