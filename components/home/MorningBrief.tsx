@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 
 export default function MorningBrief() {
   const [available, setAvailable] = useState<boolean | null>(null)
@@ -7,6 +7,8 @@ export default function MorningBrief() {
   const [generating, setGenerating] = useState(false)
   const [liveHtml, setLiveHtml] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const [iframeHeight, setIframeHeight] = useState(0)
 
   useEffect(() => {
     fetch('/api/brief')
@@ -21,6 +23,7 @@ export default function MorningBrief() {
   const handleUpdate = async () => {
     setGenerating(true)
     setError(null)
+    setIframeHeight(0)
     try {
       const res = await fetch('/api/brief/generate', { method: 'POST' })
       const data = await res.json()
@@ -44,11 +47,20 @@ export default function MorningBrief() {
     }) + ' ART'
   }
 
+  const onIframeLoad = useCallback(() => {
+    try {
+      const body = iframeRef.current?.contentDocument?.body
+      if (body) setIframeHeight(body.scrollHeight + 32)
+    } catch {
+      setIframeHeight(4000)
+    }
+  }, [])
+
   const showBrief = (available === true || liveHtml !== null) && !generating
 
   return (
     <section className="px-4 pb-20 pt-5">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-4xl">
 
         {/* Toolbar */}
         <div className="mb-3 flex items-center justify-between">
@@ -95,10 +107,7 @@ export default function MorningBrief() {
 
         {/* Generating overlay */}
         {generating && (
-          <div
-            className="flex flex-col items-center justify-center rounded-2xl border border-white/8 bg-[#0d0d0d]"
-            style={{ height: 'max(78vh, 560px)' }}
-          >
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-white/8 bg-[#0d0d0d] py-24">
             <div className="relative mb-5">
               <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-amber-400/80" />
               <div className="absolute inset-0 flex items-center justify-center text-lg">☀️</div>
@@ -110,15 +119,19 @@ export default function MorningBrief() {
 
         {/* Brief content */}
         {showBrief && (
-          <div
-            className="overflow-hidden rounded-2xl border border-white/8 shadow-[0_0_80px_rgba(255,255,255,0.02)]"
-            style={{ height: 'max(78vh, 560px)' }}
-          >
+          <div className="overflow-hidden rounded-2xl border border-white/8 shadow-[0_0_80px_rgba(255,255,255,0.02)]">
+            {iframeHeight === 0 && (
+              <div className="h-48 animate-pulse bg-white/[0.02]" />
+            )}
             <iframe
+              ref={iframeRef}
               key={liveHtml ? 'live' : 'static'}
               {...(liveHtml ? { srcDoc: liveHtml } : { src: '/briefs/latest.html', loading: 'lazy' as const })}
-              className="h-full w-full"
+              className="w-full"
+              style={{ height: iframeHeight || 0, display: iframeHeight ? 'block' : 'none' }}
               title="Morning Brief"
+              scrolling="no"
+              onLoad={onIframeLoad}
             />
           </div>
         )}
