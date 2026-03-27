@@ -8,6 +8,7 @@ import {
 interface MarketItem {
   ticker: string
   label: string
+  group: string
   price: number
   change: number
   changePct: number
@@ -33,6 +34,8 @@ const PERIODS: { label: string; value: Period }[] = [
   { label: '1Y', value: '1y' },
   { label: '5Y', value: '5y' },
 ]
+
+const GROUP_ORDER = ['Índices', 'Tasas', 'Energía', 'Metales', 'Agro', 'Crypto', 'Monedas']
 
 // ── Sparkline SVG ─────────────────────────────────────────────────────────────
 function Sparkline({ prices, up, id }: { prices: number[]; up: boolean; id: string }) {
@@ -63,21 +66,30 @@ function Sparkline({ prices, up, id }: { prices: number[]; up: boolean; id: stri
 // ── Price formatting ──────────────────────────────────────────────────────────
 function fmtPrice(price: number, ticker: string): string {
   if (!price) return '—'
-  if (ticker === 'EURUSD=X') return price.toFixed(4)
-  if (ticker === '^TNX') return price.toFixed(3) + '%'
+  // Treasury yields
+  if (ticker === '^TNX' || ticker === '^TYX' || ticker === '^FVX') return price.toFixed(3) + '%'
+  // FX pairs — 4 decimal places
+  if (ticker.endsWith('=X')) return price.toFixed(4)
+  // Large indices / crypto
   if (price >= 10000) return price.toLocaleString('en-US', { maximumFractionDigits: 0 })
   if (price >= 1000) return price.toLocaleString('en-US', { maximumFractionDigits: 2 })
-  if (price >= 100) return price.toFixed(2)
+  // Commodities, metals, energy — 2 decimal places
+  if (price >= 10) return price.toFixed(2)
+  // Small crypto / sub-10
   return price.toFixed(4)
 }
 
 const ICONS: Record<string, string> = {
-  '^GSPC': '📊', '^NDX': '💻', '^DJI': '🏛️', '^TNX': '🏦',
-  'CL=F': '🛢️', 'BZ=F': '🛢️', 'GC=F': '🥇',
-  'BTC-USD': '₿', 'ETH-USD': 'Ξ', 'EURUSD=X': '🇪🇺',
+  '^GSPC': '📊', '^NDX': '💻', '^DJI': '🏛️',
+  '^TNX': '🏦',  '^TYX': '🏦', '^FVX': '🏦',
+  'CL=F': '🛢️',  'BZ=F': '🛢️', 'RB=F': '⛽',
+  'GC=F': '🥇',  'SI=F': '🥈', 'HG=F': '🔶',
+  'ZS=F': '🌱',  'ZW=F': '🌾', 'ZC=F': '🌽',
+  'BTC-USD': '₿', 'ETH-USD': 'Ξ', 'AVAX-USD': '🔺',
+  'EURUSD=X': '🇪🇺', 'USDMXN=X': '🇲🇽', 'USDBRL=X': '🇧🇷',
 }
 
-// ── Chart modal (Recharts) ────────────────────────────────────────────────────
+// ── Chart modal ───────────────────────────────────────────────────────────────
 interface ChartBar { date: string; price: number }
 
 function ChartModal({ item, onClose }: { item: MarketItem; onClose: () => void }) {
@@ -119,7 +131,6 @@ function ChartModal({ item, onClose }: { item: MarketItem; onClose: () => void }
         style={{ height: 'min(88vh, 500px)' }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex flex-shrink-0 items-center justify-between border-b border-white/8 px-5 py-3">
           <div className="flex items-center gap-2.5">
             <span className="text-base leading-none">{ICONS[item.ticker] ?? '📈'}</span>
@@ -136,9 +147,7 @@ function ChartModal({ item, onClose }: { item: MarketItem; onClose: () => void }
                   key={p.value}
                   onClick={() => setPeriod(p.value)}
                   className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
-                    period === p.value
-                      ? 'bg-white text-black shadow-sm'
-                      : 'text-white/35 hover:text-white/70'
+                    period === p.value ? 'bg-white text-black shadow-sm' : 'text-white/35 hover:text-white/70'
                   }`}
                 >
                   {p.label}
@@ -154,7 +163,6 @@ function ChartModal({ item, onClose }: { item: MarketItem; onClose: () => void }
           </div>
         </div>
 
-        {/* Chart */}
         <div className="min-h-0 flex-1 px-2 py-4">
           {chartLoading ? (
             <div className="h-full animate-pulse rounded-xl bg-white/[0.03]" />
@@ -167,49 +175,19 @@ function ChartModal({ item, onClose }: { item: MarketItem; onClose: () => void }
                     <stop offset="100%" stopColor={color} stopOpacity={0.01} />
                   </linearGradient>
                 </defs>
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.25)' }}
-                  tickLine={false}
-                  axisLine={false}
-                  interval="preserveStartEnd"
-                />
-                <YAxis
-                  domain={['auto', 'auto']}
-                  tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.25)' }}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(v) => fmtPrice(v, item.ticker)}
-                  width={60}
-                />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.25)' }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                <YAxis domain={['auto', 'auto']} tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.25)' }} tickLine={false} axisLine={false} tickFormatter={(v) => fmtPrice(v, item.ticker)} width={60} />
                 <Tooltip
-                  contentStyle={{
-                    background: '#1a1a1a',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: 10,
-                    fontSize: 12,
-                    color: '#fff',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-                  }}
+                  contentStyle={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, fontSize: 12, color: '#fff', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}
                   labelStyle={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginBottom: 2 }}
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   formatter={(v: any) => [fmtPrice(Number(v), item.ticker), item.label]}
                 />
-                <Area
-                  type="monotone"
-                  dataKey="price"
-                  stroke={color}
-                  strokeWidth={1.5}
-                  fill={`url(#${gradId})`}
-                  dot={false}
-                  isAnimationActive={false}
-                />
+                <Area type="monotone" dataKey="price" stroke={color} strokeWidth={1.5} fill={`url(#${gradId})`} dot={false} isAnimationActive={false} />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex h-full items-center justify-center text-sm text-white/20">
-              No chart data available
-            </div>
+            <div className="flex h-full items-center justify-center text-sm text-white/20">No chart data available</div>
           )}
         </div>
       </div>
@@ -218,15 +196,22 @@ function ChartModal({ item, onClose }: { item: MarketItem; onClose: () => void }
 }
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
-function SkeletonCard() {
+function SkeletonGroup() {
   return (
-    <div className="animate-pulse rounded-2xl border border-white/8 bg-[#0f0f0f] p-4">
-      <div className="mb-3 flex items-center gap-2">
-        <div className="h-4 w-4 rounded bg-white/10" />
-        <div className="h-3 w-20 rounded bg-white/10" />
+    <div className="mb-5">
+      <div className="mb-2 h-3 w-16 animate-pulse rounded bg-white/8" />
+      <div className="grid grid-cols-3 gap-2.5">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="animate-pulse rounded-xl border border-white/8 bg-[#0f0f0f] p-3">
+            <div className="mb-2.5 flex items-center gap-1.5">
+              <div className="h-3.5 w-3.5 rounded bg-white/10" />
+              <div className="h-2.5 w-14 rounded bg-white/10" />
+            </div>
+            <div className="mb-2 h-5 w-20 rounded bg-white/10" />
+            <div className="h-8 rounded bg-white/5" />
+          </div>
+        ))}
       </div>
-      <div className="mb-2 h-6 w-28 rounded bg-white/10" />
-      <div className="h-9 rounded bg-white/5" />
     </div>
   )
 }
@@ -246,77 +231,88 @@ export default function MarketMonitor() {
       .catch(() => setLoading(false))
   }, [])
 
+  const grouped = GROUP_ORDER.map((name) => ({
+    name,
+    items: data?.items.filter((i) => i.group === name) ?? [],
+  })).filter((g) => g.items.length > 0)
+
   return (
     <>
       <section className="px-4 pb-20 pt-6">
         <div className="mx-auto max-w-6xl">
 
-          {/* Header */}
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-5 flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold tracking-[0.2em] uppercase text-amber-400/80">Global Markets</p>
+              <p className="text-xs font-bold tracking-[0.2em] uppercase text-amber-400/80">Monitor Global</p>
               <p className="mt-0.5 text-[11px] text-white/20">Click any card for price history · Delayed ~15 min</p>
             </div>
           </div>
 
-          {/* Market grid */}
           {loading ? (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              {Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} />)}
+            <div>
+              {GROUP_ORDER.map((g) => <SkeletonGroup key={g} />)}
             </div>
-          ) : data?.items ? (
-            <>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                {data.items.map((item) => {
-                  const up = item.changePct >= 0
-                  const safeId = item.ticker.replace(/[^a-zA-Z0-9]/g, '_')
-                  return (
-                    <button
-                      key={item.ticker}
-                      onClick={() => setSelected(item)}
-                      className="group cursor-pointer rounded-2xl border border-white/[0.06] bg-[#0f0f0f] p-4 text-left transition-all hover:border-white/15 hover:bg-white/[0.04]"
-                    >
-                      <div className="mb-2 flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-sm leading-none">{ICONS[item.ticker] ?? '📈'}</span>
-                          <span className="text-[11px] font-medium leading-none text-white/40">{item.label}</span>
-                        </div>
-                        <span className={`flex items-center gap-0.5 text-[11px] font-semibold tabular-nums ${up ? 'text-emerald-400' : 'text-red-400'}`}>
-                          {up ? '▲' : '▼'} {Math.abs(item.changePct).toFixed(2)}%
-                        </span>
-                      </div>
-                      <p className="mb-2 text-lg font-bold leading-none text-white tabular-nums">
-                        {fmtPrice(item.price, item.ticker)}
-                      </p>
-                      <Sparkline prices={item.sparkline} up={up} id={safeId} />
-                    </button>
-                  )
-                })}
-              </div>
+          ) : (
+            <div>
+              {/* Grouped instrument rows */}
+              {grouped.map((group) => (
+                <div key={group.name} className="mb-5">
+                  <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/25">
+                    {group.name}
+                  </p>
+                  <div className="grid grid-cols-3 gap-2.5">
+                    {group.items.map((item) => {
+                      const up = item.changePct >= 0
+                      const safeId = item.ticker.replace(/[^a-zA-Z0-9]/g, '_')
+                      return (
+                        <button
+                          key={item.ticker}
+                          onClick={() => setSelected(item)}
+                          className="group cursor-pointer rounded-xl border border-white/[0.06] bg-[#0f0f0f] p-3 text-left transition-all hover:border-white/15 hover:bg-white/[0.04]"
+                        >
+                          <div className="mb-1.5 flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className="text-xs leading-none flex-shrink-0">{ICONS[item.ticker] ?? '📈'}</span>
+                              <span className="truncate text-[10px] font-medium leading-none text-white/40">{item.label}</span>
+                            </div>
+                            <span className={`ml-1.5 flex-shrink-0 text-[10px] font-semibold tabular-nums ${up ? 'text-emerald-400' : 'text-red-400'}`}>
+                              {up ? '▲' : '▼'}{Math.abs(item.changePct).toFixed(2)}%
+                            </span>
+                          </div>
+                          <p className="mb-1.5 text-base font-bold leading-none text-white tabular-nums">
+                            {fmtPrice(item.price, item.ticker)}
+                          </p>
+                          <Sparkline prices={item.sparkline} up={up} id={safeId} />
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
 
               {/* Hot movers */}
-              {data.hotStocks.length > 0 && (
-                <div className="mt-8">
-                  <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.25em] text-white/20">
-                    <span className="text-amber-400/80">HOT</span> · US Stocks · Major Movement
+              {data?.hotStocks && data.hotStocks.length > 0 && (
+                <div className="mt-6">
+                  <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/25">
+                    <span className="text-amber-400/80">HOT</span> · Acciones · Mayor movimiento
                   </p>
-                  <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                  <div className="flex gap-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
                     {data.hotStocks.map((s, i) => {
                       const up = s.changePct >= 0
                       return (
                         <Link
                           key={s.ticker}
                           href={`/stock/${s.ticker}`}
-                          className="flex min-w-[200px] flex-shrink-0 items-center gap-3 rounded-2xl border border-white/[0.06] bg-[#0f0f0f] px-4 py-3 transition-colors hover:border-white/15"
+                          className="flex min-w-[180px] flex-shrink-0 items-center gap-3 rounded-xl border border-white/[0.06] bg-[#0f0f0f] px-4 py-3 transition-colors hover:border-white/15"
                         >
-                          <span className="text-2xl font-bold tabular-nums text-white/10">{i + 1}</span>
+                          <span className="text-xl font-bold tabular-nums text-white/10">{i + 1}</span>
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-bold text-white">{s.ticker}</p>
-                            <p className="truncate text-xs text-white/30">{s.name}</p>
+                            <p className="truncate text-[10px] text-white/30">{s.name}</p>
                           </div>
                           <div className="text-right">
                             <p className="text-sm font-bold tabular-nums text-white">${s.price.toFixed(2)}</p>
-                            <p className={`text-xs font-semibold tabular-nums ${up ? 'text-emerald-400' : 'text-red-400'}`}>
+                            <p className={`text-[10px] font-semibold tabular-nums ${up ? 'text-emerald-400' : 'text-red-400'}`}>
                               {up ? '+' : ''}{s.changePct.toFixed(2)}%
                             </p>
                           </div>
@@ -326,12 +322,11 @@ export default function MarketMonitor() {
                   </div>
                 </div>
               )}
-            </>
-          ) : null}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Chart modal */}
       {selected && <ChartModal item={selected} onClose={closeModal} />}
     </>
   )
