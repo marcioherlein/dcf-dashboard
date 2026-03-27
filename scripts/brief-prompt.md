@@ -60,6 +60,9 @@ MARKETS (specific numbers):
   Gold: ~$4,300 Mixed · PCE tomorrow is the catalyst
   Country Risk AR: ~633 bps ▲ 2026 HIGH · EM pressure
   10Y Treasury: ~4.4% ▲ Spiked Thu · Stagflation
+  Merval: ~2,712K ▼ −1.2% · EM outflows · Country risk 633 bps
+  Ibovespa: ~131,200 ▼ −0.8% · BRL under pressure
+  BRL/USD: R$5.27 ▼ · Real weakening on risk-off
 
 REGULATION:
   EU AI Act: 129 days to Aug 2. Joule in HR/Finance = Annex III. €35M or 7% global turnover. ESCALATE TO LEGAL NOW.
@@ -133,11 +136,11 @@ Structural gaps: Zero gold/commodity hedge. US tech cluster correlation ~0.85.
 1. `<head>` — CSS + Google Fonts Inter
 2. `.hdr` — gradient header (war/talks/ceasefire gradient), title, War Day N, badges, 3-sentence summary with today's top numbers
 3. `sec-label "⚡ Overview"` — 3 alert boxes (red/blue/amber) — one per major story, each 4–6 sentences with specific numbers and inline sources
-4. `.g2` — Global markets snapshot card + Argentina/Brazil snapshot card
+4. `.g2` — Global markets snapshot card + Argentina/Brazil snapshot card (always include Merval index level, Ibovespa, BRL/USD, and country risk AR bps)
 5. `.card` — 5 Action Items — each 3–4 sentences, portfolio-specific, references actual holdings
 6. `sec-label "⚔️ Geopolitics"` — 4–5 geo cards — each 3+ paragraphs, named officials, specific quotes, portfolio implication
 7. `sec-label "💼 Portfolio"` — factor table (metric rows), 3 scenarios with % probabilities and dollar impact, 5 ranked recommendations
-8. `sec-label "📊 Markets"` — two g4 rows of ticker cards with today's actual prices
+8. `sec-label "📊 Markets"` — two g4 rows of ticker cards with today's actual prices. **Always include**: US row (S&P 500, Nasdaq, Dow, 10Y Treasury, VIX, Gold, Brent, Bitcoin) + LatAm row (Merval, Country Risk AR, Ibovespa, BRL/USD)
 9. `sec-label "⚖️ Regulation"` — reg cards with exact days remaining
 10. `sec-label "🔷 SAP Intelligence"` — 4–5 sap-items tying today's news to enterprise pipeline
 11. `sec-label "📅 Ahead"` — this week's key dates

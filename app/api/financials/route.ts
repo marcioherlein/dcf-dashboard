@@ -118,6 +118,16 @@ export async function GET(req: NextRequest) {
     const ks = fin.defaultKeyStatistics ?? {}
     const rawFCFLocal = ((fd.freeCashflow ?? 0) as number) / 1e6
     const rawRevMLocal = ((fd.totalRevenue ?? 0) as number) / 1e6
+
+    // Compute FCF from most recent annual cash flow statement (more reliable than Yahoo's TTM freeCashflow,
+    // which is distorted for fintechs/payments companies where loan originations flow through operating activities)
+    const rawCFHistoryEarly: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
+    const recentCF = rawCFHistoryEarly[0] ?? {}
+    const recentOpCF = ((recentCF.operatingCashflow ?? recentCF.totalCashFromOperatingActivities ?? fd.operatingCashflow ?? 0) as number)
+    const recentCapex = ((recentCF.capitalExpenditures ?? recentCF.capitalExpenditure ?? 0) as number)
+    // annualFCFLocal = OCF + CapEx (CapEx is stored negative in Yahoo data, so this is OCF - |CapEx|)
+    const annualFCFLocal = recentOpCF !== 0 ? (recentOpCF + recentCapex) / 1e6 : rawFCFLocal
+
     const businessProfile = {
       description: (profile.longBusinessSummary ?? '') as string,
       industry: (profile.industry ?? '') as string,
@@ -126,7 +136,7 @@ export async function GET(req: NextRequest) {
       // Treat 0 as null — Yahoo returns 0 for banks/fintechs that don't have COGS
       grossMargin: (fd.grossMargins != null && fd.grossMargins !== 0) ? (fd.grossMargins as number) : null,
       netMargin: (fd.profitMargins ?? null) as number | null,
-      fcfMargin: rawRevMLocal > 0 && rawFCFLocal !== 0 ? rawFCFLocal / rawRevMLocal : null,
+      fcfMargin: rawRevMLocal > 0 && annualFCFLocal !== 0 ? annualFCFLocal / rawRevMLocal : null,
       revenueM: rawRevMLocal * fxRate,
     }
 
@@ -134,7 +144,7 @@ export async function GET(req: NextRequest) {
     const ratings = calculateRatings({
       grossMargin: (fd.grossMargins ?? null) as number | null,
       netMargin: (fd.profitMargins ?? null) as number | null,
-      fcfMargin: rawRevMLocal > 0 ? rawFCFLocal / rawRevMLocal : null,
+      fcfMargin: rawRevMLocal > 0 ? annualFCFLocal / rawRevMLocal : null,
       operatingMargin: (fd.operatingMargins ?? null) as number | null,
       roe: (fd.returnOnEquity ?? null) as number | null,
       roa: (fd.returnOnAssets ?? null) as number | null,
@@ -483,7 +493,7 @@ export async function GET(req: NextRequest) {
     const balanceSheet = [...bsHistoricalRows, ...bsProjectedRows]
 
     // --- Cash Flow ---
-    const rawCFHistory: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
+    const rawCFHistory: any[] = rawCFHistoryEarly
     const cfHistorical = rawCFHistory.slice(-4).reverse()
 
     const avgCapexM = cfHistorical.length > 0

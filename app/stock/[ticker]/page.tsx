@@ -13,6 +13,7 @@ import BusinessModel from '@/components/stock/BusinessModel'
 import RatingsPanel from '@/components/stock/RatingsPanel'
 import ValuationMethods from '@/components/stock/ValuationMethods'
 import FinancialStatements from '@/components/stock/FinancialStatements'
+import FinancialCharts from '@/components/stock/FinancialCharts'
 import FinancialScores from '@/components/stock/FinancialScores'
 import OwnershipPanel from '@/components/stock/OwnershipPanel'
 import TabNav, { type TabId } from '@/components/stock/TabNav'
@@ -296,6 +297,14 @@ export default function StockPage() {
                     cashFlow={data.financialStatements.cashFlow}
                     currency={currency}
                     cagr={data.cagr}
+                  />
+                )}
+                {data.financialStatements && (
+                  <FinancialCharts
+                    incomeStatement={data.financialStatements.incomeStatement}
+                    cashFlow={data.financialStatements.cashFlow}
+                    currency={currency}
+                    isDark={isDark}
                   />
                 )}
                 {(data.businessProfile.description || data.historicalRevenues.length >= 2) && (
