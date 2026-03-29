@@ -38,7 +38,7 @@ export function calculateWACC(inputs: WACCInputs): WACCResult {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function extractWACCInputs(financials: any, rfRate: number, betaFromRegression: number): WACCInputs {
+export function extractWACCInputs(financials: any, rfRate: number, betaFromRegression: number, fxRate = 1): WACCInputs {
   const fd = financials.financialData ?? {}
   const ks = financials.defaultKeyStatistics ?? {}
   const sd = financials.summaryDetail ?? {}
@@ -53,18 +53,22 @@ export function extractWACCInputs(financials: any, rfRate: number, betaFromRegre
 
   const marketCap: number = sd.marketCap ?? ks.enterpriseValue ?? 0
 
+  // All debt figures come from Yahoo's financial statements in the reporting currency
+  // (e.g. ARS for YPF, BRL for Petrobras), but marketCap is always in the quote currency
+  // (e.g. USD for NYSE-listed ADRs). Apply fxRate to convert debt → quote currency before
+  // computing D/E, otherwise D/E is inflated by the FX ratio (≈870x for ARS stocks).
   let totalDebt: number
   if (isFinancialSector) {
     // For banks/insurers: use only issued long-term debt (bonds, notes).
     // totalDebt from financialData can include deposit liabilities or off-balance-sheet
     // items that inflate D/E to 3-5x, collapsing WACC to ~4% and exploding DCF value.
-    totalDebt = (bs0.longTermDebt ?? bs0.longTermDebtNoncurrent ?? 0) as number
+    totalDebt = ((bs0.longTermDebt ?? bs0.longTermDebtNoncurrent ?? 0) as number) * fxRate
     // Absolute safety cap: D/E ≤ 1.5 for financial companies (pure financial debt only)
     if (marketCap > 0 && totalDebt / marketCap > 1.5) {
       totalDebt = marketCap * 1.5
     }
   } else {
-    totalDebt = (fd.totalDebt ?? 0) as number
+    totalDebt = ((fd.totalDebt ?? 0) as number) * fxRate
   }
 
   const debtToEquity = marketCap > 0 ? totalDebt / marketCap : 0.30
@@ -73,9 +77,13 @@ export function extractWACCInputs(financials: any, rfRate: number, betaFromRegre
   const beta = betaFromRegression > 0 ? betaFromRegression : (ks.beta ?? 1.0)
 
   // Cost of debt: try income statement, else RF + 1.5% credit spread (investment grade default)
+  // interestExpense and rawDebtForRate are both in reporting currency → rate is currency-independent
   const interestExpense = Math.abs(inc0.interestExpense ?? 0)
-  const costOfDebt = (interestExpense > 0 && totalDebt > 0)
-    ? Math.min(interestExpense / totalDebt, 0.15)  // cap at 15%
+  const rawDebtForRate = isFinancialSector
+    ? (bs0.longTermDebt ?? bs0.longTermDebtNoncurrent ?? 0) as number
+    : (fd.totalDebt ?? 0) as number
+  const costOfDebt = (interestExpense > 0 && rawDebtForRate > 0)
+    ? Math.min(interestExpense / rawDebtForRate, 0.15)  // cap at 15%
     : rfRate + 0.015
 
   // Tax rate: income stmt if available, else 21% US statutory

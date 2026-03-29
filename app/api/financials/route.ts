@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
     )
 
     // WACC (uses percentages/ratios — not currency-sensitive)
-    const waccInputs = extractWACCInputs(fin, rfRate, beta)
+    const waccInputs = extractWACCInputs(fin, rfRate, beta, fxRate)
     const waccResult = calculateWACC(waccInputs)
 
     // FCF + CAGR — values are in financial currency; convert to quote currency
