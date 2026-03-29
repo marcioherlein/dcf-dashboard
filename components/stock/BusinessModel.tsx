@@ -97,13 +97,13 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
     .filter((d) => d.gross !== null || d.net !== null)
 
   return (
-    <div className="rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/8 dark:bg-[#111]">
-      <h2 className="text-sm font-semibold text-gray-700 dark:text-white/70 mb-4">Business Model</h2>
+    <div className="rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8 p-6">
+      <h2 className="text-sm font-headline font-semibold text-on-surface dark:text-white/70 mb-4">Business Model</h2>
 
       {pills.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
           {pills.map((p) => (
-            <span key={p.label} className="rounded-full border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-3 py-1 text-xs font-medium text-gray-600 dark:text-white/50">
+            <span key={p.label} className="rounded-full border border-gray-200 dark:border-white/10 bg-surface-container-low dark:bg-white/5 px-3 py-1 text-xs font-medium text-gray-600 dark:text-white/50">
               {p.label}
             </span>
           ))}
@@ -133,7 +133,7 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
           <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-white/25">Profitability Margins</p>
           <div className="space-y-2">
             {margins.map((m) => (
-              <div key={m.label} className="flex items-center justify-between rounded-xl bg-gray-50 dark:bg-white/5 px-4 py-2.5">
+              <div key={m.label} className="flex items-center justify-between rounded-xl bg-surface-container-low dark:bg-white/5 px-4 py-2.5">
                 <span className="text-xs text-gray-500 dark:text-white/40">{m.label}</span>
                 <span className={`text-sm font-semibold tabular-nums ${marginColor(m.value)}`}>
                   {m.value !== null ? fmtPct(m.value) : '—'}

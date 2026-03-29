@@ -93,11 +93,11 @@ export default function FinancialStatements({ incomeStatement, balanceSheet, cas
     rows.map(r => ({ year: r.year, isProjected: r.isProjected }))
 
   return (
-    <div className="rounded-2xl border border-black/[0.06] bg-white shadow-sm dark:border-white/8 dark:bg-[#111]">
+    <div className="rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8">
       {/* Header + Tabs */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 dark:border-white/5 px-6 py-4">
         <div>
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-white/70">Financial Statements</h2>
+          <h2 className="text-sm font-headline font-semibold text-on-surface dark:text-white/70">Financial Statements</h2>
           <p className="mt-0.5 text-xs text-gray-400 dark:text-white/25">Historical actuals · Model projections</p>
         </div>
         <div className="flex rounded-xl bg-gray-100 dark:bg-white/5 p-1 gap-1">

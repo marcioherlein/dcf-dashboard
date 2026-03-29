@@ -134,8 +134,14 @@ export function calculateAltman(
 
   const ca = (bs.totalCurrentAssets ?? 0) as number
   const cl = (bs.totalCurrentLiabilities ?? 0) as number
-  const re = (bs.retainedEarnings ?? 0) as number
-  const tl = (bs.totalLiab ?? bs.totalLiabilities ?? 0) as number
+  // Yahoo Finance uses multiple field names for retained earnings across company types
+  const re = (
+    bs.retainedEarnings
+    ?? bs.retainedEarningsAccumulatedDeficit
+    ?? bs.accumulatedOtherComprehensiveIncomeLoss
+    ?? 0
+  ) as number
+  const tl = (bs.totalLiab ?? bs.totalLiabilities ?? bs.totalLiabilitiesNetMinorityInterest ?? 0) as number
   const rev = (inc.totalRevenue ?? 0) as number
 
   // EBIT: use ebit field first, then operatingIncome — do NOT fall back to totalRevenue
@@ -300,25 +306,37 @@ export function calculateROIC(
 ): ROICResult {
   const toM = (n: number) => n / 1e6 * fxRate
 
-  const opIncome = (inc.ebit ?? inc.operatingIncome ?? inc.operatingIncomeBeforeDepreciation ?? inc.incomeBeforeTax ?? 0) as number
-  const nopat = toM(opIncome) * (1 - taxRate)
+  // Extended operating income fallback (covers banks, fintechs, non-US GAAP)
+  const opIncome = (
+    inc.ebit
+    ?? inc.operatingIncome
+    ?? inc.operatingIncomeBeforeDepreciation
+    ?? inc.incomeBeforeTax
+    ?? inc.pretaxIncome
+    ?? 0
+  ) as number
+  const nopat = toM(opIncome) * (1 - Math.max(0, Math.min(0.40, taxRate)))
 
   function investedCapital(bs: any): number {
+    if (!bs || Object.keys(bs).length === 0) return 0
     const ta = toM((bs.totalAssets ?? 0) as number)
+    if (ta <= 0) return 0
     const ap = toM((bs.accountsPayable ?? 0) as number)
-    const cash = toM((bs.cash ?? bs.cashAndCashEquivalents ?? 0) as number)
+    const cash = toM((bs.cash ?? bs.cashAndCashEquivalents ?? bs.cashAndShortTermInvestments ?? 0) as number)
     const sti = toM((bs.shortTermInvestments ?? 0) as number)
     const ca = toM((bs.totalCurrentAssets ?? 0) as number)
     const cl = toM((bs.totalCurrentLiabilities ?? 0) as number)
-    const excessCash = cash + sti - Math.max(0, cl - ca + cash)
-    return ta - ap - Math.max(0, excessCash)
+    // Excess cash = cash above what's needed to cover current liabilities
+    const excessCash = Math.max(0, cash + sti - Math.max(0, cl - ca + cash))
+    return Math.max(0, ta - ap - excessCash)
   }
 
   const ic0 = investedCapital(bs0)
   const ic1 = investedCapital(bs1)
-  const avgIC = ic0 > 0 && ic1 > 0 ? (ic0 + ic1) / 2 : Math.max(ic0, ic1)
+  // If bs1 is empty (only 1 year of data), use ic0 alone
+  const avgIC = ic1 > 0 ? (ic0 + ic1) / 2 : ic0
 
-  const roic = avgIC > 0 ? nopat / avgIC : 0
+  const roic = avgIC > 100 ? nopat / avgIC : 0  // require at least $100M invested capital
   const spread = roic - wacc
 
   return {

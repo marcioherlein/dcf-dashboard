@@ -35,7 +35,7 @@ function WeightBar({ label, weight, color }: { label: string; weight: number; co
   return (
     <div className="flex items-center gap-2">
       <span className="w-24 shrink-0 text-[10px] text-gray-400 dark:text-white/30">{label}</span>
-      <div className="flex-1 rounded-full bg-gray-100 dark:bg-white/8 h-1.5 overflow-hidden">
+      <div className="flex-1 rounded-full bg-surface-container dark:bg-white/8 h-1.5 overflow-hidden">
         <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
       </div>
       <span className="w-8 text-right text-[10px] font-semibold text-gray-500 dark:text-white/40">{pct}%</span>
@@ -91,9 +91,9 @@ export default function CAGRAnalysis({ cagrAnalysis: ca, isNegativeFCF, growthMo
   ]
 
   return (
-    <div className="rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/8 dark:bg-[#111]">
+    <div className="rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8 p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-white/70">CAGR Analysis</h2>
+        <h2 className="text-sm font-headline font-semibold text-on-surface dark:text-white/70">CAGR Analysis</h2>
         <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${confColor[ca.confidenceLabel]}`}>
           {ca.confidenceLabel} confidence · {Math.round(ca.confidence * 100)}%
         </span>
@@ -116,7 +116,7 @@ export default function CAGRAnalysis({ cagrAnalysis: ca, isNegativeFCF, growthMo
       <div className="mb-4 overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-100 dark:border-white/8">
+            <tr className="border-b border-outline-variant/15 dark:border-white/8">
               <th className="pb-2 text-left text-xs font-medium text-gray-400 dark:text-white/25">Source</th>
               <th className="pb-2 text-right text-xs font-medium text-gray-400 dark:text-white/25">Rate</th>
               <th className="pb-2 text-right text-xs font-medium text-gray-400 dark:text-white/25">Note</th>
@@ -127,7 +127,7 @@ export default function CAGRAnalysis({ cagrAnalysis: ca, isNegativeFCF, growthMo
               <tr
                 key={row.label}
                 className={`border-b border-gray-50 dark:border-white/5 ${
-                  (row as { bold?: boolean }).bold ? 'bg-gray-50 dark:bg-white/5' : ''
+                  (row as { bold?: boolean }).bold ? 'bg-surface-container-low dark:bg-white/5' : ''
                 }`}
               >
                 <td className={`py-2 ${
@@ -157,7 +157,7 @@ export default function CAGRAnalysis({ cagrAnalysis: ca, isNegativeFCF, growthMo
 
       {/* Blending weights visual */}
       {(ca.weights.historical > 0 || ca.weights.analyst > 0 || ca.weights.fundamental > 0) && (
-        <div className="mb-4 rounded-xl border border-gray-100 dark:border-white/8 bg-gray-50 dark:bg-white/5 px-4 py-3">
+        <div className="mb-4 rounded-xl border border-outline-variant/15 dark:border-white/8 bg-surface-container-low dark:bg-white/5 px-4 py-3">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-white/25">Blending Weights</p>
           <div className="space-y-1.5">
             <WeightBar label="Analyst"     weight={ca.weights.analyst}     color="#6366f1" />
@@ -168,7 +168,7 @@ export default function CAGRAnalysis({ cagrAnalysis: ca, isNegativeFCF, growthMo
       )}
 
       {/* DCF Growth Model */}
-      <div className="mb-4 rounded-xl border border-gray-100 dark:border-white/8 bg-gray-50 dark:bg-white/5 px-4 py-3">
+      <div className="mb-4 rounded-xl border border-outline-variant/15 dark:border-white/8 bg-surface-container-low dark:bg-white/5 px-4 py-3">
         <div className="flex items-center gap-2">
           <p className="text-xs font-semibold text-gray-600 dark:text-white/50">DCF Growth Model</p>
           {growthModel === 'three-stage' ? (

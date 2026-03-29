@@ -113,10 +113,10 @@ export default function RatingsPanel({ ratings }: Props) {
   const oc = colorMap[ratings.overall.color] ?? colorMap.blue
 
   return (
-    <div className="rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/8 dark:bg-[#111]">
+    <div className="rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8 p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-white/70">Analysis Ratings</h2>
+          <h2 className="text-sm font-headline font-semibold text-on-surface dark:text-white/70">Analysis Ratings</h2>
           <p className="mt-0.5 text-xs text-gray-400 dark:text-white/25">Profitability · Liquidity · Growth · MOAT · Valuation</p>
         </div>
         <div className={`flex items-center gap-3 rounded-2xl border ${oc.border} ${oc.bg} px-5 py-3`}>

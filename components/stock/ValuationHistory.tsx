@@ -56,9 +56,9 @@ export default function ValuationHistory({ ticker, onSave, saving }: Props) {
   }
 
   return (
-    <div className="rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/8 dark:bg-[#111]">
+    <div className="rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8 p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-white/70">Valuation History</h2>
+        <h2 className="text-sm font-headline font-semibold text-on-surface dark:text-white/70">Valuation History</h2>
         <button
           onClick={handleSave} disabled={saving}
           className="rounded-xl bg-gray-900 px-4 py-2 text-xs font-medium text-white transition hover:bg-gray-700 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/80"
@@ -78,7 +78,7 @@ export default function ValuationHistory({ ticker, onSave, saving }: Props) {
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-100 dark:border-white/8">
+              <tr className="border-b border-outline-variant/15 dark:border-white/8">
                 {['Date', 'Price', 'Fair Value', 'Upside', 'WACC', 'CAGR'].map((h, i) => (
                   <th key={h} className={`pb-2 text-xs font-medium text-gray-400 dark:text-white/25 ${i === 0 ? 'text-left' : 'text-right'}`}>{h}</th>
                 ))}

@@ -47,8 +47,8 @@ export default function OwnershipPanel({ ownership }: Props) {
   const shortTextColor = shortLevel === 'high' ? 'text-red-600 dark:text-red-400' : shortLevel === 'medium' ? 'text-amber-600 dark:text-amber-400' : 'text-gray-500 dark:text-white/40'
 
   return (
-    <div className="rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/8 dark:bg-[#111]">
-      <h2 className="mb-4 text-sm font-semibold text-gray-700 dark:text-white/70">Ownership &amp; Short Interest</h2>
+    <div className="rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8 p-6">
+      <h2 className="mb-4 text-sm font-headline font-semibold text-on-surface dark:text-white/70">Ownership &amp; Short Interest</h2>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
 
@@ -138,7 +138,7 @@ export default function OwnershipPanel({ ownership }: Props) {
             </div>
 
             {/* Metrics */}
-            <div className="rounded-xl border border-gray-100 dark:border-white/8 bg-gray-50 dark:bg-white/5 px-3 py-2.5 space-y-1.5">
+            <div className="rounded-xl border border-outline-variant/15 dark:border-white/8 bg-surface-container-low dark:bg-white/5 px-3 py-2.5 space-y-1.5">
               {[
                 { label: 'Days to Cover', value: shortRatio != null ? `${shortRatio.toFixed(1)} days` : 'N/A' },
                 { label: 'Shares Short', value: fmtShares(sharesShort) },

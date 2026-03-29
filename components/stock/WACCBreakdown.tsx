@@ -25,9 +25,9 @@ export default function WACCBreakdown({ wacc, onWACCChange }: Props) {
   ]
 
   return (
-    <div className="rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/8 dark:bg-[#111]">
+    <div className="rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8 p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-white/70">WACC Breakdown</h2>
+        <h2 className="text-sm font-headline font-semibold text-on-surface dark:text-white/70">WACC Breakdown</h2>
         <div className="flex items-center gap-2">
           <span className="text-2xl font-bold text-gray-900 dark:text-white" style={{ letterSpacing: '-0.03em' }}>{fmtPct(wacc.wacc)}</span>
           <span className="text-xs text-gray-400 dark:text-white/25">auto-calculated</span>
@@ -36,7 +36,7 @@ export default function WACCBreakdown({ wacc, onWACCChange }: Props) {
 
       <div className="overflow-hidden rounded-xl border border-gray-100 dark:border-white/6">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-white/5">
+          <thead className="bg-surface-container-low dark:bg-white/5">
             <tr>
               {['Variable', 'Formula', 'Value', 'Source'].map((h, i) => (
                 <th key={h} className={`px-4 py-2 text-xs font-medium text-gray-400 dark:text-white/25 ${i > 1 ? 'text-right' : 'text-left'}`}>{h}</th>

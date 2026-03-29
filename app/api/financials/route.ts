@@ -80,14 +80,20 @@ export async function GET(req: NextRequest) {
 
     // Balance sheet items — convert to quote currency
     const bs = fin.balanceSheetHistory?.balanceSheetStatements?.[0] ?? {}
-    const cashM = ((
+    // Yahoo Finance uses wildly inconsistent field names across company types and API versions.
+    // The extended fallback chain below covers all known variants.
+    const cashRaw = (
       bs.cash
       ?? bs.cashAndCashEquivalents
       ?? bs.cashAndShortTermInvestments
       ?? bs.cashCashEquivalentsAndShortTermInvestments
       ?? bs.cashAndCashEquivalentsAtCarryingValue
+      ?? bs.cashEquivalents
+      ?? bs.cashAndDueFromBanks  // banks
+      ?? fin.financialData?.totalCash  // financialData TTM fallback
       ?? 0
-    ) as number) / 1e6 * fxRate
+    ) as number
+    const cashM = cashRaw / 1e6 * fxRate
 
     // Detect financial sector here for balance sheet treatment
     const isBankOrInsurer = /bank|insurance|financ|fintech|payment|credit|lending|capital market|asset management|brokerage/i.test(
@@ -100,8 +106,21 @@ export async function GET(req: NextRequest) {
     // Yahoo Finance uses inconsistent field names across company types and regions.
     // Extend fallback chains to catch all known variants.
     const rawDebtM = isBankOrInsurer
-      ? ((bs.longTermDebt ?? bs.longTermDebtNoncurrent ?? bs.longTermDebtAndCapitalLeaseObligation ?? bs.totalDebt ?? 0) as number) / 1e6 * fxRate
-      : ((bs.totalDebt ?? bs.longTermDebt ?? bs.longTermDebtAndCapitalLeaseObligation ?? bs.totalLongTermDebt ?? bs.shortLongTermDebtTotal ?? bs.longTermDebtTotal ?? bs.currentDebt ?? 0) as number) / 1e6 * fxRate
+      ? ((bs.longTermDebt ?? bs.longTermDebtNoncurrent ?? bs.longTermDebtAndCapitalLeaseObligation ?? bs.longTermDebtAndFinanceLeaseLiability ?? bs.totalDebt ?? 0) as number) / 1e6 * fxRate
+      : ((
+          bs.totalDebt
+          ?? bs.shortLongTermDebtTotal
+          ?? bs.longTermDebt
+          ?? bs.longTermDebtAndCapitalLeaseObligation
+          ?? bs.longTermDebtAndFinanceLeaseLiability
+          ?? bs.totalLongTermDebt
+          ?? bs.longTermDebtTotal
+          ?? bs.currentDebt
+          ?? bs.longTermDebtNoncurrent
+          // financialData TTM fallbacks
+          ?? fin.financialData?.totalDebt
+          ?? 0
+        ) as number) / 1e6 * fxRate
     // Safety cap: debt should not exceed 3× market cap (prevents extreme leverage edge cases)
     const debtM = marketCapM > 0 ? Math.min(rawDebtM, marketCapM * 3) : rawDebtM
 
@@ -561,6 +580,12 @@ export async function GET(req: NextRequest) {
 
     const financialStatements = { incomeStatement, balanceSheet, cashFlow }
 
+    // Historical FCF for DCF table context (last 3 years, used to show YoY actuals)
+    const historicalFCF: { year: number; cashFlow: number }[] = cfHistoricalRows
+      .filter((r) => r.freeCashFlow != null && !r.isProjected)
+      .slice(-3)
+      .map((r) => ({ year: parseInt(r.year), cashFlow: Math.round(r.freeCashFlow!) }))
+
     return NextResponse.json({
       ticker,
       companyName: q.longName ?? q.shortName ?? ticker,
@@ -585,6 +610,7 @@ export async function GET(req: NextRequest) {
       cagrAnalysis,
       isNegativeFCF,
       terminalG,
+      historicalFCF,
       historicalRevenues,
       businessProfile,
       analystRecommendation: fin.financialData?.recommendationKey ?? '',

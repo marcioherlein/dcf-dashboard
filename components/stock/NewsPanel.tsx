@@ -15,8 +15,8 @@ export default function NewsPanel({ ticker }: { ticker: string }) {
   }, [ticker])
 
   return (
-    <div className="rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/8 dark:bg-[#111]">
-      <h2 className="text-sm font-semibold text-gray-700 dark:text-white/70">Latest News</h2>
+    <div className="rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8 p-6">
+      <h2 className="text-sm font-headline font-semibold text-on-surface dark:text-white/70">Latest News</h2>
       {loading ? (
         <p className="mt-4 text-sm text-gray-400 dark:text-white/25">Loading…</p>
       ) : news.length === 0 ? (

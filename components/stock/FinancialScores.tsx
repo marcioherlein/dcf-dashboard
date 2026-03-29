@@ -78,14 +78,14 @@ export default function FinancialScores({ scores }: Props) {
     : 'Distress Zone'
 
   return (
-    <div className="rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/8 dark:bg-[#111]">
-      <h2 className="mb-4 text-sm font-semibold text-gray-700 dark:text-white/70">Financial Quality Scores</h2>
+    <div className="rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8 p-6">
+      <h2 className="mb-4 text-sm font-headline font-semibold text-on-surface dark:text-white/70">Financial Quality Scores</h2>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
 
         {/* ── Piotroski F-Score ── */}
         <div className={`rounded-xl border p-4 ${BgColor(piotroski.score, [4, 8])}`}>
-          <div className="mb-3 flex items-start justify-between">
+          <div className="mb-1 flex items-start justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-white/40">Piotroski F-Score</p>
               <p className={`mt-0.5 text-3xl font-bold tabular-nums ${ScoreColor(piotroski.score, [4, 8])}`}>
@@ -96,6 +96,10 @@ export default function FinancialScores({ scores }: Props) {
               {piotroski.label}
             </span>
           </div>
+          <p className="mb-3 text-[11px] text-gray-500 dark:text-white/35 leading-relaxed">
+            Developed by Joseph Piotroski (2000). Scores 9 accounting signals across profitability, leverage, and operating efficiency.
+            Score ≥ 7 = strong financial health. Score ≤ 3 = potential distress. Each point is binary (pass/fail).
+          </p>
 
           {/* 9 indicator dots */}
           <div className="mb-3 flex flex-wrap gap-1.5">
@@ -134,7 +138,7 @@ export default function FinancialScores({ scores }: Props) {
 
         {/* ── Altman Z-Score ── */}
         <div className={`rounded-xl border p-4 ${altmanBg}`}>
-          <div className="mb-3 flex items-start justify-between">
+          <div className="mb-1 flex items-start justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-white/40">Altman Z-Score</p>
               {altmanSafe != null ? (
@@ -149,6 +153,10 @@ export default function FinancialScores({ scores }: Props) {
               {altmanZoneLabel}
             </span>
           </div>
+          <p className="mb-3 text-[11px] text-gray-500 dark:text-white/35 leading-relaxed">
+            Created by Edward Altman (1968) to predict bankruptcy within 2 years. Combines 5 financial ratios weighted by predictive power.
+            Z &lt; 1.8 = distress zone. 1.8–3.0 = grey zone. Z ≥ 3.0 = safe zone. Not designed for financial-sector companies.
+          </p>
 
           {altmanSafe != null && (
             <div className="mb-3">
@@ -203,7 +211,7 @@ export default function FinancialScores({ scores }: Props) {
 
         {/* ── Beneish M-Score ── */}
         <div className={`rounded-xl border p-4 ${beneish ? beneishBg : 'bg-gray-50 border-gray-200 dark:bg-white/5 dark:border-white/10'}`}>
-          <div className="mb-3 flex items-start justify-between">
+          <div className="mb-1 flex items-start justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-white/40">Beneish M-Score</p>
               {beneish ? (
@@ -220,6 +228,10 @@ export default function FinancialScores({ scores }: Props) {
               </span>
             )}
           </div>
+          <p className="mb-3 text-[11px] text-gray-500 dark:text-white/35 leading-relaxed">
+            Developed by Messod Beneish (1999) to detect earnings manipulation. Uses 8 accounting indices that compare year-over-year changes in income statement and balance sheet ratios.
+            M-Score ≤ −1.78 suggests the company is unlikely to be a manipulator. Higher values warrant closer scrutiny.
+          </p>
 
           {beneish && (
             <>
@@ -262,7 +274,7 @@ export default function FinancialScores({ scores }: Props) {
 
         {/* ── ROIC vs WACC ── */}
         <div className={`rounded-xl border p-4 ${spreadGood ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20' : 'bg-red-50 border-red-200 dark:bg-red-500/10 dark:border-red-500/20'}`}>
-          <div className="mb-3 flex items-start justify-between">
+          <div className="mb-1 flex items-start justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-white/40">ROIC vs WACC</p>
               <p className={`mt-0.5 text-3xl font-bold tabular-nums ${spreadGood ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
@@ -274,6 +286,11 @@ export default function FinancialScores({ scores }: Props) {
               {spreadGood ? 'Value Created' : 'Value Destroyed'}
             </span>
           </div>
+          <p className="mb-3 text-[11px] text-gray-500 dark:text-white/35 leading-relaxed">
+            Return on Invested Capital (ROIC) measures how efficiently a company generates profit from the capital it has deployed.
+            When ROIC exceeds WACC, the company creates economic value — each dollar invested earns more than it costs.
+            NOPAT = EBIT × (1 − tax rate). Invested Capital = Total Assets − non-interest liabilities − excess cash.
+          </p>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">

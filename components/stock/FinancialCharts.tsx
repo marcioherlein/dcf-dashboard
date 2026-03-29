@@ -97,7 +97,7 @@ export default function FinancialCharts({ incomeStatement, cashFlow, currency = 
   if (historicalIS.length < 2) return null
 
   const sectionTitle = 'text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-white/25 mb-3'
-  const panel = 'rounded-2xl border border-black/[0.06] bg-white p-5 shadow-sm dark:border-white/8 dark:bg-[#111]'
+  const panel = 'rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8 p-5'
 
   return (
     <div className="space-y-4">

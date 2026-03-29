@@ -68,6 +68,7 @@ interface FinancialsData {
     yearlyGrowthRates?: number[]
   }
   growthModel?: 'two-stage' | 'three-stage'
+  historicalFCF?: { year: number; cashFlow: number }[]
   fairValue: {
     ev: number; cash: number; debt: number; marketCap: number
     equityValue: number; sharesOutstanding: number
@@ -125,13 +126,10 @@ function ThemeToggle({ isDark, onToggle }: { isDark: boolean; onToggle: () => vo
   return (
     <button
       onClick={onToggle}
-      className="flex items-center gap-2 rounded-full px-2 py-1 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+      className="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium text-on-surface-variant hover:bg-surface-container-low transition-colors"
       aria-label="Toggle theme"
     >
-      <span className="text-sm">{isDark ? '☀︎' : '☾'}</span>
-      <div className={`relative flex h-5 w-9 items-center rounded-full transition-colors duration-300 ${isDark ? 'bg-white/20' : 'bg-gray-200'}`}>
-        <span className={`absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${isDark ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
-      </div>
+      <span>{isDark ? '☀︎ Light' : '☾ Dark'}</span>
     </button>
   )
 }
@@ -223,65 +221,80 @@ export default function StockPage() {
 
   return (
     <div className={isDark ? 'dark' : ''}>
-      <div className="min-h-screen bg-[#f5f5f7] dark:bg-black" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif' }}>
+      <div className="min-h-screen bg-background dark:bg-[#0f0f0f] text-on-background dark:text-white/90">
 
-        {/* Nav */}
-        <nav className="sticky top-0 z-10 border-b border-black/[0.06] bg-white/80 px-6 py-3 backdrop-blur-xl dark:border-white/8 dark:bg-black/80">
-          <div className="mx-auto flex max-w-7xl items-center gap-4">
+        {/* Top nav */}
+        <nav className="sticky top-0 z-40 bg-surface-container-lowest dark:bg-[#111] border-b border-outline-variant/15 dark:border-white/8 shadow-nav">
+          <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-3">
             <button
               onClick={() => router.push('/')}
-              className="text-sm text-gray-400 transition hover:text-gray-700 dark:text-white/30 dark:hover:text-white/70"
+              className="flex items-center gap-1.5 text-sm text-on-surface-variant dark:text-white/40 hover:text-on-surface dark:hover:text-white/70 transition-colors"
             >
-              ← Search
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+              Back
             </button>
-            <span className="text-sm font-bold text-gray-900 dark:text-white">{ticker}</span>
-            {data && <span className="text-sm text-gray-400 dark:text-white/40">{data.companyName}</span>}
-            <div className="ml-auto">
+
+            <div className="h-4 w-px bg-outline-variant/40" />
+
+            <div className="flex items-center gap-2">
+              <span className="font-headline text-sm font-bold text-primary dark:text-white">{ticker}</span>
+              {data && (
+                <span className="hidden sm:block text-xs text-on-surface-variant dark:text-white/40 truncate max-w-[200px]">
+                  {data.companyName}
+                </span>
+              )}
+            </div>
+
+            <div className="ml-auto flex items-center gap-2">
               <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
             </div>
           </div>
         </nav>
 
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-12">
           {loading && (
-            <div className="flex flex-col items-center justify-center py-32 gap-3">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-800 dark:border-white/10 dark:border-t-white/60" />
-              <p className="text-sm text-gray-400 dark:text-white/30">Calculating WACC, Beta, DCF… this takes ~10s</p>
+            <div className="flex flex-col items-center justify-center py-32 gap-4">
+              <div className="h-10 w-10 animate-spin rounded-full border-4 border-surface-container-high border-t-primary dark:border-white/10 dark:border-t-white/60" />
+              <p className="text-sm text-on-surface-variant dark:text-white/30">Calculating WACC, Beta, DCF… this takes ~10s</p>
             </div>
           )}
 
           {error && (
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">
+            <div className="mt-8 rounded-xl bg-error-container/60 border border-error/20 p-5 text-sm text-on-error-container">
               <strong>Error:</strong> {error}. Yahoo Finance may be temporarily unavailable — try again in a moment.
             </div>
           )}
 
           {data && !loading && (
             <div>
-              {/* Always-visible price header */}
-              <PriceHeader
-                ticker={data.ticker}
-                companyName={data.companyName}
-                price={data.quote.price}
-                change={data.quote.change}
-                changePct={data.quote.changePct}
-                marketCap={data.quote.marketCap}
-                peRatio={data.quote.peRatio}
-                high52={data.quote.fiftyTwoWeekHigh}
-                low52={data.quote.fiftyTwoWeekLow}
-                analystTarget={data.quote.analystTargetMean}
-                currency={data.quote.currency ?? 'USD'}
-                sector={data.quote.sector ?? ''}
-                analystRec={data.analystRecommendation}
-              />
+              {/* Price header */}
+              <div className="pt-6">
+                <PriceHeader
+                  ticker={data.ticker}
+                  companyName={data.companyName}
+                  price={data.quote.price}
+                  change={data.quote.change}
+                  changePct={data.quote.changePct}
+                  marketCap={data.quote.marketCap}
+                  peRatio={data.quote.peRatio}
+                  high52={data.quote.fiftyTwoWeekHigh}
+                  low52={data.quote.fiftyTwoWeekLow}
+                  analystTarget={data.quote.analystTargetMean}
+                  currency={data.quote.currency ?? 'USD'}
+                  sector={data.quote.sector ?? ''}
+                  analystRec={data.analystRecommendation}
+                />
+              </div>
 
-              {/* Tab navigation — sticky below main nav */}
+              {/* Tab navigation */}
               <div className="-mx-4 sm:-mx-6 lg:-mx-8 mt-4">
                 <TabNav activeTab={activeTab} onChange={setActiveTab} />
               </div>
 
               {/* ── Summary ── */}
-              <div className={`pt-4 space-y-4 ${activeTab === 'summary' ? 'block' : 'hidden'}`}>
+              <div className={`pt-6 space-y-4 ${activeTab === 'summary' ? 'block' : 'hidden'}`}>
                 <PriceChart
                   ticker={ticker}
                   isDark={isDark}
@@ -293,7 +306,7 @@ export default function StockPage() {
               </div>
 
               {/* ── Financials ── */}
-              <div className={`pt-4 space-y-4 ${activeTab === 'financials' ? 'block' : 'hidden'}`}>
+              <div className={`pt-6 space-y-4 ${activeTab === 'financials' ? 'block' : 'hidden'}`}>
                 {data.financialStatements && (
                   <FinancialStatements
                     incomeStatement={data.financialStatements.incomeStatement}
@@ -324,7 +337,7 @@ export default function StockPage() {
               </div>
 
               {/* ── Valuation ── */}
-              <div className={`pt-4 space-y-4 ${activeTab === 'valuation' ? 'block' : 'hidden'}`}>
+              <div className={`pt-6 space-y-4 ${activeTab === 'valuation' ? 'block' : 'hidden'}`}>
                 {data.valuationMethods && (
                   <ValuationMethods
                     valuationMethods={data.valuationMethods}
@@ -347,6 +360,7 @@ export default function StockPage() {
                   onTerminalGChange={setTerminalGOverride}
                   growthModel={data.growthModel}
                   yearlyGrowthRates={data.dcf.yearlyGrowthRates}
+                  historicalFCF={data.historicalFCF}
                 />
                 <WACCBreakdown
                   wacc={data.wacc}
@@ -363,23 +377,23 @@ export default function StockPage() {
               </div>
 
               {/* ── Quality ── */}
-              <div className={`pt-4 space-y-4 ${activeTab === 'quality' ? 'block' : 'hidden'}`}>
+              <div className={`pt-6 space-y-4 ${activeTab === 'quality' ? 'block' : 'hidden'}`}>
                 {data.scores && <FinancialScores scores={data.scores} />}
               </div>
 
               {/* ── Ownership ── */}
-              <div className={`pt-4 space-y-4 ${activeTab === 'ownership' ? 'block' : 'hidden'}`}>
+              <div className={`pt-6 space-y-4 ${activeTab === 'ownership' ? 'block' : 'hidden'}`}>
                 {data.ownership && <OwnershipPanel ownership={data.ownership} />}
                 <InsiderTable ticker={ticker} />
               </div>
 
               {/* ── News ── */}
-              <div className={`pt-4 space-y-4 ${activeTab === 'news' ? 'block' : 'hidden'}`}>
+              <div className={`pt-6 space-y-4 ${activeTab === 'news' ? 'block' : 'hidden'}`}>
                 <NewsPanel ticker={ticker} />
               </div>
 
               {/* Always-visible save/history */}
-              <div className="pt-4">
+              <div className="pt-6">
                 <ValuationHistory
                   ticker={ticker}
                   onSave={handleSave}

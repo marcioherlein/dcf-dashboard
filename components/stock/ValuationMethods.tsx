@@ -59,7 +59,7 @@ const TYPE_COLORS: Record<CompanyType, { bg: string; text: string; border: strin
     badge:  'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400',
   },
   standard: {
-    bg:     'bg-gray-50 dark:bg-white/5',
+    bg:     'bg-surface-container-low dark:bg-white/5',
     text:   'text-gray-700 dark:text-white/60',
     border: 'border-gray-200 dark:border-white/10',
     badge:  'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-white/60',
@@ -74,38 +74,91 @@ function fmtPct(v: number) {
   return `${v >= 0 ? '+' : ''}${(v * 100).toFixed(1)}%`
 }
 
+interface ModelCardProps {
+  label: string
+  tagline: string
+  methodology: string
+  inputs: { key: string; value: string }[]
+  fairValue: number
+  upsidePct: number
+  applicable: boolean
+  reason: string
+  currency: string
+  isPrimary?: boolean
+  weight: number
+}
+
 function ModelCard({
-  label, subtitle, fairValue, upsidePct, applicable, reason, currency, isPrimary,
-}: {
-  label: string; subtitle?: string; fairValue: number; upsidePct: number
-  applicable: boolean; reason: string; currency: string; isPrimary?: boolean
-}) {
+  label, tagline, methodology, inputs,
+  fairValue, upsidePct, applicable, reason,
+  currency, isPrimary, weight,
+}: ModelCardProps) {
+  const [expanded, setExpanded] = useState(false)
   const up = upsidePct >= 0
   return (
-    <div className={`rounded-xl border p-4 flex flex-col gap-1.5 ${
+    <div className={`rounded-xl border flex flex-col gap-0 overflow-hidden transition-all ${
       isPrimary
-        ? 'bg-gray-50 dark:bg-[#1f1f21] border-gray-300 dark:border-white/20 ring-1 ring-gray-300 dark:ring-white/20'
-        : 'bg-white dark:bg-[#161618] border-gray-200 dark:border-white/[0.06]'
+        ? 'border-primary/20 dark:border-primary-fixed/20 ring-1 ring-primary/15 dark:ring-primary-fixed/15'
+        : 'border-outline-variant/15 dark:border-white/[0.06]'
     } ${!applicable ? 'opacity-50' : ''}`}>
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold text-gray-700 dark:text-white/70 leading-tight">{label}</p>
-        {isPrimary && (
-          <span className="text-[10px] font-medium bg-gray-200 dark:bg-white/[0.12] text-gray-600 dark:text-white/60 rounded px-1.5 py-0.5">primary</span>
+      {/* Header */}
+      <div className={`px-4 pt-3.5 pb-3 ${isPrimary ? 'bg-primary/5 dark:bg-primary-fixed/8' : 'bg-surface-container-lowest dark:bg-[#161618]'}`}>
+        <div className="flex items-center justify-between gap-2 mb-0.5">
+          <p className="text-xs font-headline font-bold text-on-surface dark:text-white/80">{label}</p>
+          <div className="flex items-center gap-1.5">
+            {isPrimary && (
+              <span className="text-[9px] font-semibold bg-primary/15 text-primary dark:bg-primary-fixed/20 dark:text-primary-fixed-dim rounded px-1.5 py-0.5 uppercase tracking-wide">primary</span>
+            )}
+            <span className="text-[9px] font-medium text-on-surface-variant dark:text-white/25 bg-surface-container dark:bg-white/8 rounded px-1.5 py-0.5">{weight}% weight</span>
+          </div>
+        </div>
+        <p className="text-[10px] text-on-surface-variant dark:text-white/30 leading-tight">{tagline}</p>
+      </div>
+
+      {/* Result */}
+      <div className="px-4 py-3 bg-surface-container-lowest dark:bg-[#161618] border-t border-outline-variant/10 dark:border-white/5">
+        {applicable ? (
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-[10px] text-on-surface-variant dark:text-white/30 mb-0.5">Fair Value</p>
+              <p className="text-xl font-headline font-bold text-on-surface dark:text-white tabular-nums" style={{ letterSpacing: '-0.02em' }}>
+                {currency}{fmt(fairValue)}
+              </p>
+            </div>
+            <span className={`text-sm font-semibold tabular-nums pb-0.5 ${up ? 'text-secondary dark:text-secondary-container' : 'text-error dark:text-error-container'}`}>
+              {fmtPct(upsidePct)}
+            </span>
+          </div>
+        ) : (
+          <p className="text-xs text-on-surface-variant dark:text-white/30 italic">{reason}</p>
         )}
       </div>
-      {subtitle && <p className="text-[10px] text-gray-400 dark:text-white/25 leading-tight">{subtitle}</p>}
-      {applicable ? (
-        <>
-          <p className="text-lg font-bold text-gray-900 dark:text-white tabular-nums">{currency}{fmt(fairValue)}</p>
-          <span className={`text-sm font-semibold tabular-nums ${up ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
-            {fmtPct(upsidePct)}
-          </span>
-        </>
-      ) : (
-        <p className="text-xs text-gray-400 dark:text-white/25 italic mt-1">{reason}</p>
-      )}
+
+      {/* Expandable detail */}
       {applicable && (
-        <p className="text-[10px] text-gray-400 dark:text-white/25 leading-relaxed border-t border-gray-100 dark:border-white/5 pt-1.5 mt-0.5">{reason}</p>
+        <>
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="flex items-center justify-between gap-2 px-4 py-2 text-[10px] font-medium text-on-surface-variant dark:text-white/25 hover:bg-surface-container-low dark:hover:bg-white/5 transition-colors border-t border-outline-variant/10 dark:border-white/5"
+          >
+            <span>How it&apos;s calculated</span>
+            <span className="text-[10px]">{expanded ? '▲' : '▼'}</span>
+          </button>
+          {expanded && (
+            <div className="px-4 pb-4 bg-surface-container-low dark:bg-white/[0.03] border-t border-outline-variant/10 dark:border-white/5 space-y-3">
+              <p className="text-[11px] text-on-surface-variant dark:text-white/40 leading-relaxed pt-3">{methodology}</p>
+              <div className="space-y-1">
+                {inputs.map((inp) => (
+                  <div key={inp.key} className="flex justify-between items-center text-[11px]">
+                    <span className="text-on-surface-variant dark:text-white/30">{inp.key}</span>
+                    <span className="font-semibold text-on-surface dark:text-white/70 tabular-nums">{inp.value}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-on-surface-variant dark:text-white/25 leading-relaxed border-t border-outline-variant/10 dark:border-white/5 pt-2">{reason}</p>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
@@ -168,11 +221,11 @@ export default function ValuationMethods({ valuationMethods: vm, currency = '$' 
   }
 
   return (
-    <div className="rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/8 dark:bg-[#111]">
+    <div className="rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8 p-6">
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div>
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-white/70">Valuation Methods</h2>
+          <h2 className="text-sm font-headline font-semibold text-on-surface dark:text-white/70">Valuation Methods</h2>
           <p className="mt-0.5 text-xs text-gray-400 dark:text-white/25">
             {vm.primaryModelLabel} · {[
               vm.models.fcff.applicable ? 'FCFF' : null,
@@ -188,51 +241,76 @@ export default function ValuationMethods({ valuationMethods: vm, currency = '$' 
       </div>
 
       {/* Model cards grid */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-5">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 mb-5">
         <ModelCard
           label="FCFF DCF"
-          subtitle="Free Cash Flow to Firm"
+          tagline="Free Cash Flow to Firm — discounted at WACC"
+          methodology="Projects the free cash flow available to ALL capital providers (debt + equity) over 10 years, then discounts each year's cash flow back to present value using WACC. Adds a terminal value (Gordon Growth) for year 10+, subtracts net debt, and divides by shares outstanding to get intrinsic value per share."
+          inputs={[
+            { key: 'Base FCF', value: `${currency}${(vm.models.fcff.fairValue > 0 ? '—' : '—')}` },
+          ]}
           fairValue={vm.models.fcff.fairValue}
           upsidePct={vm.models.fcff.upsidePct}
           applicable={vm.models.fcff.applicable}
           reason={vm.models.fcff.reason}
           currency={currency}
           isPrimary={isPrimaryModel('fcff')}
+          weight={vm.effectiveWeights.fcff}
         />
         <ModelCard
           label="FCFE DCF"
-          subtitle="Free Cash Flow to Equity"
+          tagline="Free Cash Flow to Equity — discounted at cost of equity"
+          methodology="For financial companies (banks, insurers, fintechs), capital structure is embedded in operations — WACC is not appropriate. Instead, FCFE uses Net Income × 0.90 as an equity cash flow proxy, discounted at the Cost of Equity (Ke) from CAPM. No debt/cash bridge needed since we start from after-interest earnings."
+          inputs={[
+            { key: 'Base FCFE', value: `${currency}${fmt(vm.models.fcfe.baseFCFE)}M` },
+            { key: 'Discount rate (Ke)', value: `${(vm.models.fcfe.discountRate * 100).toFixed(2)}%` },
+          ]}
           fairValue={vm.models.fcfe.fairValuePerShare}
           upsidePct={vm.models.fcfe.upsidePct}
           applicable={vm.models.fcfe.applicable}
           reason={vm.models.fcfe.reason}
           currency={currency}
           isPrimary={isPrimaryModel('fcfe')}
+          weight={vm.effectiveWeights.fcfe}
         />
         <ModelCard
           label="DDM"
-          subtitle="Dividend Discount Model"
+          tagline="Dividend Discount Model — Gordon Growth"
+          methodology="Values a stock as the present value of all future dividends. Uses the Gordon Growth Model: P = D₁ / (Ke − g), where D₁ is next year's expected dividend, Ke is the cost of equity from CAPM, and g is the sustainable growth rate (ROE × retention ratio). Only applicable for dividend-paying companies."
+          inputs={[
+            { key: 'Annual dividend (D₀)', value: `${currency}${fmt(vm.models.ddm.dividendPerShare)}` },
+            { key: 'Cost of equity (Ke)', value: `${(vm.models.ddm.costOfEquity * 100).toFixed(2)}%` },
+            { key: 'Sustainable growth (g)', value: `${(vm.models.ddm.impliedGrowthRate * 100).toFixed(2)}%` },
+          ]}
           fairValue={vm.models.ddm.fairValuePerShare}
           upsidePct={vm.models.ddm.upsidePct}
           applicable={vm.models.ddm.applicable}
           reason={vm.models.ddm.reason}
           currency={currency}
           isPrimary={isPrimaryModel('ddm')}
+          weight={vm.effectiveWeights.ddm}
         />
         <ModelCard
           label="Multiples"
-          subtitle={`${applicableMultiples.length} comparable metric${applicableMultiples.length !== 1 ? 's' : ''}`}
+          tagline={`${applicableMultiples.length} comparable metric${applicableMultiples.length !== 1 ? 's' : ''} vs sector peers`}
+          methodology="Compares the company's valuation ratios (EV/EBITDA, P/E, P/S, P/FCF) against live sector peers or industry medians. Each applicable multiple implies a fair value; these are blended (equal-weighted) to produce a single estimate. Serves as a market-based sanity check on DCF assumptions."
+          inputs={applicableMultiples.slice(0, 4).map((e) => ({
+            key: `${e.multiple} (actual)`,
+            value: `${e.actualValue.toFixed(1)}x vs ${e.sectorMedian.toFixed(1)}x median → ${currency}${fmt(e.impliedFairValue)}`,
+          }))}
           fairValue={vm.models.multiples.blendedFairValue ?? 0}
-          upsidePct={vm.models.multiples.blendedFairValue !== null && currency
-            ? (vm.models.multiples.estimates.filter(e => e.applicable).reduce((s, e) => s + e.upsidePct, 0) /
-               Math.max(applicableMultiples.length, 1))
-            : 0}
-          applicable={vm.models.multiples.blendedFairValue !== null}
+          upsidePct={
+            applicableMultiples.length > 0
+              ? applicableMultiples.reduce((s, e) => s + e.upsidePct, 0) / applicableMultiples.length
+              : 0
+          }
+          applicable={vm.models.multiples.blendedFairValue !== null && applicableMultiples.length > 0}
           reason={applicableMultiples.length > 0
-            ? `Blended: ${applicableMultiples.map(e => e.multiple).join(', ')}`
-            : 'No applicable multiples'}
+            ? `Blended across: ${applicableMultiples.map((e) => e.multiple).join(', ')}`
+            : 'No applicable multiples found for this company'}
           currency={currency}
           isPrimary={isPrimaryModel('multiples')}
+          weight={vm.effectiveWeights.multiples}
         />
       </div>
 
@@ -271,7 +349,7 @@ export default function ValuationMethods({ valuationMethods: vm, currency = '$' 
         // Visual cap: ±60% so extreme values don't crush other bars
         const CAP = 60
         return (
-          <div className="mb-4 rounded-xl border border-gray-100 dark:border-white/8 bg-gray-50 dark:bg-white/5 px-4 py-3">
+          <div className="mb-4 rounded-xl border border-outline-variant/15 dark:border-white/8 bg-surface-container-low dark:bg-white/5 px-4 py-3">
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-semibold text-gray-500 dark:text-white/40">vs Peer Median</p>
               <span className="text-[10px] text-gray-400 dark:text-white/25">
@@ -296,7 +374,7 @@ export default function ValuationMethods({ valuationMethods: vm, currency = '$' 
                       {d.actual.toFixed(1)}x vs {d.median.toFixed(1)}x
                     </span>
                     {/* Diverging bar track */}
-                    <div className="relative flex-1 h-5 rounded bg-gray-100 dark:bg-white/8 overflow-hidden">
+                    <div className="relative flex-1 h-5 rounded bg-surface-container dark:bg-white/8 overflow-hidden">
                       {/* Center line */}
                       <div className="absolute left-1/2 top-0 h-full w-px bg-gray-300 dark:bg-white/20" />
                       {/* Bar */}
@@ -334,7 +412,7 @@ export default function ValuationMethods({ valuationMethods: vm, currency = '$' 
             Multiples breakdown
           </button>
           {showMultiples && (
-            <div className="mt-2 rounded-xl border border-gray-100 dark:border-white/8 bg-gray-50 dark:bg-white/5 px-4 py-2">
+            <div className="mt-2 rounded-xl border border-outline-variant/15 dark:border-white/8 bg-surface-container-low dark:bg-white/5 px-4 py-2">
               {vm.models.multiples.estimates.map((est) => (
                 <MultipleRow key={est.multiple} est={est} currency={currency} />
               ))}
@@ -358,7 +436,7 @@ export default function ValuationMethods({ valuationMethods: vm, currency = '$' 
           Why these models?
         </button>
         {showRationale && (
-          <p className="mt-2 text-xs text-gray-500 dark:text-white/40 leading-relaxed bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-white/8 px-4 py-3">
+          <p className="mt-2 text-xs text-gray-500 dark:text-white/40 leading-relaxed bg-surface-container-low dark:bg-white/5 rounded-xl border border-outline-variant/15 dark:border-white/8 px-4 py-3">
             {vm.rationale}
           </p>
         )}

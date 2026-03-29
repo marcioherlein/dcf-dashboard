@@ -264,11 +264,11 @@ export default function PriceChart({ ticker, isDark, fcffFairValue, triangulated
   const changePct = firstClose && lastClose ? ((lastClose - firstClose) / firstClose) * 100 : null
 
   return (
-    <div className="rounded-2xl border border-black/[0.06] bg-white shadow-sm dark:border-white/8 dark:bg-[#111]">
+    <div className="rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8">
       {/* ── Header ── */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-6 pt-5 pb-3">
         <div className="flex items-center gap-3">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-white/70">Price Chart</h2>
+          <h2 className="text-sm font-headline font-semibold text-on-surface dark:text-white/70">Price Chart</h2>
           {changePct != null && (
             <span className={`text-xs font-semibold tabular-nums ${changePct >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
               {changePct >= 0 ? '+' : ''}{changePct.toFixed(2)}%

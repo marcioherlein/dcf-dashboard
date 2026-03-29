@@ -25,6 +25,8 @@ interface Props {
   // Growth model
   growthModel?: 'two-stage' | 'three-stage'
   yearlyGrowthRates?: number[]
+  // Historical FCF for YoY context
+  historicalFCF?: { year: number; cashFlow: number }[]
 }
 
 // Re-runs DCF projection inline (mirrors server logic) for scenario recalculation
@@ -53,6 +55,7 @@ export default function DCFModel({
   wacc, cagr, terminalG, scenarios,
   baseFCF, terminalGOverride, onTerminalGChange,
   growthModel = 'two-stage', yearlyGrowthRates,
+  historicalFCF,
 }: Props) {
   const [editing, setEditing] = useState(false)
   const [inputVal, setInputVal] = useState('')
@@ -130,10 +133,10 @@ export default function DCFModel({
 
   return (
     <div className="space-y-4">
-      <div className="overflow-x-auto rounded-2xl border border-black/[0.06] bg-white shadow-sm dark:border-white/8 dark:bg-[#111]">
+      <div className="overflow-x-auto rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8">
         <div className="px-6 pt-5 pb-2">
           <div className="flex flex-wrap items-center gap-4">
-            <h2 className="text-sm font-semibold text-gray-700 dark:text-white/70">DCF Model</h2>
+            <h2 className="text-sm font-headline font-semibold text-on-surface dark:text-white/70">DCF Model</h2>
             <div className="flex flex-wrap gap-4 text-xs text-gray-500 dark:text-white/30">
               <span>WACC <strong className="text-gray-800 dark:text-white/70">{fmtPct(wacc)}</strong></span>
               <span>CAGR <strong className="text-gray-800 dark:text-white/70">{fmtPct(cagr)}</strong></span>
@@ -192,9 +195,15 @@ export default function DCFModel({
           </div>
         </div>
         <table className="w-full min-w-[900px] text-sm">
-          <thead className="bg-gray-50 dark:bg-white/5">
+          <thead className="bg-surface-container-low dark:bg-white/5">
             <tr>
               <td className="px-4 py-2 text-xs font-medium text-gray-500 dark:text-white/25">DCF MODEL</td>
+              {(historicalFCF ?? []).map((h) => (
+                <td key={`h${h.year}`} className="px-3 py-2 text-center text-xs font-medium text-gray-400 dark:text-white/20">{h.year}</td>
+              ))}
+              {(historicalFCF ?? []).length > 0 && (
+                <td className="px-1 py-2 text-center text-xs text-gray-300 dark:text-white/10">│</td>
+              )}
               {(projections ?? []).map((p) => (
                 <td key={p.year} className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-white/25">{p.year}</td>
               ))}
@@ -202,19 +211,77 @@ export default function DCFModel({
             </tr>
           </thead>
           <tbody>
+            {/* Row label sub-header */}
+            {(historicalFCF ?? []).length > 0 && (
+              <tr>
+                <td className="px-4 py-1 text-[10px] text-gray-400 dark:text-white/20 italic" colSpan={1}></td>
+                {(historicalFCF ?? []).map((h) => (
+                  <td key={`lbl${h.year}`} className="px-3 py-1 text-center text-[10px] text-gray-400 dark:text-white/20 italic">actual</td>
+                ))}
+                <td className="px-1 py-1"></td>
+                {(projections ?? []).map((p) => (
+                  <td key={`lbl${p.year}`} className="px-3 py-1 text-center text-[10px] text-gray-400 dark:text-white/20 italic">est.</td>
+                ))}
+                <td className="px-3 py-1"></td>
+              </tr>
+            )}
             <tr className="border-t border-gray-100 dark:border-white/5">
-              <td className="px-4 py-2.5 text-xs text-gray-500 dark:text-white/25">CF (M)</td>
+              <td className="px-4 py-2.5 text-xs text-gray-500 dark:text-white/25">FCF (M)</td>
+              {(historicalFCF ?? []).map((h) => (
+                <td key={`hcf${h.year}`} className="px-3 py-2.5 text-center text-sm font-medium text-gray-500 dark:text-white/40 tabular-nums">
+                  {fmt(h.cashFlow, 0)}
+                </td>
+              ))}
+              {(historicalFCF ?? []).length > 0 && (
+                <td className="px-1 py-2.5 text-center text-xs text-gray-200 dark:text-white/10">│</td>
+              )}
               {(projections ?? []).map((p) => (
-                <td key={p.year} className="px-3 py-2.5 text-center text-sm font-medium text-gray-800 dark:text-white/80">{fmt(p.cashFlow, 0)}</td>
+                <td key={p.year} className="px-3 py-2.5 text-center text-sm font-medium text-gray-800 dark:text-white/80 tabular-nums">{fmt(p.cashFlow, 0)}</td>
               ))}
               <td className={`px-3 py-2.5 text-center text-sm font-medium ${terminalGOverride != null ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-800 dark:text-white/80'}`}>
                 {fmt(dispTV, 0)}
               </td>
             </tr>
+            {/* YoY growth row */}
+            <tr className="border-t border-gray-100 dark:border-white/5">
+              <td className="px-4 py-1.5 text-xs text-gray-400 dark:text-white/20">YoY</td>
+              {(historicalFCF ?? []).map((h, i, arr) => {
+                const prev = arr[i - 1]
+                if (!prev || prev.cashFlow === 0) return <td key={`hyoy${h.year}`} className="px-3 py-1.5 text-center text-xs text-gray-300 dark:text-white/15">—</td>
+                const g = (h.cashFlow - prev.cashFlow) / Math.abs(prev.cashFlow)
+                return (
+                  <td key={`hyoy${h.year}`} className={`px-3 py-1.5 text-center text-xs tabular-nums font-medium ${g >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
+                    {g >= 0 ? '+' : ''}{(g * 100).toFixed(1)}%
+                  </td>
+                )
+              })}
+              {(historicalFCF ?? []).length > 0 && (
+                <td className="px-1 py-1.5 text-center text-xs text-gray-200 dark:text-white/10">│</td>
+              )}
+              {(projections ?? []).map((p, i) => {
+                const prevCF = i === 0
+                  ? (historicalFCF && historicalFCF.length > 0 ? historicalFCF[historicalFCF.length - 1].cashFlow : null)
+                  : projections[i - 1].cashFlow
+                if (prevCF == null || prevCF === 0) return <td key={`pyoy${p.year}`} className="px-3 py-1.5 text-center text-xs text-gray-300 dark:text-white/15">—</td>
+                const g = (p.cashFlow - prevCF) / Math.abs(prevCF)
+                return (
+                  <td key={`pyoy${p.year}`} className={`px-3 py-1.5 text-center text-xs tabular-nums font-medium ${g >= 0 ? 'text-emerald-500/70 dark:text-emerald-400/60' : 'text-red-400/70 dark:text-red-400/60'}`}>
+                    {g >= 0 ? '+' : ''}{(g * 100).toFixed(1)}%
+                  </td>
+                )
+              })}
+              <td className="px-3 py-1.5 text-center text-xs text-gray-300 dark:text-white/15">{fmtPct(activeG)}</td>
+            </tr>
             <tr className="border-t border-gray-100 bg-gray-50 dark:border-white/5 dark:bg-white/[0.03]">
               <td className="px-4 py-2.5 text-xs text-gray-500 dark:text-white/25">DCF (M)</td>
+              {(historicalFCF ?? []).map((h) => (
+                <td key={`hdcf${h.year}`} className="px-3 py-2.5 text-center text-xs text-gray-300 dark:text-white/15">—</td>
+              ))}
+              {(historicalFCF ?? []).length > 0 && (
+                <td className="px-1 py-2.5 text-center text-xs text-gray-200 dark:text-white/10">│</td>
+              )}
               {(projections ?? []).map((p) => (
-                <td key={p.year} className="px-3 py-2.5 text-center text-sm text-gray-600 dark:text-white/50">{fmt(p.discounted, 0)}</td>
+                <td key={p.year} className="px-3 py-2.5 text-center text-sm text-gray-600 dark:text-white/50 tabular-nums">{fmt(p.discounted, 0)}</td>
               ))}
               <td className={`px-3 py-2.5 text-center text-sm ${terminalGOverride != null ? 'text-indigo-500 dark:text-indigo-400' : 'text-gray-600 dark:text-white/50'}`}>
                 {fmt(dispTVdisc, 0)}
@@ -223,6 +290,12 @@ export default function DCFModel({
             {growthModel === 'three-stage' && yearlyGrowthRates && yearlyGrowthRates.length > 0 && (
               <tr className="border-t border-gray-100 dark:border-white/5">
                 <td className="px-4 py-1.5 text-xs text-gray-400 dark:text-white/20">g/yr</td>
+                {(historicalFCF ?? []).map((h) => (
+                  <td key={`hg${h.year}`} className="px-3 py-1.5 text-center text-xs text-gray-300 dark:text-white/15">—</td>
+                ))}
+                {(historicalFCF ?? []).length > 0 && (
+                  <td className="px-1 py-1.5"></td>
+                )}
                 {yearlyGrowthRates.map((g, i) => (
                   <td key={i} className={`px-3 py-1.5 text-center text-xs tabular-nums ${i >= 5 ? 'text-violet-500 dark:text-violet-400 font-medium' : 'text-gray-400 dark:text-white/30'}`}>
                     {fmtPct(g)}
@@ -236,7 +309,7 @@ export default function DCFModel({
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-2xl border border-black/[0.06] bg-white p-5 shadow-sm dark:border-white/8 dark:bg-[#111]">
+        <div className="rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8 p-5">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-white/25">Enterprise Value Bridge</h3>
           <div className="mt-4 space-y-2 text-sm">
             {[
@@ -263,7 +336,7 @@ export default function DCFModel({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-black/[0.06] bg-white p-5 shadow-sm dark:border-white/8 dark:bg-[#111]">
+        <div className="rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8 p-5">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-white/25">Scenarios</h3>
           <div className="mt-4 space-y-3">
             {([

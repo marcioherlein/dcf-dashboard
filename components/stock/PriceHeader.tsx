@@ -14,46 +14,35 @@ interface Props {
   analystTarget: number
   currency: string
   sector: string
-  analystRec: string
-}
-
-const recColor: Record<string, string> = {
-  buy:        'bg-green-100 text-green-800 dark:bg-green-500/15 dark:text-green-400',
-  strongBuy:  'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-400',
-  hold:       'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/15 dark:text-yellow-400',
-  sell:       'bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-400',
-  strongSell: 'bg-red-200 text-red-900 dark:bg-red-500/20 dark:text-red-400',
+  analystRec: string  // kept in props for future use (e.g. ratings tab)
 }
 
 export default function PriceHeader({
   ticker, companyName, price, change, changePct, marketCap, peRatio,
-  high52, low52, analystTarget, currency, sector, analystRec,
+  high52, low52, analystTarget, currency, sector,
 }: Props) {
   const up = change >= 0
   return (
-    <div className="rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/8 dark:bg-[#111]">
+    <div className="rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8 p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3">
-            <span className="rounded-xl bg-gray-100 px-3 py-1 text-sm font-bold text-gray-700 dark:bg-white/10 dark:text-white/80">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="rounded-lg bg-primary/10 dark:bg-primary-fixed/15 px-3 py-1 text-sm font-bold font-headline text-primary dark:text-primary-fixed-dim">
               {ticker}
             </span>
-            {sector && <span className="text-xs text-gray-400 dark:text-white/30">{sector}</span>}
-            {analystRec && (
-              <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${recColor[analystRec] ?? 'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-white/60'}`}>
-                {analystRec}
-              </span>
+            {sector && (
+              <span className="text-xs text-on-surface-variant dark:text-white/30">{sector}</span>
             )}
           </div>
-          <h1 className="mt-1.5 text-2xl font-semibold text-gray-900 dark:text-white" style={{ letterSpacing: '-0.02em' }}>
+          <h1 className="mt-2 text-2xl font-headline font-bold text-on-surface dark:text-white" style={{ letterSpacing: '-0.02em' }}>
             {companyName}
           </h1>
         </div>
         <div className="text-right">
-          <div className="text-4xl font-bold text-gray-900 dark:text-white" style={{ letterSpacing: '-0.03em' }}>
+          <div className="text-4xl font-headline font-extrabold text-on-surface dark:text-white" style={{ letterSpacing: '-0.03em' }}>
             {currency} {fmt(price)}
           </div>
-          <div className={`mt-1 text-sm font-medium ${up ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+          <div className={`mt-1.5 text-sm font-semibold ${up ? 'text-secondary dark:text-secondary-container' : 'text-error dark:text-error-container'}`}>
             {up ? '+' : ''}{fmt(change)} ({up ? '+' : ''}{fmt(changePct, 2)}%)
           </div>
         </div>
@@ -67,9 +56,9 @@ export default function PriceHeader({
           { label: '52-wk Low',      value: `$${fmt(low52)}` },
           { label: 'Analyst Target', value: analystTarget ? `$${fmt(analystTarget)}` : '—' },
         ].map((stat) => (
-          <div key={stat.label} className="rounded-xl bg-gray-50 px-4 py-3 dark:bg-white/5">
-            <p className="text-xs text-gray-400 dark:text-white/30">{stat.label}</p>
-            <p className="mt-0.5 text-sm font-semibold text-gray-800 dark:text-white/80">{stat.value}</p>
+          <div key={stat.label} className="rounded-xl bg-surface-container-low dark:bg-white/5 px-4 py-3">
+            <p className="text-[11px] font-medium text-on-surface-variant dark:text-white/30">{stat.label}</p>
+            <p className="mt-0.5 text-sm font-semibold text-on-surface dark:text-white/80">{stat.value}</p>
           </div>
         ))}
       </div>
