@@ -27,7 +27,11 @@ interface CAGRAnalysisData {
   historicalCagr3y: number
   analystEstimate1y: number
   analystEstimate2y: number
+  fundamentalGrowth: number | null
   blended: number
+  rawBlended: number
+  cagrCap: number
+  weights: { historical: number; analyst: number; fundamental: number }
   confidence: number
   confidenceLabel: 'High' | 'Medium' | 'Low'
   numAnalysts: number
