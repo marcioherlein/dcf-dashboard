@@ -31,7 +31,6 @@ const MERVAL_STOCKS: Omit<Instrument, 'isCedear' | 'cedearTicker' | 'cedearRatio
   { ticker: 'BHIP.BA',  displayTicker: 'BHIP',  name: 'Banco Hipotecario',                market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Financials',     benchmarkTicker: MERVAL_BENCHMARK },
   { ticker: 'BYMA.BA',  displayTicker: 'BYMA',  name: 'Bolsas y Mercados Argentinos',     market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Financials',     benchmarkTicker: MERVAL_BENCHMARK },
   { ticker: 'VALO.BA',  displayTicker: 'VALO',  name: 'Grupo Financiero Valores',         market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Financials',     benchmarkTicker: MERVAL_BENCHMARK },
-  { ticker: 'GCDI.BA',  displayTicker: 'GCDI',  name: 'Grupo Consultatio',                market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Financials',     benchmarkTicker: MERVAL_BENCHMARK },
   // Energy & Utilities
   { ticker: 'YPF.BA',   displayTicker: 'YPF',   name: 'YPF',                              market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Energy',         benchmarkTicker: MERVAL_BENCHMARK },
   { ticker: 'PAMP.BA',  displayTicker: 'PAMP',  name: 'Pampa Energía',                    market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Energy',         benchmarkTicker: MERVAL_BENCHMARK },
@@ -40,9 +39,7 @@ const MERVAL_STOCKS: Omit<Instrument, 'isCedear' | 'cedearTicker' | 'cedearRatio
   { ticker: 'TGNO4.BA', displayTicker: 'TGNO4', name: 'Transportadora Gas del Norte',     market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Energy',         benchmarkTicker: MERVAL_BENCHMARK },
   { ticker: 'METR.BA',  displayTicker: 'METR',  name: 'MetroGAS',                         market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Utilities',      benchmarkTicker: MERVAL_BENCHMARK },
   { ticker: 'DGCU2.BA', displayTicker: 'DGCU2', name: 'Distribuidora Gas Cuyana',         market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Utilities',      benchmarkTicker: MERVAL_BENCHMARK },
-  { ticker: 'PATA.BA',  displayTicker: 'PATA',  name: 'Patagonia Gold',                   market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Materials',      benchmarkTicker: MERVAL_BENCHMARK },
-  { ticker: 'EDNS.BA',  displayTicker: 'EDNS',  name: 'Empresa Distribuidora Norte',      market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Utilities',      benchmarkTicker: MERVAL_BENCHMARK },
-  { ticker: 'EDENOR.BA',displayTicker: 'EDN',   name: 'Edenor',                           market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Utilities',      benchmarkTicker: MERVAL_BENCHMARK },
+  { ticker: 'EDN.BA',   displayTicker: 'EDN',   name: 'Edenor',                           market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Utilities',      benchmarkTicker: MERVAL_BENCHMARK },
   // Materials & Industrials
   { ticker: 'TXAR.BA',  displayTicker: 'TXAR',  name: 'Ternium Argentina',                market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Materials',      benchmarkTicker: MERVAL_BENCHMARK },
   { ticker: 'ALUA.BA',  displayTicker: 'ALUA',  name: 'Aluar',                            market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Materials',      benchmarkTicker: MERVAL_BENCHMARK },
@@ -51,7 +48,6 @@ const MERVAL_STOCKS: Omit<Instrument, 'isCedear' | 'cedearTicker' | 'cedearRatio
   // Real Estate
   { ticker: 'IRSA.BA',  displayTicker: 'IRSA',  name: 'IRSA Inversiones',                 market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Real Estate',    benchmarkTicker: MERVAL_BENCHMARK },
   { ticker: 'CRES.BA',  displayTicker: 'CRES',  name: 'Cresud',                           market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Real Estate',    benchmarkTicker: MERVAL_BENCHMARK },
-  { ticker: 'INTR.BA',  displayTicker: 'INTR',  name: 'Intermédica',                      market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Real Estate',    benchmarkTicker: MERVAL_BENCHMARK },
   // Telecom & Media
   { ticker: 'TECO2.BA', displayTicker: 'TECO2', name: 'Telecom Argentina',                market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Telecom',        benchmarkTicker: MERVAL_BENCHMARK },
   { ticker: 'CVH.BA',   displayTicker: 'CVH',   name: 'Cablevision Holding',              market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Telecom',        benchmarkTicker: MERVAL_BENCHMARK },
@@ -61,8 +57,6 @@ const MERVAL_STOCKS: Omit<Instrument, 'isCedear' | 'cedearTicker' | 'cedearRatio
   { ticker: 'HAVA.BA',  displayTicker: 'HAVA',  name: 'Havanna Holding',                  market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Consumer',       benchmarkTicker: MERVAL_BENCHMARK },
   { ticker: 'AGRO.BA',  displayTicker: 'AGRO',  name: 'Agrometal',                        market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Industrials',    benchmarkTicker: MERVAL_BENCHMARK },
   { ticker: 'RICH.BA',  displayTicker: 'RICH',  name: 'Rigolleau',                        market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Materials',      benchmarkTicker: MERVAL_BENCHMARK },
-  { ticker: 'RIGO.BA',  displayTicker: 'RIGO',  name: 'Grupo Inversor Petroquímica',      market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Energy',         benchmarkTicker: MERVAL_BENCHMARK },
-  { ticker: 'SEMI.BA',  displayTicker: 'SEMI',  name: 'Instituto Rosenbusch',             market: 'MERVAL', assetType: 'equity', currency: 'ARS', sector: 'Healthcare',     benchmarkTicker: MERVAL_BENCHMARK },
 ]
 
 // ── NYSE Equities — S&P 500 large caps ───────────────────────────────────────

@@ -27,10 +27,10 @@ function m(km: Record<string, number | null>, key: string): number | null {
 // ── Recommendation from score ─────────────────────────────────────────────────
 
 export function computeRecommendation(score: number): Recommendation {
-  if (score >= 75) return 'STRONG_BUY'
-  if (score >= 60) return 'BUY'
-  if (score >= 45) return 'HOLD'
-  if (score >= 30) return 'AVOID'
+  if (score >= 80) return 'STRONG_BUY'
+  if (score >= 68) return 'BUY'
+  if (score >= 50) return 'HOLD'
+  if (score >= 35) return 'AVOID'
   return 'SHORT_CANDIDATE'
 }
 
@@ -51,13 +51,13 @@ export function computeConviction(
   const isBearishRec = rec === 'AVOID' || rec === 'SHORT_CANDIDATE'
 
   const aligned = scores.filter((s) => {
-    if (isBullishRec) return s >= 60
-    if (isBearishRec) return s <= 40
-    return s >= 45 && s <= 60 // neutral
+    if (isBullishRec) return s >= 65   // stricter: was 60
+    if (isBearishRec) return s <= 35   // stricter: was 40
+    return s >= 45 && s <= 60
   }).length
 
   if (aligned >= 4) return 'HIGH'
-  if (aligned >= 2) return 'MEDIUM'
+  if (aligned >= 3) return 'MEDIUM'   // stricter: was 2
   return 'LOW'
 }
 
@@ -100,32 +100,33 @@ export function computeExitLevels(
   finalScore: number,
   rec: Recommendation,
 ): ExitLevels {
-  const ATR_MULTIPLE = 2.5
-  const atrPct = m(km, 'ATR%') ?? 2.0  // fallback 2% if missing
+  const ATR_MULTIPLE = 2.0            // tighter stop: was 2.5× — improves R/R
+  const atrPct = m(km, 'ATR%') ?? 2.0
   const atrAbsolute = price * (atrPct / 100)
 
   const isShort = rec === 'SHORT_CANDIDATE'
 
-  // Stop loss: 2.5× ATR from entry
+  // Stop loss: 2× ATR from entry
   const stopPrice = isShort
     ? price + ATR_MULTIPLE * atrAbsolute
     : price - ATR_MULTIPLE * atrAbsolute
 
   const stopPct = ((stopPrice - price) / price) * 100
 
-  // Target: peer avg return × (score/100), capped at 3× peer avg
-  const baseReturn = Math.max(peerStats.avgReturn12M, 0.05)  // floor 5% to avoid degenerate calcs
+  // Target: peer avg return × (score/100), scaled to short horizon, capped at 2× peer avg
+  // Divide by 4 to convert annual return to ~3-month horizon
+  const baseReturn = Math.max(peerStats.avgReturn12M / 4, 0.02)  // quarterly floor 2%
   const scoreFraction = finalScore / 100
   const rawReturn = baseReturn * scoreFraction * (isShort ? -1 : 1)
   const cappedReturn = isShort
     ? Math.min(rawReturn, -baseReturn * 0.5)
-    : Math.min(rawReturn, baseReturn * 3)
+    : Math.min(rawReturn, baseReturn * 2)   // cap at 2× peer quarterly avg
 
   const targetPrice = price * (1 + cappedReturn)
   const targetPct = cappedReturn * 100
 
-  // Aggressive: 50% more upside (or downside for shorts)
-  const aggressiveReturn = cappedReturn * 1.5
+  // Aggressive: 40% more upside
+  const aggressiveReturn = cappedReturn * 1.4
   const aggressivePrice = price * (1 + aggressiveReturn)
 
   return {
@@ -313,15 +314,15 @@ export function buildExplanation(
 
 function computeTimeHorizon(dominantFactor: string): TimeHorizon {
   switch (dominantFactor) {
-    case 'Momentum':       return '3-6 months'
-    case 'Trend':          return '6-12 months'
-    case 'Earnings':       return '3-6 months'
-    case 'Quality':        return '6-12 months'
-    case 'Risk':           return '1-3 months'
-    case 'Term Structure': return '1-3 months'
-    case 'Volatility':     return '1-3 months'
-    case 'Liquidity':      return '3-6 months'
-    default:               return '3-6 months'
+    case 'Momentum':       return '2-4 weeks'
+    case 'Trend':          return '1-3 months'
+    case 'Earnings':       return '2-4 weeks'
+    case 'Quality':        return '1-3 months'
+    case 'Risk':           return '1-2 weeks'
+    case 'Term Structure': return '1-2 weeks'
+    case 'Volatility':     return '1-2 weeks'
+    case 'Liquidity':      return '2-4 weeks'
+    default:               return '2-4 weeks'
   }
 }
 
@@ -358,7 +359,15 @@ export function generateStrategy(
     timeHorizon: computeTimeHorizon(dominantFactor),
     dominantFactor,
   }
-  tradePlan.poorRiskReward = tradePlan.riskRewardRatio < 1.5
+
+  // Downgrade recommendation if R/R doesn't justify it
+  // Only the best setups keep their rating — R/R < 2.0 downgrades by one level
+  const rr = tradePlan.riskRewardRatio
+  if (rr < 1.5 && tradePlan.recommendation === 'STRONG_BUY') tradePlan.recommendation = 'HOLD'
+  else if (rr < 1.5 && tradePlan.recommendation === 'BUY')   tradePlan.recommendation = 'HOLD'
+  else if (rr < 2.0 && tradePlan.recommendation === 'STRONG_BUY') tradePlan.recommendation = 'BUY'
+
+  tradePlan.poorRiskReward = rr < 2.0
 
   const explanation = buildExplanation(instrument, alignment, tradePlan, peerStats)
 

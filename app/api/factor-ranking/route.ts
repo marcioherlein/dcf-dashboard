@@ -191,7 +191,7 @@ export async function GET(req: NextRequest) {
     const change1DPct = prevClose > 0 ? (price - prevClose) / prevClose : 0
 
     let metrics: EquityRawMetrics | null = null
-    if (bars.length >= 60) {
+    if (bars.length >= 45) {   // lowered from 60 — include stocks with ~2 months of history
       metrics = computeEquityMetrics(bars, benchBars, fundamentals)
     }
 
