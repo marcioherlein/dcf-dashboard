@@ -54,7 +54,9 @@ export async function GET(req: NextRequest) {
     const waccResult = calculateWACC(waccInputs)
 
     // FCF + CAGR — values are in financial currency; convert to quote currency
-    const { baseFCF: baseFCFLocal, cagr, cagrAnalysis, historicalRevenues: historicalRevenuesLocal, isNegativeFCF, normalizedNetIncomeM: normalizedNetIncomeMLocal } = extractFCFInputs(fin)
+    // Pass foreignCurrency=true when reporting currency ≠ quote currency so that
+    // the CAGR model discards inflation-distorted local revenue history.
+    const { baseFCF: baseFCFLocal, cagr, cagrAnalysis, historicalRevenues: historicalRevenuesLocal, isNegativeFCF, normalizedNetIncomeM: normalizedNetIncomeMLocal } = extractFCFInputs(fin, fxRate !== 1)
     let baseFCF = baseFCFLocal * fxRate
     const historicalRevenues = historicalRevenuesLocal.map((r) => r * fxRate)
     const normalizedNetIncomeM = normalizedNetIncomeMLocal * fxRate
@@ -511,14 +513,25 @@ export async function GET(req: NextRequest) {
       const rawFinCF = s.totalCashFromFinancingActivities ?? s.netCashUsedProvidedByFinancingActivities ?? s.cashUsedProvidedByFinancingActivities
       const rawDivPaid = s.dividendsPaid ?? s.paymentOfDividends ?? s.paymentsForDividends
 
+      // For some foreign ADRs Yahoo only populates netIncome in cashflow statements.
+      // Fall back to matching income statement row so FCF ≈ net income (rough proxy).
+      const cfYear = String(new Date(s.endDate).getFullYear())
+      const matchingIS = rawISStmts.find((r: any) => String(new Date(r.endDate).getFullYear()) === cfYear)
+      const fallbackNetIncome = (matchingIS?.netIncome ?? s.netIncome ?? null) as number | null
+
       const opCF   = rawOpCF  != null ? (rawOpCF  as number) / 1e6 * fxRate : null
       const capex  = rawCapex != null ? (rawCapex as number) / 1e6 * fxRate : null
+      // If no OpCF and no CapEx but we have net income → show it as a rough FCF proxy
+      const freeCashFlowFallback = (opCF == null && capex == null && fallbackNetIncome != null)
+        ? Math.round(fallbackNetIncome / 1e6 * fxRate)
+        : null
       return {
         year: String(new Date(s.endDate).getFullYear()),
         operatingCF: opCF,
         capex: capex,
-        // FCF = OCF + capex (capex is negative in Yahoo's data)
-        freeCashFlow: opCF != null && capex != null ? Math.round(opCF + capex) : opCF,
+        // FCF = OCF + capex (capex is negative in Yahoo's data).
+        // For foreign ADRs where Yahoo only has netIncome in CF statements, use it as proxy.
+        freeCashFlow: opCF != null && capex != null ? Math.round(opCF + capex) : opCF ?? freeCashFlowFallback,
         investingCF: rawInvCF != null ? (rawInvCF as number) / 1e6 * fxRate : null,
         financingCF: rawFinCF != null ? (rawFinCF as number) / 1e6 * fxRate : null,
         dividendsPaid: rawDivPaid != null ? (rawDivPaid as number) / 1e6 * fxRate : null,

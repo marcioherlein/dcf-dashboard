@@ -79,7 +79,7 @@ export function projectCashFlows(inputs: ProjectionInputs): DCFResult {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function extractFCFInputs(financials: any): {
+export function extractFCFInputs(financials: any, foreignCurrency = false): {
   baseFCF: number
   cagr: number
   cagrAnalysis: CAGRAnalysis
@@ -206,17 +206,36 @@ export function extractFCFInputs(financials: any): {
     confidence > 0.65 ? 'High' : confidence > 0.35 ? 'Medium' : 'Low'
 
   // Blended CAGR
-  const analystWeight = 0.3 + analystCoverageScore * 0.4
-  const blendedCagr = historicalCagr3y * (1 - analystWeight) + analyst1y * analystWeight
+  // For foreign-currency companies (e.g. YPF reports in ARS, Petrobras in BRL):
+  // historical revenue CAGR is in local currency and reflects nominal inflation,
+  // not real USD growth. Discard it entirely — use analyst USD estimates only,
+  // or fall back to a conservative 5% if coverage is thin.
+  let blendedCagr: number
+  if (foreignCurrency) {
+    if (numAnalysts >= 2) {
+      blendedCagr = analyst1y
+    } else if (numAnalysts === 1) {
+      blendedCagr = analyst1y * 0.85  // light haircut for thin coverage
+    } else {
+      blendedCagr = 0.05  // conservative default — no reliable USD growth signal
+    }
+  } else {
+    const analystWeight = 0.3 + analystCoverageScore * 0.4
+    blendedCagr = historicalCagr3y * (1 - analystWeight) + analyst1y * analystWeight
+  }
 
   // CAGR bounds:
   // - Financial companies: max 12% (mature banks rarely exceed this sustainably)
+  // - Foreign-currency companies: max 20% (already in USD terms via analyst estimates)
   // - Other companies: max 50% (high-growth like NU can be 40-60%)
-  const cagrCap = isFinancialSector ? 0.12 : 0.50
+  const cagrCap = isFinancialSector ? 0.12 : foreignCurrency ? 0.20 : 0.50
   const cagr = Math.min(Math.max(blendedCagr, -0.10), cagrCap)
 
   // Growth drivers
   const drivers: string[] = []
+  if (foreignCurrency) {
+    drivers.push('Foreign reporting currency — local CAGR discarded (inflation-distorted); USD analyst estimates used')
+  }
   if (isFinancialSector) {
     drivers.push('Financial sector — net income CAGR used (bank revenues distorted by interest rate cycle)')
     drivers.push('Base FCF = normalized net income × 0.85 (2-year avg to smooth one-time charges)')
