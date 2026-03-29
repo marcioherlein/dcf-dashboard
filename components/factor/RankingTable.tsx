@@ -27,7 +27,7 @@ function isFuturesScores(s: RankedInstrument['factorScores']): s is {
 function ChangeCell({ pct }: { pct: number }) {
   const up = pct >= 0
   return (
-    <span className={`text-xs font-semibold tabular-nums ${up ? 'text-secondary dark:text-secondary-container' : 'text-error dark:text-error-container'}`}>
+    <span className={`text-xs font-semibold tabular-nums ${up ? 'text-secondary' : 'text-error'}`}>
       {up ? '+' : ''}{pct.toFixed(2)}%
     </span>
   )
@@ -49,6 +49,13 @@ function MetricPill({ label, value }: { label: string; value: number | null }) {
       {label} <strong>{typeof value === 'number' && !isNaN(value) ? `${value > 0 && isGood ? '+' : ''}${value.toFixed(1)}%` : '—'}</strong>
     </span>
   )
+}
+
+const MARKET_COLORS: Record<string, string> = {
+  MERVAL: 'bg-blue-100 text-blue-700',
+  NYSE:   'bg-primary-fixed/60 text-on-primary-fixed-variant',
+  NASDAQ: 'bg-violet-100 text-violet-700',
+  ROFEX:  'bg-amber-100 text-amber-700',
 }
 
 export default function RankingTable({ results, loading, normalizeUSD }: Props) {
@@ -111,7 +118,7 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
         className="px-3 py-2.5 text-left cursor-pointer select-none whitespace-nowrap"
         onClick={() => toggleSort(k)}
       >
-        <span className={`flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider ${active ? 'text-primary dark:text-primary-fixed-dim' : 'text-on-surface-variant dark:text-white/30'}`}>
+        <span className={`flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider ${active ? 'text-primary' : 'text-on-surface-variant'}`}>
           {label}
           <span className={`text-[8px] ${active ? 'opacity-100' : 'opacity-30'}`}>
             {active ? (sortDir === 'asc' ? '↑' : '↓') : '↕'}
@@ -121,18 +128,11 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
     )
   }
 
-  const MARKET_COLORS: Record<string, string> = {
-    MERVAL: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400',
-    NYSE:   'bg-primary-fixed/60 text-on-primary-fixed-variant dark:bg-primary-fixed/20 dark:text-primary-fixed-dim',
-    NASDAQ: 'bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-400',
-    ROFEX:  'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400',
-  }
-
   if (loading) {
     return (
       <div className="space-y-2">
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="h-12 animate-pulse rounded-xl bg-surface-container dark:bg-white/5" />
+          <div key={i} className="h-12 animate-pulse rounded-xl bg-surface-container" />
         ))}
       </div>
     )
@@ -140,20 +140,20 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
 
   if (results.length === 0) {
     return (
-      <div className="py-16 text-center text-sm text-on-surface-variant dark:text-white/30">
+      <div className="py-16 text-center text-sm text-on-surface-variant">
         No instruments match the current filters.
       </div>
     )
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8">
+    <div className="overflow-x-auto rounded-xl bg-surface-container-lowest shadow-card border border-outline-variant/10">
       <table className="w-full min-w-[1100px] text-sm border-collapse">
-        <thead className="bg-surface-container-low dark:bg-white/[0.03] sticky top-0 z-10">
+        <thead className="bg-surface-container-low sticky top-0 z-10">
           <tr>
             <SortHeader label="#" k="rank" />
-            <th className="px-3 py-2.5 text-left text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant dark:text-white/30 whitespace-nowrap">Instrument</th>
-            <th className="px-3 py-2.5 text-left text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant dark:text-white/30">Market</th>
+            <th className="px-3 py-2.5 text-left text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant whitespace-nowrap">Instrument</th>
+            <th className="px-3 py-2.5 text-left text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant">Market</th>
             <SortHeader label="Price" k="price" />
             <SortHeader label="1D %" k="change1DPct" />
             <SortHeader label="Score" k="finalScore" />
@@ -162,10 +162,10 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
             <SortHeader label="Earnings" k="earnings" />
             <SortHeader label="Quality" k="quality" />
             <SortHeader label="Risk" k="risk" />
-            <th className="px-3 py-2.5 text-left text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant dark:text-white/30">Tags</th>
+            <th className="px-3 py-2.5 text-left text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant">Tags</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-outline-variant/10 dark:divide-white/[0.04]">
+        <tbody className="divide-y divide-outline-variant/10">
           {sorted.map((row) => {
             const isExpanded = expandedTicker === row.ticker
             const isEq = isEquityScores(row.factorScores)
@@ -175,11 +175,11 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
               <>
                 <tr
                   key={row.ticker}
-                  className="hover:bg-primary-fixed/10 dark:hover:bg-white/[0.03] cursor-pointer transition-colors"
+                  className="hover:bg-primary-fixed/10 cursor-pointer transition-colors"
                   onClick={() => setExpandedTicker(isExpanded ? null : row.ticker)}
                 >
                   {/* Rank */}
-                  <td className="px-3 py-3 tabular-nums font-mono text-xs text-on-surface-variant dark:text-white/30">
+                  <td className="px-3 py-3 tabular-nums font-mono text-xs text-on-surface-variant">
                     {row.rank}
                   </td>
 
@@ -187,8 +187,8 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
                   <td className="px-3 py-3">
                     <div className="flex items-center gap-2.5">
                       <div>
-                        <p className="font-headline font-bold text-sm text-primary dark:text-primary-fixed-dim">{row.displayTicker}</p>
-                        <p className="text-[10px] text-on-surface-variant dark:text-white/30 max-w-[160px] truncate">{row.name}</p>
+                        <p className="font-headline font-bold text-sm text-primary">{row.displayTicker}</p>
+                        <p className="text-[10px] text-on-surface-variant max-w-[160px] truncate">{row.name}</p>
                       </div>
                     </div>
                   </td>
@@ -201,10 +201,9 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
                   </td>
 
                   {/* Price */}
-                  <td className="px-3 py-3 tabular-nums text-sm font-semibold text-on-surface dark:text-white/80">
-                    {normalizeUSD && row.currency === 'USD' ? '$' : row.currency === 'ARS' ? '$' : '$'}
-                    {row.price < 10 ? row.price.toFixed(3) : row.price < 100 ? row.price.toFixed(2) : row.price.toFixed(0)}
-                    {!normalizeUSD && row.currency === 'ARS' && <span className="text-[9px] text-on-surface-variant dark:text-white/20 ml-0.5">ARS</span>}
+                  <td className="px-3 py-3 tabular-nums text-sm font-semibold text-on-surface">
+                    ${row.price < 10 ? row.price.toFixed(3) : row.price < 100 ? row.price.toFixed(2) : row.price.toFixed(0)}
+                    {!normalizeUSD && row.currency === 'ARS' && <span className="text-[9px] text-on-surface-variant ml-0.5">ARS</span>}
                   </td>
 
                   {/* 1D % */}
@@ -222,7 +221,7 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
                     <ScoreBar score={fs.momentum} size="sm" />
                   </td>
 
-                  {/* Trend (equity) / TermStructure (futures) */}
+                  {/* Trend / TermStructure */}
                   <td className="px-3 py-3 min-w-[80px]">
                     {isEq
                       ? <ScoreBar score={(fs as { trend: number }).trend} size="sm" />
@@ -230,7 +229,7 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
                     }
                   </td>
 
-                  {/* Earnings (equity) / Volatility (futures) */}
+                  {/* Earnings / Volatility */}
                   <td className="px-3 py-3 min-w-[80px]">
                     {isEq
                       ? <ScoreBar score={(fs as { earnings: number }).earnings} size="sm" />
@@ -238,7 +237,7 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
                     }
                   </td>
 
-                  {/* Quality (equity) / Liquidity (futures) */}
+                  {/* Quality / Liquidity */}
                   <td className="px-3 py-3 min-w-[80px]">
                     {isEq
                       ? <ScoreBar score={(fs as { quality: number }).quality} size="sm" />
@@ -250,7 +249,7 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
                   <td className="px-3 py-3 min-w-[80px]">
                     {isEq
                       ? <ScoreBar score={(fs as { risk: number }).risk} size="sm" />
-                      : <span className="text-[10px] text-on-surface-variant/40 dark:text-white/15">—</span>
+                      : <span className="text-[10px] text-on-surface-variant/40">—</span>
                     }
                   </td>
 
@@ -258,12 +257,12 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
                   <td className="px-3 py-3">
                     <div className="flex flex-wrap gap-1">
                       {row.isCedear && (
-                        <span className="text-[9px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 bg-secondary-container/40 text-on-secondary-container dark:bg-secondary/20 dark:text-secondary-container">
+                        <span className="text-[9px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 bg-secondary-container/40 text-on-secondary-container">
                           CEDEAR
                         </span>
                       )}
                       {row.assetType === 'future' && (
-                        <span className="text-[9px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 bg-tertiary-fixed/40 text-on-tertiary-fixed-variant dark:bg-amber-500/20 dark:text-amber-400">
+                        <span className="text-[9px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 bg-tertiary-fixed/40 text-on-tertiary-fixed-variant">
                           FUT
                         </span>
                       )}
@@ -274,53 +273,53 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
 
                 {/* Expanded detail row */}
                 {isExpanded && (
-                  <tr key={`${row.ticker}-detail`} className="bg-surface-container-low dark:bg-white/[0.025]">
+                  <tr key={`${row.ticker}-detail`} className="bg-surface-container-low">
                     <td colSpan={12} className="px-6 py-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
                         {/* Factor breakdown */}
                         <div>
-                          <p className="text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant dark:text-white/30 mb-2">
+                          <p className="text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant mb-2">
                             Factor Breakdown
                           </p>
                           <div className="space-y-2">
                             <div>
                               <div className="flex justify-between mb-0.5">
-                                <span className="text-xs text-on-surface-variant dark:text-white/40">Momentum (40%)</span>
+                                <span className="text-xs text-on-surface-variant">Momentum (40%)</span>
                               </div>
                               <ScoreBar score={fs.momentum} />
                             </div>
                             {isEq ? (
                               <>
                                 <div>
-                                  <span className="text-xs text-on-surface-variant dark:text-white/40">Trend (20%)</span>
+                                  <span className="text-xs text-on-surface-variant">Trend (20%)</span>
                                   <ScoreBar score={(fs as { trend: number }).trend} />
                                 </div>
                                 <div>
-                                  <span className="text-xs text-on-surface-variant dark:text-white/40">Earnings (20%)</span>
+                                  <span className="text-xs text-on-surface-variant">Earnings (20%)</span>
                                   <ScoreBar score={(fs as { earnings: number }).earnings} />
                                 </div>
                                 <div>
-                                  <span className="text-xs text-on-surface-variant dark:text-white/40">Quality (10%)</span>
+                                  <span className="text-xs text-on-surface-variant">Quality (10%)</span>
                                   <ScoreBar score={(fs as { quality: number }).quality} />
                                 </div>
                                 <div>
-                                  <span className="text-xs text-on-surface-variant dark:text-white/40">Risk (10%)</span>
+                                  <span className="text-xs text-on-surface-variant">Risk (10%)</span>
                                   <ScoreBar score={(fs as { risk: number }).risk} />
                                 </div>
                               </>
                             ) : (
                               <>
                                 <div>
-                                  <span className="text-xs text-on-surface-variant dark:text-white/40">Term Structure (20%)</span>
+                                  <span className="text-xs text-on-surface-variant">Term Structure (20%)</span>
                                   <ScoreBar score={isFuturesScores(fs) ? fs.termStructure : 50} />
                                 </div>
                                 <div>
-                                  <span className="text-xs text-on-surface-variant dark:text-white/40">Volatility (20%)</span>
+                                  <span className="text-xs text-on-surface-variant">Volatility (20%)</span>
                                   <ScoreBar score={isFuturesScores(fs) ? fs.volatility : 50} />
                                 </div>
                                 <div>
-                                  <span className="text-xs text-on-surface-variant dark:text-white/40">Liquidity (10%)</span>
+                                  <span className="text-xs text-on-surface-variant">Liquidity (10%)</span>
                                   <ScoreBar score={isFuturesScores(fs) ? fs.liquidity : 50} />
                                 </div>
                               </>
@@ -330,7 +329,7 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
 
                         {/* Key metrics */}
                         <div>
-                          <p className="text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant dark:text-white/30 mb-2">
+                          <p className="text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant mb-2">
                             Key Metrics
                           </p>
                           <div className="flex flex-wrap gap-1">
@@ -340,47 +339,47 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
                           </div>
                         </div>
 
-                        {/* CEDEAR info + identity */}
+                        {/* Instrument details */}
                         <div>
-                          <p className="text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant dark:text-white/30 mb-2">
+                          <p className="text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant mb-2">
                             Instrument Details
                           </p>
                           <div className="space-y-1 text-xs">
                             <div className="flex justify-between">
-                              <span className="text-on-surface-variant dark:text-white/30">Ticker</span>
-                              <span className="font-mono font-bold text-on-surface dark:text-white/80">{row.ticker}</span>
+                              <span className="text-on-surface-variant">Ticker</span>
+                              <span className="font-mono font-bold text-on-surface">{row.ticker}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-on-surface-variant dark:text-white/30">Market</span>
-                              <span className="font-semibold text-on-surface dark:text-white/70">{row.market}</span>
+                              <span className="text-on-surface-variant">Market</span>
+                              <span className="font-semibold text-on-surface">{row.market}</span>
                             </div>
                             {row.sector && (
                               <div className="flex justify-between">
-                                <span className="text-on-surface-variant dark:text-white/30">Sector</span>
-                                <span className="font-semibold text-on-surface dark:text-white/70">{row.sector}</span>
+                                <span className="text-on-surface-variant">Sector</span>
+                                <span className="font-semibold text-on-surface">{row.sector}</span>
                               </div>
                             )}
                             <div className="flex justify-between">
-                              <span className="text-on-surface-variant dark:text-white/30">Currency</span>
-                              <span className="font-semibold text-on-surface dark:text-white/70">{row.currency}</span>
+                              <span className="text-on-surface-variant">Currency</span>
+                              <span className="font-semibold text-on-surface">{row.currency}</span>
                             </div>
                             {row.isCedear && (
                               <>
-                                <div className="flex justify-between border-t border-outline-variant/10 dark:border-white/5 pt-1 mt-1">
-                                  <span className="text-on-surface-variant dark:text-white/30">CEDEAR Ticker (BYMA)</span>
-                                  <span className="font-mono font-bold text-secondary dark:text-secondary-container">{row.cedearTicker}</span>
+                                <div className="flex justify-between border-t border-outline-variant/10 pt-1 mt-1">
+                                  <span className="text-on-surface-variant">CEDEAR (BYMA)</span>
+                                  <span className="font-mono font-bold text-secondary">{row.cedearTicker}</span>
                                 </div>
                                 {row.cedearRatio && (
                                   <div className="flex justify-between">
-                                    <span className="text-on-surface-variant dark:text-white/30">CEDEAR Ratio</span>
-                                    <span className="font-semibold text-on-surface dark:text-white/70">{row.cedearRatio}:1</span>
+                                    <span className="text-on-surface-variant">CEDEAR Ratio</span>
+                                    <span className="font-semibold text-on-surface">{row.cedearRatio}:1</span>
                                   </div>
                                 )}
                               </>
                             )}
-                            <div className="flex justify-between border-t border-outline-variant/10 dark:border-white/5 pt-1 mt-1">
-                              <span className="text-on-surface-variant dark:text-white/30">Market Rank</span>
-                              <span className="font-bold text-on-surface dark:text-white/80">#{row.marketRank} in {row.market}</span>
+                            <div className="flex justify-between border-t border-outline-variant/10 pt-1 mt-1">
+                              <span className="text-on-surface-variant">Market Rank</span>
+                              <span className="font-bold text-on-surface">#{row.marketRank} in {row.market}</span>
                             </div>
                           </div>
                         </div>

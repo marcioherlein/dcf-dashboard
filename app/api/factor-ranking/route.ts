@@ -287,14 +287,21 @@ export async function GET(req: NextRequest) {
       ? {
           'Ret 12M':       Math.round(metrics.return12M * 1000) / 10,
           'Ret 6M (skip)': Math.round(metrics.return6MSkip1M * 1000) / 10,
+          'RS vs Bench':   Math.round(metrics.rsVsBenchmark * 1000) / 10,
           'vs 200MA':      Math.round(metrics.pctAbove200MA * 1000) / 10,
           'vs 50MA':       Math.round(metrics.pctAbove50MA * 1000) / 10,
+          'Slope 200MA':   Math.round(metrics.slope200MA * 10000) / 10,
+          'Days >50MA':    Math.round(metrics.daysAbove50MApct * 1000) / 10,
           'Dist 52w Hi':   Math.round(metrics.distTo52wHigh * 1000) / 10,
           'ATR%':          Math.round(metrics.atrPct * 1000) / 10,
           'Max DD 6M':     Math.round(metrics.maxDD6M * 1000) / 10,
+          'Vol Contract':  Math.round(metrics.volContraction * 100) / 100,
           'EPS Gr YoY':    metrics.epsGrowthYoY !== null ? Math.round(metrics.epsGrowthYoY * 1000) / 10 : null,
           'Rev Gr YoY':    metrics.revenueGrowthYoY !== null ? Math.round(metrics.revenueGrowthYoY * 1000) / 10 : null,
+          'EPS Surprise':  metrics.epsSurprisePct !== null ? Math.round(metrics.epsSurprisePct * 1000) / 10 : null,
           'ROE':           metrics.roe !== null ? Math.round(metrics.roe * 1000) / 10 : null,
+          'Gross Margin':  metrics.grossMarginStability !== null ? Math.round(metrics.grossMarginStability * 1000) / 10 : null,
+          'Debt/EBITDA':   metrics.debtToEbitda !== null ? Math.round(metrics.debtToEbitda * 100) / 100 : null,
         }
       : {}
 
@@ -334,12 +341,13 @@ export async function GET(req: NextRequest) {
 
     const keyMetrics: Record<string, number | null> = metrics
       ? {
-          'Ret 1M':   Math.round(metrics.return1M * 1000) / 10,
-          'Ret 3M':   Math.round(metrics.return3M * 1000) / 10,
-          'Trend':    Math.round(metrics.trendStrength * 1000) / 10,
-          'ATR%':     Math.round(metrics.atrPct * 1000) / 10,
-          'Vol Exp':  Math.round(metrics.volExpansion * 100) / 100,
-          'Vol Trend':Math.round(metrics.volumeTrend * 100) / 100,
+          'Ret 1M':    Math.round(metrics.return1M * 1000) / 10,
+          'Ret 3M':    Math.round(metrics.return3M * 1000) / 10,
+          'Trend':     Math.round(metrics.trendStrength * 1000) / 10,
+          'Contango':  Math.round(metrics.contangoProxy * 100) / 100,
+          'ATR%':      Math.round(metrics.atrPct * 1000) / 10,
+          'Vol Exp':   Math.round(metrics.volExpansion * 100) / 100,
+          'Vol Trend': Math.round(metrics.volumeTrend * 100) / 100,
         }
       : {}
 
