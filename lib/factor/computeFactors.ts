@@ -184,7 +184,6 @@ export function computeEquityMetrics(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fin = fundamentals as any
   const fd  = fin?.financialData
-  const ds  = fin?.defaultKeyStatistics
   const sd  = fin?.summaryDetail
 
   const roe = typeof fd?.returnOnEquity === 'number' ? fd.returnOnEquity : null
