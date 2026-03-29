@@ -379,7 +379,7 @@ export async function GET(req: NextRequest) {
     group.push(r)
     byMarket.set(key, group)
   }
-  for (const group of byMarket.values()) {
+  for (const group of Array.from(byMarket.values())) {
     group.sort((a, b) => b.finalScore - a.finalScore)
     group.forEach((r, i) => { r.marketRank = i + 1 })
   }
