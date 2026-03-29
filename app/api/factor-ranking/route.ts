@@ -162,11 +162,11 @@ export async function GET(req: NextRequest) {
   // 380 days = enough for 252 trading days (1Y momentum) + buffer
   const HISTORY_DAYS = 380
   const [historyMap, benchmarkHistoryMap, fundamentalsMap, quotesMap] = await Promise.all([
-    batchFetch(allTickers, (t) => fetchHistory(t, HISTORY_DAYS), 4),
-    batchFetch(benchmarkTickersNeeded, (t) => fetchHistory(t, HISTORY_DAYS), 4),
+    batchFetch(allTickers, (t) => fetchHistory(t, HISTORY_DAYS), 8),
+    batchFetch(benchmarkTickersNeeded, (t) => fetchHistory(t, HISTORY_DAYS), 6),
     // Fundamentals only for equities (skip futures)
-    batchFetch(equityInstruments.map((i) => i.ticker), fetchFundamentals, 3),
-    batchFetch(allTickers, fetchQuote, 6),
+    batchFetch(equityInstruments.map((i) => i.ticker), fetchFundamentals, 5),
+    batchFetch(allTickers, fetchQuote, 10),
   ])
 
   // ── Process equities ─────────────────────────────────────────────────────────
