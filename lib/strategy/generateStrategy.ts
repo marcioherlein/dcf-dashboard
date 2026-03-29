@@ -128,11 +128,6 @@ export function computeExitLevels(
   const aggressiveReturn = cappedReturn * 1.5
   const aggressivePrice = price * (1 + aggressiveReturn)
 
-  const riskDollar = Math.abs(price - stopPrice)
-  const rewardDollar = Math.abs(targetPrice - price)
-
-  const riskRewardRatio = riskDollar > 0 ? Math.round((rewardDollar / riskDollar) * 100) / 100 : 0
-
   return {
     primaryTarget: {
       price: Math.round(targetPrice * 100) / 100,
