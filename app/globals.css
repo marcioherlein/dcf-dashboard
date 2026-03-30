@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -10,13 +10,23 @@
 }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'IBM Plex Sans', 'Inter', system-ui, sans-serif;
   color: var(--foreground);
   background: var(--background);
 }
 
 h1, h2, h3 {
-  font-family: 'Manrope', system-ui, sans-serif;
+  font-family: 'IBM Plex Sans', 'Manrope', system-ui, sans-serif;
+}
+
+/* Bloomberg terminal mono class */
+.font-terminal {
+  font-family: 'IBM Plex Mono', 'Courier New', monospace;
+}
+
+/* Override .font-mono to IBM Plex Mono throughout */
+.font-mono {
+  font-family: 'IBM Plex Mono', monospace !important;
 }
 
 @keyframes marquee {

@@ -1,15 +1,15 @@
 import { Suspense } from 'react'
-import Sidebar from './Sidebar'
+import TopBar from './TopBar'
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen">
+    <div className="min-h-screen bg-[#080808]">
       <Suspense fallback={
-        <aside className="fixed left-0 top-0 h-screen w-[220px] bg-primary z-40" />
+        <header className="fixed top-0 left-0 right-0 h-12 bg-[#0a0a0a] border-b border-[#ff6600]/40 z-40" />
       }>
-        <Sidebar />
+        <TopBar />
       </Suspense>
-      <div className="ml-[220px] flex-1 min-w-0">
+      <div className="pt-12">
         {children}
       </div>
     </div>
