@@ -307,14 +307,16 @@ export function calculateROIC(
   const toM = (n: number) => n / 1e6 * fxRate
 
   // Extended operating income fallback (covers banks, fintechs, non-US GAAP)
-  const opIncome = (
+  const rawOpIncome = (
     inc.ebit
     ?? inc.operatingIncome
     ?? inc.operatingIncomeBeforeDepreciation
     ?? inc.incomeBeforeTax
     ?? inc.pretaxIncome
-    ?? 0
-  ) as number
+    ?? null
+  ) as number | null
+  const opIncomeHasData = rawOpIncome !== null
+  const opIncome = rawOpIncome ?? 0
   const nopat = toM(opIncome) * (1 - Math.max(0, Math.min(0.40, taxRate)))
 
   function investedCapital(bs: any): number {
@@ -336,7 +338,7 @@ export function calculateROIC(
   // If bs1 is empty (only 1 year of data), use ic0 alone
   const avgIC = ic1 > 0 ? (ic0 + ic1) / 2 : ic0
 
-  const roic = avgIC > 100 ? nopat / avgIC : 0  // require at least $100M invested capital
+  const roic = (avgIC > 1 && opIncomeHasData) ? nopat / avgIC : 0  // require data + at least $1M invested capital
   const spread = roic - wacc
 
   return {

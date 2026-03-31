@@ -126,10 +126,9 @@ function ThemeToggle({ isDark, onToggle }: { isDark: boolean; onToggle: () => vo
   return (
     <button
       onClick={onToggle}
-      className="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium text-on-surface-variant hover:bg-surface-container-low transition-colors"
-      aria-label="Toggle theme"
+      className="font-mono text-[10px] text-[#666] hover:text-[#ff6600] transition-colors uppercase tracking-wider border border-[#30363d] px-2 py-0.5 hover:border-[#ff6600]"
     >
-      <span>{isDark ? '☀︎ Light' : '☾ Dark'}</span>
+      {isDark ? '☀ Light' : '☾ Dark'}
     </button>
   )
 }
@@ -220,189 +219,170 @@ export default function StockPage() {
   const currency = data?.quote.currency === 'USD' ? '$' : (data?.quote.currency ?? '$') + ' '
 
   return (
-    <div className={isDark ? 'dark' : ''}>
-      <div className="min-h-screen bg-background dark:bg-[#0f0f0f] text-on-background dark:text-white/90">
+    <div className="min-h-screen bg-[#080808] text-[#e6edf3]">
 
-        {/* Top nav */}
-        <nav className="sticky top-0 z-40 bg-surface-container-lowest dark:bg-[#111] border-b border-outline-variant/15 dark:border-white/8 shadow-nav">
-          <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-3">
-            <button
-              onClick={() => router.push('/')}
-              className="flex items-center gap-1.5 text-sm text-on-surface-variant dark:text-white/40 hover:text-on-surface dark:hover:text-white/70 transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-              Back
-            </button>
+      {/* Breadcrumb bar */}
+      <div className="bg-[#0d1117] border-b border-[#21262d] px-6 py-2 flex items-center gap-3">
+        <button
+          onClick={() => router.push('/factor-ranking')}
+          className="flex items-center gap-1.5 font-mono text-[11px] text-[#8b949e] hover:text-[#ff6600] transition-colors"
+        >
+          ← Screener
+        </button>
+        <span className="text-[#30363d] font-mono">·</span>
+        <span className="font-mono text-[11px] text-[#ff6600] font-bold">{ticker}</span>
+        {data && <span className="font-mono text-[11px] text-[#6e7681] truncate max-w-xs">{data.companyName}</span>}
+        <div className="ml-auto flex items-center gap-3">
+          <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
+        </div>
+      </div>
 
-            <div className="h-4 w-px bg-outline-variant/40" />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-12">
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-32 gap-4">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#30363d] border-t-[#ff6600]" />
+            <p className="font-mono text-xs text-[#6e7681]">Calculating WACC · Beta · DCF…</p>
+          </div>
+        )}
 
-            <div className="flex items-center gap-2">
-              <span className="font-headline text-sm font-bold text-primary dark:text-white">{ticker}</span>
-              {data && (
-                <span className="hidden sm:block text-xs text-on-surface-variant dark:text-white/40 truncate max-w-[200px]">
-                  {data.companyName}
-                </span>
+        {error && (
+          <div className="mt-8 rounded bg-[#2d1b1b] border border-[#f85149]/30 px-5 py-4 font-mono text-xs text-[#f85149]">
+            <strong>Error:</strong> {error}. Yahoo Finance may be temporarily unavailable — try again in a moment.
+          </div>
+        )}
+
+        {data && !loading && (
+          <div>
+            <div className="pt-5">
+              <PriceHeader
+                ticker={data.ticker}
+                companyName={data.companyName}
+                price={data.quote.price}
+                change={data.quote.change}
+                changePct={data.quote.changePct}
+                marketCap={data.quote.marketCap}
+                peRatio={data.quote.peRatio}
+                high52={data.quote.fiftyTwoWeekHigh}
+                low52={data.quote.fiftyTwoWeekLow}
+                analystTarget={data.quote.analystTargetMean}
+                currency={data.quote.currency ?? 'USD'}
+                sector={data.quote.sector ?? ''}
+                analystRec={data.analystRecommendation}
+              />
+            </div>
+
+            <div className="-mx-4 sm:-mx-6 lg:-mx-8 mt-4">
+              <TabNav activeTab={activeTab} onChange={setActiveTab} />
+            </div>
+
+            {/* ── Summary ── */}
+            <div className={`pt-6 space-y-4 ${activeTab === 'summary' ? 'block' : 'hidden'}`}>
+              <PriceChart
+                ticker={ticker}
+                isDark={true}
+                fcffFairValue={data.fairValue.fairValuePerShare}
+                triangulatedFairValue={data.valuationMethods?.triangulatedFairValue}
+                analystTarget={data.quote.analystTargetMean}
+              />
+              {data.ratings && <RatingsPanel ratings={data.ratings} />}
+            </div>
+
+            {/* ── Financials ── */}
+            <div className={`pt-6 space-y-4 ${activeTab === 'financials' ? 'block' : 'hidden'}`}>
+              {data.financialStatements && (
+                <FinancialStatements
+                  incomeStatement={data.financialStatements.incomeStatement}
+                  balanceSheet={data.financialStatements.balanceSheet}
+                  cashFlow={data.financialStatements.cashFlow}
+                  currency={currency}
+                  cagr={data.cagr}
+                />
+              )}
+              {data.financialStatements && (
+                <FinancialCharts
+                  incomeStatement={data.financialStatements.incomeStatement}
+                  cashFlow={data.financialStatements.cashFlow}
+                  currency={currency}
+                  isDark={true}
+                />
+              )}
+              {(data.businessProfile.description || data.historicalRevenues.length >= 2) && (
+                <BusinessModel
+                  businessProfile={data.businessProfile}
+                  historicalRevenues={data.historicalRevenues}
+                  ticker={ticker}
+                  isDark={true}
+                  incomeStatement={data.financialStatements?.incomeStatement}
+                  cashFlow={data.financialStatements?.cashFlow}
+                />
               )}
             </div>
 
-            <div className="ml-auto flex items-center gap-2">
-              <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
+            {/* ── Valuation ── */}
+            <div className={`pt-6 space-y-4 ${activeTab === 'valuation' ? 'block' : 'hidden'}`}>
+              {data.valuationMethods && (
+                <ValuationMethods
+                  valuationMethods={data.valuationMethods}
+                  currency={currency}
+                />
+              )}
+              <DCFModel
+                projections={data.dcf.projections}
+                terminalValue={data.dcf.terminalValue}
+                terminalValueDiscounted={data.dcf.terminalValueDiscounted}
+                sumPV={data.dcf.sumPV}
+                ev={data.dcf.ev}
+                fairValue={data.fairValue}
+                wacc={waccOverride ?? data.wacc.wacc}
+                cagr={data.cagr}
+                terminalG={data.terminalG}
+                scenarios={data.scenarios}
+                baseFCF={data.baseFCF}
+                terminalGOverride={terminalGOverride}
+                onTerminalGChange={setTerminalGOverride}
+                growthModel={data.growthModel}
+                yearlyGrowthRates={data.dcf.yearlyGrowthRates}
+                historicalFCF={data.historicalFCF}
+              />
+              <WACCBreakdown
+                wacc={data.wacc}
+                onWACCChange={(w) => setWaccOverride(w)}
+              />
+              {data.cagrAnalysis && (
+                <CAGRAnalysis
+                  cagrAnalysis={data.cagrAnalysis}
+                  isNegativeFCF={data.isNegativeFCF ?? false}
+                  growthModel={data.growthModel}
+                  terminalG={data.terminalG}
+                />
+              )}
+            </div>
+
+            {/* ── Quality ── */}
+            <div className={`pt-6 space-y-4 ${activeTab === 'quality' ? 'block' : 'hidden'}`}>
+              {data.scores && <FinancialScores scores={data.scores} />}
+            </div>
+
+            {/* ── Ownership ── */}
+            <div className={`pt-6 space-y-4 ${activeTab === 'ownership' ? 'block' : 'hidden'}`}>
+              {data.ownership && <OwnershipPanel ownership={data.ownership} />}
+              <InsiderTable ticker={ticker} />
+            </div>
+
+            {/* ── News ── */}
+            <div className={`pt-6 space-y-4 ${activeTab === 'news' ? 'block' : 'hidden'}`}>
+              <NewsPanel ticker={ticker} />
+            </div>
+
+            <div className="pt-6">
+              <ValuationHistory
+                ticker={ticker}
+                onSave={handleSave}
+                saving={saving}
+              />
             </div>
           </div>
-        </nav>
-
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-12">
-          {loading && (
-            <div className="flex flex-col items-center justify-center py-32 gap-4">
-              <div className="h-10 w-10 animate-spin rounded-full border-4 border-surface-container-high border-t-primary dark:border-white/10 dark:border-t-white/60" />
-              <p className="text-sm text-on-surface-variant dark:text-white/30">Calculating WACC, Beta, DCF… this takes ~10s</p>
-            </div>
-          )}
-
-          {error && (
-            <div className="mt-8 rounded-xl bg-error-container/60 border border-error/20 p-5 text-sm text-on-error-container">
-              <strong>Error:</strong> {error}. Yahoo Finance may be temporarily unavailable — try again in a moment.
-            </div>
-          )}
-
-          {data && !loading && (
-            <div>
-              {/* Price header */}
-              <div className="pt-6">
-                <PriceHeader
-                  ticker={data.ticker}
-                  companyName={data.companyName}
-                  price={data.quote.price}
-                  change={data.quote.change}
-                  changePct={data.quote.changePct}
-                  marketCap={data.quote.marketCap}
-                  peRatio={data.quote.peRatio}
-                  high52={data.quote.fiftyTwoWeekHigh}
-                  low52={data.quote.fiftyTwoWeekLow}
-                  analystTarget={data.quote.analystTargetMean}
-                  currency={data.quote.currency ?? 'USD'}
-                  sector={data.quote.sector ?? ''}
-                  analystRec={data.analystRecommendation}
-                />
-              </div>
-
-              {/* Tab navigation */}
-              <div className="-mx-4 sm:-mx-6 lg:-mx-8 mt-4">
-                <TabNav activeTab={activeTab} onChange={setActiveTab} />
-              </div>
-
-              {/* ── Summary ── */}
-              <div className={`pt-6 space-y-4 ${activeTab === 'summary' ? 'block' : 'hidden'}`}>
-                <PriceChart
-                  ticker={ticker}
-                  isDark={isDark}
-                  fcffFairValue={data.fairValue.fairValuePerShare}
-                  triangulatedFairValue={data.valuationMethods?.triangulatedFairValue}
-                  analystTarget={data.quote.analystTargetMean}
-                />
-                {data.ratings && <RatingsPanel ratings={data.ratings} />}
-              </div>
-
-              {/* ── Financials ── */}
-              <div className={`pt-6 space-y-4 ${activeTab === 'financials' ? 'block' : 'hidden'}`}>
-                {data.financialStatements && (
-                  <FinancialStatements
-                    incomeStatement={data.financialStatements.incomeStatement}
-                    balanceSheet={data.financialStatements.balanceSheet}
-                    cashFlow={data.financialStatements.cashFlow}
-                    currency={currency}
-                    cagr={data.cagr}
-                  />
-                )}
-                {data.financialStatements && (
-                  <FinancialCharts
-                    incomeStatement={data.financialStatements.incomeStatement}
-                    cashFlow={data.financialStatements.cashFlow}
-                    currency={currency}
-                    isDark={isDark}
-                  />
-                )}
-                {(data.businessProfile.description || data.historicalRevenues.length >= 2) && (
-                  <BusinessModel
-                    businessProfile={data.businessProfile}
-                    historicalRevenues={data.historicalRevenues}
-                    ticker={ticker}
-                    isDark={isDark}
-                    incomeStatement={data.financialStatements?.incomeStatement}
-                    cashFlow={data.financialStatements?.cashFlow}
-                  />
-                )}
-              </div>
-
-              {/* ── Valuation ── */}
-              <div className={`pt-6 space-y-4 ${activeTab === 'valuation' ? 'block' : 'hidden'}`}>
-                {data.valuationMethods && (
-                  <ValuationMethods
-                    valuationMethods={data.valuationMethods}
-                    currency={currency}
-                  />
-                )}
-                <DCFModel
-                  projections={data.dcf.projections}
-                  terminalValue={data.dcf.terminalValue}
-                  terminalValueDiscounted={data.dcf.terminalValueDiscounted}
-                  sumPV={data.dcf.sumPV}
-                  ev={data.dcf.ev}
-                  fairValue={data.fairValue}
-                  wacc={waccOverride ?? data.wacc.wacc}
-                  cagr={data.cagr}
-                  terminalG={data.terminalG}
-                  scenarios={data.scenarios}
-                  baseFCF={data.baseFCF}
-                  terminalGOverride={terminalGOverride}
-                  onTerminalGChange={setTerminalGOverride}
-                  growthModel={data.growthModel}
-                  yearlyGrowthRates={data.dcf.yearlyGrowthRates}
-                  historicalFCF={data.historicalFCF}
-                />
-                <WACCBreakdown
-                  wacc={data.wacc}
-                  onWACCChange={(w) => setWaccOverride(w)}
-                />
-                {data.cagrAnalysis && (
-                  <CAGRAnalysis
-                    cagrAnalysis={data.cagrAnalysis}
-                    isNegativeFCF={data.isNegativeFCF ?? false}
-                    growthModel={data.growthModel}
-                    terminalG={data.terminalG}
-                  />
-                )}
-              </div>
-
-              {/* ── Quality ── */}
-              <div className={`pt-6 space-y-4 ${activeTab === 'quality' ? 'block' : 'hidden'}`}>
-                {data.scores && <FinancialScores scores={data.scores} />}
-              </div>
-
-              {/* ── Ownership ── */}
-              <div className={`pt-6 space-y-4 ${activeTab === 'ownership' ? 'block' : 'hidden'}`}>
-                {data.ownership && <OwnershipPanel ownership={data.ownership} />}
-                <InsiderTable ticker={ticker} />
-              </div>
-
-              {/* ── News ── */}
-              <div className={`pt-6 space-y-4 ${activeTab === 'news' ? 'block' : 'hidden'}`}>
-                <NewsPanel ticker={ticker} />
-              </div>
-
-              {/* Always-visible save/history */}
-              <div className="pt-6">
-                <ValuationHistory
-                  ticker={ticker}
-                  onSave={handleSave}
-                  saving={saving}
-                />
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   )

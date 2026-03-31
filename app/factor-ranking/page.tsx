@@ -85,7 +85,7 @@ export default function FactorRankingPage() {
     }
   }, [market, onlyCedear])
 
-  useEffect(() => { fetchRankings() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchRankings() }, [fetchRankings])
 
   // Client-side filters
   const filtered = results.filter((r) => {

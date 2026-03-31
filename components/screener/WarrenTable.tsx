@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { RankedInstrument } from '@/app/api/factor-ranking/route'
+import ScreenerChart from './ScreenerChart'
 
 interface Props {
   instruments: RankedInstrument[]
@@ -42,6 +43,7 @@ export default function WarrenTable({ instruments }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>('finalScore')
   const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc')
   const [page, setPage] = useState(0)
+  const [selected, setSelected] = useState<RankedInstrument | null>(null)
   const PAGE_SIZE = 30
 
   function handleSort(key: SortKey) {
@@ -110,6 +112,18 @@ export default function WarrenTable({ instruments }: Props) {
 
   return (
     <div className="flex flex-col h-full">
+      {/* Chart panel */}
+      {selected && (
+        <ScreenerChart
+          ticker={selected.ticker}
+          displayTicker={selected.displayTicker}
+          name={selected.name}
+          price={selected.price}
+          change1DPct={selected.change1DPct}
+          currency={selected.currency}
+          onClose={() => setSelected(null)}
+        />
+      )}
       <div className="overflow-auto flex-1 custom-scrollbar">
         <table className="w-full border-collapse">
           <thead className="sticky top-0 z-10 bg-[#0d1117]">
@@ -136,7 +150,8 @@ export default function WarrenTable({ instruments }: Props) {
               return (
                 <tr
                   key={inst.ticker}
-                  className="border-b border-[#21262d] hover:bg-[#161b22] transition-colors"
+                  className="border-b border-[#21262d] hover:bg-[#161b22] transition-colors cursor-pointer"
+                  onClick={() => setSelected(inst)}
                 >
                   {/* Rank */}
                   <td className="px-3 py-2 text-[11px] text-[#6e7681]">{globalRank}</td>
