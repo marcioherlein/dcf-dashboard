@@ -41,6 +41,30 @@ export default function FinancialScores({ scores }: Props) {
     return `$${n.toFixed(0)}M`
   }
 
+  // Detect "no fundamental data" state: all four metrics effectively empty
+  const piotroskiNoData = piotroski.score <= 1 && piotroski.criteria.every((c) => !c.pass || c.detail.includes('0.0%') || c.detail.includes('$0.0B'))
+  const roicNoData = !roic.dataAvailable
+  const noData = piotroskiNoData && altman == null && beneish == null && roicNoData
+
+  if (noData) {
+    return (
+      <div className="rounded-xl bg-[#0d1117] border border-[#21262d] p-6">
+        <h2 className="mb-4 text-xs font-mono font-bold text-[#8b949e] uppercase tracking-widest">Financial Quality Scores</h2>
+        <div className="flex flex-col items-center justify-center py-10 gap-3">
+          <div className="text-[#30363d] text-4xl">⚠</div>
+          <p className="font-mono text-sm font-semibold text-[#6e7681]">Fundamental data unavailable</p>
+          <p className="font-mono text-[11px] text-[#484f58] text-center max-w-xs leading-relaxed">
+            Yahoo Finance did not return financial statements for this ticker.
+            Quality scores (Piotroski, Altman, Beneish, ROIC) require at least 2 years of income statement and balance sheet data.
+          </p>
+          <p className="font-mono text-[10px] text-[#30363d] mt-2">
+            This is common for MERVAL .BA tickers and thinly-covered international names.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   // Altman — higher is better, thresholds: 1.8 (distress→grey), 3.0 (grey→safe)
   // Belt-and-suspenders: treat out-of-range values as null (catches any future calculation drift)
   const altmanSafe = altman != null && isFinite(altman.zScore) && Math.abs(altman.zScore) <= 50 ? altman : null
@@ -78,8 +102,8 @@ export default function FinancialScores({ scores }: Props) {
     : 'Distress Zone'
 
   return (
-    <div className="rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8 p-6">
-      <h2 className="mb-4 text-sm font-headline font-semibold text-on-surface dark:text-white/70">Financial Quality Scores</h2>
+    <div className="rounded-xl bg-[#0d1117] border border-[#21262d] p-6">
+      <h2 className="mb-4 text-xs font-mono font-bold text-[#8b949e] uppercase tracking-widest">Financial Quality Scores</h2>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
 
@@ -273,6 +297,7 @@ export default function FinancialScores({ scores }: Props) {
         </div>
 
         {/* ── ROIC vs WACC ── */}
+        {roic.dataAvailable && (
         <div className={`rounded-xl border p-4 ${spreadGood ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20' : 'bg-red-50 border-red-200 dark:bg-red-500/10 dark:border-red-500/20'}`}>
           <div className="mb-1 flex items-start justify-between">
             <div>
@@ -316,10 +341,11 @@ export default function FinancialScores({ scores }: Props) {
             </div>
           </div>
         </div>
+        )}
 
       </div>
 
-      <p className="mt-3 text-[10px] text-gray-300 dark:text-white/20">
+      <p className="mt-3 text-[10px] text-[#484f58] font-mono">
         Piotroski (2000), Altman (1968), Beneish (1999), ROIC/WACC per Damodaran framework. Computed from trailing annual financials.
       </p>
     </div>

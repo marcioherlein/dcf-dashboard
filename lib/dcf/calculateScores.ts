@@ -294,6 +294,7 @@ export interface ROICResult {
   nopat: number          // millions
   investedCapital: number // millions
   spread: number         // roic − wacc
+  dataAvailable: boolean // false when source data was entirely absent
 }
 
 export function calculateROIC(
@@ -346,5 +347,6 @@ export function calculateROIC(
     nopat: Math.round(nopat),
     investedCapital: Math.round(avgIC),
     spread: Math.round(spread * 10000) / 10000,
+    dataAvailable: opIncomeHasData && avgIC > 1,
   }
 }
