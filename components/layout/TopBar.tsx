@@ -32,6 +32,11 @@ const NAV_ITEMS = [
     label: 'Screener',
     tab: null,
   },
+  {
+    href: '/compare',
+    label: 'Compare',
+    tab: null,
+  },
 ]
 
 export default function TopBar() {
