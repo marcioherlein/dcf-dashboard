@@ -186,7 +186,7 @@ function TickerInput({
 }
 
 // ─── Custom Tooltip ───────────────────────────────────────────────────────────
-function CompareTooltip({ active, payload, label, tickerA, tickerB }: {
+function CompareTooltip({ active, payload, label, tickerA }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   active?: boolean; payload?: any[]; label?: string; tickerA: string; tickerB: string
 }) {
