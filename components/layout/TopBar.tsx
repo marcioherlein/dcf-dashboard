@@ -12,29 +12,29 @@ interface SearchResult {
 }
 
 const NAV_ITEMS = [
-  {
     href: '/?tab=brief',
     label: 'Morning Brief',
     tab: 'brief',
   },
-  {
     href: '/?tab=monitor',
     label: 'Market Monitor',
     tab: 'monitor',
   },
-  {
     href: '/?tab=portfolio',
     label: 'Portfolio',
     tab: 'portfolio',
   },
-  {
     href: '/factor-ranking',
     label: 'Screener',
     tab: null,
   },
-  {
     href: '/compare',
     label: 'Compare',
+    tab: null,
+  },
+  {
+    href: '/trading',
+    label: 'Trading',
     tab: null,
   },
 ]

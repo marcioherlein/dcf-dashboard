@@ -5,3 +5,9 @@ out/
 .env*.local
 .DS_Store
 *.log
+
+# live CEDEAR market data and credentials
+/data/raw/
+/data/adjusted/
+/data/live/
+.env.cocos
