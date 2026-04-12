@@ -82,6 +82,9 @@ interface LiveSignalResponse {
   };
   config: { lookback: number; zEntry: number; zExit: number; costBps: number };
   history: Record<string, string | number | null>[];
+  correlations?: Record<string, string | number | null>[];
+  usdPrices?: Record<string, string | number | null>[];
+  ltmPerformance?: Record<string, string | number | null>[];
   pairwise?: PairwiseItem[];
   fundamentals?: Record<string, FundamentalEntry> | null;
   valuationGate?: Record<string, { upside: number | null; suppressed: boolean }>;
@@ -155,7 +158,7 @@ export default function TradingPage() {
     fundamentalsFetchedAt,
   } = data ?? {};
 
-  const chartData = (history ?? []).map((row) => ({
+  const chartData = (history ?? []).map((row: Record<string, string | number | null>) => ({
     date: String(row.date),
     NU:   row.NU   as number | null,
     PAGS: row.PAGS as number | null,
@@ -533,9 +536,34 @@ export default function TradingPage() {
         {/* Z-Score Sparkline */}
         {chartData.length > 0 && (
           <div className="border border-[#1e1e1e] bg-[#0a0a0a] p-4">
-            <div className="font-mono text-[10px] text-[#555] uppercase tracking-widest mb-3">
+            <div className="font-mono text-[10px] text-[#555] uppercase tracking-widest mb-1">
               Z-Score · Last 30 Days · USD-equivalent CCL-deflated
             </div>
+
+            {/* Z-score explainer */}
+            <details className="mb-3">
+              <summary className="font-mono text-[10px] text-[#ff6600]/70 cursor-pointer select-none hover:text-[#ff6600] transition-colors">
+                What is this?
+              </summary>
+              <div className="mt-2 font-mono text-[10px] text-[#555] leading-relaxed space-y-1.5 border-l border-[#222] pl-3">
+                <p>
+                  The <span className="text-[#aaa]">z-score</span> measures how far each stock&apos;s price is from its recent average, expressed in standard deviations.
+                </p>
+                <p>
+                  <span className="text-[#aaa]">How it&apos;s built:</span> We take the USD-equivalent price of each CEDEAR (adjusted for CCL and ratio), compute the basket average, then measure each ticker&apos;s deviation from that average over a rolling {data?.config.lookback ?? 20}-day window.
+                </p>
+                <p>
+                  <span className="text-[#aaa]">Reading the chart:</span> A ticker above the orange line (+{data?.config.zEntry ?? 1.0}σ) is <span className="text-red-400">RICH</span> — expensive relative to its peers. A ticker below the lower orange line is <span className="text-green-400">CHEAP</span>. The strategy sells rich and buys cheap, betting the spread will mean-revert.
+                </p>
+                <p>
+                  <span className="text-[#aaa]">Why USD-equivalent?</span> NU.BA, STNE.BA, and PAGSd.BA are all ARS or USD CEDEARs with different ratios. Converting to USD removes the CCL (blue-chip dollar) noise so you&apos;re comparing actual company valuations, not Argentine peso moves.
+                </p>
+                <p className="text-[#333]">
+                  Z = (price − rolling mean) / rolling std deviation. Values beyond ±1 trigger a rebalance signal. Values beyond ±1.5 are considered &quot;stretched&quot;.
+                </p>
+              </div>
+            </details>
+
             <ResponsiveContainer width="100%" height={180}>
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#141414" />
@@ -548,6 +576,95 @@ export default function TradingPage() {
                 <ReferenceLine y={0}       stroke="#222" strokeWidth={1} />
                 <Tooltip contentStyle={{ background: '#0a0a0a', border: '1px solid #222', fontSize: 10, fontFamily: 'monospace' }}
                   formatter={(v: unknown) => [(v as number)?.toFixed(2)]} />
+                <Legend wrapperStyle={{ fontSize: 9, fontFamily: 'monospace' }} />
+                {(['NU', 'PAGS', 'STNE'] as const).map((t) => (
+                  <Line key={t} type="monotone" dataKey={t} dot={false} strokeWidth={1.5}
+                    stroke={TICKER_COLORS[t]} connectNulls />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* Rolling Correlations */}
+        {data?.correlations && data.correlations.length > 0 && (
+          <div className="border border-[#1e1e1e] bg-[#0a0a0a] p-4">
+            <div className="font-mono text-[10px] text-[#555] uppercase tracking-widest mb-1">
+              Rolling 20-Day Correlations
+            </div>
+            <div className="font-mono text-[10px] text-[#333] mb-3">
+              Pearson correlation of daily returns. Above 0.6 = stocks moving together (strategy works). Below 0.3 = regime broken (no trades).
+            </div>
+            <ResponsiveContainer width="100%" height={180}>
+              <LineChart data={data.correlations as Record<string, string | number | null>[]}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#141414" />
+                <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#444', fontFamily: 'monospace' }}
+                  tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                <YAxis domain={[-0.2, 1]} tick={{ fontSize: 9, fill: '#444', fontFamily: 'monospace' }}
+                  tickLine={false} axisLine={false} width={28} />
+                <ReferenceLine y={0.6} stroke="#22c55e" strokeDasharray="4 2" strokeWidth={0.8} label={{ value: '0.6', fill: '#22c55e', fontSize: 8, fontFamily: 'monospace' }} />
+                <ReferenceLine y={0.3} stroke="#ff6600" strokeDasharray="4 2" strokeWidth={0.8} label={{ value: '0.3', fill: '#ff6600', fontSize: 8, fontFamily: 'monospace' }} />
+                <Tooltip contentStyle={{ background: '#0a0a0a', border: '1px solid #222', fontSize: 10, fontFamily: 'monospace' }}
+                  formatter={(v: unknown) => [(v as number)?.toFixed(2)]} />
+                <Legend wrapperStyle={{ fontSize: 9, fontFamily: 'monospace' }} />
+                <Line type="monotone" dataKey="NU/PAGS"   dot={false} strokeWidth={1.5} stroke="#60a5fa" connectNulls />
+                <Line type="monotone" dataKey="NU/STNE"   dot={false} strokeWidth={1.5} stroke="#f59e0b" connectNulls />
+                <Line type="monotone" dataKey="PAGS/STNE" dot={false} strokeWidth={1.5} stroke="#34d399" connectNulls />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* USD Price History */}
+        {data?.usdPrices && data.usdPrices.length > 0 && (
+          <div className="border border-[#1e1e1e] bg-[#0a0a0a] p-4">
+            <div className="font-mono text-[10px] text-[#555] uppercase tracking-widest mb-1">
+              Price History · USD-Equivalent
+            </div>
+            <div className="font-mono text-[10px] text-[#333] mb-3">
+              CEDEAR prices converted to USD via CCL anchor. Removes Argentine peso inflation and devaluation noise.
+            </div>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={data.usdPrices as Record<string, string | number | null>[]}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#141414" />
+                <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#444', fontFamily: 'monospace' }}
+                  tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                <YAxis tick={{ fontSize: 9, fill: '#444', fontFamily: 'monospace' }}
+                  tickLine={false} axisLine={false} width={36}
+                  tickFormatter={(v: number) => `$${v.toFixed(1)}`} />
+                <Tooltip contentStyle={{ background: '#0a0a0a', border: '1px solid #222', fontSize: 10, fontFamily: 'monospace' }}
+                  formatter={(v: unknown) => [`$${(v as number)?.toFixed(2)}`]} />
+                <Legend wrapperStyle={{ fontSize: 9, fontFamily: 'monospace' }} />
+                {(['NU', 'PAGS', 'STNE'] as const).map((t) => (
+                  <Line key={t} type="monotone" dataKey={t} dot={false} strokeWidth={1.5}
+                    stroke={TICKER_COLORS[t]} connectNulls />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* LTM Performance */}
+        {data?.ltmPerformance && data.ltmPerformance.length > 0 && (
+          <div className="border border-[#1e1e1e] bg-[#0a0a0a] p-4">
+            <div className="font-mono text-[10px] text-[#555] uppercase tracking-widest mb-1">
+              Price Performance · Last 12 Months · Rebased to 100
+            </div>
+            <div className="font-mono text-[10px] text-[#333] mb-3">
+              All three tickers indexed to 100 at the start of the period. Shows relative performance independent of price level.
+            </div>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={data.ltmPerformance as Record<string, string | number | null>[]}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#141414" />
+                <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#444', fontFamily: 'monospace' }}
+                  tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                <YAxis tick={{ fontSize: 9, fill: '#444', fontFamily: 'monospace' }}
+                  tickLine={false} axisLine={false} width={36}
+                  tickFormatter={(v: number) => `${v.toFixed(0)}`} />
+                <ReferenceLine y={100} stroke="#333" strokeWidth={1} />
+                <Tooltip contentStyle={{ background: '#0a0a0a', border: '1px solid #222', fontSize: 10, fontFamily: 'monospace' }}
+                  formatter={(v: unknown) => [`${(v as number)?.toFixed(1)}`]}
+                  labelFormatter={(label) => `${label}`} />
                 <Legend wrapperStyle={{ fontSize: 9, fontFamily: 'monospace' }} />
                 {(['NU', 'PAGS', 'STNE'] as const).map((t) => (
                   <Line key={t} type="monotone" dataKey={t} dot={false} strokeWidth={1.5}

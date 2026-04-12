@@ -39,8 +39,8 @@ const CEDEAR_RATIO: Record<string, number> = {
   'PAGSd.BA': 0.3481, // already USD-denominated
 };
 
-// How many calendar days of history to fetch (≥ lookback + pairwise_window + buffer)
-const HISTORY_DAYS = 120;
+// How many calendar days of history to fetch
+const HISTORY_DAYS = 400; // enough for 365 trading-day LTM + rolling windows
 
 function rollingMean(series: number[], w: number): (number | null)[] {
   return series.map((_, i) => {
@@ -55,6 +55,27 @@ function rollingStd(series: number[], w: number): (number | null)[] {
     const m = sl.reduce((a, b) => a + b, 0) / w;
     return Math.sqrt(sl.reduce((a, b) => a + (b - m) ** 2, 0) / (w - 1));
   });
+}
+
+function rollingCorr(a: number[], b: number[], w: number): (number | null)[] {
+  return a.map((_, i) => {
+    if (i < w - 1) return null;
+    const sa = a.slice(i - w + 1, i + 1);
+    const sb = b.slice(i - w + 1, i + 1);
+    const ma = sa.reduce((s, v) => s + v, 0) / w;
+    const mb = sb.reduce((s, v) => s + v, 0) / w;
+    let num = 0, da = 0, db = 0;
+    for (let j = 0; j < w; j++) {
+      num += (sa[j] - ma) * (sb[j] - mb);
+      da  += (sa[j] - ma) ** 2;
+      db  += (sb[j] - mb) ** 2;
+    }
+    return da > 0 && db > 0 ? num / (Math.sqrt(da) * Math.sqrt(db)) : null;
+  });
+}
+
+function dailyReturns(prices: number[]): number[] {
+  return prices.map((v, i) => i === 0 ? 0 : (v - prices[i - 1]) / prices[i - 1]);
 }
 
 async function fetchDaily(symbol: string, days: number): Promise<{ date: string; close: number }[]> {
@@ -366,13 +387,53 @@ export async function GET(req: NextRequest) {
     const totalCocosCost  = trades.reduce((s, t) => s + t.cocosCostARS, 0);
     const totalTradeValue = trades.reduce((s, t) => s + t.tradeValueARS, 0);
 
-    // ── 7. Sparkline ─────────────────────────────────────────────────────────
+    // ── 7. Sparkline (last 30 days z-score) ──────────────────────────────────
     const history = commonDates.slice(-30).map((date, ii) => {
       const idx = n - 30 + ii;
       const row: Record<string, string|number|null> = { date };
       for (const t of TICKERS) row[t] = zScoreSeries[t][idx] ?? null;
       return row;
     });
+
+    // ── 8. Rolling 20-day correlations (all available history) ───────────────
+    const CORR_WINDOW = 20;
+    const retNU   = dailyReturns(usdEquivPrices['NU']);
+    const retPAGS = dailyReturns(usdEquivPrices['PAGS']);
+    const retSTNE = dailyReturns(usdEquivPrices['STNE']);
+    const corrNU_PAGS  = rollingCorr(retNU,   retPAGS, CORR_WINDOW);
+    const corrNU_STNE  = rollingCorr(retNU,   retSTNE, CORR_WINDOW);
+    const corrPAGS_STNE = rollingCorr(retPAGS, retSTNE, CORR_WINDOW);
+    const correlations = commonDates.map((date, i) => ({
+      date,
+      'NU/PAGS':  corrNU_PAGS[i]   !== null ? parseFloat(corrNU_PAGS[i]!.toFixed(3))   : null,
+      'NU/STNE':  corrNU_STNE[i]   !== null ? parseFloat(corrNU_STNE[i]!.toFixed(3))   : null,
+      'PAGS/STNE': corrPAGS_STNE[i] !== null ? parseFloat(corrPAGS_STNE[i]!.toFixed(3)) : null,
+    }));
+
+    // ── 9. USD price series (full history, thinned to every 2nd point) ────────
+    const usdPrices = commonDates
+      .filter((_, i) => i % 2 === 0 || i === n - 1)
+      .map((date) => {
+        const idx = commonDates.indexOf(date);
+        const row: Record<string, string|number|null> = { date };
+        for (const t of TICKERS) row[t] = parseFloat(usdEquivPrices[t][idx].toFixed(3));
+        return row;
+      });
+
+    // ── 10. LTM performance (last 252 trading days, rebased to 100) ───────────
+    const ltmStart = Math.max(0, n - 252);
+    const ltmBases = Object.fromEntries(TICKERS.map((t) => [t, usdEquivPrices[t][ltmStart]]));
+    const ltmPerformance = commonDates.slice(ltmStart)
+      .filter((_, i, arr) => i % 2 === 0 || i === arr.length - 1)
+      .map((date) => {
+        const idx = commonDates.indexOf(date);
+        const row: Record<string, string|number|null> = { date };
+        for (const t of TICKERS) {
+          const base = ltmBases[t];
+          row[t] = base > 0 ? parseFloat(((usdEquivPrices[t][idx] / base) * 100).toFixed(2)) : null;
+        }
+        return row;
+      });
 
     return NextResponse.json({
       dataAsOf:  latestDate,
@@ -407,6 +468,9 @@ export async function GET(req: NextRequest) {
       fundamentals,
       valuationGate,
       fundamentalsFetchedAt: new Date().toISOString(),
+      correlations,
+      usdPrices,
+      ltmPerformance,
     });
 
   } catch (err) {
