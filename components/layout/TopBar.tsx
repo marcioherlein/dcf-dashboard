@@ -13,11 +13,6 @@ interface SearchResult {
 
 const NAV_ITEMS = [
   {
-    href: '/?tab=brief',
-    label: 'Morning Brief',
-    tab: 'brief',
-  },
-  {
     href: '/?tab=monitor',
     label: 'Market Monitor',
     tab: 'monitor',
@@ -98,7 +93,7 @@ export default function TopBar() {
     <header className="fixed top-0 left-0 right-0 z-40 h-12 bg-[#0a0a0a] border-b border-[#ff6600]/40 flex items-center px-4 gap-0">
 
       {/* Logo */}
-      <Link href="/?tab=brief" className="flex items-center gap-2 shrink-0 mr-6">
+      <Link href="/?tab=monitor" className="flex items-center gap-2 shrink-0 mr-6">
         <div className="flex items-center gap-1.5">
           <div className="w-5 h-5 bg-[#ff6600] rounded-sm flex items-center justify-center">
             <svg className="w-3 h-3 text-black" viewBox="0 0 24 24" fill="currentColor">

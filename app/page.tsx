@@ -3,7 +3,6 @@ import { Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import MarketMonitor from '@/components/home/MarketMonitor'
-import MorningBrief from '@/components/home/MorningBrief'
 import Portfolio from '@/components/home/Portfolio'
 
 interface SearchResult {
@@ -13,7 +12,6 @@ interface SearchResult {
 }
 
 const TABS = [
-  { id: 'brief',     label: 'Morning Brief' },
   { id: 'monitor',   label: 'Market Monitor' },
   { id: 'portfolio', label: 'Portfolio' },
 ]
@@ -120,7 +118,7 @@ function StockSearchHero() {
 function HomeContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const tab = searchParams.get('tab') ?? 'brief'
+  const tab = searchParams.get('tab') ?? 'monitor'
 
   return (
     <div className="min-h-screen bg-[#080808] text-[#e6edf3]">
@@ -153,7 +151,6 @@ function HomeContent() {
 
       {/* Content */}
       <main>
-        {tab === 'brief'     && <div className="mx-auto max-w-7xl px-6 py-8"><MorningBrief /></div>}
         {tab === 'monitor'   && <MarketMonitor />}
         {tab === 'portfolio' && <div className="mx-auto max-w-7xl px-6 py-8"><Portfolio /></div>}
       </main>
