@@ -1,67 +1,46 @@
 /**
- * GET /api/relative-value/live-signal
+ * GET /api/trading/live-signal
  *
- * Reads yfinance live data from data/live/ (written by scripts/fetch_live.py).
+ * Fetches live CEDEAR data directly from Yahoo Finance via yahoo-finance2.
+ * No local files needed — works on Vercel.
  *
- * CEDEAR details:
- *   NU.BA    — ARS, ratio 10:1  → usd_equiv = ARS / (CCL × 10)
- *   STNE.BA  — ARS, ratio 6.676 → usd_equiv = ARS / (CCL × 6.676)
- *   PAGSd.BA — USD CEDEAR → usd_equiv = USD / 0.3481
- *   PAGS.BA  — ARS CEDEAR (sparse) → synthetic ARS = PAGSd × CCL × 19.07
+ * CEDEAR mechanics:
+ *   CCL = AAPL.BA / AAPL   (most liquid ARS/USD implicit rate)
+ *   NU.BA    ratio 10:1    → usd_equiv = ARS_price / (CCL × 10)
+ *   STNE.BA  ratio 6.676:1 → usd_equiv = ARS_price / (CCL × 6.676)
+ *   PAGSd.BA ratio 0.3481  → already USD → usd_equiv = USD / 0.3481
+ *   PAGS.BA  (ARS, sparse) → synthetic ARS = PAGSd.BA_USD × CCL × (6.64/0.3481)
  *
  * Query params:
- *   lookback     z-score window days (default 20)
- *   zEntry       entry threshold (default 1.0)
- *   zExit        exit threshold (default 0.25)
- *   costBps      Cocos bps per side (default 50)
- *   nu           current NU.BA shares held (optional)
- *   pags         current PAGS.BA shares held (optional)
- *   stne         current STNE.BA shares held (optional)
- *   capital      fallback ARS capital if no holdings provided (default 300000)
+ *   lookback   z-score window in days (default 20, max 60)
+ *   zEntry     entry threshold (default 1.0)
+ *   zExit      exit threshold (default 0.25)
+ *   costBps    Cocos fee bps per side (default 50)
+ *   nu         current NU.BA shares held (optional)
+ *   pags       current PAGS.BA shares held (optional)
+ *   stne       current STNE.BA shares held (optional)
+ *   capital    fallback ARS capital if no holdings provided (default 300000)
+ *   valuationGate  'true' to suppress BUY when analyst upside < -15%
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 import { computePairwiseRatios, pairwiseConfidenceModifier } from '@/lib/rv/pairwise-ratio';
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const YahooFinance = require('yahoo-finance2').default;
+const yf = new YahooFinance({ suppressNotices: ['ripHistorical', 'yahooSurvey'] });
+
 const TICKERS: [string, string, string] = ['NU', 'PAGS', 'STNE'];
-const LIVE_DIR = path.join(process.cwd(), 'data', 'live');
 
-interface USDEquivEntry {
-  date: string;
-  ba_price: number | null;
-  usd_equiv: number;
-  ccl: number | null;
-}
-interface CCLFile {
-  ccl_series: Array<{ date: string; rate: number }>;
-  latest_ccl: { date: string; rate: number } | null;
-  usd_equiv: Record<string, USDEquivEntry[]>;
-}
-interface LiveFile { ticker: string; bars: Array<{ date: string; close: number | null }>; fetchedAt: string }
+// CEDEAR ratios: ARS_price / (CCL × ratio) = USD_equiv
+const CEDEAR_RATIO: Record<string, number> = {
+  'NU.BA':    10.0,
+  'STNE.BA':  6.676,
+  'PAGSd.BA': 0.3481, // already USD-denominated
+};
 
-interface FundamentalsFile {
-  tickers: Record<string, {
-    pe: number | null;
-    forwardPe: number | null;
-    evEbitda: number | null;
-    pb: number | null;
-    ps: number | null;
-    targetPrice: number | null;
-    currentPrice: number | null;
-    upside: number | null;
-    marketCap: number | null;
-    name: string | null;
-  }>;
-  fetchedAt: string;
-}
-
-function readJSON(filename: string) {
-  const p = path.join(LIVE_DIR, filename);
-  if (!fs.existsSync(p)) return null;
-  try { return JSON.parse(fs.readFileSync(p, 'utf-8')); } catch { return null; }
-}
+// How many calendar days of history to fetch (≥ lookback + pairwise_window + buffer)
+const HISTORY_DAYS = 120;
 
 function rollingMean(series: number[], w: number): (number | null)[] {
   return series.map((_, i) => {
@@ -78,16 +57,53 @@ function rollingStd(series: number[], w: number): (number | null)[] {
   });
 }
 
+async function fetchDaily(symbol: string, days: number): Promise<{ date: string; close: number }[]> {
+  const period2 = new Date();
+  const period1 = new Date();
+  period1.setDate(period1.getDate() - days);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rows: any[] = await yf.historical(symbol, {
+    period1: period1.toISOString().split('T')[0],
+    period2: period2.toISOString().split('T')[0],
+    interval: '1d',
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return rows
+    .filter((r: any) => r.close != null)
+    .map((r: any) => ({
+      date: r.date instanceof Date ? r.date.toISOString().split('T')[0] : String(r.date).split('T')[0],
+      close: r.close as number,
+    }))
+    .sort((a: { date: string }, b: { date: string }) => a.date.localeCompare(b.date));
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extractFund(q: any) {
+  if (!q) return null;
+  const current = q.regularMarketPrice ?? null;
+  const target  = q.targetMeanPrice    ?? null;
+  const upside  = current && target && current > 0 ? (target - current) / current : null;
+  return {
+    pe:           q.trailingPE ?? null,
+    evEbitda:     q.enterpriseToEbitda ?? null,
+    pb:           q.priceToBook ?? null,
+    ps:           q.priceToSalesTrailing12Months ?? null,
+    targetPrice:  target,
+    currentPrice: current,
+    upside,
+  };
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const lookback     = Math.min(parseInt(searchParams.get('lookback') ?? '20'), 60);
-    const zEntry       = parseFloat(searchParams.get('zEntry')   ?? '1.0');
-    const zExit        = parseFloat(searchParams.get('zExit')    ?? '0.25');
-    const costBps      = parseFloat(searchParams.get('costBps')  ?? '50');
-    const fallbackCapital = parseFloat(searchParams.get('capital') ?? '300000');
+    const lookback        = Math.min(parseInt(searchParams.get('lookback') ?? '20'), 60);
+    const zEntry          = parseFloat(searchParams.get('zEntry')   ?? '1.0');
+    const zExit           = parseFloat(searchParams.get('zExit')    ?? '0.25');
+    const costBps         = parseFloat(searchParams.get('costBps')  ?? '50');
+    const fallbackCapital = parseFloat(searchParams.get('capital')  ?? '300000');
+    const useValuationGate = searchParams.get('valuationGate') === 'true';
 
-    // Current holdings (shares) — optional; if provided, overrides capital
     const currentShares: Record<string, number | null> = {
       NU:   searchParams.has('nu')   ? parseInt(searchParams.get('nu')!)   : null,
       PAGS: searchParams.has('pags') ? parseInt(searchParams.get('pags')!) : null,
@@ -95,40 +111,89 @@ export async function GET(req: NextRequest) {
     };
     const hasHoldings = TICKERS.some((t) => currentShares[t] !== null);
 
-    // ── 1. Load CCL + USD-equiv ──────────────────────────────────────────────
-    const cclFile = readJSON('ccl.json') as CCLFile | null;
-    if (!cclFile?.usd_equiv) {
-      return NextResponse.json(
-        { error: 'Live data missing.', instruction: 'Run: python3 scripts/fetch_live.py' },
-        { status: 422 }
-      );
+    // ── 1. Fetch all historical series in parallel ────────────────────────────
+    const [
+      aaplBA, aapl,
+      nuBA, stneBA, pagsDBA,
+      nuQ, pagsQ, stneQ,
+    ] = await Promise.all([
+      fetchDaily('AAPL.BA',  HISTORY_DAYS),
+      fetchDaily('AAPL',     HISTORY_DAYS),
+      fetchDaily('NU.BA',    HISTORY_DAYS),
+      fetchDaily('STNE.BA',  HISTORY_DAYS),
+      fetchDaily('PAGSd.BA', HISTORY_DAYS),
+      // Live quotes for fundamentals
+      yf.quote('NU').catch(() => null),
+      yf.quote('PAGS').catch(() => null),
+      yf.quote('STNE').catch(() => null),
+    ]);
+
+    if (!aaplBA.length || !aapl.length) {
+      return NextResponse.json({ error: 'Could not fetch AAPL/AAPL.BA from Yahoo Finance.' }, { status: 502 });
     }
 
-    const latestCCL = cclFile.latest_ccl;
+    // ── 2. Compute daily CCL from AAPL.BA / AAPL ─────────────────────────────
+    const aaplBAByDate = Object.fromEntries(aaplBA.map((r) => [r.date, r.close]));
+    const aaplByDate   = Object.fromEntries(aapl.map((r) => [r.date, r.close]));
 
-    // ── 1b. Load fundamentals (optional — valuation gate) ────────────────────
-    const fundamentalsFile = readJSON('fundamentals.json') as FundamentalsFile | null;
-    const fundamentals = fundamentalsFile?.tickers ?? null;
-    const useValuationGate = searchParams.get('valuationGate') === 'true';
+    const cclByDate: Record<string, number> = {};
+    for (const date of Object.keys(aaplBAByDate)) {
+      const usd = aaplByDate[date];
+      if (usd && usd > 0) cclByDate[date] = aaplBAByDate[date] / usd;
+    }
 
-    // ── 2. Build aligned USD-equiv price arrays ──────────────────────────────
+    // Fill forward CCL for days AAPL.BA traded but AAPL didn't (Argentine holiday vs US holiday)
+    const cclDates = Object.keys(cclByDate).sort();
+    let lastCCL = cclDates.length ? cclByDate[cclDates[0]] : null;
+    if (!lastCCL) {
+      return NextResponse.json({ error: 'Could not compute CCL from AAPL anchor.' }, { status: 502 });
+    }
+
+    // ── 3. Build USD-equivalent series ───────────────────────────────────────
+    const nuBAByDate   = Object.fromEntries(nuBA.map((r) => [r.date, r.close]));
+    const stneBAByDate = Object.fromEntries(stneBA.map((r) => [r.date, r.close]));
+    const pagsDByDate  = Object.fromEntries(pagsDBA.map((r) => [r.date, r.close]));
+
+    // Collect all dates where we have at least NU.BA, STNE.BA, and PAGSd.BA
+    const allDates = Array.from(new Set([
+      ...Object.keys(nuBAByDate),
+      ...Object.keys(stneBAByDate),
+      ...Object.keys(pagsDByDate),
+    ])).sort();
+
     const usdEquivByDate: Record<string, Record<string, number>> = {};
     const arsPriceByDate: Record<string, Record<string, number>> = {};
 
-    for (const ticker of TICKERS) {
-      const series = cclFile.usd_equiv[ticker] ?? [];
-      if (!series.length) {
-        return NextResponse.json(
-          { error: `No data for ${ticker}.`, instruction: 'Run: python3 scripts/fetch_live.py' },
-          { status: 422 }
-        );
+    for (const date of allDates) {
+      // Fill-forward CCL: find nearest prior date
+      let ccl = cclByDate[date];
+      if (!ccl) {
+        // Find most recent CCL before this date
+        const prior = cclDates.filter((d) => d <= date).at(-1);
+        ccl = prior ? cclByDate[prior] : (lastCCL ?? 0);
       }
-      for (const entry of series) {
-        if (!usdEquivByDate[entry.date]) usdEquivByDate[entry.date] = {};
-        if (!arsPriceByDate[entry.date]) arsPriceByDate[entry.date] = {};
-        usdEquivByDate[entry.date][ticker] = entry.usd_equiv;
-        if (entry.ba_price !== null) arsPriceByDate[entry.date][ticker] = entry.ba_price;
-      }
+      if (!ccl || ccl <= 0) continue;
+      lastCCL = ccl;
+
+      const nuPrice   = nuBAByDate[date];
+      const stnePrice = stneBAByDate[date];
+      const pagsUSD   = pagsDByDate[date];
+
+      if (!nuPrice || !stnePrice || !pagsUSD) continue;
+
+      // ARS prices for trade sizing
+      arsPriceByDate[date] = {
+        NU:   nuPrice,
+        STNE: stnePrice,
+        PAGS: pagsUSD * ccl * (6.64 / 0.3481), // synthetic ARS
+      };
+
+      // USD-equivalent for signal computation
+      usdEquivByDate[date] = {
+        NU:   nuPrice   / (ccl * CEDEAR_RATIO['NU.BA']),
+        STNE: stnePrice / (ccl * CEDEAR_RATIO['STNE.BA']),
+        PAGS: pagsUSD   / CEDEAR_RATIO['PAGSd.BA'],
+      };
     }
 
     const commonDates = Object.keys(usdEquivByDate)
@@ -137,7 +202,7 @@ export async function GET(req: NextRequest) {
 
     if (commonDates.length < lookback + 5) {
       return NextResponse.json(
-        { error: `Only ${commonDates.length} aligned days — need ${lookback + 5}.`, instruction: 'Run: python3 scripts/fetch_live.py' },
+        { error: `Only ${commonDates.length} aligned trading days found. Need ${lookback + 5}.` },
         { status: 422 }
       );
     }
@@ -147,11 +212,15 @@ export async function GET(req: NextRequest) {
       TICKERS.map((t) => [t, commonDates.map((d) => usdEquivByDate[d][t])])
     );
 
-    // Latest ARS prices (for trade sizing)
+    // Latest prices
+    const latestDate = commonDates[n - 1];
+    const latestCCLRate = (() => {
+      const prior = cclDates.filter((d) => d <= latestDate).at(-1);
+      return prior ? cclByDate[prior] : 0;
+    })();
     const latestARS: Record<string, number> = Object.fromEntries(
       TICKERS.map((t) => {
-        // Walk back to find most recent ARS price
-        for (let i = commonDates.length - 1; i >= 0; i--) {
+        for (let i = n - 1; i >= 0; i--) {
           const v = arsPriceByDate[commonDates[i]]?.[t];
           if (v) return [t, v];
         }
@@ -162,7 +231,7 @@ export async function GET(req: NextRequest) {
       TICKERS.map((t) => [t, usdEquivPrices[t][n - 1]])
     );
 
-    // ── 3. Equal-weight spread + z-score ─────────────────────────────────────
+    // ── 4. Basket z-score ────────────────────────────────────────────────────
     const spreadSeries: Record<string, number[]> = Object.fromEntries(TICKERS.map((t) => [t, []]));
     for (let i = 0; i < n; i++) {
       const logs = Object.fromEntries(TICKERS.map((t) => [t, Math.log(usdEquivPrices[t][i])]));
@@ -188,21 +257,25 @@ export async function GET(req: NextRequest) {
       })
     );
 
-    // ── 4. Signal + target weights ────────────────────────────────────────────
-    const sorted = [...TICKERS].sort((a, b) => (currentZ[a] ?? 0) - (currentZ[b] ?? 0));
-    const cheapTicker   = sorted[0];
-    const richTicker    = sorted[2];
+    // ── 5. Signal ────────────────────────────────────────────────────────────
+    const sorted      = [...TICKERS].sort((a, b) => (currentZ[a] ?? 0) - (currentZ[b] ?? 0));
+    const cheapTicker = sorted[0];
+    const richTicker  = sorted[2];
     const neutralTicker = sorted[1];
 
-    // ── 4b. Pairwise ratio z-scores (DCF Compare approach) ───────────────────
-    const pairwise = computePairwiseRatios(usdEquivPrices, 60);
+    const pairwise    = computePairwiseRatios(usdEquivPrices, 60);
     const pairwiseMod = pairwiseConfidenceModifier(pairwise, richTicker, cheapTicker);
 
-    // ── 4c. Valuation gate (optional) ────────────────────────────────────────
-    // Suppresses BUY if analyst upside < -15% (ticker is overvalued per consensus)
+    // Fundamentals from live quotes
+    const fundamentals = {
+      NU:   extractFund(nuQ),
+      PAGS: extractFund(pagsQ),
+      STNE: extractFund(stneQ),
+    };
+
     const valuationGate: Record<string, { upside: number | null; suppressed: boolean }> = Object.fromEntries(
       TICKERS.map((t) => {
-        const upside = fundamentals?.[t]?.upside ?? null;
+        const upside = fundamentals[t as keyof typeof fundamentals]?.upside ?? null;
         const suppressed = useValuationGate && upside !== null && upside < -0.15;
         return [t, { upside, suppressed }];
       })
@@ -220,7 +293,6 @@ export async function GET(req: NextRequest) {
     const maxAbsCurrentZ = Math.max(...TICKERS.map((t) => Math.abs(currentZ[t] ?? 0)));
     const shouldRebalance = maxAbsCurrentZ >= zEntry;
 
-    // 20d correlation gate
     const corrWarnings: string[] = [];
     for (const [a, b] of [['NU','PAGS'],['NU','STNE'],['PAGS','STNE']] as [string,string][]) {
       const ra = usdEquivPrices[a].slice(-21).map((v,i,arr) => i > 0 ? (v-arr[i-1])/arr[i-1] : 0).slice(1);
@@ -232,19 +304,16 @@ export async function GET(req: NextRequest) {
       const da  = Math.sqrt(ra.slice(0,nn).reduce((s,v)=>s+(v-ma)**2,0));
       const db  = Math.sqrt(rb.slice(0,nn).reduce((s,v)=>s+(v-mb)**2,0));
       const corr = da>0&&db>0 ? num/(da*db) : 0;
-      if (corr < 0.3) corrWarnings.push(`${a}/${b} 20d correlation = ${corr.toFixed(2)} (below 0.3 gate)`);
+      if (corr < 0.3) corrWarnings.push(`${a}/${b} 20d corr = ${corr.toFixed(2)} (below 0.3 gate)`);
     }
     const regime: 'normal'|'stretched'|'broken' =
       corrWarnings.length > 0 ? 'broken' : maxAbsCurrentZ >= 1.5 ? 'stretched' : 'normal';
 
-    // Confidence: base from z-score, adjusted by pairwise confirmation (+/- 0.2)
     const baseConf = regime === 'broken' ? 0 : maxAbsCurrentZ >= 1.5 ? 1 : maxAbsCurrentZ >= zEntry ? 0.5 : 0;
     const adjConf  = baseConf + pairwiseMod;
     const confidence: 'high'|'medium'|'low' = adjConf >= 0.8 ? 'high' : adjConf >= 0.4 ? 'medium' : 'low';
 
-    // ── 5. Portfolio + trade sizing ───────────────────────────────────────────
-    // If user provided holdings: compute capital from market value
-    // Otherwise: use fallback capital with equal-weight assumption
+    // ── 6. Portfolio + trade sizing ───────────────────────────────────────────
     let capital: number;
     let currentWeights: Record<string, number>;
     let currentShareCount: Record<string, number>;
@@ -265,39 +334,31 @@ export async function GET(req: NextRequest) {
     }
 
     const trades = TICKERS.map((t) => {
-      const arsPrice   = latestARS[t];
-      const currW      = currentWeights[t];
-      const targW      = targetWeights[t];
-      const deltaARS   = (targW - currW) * capital;
-      const deltaPct   = targW - currW;
-
-      // Shares to trade (round to nearest whole share)
+      const arsPrice    = latestARS[t];
+      const currW       = currentWeights[t];
+      const targW       = targetWeights[t];
+      const deltaARS    = (targW - currW) * capital;
       const deltaShares = arsPrice > 0 ? Math.round(deltaARS / arsPrice) : 0;
-      const targetShares = currentShareCount[t] + deltaShares;
+      const targetSharesFinal = currentShareCount[t] + deltaShares;
       const tradeValueARS = Math.abs(deltaShares * arsPrice);
       const cocosCost = (costBps / 10000) * tradeValueARS;
 
-      // Apply valuation gate: suppress BUY if ticker is flagged overvalued
       const rawAction = (deltaARS > arsPrice * 0.5 ? 'BUY' : deltaARS < -arsPrice * 0.5 ? 'SELL' : 'HOLD') as 'BUY'|'SELL'|'HOLD';
       const gated = valuationGate[t]?.suppressed && rawAction === 'BUY';
       const action: 'BUY'|'SELL'|'HOLD' = gated ? 'HOLD' : rawAction;
 
       return {
-        ticker:         t,
-        action,
+        ticker: t, action,
         currentShares:  currentShareCount[t],
         deltaShares:    Math.abs(deltaShares),
         deltaDirection: deltaShares,
-        targetShares,
-        arsPrice,
-        usdEquiv:       latestUSD[t],
-        currentWeight:  currW,
-        targetWeight:   targW,
-        deltaWeightPct: deltaPct,
-        tradeValueARS,
-        cocosCostARS:   cocosCost,
-        zScore:         currentZ[t],
-        label:          (t === richTicker ? 'RICH' : t === cheapTicker ? 'CHEAP' : 'NEUTRAL') as 'RICH'|'CHEAP'|'NEUTRAL',
+        targetShares:   targetSharesFinal,
+        arsPrice, usdEquiv: latestUSD[t],
+        currentWeight: currW, targetWeight: targW,
+        deltaWeightPct: targW - currW,
+        tradeValueARS, cocosCostARS: cocosCost,
+        zScore: currentZ[t],
+        label: (t === richTicker ? 'RICH' : t === cheapTicker ? 'CHEAP' : 'NEUTRAL') as 'RICH'|'CHEAP'|'NEUTRAL',
         valuationSuppressed: gated,
       };
     });
@@ -305,25 +366,20 @@ export async function GET(req: NextRequest) {
     const totalCocosCost  = trades.reduce((s, t) => s + t.cocosCostARS, 0);
     const totalTradeValue = trades.reduce((s, t) => s + t.tradeValueARS, 0);
 
-    // ── 6. Sparkline history ─────────────────────────────────────────────────
+    // ── 7. Sparkline ─────────────────────────────────────────────────────────
     const history = commonDates.slice(-30).map((date, ii) => {
       const idx = n - 30 + ii;
       const row: Record<string, string|number|null> = { date };
-      for (const t of TICKERS) {
-        row[t]        = zScoreSeries[t][idx] ?? null;
-        row[`usd_${t}`] = usdEquivPrices[t][idx] ?? null;
-      }
+      for (const t of TICKERS) row[t] = zScoreSeries[t][idx] ?? null;
       return row;
     });
 
-    const baFile = readJSON('NU_BA.json') as LiveFile | null;
-
     return NextResponse.json({
-      dataAsOf:   commonDates[n - 1],
-      fetchedAt:  baFile?.fetchedAt ?? null,
-      ccl:        latestCCL,
-      prices:     { ars: latestARS, usdEquiv: latestUSD },
-      portfolio:  { capital, currentWeights, currentShares: currentShareCount, hasHoldings },
+      dataAsOf:  latestDate,
+      fetchedAt: new Date().toISOString(),
+      ccl:       { date: latestDate, rate: latestCCLRate },
+      prices:    { ars: latestARS, usdEquiv: latestUSD },
+      portfolio: { capital, currentWeights, currentShares: currentShareCount, hasHoldings },
       signal: {
         regime, richTicker, cheapTicker, neutralTicker,
         zScores: currentZ, targetWeights,
@@ -331,48 +387,30 @@ export async function GET(req: NextRequest) {
         rebalanceReason: shouldRebalance
           ? `Max |z| = ${maxAbsCurrentZ.toFixed(2)} ≥ ${zEntry}. ${richTicker} rich (z=${currentZ[richTicker]?.toFixed(2)}), ${cheapTicker} cheap (z=${currentZ[cheapTicker]?.toFixed(2)}).`
           : `Max |z| = ${maxAbsCurrentZ.toFixed(2)} < ${zEntry}. Spread within range — hold.`,
-        corrWarnings,
-        confidence,
-        pairwiseMod,
+        corrWarnings, confidence, pairwiseMod,
       },
       trades,
       costs: {
-        capital,
-        totalTradeValueARS: totalTradeValue,
-        totalCocosCostARS:  totalCocosCost,
-        effectiveCostBps:   totalTradeValue > 0 ? parseFloat(((totalCocosCost / capital) * 10000).toFixed(1)) : 0,
-        costBpsPerSide:     costBps,
+        capital, totalTradeValueARS: totalTradeValue,
+        totalCocosCostARS: totalCocosCost,
+        effectiveCostBps: totalTradeValue > 0 ? parseFloat(((totalCocosCost / capital) * 10000).toFixed(1)) : 0,
+        costBpsPerSide: costBps,
       },
       config: { lookback, zEntry, zExit, costBps },
       history,
       pairwise: pairwise.map((p) => ({
-        pair:           p.pair,
-        tickerA:        p.tickerA,
-        tickerB:        p.tickerB,
-        currentRatio:   p.currentRatio,
-        currentZ:       p.currentZ,
-        pearsonCorr:    p.pearsonCorr,
-        direction:      p.direction,
-        signalStrength: p.signalStrength,
-        suggestion:     p.suggestion,
+        pair: p.pair, tickerA: p.tickerA, tickerB: p.tickerB,
+        currentRatio: p.currentRatio, currentZ: p.currentZ,
+        pearsonCorr: p.pearsonCorr, direction: p.direction,
+        signalStrength: p.signalStrength, suggestion: p.suggestion,
       })),
-      fundamentals: fundamentals ? Object.fromEntries(
-        TICKERS.map((t) => [t, {
-          pe:           fundamentals[t]?.pe ?? null,
-          evEbitda:     fundamentals[t]?.evEbitda ?? null,
-          pb:           fundamentals[t]?.pb ?? null,
-          ps:           fundamentals[t]?.ps ?? null,
-          targetPrice:  fundamentals[t]?.targetPrice ?? null,
-          currentPrice: fundamentals[t]?.currentPrice ?? null,
-          upside:       fundamentals[t]?.upside ?? null,
-        }])
-      ) : null,
+      fundamentals,
       valuationGate,
-      fundamentalsFetchedAt: fundamentalsFile?.fetchedAt ?? null,
+      fundamentalsFetchedAt: new Date().toISOString(),
     });
 
   } catch (err) {
-    console.error('[live-signal]', err);
+    console.error('[trading/live-signal]', err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
