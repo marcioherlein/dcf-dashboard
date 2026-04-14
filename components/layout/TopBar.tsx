@@ -37,6 +37,11 @@ const NAV_ITEMS = [
     label: 'Trading',
     tab: null,
   },
+  {
+    href: '/simplifier',
+    label: 'Simplifier',
+    tab: null,
+  },
 ]
 
 export default function TopBar() {

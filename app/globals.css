@@ -62,3 +62,14 @@ h1, h2, h3 {
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: #c4c6d2; border-radius: 10px; }
 }
+
+/* ── Simplifier PDF print styles ─────────────────────────────────── */
+@media print {
+  body { background: white !important; color: #111 !important; }
+  header, nav, [data-topbar], .fixed { display: none !important; }
+  .rounded-xl, .rounded-lg { border: 1px solid #ddd !important; background: white !important; }
+  .text-\[\#e6edf3\], .text-\[\#8b949e\], .text-\[\#c9d1d9\] { color: #111 !important; }
+  .bg-\[\#0d1117\], .bg-\[\#080808\], .bg-\[\#161b22\] { background: white !important; }
+  .border-\[\#21262d\], .border-\[\#30363d\] { border-color: #ddd !important; }
+  a { color: inherit !important; text-decoration: none !important; }
+}
