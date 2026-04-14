@@ -112,7 +112,7 @@ export default function TopBar() {
       </Link>
 
       {/* Nav links */}
-      <nav className="flex items-center gap-0 border-l border-[#222] mr-4">
+      <nav className="flex items-center gap-0 border-l border-[#222] mr-4 overflow-x-auto scrollbar-hide shrink-0">
         {NAV_ITEMS.map((item) => {
           const active = isActive(item)
           return (
@@ -133,7 +133,7 @@ export default function TopBar() {
       </nav>
 
       {/* Search */}
-      <div className="relative flex-1 max-w-xs" ref={searchRef}>
+      <div className="relative flex-1 min-w-0 max-w-xs" ref={searchRef}>
         <div className="flex items-center gap-2 bg-[#111] border border-[#333] rounded-sm px-2.5 py-1.5 focus-within:border-[#ff6600]/60 transition-colors">
           <svg className="h-3 w-3 text-[#555] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
