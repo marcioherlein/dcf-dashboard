@@ -10,7 +10,7 @@ function num(v: number | null | undefined, d = 1): string {
   return v.toFixed(d)
 }
 
-export function buildBusinessSummary(companyName: string, data: FinancialsData, _answers: AllAnswers): string {
+export function buildBusinessSummary(companyName: string, data: FinancialsData): string {
   const gm   = data.businessProfile?.grossMargin ?? null
   const fcfM = data.businessProfile?.fcfMargin ?? null
   const cagr = data.cagrAnalysis?.historicalCagr3y ?? null
@@ -51,7 +51,7 @@ export function buildGrowthSummary(companyName: string, data: FinancialsData, an
   return parts.join(' ') || 'Insufficient data to generate a growth summary.'
 }
 
-export function buildManagementSummary(companyName: string, data: FinancialsData, _answers: AllAnswers): string {
+export function buildManagementSummary(companyName: string, data: FinancialsData): string {
   const insiderPct  = data.ownership?.insiderPct ?? null
   const piotroski   = data.scores?.piotroski?.score ?? null
   const beneishFlag = data.scores?.beneish?.flag ?? null
@@ -63,7 +63,7 @@ export function buildManagementSummary(companyName: string, data: FinancialsData
   return parts.join(' ') || 'Insufficient data to generate a management summary.'
 }
 
-export function buildRiskSummary(companyName: string, data: FinancialsData, _answers: AllAnswers): string {
+export function buildRiskSummary(companyName: string, data: FinancialsData): string {
   const altmanZone = data.scores?.altman?.zone ?? null
   const beta       = data.wacc?.inputs?.beta ?? null
   const beneish    = data.scores?.beneish?.flag ?? null
@@ -75,7 +75,7 @@ export function buildRiskSummary(companyName: string, data: FinancialsData, _ans
   return parts.join(' ') || 'Insufficient data to generate a risk summary.'
 }
 
-export function buildValuationSummary(companyName: string, data: FinancialsData, _answers: AllAnswers): string {
+export function buildValuationSummary(companyName: string, data: FinancialsData): string {
   const d = data as any
   const upsidePct = d.fairValue?.upsidePct ?? null
   const peRatio   = d.quote?.peRatio ?? null

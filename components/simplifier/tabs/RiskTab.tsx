@@ -48,7 +48,7 @@ export default function RiskTab({
     { label: 'Beneish Flag', value: beneishFlag ?? '—',          color: beneishColor },
   ]
 
-  const summary = buildRiskSummary(companyName, data, answers)
+  const summary = buildRiskSummary(companyName, data)
 
   return (
     <div className="flex flex-col gap-6">

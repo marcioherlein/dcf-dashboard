@@ -63,7 +63,7 @@ export default function BusinessTab({
     }))
     .filter(r => r.value != null) as { year: string; value: number; isProjected: boolean }[]
 
-  const summary = buildBusinessSummary(companyName, data, answers)
+  const summary = buildBusinessSummary(companyName, data)
 
   return (
     <div className="flex flex-col gap-6">

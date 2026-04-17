@@ -47,7 +47,7 @@ export default function ValuationTab({
   const upsideColor = upsidePct == null ? 'text-[#6B6A72]' : upsidePct >= 0.25 ? 'text-[#1f6feb]' : upsidePct >= 0.05 ? 'text-[#9a6700]' : 'text-[#cf222e]'
   const upsideLabel = upsidePct == null ? '' : upsidePct >= 0.25 ? 'Attractive' : upsidePct >= 0.05 ? 'Fair Value' : 'Expensive'
 
-  const summary = buildValuationSummary(companyName, data, answers)
+  const summary = buildValuationSummary(companyName, data)
 
   return (
     <div className="flex flex-col gap-6">

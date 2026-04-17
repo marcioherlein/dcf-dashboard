@@ -61,7 +61,7 @@ export default function ManagementTab({
 
   const beneishColor = beneishFlag === 'Clean' ? 'text-[#1f6feb]' : beneishFlag === 'Warning' ? 'text-[#9a6700]' : 'text-[#cf222e]'
 
-  const summary = buildManagementSummary(companyName, data, answers)
+  const summary = buildManagementSummary(companyName, data)
 
   return (
     <div className="flex flex-col gap-6">
