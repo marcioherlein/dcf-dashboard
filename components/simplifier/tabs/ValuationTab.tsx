@@ -1,7 +1,6 @@
 'use client'
 
 import { PHASES } from '@/lib/simplifier/phases'
-import { scorePhase } from '@/lib/simplifier/scoring'
 import type { AllAnswers, NoteMap, SimplifierAutoMap } from '@/lib/simplifier/types'
 import type { FinancialsData } from '@/lib/simplifier/autoMapper'
 import { buildValuationSummary } from '@/lib/simplifier/summaryBuilder'

@@ -1,7 +1,7 @@
 'use client'
 
 import { PHASES } from '@/lib/simplifier/phases'
-import { answeredCount, scorePhase } from '@/lib/simplifier/scoring'
+import { answeredCount } from '@/lib/simplifier/scoring'
 import type { AllAnswers } from '@/lib/simplifier/types'
 
 export type TabId = 'ticker' | 'business' | 'moat' | 'growth' | 'management' | 'risk' | 'valuation' | 'score'

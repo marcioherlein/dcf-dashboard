@@ -11,3 +11,4 @@ out/
 /data/adjusted/
 /data/live/
 .env.cocos
+.vercel
