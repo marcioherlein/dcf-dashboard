@@ -43,7 +43,7 @@ export default function ScreenerChart({ ticker, displayTicker, name, price, chan
   const [rawData, setRawData] = useState<Bar[]>([])
   const [loading, setLoading] = useState(true)
   const isUp = change1DPct >= 0
-  const accentColor = isUp ? '#3fb950' : '#f85149'
+  const accentColor = isUp ? '#059669' : '#DC2626'
 
   useEffect(() => {
     setLoading(true)
@@ -85,47 +85,47 @@ export default function ScreenerChart({ ticker, displayTicker, name, price, chan
   return (
     <div className="fixed inset-0 z-50 flex" onClick={onClose}>
       {/* Backdrop */}
-      <div className="flex-1 bg-black/60" />
+      <div className="flex-1 bg-black/40" />
 
       {/* Panel */}
       <div
-        className="w-[480px] bg-[#0d1117] border-l border-[#30363d] flex flex-col h-full overflow-y-auto"
+        className="w-[480px] bg-white border-l border-slate-200 flex flex-col h-full overflow-y-auto shadow-card-md"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between px-5 py-4 border-b border-[#21262d]">
+        <div className="flex items-start justify-between px-5 py-4 border-b border-slate-200">
           <div>
             <div className="flex items-baseline gap-2">
-              <span className="font-mono text-lg font-bold text-[#e6edf3]">{displayTicker}</span>
+              <span className="text-lg font-bold text-slate-900">{displayTicker}</span>
               <span
-                className="font-mono text-sm font-semibold"
+                className="text-sm font-semibold"
                 style={{ color: accentColor }}
               >
                 {isUp ? '+' : ''}{change1DPct.toFixed(2)}%
               </span>
             </div>
-            <div className="font-mono text-[11px] text-[#8b949e] mt-0.5 truncate max-w-[320px]">{name}</div>
-            <div className="font-mono text-xl font-bold text-[#e6edf3] mt-1">{fmt(price)}</div>
+            <div className="text-[11px] text-slate-400 mt-0.5 truncate max-w-[320px]">{name}</div>
+            <div className="text-xl font-bold text-slate-900 mt-1">{fmt(price)}</div>
           </div>
           <button
             onClick={onClose}
-            className="text-[#6e7681] hover:text-[#e6edf3] transition-colors mt-0.5 font-mono text-lg leading-none"
+            className="text-slate-400 hover:text-slate-700 transition-colors mt-0.5 text-lg leading-none"
           >
             ×
           </button>
         </div>
 
         {/* Period selector */}
-        <div className="flex items-center gap-1 px-5 py-2 border-b border-[#21262d]">
+        <div className="flex items-center gap-1 px-5 py-2 border-b border-slate-100">
           {PERIODS.map((p) => (
             <button
               key={p.id}
               onClick={() => setPeriod(p.id)}
               className={[
-                'px-2.5 py-0.5 font-mono text-[11px] font-semibold rounded transition-colors',
+                'px-2.5 py-0.5 text-[11px] font-semibold rounded transition-colors',
                 period === p.id
-                  ? 'bg-[#ff6600] text-black'
-                  : 'text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d]',
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100',
               ].join(' ')}
             >
               {p.label}
@@ -133,8 +133,8 @@ export default function ScreenerChart({ ticker, displayTicker, name, price, chan
           ))}
           {periodChange !== null && (
             <span
-              className="ml-auto font-mono text-[11px] font-semibold"
-              style={{ color: periodChange >= 0 ? '#3fb950' : '#f85149' }}
+              className="ml-auto text-[11px] font-semibold"
+              style={{ color: periodChange >= 0 ? '#059669' : '#DC2626' }}
             >
               {periodChange >= 0 ? '+' : ''}{periodChange.toFixed(2)}% period
             </span>
@@ -144,11 +144,11 @@ export default function ScreenerChart({ ticker, displayTicker, name, price, chan
         {/* Chart */}
         <div className="px-2 py-4 flex-1">
           {loading ? (
-            <div className="flex items-center justify-center h-48 text-[#6e7681] font-mono text-xs">
+            <div className="flex items-center justify-center h-48 text-slate-400 text-xs">
               Loading…
             </div>
           ) : data.length === 0 ? (
-            <div className="flex items-center justify-center h-48 text-[#6e7681] font-mono text-xs">
+            <div className="flex items-center justify-center h-48 text-slate-400 text-xs">
               No data available
             </div>
           ) : (
@@ -159,21 +159,21 @@ export default function ScreenerChart({ ticker, displayTicker, name, price, chan
                   <ComposedChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id={`grad-${ticker}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={accentColor} stopOpacity={0.25} />
+                        <stop offset="5%" stopColor={accentColor} stopOpacity={0.2} />
                         <stop offset="95%" stopColor={accentColor} stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid stroke="#21262d" strokeDasharray="3 3" vertical={false} />
+                    <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" vertical={false} />
                     <XAxis
                       dataKey="date"
-                      tick={{ fontSize: 9, fill: '#6e7681', fontFamily: 'IBM Plex Mono, monospace' }}
+                      tick={{ fontSize: 9, fill: '#94A3B8' }}
                       tickLine={false}
                       axisLine={false}
                       interval="preserveStartEnd"
                     />
                     <YAxis
                       domain={[minP, maxP]}
-                      tick={{ fontSize: 9, fill: '#6e7681', fontFamily: 'IBM Plex Mono, monospace' }}
+                      tick={{ fontSize: 9, fill: '#94A3B8' }}
                       tickLine={false}
                       axisLine={false}
                       width={52}
@@ -187,11 +187,11 @@ export default function ScreenerChart({ ticker, displayTicker, name, price, chan
                         if (!active || !payload?.length) return null
                         const d = payload[0]?.payload
                         return (
-                          <div className="bg-[#161b22] border border-[#30363d] rounded px-3 py-2 text-xs font-mono">
-                            <div className="text-[#8b949e] mb-1">{label}</div>
-                            <div className="text-[#e6edf3] font-bold">{fmt(d.close)}</div>
-                            {d.sma20 && <div className="text-[#f59e0b]">SMA20 {fmt(d.sma20)}</div>}
-                            {d.sma50 && <div className="text-[#3b82f6]">SMA50 {fmt(d.sma50)}</div>}
+                          <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs shadow-card-md">
+                            <div className="text-slate-400 mb-1">{label}</div>
+                            <div className="text-slate-800 font-bold">{fmt(d.close)}</div>
+                            {d.sma20 && <div className="text-amber-500">SMA20 {fmt(d.sma20)}</div>}
+                            {d.sma50 && <div className="text-blue-500">SMA50 {fmt(d.sma50)}</div>}
                           </div>
                         )
                       }}
@@ -205,10 +205,10 @@ export default function ScreenerChart({ ticker, displayTicker, name, price, chan
                       dot={false}
                       isAnimationActive={false}
                     />
-                    <Line type="monotone" dataKey="sma20" stroke="#f59e0b" strokeWidth={1} dot={false} isAnimationActive={false} connectNulls strokeDasharray="3 2" />
-                    <Line type="monotone" dataKey="sma50" stroke="#3b82f6" strokeWidth={1} dot={false} isAnimationActive={false} connectNulls strokeDasharray="3 2" />
+                    <Line type="monotone" dataKey="sma20" stroke="#F59E0B" strokeWidth={1} dot={false} isAnimationActive={false} connectNulls strokeDasharray="3 2" />
+                    <Line type="monotone" dataKey="sma50" stroke="#3B82F6" strokeWidth={1} dot={false} isAnimationActive={false} connectNulls strokeDasharray="3 2" />
                     {/* Current price line */}
-                    <ReferenceLine y={price} stroke="#ff6600" strokeDasharray="4 2" strokeWidth={1} strokeOpacity={0.6} />
+                    <ReferenceLine y={price} stroke="#2563EB" strokeDasharray="4 2" strokeWidth={1} strokeOpacity={0.5} />
                   </ComposedChart>
                 </ResponsiveContainer>
               </div>
@@ -219,31 +219,31 @@ export default function ScreenerChart({ ticker, displayTicker, name, price, chan
                   <ComposedChart data={data} margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
                     <XAxis dataKey="date" hide />
                     <YAxis
-                      tick={{ fontSize: 8, fill: '#6e7681' }}
+                      tick={{ fontSize: 8, fill: '#94A3B8' }}
                       tickLine={false}
                       axisLine={false}
                       width={52}
                       tickFormatter={(v) => `${(v / 1e6).toFixed(0)}M`}
                     />
-                    <ReBar dataKey="volume" fill="#21262d" isAnimationActive={false} radius={[1, 1, 0, 0]} />
+                    <ReBar dataKey="volume" fill="#E2E8F0" isAnimationActive={false} radius={[1, 1, 0, 0]} />
                   </ComposedChart>
                 </ResponsiveContainer>
-                <p className="text-center font-mono text-[9px] text-[#6e7681] -mt-1">VOLUME</p>
+                <p className="text-center text-[9px] text-slate-400 -mt-1">VOLUME</p>
               </div>
 
               {/* Legend */}
               <div className="flex items-center gap-4 px-1 mt-3">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-4 h-0.5 bg-[#f59e0b]" style={{ background: 'repeating-linear-gradient(90deg, #f59e0b 0, #f59e0b 3px, transparent 3px, transparent 5px)' }} />
-                  <span className="font-mono text-[9px] text-[#8b949e]">SMA 20</span>
+                  <div className="w-4 h-0.5" style={{ background: 'repeating-linear-gradient(90deg, #F59E0B 0, #F59E0B 3px, transparent 3px, transparent 5px)' }} />
+                  <span className="text-[9px] text-slate-400">SMA 20</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-4 h-0.5" style={{ background: 'repeating-linear-gradient(90deg, #3b82f6 0, #3b82f6 3px, transparent 3px, transparent 5px)' }} />
-                  <span className="font-mono text-[9px] text-[#8b949e]">SMA 50</span>
+                  <div className="w-4 h-0.5" style={{ background: 'repeating-linear-gradient(90deg, #3B82F6 0, #3B82F6 3px, transparent 3px, transparent 5px)' }} />
+                  <span className="text-[9px] text-slate-400">SMA 50</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-4 h-0.5" style={{ background: 'repeating-linear-gradient(90deg, #ff6600 0, #ff6600 4px, transparent 4px, transparent 6px)' }} />
-                  <span className="font-mono text-[9px] text-[#8b949e]">Last price</span>
+                  <div className="w-4 h-0.5" style={{ background: 'repeating-linear-gradient(90deg, #2563EB 0, #2563EB 4px, transparent 4px, transparent 6px)' }} />
+                  <span className="text-[9px] text-slate-400">Last price</span>
                 </div>
               </div>
             </>
@@ -251,10 +251,10 @@ export default function ScreenerChart({ ticker, displayTicker, name, price, chan
         </div>
 
         {/* Footer: open full analysis */}
-        <div className="px-5 py-3 border-t border-[#21262d]">
+        <div className="px-5 py-3 border-t border-slate-200">
           <a
             href={`/stock/${ticker}`}
-            className="flex items-center justify-center gap-2 w-full py-2 bg-[#ff6600] hover:bg-[#e55a00] text-black font-mono text-xs font-bold rounded transition-colors"
+            className="flex items-center justify-center gap-2 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors"
           >
             Open Full Analysis →
           </a>

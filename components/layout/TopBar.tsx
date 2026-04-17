@@ -12,36 +12,12 @@ interface SearchResult {
 }
 
 const NAV_ITEMS = [
-  {
-    href: '/?tab=monitor',
-    label: 'Market Monitor',
-    tab: 'monitor',
-  },
-  {
-    href: '/?tab=portfolio',
-    label: 'Portfolio',
-    tab: 'portfolio',
-  },
-  {
-    href: '/factor-ranking',
-    label: 'Screener',
-    tab: null,
-  },
-  {
-    href: '/compare',
-    label: 'Compare',
-    tab: null,
-  },
-  {
-    href: '/trading',
-    label: 'Trading',
-    tab: null,
-  },
-  {
-    href: '/simplifier',
-    label: 'Simplifier',
-    tab: null,
-  },
+  { href: '/?tab=monitor',   label: 'Market Monitor', tab: 'monitor' },
+  { href: '/?tab=portfolio', label: 'Portfolio',       tab: 'portfolio' },
+  { href: '/factor-ranking', label: 'Screener',        tab: null },
+  { href: '/compare',        label: 'Compare',         tab: null },
+  { href: '/trading',        label: 'Trading',         tab: null },
+  { href: '/simplifier',     label: 'Simplifier',      tab: null },
 ]
 
 export default function TopBar() {
@@ -95,24 +71,20 @@ export default function TopBar() {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 h-12 bg-[#0a0a0a] border-b border-[#ff6600]/40 flex items-center px-4 gap-0">
+    <header className="fixed top-0 left-0 right-0 z-40 h-13 bg-white border-b border-slate-200 flex items-center px-4 gap-0 shadow-sm" style={{ height: '52px' }}>
 
       {/* Logo */}
       <Link href="/?tab=monitor" className="flex items-center gap-2 shrink-0 mr-6">
-        <div className="flex items-center gap-1.5">
-          <div className="w-5 h-5 bg-[#ff6600] rounded-sm flex items-center justify-center">
-            <svg className="w-3 h-3 text-black" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M3 3h18v2H3V3zm0 4h12v2H3V7zm0 4h18v2H3v-2zm0 4h12v2H3v-2zm0 4h18v2H3v-2z"/>
-            </svg>
-          </div>
-          <span className="font-mono text-sm font-bold text-[#ff6600] tracking-widest uppercase">DCF</span>
+        <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
+          <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 3h18v2H3V3zm0 4h12v2H3V7zm0 4h18v2H3v-2zm0 4h12v2H3v-2zm0 4h18v2H3v-2z"/>
+          </svg>
         </div>
-        <span className="text-[#444] font-mono text-xs">|</span>
-        <span className="font-mono text-[10px] text-[#888] tracking-wider uppercase">Terminal</span>
+        <span className="font-semibold text-slate-900 text-sm tracking-tight">DCF Dashboard</span>
       </Link>
 
       {/* Nav links */}
-      <nav className="flex items-center gap-0 border-l border-[#222] mr-4 overflow-x-auto scrollbar-hide shrink-0">
+      <nav className="flex items-center overflow-x-auto scrollbar-hide shrink-0 mr-4 gap-0.5">
         {NAV_ITEMS.map((item) => {
           const active = isActive(item)
           return (
@@ -120,10 +92,10 @@ export default function TopBar() {
               key={item.href}
               href={item.href}
               className={[
-                'h-12 flex items-center px-4 font-mono text-[11px] font-medium uppercase tracking-wider border-r border-[#222] transition-colors whitespace-nowrap',
+                'h-8 flex items-center px-3 text-[13px] font-medium rounded-md transition-colors whitespace-nowrap',
                 active
-                  ? 'text-[#ff6600] bg-[#1a0d00] border-b-2 border-b-[#ff6600]'
-                  : 'text-[#aaa] hover:text-[#ff6600] hover:bg-[#111]',
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100',
               ].join(' ')}
             >
               {item.label}
@@ -134,39 +106,42 @@ export default function TopBar() {
 
       {/* Search */}
       <div className="relative flex-1 min-w-0 max-w-xs" ref={searchRef}>
-        <div className="flex items-center gap-2 bg-[#111] border border-[#333] rounded-sm px-2.5 py-1.5 focus-within:border-[#ff6600]/60 transition-colors">
-          <svg className="h-3 w-3 text-[#555] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
-          </svg>
+        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 focus-within:border-blue-400 focus-within:bg-white transition-colors">
+          {loading ? (
+            <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-blue-500 shrink-0" />
+          ) : (
+            <svg className="h-3.5 w-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
+            </svg>
+          )}
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="TICKER SEARCH"
-            className="flex-1 min-w-0 bg-transparent font-mono text-[11px] text-[#e0e0e0] placeholder-[#444] focus:outline-none tracking-widest uppercase"
+            placeholder="Search ticker…"
+            className="flex-1 min-w-0 bg-transparent text-[13px] text-slate-900 placeholder-slate-400 focus:outline-none uppercase"
           />
-          {loading && <div className="h-3 w-3 animate-spin rounded-full border border-[#444] border-t-[#ff6600] shrink-0" />}
         </div>
 
         {open && (
-          <div className="absolute left-0 right-0 top-full mt-0.5 overflow-hidden bg-[#0f0f0f] border border-[#333] shadow-2xl z-50">
+          <div className="absolute left-0 right-0 top-full mt-1 overflow-hidden bg-white border border-slate-200 rounded-xl shadow-card-md z-50">
             {results.map((r) => (
               <button
                 key={r.symbol}
                 onClick={() => select(r.symbol)}
-                className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-[#1a1a1a] border-b border-[#1e1e1e] last:border-b-0 transition-colors"
+                className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-slate-50 border-b border-slate-100 last:border-b-0 transition-colors"
               >
-                <span className="font-mono text-xs font-bold text-[#ff6600] tracking-wider w-16 shrink-0">{r.symbol}</span>
-                <span className="font-mono text-[10px] text-[#888] truncate">{r.longname ?? r.shortname}</span>
+                <span className="text-[13px] font-semibold text-blue-600 w-16 shrink-0 font-mono">{r.symbol}</span>
+                <span className="text-[12px] text-slate-500 truncate">{r.longname ?? r.shortname}</span>
               </button>
             ))}
           </div>
         )}
       </div>
 
-      {/* Right section: time + auth */}
-      <div className="ml-auto flex items-center gap-4 pl-4">
+      {/* Right: clock + auth */}
+      <div className="ml-auto flex items-center gap-3 pl-4">
         <LiveClock />
 
         {session ? (
@@ -175,24 +150,24 @@ export default function TopBar() {
               <Image
                 src={session.user.image}
                 alt={session.user.name ?? ''}
-                width={24}
-                height={24}
-                className="rounded-sm ring-1 ring-[#333]"
+                width={26}
+                height={26}
+                className="rounded-full ring-2 ring-slate-200"
               />
             )}
             <button
               onClick={() => signOut()}
-              className="font-mono text-[10px] text-[#666] hover:text-[#ff6600] transition-colors uppercase tracking-wider"
+              className="text-[12px] text-slate-500 hover:text-slate-900 transition-colors"
             >
-              Sign Out
+              Sign out
             </button>
           </div>
         ) : (
           <button
             onClick={() => signIn('google')}
-            className="font-mono text-[10px] text-[#888] border border-[#333] px-3 py-1 hover:border-[#ff6600] hover:text-[#ff6600] transition-colors uppercase tracking-wider"
+            className="text-[12px] bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg transition-colors font-medium"
           >
-            Sign In
+            Sign in
           </button>
         )}
       </div>
@@ -209,6 +184,6 @@ function LiveClock() {
     return () => clearInterval(id)
   }, [])
   return (
-    <span className="font-mono text-[11px] text-[#555] tracking-widest tabular-nums">{time}</span>
+    <span className="font-mono text-[11px] text-slate-400 tabular-nums tracking-wider hidden sm:block">{time}</span>
   )
 }

@@ -1,30 +1,40 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #fbf9f8;
-  --foreground: #1b1c1c;
+  --background: #F8FAFB;
+  --foreground: #0F172A;
+  --surface: #FFFFFF;
+  --border: #E2E8F0;
+  --border-strong: #CBD5E1;
+  --muted: #64748B;
+  --blue: #2563EB;
+  --blue-light: #EFF6FF;
+  --blue-border: #BFDBFE;
+  --green: #059669;
+  --green-light: #ECFDF5;
+  --red: #DC2626;
+  --amber: #D97706;
 }
 
 body {
-  font-family: 'IBM Plex Sans', 'Inter', system-ui, sans-serif;
+  font-family: 'Inter', 'IBM Plex Sans', system-ui, sans-serif;
   color: var(--foreground);
   background: var(--background);
 }
 
 h1, h2, h3 {
-  font-family: 'IBM Plex Sans', 'Manrope', system-ui, sans-serif;
+  font-family: 'Inter', 'IBM Plex Sans', system-ui, sans-serif;
+  font-weight: 600;
 }
 
-/* Bloomberg terminal mono class */
 .font-terminal {
   font-family: 'IBM Plex Mono', 'Courier New', monospace;
 }
 
-/* Override .font-mono to IBM Plex Mono throughout */
 .font-mono {
   font-family: 'IBM Plex Mono', monospace !important;
 }
@@ -48,8 +58,11 @@ h1, h2, h3 {
   .text-balance {
     text-wrap: balance;
   }
-  .shadow-primary-tint {
-    box-shadow: 0 20px 40px rgba(0, 27, 68, 0.06);
+  .shadow-card {
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+  .shadow-card-md {
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.04);
   }
   .scrollbar-hide {
     scrollbar-width: none;
@@ -60,16 +73,13 @@ h1, h2, h3 {
   }
   .custom-scrollbar::-webkit-scrollbar { width: 4px; }
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-  .custom-scrollbar::-webkit-scrollbar-thumb { background: #c4c6d2; border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
 }
 
-/* ── Simplifier PDF print styles ─────────────────────────────────── */
+/* ── Print styles ─────────────────────────────────── */
 @media print {
   body { background: white !important; color: #111 !important; }
   header, nav, [data-topbar], .fixed { display: none !important; }
-  .rounded-xl, .rounded-lg { border: 1px solid #ddd !important; background: white !important; }
-  .text-\[\#e6edf3\], .text-\[\#8b949e\], .text-\[\#c9d1d9\] { color: #111 !important; }
-  .bg-\[\#0d1117\], .bg-\[\#080808\], .bg-\[\#161b22\] { background: white !important; }
-  .border-\[\#21262d\], .border-\[\#30363d\] { border-color: #ddd !important; }
+  .rounded-xl, .rounded-lg { border: 1px solid #E2E8F0 !important; background: white !important; }
   a { color: inherit !important; text-decoration: none !important; }
 }

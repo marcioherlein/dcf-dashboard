@@ -122,17 +122,6 @@ interface FinancialsData {
   }
 }
 
-function ThemeToggle({ isDark, onToggle }: { isDark: boolean; onToggle: () => void }) {
-  return (
-    <button
-      onClick={onToggle}
-      className="font-mono text-[10px] text-[#666] hover:text-[#ff6600] transition-colors uppercase tracking-wider border border-[#30363d] px-2 py-0.5 hover:border-[#ff6600]"
-    >
-      {isDark ? '☀ Light' : '☾ Dark'}
-    </button>
-  )
-}
-
 export default function StockPage() {
   const { ticker } = useParams<{ ticker: string }>()
   const router = useRouter()
@@ -142,21 +131,7 @@ export default function StockPage() {
   const [saving, setSaving] = useState(false)
   const [waccOverride, setWaccOverride] = useState<number | null>(null)
   const [terminalGOverride, setTerminalGOverride] = useState<number | null>(null)
-  const [isDark, setIsDark] = useState(false)
   const [activeTab, setActiveTab] = useState<TabId>('summary')
-
-  // Persist theme preference
-  useEffect(() => {
-    const saved = localStorage.getItem('theme')
-    if (saved === 'dark') setIsDark(true)
-  }, [])
-
-  const toggleTheme = () => {
-    setIsDark((d) => {
-      localStorage.setItem('theme', !d ? 'dark' : 'light')
-      return !d
-    })
-  }
 
   useEffect(() => {
     setLoading(true)
@@ -219,34 +194,31 @@ export default function StockPage() {
   const currency = data?.quote.currency === 'USD' ? '$' : (data?.quote.currency ?? '$') + ' '
 
   return (
-    <div className="min-h-screen bg-[#080808] text-[#e6edf3]">
+    <div className="min-h-screen bg-[#F8FAFB]">
 
       {/* Breadcrumb bar */}
-      <div className="bg-[#0d1117] border-b border-[#21262d] px-6 py-2 flex items-center gap-3">
+      <div className="bg-white border-b border-slate-200 px-6 py-2 flex items-center gap-3">
         <button
           onClick={() => router.push('/factor-ranking')}
-          className="flex items-center gap-1.5 font-mono text-[11px] text-[#8b949e] hover:text-[#ff6600] transition-colors"
+          className="flex items-center gap-1.5 text-[12px] text-slate-500 hover:text-blue-600 transition-colors"
         >
           ← Screener
         </button>
-        <span className="text-[#30363d] font-mono">·</span>
-        <span className="font-mono text-[11px] text-[#ff6600] font-bold">{ticker}</span>
-        {data && <span className="font-mono text-[11px] text-[#6e7681] truncate max-w-xs">{data.companyName}</span>}
-        <div className="ml-auto flex items-center gap-3">
-          <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
-        </div>
+        <span className="text-slate-300">·</span>
+        <span className="text-[12px] text-blue-600 font-semibold">{ticker}</span>
+        {data && <span className="text-[12px] text-slate-400 truncate max-w-xs">{data.companyName}</span>}
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-12">
         {loading && (
           <div className="flex flex-col items-center justify-center py-32 gap-4">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#30363d] border-t-[#ff6600]" />
-            <p className="font-mono text-xs text-[#6e7681]">Calculating WACC · Beta · DCF…</p>
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-blue-500" />
+            <p className="text-sm text-slate-400">Calculating WACC · Beta · DCF…</p>
           </div>
         )}
 
         {error && (
-          <div className="mt-8 rounded bg-[#2d1b1b] border border-[#f85149]/30 px-5 py-4 font-mono text-xs text-[#f85149]">
+          <div className="mt-8 rounded-xl bg-red-50 border border-red-200 px-5 py-4 text-sm text-red-700">
             <strong>Error:</strong> {error}. Yahoo Finance may be temporarily unavailable — try again in a moment.
           </div>
         )}
@@ -279,7 +251,7 @@ export default function StockPage() {
             <div className={`pt-6 space-y-4 ${activeTab === 'summary' ? 'block' : 'hidden'}`}>
               <PriceChart
                 ticker={ticker}
-                isDark={true}
+                isDark={false}
                 fcffFairValue={data.fairValue.fairValuePerShare}
                 triangulatedFairValue={data.valuationMethods?.triangulatedFairValue}
                 analystTarget={data.quote.analystTargetMean}
@@ -303,7 +275,7 @@ export default function StockPage() {
                   incomeStatement={data.financialStatements.incomeStatement}
                   cashFlow={data.financialStatements.cashFlow}
                   currency={currency}
-                  isDark={true}
+                  isDark={false}
                 />
               )}
               {(data.businessProfile.description || data.historicalRevenues.length >= 2) && (
@@ -311,7 +283,7 @@ export default function StockPage() {
                   businessProfile={data.businessProfile}
                   historicalRevenues={data.historicalRevenues}
                   ticker={ticker}
-                  isDark={true}
+                  isDark={false}
                   incomeStatement={data.financialStatements?.incomeStatement}
                   cashFlow={data.financialStatements?.cashFlow}
                 />

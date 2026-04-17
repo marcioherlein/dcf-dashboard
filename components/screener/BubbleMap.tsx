@@ -29,9 +29,9 @@ function getCoords(inst: RankedInstrument) {
 }
 
 function bubbleColor(rsScore: number): { fill: string; stroke: string } {
-  if (rsScore >= 70) return { fill: 'rgba(63,185,80,0.25)', stroke: '#3fb950' }
-  if (rsScore >= 40) return { fill: 'rgba(210,153,34,0.25)', stroke: '#d2991f' }
-  return { fill: 'rgba(248,81,73,0.2)', stroke: '#f85149' }
+  if (rsScore >= 70) return { fill: 'rgba(5,150,105,0.15)', stroke: '#059669' }
+  if (rsScore >= 40) return { fill: 'rgba(217,119,6,0.15)', stroke: '#D97706' }
+  return { fill: 'rgba(220,38,38,0.12)', stroke: '#DC2626' }
 }
 
 export default function BubbleMap({ instruments }: Props) {
@@ -40,7 +40,7 @@ export default function BubbleMap({ instruments }: Props) {
 
   if (instruments.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center text-[#8b949e] text-xs">
+      <div className="h-full flex items-center justify-center text-slate-400 text-xs">
         No data
       </div>
     )
@@ -68,15 +68,15 @@ export default function BubbleMap({ instruments }: Props) {
         onMouseLeave={() => setHovered(null)}
       >
         {/* Background */}
-        <rect x={PAD.left} y={PAD.top} width={W - PAD.left - PAD.right} height={H - PAD.top - PAD.bottom} fill="#161b22" rx="4" />
+        <rect x={PAD.left} y={PAD.top} width={W - PAD.left - PAD.right} height={H - PAD.top - PAD.bottom} fill="#F8FAFB" rx="4" />
 
         {/* X grid + labels */}
         {xGridValues.map((v) => {
           const x = xToPixel(v)
           return (
             <g key={`xg-${v}`}>
-              <line x1={x} y1={PAD.top} x2={x} y2={H - PAD.bottom} stroke="#21262d" strokeWidth={1} />
-              <text x={x} y={H - PAD.bottom + 14} textAnchor="middle" fill="#6e7681" fontSize="10">{v}</text>
+              <line x1={x} y1={PAD.top} x2={x} y2={H - PAD.bottom} stroke="#E2E8F0" strokeWidth={1} />
+              <text x={x} y={H - PAD.bottom + 14} textAnchor="middle" fill="#94A3B8" fontSize="10">{v}</text>
             </g>
           )
         })}
@@ -86,19 +86,19 @@ export default function BubbleMap({ instruments }: Props) {
           const y = yToPixel(v)
           return (
             <g key={`yg-${v}`}>
-              <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y} stroke="#21262d" strokeWidth={1} />
-              <text x={PAD.left - 6} y={y + 4} textAnchor="end" fill="#6e7681" fontSize="10">{v === 0 ? '0%' : `${v}%`}</text>
+              <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y} stroke="#E2E8F0" strokeWidth={1} />
+              <text x={PAD.left - 6} y={y + 4} textAnchor="end" fill="#94A3B8" fontSize="10">{v === 0 ? '0%' : `${v}%`}</text>
             </g>
           )
         })}
 
         {/* Axis labels */}
-        <text x={W / 2} y={H - 4} textAnchor="middle" fill="#8b949e" fontSize="10">RS Score (Momentum)</text>
+        <text x={W / 2} y={H - 4} textAnchor="middle" fill="#64748B" fontSize="10">RS Score (Momentum)</text>
         <text
           x={12}
           y={(PAD.top + H - PAD.bottom) / 2}
           textAnchor="middle"
-          fill="#8b949e"
+          fill="#64748B"
           fontSize="10"
           transform={`rotate(-90, 12, ${(PAD.top + H - PAD.bottom) / 2})`}
         >
@@ -137,7 +137,7 @@ export default function BubbleMap({ instruments }: Props) {
                   x={x}
                   y={y - r - 3}
                   textAnchor="middle"
-                  fill={isHovered ? '#e6edf3' : stroke}
+                  fill={isHovered ? '#0F172A' : stroke}
                   fontSize="9"
                   fontWeight="600"
                 >
@@ -154,28 +154,28 @@ export default function BubbleMap({ instruments }: Props) {
           y={PAD.top}
           width={W - PAD.right - xToPixel(65)}
           height={yToPixel(-25) - PAD.top}
-          fill="rgba(63,185,80,0.04)"
+          fill="rgba(5,150,105,0.05)"
           pointerEvents="none"
         />
-        <text x={xToPixel(82)} y={PAD.top + 12} fill="rgba(63,185,80,0.4)" fontSize="9">Best</text>
+        <text x={xToPixel(82)} y={PAD.top + 12} fill="rgba(5,150,105,0.5)" fontSize="9">Best</text>
       </svg>
 
       {/* Tooltip */}
       {hovered && (
         <div
-          className="absolute z-20 pointer-events-none bg-[#161b22] border border-[#30363d] rounded px-3 py-2 text-xs shadow-xl"
+          className="absolute z-20 pointer-events-none bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs shadow-card-md"
           style={{
             left: tooltipPos.x + 12,
             top: tooltipPos.y - 24,
             transform: tooltipPos.x > W * 0.65 ? 'translateX(-110%)' : undefined,
           }}
         >
-          <div className="font-bold text-[#e6edf3]">{hovered.displayTicker}</div>
-          <div className="text-[#8b949e]">{hovered.name.slice(0, 28)}</div>
+          <div className="font-bold text-slate-800">{hovered.displayTicker}</div>
+          <div className="text-slate-400">{hovered.name.slice(0, 28)}</div>
           <div className="mt-1 flex gap-3">
-            <span className="text-[#8b949e]">Score <span className="text-[#e6edf3] font-semibold">{hovered.finalScore}</span></span>
-            <span className="text-[#8b949e]">RS <span className="text-[#e6edf3] font-semibold">{(hovered.factorScores as unknown as Record<string, number>).momentum?.toFixed(0) ?? '—'}</span></span>
-            <span className="text-[#8b949e]">52w <span className="text-[#e6edf3] font-semibold">{(hovered.keyMetrics?.['Dist 52w Hi'] as number | null)?.toFixed(1) ?? '—'}%</span></span>
+            <span className="text-slate-400">Score <span className="text-slate-700 font-semibold">{hovered.finalScore}</span></span>
+            <span className="text-slate-400">RS <span className="text-slate-700 font-semibold">{(hovered.factorScores as unknown as Record<string, number>).momentum?.toFixed(0) ?? '—'}</span></span>
+            <span className="text-slate-400">52w <span className="text-slate-700 font-semibold">{(hovered.keyMetrics?.['Dist 52w Hi'] as number | null)?.toFixed(1) ?? '—'}%</span></span>
           </div>
         </div>
       )}
@@ -183,16 +183,16 @@ export default function BubbleMap({ instruments }: Props) {
       {/* Legend */}
       <div className="flex items-center gap-4 mt-2 px-1">
         {[
-          { color: '#3fb950', label: 'RS ≥ 70' },
-          { color: '#d2991f', label: 'RS 40–70' },
-          { color: '#f85149', label: 'RS < 40' },
+          { color: '#059669', label: 'RS ≥ 70' },
+          { color: '#D97706', label: 'RS 40–70' },
+          { color: '#DC2626', label: 'RS < 40' },
         ].map(({ color, label }) => (
           <div key={label} className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full border" style={{ borderColor: color, background: `${color}33` }} />
-            <span className="text-[10px] text-[#8b949e]">{label}</span>
+            <div className="w-2.5 h-2.5 rounded-full border" style={{ borderColor: color, background: `${color}22` }} />
+            <span className="text-[10px] text-slate-400">{label}</span>
           </div>
         ))}
-        <span className="text-[10px] text-[#8b949e] ml-auto">Bubble size = score</span>
+        <span className="text-[10px] text-slate-400 ml-auto">Bubble size = score</span>
       </div>
     </div>
   )

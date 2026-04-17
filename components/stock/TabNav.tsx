@@ -72,25 +72,26 @@ interface Props {
 
 export default function TabNav({ activeTab, onChange }: Props) {
   return (
-    <div className="sticky top-[57px] z-10 bg-surface-container-lowest border-b border-outline-variant/15 shadow-nav">
+    <div className="sticky top-[52px] z-10 bg-white border-b border-slate-200 shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div
-          className="flex gap-0.5 overflow-x-auto scrollbar-hide py-1"
-        >
+        <div className="flex gap-0 overflow-x-auto scrollbar-hide">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => onChange(tab.id)}
               aria-current={activeTab === tab.id ? 'page' : undefined}
               className={[
-                'relative flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap rounded-xl transition-colors',
+                'relative flex items-center gap-2 px-4 py-3 text-[13px] font-medium whitespace-nowrap transition-colors',
                 activeTab === tab.id
-                  ? 'text-primary bg-primary-fixed/60'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low',
+                  ? 'text-blue-600'
+                  : 'text-slate-500 hover:text-slate-800',
               ].join(' ')}
             >
-              <span className={activeTab === tab.id ? 'text-primary' : 'text-on-surface-variant'}>{tab.icon}</span>
+              <span className={activeTab === tab.id ? 'text-blue-600' : 'text-slate-400'}>{tab.icon}</span>
               {tab.label}
+              {activeTab === tab.id && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
+              )}
             </button>
           ))}
         </div>
