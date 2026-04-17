@@ -7,7 +7,8 @@ import type { FinancialsData } from '@/lib/simplifier/autoMapper'
 import { buildBusinessSummary } from '@/lib/simplifier/summaryBuilder'
 import ScoreCircle from '../ScoreCircle'
 import SectionSummary from '../SectionSummary'
-import QuestionCardLight from '../QuestionCardLight'
+import QuestionCircle from '../QuestionCircle'
+import BarChart from '../BarChart'
 
 interface BusinessTabProps {
   companyName: string
@@ -23,8 +24,8 @@ export default function BusinessTab({
   companyName, data, answers, notes, autoMap, onChange, onNoteChange,
 }: BusinessTabProps) {
   const phase = PHASES[0]
-  const raw   = scorePhase(answers, phase)       // 0–1
-  const score = 1 + raw * 4                      // 1–5
+  const raw   = scorePhase(answers, phase)
+  const score = 1 + raw * 4
 
   const gm   = data.businessProfile?.grossMargin ?? null
   const fcfM = data.businessProfile?.fcfMargin ?? null
@@ -32,14 +33,35 @@ export default function BusinessTab({
   const beta = data.wacc?.inputs?.beta ?? null
 
   function pct(v: number | null) { return v == null ? '—' : `${(v * 100).toFixed(1)}%` }
-  function num(v: number | null, d = 2) { return v == null ? '—' : v.toFixed(d) }
 
   const metrics = [
     { label: 'Gross Margin', value: pct(gm) },
     { label: 'FCF Margin',   value: pct(fcfM) },
     { label: '3Y Rev CAGR',  value: pct(cagr) },
-    { label: 'Beta',         value: num(beta) },
+    { label: 'Beta',         value: beta == null ? '—' : beta.toFixed(2) },
   ]
+
+  // Revenue chart rows (actuals + projected)
+  const isRows = data.financialStatements?.incomeStatement ?? []
+  const revenueRows = isRows
+    .filter(r => r.revenue != null)
+    .map(r => ({ year: r.year, value: r.revenue!, isProjected: !!r.isProjected }))
+
+  // FCF chart rows
+  const cfRows = data.financialStatements?.cashFlow ?? []
+  const fcfRows = cfRows
+    .filter(r => r.freeCashFlow != null)
+    .map(r => ({ year: r.year, value: r.freeCashFlow!, isProjected: !!r.isProjected }))
+
+  // Gross margin trend
+  const gmRows = isRows
+    .filter(r => r.revenue != null && r.grossProfit != null)
+    .map(r => ({
+      year: r.year,
+      value: r.revenue! > 0 ? (r.grossProfit! / r.revenue!) * 100 : null,
+      isProjected: !!r.isProjected,
+    }))
+    .filter(r => r.value != null) as { year: string; value: number; isProjected: boolean }[]
 
   const summary = buildBusinessSummary(companyName, data, answers)
 
@@ -53,8 +75,7 @@ export default function BusinessTab({
           <h2 className="text-lg font-bold text-[#2D2C31]">Business Quality</h2>
           <p className="text-sm text-[#6B6A72] mt-0.5">{phase.description}</p>
         </div>
-        {/* Mini metrics row */}
-        <div className="hidden sm:grid grid-cols-2 gap-2">
+        <div className="hidden sm:grid grid-cols-2 gap-3">
           {metrics.map(m => (
             <div key={m.label} className="text-right">
               <p className="text-[10px] text-[#6B6A72] uppercase tracking-wider">{m.label}</p>
@@ -64,13 +85,55 @@ export default function BusinessTab({
         </div>
       </div>
 
-      {/* Smart summary */}
+      {/* Revenue + FCF charts side by side */}
+      {(revenueRows.length > 0 || fcfRows.length > 0) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {revenueRows.length > 0 && (
+            <div className="rounded-xl border border-[#E8E6E0] bg-white p-4">
+              <BarChart
+                rows={revenueRows}
+                label="Revenue ($M)"
+                color="#1f6feb"
+                unit="B"
+                showGrowth
+                height={160}
+              />
+            </div>
+          )}
+          {fcfRows.length > 0 && (
+            <div className="rounded-xl border border-[#E8E6E0] bg-white p-4">
+              <BarChart
+                rows={fcfRows}
+                label="Free Cash Flow ($M)"
+                color="#0969da"
+                unit="B"
+                showGrowth
+                height={160}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Gross margin trend */}
+      {gmRows.length > 1 && (
+        <div className="rounded-xl border border-[#E8E6E0] bg-white p-4">
+          <BarChart
+            rows={gmRows}
+            label="Gross Margin %"
+            color="#1f6feb"
+            unit="%"
+            showGrowth={false}
+            height={130}
+          />
+        </div>
+      )}
+
       <SectionSummary text={summary} label="Business Quality Analysis" />
 
-      {/* Questions */}
       <div className="flex flex-col gap-3">
         {phase.questions.map(q => (
-          <QuestionCardLight
+          <QuestionCircle
             key={q.id}
             questionId={q.id}
             text={q.text}

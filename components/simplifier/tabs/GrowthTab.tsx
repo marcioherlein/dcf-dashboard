@@ -7,7 +7,8 @@ import type { FinancialsData } from '@/lib/simplifier/autoMapper'
 import { buildGrowthSummary } from '@/lib/simplifier/summaryBuilder'
 import ScoreCircle from '../ScoreCircle'
 import SectionSummary from '../SectionSummary'
-import QuestionCardLight from '../QuestionCardLight'
+import QuestionCircle from '../QuestionCircle'
+import BarChart from '../BarChart'
 
 interface GrowthTabProps {
   companyName: string
@@ -28,19 +29,42 @@ export default function GrowthTab({
 
   const cagr3y  = data.cagrAnalysis?.historicalCagr3y ?? null
   const analyst = data.cagrAnalysis?.analystEstimate1y ?? null
+  const blended = data.cagrAnalysis?.blended ?? null
   const spread  = data.scores?.roic?.spread ?? null
 
-  // Operating margin trend from income statement
-  const isRows = (data.financialStatements?.incomeStatement ?? [])
-    .filter((r) => !r.isProjected && r.operatingMargin != null)
-    .slice(0, 4)
-    .reverse() // oldest first for chart
-
   function pct(v: number | null) { return v == null ? '—' : `${(v * 100).toFixed(1)}%` }
+
+  const isRows = data.financialStatements?.incomeStatement ?? []
+  const cfRows = data.financialStatements?.cashFlow ?? []
+
+  // Revenue rows
+  const revenueRows = isRows
+    .filter(r => r.revenue != null)
+    .map(r => ({ year: r.year, value: r.revenue!, isProjected: !!r.isProjected }))
+
+  // EPS rows — store as plain numbers (dollars per share)
+  const epsRows = isRows
+    .filter(r => r.eps != null)
+    .map(r => ({ year: r.year, value: r.eps!, isProjected: !!r.isProjected }))
+
+  // FCF rows
+  const fcfRows = cfRows
+    .filter(r => r.freeCashFlow != null)
+    .map(r => ({ year: r.year, value: r.freeCashFlow!, isProjected: !!r.isProjected }))
+
+  // Operating margin trend
+  const opMarginRows = isRows
+    .filter(r => r.revenue != null && r.operatingIncome != null && r.revenue! > 0)
+    .map(r => ({
+      year: r.year,
+      value: (r.operatingIncome! / r.revenue!) * 100,
+      isProjected: !!r.isProjected,
+    }))
 
   const metrics = [
     { label: '3Y Rev CAGR',  value: pct(cagr3y) },
     { label: 'Analyst Est.', value: pct(analyst) },
+    { label: 'Blended CAGR', value: pct(blended) },
     { label: 'ROIC Spread',  value: pct(spread) },
   ]
 
@@ -56,7 +80,7 @@ export default function GrowthTab({
           <h2 className="text-lg font-bold text-[#2D2C31]">Growth</h2>
           <p className="text-sm text-[#6B6A72] mt-0.5">{phase.description}</p>
         </div>
-        <div className="hidden sm:grid grid-cols-3 gap-3">
+        <div className="hidden sm:grid grid-cols-2 gap-3">
           {metrics.map(m => (
             <div key={m.label} className="text-right">
               <p className="text-[10px] text-[#6B6A72] uppercase tracking-wider">{m.label}</p>
@@ -66,31 +90,63 @@ export default function GrowthTab({
         </div>
       </div>
 
-      {/* Operating margin trend */}
-      {isRows.length >= 2 && (
-        <div className="rounded-xl border border-[#E8E6E0] bg-white p-5">
-          <p className="text-[11px] font-semibold text-[#6B6A72] uppercase tracking-wider mb-3">Operating Margin Trend</p>
-          <div className="flex items-end gap-3 h-20">
-            {isRows.map((row, i) => {
-              const val = row.operatingMargin!
-              const barH = Math.max(4, Math.min(72, Math.abs(val) * 200))
-              const isPositive = val >= 0
-              return (
-                <div key={i} className="flex flex-col items-center gap-1 flex-1">
-                  <div
-                    className="w-full rounded-t-md"
-                    style={{
-                      height: `${barH}px`,
-                      background: isPositive ? '#1f6feb' : '#cf222e',
-                      opacity: 0.7 + (i / isRows.length) * 0.3,
-                    }}
-                  />
-                  <p className="text-[10px] font-mono text-[#2D2C31]">{pct(val)}</p>
-                  <p className="text-[9px] text-[#6B6A72]">{row.year}</p>
-                </div>
-              )
-            })}
-          </div>
+      {/* Revenue + EPS charts */}
+      {(revenueRows.length > 0 || epsRows.length > 0) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {revenueRows.length > 0 && (
+            <div className="rounded-xl border border-[#E8E6E0] bg-white p-4">
+              <BarChart
+                rows={revenueRows}
+                label="Revenue ($M)"
+                color="#1f6feb"
+                unit="B"
+                showGrowth
+                height={160}
+              />
+            </div>
+          )}
+          {epsRows.length > 0 && (
+            <div className="rounded-xl border border-[#E8E6E0] bg-white p-4">
+              <BarChart
+                rows={epsRows}
+                label="Earnings Per Share ($)"
+                color="#0969da"
+                unit="$"
+                showGrowth
+                height={160}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* FCF + Operating Margin charts */}
+      {(fcfRows.length > 0 || opMarginRows.length > 0) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {fcfRows.length > 0 && (
+            <div className="rounded-xl border border-[#E8E6E0] bg-white p-4">
+              <BarChart
+                rows={fcfRows}
+                label="Free Cash Flow ($M)"
+                color="#1f6feb"
+                unit="B"
+                showGrowth
+                height={140}
+              />
+            </div>
+          )}
+          {opMarginRows.length > 0 && (
+            <div className="rounded-xl border border-[#E8E6E0] bg-white p-4">
+              <BarChart
+                rows={opMarginRows}
+                label="Operating Margin %"
+                color="#0969da"
+                unit="%"
+                showGrowth={false}
+                height={140}
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -98,7 +154,7 @@ export default function GrowthTab({
 
       <div className="flex flex-col gap-3">
         {phase.questions.map(q => (
-          <QuestionCardLight
+          <QuestionCircle
             key={q.id}
             questionId={q.id}
             text={q.text}

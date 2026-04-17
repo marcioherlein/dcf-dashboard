@@ -7,7 +7,7 @@ import type { FinancialsData } from '@/lib/simplifier/autoMapper'
 import { buildValuationSummary } from '@/lib/simplifier/summaryBuilder'
 import ScoreCircle from '../ScoreCircle'
 import SectionSummary from '../SectionSummary'
-import QuestionCardLight from '../QuestionCardLight'
+import QuestionCircle from '../QuestionCircle'
 
 interface ValuationTabProps {
   companyName: string
@@ -114,7 +114,7 @@ export default function ValuationTab({
 
       <div className="flex flex-col gap-3">
         {valQs.map(q => (
-          <QuestionCardLight
+          <QuestionCircle
             key={q.id}
             questionId={q.id}
             text={q.text}

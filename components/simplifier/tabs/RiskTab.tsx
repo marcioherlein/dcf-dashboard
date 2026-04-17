@@ -7,7 +7,7 @@ import type { FinancialsData } from '@/lib/simplifier/autoMapper'
 import { buildRiskSummary } from '@/lib/simplifier/summaryBuilder'
 import ScoreCircle from '../ScoreCircle'
 import SectionSummary from '../SectionSummary'
-import QuestionCardLight from '../QuestionCardLight'
+import QuestionCircle from '../QuestionCircle'
 
 interface RiskTabProps {
   companyName: string
@@ -100,7 +100,7 @@ export default function RiskTab({
 
       <div className="flex flex-col gap-3">
         {riskQs.map(q => (
-          <QuestionCardLight
+          <QuestionCircle
             key={q.id}
             questionId={q.id}
             text={q.text}

@@ -7,7 +7,7 @@ import type { FinancialsData } from '@/lib/simplifier/autoMapper'
 import { buildMoatSummary } from '@/lib/simplifier/summaryBuilder'
 import ScoreCircle from '../ScoreCircle'
 import SectionSummary from '../SectionSummary'
-import QuestionCardLight from '../QuestionCardLight'
+import QuestionCircle from '../QuestionCircle'
 
 interface MoatTabProps {
   companyName: string
@@ -104,7 +104,7 @@ export default function MoatTab({
 
       <div className="flex flex-col gap-3">
         {phase.questions.map(q => (
-          <QuestionCardLight
+          <QuestionCircle
             key={q.id}
             questionId={q.id}
             text={q.text}

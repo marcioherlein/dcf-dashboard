@@ -31,6 +31,12 @@ export interface FinancialsData {
   cagrAnalysis?: {
     historicalCagr3y?: number
     analystEstimate1y?: number
+    blended?: number
+    analystEstimate2y?: number
+    fundamentalGrowth?: number | null
+    confidence?: number
+    confidenceLabel?: string
+    numAnalysts?: number
   }
   ownership?: {
     insiderPct?: number | null
@@ -44,7 +50,27 @@ export interface FinancialsData {
   financialStatements?: {
     incomeStatement?: Array<{
       year: string
+      revenue?: number | null
+      grossProfit?: number | null
+      operatingIncome?: number | null
+      netIncome?: number | null
+      eps?: number | null
       operatingMargin?: number | null
+      isProjected?: boolean
+    }>
+    cashFlow?: Array<{
+      year: string
+      freeCashFlow?: number | null
+      operatingCF?: number | null
+      dividendsPaid?: number | null
+      financingCF?: number | null
+      isProjected?: boolean
+    }>
+    balanceSheet?: Array<{
+      year: string
+      cash?: number | null
+      totalEquity?: number | null
+      longTermDebt?: number | null
       isProjected?: boolean
     }>
   }

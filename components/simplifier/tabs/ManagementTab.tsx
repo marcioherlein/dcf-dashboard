@@ -7,7 +7,8 @@ import type { FinancialsData } from '@/lib/simplifier/autoMapper'
 import { buildManagementSummary } from '@/lib/simplifier/summaryBuilder'
 import ScoreCircle from '../ScoreCircle'
 import SectionSummary from '../SectionSummary'
-import QuestionCardLight from '../QuestionCardLight'
+import QuestionCircle from '../QuestionCircle'
+import BarChart from '../BarChart'
 
 interface ManagementTabProps {
   companyName: string
@@ -32,6 +33,25 @@ export default function ManagementTab({
   const criteria    = data.scores?.piotroski?.criteria ?? []
 
   function pct(v: number | null) { return v == null ? '—' : `${(v * 100).toFixed(1)}%` }
+
+  const cfRows = data.financialStatements?.cashFlow ?? []
+
+  // Dividends paid (absolute value — Yahoo returns as negative)
+  const dividendRows = cfRows
+    .filter(r => r.dividendsPaid != null && r.dividendsPaid !== 0)
+    .map(r => ({ year: r.year, value: Math.abs(r.dividendsPaid!), isProjected: !!r.isProjected }))
+
+  // Buybacks proxy: financing CF minus dividends (financing CF is negative when returning capital)
+  // We use FCF − |dividends| as a rough proxy for buybacks
+  const buybackRows = cfRows
+    .filter(r => r.freeCashFlow != null)
+    .map(r => {
+      const div = r.dividendsPaid != null ? Math.abs(r.dividendsPaid) : 0
+      const fcf = r.freeCashFlow!
+      // Capital returned beyond dividends = FCF - dividends (positive = buybacks possible)
+      return { year: r.year, value: Math.max(0, fcf - div), isProjected: !!r.isProjected }
+    })
+    .filter(r => r.value > 0)
 
   const metrics = [
     { label: 'Insider Own.',    value: pct(insiderPct) },
@@ -63,6 +83,36 @@ export default function ManagementTab({
         </div>
       </div>
 
+      {/* Capital return charts */}
+      {(dividendRows.length > 0 || buybackRows.length > 0) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {dividendRows.length > 0 && (
+            <div className="rounded-xl border border-[#E8E6E0] bg-white p-4">
+              <BarChart
+                rows={dividendRows}
+                label="Dividends Paid ($M)"
+                color="#0969da"
+                unit="M"
+                showGrowth
+                height={150}
+              />
+            </div>
+          )}
+          {buybackRows.length > 0 && (
+            <div className="rounded-xl border border-[#E8E6E0] bg-white p-4">
+              <BarChart
+                rows={buybackRows}
+                label="FCF Available for Buybacks ($M)"
+                color="#1f6feb"
+                unit="M"
+                showGrowth
+                height={150}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Piotroski breakdown */}
       {criteria.length > 0 && (
         <div className="rounded-xl border border-[#E8E6E0] bg-white p-5">
@@ -86,7 +136,7 @@ export default function ManagementTab({
 
       <div className="flex flex-col gap-3">
         {phase.questions.map(q => (
-          <QuestionCardLight
+          <QuestionCircle
             key={q.id}
             questionId={q.id}
             text={q.text}
