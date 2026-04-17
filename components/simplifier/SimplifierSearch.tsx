@@ -46,13 +46,13 @@ export default function SimplifierSearch() {
 
   return (
     <div className="relative w-full max-w-sm">
-      <div className="flex items-center gap-2 bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2 focus-within:border-[#388bfd] transition-colors">
+      <div className="flex items-center gap-2 bg-white border border-[#E8E6E0] rounded-lg px-3 py-2 focus-within:border-[#1f6feb] transition-colors shadow-sm">
         {loading ? (
-          <svg className="animate-spin text-[#8b949e]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg className="animate-spin text-[#6B6A72]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
           </svg>
         ) : (
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="#8b949e">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="#6B6A72">
             <path d="M10.68 11.74a6 6 0 0 1-7.922-8.982 6 6 0 0 1 8.982 7.922l3.04 3.04a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215ZM11.5 7a4.499 4.499 0 1 0-8.997 0A4.499 4.499 0 0 0 11.5 7Z"/>
           </svg>
         )}
@@ -63,20 +63,20 @@ export default function SimplifierSearch() {
           onFocus={() => results.length > 0 && setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
           placeholder="Search ticker or company…"
-          className="flex-1 bg-transparent text-[#e6edf3] text-sm placeholder-[#484f58] outline-none"
+          className="flex-1 bg-transparent text-[#2D2C31] text-sm placeholder-[#6B6A72] outline-none"
         />
       </div>
 
       {open && results.length > 0 && (
-        <div className="absolute top-full mt-1 left-0 right-0 bg-[#161b22] border border-[#30363d] rounded-lg shadow-float z-50 overflow-hidden">
+        <div className="absolute top-full mt-1 left-0 right-0 bg-white border border-[#E8E6E0] rounded-lg shadow-lg z-50 overflow-hidden">
           {results.map((r) => (
             <button
               key={r.symbol}
               onMouseDown={() => handleSelect(r.symbol)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[#21262d] transition-colors text-left"
+              className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[#F7F6F1] transition-colors text-left"
             >
-              <span className="text-[#e6edf3] text-sm font-semibold font-mono w-16 shrink-0">{r.symbol}</span>
-              <span className="text-[#8b949e] text-xs truncate">{r.shortname ?? r.longname ?? ''}</span>
+              <span className="text-[#2D2C31] text-sm font-semibold font-mono w-16 shrink-0">{r.symbol}</span>
+              <span className="text-[#6B6A72] text-xs truncate">{r.shortname ?? r.longname ?? ''}</span>
             </button>
           ))}
         </div>

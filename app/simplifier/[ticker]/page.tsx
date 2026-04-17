@@ -9,7 +9,7 @@ import { getWatchlistEntry, saveWatchlistEntry } from '@/lib/simplifier/watchlis
 import { scoreAll, overallScore } from '@/lib/simplifier/scoring'
 import type { WatchlistEntry, SimplifierAutoMap, FinancialSnapshot } from '@/lib/simplifier/types'
 import type { FinancialsData }  from '@/lib/simplifier/autoMapper'
-import PhaseWizard from '@/components/simplifier/PhaseWizard'
+import SimplifierTabs from '@/components/simplifier/SimplifierTabs'
 
 export default function SimplifierTickerPage() {
   const { ticker } = useParams<{ ticker: string }>()
@@ -83,7 +83,7 @@ export default function SimplifierTickerPage() {
       ticker:       upperTicker,
       companyName:  (data as any).companyName ?? upperTicker,
       updatedAt:    new Date().toISOString(),
-      currentPhase: partial.currentPhase ?? 1,
+      currentPhase: partial.currentPhase ?? 5,
       answers:      partial.answers ?? {},
       notes:        partial.notes ?? {},
       phaseScores,
@@ -96,8 +96,8 @@ export default function SimplifierTickerPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
-        <div className="flex items-center gap-2 text-[#8b949e] text-sm">
+      <div className="min-h-screen bg-[#F7F6F1] flex items-center justify-center">
+        <div className="flex items-center gap-2 text-[#6B6A72] text-sm">
           <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
           </svg>
@@ -109,111 +109,59 @@ export default function SimplifierTickerPage() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-[#080808] flex flex-col items-center justify-center gap-4">
-        <p className="text-[#f85149] text-sm">{error || 'Failed to load data'}</p>
-        <button onClick={() => router.back()} className="text-[#79c0ff] text-sm hover:underline">Go back</button>
+      <div className="min-h-screen bg-[#F7F6F1] flex flex-col items-center justify-center gap-4">
+        <p className="text-[#cf222e] text-sm">{error || 'Failed to load data'}</p>
+        <button onClick={() => router.back()} className="text-[#1f6feb] text-sm hover:underline">Go back</button>
       </div>
     )
   }
 
-  const companyName  = (data as any).companyName ?? upperTicker
-  const price        = (data as any).quote?.price ?? null
-  const sector       = (data as any).quote?.sector ?? ''
-  const upsidePct    = (data as any).fairValue?.upsidePct ?? null
-  const moatScore    = (data as any).ratings?.moat?.score ?? null
-  const grossMargin  = (data as any).businessProfile?.grossMargin ?? null
-  const fcfMargin    = (data as any).businessProfile?.fcfMargin ?? null
-  const cagr3y       = (data as any).cagrAnalysis?.historicalCagr3y ?? null
-  const roic         = (data as any).scores?.roic?.roic ?? null
-  const beta         = (data as any).wacc?.inputs?.beta ?? null
-  const insiderPct   = (data as any).ownership?.insiderPct ?? null
-  const altmanZone   = (data as any).scores?.altman?.zone ?? null
-  const beneishFlag  = (data as any).scores?.beneish?.flag ?? null
-  const piotroskiScore = (data as any).scores?.piotroski?.score ?? null
-
-  const pct = (v: number | null) => v != null ? `${(v * 100).toFixed(1)}%` : null
-
-  const keyMetrics = [
-    price != null        && { label: 'Price',       value: `$${price.toFixed(2)}` },
-    upsidePct != null    && { label: 'Upside',      value: pct(upsidePct)! },
-    moatScore != null    && { label: 'Moat',        value: `${moatScore.toFixed(1)}/5` },
-    grossMargin != null  && { label: 'Gross Margin',value: pct(grossMargin)! },
-    fcfMargin != null    && { label: 'FCF Margin',  value: pct(fcfMargin)! },
-    cagr3y != null       && { label: '3Y CAGR',     value: pct(cagr3y)! },
-    roic != null         && { label: 'ROIC',        value: pct(roic)! },
-    beta != null         && { label: 'Beta',        value: beta.toFixed(2) },
-  ].filter(Boolean) as { label: string; value: string }[]
+  const companyName = (data as any).companyName ?? upperTicker
+  const price       = (data as any).quote?.price ?? null
+  const upsidePct   = (data as any).fairValue?.upsidePct ?? null
+  const sector      = (data as any).quote?.sector ?? ''
+  const industry    = (data as any).quote?.industry ?? ''
+  const country     = (data as any).businessProfile?.country ?? ''
+  const marketCap   = (data as any).quote?.marketCap ?? null
+  const peRatio     = (data as any).quote?.peRatio ?? null
+  const beta        = (data as any).wacc?.inputs?.beta ?? null
+  const grossMargin = (data as any).businessProfile?.grossMargin ?? null
+  const fcfMargin   = (data as any).businessProfile?.fcfMargin ?? null
+  const description = (data as any).quote?.longBusinessSummary ?? ''
 
   return (
-    <div className="min-h-screen bg-[#080808] text-[#e6edf3]">
-      <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-[#F7F6F1]">
+      <div className="max-w-3xl mx-auto px-4 py-6">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs text-[#8b949e] mb-6">
-          <Link href="/simplifier" className="hover:text-[#e6edf3] transition-colors">Simplifier</Link>
+        <div className="flex items-center gap-2 text-xs text-[#6B6A72] mb-5">
+          <Link href="/simplifier" className="hover:text-[#1f6feb] transition-colors">Simplifier</Link>
           <span>/</span>
-          <span className="text-[#e6edf3] font-mono">{upperTicker}</span>
+          <span className="text-[#2D2C31] font-mono font-semibold">{upperTicker}</span>
         </div>
 
-        {/* Stock header */}
-        <div className="rounded-xl border border-[#21262d] bg-[#0d1117] p-5 mb-6">
-          <div className="flex items-start justify-between gap-4 mb-4">
-            <div>
-              <h1 className="text-[#e6edf3] text-xl font-semibold font-mono">{upperTicker}</h1>
-              <p className="text-[#8b949e] text-sm mt-0.5">{companyName}</p>
-              {sector && <p className="text-[#484f58] text-xs mt-1">{sector}</p>}
-            </div>
-            {price != null && (
-              <div className="text-right">
-                <p className="text-[#e6edf3] text-xl font-semibold font-mono">${price.toFixed(2)}</p>
-                {upsidePct != null && (
-                  <p className={`text-sm font-mono ${upsidePct >= 0 ? 'text-[#3fb950]' : 'text-[#f85149]'}`}>
-                    {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}% upside
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Key metrics strip */}
-          <div className="flex flex-wrap gap-x-4 gap-y-2">
-            {keyMetrics.map((m) => (
-              <div key={m.label} className="flex items-center gap-1">
-                <span className="text-[#484f58] text-[11px]">{m.label}</span>
-                <span className="text-[#8b949e] text-[11px] font-mono">{m.value}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Wikipedia bio — shown when available */}
-          {wikiBio && (
-            <p className="text-[#8b949e] text-xs leading-relaxed mt-3 pt-3 border-t border-[#21262d]">
-              {wikiBio}
-            </p>
-          )}
+        {/* Tab-based analysis */}
+        <div className="rounded-2xl border border-[#E8E6E0] bg-white overflow-hidden shadow-sm">
+          <SimplifierTabs
+            ticker={upperTicker}
+            companyName={companyName}
+            sector={sector}
+            industry={industry}
+            country={country}
+            price={price}
+            upsidePct={upsidePct}
+            peRatio={peRatio}
+            marketCap={marketCap}
+            beta={beta}
+            grossMargin={grossMargin}
+            fcfMargin={fcfMargin}
+            description={description}
+            wikiBio={wikiBio}
+            data={data as FinancialsData}
+            autoMap={autoMap}
+            initialEntry={existing}
+            onSave={handleSave}
+          />
         </div>
-
-        {/* Wizard */}
-        <PhaseWizard
-          autoMap={autoMap}
-          financialsMeta={{
-            ticker: upperTicker,
-            companyName,
-            sector,
-            grossMargin,
-            fcfMargin,
-            cagr3y,
-            moatScore,
-            roic,
-            beta,
-            upsidePct,
-            insiderPct,
-            altmanZone,
-            beneishFlag,
-            piotroskiScore,
-          }}
-          initialEntry={existing}
-          onSave={handleSave}
-        />
       </div>
     </div>
   )
