@@ -18,6 +18,7 @@ const NAV_ITEMS = [
   { href: '/compare',        label: 'Compare',         tab: null },
   { href: '/trading',        label: 'Trading',         tab: null },
   { href: '/simplifier',     label: 'Simplifier',      tab: null },
+  { href: '/ai-stack',       label: 'AI Stack',        tab: null },
 ]
 
 export default function TopBar() {
