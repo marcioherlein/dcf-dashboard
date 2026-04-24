@@ -127,31 +127,17 @@ export function computeForwardValuation(
   sharesRaw: number | null,
 ): ValuationAssumptions | null {
   const { totalRevenue, profitMargin, grossMargin, revenueGrowth, beta,
-          totalDebt, marketCap, price, layer, ps, financialCurrency } = m
+          totalDebt, marketCap, price, layer, financialCurrency } = m
 
-  if (!price || price <= 0 || layer === undefined) return null
+  if (!totalRevenue || !price || price <= 0 || layer === undefined) return null
   if (!sharesRaw || sharesRaw <= 0) return null
 
-  // ── ADR / currency handling ───────────────────────────────────────────────
-  // Yahoo financial statements are in the *reporting currency* (EUR, CAD, TWD…),
-  // but price and marketCap are quoted in USD for US-listed ADRs.
-  // When currencies differ, use marketCap / PS (P/S ratio) as a USD-based revenue proxy.
+  // Revenue is already in USD (route.ts converts via FX rate before this is called).
+  // Flag if it was a non-USD company so the modal can note it.
   const reportingCurrency = (financialCurrency ?? 'USD').toUpperCase()
-  let usdRevenue: number | null = null
-  let currencyNote: string | null = null
-
-  if (reportingCurrency !== 'USD' && marketCap && marketCap > 0 && ps && ps > 0) {
-    usdRevenue = marketCap / ps
-    currencyNote = `Financial statements in ${reportingCurrency}. Revenue estimated from Market Cap ÷ P/S (${ps.toFixed(1)}×) = $${(usdRevenue / 1e9).toFixed(2)}B USD-equivalent.`
-  } else if (reportingCurrency !== 'USD' && totalRevenue) {
-    // Fallback: use as-is but warn
-    usdRevenue = totalRevenue
-    currencyNote = `Financial statements in ${reportingCurrency}. Revenue used as-is — may be in local currency (USD figures could differ).`
-  } else {
-    usdRevenue = totalRevenue ?? null
-  }
-
-  if (!usdRevenue) return null
+  const currencyNote: string | null = reportingCurrency !== 'USD'
+    ? `Financial statements converted from ${reportingCurrency} to USD using live FX rate.`
+    : null
 
   // ── WACC ──────────────────────────────────────────────────────────────────
   const b = beta != null ? Math.max(0.5, Math.min(3.0, beta)) : 1.2
@@ -187,7 +173,7 @@ export function computeForwardValuation(
   const { rate: dilutionRate, evidence: dilutionEvidence } = estimateDilution(layer, profitMargin ?? null)
 
   // ── Projection formula ───────────────────────────────────────────────────
-  const rev2031         = usdRevenue * Math.pow(1 + revenueCAGR, N)
+  const rev2031         = totalRevenue * Math.pow(1 + revenueCAGR, N)
   const ni2031          = rev2031 * profitMargin2031
   const shares2031      = sharesRaw * Math.pow(1 + dilutionRate, N)
   const eps2031         = ni2031 / shares2031
@@ -195,12 +181,12 @@ export function computeForwardValuation(
 
   if (!isFinite(targetPrice2031) || targetPrice2031 <= 0) return null
 
-  const fairValue    = targetPrice2031 / Math.pow(1 + wacc, N)
+  const fairValue     = targetPrice2031 / Math.pow(1 + wacc, N)
   const priceTarget1Y = targetPrice2031 / Math.pow(1 + wacc, N - 1)
-  const upside       = (fairValue - price) / price
+  const upside        = (fairValue - price) / price
 
   return {
-    ltvRevenue:      usdRevenue,
+    ltvRevenue:      totalRevenue,
     sharesOutstanding: sharesRaw,
     revenueCAGR,
     profitMargin2031,
