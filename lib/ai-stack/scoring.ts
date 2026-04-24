@@ -97,7 +97,8 @@ export interface ValuationMetrics {
   priceTarget1Y: number | null
   upside: number | null             // decimal, e.g. 0.56 = +56% upside
   valAssumptions: ValuationAssumptions | null
-  financialCurrency: string         // reporting currency (USD for most; EUR for ASML, CAD for ENB, etc.)
+  financialCurrency: string         // reporting currency (USD for most; EUR for ASML, CAD for ENB, TWD for TSM, etc.)
+  exchange: string | null           // 'NASDAQ' | 'NYSE' | null
 
   // Score
   valueScore: number            // 0–100

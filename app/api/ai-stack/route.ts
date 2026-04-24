@@ -15,6 +15,15 @@ async function fetchSummary(ticker: string) {
   })
 }
 
+// Map Yahoo exchange codes to human-readable market names
+function mapExchange(code: string | null | undefined): string | null {
+  if (!code) return null
+  const c = code.toUpperCase()
+  if (c === 'NMS' || c === 'NGM' || c === 'NCM' || c.includes('NASDAQ')) return 'NASDAQ'
+  if (c === 'NYQ' || c === 'ASE' || c.includes('NYSE')) return 'NYSE'
+  return code
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractMetrics(ticker: string, raw: any): Omit<ValuationMetrics, 'valueScore' | 'scoreBreakdown'> {
   const { name, layer, layerLabel, sublayer } = AI_STACK_TICKERS.find(t => t.ticker === ticker)!
@@ -28,25 +37,47 @@ function extractMetrics(ticker: string, raw: any): Omit<ValuationMetrics, 'value
   const fcf       = fd.freeCashflow       ?? null
   const sharesRaw = (ks.sharesOutstanding ?? ks.impliedSharesOutstanding ?? null) as number | null
   const financialCurrency = (fd.financialCurrency ?? pr.currency ?? 'USD') as string
-
-  // Allow negative P/FCF — negative FCF IS the signal (company is burning cash)
-  const pfcf      = (marketCap != null && fcf != null) ? marketCap / fcf : null
-  // Allow negative FCF yield — shows how much cash is being burned vs market cap
-  const fcfYield  = (marketCap != null && fcf != null && marketCap > 0) ? fcf / marketCap : null
+  const exchange   = mapExchange(pr.exchange ?? pr.exchangeName)
+  const isADR      = financialCurrency.toUpperCase() !== 'USD'
 
   const totalRevenue = fd.totalRevenue ?? null
   const ebitda       = fd.ebitda       ?? null
   const totalCash    = fd.totalCash    ?? null
   const totalDebt    = fd.totalDebt    ?? null
+  const ps           = fd.priceToSalesTrailing12Months ?? null
 
-  // Net Debt = Debt - Cash. Negative = net cash position (great sign)
+  // Net Debt = Debt − Cash (same currency → ratio is valid even for ADRs)
   const netDebt = (totalDebt != null && totalCash != null) ? totalDebt - totalCash : null
 
-  // Net Debt / EBITDA: leverage quality signal. < 0 = net cash. > 4x = dangerously leveraged.
+  // Net Debt / EBITDA: both same currency → ratio is always valid
   const netDebtToEbitda = (netDebt != null && ebitda != null && ebitda > 0) ? netDebt / ebitda : null
 
-  // FCF Margin = FCF / Revenue. Shows how much cash the business generates per dollar of sales.
+  // FCF Margin = FCF / Revenue — both in reporting currency → currency-neutral, always valid
   const fcfMargin = (fcf != null && totalRevenue != null && totalRevenue > 0) ? fcf / totalRevenue : null
+
+  // ── P/FCF and FCF Yield ───────────────────────────────────────────────────
+  // For ADRs: Yahoo's FCF & revenue are in reporting currency (TWD, EUR, CAD…) but
+  // marketCap is in USD (the ADR quote currency). Direct division is invalid.
+  //
+  // Fix: use Yahoo's P/S ratio (already USD-adjusted by Yahoo) to derive USD revenue,
+  // then use the currency-neutral fcfMargin to get USD-equivalent FCF.
+  //   usdRevenue = marketCap(USD) / PS          ← Yahoo's PS is always USD-consistent
+  //   usdFcf     = fcfMargin × usdRevenue       ← fcfMargin is currency-neutral
+  //   pfcf       = marketCap / usdFcf
+  //   fcfYield   = usdFcf / marketCap
+  let pfcf: number | null = null
+  let fcfYield: number | null = null
+
+  if (isADR && fcfMargin !== null && ps !== null && ps > 0 && marketCap !== null && marketCap > 0) {
+    const usdRevenue = marketCap / ps
+    const usdFcf = fcfMargin * usdRevenue
+    pfcf     = usdFcf !== 0 ? marketCap / usdFcf : null
+    fcfYield = usdFcf / marketCap
+  } else if (!isADR && marketCap != null && fcf != null) {
+    // USD company: direct calculation is valid
+    pfcf     = marketCap / fcf
+    fcfYield = marketCap > 0 ? fcf / marketCap : null
+  }
 
   return {
     ticker,
@@ -65,7 +96,7 @@ function extractMetrics(ticker: string, raw: any): Omit<ValuationMetrics, 'value
     forwardPe:   ks.forwardPE    ?? null,
     peg:         ks.pegRatio     ?? null,
     pb:          ks.priceToBook  ?? null,
-    ps:          fd.priceToSalesTrailing12Months ?? null,
+    ps,
     pfcf,
     evEbitda:    ks.enterpriseToEbitda  ?? null,
     evRevenue:   ks.enterpriseToRevenue ?? null,
@@ -97,6 +128,7 @@ function extractMetrics(ticker: string, raw: any): Omit<ValuationMetrics, 'value
     beta:          sd.beta          ?? ks.beta ?? null,
     fcfYield,
     financialCurrency,
+    exchange,
     // Forward valuation fields — populated by GET handler after extractMetrics
     sharesOutstanding: sharesRaw,
     fairValue:         null,
@@ -145,7 +177,7 @@ export async function GET() {
         debtToEquity: null, currentRatio: null, quickRatio: null,
         revenueGrowth: null, earningsGrowth: null,
         dividendYield: null, beta: null, fcfYield: null,
-        financialCurrency: 'USD',
+        financialCurrency: 'USD', exchange: null,
         sharesOutstanding: null, fairValue: null, priceTarget1Y: null, upside: null, valAssumptions: null,
         valueScore: score, scoreBreakdown: breakdown,
       }

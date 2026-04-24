@@ -214,14 +214,22 @@ const COLUMNS: ColDef[] = [
     defaultDir: 'desc',
   },
   {
-    key: 'freeCashflow', label: 'FCF ($)', tooltip: 'Raw free cash flow in dollars. Negative = company is burning cash.',
-    fmt: r => fmtCash(r.freeCashflow),
+    key: 'freeCashflow', label: 'FCF', tooltip: 'Free cash flow. For ADR companies (non-USD reporting), amount is in the reporting currency — shown with currency code.',
+    fmt: r => {
+      if (r.freeCashflow === null) return '—'
+      const cur = r.financialCurrency !== 'USD' ? r.financialCurrency : ''
+      return fmtCash(r.freeCashflow) + (cur ? ` ${cur}` : '')
+    },
     colorFn: r => r.freeCashflow === null ? 'text-slate-400' : r.freeCashflow < 0 ? 'text-red-500' : 'text-emerald-600',
     defaultDir: 'desc',
   },
   {
-    key: 'operatingCashflow', label: 'Op CF ($)', tooltip: 'Operating cash flow (before capex). Often positive even when FCF is negative.',
-    fmt: r => fmtCash(r.operatingCashflow),
+    key: 'operatingCashflow', label: 'Op CF', tooltip: 'Operating cash flow (before capex). For ADR companies, amount is in reporting currency.',
+    fmt: r => {
+      if (r.operatingCashflow === null) return '—'
+      const cur = r.financialCurrency !== 'USD' ? r.financialCurrency : ''
+      return fmtCash(r.operatingCashflow) + (cur ? ` ${cur}` : '')
+    },
     colorFn: r => r.operatingCashflow === null ? 'text-slate-400' : r.operatingCashflow < 0 ? 'text-red-500' : 'text-slate-700',
     defaultDir: 'desc',
   },
@@ -271,8 +279,12 @@ const COLUMNS: ColDef[] = [
   },
   // ── Balance Sheet / Leverage ───────────────────────────────────────────────
   {
-    key: 'netDebt', label: 'Net Debt ($)', tooltip: 'Total Debt − Cash. Negative = net cash position (company has more cash than debt).',
-    fmt: r => fmtCash(r.netDebt),
+    key: 'netDebt', label: 'Net Debt', tooltip: 'Total Debt − Cash. Negative = net cash. For ADR companies, amount is in reporting currency.',
+    fmt: r => {
+      if (r.netDebt === null) return '—'
+      const cur = r.financialCurrency !== 'USD' ? r.financialCurrency : ''
+      return fmtCash(r.netDebt) + (cur ? ` ${cur}` : '')
+    },
     colorFn: r => r.netDebt === null ? 'text-slate-400' : r.netDebt < 0 ? 'text-emerald-600' : r.netDebt < 1e10 ? 'text-slate-700' : 'text-red-500',
     defaultDir: 'asc',
   },
@@ -983,7 +995,19 @@ export default function AIStackPage() {
                         >
                           {row.ticker}
                         </Link>
-                        {isError && <div className="text-[9px] text-red-400">no data</div>}
+                        <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                          {row.exchange && (
+                            <span className="text-[9px] font-medium text-slate-400 bg-slate-100 px-1 py-0.5 rounded">
+                              {row.exchange}
+                            </span>
+                          )}
+                          {row.financialCurrency !== 'USD' && (
+                            <span className="text-[9px] font-medium text-amber-600 bg-amber-50 px-1 py-0.5 rounded" title={`Financials reported in ${row.financialCurrency}`}>
+                              {row.financialCurrency}
+                            </span>
+                          )}
+                          {isError && <span className="text-[9px] text-red-400">no data</span>}
+                        </div>
                       </td>
                       <td className="sticky left-[116px] bg-white z-10 px-3 py-2 border-r border-slate-100">
                         <div className="text-slate-700 text-[12px] truncate max-w-[155px]" title={row.name}>
