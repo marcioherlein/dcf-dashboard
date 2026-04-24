@@ -17,16 +17,33 @@ async function fetchSummary(ticker: string) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractMetrics(ticker: string, raw: any): Omit<ValuationMetrics, 'valueScore' | 'scoreBreakdown'> {
   const { name, layer, layerLabel, sublayer } = AI_STACK_TICKERS.find(t => t.ticker === ticker)!
-  const fd  = raw?.financialData      ?? {}
+  const fd  = raw?.financialData       ?? {}
   const ks  = raw?.defaultKeyStatistics ?? {}
-  const sd  = raw?.summaryDetail      ?? {}
-  const pr  = raw?.price              ?? {}
+  const sd  = raw?.summaryDetail       ?? {}
+  const pr  = raw?.price               ?? {}
 
   const price     = pr.regularMarketPrice ?? fd.currentPrice ?? null
   const marketCap = pr.marketCap          ?? sd.marketCap    ?? null
   const fcf       = fd.freeCashflow       ?? null
-  const pfcf      = (marketCap && fcf && fcf > 0) ? marketCap / fcf : null
-  const fcfYield  = (marketCap && fcf && marketCap > 0) ? fcf / marketCap : null
+
+  // Allow negative P/FCF — negative FCF IS the signal (company is burning cash)
+  const pfcf      = (marketCap != null && fcf != null) ? marketCap / fcf : null
+  // Allow negative FCF yield — shows how much cash is being burned vs market cap
+  const fcfYield  = (marketCap != null && fcf != null && marketCap > 0) ? fcf / marketCap : null
+
+  const totalRevenue = fd.totalRevenue ?? null
+  const ebitda       = fd.ebitda       ?? null
+  const totalCash    = fd.totalCash    ?? null
+  const totalDebt    = fd.totalDebt    ?? null
+
+  // Net Debt = Debt - Cash. Negative = net cash position (great sign)
+  const netDebt = (totalDebt != null && totalCash != null) ? totalDebt - totalCash : null
+
+  // Net Debt / EBITDA: leverage quality signal. < 0 = net cash. > 4x = dangerously leveraged.
+  const netDebtToEbitda = (netDebt != null && ebitda != null && ebitda > 0) ? netDebt / ebitda : null
+
+  // FCF Margin = FCF / Revenue. Shows how much cash the business generates per dollar of sales.
+  const fcfMargin = (fcf != null && totalRevenue != null && totalRevenue > 0) ? fcf / totalRevenue : null
 
   return {
     ticker,
@@ -52,20 +69,23 @@ function extractMetrics(ticker: string, raw: any): Omit<ValuationMetrics, 'value
 
     freeCashflow:      fcf,
     operatingCashflow: fd.operatingCashflow ?? null,
-    totalRevenue:      fd.totalRevenue      ?? null,
-    ebitda:            fd.ebitda            ?? null,
+    totalRevenue,
+    ebitda,
 
     grossMargin:     fd.grossMargins     ?? null,
     operatingMargin: fd.operatingMargins ?? null,
     profitMargin:    fd.profitMargins    ?? null,
+    fcfMargin,
     roe:  fd.returnOnEquity ?? null,
     roa:  fd.returnOnAssets ?? null,
 
+    totalCash,
+    totalDebt,
+    netDebt,
+    netDebtToEbitda,
     debtToEquity: fd.debtToEquity  ?? null,
     currentRatio: fd.currentRatio  ?? null,
     quickRatio:   fd.quickRatio    ?? null,
-    totalCash:    fd.totalCash     ?? null,
-    totalDebt:    fd.totalDebt     ?? null,
 
     revenueGrowth:  fd.revenueGrowth  ?? null,
     earningsGrowth: fd.earningsGrowth ?? null,
@@ -79,7 +99,6 @@ function extractMetrics(ticker: string, raw: any): Omit<ValuationMetrics, 'value
 export async function GET() {
   const tickers = AI_STACK_TICKERS.map(t => t.ticker)
 
-  // Fetch in batches to avoid overwhelming Yahoo Finance
   const rawMap = new Map<string, unknown>()
 
   for (let i = 0; i < tickers.length; i += BATCH_SIZE) {
@@ -110,9 +129,11 @@ export async function GET() {
         pe: null, forwardPe: null, peg: null, pb: null, ps: null,
         pfcf: null, evEbitda: null, evRevenue: null,
         freeCashflow: null, operatingCashflow: null, totalRevenue: null, ebitda: null,
-        grossMargin: null, operatingMargin: null, profitMargin: null,
-        roe: null, roa: null, debtToEquity: null, currentRatio: null, quickRatio: null,
-        totalCash: null, totalDebt: null, revenueGrowth: null, earningsGrowth: null,
+        grossMargin: null, operatingMargin: null, profitMargin: null, fcfMargin: null,
+        roe: null, roa: null,
+        totalCash: null, totalDebt: null, netDebt: null, netDebtToEbitda: null,
+        debtToEquity: null, currentRatio: null, quickRatio: null,
+        revenueGrowth: null, earningsGrowth: null,
         dividendYield: null, beta: null, fcfYield: null,
         valueScore: score, scoreBreakdown: breakdown,
       }

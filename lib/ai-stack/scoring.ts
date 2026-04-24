@@ -7,7 +7,7 @@ export interface ScoreBreakdown {
   roeScore: number
   marginScore: number
   growthScore: number
-  currentRatioScore: number
+  fcfYieldScore: number   // replaces currentRatioScore — cash yield is king
 }
 
 export interface ValuationMetrics {
@@ -21,7 +21,7 @@ export interface ValuationMetrics {
   // Price & market
   price: number | null
   marketCap: number | null
-  change1d: number | null      // today % change
+  change1d: number | null      // today % change (not decimal — raw %, e.g. 1.5 = 1.5%)
   change52w: number | null     // 52-week % change (decimal, e.g. 0.15 = 15%)
 
   // Valuation multiples
@@ -30,7 +30,7 @@ export interface ValuationMetrics {
   peg: number | null           // PEG ratio
   pb: number | null            // Price/Book
   ps: number | null            // Price/Sales (TTM)
-  pfcf: number | null          // Price/Free Cash Flow (computed: mktCap/FCF)
+  pfcf: number | null          // Price/FCF (negative when FCF < 0 — that IS the signal)
   evEbitda: number | null      // EV/EBITDA
   evRevenue: number | null     // EV/Revenue
 
@@ -44,33 +44,37 @@ export interface ValuationMetrics {
   grossMargin: number | null
   operatingMargin: number | null
   profitMargin: number | null
-  roe: number | null           // Return on equity (decimal)
-  roa: number | null           // Return on assets (decimal)
+  fcfMargin: number | null      // FCF / Revenue (computed)
+  roe: number | null            // Return on equity (decimal)
+  roa: number | null            // Return on assets (decimal)
 
   // Balance sheet
-  debtToEquity: number | null  // Yahoo reports in %, e.g. 47.5 = 47.5% D/E
-  currentRatio: number | null
-  quickRatio: number | null
   totalCash: number | null
   totalDebt: number | null
+  netDebt: number | null        // totalDebt - totalCash (negative = net cash)
+  netDebtToEbitda: number | null // netDebt / EBITDA (leverage quality)
+  debtToEquity: number | null   // Yahoo reports in %, e.g. 47.5 = 47.5%
+  currentRatio: number | null
+  quickRatio: number | null
 
   // Growth (decimal, e.g. 0.12 = 12%)
   revenueGrowth: number | null
   earningsGrowth: number | null
 
   // Other
-  dividendYield: number | null // decimal
+  dividendYield: number | null  // decimal
   beta: number | null
-  fcfYield: number | null      // FCF / marketCap (decimal)
+  fcfYield: number | null       // FCF / marketCap (negative when FCF < 0)
 
   // Score
-  valueScore: number           // 0–100
+  valueScore: number            // 0–100
   scoreBreakdown: ScoreBreakdown
 }
 
 // ─── Scoring helpers ────────────────────────────────────────────────────────
 
-function scorePegInline(peg: number | null): number {
+// PEG: < 1 is undervalued (Peter Lynch), growth at a fair price
+function scorePeg(peg: number | null): number {
   if (peg === null || !isFinite(peg)) return 5
   if (peg < 0) return 3
   if (peg < 1)   return 10
@@ -80,10 +84,11 @@ function scorePegInline(peg: number | null): number {
   return 2
 }
 
-// P/FCF: lower is better. Negative FCF → bad.
+// P/FCF: negative FCF is a strong negative signal (not neutral)
+// Negative P/FCF = FCF < 0. The company is burning cash.
 function scorePfcf(pfcf: number | null): number {
   if (pfcf === null || !isFinite(pfcf)) return 5
-  if (pfcf < 0) return 2
+  if (pfcf < 0)   return 1   // negative FCF — burning cash
   if (pfcf < 10)  return 10
   if (pfcf < 15)  return 9
   if (pfcf < 20)  return 7
@@ -92,7 +97,7 @@ function scorePfcf(pfcf: number | null): number {
   return 2
 }
 
-// EV/EBITDA: lower is better
+// EV/EBITDA: whole-company cost vs operating earnings. Damodaran's preferred multiple.
 function scoreEvEbitda(v: number | null): number {
   if (v === null || !isFinite(v)) return 5
   if (v < 0)   return 3
@@ -103,7 +108,7 @@ function scoreEvEbitda(v: number | null): number {
   return 2
 }
 
-// P/B: lower is better (tech gets some lenience via overall score weighting)
+// P/B: Graham floor. Less relevant for high-ROIC tech but important for industrials.
 function scorePb(v: number | null): number {
   if (v === null || !isFinite(v)) return 5
   if (v < 0)   return 3
@@ -115,10 +120,10 @@ function scorePb(v: number | null): number {
   return 2
 }
 
-// Debt/Equity — Yahoo reports in %, e.g. 47.5 = 47.5% D/E (0.475 ratio)
+// Debt/Equity (Yahoo %, e.g. 47.5 = 47.5%)
 function scoreDebt(v: number | null): number {
   if (v === null || !isFinite(v)) return 5
-  if (v < 0)    return 5  // negative D/E (more cash than debt)
+  if (v < 0)    return 5   // negative = more cash than debt
   if (v < 20)   return 10
   if (v < 50)   return 9
   if (v < 100)  return 7
@@ -127,7 +132,7 @@ function scoreDebt(v: number | null): number {
   return 2
 }
 
-// ROE: higher is better (decimal format from Yahoo, e.g. 0.15 = 15%)
+// ROE: Buffett's favourite quality signal. > 15% consistently = moat.
 function scoreRoe(v: number | null): number {
   if (v === null || !isFinite(v)) return 5
   if (v < 0)     return 1
@@ -139,7 +144,7 @@ function scoreRoe(v: number | null): number {
   return 2
 }
 
-// Gross margin: higher is better (moat indicator) — decimal format
+// Gross Margin: > 40% = pricing power moat (Buffett). Durable advantage indicator.
 function scoreMargin(v: number | null): number {
   if (v === null || !isFinite(v)) return 5
   if (v < 0)     return 1
@@ -150,7 +155,7 @@ function scoreMargin(v: number | null): number {
   return 2
 }
 
-// Revenue growth: higher is better — decimal format
+// Revenue growth: business must grow to be worth a premium
 function scoreGrowth(v: number | null): number {
   if (v === null || !isFinite(v)) return 5
   if (v >= 0.30) return 10
@@ -158,18 +163,20 @@ function scoreGrowth(v: number | null): number {
   if (v >= 0.10) return 7
   if (v >= 0.05) return 5
   if (v >= 0)    return 4
-  return 2  // negative growth
+  return 2   // negative growth
 }
 
-// Current ratio: higher is better
-function scoreCurrentRatio(v: number | null): number {
+// FCF Yield = FCF / Market Cap. This is the single most important value signal.
+// High yield = you're being paid in cash flow. < 0 = company is burning cash.
+function scoreFcfYield(v: number | null): number {
   if (v === null || !isFinite(v)) return 5
-  if (v >= 3.0) return 10
-  if (v >= 2.0) return 9
-  if (v >= 1.5) return 7
-  if (v >= 1.0) return 5
-  if (v >= 0.5) return 3
-  return 1
+  if (v < -0.10)  return 1   // burning > 10% of market cap in FCF
+  if (v < 0)      return 2   // any negative FCF = bad
+  if (v < 0.02)   return 3   // < 2% yield = expensive (P/FCF > 50)
+  if (v < 0.04)   return 5   // 2–4% yield = neutral
+  if (v < 0.06)   return 7   // 4–6% yield = attractive (P/FCF 17–25)
+  if (v < 0.08)   return 9   // 6–8% yield = very attractive (P/FCF 12–17)
+  return 10                  // > 8% yield = excellent (P/FCF < 12.5)
 }
 
 // ─── Main export ─────────────────────────────────────────────────────────────
@@ -178,27 +185,30 @@ export function computeValueScore(m: Partial<ValuationMetrics>): {
   score: number
   breakdown: ScoreBreakdown
 } {
-  const pegScore          = scorePegInline(m.peg ?? null)
-  const pfcfScore         = scorePfcf(m.pfcf ?? null)
-  const evEbitdaScore     = scoreEvEbitda(m.evEbitda ?? null)
-  const pbScore           = scorePb(m.pb ?? null)
-  const debtScore         = scoreDebt(m.debtToEquity ?? null)
-  const roeScore          = scoreRoe(m.roe ?? null)
-  const marginScore       = scoreMargin(m.grossMargin ?? null)
-  const growthScore       = scoreGrowth(m.revenueGrowth ?? null)
-  const currentRatioScore = scoreCurrentRatio(m.currentRatio ?? null)
+  const pegScore      = scorePeg(m.peg ?? null)
+  const pfcfScore     = scorePfcf(m.pfcf ?? null)
+  const evEbitdaScore = scoreEvEbitda(m.evEbitda ?? null)
+  const pbScore       = scorePb(m.pb ?? null)
+  const debtScore     = scoreDebt(m.debtToEquity ?? null)
+  const roeScore      = scoreRoe(m.roe ?? null)
+  const marginScore   = scoreMargin(m.grossMargin ?? null)
+  const growthScore   = scoreGrowth(m.revenueGrowth ?? null)
+  const fcfYieldScore = scoreFcfYield(m.fcfYield ?? null)
 
   // Weights (sum = 1.0)
+  // FCF yield is the top signal — you're buying a stream of cash.
+  // EV/EBITDA captures leverage the P/E misses.
+  // PEG rewards quality growth at a fair price.
   const raw =
-    pegScore          * 0.16 +
-    pfcfScore         * 0.16 +
-    evEbitdaScore     * 0.13 +
-    pbScore           * 0.07 +
-    debtScore         * 0.12 +
-    roeScore          * 0.13 +
-    marginScore       * 0.10 +
-    growthScore       * 0.08 +
-    currentRatioScore * 0.05
+    fcfYieldScore  * 0.18 +  // cash is king — most reliable undervalue signal
+    evEbitdaScore  * 0.15 +  // enterprise-level value, penalizes debt
+    pegScore       * 0.13 +  // growth-adjusted price (Lynch)
+    roeScore       * 0.12 +  // business quality (Buffett)
+    pfcfScore      * 0.10 +  // direct cash multiple, penalizes negative FCF
+    marginScore    * 0.10 +  // moat / pricing power (Buffett)
+    debtScore      * 0.09 +  // balance sheet risk
+    growthScore    * 0.08 +  // top-line momentum
+    pbScore        * 0.05    // asset floor (Graham)
 
   // Scale 0–10 → 0–100
   const score = Math.round(raw * 10)
@@ -214,7 +224,7 @@ export function computeValueScore(m: Partial<ValuationMetrics>): {
       roeScore,
       marginScore,
       growthScore,
-      currentRatioScore,
+      fcfYieldScore,
     },
   }
 }
@@ -222,17 +232,18 @@ export function computeValueScore(m: Partial<ValuationMetrics>): {
 // ─── Color helpers used by the UI ───────────────────────────────────────────
 
 export function getScoreLabel(score: number): { label: string; color: string } {
-  if (score >= 70) return { label: 'Undervalued',  color: '#16a34a' }
-  if (score >= 55) return { label: 'Fair Value',    color: '#65a30d' }
-  if (score >= 40) return { label: 'Fairly Priced', color: '#d97706' }
-  if (score >= 25) return { label: 'Overvalued',    color: '#ea580c' }
-  return               { label: 'Expensive',        color: '#dc2626' }
+  if (score >= 70) return { label: 'Undervalued',   color: '#16a34a' }
+  if (score >= 55) return { label: 'Fair Value',     color: '#65a30d' }
+  if (score >= 40) return { label: 'Fairly Priced',  color: '#d97706' }
+  if (score >= 25) return { label: 'Overvalued',     color: '#ea580c' }
+  return               { label: 'Expensive',         color: '#dc2626' }
 }
 
 export function metricColor(
   value: number | null,
   type: 'pe' | 'peg' | 'pfcf' | 'evEbitda' | 'evRev' | 'pb' | 'ps' | 'debtEq'
-      | 'roe' | 'margin' | 'growth' | 'current' | 'fcfYield' | 'divYield',
+      | 'roe' | 'margin' | 'growth' | 'current' | 'fcfYield' | 'divYield'
+      | 'fcfMargin' | 'netDebtEbitda',
 ): string {
   if (value === null || !isFinite(value)) return 'text-slate-400'
   const g = 'text-emerald-600'
@@ -247,7 +258,7 @@ export function metricColor(
       if (value < 0)   return 'text-slate-400'
       if (value < 1)   return g; if (value < 2) return n; return r
     case 'pfcf':
-      if (value < 0)   return r
+      if (value < 0)   return r   // negative FCF — burning cash
       if (value < 15)  return g; if (value < 30) return n; return r
     case 'evEbitda':
       if (value < 0)   return 'text-slate-400'
@@ -269,7 +280,14 @@ export function metricColor(
     case 'current':
       if (value >= 1.5) return g; if (value >= 1.0) return n; return r
     case 'fcfYield':
-      if (value >= 0.05) return g; if (value >= 0.02) return n; return y
+      if (value < 0)     return r          // negative FCF = burning cash
+      if (value >= 0.06) return g; if (value >= 0.03) return n; return y
+    case 'fcfMargin':
+      if (value < 0)     return r
+      if (value >= 0.15) return g; if (value >= 0.05) return n; return y
+    case 'netDebtEbitda':
+      if (value < 0)   return g    // net cash position = excellent
+      if (value < 1.5) return g; if (value < 3) return n; return r
     case 'divYield':
       if (value >= 0.03) return g; if (value > 0) return n; return 'text-slate-400'
     default: return n
