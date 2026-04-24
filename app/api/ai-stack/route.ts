@@ -16,7 +16,7 @@ async function fetchSummary(ticker: string) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractMetrics(ticker: string, raw: any): Omit<ValuationMetrics, 'valueScore' | 'scoreBreakdown'> {
-  const { ticker: _t, name, layer, layerLabel, sublayer } = AI_STACK_TICKERS.find(t => t.ticker === ticker)!
+  const { name, layer, layerLabel, sublayer } = AI_STACK_TICKERS.find(t => t.ticker === ticker)!
   const fd  = raw?.financialData      ?? {}
   const ks  = raw?.defaultKeyStatistics ?? {}
   const sd  = raw?.summaryDetail      ?? {}

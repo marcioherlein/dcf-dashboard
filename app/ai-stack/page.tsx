@@ -209,7 +209,7 @@ const COLUMNS: ColDef[] = [
 // ─── Score bar component ─────────────────────────────────────────────────────
 
 function ScoreBar({ score }: { score: number }) {
-  const { label, color } = getScoreLabel(score)
+  const { color } = getScoreLabel(score)
   const pct = Math.max(0, Math.min(100, score))
   const barColor =
     score >= 70 ? '#16a34a' :
