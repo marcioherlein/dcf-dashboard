@@ -354,16 +354,17 @@ function ValuationModal({
   row: ValuationMetrics
   onClose: () => void
 }) {
-  const a = row.valAssumptions as ValuationAssumptions
-  if (!a) return null
+  const a = row.valAssumptions as ValuationAssumptions | null
 
-  const [cagr,     setCagr]     = useState((a.revenueCAGR     * 100).toFixed(1))
-  const [margin,   setMargin]   = useState((a.profitMargin2031 * 100).toFixed(1))
-  const [pe,       setPe]       = useState(a.peRatio2031.toString())
-  const [dilution, setDilution] = useState((a.dilutionRate     * 100).toFixed(1))
-  const [wacc,     setWacc]     = useState((a.discountRate     * 100).toFixed(1))
+  // Hooks must run unconditionally — initialize with fallbacks when a is null
+  const [cagr,     setCagr]     = useState(a ? (a.revenueCAGR     * 100).toFixed(1) : '10.0')
+  const [margin,   setMargin]   = useState(a ? (a.profitMargin2031 * 100).toFixed(1) : '10.0')
+  const [pe,       setPe]       = useState(a ? a.peRatio2031.toString()              : '20')
+  const [dilution, setDilution] = useState(a ? (a.dilutionRate     * 100).toFixed(1) : '2.0')
+  const [wacc,     setWacc]     = useState(a ? (a.discountRate     * 100).toFixed(1) : '10.0')
 
   const computed = useMemo(() => {
+    if (!a) return null
     const c = parseFloat(cagr)     / 100
     const m = parseFloat(margin)   / 100
     const p = parseFloat(pe)
@@ -386,6 +387,9 @@ function ValuationModal({
     const annRet   = (Math.pow(1 + upside, 1 / N) - 1) * 100
     return { target, fair, target1y, upside, annRet, rev2031, shr2031 }
   }, [cagr, margin, pe, dilution, wacc, a, row.price])
+
+  // Guard after all hooks
+  if (!a) return null
 
   const upsideColor = !computed ? '#64748b'
     : computed.upside >= 0.20 ? '#16a34a'
