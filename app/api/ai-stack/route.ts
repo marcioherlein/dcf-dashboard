@@ -15,7 +15,9 @@ async function fetchSummary(ticker: string) {
   })
 }
 
-// Fetch TWD→USD, EUR→USD, CAD→USD, etc. from Yahoo FX pairs (e.g. "TWDUSD=X")
+// Fetch TWD→USD, EUR→USD, CAD→USD, etc.
+// Uses yf.quote() (the right method for live prices/FX, not quoteSummary which validates schemas)
+// Yahoo FX ticker format: "TWDUSD=X" → regularMarketPrice ≈ 0.031 (how many USD per 1 TWD)
 async function fetchFxRates(currencies: string[]): Promise<Map<string, number>> {
   const unique = Array.from(new Set(currencies.map(c => c.toUpperCase()).filter(c => c !== 'USD')))
   const map = new Map<string, number>([['USD', 1.0]])
@@ -23,10 +25,17 @@ async function fetchFxRates(currencies: string[]): Promise<Map<string, number>> 
 
   const settled = await Promise.allSettled(
     unique.map(cur =>
-      yf.quoteSummary(`${cur}USD=X`, { modules: ['price'] })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (yf as any).quote(`${cur}USD=X`)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .then((q: any) => ({ cur, rate: (q?.price?.regularMarketPrice ?? null) as number | null }))
-        .catch(() => ({ cur, rate: null }))
+        .then((q: any) => {
+          const rate = q?.regularMarketPrice ?? null
+          // Sanity-check: TWD/USD should be < 1, EUR/USD < 3, etc.
+          // If rate > 100 it's almost certainly inverted (USD/TWD ≈ 32) — invert it
+          const corrected = rate && rate > 10 ? 1 / rate : rate
+          return { cur, rate: corrected as number | null }
+        })
+        .catch(() => ({ cur, rate: null as number | null }))
     )
   )
   for (const r of settled) {
@@ -62,12 +71,26 @@ function extractMetrics(
   const price     = pr.regularMarketPrice ?? fd.currentPrice ?? null
   const marketCap = pr.marketCap          ?? sd.marketCap    ?? null
   const exchange  = mapExchange(pr.exchange ?? pr.exchangeName)
+  const psRaw     = fd.priceToSalesTrailing12Months ?? ks.priceToSalesTrailing12Months ?? null
 
   // Convert local-currency amounts to USD.
-  // All Yahoo financialData dollar fields (revenue, FCF, debt, etc.) are in the
-  // company's reporting currency. For US-listed ADRs the fxRate converts them.
-  const toUSD = (v: number | null | undefined): number | null =>
-    v == null ? null : v * fxRate
+  // fxRate is passed in from the pre-fetched Yahoo FX pair (e.g. TWDUSD=X ≈ 0.031).
+  // Fallback: if fxRate is 0 (fetch failed), derive USD revenue from P/S ratio as a
+  // secondary bridge — Yahoo computes P/S in USD-consistent terms for US-listed ADRs,
+  // so marketCap(USD) / PS gives USD-equivalent revenue.
+  let effectiveFxRate = fxRate
+  if (effectiveFxRate === 0 && psRaw && psRaw > 0 && marketCap && marketCap > 0) {
+    const usdRev = marketCap / psRaw
+    const localRev = fd.totalRevenue ?? null
+    // Derive implied FX rate from the P/S bridge
+    if (localRev && localRev > 0) effectiveFxRate = usdRev / localRev
+  }
+
+  const toUSD = (v: number | null | undefined): number | null => {
+    if (v == null) return null
+    if (effectiveFxRate === 0) return null  // no conversion available → don't show wrong currency
+    return v * effectiveFxRate
+  }
 
   const totalRevenue       = toUSD(fd.totalRevenue)
   const fcf                = toUSD(fd.freeCashflow)
@@ -76,8 +99,10 @@ function extractMetrics(
   const totalCash          = toUSD(fd.totalCash)
   const totalDebt          = toUSD(fd.totalDebt)
 
-  // Shares: derive from marketCap / price — gives ADR-equivalent share count
-  // (reliable for all ADRs; Yahoo's sharesOutstanding can be in underlying shares)
+  // Shares: derive from marketCap / price — gives ADR-equivalent share count.
+  // Yahoo's sharesOutstanding for TSMC returns ~25.9B underlying shares,
+  // but the ADR price represents 5 underlying shares → we need ~5.18B ADR shares.
+  // marketCap(USD) / ADR_price(USD) = ADR share count, always correct.
   const sharesADR: number | null =
     marketCap != null && price != null && price > 0
       ? marketCap / price
@@ -216,34 +241,13 @@ export async function GET() {
       r?.financialData?.financialCurrency ?? r?.price?.currency ?? 'USD'
     ).toUpperCase() as string
 
-    // Use the fetched FX rate; if unavailable (fetch failed) set to null
-    // so downstream code can distinguish "USD" from "failed conversion"
-    const fxRate = fxRates.get(financialCurrency) ?? null
+    // Pass fxRate = 1.0 for USD companies, fetched rate for non-USD,
+    // or 0 if the fetch failed (extractMetrics handles 0 → returns null for amounts)
+    const fxRate = financialCurrency === 'USD'
+      ? 1.0
+      : (fxRates.get(financialCurrency) ?? 0)  // 0 = failed; extractMetrics will use P/S fallback
 
-    // If non-USD and no FX rate, we can't convert — treat financials as unavailable
-    // rather than showing numbers in the wrong currency
-    const effectiveRate = fxRate ?? (financialCurrency === 'USD' ? 1.0 : null)
-    if (effectiveRate === null) {
-      // No FX rate — can still show ratios but not raw amounts
-      const metrics = extractMetrics(ticker, raw, 0, financialCurrency)
-      // Zero out all dollar amounts to avoid displaying wrong-currency numbers
-      const safe = {
-        ...metrics,
-        totalRevenue: null, freeCashflow: null, operatingCashflow: null,
-        ebitda: null, totalCash: null, totalDebt: null, netDebt: null,
-        netDebtToEbitda: null, fcfMargin: null, pfcf: null, fcfYield: null,
-      }
-      const { score, breakdown } = computeValueScore(safe)
-      const val = computeForwardValuation(safe, safe.sharesOutstanding)
-      return {
-        ...safe,
-        valueScore: score, scoreBreakdown: breakdown,
-        fairValue: val?.fairValue ?? null, priceTarget1Y: val?.priceTarget1Y ?? null,
-        upside: val?.upside ?? null, valAssumptions: val ?? null,
-      }
-    }
-
-    const metrics = extractMetrics(ticker, raw, effectiveRate, financialCurrency)
+    const metrics = extractMetrics(ticker, raw, fxRate, financialCurrency)
     const { score, breakdown } = computeValueScore(metrics)
     const val = computeForwardValuation(metrics, metrics.sharesOutstanding)
     return {
