@@ -1,3 +1,20 @@
+// ─── Forward valuation assumptions (set by computeForwardValuation) ──────────
+
+export interface ValuationAssumptions {
+  ltvRevenue: number         // LTM revenue (raw $)
+  sharesOutstanding: number  // shares (raw)
+  revenueCAGR: number        // estimated 5Y CAGR (decimal)
+  profitMargin2031: number   // projected 2031 net margin (decimal)
+  peRatio2031: number        // normalized exit PE multiple
+  dilutionRate: number       // annual share dilution (decimal)
+  discountRate: number       // WACC (decimal)
+  yearsToTarget: number      // = 5
+  targetPrice2031: number    // computed 2031 price
+  fairValue: number          // discounted fair value today
+  priceTarget1Y: number      // 1-year price target
+  upside: number             // (fairValue − price) / price
+}
+
 export interface ScoreBreakdown {
   pegScore: number
   pfcfScore: number
@@ -65,6 +82,13 @@ export interface ValuationMetrics {
   dividendYield: number | null  // decimal
   beta: number | null
   fcfYield: number | null       // FCF / marketCap (negative when FCF < 0)
+
+  // Forward valuation (computed by lib/ai-stack/valuation.ts)
+  sharesOutstanding: number | null
+  fairValue: number | null
+  priceTarget1Y: number | null
+  upside: number | null             // decimal, e.g. 0.56 = +56% upside
+  valAssumptions: ValuationAssumptions | null
 
   // Score
   valueScore: number            // 0–100

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { AI_STACK_TICKERS } from '@/lib/ai-stack/tickers'
 import { computeValueScore, ValuationMetrics } from '@/lib/ai-stack/scoring'
+import { computeForwardValuation } from '@/lib/ai-stack/valuation'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const YahooFinance = require('yahoo-finance2').default
@@ -25,6 +26,7 @@ function extractMetrics(ticker: string, raw: any): Omit<ValuationMetrics, 'value
   const price     = pr.regularMarketPrice ?? fd.currentPrice ?? null
   const marketCap = pr.marketCap          ?? sd.marketCap    ?? null
   const fcf       = fd.freeCashflow       ?? null
+  const sharesRaw = (ks.sharesOutstanding ?? ks.impliedSharesOutstanding ?? null) as number | null
 
   // Allow negative P/FCF — negative FCF IS the signal (company is burning cash)
   const pfcf      = (marketCap != null && fcf != null) ? marketCap / fcf : null
@@ -93,6 +95,12 @@ function extractMetrics(ticker: string, raw: any): Omit<ValuationMetrics, 'value
     dividendYield: sd.dividendYield ?? null,
     beta:          sd.beta          ?? ks.beta ?? null,
     fcfYield,
+    // Forward valuation fields — populated by GET handler after extractMetrics
+    sharesOutstanding: sharesRaw,
+    fairValue:         null,
+    priceTarget1Y:     null,
+    upside:            null,
+    valAssumptions:    null,
   }
 }
 
@@ -135,13 +143,23 @@ export async function GET() {
         debtToEquity: null, currentRatio: null, quickRatio: null,
         revenueGrowth: null, earningsGrowth: null,
         dividendYield: null, beta: null, fcfYield: null,
+        sharesOutstanding: null, fairValue: null, priceTarget1Y: null, upside: null, valAssumptions: null,
         valueScore: score, scoreBreakdown: breakdown,
       }
     }
 
     const metrics = extractMetrics(ticker, raw)
     const { score, breakdown } = computeValueScore(metrics)
-    return { ...metrics, valueScore: score, scoreBreakdown: breakdown }
+    const val = computeForwardValuation(metrics, metrics.sharesOutstanding)
+    return {
+      ...metrics,
+      valueScore: score,
+      scoreBreakdown: breakdown,
+      fairValue:      val?.fairValue      ?? null,
+      priceTarget1Y:  val?.priceTarget1Y  ?? null,
+      upside:         val?.upside         ?? null,
+      valAssumptions: val ?? null,
+    }
   })
 
   return NextResponse.json(results, {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import Link from 'next/link'
-import { ValuationMetrics, metricColor, getScoreLabel } from '@/lib/ai-stack/scoring'
+import { ValuationMetrics, ValuationAssumptions, metricColor, getScoreLabel } from '@/lib/ai-stack/scoring'
 import { LAYER_COLORS } from '@/lib/ai-stack/tickers'
 
 // ─── Formatters ──────────────────────────────────────────────────────────────
@@ -82,9 +82,38 @@ interface ColDef {
   fmt: (row: ValuationMetrics) => string
   colorFn?: (row: ValuationMetrics) => string
   defaultDir?: SortDir
+  clickable?: boolean  // opens valuation modal
 }
 
 const COLUMNS: ColDef[] = [
+  // ── Forward Valuation ─────────────────────────────────────────────────────
+  {
+    key: 'fairValue', label: 'Fair Value', tooltip: 'Click to see assumptions. Forward PE model: 2031 Target Price discounted to today at WACC.',
+    fmt: r => r.fairValue ? fmtPrice(r.fairValue) : '—',
+    colorFn: r => {
+      if (!r.fairValue || !r.upside) return 'text-slate-400'
+      return r.upside >= 0.20 ? 'text-emerald-600 font-semibold cursor-pointer'
+           : r.upside >= 0    ? 'text-amber-600 cursor-pointer'
+           :                    'text-red-500 cursor-pointer'
+    },
+    defaultDir: 'desc',
+    clickable: true,
+  },
+  {
+    key: 'upside', label: 'Upside', tooltip: '(Fair Value − Price) / Price. Click for full assumptions.',
+    fmt: r => {
+      if (r.upside === null) return '—'
+      return (r.upside >= 0 ? '+' : '') + (r.upside * 100).toFixed(0) + '%'
+    },
+    colorFn: r => {
+      if (r.upside === null) return 'text-slate-400'
+      return r.upside >= 0.20 ? 'text-emerald-600 font-semibold cursor-pointer'
+           : r.upside >= 0    ? 'text-amber-600 cursor-pointer'
+           :                    'text-red-500 cursor-pointer'
+    },
+    defaultDir: 'desc',
+    clickable: true,
+  },
   // ── Price & Performance ────────────────────────────────────────────────────
   {
     key: 'price', label: 'Price', tooltip: 'Last price from Yahoo Finance',
@@ -285,6 +314,128 @@ const COLUMNS: ColDef[] = [
 
 // ─── Score bar component ─────────────────────────────────────────────────────
 
+// ─── Valuation assumptions modal ──────────────────────────────────────────────
+
+function fmtB(v: number): string {
+  const abs = Math.abs(v)
+  if (abs >= 1e12) return '$' + (v / 1e12).toFixed(2) + 'T'
+  if (abs >= 1e9)  return '$' + (v / 1e9).toFixed(2) + 'B'
+  if (abs >= 1e6)  return '$' + (v / 1e6).toFixed(0) + 'M'
+  return '$' + v.toFixed(0)
+}
+
+function ValuationModal({
+  row,
+  onClose,
+}: {
+  row: ValuationMetrics
+  onClose: () => void
+}) {
+  const a = row.valAssumptions as ValuationAssumptions
+  if (!a) return null
+
+  const upsidePct  = (a.upside * 100).toFixed(1)
+  const upsideSign = a.upside >= 0 ? '+' : ''
+  const upsideColor = a.upside >= 0.20 ? '#16a34a' : a.upside >= 0 ? '#d97706' : '#dc2626'
+  const annualReturn = (Math.pow(1 + a.upside, 1 / a.yearsToTarget) - 1) * 100
+
+  // Formula components for display
+  const rev2031   = fmtB(a.ltvRevenue * Math.pow(1 + a.revenueCAGR, a.yearsToTarget))
+  const sharesB   = (a.sharesOutstanding / 1e9).toFixed(4) + 'B'
+  const dilShares = ((a.sharesOutstanding * Math.pow(1 + a.dilutionRate, a.yearsToTarget)) / 1e9).toFixed(4) + 'B'
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+          <div>
+            <span className="font-bold text-slate-900 font-mono text-lg">{row.ticker}</span>
+            <span className="text-slate-500 text-sm ml-2">{row.name}</span>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-xl leading-none">×</button>
+        </div>
+
+        <div className="px-5 py-4 space-y-4 text-[13px]">
+          {/* Assumptions */}
+          <div>
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Assumptions</div>
+            <div className="space-y-1">
+              {[
+                ['LTM Revenue',       fmtB(a.ltvRevenue)],
+                ['5Y Revenue CAGR',   (a.revenueCAGR * 100).toFixed(1) + '%'],
+                ['2031 Net Margin',   (a.profitMargin2031 * 100).toFixed(1) + '%'],
+                ['2031 PE Ratio',     a.peRatio2031 + 'x'],
+                ['Shares Outstanding',sharesB + '  →  ' + dilShares + ' (diluted)'],
+                ['Annual Dilution',   (a.dilutionRate * 100).toFixed(1) + '%/year'],
+                ['Discount Rate (WACC)', (a.discountRate * 100).toFixed(1) + '%'],
+              ].map(([label, value]) => (
+                <div key={label} className="flex justify-between gap-4">
+                  <span className="text-slate-500">{label}</span>
+                  <span className="font-medium text-slate-800 text-right">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Valuation formula */}
+          <div className="bg-slate-50 rounded-xl px-4 py-3">
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Valuation</div>
+            <div className="text-[11px] font-mono text-slate-600 leading-relaxed">
+              {fmtB(a.ltvRevenue)} × (1.{(a.revenueCAGR * 100).toFixed(0)})^5 × {(a.profitMargin2031 * 100).toFixed(0)}% × {a.peRatio2031}
+              <br />
+              ──────────────────────────────
+              <br />
+              [{sharesB} × (1.0{(a.dilutionRate * 100).toFixed(0)})^5]
+              <br />
+              <span className="text-slate-800 font-semibold">= {rev2031.replace('$', '')} rev · {dilShares} shares</span>
+            </div>
+            <div className="mt-2 text-[11px] text-slate-500">
+              2031 target price: <span className="font-bold text-slate-800">${a.targetPrice2031.toFixed(0)}</span>
+              {' · '}discounted at {(a.discountRate * 100).toFixed(1)}% for {a.yearsToTarget}y
+            </div>
+          </div>
+
+          {/* Results */}
+          <div className="space-y-1.5">
+            {[
+              { label: 'Actual Price',     value: '$' + (row.price ?? 0).toFixed(2),                  color: 'text-slate-800' },
+              { label: 'Fair Value',       value: '$' + a.fairValue.toFixed(2),                       color: a.upside >= 0 ? 'text-emerald-700' : 'text-red-600' },
+              { label: 'Price Target (1Y)', value: '$' + a.priceTarget1Y.toFixed(2),                   color: 'text-blue-700' },
+              { label: 'Potential Upside', value: upsideSign + upsidePct + '%',                       color: '' },
+              { label: 'Expected Return',  value: (annualReturn >= 0 ? '+' : '') + annualReturn.toFixed(1) + '%/year', color: '' },
+              { label: 'Dividend Yield',   value: row.dividendYield ? (row.dividendYield * 100).toFixed(2) + '%' : '—', color: 'text-slate-700' },
+            ].map(item => (
+              <div key={item.label} className="flex items-center justify-between">
+                <span className="text-slate-500 font-medium uppercase text-[11px] tracking-wide">{item.label}</span>
+                <span
+                  className={`font-bold text-[15px] ${item.color}`}
+                  style={item.label === 'Potential Upside' || item.label === 'Expected Return' ? { color: upsideColor } : {}}
+                >
+                  {item.value}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-100">
+            Forward PE model. CAGR blended from YoY growth with mean reversion. WACC computed from beta + D/E.
+            Sector PE assumes overvaluations compress by 2031. Not investment advice.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Score bar component ─────────────────────────────────────────────────────
+
 function ScoreBar({ score }: { score: number }) {
   const { color } = getScoreLabel(score)
   const pct = Math.max(0, Math.min(100, score))
@@ -367,6 +518,7 @@ export default function AIStackPage() {
   const [search, setSearch]           = useState('')
   const [layerFilter, setLayerFilter] = useState<number | null>(null)
   const [riskAverse, setRiskAverse]   = useState(false)
+  const [valModal, setValModal]       = useState<ValuationMetrics | null>(null)
   const [sortKey, setSortKey]         = useState<SortKey>('valueScore')
   const [sortDir, setSortDir]         = useState<SortDir>('desc')
   const [lastFetch, setLastFetch]     = useState<Date | null>(null)
@@ -452,6 +604,12 @@ export default function AIStackPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 pt-[52px]">
+
+      {/* Valuation assumptions modal */}
+      {valModal?.valAssumptions && (
+        <ValuationModal row={valModal} onClose={() => setValModal(null)} />
+      )}
+
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-6 py-5">
         <div className="max-w-screen-2xl mx-auto">
@@ -685,8 +843,14 @@ export default function AIStackPage() {
                       {COLUMNS.map(col => {
                         const val = col.fmt(row)
                         const colorClass = col.colorFn ? col.colorFn(row) : 'text-slate-700'
+                        const canClick = col.clickable && row.valAssumptions
                         return (
-                          <td key={col.key as string} className={`px-3 py-2 text-right tabular-nums ${colorClass}`}>
+                          <td
+                            key={col.key as string}
+                            className={`px-3 py-2 text-right tabular-nums ${colorClass}`}
+                            onClick={canClick ? () => setValModal(row) : undefined}
+                            title={canClick ? 'Click to see valuation assumptions' : undefined}
+                          >
                             {val}
                           </td>
                         )
