@@ -318,10 +318,33 @@ const COLUMNS: ColDef[] = [
 
 function fmtB(v: number): string {
   const abs = Math.abs(v)
-  if (abs >= 1e12) return '$' + (v / 1e12).toFixed(2) + 'T'
-  if (abs >= 1e9)  return '$' + (v / 1e9).toFixed(2) + 'B'
-  if (abs >= 1e6)  return '$' + (v / 1e6).toFixed(0) + 'M'
-  return '$' + v.toFixed(0)
+  const sign = v < 0 ? '-' : ''
+  if (abs >= 1e12) return sign + '$' + (abs / 1e12).toFixed(2) + 'T'
+  if (abs >= 1e9)  return sign + '$' + (abs / 1e9).toFixed(2) + 'B'
+  if (abs >= 1e6)  return sign + '$' + (abs / 1e6).toFixed(0) + 'M'
+  return sign + '$' + abs.toFixed(0)
+}
+
+function NumInput({
+  value, onChange, step = '0.1', min, max, suffix,
+}: {
+  value: string; onChange: (v: string) => void
+  step?: string; min?: string; max?: string; suffix?: string
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      <input
+        type="number"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        step={step}
+        min={min}
+        max={max}
+        className="w-20 text-right border border-slate-200 rounded-md px-2 py-0.5 text-[12px] font-mono focus:outline-none focus:border-blue-400 bg-slate-50"
+      />
+      {suffix && <span className="text-slate-400 text-[11px]">{suffix}</span>}
+    </div>
+  )
 }
 
 function ValuationModal({
@@ -334,15 +357,55 @@ function ValuationModal({
   const a = row.valAssumptions as ValuationAssumptions
   if (!a) return null
 
-  const upsidePct  = (a.upside * 100).toFixed(1)
-  const upsideSign = a.upside >= 0 ? '+' : ''
-  const upsideColor = a.upside >= 0.20 ? '#16a34a' : a.upside >= 0 ? '#d97706' : '#dc2626'
-  const annualReturn = (Math.pow(1 + a.upside, 1 / a.yearsToTarget) - 1) * 100
+  const [cagr,     setCagr]     = useState((a.revenueCAGR     * 100).toFixed(1))
+  const [margin,   setMargin]   = useState((a.profitMargin2031 * 100).toFixed(1))
+  const [pe,       setPe]       = useState(a.peRatio2031.toString())
+  const [dilution, setDilution] = useState((a.dilutionRate     * 100).toFixed(1))
+  const [wacc,     setWacc]     = useState((a.discountRate     * 100).toFixed(1))
 
-  // Formula components for display
-  const rev2031   = fmtB(a.ltvRevenue * Math.pow(1 + a.revenueCAGR, a.yearsToTarget))
-  const sharesB   = (a.sharesOutstanding / 1e9).toFixed(4) + 'B'
-  const dilShares = ((a.sharesOutstanding * Math.pow(1 + a.dilutionRate, a.yearsToTarget)) / 1e9).toFixed(4) + 'B'
+  const computed = useMemo(() => {
+    const c = parseFloat(cagr)     / 100
+    const m = parseFloat(margin)   / 100
+    const p = parseFloat(pe)
+    const d = parseFloat(dilution) / 100
+    const w = parseFloat(wacc)     / 100
+    const price = row.price ?? 0
+
+    if ([c, m, p, d, w].some(isNaN)) return null
+
+    const N = 5
+    const rev2031   = a.ltvRevenue * Math.pow(1 + c, N)
+    const ni2031    = rev2031 * m
+    const shr2031   = a.sharesOutstanding * Math.pow(1 + d, N)
+    const target    = (ni2031 / shr2031) * p
+    if (!isFinite(target) || target <= 0) return null
+
+    const fair     = target / Math.pow(1 + w, N)
+    const target1y = target / Math.pow(1 + w, N - 1)
+    const upside   = price > 0 ? (fair - price) / price : 0
+    const annRet   = (Math.pow(1 + upside, 1 / N) - 1) * 100
+    return { target, fair, target1y, upside, annRet, rev2031, shr2031 }
+  }, [cagr, margin, pe, dilution, wacc, a, row.price])
+
+  const upsideColor = !computed ? '#64748b'
+    : computed.upside >= 0.20 ? '#16a34a'
+    : computed.upside >= 0    ? '#d97706'
+    : '#dc2626'
+
+  const isModified =
+    cagr     !== (a.revenueCAGR     * 100).toFixed(1) ||
+    margin   !== (a.profitMargin2031 * 100).toFixed(1) ||
+    pe       !== a.peRatio2031.toString() ||
+    dilution !== (a.dilutionRate     * 100).toFixed(1) ||
+    wacc     !== (a.discountRate     * 100).toFixed(1)
+
+  const reset = () => {
+    setCagr(    (a.revenueCAGR     * 100).toFixed(1))
+    setMargin(  (a.profitMargin2031 * 100).toFixed(1))
+    setPe(       a.peRatio2031.toString())
+    setDilution((a.dilutionRate     * 100).toFixed(1))
+    setWacc(    (a.discountRate     * 100).toFixed(1))
+  }
 
   return (
     <div
@@ -350,82 +413,177 @@ function ValuationModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-y-auto max-h-[92vh]"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 sticky top-0 bg-white z-10">
           <div>
             <span className="font-bold text-slate-900 font-mono text-lg">{row.ticker}</span>
             <span className="text-slate-500 text-sm ml-2">{row.name}</span>
+            {row.financialCurrency && row.financialCurrency !== 'USD' && (
+              <span className="ml-2 text-[10px] bg-amber-100 text-amber-700 font-semibold px-2 py-0.5 rounded-full">
+                {row.financialCurrency} ADR
+              </span>
+            )}
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-xl leading-none">×</button>
         </div>
 
-        <div className="px-5 py-4 space-y-4 text-[13px]">
-          {/* Assumptions */}
+        <div className="px-5 py-4 space-y-5 text-[13px]">
+
+          {/* Currency note */}
+          {a.currencyNote && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-[12px]">
+              <div className="text-amber-700 font-semibold mb-0.5">⚠ ADR Currency Adjustment</div>
+              <div className="text-amber-600">{a.currencyNote}</div>
+            </div>
+          )}
+
+          {/* Past Evidence */}
           <div>
-            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Assumptions</div>
-            <div className="space-y-1">
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+              Past Evidence &amp; Derivation
+            </div>
+            <div className="bg-slate-50 rounded-xl px-4 py-3 space-y-2">
               {[
-                ['LTM Revenue',       fmtB(a.ltvRevenue)],
-                ['5Y Revenue CAGR',   (a.revenueCAGR * 100).toFixed(1) + '%'],
-                ['2031 Net Margin',   (a.profitMargin2031 * 100).toFixed(1) + '%'],
-                ['2031 PE Ratio',     a.peRatio2031 + 'x'],
-                ['Shares Outstanding',sharesB + '  →  ' + dilShares + ' (diluted)'],
-                ['Annual Dilution',   (a.dilutionRate * 100).toFixed(1) + '%/year'],
-                ['Discount Rate (WACC)', (a.discountRate * 100).toFixed(1) + '%'],
-              ].map(([label, value]) => (
-                <div key={label} className="flex justify-between gap-4">
-                  <span className="text-slate-500">{label}</span>
-                  <span className="font-medium text-slate-800 text-right">{value}</span>
+                { label: 'Revenue CAGR',    evidence: a.cagrEvidence },
+                { label: 'Net Margin 2031', evidence: a.marginEvidence },
+                { label: 'Exit PE 2031',    evidence: a.peEvidence },
+                { label: 'Share Dilution',  evidence: a.dilutionEvidence },
+                { label: 'WACC',            evidence: a.waccEvidence },
+              ].map(({ label, evidence }) => (
+                <div key={label} className="flex gap-2">
+                  <span className="text-slate-400 w-28 shrink-0 text-[11px] font-medium">{label}</span>
+                  <span className="text-slate-600 text-[11px] leading-relaxed">{evidence}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Valuation formula */}
-          <div className="bg-slate-50 rounded-xl px-4 py-3">
-            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Valuation</div>
-            <div className="text-[11px] font-mono text-slate-600 leading-relaxed">
-              {fmtB(a.ltvRevenue)} × (1.{(a.revenueCAGR * 100).toFixed(0)})^5 × {(a.profitMargin2031 * 100).toFixed(0)}% × {a.peRatio2031}
-              <br />
-              ──────────────────────────────
-              <br />
-              [{sharesB} × (1.0{(a.dilutionRate * 100).toFixed(0)})^5]
-              <br />
-              <span className="text-slate-800 font-semibold">= {rev2031.replace('$', '')} rev · {dilShares} shares</span>
+          {/* Editable Assumptions */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                Assumptions {isModified && <span className="text-blue-500 normal-case ml-1">(modified)</span>}
+              </div>
+              {isModified && (
+                <button
+                  onClick={reset}
+                  className="text-[11px] text-blue-500 hover:text-blue-700 underline"
+                >
+                  Reset to model
+                </button>
+              )}
             </div>
-            <div className="mt-2 text-[11px] text-slate-500">
-              2031 target price: <span className="font-bold text-slate-800">${a.targetPrice2031.toFixed(0)}</span>
-              {' · '}discounted at {(a.discountRate * 100).toFixed(1)}% for {a.yearsToTarget}y
+            <div className="space-y-2">
+              {/* Read-only */}
+              <div className="flex items-center justify-between text-[12px]">
+                <span className="text-slate-500">LTM Revenue</span>
+                <span className="font-medium text-slate-800 font-mono">{fmtB(a.ltvRevenue)}</span>
+              </div>
+              <div className="flex items-center justify-between text-[12px]">
+                <span className="text-slate-500">Shares Outstanding</span>
+                <span className="font-medium text-slate-800 font-mono">{(a.sharesOutstanding / 1e9).toFixed(3)}B</span>
+              </div>
+              <div className="border-t border-slate-100 pt-2 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-slate-700 font-medium">5Y Revenue CAGR</span>
+                    <div className="text-[10px] text-slate-400">Annual revenue growth rate to 2031</div>
+                  </div>
+                  <NumInput value={cagr} onChange={setCagr} step="0.5" min="-10" max="100" suffix="%" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-slate-700 font-medium">Net Margin 2031</span>
+                    <div className="text-[10px] text-slate-400">Projected net profit margin</div>
+                  </div>
+                  <NumInput value={margin} onChange={setMargin} step="0.5" min="0" max="80" suffix="%" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-slate-700 font-medium">Exit P/E 2031</span>
+                    <div className="text-[10px] text-slate-400">Normalized sector multiple at exit</div>
+                  </div>
+                  <NumInput value={pe} onChange={setPe} step="1" min="5" max="100" suffix="×" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-slate-700 font-medium">Annual Dilution</span>
+                    <div className="text-[10px] text-slate-400">Stock-based comp / share count growth</div>
+                  </div>
+                  <NumInput value={dilution} onChange={setDilution} step="0.5" min="0" max="10" suffix="%" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-slate-700 font-medium">Discount Rate (WACC)</span>
+                    <div className="text-[10px] text-slate-400">Required return on equity + debt</div>
+                  </div>
+                  <NumInput value={wacc} onChange={setWacc} step="0.5" min="4" max="30" suffix="%" />
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* Formula display */}
+          {computed && (
+            <div className="bg-slate-50 rounded-xl px-4 py-3">
+              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Formula</div>
+              <div className="text-[11px] font-mono text-slate-600 leading-relaxed">
+                {fmtB(a.ltvRevenue)} × (1+{cagr}%)^5 × {margin}% × {pe}×
+                <br />
+                ÷ [{(a.sharesOutstanding / 1e9).toFixed(3)}B × (1+{dilution}%)^5]
+                <br />
+                = <span className="font-semibold text-slate-800">${computed.target.toFixed(0)}</span> target in 2031
+              </div>
+              <div className="mt-2 text-[11px] text-slate-500">
+                Discounted at {wacc}% for 5y → fair value today
+              </div>
+            </div>
+          )}
 
           {/* Results */}
-          <div className="space-y-1.5">
-            {[
-              { label: 'Actual Price',     value: '$' + (row.price ?? 0).toFixed(2),                  color: 'text-slate-800' },
-              { label: 'Fair Value',       value: '$' + a.fairValue.toFixed(2),                       color: a.upside >= 0 ? 'text-emerald-700' : 'text-red-600' },
-              { label: 'Price Target (1Y)', value: '$' + a.priceTarget1Y.toFixed(2),                   color: 'text-blue-700' },
-              { label: 'Potential Upside', value: upsideSign + upsidePct + '%',                       color: '' },
-              { label: 'Expected Return',  value: (annualReturn >= 0 ? '+' : '') + annualReturn.toFixed(1) + '%/year', color: '' },
-              { label: 'Dividend Yield',   value: row.dividendYield ? (row.dividendYield * 100).toFixed(2) + '%' : '—', color: 'text-slate-700' },
-            ].map(item => (
-              <div key={item.label} className="flex items-center justify-between">
-                <span className="text-slate-500 font-medium uppercase text-[11px] tracking-wide">{item.label}</span>
-                <span
-                  className={`font-bold text-[15px] ${item.color}`}
-                  style={item.label === 'Potential Upside' || item.label === 'Expected Return' ? { color: upsideColor } : {}}
-                >
-                  {item.value}
-                </span>
+          {computed && (
+            <div className="space-y-1.5">
+              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Results</div>
+              {[
+                { label: 'Actual Price',     value: fmtPrice(row.price),              color: 'text-slate-800' },
+                { label: '2031 Target',      value: '$' + computed.target.toFixed(0), color: 'text-blue-600' },
+                { label: 'Fair Value Today', value: '$' + computed.fair.toFixed(2),   color: computed.upside >= 0 ? 'text-emerald-700' : 'text-red-600' },
+                { label: '1Y Price Target',  value: '$' + computed.target1y.toFixed(2), color: 'text-blue-700' },
+              ].map(item => (
+                <div key={item.label} className="flex items-center justify-between">
+                  <span className="text-slate-500 font-medium uppercase text-[11px] tracking-wide">{item.label}</span>
+                  <span className={`font-bold text-[15px] ${item.color}`}>{item.value}</span>
+                </div>
+              ))}
+              <div className="border-t border-slate-100 pt-1.5 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500 font-medium uppercase text-[11px] tracking-wide">Potential Upside</span>
+                  <span className="font-bold text-[17px]" style={{ color: upsideColor }}>
+                    {computed.upside >= 0 ? '+' : ''}{(computed.upside * 100).toFixed(1)}%
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500 font-medium uppercase text-[11px] tracking-wide">Expected Return</span>
+                  <span className="font-bold text-[15px]" style={{ color: upsideColor }}>
+                    {computed.annRet >= 0 ? '+' : ''}{computed.annRet.toFixed(1)}%/yr
+                  </span>
+                </div>
+                {row.dividendYield ? (
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 font-medium uppercase text-[11px] tracking-wide">Dividend Yield</span>
+                    <span className="font-bold text-[13px] text-slate-700">+{(row.dividendYield * 100).toFixed(2)}%/yr</span>
+                  </div>
+                ) : null}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
 
           <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-100">
-            Forward PE model. CAGR blended from YoY growth with mean reversion. WACC computed from beta + D/E.
+            Forward PE model. Modify any assumption above and results update live.
+            CAGR mean-reverted from YoY data. WACC: beta + D/MktCap + RF 4.5% + ERP 5.5%.
             Sector PE assumes overvaluations compress by 2031. Not investment advice.
           </p>
         </div>

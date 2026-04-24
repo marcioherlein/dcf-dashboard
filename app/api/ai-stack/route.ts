@@ -27,6 +27,7 @@ function extractMetrics(ticker: string, raw: any): Omit<ValuationMetrics, 'value
   const marketCap = pr.marketCap          ?? sd.marketCap    ?? null
   const fcf       = fd.freeCashflow       ?? null
   const sharesRaw = (ks.sharesOutstanding ?? ks.impliedSharesOutstanding ?? null) as number | null
+  const financialCurrency = (fd.financialCurrency ?? pr.currency ?? 'USD') as string
 
   // Allow negative P/FCF — negative FCF IS the signal (company is burning cash)
   const pfcf      = (marketCap != null && fcf != null) ? marketCap / fcf : null
@@ -95,6 +96,7 @@ function extractMetrics(ticker: string, raw: any): Omit<ValuationMetrics, 'value
     dividendYield: sd.dividendYield ?? null,
     beta:          sd.beta          ?? ks.beta ?? null,
     fcfYield,
+    financialCurrency,
     // Forward valuation fields — populated by GET handler after extractMetrics
     sharesOutstanding: sharesRaw,
     fairValue:         null,
@@ -143,6 +145,7 @@ export async function GET() {
         debtToEquity: null, currentRatio: null, quickRatio: null,
         revenueGrowth: null, earningsGrowth: null,
         dividendYield: null, beta: null, fcfYield: null,
+        financialCurrency: 'USD',
         sharesOutstanding: null, fairValue: null, priceTarget1Y: null, upside: null, valAssumptions: null,
         valueScore: score, scoreBreakdown: breakdown,
       }

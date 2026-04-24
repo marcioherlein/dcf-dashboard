@@ -39,58 +39,85 @@ const SECTOR_CAGR: Record<number, number> = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function estimateCAGR(revenueGrowth: number | null, layer: number): number {
-  if (revenueGrowth === null) return SECTOR_CAGR[layer] ?? 0.08
+function estimateCAGR(revenueGrowth: number | null, layer: number): { cagr: number; evidence: string } {
+  if (revenueGrowth === null) {
+    const cagr = SECTOR_CAGR[layer] ?? 0.08
+    return { cagr, evidence: `No growth data → sector default ${pct(cagr)}` }
+  }
 
-  // Mean-reversion: high-growth inevitably slows
+  const raw = revenueGrowth
   let g = revenueGrowth
-  if (g > 0.50)      g = g * 0.50 + 0.30 * 0.50
-  else if (g > 0.30) g = g * 0.65 + 0.20 * 0.35
-  else if (g > 0.15) g = g * 0.80 + 0.12 * 0.20
+  let note = ''
+  if (g > 0.50) {
+    g = g * 0.50 + 0.30 * 0.50
+    note = `${pct(raw)} → mean-reverted to ${pct(g)} (blended toward 30%)`
+  } else if (g > 0.30) {
+    g = g * 0.65 + 0.20 * 0.35
+    note = `${pct(raw)} → mean-reverted to ${pct(g)} (blended toward 20%)`
+  } else if (g > 0.15) {
+    g = g * 0.80 + 0.12 * 0.20
+    note = `${pct(raw)} → mean-reverted to ${pct(g)} (blended toward 12%)`
+  } else {
+    note = `${pct(raw)} → used as-is`
+  }
 
-  return Math.max(-0.05, Math.min(0.45, g))
+  const cagr = Math.max(-0.05, Math.min(0.45, g))
+  return { cagr, evidence: `YoY revenue growth ${note}` }
 }
 
 function estimateMargin2031(
   profitMargin: number | null,
   grossMargin: number | null,
   revenueGrowth: number | null,
-): number {
-  // Pre-profit: project toward profitability based on business model quality
+): { margin: number; evidence: string } {
   if (profitMargin === null || profitMargin <= 0) {
-    if (grossMargin !== null && grossMargin >= 0.50) return 0.08   // high-margin software model
-    if (grossMargin !== null && grossMargin >= 0.30) return 0.05
-    if (grossMargin !== null && grossMargin >= 0.15) return 0.03
-    return 0.02
+    let margin = 0.02
+    let source = 'low gross margin'
+    if (grossMargin !== null && grossMargin >= 0.50) { margin = 0.08; source = `gross margin ${pct(grossMargin)} → software model` }
+    else if (grossMargin !== null && grossMargin >= 0.30) { margin = 0.05; source = `gross margin ${pct(grossMargin)} → moderate` }
+    else if (grossMargin !== null && grossMargin >= 0.15) { margin = 0.03; source = `gross margin ${pct(grossMargin)} → thin` }
+    const evidence = `Pre-profit (${profitMargin !== null ? pct(profitMargin) : 'N/A'}) — projected ${pct(margin)} via ${source}`
+    return { margin, evidence }
   }
 
-  // For profitable companies: apply operating leverage improvement
-  const isHighGrowth  = revenueGrowth !== null && revenueGrowth > 0.15
-  const hasMoat       = grossMargin   !== null && grossMargin   > 0.40
-  const improvement   = (isHighGrowth && hasMoat) ? 0.03
-                      : (isHighGrowth || hasMoat) ? 0.015
-                      : 0.005
+  const isHighGrowth = revenueGrowth !== null && revenueGrowth > 0.15
+  const hasMoat      = grossMargin   !== null && grossMargin   > 0.40
+  const improvement  = (isHighGrowth && hasMoat) ? 0.03
+                     : (isHighGrowth || hasMoat) ? 0.015
+                     : 0.005
 
-  return Math.max(0.01, Math.min(0.50, profitMargin + improvement))
+  const margin = Math.max(0.01, Math.min(0.50, profitMargin + improvement))
+  const reason = isHighGrowth && hasMoat ? 'high growth + moat (+3%)'
+               : isHighGrowth            ? 'high growth (+1.5%)'
+               : hasMoat                 ? 'moat/margin (+1.5%)'
+               : 'stable (+0.5%)'
+  const evidence = `Current net margin ${pct(profitMargin)} → ${pct(margin)} (${reason})`
+  return { margin, evidence }
 }
 
-function estimateDilution(layer: number, profitMargin: number | null): number {
-  // Tech/growth layers: stock-based compensation is meaningful
+function estimateDilution(layer: number, profitMargin: number | null): { rate: number; evidence: string } {
   const techLayers = new Set([0, 1, 2, 4, 6, 7, 8])
   if (techLayers.has(layer)) {
-    if (profitMargin !== null && profitMargin > 0.20) return 0.010  // mature, likely doing buybacks
-    if (profitMargin !== null && profitMargin > 0.10) return 0.020
-    return 0.030   // growth stage, heavy stock comp
+    if (profitMargin !== null && profitMargin > 0.20) {
+      return { rate: 0.010, evidence: 'Tech layer, mature/profitable (likely buybacks) → 1.0%/yr' }
+    }
+    if (profitMargin !== null && profitMargin > 0.10) {
+      return { rate: 0.020, evidence: 'Tech layer, moderate profitability → 2.0%/yr stock comp' }
+    }
+    return { rate: 0.030, evidence: 'Tech layer, growth stage (heavy stock-based comp) → 3.0%/yr' }
   }
-  // Industrial / materials / energy: much lower dilution
-  return profitMargin !== null && profitMargin > 0.15 ? 0.005 : 0.010
+  const rate = profitMargin !== null && profitMargin > 0.15 ? 0.005 : 0.010
+  return { rate, evidence: `Industrial/materials layer → ${pct(rate)}/yr` }
 }
 
 function estimateCostOfDebt(debtToMarketCap: number): number {
-  // Estimate pre-tax cost of debt based on leverage
-  if (debtToMarketCap < 0.10) return RF_RATE + 0.010   // investment grade
-  if (debtToMarketCap < 0.30) return RF_RATE + 0.015   // BBB
-  return RF_RATE + 0.025                                // high yield
+  if (debtToMarketCap < 0.10) return RF_RATE + 0.010
+  if (debtToMarketCap < 0.30) return RF_RATE + 0.015
+  return RF_RATE + 0.025
+}
+
+function pct(v: number): string {
+  return (v * 100).toFixed(1) + '%'
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────
@@ -100,16 +127,37 @@ export function computeForwardValuation(
   sharesRaw: number | null,
 ): ValuationAssumptions | null {
   const { totalRevenue, profitMargin, grossMargin, revenueGrowth, beta,
-          totalDebt, marketCap, price, layer } = m
+          totalDebt, marketCap, price, layer, ps, financialCurrency } = m
 
-  if (!totalRevenue || !price || price <= 0 || layer === undefined) return null
+  if (!price || price <= 0 || layer === undefined) return null
   if (!sharesRaw || sharesRaw <= 0) return null
 
-  // ── WACC via existing engine ──────────────────────────────────────────────
+  // ── ADR / currency handling ───────────────────────────────────────────────
+  // Yahoo financial statements are in the *reporting currency* (EUR, CAD, TWD…),
+  // but price and marketCap are quoted in USD for US-listed ADRs.
+  // When currencies differ, use marketCap / PS (P/S ratio) as a USD-based revenue proxy.
+  const reportingCurrency = (financialCurrency ?? 'USD').toUpperCase()
+  let usdRevenue: number | null = null
+  let currencyNote: string | null = null
+
+  if (reportingCurrency !== 'USD' && marketCap && marketCap > 0 && ps && ps > 0) {
+    usdRevenue = marketCap / ps
+    currencyNote = `Financial statements in ${reportingCurrency}. Revenue estimated from Market Cap ÷ P/S (${ps.toFixed(1)}×) = $${(usdRevenue / 1e9).toFixed(2)}B USD-equivalent.`
+  } else if (reportingCurrency !== 'USD' && totalRevenue) {
+    // Fallback: use as-is but warn
+    usdRevenue = totalRevenue
+    currencyNote = `Financial statements in ${reportingCurrency}. Revenue used as-is — may be in local currency (USD figures could differ).`
+  } else {
+    usdRevenue = totalRevenue ?? null
+  }
+
+  if (!usdRevenue) return null
+
+  // ── WACC ──────────────────────────────────────────────────────────────────
   const b = beta != null ? Math.max(0.5, Math.min(3.0, beta)) : 1.2
   const dtomcap = (totalDebt != null && marketCap != null && marketCap > 0)
     ? totalDebt / marketCap
-    : 0.25   // conservative default when unknown
+    : 0.25
   const cod = estimateCostOfDebt(dtomcap)
 
   const waccResult = calculateWACC({
@@ -122,20 +170,27 @@ export function computeForwardValuation(
   })
   const wacc = Math.min(0.20, Math.max(0.07, waccResult.wacc))
 
-  // ── Assumptions ───────────────────────────────────────────────────────────
-  const revenueCAGR      = estimateCAGR(revenueGrowth ?? null, layer)
-  const profitMargin2031 = estimateMargin2031(profitMargin ?? null, grossMargin ?? null, revenueGrowth ?? null)
-  const peRatio2031      = SECTOR_PE[layer] ?? 20
-  const dilutionRate     = estimateDilution(layer, profitMargin ?? null)
+  const betaUsed = beta != null ? beta.toFixed(2) : '1.20 (default)'
+  const waccEvidence = `Beta ${betaUsed}, RF ${pct(RF_RATE)}, ERP ${pct(ERP)}, CoD ${pct(cod)}, D/MktCap ${pct(dtomcap)} → WACC ${pct(wacc)}`
 
-  // ── Projection formula (matches screenshot) ───────────────────────────────
-  //   2031 Target = Revenue × (1+CAGR)^N × NetMargin × PE
-  //                 ─────────────────────────────────────────
-  //                 Shares × (1 + Dilution)^N
-  const rev2031        = totalRevenue * Math.pow(1 + revenueCAGR, N)
-  const ni2031         = rev2031 * profitMargin2031
-  const shares2031     = sharesRaw * Math.pow(1 + dilutionRate, N)
-  const eps2031        = ni2031 / shares2031
+  // ── Assumptions ───────────────────────────────────────────────────────────
+  const { cagr: revenueCAGR, evidence: cagrEvidence } = estimateCAGR(revenueGrowth ?? null, layer)
+  const { margin: profitMargin2031, evidence: marginEvidence } = estimateMargin2031(
+    profitMargin ?? null, grossMargin ?? null, revenueGrowth ?? null
+  )
+  const peRatio2031 = SECTOR_PE[layer] ?? 20
+  const currentPe = m.pe ?? m.forwardPe
+  const peEvidence = currentPe
+    ? `Current trailing PE ${currentPe.toFixed(0)}× → sector normalized target ${peRatio2031}× (layer ${layer})`
+    : `No current PE data → sector target ${peRatio2031}× (layer ${layer})`
+
+  const { rate: dilutionRate, evidence: dilutionEvidence } = estimateDilution(layer, profitMargin ?? null)
+
+  // ── Projection formula ───────────────────────────────────────────────────
+  const rev2031         = usdRevenue * Math.pow(1 + revenueCAGR, N)
+  const ni2031          = rev2031 * profitMargin2031
+  const shares2031      = sharesRaw * Math.pow(1 + dilutionRate, N)
+  const eps2031         = ni2031 / shares2031
   const targetPrice2031 = eps2031 * peRatio2031
 
   if (!isFinite(targetPrice2031) || targetPrice2031 <= 0) return null
@@ -145,7 +200,7 @@ export function computeForwardValuation(
   const upside       = (fairValue - price) / price
 
   return {
-    ltvRevenue:      totalRevenue,
+    ltvRevenue:      usdRevenue,
     sharesOutstanding: sharesRaw,
     revenueCAGR,
     profitMargin2031,
@@ -157,5 +212,44 @@ export function computeForwardValuation(
     fairValue,
     priceTarget1Y,
     upside,
+    cagrEvidence,
+    marginEvidence,
+    peEvidence,
+    dilutionEvidence,
+    waccEvidence,
+    currencyNote,
   }
+}
+
+// ─── Recompute from editable assumptions (modal override) ────────────────────
+
+export interface EditableAssumptions {
+  revenueCAGR: number
+  profitMargin2031: number
+  peRatio2031: number
+  dilutionRate: number
+  discountRate: number
+}
+
+export function recomputeValuation(
+  price: number,
+  ltvRevenue: number,
+  sharesOutstanding: number,
+  a: EditableAssumptions,
+): { targetPrice2031: number; fairValue: number; priceTarget1Y: number; upside: number } {
+  const rev2031         = ltvRevenue * Math.pow(1 + a.revenueCAGR, N)
+  const ni2031          = rev2031 * a.profitMargin2031
+  const shares2031      = sharesOutstanding * Math.pow(1 + a.dilutionRate, N)
+  const eps2031         = ni2031 / shares2031
+  const targetPrice2031 = eps2031 * a.peRatio2031
+
+  if (!isFinite(targetPrice2031) || targetPrice2031 <= 0) {
+    return { targetPrice2031: 0, fairValue: 0, priceTarget1Y: 0, upside: -1 }
+  }
+
+  const fairValue     = targetPrice2031 / Math.pow(1 + a.discountRate, N)
+  const priceTarget1Y = targetPrice2031 / Math.pow(1 + a.discountRate, N - 1)
+  const upside        = (fairValue - price) / price
+
+  return { targetPrice2031, fairValue, priceTarget1Y, upside }
 }

@@ -1,7 +1,7 @@
 // ─── Forward valuation assumptions (set by computeForwardValuation) ──────────
 
 export interface ValuationAssumptions {
-  ltvRevenue: number         // LTM revenue (raw $)
+  ltvRevenue: number         // LTM revenue (raw $, USD-adjusted for ADRs)
   sharesOutstanding: number  // shares (raw)
   revenueCAGR: number        // estimated 5Y CAGR (decimal)
   profitMargin2031: number   // projected 2031 net margin (decimal)
@@ -13,6 +13,14 @@ export interface ValuationAssumptions {
   fairValue: number          // discounted fair value today
   priceTarget1Y: number      // 1-year price target
   upside: number             // (fairValue − price) / price
+  // Evidence strings for modal display
+  cagrEvidence: string       // e.g. "YoY growth +24.3% → mean-reverted to 18.0%"
+  marginEvidence: string     // e.g. "Current net margin 8.2% → projected 10.5%"
+  peEvidence: string         // e.g. "Current trailing PE 32× → sector target 22×"
+  dilutionEvidence: string   // e.g. "Tech layer, growth stage → 3.0% annual dilution"
+  waccEvidence: string       // e.g. "Beta 1.3, RF 4.5%, ERP 5.5% → WACC 11.4%"
+  // ADR/currency note
+  currencyNote: string | null  // non-null when financial currency ≠ USD
 }
 
 export interface ScoreBreakdown {
@@ -89,6 +97,7 @@ export interface ValuationMetrics {
   priceTarget1Y: number | null
   upside: number | null             // decimal, e.g. 0.56 = +56% upside
   valAssumptions: ValuationAssumptions | null
+  financialCurrency: string         // reporting currency (USD for most; EUR for ASML, CAD for ENB, etc.)
 
   // Score
   valueScore: number            // 0–100
