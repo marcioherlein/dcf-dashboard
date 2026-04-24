@@ -337,12 +337,36 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+// ─── Risk-averse screen ───────────────────────────────────────────────────────
+// Capital Preservation + Quality + Value (Graham/Buffett framework)
+// A stock passes only if ALL verifiable criteria are met.
+
+const RISK_CRITERIA = [
+  { label: 'Positive FCF',       desc: 'Free cash flow ≥ 0 — never buy cash-burning companies' },
+  { label: 'D/E < 200%',         desc: 'Debt/Equity below 200% — leverage amplifies losses in downturns' },
+  { label: 'Current Ratio ≥ 1',  desc: 'Can meet short-term obligations — avoids liquidity crises' },
+  { label: 'Gross Margin ≥ 15%', desc: 'Some pricing power — margin buffer in bad markets' },
+  { label: 'Value Score ≥ 40',   desc: 'Not in "Expensive" territory — margin of safety (Graham)' },
+  { label: 'Data verified',      desc: 'Yahoo Finance data must be available — never act on missing data' },
+]
+
+function passesRiskScreen(row: ValuationMetrics): boolean {
+  if (row.error) return false                                           // no data
+  if (row.freeCashflow === null || row.freeCashflow < 0) return false  // burning cash
+  if (row.debtToEquity !== null && row.debtToEquity > 200) return false // over-leveraged
+  if (row.currentRatio !== null && row.currentRatio < 1.0) return false // liquidity risk
+  if (row.grossMargin !== null && row.grossMargin < 0.15) return false  // no pricing power
+  if (row.valueScore < 40) return false                                 // too expensive
+  return true
+}
+
 export default function AIStackPage() {
   const [data, setData]               = useState<ValuationMetrics[]>([])
   const [loading, setLoading]         = useState(true)
   const [error, setError]             = useState<string | null>(null)
   const [search, setSearch]           = useState('')
   const [layerFilter, setLayerFilter] = useState<number | null>(null)
+  const [riskAverse, setRiskAverse]   = useState(false)
   const [sortKey, setSortKey]         = useState<SortKey>('valueScore')
   const [sortDir, setSortDir]         = useState<SortDir>('desc')
   const [lastFetch, setLastFetch]     = useState<Date | null>(null)
@@ -377,6 +401,10 @@ export default function AIStackPage() {
   const filtered = useMemo(() => {
     let rows = [...data]
 
+    if (riskAverse) {
+      rows = rows.filter(passesRiskScreen)
+    }
+
     if (search.trim()) {
       const q = search.trim().toLowerCase()
       rows = rows.filter(r =>
@@ -401,17 +429,18 @@ export default function AIStackPage() {
     })
 
     return rows
-  }, [data, search, layerFilter, sortKey, sortDir])
+  }, [data, search, layerFilter, riskAverse, sortKey, sortDir])
 
   const stats = useMemo(() => {
     if (!data.length) return null
-    const valid      = data.filter(r => !r.error && r.price !== null)
-    const scored     = data.filter(r => r.valueScore > 0)
+    const valid       = data.filter(r => !r.error && r.price !== null)
+    const scored      = data.filter(r => r.valueScore > 0)
     const undervalued = scored.filter(r => r.valueScore >= 70).length
-    const negFcf     = data.filter(r => r.freeCashflow !== null && r.freeCashflow < 0).length
-    const avgScore   = scored.length ? Math.round(scored.reduce((s, r) => s + r.valueScore, 0) / scored.length) : 0
-    const top5       = [...scored].sort((a, b) => b.valueScore - a.valueScore).slice(0, 5)
-    return { total: valid.length, undervalued, negFcf, avgScore, top5 }
+    const negFcf      = data.filter(r => r.freeCashflow !== null && r.freeCashflow < 0).length
+    const safeCount   = data.filter(passesRiskScreen).length
+    const avgScore    = scored.length ? Math.round(scored.reduce((s, r) => s + r.valueScore, 0) / scored.length) : 0
+    const top5        = [...scored].sort((a, b) => b.valueScore - a.valueScore).slice(0, 5)
+    return { total: valid.length, undervalued, negFcf, safeCount, avgScore, top5 }
   }, [data])
 
   const layers = useMemo(() => Array.from(new Set(data.map(r => r.layer))).sort((a, b) => a - b), [data])
@@ -461,6 +490,22 @@ export default function AIStackPage() {
               <StatCard label="Total Tracked" value={stats.total.toString()} sub="public companies" />
               <StatCard label="Avg Score" value={stats.avgScore.toString()} sub="out of 100" />
               <StatCard label="Undervalued" value={stats.undervalued.toString()} sub="score ≥ 70" />
+              <div
+                className="bg-white border-2 rounded-xl px-4 py-3 min-w-[130px] cursor-pointer transition-colors"
+                style={{ borderColor: riskAverse ? '#16a34a' : '#e2e8f0', backgroundColor: riskAverse ? '#f0fdf4' : 'white' }}
+                onClick={() => setRiskAverse(v => !v)}
+                title="Click to toggle risk-averse filter"
+              >
+                <div className="text-[11px] font-medium uppercase tracking-wide" style={{ color: riskAverse ? '#16a34a' : '#64748b' }}>
+                  {riskAverse ? '🛡 Filter ON' : '🛡 Safe Picks'}
+                </div>
+                <div className="text-xl font-bold mt-0.5" style={{ color: riskAverse ? '#16a34a' : '#0f172a' }}>
+                  {stats.safeCount}
+                </div>
+                <div className="text-[11px] mt-0.5" style={{ color: riskAverse ? '#16a34a' : '#94a3b8' }}>
+                  {riskAverse ? 'click to clear' : 'pass all criteria'}
+                </div>
+              </div>
               <StatCard
                 label="Negative FCF"
                 value={stats.negFcf.toString()}
@@ -528,10 +573,37 @@ export default function AIStackPage() {
             ))}
           </div>
 
-          <div className="ml-auto text-[12px] text-slate-400">
-            {filtered.length} of {data.length} rows
+          <div className="ml-auto flex items-center gap-3">
+            {/* Risk-averse toggle */}
+            <button
+              onClick={() => setRiskAverse(v => !v)}
+              className={`h-7 px-3 text-[11px] font-semibold rounded-md border transition-colors flex items-center gap-1.5 ${
+                riskAverse
+                  ? 'bg-emerald-600 border-emerald-600 text-white'
+                  : 'bg-white border-slate-300 text-slate-600 hover:border-emerald-500 hover:text-emerald-600'
+              }`}
+              title="Show only stocks that pass all 6 risk-averse criteria"
+            >
+              🛡 Risk-Averse{riskAverse ? ' ✓' : ''}
+            </button>
+
+            <div className="text-[12px] text-slate-400">
+              {filtered.length} of {data.length} rows
+            </div>
           </div>
         </div>
+
+        {/* Risk-averse criteria panel */}
+        {riskAverse && (
+          <div className="max-w-screen-2xl mx-auto mt-0 pb-2 flex gap-2 flex-wrap">
+            {RISK_CRITERIA.map(c => (
+              <div key={c.label} className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5 text-[11px]">
+                <span className="text-emerald-600 font-semibold">✓ {c.label}</span>
+                <span className="text-slate-500 hidden sm:inline">— {c.desc}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Table */}
