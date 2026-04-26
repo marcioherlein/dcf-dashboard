@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server'
 import { STRATEGY_UNIVERSE, StrategyRow } from '@/lib/strategies/types'
 
+export const maxDuration = 60
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const YahooFinance = require('yahoo-finance2').default
 const yf = new YahooFinance({ suppressNotices: ['ripHistorical', 'yahooSurvey'] })
+
+const BATCH_SIZE = 25
 
 // ─── Math helpers ─────────────────────────────────────────────────────────────
 
@@ -43,26 +47,29 @@ export async function GET() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const quoteMap = new Map<string, any>()
 
-  await Promise.allSettled(
-    tickers.map(async (ticker) => {
-      try {
-        const [hist, summary] = await Promise.all([
-          yf.historical(ticker, {
-            period1: period1.toISOString().split('T')[0],
-            period2: now.toISOString().split('T')[0],
-            interval: '1d',
-          }),
-          yf.quoteSummary(ticker, {
-            modules: ['defaultKeyStatistics', 'summaryDetail', 'financialData', 'price'],
-          }).catch(() => null),
-        ])
-        if (hist?.length) histMap.set(ticker, hist)
-        if (summary) quoteMap.set(ticker, summary)
-      } catch {
-        // skip failed tickers
-      }
-    })
-  )
+  for (let b = 0; b < tickers.length; b += BATCH_SIZE) {
+    const batch = tickers.slice(b, b + BATCH_SIZE)
+    await Promise.allSettled(
+      batch.map(async (ticker) => {
+        try {
+          const [hist, summary] = await Promise.all([
+            yf.historical(ticker, {
+              period1: period1.toISOString().split('T')[0],
+              period2: now.toISOString().split('T')[0],
+              interval: '1d',
+            }),
+            yf.quoteSummary(ticker, {
+              modules: ['defaultKeyStatistics', 'summaryDetail', 'financialData', 'price'],
+            }).catch(() => null),
+          ])
+          if (hist?.length) histMap.set(ticker, hist)
+          if (summary) quoteMap.set(ticker, summary)
+        } catch {
+          // skip failed tickers
+        }
+      })
+    )
+  }
 
   // Build per-ticker signals
   const rawRows: StrategyRow[] = STRATEGY_UNIVERSE.map(({ ticker, name, layer, category }) => {
