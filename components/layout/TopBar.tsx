@@ -19,6 +19,7 @@ const NAV_ITEMS = [
   { href: '/trading',        label: 'Trading',         tab: null },
   { href: '/simplifier',     label: 'Simplifier',      tab: null },
   { href: '/ai-stack',       label: 'AI Stack',        tab: null },
+  { href: '/strategies',     label: 'Strategies',      tab: null },
 ]
 
 export default function TopBar() {
