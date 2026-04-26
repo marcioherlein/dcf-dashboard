@@ -65,7 +65,7 @@ export async function GET() {
   )
 
   // Build per-ticker signals
-  const rawRows: StrategyRow[] = STRATEGY_UNIVERSE.map(({ ticker, name, layer }) => {
+  const rawRows: StrategyRow[] = STRATEGY_UNIVERSE.map(({ ticker, name, layer, category }) => {
     const hist = histMap.get(ticker) ?? []
     const summary = quoteMap.get(ticker)
 
@@ -129,7 +129,7 @@ export async function GET() {
     const evEbitda = ks.enterpriseToEbitda ?? null
 
     return {
-      ticker, name, layer, price, change1d,
+      ticker, name, layer, category, price, change1d,
       momentum12_1,
       momentumRank: null,
       vol252,

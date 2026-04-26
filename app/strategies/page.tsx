@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import type { StrategyRow } from '@/lib/strategies/types'
+import type { StrategyRow, UniverseCategory } from '@/lib/strategies/types'
 
 // ─── Strategy definitions ─────────────────────────────────────────────────────
 
@@ -120,6 +120,19 @@ function StrategyHeader({ def }: { def: StrategyDef }) {
   )
 }
 
+function CategoryBadge({ category }: { category: StrategyRow['category'] }) {
+  const styles: Record<string, string> = {
+    'AI Stack': 'bg-blue-100 text-blue-700',
+    'CEDEAR':   'bg-violet-100 text-violet-700',
+    'BYMA':     'bg-emerald-100 text-emerald-700',
+  }
+  return (
+    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${styles[category] ?? 'bg-slate-100 text-slate-500'}`}>
+      {category}
+    </span>
+  )
+}
+
 function RankBadge({ rank, total }: { rank: number | null; total: number }) {
   return (
     <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-[12px] font-bold ${rankColor(rank, total)}`}>
@@ -167,8 +180,11 @@ function MomentumTable({ rows }: { rows: StrategyRow[] }) {
                 <RankBadge rank={r.momentumRank} total={n} />
               </td>
               <td className="py-2.5 px-3">
-                <span className="font-semibold text-blue-700">{r.ticker}</span>
-                <span className="text-[11px] text-slate-400 ml-1.5 hidden sm:inline">{r.name}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-semibold text-blue-700">{r.ticker}</span>
+                  <CategoryBadge category={r.category} />
+                </div>
+                <span className="text-[11px] text-slate-400 hidden sm:block">{r.name}</span>
               </td>
               <td className="py-2.5 px-3 text-slate-500">{r.layer}</td>
               <td className={`py-2.5 px-3 text-right font-mono font-semibold ${clr(r.momentum12_1, 'high')}`}>
@@ -219,8 +235,11 @@ function LowVolTable({ rows }: { rows: StrategyRow[] }) {
                 <RankBadge rank={r.volRank} total={n} />
               </td>
               <td className="py-2.5 px-3">
-                <span className="font-semibold text-blue-700">{r.ticker}</span>
-                <span className="text-[11px] text-slate-400 ml-1.5 hidden sm:inline">{r.name}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-semibold text-blue-700">{r.ticker}</span>
+                  <CategoryBadge category={r.category} />
+                </div>
+                <span className="text-[11px] text-slate-400 hidden sm:block">{r.name}</span>
               </td>
               <td className="py-2.5 px-3 text-slate-500">{r.layer}</td>
               <td className={`py-2.5 px-3 text-right font-mono font-semibold ${r.vol252 !== null ? (r.vol252 < 0.30 ? 'text-emerald-600' : r.vol252 < 0.50 ? 'text-slate-700' : 'text-red-500') : 'text-slate-400'}`}>
@@ -269,8 +288,11 @@ function MaTable({ rows }: { rows: StrategyRow[] }) {
           return (
             <tr key={r.ticker} className="border-b border-slate-100 hover:bg-slate-50">
               <td className="py-2.5 px-3">
-                <span className="font-semibold text-blue-700">{r.ticker}</span>
-                <span className="text-[11px] text-slate-400 ml-1.5 hidden sm:inline">{r.name}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-semibold text-blue-700">{r.ticker}</span>
+                  <CategoryBadge category={r.category} />
+                </div>
+                <span className="text-[11px] text-slate-400 hidden sm:block">{r.name}</span>
               </td>
               <td className="py-2.5 px-3 text-slate-500">{r.layer}</td>
               <td className="py-2.5 px-3 text-center">
@@ -317,8 +339,11 @@ function MeanRevTable({ rows }: { rows: StrategyRow[] }) {
           return (
             <tr key={r.ticker} className="border-b border-slate-100 hover:bg-slate-50">
               <td className="py-2.5 px-3">
-                <span className="font-semibold text-blue-700">{r.ticker}</span>
-                <span className="text-[11px] text-slate-400 ml-1.5 hidden sm:inline">{r.name}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-semibold text-blue-700">{r.ticker}</span>
+                  <CategoryBadge category={r.category} />
+                </div>
+                <span className="text-[11px] text-slate-400 hidden sm:block">{r.name}</span>
               </td>
               <td className="py-2.5 px-3 text-slate-500">{r.layer}</td>
               <td className={`py-2.5 px-3 text-right font-mono ${clr(r.return1m, 'high')}`}>
@@ -371,8 +396,11 @@ function ValueTable({ rows }: { rows: StrategyRow[] }) {
                 <RankBadge rank={r.valueRank} total={n} />
               </td>
               <td className="py-2.5 px-3">
-                <span className="font-semibold text-blue-700">{r.ticker}</span>
-                <span className="text-[11px] text-slate-400 ml-1.5 hidden sm:inline">{r.name}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-semibold text-blue-700">{r.ticker}</span>
+                  <CategoryBadge category={r.category} />
+                </div>
+                <span className="text-[11px] text-slate-400 hidden sm:block">{r.name}</span>
               </td>
               <td className="py-2.5 px-3 text-slate-500">{r.layer}</td>
               <td className={`py-2.5 px-3 text-right font-mono ${r.pe !== null ? (r.pe < 20 ? 'text-emerald-600' : r.pe < 40 ? 'text-slate-600' : 'text-red-500') : 'text-slate-400'}`}>
@@ -494,6 +522,12 @@ export default function StrategiesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeStrategy, setActiveStrategy] = useState<string>('consensus')
+  const [activeCategory, setActiveCategory] = useState<UniverseCategory | 'All'>('All')
+
+  const filteredRows = useMemo(() =>
+    activeCategory === 'All' ? rows : rows.filter(r => r.category === activeCategory),
+    [rows, activeCategory]
+  )
 
   useEffect(() => {
     setLoading(true)
@@ -512,8 +546,32 @@ export default function StrategiesPage() {
         <div className="mb-5">
           <h1 className="text-xl font-bold text-slate-900">Quantitative Strategies</h1>
           <p className="text-[13px] text-slate-500 mt-0.5">
-            Academic factor strategies from Kakushadze &amp; Serur (2018) — applied to the AI Stack universe · 15-stock universe · Daily data
+            Academic factor strategies from Kakushadze &amp; Serur (2018) — AI Stack · CEDEARs · BYMA · Daily price data
           </p>
+        </div>
+
+        {/* Category filter */}
+        <div className="flex gap-2 mb-4 flex-wrap">
+          {(['All', 'AI Stack', 'CEDEAR', 'BYMA'] as const).map(cat => {
+            const count = cat === 'All' ? rows.length : rows.filter(r => r.category === cat).length
+            return (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={[
+                  'px-3 py-1 rounded-full text-[12px] font-semibold border transition-colors',
+                  activeCategory === cat
+                    ? cat === 'All'     ? 'bg-slate-800 text-white border-slate-800'
+                    : cat === 'AI Stack'? 'bg-blue-600 text-white border-blue-600'
+                    : cat === 'CEDEAR'  ? 'bg-violet-600 text-white border-violet-600'
+                    :                    'bg-emerald-600 text-white border-emerald-600'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400',
+                ].join(' ')}
+              >
+                {cat} <span className="opacity-70">({count})</span>
+              </button>
+            )
+          })}
         </div>
 
         {/* Strategy tabs */}
@@ -536,7 +594,7 @@ export default function StrategiesPage() {
         {loading && (
           <div className="flex items-center justify-center py-24 text-slate-400 text-sm">
             <div className="w-5 h-5 border-2 border-slate-200 border-t-blue-500 rounded-full animate-spin mr-3" />
-            Fetching 14 months of price history for 15 tickers…
+            Fetching 14 months of price history for ~80 tickers…
           </div>
         )}
 
@@ -547,16 +605,16 @@ export default function StrategiesPage() {
         {!loading && !error && (
           <>
             {activeStrategy === 'consensus' ? (
-              <ConsensusSummary rows={rows} />
+              <ConsensusSummary rows={filteredRows} />
             ) : (
               <>
                 {activeDef && <StrategyHeader def={activeDef} />}
                 <div className="bg-white border border-slate-200 rounded-xl overflow-x-auto">
-                  {activeStrategy === 'momentum' && <MomentumTable rows={rows} />}
-                  {activeStrategy === 'lowvol'   && <LowVolTable rows={rows} />}
-                  {activeStrategy === 'ma'       && <MaTable rows={rows} />}
-                  {activeStrategy === 'meanrev'  && <MeanRevTable rows={rows} />}
-                  {activeStrategy === 'value'    && <ValueTable rows={rows} />}
+                  {activeStrategy === 'momentum' && <MomentumTable rows={filteredRows} />}
+                  {activeStrategy === 'lowvol'   && <LowVolTable rows={filteredRows} />}
+                  {activeStrategy === 'ma'       && <MaTable rows={filteredRows} />}
+                  {activeStrategy === 'meanrev'  && <MeanRevTable rows={filteredRows} />}
+                  {activeStrategy === 'value'    && <ValueTable rows={filteredRows} />}
                 </div>
               </>
             )}
