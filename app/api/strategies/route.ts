@@ -264,7 +264,7 @@ export async function GET() {
   )
 
   // Assemble final rows
-  const results: StrategyRow[] = rawRows.map((r, i) => ({
+  const results: StrategyRow[] = rawRows.map((r) => ({
     ...r,
     momentumRank: momRanks.get(r.ticker) ?? null,
     volRank:      volRanks.get(r.ticker) ?? null,
