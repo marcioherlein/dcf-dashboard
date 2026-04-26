@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import type { StrategyRow } from '@/app/api/strategies/route'
+import type { StrategyRow } from '@/lib/strategies/types'
 
 // ─── Strategy definitions ─────────────────────────────────────────────────────
 
