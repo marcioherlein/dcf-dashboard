@@ -191,7 +191,7 @@ function MomentumTable({ rows }: { rows: StrategyRow[] }) {
                 {fmtPct(r.momentum12_1)}
               </td>
               <td className={`py-2.5 px-3 text-right font-mono ${clr(r.change1d, 'high')}`}>
-                {fmtPct(r.change1d !== null ? r.change1d / 100 : null)}
+                {fmtPct(r.change1d)}
               </td>
               <td className="py-2.5 px-3 text-right font-mono text-slate-700">
                 {r.price !== null ? `$${r.price.toFixed(2)}` : '—'}

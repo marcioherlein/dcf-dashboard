@@ -46,7 +46,7 @@ export interface ValuationMetrics {
   // Price & market
   price: number | null
   marketCap: number | null
-  change1d: number | null      // today % change (not decimal — raw %, e.g. 1.5 = 1.5%)
+  change1d: number | null      // today % change (decimal, e.g. 0.015 = +1.5%)
   change52w: number | null     // 52-week % change (decimal, e.g. 0.15 = 15%)
 
   // Valuation multiples

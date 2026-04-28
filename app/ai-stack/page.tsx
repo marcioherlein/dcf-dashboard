@@ -127,7 +127,7 @@ const COLUMNS: ColDef[] = [
   },
   {
     key: 'change1d', label: '1D%', tooltip: "Today's price change %",
-    fmt: r => fmtPct(r.change1d, false),
+    fmt: r => fmtPct(r.change1d),
     colorFn: r => r.change1d === null ? 'text-slate-400' : r.change1d >= 0 ? 'text-emerald-600' : 'text-red-500',
     defaultDir: 'desc',
   },
