@@ -845,13 +845,6 @@ export default function AIStackPage() {
               )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <Link
-                href="/ai-stack/report"
-                className="h-8 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
-                title="Export a PDF report for LinkedIn"
-              >
-                <span>⬇</span> PDF Report
-              </Link>
               <button
                 onClick={fetchData}
                 disabled={loading}
