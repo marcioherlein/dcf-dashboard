@@ -37,19 +37,12 @@ function scoreBg(s: number): string {
   return '#fee2e2'
 }
 
-function scoreLabel(s: number): string {
-  if (s >= 70) return 'UNDERVALUED'
-  if (s >= 55) return 'FAIR VALUE'
-  if (s >= 40) return 'FAIRLY PRICED'
-  return 'EXPENSIVE'
-}
-
 // ─── Cover slide ─────────────────────────────────────────────────────────────
 
 function CoverSlide() {
   const layerColors = Object.values(LAYER_COLORS)
   return (
-    <div className="slide" style={{
+    <div className="report-slide" style={{
       background: 'linear-gradient(150deg, #060d1a 0%, #0d1f3c 55%, #060d1a 100%)',
       display: 'flex',
       flexDirection: 'column',
@@ -117,7 +110,7 @@ function CoverSlide() {
           background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
           borderRadius: '100px', padding: '8px 20px',
         }}>
-          <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#4ade80', animation: 'pulse 2s infinite' }} />
+          <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#4ade80' }} />
           <span style={{ fontSize: '12px', color: '#cbd5e1', fontWeight: 500 }}>Live data · DCF Dashboard · 2025</span>
         </div>
       </div>
@@ -155,7 +148,7 @@ const SCORE_RANGES = [
 
 function ScoringSlide() {
   return (
-    <div className="slide" style={{ background: '#f8fafc', display: 'flex', flexDirection: 'column', padding: '48px 56px' }}>
+    <div className="report-slide" style={{ background: '#f8fafc', display: 'flex', flexDirection: 'column', padding: '48px 56px' }}>
       <div style={{ marginBottom: '32px' }}>
         <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.3em', color: '#64748b', textTransform: 'uppercase', marginBottom: '8px' }}>
           Methodology
@@ -290,7 +283,7 @@ function LayerSlide({ layer, rows }: { layer: number; rows: ValuationMetrics[] }
   const marginStyle = MARGIN_HEX[info.marginRating] ?? MARGIN_HEX['Moderate']
 
   return (
-    <div className="slide" style={{ background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
+    <div className="report-slide" style={{ background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <div style={{
         background: `linear-gradient(90deg, ${color} 0%, ${color}cc 60%, ${color}99 100%)`,
@@ -417,7 +410,7 @@ function LayerSlide({ layer, rows }: { layer: number; rows: ValuationMetrics[] }
 function ClosingSlide() {
   const layerColors = Object.values(LAYER_COLORS)
   return (
-    <div className="slide" style={{
+    <div className="report-slide" style={{
       background: 'linear-gradient(150deg, #060d1a 0%, #0d1f3c 55%, #060d1a 100%)',
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
@@ -487,9 +480,9 @@ function ClosingSlide() {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function AIStackReport() {
-  const [data, setData]     = useState<ValuationMetrics[]>([])
+  const [data, setData]       = useState<ValuationMetrics[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError]   = useState<string | null>(null)
+  const [error, setError]     = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/ai-stack')
@@ -512,49 +505,39 @@ export default function AIStackReport() {
 
   return (
     <>
-      {/* Print + screen CSS */}
+      {/* Scoped CSS — no global resets, no body overrides */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-          background: #e2e8f0;
-        }
-
-        .slide {
+        .report-slide {
           width: 297mm;
+          min-height: 210mm;
           height: 210mm;
           overflow: hidden;
           position: relative;
           background: white;
-          margin: 0 auto 20px;
-          box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+          margin: 0 auto 24px;
+          box-shadow: 0 4px 32px rgba(0,0,0,0.18);
+          flex-shrink: 0;
           break-after: page;
           page-break-after: always;
+          box-sizing: border-box;
         }
-
-        .slide:last-child { break-after: auto; page-break-after: auto; }
-
-        .no-print { display: block; }
-
+        .report-slide:last-child { break-after: auto; page-break-after: auto; }
+        .report-no-print { display: block; }
         @media print {
           @page { size: A4 landscape; margin: 0; }
-          body { background: white; }
-          .no-print { display: none !important; }
-          .slide {
+          .report-no-print { display: none !important; }
+          .report-slide {
             box-shadow: none;
             margin: 0;
             width: 297mm;
             height: 210mm;
           }
-          .slides-container { padding: 0; }
+          .report-slides-wrap { padding: 0 !important; background: white; }
         }
       `}</style>
 
       {/* Top bar — hidden in print */}
-      <div className="no-print" style={{
+      <div className="report-no-print" style={{
         position: 'sticky', top: 0, zIndex: 50,
         background: '#0f172a', borderBottom: '1px solid #1e293b',
         padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -592,7 +575,7 @@ export default function AIStackReport() {
 
       {/* Loading / error states */}
       {loading && (
-        <div className="no-print" style={{ textAlign: 'center', padding: '80px 20px', color: '#64748b' }}>
+        <div className="report-no-print" style={{ textAlign: 'center', padding: '80px 20px', color: '#64748b' }}>
           <div style={{ fontSize: '32px', marginBottom: '16px' }}>⟳</div>
           <p style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px' }}>Loading ~125 tickers from Yahoo Finance…</p>
           <p style={{ fontSize: '13px', color: '#94a3b8' }}>First load takes ~15 seconds. Sit tight — the report will populate with live data.</p>
@@ -600,13 +583,18 @@ export default function AIStackReport() {
       )}
 
       {error && (
-        <div className="no-print" style={{ textAlign: 'center', padding: '40px', color: '#ef4444' }}>
+        <div className="report-no-print" style={{ textAlign: 'center', padding: '40px', color: '#ef4444' }}>
           Error: {error}
         </div>
       )}
 
-      {/* Slides */}
-      <div className="slides-container" style={{ padding: loading ? '0' : '24px 0' }}>
+      {/* Slides — horizontally scrollable so 297mm slides don't clip on narrow screens */}
+      <div className="report-slides-wrap" style={{
+        overflowX: 'auto',
+        padding: loading ? '0' : '24px 0',
+        background: '#e2e8f0',
+        minWidth: 0,
+      }}>
         {!loading && (
           <>
             <CoverSlide />
