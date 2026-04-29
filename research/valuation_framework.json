@@ -1,0 +1,248 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "sources": [
+      "ssrn-743229  — Fernandez 2002: Company Valuation Methods",
+      "ssrn-274973  — Fernandez 2004: The Value of Tax Shields is NOT Equal to PV of Tax Shields",
+      "ssrn-256987  — Fernandez 2007: Valuing Companies by Cash Flow Discounting (10 methods)",
+      "ssrn-1620871 — Fernandez 2010: WACC: Definition, Misconceptions and Errors",
+      "ssrn-1025424 — Fernandez 2008: 201 Errors in Valuation",
+      "ssrn-LEVERING — Fernandez 2006: Levered and Unlevered Beta"
+    ],
+    "governing_rule": "Only Group D (DCF) methods are conceptually correct for going-concern valuation. Group A (balance sheet), B (multiples), and C (goodwill) are used only as cross-checks or when DCF inputs are unavailable.",
+    "critical_axiom": "All 10 DCF methods must yield the SAME equity value when applied consistently. Divergence indicates an input inconsistency — not a model disagreement. Source: ssrn-256987 eq[1]–[10].",
+    "value_vs_price": "Value is buyer-specific and assumes a specific discount rate. Price is determined by the market. They may differ substantially. Source: ssrn-743229 §3."
+  },
+
+  "GROUP_A_BALANCE_SHEET": {
+    "status": "FORBIDDEN_PRIMARY",
+    "reason": "Does not capture future earnings capacity. Book value reflects past decisions, not future cash flows. Source: ssrn-743229 §2.1–2.6.",
+    "methods": ["book_value", "adjusted_book_value", "liquidation_value", "substantial_value"],
+    "use": "Only as floor estimate (liquidation scenario) or sanity check on net asset value"
+  },
+
+  "GROUP_B_MULTIPLES": {
+    "status": "CROSS_CHECK_ONLY",
+    "reason": "Relative valuation assumes peers are correctly valued — a circular assumption. Source: ssrn-743229 §2.7–2.11.",
+    "methods": ["pe_ratio", "price_to_book", "price_to_sales", "ev_ebitda", "ev_revenue"],
+    "use": "Sanity check against DCF intrinsic value; primary model for pre-profit companies where FCF is negative and DCF is unreliable"
+  },
+
+  "GROUP_C_GOODWILL": {
+    "status": "FORBIDDEN",
+    "reason": "Conceptually inconsistent — mixes accounting constructs with market-based valuation. Source: ssrn-743229 §2.12–2.14.",
+    "methods": ["excess_return", "economic_profit_static"],
+    "use": "Never use as primary or cross-check"
+  },
+
+  "GROUP_D_DCF": {
+    "status": "PRIMARY_REQUIRED",
+    "reason": "Conceptually correct. All 10 methods give identical equity value under consistent inputs. Source: ssrn-256987, ssrn-1620871.",
+    "consistency_requirement": "E_t + D_t = (E_{t-1} + D_{t-1})(1 + WACC_t) - FCF_t for every period t. Source: ssrn-1620871 eq[4],[5].",
+    "methods": {
+      "D1_ECF_Ke": {
+        "label": "Equity Cash Flow / Ke",
+        "formula_latex": "E_0 = \\sum_{t=1}^{n} \\frac{ECF_t}{\\prod_{i=1}^{t}(1+K_{e,i})} + \\frac{E_n}{\\prod_{i=1}^{n}(1+K_{e,i})}",
+        "inputs": ["ECF_t", "Ke_t"],
+        "ecf_definition": "ECF_t = FCF_t + \\Delta D_t - I_t(1-T)",
+        "note": "Ke is the required return to equity (CAPM). E_n is terminal equity value.",
+        "source": "ssrn-256987 eq[1],[2],[3]"
+      },
+      "D2_FCF_WACC": {
+        "label": "Free Cash Flow / WACC",
+        "formula_latex": "E_0 + D_0 = \\sum_{t=1}^{n} \\frac{FCF_t}{\\prod_{i=1}^{t}(1+WACC_i)}",
+        "wacc_formula": "WACC_t = \\frac{E_{t-1} K_{e,t} + D_{t-1} K_{d,t}(1-T)}{E_{t-1} + D_{t-1}}",
+        "inputs": ["FCF_t", "WACC_t", "E_t", "D_t"],
+        "consistency_check": "E_t + D_t = (E_{t-1}+D_{t-1})(1+WACC_t) - FCF_t",
+        "iterative_note": "E and D in WACC must be the VALUATION-DERIVED values (not market or book). Requires iteration. Source: ssrn-1620871 §3.",
+        "source": "ssrn-1620871 eq[4],[5]; ssrn-256987 eq[4],[5]"
+      },
+      "D3_CCF_WACCbt": {
+        "label": "Capital Cash Flow / WACC before tax",
+        "formula_latex": "E_0 + D_0 = \\sum_{t=1}^{n} \\frac{CCF_t}{\\prod_{i=1}^{t}(1+WACC_{BT,t})}",
+        "wacc_bt_formula": "WACC_{BT,t} = \\frac{E_{t-1} K_{e,t} + D_{t-1} K_{d,t}}{E_{t-1} + D_{t-1}}",
+        "ccf_definition": "CCF_t = ECF_t + I_t \\cdot T = FCF_t + I_t \\cdot T",
+        "source": "ssrn-256987 eq[6],[7]"
+      },
+      "D4_APV": {
+        "label": "Adjusted Present Value",
+        "formula_latex": "E_0 + D_0 = V_u + VTS",
+        "vu_formula": "V_u = \\sum_{t=1}^{n} \\frac{FCF_t}{\\prod_{i=1}^{t}(1+K_{u,t})}",
+        "vts": "See GROUP_E VTS theories — theory selection is the primary variable",
+        "source": "ssrn-256987 eq[8]; ssrn-274973"
+      },
+      "D5_FCF_Ku": {
+        "label": "FCF residual / Ku",
+        "formula_latex": "FCF_t^{Ku} = FCF_t - (E_{t-1}+D_{t-1})(WACC_t - K_{u,t})",
+        "source": "ssrn-256987 eq[9]"
+      },
+      "D6_ECF_Ku": {
+        "label": "ECF residual / Ku",
+        "formula_latex": "ECF_t^{Ku} = ECF_t - E_{t-1}(K_{e,t} - K_{u,t})",
+        "source": "ssrn-256987 eq[10]"
+      },
+      "D7_EP_Ke": {
+        "label": "Economic Profit / Ke",
+        "formula_latex": "E_0 = Ebv_0 + \\sum_{t=1}^{n} \\frac{EP_t}{\\prod_{i=1}^{t}(1+K_{e,t})}",
+        "ep_definition": "EP_t = PAT_t - K_{e,t} \\cdot Ebv_{t-1}",
+        "source": "ssrn-256987 eq[3b]"
+      },
+      "D8_EVA_WACC": {
+        "label": "Economic Value Added / WACC",
+        "formula_latex": "E_0 + D_0 = (Ebv_0+N_0) + \\sum_{t=1}^{n} \\frac{EVA_t}{\\prod_{i=1}^{t}(1+WACC_t)}",
+        "eva_definition": "EVA_t = NOPAT_t - (D_{t-1}+Ebv_{t-1}) \\cdot WACC_t",
+        "source": "ssrn-256987 eq[4b]"
+      },
+      "D9_FCF_RF": {
+        "label": "FCF residual / RF",
+        "formula_latex": "FCF_t^{RF} = FCF_t - (E_{t-1}+D_{t-1})(WACC_t - RF_t)",
+        "source": "ssrn-256987 eq[11]"
+      },
+      "D10_ECF_RF": {
+        "label": "ECF residual / RF",
+        "formula_latex": "ECF_t^{RF} = ECF_t - E_{t-1}(K_{e,t} - RF_t)",
+        "source": "ssrn-256987 eq[12]"
+      }
+    }
+  },
+
+  "GROUP_E_VTS_THEORIES": {
+    "status": "THEORY_SELECTION",
+    "governing_rule": "VTS theory selection is the ONLY genuine disagreement in valuation theory. All other differences derive from input inconsistency. Source: ssrn-256987 §4.",
+    "toro_equity_range": "Same company (Toro Inc.), same inputs, different VTS theory → equity range 3,335 (Miller) to 4,081 (MM). Source: ssrn-256987 Table 1.",
+    "theories": {
+      "T1_Fernandez_2007": {
+        "label": "Fernandez (2007) — Recommended Default",
+        "vts_formula": "VTS = \\frac{D \\cdot T \\cdot K_u}{K_u - g}",
+        "beta_levering": "\\beta_L = \\frac{\\beta_u [D(1-T)+E] - \\beta_d \\cdot D(1-T)}{E}",
+        "risk_assumption": "VTS has same risk as the unlevered firm (Ku), not debt (Kd or RF)",
+        "proof": "VTS = D_t \\cdot T when debt is rebalanced each period to maintain D/(E+D). Derived from G^u - G^L = D \\cdot T. Source: ssrn-274973 Proposition 1.",
+        "toro_equity": 3958.96,
+        "toro_vts": 623.61,
+        "source": "ssrn-274973; ssrn-256987 Table 1 T1"
+      },
+      "T2_Miles_Ezzell": {
+        "label": "Miles-Ezzell",
+        "vts_formula": "VTS = PV[K_u; D \\cdot K_d \\cdot T] \\cdot \\frac{1+K_u}{1+K_d}",
+        "risk_assumption": "First period: Kd risk (debt is known). Subsequent periods: Ku risk.",
+        "toro_equity": 3843.48,
+        "toro_vts": 508.13,
+        "source": "ssrn-256987 Table 1 T2"
+      },
+      "T3_Modigliani_Miller": {
+        "label": "Modigliani-Miller (1963)",
+        "vts_formula": "VTS = PV(RF; D \\cdot RF \\cdot T)",
+        "risk_assumption": "VTS has same risk as debt (RF) — only applicable for FIXED, KNOWN debt schedules",
+        "toro_equity": 4080.75,
+        "toro_vts": 745.40,
+        "source": "ssrn-256987 Table 1 T3"
+      },
+      "T4_Myers": {
+        "label": "Myers (1974)",
+        "vts_formula": "VTS = PV(K_d; D \\cdot K_d \\cdot T)",
+        "risk_assumption": "VTS has same risk as debt (Kd) — applicable for preset/known debt schedules",
+        "toro_equity": 3999.27,
+        "toro_vts": 663.92,
+        "source": "ssrn-256987 Table 1 T4"
+      },
+      "T5_Miller": {
+        "label": "Miller (1977)",
+        "vts_formula": "VTS = 0",
+        "risk_assumption": "No benefit from leverage due to personal taxes offsetting corporate tax shields",
+        "toro_equity": 3335.35,
+        "toro_vts": 0,
+        "source": "ssrn-256987 Table 1 T5"
+      },
+      "T6_Harris_Pringle_Ruback": {
+        "label": "Harris-Pringle / Ruback",
+        "vts_formula": "VTS = PV(K_u; D \\cdot K_d \\cdot T)",
+        "risk_assumption": "VTS discounted at Ku — implies VTS does not add to firm risk",
+        "incompatibility_warning": "Implies leverage cost when combined with Fernandez beta levering formula. Source: ssrn-1025424 Error category 4.3.",
+        "toro_equity": 3834.24,
+        "toro_vts": 498.89,
+        "source": "ssrn-256987 Table 1 T6"
+      },
+      "T7_Damodaran": {
+        "label": "Damodaran (1994)",
+        "vts_formula": "VTS = PV[K_u; D \\cdot T \\cdot K_u - D(K_d - RF)(1-T)]",
+        "risk_assumption": "Includes a leverage cost term D(Kd-RF) which penalizes excess Kd over RF",
+        "incompatibility_warning": "Damodaran beta formula is inconsistent with Fernandez VTS — using both double-counts leverage costs. Source: ssrn-1025424 Error 4.3.",
+        "beta_formula": "\\beta_L = \\beta_u \\left(1 + \\frac{D(1-T)}{E}\\right)",
+        "toro_equity": 3727.34,
+        "source": "ssrn-256987 Table 1 T7"
+      },
+      "T8_Practitioners": {
+        "label": "Practitioners",
+        "vts_formula": "VTS = PV[K_u; T \\cdot D \\cdot K_d - D(K_d - RF)]",
+        "risk_assumption": "Treats entire spread Kd-RF as a leverage cost — most conservative estimate of VTS",
+        "toro_equity": 3477.89,
+        "toro_vts": 142.54,
+        "source": "ssrn-256987 Table 1 T8"
+      },
+      "T9_With_Cost_of_Leverage": {
+        "label": "With Cost of Leverage",
+        "vts_formula": "VTS = PV[K_u; D(K_u \\cdot T + RF - K_d)]",
+        "toro_equity": 3602.61,
+        "toro_vts": 267.26,
+        "source": "ssrn-256987 Table 1 T9"
+      }
+    }
+  },
+
+  "BETA_LEVERING_FORMULAS": {
+    "governing_rule": "Use Fernandez (2007) as default. The choice of levering formula is tied to VTS theory — mixing formulas from different theories introduces leverage cost errors. Source: ssrn-LEVERING.",
+    "fernandez_2007": {
+      "formula_latex": "\\beta_L = \\frac{\\beta_u [D(1-T)+E] - \\beta_d \\cdot D(1-T)}{E}",
+      "inverse": "\\beta_u = \\frac{\\beta_L \\cdot E + \\beta_d \\cdot D(1-T)}{D(1-T)+E}",
+      "note": "βd ≈ 0 simplification: βL ≈ βu(1 + D(1-T)/E) — less accurate but common",
+      "source": "ssrn-LEVERING; ssrn-274973 eq[17]"
+    },
+    "harris_pringle": {
+      "formula_latex": "\\beta_L = \\beta_u \\left(1 + \\frac{D}{E}\\right)",
+      "warning": "Ignores tax shield on debt — implies lower leverage than Fernandez",
+      "source": "ssrn-LEVERING"
+    },
+    "damodaran": {
+      "formula_latex": "\\beta_L = \\beta_u \\left(1 + \\frac{D(1-T)}{E}\\right)",
+      "warning": "Implies leverage cost when used with Fernandez VTS. See incompatibility warning in T7_Damodaran.",
+      "source": "ssrn-LEVERING"
+    },
+    "miller": {
+      "formula_latex": "\\beta_L = \\beta_u \\left(1 + \\frac{D}{E} \\cdot \\frac{1-T_s}{1-T_d}\\right)",
+      "source": "ssrn-LEVERING"
+    }
+  },
+
+  "WACC_DEFINITION": {
+    "correct_definition": "WACC is the rate at which FCF must be discounted to yield the same equity value as discounting ECF at Ke. It is NOT a cost — it is a definitional rate. Source: ssrn-1620871 §1.",
+    "formula": "WACC_t = \\frac{E_{t-1} K_{e,t} + D_{t-1} K_{d,t}(1-T)}{E_{t-1} + D_{t-1}}",
+    "critical": "E and D are VALUATION-DERIVED (iterative), not book value or market cap. Source: ssrn-1620871 §3.",
+    "wacc_bt": "WACC_{BT,t} = \\frac{E_{t-1} K_{e,t} + D_{t-1} K_{d,t}}{E_{t-1} + D_{t-1}}",
+    "relationship": "WACC = WACC_{BT} - \\frac{D_{t-1} K_{d,t} T}{E_{t-1}+D_{t-1}}"
+  },
+
+  "PERPETUITY_FORMULAS": {
+    "no_growth": {
+      "vts": "VTS = D \\cdot T",
+      "source": "ssrn-274973 Proposition 3"
+    },
+    "constant_growth_fernandez": {
+      "vts": "VTS = \\frac{D \\cdot T \\cdot K_u}{K_u - g}",
+      "equity": "E_0 = (V_u + VTS) - D_0",
+      "consistency_check": "g < WACC required (otherwise PV is infinite or negative)",
+      "source": "ssrn-274973 Proposition 4"
+    },
+    "gordon_growth": {
+      "formula": "V = \\frac{FCF_1}{WACC - g} = \\frac{FCF_0(1+g)}{WACC - g}",
+      "warning": "FCF_1 must be normalized (steady-state, not inflated by one-time items). Source: ssrn-1025424 Error I.7.4.",
+      "residual_value_weight": "60–80% of total firm value. Errors here are disproportionately damaging. Source: ssrn-1025424 §I.7."
+    }
+  },
+
+  "D_vs_N_distinction": {
+    "D": "Market value of debt (fair value)",
+    "N": "Book value / face value of debt",
+    "wacc_with_N": "WACC_t = \\frac{E_{t-1} K_{e,t} + N_{t-1} K_{d,t}(1-T)}{E_{t-1} + N_{t-1}}",
+    "note": "When D ≠ N (distressed debt, high-yield bonds), use N in all debt-related formulas. Most public companies: D ≈ N. Source: ssrn-1620871 §5."
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "purpose": "Runtime validation rules — inputs that fail these produce structured errors, not computations",
+    "sources": ["ssrn-1025424", "ssrn-1620871", "ssrn-274973"]
+  },
+
+  "hard_errors": [
+    {
+      "rule_id": "V1",
+      "field": "terminalG",
+      "condition": "terminalG >= wacc",
+      "severity": "ERROR",
+      "message": "Terminal growth rate (${terminalG}) must be strictly less than WACC (${wacc}). Value would be infinite.",
+      "source": "ssrn-1025424 Error I.6.1"
+    },
+    {
+      "rule_id": "V2",
+      "field": "wacc",
+      "condition": "wacc <= 0",
+      "severity": "ERROR",
+      "message": "WACC must be positive. Got ${wacc}.",
+      "source": "ssrn-1620871"
+    },
+    {
+      "rule_id": "V3",
+      "field": "shares",
+      "condition": "shares <= 0",
+      "severity": "ERROR",
+      "message": "Shares outstanding must be positive. Cannot compute per-share value.",
+      "source": "basic"
+    },
+    {
+      "rule_id": "V4",
+      "field": "companyType",
+      "condition": "companyType == 'financial' AND model == 'FCFF'",
+      "severity": "ERROR",
+      "message": "FCFF DCF is not applicable for financial companies (banks, insurers, fintechs). FCF is distorted by loan book flows. Use FCFE instead.",
+      "source": "ssrn-743229 §3.4; R1 in model_selection_rules.json"
+    },
+    {
+      "rule_id": "V5",
+      "field": "rfRate",
+      "condition": "rfRate <= 0 OR rfRate > 0.20",
+      "severity": "ERROR",
+      "message": "Risk-free rate ${rfRate} is outside plausible bounds [0.001, 0.20]. Check FRED data source.",
+      "source": "ssrn-1025424 Error 1.A"
+    }
+  ],
+
+  "warnings": [
+    {
+      "rule_id": "W1",
+      "field": "terminalG",
+      "condition": "terminalG > 0.03",
+      "severity": "WARNING",
+      "message": "Terminal growth rate ${terminalG} exceeds 3%. This implies the company will grow faster than the world economy indefinitely.",
+      "source": "ssrn-1025424 Error I.6"
+    },
+    {
+      "rule_id": "W2",
+      "field": "residual_value_pct",
+      "condition": "residualValue / totalEV > 0.85",
+      "severity": "WARNING",
+      "message": "Residual value is ${pct}% of total EV. Small changes in terminal assumptions have outsized impact. Run sensitivity analysis.",
+      "source": "ssrn-1025424 §I.7"
+    },
+    {
+      "rule_id": "W3",
+      "field": "baseFCF",
+      "condition": "baseFCF < 0 AND companyType != 'startup' AND companyType != 'growth'",
+      "severity": "WARNING",
+      "message": "Base FCF is negative for a ${companyType} company. Valuation assumes FCF turns positive within the forecast period.",
+      "source": "ssrn-1025424 Error I.3"
+    },
+    {
+      "rule_id": "W4",
+      "field": "debtToEquity",
+      "condition": "debtToEquity > 3",
+      "severity": "WARNING",
+      "message": "D/E ratio of ${debtToEquity} is very high. Verify that deposit liabilities (banks) or operating leases are not included as financial debt.",
+      "source": "calculateWACC.ts; ssrn-1620871"
+    },
+    {
+      "rule_id": "W5",
+      "field": "upsidePct",
+      "condition": "Math.abs(upsidePct) > 2.0",
+      "severity": "WARNING",
+      "message": "Computed upside/downside of ${pct}% is extreme. Verify FCF normalization and input data quality.",
+      "source": "ssrn-1025424 Error I.1"
+    },
+    {
+      "rule_id": "W6",
+      "field": "consistency_check",
+      "condition": "Math.abs(method1_equity - method2_equity) / method1_equity > 0.005",
+      "severity": "WARNING",
+      "message": "DCF method 1 (${m1}) and method 2 (${m2}) diverge by more than 0.5%. Input inconsistency detected.",
+      "source": "ssrn-256987 §3; R9 in model_selection_rules.json"
+    },
+    {
+      "rule_id": "W7",
+      "field": "beta",
+      "condition": "beta < 0.3 OR beta > 3.5",
+      "severity": "WARNING",
+      "message": "Beta of ${beta} is outside typical range [0.3, 3.5]. Regression may have insufficient history or the stock has very low liquidity.",
+      "source": "ssrn-1025424 Error 1.C"
+    }
+  ],
+
+  "missing_input_policy": {
+    "rule": "If a REQUIRED input is missing, return a structured error — do NOT substitute defaults silently.",
+    "required_inputs": ["rfRate", "beta", "costOfDebt", "taxRate", "baseFCF", "shares", "currentPrice"],
+    "optional_with_fallback": {
+      "erp": { "fallback": 0.046, "note": "Damodaran 2025 implied ERP" },
+      "debtToEquity": { "fallback": 0.30, "note": "Median D/E for S&P500" },
+      "terminalG": { "fallback": "model_selection_rules.terminal_growth_selection", "note": "Derived from cagr" }
+    }
+  }
+}

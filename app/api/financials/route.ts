@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getFmpBundle } from '@/lib/data/fmpClient'
 import { getFinancials, getQuote, getHistorical, getSPYHistorical, getFXRate, getPeerQuotes } from '@/lib/data/yahooClient'
 import { calculateBeta } from '@/lib/dcf/calculateBeta'
 import { calculateWACC, extractWACCInputs } from '@/lib/dcf/calculateWACC'
@@ -17,12 +18,13 @@ export async function GET(req: NextRequest) {
   if (!ticker) return NextResponse.json({ error: 'ticker required' }, { status: 400 })
 
   try {
-    const [financials, quote, stockHistory, spyHistory, rfRate] = await Promise.all([
+    const [financials, quote, stockHistory, spyHistory, rfRate, fmp] = await Promise.all([
       getFinancials(ticker),
       getQuote(ticker),
       getHistorical(ticker, '5y'),
       getSPYHistorical(),
       getRfRate(),
+      getFmpBundle(ticker).catch(() => ({ incomeStatements: [], cashFlowStatements: [], balanceSheets: [], keyMetrics: [], ratios: [] })),
     ])
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -349,93 +351,127 @@ export async function GET(req: NextRequest) {
       },
     }
 
-    // ─── Financial Statements ──────────────────────────────────────────────────
+    // ─── Financial Statements (FMP — higher quality than Yahoo) ──────────────────
 
-    // --- Income Statement ---
-    const rawISHistory: any[] = fin.incomeStatementHistory?.incomeStatementHistory ?? []
-    const isHistorical = rawISHistory.slice(-4).reverse()
+    const hasFmp = fmp.incomeStatements.length > 0
 
-    // Compute historical average margins for projections
-    const avgGrossMarginRatio = isHistorical.length > 0
-      ? isHistorical.reduce((s: number, s2: any) => {
-          const rev = (s2.totalRevenue ?? 0) as number
-          const gp = (s2.grossProfit ?? 0) as number
-          return s + (rev > 0 ? gp / rev : 0)
-        }, 0) / isHistorical.length
-      : 0.4
-    const avgOpMarginRatio = isHistorical.length > 0
-      ? isHistorical.reduce((s: number, s2: any) => {
-          const rev = (s2.totalRevenue ?? 0) as number
-          const op = (s2.ebit ?? 0) as number
-          return s + (rev > 0 ? op / rev : 0)
-        }, 0) / isHistorical.length
-      : 0.15
-    const avgEbitdaMarginRatio = isHistorical.length > 0
-      ? isHistorical.reduce((s: number, s2: any) => {
-          const rev = (s2.totalRevenue ?? 0) as number
-          const eb = (s2.ebitda ?? 0) as number
-          return s + (rev > 0 ? eb / rev : 0)
-        }, 0) / isHistorical.length
-      : 0.2
-    const avgNetMarginRatio = isHistorical.length > 0
-      ? isHistorical.reduce((s: number, s2: any) => {
-          const rev = (s2.totalRevenue ?? 0) as number
-          const ni = (s2.netIncome ?? 0) as number
-          return s + (rev > 0 ? ni / rev : 0)
-        }, 0) / isHistorical.length
-      : 0.1
+    // ── Enrichments from FMP (override Yahoo where available) ────────────────
+    // ROIC from FMP key metrics (more accurate than our manual calculation)
+    const fmpRoic = fmp.keyMetrics[0]?.returnOnInvestedCapital ?? null
+    const fmpRoicSpread = fmpRoic != null ? fmpRoic - waccResult.wacc : null
 
-    const latestRevM = isHistorical.length > 0
-      ? ((isHistorical[isHistorical.length - 1].totalRevenue ?? 0) as number) / 1e6 * fxRate
-      : historicalRevenues[0] ?? 0
+    // Gross margin from FMP ratios (cleaner than Yahoo's grossMargins field)
+    const fmpGrossMargin = fmp.ratios[0]?.grossProfitMargin ?? null
+    const fmpNetMargin   = fmp.ratios[0]?.netProfitMargin ?? null
 
-    // Build depreciation lookup from cashflow history for EBITDA = EBIT + D&A
-    const rawCFForEbitda: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
-    const depreciationByYear: Record<string, number> = {}
-    for (const cf of rawCFForEbitda) {
-      const yr = String(new Date(cf.endDate).getFullYear())
-      const da = ((cf.depreciation ?? cf.depreciationAndAmortization ?? 0) as number) / 1e6 * fxRate
-      if (da > 0) depreciationByYear[yr] = da
+    // Override businessProfile with FMP margins when available
+    if (fmpGrossMargin != null) businessProfile.grossMargin = fmpGrossMargin
+    if (fmpNetMargin   != null) businessProfile.netMargin   = fmpNetMargin
+
+    // FCF margin from FMP cash flows
+    const fmpLatestCF = fmp.cashFlowStatements[0]
+    const fmpLatestIS = fmp.incomeStatements[0]
+    if (fmpLatestCF && fmpLatestIS && fmpLatestIS.revenue > 0) {
+      const fmpFcfM = fmpLatestCF.freeCashFlow / 1e6
+      const fmpRevM = fmpLatestIS.revenue / 1e6
+      if (fmpFcfM !== 0) businessProfile.fcfMargin = fmpFcfM / fmpRevM
     }
 
-    // Helper: treat 0 the same as null for non-revenue income fields.
-    // Yahoo returns 0 for banks/fintechs that lack traditional COGS / EBIT structure.
-    const nonzero = (v: number | null | undefined) => (v != null && v !== 0) ? v : null
-
-    const isHistoricalRows = isHistorical.map((s: any) => {
-      const yr = String(new Date(s.endDate).getFullYear())
-      const revRaw = nonzero(s.totalRevenue)
-      // Gross profit: use direct field or compute Revenue − COGS
-      const gpDirect = nonzero(s.grossProfit)
-      const gpComputed = (s.totalRevenue != null && (s.costOfRevenue ?? s.costOfGoodsSold) != null)
-        ? s.totalRevenue - (s.costOfRevenue ?? s.costOfGoodsSold ?? 0)
-        : null
-      const gpRaw = gpDirect ?? nonzero(gpComputed)
-      const ebitRaw = nonzero(s.ebit ?? s.operatingIncome)
-      // EBITDA: prefer Yahoo's field, else compute EBIT + D&A
-      const ebitdaRaw = nonzero(s.ebitda) ?? nonzero(s.normalizedEbitda) ??
-        (ebitRaw != null && depreciationByYear[yr] ? ebitRaw + depreciationByYear[yr] * 1e6 : null)
-      return {
-        year: yr,
-        revenue: revRaw != null ? revRaw / 1e6 * fxRate : null,
-        grossProfit: gpRaw != null ? gpRaw / 1e6 * fxRate : null,
-        operatingIncome: ebitRaw != null ? ebitRaw / 1e6 * fxRate : null,
-        ebitda: ebitdaRaw != null ? ebitdaRaw / 1e6 * fxRate : null,
-        netIncome: s.netIncome != null ? (s.netIncome as number) / 1e6 * fxRate : null,
-        eps: s.dilutedEps != null ? (s.dilutedEps as number) : null,
-        isProjected: false,
+    // Override roicResult with FMP data when available
+    if (fmpRoic != null) {
+      scores.roic = {
+        ...scores.roic,
+        roic: fmpRoic,
+        spread: fmpRoicSpread ?? scores.roic?.spread ?? 0,
+        dataAvailable: true,
       }
-    })
+    }
 
-    const baseYear = isHistorical.length > 0
-      ? new Date(isHistorical[isHistorical.length - 1].endDate).getFullYear()
-      : new Date().getFullYear()
+    // Compute projections based on FMP historical data or Yahoo fallback
+    const useFmpForProjections = hasFmp && fmp.incomeStatements.length >= 2
+
+    // Sort FMP data oldest-first for charting
+    const fmpIsSorted = [...fmp.incomeStatements].sort((a, b) => a.fiscalYear.localeCompare(b.fiscalYear))
+    const fmpCfSorted = [...fmp.cashFlowStatements].sort((a, b) => a.fiscalYear.localeCompare(b.fiscalYear))
+    const fmpBsSorted = [...fmp.balanceSheets].sort((a, b) => a.fiscalYear.localeCompare(b.fiscalYear))
+
+    // --- Compute projection averages from FMP or Yahoo fallback ---
+    let avgGrossMarginRatio: number
+    let avgOpMarginRatio: number
+    let avgEbitdaMarginRatio: number
+    let avgNetMarginRatio: number
+    let latestRevM: number
+    let baseYear: number
+
+    if (useFmpForProjections) {
+      avgGrossMarginRatio = fmpIsSorted.reduce((s, r) => s + (r.revenue > 0 ? r.grossProfit / r.revenue : 0), 0) / fmpIsSorted.length
+      avgOpMarginRatio    = fmpIsSorted.reduce((s, r) => s + (r.revenue > 0 ? r.operatingIncome / r.revenue : 0), 0) / fmpIsSorted.length
+      avgEbitdaMarginRatio = fmpIsSorted.reduce((s, r) => s + (r.revenue > 0 ? r.ebitda / r.revenue : 0), 0) / fmpIsSorted.length
+      avgNetMarginRatio   = fmpIsSorted.reduce((s, r) => s + (r.revenue > 0 ? r.netIncome / r.revenue : 0), 0) / fmpIsSorted.length
+      latestRevM = fmpIsSorted[fmpIsSorted.length - 1].revenue / 1e6
+      baseYear   = parseInt(fmpIsSorted[fmpIsSorted.length - 1].fiscalYear)
+    } else {
+      // Yahoo fallback
+      const rawISHistory: any[] = fin.incomeStatementHistory?.incomeStatementHistory ?? []
+      const isHistorical = rawISHistory.slice(-4).reverse()
+      avgGrossMarginRatio = isHistorical.length > 0 ? isHistorical.reduce((s: number, s2: any) => { const rev = (s2.totalRevenue ?? 0) as number; const gp = (s2.grossProfit ?? 0) as number; return s + (rev > 0 ? gp / rev : 0) }, 0) / isHistorical.length : 0.4
+      avgOpMarginRatio    = isHistorical.length > 0 ? isHistorical.reduce((s: number, s2: any) => { const rev = (s2.totalRevenue ?? 0) as number; const op = (s2.ebit ?? 0) as number; return s + (rev > 0 ? op / rev : 0) }, 0) / isHistorical.length : 0.15
+      avgEbitdaMarginRatio = isHistorical.length > 0 ? isHistorical.reduce((s: number, s2: any) => { const rev = (s2.totalRevenue ?? 0) as number; const eb = (s2.ebitda ?? 0) as number; return s + (rev > 0 ? eb / rev : 0) }, 0) / isHistorical.length : 0.2
+      avgNetMarginRatio   = isHistorical.length > 0 ? isHistorical.reduce((s: number, s2: any) => { const rev = (s2.totalRevenue ?? 0) as number; const ni = (s2.netIncome ?? 0) as number; return s + (rev > 0 ? ni / rev : 0) }, 0) / isHistorical.length : 0.1
+      latestRevM = isHistorical.length > 0 ? ((isHistorical[isHistorical.length - 1].totalRevenue ?? 0) as number) / 1e6 * fxRate : historicalRevenues[0] ?? 0
+      baseYear   = isHistorical.length > 0 ? new Date(isHistorical[isHistorical.length - 1].endDate).getFullYear() : new Date().getFullYear()
+    }
+
+    // --- Income Statement ---
+    const isHistoricalRows = hasFmp
+      ? fmpIsSorted.map(s => ({
+          year: s.fiscalYear,
+          revenue: s.revenue > 0 ? s.revenue / 1e6 : null,
+          grossProfit: s.grossProfit !== 0 ? s.grossProfit / 1e6 : null,
+          operatingIncome: s.operatingIncome !== 0 ? s.operatingIncome / 1e6 : null,
+          ebitda: s.ebitda !== 0 ? s.ebitda / 1e6 : null,
+          netIncome: s.netIncome !== 0 ? s.netIncome / 1e6 : null,
+          eps: s.epsDiluted !== 0 ? s.epsDiluted : null,
+          operatingMargin: s.revenue > 0 && s.operatingIncome !== 0 ? s.operatingIncome / s.revenue : null,
+          isProjected: false,
+        }))
+      : (() => {
+          const rawISHistory: any[] = fin.incomeStatementHistory?.incomeStatementHistory ?? []
+          const isHistorical = rawISHistory.slice(-4).reverse()
+          const rawCFForEbitda: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
+          const depreciationByYear: Record<string, number> = {}
+          for (const cf of rawCFForEbitda) {
+            const yr = String(new Date(cf.endDate).getFullYear())
+            const da = ((cf.depreciation ?? cf.depreciationAndAmortization ?? 0) as number) / 1e6 * fxRate
+            if (da > 0) depreciationByYear[yr] = da
+          }
+          const nonzero = (v: number | null | undefined) => (v != null && v !== 0) ? v : null
+          return isHistorical.map((s: any) => {
+            const yr = String(new Date(s.endDate).getFullYear())
+            const revRaw = nonzero(s.totalRevenue)
+            const gpDirect = nonzero(s.grossProfit)
+            const gpComputed = (s.totalRevenue != null && (s.costOfRevenue ?? s.costOfGoodsSold) != null) ? s.totalRevenue - (s.costOfRevenue ?? s.costOfGoodsSold ?? 0) : null
+            const gpRaw = gpDirect ?? nonzero(gpComputed)
+            const ebitRaw = nonzero(s.ebit ?? s.operatingIncome)
+            const ebitdaRaw = nonzero(s.ebitda) ?? nonzero(s.normalizedEbitda) ?? (ebitRaw != null && depreciationByYear[yr] ? ebitRaw + depreciationByYear[yr] * 1e6 : null)
+            return {
+              year: yr,
+              revenue: revRaw != null ? revRaw / 1e6 * fxRate : null,
+              grossProfit: gpRaw != null ? gpRaw / 1e6 * fxRate : null,
+              operatingIncome: ebitRaw != null ? ebitRaw / 1e6 * fxRate : null,
+              ebitda: ebitdaRaw != null ? ebitdaRaw / 1e6 * fxRate : null,
+              netIncome: s.netIncome != null ? (s.netIncome as number) / 1e6 * fxRate : null,
+              eps: s.dilutedEps != null ? (s.dilutedEps as number) : null,
+              operatingMargin: null as number | null,
+              isProjected: false,
+            }
+          })
+        })()
 
     const isProjectedRows = Array.from({ length: 5 }, (_, idx) => {
       const t = idx + 1
       const projRevM = latestRevM * Math.pow(1 + cagr, t)
       const projNetIncomeM = projRevM * avgNetMarginRatio
-      // Only show margin-derived lines if historical data existed (non-zero avg margin)
       return {
         year: `${baseYear + t}E`,
         revenue: Math.round(projRevM),
@@ -444,124 +480,85 @@ export async function GET(req: NextRequest) {
         ebitda: avgEbitdaMarginRatio > 0 ? Math.round(projRevM * avgEbitdaMarginRatio) : null,
         netIncome: Math.round(projNetIncomeM),
         eps: sharesM > 0 ? Math.round((projNetIncomeM / sharesM) * 100) / 100 : null,
+        operatingMargin: avgOpMarginRatio !== 0 ? avgOpMarginRatio : null,
         isProjected: true,
       }
     })
 
     const incomeStatement = [...isHistoricalRows, ...isProjectedRows]
 
-    // --- Balance Sheet ---
-    const rawBSHistory: any[] = fin.balanceSheetHistory?.balanceSheetStatements ?? []
-    const bsHistorical = rawBSHistory.slice(-4).reverse()
-
-    const bsHistoricalRows = bsHistorical.map((s: any) => ({
-      year: String(new Date(s.endDate).getFullYear()),
-      cash: (() => {
-        const v = s.cash ?? s.cashAndCashEquivalents ?? s.cashAndShortTermInvestments ?? s.cashCashEquivalentsAndShortTermInvestments ?? s.cashAndCashEquivalentsAtCarryingValue
-        return v != null ? (v as number) / 1e6 * fxRate : null
-      })(),
-      totalCurrentAssets: s.totalCurrentAssets != null ? (s.totalCurrentAssets as number) / 1e6 * fxRate : null,
-      totalAssets: s.totalAssets != null ? (s.totalAssets as number) / 1e6 * fxRate : null,
-      longTermDebt: s.longTermDebt != null ? (s.longTermDebt as number) / 1e6 * fxRate : null,
-      totalCurrentLiabilities: s.totalCurrentLiabilities != null ? (s.totalCurrentLiabilities as number) / 1e6 * fxRate : null,
-      totalEquity: (s.totalStockholderEquity ?? s.stockholdersEquity) != null ? ((s.totalStockholderEquity ?? s.stockholdersEquity) as number) / 1e6 * fxRate : null,
-      isProjected: false,
-    }))
-
-    // Projected balance sheet (only if sufficient history)
-    let bsProjectedRows: typeof bsHistoricalRows = []
-    if (bsHistoricalRows.length >= 2) {
-      const lastBS = bsHistoricalRows[bsHistoricalRows.length - 1]
-      // Estimate historical avg dividends from cash flow for balance sheet projections
-      const rawCFHistForBS: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
-      const avgDivPaidM = rawCFHistForBS.length > 0
-        ? rawCFHistForBS.reduce((s: number, s2: any) => s + Math.abs((s2.dividendsPaid ?? 0) as number) / 1e6 * fxRate, 0) / rawCFHistForBS.length
-        : 0
-
-      let prevCash = lastBS.cash ?? 0
-      let prevEquity = lastBS.totalEquity ?? 0
-      let prevAssets = lastBS.totalAssets ?? 0
-      const projDebt = lastBS.longTermDebt
-
-      bsProjectedRows = Array.from({ length: 5 }, (_, idx) => {
-        const t = idx + 1
-        const projFCF = dcfResult.projections[t - 1]?.cashFlow ?? 0
-        const projRevM = latestRevM * Math.pow(1 + cagr, t)
-        const projNetIncomeM = projRevM * avgNetMarginRatio
-
-        const newCash = prevCash + projFCF - avgDivPaidM
-        const newEquity = prevEquity + projNetIncomeM - avgDivPaidM
-        const newAssets = prevAssets + projFCF
-
-        const row = {
-          year: `${baseYear + t}E`,
-          cash: newCash,
-          totalCurrentAssets: null,
-          totalAssets: newAssets,
-          longTermDebt: projDebt,
-          totalCurrentLiabilities: null,
-          totalEquity: newEquity,
-          isProjected: true,
-        }
-
-        prevCash = newCash
-        prevEquity = newEquity
-        prevAssets = newAssets
-        return row
-      })
-    }
-
-    const balanceSheet = [...bsHistoricalRows, ...bsProjectedRows]
-
     // --- Cash Flow ---
-    const rawCFHistory: any[] = rawCFHistoryEarly
-    const cfHistorical = rawCFHistory.slice(-4).reverse()
+    const avgCapexM: number = hasFmp && fmpCfSorted.length > 0
+      ? fmpCfSorted.reduce((s, r) => s + r.investmentsInPropertyPlantAndEquipment / 1e6, 0) / fmpCfSorted.length  // already negative
+      : (() => {
+          const rawCFHistory: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
+          const cfHistorical = rawCFHistory.slice(-4).reverse()
+          return cfHistorical.length > 0 ? cfHistorical.reduce((s: number, s2: any) => s + ((s2.capitalExpenditures ?? s2.capitalExpenditure ?? s2.purchaseOfPlantPropertyEquipment ?? 0) as number) / 1e6 * fxRate, 0) / cfHistorical.length : 0
+        })()
 
-    const avgCapexM = cfHistorical.length > 0
-      ? cfHistorical.reduce((s: number, s2: any) => s + ((s2.capitalExpenditures ?? s2.capitalExpenditure ?? s2.purchaseOfPlantPropertyEquipment ?? 0) as number) / 1e6 * fxRate, 0) / cfHistorical.length
-      : 0
-    const avgDivPaidM = cfHistorical.length > 0
-      ? cfHistorical.reduce((s: number, s2: any) => s + ((s2.dividendsPaid ?? 0) as number) / 1e6 * fxRate, 0) / cfHistorical.length
-      : 0
+    const avgDivPaidM: number = hasFmp && fmpCfSorted.length > 0
+      ? fmpCfSorted.reduce((s, r) => s + r.commonDividendsPaid / 1e6, 0) / fmpCfSorted.length  // stored negative in FMP
+      : (() => {
+          const rawCFHistory: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
+          const cfHistorical = rawCFHistory.slice(-4).reverse()
+          return cfHistorical.length > 0 ? cfHistorical.reduce((s: number, s2: any) => s + ((s2.dividendsPaid ?? 0) as number) / 1e6 * fxRate, 0) / cfHistorical.length : 0
+        })()
 
-    const cfHistoricalRows = cfHistorical.map((s: any) => {
-      // Yahoo Finance / yahoo-finance2 uses varying field names across versions and company types
-      const rawOpCF = s.operatingCashflow ?? s.totalCashFromOperatingActivities ?? s.netCashProvidedByOperatingActivities ?? s.cashFromOperations ?? s.cashGeneratedFromOperations
-      const rawCapex = s.capitalExpenditures ?? s.capitalExpenditure ?? s.purchaseOfPlantPropertyEquipment ?? s.paymentsToAcquirePropertyPlantAndEquipment
-      const rawInvCF = s.totalCashflowsFromInvestingActivities ?? s.totalCashFromInvestingActivities ?? s.netCashUsedForInvestingActivities ?? s.cashUsedForInvestingActivities
-      const rawFinCF = s.totalCashFromFinancingActivities ?? s.netCashUsedProvidedByFinancingActivities ?? s.cashUsedProvidedByFinancingActivities
-      const rawDivPaid = s.dividendsPaid ?? s.paymentOfDividends ?? s.paymentsForDividends
+    const avgBuybackM: number = hasFmp && fmpCfSorted.length > 0
+      ? fmpCfSorted.reduce((s, r) => s + Math.abs(r.commonStockRepurchased / 1e6), 0) / fmpCfSorted.length
+      : (() => {
+          const rawCFHistory: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
+          const cfHistorical = rawCFHistory.slice(-4).reverse()
+          return cfHistorical.length > 0 ? cfHistorical.reduce((s: number, s2: any) => s + Math.abs((s2.repurchaseOfStock ?? s2.repurchaseOfCommonStock ?? 0) as number) / 1e6 * fxRate, 0) / cfHistorical.length : 0
+        })()
 
-      // For some foreign ADRs Yahoo only populates netIncome in cashflow statements.
-      // Fall back to matching income statement row so FCF ≈ net income (rough proxy).
-      const cfYear = String(new Date(s.endDate).getFullYear())
-      const matchingIS = rawISStmts.find((r: any) => String(new Date(r.endDate).getFullYear()) === cfYear)
-      const fallbackNetIncome = (matchingIS?.netIncome ?? s.netIncome ?? null) as number | null
-
-      const opCF   = rawOpCF  != null ? (rawOpCF  as number) / 1e6 * fxRate : null
-      const capex  = rawCapex != null ? (rawCapex as number) / 1e6 * fxRate : null
-      // If no OpCF and no CapEx but we have net income → show it as a rough FCF proxy
-      const freeCashFlowFallback = (opCF == null && capex == null && fallbackNetIncome != null)
-        ? Math.round(fallbackNetIncome / 1e6 * fxRate)
-        : null
-      return {
-        year: String(new Date(s.endDate).getFullYear()),
-        operatingCF: opCF,
-        capex: capex,
-        // FCF = OCF + capex (capex is negative in Yahoo's data).
-        // For foreign ADRs where Yahoo only has netIncome in CF statements, use it as proxy.
-        freeCashFlow: opCF != null && capex != null ? Math.round(opCF + capex) : opCF ?? freeCashFlowFallback,
-        investingCF: rawInvCF != null ? (rawInvCF as number) / 1e6 * fxRate : null,
-        financingCF: rawFinCF != null ? (rawFinCF as number) / 1e6 * fxRate : null,
-        dividendsPaid: rawDivPaid != null ? (rawDivPaid as number) / 1e6 * fxRate : null,
-        isProjected: false,
-      }
-    })
+    const cfHistoricalRows = hasFmp
+      ? fmpCfSorted.map(s => ({
+          year: s.fiscalYear,
+          operatingCF: s.netCashProvidedByOperatingActivities !== 0 ? s.netCashProvidedByOperatingActivities / 1e6 : null,
+          capex: s.investmentsInPropertyPlantAndEquipment !== 0 ? s.investmentsInPropertyPlantAndEquipment / 1e6 : null,
+          freeCashFlow: s.freeCashFlow !== 0 ? Math.round(s.freeCashFlow / 1e6) : null,
+          investingCF: s.netCashUsedForInvestingActivites !== 0 ? s.netCashUsedForInvestingActivites / 1e6 : null,
+          financingCF: s.netCashUsedProvidedByFinancingActivities !== 0 ? s.netCashUsedProvidedByFinancingActivities / 1e6 : null,
+          // dividendsPaid in FMP is negative (outflow); store as negative to match Yahoo convention
+          dividendsPaid: s.commonDividendsPaid !== 0 ? s.commonDividendsPaid / 1e6 : null,
+          buybacks: s.commonStockRepurchased !== 0 ? Math.abs(s.commonStockRepurchased / 1e6) : null,
+          isProjected: false,
+        }))
+      : (() => {
+          const rawCFHistoryEarly: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
+          const rawISStmts: any[] = fin.incomeStatementHistory?.incomeStatementHistory ?? []
+          const cfHistorical = rawCFHistoryEarly.slice(-4).reverse()
+          return cfHistorical.map((s: any) => {
+            const rawOpCF = s.operatingCashflow ?? s.totalCashFromOperatingActivities ?? s.netCashProvidedByOperatingActivities ?? s.cashFromOperations ?? s.cashGeneratedFromOperations
+            const rawCapex = s.capitalExpenditures ?? s.capitalExpenditure ?? s.purchaseOfPlantPropertyEquipment ?? s.paymentsToAcquirePropertyPlantAndEquipment
+            const rawInvCF = s.totalCashflowsFromInvestingActivities ?? s.totalCashFromInvestingActivities ?? s.netCashUsedForInvestingActivities ?? s.cashUsedForInvestingActivities
+            const rawFinCF = s.totalCashFromFinancingActivities ?? s.netCashUsedProvidedByFinancingActivities ?? s.cashUsedProvidedByFinancingActivities
+            const rawDivPaid = s.dividendsPaid ?? s.paymentOfDividends ?? s.paymentsForDividends
+            const rawBuyback = s.repurchaseOfStock ?? s.repurchaseOfCommonStock ?? s.paymentsForRepurchaseOfCommonStock ?? s.buybacksOfStock ?? null
+            const cfYear = String(new Date(s.endDate).getFullYear())
+            const matchingIS = rawISStmts.find((r: any) => String(new Date(r.endDate).getFullYear()) === cfYear)
+            const fallbackNetIncome = (matchingIS?.netIncome ?? s.netIncome ?? null) as number | null
+            const opCF  = rawOpCF  != null ? (rawOpCF  as number) / 1e6 * fxRate : null
+            const capex = rawCapex != null ? (rawCapex as number) / 1e6 * fxRate : null
+            const freeCashFlowFallback = (opCF == null && capex == null && fallbackNetIncome != null) ? Math.round(fallbackNetIncome / 1e6 * fxRate) : null
+            return {
+              year: String(new Date(s.endDate).getFullYear()),
+              operatingCF: opCF,
+              capex,
+              freeCashFlow: opCF != null && capex != null ? Math.round(opCF + capex) : opCF ?? freeCashFlowFallback,
+              investingCF: rawInvCF != null ? (rawInvCF as number) / 1e6 * fxRate : null,
+              financingCF: rawFinCF != null ? (rawFinCF as number) / 1e6 * fxRate : null,
+              dividendsPaid: rawDivPaid != null ? (rawDivPaid as number) / 1e6 * fxRate : null,
+              buybacks: rawBuyback != null ? Math.abs((rawBuyback as number) / 1e6 * fxRate) : null,
+              isProjected: false,
+            }
+          })
+        })()
 
     const cfProjectedRows = Array.from({ length: 5 }, (_, idx) => {
       const t = idx + 1
       const projFCF = dcfResult.projections[t - 1]?.cashFlow ?? 0
-      // capex is negative in Yahoo data; avgCapexM is negative (or 0 for fintechs)
       const hasCapex = avgCapexM !== 0
       const projOpCF = hasCapex ? projFCF - avgCapexM : projFCF
       return {
@@ -572,15 +569,69 @@ export async function GET(req: NextRequest) {
         investingCF: null,
         financingCF: null,
         dividendsPaid: avgDivPaidM !== 0 ? Math.round(avgDivPaidM) : null,
+        buybacks: avgBuybackM > 0 ? Math.round(avgBuybackM) : null,
         isProjected: true,
       }
     })
 
     const cashFlow = [...cfHistoricalRows, ...cfProjectedRows]
 
+    // --- Balance Sheet ---
+    const bsHistoricalRows = hasFmp
+      ? fmpBsSorted.map(s => ({
+          year: s.fiscalYear,
+          cash: s.cashAndShortTermInvestments > 0 ? s.cashAndShortTermInvestments / 1e6 : (s.cashAndCashEquivalents > 0 ? s.cashAndCashEquivalents / 1e6 : null),
+          totalCurrentAssets: s.totalCurrentAssets > 0 ? s.totalCurrentAssets / 1e6 : null,
+          totalAssets: s.totalAssets > 0 ? s.totalAssets / 1e6 : null,
+          longTermDebt: s.longTermDebt > 0 ? s.longTermDebt / 1e6 : null,
+          totalCurrentLiabilities: s.totalCurrentLiabilities > 0 ? s.totalCurrentLiabilities / 1e6 : null,
+          totalEquity: (s.totalStockholdersEquity ?? s.totalEquity) > 0 ? (s.totalStockholdersEquity ?? s.totalEquity) / 1e6 : null,
+          isProjected: false,
+        }))
+      : (() => {
+          const rawBSHistory: any[] = fin.balanceSheetHistory?.balanceSheetStatements ?? []
+          const bsHistorical = rawBSHistory.slice(-4).reverse()
+          return bsHistorical.map((s: any) => ({
+            year: String(new Date(s.endDate).getFullYear()),
+            cash: (() => { const v = s.cash ?? s.cashAndCashEquivalents ?? s.cashAndShortTermInvestments ?? s.cashCashEquivalentsAndShortTermInvestments ?? s.cashAndCashEquivalentsAtCarryingValue; return v != null ? (v as number) / 1e6 * fxRate : null })(),
+            totalCurrentAssets: s.totalCurrentAssets != null ? (s.totalCurrentAssets as number) / 1e6 * fxRate : null,
+            totalAssets: s.totalAssets != null ? (s.totalAssets as number) / 1e6 * fxRate : null,
+            longTermDebt: s.longTermDebt != null ? (s.longTermDebt as number) / 1e6 * fxRate : null,
+            totalCurrentLiabilities: s.totalCurrentLiabilities != null ? (s.totalCurrentLiabilities as number) / 1e6 * fxRate : null,
+            totalEquity: (s.totalStockholderEquity ?? s.stockholdersEquity) != null ? ((s.totalStockholderEquity ?? s.stockholdersEquity) as number) / 1e6 * fxRate : null,
+            isProjected: false,
+          }))
+        })()
+
+    // Projected balance sheet
+    let bsProjectedRows: typeof bsHistoricalRows = []
+    if (bsHistoricalRows.length >= 2) {
+      const lastBS = bsHistoricalRows[bsHistoricalRows.length - 1]
+      const avgDivForBS = Math.abs(avgDivPaidM)
+      let prevCash   = lastBS.cash ?? 0
+      let prevEquity = lastBS.totalEquity ?? 0
+      let prevAssets = lastBS.totalAssets ?? 0
+      const projDebt = lastBS.longTermDebt
+
+      bsProjectedRows = Array.from({ length: 5 }, (_, idx) => {
+        const t = idx + 1
+        const projFCF = dcfResult.projections[t - 1]?.cashFlow ?? 0
+        const projRevM = latestRevM * Math.pow(1 + cagr, t)
+        const projNetIncomeM = projRevM * avgNetMarginRatio
+        const newCash   = prevCash   + projFCF - avgDivForBS
+        const newEquity = prevEquity + projNetIncomeM - avgDivForBS
+        const newAssets = prevAssets + projFCF
+        const row = { year: `${baseYear + t}E`, cash: newCash, totalCurrentAssets: null as null, totalAssets: newAssets, longTermDebt: projDebt, totalCurrentLiabilities: null as null, totalEquity: newEquity, isProjected: true }
+        prevCash = newCash; prevEquity = newEquity; prevAssets = newAssets
+        return row
+      })
+    }
+
+    const balanceSheet = [...bsHistoricalRows, ...bsProjectedRows]
+
     const financialStatements = { incomeStatement, balanceSheet, cashFlow }
 
-    // Historical FCF for DCF table context (last 3 years, used to show YoY actuals)
+    // Historical FCF for DCF table context (last 3 years)
     const historicalFCF: { year: number; cashFlow: number }[] = cfHistoricalRows
       .filter((r) => r.freeCashFlow != null && !r.isProjected)
       .slice(-3)

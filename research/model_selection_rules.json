@@ -1,0 +1,107 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "purpose": "Deterministic rules for selecting the valuation model, VTS theory, and growth stage given a company's characteristics",
+    "sources": ["ssrn-743229", "ssrn-256987", "ssrn-1025424"]
+  },
+
+  "model_selection": [
+    {
+      "rule_id": "R1",
+      "condition": "companyType == 'financial' (bank, insurer, fintech)",
+      "primary_model": "FCFE (D6_ECF_Ke equivalent using net income as equity CF proxy)",
+      "secondary_model": "DDM if dividendYield > 0.01",
+      "forbidden": ["FCFF/WACC DCF (D2_FCF_WACC)", "EV-based multiples"],
+      "reason": "FCFF/WACC is distorted for banks because operating CF includes loan originations. Source: ssrn-743229 §3.4; detectCompanyType.ts.",
+      "fallback": "If FCFE inputs unavailable → 'Valuation not available for financial companies' structured error"
+    },
+    {
+      "rule_id": "R2",
+      "condition": "companyType == 'startup' (isNegativeFCF == true AND revenueM < 500)",
+      "primary_model": "Revenue multiples (EV/Revenue) with DCF as secondary",
+      "forbidden": ["Residual value dominated DCF (>85% residual = unreliable)"],
+      "reason": "Negative FCF makes terminal value the entire valuation — too speculative. Source: ssrn-1025424 Error I.7.",
+      "dcf_use": "Apply DCF with seeded FCF from revenue × avg sector FCF margin, flag as speculative"
+    },
+    {
+      "rule_id": "R3",
+      "condition": "baseFCF < 0 AND companyType != 'startup'",
+      "primary_model": "D2_FCF_WACC with negative FCF in early years (three-stage model)",
+      "note": "Do not force FCF to zero — allow negative FCF in growth phase. Terminal value uses normalized positive FCF.",
+      "warning_threshold": "If all 10 projected years have negative FCF → mark as 'speculative, high uncertainty'"
+    },
+    {
+      "rule_id": "R4",
+      "condition": "g >= WACC in terminal value computation",
+      "action": "REJECT — return structured error. Do not compute. Source: ssrn-1025424 Error I.6.1.",
+      "error_message": "Terminal growth rate ({g}) >= WACC ({wacc}). Value would be infinite. Reduce g or increase WACC."
+    },
+    {
+      "rule_id": "R5",
+      "condition": "Debt schedule is fixed and known in advance (e.g., project finance, LBO)",
+      "vts_theory": "T4_Myers or T3_Modigliani_Miller",
+      "reason": "Pre-set debt → VTS risk = Kd (Myers) or RF (MM). Source: ssrn-256987 §4."
+    },
+    {
+      "rule_id": "R6",
+      "condition": "Default case (debt rebalanced to target D/E ratio)",
+      "vts_theory": "T1_Fernandez_2007",
+      "reason": "When leverage is rebalanced, VTS risk = Ku. Source: ssrn-274973 Proposition 1.",
+      "beta_formula": "Fernandez_2007: βL = {βu[D(1-T)+E] − βd·D(1-T)} / E"
+    },
+    {
+      "rule_id": "R7",
+      "condition": "historicalCagr3y > 0.20 OR analystEstimate1y > 0.20",
+      "growth_model": "three_stage",
+      "reason": "High growth must converge to stable growth. Immediate terminal value understates value loss during deceleration. Source: ssrn-1025424 Error I.3."
+    },
+    {
+      "rule_id": "R8",
+      "condition": "historicalCagr3y <= 0.20 AND analystEstimate1y <= 0.20",
+      "growth_model": "two_stage",
+      "reason": "Stable/mature companies: explicit forecast period + terminal value sufficient."
+    },
+    {
+      "rule_id": "R9",
+      "condition": "After computing all applicable DCF methods",
+      "action": "VERIFY consistency: all methods must produce same equity value (within rounding tolerance ±0.1%). Divergence > 0.5% = input inconsistency flag.",
+      "source": "ssrn-256987 §3"
+    },
+    {
+      "rule_id": "R10",
+      "condition": "Using Damodaran or Harris-Pringle beta formula with Fernandez VTS",
+      "action": "FLAG incompatibility. Compute leverage cost explicitly: CL = VTS_fernandez - VTS_damodaran.",
+      "source": "ssrn-1025424 Error 4.3; ssrn-256987 §4"
+    }
+  ],
+
+  "terminal_growth_selection": {
+    "high_growth_company": {
+      "condition": "cagr > 0.15",
+      "terminal_g": 0.025,
+      "reason": "Emerging/global nominal GDP. Source: Damodaran lifecycle framework."
+    },
+    "standard_company": {
+      "condition": "cagr between 0.05 and 0.15",
+      "terminal_g": 0.020,
+      "reason": "Developed market nominal GDP."
+    },
+    "mature_company": {
+      "condition": "cagr < 0.05",
+      "terminal_g": 0.015,
+      "reason": "Conservative real GDP floor."
+    },
+    "hard_ceiling": "terminal_g <= WACC - 0.005 (enforced as guard rail, not academic)"
+  },
+
+  "multi_model_weights": {
+    "_comment": "Weights applied in triangulation. Source: detectCompanyType.ts getModelWeights()",
+    "standard_no_dividend": { "fcff": 0.65, "fcfe": 0.00, "ddm": 0.00, "multiples": 0.35 },
+    "standard_with_dividend": { "fcff": 0.55, "fcfe": 0.00, "ddm": 0.15, "multiples": 0.30 },
+    "growth": { "fcff": 0.65, "fcfe": 0.00, "ddm": 0.00, "multiples": 0.35 },
+    "dividend": { "fcff": 0.30, "fcfe": 0.00, "ddm": 0.50, "multiples": 0.20 },
+    "financial_no_dividend": { "fcff": 0.05, "fcfe": 0.65, "ddm": 0.00, "multiples": 0.30 },
+    "financial_with_dividend": { "fcff": 0.05, "fcfe": 0.50, "ddm": 0.25, "multiples": 0.20 },
+    "startup": { "fcff": 0.30, "fcfe": 0.00, "ddm": 0.00, "multiples": 0.70 }
+  }
+}

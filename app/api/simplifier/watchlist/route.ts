@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase'
-import type { WatchlistEntry } from '@/lib/simplifier/types'
+import type { WatchlistEntry, ListTag } from '@/lib/simplifier/types'
 
 const TABLE = 'simplifier_watchlist'
 
@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
           phase_scores: entry.phaseScores,
           overall_score: entry.overallScore,
           financial_snapshot: entry.snapshot,
+          list_tag: entry.listTag ?? null,
         },
         { onConflict: 'user_id,ticker' },
       )
@@ -73,6 +74,28 @@ export async function DELETE(req: NextRequest) {
       .delete()
       .eq('user_id', userEmail)
       .eq('ticker', ticker)
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 })
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json() as { userEmail: string; ticker: string; listTag: ListTag }
+    const { userEmail, ticker, listTag } = body
+    if (!userEmail || !ticker) {
+      return NextResponse.json({ error: 'userEmail and ticker required' }, { status: 400 })
+    }
+
+    const client = createServiceClient()
+    const { error } = await client
+      .from(TABLE)
+      .update({ list_tag: listTag })
+      .eq('user_id', userEmail)
+      .eq('ticker', ticker.toUpperCase())
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ ok: true })

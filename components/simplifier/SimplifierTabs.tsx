@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { AllAnswers, Answer, NoteMap, SimplifierAutoMap } from '@/lib/simplifier/types'
+import type { AllAnswers, Answer, NoteMap, SimplifierAutoMap, ListTag } from '@/lib/simplifier/types'
 import type { FinancialsData } from '@/lib/simplifier/autoMapper'
 import type { WatchlistEntry } from '@/lib/simplifier/types'
 import SimplifierTabBar, { type TabId } from './SimplifierTabBar'
@@ -31,7 +31,7 @@ interface SimplifierTabsProps {
   wikiBio: string | null
   data: FinancialsData
   autoMap: SimplifierAutoMap
-  initialEntry: Pick<WatchlistEntry, 'answers' | 'notes'> | null
+  initialEntry: Pick<WatchlistEntry, 'answers' | 'notes' | 'listTag'> | null
   onSave: (partial: Partial<WatchlistEntry>) => Promise<void>
 }
 
@@ -43,6 +43,7 @@ export default function SimplifierTabs({
   const [activeTab, setActiveTab] = useState<TabId>('ticker')
   const [answers, setAnswers]     = useState<AllAnswers>(initialEntry?.answers ?? {})
   const [notes, setNotes]         = useState<NoteMap>(initialEntry?.notes ?? {})
+  const [listTag, setListTag]     = useState<ListTag>(initialEntry?.listTag ?? null)
   const [saving, setSaving]       = useState(false)
 
   function handleChange(id: string, answer: Answer) {
@@ -51,15 +52,6 @@ export default function SimplifierTabs({
 
   function handleNoteChange(id: string, note: string) {
     setNotes(prev => ({ ...prev, [id]: note }))
-  }
-
-  async function handleSave() {
-    setSaving(true)
-    try {
-      await onSave({ answers, notes })
-    } finally {
-      setSaving(false)
-    }
   }
 
   const sharedProps = { companyName, data, answers, notes, autoMap, onChange: handleChange, onNoteChange: handleNoteChange }
@@ -98,7 +90,16 @@ export default function SimplifierTabs({
             ticker={ticker}
             companyName={companyName}
             answers={answers}
-            onSave={handleSave}
+            initialListTag={listTag}
+            onSave={async (tag) => {
+              setListTag(tag)
+              setSaving(true)
+              try {
+                await onSave({ answers, notes, listTag: tag })
+              } finally {
+                setSaving(false)
+              }
+            }}
             saving={saving}
           />
         )}

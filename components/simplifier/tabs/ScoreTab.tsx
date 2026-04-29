@@ -1,15 +1,18 @@
 'use client'
 
+import { useState } from 'react'
 import { PHASES } from '@/lib/simplifier/phases'
 import { scorePhase, overallScore } from '@/lib/simplifier/scoring'
-import type { AllAnswers } from '@/lib/simplifier/types'
+import type { AllAnswers, ListTag } from '@/lib/simplifier/types'
 import ScoreCircle from '../ScoreCircle'
+import ListTagSelector from '../ListTagSelector'
 
 interface ScoreTabProps {
   ticker: string
   companyName: string
   answers: AllAnswers
-  onSave?: () => void
+  initialListTag?: ListTag
+  onSave?: (listTag: ListTag) => void
   saveLabel?: string
   saving?: boolean
 }
@@ -55,7 +58,7 @@ function scoreBadgeClass(s: number): string {
 }
 
 export default function ScoreTab({
-  ticker, companyName, answers, onSave, saveLabel = 'Save to Watchlist', saving = false,
+  ticker, companyName, answers, initialListTag, onSave, saveLabel = 'Save to Watchlist', saving = false,
 }: ScoreTabProps) {
   const phaseScoresRaw = {
     1: scorePhase(answers, PHASES[0]),
@@ -65,6 +68,14 @@ export default function ScoreTab({
     5: scorePhase(answers, PHASES[4]),
   }
   const overall1to5 = 1 + overallScore(phaseScoresRaw) * 4
+
+  // Auto-suggest tag, user can override
+  const suggestedTag: ListTag =
+    overall1to5 >= 4.0 ? 'buy' :
+    overall1to5 >= 3.0 ? 'watch' :
+    'pass'
+
+  const [listTag, setListTag] = useState<ListTag>(initialListTag ?? suggestedTag)
 
   const dimScores = DIMENSIONS.map(d => ({
     ...d,
@@ -87,13 +98,19 @@ export default function ScoreTab({
           </p>
         </div>
         {onSave && (
-          <button
-            onClick={onSave}
-            disabled={saving}
-            className="shrink-0 px-5 py-2.5 bg-[#1f6feb] text-white text-sm font-semibold rounded-xl hover:bg-[#1a5fc7] disabled:opacity-60 transition-colors"
-          >
-            {saving ? 'Saving…' : saveLabel}
-          </button>
+          <div className="shrink-0 flex flex-col items-end gap-3">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B6A72] mb-1.5">Add to list</p>
+              <ListTagSelector value={listTag} onChange={setListTag} />
+            </div>
+            <button
+              onClick={() => onSave(listTag)}
+              disabled={saving}
+              className="px-5 py-2.5 bg-[#1f6feb] text-white text-sm font-semibold rounded-xl hover:bg-[#1a5fc7] disabled:opacity-60 transition-colors"
+            >
+              {saving ? 'Saving…' : saveLabel}
+            </button>
+          </div>
         )}
       </div>
 

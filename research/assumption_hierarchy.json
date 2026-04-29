@@ -1,0 +1,126 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "purpose": "Canonical hierarchy and quality requirements for each DCF input",
+    "sources": ["ssrn-1025424 §I (201 Errors in Valuation)"]
+  },
+
+  "inputs": {
+    "RF_risk_free_rate": {
+      "priority": ["10Y_treasury_yield_FRED", "current_market_yield"],
+      "forbidden": [
+        {
+          "source": "historical_average_rf",
+          "error_code": "1.A.1",
+          "reason": "Historical avg RF includes past inflation expectations not representative of current cost of capital"
+        },
+        {
+          "source": "short_term_tbill",
+          "error_code": "1.A.2",
+          "reason": "T-bill rate is distorted by monetary policy, not a fair long-term discount rate"
+        }
+      ],
+      "current_source": "lib/data/fredClient.ts → getRfRate() → FRED 10Y Treasury"
+    },
+
+    "ERP_equity_risk_premium": {
+      "priority": ["damodaran_implied_erp_current_year"],
+      "value": 0.046,
+      "update_frequency": "annually",
+      "error_reference": "ssrn-1025424 Error 1.B — using geometric vs arithmetic average can differ by 2–3%",
+      "current_source": "calculateWACC.ts line 99: erp: 0.046"
+    },
+
+    "BETA": {
+      "priority": ["regression_5y_weekly_returns", "yahoo_published_beta", "industry_avg_unlevered"],
+      "levering_formula": "Fernandez_2007",
+      "forbidden": [
+        {
+          "source": "book_value_leverage_in_levering_formula",
+          "error_code": "4.2",
+          "reason": "Book D/E can be 5–10x market D/E, inflating levered beta significantly"
+        },
+        {
+          "source": "mixing_damodaran_beta_with_fernandez_vts",
+          "error_code": "4.3",
+          "reason": "Double-counts leverage cost — see R10 in model_selection_rules.json"
+        }
+      ],
+      "current_source": "calculateBeta.ts (regression) → extractWACCInputs fallback to yahoo"
+    },
+
+    "Kd_cost_of_debt": {
+      "priority": [
+        "interest_expense_div_avg_gross_debt_from_income_stmt",
+        "rf_plus_credit_spread"
+      ],
+      "cap": 0.15,
+      "default_spread_investment_grade": 0.015,
+      "error_reference": "ssrn-1025424 Error 2.3 — using coupon rate instead of yield to maturity",
+      "current_source": "calculateWACC.ts extractWACCInputs"
+    },
+
+    "FCF_free_cash_flow": {
+      "definition": "FCF = EBIT(1-T) + D&A - ΔNWC - CAPEX = OCF - CAPEX",
+      "priority": [
+        "annual_income_statement_OCF_minus_capex",
+        "yahoo_freeCashflow_TTM"
+      ],
+      "forbidden": [
+        {
+          "source": "inflated_one_time_fcf",
+          "error_code": "I.1.3",
+          "reason": "Using non-normalized FCF as base overestimates all future projections"
+        }
+      ],
+      "normalization": "Use 2-year average OCF-CapEx to smooth one-time items",
+      "negative_fcf": "Allowed in growth phase — do not force to zero. Source: ssrn-1025424 Error I.3.",
+      "current_source": "projectCashFlows.ts extractFCFInputs"
+    },
+
+    "WACC": {
+      "definition": "Discount rate that makes PV(FCF) == PV(ECF at Ke). NOT a cost. Source: ssrn-1620871.",
+      "values_for_E_D": "VALUATION-DERIVED (iterative), not book or market cap. Source: ssrn-1620871 §3.",
+      "forbidden": [
+        {
+          "source": "book_value_weights",
+          "error_code": "2.2",
+          "reason": "Real case: book-value WACC inflated equity from 2,014 to 3,033 — 51% overestimate. Source: ssrn-1620871."
+        },
+        {
+          "source": "target_debt_ratio_without_iteration",
+          "error_code": "2.4",
+          "reason": "Target ratio must match valuation-derived D/(D+E), not management aspiration"
+        }
+      ],
+      "current_source": "calculateWACC.ts — NOTE: uses market cap for weights (acceptable approximation)"
+    },
+
+    "TERMINAL_GROWTH": {
+      "ceiling": "Must be < WACC. Hard cap: WACC - 0.005. Source: ssrn-1025424 Error I.6.1.",
+      "floor": 0,
+      "recommendation": "Align with long-run nominal GDP growth (1.5–2.5%)",
+      "terminal_value_weight_warning": "Residual value = 60–80% of total value. Sensitivity analysis mandatory. Source: ssrn-1025424 §I.7.",
+      "normalization_required": "FCF at terminal year must be steady-state (no non-recurring items, consistent capex/D&A ratio). Source: ssrn-1025424 Error I.7.4.",
+      "current_source": "projectCashFlows.ts — terminalG parameter"
+    },
+
+    "SHARES_OUTSTANDING": {
+      "use": "Diluted shares outstanding (includes options, warrants, convertibles)",
+      "forbidden": ["basic_shares_only"],
+      "current_source": "defaultKeyStatistics.sharesOutstanding"
+    },
+
+    "TAX_RATE": {
+      "priority": ["effective_rate_from_income_stmt", "statutory_rate"],
+      "bounds": { "min": 0.05, "max": 0.40 },
+      "current_source": "calculateWACC.ts extractWACCInputs"
+    },
+
+    "DEBT_VALUE": {
+      "D_vs_N": "Use market value (D) when bonds trade at significant discount/premium to par. For most public companies: D ≈ N (face value). Source: ssrn-1620871 §5.",
+      "financial_sector_special": "For banks: use only long-term issued debt (bonds/notes), NOT deposit liabilities. Source: calculateWACC.ts.",
+      "forbidden": ["including_operating_lease_liabilities_without_adjustment"]
+    }
+  }
+}

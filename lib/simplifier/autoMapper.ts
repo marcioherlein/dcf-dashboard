@@ -63,6 +63,7 @@ export interface FinancialsData {
       freeCashFlow?: number | null
       operatingCF?: number | null
       dividendsPaid?: number | null
+      buybacks?: number | null
       financingCF?: number | null
       isProjected?: boolean
     }>

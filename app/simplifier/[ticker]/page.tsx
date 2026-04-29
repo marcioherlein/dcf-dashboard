@@ -21,7 +21,7 @@ export default function SimplifierTickerPage() {
   const [autoMap, setAutoMap] = useState<SimplifierAutoMap>({})
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState('')
-  const [existing, setExisting] = useState<Pick<WatchlistEntry, 'answers' | 'notes'> | null>(null)
+  const [existing, setExisting] = useState<Pick<WatchlistEntry, 'answers' | 'notes' | 'listTag'> | null>(null)
   const [wikiBio, setWikiBio] = useState<string | null>(null)
 
   const upperTicker = ticker.toUpperCase()
@@ -32,7 +32,7 @@ export default function SimplifierTickerPage() {
 
     // Load any previously saved entry from localStorage
     const saved = getWatchlistEntry(upperTicker)
-    if (saved) setExisting({ answers: saved.answers, notes: saved.notes })
+    if (saved) setExisting({ answers: saved.answers, notes: saved.notes, listTag: saved.listTag })
 
     fetch(`/api/financials?ticker=${upperTicker}`)
       .then((r) => r.json())
@@ -89,6 +89,7 @@ export default function SimplifierTickerPage() {
       phaseScores,
       overallScore: overall,
       snapshot,
+      listTag:      partial.listTag ?? null,
     }
 
     await saveWatchlistEntry(entry, userEmail)

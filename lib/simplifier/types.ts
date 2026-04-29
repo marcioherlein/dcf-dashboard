@@ -1,5 +1,7 @@
 export type Answer = 'yes' | 'partial' | 'no' | null
 
+export type ListTag = 'buy' | 'watch' | 'pass' | null
+
 export interface QuestionDef {
   id: string
   text: string
@@ -56,4 +58,5 @@ export interface WatchlistEntry {
   phaseScores:      Partial<PhaseScores>
   overallScore:     number | null     // 0.0–1.0
   snapshot:         FinancialSnapshot
+  listTag:          ListTag           // user's manual classification
 }
