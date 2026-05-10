@@ -12,6 +12,7 @@ import CAGRAnalysis from '@/components/stock/CAGRAnalysis'
 import BusinessModel from '@/components/stock/BusinessModel'
 import RatingsPanel from '@/components/stock/RatingsPanel'
 import ValuationMethods from '@/components/stock/ValuationMethods'
+import FCFBuildUp from '@/components/stock/FCFBuildUp'
 import FinancialStatements from '@/components/stock/FinancialStatements'
 import FinancialCharts from '@/components/stock/FinancialCharts'
 import FinancialScores from '@/components/stock/FinancialScores'
@@ -87,6 +88,7 @@ interface FinancialsData {
   historicalRevenues: number[]
   businessProfile: BusinessProfile
   analystRecommendation: string
+  financialCurrencyNote?: string
   ratings: import('@/lib/dcf/calculateRatings').StockRatings
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   valuationMethods?: any
@@ -316,6 +318,22 @@ export default function StockPage() {
                 yearlyGrowthRates={data.dcf.yearlyGrowthRates}
                 historicalFCF={data.historicalFCF}
               />
+              {data.financialStatements && (
+                <FCFBuildUp
+                  incomeStatement={data.financialStatements.incomeStatement}
+                  balanceSheet={data.financialStatements.balanceSheet}
+                  cashFlow={data.financialStatements.cashFlow}
+                  wacc={waccOverride ?? data.wacc.wacc}
+                  taxRate={data.wacc.inputs.taxRate}
+                  cash={data.fairValue.cash}
+                  debt={data.fairValue.debt}
+                  sharesOutstanding={data.fairValue.sharesOutstanding}
+                  currentPrice={data.fairValue.currentPrice}
+                  cagrAnalysis={data.cagrAnalysis}
+                  currency={currency}
+                  financialCurrencyNote={data.financialCurrencyNote}
+                />
+              )}
               <WACCBreakdown
                 wacc={data.wacc}
                 onWACCChange={(w) => setWaccOverride(w)}
