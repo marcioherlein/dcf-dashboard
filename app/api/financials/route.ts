@@ -427,12 +427,12 @@ export async function GET(req: NextRequest) {
       ? fmpIsSorted.map(s => ({
           year: s.fiscalYear,
           revenue: s.revenue > 0 ? s.revenue / 1e6 : null,
-          grossProfit: s.grossProfit !== 0 ? s.grossProfit / 1e6 : null,
-          operatingIncome: s.operatingIncome !== 0 ? s.operatingIncome / 1e6 : null,
-          ebitda: s.ebitda !== 0 ? s.ebitda / 1e6 : null,
-          netIncome: s.netIncome !== 0 ? s.netIncome / 1e6 : null,
-          eps: s.epsDiluted !== 0 ? s.epsDiluted : null,
-          operatingMargin: s.revenue > 0 && s.operatingIncome !== 0 ? s.operatingIncome / s.revenue : null,
+          grossProfit: s.grossProfit != null ? s.grossProfit / 1e6 : null,
+          operatingIncome: s.operatingIncome != null ? s.operatingIncome / 1e6 : null,
+          ebitda: s.ebitda != null ? s.ebitda / 1e6 : null,
+          netIncome: s.netIncome != null ? s.netIncome / 1e6 : null,
+          eps: s.epsDiluted ?? null,
+          operatingMargin: s.revenue > 0 && s.operatingIncome != null ? s.operatingIncome / s.revenue : null,
           isProjected: false,
         }))
       : (() => {
@@ -515,14 +515,14 @@ export async function GET(req: NextRequest) {
     const cfHistoricalRows = hasFmp
       ? fmpCfSorted.map(s => ({
           year: s.fiscalYear,
-          operatingCF: s.netCashProvidedByOperatingActivities !== 0 ? s.netCashProvidedByOperatingActivities / 1e6 : null,
-          capex: s.investmentsInPropertyPlantAndEquipment !== 0 ? s.investmentsInPropertyPlantAndEquipment / 1e6 : null,
-          freeCashFlow: s.freeCashFlow !== 0 ? Math.round(s.freeCashFlow / 1e6) : null,
-          investingCF: s.netCashUsedForInvestingActivites !== 0 ? s.netCashUsedForInvestingActivites / 1e6 : null,
-          financingCF: s.netCashUsedProvidedByFinancingActivities !== 0 ? s.netCashUsedProvidedByFinancingActivities / 1e6 : null,
+          operatingCF: s.netCashProvidedByOperatingActivities != null ? s.netCashProvidedByOperatingActivities / 1e6 : null,
+          capex: s.investmentsInPropertyPlantAndEquipment != null ? s.investmentsInPropertyPlantAndEquipment / 1e6 : null,
+          freeCashFlow: s.freeCashFlow != null ? Math.round(s.freeCashFlow / 1e6) : null,
+          investingCF: s.netCashUsedForInvestingActivites != null ? s.netCashUsedForInvestingActivites / 1e6 : null,
+          financingCF: s.netCashUsedProvidedByFinancingActivities != null ? s.netCashUsedProvidedByFinancingActivities / 1e6 : null,
           // dividendsPaid in FMP is negative (outflow); store as negative to match Yahoo convention
-          dividendsPaid: s.commonDividendsPaid !== 0 ? s.commonDividendsPaid / 1e6 : null,
-          buybacks: s.commonStockRepurchased !== 0 ? Math.abs(s.commonStockRepurchased / 1e6) : null,
+          dividendsPaid: s.commonDividendsPaid != null ? s.commonDividendsPaid / 1e6 : null,
+          buybacks: s.commonStockRepurchased != null ? Math.abs(s.commonStockRepurchased / 1e6) : null,
           isProjected: false,
         }))
       : (() => {
@@ -672,6 +672,21 @@ export async function GET(req: NextRequest) {
       ownership,
       valuationMethods,
       financialStatements,
+      providerStatus: {
+        fmp: {
+          ok: hasFmp,
+          ...(hasFmp ? {} : { error: 'No FMP income statement data' }),
+        },
+        fred: {
+          ok: true,
+          rfRate,
+          source: rfRate === 0.0429 ? ('fallback' as const) : ('api' as const),
+        },
+        fx: {
+          rate: fxRate,
+          source: fxRate === 1 ? ('parity' as const) : ('api' as const),
+        },
+      },
     })
   } catch (err) {
     console.error(`Financials error for ${ticker}:`, err)

@@ -11,7 +11,7 @@ interface ForecastTableProps {
   ufcfRows: UFCFRow[]
   lfcfRows: LFCFRow[]
   currency: string
-  onCellEdit?: (rowIndex: number, field: string, value: number) => void
+  onCellEdit?: (year: string, field: string, value: number) => void
 }
 
 function GrowthLabel({ value }: { value: string }) {
@@ -21,11 +21,11 @@ function GrowthLabel({ value }: { value: string }) {
 }
 
 function Cell({
-  value, isProjected, isEditable, fieldName, rowIndex,
+  value, isProjected, isEditable, fieldName, year,
   onEdit, highlight,
 }: {
-  value: string; isProjected: boolean; isEditable: boolean; fieldName: string; rowIndex: number
-  onEdit?: (rowIndex: number, field: string, value: number) => void
+  value: string; isProjected: boolean; isEditable: boolean; fieldName: string; year: string
+  onEdit?: (year: string, field: string, value: number) => void
   highlight?: boolean
 }) {
   const [editing, setEditing] = useState(false)
@@ -48,7 +48,7 @@ function Cell({
             if (e.key === 'Enter') {
               const raw = draft.replace(/[$,BM%()]/g, '').trim()
               const parsed = parseFloat(raw)
-              if (!isNaN(parsed) && onEdit) onEdit(rowIndex, fieldName, parsed)
+              if (!isNaN(parsed) && onEdit) onEdit(year, fieldName, parsed)
               setEditing(false)
             }
             if (e.key === 'Escape') setEditing(false)
@@ -56,7 +56,7 @@ function Cell({
           onBlur={() => {
             const raw = draft.replace(/[$,BM%()]/g, '').trim()
             const parsed = parseFloat(raw)
-            if (!isNaN(parsed) && onEdit) onEdit(rowIndex, fieldName, parsed)
+            if (!isNaN(parsed) && onEdit) onEdit(year, fieldName, parsed)
             setEditing(false)
           }}
         />
@@ -238,7 +238,7 @@ export default function ForecastTable({ ufcfRows, lfcfRows, currency, onCellEdit
                         isProjected={row.isProjected}
                         isEditable={rowDef.editable ?? false}
                         fieldName={rowDef.key}
-                        rowIndex={i}
+                        year={row.year}
                         onEdit={onCellEdit}
                         highlight={rowDef.bold}
                       />

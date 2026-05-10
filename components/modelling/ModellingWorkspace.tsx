@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { normalizeModellingInputs, type ModellingInput, type ModellingRow } from '@/lib/valuation/normalizeInputs'
 import { buildAssumptionSet, type AssumptionSet } from '@/lib/valuation/assumptions'
 import { computeUFCFRows, computeUFCFTerminalValues, computeUFCFEV } from '@/lib/valuation/unleveredDcf'
@@ -33,9 +33,26 @@ export default function ModellingWorkspace({ apiData, ticker }: ModellingWorkspa
   const [terminalGOverride, setTerminalGOverride] = useState<number | null>(null)
   const [exitMultipleOverride, setExitMultipleOverride] = useState<number | null>(null)
 
-  const wacc = waccOverride ?? baseInput.wacc
-  const cagr = cagrOverride ?? baseInput.cagr
-  const terminalG = terminalGOverride ?? baseInput.terminalG
+  // Scenario presets
+  type Preset = 'conservative' | 'base' | 'optimistic'
+  const [preset, setPreset] = useState<Preset>('base')
+  const PRESET_OFFSETS: Record<Preset, { cagr: number; wacc: number; terminalG: number }> = {
+    conservative: { cagr: -0.02, wacc: 0.01, terminalG: -0.005 },
+    base:         { cagr: 0,     wacc: 0,     terminalG: 0 },
+    optimistic:   { cagr: 0.02,  wacc: -0.01, terminalG: 0.005 },
+  }
+
+  // Row-level cell overrides (keyed by year string then field name)
+  const [rowOverrides, setRowOverrides] = useState<Record<string, Record<string, number>>>({})
+
+  // Reset row overrides whenever the preset changes
+  useEffect(() => {
+    setRowOverrides({})
+  }, [preset])
+
+  const wacc = Math.max(0.01, (waccOverride ?? baseInput.wacc) + PRESET_OFFSETS[preset].wacc)
+  const cagr = Math.max(0, (cagrOverride ?? baseInput.cagr) + PRESET_OFFSETS[preset].cagr)
+  const terminalG = Math.max(0, (terminalGOverride ?? baseInput.terminalG) + PRESET_OFFSETS[preset].terminalG)
   const taxRate = baseInput.taxRate
 
   // Build assumption set for AssumptionPanel
@@ -81,24 +98,36 @@ export default function ModellingWorkspace({ apiData, ticker }: ModellingWorkspa
   const exitMultiple = exitMultipleOverride ?? assumptions.exitMultiple.value
 
   // Build UFCF + LFCF rows
-  const ufcfInputRows = useMemo(() => baseInput.rows.map(r => ({
-    year: r.year, isProjected: r.isProjected,
-    revenue: r.revenue, ebit: r.ebit, ebitda: r.ebitda,
-    capex: r.capex, nwc: deriveNWC(r),
-  })), [baseInput])
+  const ufcfInputRows = useMemo(() => baseInput.rows.map(r => {
+    const ov = rowOverrides[r.year] ?? {}
+    return {
+      year: r.year, isProjected: r.isProjected,
+      revenue: ov.revenue != null ? ov.revenue : r.revenue,
+      ebit:    ov.ebit    != null ? ov.ebit    : r.ebit,
+      ebitda:  ov.ebitda  != null ? ov.ebitda  : r.ebitda,
+      capex:   ov.capex   != null ? ov.capex   : r.capex,
+      nwc:     ov.nwc     != null ? ov.nwc     : deriveNWC(r),
+    }
+  }), [baseInput, rowOverrides])
 
   const ufcfRows = useMemo(() => computeUFCFRows(ufcfInputRows, taxRate, wacc), [ufcfInputRows, taxRate, wacc])
 
-  const lfcfInputRows = useMemo(() => baseInput.rows.map(r => ({
-    year: r.year, isProjected: r.isProjected,
-    revenue: r.revenue,
-    netIncome: r.netIncome, ebit: r.ebit, ebitda: r.ebitda,
-    capex: r.capex, nwc: deriveNWC(r),
-    // Net debt repayment proxy from financing cash flows
-    netDebtRepayment: r.financingCF != null && r.dividendsPaid != null
-      ? -r.financingCF - Math.abs(r.dividendsPaid ?? 0)   // simplified proxy
-      : null,
-  })), [baseInput])
+  const lfcfInputRows = useMemo(() => baseInput.rows.map(r => {
+    const ov = rowOverrides[r.year] ?? {}
+    const baseNetDebtRepayment = r.financingCF != null && r.dividendsPaid != null
+      ? -r.financingCF - Math.abs(r.dividendsPaid ?? 0)
+      : null
+    return {
+      year: r.year, isProjected: r.isProjected,
+      revenue:          ov.revenue          != null ? ov.revenue          : r.revenue,
+      netIncome:        ov.netIncome        != null ? ov.netIncome        : r.netIncome,
+      ebit:             ov.ebit             != null ? ov.ebit             : r.ebit,
+      ebitda:           ov.ebitda           != null ? ov.ebitda           : r.ebitda,
+      capex:            ov.capex            != null ? ov.capex            : r.capex,
+      nwc:              ov.nwc              != null ? ov.nwc              : deriveNWC(r),
+      netDebtRepayment: ov.netDebtRepayment != null ? ov.netDebtRepayment : baseNetDebtRepayment,
+    }
+  }), [baseInput, rowOverrides])
 
   const lfcfRows = useMemo(() => computeLFCFRows(lfcfInputRows, baseInput.costOfEquity), [lfcfInputRows, baseInput.costOfEquity])
 
@@ -138,6 +167,10 @@ export default function ModellingWorkspace({ apiData, ticker }: ModellingWorkspa
     else if (field === 'exitMultiple') setExitMultipleOverride(value)
   }, [])
 
+  const handleCellEdit = useCallback((year: string, field: string, value: number) => {
+    setRowOverrides(prev => ({ ...prev, [year]: { ...prev[year], [field]: value } }))
+  }, [])
+
   const tvError = tvUFCF.guardError
 
   return (
@@ -146,7 +179,7 @@ export default function ModellingWorkspace({ apiData, ticker }: ModellingWorkspa
         terminalGError={tvError}
         financialCurrencyNote={baseInput.financialCurrencyNote}
         isFinancialSector={baseInput.isFinancialSector}
-        isNegativeFCF={(baseInput.baseFCF ?? 0) < 0}
+        isNegativeFCF={baseInput.baseFCF != null && baseInput.baseFCF < 0}
         altmanZone={baseInput.altmanZone}
         beneishFlag={baseInput.beneishFlag}
       />
@@ -162,10 +195,34 @@ export default function ModellingWorkspace({ apiData, ticker }: ModellingWorkspa
 
         {/* Main area */}
         <div className="lg:col-span-3 space-y-4">
+          {/* Scenario preset selector */}
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs font-medium text-slate-500">Scenario:</span>
+            {(['conservative', 'base', 'optimistic'] as Preset[]).map(p => (
+              <button
+                key={p}
+                onClick={() => setPreset(p)}
+                className={`px-3 py-1 text-xs rounded-full border font-medium capitalize transition-colors ${
+                  preset === p ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-300 hover:border-slate-500'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+            {Object.keys(rowOverrides).length > 0 && (
+              <button
+                onClick={() => setRowOverrides({})}
+                className="text-xs text-blue-600 hover:text-blue-800 underline"
+              >
+                Reset
+              </button>
+            )}
+          </div>
           <ForecastTable
             ufcfRows={ufcfRows}
             lfcfRows={lfcfRows}
             currency={baseInput.currency}
+            onCellEdit={handleCellEdit}
           />
 
           <TerminalValuePanel

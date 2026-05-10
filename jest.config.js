@@ -9,7 +9,10 @@ module.exports = {
     '^.+\\.tsx?$': ['ts-jest', { tsconfig: { strict: false } }],
   },
   testMatch: [
-    '**/lib/valuation/__tests__/guards.test.ts',
-    '**/lib/valuation/__tests__/dcf.test.ts',
+    '**/lib/**/__tests__/**/*.test.ts',
+  ],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/.claude/worktrees/',
   ],
 }

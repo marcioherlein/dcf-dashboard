@@ -27,16 +27,24 @@ export function calculatePiotroski(
   const inc1 = incStmts[1] ?? {}
   const cf0 = cfStmts[0] ?? {}
 
-  const ta0 = (bs0.totalAssets ?? 0) as number
-  const ta1 = (bs1.totalAssets ?? 0) as number
+  // Null guards for critical inputs: using ?? 0 on totalAssets / netIncome / OCF
+  // causes division-by-zero or meaningless ratios when data is genuinely absent.
+  // We store null and mark affected criteria as pass=false / "data unavailable".
+  const ta0Raw = (bs0.totalAssets ?? null) as number | null
+  const ta1Raw = (bs1.totalAssets ?? null) as number | null
+  const ta0 = ta0Raw ?? 0
+  const ta1 = ta1Raw ?? 0
 
-  const ni0 = (inc0.netIncome ?? inc0.netIncomeApplicableToCommonShares ?? 0) as number
-  const ni1 = (inc1.netIncome ?? inc1.netIncomeApplicableToCommonShares ?? 0) as number
+  const ni0Raw = (inc0.netIncome ?? inc0.netIncomeApplicableToCommonShares ?? null) as number | null
+  const ni1Raw = (inc1.netIncome ?? inc1.netIncomeApplicableToCommonShares ?? null) as number | null
+  const ni0 = ni0Raw ?? 0
+  const ni1 = ni1Raw ?? 0
 
-  const ocf0 = (cf0.totalCashFromOperatingActivities ?? cf0.operatingCashflow ?? 0) as number
+  const ocf0Raw = (cf0.totalCashFromOperatingActivities ?? cf0.operatingCashflow ?? null) as number | null
+  const ocf0 = ocf0Raw ?? 0
 
-  const roa0 = ta0 > 0 ? ni0 / ta0 : 0
-  const roa1 = ta1 > 0 ? ni1 / ta1 : 0
+  const roa0 = ta0Raw != null && ta0 > 0 && ni0Raw != null ? ni0 / ta0 : null
+  const roa1 = ta1Raw != null && ta1 > 0 && ni1Raw != null ? ni1 / ta1 : null
 
   const ltd0 = ((bs0.longTermDebt ?? bs0.longTermDebtTotal ?? 0) as number)
   const ltd1 = ((bs1.longTermDebt ?? bs1.longTermDebtTotal ?? 0) as number)
@@ -63,26 +71,22 @@ export function calculatePiotroski(
   const fmtN = (n: number) => n.toFixed(3)
 
   const criteria: PiotroskiCriterion[] = [
-    {
-      name: 'ROA positive',
-      pass: roa0 > 0,
-      detail: `ROA ${fmt(roa0)}`,
-    },
-    {
-      name: 'Operating CF positive',
-      pass: ocf0 > 0,
-      detail: `OCF $${(ocf0 / 1e9).toFixed(1)}B`,
-    },
-    {
-      name: 'ROA improving',
-      pass: roa0 > roa1,
-      detail: `${fmt(roa0)} vs ${fmt(roa1)} prior`,
-    },
-    {
-      name: 'Accrual quality (OCF > Net Income)',
-      pass: ocf0 > ni0,
-      detail: `OCF $${(ocf0 / 1e9).toFixed(1)}B vs NI $${(ni0 / 1e9).toFixed(1)}B`,
-    },
+    roa0 === null
+      ? { name: 'ROA positive', pass: false, detail: 'data unavailable' }
+      : { name: 'ROA positive', pass: roa0 > 0, detail: `ROA ${fmt(roa0)}` },
+    ocf0Raw === null
+      ? { name: 'Operating CF positive', pass: false, detail: 'data unavailable' }
+      : { name: 'Operating CF positive', pass: ocf0 > 0, detail: `OCF $${(ocf0 / 1e9).toFixed(1)}B` },
+    roa0 === null || roa1 === null
+      ? { name: 'ROA improving', pass: false, detail: 'data unavailable' }
+      : { name: 'ROA improving', pass: roa0 > roa1, detail: `${fmt(roa0)} vs ${fmt(roa1)} prior` },
+    ocf0Raw === null || ni0Raw === null
+      ? { name: 'Accrual quality (OCF > Net Income)', pass: false, detail: 'data unavailable' }
+      : {
+          name: 'Accrual quality (OCF > Net Income)',
+          pass: ocf0 > ni0,
+          detail: `OCF $${(ocf0 / 1e9).toFixed(1)}B vs NI $${(ni0 / 1e9).toFixed(1)}B`,
+        },
     {
       name: 'Leverage falling',
       pass: lev0 < lev1,

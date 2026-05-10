@@ -7,7 +7,9 @@ export async function getRfRate(): Promise<number> {
   try {
     const url = `https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${apiKey}&sort_order=desc&limit=5&file_type=json`
     const res = await fetch(url, { next: { revalidate: 3600 } }) // cache 1h
-    if (!res.ok) return 4.29
+    // BUG FIX: was `return 4.29` (percent) but the caller expects a decimal;
+    // the successful path divides by 100 and the no-api-key fallback returns 0.0429.
+    if (!res.ok) return 0.0429
     const data = await res.json()
     const observations: { value: string }[] = data.observations ?? []
     const latest = observations.find((o) => o.value !== '.')
