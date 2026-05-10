@@ -10,18 +10,19 @@ import InsiderTable from '@/components/stock/InsiderTable'
 import ValuationHistory, { saveLocal } from '@/components/stock/ValuationHistory'
 import CAGRAnalysis from '@/components/stock/CAGRAnalysis'
 import BusinessModel from '@/components/stock/BusinessModel'
-import RatingsPanel from '@/components/stock/RatingsPanel'
-import ValuationMethods from '@/components/stock/ValuationMethods'
+import ValuationSection from '@/components/stock/ValuationSection'
 import FCFBuildUp from '@/components/stock/FCFBuildUp'
 import FinancialStatements from '@/components/stock/FinancialStatements'
 import FinancialCharts from '@/components/stock/FinancialCharts'
 import FinancialScores from '@/components/stock/FinancialScores'
 import OwnershipPanel from '@/components/stock/OwnershipPanel'
-import TabNav, { type TabId } from '@/components/stock/TabNav'
+import AtAGlance from '@/components/stock/AtAGlance'
+import HealthSection from '@/components/stock/HealthSection'
+import ModelSection from '@/components/stock/ModelSection'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
-  loading: () => <div className="h-64 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" />,
+  loading: () => <div className="h-64 animate-pulse rounded-2xl bg-gray-100" />,
 })
 
 interface CAGRAnalysisData {
@@ -127,20 +128,22 @@ interface FinancialsData {
 export default function StockPage() {
   const { ticker } = useParams<{ ticker: string }>()
   const router = useRouter()
-  const [data, setData] = useState<FinancialsData | null>(null)
+  const [data, setData]       = useState<FinancialsData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [waccOverride, setWaccOverride] = useState<number | null>(null)
+  const [error, setError]     = useState('')
+  const [saving, setSaving]   = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+
+  // Overrides from WACCBreakdown / DCFModel inline editors (kept for the Details section)
+  const [waccOverride, setWaccOverride]         = useState<number | null>(null)
   const [terminalGOverride, setTerminalGOverride] = useState<number | null>(null)
-  const [activeTab, setActiveTab] = useState<TabId>('summary')
 
   useEffect(() => {
     setLoading(true)
     setError('')
     setWaccOverride(null)
     setTerminalGOverride(null)
-    setActiveTab('summary')
+    setDetailsOpen(false)
     fetch(`/api/financials?ticker=${ticker}`)
       .then((r) => r.json())
       .then((d) => {
@@ -198,20 +201,21 @@ export default function StockPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFB]">
 
-      {/* Breadcrumb bar */}
+      {/* Breadcrumb */}
       <div className="bg-white border-b border-slate-200 px-6 py-2 flex items-center gap-3">
         <button
-          onClick={() => router.push('/factor-ranking')}
+          onClick={() => router.push('/')}
           className="flex items-center gap-1.5 text-[12px] text-slate-500 hover:text-blue-600 transition-colors"
         >
-          ← Screener
+          ← Home
         </button>
         <span className="text-slate-300">·</span>
         <span className="text-[12px] text-blue-600 font-semibold">{ticker}</span>
         {data && <span className="text-[12px] text-slate-400 truncate max-w-xs">{data.companyName}</span>}
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-12">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-16">
+
         {loading && (
           <div className="flex flex-col items-center justify-center py-32 gap-4">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-blue-500" />
@@ -226,151 +230,211 @@ export default function StockPage() {
         )}
 
         {data && !loading && (
-          <div>
-            <div className="pt-5">
-              <PriceHeader
-                ticker={data.ticker}
-                companyName={data.companyName}
-                price={data.quote.price}
-                change={data.quote.change}
-                changePct={data.quote.changePct}
-                marketCap={data.quote.marketCap}
-                peRatio={data.quote.peRatio}
-                high52={data.quote.fiftyTwoWeekHigh}
-                low52={data.quote.fiftyTwoWeekLow}
-                analystTarget={data.quote.analystTargetMean}
-                currency={data.quote.currency ?? 'USD'}
-                sector={data.quote.sector ?? ''}
-                analystRec={data.analystRecommendation}
-              />
-            </div>
+          <div className="space-y-4 pt-5">
 
-            <div className="-mx-4 sm:-mx-6 lg:-mx-8 mt-4">
-              <TabNav activeTab={activeTab} onChange={setActiveTab} />
-            </div>
+            {/* Price header */}
+            <PriceHeader
+              ticker={data.ticker}
+              companyName={data.companyName}
+              price={data.quote.price}
+              change={data.quote.change}
+              changePct={data.quote.changePct}
+              marketCap={data.quote.marketCap}
+              peRatio={data.quote.peRatio}
+              high52={data.quote.fiftyTwoWeekHigh}
+              low52={data.quote.fiftyTwoWeekLow}
+              analystTarget={data.quote.analystTargetMean}
+              currency={data.quote.currency ?? 'USD'}
+              sector={data.quote.sector ?? ''}
+              analystRec={data.analystRecommendation}
+            />
 
-            {/* ── Summary ── */}
-            <div className={`pt-6 space-y-4 ${activeTab === 'summary' ? 'block' : 'hidden'}`}>
-              <PriceChart
+            {/* Section 1: At a Glance */}
+            <AtAGlance
+              companyName={data.companyName}
+              price={data.quote.price}
+              high52={data.quote.fiftyTwoWeekHigh}
+              low52={data.quote.fiftyTwoWeekLow}
+              sector={data.quote.sector ?? ''}
+              country={data.businessProfile.country}
+              currency={currency}
+              fairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue.fairValuePerShare}
+              upsidePct={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue.upsidePct}
+              overallGrade={data.ratings?.overall?.grade ?? 'N/A'}
+              overallLabel={data.ratings?.overall?.label ?? ''}
+            />
+
+            {/* Section 2: The Business */}
+            {(data.businessProfile.description || data.historicalRevenues.length >= 2) && (
+              <BusinessModel
+                businessProfile={data.businessProfile}
+                historicalRevenues={data.historicalRevenues}
                 ticker={ticker}
                 isDark={false}
-                fcffFairValue={data.fairValue.fairValuePerShare}
-                triangulatedFairValue={data.valuationMethods?.triangulatedFairValue}
-                analystTarget={data.quote.analystTargetMean}
+                incomeStatement={data.financialStatements?.incomeStatement}
+                cashFlow={data.financialStatements?.cashFlow}
               />
-              {data.ratings && <RatingsPanel ratings={data.ratings} />}
-            </div>
+            )}
 
-            {/* ── Financials ── */}
-            <div className={`pt-6 space-y-4 ${activeTab === 'financials' ? 'block' : 'hidden'}`}>
-              {data.financialStatements && (
-                <FinancialStatements
-                  incomeStatement={data.financialStatements.incomeStatement}
-                  balanceSheet={data.financialStatements.balanceSheet}
-                  cashFlow={data.financialStatements.cashFlow}
-                  currency={currency}
-                  cagr={data.cagr}
-                />
-              )}
-              {data.financialStatements && (
-                <FinancialCharts
-                  incomeStatement={data.financialStatements.incomeStatement}
-                  cashFlow={data.financialStatements.cashFlow}
-                  currency={currency}
-                  isDark={false}
-                />
-              )}
-              {(data.businessProfile.description || data.historicalRevenues.length >= 2) && (
-                <BusinessModel
-                  businessProfile={data.businessProfile}
-                  historicalRevenues={data.historicalRevenues}
-                  ticker={ticker}
-                  isDark={false}
-                  incomeStatement={data.financialStatements?.incomeStatement}
-                  cashFlow={data.financialStatements?.cashFlow}
-                />
-              )}
-            </div>
+            {/* Section 3: Financial Health */}
+            {data.ratings && data.scores && (
+              <HealthSection
+                ratings={data.ratings}
+                scores={data.scores}
+                financialsData={data}
+              />
+            )}
 
-            {/* ── Valuation ── */}
-            <div className={`pt-6 space-y-4 ${activeTab === 'valuation' ? 'block' : 'hidden'}`}>
-              {data.valuationMethods && (
-                <ValuationMethods
-                  valuationMethods={data.valuationMethods}
-                  currency={currency}
-                />
-              )}
-              <DCFModel
-                projections={data.dcf.projections}
-                terminalValue={data.dcf.terminalValue}
-                terminalValueDiscounted={data.dcf.terminalValueDiscounted}
-                sumPV={data.dcf.sumPV}
-                ev={data.dcf.ev}
-                fairValue={data.fairValue}
-                wacc={waccOverride ?? data.wacc.wacc}
-                cagr={data.cagr}
-                terminalG={data.terminalG}
+            {/* Section 4: What Is It Worth? */}
+            {data.valuationMethods && (
+              <ValuationSection
+                companyName={data.companyName}
+                currency={currency}
+                fairValuePerShare={data.valuationMethods.triangulatedFairValue ?? data.fairValue.fairValuePerShare}
+                upsidePct={data.valuationMethods.triangulatedUpsidePct ?? data.fairValue.upsidePct}
+                valuationMethods={data.valuationMethods}
                 scenarios={data.scenarios}
-                baseFCF={data.baseFCF}
-                terminalGOverride={terminalGOverride}
-                onTerminalGChange={setTerminalGOverride}
-                growthModel={data.growthModel}
-                yearlyGrowthRates={data.dcf.yearlyGrowthRates}
-                historicalFCF={data.historicalFCF}
+                currentPrice={data.quote.price}
+                financialsData={data}
               />
-              {data.financialStatements && (
-                <FCFBuildUp
-                  incomeStatement={data.financialStatements.incomeStatement}
-                  balanceSheet={data.financialStatements.balanceSheet}
-                  cashFlow={data.financialStatements.cashFlow}
-                  wacc={waccOverride ?? data.wacc.wacc}
-                  taxRate={data.wacc.inputs.taxRate}
-                  cash={data.fairValue.cash}
-                  debt={data.fairValue.debt}
-                  sharesOutstanding={data.fairValue.sharesOutstanding}
-                  currentPrice={data.fairValue.currentPrice}
-                  cagrAnalysis={data.cagrAnalysis}
-                  currency={currency}
-                  financialCurrencyNote={data.financialCurrencyNote}
-                />
+            )}
+
+            {/* Section 5: Model the Assumptions */}
+            <ModelSection
+              baseCagr={data.cagr}
+              baseWacc={data.wacc.wacc}
+              baseTerminalG={data.terminalG}
+              baseFairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue.fairValuePerShare}
+              currentPrice={data.quote.price}
+              currency={currency}
+              cagrAnalysis={data.cagrAnalysis}
+              baseFCF={data.baseFCF}
+              cashM={data.fairValue.cash}
+              debtM={data.fairValue.debt}
+              sharesM={data.fairValue.sharesOutstanding}
+              growthModel={data.growthModel ?? 'two-stage'}
+            />
+
+            {/* Section 6: Detailed Analysis (collapsible) */}
+            <div className="rounded-2xl bg-white border border-slate-200 shadow-card overflow-hidden">
+              <button
+                onClick={() => setDetailsOpen((v) => !v)}
+                className="w-full flex items-center justify-between px-6 py-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                <span>Show full analysis</span>
+                <svg
+                  className={`w-4 h-4 text-slate-400 transition-transform ${detailsOpen ? 'rotate-180' : ''}`}
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {detailsOpen && (
+                <div className="border-t border-slate-100 px-4 sm:px-6 pb-8 space-y-5 pt-5">
+
+                  {/* Price chart */}
+                  <PriceChart
+                    ticker={ticker}
+                    isDark={false}
+                    fcffFairValue={data.fairValue.fairValuePerShare}
+                    triangulatedFairValue={data.valuationMethods?.triangulatedFairValue}
+                    analystTarget={data.quote.analystTargetMean}
+                  />
+
+                  {/* Financial statements */}
+                  {data.financialStatements && (
+                    <FinancialStatements
+                      incomeStatement={data.financialStatements.incomeStatement}
+                      balanceSheet={data.financialStatements.balanceSheet}
+                      cashFlow={data.financialStatements.cashFlow}
+                      currency={currency}
+                      cagr={data.cagr}
+                    />
+                  )}
+                  {data.financialStatements && (
+                    <FinancialCharts
+                      incomeStatement={data.financialStatements.incomeStatement}
+                      cashFlow={data.financialStatements.cashFlow}
+                      currency={currency}
+                      isDark={false}
+                    />
+                  )}
+
+                  {/* DCF model */}
+                  <DCFModel
+                    projections={data.dcf.projections}
+                    terminalValue={data.dcf.terminalValue}
+                    terminalValueDiscounted={data.dcf.terminalValueDiscounted}
+                    sumPV={data.dcf.sumPV}
+                    ev={data.dcf.ev}
+                    fairValue={data.fairValue}
+                    wacc={waccOverride ?? data.wacc.wacc}
+                    cagr={data.cagr}
+                    terminalG={data.terminalG}
+                    scenarios={data.scenarios}
+                    baseFCF={data.baseFCF}
+                    terminalGOverride={terminalGOverride}
+                    onTerminalGChange={setTerminalGOverride}
+                    growthModel={data.growthModel}
+                    yearlyGrowthRates={data.dcf.yearlyGrowthRates}
+                    historicalFCF={data.historicalFCF}
+                  />
+
+                  {/* FCF build-up */}
+                  {data.financialStatements && (
+                    <FCFBuildUp
+                      incomeStatement={data.financialStatements.incomeStatement}
+                      balanceSheet={data.financialStatements.balanceSheet}
+                      cashFlow={data.financialStatements.cashFlow}
+                      wacc={waccOverride ?? data.wacc.wacc}
+                      taxRate={data.wacc.inputs.taxRate}
+                      cash={data.fairValue.cash}
+                      debt={data.fairValue.debt}
+                      sharesOutstanding={data.fairValue.sharesOutstanding}
+                      currentPrice={data.fairValue.currentPrice}
+                      cagrAnalysis={data.cagrAnalysis}
+                      currency={currency}
+                      financialCurrencyNote={data.financialCurrencyNote}
+                    />
+                  )}
+
+                  {/* WACC breakdown */}
+                  <WACCBreakdown
+                    wacc={data.wacc}
+                    onWACCChange={(w) => setWaccOverride(w)}
+                  />
+
+                  {/* CAGR analysis */}
+                  {data.cagrAnalysis && (
+                    <CAGRAnalysis
+                      cagrAnalysis={data.cagrAnalysis}
+                      isNegativeFCF={data.isNegativeFCF ?? false}
+                      growthModel={data.growthModel}
+                      terminalG={data.terminalG}
+                    />
+                  )}
+
+                  {/* Quality scores */}
+                  {data.scores && <FinancialScores scores={data.scores} />}
+
+                  {/* Ownership */}
+                  {data.ownership && <OwnershipPanel ownership={data.ownership} />}
+                  <InsiderTable ticker={ticker} />
+
+                  {/* News */}
+                  <NewsPanel ticker={ticker} />
+
+                  {/* Valuation history */}
+                  <ValuationHistory
+                    ticker={ticker}
+                    onSave={handleSave}
+                    saving={saving}
+                  />
+                </div>
               )}
-              <WACCBreakdown
-                wacc={data.wacc}
-                onWACCChange={(w) => setWaccOverride(w)}
-              />
-              {data.cagrAnalysis && (
-                <CAGRAnalysis
-                  cagrAnalysis={data.cagrAnalysis}
-                  isNegativeFCF={data.isNegativeFCF ?? false}
-                  growthModel={data.growthModel}
-                  terminalG={data.terminalG}
-                />
-              )}
             </div>
 
-            {/* ── Quality ── */}
-            <div className={`pt-6 space-y-4 ${activeTab === 'quality' ? 'block' : 'hidden'}`}>
-              {data.scores && <FinancialScores scores={data.scores} />}
-            </div>
-
-            {/* ── Ownership ── */}
-            <div className={`pt-6 space-y-4 ${activeTab === 'ownership' ? 'block' : 'hidden'}`}>
-              {data.ownership && <OwnershipPanel ownership={data.ownership} />}
-              <InsiderTable ticker={ticker} />
-            </div>
-
-            {/* ── News ── */}
-            <div className={`pt-6 space-y-4 ${activeTab === 'news' ? 'block' : 'hidden'}`}>
-              <NewsPanel ticker={ticker} />
-            </div>
-
-            <div className="pt-6">
-              <ValuationHistory
-                ticker={ticker}
-                onSave={handleSave}
-                saving={saving}
-              />
-            </div>
           </div>
         )}
       </div>

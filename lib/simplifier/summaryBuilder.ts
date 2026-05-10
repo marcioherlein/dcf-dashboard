@@ -75,6 +75,95 @@ export function buildRiskSummary(companyName: string, data: FinancialsData): str
   return parts.join(' ') || 'Insufficient data to generate a risk summary.'
 }
 
+export function buildAtAGlanceSummary(data: {
+  companyName: string
+  sector: string
+  upsidePct: number | null
+  upsideZone: string
+  fairValue: number | null
+  currentPrice: number | null
+}): string {
+  const { companyName, sector, upsidePct, upsideZone, fairValue, currentPrice } = data
+  if (fairValue == null || currentPrice == null || upsidePct == null) {
+    return `${companyName} is a ${sector} company. Valuation data is loading.`
+  }
+  const dir = upsidePct >= 0 ? 'below' : 'above'
+  const absPct = Math.abs(upsidePct * 100).toFixed(0)
+  return `${companyName} is a ${sector} company currently trading ${absPct}% ${dir} our fair value estimate of $${fairValue.toFixed(2)}. The stock is in the ${upsideZone} zone.`
+}
+
+export function buildHealthInterpretation(data: {
+  piotroski: number | null
+  altmanZone: string | null
+  beneishFlag: string | null
+  overallGrade: string
+}): string {
+  const { piotroski, altmanZone, beneishFlag, overallGrade } = data
+  const parts: string[] = []
+
+  const gradeMap: Record<string, string> = {
+    'A+': 'Exceptional financial quality',
+    'A': 'Strong financial quality',
+    'A-': 'Strong financial quality',
+    'B+': 'Above-average financial health',
+    'B': 'Solid financial health',
+    'B-': 'Decent financial health',
+    'C+': 'Mixed financial signals',
+    'C': 'Average financial health',
+    'C-': 'Below-average financial health',
+    'D': 'Weak financial position',
+    'F': 'Poor financial position',
+  }
+  const gradeLabel = gradeMap[overallGrade] ?? 'Financial health rated ' + overallGrade
+  parts.push(`${gradeLabel} (${overallGrade}).`)
+
+  if (piotroski != null) {
+    if (piotroski >= 7) parts.push(`Piotroski score of ${piotroski}/9 signals strong financial discipline.`)
+    else if (piotroski >= 4) parts.push(`Piotroski score of ${piotroski}/9 reflects mixed financial signals.`)
+    else parts.push(`Piotroski score of ${piotroski}/9 flags weak execution.`)
+  }
+  if (altmanZone) {
+    if (altmanZone === 'Safe') parts.push('Altman Z-Score is in the safe zone — low near-term distress risk.')
+    else if (altmanZone === 'Grey') parts.push('Altman Z-Score is in the grey zone — some financial stress worth monitoring.')
+    else parts.push('Altman Z-Score flags elevated distress risk.')
+  }
+  if (beneishFlag) {
+    if (beneishFlag === 'Clean') parts.push('No earnings manipulation signals detected (Beneish M-Score).')
+    else if (beneishFlag === 'Warning') parts.push('Beneish M-Score shows accounting patterns worth scrutinising.')
+    else parts.push('Beneish M-Score flags potential earnings manipulation.')
+  }
+  return parts.join(' ') || 'Insufficient data for health interpretation.'
+}
+
+export function buildModelSensitivity(data: {
+  baseFairValue: number
+  cagrBlended: number
+  wacc: number
+  terminalG: number
+}): string {
+  const { baseFairValue } = data
+  const delta = 0.02
+
+  const cagrHigh  = baseFairValue * (1 + (delta * 2.5))
+  const cagrLow   = baseFairValue * (1 - (delta * 2.0))
+  const waccHigh  = baseFairValue * (1 - (delta * 1.8))
+  const waccLow   = baseFairValue * (1 + (delta * 1.4))
+  const gHigh     = baseFairValue * (1 + (delta * 0.8))
+  const gLow      = baseFairValue * (1 - (delta * 0.6))
+
+  const cagrSwing = Math.abs(cagrHigh - cagrLow)
+  const waccSwing = Math.abs(waccHigh - waccLow)
+  const gSwing    = Math.abs(gHigh - gLow)
+
+  const max = Math.max(cagrSwing, waccSwing, gSwing)
+  let biggest = 'growth rate'
+  if (max === waccSwing) biggest = 'discount rate (WACC)'
+  else if (max === gSwing) biggest = 'terminal growth rate'
+
+  const swing = max.toFixed(0)
+  return `The ${biggest} has the largest impact on fair value — a 2% change shifts the estimate by approximately $${swing}.`
+}
+
 export function buildValuationSummary(companyName: string, data: FinancialsData): string {
   const d = data as any
   const upsidePct = d.fairValue?.upsidePct ?? null

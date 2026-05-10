@@ -1,7 +1,7 @@
 'use client'
-import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { fmt, fmtPct } from '@/lib/utils'
+import { buildBusinessSummary } from '@/lib/simplifier/summaryBuilder'
 
 const BarChart = dynamic(() => import('recharts').then((m) => m.BarChart), { ssr: false })
 const Bar = dynamic(() => import('recharts').then((m) => m.Bar), { ssr: false })
@@ -41,17 +41,8 @@ interface Props {
   cashFlow?: CashFlowRow[]
 }
 
-function marginColor(v: number | null): string {
-  if (v === null) return 'text-gray-400 dark:text-white/25'
-  if (v > 0.20) return 'text-emerald-600 dark:text-emerald-400'
-  if (v > 0.05) return 'text-blue-600 dark:text-blue-400'
-  if (v >= 0) return 'text-amber-600 dark:text-amber-400'
-  return 'text-red-600 dark:text-red-400'
-}
-
 export default function BusinessModel({ businessProfile, historicalRevenues, ticker, isDark, incomeStatement, cashFlow }: Props) {
-  const [expanded, setExpanded] = useState(false)
-  const { description, industry, country, employees, grossMargin, netMargin, fcfMargin } = businessProfile
+  const { description, industry, country, employees, netMargin, fcfMargin, revenueM } = businessProfile
 
   const currentYear = new Date().getFullYear()
   const chartData = [...historicalRevenues]
@@ -61,15 +52,6 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
       year: String(currentYear - arr.length + i),
       revenue: Math.round(rev),
     }))
-
-  const DESC_LIMIT = 280
-  const shortDesc = description.length > DESC_LIMIT ? description.slice(0, DESC_LIMIT) + '…' : description
-
-  const margins = [
-    { label: 'Gross Margin', value: grossMargin },
-    { label: 'Net Margin', value: netMargin },
-    { label: 'FCF Margin', value: fcfMargin },
-  ]
 
   const pills = [
     industry && { label: industry },
@@ -96,57 +78,88 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
     })
     .filter((d) => d.gross !== null || d.net !== null)
 
-  return (
-    <div className="rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8 p-6">
-      <h2 className="text-sm font-headline font-semibold text-on-surface dark:text-white/70 mb-4">Business Model</h2>
+  // Plain-English stat values
+  const revenueB = revenueM >= 1000 ? `$${(revenueM / 1000).toFixed(1)}b` : `$${revenueM.toFixed(0)}m`
+  const netMarginKeep = netMargin != null ? `$${(netMargin * 100).toFixed(0)} of every $100` : null
+  const fcfB = fcfMargin != null && revenueM > 0
+    ? (fcfMargin * revenueM >= 1000 ? `$${((fcfMargin * revenueM) / 1000).toFixed(1)}b` : `$${(fcfMargin * revenueM).toFixed(0)}m`)
+    : null
 
+  // Summary callout — build from available financials-like data
+  const summaryCallout = buildBusinessSummary(ticker, {
+    businessProfile,
+    wacc: null,
+    cagrAnalysis: null,
+    scores: null,
+  } as any)
+
+  const statCards = [
+    {
+      label: 'Annual Revenue',
+      value: revenueB,
+      sub: 'Last reported year',
+      color: 'bg-blue-50 border-blue-100',
+    },
+    {
+      label: 'Profit Margin',
+      value: netMarginKeep ?? (netMargin != null ? fmtPct(netMargin) : '—'),
+      sub: netMarginKeep ? 'Net income per $100 revenue' : 'Net margin',
+      color: netMargin != null && netMargin > 0.10 ? 'bg-green-50 border-green-100' : 'bg-slate-50 border-slate-100',
+    },
+    {
+      label: 'Free Cash Flow',
+      value: fcfB ?? (fcfMargin != null ? fmtPct(fcfMargin) : '—'),
+      sub: fcfB ? 'Generated per year (est.)' : 'FCF margin',
+      color: fcfMargin != null && fcfMargin > 0.10 ? 'bg-green-50 border-green-100' : 'bg-slate-50 border-slate-100',
+    },
+  ]
+
+  return (
+    <div className="rounded-2xl bg-white border border-slate-200 shadow-card p-6">
+      <h2 className="text-base font-semibold text-slate-900 mb-4">The Business</h2>
+
+      {/* Context pills */}
       {pills.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
           {pills.map((p) => (
-            <span key={p.label} className="rounded-full border border-gray-200 dark:border-white/10 bg-surface-container-low dark:bg-white/5 px-3 py-1 text-xs font-medium text-gray-600 dark:text-white/50">
+            <span key={p.label} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
               {p.label}
             </span>
           ))}
         </div>
       )}
 
+      {/* Full description */}
       {description ? (
-        <div className="mb-5">
-          <p className="text-sm text-gray-600 dark:text-white/50 leading-relaxed">
-            {expanded ? description : shortDesc}
-          </p>
-          {description.length > DESC_LIMIT && (
-            <button
-              onClick={() => setExpanded((v) => !v)}
-              className="mt-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-            >
-              {expanded ? 'Show less' : 'Read more'}
-            </button>
-          )}
-        </div>
+        <p className="text-sm text-slate-600 leading-relaxed mb-6">{description}</p>
       ) : (
-        <p className="mb-5 text-sm text-gray-400 dark:text-white/25">No business description available for {ticker}.</p>
+        <p className="text-sm text-slate-400 mb-6">No business description available for {ticker}.</p>
       )}
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <div>
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-white/25">Profitability Margins</p>
-          <div className="space-y-2">
-            {margins.map((m) => (
-              <div key={m.label} className="flex items-center justify-between rounded-xl bg-surface-container-low dark:bg-white/5 px-4 py-2.5">
-                <span className="text-xs text-gray-500 dark:text-white/40">{m.label}</span>
-                <span className={`text-sm font-semibold tabular-nums ${marginColor(m.value)}`}>
-                  {m.value !== null ? fmtPct(m.value) : '—'}
-                </span>
-              </div>
-            ))}
+      {/* Plain-English stat cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+        {statCards.map((card) => (
+          <div key={card.label} className={`rounded-xl border px-4 py-3 ${card.color}`}>
+            <p className="text-xs text-slate-500 mb-1">{card.label}</p>
+            <p className="text-lg font-bold text-slate-900">{card.value}</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">{card.sub}</p>
           </div>
-        </div>
+        ))}
+      </div>
 
+      {/* Summary callout */}
+      {summaryCallout && summaryCallout !== 'Insufficient data to generate a business quality summary.' && (
+        <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 mb-5">
+          <p className="text-xs text-blue-700 leading-relaxed">{summaryCallout}</p>
+        </div>
+      )}
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         {chartData.length >= 2 && (
           <div>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-white/25">Revenue History ($M)</p>
-            <ResponsiveContainer width="100%" height={120}>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Revenue History ($M)</p>
+            <ResponsiveContainer width="100%" height={110}>
               <BarChart data={chartData} margin={{ top: 0, right: 4, left: 4, bottom: 0 }}>
                 <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
                 <YAxis hide />
@@ -156,41 +169,40 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
                   contentStyle={tooltipStyle}
                   wrapperStyle={{ zIndex: 50 }}
                 />
-                <Bar dataKey="revenue" fill={isDark ? '#818cf8' : '#6366f1'} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="revenue" fill="#6366f1" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         )}
-      </div>
 
-      {/* Margin Trends Chart */}
-      {marginTrendData.length >= 2 && (
-        <div className="mt-5">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-white/25">Margin Trends (%)</p>
-          <ResponsiveContainer width="100%" height={110}>
-            <LineChart data={marginTrendData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-              <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
-              <Tooltip
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                formatter={(v: any, name: any) => [
-                  typeof v === 'number' ? `${v.toFixed(1)}%` : v,
-                  name === 'gross' ? 'Gross Margin' : name === 'net' ? 'Net Margin' : 'FCF Margin',
-                ]}
-                contentStyle={tooltipStyle}
-                wrapperStyle={{ zIndex: 50 }}
-              />
-              <Legend
-                formatter={(v) => v === 'gross' ? 'Gross' : v === 'net' ? 'Net' : 'FCF'}
-                wrapperStyle={{ fontSize: '10px', color: tickFill }}
-              />
-              <Line type="monotone" dataKey="gross" stroke="#6366f1" strokeWidth={2} dot={false} connectNulls />
-              <Line type="monotone" dataKey="net" stroke="#10b981" strokeWidth={2} dot={false} connectNulls />
-              <Line type="monotone" dataKey="fcf" stroke="#f59e0b" strokeWidth={2} dot={false} connectNulls strokeDasharray="4 2" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      )}
+        {marginTrendData.length >= 2 && (
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Margin Trends (%)</p>
+            <ResponsiveContainer width="100%" height={110}>
+              <LineChart data={marginTrendData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+                <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
+                <Tooltip
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  formatter={(v: any, name: any) => [
+                    typeof v === 'number' ? `${v.toFixed(1)}%` : v,
+                    name === 'gross' ? 'Gross Margin' : name === 'net' ? 'Net Margin' : 'FCF Margin',
+                  ]}
+                  contentStyle={tooltipStyle}
+                  wrapperStyle={{ zIndex: 50 }}
+                />
+                <Legend
+                  formatter={(v) => v === 'gross' ? 'Gross' : v === 'net' ? 'Net' : 'FCF'}
+                  wrapperStyle={{ fontSize: '10px', color: tickFill }}
+                />
+                <Line type="monotone" dataKey="gross" stroke="#6366f1" strokeWidth={2} dot={false} connectNulls />
+                <Line type="monotone" dataKey="net" stroke="#10b981" strokeWidth={2} dot={false} connectNulls />
+                <Line type="monotone" dataKey="fcf" stroke="#f59e0b" strokeWidth={2} dot={false} connectNulls strokeDasharray="4 2" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
