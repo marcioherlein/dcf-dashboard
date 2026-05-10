@@ -291,7 +291,6 @@ export default function FCFBuildUp({
 
   // ── Cell helpers ────────────────────────────────────────────────────────────
   const cellBase = 'px-3 py-2.5 text-center text-xs tabular-nums'
-  const dash = <td className={`${cellBase} text-gray-300 dark:text-white/15`}>—</td>
   const divider = <td className="px-1 py-2.5 text-center text-xs text-gray-200 dark:text-white/10">│</td>
   const inputCls = 'w-16 bg-transparent border-b border-gray-300 dark:border-white/20 text-sm font-semibold text-gray-900 dark:text-white outline-none tabular-nums focus:border-indigo-400'
 

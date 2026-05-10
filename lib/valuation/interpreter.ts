@@ -157,9 +157,10 @@ function buildKeyRisk(input: ValuationInput): string {
 function buildMoSRecommendation(
   upsidePct: number | null,
   zone: 'Attractive' | 'Fair Value' | 'Expensive' | string,
-  input: ValuationInput,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _input: ValuationInput,
 ): string {
-  const { attractive, fairValue } = VALUATION_CONFIG.upsideZones
+  const { attractive } = VALUATION_CONFIG.upsideZones
 
   if (upsidePct == null) return 'Insufficient data to provide a margin of safety recommendation.'
 

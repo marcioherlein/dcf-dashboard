@@ -204,7 +204,7 @@ const t3Data = buildMockFinancialsResponse({
 
 const t3Input = adaptFinancialsToValuationInput('NU', t3Data)
 const t3Result = runValuationEngine(t3Input)
-const t3Validation = validateValuationInput(t3Input)
+validateValuationInput(t3Input)
 
 assert(t3Input.companyType === 'financial', 'Company type = financial (bank/fintech)')
 assert(t3Result.fcff?.applicable === false, 'FCFF NOT applicable for financial company (R1 in model_selection_rules.json)')

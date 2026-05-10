@@ -37,7 +37,9 @@ export type {
 // Convenience entry point: adapter + engine in one call
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function runValuation(ticker: string, financialsData: any) {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { adaptFinancialsToValuationInput: adapt } = require('./adapter')
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { runValuationEngine: run } = require('./engine')
   const input = adapt(ticker, financialsData)
   return run(input)
