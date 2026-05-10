@@ -48,7 +48,8 @@ export function validateValuationInput(input: ValuationInput): ValidationResult 
   }
 
   // V4: financial company + FCFF model
-  if (input.companyType === 'financial' && input.baseFCF !== 0) {
+  // baseFCF != null: only warn when we have actual FCF data (null means data absent, model won't run)
+  if (input.companyType === 'financial' && input.baseFCF != null) {
     // Not a hard error — we still run FCFF but weight it at 5%. Issue a warning.
     addWarning(
       'W4_FINANCIAL',

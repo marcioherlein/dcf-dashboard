@@ -19,6 +19,8 @@ import OwnershipPanel from '@/components/stock/OwnershipPanel'
 import AtAGlance from '@/components/stock/AtAGlance'
 import HealthSection from '@/components/stock/HealthSection'
 import ModelSection from '@/components/stock/ModelSection'
+import TabNav, { type TabId } from '@/components/stock/TabNav'
+import ModellingWorkspace from '@/components/modelling/ModellingWorkspace'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
@@ -133,6 +135,7 @@ export default function StockPage() {
   const [error, setError]     = useState('')
   const [saving, setSaving]   = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<TabId>('summary')
 
   // Overrides from WACCBreakdown / DCFModel inline editors (kept for the Details section)
   const [waccOverride, setWaccOverride]         = useState<number | null>(null)
@@ -144,6 +147,7 @@ export default function StockPage() {
     setWaccOverride(null)
     setTerminalGOverride(null)
     setDetailsOpen(false)
+    setActiveTab('summary')
     fetch(`/api/financials?ticker=${ticker}`)
       .then((r) => r.json())
       .then((d) => {
@@ -214,6 +218,11 @@ export default function StockPage() {
         {data && <span className="text-[12px] text-slate-400 truncate max-w-xs">{data.companyName}</span>}
       </div>
 
+      {/* Tab navigation */}
+      {data && !loading && (
+        <TabNav activeTab={activeTab} onChange={setActiveTab} />
+      )}
+
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-16">
 
         {loading && (
@@ -232,7 +241,7 @@ export default function StockPage() {
         {data && !loading && (
           <div className="space-y-4 pt-5">
 
-            {/* Price header */}
+            {/* Always-visible price header */}
             <PriceHeader
               ticker={data.ticker}
               companyName={data.companyName}
@@ -248,6 +257,14 @@ export default function StockPage() {
               sector={data.quote.sector ?? ''}
               analystRec={data.analystRecommendation}
             />
+
+            {/* ── Modelling tab ── */}
+            {activeTab === 'modelling' && (
+              <ModellingWorkspace apiData={data} ticker={ticker} />
+            )}
+
+            {/* ── Summary / default tabs ── */}
+            {activeTab !== 'modelling' && (<>
 
             {/* Section 1: At a Glance */}
             <AtAGlance
@@ -434,6 +451,8 @@ export default function StockPage() {
                 </div>
               )}
             </div>
+
+            </>)}
 
           </div>
         )}

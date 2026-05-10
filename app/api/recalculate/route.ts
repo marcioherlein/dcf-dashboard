@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
   // Clamp inputs to safe ranges
   const safeCAGR      = Math.max(0, Math.min(cagr, 0.6))
   const safeWACC      = Math.max(0.04, Math.min(wacc, 0.3))
-  const safeTerminalG = Math.max(0, Math.min(terminalG, 0.05))
+  const safeTerminalG = Math.max(0, Math.min(terminalG, safeWACC - 0.005))
 
   // Re-select growth model if CAGR crosses the threshold
   const effectiveGrowthModel = safeCAGR > 0.15 ? 'three-stage' as const : growthModel

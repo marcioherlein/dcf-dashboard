@@ -1,6 +1,6 @@
 'use client'
 
-export type TabId = 'summary' | 'financials' | 'valuation' | 'quality' | 'ownership' | 'news'
+export type TabId = 'summary' | 'financials' | 'valuation' | 'modelling' | 'quality' | 'ownership' | 'news'
 
 interface Tab {
   id: TabId
@@ -33,6 +33,15 @@ const TABS: Tab[] = [
     icon: (
       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+      </svg>
+    ),
+  },
+  {
+    id: 'modelling',
+    label: 'Modelling',
+    icon: (
+      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M3 14h18M10 3v18M14 3v18M3 6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6z" />
       </svg>
     ),
   },
