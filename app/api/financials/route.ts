@@ -424,17 +424,24 @@ export async function GET(req: NextRequest) {
 
     // --- Income Statement ---
     const isHistoricalRows = hasFmp
-      ? fmpIsSorted.map(s => ({
-          year: s.fiscalYear,
-          revenue: s.revenue > 0 ? s.revenue / 1e6 : null,
-          grossProfit: s.grossProfit != null ? s.grossProfit / 1e6 : null,
-          operatingIncome: s.operatingIncome != null ? s.operatingIncome / 1e6 : null,
-          ebitda: s.ebitda != null ? s.ebitda / 1e6 : null,
-          netIncome: s.netIncome != null ? s.netIncome / 1e6 : null,
-          eps: s.epsDiluted ?? null,
-          operatingMargin: s.revenue > 0 && s.operatingIncome != null ? s.operatingIncome / s.revenue : null,
-          isProjected: false,
-        }))
+      ? fmpIsSorted.map(s => {
+          const taxRawFmp = (s.incomeTaxExpense != null && s.incomeBeforeIncomeTaxExpense != null && s.incomeBeforeIncomeTaxExpense > 0)
+            ? Math.abs(s.incomeTaxExpense) / s.incomeBeforeIncomeTaxExpense
+            : null
+          return {
+            year: s.fiscalYear,
+            revenue: s.revenue > 0 ? s.revenue / 1e6 : null,
+            grossProfit: s.grossProfit != null ? s.grossProfit / 1e6 : null,
+            operatingIncome: s.operatingIncome != null ? s.operatingIncome / 1e6 : null,
+            ebitda: s.ebitda != null ? s.ebitda / 1e6 : null,
+            netIncome: s.netIncome != null ? s.netIncome / 1e6 : null,
+            eps: s.epsDiluted ?? null,
+            operatingMargin: s.revenue > 0 && s.operatingIncome != null ? s.operatingIncome / s.revenue : null,
+            taxRate: taxRawFmp != null ? Math.max(0.05, Math.min(0.55, taxRawFmp)) : null,
+            fiscalDate: s.date ?? s.fiscalYear,
+            isProjected: false,
+          }
+        })
       : (() => {
           const rawISHistory: any[] = fin.incomeStatementHistory?.incomeStatementHistory ?? []
           const isHistorical = rawISHistory.slice(-4).reverse()
@@ -454,6 +461,9 @@ export async function GET(req: NextRequest) {
             const gpRaw = gpDirect ?? nonzero(gpComputed)
             const ebitRaw = nonzero(s.ebit ?? s.operatingIncome)
             const ebitdaRaw = nonzero(s.ebitda) ?? nonzero(s.normalizedEbitda) ?? (ebitRaw != null && depreciationByYear[yr] ? ebitRaw + depreciationByYear[yr] * 1e6 : null)
+            const taxRawYahoo = (s.incomeTaxExpense != null && s.incomeBeforeTax != null && (s.incomeBeforeTax as number) !== 0)
+              ? (s.incomeTaxExpense as number) / (s.incomeBeforeTax as number)
+              : null
             return {
               year: yr,
               revenue: revRaw != null ? revRaw / 1e6 * fxRate : null,
@@ -463,10 +473,17 @@ export async function GET(req: NextRequest) {
               netIncome: s.netIncome != null ? (s.netIncome as number) / 1e6 * fxRate : null,
               eps: s.dilutedEps != null ? (s.dilutedEps as number) : null,
               operatingMargin: null as number | null,
+              taxRate: taxRawYahoo != null ? Math.max(0.05, Math.min(0.55, taxRawYahoo)) : null,
+              fiscalDate: s.endDate ? new Date(s.endDate).toISOString().split('T')[0] : null,
               isProjected: false,
             }
           })
         })()
+
+    // Last actual effective tax rate and fiscal month/day for projected IS rows
+    const lastActualTaxRate = [...isHistoricalRows].reverse().find(r => r.taxRate != null)?.taxRate ?? waccInputs.taxRate
+    const lastIsFiscalDate = isHistoricalRows[isHistoricalRows.length - 1]?.fiscalDate ?? null
+    const isFiscalMonthDay = (lastIsFiscalDate && lastIsFiscalDate.length >= 10) ? lastIsFiscalDate.slice(5) : '12-31'
 
     const isProjectedRows = Array.from({ length: 5 }, (_, idx) => {
       const t = idx + 1
@@ -481,6 +498,8 @@ export async function GET(req: NextRequest) {
         netIncome: Math.round(projNetIncomeM),
         eps: sharesM > 0 ? Math.round((projNetIncomeM / sharesM) * 100) / 100 : null,
         operatingMargin: avgOpMarginRatio !== 0 ? avgOpMarginRatio : null,
+        taxRate: lastActualTaxRate,
+        fiscalDate: `${baseYear + t}-${isFiscalMonthDay}`,
         isProjected: true,
       }
     })
@@ -523,6 +542,8 @@ export async function GET(req: NextRequest) {
           // dividendsPaid in FMP is negative (outflow); store as negative to match Yahoo convention
           dividendsPaid: s.commonDividendsPaid != null ? s.commonDividendsPaid / 1e6 : null,
           buybacks: s.commonStockRepurchased != null ? Math.abs(s.commonStockRepurchased / 1e6) : null,
+          dna: s.depreciationAndAmortization != null ? s.depreciationAndAmortization / 1e6 : null,
+          fiscalDate: s.date ?? s.fiscalYear,
           isProjected: false,
         }))
       : (() => {
@@ -536,6 +557,7 @@ export async function GET(req: NextRequest) {
             const rawFinCF = s.totalCashFromFinancingActivities ?? s.netCashUsedProvidedByFinancingActivities ?? s.cashUsedProvidedByFinancingActivities
             const rawDivPaid = s.dividendsPaid ?? s.paymentOfDividends ?? s.paymentsForDividends
             const rawBuyback = s.repurchaseOfStock ?? s.repurchaseOfCommonStock ?? s.paymentsForRepurchaseOfCommonStock ?? s.buybacksOfStock ?? null
+            const dnaRaw = s.depreciation ?? s.depreciationAndAmortization
             const cfYear = String(new Date(s.endDate).getFullYear())
             const matchingIS = rawISStmts.find((r: any) => String(new Date(r.endDate).getFullYear()) === cfYear)
             const fallbackNetIncome = (matchingIS?.netIncome ?? s.netIncome ?? null) as number | null
@@ -551,10 +573,27 @@ export async function GET(req: NextRequest) {
               financingCF: rawFinCF != null ? (rawFinCF as number) / 1e6 * fxRate : null,
               dividendsPaid: rawDivPaid != null ? (rawDivPaid as number) / 1e6 * fxRate : null,
               buybacks: rawBuyback != null ? Math.abs((rawBuyback as number) / 1e6 * fxRate) : null,
+              dna: dnaRaw != null ? (dnaRaw as number) / 1e6 * fxRate : null,
+              fiscalDate: s.endDate ? new Date(s.endDate).toISOString().split('T')[0] : null,
               isProjected: false,
             }
           })
         })()
+
+    // Average D&A as % of revenue — use most recent year's rate for projections
+    const avgDnaRateFromCF: number = (() => {
+      const rows = cfHistoricalRows.filter(r => r.dna != null && r.year != null)
+      const ratesWithRev = rows.map(r => {
+        const incRow = isHistoricalRows.find(i => i.year === r.year)
+        const rev = incRow?.revenue
+        return (r.dna != null && rev != null && rev > 0) ? r.dna / rev : null
+      }).filter((v): v is number => v != null)
+      return ratesWithRev.length > 0 ? ratesWithRev[ratesWithRev.length - 1] : 0.06
+    })()
+
+    // Infer fiscal year-end month/day from last historical CF row
+    const lastCfFiscalDate = cfHistoricalRows[cfHistoricalRows.length - 1]?.fiscalDate ?? null
+    const fiscalMonthDay = (lastCfFiscalDate && lastCfFiscalDate.length >= 10) ? lastCfFiscalDate.slice(5) : '12-31'
 
     const cfProjectedRows = Array.from({ length: 5 }, (_, idx) => {
       const t = idx + 1
@@ -570,6 +609,8 @@ export async function GET(req: NextRequest) {
         financingCF: null,
         dividendsPaid: avgDivPaidM !== 0 ? Math.round(avgDivPaidM) : null,
         buybacks: avgBuybackM > 0 ? Math.round(avgBuybackM) : null,
+        dna: Math.round(latestRevM * Math.pow(1 + cagr, t) * avgDnaRateFromCF),
+        fiscalDate: `${baseYear + t}-${fiscalMonthDay}`,
         isProjected: true,
       }
     })
@@ -586,6 +627,7 @@ export async function GET(req: NextRequest) {
           longTermDebt: s.longTermDebt > 0 ? s.longTermDebt / 1e6 : null,
           totalCurrentLiabilities: s.totalCurrentLiabilities > 0 ? s.totalCurrentLiabilities / 1e6 : null,
           totalEquity: (s.totalStockholdersEquity ?? s.totalEquity) > 0 ? (s.totalStockholdersEquity ?? s.totalEquity) / 1e6 : null,
+          fiscalDate: s.date ?? s.fiscalYear,
           isProjected: false,
         }))
       : (() => {
@@ -599,6 +641,7 @@ export async function GET(req: NextRequest) {
             longTermDebt: s.longTermDebt != null ? (s.longTermDebt as number) / 1e6 * fxRate : null,
             totalCurrentLiabilities: s.totalCurrentLiabilities != null ? (s.totalCurrentLiabilities as number) / 1e6 * fxRate : null,
             totalEquity: (s.totalStockholderEquity ?? s.stockholdersEquity) != null ? ((s.totalStockholderEquity ?? s.stockholdersEquity) as number) / 1e6 * fxRate : null,
+            fiscalDate: s.endDate ? new Date(s.endDate).toISOString().split('T')[0] : null,
             isProjected: false,
           }))
         })()
@@ -612,6 +655,8 @@ export async function GET(req: NextRequest) {
       let prevEquity = lastBS.totalEquity ?? 0
       let prevAssets = lastBS.totalAssets ?? 0
       const projDebt = lastBS.longTermDebt
+      const lastBsFiscalDate = lastBS.fiscalDate ?? null
+      const bsFiscalMonthDay = (lastBsFiscalDate && lastBsFiscalDate.length >= 10) ? lastBsFiscalDate.slice(5) : fiscalMonthDay
 
       bsProjectedRows = Array.from({ length: 5 }, (_, idx) => {
         const t = idx + 1
@@ -621,7 +666,7 @@ export async function GET(req: NextRequest) {
         const newCash   = prevCash   + projFCF - avgDivForBS
         const newEquity = prevEquity + projNetIncomeM - avgDivForBS
         const newAssets = prevAssets + projFCF
-        const row = { year: `${baseYear + t}E`, cash: newCash, totalCurrentAssets: null as null, totalAssets: newAssets, longTermDebt: projDebt, totalCurrentLiabilities: null as null, totalEquity: newEquity, isProjected: true }
+        const row = { year: `${baseYear + t}E`, cash: newCash, totalCurrentAssets: null as null, totalAssets: newAssets, longTermDebt: projDebt, totalCurrentLiabilities: null as null, totalEquity: newEquity, fiscalDate: `${baseYear + t}-${bsFiscalMonthDay}`, isProjected: true }
         prevCash = newCash; prevEquity = newEquity; prevAssets = newAssets
         return row
       })

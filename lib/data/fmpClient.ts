@@ -42,6 +42,8 @@ export interface FmpIncomeStatement {
   eps: number
   epsDiluted: number
   depreciationAndAmortization: number
+  incomeTaxExpense: number | null
+  incomeBeforeIncomeTaxExpense: number | null
   reportedCurrency: string
 }
 
@@ -56,6 +58,7 @@ export interface FmpCashFlowStatement {
   commonStockRepurchased: number
   netCashUsedForInvestingActivites: number
   netCashUsedProvidedByFinancingActivities: number
+  depreciationAndAmortization: number | null
   reportedCurrency: string
 }
 

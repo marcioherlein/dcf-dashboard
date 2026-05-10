@@ -134,7 +134,7 @@ export default function StockPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState('')
   const [saving, setSaving]   = useState(false)
-  const [activeTab, setActiveTab] = useState<TabId>('summary')
+  const [activeTab, setActiveTab] = useState<TabId>('modelling')
 
   // Overrides from WACCBreakdown / DCFModel inline editors (used in Valuation tab)
   const [waccOverride, setWaccOverride]         = useState<number | null>(null)
@@ -145,7 +145,7 @@ export default function StockPage() {
     setError('')
     setWaccOverride(null)
     setTerminalGOverride(null)
-    setActiveTab('summary')
+    setActiveTab('modelling')
     fetch(`/api/financials?ticker=${ticker}`)
       .then((r) => r.json())
       .then((d) => {

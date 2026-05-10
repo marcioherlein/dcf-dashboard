@@ -21,12 +21,13 @@ export interface UFCFRow {
   capex: number | null       // stored as negative (e.g. −120M)
   nwc: number | null         // (currentAssets − cash) − currentLiabilities
   // Derived
-  dna: number | null         // ebitda − ebit
+  dna: number | null         // ebitda − ebit (or dnaFromCF if provided)
   nwcDelta: number | null    // nwc[t] − nwc[t−1]
   nopat: number | null       // ebit × (1 − taxRate)
   ufcf: number | null        // nopat + dna + capex + nwcDelta (capex is negative, nwcDelta may be negative)
   // Output
   pvUfcf: number | null      // ufcf / (1+wacc)^t
+  taxRateActual?: number | null  // the per-row tax rate used (not the global WACC tax rate)
 }
 
 export interface UFCFResult {
@@ -38,7 +39,7 @@ export interface UFCFResult {
 }
 
 export function computeUFCFRows(
-  rows: Omit<UFCFRow, 'dna' | 'nwcDelta' | 'nopat' | 'ufcf' | 'pvUfcf'>[],
+  rows: Omit<UFCFRow, 'dna' | 'nwcDelta' | 'nopat' | 'ufcf' | 'pvUfcf' | 'taxRateActual'>[],
   taxRate: number,
   wacc: number,
 ): UFCFRow[] {
@@ -48,9 +49,12 @@ export function computeUFCFRows(
     const r = rows[i]
     const prior = i > 0 ? result[i - 1] : null
 
-    const dna = (r.ebitda != null && r.ebit != null) ? r.ebitda - r.ebit : null
+    const dna = (r as any).dnaFromCF != null
+      ? (r as any).dnaFromCF as number
+      : (r.ebitda != null && r.ebit != null) ? r.ebitda - r.ebit : null
     const nwcDelta = (r.nwc != null && prior?.nwc != null) ? r.nwc - prior.nwc : null
-    const nopat = r.ebit != null ? r.ebit * (1 - taxRate) : null
+    const effectiveTaxRate = (r as any).taxRateOverride != null ? (r as any).taxRateOverride as number : taxRate
+    const nopat = r.ebit != null ? r.ebit * (1 - effectiveTaxRate) : null
 
     let ufcf: number | null = null
     if (nopat != null && dna != null && r.capex != null) {
@@ -62,7 +66,7 @@ export function computeUFCFRows(
     const projectedYearIndex = result.filter(x => x.isProjected).length + (r.isProjected ? 1 : 0)
     const pvUfcf = (ufcf != null && r.isProjected) ? ufcf / Math.pow(1 + wacc, projectedYearIndex) : null
 
-    result.push({ ...r, dna, nwcDelta, nopat, ufcf, pvUfcf })
+    result.push({ ...r, dna, nwcDelta, nopat, ufcf, pvUfcf, taxRateActual: effectiveTaxRate })
   }
 
   return result

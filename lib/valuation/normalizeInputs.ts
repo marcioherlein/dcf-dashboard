@@ -27,6 +27,10 @@ export interface ModellingRow {
   totalCurrentLiabilities: number | null
   longTermDebt: number | null
   totalEquity: number | null
+  // New modelling fields
+  dna: number | null           // D&A from cash flow statement (positive, $M)
+  taxRate: number | null       // effective tax rate for this year (e.g. 0.19)
+  fiscalDate: string | null    // "2025-06-30" or null
 }
 
 export interface ModellingInput {
@@ -124,13 +128,15 @@ function buildRows(fs: any): ModellingRow[] {
       ebitda: nullable(row.ebitda),
       netIncome: nullable(row.netIncome),
       eps: nullable(row.eps),
+      taxRate: nullable(row.taxRate),
+      fiscalDate: row.fiscalDate ?? null,
     })
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   for (const row of cash as any[]) {
     const key = String(row.year)
-    const existing = byYear.get(key) ?? { year: key, isProjected: row.isProjected ?? false }
+    const existing = byYear.get(key) ?? { year: key, isProjected: row.isProjected ?? false, fiscalDate: null as string | null }
     byYear.set(key, {
       ...existing,
       capex: nullable(row.capex),
@@ -138,6 +144,9 @@ function buildRows(fs: any): ModellingRow[] {
       freeCashFlow: nullable(row.freeCashFlow),
       dividendsPaid: nullable(row.dividendsPaid),
       financingCF: nullable(row.financingCF),
+      dna: nullable(row.dna),
+      // fiscalDate from income statement takes precedence if already set
+      fiscalDate: existing.fiscalDate ?? row.fiscalDate ?? null,
     })
   }
 
@@ -173,5 +182,8 @@ function buildRows(fs: any): ModellingRow[] {
     totalCurrentLiabilities: r.totalCurrentLiabilities ?? null,
     longTermDebt: r.longTermDebt ?? null,
     totalEquity: r.totalEquity ?? null,
+    dna: r.dna ?? null,
+    taxRate: r.taxRate ?? null,
+    fiscalDate: r.fiscalDate ?? null,
   }))
 }
