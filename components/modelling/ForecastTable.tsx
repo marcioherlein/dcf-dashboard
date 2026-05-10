@@ -14,11 +14,6 @@ interface ForecastTableProps {
   onCellEdit?: (year: string, field: string, value: number) => void
 }
 
-function GrowthLabel({ value }: { value: string }) {
-  if (value === '—') return <span className="text-slate-400">—</span>
-  const pos = value.startsWith('+')
-  return <span className={pos ? 'text-green-600' : 'text-red-500'}>{value}</span>
-}
 
 function Cell({
   value, isProjected, isEditable, fieldName, year,
@@ -230,7 +225,6 @@ export default function ForecastTable({ ufcfRows, lfcfRows, currency, onCellEdit
                   {rows.map((row, i) => {
                     const prior = i > 0 ? rows[i - 1] : null
                     const val = getValue(row, rowDef.key, mode, prior, rowDef)
-                    const isFirst = i === firstProjectedIdx
                     return (
                       <Cell
                         key={`${row.year}-${rowDef.key}`}

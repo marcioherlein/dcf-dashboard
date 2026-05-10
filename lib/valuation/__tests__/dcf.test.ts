@@ -6,7 +6,6 @@
 import { computeUFCFRows, computeUFCFTerminalValues } from '../unleveredDcf'
 import { computeLFCFRows } from '../leveredDcf'
 import { computeTerminalValues } from '../terminalValue'
-import { GuardError } from '../valuationGuards'
 
 // ── UFCF ─────────────────────────────────────────────────────────────────────
 
