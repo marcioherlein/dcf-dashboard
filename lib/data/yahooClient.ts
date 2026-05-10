@@ -35,19 +35,31 @@ export async function getFinancials(ticker: string): Promise<any> {
   })
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function getHistorical(ticker: string, period: '1mo' | '3mo' | '1y' | '5y' = '5y'): Promise<any[]> {
-  const period2 = new Date()
-  const period1 = new Date()
-  if (period === '1mo') period1.setMonth(period1.getMonth() - 1)
-  else if (period === '3mo') period1.setMonth(period1.getMonth() - 3)
-  else if (period === '1y') period1.setFullYear(period1.getFullYear() - 1)
-  else period1.setFullYear(period1.getFullYear() - 5)
+export type HistoricalPeriod = '1d' | '5d' | '1mo' | '3mo' | '6mo' | 'ytd' | '1y' | '2y' | '3y' | '5y' | '10y' | 'max'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function getHistorical(ticker: string, period: HistoricalPeriod = '1y'): Promise<any[]> {
+  const period2 = new Date()
+  let period1 = new Date()
+  switch (period) {
+    case '1d':  period1.setDate(period1.getDate() - 1); break
+    case '5d':  period1.setDate(period1.getDate() - 5); break
+    case '1mo': period1.setMonth(period1.getMonth() - 1); break
+    case '3mo': period1.setMonth(period1.getMonth() - 3); break
+    case '6mo': period1.setMonth(period1.getMonth() - 6); break
+    case 'ytd': period1 = new Date(period2.getFullYear(), 0, 1); break
+    case '1y':  period1.setFullYear(period1.getFullYear() - 1); break
+    case '2y':  period1.setFullYear(period1.getFullYear() - 2); break
+    case '3y':  period1.setFullYear(period1.getFullYear() - 3); break
+    case '5y':  period1.setFullYear(period1.getFullYear() - 5); break
+    case '10y': period1.setFullYear(period1.getFullYear() - 10); break
+    case 'max': period1 = new Date('1970-01-01'); break
+  }
+  const weekly = ['2y', '3y', '5y', '10y', 'max'].includes(period)
   return yf.historical(ticker, {
     period1: period1.toISOString().split('T')[0],
     period2: period2.toISOString().split('T')[0],
-    interval: period === '5y' ? '1wk' : '1d',
+    interval: weekly ? '1wk' : '1d',
   })
 }
 

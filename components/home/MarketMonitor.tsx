@@ -1,9 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
-import {
-  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
-} from 'recharts'
+import MultiTickerChart from '@/components/charts/MultiTickerChart'
 
 interface MarketItem {
   ticker: string
@@ -19,13 +17,6 @@ interface MarketData {
   items: MarketItem[]
 }
 
-type Period = '1mo' | '3mo' | '1y' | '5y'
-const PERIODS: { label: string; value: Period }[] = [
-  { label: '1M', value: '1mo' },
-  { label: '3M', value: '3mo' },
-  { label: '1Y', value: '1y' },
-  { label: '5Y', value: '5y' },
-]
 
 // Display order + labels for each group section
 const GROUP_ORDER = [
@@ -90,31 +81,11 @@ function Sparkline({ prices, up }: { prices: number[]; up: boolean }) {
   )
 }
 
-// ── Chart slide-in panel (same style as ScreenerChart) ───────────────────────
-interface ChartBar { date: string; price: number }
-
+// ── Chart slide-in panel ─────────────────────────────────────────────────────
 function ChartPanel({ item, onClose }: { item: MarketItem; onClose: () => void }) {
-  const [period, setPeriod] = useState<Period>('3mo')
-  const [chartData, setChartData] = useState<ChartBar[]>([])
-  const [loading, setLoading] = useState(false)
   const isUp = item.changePct >= 0
   const accentColor = isUp ? '#059669' : '#DC2626'
-  const gradId = `cg-${item.ticker.replace(/[^a-z0-9]/gi, '')}`
   const isEquity = EQUITY_GROUPS.has(item.group)
-
-  useEffect(() => {
-    setLoading(true)
-    fetch(`/api/historical?ticker=${encodeURIComponent(item.ticker)}&period=${period}`)
-      .then((r) => r.json())
-      .then((raw: { date: string; close: number }[]) => {
-        setChartData(raw.map((p) => ({
-          date: new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit' }),
-          price: p.close,
-        })))
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
-  }, [item.ticker, period])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -122,18 +93,11 @@ function ChartPanel({ item, onClose }: { item: MarketItem; onClose: () => void }
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  const prices = chartData.map((d) => d.price)
-  const minP = prices.length ? Math.min(...prices) * 0.97 : 0
-  const maxP = prices.length ? Math.max(...prices) * 1.03 : 1
-  const periodChange = prices.length >= 2
-    ? ((prices[prices.length - 1] - prices[0]) / prices[0]) * 100
-    : null
-
   return (
     <div className="fixed inset-0 z-50 flex" onClick={onClose}>
       <div className="flex-1 bg-black/30" />
       <div
-        className="w-[480px] bg-white border-l border-slate-200 flex flex-col h-full overflow-y-auto shadow-card-md"
+        className="w-[520px] bg-white border-l border-slate-200 flex flex-col h-full overflow-y-auto shadow-card-md"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -156,79 +120,15 @@ function ChartPanel({ item, onClose }: { item: MarketItem; onClose: () => void }
           </button>
         </div>
 
-        {/* Period selector */}
-        <div className="flex items-center gap-1 px-5 py-2 border-b border-slate-200">
-          {PERIODS.map((p) => (
-            <button
-              key={p.value}
-              onClick={() => setPeriod(p.value)}
-              className={[
-                'px-2.5 py-0.5 text-[12px] font-medium rounded-lg transition-colors',
-                period === p.value
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100',
-              ].join(' ')}
-            >
-              {p.label}
-            </button>
-          ))}
-          {periodChange !== null && (
-            <span
-              className="ml-auto text-[12px] font-semibold"
-              style={{ color: periodChange >= 0 ? '#059669' : '#DC2626' }}
-            >
-              {periodChange >= 0 ? '+' : ''}{periodChange.toFixed(2)}% period
-            </span>
-          )}
-        </div>
-
         {/* Chart */}
-        <div className="px-2 py-4 flex-1">
-          {loading ? (
-            <div className="flex items-center justify-center h-48 text-slate-400 text-xs">Loading…</div>
-          ) : chartData.length === 0 ? (
-            <div className="flex items-center justify-center h-48 text-slate-400 text-xs">No data</div>
-          ) : (
-            <div className="h-56">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={accentColor} stopOpacity={0.2} />
-                      <stop offset="95%" stopColor={accentColor} stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 10, fill: '#94a3b8' }}
-                    tickLine={false} axisLine={false} interval="preserveStartEnd"
-                  />
-                  <YAxis
-                    domain={[minP, maxP]}
-                    tick={{ fontSize: 10, fill: '#94a3b8' }}
-                    tickLine={false} axisLine={false} width={56}
-                    tickFormatter={(v) => fmtPrice(v, item.ticker)}
-                  />
-                  <Tooltip
-                    content={({ active, payload, label }) => {
-                      if (!active || !payload?.length) return null
-                      return (
-                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs shadow-card-md">
-                          <div className="text-slate-400 mb-1">{label}</div>
-                          <div className="text-slate-900 font-semibold">{fmtPrice(payload[0]?.value as number, item.ticker)}</div>
-                        </div>
-                      )
-                    }}
-                  />
-                  <Area
-                    type="monotone" dataKey="price"
-                    stroke={accentColor} strokeWidth={2}
-                    fill={`url(#${gradId})`} dot={false} isAnimationActive={false}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          )}
+        <div className="px-3 py-4 flex-1">
+          <MultiTickerChart
+            initialTickers={[item.ticker]}
+            defaultPeriod="3m"
+            height={340}
+            showMetricSelect={true}
+            className="border-0 shadow-none !rounded-none"
+          />
         </div>
 
         {/* Footer CTA — only for equity groups */}
