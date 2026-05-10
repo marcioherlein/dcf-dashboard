@@ -140,7 +140,8 @@ export default function FCFBuildUp({
         if (Math.abs(deltaRev) > 0.1) dnwcRevRatios.push((nwcCurr - nwcPrev) / deltaRev)
       }
     }
-    const avgDnwcRatio = dnwcRevRatios.length > 0
+    const hasNwcData = dnwcRevRatios.length > 0
+    const avgDnwcRatio = hasNwcData
       ? dnwcRevRatios.reduce((a, b) => a + b, 0) / dnwcRevRatios.length
       : 0
 
@@ -176,7 +177,8 @@ export default function FCFBuildUp({
       if (!isProjected) {
         const nwcCurr = nwcByYear[yr]; const nwcPrev = prevYr ? nwcByYear[prevYr] : null
         if (nwcCurr != null && nwcPrev != null) dnwc = nwcCurr - nwcPrev
-      } else if (revenue != null && prevRevenue != null) {
+      } else if (hasNwcData && revenue != null && prevRevenue != null) {
+        // Only project NWC changes if we have historical data to anchor the ratio
         dnwc = avgDnwcRatio * (revenue - prevRevenue)
       }
       const dnwcRev = ratio(dnwc, revenue)
@@ -198,19 +200,25 @@ export default function FCFBuildUp({
       const nopatMargin = ratio(nopat, revenue)
 
       // UFCF = NOPAT + D&A + capex(neg) − ΔNWC
+      // Only use the build-up formula; never fall back to projected CF values
+      // (which come from a different FCF basis and cause discontinuities)
       let ufcf: number | null = null
       if (nopat != null && da != null && capex != null) {
         ufcf = nopat + da + capex - (dnwc ?? 0)
-      } else if (cf?.freeCashFlow != null) {
-        ufcf = cf.freeCashFlow   // graceful fallback
+      } else if (!isProjected && cf?.freeCashFlow != null) {
+        ufcf = cf.freeCashFlow   // historical fallback only
       }
 
       // LFCF = Net Income + D&A + capex(neg) − ΔNWC − NetDebtRepayment
+      // For projected rows without D&A/capex: use netIncome as proxy (consistent with
+      // historical NI-based FCF shown when cashflow statement data is missing)
       let lfcf: number | null = null
       if (netIncome != null && da != null && capex != null) {
         lfcf = netIncome + da + capex - (dnwc ?? 0) - (netDebtRepayment ?? 0)
-      } else if (cf?.freeCashFlow != null) {
-        lfcf = cf.freeCashFlow
+      } else if (!isProjected && cf?.freeCashFlow != null) {
+        lfcf = cf.freeCashFlow   // historical fallback only
+      } else if (isProjected && netIncome != null) {
+        lfcf = netIncome         // projected fallback: NI proxy (same basis as historical rows)
       }
 
       // YoY growth
@@ -458,9 +466,9 @@ export default function FCFBuildUp({
             {/* ── D&A ── */}
             <tr className="border-t border-gray-100 dark:border-white/5">
               {labelCell(`+ D&A (${scale})`)}
-              {histRows.map(r => numCell(fmtDollars(r.da, scale), false, false, false, true))}
+              {histRows.map(r => numCell(fmtDollars(r.da, scale), false, false, false, r.da != null && r.da > 0))}
               {divider}
-              {projRows.map(r => numCell(fmtDollars(r.da, scale), true, false, false, true))}
+              {projRows.map(r => numCell(fmtDollars(r.da, scale), true, false, false, r.da != null && r.da > 0))}
             </tr>
             <tr>
               {subLabelCell('D&A / Revenue')}
@@ -472,9 +480,9 @@ export default function FCFBuildUp({
             {/* ── CapEx ── */}
             <tr className="border-t border-gray-100 dark:border-white/5">
               {labelCell(`− CapEx (${scale})`)}
-              {histRows.map(r => numCell(fmtDollars(r.capex, scale), false, false, true))}
+              {histRows.map(r => numCell(fmtDollars(r.capex, scale), false, false, r.capex != null && r.capex < 0))}
               {divider}
-              {projRows.map(r => numCell(fmtDollars(r.capex, scale), true, false, true))}
+              {projRows.map(r => numCell(fmtDollars(r.capex, scale), true, false, r.capex != null && r.capex < 0))}
             </tr>
             <tr>
               {subLabelCell('CapEx / Revenue')}
