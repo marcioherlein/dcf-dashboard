@@ -13,10 +13,14 @@ import ForecastTable, {
 } from './ForecastTable'
 import DataQualityWarnings from './DataQualityWarnings'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type StatementsDataLike = any
+
 interface ModellingWorkspaceProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   apiData: any
   ticker: string
+  statementsData?: StatementsDataLike | null
 }
 
 // Derive ΔNWC from balance sheet: NWC = (currentAssets - cash) - currentLiabilities
@@ -121,8 +125,8 @@ function buildDisplayRows(
   })
 }
 
-export default function ModellingWorkspace({ apiData, ticker }: ModellingWorkspaceProps) {
-  const baseInput: ModellingInput = useMemo(() => normalizeModellingInputs(ticker, apiData), [ticker, apiData])
+export default function ModellingWorkspace({ apiData, ticker, statementsData }: ModellingWorkspaceProps) {
+  const baseInput: ModellingInput = useMemo(() => normalizeModellingInputs(ticker, apiData, statementsData), [ticker, apiData, statementsData])
 
   // Overridable assumptions
   const [waccOverride, setWaccOverride] = useState<number | null>(null)

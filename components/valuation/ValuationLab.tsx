@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useMemo, useRef } from 'react'
-import ValuationMethodCard from './ValuationMethodCard'
-import ValuationModelDrawer, {
+import { useState, useMemo } from 'react'
+import {
   type ValuationMethodId,
   type ValuationMethodConfig,
   type ValuationResult,
+  type ValuationAssumption,
+  sourceLabel,
 } from './ValuationModelDrawer'
 import ValuationSummary, { type MethodResult } from './ValuationSummary'
 import ModellingWorkspace from '@/components/modelling/ModellingWorkspace'
@@ -22,19 +23,15 @@ import {
 import { fmtPrice, fmtPct, fmtLarge, fmtLargeCurrency } from '@/lib/formatters'
 import { WizardSteps } from '@/components/ui/wizard-steps'
 import { SourceLabel } from '@/components/ui/source-label'
+import { TrendBadge } from '@/components/ui/trend-badge'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { cn } from '@/lib/utils'
 
-// ─── Local helpers (formula builders need $-prefixed strings) ────────────────
+// ─── Local helpers ─────────────────────────────────────────────────────────────
 
-function fmtB(v: number | null): string {
-  return fmtLargeCurrency(v)
-}
-
-function fmtPctSigned(v: number | null): string {
-  return fmtPct(v)
-}
+function fmtB(v: number | null): string { return fmtLargeCurrency(v) }
+function fmtPctSigned(v: number | null): string { return fmtPct(v) }
 
 // ─── Formula builders ─────────────────────────────────────────────────────────
 
@@ -75,7 +72,7 @@ function buildRevMultipleFormula(
   ]
 }
 
-// ─── Results builders ─────────────────────────────────────────────────────────
+// ─── Result builders ──────────────────────────────────────────────────────────
 
 function upsideTone(v: number | null): ValuationResult['tone'] {
   if (v == null) return 'neutral'
@@ -87,12 +84,12 @@ function upsideTone(v: number | null): ValuationResult['tone'] {
 function buildForwardPEResults(result: ReturnType<typeof computeForwardPE>, currentPrice: number, currency = 'USD'): ValuationResult[] {
   const N = 5; const targetYear = new Date().getFullYear() + N
   return [
-    { label: 'Actual Price',          value: currentPrice,             formattedValue: fmtPrice(currentPrice, currency),                tone: 'neutral' },
-    { label: `${targetYear} Target`,  value: result.futureTargetPrice, formattedValue: fmtPrice(result.futureTargetPrice, currency),    tone: 'neutral' },
-    { label: 'Fair Value Today',      value: result.fairValueToday,    formattedValue: fmtPrice(result.fairValueToday, currency),       tone: upsideTone(result.upsidePct) },
-    { label: '1Y Price Target',       value: result.target1Y,          formattedValue: fmtPrice(result.target1Y, currency),            tone: 'neutral' },
-    { label: 'Potential Upside',      value: result.upsidePct,         formattedValue: fmtPctSigned(result.upsidePct),                 tone: upsideTone(result.upsidePct) },
-    { label: 'Expected Return',       value: result.expectedReturnPct, formattedValue: result.expectedReturnPct != null ? fmtPctSigned(result.expectedReturnPct) + '/yr' : '—', tone: upsideTone(result.expectedReturnPct) },
+    { label: 'Actual Price',         value: currentPrice,             formattedValue: fmtPrice(currentPrice, currency),             tone: 'neutral' },
+    { label: `${targetYear} Target`, value: result.futureTargetPrice, formattedValue: fmtPrice(result.futureTargetPrice, currency), tone: 'neutral' },
+    { label: 'Fair Value Today',     value: result.fairValueToday,    formattedValue: fmtPrice(result.fairValueToday, currency),    tone: upsideTone(result.upsidePct) },
+    { label: '1Y Price Target',      value: result.target1Y,          formattedValue: fmtPrice(result.target1Y, currency),         tone: 'neutral' },
+    { label: 'Potential Upside',     value: result.upsidePct,         formattedValue: fmtPctSigned(result.upsidePct),              tone: upsideTone(result.upsidePct) },
+    { label: 'Expected Return',      value: result.expectedReturnPct, formattedValue: result.expectedReturnPct != null ? fmtPctSigned(result.expectedReturnPct) + '/yr' : '—', tone: upsideTone(result.expectedReturnPct) },
     ...(result.expectedReturnWithDivPct != null && result.expectedReturnWithDivPct !== result.expectedReturnPct
       ? [{ label: 'Total Ret. (w/ Div)', value: result.expectedReturnWithDivPct, formattedValue: fmtPctSigned(result.expectedReturnWithDivPct) + '/yr', tone: upsideTone(result.expectedReturnWithDivPct) } as ValuationResult]
       : []),
@@ -114,28 +111,227 @@ function buildRevMultipleResults(result: ReturnType<typeof computeRevenueMultipl
 function buildReverseDCFResults(result: ReturnType<typeof computeReverseDCF>): ValuationResult[] {
   const implCAGRFmt = result.impliedCAGR != null ? (result.impliedCAGR * 100).toFixed(1) + '%' : '—'
   const interpTone: ValuationResult['tone'] =
-    result.interpretation === 'conservative' ? 'positive' :
-    result.interpretation === 'reasonable'   ? 'positive' :
-    result.interpretation === 'aggressive'   ? 'warning'  :
+    result.interpretation === 'conservative'    ? 'positive' :
+    result.interpretation === 'reasonable'      ? 'positive' :
+    result.interpretation === 'aggressive'      ? 'warning'  :
     result.interpretation === 'very_aggressive' ? 'negative' : 'neutral'
   return [
-    { label: 'Implied 5Y CAGR', value: result.impliedCAGR,       formattedValue: implCAGRFmt, tone: interpTone },
-    { label: 'FCF Margin Used', value: result.impliedFCFMargin,  formattedValue: result.impliedFCFMargin != null ? (result.impliedFCFMargin * 100).toFixed(1) + '%' : '—', tone: 'neutral' },
-    { label: 'Assessment',      value: null,                     formattedValue: result.interpretation.replace('_', ' '), tone: interpTone },
+    { label: 'Implied 5Y CAGR', value: result.impliedCAGR,      formattedValue: implCAGRFmt, tone: interpTone },
+    { label: 'FCF Margin Used', value: result.impliedFCFMargin, formattedValue: result.impliedFCFMargin != null ? (result.impliedFCFMargin * 100).toFixed(1) + '%' : '—', tone: 'neutral' },
+    { label: 'Assessment',      value: null,                    formattedValue: result.interpretation.replace('_', ' '), tone: interpTone },
   ]
 }
 
 function buildEVEBITDAResults(result: ReturnType<typeof computeEVEBITDA>, currentPrice: number, currency = 'USD'): ValuationResult[] {
   return [
-    { label: 'Enterprise Value',   value: result.enterpriseValue,   formattedValue: fmtB(result.enterpriseValue),              tone: 'neutral' },
-    { label: 'Equity Value',       value: result.equityValue,       formattedValue: fmtB(result.equityValue),                  tone: 'neutral' },
+    { label: 'Enterprise Value',   value: result.enterpriseValue,   formattedValue: fmtB(result.enterpriseValue),                tone: 'neutral' },
+    { label: 'Equity Value',       value: result.equityValue,       formattedValue: fmtB(result.equityValue),                    tone: 'neutral' },
     { label: 'Fair Value / Share', value: result.fairValuePerShare, formattedValue: fmtPrice(result.fairValuePerShare, currency), tone: upsideTone(result.upsidePct) },
-    { label: 'Actual Price',       value: currentPrice,             formattedValue: fmtPrice(currentPrice, currency),          tone: 'neutral' },
-    { label: 'Potential Upside',   value: result.upsidePct,         formattedValue: fmtPctSigned(result.upsidePct),            tone: upsideTone(result.upsidePct) },
+    { label: 'Actual Price',       value: currentPrice,             formattedValue: fmtPrice(currentPrice, currency),            tone: 'neutral' },
+    { label: 'Potential Upside',   value: result.upsidePct,         formattedValue: fmtPctSigned(result.upsidePct),              tone: upsideTone(result.upsidePct) },
   ]
 }
 
-// ─── Stat Card (light design) ─────────────────────────────────────────────────
+// ─── Inline method panel helpers ──────────────────────────────────────────────
+
+function resultToneClass(tone: ValuationResult['tone']): string {
+  switch (tone) {
+    case 'positive': return 'text-emerald-600'
+    case 'negative': return 'text-red-600'
+    case 'warning':  return 'text-amber-600'
+    default:         return 'text-slate-900'
+  }
+}
+
+function fmtAssumptionDisplay(assumption: ValuationAssumption, overrides: Record<string, number>): string {
+  const raw = assumption.key in overrides ? overrides[assumption.key] : assumption.value
+  if (raw == null) return '—'
+  if (assumption.unit === '%') return (raw * 100).toFixed(1)
+  if (assumption.unit === 'x') return raw.toFixed(1)
+  if (assumption.unit === '$') {
+    const abs = Math.abs(raw)
+    const sign = raw < 0 ? '-' : ''
+    if (abs >= 1e12) return sign + '$' + (abs / 1e12).toFixed(2) + 'T'
+    if (abs >= 1e9)  return sign + '$' + (abs / 1e9).toFixed(1) + 'B'
+    if (abs >= 1e6)  return sign + '$' + (abs / 1e6).toFixed(0) + 'M'
+    return sign + '$' + abs.toFixed(0)
+  }
+  if (assumption.unit === 'shares') {
+    if (Math.abs(raw) >= 1e9) return (raw / 1e9).toFixed(3) + 'B'
+    if (Math.abs(raw) >= 1e6) return (raw / 1e6).toFixed(0) + 'M'
+    return raw.toFixed(0)
+  }
+  return raw.toFixed(2)
+}
+
+// ─── MethodInlinePanel ────────────────────────────────────────────────────────
+
+interface MethodInlinePanelProps {
+  config: ValuationMethodConfig
+  overrides: Record<string, number>
+  currency: string
+  onAssumptionChange: (key: string, value: number) => void
+  onResetOverrides: () => void
+}
+
+function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, onResetOverrides }: MethodInlinePanelProps) {
+  const isModified = Object.keys(overrides).length > 0
+  const upside =
+    config.fairValueSummary != null && config.currentPrice != null && config.currentPrice > 0
+      ? (config.fairValueSummary - config.currentPrice) / config.currentPrice
+      : null
+
+  function handleInputChange(key: string, rawStr: string) {
+    const assumption = config.assumptions.find(a => a.key === key)
+    if (!assumption) return
+    const parsed = parseFloat(rawStr)
+    if (isNaN(parsed)) return
+    onAssumptionChange(key, assumption.unit === '%' ? parsed / 100 : parsed)
+  }
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden">
+      {/* Header */}
+      <div className="px-5 py-4 border-b border-slate-100 flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-base font-bold text-slate-900">{config.title}</h3>
+          <p className="text-micro text-slate-400 mt-0.5">{config.subtitle}</p>
+        </div>
+        {config.fairValueSummary != null && (
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="text-right">
+              <p className="text-label uppercase tracking-wider text-slate-400">Fair Value</p>
+              <p className="text-lg font-bold font-mono text-slate-900">
+                {fmtPrice(config.fairValueSummary, currency)}
+              </p>
+            </div>
+            {upside != null && <TrendBadge value={upside} size="lg" />}
+          </div>
+        )}
+      </div>
+
+      {/* Warnings */}
+      {config.warnings.length > 0 && (
+        <div className="px-5 pt-3 space-y-1.5">
+          {config.warnings.map((w, i) => (
+            <div key={i} className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-700">
+              ⚠ {w}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Left column: Evidence + Assumptions */}
+        <div className="space-y-5">
+          {config.evidence.length > 0 && (
+            <div>
+              <p className="text-label uppercase tracking-wider text-slate-400 mb-2">Evidence & Derivation</p>
+              <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 space-y-1.5">
+                {config.evidence.map(({ label, text }) => (
+                  <div key={label} className="flex gap-3 text-xs">
+                    <span className="text-slate-500 font-medium w-24 shrink-0">{label}</span>
+                    <span className="text-slate-600 leading-relaxed">{text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {config.assumptions.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-label uppercase tracking-wider text-slate-400">
+                  Assumptions
+                  {isModified && <span className="text-blue-500 normal-case ml-1 font-normal">(modified)</span>}
+                </p>
+                {isModified && (
+                  <button
+                    onClick={onResetOverrides}
+                    className="text-xs text-blue-600 hover:text-blue-700 underline"
+                  >
+                    Reset to model
+                  </button>
+                )}
+              </div>
+              <div className="divide-y divide-slate-100">
+                {config.assumptions.map(a => {
+                  const displayVal = fmtAssumptionDisplay(a, overrides)
+                  const isOverridden = a.key in overrides
+                  return (
+                    <div key={a.key} className="flex items-center justify-between gap-3 py-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-xs font-medium text-slate-700">{a.label}</span>
+                          <span className={cn(
+                            'text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider',
+                            isOverridden ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500',
+                          )}>
+                            {isOverridden ? 'Override' : sourceLabel(a.source)}
+                          </span>
+                        </div>
+                        {a.description && (
+                          <p className="text-[10px] text-slate-400 mt-0.5">{a.description}</p>
+                        )}
+                      </div>
+                      {a.editable ? (
+                        <div className="flex items-center gap-1 shrink-0">
+                          <input
+                            type="number"
+                            value={displayVal}
+                            onChange={e => handleInputChange(a.key, e.target.value)}
+                            step={String(a.step ?? 0.1)}
+                            className="w-20 text-right border border-slate-200 rounded-md px-2 py-1 text-xs font-mono focus:outline-none focus:border-blue-400 bg-white text-slate-900"
+                          />
+                          {a.unit === '%' && <span className="text-slate-400 text-xs">%</span>}
+                          {a.unit === 'x' && <span className="text-slate-400 text-xs">×</span>}
+                        </div>
+                      ) : (
+                        <span className="text-xs font-mono text-slate-500 shrink-0">
+                          {displayVal}{a.unit === '%' ? '%' : a.unit === 'x' ? '×' : ''}
+                        </span>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right column: Formula + Results */}
+        <div className="space-y-5">
+          {config.formulaLines.length > 0 && config.formulaLines[0] !== 'See the full modelling table below.' && (
+            <div>
+              <p className="text-label uppercase tracking-wider text-slate-400 mb-2">Formula</p>
+              <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 font-mono text-xs text-slate-600 space-y-0.5">
+                {config.formulaLines.map((line, i) => <div key={i}>{line}</div>)}
+              </div>
+            </div>
+          )}
+
+          {config.results.length > 0 && (
+            <div>
+              <p className="text-label uppercase tracking-wider text-slate-400 mb-2">Results</p>
+              <div className="divide-y divide-slate-100">
+                {config.results.map((r, i) => (
+                  <div key={i} className="flex items-center justify-between py-1.5">
+                    <span className="text-xs text-slate-500 font-medium">{r.label}</span>
+                    <span className={cn('font-bold font-mono text-sm', resultToneClass(r.tone))}>
+                      {r.formattedValue}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Stat Card ────────────────────────────────────────────────────────────────
 
 function StatCard({ label, value, sub, source }: { label: string; value: string; sub?: string; source?: 'yahoo' | 'calc' }) {
   return (
@@ -151,8 +347,6 @@ function StatCard({ label, value, sub, source }: { label: string; value: string;
     </div>
   )
 }
-
-// ─── Assumption summary item ──────────────────────────────────────────────────
 
 function AssumptionStat({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
@@ -188,11 +382,8 @@ const WIZARD_STEPS = [
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function ValuationLab({ apiData, ticker, statementsData }: ValuationLabProps) {
-  const [activeMethod,      setActiveMethod]      = useState<ValuationMethodId | null>(null)
-  const [overrides,         setOverrides]         = useState<OverridesMap>({})
-  const [currentStep,       setCurrentStep]       = useState<1 | 2 | 3>(1)
-  const [evEbitdaDrawerOpen,setEvEbitdaDrawerOpen]= useState(false)
-  const dcfRef = useRef<HTMLDivElement>(null)
+  const [overrides,   setOverrides]   = useState<OverridesMap>({})
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1)
 
   const currency     = apiData?.quote?.currency ?? 'USD'
   const currentPrice = (apiData?.quote?.price   ?? 0) as number
@@ -245,8 +436,8 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
     currentPrice,
     dividendYield:     null,
   }), [fwdPEBase, fwdPEOverrides, currentPrice])
-  const fwdPEResult  = useMemo(() => computeForwardPE(fwdPEInputs), [fwdPEInputs])
-  const fwdPEConfig  = useMemo((): ValuationMethodConfig => ({
+  const fwdPEResult = useMemo(() => computeForwardPE(fwdPEInputs), [fwdPEInputs])
+  const fwdPEConfig = useMemo((): ValuationMethodConfig => ({
     id: 'forward_pe', title: 'Forward P/E', subtitle: '5-year target price discounted to today',
     companyName: apiData?.companyName ?? ticker, ticker, currency,
     evidence:    fwdPEBase.evidence,
@@ -308,9 +499,9 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
         { label: 'Exit Multiple', text: `${multiple.toFixed(0)}× EV/EBITDA (sector default: ${sect})` },
       ],
       assumptions: [
-        { key: 'ttmEbitda',    label: 'TTM EBITDA',          editable: false, value: evEbitdaInputs.ttmEbitda, unit: '$', source: 'historical_3y_median' as const },
-        { key: 'netDebt',      label: 'Net Debt',            editable: false, value: evEbitdaInputs.netDebt,   unit: '$', source: 'historical_3y_median' as const },
-        { key: 'exitMultiple', label: 'EV/EBITDA Multiple',  editable: true,  value: multiple, unit: 'x', min: 1, max: 50, step: 0.5, source: 'sector_fallback' as const, sourceExplanation: `${sect} sector typical ${multiple.toFixed(0)}×`, description: 'Sector-typical exit multiple' },
+        { key: 'ttmEbitda',    label: 'TTM EBITDA',         editable: false, value: evEbitdaInputs.ttmEbitda, unit: '$', source: 'historical_3y_median' as const },
+        { key: 'netDebt',      label: 'Net Debt',           editable: false, value: evEbitdaInputs.netDebt,   unit: '$', source: 'historical_3y_median' as const },
+        { key: 'exitMultiple', label: 'EV/EBITDA Multiple', editable: true,  value: multiple, unit: 'x', min: 1, max: 50, step: 0.5, source: 'sector_fallback' as const, sourceExplanation: `${sect} sector typical ${multiple.toFixed(0)}×`, description: 'Sector-typical exit multiple' },
       ],
       formulaLines: [
         `EV = ${fmtB(evEbitdaInputs.ttmEbitda)} × ${multiple.toFixed(0)}× = ${fmtB(evEbitdaResult.enterpriseValue)}`,
@@ -359,7 +550,7 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
   const reverseDCFConfig = useMemo((): ValuationMethodConfig => {
     const implCAGRPct = reverseDCFResult.impliedCAGR != null ? (reverseDCFResult.impliedCAGR * 100).toFixed(1) + '%' : '—'
     return {
-      id: 'reverse_dcf', title: 'Reverse DCF', subtitle: 'What the market is pricing in',
+      id: 'reverse_dcf', title: 'Reverse DCF', subtitle: 'What growth rate the market is pricing in',
       companyName: apiData?.companyName ?? ticker, ticker, currency,
       evidence: [
         { label: 'Implied EV', text: reverseDCFResult.impliedEV != null ? fmtB(reverseDCFResult.impliedEV) + ' (price × shares + debt − cash)' : 'Cannot compute — missing inputs' },
@@ -368,11 +559,11 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
         { label: 'Terminal G', text: ((apiData?.terminalG  ?? 0.025) * 100).toFixed(1) + '%' },
       ],
       assumptions: [
-        { key: 'currentPrice',  label: 'Current Price',   value: currentPrice,        unit: '$', editable: false, source: 'model_default' as const },
-        { key: 'lastRevenue',   label: 'LTM Revenue',     value: lastActualRevenue,   unit: '$', editable: false, source: 'historical_3y_median' as const },
-        { key: 'lastFCFMargin', label: 'FCF Margin',      value: lastFCFMargin,       unit: '%', editable: false, source: 'historical_3y_median' as const },
-        { key: 'wacc',          label: 'WACC',            value: apiData?.wacc?.wacc  ?? 0.09, unit: '%', editable: false, source: 'model_default' as const },
-        { key: 'terminalG',     label: 'Terminal Growth', value: apiData?.terminalG   ?? 0.025, unit: '%', editable: false, source: 'model_default' as const },
+        { key: 'currentPrice',  label: 'Current Price',   value: currentPrice,      unit: '$', editable: false, source: 'model_default' as const },
+        { key: 'lastRevenue',   label: 'LTM Revenue',     value: lastActualRevenue, unit: '$', editable: false, source: 'historical_3y_median' as const },
+        { key: 'lastFCFMargin', label: 'FCF Margin',      value: lastFCFMargin,     unit: '%', editable: false, source: 'historical_3y_median' as const },
+        { key: 'wacc',          label: 'WACC',            value: apiData?.wacc?.wacc ?? 0.09, unit: '%', editable: false, source: 'model_default' as const },
+        { key: 'terminalG',     label: 'Terminal Growth', value: apiData?.terminalG ?? 0.025, unit: '%', editable: false, source: 'model_default' as const },
       ],
       formulaLines: [
         `Implied EV = ${fmtB(reverseDCFResult.impliedEV)}`,
@@ -425,61 +616,39 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
     }
   }, [scenarioResult, ticker, currency, currentPrice, apiData])
 
-  const dcfConfig = useMemo((): ValuationMethodConfig => ({
-    id: 'dcf', title: 'Full DCF Model', subtitle: 'Year-by-year FCF model — see table below',
-    companyName: apiData?.companyName ?? ticker, ticker, currency,
-    evidence: [], assumptions: [],
-    formulaLines: ['See the full modelling table below.'],
-    results: [], warnings: [],
-    fairValueSummary: null, currentPrice,
-  }), [ticker, currency, currentPrice, apiData])
-
-  const configMap = useMemo(() => ({
-    forward_pe:       fwdPEConfig,
-    revenue_multiple: revMultConfig,
-    dcf:              dcfConfig,
-    reverse_dcf:      reverseDCFConfig,
-    scenario_blend:   scenarioConfig,
-  } as Record<ValuationMethodId, ValuationMethodConfig>), [fwdPEConfig, revMultConfig, dcfConfig, reverseDCFConfig, scenarioConfig])
-
-  const activeConfig = activeMethod ? configMap[activeMethod] : null
-  const allMethods: ValuationMethodId[] = ['forward_pe', 'revenue_multiple', 'dcf', 'reverse_dcf', 'scenario_blend']
-
+  // ── Handlers ─────────────────────────────────────────────────────────────
   function handleAssumptionChange(methodId: ValuationMethodId | 'ev_ebitda', key: string, value: number) {
     setOverrides(prev => ({ ...prev, [methodId]: { ...(prev[methodId] ?? {}), [key]: value } }))
   }
   function handleResetOverrides(methodId: ValuationMethodId | 'ev_ebitda') {
     setOverrides(prev => { const n = { ...prev }; delete n[methodId]; return n })
   }
-  function handleMethodOpen(id: ValuationMethodId) {
-    if (id === 'dcf') { dcfRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); return }
-    setActiveMethod(id)
-  }
 
+  // ── Summary ───────────────────────────────────────────────────────────────
   const summaryMethods: MethodResult[] = [
-    { id: 'forward_pe',       label: 'Forward P/E (5Y)',   fairValue: fwdPEResult.fairValueToday,          bullFairValue: scenarioResult.scenarios.find(s => s.label === 'bull')?.fairValue ?? null, bearFairValue: scenarioResult.scenarios.find(s => s.label === 'bear')?.fairValue ?? null, upsidePct: fwdPEResult.upsidePct,           weight: 0.30 },
-    { id: 'ev_ebitda',        label: 'EV/EBITDA',          fairValue: evEbitdaResult.fairValuePerShare,    upsidePct: evEbitdaResult.upsidePct,       weight: 0.25 },
-    { id: 'revenue_multiple', label: 'Revenue Multiple',   fairValue: revMultResult.fairValueToday,        upsidePct: revMultResult.upsidePct,        weight: 0.20 },
-    { id: 'scenario_blend',   label: 'Scenario Blend',     fairValue: scenarioResult.weightedFairValue,    upsidePct: scenarioResult.weightedUpsidePct, weight: 0.15 },
-    { id: 'reverse_dcf',      label: 'Reverse DCF',        fairValue: null,                                upsidePct: null,                           weight: 0.10 },
+    { id: 'forward_pe',       label: 'Forward P/E (5Y)',   fairValue: fwdPEResult.fairValueToday,       bullFairValue: scenarioResult.scenarios.find(s => s.label === 'bull')?.fairValue ?? null, bearFairValue: scenarioResult.scenarios.find(s => s.label === 'bear')?.fairValue ?? null, upsidePct: fwdPEResult.upsidePct,          weight: 0.30 },
+    { id: 'ev_ebitda',        label: 'EV/EBITDA',          fairValue: evEbitdaResult.fairValuePerShare, upsidePct: evEbitdaResult.upsidePct,      weight: 0.25 },
+    { id: 'revenue_multiple', label: 'Revenue Multiple',   fairValue: revMultResult.fairValueToday,     upsidePct: revMultResult.upsidePct,       weight: 0.20 },
+    { id: 'scenario_blend',   label: 'Scenario Blend',     fairValue: scenarioResult.weightedFairValue, upsidePct: scenarioResult.weightedUpsidePct, weight: 0.15 },
+    { id: 'reverse_dcf',      label: 'Reverse DCF',        fairValue: null,                             upsidePct: null,                          weight: 0.10 },
   ]
 
   return (
     <div className="space-y-4">
 
-      {/* ── Wizard progress ─────────────────────────────────────────────────── */}
+      {/* ── Wizard progress ────────────────────────────────────────────────── */}
       <div className="bg-white border border-slate-200 rounded-xl px-5 py-4 shadow-card">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <WizardSteps steps={WIZARD_STEPS} current={currentStep} />
           <p className="text-micro text-slate-400 hidden sm:block">
             {currentStep === 1 ? 'Review the data foundation before running models' :
-             currentStep === 2 ? 'Adjust % assumptions, open any method to edit' :
+             currentStep === 2 ? 'Scroll through each method — edit any assumption live' :
              'Weighted consensus across all methods'}
           </p>
         </div>
       </div>
 
-      {/* ── Step 1: Base Data ─────────────────────────────────────────────────── */}
+      {/* ── Step 1: Base Data ──────────────────────────────────────────────── */}
       {currentStep === 1 && (
         <div className="space-y-4">
           {statementsAvailable ? (
@@ -508,7 +677,6 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
             </Alert>
           )}
 
-          {/* % assumption summary */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-card">
             <div className="flex items-center justify-between mb-3">
               <p className="text-label uppercase tracking-wider text-slate-400">Model Assumptions (% inputs)</p>
@@ -521,7 +689,7 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
               <AssumptionStat label="Exit P/E"     value={`${fwdPEBase.exitPE.toFixed(0)}×`}              sub="sector-normalized" />
             </div>
             <p className="text-micro text-slate-400 mt-3">
-              Open any method card to edit these assumptions. All inputs are percentages or multiples — no absolute dollar editing.
+              Scroll through the methods below to edit assumptions. All inputs are percentages or multiples.
             </p>
           </div>
 
@@ -531,46 +699,67 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
         </div>
       )}
 
-      {/* ── Step 2: Methods ──────────────────────────────────────────────────── */}
+      {/* ── Step 2: Methods (vertical scroll) ─────────────────────────────── */}
       {currentStep === 2 && (
-        <div className="space-y-4">
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-card">
-            <p className="text-label uppercase tracking-wider text-slate-400 mb-3">
-              Valuation Methods — click any card to edit % assumptions
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-              {allMethods.map(id => (
-                <ValuationMethodCard
-                  key={id}
-                  config={configMap[id]}
-                  isActive={activeMethod === id}
-                  onOpen={() => handleMethodOpen(id)}
-                />
-              ))}
-              <ValuationMethodCard
-                config={evEbitdaConfig}
-                isActive={evEbitdaDrawerOpen}
-                onOpen={() => setEvEbitdaDrawerOpen(true)}
-              />
-            </div>
-          </div>
+        <div className="space-y-5">
 
-          {/* DCF Modelling Table */}
-          <div ref={dcfRef}>
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-card">
-              <div className="px-5 py-4 border-b border-slate-100">
-                <p className="text-label uppercase tracking-wider text-slate-400">Full DCF Modelling Table</p>
-              </div>
-              <DataQualityWarnings
-                terminalGError={null}
-                financialCurrencyNote={apiData?.financialCurrencyNote ?? null}
-                isFinancialSector={apiData?.valuationMethods?.companyType === 'financial'}
-                isNegativeFCF={apiData?.baseFCF != null && apiData.baseFCF < 0}
-                altmanZone={apiData?.scores?.altman?.zone ?? null}
-                beneishFlag={apiData?.scores?.beneish?.flag ?? null}
-              />
-              <ModellingWorkspace apiData={apiData} ticker={ticker} />
+          <MethodInlinePanel
+            config={fwdPEConfig}
+            overrides={overrides['forward_pe'] ?? {}}
+            currency={currency}
+            onAssumptionChange={(key, val) => handleAssumptionChange('forward_pe', key, val)}
+            onResetOverrides={() => handleResetOverrides('forward_pe')}
+          />
+
+          <MethodInlinePanel
+            config={evEbitdaConfig}
+            overrides={overrides['ev_ebitda'] ?? {}}
+            currency={currency}
+            onAssumptionChange={(key, val) => handleAssumptionChange('ev_ebitda', key, val)}
+            onResetOverrides={() => handleResetOverrides('ev_ebitda')}
+          />
+
+          <MethodInlinePanel
+            config={revMultConfig}
+            overrides={overrides['revenue_multiple'] ?? {}}
+            currency={currency}
+            onAssumptionChange={(key, val) => handleAssumptionChange('revenue_multiple', key, val)}
+            onResetOverrides={() => handleResetOverrides('revenue_multiple')}
+          />
+
+          <MethodInlinePanel
+            config={scenarioConfig}
+            overrides={overrides['scenario_blend'] ?? {}}
+            currency={currency}
+            onAssumptionChange={(key, val) => handleAssumptionChange('scenario_blend', key, val)}
+            onResetOverrides={() => handleResetOverrides('scenario_blend')}
+          />
+
+          <MethodInlinePanel
+            config={reverseDCFConfig}
+            overrides={{}}
+            currency={currency}
+            onAssumptionChange={() => {}}
+            onResetOverrides={() => {}}
+          />
+
+          {/* Full DCF Modelling Table */}
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-card">
+            <div className="px-5 py-4 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">Full DCF Modelling Table</h3>
+              <p className="text-micro text-slate-400 mt-0.5">
+                Year-by-year unlevered FCF model grounded in Yahoo Finance statements
+              </p>
             </div>
+            <DataQualityWarnings
+              terminalGError={null}
+              financialCurrencyNote={apiData?.financialCurrencyNote ?? null}
+              isFinancialSector={apiData?.valuationMethods?.companyType === 'financial'}
+              isNegativeFCF={apiData?.baseFCF != null && apiData.baseFCF < 0}
+              altmanZone={apiData?.scores?.altman?.zone ?? null}
+              beneishFlag={apiData?.scores?.beneish?.flag ?? null}
+            />
+            <ModellingWorkspace apiData={apiData} ticker={ticker} statementsData={statementsData} />
           </div>
 
           <div className="flex gap-3">
@@ -584,11 +773,11 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
         </div>
       )}
 
-      {/* ── Step 3: Summary ──────────────────────────────────────────────────── */}
+      {/* ── Step 3: Summary ───────────────────────────────────────────────── */}
       {currentStep === 3 && (
         <div className="space-y-4">
           <div className="bg-white border border-slate-200 rounded-xl px-5 py-3 shadow-card">
-            <p className={cn('text-label uppercase tracking-wider', 'text-slate-500')}>
+            <p className="text-label uppercase tracking-wider text-slate-500">
               Valuation Summary — Weighted Consensus
             </p>
           </div>
@@ -601,26 +790,6 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
             ← Back to Methods
           </Button>
         </div>
-      )}
-
-      {/* ── Drawers ─────────────────────────────────────────────────────────── */}
-      {activeConfig && (
-        <ValuationModelDrawer
-          config={activeConfig}
-          onClose={() => setActiveMethod(null)}
-          overrides={activeMethod ? (overrides[activeMethod] ?? {}) : {}}
-          onAssumptionChange={(key, value) => activeMethod && handleAssumptionChange(activeMethod, key, value)}
-          onResetOverrides={() => activeMethod && handleResetOverrides(activeMethod)}
-        />
-      )}
-      {evEbitdaDrawerOpen && (
-        <ValuationModelDrawer
-          config={evEbitdaConfig}
-          onClose={() => setEvEbitdaDrawerOpen(false)}
-          overrides={overrides['ev_ebitda'] ?? {}}
-          onAssumptionChange={(key, value) => handleAssumptionChange('ev_ebitda', key, value)}
-          onResetOverrides={() => handleResetOverrides('ev_ebitda')}
-        />
       )}
     </div>
   )
