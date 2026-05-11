@@ -9,99 +9,288 @@ type StatementType = 'income' | 'balance' | 'cashflow'
 interface RowDef {
   key: string
   label: string
-  indent: number   // 0 = top-level, 1 = indented sub-row
+  indent: number
   bold?: boolean
+  isEPS?: boolean      // format as raw number (not /1000)
+  isPct?: boolean      // format as percentage
+  children?: RowDef[]  // expandable children
+  parentKey?: string   // for toggling
 }
 
-// ─── Row definitions (Yahoo Finance order) ───────────────────────────────────
+// ─── Income Statement rows (Yahoo Finance order) ──────────────────────────────
 
 const INCOME_ROWS: RowDef[] = [
-  { key: 'totalRevenue',                       label: 'Total Revenue',                               indent: 0, bold: true },
-  { key: 'costOfRevenue',                      label: 'Cost Of Revenue',                             indent: 1 },
-  { key: 'grossProfit',                        label: 'Gross Profit',                                indent: 0, bold: true },
-  { key: 'researchDevelopment',                label: 'Research And Development',                    indent: 1 },
-  { key: 'sellingGeneralAdministrative',       label: 'Selling General Administrative',              indent: 1 },
-  { key: 'nonRecurring',                       label: 'Non Recurring',                               indent: 1 },
-  { key: 'otherOperatingExpenses',             label: 'Other Operating Expenses',                    indent: 1 },
-  { key: 'totalOperatingExpenses',             label: 'Total Operating Expenses',                    indent: 0, bold: true },
-  { key: 'operatingIncome',                    label: 'Operating Income',                            indent: 0, bold: true },
-  { key: 'totalOtherIncomeExpenseNet',         label: 'Other Income Expense Net',                   indent: 1 },
-  { key: 'interestExpense',                    label: 'Interest Expense',                            indent: 1 },
-  { key: 'incomeBeforeTax',                    label: 'Pretax Income',                               indent: 0, bold: true },
-  { key: 'incomeTaxExpense',                   label: 'Tax Provision',                               indent: 1 },
-  { key: 'minorityInterest',                   label: 'Minority Interest',                           indent: 1 },
-  { key: 'netIncomeFromContinuingOps',         label: 'Net Income From Continuing Operations',       indent: 0, bold: true },
-  { key: 'discontinuedOperations',             label: 'Discontinued Operations',                     indent: 1 },
-  { key: 'extraordinaryItems',                 label: 'Extraordinary Items',                         indent: 1 },
-  { key: 'effectOfAccountingCharges',          label: 'Effect Of Accounting Charges',                indent: 1 },
-  { key: 'otherItems',                         label: 'Other Items',                                 indent: 1 },
-  { key: 'netIncome',                          label: 'Net Income',                                  indent: 0, bold: true },
-  { key: 'netIncomeApplicableToCommonShares',  label: 'Net Income Applicable To Common Shares',      indent: 1 },
+  {
+    key: 'TotalRevenue', label: 'Total Revenue', indent: 0, bold: true,
+    children: [
+      { key: 'OperatingRevenue', label: 'Operating Revenue', indent: 1 },
+    ],
+  },
+  { key: 'CostOfRevenue', label: 'Cost of Revenue', indent: 0 },
+  { key: 'GrossProfit', label: 'Gross Profit', indent: 0, bold: true },
+  {
+    key: 'OperatingExpense', label: 'Operating Expense', indent: 0, bold: true,
+    children: [
+      {
+        key: 'SellingGeneralAndAdministration', label: 'Selling General and Admin', indent: 1,
+        children: [
+          { key: 'GeneralAndAdministrativeExpense', label: 'General and Administrative', indent: 2 },
+          { key: 'OtherGandA', label: 'Other G&A', indent: 2 },
+          { key: 'SellingAndMarketingExpense', label: 'Selling & Marketing', indent: 2 },
+        ],
+      },
+      { key: 'ResearchAndDevelopment', label: 'Research & Development', indent: 1 },
+    ],
+  },
+  { key: 'OperatingIncome', label: 'Operating Income', indent: 0, bold: true },
+  {
+    key: 'NetNonOperatingInterestIncomeExpense', label: 'Net Non Operating Interest Income Expense', indent: 0,
+    children: [
+      { key: 'InterestIncomeNonOperating', label: 'Interest Income Non Operating', indent: 1 },
+      { key: 'InterestExpenseNonOperating', label: 'Interest Expense Non Operating', indent: 1 },
+    ],
+  },
+  {
+    key: 'OtherIncomeExpense', label: 'Other Income Expense', indent: 0,
+    children: [
+      { key: 'GainOnSaleOfSecurity', label: 'Gain on Sale of Security', indent: 1 },
+      {
+        key: 'SpecialIncomeCharges', label: 'Special Income Charges', indent: 1,
+        children: [
+          { key: 'WriteOff', label: 'Write Off', indent: 2 },
+        ],
+      },
+      { key: 'OtherNonOperatingIncomeExpenses', label: 'Other Non Operating Income Expenses', indent: 1 },
+    ],
+  },
+  { key: 'PretaxIncome', label: 'Pretax Income', indent: 0, bold: true },
+  { key: 'TaxProvision', label: 'Tax Provision', indent: 1 },
+  { key: 'TaxRateForCalcs', label: 'Tax Rate For Calcs', indent: 1, isPct: true },
+  {
+    key: 'NetIncomeCommonStockholders', label: 'Net Income Common Stockholders', indent: 0, bold: true,
+    children: [
+      { key: 'NetIncome', label: 'Net Income', indent: 1 },
+      { key: 'DilutedNIAvailtoComStockholders', label: 'Diluted NI Available to Com. Stockholders', indent: 1 },
+    ],
+  },
+  { key: 'BasicEPS', label: 'Basic EPS', indent: 0, isEPS: true },
+  { key: 'DilutedEPS', label: 'Diluted EPS', indent: 0, isEPS: true },
+  { key: 'BasicAverageShares', label: 'Basic Average Shares', indent: 0 },
+  { key: 'DilutedAverageShares', label: 'Diluted Average Shares', indent: 0 },
+  { key: 'TotalOperatingIncomeAsReported', label: 'Total Operating Income as Reported', indent: 0 },
+  { key: 'TotalExpenses', label: 'Total Expenses', indent: 0 },
+  { key: 'NetInterestIncome', label: 'Net Interest Income', indent: 0 },
+  { key: 'EBIT', label: 'EBIT', indent: 0, bold: true },
+  { key: 'EBITDA', label: 'EBITDA', indent: 0, bold: true },
+  { key: 'ReconciledCostOfRevenue', label: 'Reconciled Cost of Revenue', indent: 0 },
+  { key: 'ReconciledDepreciation', label: 'Reconciled Depreciation', indent: 0 },
+  { key: 'NormalizedEBITDA', label: 'Normalized EBITDA', indent: 0 },
+  { key: 'NormalizedIncome', label: 'Normalized Income', indent: 0 },
 ]
+
+// ─── Balance Sheet rows ────────────────────────────────────────────────────────
 
 const BALANCE_ROWS: RowDef[] = [
-  // Current Assets
-  { key: 'cash',                    label: 'Cash And Cash Equivalents',          indent: 1 },
-  { key: 'shortTermInvestments',    label: 'Short Term Investments',              indent: 1 },
-  { key: 'netReceivables',          label: 'Net Receivables',                     indent: 1 },
-  { key: 'inventory',               label: 'Inventory',                           indent: 1 },
-  { key: 'otherCurrentAssets',      label: 'Other Current Assets',               indent: 1 },
-  { key: 'totalCurrentAssets',      label: 'Total Current Assets',               indent: 0, bold: true },
-  // Non-current Assets
-  { key: 'longTermInvestments',     label: 'Long Term Investments',               indent: 1 },
-  { key: 'propertyPlantEquipment',  label: 'Net PPE',                             indent: 1 },
-  { key: 'goodWill',                label: 'Goodwill',                            indent: 1 },
-  { key: 'intangibleAssets',        label: 'Intangible Assets',                   indent: 1 },
-  { key: 'deferredLongTermAssetCharges', label: 'Deferred Long Term Asset Charges', indent: 1 },
-  { key: 'otherAssets',             label: 'Other Assets',                        indent: 1 },
-  { key: 'totalAssets',             label: 'Total Assets',                        indent: 0, bold: true },
-  // Current Liabilities
-  { key: 'accountsPayable',         label: 'Accounts Payable',                   indent: 1 },
-  { key: 'shortLongTermDebt',       label: 'Current Debt',                        indent: 1 },
-  { key: 'otherCurrentLiab',        label: 'Other Current Liabilities',           indent: 1 },
-  { key: 'totalCurrentLiabilities', label: 'Total Current Liabilities',           indent: 0, bold: true },
-  // Non-current Liabilities
-  { key: 'longTermDebt',            label: 'Long Term Debt',                      indent: 1 },
-  { key: 'otherLiab',               label: 'Other Liabilities',                   indent: 1 },
-  { key: 'deferredLongTermLiab',    label: 'Deferred Long Term Liabilities',       indent: 1 },
-  { key: 'totalLiab',               label: 'Total Liabilities Net Minority Interest', indent: 0, bold: true },
-  // Equity
-  { key: 'commonStock',             label: 'Common Stock',                        indent: 1 },
-  { key: 'retainedEarnings',        label: 'Retained Earnings',                   indent: 1 },
-  { key: 'treasuryStock',           label: 'Treasury Stock',                      indent: 1 },
-  { key: 'capitalSurplus',          label: 'Additional Paid In Capital',           indent: 1 },
-  { key: 'otherStockholderEquity',  label: 'Other Stockholder Equity',            indent: 1 },
-  { key: 'totalStockholderEquity',  label: "Stockholders' Equity",                indent: 0, bold: true },
-  { key: 'netTangibleAssets',       label: 'Net Tangible Assets',                 indent: 0 },
+  {
+    key: 'CurrentAssets', label: 'Current Assets', indent: 0, bold: true,
+    children: [
+      {
+        key: 'CashCashEquivalentsAndShortTermInvestments', label: 'Cash, Cash Equivalents & Short Term Investments', indent: 1,
+        children: [
+          { key: 'CashAndCashEquivalents', label: 'Cash And Cash Equivalents', indent: 2 },
+          { key: 'OtherShortTermInvestments', label: 'Other Short Term Investments', indent: 2 },
+        ],
+      },
+      {
+        key: 'NetReceivables', label: 'Receivables', indent: 1,
+        children: [
+          { key: 'AccountsReceivable', label: 'Accounts Receivable', indent: 2 },
+          { key: 'OtherReceivables', label: 'Other Receivables', indent: 2 },
+        ],
+      },
+      { key: 'Inventory', label: 'Inventory', indent: 1 },
+      { key: 'OtherCurrentAssets', label: 'Other Current Assets', indent: 1 },
+    ],
+  },
+  {
+    key: 'TotalNonCurrentAssets', label: 'Total Non Current Assets', indent: 0, bold: true,
+    children: [
+      { key: 'NetPPE', label: 'Net PPE', indent: 1 },
+      {
+        key: 'GoodwillAndOtherIntangibleAssets', label: 'Goodwill and Other Intangible Assets', indent: 1,
+        children: [
+          { key: 'Goodwill', label: 'Goodwill', indent: 2 },
+          { key: 'OtherIntangibleAssets', label: 'Other Intangible Assets', indent: 2 },
+        ],
+      },
+      {
+        key: 'InvestmentsAndAdvances', label: 'Investments And Advances', indent: 1,
+        children: [
+          { key: 'LongTermEquityInvestment', label: 'Long Term Equity Investment', indent: 2 },
+        ],
+      },
+      { key: 'OtherNonCurrentAssets', label: 'Other Non Current Assets', indent: 1 },
+    ],
+  },
+  { key: 'TotalAssets', label: 'Total Assets', indent: 0, bold: true },
+  {
+    key: 'CurrentLiabilities', label: 'Current Liabilities', indent: 0, bold: true,
+    children: [
+      { key: 'AccountsPayable', label: 'Accounts Payable', indent: 1 },
+      { key: 'TaxesPayable', label: 'Taxes Payable', indent: 1 },
+      {
+        key: 'CurrentDebtAndCapitalLeaseObligation', label: 'Current Debt and Capital Lease Obligation', indent: 1,
+        children: [
+          { key: 'CurrentCapitalLeaseObligation', label: 'Current Capital Lease Obligation', indent: 2 },
+          { key: 'OtherCurrentBorrowings', label: 'Other Current Borrowings', indent: 2 },
+        ],
+      },
+      { key: 'OtherCurrentLiabilities', label: 'Other Current Liabilities', indent: 1 },
+    ],
+  },
+  {
+    key: 'TotalNonCurrentLiabilitiesNetMinorityInterest', label: 'Total Non Current Liabilities', indent: 0, bold: true,
+    children: [
+      {
+        key: 'LongTermDebtAndCapitalLeaseObligation', label: 'Long Term Debt and Capital Lease Obligation', indent: 1,
+        children: [
+          { key: 'LongTermCapitalLeaseObligation', label: 'Long Term Capital Lease Obligation', indent: 2 },
+          { key: 'LongTermDebt', label: 'Long Term Debt', indent: 2 },
+        ],
+      },
+      { key: 'OtherNonCurrentLiabilities', label: 'Other Non Current Liabilities', indent: 1 },
+    ],
+  },
+  { key: 'TotalLiabilitiesNetMinorityInterest', label: 'Total Liabilities Net Minority Interest', indent: 0, bold: true },
+  {
+    key: 'TotalEquityGrossMinorityInterest', label: 'Total Equity Gross Minority Interest', indent: 0, bold: true,
+    children: [
+      {
+        key: 'StockholdersEquity', label: "Stockholders' Equity", indent: 1,
+        children: [
+          { key: 'CommonStock', label: 'Common Stock', indent: 2 },
+          { key: 'AdditionalPaidInCapital', label: 'Additional Paid In Capital', indent: 2 },
+          { key: 'RetainedEarnings', label: 'Retained Earnings', indent: 2 },
+          { key: 'TreasuryStock', label: 'Treasury Stock', indent: 2 },
+          { key: 'OtherEquityAdjustments', label: 'Other Equity Adjustments', indent: 2 },
+        ],
+      },
+    ],
+  },
+  { key: 'TotalCapitalization', label: 'Total Capitalization', indent: 0 },
+  { key: 'CommonStockEquity', label: 'Common Stock Equity', indent: 0 },
+  { key: 'NetTangibleAssets', label: 'Net Tangible Assets', indent: 0 },
+  { key: 'WorkingCapital', label: 'Working Capital', indent: 0 },
+  { key: 'InvestedCapital', label: 'Invested Capital', indent: 0 },
+  { key: 'TangibleBookValue', label: 'Tangible Book Value', indent: 0 },
+  { key: 'ShareIssued', label: 'Share Issued', indent: 0 },
+  { key: 'OrdinarySharesNumber', label: 'Ordinary Shares Number', indent: 0 },
 ]
 
+// ─── Cash Flow rows ────────────────────────────────────────────────────────────
+
 const CASHFLOW_ROWS: RowDef[] = [
-  { key: 'totalCashFromOperatingActivities',      label: 'Operating Cash Flow',                               indent: 0, bold: true },
-  { key: 'totalCashFromOperatingActivities',      label: 'Cash Flow From Continuing Operating Activities',    indent: 1 },
-  { key: 'totalCashflowsFromInvestingActivities', label: 'Investing Cash Flow',                               indent: 0, bold: true },
-  { key: 'totalCashflowsFromInvestingActivities', label: 'Cash Flow From Continuing Investing Activities',    indent: 1 },
-  { key: 'totalCashFromFinancingActivities',      label: 'Financing Cash Flow',                               indent: 0, bold: true },
-  { key: 'totalCashFromFinancingActivities',      label: 'Cash Flow From Continuing Financing Activities',    indent: 1 },
-  { key: 'endCashPosition',                       label: 'End Cash Position',                                 indent: 0, bold: true },
-  { key: 'changeInCash',                          label: 'Changes In Cash',                                   indent: 0 },
-  { key: 'effectOfExchangeRate',                  label: 'Effect Of Exchange Rate Changes',                   indent: 0 },
-  { key: 'beginPeriodCashFlow',                   label: 'Beginning Cash Position',                           indent: 0 },
-  { key: 'capitalExpenditures',                   label: 'Capital Expenditure',                               indent: 0 },
-  { key: 'issuanceOfStock',                       label: 'Issuance Of Capital Stock',                         indent: 0 },
-  { key: 'netBorrowings',                         label: 'Issuance Of Debt',                                  indent: 0 },
-  { key: 'repurchaseOfStock',                     label: 'Repurchase Of Capital Stock',                       indent: 0 },
-  { key: 'dividendsPaid',                         label: 'Payment Of Dividends',                              indent: 0 },
-  { key: 'salePurchaseOfStock',                   label: 'Sale Purchase Of Stock',                            indent: 0 },
+  {
+    key: 'OperatingCashFlow', label: 'Operating Cash Flow', indent: 0, bold: true,
+    children: [
+      { key: 'CashFlowFromContinuingOperatingActivities', label: 'Cash Flow From Continuing Operating Activities', indent: 1 },
+      { key: 'NetIncome', label: 'Net Income', indent: 1 },
+      { key: 'DepreciationAndAmortization', label: 'Depreciation & Amortization', indent: 1 },
+      { key: 'DeferredIncomeTax', label: 'Deferred Income Tax', indent: 1 },
+      { key: 'StockBasedCompensation', label: 'Stock Based Compensation', indent: 1 },
+      {
+        key: 'ChangeInWorkingCapital', label: 'Change In Working Capital', indent: 1,
+        children: [
+          { key: 'ChangeInAccountsReceivable', label: 'Change In Accounts Receivable', indent: 2 },
+          { key: 'ChangeInInventory', label: 'Change In Inventory', indent: 2 },
+          { key: 'ChangeInOtherWorkingCapital', label: 'Change In Other Working Capital', indent: 2 },
+        ],
+      },
+      { key: 'OtherNonCashItems', label: 'Other Non Cash Items', indent: 1 },
+    ],
+  },
+  {
+    key: 'InvestingCashFlow', label: 'Investing Cash Flow', indent: 0, bold: true,
+    children: [
+      { key: 'CashFlowFromContinuingInvestingActivities', label: 'Cash Flow From Continuing Investing Activities', indent: 1 },
+      { key: 'CapitalExpenditure', label: 'Capital Expenditure', indent: 1 },
+      { key: 'PurchaseOfBusiness', label: 'Purchase of Business', indent: 1 },
+      { key: 'PurchaseOfInvestment', label: 'Purchase of Investment', indent: 1 },
+      { key: 'SaleOfInvestment', label: 'Sale of Investment', indent: 1 },
+      { key: 'OtherInvestingCharges', label: 'Other Investing Charges', indent: 1 },
+    ],
+  },
+  {
+    key: 'FinancingCashFlow', label: 'Financing Cash Flow', indent: 0, bold: true,
+    children: [
+      { key: 'CashFlowFromContinuingFinancingActivities', label: 'Cash Flow From Continuing Financing Activities', indent: 1 },
+      { key: 'IssuanceOfDebt', label: 'Issuance of Debt', indent: 1 },
+      { key: 'RepaymentOfDebt', label: 'Repayment of Debt', indent: 1 },
+      { key: 'IssuanceOfCapitalStock', label: 'Issuance of Capital Stock', indent: 1 },
+      { key: 'RepurchaseOfCapitalStock', label: 'Repurchase of Capital Stock', indent: 1 },
+      { key: 'CashDividendsPaid', label: 'Cash Dividends Paid', indent: 1 },
+      { key: 'OtherFinancingCharges', label: 'Other Financing Charges', indent: 1 },
+    ],
+  },
+  { key: 'EndCashPosition', label: 'End Cash Position', indent: 0, bold: true },
+  { key: 'ChangesInCash', label: 'Changes In Cash', indent: 0 },
+  { key: 'EffectOfExchangeRateChanges', label: 'Effect Of Exchange Rate Changes', indent: 0 },
+  { key: 'BeginningCashPosition', label: 'Beginning Cash Position', indent: 0 },
+  { key: 'FreeCashFlow', label: 'Free Cash Flow', indent: 0, bold: true },
 ]
+
+// ─── Flatten tree ─────────────────────────────────────────────────────────────
+
+interface FlatRow extends RowDef {
+  parentKey?: string
+  hasChildren?: boolean
+}
+
+function flattenRows(rows: RowDef[], expandedSet: Set<string>, parentKey?: string): FlatRow[] {
+  const result: FlatRow[] = []
+  for (const row of rows) {
+    const hasChildren = !!(row.children && row.children.length > 0)
+    result.push({ ...row, parentKey, hasChildren })
+    if (hasChildren && expandedSet.has(row.key)) {
+      result.push(...flattenRows(row.children!, expandedSet, row.key))
+    }
+  }
+  return result
+}
+
+function getAllParentKeys(rows: RowDef[]): string[] {
+  const keys: string[] = []
+  for (const row of rows) {
+    if (row.children && row.children.length > 0) {
+      keys.push(row.key)
+      keys.push(...getAllParentKeys(row.children))
+    }
+  }
+  return keys
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmtThousands(v: unknown): string {
-  if (v == null || v === '' || (typeof v === 'object' && v !== null)) return '—'
+  if (v == null || v === '') return '—'
   const n = typeof v === 'number' ? v : parseFloat(String(v))
   if (!isFinite(n)) return '—'
   const thou = Math.round(n / 1000)
   return thou.toLocaleString('en-US')
+}
+
+function fmtEPS(v: unknown): string {
+  if (v == null || v === '') return '—'
+  const n = typeof v === 'number' ? v : parseFloat(String(v))
+  if (!isFinite(n)) return '—'
+  return n.toFixed(2)
+}
+
+function fmtPct(v: unknown): string {
+  if (v == null || v === '') return '—'
+  const n = typeof v === 'number' ? v : parseFloat(String(v))
+  if (!isFinite(n)) return '—'
+  return (n * 100).toFixed(1) + '%'
 }
 
 function isNegative(v: unknown): boolean {
@@ -109,9 +298,9 @@ function isNegative(v: unknown): boolean {
   return v < 0
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function formatDate(raw: unknown): string {
   if (!raw) return ''
+  if (raw === 'TTM') return 'TTM'
   const d = raw instanceof Date ? raw : new Date(String(raw))
   if (isNaN(d.getTime())) return String(raw)
   return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`
@@ -131,21 +320,48 @@ interface StatementsData {
 }
 
 export default function YahooFinancials({ ticker }: Props) {
-  const [data, setData]         = useState<StatementsData | null>(null)
-  const [loading, setLoading]   = useState(true)
-  const [error, setError]       = useState('')
-  const [period, setPeriod]     = useState<Period>('annual')
+  const [data, setData]           = useState<StatementsData | null>(null)
+  const [loading, setLoading]     = useState(true)
+  const [error, setError]         = useState('')
+  const [period, setPeriod]       = useState<Period>('annual')
   const [statement, setStatement] = useState<StatementType>('income')
-  const [expandAll, setExpandAll] = useState(false)
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set())
+  const [allExpanded, setAllExpanded]   = useState(false)
 
   useEffect(() => {
     setLoading(true)
     setError('')
     fetch(`/api/statements?ticker=${ticker}`)
       .then(r => r.json())
-      .then(d => { if (d.error) { setError(d.error); setLoading(false); return } setData(d); setLoading(false) })
+      .then(d => {
+        if (d.error) { setError(d.error); setLoading(false); return }
+        setData(d)
+        setLoading(false)
+      })
       .catch(e => { setError(String(e)); setLoading(false) })
   }, [ticker])
+
+  const rootRows = statement === 'income' ? INCOME_ROWS : statement === 'balance' ? BALANCE_ROWS : CASHFLOW_ROWS
+
+  const allParentKeys = getAllParentKeys(rootRows)
+
+  function toggleRow(key: string) {
+    setExpandedKeys(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) { next.delete(key) } else { next.add(key) }
+      return next
+    })
+  }
+
+  function toggleAll() {
+    if (allExpanded) {
+      setExpandedKeys(new Set())
+      setAllExpanded(false)
+    } else {
+      setExpandedKeys(new Set(allParentKeys))
+      setAllExpanded(true)
+    }
+  }
 
   if (loading) return (
     <div className="flex items-center justify-center py-16 text-sm text-slate-400">
@@ -156,36 +372,35 @@ export default function YahooFinancials({ ticker }: Props) {
   if (error) return <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">{error}</div>
   if (!data)  return null
 
-  const rows      = statement === 'income'   ? INCOME_ROWS
-                  : statement === 'balance'  ? BALANCE_ROWS
-                  :                            CASHFLOW_ROWS
-  const periods   = period === 'annual'
-    ? statement === 'income'   ? data.annual.incomeStatement
-      : statement === 'balance' ? data.annual.balanceSheet
-      : data.annual.cashFlow
-    : statement === 'income'   ? data.quarterly.incomeStatement
-      : statement === 'balance' ? data.quarterly.balanceSheet
-      : data.quarterly.cashFlow
+  const periodsRaw = period === 'annual'
+    ? (statement === 'income' ? data.annual.incomeStatement : statement === 'balance' ? data.annual.balanceSheet : data.annual.cashFlow)
+    : (statement === 'income' ? data.quarterly.incomeStatement : statement === 'balance' ? data.quarterly.balanceSheet : data.quarterly.cashFlow)
 
-  const hasTTM    = statement !== 'balance'
-  const ttmData   = statement === 'income'   ? data.ttm.incomeStatement
-                  : statement === 'cashflow' ? data.ttm.cashFlow
-                  : null
+  const hasTTM  = statement !== 'balance'
+  const ttmData = statement === 'income' ? data.ttm.incomeStatement : statement === 'cashflow' ? data.ttm.cashFlow : null
 
-  // Balance sheet: show up to 4 periods; income/CF: TTM + up to 4 periods
-  const displayPeriods = [...periods].reverse().slice(0, 4).reverse()
+  const displayPeriods = [...periodsRaw].reverse().slice(0, 4).reverse()
 
-  // Rows to show — filter out rows where ALL periods have null value (skip empties)
-  const visibleRows = rows.filter(row => {
+  // Filter rows where at least one period has data
+  function hasData(row: RowDef): boolean {
     const vals = [
-      ...(hasTTM && ttmData ? [ttmData[row.key]] : []),
+      ...(hasTTM && ttmData && period === 'annual' ? [ttmData[row.key]] : []),
       ...displayPeriods.map(p => p[row.key]),
     ]
     return vals.some(v => v != null && typeof v === 'number')
-  })
+  }
 
-  // In collapsed mode, only show top-level (non-indented) rows
-  const tableRows = expandAll ? visibleRows : visibleRows.filter(r => r.indent === 0)
+  function pruneRows(rows: RowDef[]): RowDef[] {
+    return rows
+      .map(row => {
+        const children = row.children ? pruneRows(row.children) : undefined
+        return { ...row, children }
+      })
+      .filter(row => hasData(row) || (row.children && row.children.some(c => hasData(c) || c.children?.some(hasData))))
+  }
+
+  const visibleRows = pruneRows(rootRows)
+  const flatRows    = flattenRows(visibleRows, expandedKeys)
 
   const TABS: { id: StatementType; label: string }[] = [
     { id: 'income',   label: 'Income Statement' },
@@ -195,14 +410,13 @@ export default function YahooFinancials({ ticker }: Props) {
 
   return (
     <div className="rounded-xl bg-white border border-slate-200 overflow-hidden shadow-sm">
-      {/* Header bar */}
+      {/* Header */}
       <div className="flex items-center justify-between px-4 pt-3 pb-0 gap-2 flex-wrap">
-        {/* Statement tabs */}
         <div className="flex gap-0 border-b border-slate-200 w-full">
           {TABS.map(tab => (
             <button
               key={tab.id}
-              onClick={() => setStatement(tab.id)}
+              onClick={() => { setStatement(tab.id); setExpandedKeys(new Set()); setAllExpanded(false) }}
               className={[
                 'px-4 py-2.5 text-[13px] font-medium whitespace-nowrap transition-colors border-b-2 -mb-px',
                 statement === tab.id
@@ -213,7 +427,6 @@ export default function YahooFinancials({ ticker }: Props) {
               {tab.label}
             </button>
           ))}
-          {/* Annual / Quarterly + Expand All pushed to right */}
           <div className="ml-auto flex items-center gap-2 pb-1">
             <div className="flex rounded-lg overflow-hidden border border-slate-200 text-[12px]">
               <button
@@ -230,27 +443,25 @@ export default function YahooFinancials({ ticker }: Props) {
               </button>
             </div>
             <button
-              onClick={() => setExpandAll(v => !v)}
+              onClick={toggleAll}
               className="text-[12px] text-blue-600 hover:text-blue-700 flex items-center gap-1 whitespace-nowrap"
             >
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d={expandAll ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'} />
+                <path strokeLinecap="round" strokeLinejoin="round" d={allExpanded ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'} />
               </svg>
-              {expandAll ? 'Collapse' : 'Expand All'}
+              {allExpanded ? 'Collapse All' : 'Expand All'}
             </button>
           </div>
         </div>
       </div>
 
-      {/* "All numbers in thousands" label */}
       <div className="px-4 pt-2 pb-1 text-[11px] text-slate-400">All numbers in thousands</div>
 
-      {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-[12px]">
           <thead>
             <tr className="border-b border-slate-100">
-              <th className="text-left px-4 py-2 text-[11px] font-semibold text-slate-500 w-56 min-w-[200px]">Breakdown</th>
+              <th className="text-left px-4 py-2 text-[11px] font-semibold text-slate-500 w-64 min-w-[220px]">Breakdown</th>
               {hasTTM && period === 'annual' && ttmData && (
                 <th className="text-right px-3 py-2 text-[11px] font-semibold text-slate-500 min-w-[110px]">TTM</th>
               )}
@@ -262,19 +473,39 @@ export default function YahooFinancials({ ticker }: Props) {
             </tr>
           </thead>
           <tbody>
-            {tableRows.map((row, i) => {
+            {flatRows.map((row, i) => {
               const isHeader = row.bold && row.indent === 0
+              const fmt = row.isEPS ? fmtEPS : row.isPct ? fmtPct : fmtThousands
+              const indentPx = [16, 32, 52][row.indent] ?? 16
+
               return (
                 <tr
                   key={`${row.key}-${i}`}
                   className={`border-b border-slate-50 ${isHeader ? 'bg-slate-50/60' : 'hover:bg-slate-50/40'}`}
                 >
-                  <td className={`px-4 py-1.5 ${row.indent === 1 ? 'pl-8' : ''} ${row.bold ? 'font-semibold text-slate-800' : 'text-slate-600'}`}>
-                    {row.label}
+                  <td
+                    className={`py-1.5 ${row.bold ? 'font-semibold text-slate-800' : 'text-slate-600'}`}
+                    style={{ paddingLeft: `${indentPx}px` }}
+                  >
+                    <div className="flex items-center gap-1">
+                      {row.hasChildren && (
+                        <button
+                          onClick={() => toggleRow(row.key)}
+                          className="text-slate-400 hover:text-slate-600 shrink-0"
+                        >
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round"
+                              d={expandedKeys.has(row.key) ? 'M19 9l-7 7-7-7' : 'M9 5l7 7-7 7'} />
+                          </svg>
+                        </button>
+                      )}
+                      {!row.hasChildren && <span className="w-3 shrink-0" />}
+                      <span>{row.label}</span>
+                    </div>
                   </td>
                   {hasTTM && period === 'annual' && ttmData && (
                     <td className={`text-right px-3 py-1.5 tabular-nums ${isNegative(ttmData[row.key]) ? 'text-red-600' : 'text-slate-700'} ${row.bold ? 'font-semibold' : ''}`}>
-                      {fmtThousands(ttmData[row.key])}
+                      {fmt(ttmData[row.key])}
                     </td>
                   )}
                   {displayPeriods.map((p, j) => (
@@ -282,7 +513,7 @@ export default function YahooFinancials({ ticker }: Props) {
                       key={j}
                       className={`text-right px-3 py-1.5 tabular-nums ${isNegative(p[row.key]) ? 'text-red-600' : 'text-slate-700'} ${row.bold ? 'font-semibold' : ''}`}
                     >
-                      {fmtThousands(p[row.key])}
+                      {fmt(p[row.key])}
                     </td>
                   ))}
                 </tr>
