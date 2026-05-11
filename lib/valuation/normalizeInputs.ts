@@ -103,11 +103,11 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
     if (stmtCagr !== null) cagr = stmtCagr
   }
 
-  // Base FCF: prefer TTM FCF from statements
+  // Base FCF: prefer TTM FCF from statements (raw dollars → millions)
   let baseFCF = nullable(apiData?.baseFCF)
   const ttmFCF = statementsData?.ttm?.cashFlow?.freeCashFlow
   if (typeof ttmFCF === 'number' && isFinite(ttmFCF) && ttmFCF !== 0) {
-    baseFCF = ttmFCF
+    baseFCF = ttmFCF / 1e6
   }
 
   // Balance sheet overrides from TTM statements
@@ -156,6 +156,12 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
 }
 
 // ── Build rows from /api/statements annual data ───────────────────────────────
+// yahoo-finance2 fundamentalsTimeSeries returns raw dollars; ModellingRow expects millions.
+
+function toM(v: unknown): number | null {
+  if (typeof v !== 'number' || !isFinite(v)) return null
+  return v / 1e6
+}
 
 function buildRowsFromStatements(
   annual: { incomeStatement: AnyRow[]; balanceSheet: AnyRow[]; cashFlow: AnyRow[] },
@@ -170,13 +176,13 @@ function buildRowsFromStatements(
     byYear.set(year, {
       year,
       isProjected: false,
-      revenue:    nullable(row.totalRevenue),
-      ebit:       nullable(row.operatingIncome ?? row.EBIT),
-      ebitda:     nullable(row.EBITDA),
-      netIncome:  nullable(row.netIncome),
-      eps:        nullable(row.dilutedEPS),
+      revenue:    toM(row.totalRevenue),
+      ebit:       toM(row.operatingIncome ?? row.EBIT),
+      ebitda:     toM(row.EBITDA),
+      netIncome:  toM(row.netIncome),
+      eps:        nullable(row.dilutedEPS),         // per-share — no scaling
       fiscalDate: row.endDate ?? null,
-      taxRate:    nullable(row.taxRateForCalcs),
+      taxRate:    nullable(row.taxRateForCalcs),    // ratio — no scaling
     })
   }
 
@@ -186,12 +192,12 @@ function buildRowsFromStatements(
     const existing = byYear.get(year) ?? { year, isProjected: false }
     byYear.set(year, {
       ...existing,
-      capex:        nullable(row.capitalExpenditure),
-      operatingCF:  nullable(row.operatingCashFlow),
-      freeCashFlow: nullable(row.freeCashFlow),
-      dna:          nullable(row.depreciationAndAmortization ?? row.reconciledDepreciation),
-      dividendsPaid: nullable(row.cashDividendsPaid),
-      financingCF:  nullable(row.financingCashFlow),
+      capex:        toM(row.capitalExpenditure),
+      operatingCF:  toM(row.operatingCashFlow),
+      freeCashFlow: toM(row.freeCashFlow),
+      dna:          toM(row.depreciationAndAmortization ?? row.reconciledDepreciation),
+      dividendsPaid: toM(row.cashDividendsPaid),
+      financingCF:  toM(row.financingCashFlow),
       fiscalDate:   (existing.fiscalDate ?? row.endDate) ?? null,
     })
   }
@@ -202,11 +208,11 @@ function buildRowsFromStatements(
     const existing = byYear.get(year) ?? { year, isProjected: false }
     byYear.set(year, {
       ...existing,
-      cash:                    nullable(row.cashCashEquivalentsAndShortTermInvestments ?? row.cash),
-      totalCurrentAssets:      nullable(row.currentAssets),
-      totalCurrentLiabilities: nullable(row.currentLiabilities),
-      longTermDebt:            nullable(row.longTermDebt),
-      totalEquity:             nullable(row.stockholdersEquity ?? row.totalStockholdersEquity),
+      cash:                    toM(row.cashCashEquivalentsAndShortTermInvestments ?? row.cash),
+      totalCurrentAssets:      toM(row.currentAssets),
+      totalCurrentLiabilities: toM(row.currentLiabilities),
+      longTermDebt:            toM(row.longTermDebt),
+      totalEquity:             toM(row.stockholdersEquity ?? row.totalStockholdersEquity),
     })
   }
 
@@ -218,22 +224,22 @@ function buildRowsFromStatements(
     byYear.set('TTM', {
       year: 'TTM',
       isProjected: false,
-      revenue:    nullable(is.totalRevenue),
-      ebit:       nullable(is.operatingIncome ?? is.EBIT),
-      ebitda:     nullable(is.EBITDA),
-      netIncome:  nullable(is.netIncome),
+      revenue:    toM(is.totalRevenue),
+      ebit:       toM(is.operatingIncome ?? is.EBIT),
+      ebitda:     toM(is.EBITDA),
+      netIncome:  toM(is.netIncome),
       eps:        nullable(is.dilutedEPS),
-      capex:        nullable(cf.capitalExpenditure),
-      operatingCF:  nullable(cf.operatingCashFlow),
-      freeCashFlow: nullable(cf.freeCashFlow),
-      dna:          nullable(cf.depreciationAndAmortization ?? cf.reconciledDepreciation),
-      dividendsPaid: nullable(cf.cashDividendsPaid),
-      financingCF:  nullable(cf.financingCashFlow),
-      cash:                    nullable(bs.cashCashEquivalentsAndShortTermInvestments ?? bs.cash),
-      totalCurrentAssets:      nullable(bs.currentAssets),
-      totalCurrentLiabilities: nullable(bs.currentLiabilities),
-      longTermDebt:            nullable(bs.longTermDebt),
-      totalEquity:             nullable(bs.stockholdersEquity ?? bs.totalStockholdersEquity),
+      capex:        toM(cf.capitalExpenditure),
+      operatingCF:  toM(cf.operatingCashFlow),
+      freeCashFlow: toM(cf.freeCashFlow),
+      dna:          toM(cf.depreciationAndAmortization ?? cf.reconciledDepreciation),
+      dividendsPaid: toM(cf.cashDividendsPaid),
+      financingCF:  toM(cf.financingCashFlow),
+      cash:                    toM(bs.cashCashEquivalentsAndShortTermInvestments ?? bs.cash),
+      totalCurrentAssets:      toM(bs.currentAssets),
+      totalCurrentLiabilities: toM(bs.currentLiabilities),
+      longTermDebt:            toM(bs.longTermDebt),
+      totalEquity:             toM(bs.stockholdersEquity ?? bs.totalStockholdersEquity),
       fiscalDate: 'TTM',
       taxRate: nullable(is.taxRateForCalcs),
     })
