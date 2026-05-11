@@ -208,8 +208,9 @@ export default function ModellingWorkspace({ apiData, ticker }: ModellingWorkspa
       revenue: ov.revenue != null ? ov.revenue : r.revenue,
       ebit:    ov.ebit    != null ? ov.ebit    : r.ebit,
       ebitda:  ov.ebitda  != null ? ov.ebitda  : r.ebitda,
-      capex:   ov.capex   != null ? ov.capex   : r.capex,
+      capex:   ov.capex   != null ? ov.capex   : (r.capex ?? (r.freeCashFlow != null && r.operatingCF != null ? r.freeCashFlow - r.operatingCF : null)),
       nwc:     ov.nwc     != null ? ov.nwc     : deriveNWC(r),
+      dnaFromCF: r.dna,
     }
   }), [baseInput, rowOverrides])
 
@@ -231,9 +232,10 @@ export default function ModellingWorkspace({ apiData, ticker }: ModellingWorkspa
       netIncome:        ov.netIncome        != null ? ov.netIncome        : r.netIncome,
       ebit:             ov.ebit             != null ? ov.ebit             : r.ebit,
       ebitda:           ov.ebitda           != null ? ov.ebitda           : r.ebitda,
-      capex:            ov.capex            != null ? ov.capex            : r.capex,
+      capex:            ov.capex            != null ? ov.capex            : (r.capex ?? (r.freeCashFlow != null && r.operatingCF != null ? r.freeCashFlow - r.operatingCF : null)),
       nwc:              ov.nwc              != null ? ov.nwc              : deriveNWC(r),
       netDebtRepayment: ov.netDebtRepayment != null ? ov.netDebtRepayment : baseNetDebtRepayment,
+      dnaFromCF: r.dna,
     }
   }), [baseInput, rowOverrides])
 

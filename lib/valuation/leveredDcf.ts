@@ -46,7 +46,9 @@ export function computeLFCFRows(
     const r = rows[i]
     const prior = i > 0 ? result[i - 1] : null
 
-    const dna = (r.ebitda != null && r.ebit != null) ? r.ebitda - r.ebit : null
+    const dna = (r as any).dnaFromCF != null
+      ? (r as any).dnaFromCF as number
+      : (r.ebitda != null && r.ebit != null) ? r.ebitda - r.ebit : null
     const nwcDelta = (r.nwc != null && prior?.nwc != null) ? r.nwc - prior.nwc : null
 
     let lfcf: number | null = null

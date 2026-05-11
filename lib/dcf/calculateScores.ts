@@ -4,7 +4,7 @@
 
 export interface PiotroskiCriterion {
   name: string
-  pass: boolean
+  pass: boolean | null   // null = data unavailable (not counted in score)
   detail: string
 }
 
@@ -72,16 +72,16 @@ export function calculatePiotroski(
 
   const criteria: PiotroskiCriterion[] = [
     roa0 === null
-      ? { name: 'ROA positive', pass: false, detail: 'data unavailable' }
+      ? { name: 'ROA positive', pass: null, detail: 'data unavailable' }
       : { name: 'ROA positive', pass: roa0 > 0, detail: `ROA ${fmt(roa0)}` },
     ocf0Raw === null
-      ? { name: 'Operating CF positive', pass: false, detail: 'data unavailable' }
+      ? { name: 'Operating CF positive', pass: null, detail: 'data unavailable' }
       : { name: 'Operating CF positive', pass: ocf0 > 0, detail: `OCF $${(ocf0 / 1e9).toFixed(1)}B` },
     roa0 === null || roa1 === null
-      ? { name: 'ROA improving', pass: false, detail: 'data unavailable' }
+      ? { name: 'ROA improving', pass: null, detail: 'data unavailable' }
       : { name: 'ROA improving', pass: roa0 > roa1, detail: `${fmt(roa0)} vs ${fmt(roa1)} prior` },
     ocf0Raw === null || ni0Raw === null
-      ? { name: 'Accrual quality (OCF > Net Income)', pass: false, detail: 'data unavailable' }
+      ? { name: 'Accrual quality (OCF > Net Income)', pass: null, detail: 'data unavailable' }
       : {
           name: 'Accrual quality (OCF > Net Income)',
           pass: ocf0 > ni0,
@@ -114,7 +114,7 @@ export function calculatePiotroski(
     },
   ]
 
-  const score = criteria.filter((c) => c.pass).length
+  const score = criteria.filter((c) => c.pass === true).length
   const label: PiotroskiResult['label'] = score >= 8 ? 'Strong' : score >= 4 ? 'Mixed' : 'Weak'
 
   return { score, criteria, label }

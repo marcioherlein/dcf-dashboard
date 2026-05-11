@@ -42,7 +42,7 @@ export default function FinancialScores({ scores }: Props) {
   }
 
   // Detect "no fundamental data" state: all four metrics effectively empty
-  const piotroskiNoData = piotroski.score <= 1 && piotroski.criteria.every((c) => !c.pass || c.detail.includes('0.0%') || c.detail.includes('$0.0B'))
+  const piotroskiNoData = piotroski.score <= 1 && piotroski.criteria.every((c) => c.pass !== true || c.detail.includes('0.0%') || c.detail.includes('$0.0B'))
   const roicNoData = !roic.dataAvailable
   const noData = piotroskiNoData && altman == null && beneish == null && roicNoData
 
@@ -130,10 +130,10 @@ export default function FinancialScores({ scores }: Props) {
             {piotroski.criteria.map((c, i) => (
               <div
                 key={i}
-                className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white ${c.pass ? 'bg-emerald-500' : 'bg-red-400'}`}
+                className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white ${c.pass === null ? 'bg-gray-300' : c.pass ? 'bg-emerald-500' : 'bg-red-400'}`}
                 title={`${c.name}: ${c.detail}`}
               >
-                {c.pass ? '✓' : '✗'}
+                {c.pass === null ? '?' : c.pass ? '✓' : '✗'}
               </div>
             ))}
           </div>
@@ -149,11 +149,11 @@ export default function FinancialScores({ scores }: Props) {
             <ul className="mt-2 space-y-1">
               {piotroski.criteria.map((c, i) => (
                 <li key={i} className="flex items-center gap-2 text-[11px]">
-                  <span className={`shrink-0 font-bold ${c.pass ? 'text-emerald-600' : 'text-red-500'}`}>
-                    {c.pass ? '✓' : '✗'}
+                  <span className={`shrink-0 font-bold ${c.pass === null ? 'text-gray-400' : c.pass ? 'text-emerald-600' : 'text-red-500'}`}>
+                    {c.pass === null ? '?' : c.pass ? '✓' : '✗'}
                   </span>
                   <span className="text-gray-600">{c.name}</span>
-                  <span className="ml-auto text-gray-400">{c.detail}</span>
+                  <span className={`ml-auto ${c.pass === null ? 'text-gray-400 italic' : 'text-gray-400'}`}>{c.detail}</span>
                 </li>
               ))}
             </ul>

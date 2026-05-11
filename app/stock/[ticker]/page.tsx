@@ -1,26 +1,19 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import PriceHeader from '@/components/stock/PriceHeader'
-import WACCBreakdown from '@/components/stock/WACCBreakdown'
-import DCFModel from '@/components/stock/DCFModel'
 import NewsPanel from '@/components/stock/NewsPanel'
 import InsiderTable from '@/components/stock/InsiderTable'
-import ValuationHistory, { saveLocal } from '@/components/stock/ValuationHistory'
-import CAGRAnalysis from '@/components/stock/CAGRAnalysis'
 import BusinessModel from '@/components/stock/BusinessModel'
-import ValuationSection from '@/components/stock/ValuationSection'
-import FCFBuildUp from '@/components/stock/FCFBuildUp'
 import FinancialStatements from '@/components/stock/FinancialStatements'
 import FinancialCharts from '@/components/stock/FinancialCharts'
 import FinancialScores from '@/components/stock/FinancialScores'
 import OwnershipPanel from '@/components/stock/OwnershipPanel'
 import AtAGlance from '@/components/stock/AtAGlance'
 import HealthSection from '@/components/stock/HealthSection'
-import ModelSection from '@/components/stock/ModelSection'
 import TabNav, { type TabId } from '@/components/stock/TabNav'
-import ModellingWorkspace from '@/components/modelling/ModellingWorkspace'
+import ValuationLab from '@/components/valuation/ValuationLab'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
@@ -134,18 +127,12 @@ export default function StockPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState('')
   const [saving, setSaving]   = useState(false)
-  const [activeTab, setActiveTab] = useState<TabId>('modelling')
-
-  // Overrides from WACCBreakdown / DCFModel inline editors (used in Valuation tab)
-  const [waccOverride, setWaccOverride]         = useState<number | null>(null)
-  const [terminalGOverride, setTerminalGOverride] = useState<number | null>(null)
+  const [activeTab, setActiveTab] = useState<TabId>('valuation')
 
   useEffect(() => {
     setLoading(true)
     setError('')
-    setWaccOverride(null)
-    setTerminalGOverride(null)
-    setActiveTab('modelling')
+    setActiveTab('valuation')
     fetch(`/api/financials?ticker=${ticker}`)
       .then((r) => r.json())
       .then((d) => {
@@ -156,47 +143,8 @@ export default function StockPage() {
       .catch((e) => { setError(String(e)); setLoading(false) })
   }, [ticker])
 
-  const handleSave = useCallback(async (): Promise<{ ok: boolean; error?: string }> => {
-    if (!data) return { ok: false, error: 'No data loaded' }
-    setSaving(true)
-    try {
-      const res = await fetch('/api/valuations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ticker: data.ticker,
-          company: data.companyName,
-          price_at_save: data.quote.price,
-          fair_value: data.fairValue.fairValuePerShare,
-          wacc: waccOverride ?? data.wacc.wacc,
-          beta: data.wacc.inputs.beta,
-          terminal_g: terminalGOverride ?? data.terminalG,
-          cagr: data.cagr,
-          upside_pct: data.fairValue.upsidePct,
-          inputs: data.wacc.inputs,
-          scenarios: data.scenarios,
-        }),
-      })
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        saveLocal(data.ticker, {
-          id: `local_${Date.now()}`,
-          saved_at: new Date().toISOString(),
-          price_at_save: data.quote.price,
-          fair_value: data.fairValue.fairValuePerShare,
-          wacc: waccOverride ?? data.wacc.wacc,
-          cagr: data.cagr,
-          upside_pct: data.fairValue.upsidePct,
-        })
-        return { ok: false, error: body.error ?? `Server error ${res.status}` }
-      }
-      return { ok: true }
-    } catch (e) {
-      return { ok: false, error: String(e) }
-    } finally {
-      setSaving(false)
-    }
-  }, [data, waccOverride, terminalGOverride])
+  // Keep saving state for potential future use — suppress unused warning
+  void setSaving; void saving
 
   const currency = data?.quote.currency === 'USD' ? '$' : (data?.quote.currency ?? '$') + ' '
 
@@ -301,18 +249,24 @@ export default function StockPage() {
                   />
                 )}
 
-                {data.valuationMethods && (
-                  <ValuationSection
-                    companyName={data.companyName}
-                    currency={currency}
-                    fairValuePerShare={data.valuationMethods.triangulatedFairValue ?? data.fairValue.fairValuePerShare}
-                    upsidePct={data.valuationMethods.triangulatedUpsidePct ?? data.fairValue.upsidePct}
-                    valuationMethods={data.valuationMethods}
-                    scenarios={data.scenarios}
-                    currentPrice={data.quote.price}
-                    financialsData={data}
-                  />
-                )}
+                {/* CTA to Valuation Lab */}
+                <div
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors"
+                  onClick={() => setActiveTab('valuation')}
+                >
+                  <div>
+                    <div className="text-[13px] font-semibold text-slate-800">Build your own valuation</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">Open Valuation Lab → adjust assumptions, see fair value live</div>
+                  </div>
+                  <span className="text-blue-600 font-medium text-[13px]">Valuation Lab →</span>
+                </div>
+              </div>
+            )}
+
+            {/* ── Valuation Lab tab ── */}
+            {activeTab === 'valuation' && (
+              <div className="space-y-4 pt-5">
+                <ValuationLab apiData={data} ticker={ticker} />
               </div>
             )}
 
@@ -334,20 +288,6 @@ export default function StockPage() {
                       currency={currency}
                       isDark={false}
                     />
-                    <FCFBuildUp
-                      incomeStatement={data.financialStatements.incomeStatement}
-                      balanceSheet={data.financialStatements.balanceSheet}
-                      cashFlow={data.financialStatements.cashFlow}
-                      wacc={waccOverride ?? data.wacc.wacc}
-                      taxRate={data.wacc.inputs.taxRate}
-                      cash={data.fairValue.cash}
-                      debt={data.fairValue.debt}
-                      sharesOutstanding={data.fairValue.sharesOutstanding}
-                      currentPrice={data.fairValue.currentPrice}
-                      cagrAnalysis={data.cagrAnalysis}
-                      currency={currency}
-                      financialCurrencyNote={data.financialCurrencyNote}
-                    />
                   </>
                 ) : (
                   <p className="text-sm text-slate-400 py-8 text-center">Financial statement data unavailable</p>
@@ -355,82 +295,13 @@ export default function StockPage() {
               </div>
             )}
 
-            {/* ── Valuation tab ── */}
-            {activeTab === 'valuation' && (
+            {/* ── Peers stub ── */}
+            {activeTab === 'peers' && (
               <div className="space-y-4 pt-5">
-                {data.valuationMethods && (
-                  <ValuationSection
-                    companyName={data.companyName}
-                    currency={currency}
-                    fairValuePerShare={data.valuationMethods.triangulatedFairValue ?? data.fairValue.fairValuePerShare}
-                    upsidePct={data.valuationMethods.triangulatedUpsidePct ?? data.fairValue.upsidePct}
-                    valuationMethods={data.valuationMethods}
-                    scenarios={data.scenarios}
-                    currentPrice={data.quote.price}
-                    financialsData={data}
-                  />
-                )}
-
-                <DCFModel
-                  projections={data.dcf.projections}
-                  terminalValue={data.dcf.terminalValue}
-                  terminalValueDiscounted={data.dcf.terminalValueDiscounted}
-                  sumPV={data.dcf.sumPV}
-                  ev={data.dcf.ev}
-                  fairValue={data.fairValue}
-                  wacc={waccOverride ?? data.wacc.wacc}
-                  cagr={data.cagr}
-                  terminalG={data.terminalG}
-                  scenarios={data.scenarios}
-                  baseFCF={data.baseFCF}
-                  terminalGOverride={terminalGOverride}
-                  onTerminalGChange={setTerminalGOverride}
-                  growthModel={data.growthModel}
-                  yearlyGrowthRates={data.dcf.yearlyGrowthRates}
-                  historicalFCF={data.historicalFCF}
-                />
-
-                <ModelSection
-                  baseCagr={data.cagr}
-                  baseWacc={data.wacc.wacc}
-                  baseTerminalG={data.terminalG}
-                  baseFairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue.fairValuePerShare}
-                  currentPrice={data.quote.price}
-                  currency={currency}
-                  cagrAnalysis={data.cagrAnalysis}
-                  baseFCF={data.baseFCF}
-                  cashM={data.fairValue.cash}
-                  debtM={data.fairValue.debt}
-                  sharesM={data.fairValue.sharesOutstanding}
-                  growthModel={data.growthModel ?? 'two-stage'}
-                />
-
-                <WACCBreakdown
-                  wacc={data.wacc}
-                  onWACCChange={(w) => setWaccOverride(w)}
-                />
-
-                {data.cagrAnalysis && (
-                  <CAGRAnalysis
-                    cagrAnalysis={data.cagrAnalysis}
-                    isNegativeFCF={data.isNegativeFCF ?? false}
-                    growthModel={data.growthModel}
-                    terminalG={data.terminalG}
-                  />
-                )}
-
-                <ValuationHistory
-                  ticker={ticker}
-                  onSave={handleSave}
-                  saving={saving}
-                />
-              </div>
-            )}
-
-            {/* ── Modelling tab ── */}
-            {activeTab === 'modelling' && (
-              <div className="space-y-4 pt-5">
-                <ModellingWorkspace apiData={data} ticker={ticker} />
+                <div className="bg-slate-50 border border-slate-200 rounded-xl px-6 py-12 text-center">
+                  <div className="text-[15px] font-semibold text-slate-700 mb-2">Peer Comparison</div>
+                  <div className="text-[13px] text-slate-400">Coming soon — peer multiples, growth, and margin comparison.</div>
+                </div>
               </div>
             )}
 
