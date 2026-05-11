@@ -321,7 +321,7 @@ export default function YahooFinancials({ ticker }: Props) {
   const allParentKeys = collectParentKeys(rootRows)
 
   function toggleKey(key: string) {
-    setExpanded(prev => { const s = new Set(prev); s.has(key) ? s.delete(key) : s.add(key); return s })
+    setExpanded(prev => { const s = new Set(prev); if (s.has(key)) { s.delete(key) } else { s.add(key) } return s })
   }
 
   function toggleAll() {
