@@ -1,5 +1,7 @@
 'use client'
-import { fmt, fmtLarge } from '@/lib/utils'
+import { fmtPrice, fmtPct, fmtLargeCurrency } from '@/lib/formatters'
+import { cn } from '@/lib/utils'
+import { TrendingUp, TrendingDown } from 'lucide-react'
 
 interface Props {
   ticker: string
@@ -14,7 +16,16 @@ interface Props {
   analystTarget: number
   currency: string
   sector: string
-  analystRec: string  // kept in props for future use (e.g. ratings tab)
+  analystRec: string
+}
+
+function StatBox({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3">
+      <p className="text-label uppercase tracking-wider text-slate-400">{label}</p>
+      <p className="mt-0.5 text-sm font-semibold font-mono text-slate-800">{value}</p>
+    </div>
+  )
 }
 
 export default function PriceHeader({
@@ -22,45 +33,43 @@ export default function PriceHeader({
   high52, low52, analystTarget, currency, sector,
 }: Props) {
   const up = change >= 0
+  const currSymbol = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$ ' : currency + ' '
+
   return (
-    <div className="rounded-xl bg-white shadow-card border border-slate-200 p-6">
+    <div className="rounded-xl bg-white shadow-card border border-slate-200 p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <span className="rounded-lg bg-blue-50 px-3 py-1 text-sm font-bold text-blue-700">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="rounded-lg bg-blue-50 border border-blue-200 px-2.5 py-1 text-xs font-bold text-blue-700 tracking-wide">
               {ticker}
             </span>
             {sector && (
-              <span className="text-xs text-slate-400">{sector}</span>
+              <span className="text-micro text-slate-400">{sector}</span>
             )}
           </div>
-          <h1 className="mt-2 text-2xl font-bold text-slate-900" style={{ letterSpacing: '-0.02em' }}>
+          <h1 className="mt-2 text-xl font-bold text-slate-900 tracking-tight truncate">
             {companyName}
           </h1>
         </div>
-        <div className="text-right">
-          <div className="text-4xl font-extrabold text-slate-900 tabular-nums" style={{ letterSpacing: '-0.03em' }}>
-            {currency} {fmt(price)}
+
+        <div className="text-right shrink-0">
+          <div className="text-3xl font-extrabold text-slate-900 font-mono tabular-nums tracking-tight">
+            {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
-          <div className={`mt-1.5 text-sm font-semibold ${up ? 'text-emerald-600' : 'text-red-600'}`}>
-            {up ? '+' : ''}{fmt(change)} ({up ? '+' : ''}{fmt(changePct, 2)}%)
+          <div className={cn('mt-1 flex items-center justify-end gap-1.5 text-sm font-semibold', up ? 'text-emerald-600' : 'text-red-600')}>
+            {up ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+            <span>{up ? '+' : ''}{change.toFixed(2)}</span>
+            <span className="text-xs opacity-80">({up ? '+' : ''}{fmtPct(changePct / 100)})</span>
           </div>
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-5">
-        {[
-          { label: 'Market Cap',     value: fmtLarge(marketCap) },
-          { label: 'P/E Ratio',      value: peRatio ? fmt(peRatio, 1) + 'x' : '—' },
-          { label: '52-wk High',     value: `$${fmt(high52)}` },
-          { label: '52-wk Low',      value: `$${fmt(low52)}` },
-          { label: 'Analyst Target', value: analystTarget ? `$${fmt(analystTarget)}` : '—' },
-        ].map((stat) => (
-          <div key={stat.label} className="rounded-xl bg-slate-50 px-4 py-3">
-            <p className="text-[11px] font-medium text-slate-400">{stat.label}</p>
-            <p className="mt-0.5 text-sm font-semibold text-slate-800">{stat.value}</p>
-          </div>
-        ))}
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
+        <StatBox label="Market Cap"     value={fmtLargeCurrency(marketCap, currency)} />
+        <StatBox label="P/E Ratio"      value={peRatio ? peRatio.toFixed(1) + '×' : '—'} />
+        <StatBox label="52-wk High"     value={fmtPrice(high52, currency)} />
+        <StatBox label="52-wk Low"      value={fmtPrice(low52, currency)} />
+        <StatBox label="Analyst Target" value={analystTarget ? fmtPrice(analystTarget, currency) : '—'} />
       </div>
     </div>
   )

@@ -1,5 +1,15 @@
 'use client'
 import { buildAtAGlanceSummary } from '@/lib/simplifier/summaryBuilder'
+import { fmtPrice, fmtMultiple, upsideZone, zoneBadgeClass } from '@/lib/formatters'
+import { MetricChip } from '@/components/ui/metric-chip'
+import { cn } from '@/lib/utils'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type StatementRow = Record<string, any>
+
+interface StatementsData {
+  ttm: { incomeStatement: StatementRow | null; balanceSheet: StatementRow | null; cashFlow?: StatementRow | null }
+}
 
 interface Props {
   companyName: string
@@ -13,24 +23,19 @@ interface Props {
   upsidePct: number | null
   overallGrade: string
   overallLabel: string
-}
-
-function ZoneBadge({ upsidePct }: { upsidePct: number | null }) {
-  if (upsidePct == null) return null
-  if (upsidePct >= 0.25)  return <span className="inline-flex items-center gap-1 rounded-full bg-green-100 text-green-700 px-3 py-0.5 text-xs font-semibold">Attractive</span>
-  if (upsidePct >= 0.05)  return <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 text-blue-700 px-3 py-0.5 text-xs font-semibold">Fair Value</span>
-  return <span className="inline-flex items-center gap-1 rounded-full bg-red-100 text-red-700 px-3 py-0.5 text-xs font-semibold">Expensive</span>
+  marketCap?: number | null
+  statementsData?: StatementsData | null
 }
 
 function GradeBadge({ grade, label }: { grade: string; label: string }) {
   const color =
-    grade.startsWith('A') ? 'text-green-700 bg-green-50 border-green-200' :
+    grade.startsWith('A') ? 'text-emerald-700 bg-emerald-50 border-emerald-200' :
     grade.startsWith('B') ? 'text-blue-700 bg-blue-50 border-blue-200' :
     grade.startsWith('C') ? 'text-amber-700 bg-amber-50 border-amber-200' :
     'text-red-700 bg-red-50 border-red-200'
 
   return (
-    <div className={`inline-flex flex-col items-center rounded-xl border px-5 py-3 ${color}`}>
+    <div className={cn('inline-flex flex-col items-center rounded-xl border px-5 py-3', color)}>
       <span className="text-3xl font-black leading-none">{grade}</span>
       <span className="text-xs font-medium mt-0.5">{label}</span>
     </div>
@@ -40,79 +45,124 @@ function GradeBadge({ grade, label }: { grade: string; label: string }) {
 export default function AtAGlance({
   companyName, price, high52, low52,
   sector, country, currency, fairValue, upsidePct,
-  overallGrade, overallLabel,
+  overallGrade, overallLabel, marketCap, statementsData,
 }: Props) {
-  const zone = upsidePct == null ? '' : upsidePct >= 0.25 ? 'Attractive' : upsidePct >= 0.05 ? 'Fair Value' : 'Expensive'
-  const summary = buildAtAGlanceSummary({ companyName, sector, upsidePct, upsideZone: zone, fairValue, currentPrice: price })
-
-  const upPct = upsidePct != null ? (upsidePct * 100).toFixed(1) : null
-  const upColor = upsidePct == null ? 'text-slate-500' : upsidePct >= 0.05 ? 'text-green-600' : 'text-red-600'
+  const zone    = upsideZone(upsidePct)
+  const summary = buildAtAGlanceSummary({ companyName, sector, upsidePct, upsideZone: zone ?? '', fairValue, currentPrice: price })
+  const upPct   = upsidePct != null ? (upsidePct * 100).toFixed(1) : null
+  const upColor = upsidePct == null ? 'text-slate-400' : upsidePct >= 0.05 ? 'text-emerald-600' : 'text-red-600'
   const upSign  = upsidePct != null && upsidePct >= 0 ? '+' : ''
 
   const rangePosition = high52 && low52 && high52 > low52
     ? Math.max(0, Math.min(100, ((price - low52) / (high52 - low52)) * 100))
     : null
 
+  // ── Key multiples from TTM statements ───────────────────────────────────────
+  const ttmIS = statementsData?.ttm?.incomeStatement
+  const ttmBS = statementsData?.ttm?.balanceSheet
+
+  const dilutedEPS = ttmIS?.dilutedEPS as number | null | undefined
+  const pe         = (price > 0 && dilutedEPS != null && dilutedEPS > 0) ? price / dilutedEPS : null
+
+  const ebitda    = ttmIS?.EBITDA as number | null | undefined
+  const totalDebt = ttmBS?.totalDebt as number | null | undefined
+  const cashBS    = (ttmBS?.cashCashEquivalentsAndShortTermInvestments ?? ttmBS?.cash) as number | null | undefined
+  const ev        = (marketCap != null && totalDebt != null && cashBS != null) ? marketCap + totalDebt - cashBS : marketCap
+  const evEbitda  = (ev != null && ebitda != null && ebitda > 0) ? ev / ebitda : null
+
+  const revenue = ttmIS?.totalRevenue as number | null | undefined
+  const ps      = (marketCap != null && marketCap > 0 && revenue != null && revenue > 0) ? marketCap / revenue : null
+
+  const equity = ttmBS?.totalStockholdersEquity as number | null | undefined
+  const pb     = (marketCap != null && marketCap > 0 && equity != null && equity > 0) ? marketCap / equity : null
+
+  const showMultiples = pe != null || evEbitda != null || ps != null || pb != null
+
+  const currSymbol = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$ ' : currency + ' '
+
   return (
-    <div className="rounded-2xl bg-white border border-slate-200 shadow-card p-6">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+    <div className="rounded-xl bg-white border border-slate-200 shadow-card p-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
 
         {/* Left: price + range */}
         <div className="space-y-3">
           <div>
-            <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Current Price</p>
-            <p className="text-3xl font-bold text-slate-900">{currency}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            <p className="text-label uppercase tracking-wider text-slate-400 mb-1">Current Price</p>
+            <p className="text-3xl font-bold font-mono text-slate-900 tabular-nums">
+              {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
           </div>
           {rangePosition != null && (
             <div>
-              <div className="flex justify-between text-[11px] text-slate-400 mb-1">
-                <span>52w Low {currency}{low52!.toFixed(0)}</span>
-                <span>52w High {currency}{high52!.toFixed(0)}</span>
+              <div className="flex justify-between text-micro text-slate-400 mb-1.5">
+                <span>52w Low {fmtPrice(low52, currency)}</span>
+                <span>52w High {fmtPrice(high52, currency)}</span>
               </div>
               <div className="relative h-1.5 rounded-full bg-slate-100">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-red-300 via-amber-300 to-emerald-400" />
                 <div
-                  className="absolute top-0 left-0 h-full rounded-full bg-gradient-to-r from-red-400 via-amber-400 to-green-400"
-                  style={{ width: `${rangePosition}%` }}
-                />
-                <div
-                  className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-blue-500 shadow"
+                  className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-blue-500 shadow-sm"
                   style={{ left: `calc(${rangePosition}% - 6px)` }}
                 />
               </div>
             </div>
           )}
-          <div className="flex gap-2 flex-wrap">
-            <span className="rounded-md bg-slate-100 text-slate-600 px-2.5 py-1 text-xs font-medium">{sector || 'N/A'}</span>
-            <span className="rounded-md bg-slate-100 text-slate-600 px-2.5 py-1 text-xs font-medium">{country || 'N/A'}</span>
+          <div className="flex gap-1.5 flex-wrap">
+            {sector  && <span className="rounded-md bg-slate-100 text-slate-600 px-2 py-0.5 text-xs font-medium">{sector}</span>}
+            {country && <span className="rounded-md bg-slate-100 text-slate-600 px-2 py-0.5 text-xs font-medium">{country}</span>}
           </div>
         </div>
 
         {/* Center: fair value */}
-        <div className="space-y-2 sm:text-center sm:border-x sm:border-slate-100 sm:px-6">
-          <p className="text-xs text-slate-400 uppercase tracking-wider">Fair Value Estimate</p>
+        <div className="space-y-2 sm:text-center sm:border-x sm:border-slate-100 sm:px-5">
+          <p className="text-label uppercase tracking-wider text-slate-400">Consensus Fair Value</p>
           {fairValue != null ? (
             <>
-              <p className="text-3xl font-bold text-slate-900">{currency}{fairValue.toFixed(2)}</p>
+              <p className="text-3xl font-bold font-mono tabular-nums text-slate-900">
+                {fmtPrice(fairValue, currency)}
+              </p>
               <div className="flex items-center gap-2 sm:justify-center">
-                <span className={`text-lg font-bold ${upColor}`}>{upSign}{upPct}%</span>
-                <ZoneBadge upsidePct={upsidePct} />
+                <span className={cn('text-lg font-bold font-mono', upColor)}>
+                  {upSign}{upPct}%
+                </span>
+                {zone && (
+                  <span className={cn('rounded-full border px-3 py-0.5 text-xs font-semibold', zoneBadgeClass(zone))}>
+                    {zone}
+                  </span>
+                )}
               </div>
             </>
           ) : (
-            <div className="h-10 animate-pulse rounded-lg bg-slate-100" />
+            <div className="space-y-2">
+              <div className="h-9 rounded-lg bg-slate-100 animate-pulse" />
+              <div className="h-5 w-24 mx-auto rounded-full bg-slate-100 animate-pulse" />
+            </div>
           )}
-          <p className="text-[11px] text-slate-400 leading-snug">{summary}</p>
+          <p className="text-micro text-slate-400 leading-relaxed">{summary}</p>
         </div>
 
         {/* Right: health grade */}
-        <div className="space-y-2 sm:text-right flex flex-col sm:items-end">
-          <p className="text-xs text-slate-400 uppercase tracking-wider">Financial Health</p>
+        <div className="space-y-2 flex flex-col sm:items-end">
+          <p className="text-label uppercase tracking-wider text-slate-400">Financial Health</p>
           <GradeBadge grade={overallGrade} label={overallLabel} />
-          <p className="text-[11px] text-slate-400 max-w-[180px]">
-            Overall score across profitability, liquidity, growth, moat, and valuation.
+          <p className="text-micro text-slate-400 sm:text-right">
+            Across profitability, liquidity, growth, moat, and valuation.
           </p>
         </div>
       </div>
+
+      {/* Key multiples row */}
+      {showMultiples && (
+        <div className="mt-4 pt-4 border-t border-slate-100">
+          <p className="text-label uppercase tracking-wider text-slate-400 mb-2.5">TTM Multiples</p>
+          <div className="flex flex-wrap gap-2">
+            <MetricChip label="P/E"       value={fmtMultiple(pe)} />
+            <MetricChip label="EV/EBITDA" value={fmtMultiple(evEbitda)} />
+            <MetricChip label="P/S"       value={fmtMultiple(ps)} />
+            <MetricChip label="P/B"       value={fmtMultiple(pb)} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

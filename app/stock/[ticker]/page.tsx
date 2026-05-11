@@ -47,6 +47,17 @@ interface BusinessProfile {
   revenueM: number
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type StatementRow = Record<string, any>
+
+interface StatementsData {
+  financialCurrency: string
+  tradingCurrency: string
+  annual:    { incomeStatement: StatementRow[]; balanceSheet: StatementRow[]; cashFlow: StatementRow[] }
+  quarterly: { incomeStatement: StatementRow[]; balanceSheet: StatementRow[]; cashFlow: StatementRow[] }
+  ttm:       { incomeStatement: StatementRow | null; balanceSheet: StatementRow | null; cashFlow: StatementRow | null }
+}
+
 interface FinancialsData {
   ticker: string
   companyName: string
@@ -124,8 +135,9 @@ interface FinancialsData {
 export default function StockPage() {
   const { ticker } = useParams<{ ticker: string }>()
   const router = useRouter()
-  const [data, setData]       = useState<FinancialsData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [data, setData]             = useState<FinancialsData | null>(null)
+  const [statementsData, setStatementsData] = useState<StatementsData | null>(null)
+  const [loading, setLoading]       = useState(true)
   const [error, setError]     = useState('')
   const [saving, setSaving]   = useState(false)
   const [activeTab, setActiveTab] = useState<TabId>('valuation')
@@ -134,11 +146,14 @@ export default function StockPage() {
     setLoading(true)
     setError('')
     setActiveTab('valuation')
-    fetch(`/api/financials?ticker=${ticker}`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.error) { setError(d.error); setLoading(false); return }
-        setData(d)
+    Promise.all([
+      fetch(`/api/financials?ticker=${ticker}`).then(r => r.json()),
+      fetch(`/api/statements?ticker=${ticker}`).then(r => r.json()).catch(() => null),
+    ])
+      .then(([finJson, stmtJson]) => {
+        if (finJson.error) { setError(finJson.error); setLoading(false); return }
+        setData(finJson)
+        setStatementsData(stmtJson ?? null)
         setLoading(false)
       })
       .catch((e) => { setError(String(e)); setLoading(false) })
@@ -173,9 +188,28 @@ export default function StockPage() {
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-16">
 
         {loading && (
-          <div className="flex flex-col items-center justify-center py-32 gap-4">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-blue-500" />
-            <p className="text-sm text-slate-400">Calculating WACC · Beta · DCF…</p>
+          <div className="pt-5 space-y-4 animate-pulse">
+            {/* PriceHeader skeleton */}
+            <div className="rounded-xl bg-white border border-slate-200 p-5">
+              <div className="flex justify-between gap-4">
+                <div className="space-y-2">
+                  <div className="h-6 w-20 rounded-lg bg-slate-100" />
+                  <div className="h-7 w-52 rounded-lg bg-slate-100" />
+                </div>
+                <div className="space-y-2 text-right">
+                  <div className="h-9 w-32 rounded-lg bg-slate-100 ml-auto" />
+                  <div className="h-4 w-24 rounded-lg bg-slate-100 ml-auto" />
+                </div>
+              </div>
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-5 gap-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-14 rounded-xl bg-slate-100" />
+                ))}
+              </div>
+            </div>
+            {/* Content skeleton */}
+            <div className="h-72 rounded-xl bg-white border border-slate-200" />
+            <div className="h-48 rounded-xl bg-white border border-slate-200" />
           </div>
         )}
 
@@ -208,7 +242,7 @@ export default function StockPage() {
 
             {/* ── Summary tab ── */}
             {activeTab === 'summary' && (
-              <div className="space-y-4 pt-5">
+              <div id="tabpanel-summary" role="tabpanel" className="space-y-4 pt-5">
                 <PriceChart
                   ticker={ticker}
                   isDark={false}
@@ -220,6 +254,7 @@ export default function StockPage() {
                 <AtAGlance
                   companyName={data.companyName}
                   price={data.quote.price}
+                  marketCap={data.quote.marketCap}
                   high52={data.quote.fiftyTwoWeekHigh}
                   low52={data.quote.fiftyTwoWeekLow}
                   sector={data.quote.sector ?? ''}
@@ -229,6 +264,7 @@ export default function StockPage() {
                   upsidePct={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue.upsidePct}
                   overallGrade={data.ratings?.overall?.grade ?? 'N/A'}
                   overallLabel={data.ratings?.overall?.label ?? ''}
+                  statementsData={statementsData}
                 />
 
                 {(data.businessProfile.description || data.historicalRevenues.length >= 2) && (
@@ -267,7 +303,7 @@ export default function StockPage() {
             {/* ── Valuation Lab tab ── */}
             {activeTab === 'valuation' && (
               <div className="space-y-4 pt-5">
-                <ValuationLab apiData={data} ticker={ticker} />
+                <ValuationLab apiData={data} ticker={ticker} statementsData={statementsData} />
               </div>
             )}
 

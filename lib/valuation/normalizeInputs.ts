@@ -4,6 +4,9 @@
  * Maps the `/api/financials` response to a fully-typed `ModellingInput`.
  * Rule: never use `?? 0` — null means "data absent" and is preserved as null.
  * Callers decide whether absence is acceptable for their computation.
+ *
+ * If `statementsData` (from /api/statements) is provided, its TTM/annual values
+ * take precedence over FMP-sourced fields for key metrics.
  */
 
 import { nullable } from './valuationGuards'
@@ -66,8 +69,18 @@ export interface ModellingInput {
   isFinancialSector: boolean
 }
 
+// Shape of /api/statements response (loose — fields are dynamic)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function normalizeModellingInputs(ticker: string, apiData: any): ModellingInput {
+type AnyRow = Record<string, any>
+
+interface StatementsDataLike {
+  annual:    { incomeStatement: AnyRow[]; balanceSheet: AnyRow[]; cashFlow: AnyRow[] }
+  quarterly: { incomeStatement: AnyRow[]; balanceSheet: AnyRow[]; cashFlow: AnyRow[] }
+  ttm:       { incomeStatement: AnyRow | null; balanceSheet: AnyRow | null; cashFlow: AnyRow | null }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function normalizeModellingInputs(ticker: string, apiData: any, statementsData?: StatementsDataLike | null): ModellingInput {
   const wacc = apiData?.wacc ?? {}
   const fv = apiData?.fairValue ?? {}
   const cagrAnalysis = apiData?.cagrAnalysis ?? {}
@@ -75,7 +88,41 @@ export function normalizeModellingInputs(ticker: string, apiData: any): Modellin
   const vm = apiData?.valuationMethods ?? {}
   const fs = apiData?.financialStatements ?? {}
 
-  const rows: ModellingRow[] = buildRows(fs)
+  // Build rows: prefer statements data if available, fall back to financialStatements
+  let rows: ModellingRow[]
+  if (statementsData?.annual?.incomeStatement?.length) {
+    rows = buildRowsFromStatements(statementsData.annual, statementsData.ttm)
+  } else {
+    rows = buildRows(fs)
+  }
+
+  // Derive CAGR: prefer 3Y historical from statements, then FMP blended
+  let cagr = nullable(apiData?.cagr) ?? cagrAnalysis.blended ?? 0.05
+  if ((statementsData?.annual?.incomeStatement?.length ?? 0) >= 3) {
+    const stmtCagr = deriveCAGRFromStatements(statementsData!.annual.incomeStatement)
+    if (stmtCagr !== null) cagr = stmtCagr
+  }
+
+  // Base FCF: prefer TTM FCF from statements
+  let baseFCF = nullable(apiData?.baseFCF)
+  const ttmFCF = statementsData?.ttm?.cashFlow?.freeCashFlow
+  if (typeof ttmFCF === 'number' && isFinite(ttmFCF) && ttmFCF !== 0) {
+    baseFCF = ttmFCF
+  }
+
+  // Balance sheet overrides from TTM statements
+  let cashM = nullable(fv.cash)
+  let debtM = nullable(fv.debt)
+  let sharesOutstanding = nullable(fv.sharesOutstanding)
+  const ttmBS = statementsData?.ttm?.balanceSheet
+  if (ttmBS) {
+    const stmtCash = ttmBS.cashCashEquivalentsAndShortTermInvestments ?? ttmBS.cash
+    if (typeof stmtCash === 'number' && isFinite(stmtCash)) cashM = stmtCash / 1e6
+    const stmtDebt = ttmBS.totalDebt ?? ttmBS.longTermDebt
+    if (typeof stmtDebt === 'number' && isFinite(stmtDebt)) debtM = stmtDebt / 1e6
+    const stmtShares = ttmBS.commonStockSharesOutstanding ?? ttmBS.sharesOutstanding
+    if (typeof stmtShares === 'number' && isFinite(stmtShares) && stmtShares > 0) sharesOutstanding = stmtShares
+  }
 
   const companyType: ModellingInput['companyType'] = vm.companyType ?? 'standard'
   const isFinancialSector = companyType === 'financial'
@@ -93,20 +140,153 @@ export function normalizeModellingInputs(ticker: string, apiData: any): Modellin
     rfRate: wacc.inputs?.rfRate ?? 0.045,
     beta: wacc.inputs?.beta ?? 1.0,
     erp: wacc.inputs?.erp ?? 0.055,
-    cagr: nullable(apiData?.cagr) ?? cagrAnalysis.blended ?? 0.05,
+    cagr,
     terminalG: nullable(apiData?.terminalG) ?? 0.02,
     growthModel: apiData?.growthModel ?? 'two-stage',
-    cashM: nullable(fv.cash),
-    debtM: nullable(fv.debt),
-    sharesOutstanding: nullable(fv.sharesOutstanding),
+    cashM,
+    debtM,
+    sharesOutstanding,
     currentPrice: apiData?.quote?.price ?? 0,
-    baseFCF: nullable(apiData?.baseFCF),
+    baseFCF,
     rows,
     altmanZone: nullable(scores.altman?.zone),
     beneishFlag: nullable(scores.beneish?.flag),
     isFinancialSector,
   }
 }
+
+// ── Build rows from /api/statements annual data ───────────────────────────────
+
+function buildRowsFromStatements(
+  annual: { incomeStatement: AnyRow[]; balanceSheet: AnyRow[]; cashFlow: AnyRow[] },
+  ttm: { incomeStatement: AnyRow | null; balanceSheet: AnyRow | null; cashFlow: AnyRow | null },
+): ModellingRow[] {
+  // Map annual rows by endDate year
+  const byYear = new Map<string, Partial<ModellingRow>>()
+
+  for (const row of annual.incomeStatement ?? []) {
+    const year = String(row.endDate ?? '').slice(0, 4)
+    if (!year || year.length !== 4) continue
+    byYear.set(year, {
+      year,
+      isProjected: false,
+      revenue:    nullable(row.totalRevenue),
+      ebit:       nullable(row.operatingIncome ?? row.EBIT),
+      ebitda:     nullable(row.EBITDA),
+      netIncome:  nullable(row.netIncome),
+      eps:        nullable(row.dilutedEPS),
+      fiscalDate: row.endDate ?? null,
+      taxRate:    nullable(row.taxRateForCalcs),
+    })
+  }
+
+  for (const row of annual.cashFlow ?? []) {
+    const year = String(row.endDate ?? '').slice(0, 4)
+    if (!year || year.length !== 4) continue
+    const existing = byYear.get(year) ?? { year, isProjected: false }
+    byYear.set(year, {
+      ...existing,
+      capex:        nullable(row.capitalExpenditure),
+      operatingCF:  nullable(row.operatingCashFlow),
+      freeCashFlow: nullable(row.freeCashFlow),
+      dna:          nullable(row.depreciationAndAmortization ?? row.reconciledDepreciation),
+      dividendsPaid: nullable(row.cashDividendsPaid),
+      financingCF:  nullable(row.financingCashFlow),
+      fiscalDate:   (existing.fiscalDate ?? row.endDate) ?? null,
+    })
+  }
+
+  for (const row of annual.balanceSheet ?? []) {
+    const year = String(row.endDate ?? '').slice(0, 4)
+    if (!year || year.length !== 4) continue
+    const existing = byYear.get(year) ?? { year, isProjected: false }
+    byYear.set(year, {
+      ...existing,
+      cash:                    nullable(row.cashCashEquivalentsAndShortTermInvestments ?? row.cash),
+      totalCurrentAssets:      nullable(row.currentAssets),
+      totalCurrentLiabilities: nullable(row.currentLiabilities),
+      longTermDebt:            nullable(row.longTermDebt),
+      totalEquity:             nullable(row.stockholdersEquity ?? row.totalStockholdersEquity),
+    })
+  }
+
+  // Add TTM row
+  if (ttm.incomeStatement || ttm.cashFlow || ttm.balanceSheet) {
+    const is = ttm.incomeStatement ?? {}
+    const cf = ttm.cashFlow ?? {}
+    const bs = ttm.balanceSheet ?? {}
+    byYear.set('TTM', {
+      year: 'TTM',
+      isProjected: false,
+      revenue:    nullable(is.totalRevenue),
+      ebit:       nullable(is.operatingIncome ?? is.EBIT),
+      ebitda:     nullable(is.EBITDA),
+      netIncome:  nullable(is.netIncome),
+      eps:        nullable(is.dilutedEPS),
+      capex:        nullable(cf.capitalExpenditure),
+      operatingCF:  nullable(cf.operatingCashFlow),
+      freeCashFlow: nullable(cf.freeCashFlow),
+      dna:          nullable(cf.depreciationAndAmortization ?? cf.reconciledDepreciation),
+      dividendsPaid: nullable(cf.cashDividendsPaid),
+      financingCF:  nullable(cf.financingCashFlow),
+      cash:                    nullable(bs.cashCashEquivalentsAndShortTermInvestments ?? bs.cash),
+      totalCurrentAssets:      nullable(bs.currentAssets),
+      totalCurrentLiabilities: nullable(bs.currentLiabilities),
+      longTermDebt:            nullable(bs.longTermDebt),
+      totalEquity:             nullable(bs.stockholdersEquity ?? bs.totalStockholdersEquity),
+      fiscalDate: 'TTM',
+      taxRate: nullable(is.taxRateForCalcs),
+    })
+  }
+
+  return Array.from(byYear.values())
+    .sort((a, b) => {
+      if (a.year === 'TTM') return 1
+      if (b.year === 'TTM') return -1
+      return (a.year ?? '').localeCompare(b.year ?? '')
+    })
+    .map(r => ({
+      year:                    r.year ?? '',
+      isProjected:             r.isProjected ?? false,
+      revenue:                 r.revenue ?? null,
+      ebit:                    r.ebit ?? null,
+      ebitda:                  r.ebitda ?? null,
+      netIncome:               r.netIncome ?? null,
+      eps:                     r.eps ?? null,
+      capex:                   r.capex ?? null,
+      operatingCF:             r.operatingCF ?? null,
+      freeCashFlow:            r.freeCashFlow ?? null,
+      dividendsPaid:           r.dividendsPaid ?? null,
+      financingCF:             r.financingCF ?? null,
+      cash:                    r.cash ?? null,
+      totalCurrentAssets:      r.totalCurrentAssets ?? null,
+      totalCurrentLiabilities: r.totalCurrentLiabilities ?? null,
+      longTermDebt:            r.longTermDebt ?? null,
+      totalEquity:             r.totalEquity ?? null,
+      dna:                     r.dna ?? null,
+      taxRate:                 r.taxRate ?? null,
+      fiscalDate:              r.fiscalDate ?? null,
+    }))
+}
+
+// ── Derive 3Y CAGR from annual statement revenue rows ─────────────────────────
+
+function deriveCAGRFromStatements(annualIS: AnyRow[]): number | null {
+  const revenues = annualIS
+    .map(r => ({ year: String(r.endDate ?? '').slice(0, 4), rev: r.totalRevenue as number | null }))
+    .filter(r => r.year.length === 4 && typeof r.rev === 'number' && r.rev > 0)
+    .sort((a, b) => a.year.localeCompare(b.year))
+
+  if (revenues.length < 2) return null
+  const n = Math.min(revenues.length - 1, 3) // use up to 3 years
+  const oldest = revenues[revenues.length - 1 - n]
+  const newest = revenues[revenues.length - 1]
+  if (oldest.rev == null || newest.rev == null || oldest.rev <= 0) return null
+  const cagr = Math.pow(newest.rev / oldest.rev, 1 / n) - 1
+  return Math.max(-0.20, Math.min(0.80, cagr))
+}
+
+// ── Build rows from old /api/financials financialStatements ───────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function buildRows(fs: any): ModellingRow[] {
