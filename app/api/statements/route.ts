@@ -78,13 +78,14 @@ export async function GET(req: NextRequest) {
   if (!ticker) return NextResponse.json({ error: 'ticker required' }, { status: 400 })
 
   try {
-    const [annualIS, quarterlyIS, annualBS, quarterlyBS, annualCF, quarterlyCF] = await Promise.all([
+    const [annualIS, quarterlyIS, annualBS, quarterlyBS, annualCF, quarterlyCF, quoteData] = await Promise.all([
       yf.fundamentalsTimeSeries(ticker, { type: 'annual',    module: 'financials',    period1: PERIOD1 }),
       yf.fundamentalsTimeSeries(ticker, { type: 'quarterly', module: 'financials',    period1: PERIOD1 }),
       yf.fundamentalsTimeSeries(ticker, { type: 'annual',    module: 'balance-sheet', period1: PERIOD1 }),
       yf.fundamentalsTimeSeries(ticker, { type: 'quarterly', module: 'balance-sheet', period1: PERIOD1 }),
       yf.fundamentalsTimeSeries(ticker, { type: 'annual',    module: 'cash-flow',     period1: PERIOD1 }),
       yf.fundamentalsTimeSeries(ticker, { type: 'quarterly', module: 'cash-flow',     period1: PERIOD1 }),
+      yf.quote(ticker, ['financialCurrency', 'currency']).catch(() => null),
     ])
 
     const annualISRows    = rowsToTable(annualIS)
@@ -101,7 +102,15 @@ export async function GET(req: NextRequest) {
     const ttmCF = last4CF.length > 0 ? { ...sumQuarters(last4CF, CF_FLOW_KEYS, []), endDate: 'TTM' } : null
     const ttmBS = quarterlyBSRows.length > 0 ? { ...quarterlyBSRows[quarterlyBSRows.length - 1] } : null
 
+    // Detect reporting currency (may differ from trading currency for ADRs)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const q = quoteData as any
+    const financialCurrency: string = q?.financialCurrency ?? q?.currency ?? 'USD'
+    const tradingCurrency: string   = q?.currency ?? 'USD'
+
     return NextResponse.json({
+      financialCurrency,
+      tradingCurrency,
       annual:    { incomeStatement: annualISRows,    balanceSheet: annualBSRows,    cashFlow: annualCFRows    },
       quarterly: { incomeStatement: quarterlyISRows, balanceSheet: quarterlyBSRows, cashFlow: quarterlyCFRows },
       ttm:       { incomeStatement: ttmIS,           balanceSheet: ttmBS,           cashFlow: ttmCF           },

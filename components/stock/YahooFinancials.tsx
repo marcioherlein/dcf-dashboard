@@ -295,6 +295,8 @@ interface Props { ticker: string }
 type StatRow = Record<string, any>
 
 interface StatementsData {
+  financialCurrency?: string
+  tradingCurrency?: string
   annual:    { incomeStatement: StatRow[]; balanceSheet: StatRow[]; cashFlow: StatRow[] }
   quarterly: { incomeStatement: StatRow[]; balanceSheet: StatRow[]; cashFlow: StatRow[] }
   ttm:       { incomeStatement: StatRow | null; balanceSheet: StatRow | null; cashFlow: StatRow | null }
@@ -401,7 +403,19 @@ export default function YahooFinancials({ ticker }: Props) {
         </div>
       </div>
 
-      <div className="px-4 pt-2 pb-1 text-[11px] text-slate-400">All numbers in thousands</div>
+      <div className="px-4 pt-2 pb-1 flex items-center gap-3 flex-wrap">
+        <span className="text-[11px] text-slate-400">All numbers in thousands</span>
+        {data.financialCurrency && (
+          <span className="text-[11px] font-medium text-slate-500">
+            Currency: <span className="font-semibold text-slate-700">{data.financialCurrency}</span>
+          </span>
+        )}
+        {data.financialCurrency && data.tradingCurrency && data.financialCurrency !== data.tradingCurrency && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+            ⚠ Reports in {data.financialCurrency} · trades in {data.tradingCurrency} · valuations converted via FX
+          </span>
+        )}
+      </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-[12px]">
@@ -456,7 +470,10 @@ export default function YahooFinancials({ ticker }: Props) {
       </div>
 
       <div className="px-4 py-2 text-[10px] text-slate-300">
-        Source: Yahoo Finance · Values in thousands · TTM = trailing twelve months (sum of last 4 quarters)
+        Source: Yahoo Finance · Values in thousands ({data.financialCurrency ?? 'USD'}) · TTM = trailing twelve months (sum of last 4 quarters)
+        {data.financialCurrency && data.tradingCurrency && data.financialCurrency !== data.tradingCurrency && (
+          <span className="ml-1">· Valuation models use FX-converted figures in {data.tradingCurrency}</span>
+        )}
       </div>
     </div>
   )
