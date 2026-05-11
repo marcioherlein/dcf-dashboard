@@ -8,6 +8,7 @@ import InsiderTable from '@/components/stock/InsiderTable'
 import BusinessModel from '@/components/stock/BusinessModel'
 import FinancialStatements from '@/components/stock/FinancialStatements'
 import FinancialCharts from '@/components/stock/FinancialCharts'
+import YahooFinancials from '@/components/stock/YahooFinancials'
 import FinancialScores from '@/components/stock/FinancialScores'
 import OwnershipPanel from '@/components/stock/OwnershipPanel'
 import AtAGlance from '@/components/stock/AtAGlance'
@@ -273,6 +274,7 @@ export default function StockPage() {
             {/* ── Financials tab ── */}
             {activeTab === 'financials' && (
               <div className="space-y-4 pt-5">
+                <YahooFinancials ticker={ticker} />
                 {data.financialStatements ? (
                   <>
                     <FinancialStatements
