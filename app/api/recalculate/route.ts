@@ -61,6 +61,7 @@ export async function GET(req: NextRequest) {
       rfRate: 0.045,
       beta: 1.0,
       erp: 0.055,
+      crp: 0,
       costOfDebt: 0.04,
       taxRate: 0.21,
       debtToEquity: 0.25,

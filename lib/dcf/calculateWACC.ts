@@ -2,6 +2,7 @@ export interface WACCInputs {
   rfRate: number        // 10Y Treasury yield, e.g. 0.0429
   beta: number          // levered beta from regression
   erp: number           // equity risk premium (Damodaran), e.g. 0.046
+  crp: number           // country risk premium (Damodaran), e.g. 0.034 for Brazil
   costOfDebt: number    // interest expense / avg gross debt, e.g. 0.0445
   taxRate: number       // effective tax rate, e.g. 0.21
   debtToEquity: number  // total debt / market cap, e.g. 0.46
@@ -17,9 +18,9 @@ export interface WACCResult {
 }
 
 export function calculateWACC(inputs: WACCInputs): WACCResult {
-  const { rfRate, beta, erp, costOfDebt, taxRate, debtToEquity } = inputs
+  const { rfRate, beta, erp, crp, costOfDebt, taxRate, debtToEquity } = inputs
 
-  const costOfEquity = rfRate + beta * erp
+  const costOfEquity = rfRate + beta * (erp + crp)
   const afterTaxCostOfDebt = costOfDebt * (1 - taxRate)
 
   const debtRatio = debtToEquity / (1 + debtToEquity)
@@ -38,7 +39,7 @@ export function calculateWACC(inputs: WACCInputs): WACCResult {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function extractWACCInputs(financials: any, rfRate: number, betaFromRegression: number, fxRate = 1): WACCInputs {
+export function extractWACCInputs(financials: any, rfRate: number, betaFromRegression: number, fxRate = 1, crp = 0): WACCInputs {
   const fd = financials.financialData ?? {}
   const ks = financials.defaultKeyStatistics ?? {}
   const sd = financials.summaryDetail ?? {}
@@ -97,6 +98,7 @@ export function extractWACCInputs(financials: any, rfRate: number, betaFromRegre
     rfRate,
     beta,
     erp: 0.046,   // Damodaran ERP — update annually
+    crp,
     costOfDebt,
     taxRate,
     debtToEquity,

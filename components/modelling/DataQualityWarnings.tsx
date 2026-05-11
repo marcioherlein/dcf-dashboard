@@ -12,6 +12,8 @@ interface DataQualityWarningsProps {
   isNegativeFCF?: boolean
   altmanZone?: string | null
   beneishFlag?: string | null
+  crp?: number
+  financialCurrency?: string
 }
 
 export default function DataQualityWarnings({
@@ -21,6 +23,8 @@ export default function DataQualityWarnings({
   isNegativeFCF,
   altmanZone,
   beneishFlag,
+  crp,
+  financialCurrency,
 }: DataQualityWarningsProps) {
   const warnings: Warning[] = []
 
@@ -29,6 +33,9 @@ export default function DataQualityWarnings({
   }
   if (financialCurrencyNote) {
     warnings.push({ type: 'warning', message: `FX mismatch: ${financialCurrencyNote}. Fair value per share is suppressed — see main DCF model for FX-adjusted figure.` })
+  }
+  if (crp && crp > 0 && financialCurrency) {
+    warnings.push({ type: 'info', message: `Country Risk Premium of +${(crp * 100).toFixed(1)}% applied to ERP for ${financialCurrency} reporting companies (Damodaran 2025). This increases cost of equity and lowers fair value vs. a USD baseline.` })
   }
   if (isFinancialSector) {
     warnings.push({ type: 'info', message: 'Financial company: UFCF/FCFF is not reliable (loan book changes distort operating cash flows). Use Levered DCF as the primary model.' })

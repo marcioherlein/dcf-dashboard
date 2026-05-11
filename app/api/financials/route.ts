@@ -12,6 +12,7 @@ import { calculateDDM } from '@/lib/dcf/calculateDDM'
 import { calculateFCFE } from '@/lib/dcf/calculateFCFE'
 import { calculateMultiples, PEER_TICKERS } from '@/lib/dcf/calculateMultiples'
 import { calculatePiotroski, calculateAltman, calculateBeneish, calculateROIC } from '@/lib/dcf/calculateScores'
+import { getCRP } from '@/lib/dcf/countryRiskPremium'
 
 export async function GET(req: NextRequest) {
   const ticker = req.nextUrl.searchParams.get('ticker')?.toUpperCase()
@@ -43,6 +44,9 @@ export async function GET(req: NextRequest) {
       financialCurrencyNote = `${financialCurrency}→${quoteCurrency} @ ${fxRate.toFixed(4)}`
     }
 
+    // Country Risk Premium (Damodaran): adjusts cost_of_equity for non-mature markets
+    const crp = getCRP(financialCurrency)
+
     // Beta via regression
     const beta = calculateBeta(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -52,7 +56,7 @@ export async function GET(req: NextRequest) {
     )
 
     // WACC (uses percentages/ratios — not currency-sensitive)
-    const waccInputs = extractWACCInputs(fin, rfRate, beta, fxRate)
+    const waccInputs = extractWACCInputs(fin, rfRate, beta, fxRate, crp)
     const waccResult = calculateWACC(waccInputs)
 
     // FCF + CAGR — values are in financial currency; convert to quote currency
@@ -697,7 +701,7 @@ export async function GET(req: NextRequest) {
         currency: quoteCurrency,
         sector: q.sector ?? '',
       },
-      wacc: waccResult,
+      wacc: { ...waccResult, crp, financialCurrency },
       dcf: dcfResult,
       fairValue: fvResult,
       scenarios,

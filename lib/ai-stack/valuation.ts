@@ -150,6 +150,7 @@ export function computeForwardValuation(
     rfRate:      RF_RATE,
     beta:        b,
     erp:         ERP,
+    crp:         0,
     costOfDebt:  cod,
     taxRate:     TAX_RATE,
     debtToEquity: dtomcap,

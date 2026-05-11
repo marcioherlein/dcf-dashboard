@@ -43,6 +43,8 @@ export interface WACCData {
   afterTaxCostOfDebt: number
   rfRate: number
   erp: number
+  crp?: number
+  financialCurrency?: string
   beta: number
   costOfEquity: number
   totalDebtM: number | null
@@ -743,7 +745,14 @@ export default function ForecastTable({
       { label: 'Tax Rate',            value: (wd.taxRate * 100).toFixed(2) + '%' },
       { label: 'After Tax Cost Debt', value: (wd.afterTaxCostOfDebt * 100).toFixed(1) + '%' },
       { label: 'Risk Free Rate',      value: (wd.rfRate * 100).toFixed(2) + '%' },
-      { label: 'Market Risk Premium', value: (wd.erp * 100).toFixed(0) + '%' },
+      {
+        label: wd.crp && wd.crp > 0
+          ? `Equity Risk Premium (adj${wd.financialCurrency ? ` · ${wd.financialCurrency}` : ''})`
+          : 'Market Risk Premium',
+        value: wd.crp && wd.crp > 0
+          ? `${((wd.erp + wd.crp) * 100).toFixed(1)}% (base ${(wd.erp * 100).toFixed(1)}% + CRP ${(wd.crp * 100).toFixed(1)}%)`
+          : (wd.erp * 100).toFixed(0) + '%',
+      },
       { label: 'Beta',                value: wd.beta.toFixed(2) },
       { label: 'Cost of Equity',      value: (wd.costOfEquity * 100).toFixed(0) + '%' },
       { label: 'Total Debt',          value: wd.totalDebtM != null ? fmtLargeM(wd.totalDebtM) : '—' },

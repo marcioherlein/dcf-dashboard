@@ -287,6 +287,8 @@ export default function ModellingWorkspace({ apiData, ticker }: ModellingWorkspa
     afterTaxCostOfDebt: baseInput.afterTaxCostOfDebt,
     rfRate: baseInput.rfRate,
     erp: baseInput.erp,
+    crp: waccRaw.crp ?? 0,
+    financialCurrency: waccRaw.financialCurrency ?? undefined,
     beta: baseInput.beta,
     costOfEquity: baseInput.costOfEquity,
     totalDebtM: baseInput.debtM,
@@ -331,6 +333,8 @@ export default function ModellingWorkspace({ apiData, ticker }: ModellingWorkspa
         isNegativeFCF={baseInput.baseFCF != null && baseInput.baseFCF < 0}
         altmanZone={baseInput.altmanZone}
         beneishFlag={baseInput.beneishFlag}
+        crp={waccRaw.crp ?? 0}
+        financialCurrency={waccRaw.financialCurrency ?? undefined}
       />
       <ForecastTable
         rows={displayRows}
