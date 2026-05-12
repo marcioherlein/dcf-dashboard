@@ -103,6 +103,12 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
     if (stmtCagr !== null) cagr = stmtCagr
   }
 
+  // Append projected rows when none exist (e.g., built from statements which only has historical)
+  if (!rows.some(r => r.isProjected)) {
+    const nYears = apiData?.growthModel === 'three-stage' ? 7 : 5
+    rows = [...rows, ...buildProjectedRows(rows, cagr, nYears)]
+  }
+
   // Base FCF: prefer TTM FCF from statements (raw dollars → millions)
   let baseFCF = nullable(apiData?.baseFCF)
   const ttmFCF = statementsData?.ttm?.cashFlow?.freeCashFlow
@@ -153,6 +159,70 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
     beneishFlag: nullable(scores.beneish?.flag),
     isFinancialSector,
   }
+}
+
+// ── Generate projected rows from historical medians ───────────────────────────
+
+function computeMedian(values: (number | null)[]): number | null {
+  const nums = values.filter((v): v is number => v != null && isFinite(v))
+  if (nums.length === 0) return null
+  const sorted = [...nums].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
+}
+
+function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears: number): ModellingRow[] {
+  const annualRows = historicalRows.filter(r => r.year !== 'TTM' && !r.isProjected)
+  const recent = annualRows.slice(-3)
+  if (recent.length === 0) return []
+
+  const medianEbitMargin = computeMedian(recent.map(r =>
+    r.ebit != null && r.revenue != null && r.revenue > 0 ? r.ebit / r.revenue : null))
+  const medianDnaPct = computeMedian(recent.map(r =>
+    r.dna != null && r.revenue != null && r.revenue > 0 ? r.dna / r.revenue : null))
+  const medianCapexPct = computeMedian(recent.map(r =>
+    r.capex != null && r.revenue != null && r.revenue > 0 ? Math.abs(r.capex) / r.revenue : null))
+  const medianNetMargin = computeMedian(recent.map(r =>
+    r.netIncome != null && r.revenue != null && r.revenue > 0 ? r.netIncome / r.revenue : null))
+  const medianTaxRate = computeMedian(recent.map(r => r.taxRate ?? null))
+
+  const ttmRow = historicalRows.find(r => r.year === 'TTM')
+  const lastAnnualRow = annualRows[annualRows.length - 1]
+  const baseRevenue = ttmRow?.revenue ?? lastAnnualRow?.revenue ?? null
+  if (baseRevenue == null || baseRevenue <= 0) return []
+
+  const lastAnnualYear = parseInt(lastAnnualRow?.year ?? '', 10)
+  const startYear = isNaN(lastAnnualYear) ? new Date().getFullYear() : lastAnnualYear + 1
+
+  const rows: ModellingRow[] = []
+  for (let i = 0; i < nYears; i++) {
+    const revenue = baseRevenue * Math.pow(1 + cagr, i + 1)
+    const ebit = medianEbitMargin != null ? revenue * medianEbitMargin : null
+    const dna = medianDnaPct != null ? revenue * medianDnaPct : null
+    rows.push({
+      year: String(startYear + i) + 'E',
+      isProjected: true,
+      revenue,
+      ebit,
+      ebitda: ebit != null && dna != null ? ebit + dna : null,
+      netIncome: medianNetMargin != null ? revenue * medianNetMargin : null,
+      eps: null,
+      capex: medianCapexPct != null ? -(revenue * medianCapexPct) : null,
+      operatingCF: null,
+      freeCashFlow: null,
+      dividendsPaid: null,
+      financingCF: null,
+      cash: null,
+      totalCurrentAssets: null,
+      totalCurrentLiabilities: null,
+      longTermDebt: null,
+      totalEquity: null,
+      dna,
+      taxRate: medianTaxRate,
+      fiscalDate: null,
+    })
+  }
+  return rows
 }
 
 // ── Build rows from /api/statements annual data ───────────────────────────────
