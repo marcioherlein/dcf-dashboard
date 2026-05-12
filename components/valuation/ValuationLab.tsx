@@ -24,9 +24,11 @@ import { fmtPrice, fmtPct, fmtLarge, fmtLargeCurrency } from '@/lib/formatters'
 import { WizardSteps } from '@/components/ui/wizard-steps'
 import { SourceLabel } from '@/components/ui/source-label'
 import { TrendBadge } from '@/components/ui/trend-badge'
+import { MetricChip } from '@/components/ui/metric-chip'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { cn } from '@/lib/utils'
+import { buildBusinessSummary } from '@/lib/simplifier/summaryBuilder'
 
 // ─── Local helpers ─────────────────────────────────────────────────────────────
 
@@ -331,6 +333,37 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
   )
 }
 
+// ─── Mini Bar Sparkline ───────────────────────────────────────────────────────
+
+function MiniBarSparkline({ values, positive }: { values: (number | null)[]; positive?: boolean }) {
+  const nums = values.map(v => (v != null && isFinite(v) ? Math.abs(v) : null))
+  const max = Math.max(...nums.filter((v): v is number => v != null), 1)
+  const barColor = positive !== false ? '#10b981' : '#f87171'
+  const W = 80, H = 28, barW = 10, gap = 3
+  const n = Math.min(nums.length, 5)
+  const subset = nums.slice(-n)
+  const totalW = n * barW + (n - 1) * gap
+  const offsetX = (W - totalW) / 2
+  return (
+    <svg width={W} height={H} className="overflow-visible">
+      {subset.map((v, i) => {
+        const h = v != null ? Math.max(2, (v / max) * (H - 2)) : 2
+        const x = offsetX + i * (barW + gap)
+        const isLast = i === subset.length - 1
+        return (
+          <rect
+            key={i}
+            x={x} y={H - h} width={barW} height={h}
+            rx={2}
+            fill={isLast ? barColor : '#e2e8f0'}
+            opacity={v == null ? 0.3 : 1}
+          />
+        )
+      })}
+    </svg>
+  )
+}
+
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
 function StatCard({ label, value, sub, source }: { label: string; value: string; sub?: string; source?: 'yahoo' | 'calc' }) {
@@ -348,12 +381,32 @@ function StatCard({ label, value, sub, source }: { label: string; value: string;
   )
 }
 
-function AssumptionStat({ label, value, sub }: { label: string; value: string; sub: string }) {
+function AssumptionStat({ label, value, sub, desc }: { label: string; value: string; sub: string; desc?: string }) {
   return (
     <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2.5">
       <div className="text-label uppercase tracking-wider text-blue-400 mb-0.5">{label}</div>
       <div className="text-base font-bold font-mono text-blue-900">{value}</div>
       <div className="text-micro text-blue-500">{sub}</div>
+      {desc && <div className="text-[10px] text-blue-400 mt-1 leading-snug">{desc}</div>}
+    </div>
+  )
+}
+
+// ─── Growth Bar ───────────────────────────────────────────────────────────────
+
+function GrowthBar({ label, value, weight }: { label: string; value: number | null; weight: number }) {
+  if (value == null) return null
+  const pctVal = value * 100
+  const barWidth = Math.min(Math.abs(pctVal) * 3, 100)
+  const barColor = pctVal > 10 ? 'bg-emerald-400' : pctVal > 5 ? 'bg-amber-400' : 'bg-slate-300'
+  return (
+    <div className="flex items-center gap-3">
+      <span className="text-xs text-slate-500 w-36 shrink-0">{label}</span>
+      <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
+        <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${barWidth}%` }} />
+      </div>
+      <span className="text-xs font-mono text-slate-700 w-12 text-right">{pctVal.toFixed(1)}%</span>
+      <span className="text-[10px] text-slate-400 w-8 text-right">{(weight * 100).toFixed(0)}%</span>
     </div>
   )
 }
@@ -403,6 +456,17 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
   const ttmShares    = ((ttmBS.commonStockSharesOutstanding ?? ttmBS.sharesOutstanding) as number | null) ?? null
 
   const statementsAvailable = ttmRevenue != null || ttmEbitda != null || ttmFCF != null
+
+  // Annual sparkline data (values in millions, consistent scale for visual comparison)
+  const annualIS = (statementsData?.annual?.incomeStatement ?? []) as Array<{ revenue?: number | null; ebitda?: number | null; netIncome?: number | null }>
+  const annualCF = (statementsData?.annual?.cashFlow ?? [])        as Array<{ freeCashFlow?: number | null }>
+  const sparkRevenue  = annualIS.slice(-5).map(r => r.revenue    ?? null)
+  const sparkEbitda   = annualIS.slice(-5).map(r => r.ebitda     ?? null)
+  const sparkFCF      = annualCF.slice(-5).map(r => r.freeCashFlow ?? null)
+  const sparkNI       = annualIS.slice(-5).map(r => r.netIncome  ?? null)
+
+  // CAGR analysis data
+  const cagrAnalysis = apiData?.cagrAnalysis ?? {}
 
   // fairValue.sharesOutstanding is in millions (sharesM); TTM balance sheet shares are absolute
   const sharesAbsolute = ttmShares ?? (apiData?.fairValue?.sharesOutstanding != null ? apiData.fairValue.sharesOutstanding * 1e6 : null)
@@ -663,46 +727,138 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
       {/* ── Step 1: Base Data ──────────────────────────────────────────────── */}
       {currentStep === 1 && (
         <div className="space-y-4">
-          {statementsAvailable ? (
-            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-card">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-label uppercase tracking-wider text-slate-400">Trailing 12 Months</p>
-                <SourceLabel source="yahoo">Yahoo Finance Statements</SourceLabel>
-              </div>
-              <div className="flex flex-wrap gap-3 mb-3">
-                <StatCard label="Revenue"        value={fmtLarge(ttmRevenue)}   source="yahoo" />
-                <StatCard label="EBITDA"         value={fmtLarge(ttmEbitda)}    sub={ebitdaMargin  != null ? `${(ebitdaMargin  * 100).toFixed(1)}% margin` : undefined} source="yahoo" />
-                <StatCard label="Free Cash Flow" value={fmtLarge(ttmFCF)}       sub={fcfMarginPct  != null ? `${(fcfMarginPct  * 100).toFixed(1)}% FCF margin` : undefined} source="yahoo" />
-                <StatCard label="Net Income"     value={fmtLarge(ttmNetIncome)} sub={netMarginPct  != null ? `${(netMarginPct  * 100).toFixed(1)}% net margin` : undefined} source="yahoo" />
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <StatCard label="Total Debt"    value={fmtLarge(ttmTotalDebt)} source="yahoo" />
-                <StatCard label="Cash & Equiv." value={fmtLarge(ttmCash)}      source="yahoo" />
-                <StatCard label="Net Debt"      value={ttmNetDebt != null ? fmtLarge(ttmNetDebt) : '—'} sub={ttmNetDebt != null && ttmNetDebt < 0 ? 'Net cash position' : undefined} source="calc" />
-              </div>
-            </div>
-          ) : (
-            <Alert>
-              <AlertDescription>
-                Statements data is loading. Key TTM metrics will appear once the data is available.
-              </AlertDescription>
-            </Alert>
-          )}
 
+          {/* Section A: Business Snapshot */}
+          <div className="bg-blue-50 border border-blue-100 rounded-xl px-5 py-4 flex gap-3 items-start">
+            <svg className="text-blue-400 mt-0.5 shrink-0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <p className="text-sm text-blue-800 leading-relaxed">
+              {buildBusinessSummary(apiData?.companyName ?? ticker, apiData)}
+            </p>
+          </div>
+
+          {/* Section B: TTM Performance */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-card">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-label uppercase tracking-wider text-slate-400">Trailing 12 Months</p>
+              <SourceLabel source="yahoo">Yahoo Finance Statements</SourceLabel>
+            </div>
+
+            {statementsAvailable ? (
+              <>
+                {/* 4 metric tiles with sparklines */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                  {([
+                    { label: 'Revenue',        value: ttmRevenue,   margin: null,          tag: '',            vals: sparkRevenue },
+                    { label: 'EBITDA',         value: ttmEbitda,    margin: ebitdaMargin,  tag: 'margin',      vals: sparkEbitda  },
+                    { label: 'Free Cash Flow', value: ttmFCF,       margin: fcfMarginPct,  tag: 'FCF margin',  vals: sparkFCF     },
+                    { label: 'Net Income',     value: ttmNetIncome, margin: netMarginPct,  tag: 'net margin',  vals: sparkNI      },
+                  ] as const).map(({ label, value, margin, tag, vals }) => {
+                    const nums = vals.filter((v): v is number => v != null)
+                    const isPositive = nums.length >= 2 ? nums[nums.length - 1] >= nums[0] : true
+                    return (
+                      <div key={label} className="bg-slate-50 border border-slate-100 rounded-xl px-3 py-3 flex flex-col gap-1">
+                        <span className="text-label uppercase tracking-wider text-slate-400">{label}</span>
+                        <span className="text-lg font-bold font-mono text-slate-900">{fmtLarge(value)}</span>
+                        {margin != null && (
+                          <span className="text-micro text-slate-500">{(margin * 100).toFixed(1)}% {tag}</span>
+                        )}
+                        <div className="mt-1">
+                          <MiniBarSparkline values={vals} positive={isPositive} />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Balance sheet row */}
+                <div className="border-t border-slate-100 pt-4 flex flex-wrap gap-2">
+                  <MetricChip label="Total Debt"    value={ttmTotalDebt != null ? fmtLarge(ttmTotalDebt) : '—'} variant="default" />
+                  <MetricChip label="Cash & Equiv." value={ttmCash      != null ? fmtLarge(ttmCash)      : '—'} variant="positive" />
+                  <MetricChip
+                    label="Net Debt"
+                    value={ttmNetDebt != null ? fmtLarge(ttmNetDebt) : '—'}
+                    variant={ttmNetDebt == null ? 'default' : ttmNetDebt < 0 ? 'positive' : 'warning'}
+                  />
+                </div>
+              </>
+            ) : (
+              <Alert>
+                <AlertDescription>
+                  Statements data is loading. Key TTM metrics will appear once the data is available.
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+
+          {/* Section C: Growth Assumption Breakdown */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-card">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-label uppercase tracking-wider text-slate-400">Revenue Growth Assumption</p>
+              {cagrAnalysis.confidenceLabel && (
+                <span className={cn(
+                  'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
+                  cagrAnalysis.confidenceLabel === 'High'   && 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                  cagrAnalysis.confidenceLabel === 'Medium' && 'bg-amber-50 text-amber-700 border-amber-200',
+                  cagrAnalysis.confidenceLabel === 'Low'    && 'bg-red-50 text-red-700 border-red-200',
+                )}>
+                  {cagrAnalysis.confidenceLabel} Confidence
+                  {cagrAnalysis.numAnalysts ? ` · ${cagrAnalysis.numAnalysts} analysts` : ''}
+                </span>
+              )}
+            </div>
+            <div className="space-y-3 mb-4">
+              <GrowthBar label="Historical 3Y CAGR" value={cagrAnalysis.historicalCagr3y  ?? null} weight={cagrAnalysis.weights?.historical  ?? 0.35} />
+              <GrowthBar label="Analyst Consensus"  value={cagrAnalysis.analystEstimate1y ?? null} weight={cagrAnalysis.weights?.analyst     ?? 0.45} />
+              <GrowthBar label="Fundamental Growth" value={cagrAnalysis.fundamentalGrowth ?? null} weight={cagrAnalysis.weights?.fundamental ?? 0.20} />
+            </div>
+            <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+              <span className="text-sm text-slate-700 font-medium">Blended CAGR (used in model)</span>
+              <span className="text-base font-bold font-mono text-emerald-700">
+                {cagrAnalysis.blended != null
+                  ? `${(cagrAnalysis.blended * 100).toFixed(1)}%`
+                  : `${(fwdPEBase.revenueCAGR * 100).toFixed(1)}%`}
+              </span>
+            </div>
+          </div>
+
+          {/* Section D: Model Inputs */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-card">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-label uppercase tracking-wider text-slate-400">Model Assumptions (% inputs)</p>
+              <p className="text-label uppercase tracking-wider text-slate-400">Model Inputs</p>
               <SourceLabel source="calc">Derived from data</SourceLabel>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <AssumptionStat label="Revenue CAGR" value={`${(fwdPEBase.revenueCAGR  * 100).toFixed(1)}%`} sub="annual growth" />
-              <AssumptionStat label="Net Margin"   value={`${(fwdPEBase.netMargin    * 100).toFixed(1)}%`} sub="exit year" />
-              <AssumptionStat label="WACC"         value={`${(fwdPEBase.discountRate * 100).toFixed(1)}%`} sub="discount rate" />
-              <AssumptionStat label="Exit P/E"     value={`${fwdPEBase.exitPE.toFixed(0)}×`}              sub="sector-normalized" />
+              <AssumptionStat label="Revenue CAGR" value={`${(fwdPEBase.revenueCAGR  * 100).toFixed(1)}%`} sub="annual growth"     desc="How fast revenue grows each year" />
+              <AssumptionStat label="Net Margin"   value={`${(fwdPEBase.netMargin    * 100).toFixed(1)}%`} sub="exit year"         desc="Profit kept from every $1 of revenue" />
+              <AssumptionStat label="WACC"         value={`${(fwdPEBase.discountRate * 100).toFixed(1)}%`} sub="discount rate"     desc="Risk-adjusted return investors require" />
+              <AssumptionStat label="Exit P/E"     value={`${fwdPEBase.exitPE.toFixed(0)}×`}              sub="sector-normalized" desc="Earnings multiple at end of forecast" />
             </div>
-            <p className="text-micro text-slate-400 mt-3">
-              Scroll through the methods below to edit assumptions. All inputs are percentages or multiples.
-            </p>
+          </div>
+
+          {/* Section E: Methods Preview */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-card">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-label uppercase tracking-wider text-slate-400">Valuation Methods</p>
+              <span className="text-micro text-slate-400">4 approaches → 1 weighted answer</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {([
+                { name: 'Forward P/E',      desc: '5-year earnings target discounted to today',  weight: '30%', cls: 'bg-indigo-50 border-indigo-100 text-indigo-700'  },
+                { name: 'EV/EBITDA',        desc: 'Profit-adjusted sector comparable multiple',  weight: '25%', cls: 'bg-blue-50 border-blue-100 text-blue-700'        },
+                { name: 'Revenue Multiple', desc: 'Top-line growth rate applied to revenue',     weight: '20%', cls: 'bg-violet-50 border-violet-100 text-violet-700'  },
+                { name: 'Scenario Blend',   desc: 'Bear / Base / Bull scenarios, DCF weighted',  weight: '15%', cls: 'bg-emerald-50 border-emerald-100 text-emerald-700' },
+              ] as const).map(m => (
+                <div key={m.name} className={`border rounded-xl px-3 py-2.5 ${m.cls}`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-semibold">{m.name}</span>
+                    <span className="text-[10px] font-mono font-bold opacity-50">{m.weight}</span>
+                  </div>
+                  <p className="text-[10px] leading-snug opacity-70">{m.desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
 
           <Button className="w-full" onClick={() => setCurrentStep(2)}>
