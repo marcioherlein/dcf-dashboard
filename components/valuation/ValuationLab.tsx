@@ -29,6 +29,10 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { cn } from '@/lib/utils'
 import { buildBusinessSummary } from '@/lib/simplifier/summaryBuilder'
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, Cell,
+  ResponsiveContainer, ReferenceLine,
+} from 'recharts'
 
 // ─── Local helpers ─────────────────────────────────────────────────────────────
 
@@ -174,9 +178,10 @@ interface MethodInlinePanelProps {
   currency: string
   onAssumptionChange: (key: string, value: number) => void
   onResetOverrides: () => void
+  extraContent?: React.ReactNode
 }
 
-function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, onResetOverrides }: MethodInlinePanelProps) {
+function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, onResetOverrides, extraContent }: MethodInlinePanelProps) {
   const isModified = Object.keys(overrides).length > 0
   const upside =
     config.fairValueSummary != null && config.currentPrice != null && config.currentPrice > 0
@@ -329,6 +334,11 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
           )}
         </div>
       </div>
+      {extraContent && (
+        <div className="border-t border-slate-100 px-5 py-4">
+          {extraContent}
+        </div>
+      )}
     </div>
   )
 }
@@ -411,6 +421,78 @@ function GrowthBar({ label, value, weight }: { label: string; value: number | nu
   )
 }
 
+// ─── Method History Charts ────────────────────────────────────────────────────
+
+interface HistoryChartDef {
+  title: string
+  data: { year: string; value: number }[]
+  unit: '%' | '$M'
+  color: string
+}
+
+function MethodHistoryCharts({ charts }: { charts: HistoryChartDef[] }) {
+  if (charts.every(c => c.data.length < 2)) return null
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function MiniTooltip({ active, payload, unit }: any) {
+    if (!active || !payload?.length) return null
+    const v = payload[0]?.value as number | null
+    if (v == null) return null
+    const display = unit === '%' ? `${v.toFixed(1)}%` : `$${v.toFixed(0)}M`
+    return (
+      <div className="bg-slate-900 text-white text-[10px] rounded px-2 py-1 shadow-lg">
+        {payload[0]?.payload?.year}: <strong>{display}</strong>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <p className="text-label uppercase tracking-wider text-slate-400 mb-3">Historical Context</p>
+      <div className="flex flex-wrap gap-6">
+        {charts.map(chart => {
+          if (chart.data.length < 2) return null
+          const min = Math.min(...chart.data.map(d => d.value))
+          const hasNegatives = min < 0
+          return (
+            <div key={chart.title} className="flex-1 min-w-[160px]">
+              <p className="text-[11px] font-medium text-slate-500 mb-1.5">{chart.title}</p>
+              <ResponsiveContainer width="100%" height={80}>
+                <BarChart data={chart.data} barSize={14} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                  <XAxis
+                    dataKey="year"
+                    tick={{ fontSize: 9, fill: '#94a3b8' }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis hide domain={hasNegatives ? ['auto', 'auto'] : [0, 'auto']} />
+                  {hasNegatives && <ReferenceLine y={0} stroke="#e2e8f0" strokeWidth={1} />}
+                  <Tooltip
+                    content={(props) => <MiniTooltip {...props} unit={chart.unit} />}
+                    cursor={{ fill: 'rgba(148,163,184,0.1)' }}
+                  />
+                  <Bar dataKey="value" radius={[3, 3, 0, 0]}>
+                    {chart.data.map((entry, i) => (
+                      <Cell
+                        key={i}
+                        fill={
+                          hasNegatives
+                            ? entry.value >= 0 ? chart.color : '#f87171'
+                            : i === chart.data.length - 1 ? chart.color : `${chart.color}80`
+                        }
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type OverridesMap = Partial<Record<ValuationMethodId | 'ev_ebitda', Record<string, number>>>
@@ -458,8 +540,8 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
   const statementsAvailable = ttmRevenue != null || ttmEbitda != null || ttmFCF != null
 
   // Annual sparkline data (values in millions, consistent scale for visual comparison)
-  const annualIS = (statementsData?.annual?.incomeStatement ?? []) as Array<{ revenue?: number | null; ebitda?: number | null; netIncome?: number | null }>
-  const annualCF = (statementsData?.annual?.cashFlow ?? [])        as Array<{ freeCashFlow?: number | null }>
+  const annualIS = (statementsData?.annual?.incomeStatement ?? []) as Array<{ year?: string; fiscalDate?: string | null; revenue?: number | null; ebitda?: number | null; netIncome?: number | null }>
+  const annualCF = (statementsData?.annual?.cashFlow ?? [])        as Array<{ year?: string; freeCashFlow?: number | null }>
   const sparkRevenue  = annualIS.slice(-5).map(r => r.revenue    ?? null)
   const sparkEbitda   = annualIS.slice(-5).map(r => r.ebitda     ?? null)
   const sparkFCF      = annualCF.slice(-5).map(r => r.freeCashFlow ?? null)
@@ -467,6 +549,34 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
 
   // CAGR analysis data
   const cagrAnalysis = apiData?.cagrAnalysis ?? {}
+
+  // Annual chart data for method history panels
+  const chartRevenueGrowth: HistoryChartDef['data'] = annualIS.slice(1).reduce<{ year: string; value: number }[]>((acc, r, i) => {
+    const prev = annualIS[i]
+    if (r.revenue != null && prev.revenue != null && prev.revenue > 0) {
+      acc.push({ year: String(r.year ?? r.fiscalDate?.slice(0, 4) ?? ''), value: (r.revenue - prev.revenue) / prev.revenue * 100 })
+    }
+    return acc
+  }, []).slice(-5)
+
+  const chartNetMargin: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r) => {
+    if (r.revenue != null && r.revenue > 0 && r.netIncome != null) {
+      acc.push({ year: String(r.year ?? r.fiscalDate?.slice(0, 4) ?? ''), value: r.netIncome / r.revenue * 100 })
+    }
+    return acc
+  }, []).slice(-5)
+
+  const chartEbitda: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r) => {
+    if (r.ebitda != null) acc.push({ year: String(r.year ?? r.fiscalDate?.slice(0, 4) ?? ''), value: r.ebitda })
+    return acc
+  }, []).slice(-5)
+
+  const chartEbitdaMargin: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r) => {
+    if (r.revenue != null && r.revenue > 0 && r.ebitda != null) {
+      acc.push({ year: String(r.year ?? r.fiscalDate?.slice(0, 4) ?? ''), value: r.ebitda / r.revenue * 100 })
+    }
+    return acc
+  }, []).slice(-5)
 
   // fairValue.sharesOutstanding is in millions (sharesM); TTM balance sheet shares are absolute
   const sharesAbsolute = ttmShares ?? (apiData?.fairValue?.sharesOutstanding != null ? apiData.fairValue.sharesOutstanding * 1e6 : null)
@@ -512,13 +622,15 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
     id: 'forward_pe', title: 'Forward P/E', subtitle: '5-year target price discounted to today',
     companyName: apiData?.companyName ?? ticker, ticker, currency,
     evidence:    fwdPEBase.evidence,
-    assumptions: fwdPEBase.assumptions,
+    assumptions: fwdPEBase.assumptions.map(a =>
+      a.key === 'ltvRevenue' && ltvRevenueAbsolute != null ? { ...a, value: ltvRevenueAbsolute } : a
+    ),
     formulaLines: buildForwardPEFormula(fwdPEInputs, fwdPEResult),
     results:     buildForwardPEResults(fwdPEResult, currentPrice, currency),
     warnings:    fwdPEResult.guardErrors,
     fairValueSummary: fwdPEResult.fairValueToday,
     currentPrice,
-  }), [fwdPEBase, fwdPEInputs, fwdPEResult, ticker, currency, currentPrice, apiData])
+  }), [fwdPEBase, fwdPEInputs, fwdPEResult, ticker, currency, currentPrice, apiData, ltvRevenueAbsolute])
 
   // ── Revenue Multiple ─────────────────────────────────────────────────────
   const revMultOverrides = overrides['revenue_multiple'] ?? {}
@@ -877,6 +989,14 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
             currency={currency}
             onAssumptionChange={(key, val) => handleAssumptionChange('forward_pe', key, val)}
             onResetOverrides={() => handleResetOverrides('forward_pe')}
+            extraContent={
+              chartRevenueGrowth.length >= 2 || chartNetMargin.length >= 2 ? (
+                <MethodHistoryCharts charts={[
+                  { title: 'Revenue Growth YoY', data: chartRevenueGrowth, unit: '%',  color: '#6366f1' },
+                  { title: 'Net Margin',          data: chartNetMargin,    unit: '%',  color: '#10b981' },
+                ]} />
+              ) : undefined
+            }
           />
 
           <MethodInlinePanel
@@ -885,6 +1005,14 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
             currency={currency}
             onAssumptionChange={(key, val) => handleAssumptionChange('ev_ebitda', key, val)}
             onResetOverrides={() => handleResetOverrides('ev_ebitda')}
+            extraContent={
+              chartEbitda.length >= 2 || chartEbitdaMargin.length >= 2 ? (
+                <MethodHistoryCharts charts={[
+                  { title: 'EBITDA ($M)',    data: chartEbitda,       unit: '$M', color: '#3b82f6' },
+                  { title: 'EBITDA Margin', data: chartEbitdaMargin, unit: '%',  color: '#f59e0b' },
+                ]} />
+              ) : undefined
+            }
           />
 
           <MethodInlinePanel
