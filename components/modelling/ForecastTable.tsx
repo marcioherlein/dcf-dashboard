@@ -63,6 +63,12 @@ export interface TerminalData {
   exitMultiple: number
   terminalG: number
   guardError: string | null
+  // Equity value bridge (all $M)
+  sumPvUfcf: number
+  cashM: number | null
+  debtM: number | null
+  sharesM: number | null
+  currentPrice: number
 }
 
 interface ForecastTableProps {
@@ -75,6 +81,7 @@ interface ForecastTableProps {
   onCellEdit: (year: string, field: string, value: number) => void
   onTerminalMethodChange: (method: 'perpetuity' | 'multiple') => void
   onExitMultipleChange: (value: number) => void
+  onTerminalGChange: (value: number) => void
 }
 
 // ─── Column cell background by type ──────────────────────────────────────────
@@ -199,9 +206,11 @@ export default function ForecastTable({
   onCellEdit,
   onTerminalMethodChange,
   onExitMultipleChange,
+  onTerminalGChange,
 }: ForecastTableProps) {
   const [mode, setMode] = useState<'ufcf' | 'lfcf'>('ufcf')
   const [exitMultipleDraft, setExitMultipleDraft] = useState<string | null>(null)
+  const [terminalGDraft, setTerminalGDraft] = useState<string | null>(null)
 
   const curr = currency === 'USD' ? '$' : currency + ' '
 
@@ -815,20 +824,37 @@ export default function ForecastTable({
   function renderTerminalSection() {
     const td = terminalData
     const isMultiple = td.method === 'multiple'
-    const tv = isMultiple ? td.exitMultipleTV : td.perpetuityTV
+    const tv   = isMultiple ? td.exitMultipleTV         : td.perpetuityTV
     const pvTv = isMultiple ? td.exitMultipleTVDiscounted : td.perpetuityTVDiscounted
+
+    // Equity value bridge
+    const ev           = pvTv != null ? td.sumPvUfcf + pvTv : null
+    const equityValue  = ev   != null ? ev + (td.cashM ?? 0) - (td.debtM ?? 0) : null
+    const impliedPrice = equityValue != null && td.sharesM != null && td.sharesM > 0
+      ? equityValue / td.sharesM : null
+    const upside = impliedPrice != null && td.currentPrice > 0
+      ? (impliedPrice - td.currentPrice) / td.currentPrice : null
+    const upsideColor = upside == null ? 'text-[#888]' : upside >= 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
+
+    function SummaryRow({ label, value, bold, color }: { label: string; value: string; bold?: boolean; color?: string }) {
+      return (
+        <div className={`flex items-center justify-between py-1 border-b border-[#1e1e1e] ${bold ? 'bg-[#151515]' : ''}`}>
+          <span className={`text-xs ${bold ? 'font-semibold text-[#ccc]' : 'text-[#666]'}`}>{label}</span>
+          <span className={`text-xs font-mono tabular-nums ${color ?? (bold ? 'text-white' : 'text-[#e2e2e2]')}`}>{value}</span>
+        </div>
+      )
+    }
 
     return (
       <div className="bg-[#0d0d0d] px-6 py-4 border-t border-[#222]">
-        <div className="flex items-center justify-between mb-3">
+        {/* Toggle + input row */}
+        <div className="flex items-center justify-between mb-4">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-[#555]">Terminal Value</p>
           <div className="flex gap-1">
             <button
               onClick={() => onTerminalMethodChange('perpetuity')}
               className={`px-3 py-1 text-xs rounded transition-colors ${
-                td.method === 'perpetuity'
-                  ? 'bg-[#4a9eff] text-white'
-                  : 'border border-[#333] text-[#888] hover:border-[#555]'
+                td.method === 'perpetuity' ? 'bg-[#4a9eff] text-white' : 'border border-[#333] text-[#888] hover:border-[#555]'
               }`}
             >
               Perpetuity
@@ -836,9 +862,7 @@ export default function ForecastTable({
             <button
               onClick={() => onTerminalMethodChange('multiple')}
               className={`px-3 py-1 text-xs rounded transition-colors ${
-                td.method === 'multiple'
-                  ? 'bg-[#4a9eff] text-white'
-                  : 'border border-[#333] text-[#888] hover:border-[#555]'
+                td.method === 'multiple' ? 'bg-[#4a9eff] text-white' : 'border border-[#333] text-[#888] hover:border-[#555]'
               }`}
             >
               Multiple
@@ -853,49 +877,76 @@ export default function ForecastTable({
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-6">
+        {/* Method-specific input */}
+        <div className="flex flex-wrap items-center gap-4 mb-4">
           {isMultiple ? (
             <div className="flex items-center gap-2">
               <span className="text-[#666] text-xs">Exit Multiple EV/FCF</span>
               <input
                 className="w-16 border border-[#333] bg-[#1a1a1a] px-2 py-1 text-center text-xs text-[#e2e2e2] rounded focus:border-[#4a9eff] focus:outline-none"
-                value={exitMultipleDraft ?? td.exitMultiple.toFixed(1)}
+                value={exitMultipleDraft ?? Math.max(1, td.exitMultiple).toFixed(1)}
                 onChange={e => setExitMultipleDraft(e.target.value)}
                 onBlur={() => {
                   if (exitMultipleDraft != null) {
-                    const parsed = parseFloat(exitMultipleDraft)
-                    if (!isNaN(parsed) && parsed > 0) onExitMultipleChange(parsed)
+                    const p = parseFloat(exitMultipleDraft)
+                    if (!isNaN(p) && p > 0) onExitMultipleChange(p)
                     setExitMultipleDraft(null)
                   }
                 }}
                 onKeyDown={e => {
-                  if (e.key === 'Enter') {
-                    if (exitMultipleDraft != null) {
-                      const parsed = parseFloat(exitMultipleDraft)
-                      if (!isNaN(parsed) && parsed > 0) onExitMultipleChange(parsed)
-                      setExitMultipleDraft(null)
-                    }
+                  if (e.key === 'Enter' && exitMultipleDraft != null) {
+                    const p = parseFloat(exitMultipleDraft)
+                    if (!isNaN(p) && p > 0) onExitMultipleChange(p)
+                    setExitMultipleDraft(null)
                   }
                 }}
               />
-              <span className="text-[#e2e2e2] text-xs font-semibold">
-                Terminal Value: {tv != null ? fmtLargeM(tv) : '—'}
-              </span>
             </div>
           ) : (
             <div className="flex items-center gap-2">
               <span className="text-[#666] text-xs">Terminal Growth Rate</span>
-              <span className="text-[#e2e2e2] text-xs font-semibold">{fmtPctDisplay(td.terminalG)}</span>
-              <span className="text-[#e2e2e2] text-xs font-semibold">
-                Terminal Value: {tv != null ? fmtLargeM(tv) : '—'}
-              </span>
+              <input
+                className="w-16 border border-[#333] bg-[#1a1a1a] px-2 py-1 text-center text-xs text-[#e2e2e2] rounded focus:border-[#4a9eff] focus:outline-none"
+                value={terminalGDraft ?? (td.terminalG * 100).toFixed(1)}
+                onChange={e => setTerminalGDraft(e.target.value)}
+                onBlur={() => {
+                  if (terminalGDraft != null) {
+                    const p = parseFloat(terminalGDraft)
+                    if (!isNaN(p) && p >= 0 && p < 15) onTerminalGChange(p / 100)
+                    setTerminalGDraft(null)
+                  }
+                }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && terminalGDraft != null) {
+                    const p = parseFloat(terminalGDraft)
+                    if (!isNaN(p) && p >= 0 && p < 15) onTerminalGChange(p / 100)
+                    setTerminalGDraft(null)
+                  }
+                }}
+              />
+              <span className="text-[#666] text-xs">%</span>
             </div>
           )}
+        </div>
 
-          <div>
-            <span className="text-[#666] text-xs mr-2">PV of Terminal Value:</span>
-            <span className="text-[#e2e2e2] text-xs font-semibold">{pvTv != null ? fmtLargeM(pvTv) : '—'}</span>
-          </div>
+        {/* Valuation summary bridge */}
+        <div className="max-w-xs space-y-0">
+          <SummaryRow label="Terminal Value"          value={tv   != null ? fmtLargeM(tv)   : '—'} />
+          <SummaryRow label="PV of Terminal Value"    value={pvTv != null ? fmtLargeM(pvTv) : '—'} />
+          <SummaryRow label="Cumulative PV of UFCF"   value={fmtLargeM(td.sumPvUfcf)} />
+          <SummaryRow label="Enterprise Value"        value={ev   != null ? fmtLargeM(ev)   : '—'} bold />
+          <SummaryRow label="+ Cash"                  value={td.cashM != null ? fmtLargeM(td.cashM) : '—'} />
+          <SummaryRow label="− Debt"                  value={td.debtM != null ? fmtLargeM(td.debtM) : '—'} />
+          <SummaryRow label="Equity Value"            value={equityValue != null ? fmtLargeM(equityValue) : '—'} bold />
+          <SummaryRow label="Shares Outstanding"      value={td.sharesM != null ? td.sharesM.toFixed(1) + 'M' : '—'} />
+          <SummaryRow label="Implied Share Price"     value={impliedPrice != null ? `${curr}${impliedPrice.toFixed(2)}` : '—'} bold />
+          <SummaryRow label="Current Share Price"     value={`${curr}${td.currentPrice.toFixed(2)}`} />
+          <SummaryRow
+            label="Implied Upside / (Downside)"
+            value={upside != null ? (upside >= 0 ? '+' : '') + (upside * 100).toFixed(1) + '%' : '—'}
+            bold
+            color={upsideColor}
+          />
         </div>
       </div>
     )

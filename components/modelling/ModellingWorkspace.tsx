@@ -306,6 +306,12 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [baseInput, waccRaw, wacc])
 
+  // Normalize sharesOutstanding → millions for equity bridge
+  // normalizeInputs may store either millions (from fairValue) or absolute count (from TTM BS)
+  const sharesM = baseInput.sharesOutstanding != null
+    ? (baseInput.sharesOutstanding > 1_000_000 ? baseInput.sharesOutstanding / 1e6 : baseInput.sharesOutstanding)
+    : null
+
   // Terminal data
   const terminalData: TerminalData = useMemo(() => ({
     method: terminalMethod,
@@ -316,17 +322,20 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
     exitMultiple,
     terminalG,
     guardError: tvUFCF.guardError ?? null,
-  }), [tvUFCF, terminalMethod, exitMultiple, terminalG])
+    sumPvUfcf: sumPvUFCF,
+    cashM: baseInput.cashM,
+    debtM: baseInput.debtM,
+    sharesM,
+    currentPrice: baseInput.currentPrice,
+  }), [tvUFCF, terminalMethod, exitMultiple, terminalG, sumPvUFCF, baseInput, sharesM])
 
   const handleCellEdit = useCallback((year: string, field: string, value: number) => {
     setRowOverrides(prev => ({ ...prev, [year]: { ...prev[year], [field]: value } }))
   }, [])
 
-  // Global assumption changes (cagr, wacc, terminalG) still supported via overrides
-  // (no AssumptionPanel in new layout, but state is preserved)
+  // Global assumption changes (cagr, wacc) not yet exposed in UI
   void setCagrOverride
   void setWaccOverride
-  void setTerminalGOverride
 
   return (
     <div className="bg-[#111111] rounded-xl overflow-hidden border border-[#222]">
@@ -350,6 +359,7 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
         onCellEdit={handleCellEdit}
         onTerminalMethodChange={setTerminalMethod}
         onExitMultipleChange={(v) => setExitMultipleOverride(v)}
+        onTerminalGChange={setTerminalGOverride}
       />
     </div>
   )
