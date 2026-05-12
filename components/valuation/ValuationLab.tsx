@@ -404,6 +404,9 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
 
   const statementsAvailable = ttmRevenue != null || ttmEbitda != null || ttmFCF != null
 
+  // fairValue.sharesOutstanding is in millions (sharesM); TTM balance sheet shares are absolute
+  const sharesAbsolute = ttmShares ?? (apiData?.fairValue?.sharesOutstanding != null ? apiData.fairValue.sharesOutstanding * 1e6 : null)
+
   const ebitdaMargin = ttmRevenue && ttmRevenue > 0 && ttmEbitda    != null ? ttmEbitda    / ttmRevenue : null
   const fcfMarginPct = ttmRevenue && ttmRevenue > 0 && ttmFCF       != null ? ttmFCF       / ttmRevenue : null
   const netMarginPct = ttmRevenue && ttmRevenue > 0 && ttmNetIncome != null ? ttmNetIncome / ttmRevenue : null
@@ -412,22 +415,26 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
   const fwdPEBase   = useMemo(() => deriveForwardPEAssumptions(apiData), [apiData])
   const revMultBase = useMemo(() => deriveRevenueMultipleAssumptions(apiData), [apiData])
 
+  // financialStatements revenue is in millions; TTM revenue is absolute — normalise to absolute $
+  // Must be defined after fwdPEBase (which provides the financialStatements fallback)
+  const ltvRevenueAbsolute = ttmRevenue ?? (fwdPEBase.ltvRevenue != null ? fwdPEBase.ltvRevenue * 1e6 : null)
+
   const evEbitdaBase = useMemo(() => {
     const ebitda   = ttmEbitda ?? (apiData?.financialStatements?.incomeStatement?.find((r: { isProjected?: boolean; ebitda?: number }) => !r.isProjected)?.ebitda ?? null)
-    const shares   = ttmShares ?? apiData?.fairValue?.sharesOutstanding ?? null
+    const shares   = sharesAbsolute
     const cashFMP  = apiData?.fairValue?.cash != null ? apiData.fairValue.cash * 1e6 : null
     const debtFMP  = apiData?.fairValue?.debt != null ? apiData.fairValue.debt * 1e6 : null
     const netDebt  = ttmNetDebt ?? (debtFMP != null && cashFMP != null ? debtFMP - cashFMP : null)
     const sector   = apiData?.quote?.sector ?? null
     const multiple = getDefaultEVEBITDAMultiple(sector)
     return { ebitda, netDebt, shares, exitMultiple: multiple, sector }
-  }, [apiData, ttmEbitda, ttmNetDebt, ttmShares])
+  }, [apiData, ttmEbitda, ttmNetDebt, sharesAbsolute])
 
   // ── Forward P/E ──────────────────────────────────────────────────────────
   const fwdPEOverrides = overrides['forward_pe'] ?? {}
   const fwdPEInputs = useMemo(() => ({
-    ltvRevenue:        fwdPEOverrides.ltvRevenue        ?? fwdPEBase.ltvRevenue,
-    sharesOutstanding: fwdPEOverrides.sharesOutstanding ?? fwdPEBase.sharesOutstanding,
+    ltvRevenue:        fwdPEOverrides.ltvRevenue        ?? ltvRevenueAbsolute,
+    sharesOutstanding: fwdPEOverrides.sharesOutstanding ?? sharesAbsolute,
     revenueCAGR:       fwdPEOverrides.revenueCAGR       ?? fwdPEBase.revenueCAGR,
     netMargin:         fwdPEOverrides.netMargin         ?? fwdPEBase.netMargin,
     exitPE:            fwdPEOverrides.exitPE            ?? fwdPEBase.exitPE,
@@ -435,7 +442,7 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
     discountRate:      fwdPEOverrides.discountRate      ?? fwdPEBase.discountRate,
     currentPrice,
     dividendYield:     null,
-  }), [fwdPEBase, fwdPEOverrides, currentPrice])
+  }), [fwdPEBase, fwdPEOverrides, currentPrice, ltvRevenueAbsolute, sharesAbsolute])
   const fwdPEResult = useMemo(() => computeForwardPE(fwdPEInputs), [fwdPEInputs])
   const fwdPEConfig = useMemo((): ValuationMethodConfig => ({
     id: 'forward_pe', title: 'Forward P/E', subtitle: '5-year target price discounted to today',
@@ -452,8 +459,8 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
   // ── Revenue Multiple ─────────────────────────────────────────────────────
   const revMultOverrides = overrides['revenue_multiple'] ?? {}
   const revMultInputs = useMemo(() => ({
-    ltvRevenue:        revMultOverrides.ltvRevenue        ?? revMultBase.ltvRevenue,
-    sharesOutstanding: revMultOverrides.sharesOutstanding ?? revMultBase.sharesOutstanding,
+    ltvRevenue:        revMultOverrides.ltvRevenue        ?? ltvRevenueAbsolute,
+    sharesOutstanding: revMultOverrides.sharesOutstanding ?? sharesAbsolute,
     revenueCAGR:       revMultOverrides.revenueCAGR       ?? revMultBase.revenueCAGR,
     exitEVRevenue:     revMultOverrides.exitEVRevenue     ?? revMultBase.exitEVRevenue,
     netDebt:           revMultOverrides.netDebt           ?? revMultBase.netDebt,
@@ -461,7 +468,7 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
     discountRate:      revMultOverrides.discountRate      ?? revMultBase.discountRate,
     currentPrice,
     dividendYield:     null,
-  }), [revMultBase, revMultOverrides, currentPrice])
+  }), [revMultBase, revMultOverrides, currentPrice, ltvRevenueAbsolute, sharesAbsolute])
   const revMultResult = useMemo(() => computeRevenueMultiple(revMultInputs), [revMultInputs])
   const revMultConfig = useMemo((): ValuationMethodConfig => ({
     id: 'revenue_multiple', title: 'Revenue Multiple', subtitle: 'EV/Revenue exit multiple discounted to today',
@@ -526,18 +533,23 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
   const lastActualRevenue = useMemo(() => {
     if (ttmRevenue != null) return ttmRevenue
     const actuals = incomeRows.filter(r => !r.isProjected && r.revenue != null && r.revenue > 0)
-    return actuals.length > 0 ? actuals[actuals.length - 1].revenue! : null
+    const revM = actuals.length > 0 ? actuals[actuals.length - 1].revenue! : null
+    return revM != null ? revM * 1e6 : null  // financialStatements revenue is in millions
   }, [incomeRows, ttmRevenue])
 
   const lastFCFMargin = useMemo(() => {
-    const rev = ttmRevenue ?? (incomeRows.filter(r => !r.isProjected && r.revenue != null).slice(-1)[0]?.revenue ?? null)
-    const fcf = ttmFCF    ?? (cashFlowRows.filter(r => !r.isProjected && r.freeCashFlow != null).slice(-1)[0]?.freeCashFlow ?? null)
-    return rev != null && rev > 0 && fcf != null ? fcf / rev : null
+    // Use both from the same scale to keep the ratio consistent
+    if (ttmRevenue != null && ttmFCF != null && ttmRevenue > 0) return ttmFCF / ttmRevenue
+    const actRev = incomeRows.filter(r => !r.isProjected && r.revenue != null && r.revenue > 0)
+    const actFCF = cashFlowRows.filter(r => !r.isProjected && r.freeCashFlow != null)
+    const revM = actRev.slice(-1)[0]?.revenue ?? null
+    const fcfM = actFCF.slice(-1)[0]?.freeCashFlow ?? null
+    return revM != null && revM > 0 && fcfM != null ? fcfM / revM : null
   }, [cashFlowRows, incomeRows, ttmRevenue, ttmFCF])
 
   const reverseDCFResult = useMemo(() => computeReverseDCF({
     currentPrice,
-    sharesOutstanding: ttmShares ?? apiData?.fairValue?.sharesOutstanding ?? null,
+    sharesOutstanding: sharesAbsolute,
     cashM:    apiData?.fairValue?.cash ?? null,
     debtM:    apiData?.fairValue?.debt ?? null,
     lastRevenue: lastActualRevenue,
@@ -545,7 +557,7 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
     wacc:     apiData?.wacc?.wacc   ?? 0.09,
     terminalG:apiData?.terminalG    ?? 0.025,
     historicalCAGR: apiData?.cagrAnalysis?.historicalCagr3y ?? null,
-  }), [currentPrice, apiData, lastActualRevenue, lastFCFMargin, ttmShares])
+  }), [currentPrice, apiData, lastActualRevenue, lastFCFMargin, sharesAbsolute])
 
   const reverseDCFConfig = useMemo((): ValuationMethodConfig => {
     const implCAGRPct = reverseDCFResult.impliedCAGR != null ? (reverseDCFResult.impliedCAGR * 100).toFixed(1) + '%' : '—'

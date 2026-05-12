@@ -58,6 +58,21 @@
   --green-light:   #ECFDF5;
   --red:           #DC2626;
   --amber:         #D97706;
+
+  /* ── DCF table dark surface tokens ── */
+  --dcf-bg:          #111111;
+  --dcf-bg-deep:     #0a0a0a;
+  --dcf-bg-raised:   #1a1a1a;
+  --dcf-projected:   #0b1628;    /* blue tint for projected columns */
+  --dcf-ttm:         #18140a;    /* amber tint for TTM column */
+  --dcf-border:      #222222;
+  --dcf-border-sep:  #333333;
+  --dcf-text:        #e2e2e2;
+  --dcf-text-dim:    #c8c8c8;
+  --dcf-text-muted:  #888888;
+  --dcf-text-faint:  #555555;
+  --dcf-accent:      #4a9eff;
+  --dcf-amber:       #d4a017;
 }
 
 body {

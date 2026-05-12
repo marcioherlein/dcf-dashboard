@@ -4,17 +4,13 @@ import { useParams, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import PriceHeader from '@/components/stock/PriceHeader'
 import NewsPanel from '@/components/stock/NewsPanel'
-import InsiderTable from '@/components/stock/InsiderTable'
 import BusinessModel from '@/components/stock/BusinessModel'
-import FinancialStatements from '@/components/stock/FinancialStatements'
-import FinancialCharts from '@/components/stock/FinancialCharts'
-import YahooFinancials from '@/components/stock/YahooFinancials'
 import FinancialScores from '@/components/stock/FinancialScores'
-import OwnershipPanel from '@/components/stock/OwnershipPanel'
 import AtAGlance from '@/components/stock/AtAGlance'
 import HealthSection from '@/components/stock/HealthSection'
 import TabNav, { type TabId } from '@/components/stock/TabNav'
 import ValuationLab from '@/components/valuation/ValuationLab'
+import FinancialsHub from '@/components/stock/FinancialsHub'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
@@ -310,43 +306,18 @@ export default function StockPage() {
             {/* ── Financials tab ── */}
             {activeTab === 'financials' && (
               <div className="space-y-4 pt-5">
-                <YahooFinancials ticker={ticker} />
-                {data.financialStatements ? (
-                  <>
-                    <FinancialStatements
-                      incomeStatement={data.financialStatements.incomeStatement}
-                      balanceSheet={data.financialStatements.balanceSheet}
-                      cashFlow={data.financialStatements.cashFlow}
-                      currency={currency}
-                      cagr={data.cagr}
-                    />
-                    <FinancialCharts
-                      incomeStatement={data.financialStatements.incomeStatement}
-                      cashFlow={data.financialStatements.cashFlow}
-                      currency={currency}
-                      isDark={false}
-                    />
-                  </>
-                ) : (
-                  <p className="text-sm text-slate-400 py-8 text-center">Financial statement data unavailable</p>
-                )}
+                <FinancialsHub
+                  statementsData={statementsData}
+                  financialsData={data}
+                  currency={currency}
+                  cagr={data.cagr}
+                />
               </div>
             )}
 
-            {/* ── Peers stub ── */}
-            {activeTab === 'peers' && (
-              <div className="space-y-4 pt-5">
-                <div className="bg-slate-50 border border-slate-200 rounded-xl px-6 py-12 text-center">
-                  <div className="text-[15px] font-semibold text-slate-700 mb-2">Peer Comparison</div>
-                  <div className="text-[13px] text-slate-400">Coming soon — peer multiples, growth, and margin comparison.</div>
-                </div>
-              </div>
-            )}
-
-            {/* ── Quality tab ── */}
+            {/* ── Quality & Risk tab ── */}
             {activeTab === 'quality' && (
               <div className="space-y-4 pt-5">
-                {data.scores && <FinancialScores scores={data.scores} />}
                 {data.ratings && data.scores && (
                   <HealthSection
                     ratings={data.ratings}
@@ -354,14 +325,20 @@ export default function StockPage() {
                     financialsData={data}
                   />
                 )}
+                {data.scores && <FinancialScores scores={data.scores} />}
               </div>
             )}
 
-            {/* ── Ownership tab ── */}
+            {/* ── Price & Technicals tab (ownership id reused) ── */}
             {activeTab === 'ownership' && (
               <div className="space-y-4 pt-5">
-                {data.ownership && <OwnershipPanel ownership={data.ownership} />}
-                <InsiderTable ticker={ticker} />
+                <PriceChart
+                  ticker={ticker}
+                  isDark={false}
+                  fcffFairValue={data.fairValue.fairValuePerShare}
+                  triangulatedFairValue={data.valuationMethods?.triangulatedFairValue}
+                  analystTarget={data.quote.analystTargetMean}
+                />
               </div>
             )}
 

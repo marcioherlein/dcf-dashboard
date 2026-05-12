@@ -77,6 +77,14 @@ interface ForecastTableProps {
   onExitMultipleChange: (value: number) => void
 }
 
+// ─── Column cell background by type ──────────────────────────────────────────
+
+function cellBg(row: DisplayRow): string {
+  if (row.year === 'TTM') return 'bg-[#18140a]'
+  if (row.isProjected) return 'bg-[#0b1628]'
+  return ''
+}
+
 // ─── Formatters ───────────────────────────────────────────────────────────────
 
 function fmtVal(v: number | null): string {
@@ -197,13 +205,11 @@ export default function ForecastTable({
 
   const curr = currency === 'USD' ? '$' : currency + ' '
 
-  // Build column header label
+  // Build compact column header label: "2024", "2025E", "TTM"
   function colHeader(row: DisplayRow): string {
-    if (row.fiscalDate && row.fiscalDate.length >= 7) {
-      const suffix = row.isProjected ? ' (E)' : ' (A)'
-      return row.fiscalDate + suffix
-    }
-    return row.year + (row.isProjected ? ' (E)' : ' (A)')
+    if (row.year === 'TTM') return 'TTM'
+    const label = row.fiscalDate?.slice(0, 4) ?? row.year
+    return row.isProjected ? label + 'E' : label
   }
 
   // Color helpers
@@ -221,6 +227,18 @@ export default function ForecastTable({
   function renderUFCFRows() {
     const sections: React.ReactNode[] = []
 
+    // Section header
+    sections.push(
+      <tr key="section-ufcf">
+        <td
+          colSpan={rows.length + 1}
+          className="px-4 py-2 text-[10px] font-semibold uppercase tracking-widest text-[#555] bg-[#0a0a0a] border-b border-[#1e1e1e]"
+        >
+          Unlevered Free Cash Flow
+        </td>
+      </tr>
+    )
+
     // Revenue row + sub-row
     sections.push(
       <tr key="revenue" className="hover:bg-[#1a1a1a]">
@@ -237,7 +255,7 @@ export default function ForecastTable({
             fieldName="revenue"
             year={r.year}
             onEdit={onCellEdit}
-            className={r.isProjected ? 'text-[#e2e2e2]' : 'text-[#c8c8c8]'}
+            className={`${cellBg(r)} ${r.isProjected ? 'text-[#e2e2e2]' : r.year === 'TTM' ? 'text-[#d4a017]' : 'text-[#c8c8c8]'}`}
           />
         ))}
       </tr>,
@@ -246,7 +264,7 @@ export default function ForecastTable({
           Revenue % Chg
         </td>
         {rows.map(r => (
-          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] tabular-nums font-mono whitespace-nowrap ${growthColor(r.revenueGrowthPct)}`}>
+          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] tabular-nums font-mono whitespace-nowrap ${cellBg(r)} ${growthColor(r.revenueGrowthPct)}`}>
             {fmtPctDisplay(r.revenueGrowthPct)}
           </td>
         ))}
@@ -269,7 +287,7 @@ export default function ForecastTable({
             fieldName="ebit"
             year={r.year}
             onEdit={onCellEdit}
-            className={r.isProjected ? 'text-[#e2e2e2]' : 'text-[#c8c8c8]'}
+            className={`${cellBg(r)} ${r.isProjected ? 'text-[#e2e2e2]' : r.year === 'TTM' ? 'text-[#d4a017]' : 'text-[#c8c8c8]'}`}
           />
         ))}
       </tr>,
@@ -278,7 +296,7 @@ export default function ForecastTable({
           EBIT Margin
         </td>
         {rows.map(r => (
-          <td key={r.year} className="px-2 py-0.5 text-right text-[11px] text-[#888] tabular-nums font-mono whitespace-nowrap">
+          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] text-[#888] tabular-nums font-mono whitespace-nowrap ${cellBg(r)}`}>
             {fmtPctDisplay(r.ebitMarginPct)}
           </td>
         ))}
@@ -302,7 +320,7 @@ export default function ForecastTable({
             year={r.year}
             onEdit={onCellEdit}
             isTaxRate={true}
-            className={r.isProjected ? 'text-[#e2e2e2]' : 'text-[#c8c8c8]'}
+            className={`${cellBg(r)} ${r.isProjected ? 'text-[#e2e2e2]' : r.year === 'TTM' ? 'text-[#d4a017]' : 'text-[#c8c8c8]'}`}
           />
         ))}
       </tr>
@@ -315,7 +333,7 @@ export default function ForecastTable({
           NOPAT
         </td>
         {rows.map(r => (
-          <td key={r.year} className={`px-2 py-1.5 text-right text-xs font-semibold tabular-nums font-mono whitespace-nowrap ${r.isProjected ? 'text-[#e2e2e2]' : 'text-[#c8c8c8]'}`}>
+          <td key={r.year} className={`px-2 py-1.5 text-right text-xs font-semibold tabular-nums font-mono whitespace-nowrap ${cellBg(r)} ${r.isProjected ? 'text-[#e2e2e2]' : r.year === 'TTM' ? 'text-[#d4a017]' : 'text-[#c8c8c8]'}`}>
             {fmtVal(r.nopat)}
           </td>
         ))}
@@ -325,7 +343,7 @@ export default function ForecastTable({
           NOPAT Margin
         </td>
         {rows.map(r => (
-          <td key={r.year} className="px-2 py-0.5 text-right text-[11px] text-[#888] tabular-nums font-mono whitespace-nowrap">
+          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] text-[#888] tabular-nums font-mono whitespace-nowrap ${cellBg(r)}`}>
             {fmtPctDisplay(r.nopatMarginPct)}
           </td>
         ))}
@@ -348,7 +366,7 @@ export default function ForecastTable({
             fieldName="dna"
             year={r.year}
             onEdit={onCellEdit}
-            className={r.isProjected ? 'text-[#e2e2e2]' : 'text-[#c8c8c8]'}
+            className={`${cellBg(r)} ${r.isProjected ? 'text-[#e2e2e2]' : r.year === 'TTM' ? 'text-[#d4a017]' : 'text-[#c8c8c8]'}`}
           />
         ))}
       </tr>,
@@ -357,7 +375,7 @@ export default function ForecastTable({
           D&amp;A / Revenue
         </td>
         {rows.map(r => (
-          <td key={r.year} className="px-2 py-0.5 text-right text-[11px] text-[#888] tabular-nums font-mono whitespace-nowrap">
+          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] text-[#888] tabular-nums font-mono whitespace-nowrap ${cellBg(r)}`}>
             {fmtPctDisplay(r.dnaPct)}
           </td>
         ))}
@@ -380,7 +398,7 @@ export default function ForecastTable({
             fieldName="capex"
             year={r.year}
             onEdit={onCellEdit}
-            className={`${r.isProjected ? 'text-[#e2e2e2]' : 'text-[#c8c8c8]'} ${negativeColor(r.capex)}`}
+            className={`${cellBg(r)} ${r.isProjected ? 'text-[#e2e2e2]' : r.year === 'TTM' ? 'text-[#d4a017]' : 'text-[#c8c8c8]'} ${negativeColor(r.capex)}`}
           />
         ))}
       </tr>,
@@ -389,7 +407,7 @@ export default function ForecastTable({
           Capex / Revenue
         </td>
         {rows.map(r => (
-          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] tabular-nums font-mono whitespace-nowrap ${negativeColor(r.capexPct) || 'text-[#888]'}`}>
+          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] tabular-nums font-mono whitespace-nowrap ${cellBg(r)} ${negativeColor(r.capexPct) || 'text-[#888]'}`}>
             {fmtPctDisplay(r.capexPct)}
           </td>
         ))}
@@ -412,7 +430,7 @@ export default function ForecastTable({
             fieldName="nwc"
             year={r.year}
             onEdit={onCellEdit}
-            className={`${r.isProjected ? 'text-[#e2e2e2]' : 'text-[#c8c8c8]'} ${negativeColor(r.nwcDelta)}`}
+            className={`${cellBg(r)} ${r.isProjected ? 'text-[#e2e2e2]' : r.year === 'TTM' ? 'text-[#d4a017]' : 'text-[#c8c8c8]'} ${negativeColor(r.nwcDelta)}`}
           />
         ))}
       </tr>,
@@ -421,7 +439,7 @@ export default function ForecastTable({
           Chg. NWC / Revenue
         </td>
         {rows.map(r => (
-          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] tabular-nums font-mono whitespace-nowrap ${negativeColor(r.nwcDeltaPct) || 'text-[#888]'}`}>
+          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] tabular-nums font-mono whitespace-nowrap ${cellBg(r)} ${negativeColor(r.nwcDeltaPct) || 'text-[#888]'}`}>
             {fmtPctDisplay(r.nwcDeltaPct)}
           </td>
         ))}
@@ -442,7 +460,7 @@ export default function ForecastTable({
           Unlevered FCF (UFCF)
         </td>
         {rows.map(r => (
-          <td key={r.year} className={`px-2 py-2 text-right text-xs font-semibold tabular-nums font-mono whitespace-nowrap text-white`}>
+          <td key={r.year} className={`px-2 py-2 text-right text-xs font-semibold tabular-nums font-mono whitespace-nowrap ${cellBg(r)} text-white`}>
             {fmtVal(r.ufcf)}
           </td>
         ))}
@@ -452,7 +470,7 @@ export default function ForecastTable({
           UFCF % Chg
         </td>
         {rows.map(r => (
-          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] tabular-nums font-mono whitespace-nowrap ${growthColor(r.ufcfGrowthPct)}`}>
+          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] tabular-nums font-mono whitespace-nowrap ${cellBg(r)} ${growthColor(r.ufcfGrowthPct)}`}>
             {fmtPctDisplay(r.ufcfGrowthPct)}
           </td>
         ))}
@@ -462,7 +480,7 @@ export default function ForecastTable({
           PV of UFCF
         </td>
         {rows.map(r => (
-          <td key={r.year} className="px-2 py-0.5 text-right text-[11px] text-[#aaa] tabular-nums font-mono whitespace-nowrap">
+          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] text-[#aaa] tabular-nums font-mono whitespace-nowrap ${r.isProjected ? cellBg(r) : ''}`}>
             {r.isProjected ? fmtVal(r.pvUfcf) : '—'}
           </td>
         ))}
@@ -472,7 +490,7 @@ export default function ForecastTable({
           Sum of PV of UFCF
         </td>
         {rows.map(r => (
-          <td key={r.year} className="px-2 py-0.5 text-right text-[11px] text-[#aaa] tabular-nums font-mono whitespace-nowrap">
+          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] text-[#aaa] tabular-nums font-mono whitespace-nowrap ${r.isProjected ? cellBg(r) : ''}`}>
             {r.sumPvUfcf != null ? fmtVal(r.sumPvUfcf) : '—'}
           </td>
         ))}
@@ -485,6 +503,18 @@ export default function ForecastTable({
   // ── Render a section row for LFCF ──
   function renderLFCFRows() {
     const sections: React.ReactNode[] = []
+
+    // Section header
+    sections.push(
+      <tr key="section-lfcf">
+        <td
+          colSpan={rows.length + 1}
+          className="px-4 py-2 text-[10px] font-semibold uppercase tracking-widest text-[#555] bg-[#0a0a0a] border-b border-[#1e1e1e]"
+        >
+          Levered Free Cash Flow
+        </td>
+      </tr>
+    )
 
     // Revenue
     sections.push(
@@ -502,7 +532,7 @@ export default function ForecastTable({
             fieldName="revenue"
             year={r.year}
             onEdit={onCellEdit}
-            className={r.isProjected ? 'text-[#e2e2e2]' : 'text-[#c8c8c8]'}
+            className={`${cellBg(r)} ${r.isProjected ? 'text-[#e2e2e2]' : r.year === 'TTM' ? 'text-[#d4a017]' : 'text-[#c8c8c8]'}`}
           />
         ))}
       </tr>,
@@ -511,7 +541,7 @@ export default function ForecastTable({
           Revenue % Chg
         </td>
         {rows.map(r => (
-          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] tabular-nums font-mono whitespace-nowrap ${growthColor(r.revenueGrowthPct)}`}>
+          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] tabular-nums font-mono whitespace-nowrap ${cellBg(r)} ${growthColor(r.revenueGrowthPct)}`}>
             {fmtPctDisplay(r.revenueGrowthPct)}
           </td>
         ))}
@@ -534,7 +564,7 @@ export default function ForecastTable({
             fieldName="netIncome"
             year={r.year}
             onEdit={onCellEdit}
-            className={r.isProjected ? 'text-[#e2e2e2]' : 'text-[#c8c8c8]'}
+            className={`${cellBg(r)} ${r.isProjected ? 'text-[#e2e2e2]' : r.year === 'TTM' ? 'text-[#d4a017]' : 'text-[#c8c8c8]'}`}
           />
         ))}
       </tr>,
@@ -543,7 +573,7 @@ export default function ForecastTable({
           Net Margin
         </td>
         {rows.map(r => (
-          <td key={r.year} className="px-2 py-0.5 text-right text-[11px] text-[#888] tabular-nums font-mono whitespace-nowrap">
+          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] text-[#888] tabular-nums font-mono whitespace-nowrap ${cellBg(r)}`}>
             {fmtPctDisplay(r.netMarginPct)}
           </td>
         ))}
@@ -566,7 +596,7 @@ export default function ForecastTable({
             fieldName="dna"
             year={r.year}
             onEdit={onCellEdit}
-            className={r.isProjected ? 'text-[#e2e2e2]' : 'text-[#c8c8c8]'}
+            className={`${cellBg(r)} ${r.isProjected ? 'text-[#e2e2e2]' : r.year === 'TTM' ? 'text-[#d4a017]' : 'text-[#c8c8c8]'}`}
           />
         ))}
       </tr>,
@@ -575,7 +605,7 @@ export default function ForecastTable({
           D&amp;A / Revenue
         </td>
         {rows.map(r => (
-          <td key={r.year} className="px-2 py-0.5 text-right text-[11px] text-[#888] tabular-nums font-mono whitespace-nowrap">
+          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] text-[#888] tabular-nums font-mono whitespace-nowrap ${cellBg(r)}`}>
             {fmtPctDisplay(r.dnaPct)}
           </td>
         ))}
@@ -598,7 +628,7 @@ export default function ForecastTable({
             fieldName="capex"
             year={r.year}
             onEdit={onCellEdit}
-            className={`${r.isProjected ? 'text-[#e2e2e2]' : 'text-[#c8c8c8]'} ${negativeColor(r.capex)}`}
+            className={`${cellBg(r)} ${r.isProjected ? 'text-[#e2e2e2]' : r.year === 'TTM' ? 'text-[#d4a017]' : 'text-[#c8c8c8]'} ${negativeColor(r.capex)}`}
           />
         ))}
       </tr>,
@@ -607,7 +637,7 @@ export default function ForecastTable({
           Capex / Revenue
         </td>
         {rows.map(r => (
-          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] tabular-nums font-mono whitespace-nowrap ${negativeColor(r.capexPct) || 'text-[#888]'}`}>
+          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] tabular-nums font-mono whitespace-nowrap ${cellBg(r)} ${negativeColor(r.capexPct) || 'text-[#888]'}`}>
             {fmtPctDisplay(r.capexPct)}
           </td>
         ))}
@@ -630,7 +660,7 @@ export default function ForecastTable({
             fieldName="nwc"
             year={r.year}
             onEdit={onCellEdit}
-            className={`${r.isProjected ? 'text-[#e2e2e2]' : 'text-[#c8c8c8]'} ${negativeColor(r.nwcDelta)}`}
+            className={`${cellBg(r)} ${r.isProjected ? 'text-[#e2e2e2]' : r.year === 'TTM' ? 'text-[#d4a017]' : 'text-[#c8c8c8]'} ${negativeColor(r.nwcDelta)}`}
           />
         ))}
       </tr>,
@@ -639,7 +669,7 @@ export default function ForecastTable({
           Chg. NWC / Revenue
         </td>
         {rows.map(r => (
-          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] tabular-nums font-mono whitespace-nowrap ${negativeColor(r.nwcDeltaPct) || 'text-[#888]'}`}>
+          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] tabular-nums font-mono whitespace-nowrap ${cellBg(r)} ${negativeColor(r.nwcDeltaPct) || 'text-[#888]'}`}>
             {fmtPctDisplay(r.nwcDeltaPct)}
           </td>
         ))}
@@ -662,7 +692,7 @@ export default function ForecastTable({
             fieldName="netDebtRepayment"
             year={r.year}
             onEdit={onCellEdit}
-            className={r.isProjected ? 'text-[#e2e2e2]' : 'text-[#c8c8c8]'}
+            className={`${cellBg(r)} ${r.isProjected ? 'text-[#e2e2e2]' : r.year === 'TTM' ? 'text-[#d4a017]' : 'text-[#c8c8c8]'}`}
           />
         ))}
       </tr>,
@@ -671,7 +701,7 @@ export default function ForecastTable({
           Net Debt Repayment / Rev
         </td>
         {rows.map(r => (
-          <td key={r.year} className="px-2 py-0.5 text-right text-[11px] text-[#888] tabular-nums font-mono whitespace-nowrap">
+          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] text-[#888] tabular-nums font-mono whitespace-nowrap ${cellBg(r)}`}>
             {fmtPctDisplay(r.netDebtRepaymentPct)}
           </td>
         ))}
@@ -692,7 +722,7 @@ export default function ForecastTable({
           Levered FCF (LFCF)
         </td>
         {rows.map(r => (
-          <td key={r.year} className="px-2 py-2 text-right text-xs font-semibold tabular-nums font-mono whitespace-nowrap text-white">
+          <td key={r.year} className={`px-2 py-2 text-right text-xs font-semibold tabular-nums font-mono whitespace-nowrap ${cellBg(r)} text-white`}>
             {fmtVal(r.lfcf)}
           </td>
         ))}
@@ -702,7 +732,7 @@ export default function ForecastTable({
           LFCF % Chg
         </td>
         {rows.map(r => (
-          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] tabular-nums font-mono whitespace-nowrap ${growthColor(r.lfcfGrowthPct)}`}>
+          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] tabular-nums font-mono whitespace-nowrap ${cellBg(r)} ${growthColor(r.lfcfGrowthPct)}`}>
             {fmtPctDisplay(r.lfcfGrowthPct)}
           </td>
         ))}
@@ -712,7 +742,7 @@ export default function ForecastTable({
           PV of LFCF
         </td>
         {rows.map(r => (
-          <td key={r.year} className="px-2 py-0.5 text-right text-[11px] text-[#aaa] tabular-nums font-mono whitespace-nowrap">
+          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] text-[#aaa] tabular-nums font-mono whitespace-nowrap ${r.isProjected ? cellBg(r) : ''}`}>
             {r.isProjected ? fmtVal(r.pvLfcf) : '—'}
           </td>
         ))}
@@ -722,7 +752,7 @@ export default function ForecastTable({
           Sum of PV of LFCF
         </td>
         {rows.map(r => (
-          <td key={r.year} className="px-2 py-0.5 text-right text-[11px] text-[#aaa] tabular-nums font-mono whitespace-nowrap">
+          <td key={r.year} className={`px-2 py-0.5 text-right text-[11px] text-[#aaa] tabular-nums font-mono whitespace-nowrap ${r.isProjected ? cellBg(r) : ''}`}>
             {r.sumPvLfcf != null ? fmtVal(r.sumPvLfcf) : '—'}
           </td>
         ))}
@@ -930,8 +960,12 @@ export default function ForecastTable({
               {rows.map(r => (
                 <th
                   key={r.year}
-                  className={`px-2 py-2 text-right text-xs font-medium whitespace-nowrap ${
-                    r.isProjected ? 'text-[#4a9eff]' : 'text-[#666]'
+                  className={`px-2 py-2 text-right text-xs font-semibold whitespace-nowrap ${
+                    r.year === 'TTM'
+                      ? 'text-[#d4a017] bg-[#18140a]'
+                      : r.isProjected
+                        ? 'text-[#4a9eff] bg-[#0b1628]'
+                        : 'text-[#666]'
                   }`}
                 >
                   {colHeader(r)}
