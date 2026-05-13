@@ -40,26 +40,26 @@ export function calculatePiotroski(
   const ni0 = ni0Raw ?? 0
   const ni1 = ni1Raw ?? 0
 
-  const ocf0Raw = (cf0.totalCashFromOperatingActivities ?? cf0.operatingCashflow ?? null) as number | null
+  const ocf0Raw = (cf0.totalCashFromOperatingActivities ?? cf0.operatingCashflow ?? cf0.cashFlowFromContinuingOperatingActivities ?? null) as number | null
   const ocf0 = ocf0Raw ?? 0
 
   const roa0 = ta0Raw != null && ta0 > 0 && ni0Raw != null ? ni0 / ta0 : null
   const roa1 = ta1Raw != null && ta1 > 0 && ni1Raw != null ? ni1 / ta1 : null
 
-  const ltd0 = ((bs0.longTermDebt ?? bs0.longTermDebtTotal ?? 0) as number)
-  const ltd1 = ((bs1.longTermDebt ?? bs1.longTermDebtTotal ?? 0) as number)
+  const ltd0 = ((bs0.longTermDebt ?? bs0.longTermDebtNoncurrent ?? bs0.longTermDebtAndCapitalLeaseObligation ?? bs0.longTermDebtAndFinanceLeaseLiability ?? bs0.longTermDebtTotal ?? 0) as number)
+  const ltd1 = ((bs1.longTermDebt ?? bs1.longTermDebtNoncurrent ?? bs1.longTermDebtAndCapitalLeaseObligation ?? bs1.longTermDebtAndFinanceLeaseLiability ?? bs1.longTermDebtTotal ?? 0) as number)
   const lev0 = ta0 > 0 ? ltd0 / ta0 : 0
   const lev1 = ta1 > 0 ? ltd1 / ta1 : 0
 
-  const ca0 = (bs0.totalCurrentAssets ?? 0) as number
-  const cl0 = (bs0.totalCurrentLiabilities ?? 0) as number
-  const ca1 = (bs1.totalCurrentAssets ?? 0) as number
-  const cl1 = (bs1.totalCurrentLiabilities ?? 0) as number
+  const ca0 = (bs0.totalCurrentAssets ?? bs0.currentAssets ?? 0) as number
+  const cl0 = (bs0.totalCurrentLiabilities ?? bs0.currentLiabilities ?? 0) as number
+  const ca1 = (bs1.totalCurrentAssets ?? bs1.currentAssets ?? 0) as number
+  const cl1 = (bs1.totalCurrentLiabilities ?? bs1.currentLiabilities ?? 0) as number
   const cr0 = cl0 > 0 ? ca0 / cl0 : 0
   const cr1 = cl1 > 0 ? ca1 / cl1 : 0
 
-  const rev0 = (inc0.totalRevenue ?? 0) as number
-  const rev1 = (inc1.totalRevenue ?? 0) as number
+  const rev0 = (inc0.totalRevenue ?? inc0.revenues ?? 0) as number
+  const rev1 = (inc1.totalRevenue ?? inc1.revenues ?? 0) as number
   const gp0 = (inc0.grossProfit ?? 0) as number
   const gp1 = (inc1.grossProfit ?? 0) as number
   const gm0 = rev0 > 0 ? gp0 / rev0 : 0
@@ -214,10 +214,10 @@ export function calculateBeneish(
   const ppe1 = (bs1.propertyPlantEquipment ?? bs1.netPPE ?? 0) as number
 
   // Current assets and liabilities
-  const ca0 = (bs0.totalCurrentAssets ?? 0) as number
-  const cl0 = (bs0.totalCurrentLiabilities ?? 0) as number
-  const ca1 = (bs1.totalCurrentAssets ?? 0) as number
-  const cl1 = (bs1.totalCurrentLiabilities ?? 0) as number
+  const ca0 = (bs0.totalCurrentAssets ?? bs0.currentAssets ?? 0) as number
+  const cl0 = (bs0.totalCurrentLiabilities ?? bs0.currentLiabilities ?? 0) as number
+  const ca1 = (bs1.totalCurrentAssets ?? bs1.currentAssets ?? 0) as number
+  const cl1 = (bs1.totalCurrentLiabilities ?? bs1.currentLiabilities ?? 0) as number
 
   // Depreciation (from income stmt or cash flow)
   const dep0 = Math.abs((inc0.depreciationAmortization ?? cf0.depreciation ?? 0) as number)

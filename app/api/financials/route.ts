@@ -204,13 +204,21 @@ export async function GET(req: NextRequest) {
 
     // Market cap in financial (reporting) currency for Altman Z-Score comparability
     const marketCapLocal = (q.marketCap ?? 0) / fxRate
-    const sharesNow = (ks.sharesOutstanding ?? 0) as number
-    // Estimate prior-year shares: check cash flow for net buybacks/issuances as signal
-    // If net repurchases > 0 (Yahoo shows buybacks as negative), shares fell → pass dilution check
-    const netBuybackM = Math.abs(((rawCFStmts[0]?.repurchaseOfStock ?? 0) as number) / 1e6)
-    const netIssuanceM = ((rawCFStmts[0]?.issuanceOfStock ?? 0) as number) / 1e6
-    // Approximate prior shares: add back net dilution (positive = more shares, negative = fewer)
-    const sharesPrior = sharesNow + (netIssuanceM - netBuybackM) * 1e6
+    // Shares for dilution check: use dilutedAverageShares from income statements (year-over-year
+    // comparison of actual weighted-average share counts, not a dollar-amount approximation).
+    // Fallback: derive from dilutedEPS × netIncome when dilutedAverageShares is absent.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const impliedShares = (inc: any): number | null => {
+      if (!inc) return null
+      const das = inc.dilutedAverageShares as number | null
+      if (das && das > 0) return das
+      const eps = inc.dilutedEps as number | undefined
+      const ni = (inc.netIncome ?? inc.netIncomeApplicableToCommonShares) as number | undefined
+      if (eps && Math.abs(eps) > 0.001 && ni) return Math.abs(ni / eps)
+      return null
+    }
+    const sharesNow   = impliedShares(rawISStmts[0]) ?? (ks.sharesOutstanding ?? 0) as number
+    const sharesPrior = impliedShares(rawISStmts[1]) ?? sharesNow
 
     const piotroski = calculatePiotroski(rawBSStmts, rawISStmts, rawCFStmts, sharesNow, sharesPrior)
     const altman = calculateAltman(rawBSStmts[0] ?? {}, rawISStmts[0] ?? {}, marketCapLocal)
