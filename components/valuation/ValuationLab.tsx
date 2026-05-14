@@ -36,6 +36,10 @@ import {
 
 // ─── Local helpers ─────────────────────────────────────────────────────────────
 
+function rowYear(r: { endDate?: string | null; year?: string; fiscalDate?: string | null }): string {
+  return r.endDate?.slice(0, 4) ?? r.year ?? r.fiscalDate?.slice(0, 4) ?? ''
+}
+
 function fmtB(v: number | null): string { return fmtLargeCurrency(v) }
 function fmtPctSigned(v: number | null): string { return fmtPct(v) }
 
@@ -471,7 +475,7 @@ function MethodHistoryCharts({ charts }: { charts: HistoryChartDef[] }) {
                     content={(props) => <MiniTooltip {...props} unit={chart.unit} />}
                     cursor={{ fill: 'rgba(148,163,184,0.1)' }}
                   />
-                  <Bar dataKey="value" radius={[3, 3, 0, 0]}>
+                  <Bar dataKey="value" radius={[3, 3, 0, 0]} isAnimationActive={false}>
                     {chart.data.map((entry, i) => (
                       <Cell
                         key={i}
@@ -540,8 +544,8 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
   const statementsAvailable = ttmRevenue != null || ttmEbitda != null || ttmFCF != null
 
   // Annual sparkline data (values in millions, consistent scale for visual comparison)
-  const annualIS = (statementsData?.annual?.incomeStatement ?? []) as Array<{ year?: string; fiscalDate?: string | null; revenue?: number | null; ebitda?: number | null; netIncome?: number | null }>
-  const annualCF = (statementsData?.annual?.cashFlow ?? [])        as Array<{ year?: string; freeCashFlow?: number | null }>
+  const annualIS = (statementsData?.annual?.incomeStatement ?? []) as Array<{ endDate?: string | null; year?: string; fiscalDate?: string | null; revenue?: number | null; ebitda?: number | null; netIncome?: number | null }>
+  const annualCF = (statementsData?.annual?.cashFlow ?? [])        as Array<{ endDate?: string | null; year?: string; freeCashFlow?: number | null }>
   const sparkRevenue  = annualIS.slice(-5).map(r => r.revenue    ?? null)
   const sparkEbitda   = annualIS.slice(-5).map(r => r.ebitda     ?? null)
   const sparkFCF      = annualCF.slice(-5).map(r => r.freeCashFlow ?? null)
@@ -554,26 +558,42 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
   const chartRevenueGrowth: HistoryChartDef['data'] = annualIS.slice(1).reduce<{ year: string; value: number }[]>((acc, r, i) => {
     const prev = annualIS[i]
     if (r.revenue != null && prev.revenue != null && prev.revenue > 0) {
-      acc.push({ year: String(r.year ?? r.fiscalDate?.slice(0, 4) ?? ''), value: (r.revenue - prev.revenue) / prev.revenue * 100 })
+      acc.push({ year: rowYear(r), value: (r.revenue - prev.revenue) / prev.revenue * 100 })
     }
     return acc
   }, []).slice(-5)
 
   const chartNetMargin: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r) => {
     if (r.revenue != null && r.revenue > 0 && r.netIncome != null) {
-      acc.push({ year: String(r.year ?? r.fiscalDate?.slice(0, 4) ?? ''), value: r.netIncome / r.revenue * 100 })
+      acc.push({ year: rowYear(r), value: r.netIncome / r.revenue * 100 })
     }
     return acc
   }, []).slice(-5)
 
   const chartEbitda: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r) => {
-    if (r.ebitda != null) acc.push({ year: String(r.year ?? r.fiscalDate?.slice(0, 4) ?? ''), value: r.ebitda })
+    if (r.ebitda != null) acc.push({ year: rowYear(r), value: r.ebitda / 1e6 })
     return acc
   }, []).slice(-5)
 
   const chartEbitdaMargin: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r) => {
     if (r.revenue != null && r.revenue > 0 && r.ebitda != null) {
-      acc.push({ year: String(r.year ?? r.fiscalDate?.slice(0, 4) ?? ''), value: r.ebitda / r.revenue * 100 })
+      acc.push({ year: rowYear(r), value: r.ebitda / r.revenue * 100 })
+    }
+    return acc
+  }, []).slice(-5)
+
+  const chartRevenue: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r) => {
+    if (r.revenue != null && r.revenue > 0) acc.push({ year: rowYear(r), value: r.revenue / 1e6 })
+    return acc
+  }, []).slice(-5)
+
+  const cfByYear = new Map(annualCF.map(r => [rowYear(r), r.freeCashFlow ?? null]))
+
+  const chartFCFMargin: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r) => {
+    const yr = rowYear(r)
+    const fcf = cfByYear.get(yr)
+    if (r.revenue != null && r.revenue > 0 && fcf != null) {
+      acc.push({ year: yr, value: fcf / r.revenue * 100 })
     }
     return acc
   }, []).slice(-5)
@@ -1021,6 +1041,13 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
             currency={currency}
             onAssumptionChange={(key, val) => handleAssumptionChange('revenue_multiple', key, val)}
             onResetOverrides={() => handleResetOverrides('revenue_multiple')}
+            extraContent={
+              chartRevenue.length >= 2 ? (
+                <MethodHistoryCharts charts={[
+                  { title: 'Revenue ($M)', data: chartRevenue, unit: '$M', color: '#8b5cf6' },
+                ]} />
+              ) : undefined
+            }
           />
 
           <MethodInlinePanel
@@ -1037,6 +1064,14 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
             currency={currency}
             onAssumptionChange={() => {}}
             onResetOverrides={() => {}}
+            extraContent={
+              chartRevenueGrowth.length >= 2 || chartFCFMargin.length >= 2 ? (
+                <MethodHistoryCharts charts={[
+                  { title: 'Revenue Growth YoY', data: chartRevenueGrowth, unit: '%',  color: '#6366f1' },
+                  { title: 'FCF Margin',          data: chartFCFMargin,    unit: '%',  color: '#0ea5e9' },
+                ]} />
+              ) : undefined
+            }
           />
 
           {/* Full DCF Modelling Table */}
