@@ -1,6 +1,6 @@
 'use client'
 import { useState, useMemo } from 'react'
-import FinancialStatements from './FinancialStatements'
+import YahooFinancials from './YahooFinancials'
 import FinancialCharts from './FinancialCharts'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -401,37 +401,71 @@ export default function FinancialsHub({ statementsData, financialsData, currency
     if (annual.length) {
       return annual
         .map((r: AnyRow) => ({
-          year: String(r.endDate ?? '').slice(0, 4),
+          year:            String(r.endDate ?? '').slice(0, 4),
           revenue:         toM(r.totalRevenue),
+          costOfRevenue:   toM(r.costOfRevenue ?? r.reconciledCostOfRevenue),
           grossProfit:     toM(r.grossProfit),
-          operatingIncome: toM(r.operatingIncome ?? r.EBIT),
+          sgaExpense:      toM(r.sellingGeneralAndAdministration ?? r.generalAndAdministrativeExpense),
+          rndExpense:      toM(r.researchAndDevelopment),
           ebitda:          toM(r.EBITDA),
+          dna:             toM(r.reconciledDepreciation),
+          operatingIncome: toM(r.operatingIncome ?? r.EBIT),
+          interestExpense: toM(r.interestExpenseNonOperating ?? r.interestExpense),
+          pretaxIncome:    toM(r.pretaxIncome),
+          taxProvision:    toM(r.taxProvision),
           netIncome:       toM(r.netIncome),
           eps:             typeof r.dilutedEPS === 'number' ? r.dilutedEPS : null,
           isProjected:     false,
         }))
         .filter((r: { year: string }) => r.year.length === 4)
     }
-    return financialsData?.financialStatements?.incomeStatement ?? []
+    // fallback: map old shape to new shape with nulls for new fields
+    return (financialsData?.financialStatements?.incomeStatement ?? []).map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (r: any) => ({
+        ...r,
+        costOfRevenue: null, sgaExpense: null, rndExpense: null,
+        dna: null, interestExpense: null, pretaxIncome: null, taxProvision: null,
+      })
+    )
   }, [statementsData, financialsData])
 
   const finBS = useMemo(() => {
     const annual = statementsData?.annual?.balanceSheet ?? []
     if (annual.length) {
       return annual
-        .map((r: AnyRow) => ({
-          year: String(r.endDate ?? '').slice(0, 4),
-          cash:                    toM(r.cashCashEquivalentsAndShortTermInvestments ?? r.cash),
-          totalCurrentAssets:      toM(r.currentAssets),
-          totalAssets:             toM(r.totalAssets),
-          longTermDebt:            toM(r.longTermDebt),
-          totalCurrentLiabilities: toM(r.currentLiabilities),
-          totalEquity:             toM(r.totalStockholdersEquity ?? r.stockholdersEquity),
-          isProjected:             false,
-        }))
+        .map((r: AnyRow) => {
+          const ltDebt = typeof r.longTermDebt === 'number' ? r.longTermDebt : null
+          const totalDebt = typeof r.totalDebt === 'number' ? r.totalDebt : null
+          const stDebt = ltDebt != null && totalDebt != null ? totalDebt - ltDebt : null
+          return {
+            year:                    String(r.endDate ?? '').slice(0, 4),
+            cash:                    toM(r.cashCashEquivalentsAndShortTermInvestments ?? r.cash),
+            netReceivables:          toM(r.netReceivables ?? r.receivables ?? r.accountsReceivable),
+            inventory:               toM(r.inventory),
+            totalCurrentAssets:      toM(r.currentAssets),
+            netPPE:                  toM(r.netPPE ?? r.netPropertyPlantAndEquipment),
+            totalAssets:             toM(r.totalAssets),
+            accountsPayable:         toM(r.accountsPayable),
+            shortTermDebt:           stDebt != null ? stDebt / 1e6 : null,
+            totalCurrentLiabilities: toM(r.currentLiabilities),
+            longTermDebt:            toM(r.longTermDebt),
+            totalDebt:               toM(r.totalDebt),
+            totalEquity:             toM(r.totalStockholdersEquity ?? r.stockholdersEquity ?? r.commonStockEquity),
+            isProjected:             false,
+          }
+        })
         .filter((r: { year: string }) => r.year.length === 4)
     }
-    return financialsData?.financialStatements?.balanceSheet ?? []
+    // fallback
+    return (financialsData?.financialStatements?.balanceSheet ?? []).map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (r: any) => ({
+        ...r,
+        netReceivables: null, inventory: null, netPPE: null,
+        accountsPayable: null, shortTermDebt: null, totalDebt: null,
+      })
+    )
   }, [statementsData, financialsData])
 
   const finCF = useMemo(() => {
@@ -439,18 +473,32 @@ export default function FinancialsHub({ statementsData, financialsData, currency
     if (annual.length) {
       return annual
         .map((r: AnyRow) => ({
-          year: String(r.endDate ?? '').slice(0, 4),
-          operatingCF:  toM(r.operatingCashFlow),
-          capex:        toM(r.capitalExpenditure),
-          freeCashFlow: toM(r.freeCashFlow),
-          investingCF:  toM(r.investingCashFlow),
-          financingCF:  toM(r.financingCashFlow),
-          dividendsPaid:toM(r.cashDividendsPaid),
-          isProjected:  false,
+          year:           String(r.endDate ?? '').slice(0, 4),
+          operatingCF:    toM(r.operatingCashFlow ?? r.cashFlowFromContinuingOperatingActivities),
+          dna:            toM(r.depreciationAndAmortization ?? r.depreciationAmortizationDepletion),
+          stockBasedComp: toM(r.stockBasedCompensation),
+          changesInWC:    toM(r.changeInWorkingCapital),
+          capex:          toM(r.capitalExpenditure ?? r.purchaseOfPPE),
+          freeCashFlow:   toM(r.freeCashFlow),
+          investingCF:    toM(r.investingCashFlow ?? r.cashFlowFromContinuingInvestingActivities),
+          debtIssuance:   toM(r.issuanceOfDebt ?? r.longTermDebtIssuance),
+          debtRepayment:  toM(r.repaymentOfDebt ?? r.longTermDebtPayments),
+          buybacks:       toM(r.repurchaseOfCapitalStock ?? r.commonStockPayments),
+          dividendsPaid:  toM(r.cashDividendsPaid ?? r.commonStockDividendPaid),
+          financingCF:    toM(r.financingCashFlow ?? r.cashFlowFromContinuingFinancingActivities),
+          isProjected:    false,
         }))
         .filter((r: { year: string }) => r.year.length === 4)
     }
-    return financialsData?.financialStatements?.cashFlow ?? []
+    // fallback
+    return (financialsData?.financialStatements?.cashFlow ?? []).map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (r: any) => ({
+        ...r,
+        dna: null, stockBasedComp: null, changesInWC: null,
+        debtIssuance: null, debtRepayment: null, buybacks: null,
+      })
+    )
   }, [statementsData, financialsData])
 
   // ── Growth data ────────────────────────────────────────────────────────────
@@ -592,14 +640,11 @@ export default function FinancialsHub({ statementsData, financialsData, currency
       {/* ── Statements ── */}
       {subTab === 'statements' && hasData && (
         <div className="space-y-0">
-          <FinancialStatements
-            incomeStatement={finIS}
-            balanceSheet={finBS}
-            cashFlow={finCF}
+          <YahooFinancials
+            statementsData={statementsData}
             currency={currency}
-            cagr={cagr}
           />
-          {(finIS.length > 0 || finCF.length > 0) && (
+          {(finCF.length > 0) && (
             <div className="border-t border-slate-100">
               <FinancialCharts
                 incomeStatement={finIS}

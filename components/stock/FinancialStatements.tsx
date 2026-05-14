@@ -2,19 +2,53 @@
 import { useState } from 'react'
 
 interface ISRow {
-  year: string; revenue: number | null; grossProfit: number | null
-  operatingIncome: number | null; ebitda: number | null
-  netIncome: number | null; eps: number | null; isProjected: boolean
+  year: string
+  revenue: number | null
+  costOfRevenue: number | null
+  grossProfit: number | null
+  sgaExpense: number | null
+  rndExpense: number | null
+  ebitda: number | null
+  dna: number | null
+  operatingIncome: number | null
+  interestExpense: number | null
+  pretaxIncome: number | null
+  taxProvision: number | null
+  netIncome: number | null
+  eps: number | null
+  isProjected: boolean
 }
 interface BSRow {
-  year: string; cash: number | null; totalCurrentAssets: number | null
-  totalAssets: number | null; longTermDebt: number | null
-  totalCurrentLiabilities: number | null; totalEquity: number | null; isProjected: boolean
+  year: string
+  cash: number | null
+  netReceivables: number | null
+  inventory: number | null
+  totalCurrentAssets: number | null
+  netPPE: number | null
+  totalAssets: number | null
+  accountsPayable: number | null
+  shortTermDebt: number | null
+  totalCurrentLiabilities: number | null
+  longTermDebt: number | null
+  totalDebt: number | null
+  totalEquity: number | null
+  isProjected: boolean
 }
 interface CFRow {
-  year: string; operatingCF: number | null; capex: number | null
-  freeCashFlow: number | null; investingCF: number | null
-  financingCF: number | null; dividendsPaid: number | null; isProjected: boolean
+  year: string
+  operatingCF: number | null
+  dna: number | null
+  stockBasedComp: number | null
+  changesInWC: number | null
+  capex: number | null
+  freeCashFlow: number | null
+  investingCF: number | null
+  debtIssuance: number | null
+  debtRepayment: number | null
+  buybacks: number | null
+  dividendsPaid: number | null
+  financingCF: number | null
+  isProjected: boolean
 }
 interface Props {
   incomeStatement: ISRow[]
@@ -44,10 +78,12 @@ function fmtEps(v: number | null): { text: string; color: string } {
   return { text: `$${v.toFixed(2)}`, color }
 }
 
-function Cell({ v, showSign = false, isMoney = true, isProjected = false }: { v: number | null; showSign?: boolean; isMoney?: boolean; isProjected?: boolean }) {
+function Cell({ v, showSign = false, isMoney = true, isProjected = false }: {
+  v: number | null; showSign?: boolean; isMoney?: boolean; isProjected?: boolean
+}) {
   const { text, color } = isMoney ? fmtM(v, showSign) : fmtEps(v)
   return (
-    <td className={`px-3 py-2.5 text-right text-xs tabular-nums ${color} ${isProjected ? 'opacity-90' : ''}`}>
+    <td className={`px-3 py-2 text-right text-xs tabular-nums ${color} ${isProjected ? 'opacity-90' : ''}`}>
       {text}
     </td>
   )
@@ -56,9 +92,7 @@ function Cell({ v, showSign = false, isMoney = true, isProjected = false }: { v:
 function YearHeader({ year, isProjected }: { year: string; isProjected: boolean }) {
   return (
     <th className={`px-3 py-2 text-right text-[11px] font-semibold whitespace-nowrap ${
-      isProjected
-        ? 'text-violet-500 dark:text-violet-400'
-        : 'text-gray-500 dark:text-white/40'
+      isProjected ? 'text-violet-500 dark:text-violet-400' : 'text-gray-500 dark:text-white/40'
     }`}>
       {year}
       {isProjected && <span className="ml-1 text-[9px] opacity-60">proj</span>}
@@ -66,10 +100,14 @@ function YearHeader({ year, isProjected }: { year: string; isProjected: boolean 
   )
 }
 
-function RowLabel({ label, indent = false }: { label: string; indent?: boolean }) {
+function RowLabel({ label, indent = false, bold = false }: { label: string; indent?: boolean; bold?: boolean }) {
   return (
-    <td className={`sticky left-0 z-10 bg-white dark:bg-[#111] py-2.5 pr-4 text-xs whitespace-nowrap ${
-      indent ? 'pl-6 text-gray-400 dark:text-white/30' : 'pl-4 font-medium text-gray-600 dark:text-white/50'
+    <td className={`sticky left-0 z-10 bg-white dark:bg-[#111] py-2 pr-4 text-xs whitespace-nowrap ${
+      indent
+        ? 'pl-8 text-gray-400 dark:text-white/30'
+        : bold
+        ? 'pl-4 font-semibold text-gray-700 dark:text-white/60'
+        : 'pl-4 font-medium text-gray-600 dark:text-white/50'
     }`}>
       {label}
     </td>
@@ -79,9 +117,47 @@ function RowLabel({ label, indent = false }: { label: string; indent?: boolean }
 function Divider({ cols }: { cols: number }) {
   return (
     <tr>
-      <td colSpan={cols + 1} className="pt-1 pb-0">
+      <td colSpan={cols + 1} className="py-0">
         <div className="h-px bg-gray-100 dark:bg-white/5" />
       </td>
+    </tr>
+  )
+}
+
+function SectionHeader({ label, cols }: { label: string; cols: number }) {
+  return (
+    <tr className="bg-slate-50 dark:bg-white/[0.03]">
+      <td
+        colSpan={cols + 1}
+        className="sticky left-0 z-10 bg-slate-50 dark:bg-[#0e0e0e] px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-white/30"
+      >
+        {label}
+      </td>
+    </tr>
+  )
+}
+
+function DataRow<T>({
+  rows, label, get, indent = false, bold = false, showSign = false, isMoney = true, highlight = false,
+}: {
+  rows: T[]
+  label: string
+  get: (r: T) => number | null
+  indent?: boolean
+  bold?: boolean
+  showSign?: boolean
+  isMoney?: boolean
+  highlight?: boolean
+}) {
+  const base = highlight
+    ? 'bg-gray-50/60 dark:bg-white/[0.025] hover:bg-gray-100/60 dark:hover:bg-white/[0.04]'
+    : 'hover:bg-gray-50/50 dark:hover:bg-white/[0.02]'
+  return (
+    <tr className={base}>
+      <RowLabel label={label} indent={indent} bold={bold} />
+      {(rows as (T & { isProjected?: boolean })[]).map((r, i) => (
+        <Cell key={i} v={get(r)} showSign={showSign} isMoney={isMoney} isProjected={r.isProjected ?? false} />
+      ))}
     </tr>
   )
 }
@@ -118,9 +194,12 @@ export default function FinancialStatements({ incomeStatement, balanceSheet, cas
       </div>
 
       <div className="overflow-x-auto">
+
+        {/* ── Income Statement ── */}
         {tab === 'Income Statement' && (() => {
           const rows = incomeStatement
           const years = allYears(rows)
+          const nc = years.length
           return (
             <table className="w-full min-w-[600px] text-sm">
               <thead>
@@ -128,45 +207,40 @@ export default function FinancialStatements({ incomeStatement, balanceSheet, cas
                   <th className="sticky left-0 z-10 bg-white dark:bg-[#111] py-2 pl-4 pr-4 text-left text-[11px] font-medium text-gray-400 dark:text-white/25 whitespace-nowrap">
                     {currency}M
                   </th>
-                  {years.map((y, i) => (
-                    <YearHeader key={i} year={y.year} isProjected={y.isProjected} />
-                  ))}
+                  {years.map((y, i) => <YearHeader key={i} year={y.year} isProjected={y.isProjected} />)}
                 </tr>
               </thead>
               <tbody>
-                <tr className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
-                  <RowLabel label="Revenue" />
-                  {rows.map((r, i) => <Cell key={i} v={r.revenue} isProjected={r.isProjected} />)}
-                </tr>
-                <tr className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
-                  <RowLabel label="Gross Profit" indent />
-                  {rows.map((r, i) => <Cell key={i} v={r.grossProfit} isProjected={r.isProjected} />)}
-                </tr>
-                <tr className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
-                  <RowLabel label="EBITDA" indent />
-                  {rows.map((r, i) => <Cell key={i} v={r.ebitda} isProjected={r.isProjected} />)}
-                </tr>
-                <tr className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
-                  <RowLabel label="Operating Income" indent />
-                  {rows.map((r, i) => <Cell key={i} v={r.operatingIncome} isProjected={r.isProjected} />)}
-                </tr>
-                <Divider cols={years.length} />
-                <tr className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
-                  <RowLabel label="Net Income" />
-                  {rows.map((r, i) => <Cell key={i} v={r.netIncome} isProjected={r.isProjected} />)}
-                </tr>
-                <tr className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
-                  <RowLabel label="EPS (diluted)" indent />
-                  {rows.map((r, i) => <Cell key={i} v={r.eps} isMoney={false} isProjected={r.isProjected} />)}
-                </tr>
+                <SectionHeader label="Revenue" cols={nc} />
+                <DataRow rows={rows} label="Total Revenue"       bold   get={r => r.revenue}         />
+                <DataRow rows={rows} label="Cost of Revenue"     indent get={r => r.costOfRevenue}   />
+                <DataRow rows={rows} label="Gross Profit"        bold   get={r => r.grossProfit}     />
+
+                <SectionHeader label="Operating Expenses" cols={nc} />
+                <DataRow rows={rows} label="SG&A"                indent get={r => r.sgaExpense}      />
+                <DataRow rows={rows} label="R&D"                 indent get={r => r.rndExpense}      />
+                <Divider cols={nc} />
+                <DataRow rows={rows} label="EBITDA"              bold   get={r => r.ebitda}          />
+                <DataRow rows={rows} label="D&A"                 indent get={r => r.dna}             />
+                <DataRow rows={rows} label="EBIT / Op. Income"   bold   get={r => r.operatingIncome} />
+
+                <SectionHeader label="Below the Line" cols={nc} />
+                <DataRow rows={rows} label="Interest Expense"    indent get={r => r.interestExpense} />
+                <DataRow rows={rows} label="Pre-tax Income"      indent get={r => r.pretaxIncome}    />
+                <DataRow rows={rows} label="Tax Provision"       indent get={r => r.taxProvision}    />
+                <Divider cols={nc} />
+                <DataRow rows={rows} label="Net Income"          bold   get={r => r.netIncome}       />
+                <DataRow rows={rows} label="EPS (diluted)"       indent isMoney={false} get={r => r.eps} />
               </tbody>
             </table>
           )
         })()}
 
+        {/* ── Balance Sheet ── */}
         {tab === 'Balance Sheet' && (() => {
           const rows = balanceSheet
           const years = allYears(rows)
+          const nc = years.length
           return (
             <table className="w-full min-w-[600px] text-sm">
               <thead>
@@ -174,46 +248,37 @@ export default function FinancialStatements({ incomeStatement, balanceSheet, cas
                   <th className="sticky left-0 z-10 bg-white dark:bg-[#111] py-2 pl-4 pr-4 text-left text-[11px] font-medium text-gray-400 dark:text-white/25 whitespace-nowrap">
                     {currency}M
                   </th>
-                  {years.map((y, i) => (
-                    <YearHeader key={i} year={y.year} isProjected={y.isProjected} />
-                  ))}
+                  {years.map((y, i) => <YearHeader key={i} year={y.year} isProjected={y.isProjected} />)}
                 </tr>
               </thead>
               <tbody>
-                <tr className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
-                  <RowLabel label="Cash & Equivalents" />
-                  {rows.map((r, i) => <Cell key={i} v={r.cash} isProjected={r.isProjected} />)}
-                </tr>
-                <tr className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
-                  <RowLabel label="Current Assets" indent />
-                  {rows.map((r, i) => <Cell key={i} v={r.totalCurrentAssets} isProjected={r.isProjected} />)}
-                </tr>
-                <tr className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
-                  <RowLabel label="Total Assets" />
-                  {rows.map((r, i) => <Cell key={i} v={r.totalAssets} isProjected={r.isProjected} />)}
-                </tr>
-                <Divider cols={years.length} />
-                <tr className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
-                  <RowLabel label="Current Liabilities" indent />
-                  {rows.map((r, i) => <Cell key={i} v={r.totalCurrentLiabilities} isProjected={r.isProjected} />)}
-                </tr>
-                <tr className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
-                  <RowLabel label="Long-Term Debt" indent />
-                  {rows.map((r, i) => <Cell key={i} v={r.longTermDebt} isProjected={r.isProjected} />)}
-                </tr>
-                <Divider cols={years.length} />
-                <tr className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
-                  <RowLabel label="Total Equity" />
-                  {rows.map((r, i) => <Cell key={i} v={r.totalEquity} isProjected={r.isProjected} />)}
-                </tr>
+                <SectionHeader label="Assets" cols={nc} />
+                <DataRow rows={rows} label="Cash & Equivalents"     bold   get={r => r.cash}                    />
+                <DataRow rows={rows} label="Net Receivables"        indent get={r => r.netReceivables}          />
+                <DataRow rows={rows} label="Inventory"              indent get={r => r.inventory}               />
+                <DataRow rows={rows} label="Current Assets"         bold   get={r => r.totalCurrentAssets}      />
+                <DataRow rows={rows} label="Net PP&E"               indent get={r => r.netPPE}                  />
+                <DataRow rows={rows} label="Total Assets"           bold   get={r => r.totalAssets}             highlight />
+
+                <SectionHeader label="Liabilities" cols={nc} />
+                <DataRow rows={rows} label="Accounts Payable"       indent get={r => r.accountsPayable}         />
+                <DataRow rows={rows} label="Short-term Debt"        indent get={r => r.shortTermDebt}           />
+                <DataRow rows={rows} label="Current Liabilities"    bold   get={r => r.totalCurrentLiabilities} />
+                <DataRow rows={rows} label="Long-term Debt"         indent get={r => r.longTermDebt}            />
+                <DataRow rows={rows} label="Total Debt"             bold   get={r => r.totalDebt}               />
+
+                <SectionHeader label="Equity" cols={nc} />
+                <DataRow rows={rows} label="Total Equity"           bold   get={r => r.totalEquity}             highlight />
               </tbody>
             </table>
           )
         })()}
 
+        {/* ── Cash Flow ── */}
         {tab === 'Cash Flow' && (() => {
           const rows = cashFlow
           const years = allYears(rows)
+          const nc = years.length
           return (
             <table className="w-full min-w-[600px] text-sm">
               <thead>
@@ -221,47 +286,46 @@ export default function FinancialStatements({ incomeStatement, balanceSheet, cas
                   <th className="sticky left-0 z-10 bg-white dark:bg-[#111] py-2 pl-4 pr-4 text-left text-[11px] font-medium text-gray-400 dark:text-white/25 whitespace-nowrap">
                     {currency}M
                   </th>
-                  {years.map((y, i) => (
-                    <YearHeader key={i} year={y.year} isProjected={y.isProjected} />
-                  ))}
+                  {years.map((y, i) => <YearHeader key={i} year={y.year} isProjected={y.isProjected} />)}
                 </tr>
               </thead>
               <tbody>
-                <tr className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
-                  <RowLabel label="Operating Cash Flow" />
-                  {rows.map((r, i) => <Cell key={i} v={r.operatingCF} isProjected={r.isProjected} />)}
-                </tr>
-                <tr className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
-                  <RowLabel label="Capital Expenditures" indent />
-                  {rows.map((r, i) => <Cell key={i} v={r.capex} showSign isProjected={r.isProjected} />)}
-                </tr>
-                <tr className="bg-gray-50/50 dark:bg-white/[0.02] hover:bg-gray-100/50 dark:hover:bg-white/[0.04]">
-                  <RowLabel label="Free Cash Flow" />
-                  {rows.map((r, i) => <Cell key={i} v={r.freeCashFlow} isProjected={r.isProjected} />)}
-                </tr>
-                <Divider cols={years.length} />
-                <tr className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
-                  <RowLabel label="Investing CF" indent />
-                  {rows.map((r, i) => <Cell key={i} v={r.investingCF} showSign isProjected={r.isProjected} />)}
-                </tr>
-                <tr className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
-                  <RowLabel label="Financing CF" indent />
-                  {rows.map((r, i) => <Cell key={i} v={r.financingCF} showSign isProjected={r.isProjected} />)}
-                </tr>
-                <tr className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
-                  <RowLabel label="Dividends Paid" indent />
-                  {rows.map((r, i) => <Cell key={i} v={r.dividendsPaid} showSign isProjected={r.isProjected} />)}
-                </tr>
+                <SectionHeader label="Operating Activities" cols={nc} />
+                <DataRow rows={rows} label="Operating Cash Flow"       bold   get={r => r.operatingCF}    highlight />
+                <DataRow rows={rows} label="D&A"                       indent get={r => r.dna}             />
+                <DataRow rows={rows} label="Stock-Based Compensation"  indent get={r => r.stockBasedComp}  />
+                <DataRow rows={rows} label="Changes in Working Capital" indent showSign get={r => r.changesInWC} />
+
+                <SectionHeader label="Investing Activities" cols={nc} />
+                <DataRow rows={rows} label="Capital Expenditures"      indent showSign get={r => r.capex}      />
+                <DataRow rows={rows} label="Investing CF"              bold   showSign get={r => r.investingCF} />
+
+                <SectionHeader label="Free Cash Flow" cols={nc} />
+                <DataRow rows={rows} label="Free Cash Flow"            bold   get={r => r.freeCashFlow}    highlight />
+
+                <SectionHeader label="Financing Activities" cols={nc} />
+                <DataRow rows={rows} label="Debt Issuance"             indent get={r => r.debtIssuance}    />
+                <DataRow rows={rows} label="Debt Repayment"            indent showSign get={r => r.debtRepayment} />
+                <DataRow rows={rows} label="Share Buybacks"            indent showSign get={r => r.buybacks}      />
+                <DataRow rows={rows} label="Dividends Paid"            indent showSign get={r => r.dividendsPaid} />
+                <DataRow rows={rows} label="Financing CF"              bold   showSign get={r => r.financingCF}   />
               </tbody>
             </table>
           )
         })()}
+
       </div>
 
       {/* Legend */}
       <div className="border-t border-gray-50 dark:border-white/5 px-6 py-3 flex items-center gap-4 text-[10px] text-gray-400 dark:text-white/25">
-        <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-gray-400 dark:bg-white/30" />Historical actuals</span>
-        <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-violet-400" />Model projections{cagr !== undefined ? ` (based on ${(cagr * 100).toFixed(1)}% CAGR)` : ''}</span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-gray-400 dark:bg-white/30" />
+          Historical actuals
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-violet-400" />
+          Model projections{cagr !== undefined ? ` (based on ${(cagr * 100).toFixed(1)}% CAGR)` : ''}
+        </span>
       </div>
     </div>
   )
