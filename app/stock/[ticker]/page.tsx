@@ -137,6 +137,12 @@ export default function StockPage() {
   const [error, setError]     = useState('')
   const [saving, setSaving]   = useState(false)
   const [activeTab, setActiveTab] = useState<TabId>('valuation')
+  const [financialsHighlight, setFinancialsHighlight] = useState<{ rowKey: string; statement: 'income' | 'balance' | 'cashflow' } | null>(null)
+
+  const handleNavigateToFinancials = (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => {
+    setActiveTab('financials')
+    setFinancialsHighlight({ rowKey, statement })
+  }
 
   useEffect(() => {
     setLoading(true)
@@ -299,7 +305,7 @@ export default function StockPage() {
             {/* ── Valuation Lab tab ── */}
             {activeTab === 'valuation' && (
               <div className="space-y-4 pt-5">
-                <ValuationLab apiData={data} ticker={ticker} statementsData={statementsData} />
+                <ValuationLab apiData={data} ticker={ticker} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} />
               </div>
             )}
 
@@ -311,6 +317,7 @@ export default function StockPage() {
                   financialsData={data}
                   currency={currency}
                   cagr={data.cagr}
+                  highlight={financialsHighlight}
                 />
               </div>
             )}

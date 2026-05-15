@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -232,12 +232,48 @@ function groupSections(rows: RowDef[]): Section[] {
 interface Props {
   statementsData: StatementsData | null
   currency?: string
+  highlight?: { rowKey: string; statement: StatementType }
 }
 
-export default function YahooFinancials({ statementsData, currency = '$' }: Props) {
+export default function YahooFinancials({ statementsData, currency = '$', highlight }: Props) {
   const [period, setPeriod]       = useState<Period>('annual')
   const [statement, setStatement] = useState<StatementType>('income')
   const [expanded, setExpanded]   = useState<Record<string, boolean>>({})
+  const [flashKey, setFlashKey]   = useState<string | null>(null)
+
+  // Navigate to highlighted row: switch tab, expand section, scroll, flash
+  useEffect(() => {
+    if (!highlight) return
+    const { rowKey, statement: stmt } = highlight
+
+    // 1. Switch to the correct statement tab
+    setStatement(stmt)
+
+    // 2. Find which section contains the row and expand it
+    const allRows = stmt === 'income' ? INCOME_ROWS : stmt === 'balance' ? BALANCE_ROWS : CASHFLOW_ROWS
+    const targetIdx = allRows.findIndex(r => r.key === rowKey)
+    if (targetIdx !== -1) {
+      // Walk backwards to find the section header (bold + indent===0)
+      for (let i = targetIdx; i >= 0; i--) {
+        if (allRows[i].bold && allRows[i].indent === 0) {
+          setExpanded(e => ({ ...e, [allRows[i].key]: true }))
+          break
+        }
+      }
+    }
+
+    // 3. Flash + scroll after React renders the expanded row
+    setFlashKey(rowKey)
+    const timer = setTimeout(() => {
+      const el = document.getElementById(`yfrow-${rowKey}`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 120)
+    const clearTimer = setTimeout(() => setFlashKey(null), 2500)
+
+    return () => { clearTimeout(timer); clearTimeout(clearTimer) }
+  // rowKey + statement together form the trigger key
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlight?.rowKey, highlight?.statement])
 
   if (!statementsData) {
     return (
@@ -370,7 +406,8 @@ export default function YahooFinancials({ statementsData, currency = '$' }: Prop
                 hdr.key !== '__orphan__' && (
                   <tr
                     key={`hdr-${si}`}
-                    className="border-b border-slate-100 bg-slate-50/60 hover:bg-slate-100/60 cursor-pointer select-none"
+                    id={`yfrow-${hdr.key}`}
+                    className={`border-b border-slate-100 bg-slate-50/60 hover:bg-slate-100/60 cursor-pointer select-none ${flashKey === hdr.key ? 'row-flash' : ''}`}
                     onClick={() => hasChildren && setExpanded(e => ({ ...e, [hdr.key]: !isOpen(hdr.key) }))}
                   >
                     <td className="sticky left-0 z-10 bg-slate-50 px-4 py-2 font-semibold text-slate-800 whitespace-nowrap flex items-center gap-1.5">
@@ -405,7 +442,7 @@ export default function YahooFinancials({ statementsData, currency = '$' }: Prop
                 ...(open || !hasChildren ? section.children.map((row, ri) => {
                   const rvt = row.valueType ?? 'money'
                   return (
-                    <tr key={`row-${si}-${ri}`} className="border-b border-slate-50 hover:bg-slate-50/40">
+                    <tr key={`row-${si}-${ri}`} id={`yfrow-${row.key}`} className={`border-b border-slate-50 hover:bg-slate-50/40 ${flashKey === row.key ? 'row-flash' : ''}`}>
                       <td className="sticky left-0 z-10 bg-white pl-10 pr-4 py-1.5 text-slate-500 whitespace-nowrap">
                         {row.label}
                       </td>

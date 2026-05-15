@@ -182,10 +182,11 @@ interface MethodInlinePanelProps {
   currency: string
   onAssumptionChange: (key: string, value: number) => void
   onResetOverrides: () => void
+  onNavigateToFinancials?: (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => void
   extraContent?: React.ReactNode
 }
 
-function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, onResetOverrides, extraContent }: MethodInlinePanelProps) {
+function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, onResetOverrides, onNavigateToFinancials, extraContent }: MethodInlinePanelProps) {
   const isModified = Object.keys(overrides).length > 0
   const upside =
     config.fairValueSummary != null && config.currentPrice != null && config.currentPrice > 0
@@ -239,12 +240,31 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
             <div>
               <p className="text-label uppercase tracking-wider text-slate-400 mb-2">Evidence & Derivation</p>
               <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 space-y-1.5">
-                {config.evidence.map(({ label, text }) => (
-                  <div key={label} className="flex gap-3 text-xs">
-                    <span className="text-slate-500 font-medium w-24 shrink-0">{label}</span>
-                    <span className="text-slate-600 leading-relaxed">{text}</span>
-                  </div>
-                ))}
+                {config.evidence.map(({ label, text, rowKey, statement }) => {
+                  const isLink = !!rowKey && !!statement
+                  return (
+                    <div key={label} className="flex gap-3 text-xs">
+                      <span
+                        className={cn(
+                          'font-medium w-24 shrink-0',
+                          isLink
+                            ? 'cursor-pointer text-blue-600 hover:text-blue-800 hover:underline underline-offset-2'
+                            : 'text-slate-500',
+                        )}
+                        title={isLink ? 'View in Financials tab' : undefined}
+                        onClick={() => isLink && onNavigateToFinancials?.(rowKey!, statement!)}
+                      >
+                        {isLink && (
+                          <svg className="inline mr-0.5 mb-0.5" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        )}
+                        {label}
+                      </span>
+                      <span className="text-slate-600 leading-relaxed">{text}</span>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
@@ -495,6 +515,7 @@ interface ValuationLabProps {
   apiData: FinancialsData
   ticker: string
   statementsData?: StatementsData | null
+  onNavigateToFinancials?: (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => void
 }
 
 const WIZARD_STEPS = [
@@ -505,7 +526,7 @@ const WIZARD_STEPS = [
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function ValuationLab({ apiData, ticker, statementsData }: ValuationLabProps) {
+export default function ValuationLab({ apiData, ticker, statementsData, onNavigateToFinancials }: ValuationLabProps) {
   const [overrides,   setOverrides]   = useState<OverridesMap>({})
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1)
 
@@ -518,7 +539,12 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
   const ttmBS = statementsData?.ttm?.balanceSheet    ?? {}
 
   const ttmRevenue   = (ttmIS.totalRevenue  as number | null) ?? null
-  const ttmEbitda    = (ttmIS.EBITDA        as number | null) ?? null
+  const ttmEbitdaRaw = (ttmIS.EBITDA        as number | null) ?? null
+  const ttmEbit      = ((ttmIS.operatingIncome ?? ttmIS.EBIT) as number | null) ?? null
+  const ttmDAStmt    = (ttmIS.reconciledDepreciation as number | null) ?? null
+  const ttmDACF      = ((ttmCF.depreciationAndAmortization ?? ttmCF.depreciationAmortizationDepletion) as number | null) ?? null
+  const ttmDA        = ttmDAStmt ?? ttmDACF
+  const ttmEbitda    = ttmEbitdaRaw ?? (ttmEbit != null && ttmDA != null ? ttmEbit + ttmDA : null)
   const ttmFCF       = (ttmCF.freeCashFlow  as number | null) ?? null
   const ttmNetIncome = (ttmIS.netIncome     as number | null) ?? null
   const ttmTotalDebt = (ttmBS.totalDebt     as number | null) ?? null
@@ -681,9 +707,9 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
       title: 'EV/EBITDA', subtitle: 'Enterprise value to EBITDA exit multiple',
       companyName: apiData?.companyName ?? ticker, ticker, currency,
       evidence: [
-        { label: 'TTM EBITDA',    text: evEbitdaInputs.ttmEbitda != null ? fmtB(evEbitdaInputs.ttmEbitda) + ' (trailing 12 months, Yahoo Finance)' : 'Not available' },
-        { label: 'Net Debt',      text: evEbitdaInputs.netDebt   != null ? fmtB(evEbitdaInputs.netDebt)   + ' (total debt − cash)' : 'Assumed 0' },
-        { label: 'Shares',        text: evEbitdaInputs.shares    != null ? (evEbitdaInputs.shares / 1e9).toFixed(3) + 'B shares outstanding' : 'Not available' },
+        { label: 'TTM EBITDA',    text: evEbitdaInputs.ttmEbitda != null ? fmtB(evEbitdaInputs.ttmEbitda) + ' (trailing 12 months, Yahoo Finance)' : 'Not available', rowKey: 'EBITDA', statement: 'income' },
+        { label: 'Net Debt',      text: evEbitdaInputs.netDebt   != null ? fmtB(evEbitdaInputs.netDebt)   + ' (total debt − cash)' : 'Assumed 0', rowKey: 'totalDebt', statement: 'balance' },
+        { label: 'Shares',        text: evEbitdaInputs.shares    != null ? (evEbitdaInputs.shares / 1e9).toFixed(3) + 'B shares outstanding' : 'Not available', rowKey: 'ordinarySharesNumber', statement: 'balance' },
         { label: 'Exit Multiple', text: `${multiple.toFixed(0)}× EV/EBITDA (sector default: ${sect})` },
       ],
       assumptions: [
@@ -747,7 +773,8 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
       companyName: apiData?.companyName ?? ticker, ticker, currency,
       evidence: [
         { label: 'Implied EV', text: reverseDCFResult.impliedEV != null ? fmtB(reverseDCFResult.impliedEV) + ' (price × shares + debt − cash)' : 'Cannot compute — missing inputs' },
-        { label: 'FCF Margin', text: lastFCFMargin != null ? (lastFCFMargin * 100).toFixed(1) + '% (TTM FCF / revenue)' : 'Not available' },
+        { label: 'FCF Margin', text: lastFCFMargin != null ? (lastFCFMargin * 100).toFixed(1) + '% (TTM FCF / revenue)' : 'Not available', rowKey: 'freeCashFlow', statement: 'cashflow' },
+        { label: 'Revenue',    text: lastActualRevenue != null ? fmtB(lastActualRevenue) + ' (TTM / last annual)' : 'Not available', rowKey: 'totalRevenue', statement: 'income' },
         { label: 'WACC',       text: ((apiData?.wacc?.wacc ?? 0.09) * 100).toFixed(1) + '%' },
         { label: 'Terminal G', text: ((apiData?.terminalG  ?? 0.025) * 100).toFixed(1) + '%' },
       ],
@@ -994,6 +1021,7 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
             currency={currency}
             onAssumptionChange={(key, val) => handleAssumptionChange('forward_pe', key, val)}
             onResetOverrides={() => handleResetOverrides('forward_pe')}
+            onNavigateToFinancials={onNavigateToFinancials}
             extraContent={
               chartRevenueGrowth.length >= 2 || chartNetMargin.length >= 2 ? (
                 <MethodHistoryCharts charts={[
@@ -1010,6 +1038,7 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
             currency={currency}
             onAssumptionChange={(key, val) => handleAssumptionChange('ev_ebitda', key, val)}
             onResetOverrides={() => handleResetOverrides('ev_ebitda')}
+            onNavigateToFinancials={onNavigateToFinancials}
             extraContent={
               chartEbitda.length >= 2 || chartEbitdaMargin.length >= 2 ? (
                 <MethodHistoryCharts charts={[
@@ -1026,6 +1055,7 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
             currency={currency}
             onAssumptionChange={(key, val) => handleAssumptionChange('revenue_multiple', key, val)}
             onResetOverrides={() => handleResetOverrides('revenue_multiple')}
+            onNavigateToFinancials={onNavigateToFinancials}
             extraContent={
               chartRevenue.length >= 2 ? (
                 <MethodHistoryCharts charts={[
@@ -1041,6 +1071,7 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
             currency={currency}
             onAssumptionChange={(key, val) => handleAssumptionChange('scenario_blend', key, val)}
             onResetOverrides={() => handleResetOverrides('scenario_blend')}
+            onNavigateToFinancials={onNavigateToFinancials}
           />
 
           <MethodInlinePanel
@@ -1049,6 +1080,7 @@ export default function ValuationLab({ apiData, ticker, statementsData }: Valuat
             currency={currency}
             onAssumptionChange={() => {}}
             onResetOverrides={() => {}}
+            onNavigateToFinancials={onNavigateToFinancials}
             extraContent={
               chartRevenueGrowth.length >= 2 || chartFCFMargin.length >= 2 ? (
                 <MethodHistoryCharts charts={[

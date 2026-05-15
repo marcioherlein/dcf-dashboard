@@ -129,6 +129,15 @@ h1, h2, h3 {
   .custom-scrollbar::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
 }
 
+/* ── Row highlight flash ──────────────────────────── */
+@keyframes row-flash {
+  0%, 40% { background-color: #fef3c7; }
+  100%     { background-color: transparent; }
+}
+.row-flash {
+  animation: row-flash 2.2s ease-out forwards;
+}
+
 /* ── Print styles ─────────────────────────────────── */
 @media print {
   body { background: white !important; color: #111 !important; }

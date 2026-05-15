@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import YahooFinancials from './YahooFinancials'
 import FinancialCharts from './FinancialCharts'
 
@@ -18,6 +18,7 @@ interface Props {
   financialsData?: any
   currency?:       string
   cagr?:           number
+  highlight?:      { rowKey: string; statement: 'income' | 'balance' | 'cashflow' } | null
 }
 
 type SubTab = 'statements' | 'growth' | 'profitability' | 'solvency'
@@ -387,8 +388,15 @@ function toM(v: unknown): number | null {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export default function FinancialsHub({ statementsData, financialsData, currency = '$' }: Props) {
+export default function FinancialsHub({ statementsData, financialsData, currency = '$', highlight }: Props) {
   const [subTab, setSubTab] = useState<SubTab>('statements')
+
+  // When a navigation highlight arrives from Valuation Lab, switch to Statements sub-tab
+  const highlightKey = highlight ? `${highlight.rowKey}:${highlight.statement}` : null
+  useEffect(() => {
+    if (highlightKey) setSubTab('statements')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlightKey])
 
   const periods = useMemo(() => buildPeriods(statementsData), [statementsData])
   const cols    = periods.map(p => p.year)
@@ -605,6 +613,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
           <YahooFinancials
             statementsData={statementsData}
             currency={currency}
+            highlight={highlight ?? undefined}
           />
           {(finCF.length > 0) && (
             <div className="border-t border-slate-100">

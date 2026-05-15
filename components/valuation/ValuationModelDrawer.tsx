@@ -37,6 +37,8 @@ export type ValuationAssumption = {
 export type EvidenceItem = {
   label: string
   text: string
+  rowKey?: string                                          // key in YahooFinancials row defs
+  statement?: 'income' | 'balance' | 'cashflow'           // which statement tab to open
 }
 
 export type ValuationResult = {
