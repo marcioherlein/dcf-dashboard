@@ -387,7 +387,7 @@ function toM(v: unknown): number | null {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export default function FinancialsHub({ statementsData, financialsData, currency = '$', cagr }: Props) {
+export default function FinancialsHub({ statementsData, financialsData, currency = '$' }: Props) {
   const [subTab, setSubTab] = useState<SubTab>('statements')
 
   const periods = useMemo(() => buildPeriods(statementsData), [statementsData])
@@ -426,44 +426,6 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         ...r,
         costOfRevenue: null, sgaExpense: null, rndExpense: null,
         dna: null, interestExpense: null, pretaxIncome: null, taxProvision: null,
-      })
-    )
-  }, [statementsData, financialsData])
-
-  const finBS = useMemo(() => {
-    const annual = statementsData?.annual?.balanceSheet ?? []
-    if (annual.length) {
-      return annual
-        .map((r: AnyRow) => {
-          const ltDebt = typeof r.longTermDebt === 'number' ? r.longTermDebt : null
-          const totalDebt = typeof r.totalDebt === 'number' ? r.totalDebt : null
-          const stDebt = ltDebt != null && totalDebt != null ? totalDebt - ltDebt : null
-          return {
-            year:                    String(r.endDate ?? '').slice(0, 4),
-            cash:                    toM(r.cashCashEquivalentsAndShortTermInvestments ?? r.cash),
-            netReceivables:          toM(r.netReceivables ?? r.receivables ?? r.accountsReceivable),
-            inventory:               toM(r.inventory),
-            totalCurrentAssets:      toM(r.currentAssets),
-            netPPE:                  toM(r.netPPE ?? r.netPropertyPlantAndEquipment),
-            totalAssets:             toM(r.totalAssets),
-            accountsPayable:         toM(r.accountsPayable),
-            shortTermDebt:           stDebt != null ? stDebt / 1e6 : null,
-            totalCurrentLiabilities: toM(r.currentLiabilities),
-            longTermDebt:            toM(r.longTermDebt),
-            totalDebt:               toM(r.totalDebt),
-            totalEquity:             toM(r.totalStockholdersEquity ?? r.stockholdersEquity ?? r.commonStockEquity),
-            isProjected:             false,
-          }
-        })
-        .filter((r: { year: string }) => r.year.length === 4)
-    }
-    // fallback
-    return (financialsData?.financialStatements?.balanceSheet ?? []).map(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (r: any) => ({
-        ...r,
-        netReceivables: null, inventory: null, netPPE: null,
-        accountsPayable: null, shortTermDebt: null, totalDebt: null,
       })
     )
   }, [statementsData, financialsData])

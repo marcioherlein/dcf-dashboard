@@ -380,21 +380,6 @@ function MiniBarSparkline({ values, positive }: { values: (number | null)[]; pos
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
-function StatCard({ label, value, sub, source }: { label: string; value: string; sub?: string; source?: 'yahoo' | 'calc' }) {
-  return (
-    <div className="flex-1 min-w-[140px] bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-card">
-      <div className="text-label uppercase tracking-wider text-slate-400 mb-1">{label}</div>
-      <div className="text-lg font-bold font-mono text-slate-900 truncate">{value}</div>
-      {sub && <div className="text-micro text-slate-500 mt-0.5">{sub}</div>}
-      {source && (
-        <div className="mt-1.5">
-          <SourceLabel source={source}>{source === 'yahoo' ? 'Yahoo Finance TTM' : 'Calculated'}</SourceLabel>
-        </div>
-      )}
-    </div>
-  )
-}
-
 function AssumptionStat({ label, value, sub, desc }: { label: string; value: string; sub: string; desc?: string }) {
   return (
     <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2.5">
