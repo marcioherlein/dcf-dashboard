@@ -24,6 +24,22 @@ const SECTOR_PE: Record<string, number> = {
   'Real Estate':            20,
 }
 
+// ─── Sector CAGR fallback (when no analyst/historical data available) ─────────
+
+const SECTOR_CAGR: Record<string, number> = {
+  'Technology':             0.12,
+  'Communication Services': 0.08,
+  'Consumer Cyclical':      0.07,
+  'Consumer Defensive':     0.04,
+  'Healthcare':             0.08,
+  'Financial Services':     0.06,
+  'Industrials':            0.05,
+  'Basic Materials':        0.04,
+  'Energy':                 0.03,
+  'Utilities':              0.03,
+  'Real Estate':            0.05,
+}
+
 // ─── Sector EV/Revenue lookup ─────────────────────────────────────────────────
 
 const SECTOR_EV_REVENUE: Record<string, number> = {
@@ -250,7 +266,7 @@ export function deriveForwardPEAssumptions(data: {
   const shares       = data.fairValue?.sharesOutstanding ?? null
   const incomeRows   = data.financialStatements?.incomeStatement ?? []
 
-  const sectorFallback = sector && SECTOR_PE[sector] ? 0.08 : 0.08
+  const sectorFallback = SECTOR_CAGR[sector ?? ''] ?? 0.07
 
   const cagrDerived     = deriveCagr(data.cagrAnalysis, sectorFallback)
   const marginDerived   = deriveNetMargin(incomeRows)
@@ -328,7 +344,7 @@ export function deriveRevenueMultipleAssumptions(data: {
   const shares       = data.fairValue?.sharesOutstanding ?? null
   const incomeRows   = data.financialStatements?.incomeStatement ?? []
 
-  const cagrDerived     = deriveCagr(data.cagrAnalysis, 0.08)
+  const cagrDerived     = deriveCagr(data.cagrAnalysis, SECTOR_CAGR[sector ?? ''] ?? 0.07)
   const marginDerived   = deriveNetMargin(incomeRows)
   const dilutionDerived = deriveDilution(sector, marginDerived.margin)
   const waccEvidence    = deriveWACCEvidence(data.wacc?.inputs ?? {}, wacc)

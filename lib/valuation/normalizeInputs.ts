@@ -176,10 +176,7 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
   const recent = annualRows.slice(-3)
   if (recent.length === 0) return []
 
-  const medianEbitMargin = computeMedian(recent.map(r =>
-    r.ebit != null && r.revenue != null && r.revenue > 0 ? r.ebit / r.revenue : null))
-
-  // D&A: prefer direct field; fall back to ebitda − ebit (both are equally valid)
+  // D&A: prefer direct field; fall back to ebitda − ebit
   const medianDnaPct = computeMedian(recent.map(r => {
     if (r.dna != null && r.revenue != null && r.revenue > 0) return r.dna / r.revenue
     if (r.ebitda != null && r.ebit != null && r.revenue != null && r.revenue > 0)
@@ -190,6 +187,15 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
   // EBITDA margin: separate median so we can set ebitda even when dna is unavailable
   const medianEbitdaMargin = computeMedian(recent.map(r =>
     r.ebitda != null && r.revenue != null && r.revenue > 0 ? r.ebitda / r.revenue : null))
+
+  // EBIT margin: prefer direct ebit; fall back to ebitda − dna medians (avoids null NOPAT)
+  const medianEbitMarginDirect = computeMedian(recent.map(r =>
+    r.ebit != null && r.revenue != null && r.revenue > 0 ? r.ebit / r.revenue : null))
+  const medianEbitMargin: number | null =
+    medianEbitMarginDirect ??
+    (medianEbitdaMargin != null && medianDnaPct != null
+      ? medianEbitdaMargin - medianDnaPct
+      : medianEbitdaMargin)
 
   // CapEx: default to 0 when historical data is absent (user can edit; 0 = conservative/asset-light)
   const medianCapexPct = computeMedian(recent.map(r =>
@@ -205,7 +211,16 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
   if (baseRevenue == null || baseRevenue <= 0) return []
 
   const lastAnnualYear = parseInt(lastAnnualRow?.year ?? '', 10)
-  const startYear = isNaN(lastAnnualYear) ? new Date().getFullYear() : lastAnnualYear + 1
+  // When lastAnnualRow is absent (TTM-only), use TTM fiscal date or current year as base
+  let startYear: number
+  if (!isNaN(lastAnnualYear)) {
+    startYear = lastAnnualYear + 1
+  } else {
+    const ttmFiscalYear = ttmRow?.fiscalDate
+      ? parseInt(String(ttmRow.fiscalDate).slice(0, 4), 10)
+      : NaN
+    startYear = (!isNaN(ttmFiscalYear) ? ttmFiscalYear : new Date().getFullYear()) + 1
+  }
 
   const rows: ModellingRow[] = []
   for (let i = 0; i < nYears; i++) {
@@ -279,12 +294,12 @@ function buildRowsFromStatements(
     const existing = byYear.get(year) ?? { year, isProjected: false }
     byYear.set(year, {
       ...existing,
-      capex:        toM(row.capitalExpenditure),
-      operatingCF:  toM(row.operatingCashFlow),
+      capex:        toM(row.capitalExpenditure ?? row.purchaseOfPPE ?? row.capitalExpenditures),
+      operatingCF:  toM(row.operatingCashFlow ?? row.cashFlowFromContinuingOperatingActivities),
       freeCashFlow: toM(row.freeCashFlow),
-      dna:          toM(row.depreciationAndAmortization ?? row.reconciledDepreciation),
-      dividendsPaid: toM(row.cashDividendsPaid),
-      financingCF:  toM(row.financingCashFlow),
+      dna:          toM(row.depreciationAndAmortization ?? row.reconciledDepreciation ?? row.depreciationAmortizationDepletion),
+      dividendsPaid: toM(row.cashDividendsPaid ?? row.dividendsPaid ?? row.paymentOfDividends),
+      financingCF:  toM(row.financingCashFlow ?? row.cashFlowFromContinuingFinancingActivities),
       fiscalDate:   (existing.fiscalDate ?? row.endDate) ?? null,
     })
   }
@@ -295,11 +310,11 @@ function buildRowsFromStatements(
     const existing = byYear.get(year) ?? { year, isProjected: false }
     byYear.set(year, {
       ...existing,
-      cash:                    toM(row.cashCashEquivalentsAndShortTermInvestments ?? row.cash),
-      totalCurrentAssets:      toM(row.currentAssets),
-      totalCurrentLiabilities: toM(row.currentLiabilities),
-      longTermDebt:            toM(row.longTermDebt),
-      totalEquity:             toM(row.stockholdersEquity ?? row.totalStockholdersEquity),
+      cash:                    toM(row.cashCashEquivalentsAndShortTermInvestments ?? row.cashAndShortTermInvestments ?? row.cashAndCashEquivalents ?? row.cash),
+      totalCurrentAssets:      toM(row.currentAssets ?? row.totalCurrentAssets),
+      totalCurrentLiabilities: toM(row.currentLiabilities ?? row.totalCurrentLiabilities),
+      longTermDebt:            toM(row.longTermDebt ?? row.longTermDebtAndCapitalLeaseObligation ?? row.longTermDebtNoncurrent),
+      totalEquity:             toM(row.stockholdersEquity ?? row.totalStockholdersEquity ?? row.totalEquity ?? row.commonStockEquity),
     })
   }
 
@@ -316,17 +331,17 @@ function buildRowsFromStatements(
       ebitda:     toM(is.EBITDA),
       netIncome:  toM(is.netIncome),
       eps:        nullable(is.dilutedEPS),
-      capex:        toM(cf.capitalExpenditure),
-      operatingCF:  toM(cf.operatingCashFlow),
+      capex:        toM(cf.capitalExpenditure ?? cf.purchaseOfPPE ?? cf.capitalExpenditures),
+      operatingCF:  toM(cf.operatingCashFlow ?? cf.cashFlowFromContinuingOperatingActivities),
       freeCashFlow: toM(cf.freeCashFlow),
-      dna:          toM(cf.depreciationAndAmortization ?? cf.reconciledDepreciation),
-      dividendsPaid: toM(cf.cashDividendsPaid),
-      financingCF:  toM(cf.financingCashFlow),
-      cash:                    toM(bs.cashCashEquivalentsAndShortTermInvestments ?? bs.cash),
-      totalCurrentAssets:      toM(bs.currentAssets),
-      totalCurrentLiabilities: toM(bs.currentLiabilities),
-      longTermDebt:            toM(bs.longTermDebt),
-      totalEquity:             toM(bs.stockholdersEquity ?? bs.totalStockholdersEquity),
+      dna:          toM(cf.depreciationAndAmortization ?? cf.reconciledDepreciation ?? cf.depreciationAmortizationDepletion),
+      dividendsPaid: toM(cf.cashDividendsPaid ?? cf.dividendsPaid ?? cf.paymentOfDividends),
+      financingCF:  toM(cf.financingCashFlow ?? cf.cashFlowFromContinuingFinancingActivities),
+      cash:                    toM(bs.cashCashEquivalentsAndShortTermInvestments ?? bs.cashAndShortTermInvestments ?? bs.cashAndCashEquivalents ?? bs.cash),
+      totalCurrentAssets:      toM(bs.currentAssets ?? bs.totalCurrentAssets),
+      totalCurrentLiabilities: toM(bs.currentLiabilities ?? bs.totalCurrentLiabilities),
+      longTermDebt:            toM(bs.longTermDebt ?? bs.longTermDebtAndCapitalLeaseObligation ?? bs.longTermDebtNoncurrent),
+      totalEquity:             toM(bs.stockholdersEquity ?? bs.totalStockholdersEquity ?? bs.totalEquity ?? bs.commonStockEquity),
       fiscalDate: 'TTM',
       taxRate: nullable(is.taxRateForCalcs),
     })
