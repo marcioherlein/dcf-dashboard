@@ -178,10 +178,23 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
 
   const medianEbitMargin = computeMedian(recent.map(r =>
     r.ebit != null && r.revenue != null && r.revenue > 0 ? r.ebit / r.revenue : null))
-  const medianDnaPct = computeMedian(recent.map(r =>
-    r.dna != null && r.revenue != null && r.revenue > 0 ? r.dna / r.revenue : null))
+
+  // D&A: prefer direct field; fall back to ebitda − ebit (both are equally valid)
+  const medianDnaPct = computeMedian(recent.map(r => {
+    if (r.dna != null && r.revenue != null && r.revenue > 0) return r.dna / r.revenue
+    if (r.ebitda != null && r.ebit != null && r.revenue != null && r.revenue > 0)
+      return Math.max(0, r.ebitda - r.ebit) / r.revenue
+    return null
+  }))
+
+  // EBITDA margin: separate median so we can set ebitda even when dna is unavailable
+  const medianEbitdaMargin = computeMedian(recent.map(r =>
+    r.ebitda != null && r.revenue != null && r.revenue > 0 ? r.ebitda / r.revenue : null))
+
+  // CapEx: default to 0 when historical data is absent (user can edit; 0 = conservative/asset-light)
   const medianCapexPct = computeMedian(recent.map(r =>
-    r.capex != null && r.revenue != null && r.revenue > 0 ? Math.abs(r.capex) / r.revenue : null))
+    r.capex != null && r.revenue != null && r.revenue > 0 ? Math.abs(r.capex) / r.revenue : null)) ?? 0
+
   const medianNetMargin = computeMedian(recent.map(r =>
     r.netIncome != null && r.revenue != null && r.revenue > 0 ? r.netIncome / r.revenue : null))
   const medianTaxRate = computeMedian(recent.map(r => r.taxRate ?? null))
@@ -199,15 +212,19 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
     const revenue = baseRevenue * Math.pow(1 + cagr, i + 1)
     const ebit = medianEbitMargin != null ? revenue * medianEbitMargin : null
     const dna = medianDnaPct != null ? revenue * medianDnaPct : null
+    // ebitda: prefer ebit+dna; fall back to EBITDA margin so UFCF engine can derive D&A
+    const ebitda = (ebit != null && dna != null)
+      ? ebit + dna
+      : (medianEbitdaMargin != null ? revenue * medianEbitdaMargin : null)
     rows.push({
       year: String(startYear + i) + 'E',
       isProjected: true,
       revenue,
       ebit,
-      ebitda: ebit != null && dna != null ? ebit + dna : null,
+      ebitda,
       netIncome: medianNetMargin != null ? revenue * medianNetMargin : null,
       eps: null,
-      capex: medianCapexPct != null ? -(revenue * medianCapexPct) : null,
+      capex: -(revenue * medianCapexPct),
       operatingCF: null,
       freeCashFlow: null,
       dividendsPaid: null,
