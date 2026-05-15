@@ -544,9 +544,16 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
   const ttmDAStmt    = (ttmIS.reconciledDepreciation as number | null) ?? null
   const ttmDACF      = ((ttmCF.depreciationAndAmortization ?? ttmCF.depreciationAmortizationDepletion) as number | null) ?? null
   const ttmDA        = ttmDAStmt ?? ttmDACF
-  const ttmEbitda    = ttmEbitdaRaw ?? (ttmEbit != null && ttmDA != null ? ttmEbit + ttmDA : null)
+  const ttmNetIncome = (ttmIS.netIncome    as number | null) ?? null
+  const ttmTaxProv   = (ttmIS.taxProvision as number | null) ?? null
+  const ttmIntExp    = Math.abs(((ttmIS.interestExpenseNonOperating ?? ttmIS.interestExpense) as number | null) ?? 0)
+  // EBITDA: (1) direct field, (2) EBIT + D&A, (3) bottom-up: NI + Tax + Interest + D&A
+  const ttmEbitda    = ttmEbitdaRaw
+    ?? (ttmEbit != null && ttmDA != null ? ttmEbit + ttmDA : null)
+    ?? (ttmNetIncome != null && ttmDA != null
+        ? ttmNetIncome + Math.abs(ttmTaxProv ?? 0) + ttmIntExp + ttmDA
+        : null)
   const ttmFCF       = (ttmCF.freeCashFlow  as number | null) ?? null
-  const ttmNetIncome = (ttmIS.netIncome     as number | null) ?? null
   const ttmTotalDebt = (ttmBS.totalDebt     as number | null) ?? null
   const ttmCash      = ((ttmBS.cashCashEquivalentsAndShortTermInvestments ?? ttmBS.cash) as number | null) ?? null
   const ttmNetDebt   = ttmTotalDebt != null && ttmCash != null ? ttmTotalDebt - ttmCash : null
@@ -554,57 +561,83 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
 
   const statementsAvailable = ttmRevenue != null || ttmEbitda != null || ttmFCF != null
 
-  // Annual sparkline data (values in millions, consistent scale for visual comparison)
-  const annualIS = (statementsData?.annual?.incomeStatement ?? []) as Array<{ endDate?: string | null; year?: string; fiscalDate?: string | null; revenue?: number | null; ebitda?: number | null; netIncome?: number | null }>
-  const annualCF = (statementsData?.annual?.cashFlow ?? [])        as Array<{ endDate?: string | null; year?: string; freeCashFlow?: number | null }>
-  const sparkRevenue  = annualIS.slice(-5).map(r => r.revenue    ?? null)
-  const sparkEbitda   = annualIS.slice(-5).map(r => r.ebitda     ?? null)
-  const sparkFCF      = annualCF.slice(-5).map(r => r.freeCashFlow ?? null)
-  const sparkNI       = annualIS.slice(-5).map(r => r.netIncome  ?? null)
+  // Annual data — use any[] because fundamentalsTimeSeries uses totalRevenue/EBITDA (not revenue/ebitda)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const annualIS: any[] = statementsData?.annual?.incomeStatement ?? []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const annualCF: any[] = statementsData?.annual?.cashFlow ?? []
+  const sparkRevenue  = annualIS.slice(-5).map((r: any) => (r.totalRevenue  as number | null) ?? null)
+  const sparkEbitda   = annualIS.slice(-5).map((r: any) => (r.EBITDA        as number | null) ?? null)
+  const sparkFCF      = annualCF.slice(-5).map((r: any) => (r.freeCashFlow  as number | null) ?? null)
+  const sparkNI       = annualIS.slice(-5).map((r: any) => (r.netIncome     as number | null) ?? null)
+
+  // Statement-derived 3Y revenue CAGR (uses fundamentalsTimeSeries annual data — same source as Financials tab)
+  const annualRevs = annualIS
+    .map((r: any) => (r.totalRevenue as number | null) ?? null)
+    .filter((v): v is number => typeof v === 'number' && v > 0)
+  const stmtCagr3y = annualRevs.length >= 2
+    ? (() => {
+        const years  = Math.min(annualRevs.length - 1, 3)
+        const latest = annualRevs[annualRevs.length - 1]
+        const base   = annualRevs[annualRevs.length - 1 - years]
+        return base > 0 ? Math.pow(latest / base, 1 / years) - 1 : null
+      })()
+    : null
+  const stmtFcfMarginForSummary = ttmFCF != null && ttmRevenue != null && ttmRevenue > 0
+    ? ttmFCF / ttmRevenue : null
 
   // CAGR analysis data
   const cagrAnalysis = apiData?.cagrAnalysis ?? {}
 
   // Annual chart data for method history panels
-  const chartRevenueGrowth: HistoryChartDef['data'] = annualIS.slice(1).reduce<{ year: string; value: number }[]>((acc, r, i) => {
+  const chartRevenueGrowth: HistoryChartDef['data'] = annualIS.slice(1).reduce<{ year: string; value: number }[]>((acc, r: any, i) => {
     const prev = annualIS[i]
-    if (r.revenue != null && prev.revenue != null && prev.revenue > 0) {
-      acc.push({ year: rowYear(r), value: (r.revenue - prev.revenue) / prev.revenue * 100 })
+    const rev  = r.totalRevenue as number | null
+    const prevRev = prev.totalRevenue as number | null
+    if (rev != null && prevRev != null && prevRev > 0) {
+      acc.push({ year: rowYear(r), value: (rev - prevRev) / prevRev * 100 })
     }
     return acc
   }, []).slice(-5)
 
-  const chartNetMargin: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r) => {
-    if (r.revenue != null && r.revenue > 0 && r.netIncome != null) {
-      acc.push({ year: rowYear(r), value: r.netIncome / r.revenue * 100 })
+  const chartNetMargin: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r: any) => {
+    const rev = r.totalRevenue as number | null
+    const ni  = r.netIncome   as number | null
+    if (rev != null && rev > 0 && ni != null) {
+      acc.push({ year: rowYear(r), value: ni / rev * 100 })
     }
     return acc
   }, []).slice(-5)
 
-  const chartEbitda: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r) => {
-    if (r.ebitda != null) acc.push({ year: rowYear(r), value: r.ebitda / 1e6 })
+  const chartEbitda: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r: any) => {
+    const ebitda = r.EBITDA as number | null
+    if (ebitda != null) acc.push({ year: rowYear(r), value: ebitda / 1e6 })
     return acc
   }, []).slice(-5)
 
-  const chartEbitdaMargin: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r) => {
-    if (r.revenue != null && r.revenue > 0 && r.ebitda != null) {
-      acc.push({ year: rowYear(r), value: r.ebitda / r.revenue * 100 })
+  const chartEbitdaMargin: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r: any) => {
+    const rev    = r.totalRevenue as number | null
+    const ebitda = r.EBITDA       as number | null
+    if (rev != null && rev > 0 && ebitda != null) {
+      acc.push({ year: rowYear(r), value: ebitda / rev * 100 })
     }
     return acc
   }, []).slice(-5)
 
-  const chartRevenue: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r) => {
-    if (r.revenue != null && r.revenue > 0) acc.push({ year: rowYear(r), value: r.revenue / 1e6 })
+  const chartRevenue: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r: any) => {
+    const rev = r.totalRevenue as number | null
+    if (rev != null && rev > 0) acc.push({ year: rowYear(r), value: rev / 1e6 })
     return acc
   }, []).slice(-5)
 
-  const cfByYear = new Map(annualCF.map(r => [rowYear(r), r.freeCashFlow ?? null]))
+  const cfByYear = new Map(annualCF.map((r: any) => [rowYear(r), (r.freeCashFlow as number | null) ?? null]))
 
-  const chartFCFMargin: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r) => {
-    const yr = rowYear(r)
+  const chartFCFMargin: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r: any) => {
+    const yr  = rowYear(r)
+    const rev = r.totalRevenue as number | null
     const fcf = cfByYear.get(yr)
-    if (r.revenue != null && r.revenue > 0 && fcf != null) {
-      acc.push({ year: yr, value: fcf / r.revenue * 100 })
+    if (rev != null && rev > 0 && fcf != null) {
+      acc.push({ year: yr, value: fcf / rev * 100 })
     }
     return acc
   }, []).slice(-5)
@@ -702,6 +735,12 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
   const evEbitdaConfig = useMemo((): ValuationMethodConfig => {
     const sect     = evEbitdaBase.sector ?? 'Unknown'
     const multiple = evEbitdaInputs.exitMultiple
+    const multEstimates: Array<{ multiple: string; actualValue: number }> =
+      (apiData as { valuationMethods?: { models?: { multiples?: { estimates?: unknown[] } } } })
+        ?.valuationMethods?.models?.multiples?.estimates as Array<{ multiple: string; actualValue: number }> ?? []
+    const actualEvEbitda = multEstimates.find(e => e.multiple === 'EV/EBITDA')?.actualValue ?? null
+    const companyEVEBITDAStr = actualEvEbitda != null && actualEvEbitda > 0 ? `${actualEvEbitda.toFixed(1)}×` : 'N/A'
+    const exitMultipleText = `Sector standard: ${multiple.toFixed(0)}× (${sect} sector median); company current EV/EBITDA: ${companyEVEBITDAStr}`
     return {
       id: 'reverse_dcf' as ValuationMethodId,
       title: 'EV/EBITDA', subtitle: 'Enterprise value to EBITDA exit multiple',
@@ -710,12 +749,12 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
         { label: 'TTM EBITDA',    text: evEbitdaInputs.ttmEbitda != null ? fmtB(evEbitdaInputs.ttmEbitda) + ' (trailing 12 months, Yahoo Finance)' : 'Not available', rowKey: 'EBITDA', statement: 'income' },
         { label: 'Net Debt',      text: evEbitdaInputs.netDebt   != null ? fmtB(evEbitdaInputs.netDebt)   + ' (total debt − cash)' : 'Assumed 0', rowKey: 'totalDebt', statement: 'balance' },
         { label: 'Shares',        text: evEbitdaInputs.shares    != null ? (evEbitdaInputs.shares / 1e9).toFixed(3) + 'B shares outstanding' : 'Not available', rowKey: 'ordinarySharesNumber', statement: 'balance' },
-        { label: 'Exit Multiple', text: `${multiple.toFixed(0)}× EV/EBITDA (sector default: ${sect})` },
+        { label: 'Exit Multiple', text: exitMultipleText },
       ],
       assumptions: [
         { key: 'ttmEbitda',    label: 'TTM EBITDA',         editable: false, value: evEbitdaInputs.ttmEbitda, unit: '$', source: 'historical_3y_median' as const },
         { key: 'netDebt',      label: 'Net Debt',           editable: false, value: evEbitdaInputs.netDebt,   unit: '$', source: 'historical_3y_median' as const },
-        { key: 'exitMultiple', label: 'EV/EBITDA Multiple', editable: true,  value: multiple, unit: 'x', min: 1, max: 50, step: 0.5, source: 'sector_fallback' as const, sourceExplanation: `${sect} sector typical ${multiple.toFixed(0)}×`, description: 'Sector-typical exit multiple' },
+        { key: 'exitMultiple', label: 'EV/EBITDA Multiple', editable: true,  value: multiple, unit: 'x', min: 1, max: 50, step: 0.5, source: 'sector_fallback' as const, sourceExplanation: exitMultipleText, description: 'Sector-typical exit multiple' },
       ],
       formulaLines: [
         `EV = ${fmtB(evEbitdaInputs.ttmEbitda)} × ${multiple.toFixed(0)}× = ${fmtB(evEbitdaResult.enterpriseValue)}`,
@@ -878,7 +917,11 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
               <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
             <p className="text-sm text-blue-800 leading-relaxed">
-              {buildBusinessSummary(apiData?.companyName ?? ticker, apiData)}
+              {buildBusinessSummary(apiData?.companyName ?? ticker, {
+                ...apiData,
+                cagrAnalysis: { ...apiData?.cagrAnalysis, historicalCagr3y: stmtCagr3y ?? apiData?.cagrAnalysis?.historicalCagr3y },
+                businessProfile: { ...apiData?.businessProfile, fcfMargin: stmtFcfMarginForSummary ?? apiData?.businessProfile?.fcfMargin },
+              } as any)}
             </p>
           </div>
 
