@@ -87,11 +87,13 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
   const scores = apiData?.scores ?? {}
   const vm = apiData?.valuationMethods ?? {}
   const fs = apiData?.financialStatements ?? {}
+  // FX rate (local-currency → quote-currency). 1 for USD companies; ~0.031 for TSM (TWD→USD).
+  const fxRate: number = apiData?.providerStatus?.fx?.rate ?? 1
 
   // Build rows: prefer statements data if available, fall back to financialStatements
   let rows: ModellingRow[]
   if (statementsData?.annual?.incomeStatement?.length) {
-    rows = buildRowsFromStatements(statementsData.annual, statementsData.ttm)
+    rows = buildRowsFromStatements(statementsData.annual, statementsData.ttm, fxRate)
   } else {
     rows = buildRows(fs)
   }
@@ -113,7 +115,7 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
   let baseFCF = nullable(apiData?.baseFCF)
   const ttmFCF = statementsData?.ttm?.cashFlow?.freeCashFlow
   if (typeof ttmFCF === 'number' && isFinite(ttmFCF) && ttmFCF !== 0) {
-    baseFCF = ttmFCF / 1e6
+    baseFCF = ttmFCF / 1e6 * fxRate
   }
 
   // Balance sheet overrides from TTM statements
@@ -123,11 +125,19 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
   const ttmBS = statementsData?.ttm?.balanceSheet
   if (ttmBS) {
     const stmtCash = ttmBS.cashCashEquivalentsAndShortTermInvestments ?? ttmBS.cash
-    if (typeof stmtCash === 'number' && isFinite(stmtCash)) cashM = stmtCash / 1e6
+    if (typeof stmtCash === 'number' && isFinite(stmtCash)) cashM = stmtCash / 1e6 * fxRate
     const stmtDebt = ttmBS.totalDebt ?? ttmBS.longTermDebt
-    if (typeof stmtDebt === 'number' && isFinite(stmtDebt)) debtM = stmtDebt / 1e6
+    if (typeof stmtDebt === 'number' && isFinite(stmtDebt)) debtM = stmtDebt / 1e6 * fxRate
     const stmtShares = ttmBS.commonStockSharesOutstanding ?? ttmBS.sharesOutstanding
     if (typeof stmtShares === 'number' && isFinite(stmtShares) && stmtShares > 0) sharesOutstanding = stmtShares
+  }
+
+  // Prefer market-cap-derived share count: more reliable for ADRs where balance-sheet
+  // shares may reflect underlying (not ADR) units. marketCap / price = ADR count.
+  const mcap = apiData?.quote?.marketCap
+  const qprice = apiData?.quote?.price
+  if (typeof mcap === 'number' && mcap > 0 && typeof qprice === 'number' && qprice > 0) {
+    sharesOutstanding = mcap / qprice / 1e6
   }
 
   const companyType: ModellingInput['companyType'] = vm.companyType ?? 'standard'
@@ -204,6 +214,8 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
   const medianNetMargin = computeMedian(recent.map(r =>
     r.netIncome != null && r.revenue != null && r.revenue > 0 ? r.netIncome / r.revenue : null))
   const medianTaxRate = computeMedian(recent.map(r => r.taxRate ?? null))
+  const medianFcfMargin = computeMedian(recent.map(r =>
+    r.freeCashFlow != null && r.revenue != null && r.revenue > 0 ? r.freeCashFlow / r.revenue : null))
 
   const ttmRow = historicalRows.find(r => r.year === 'TTM')
   const lastAnnualRow = annualRows[annualRows.length - 1]
@@ -241,7 +253,7 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
       eps: null,
       capex: -(revenue * medianCapexPct),
       operatingCF: null,
-      freeCashFlow: null,
+      freeCashFlow: medianFcfMargin != null && medianCapexPct === 0 ? revenue * medianFcfMargin : null,
       dividendsPaid: null,
       financingCF: null,
       cash: null,
@@ -258,17 +270,19 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
 }
 
 // ── Build rows from /api/statements annual data ───────────────────────────────
-// yahoo-finance2 fundamentalsTimeSeries returns raw dollars; ModellingRow expects millions.
-
-function toM(v: unknown): number | null {
-  if (typeof v !== 'number' || !isFinite(v)) return null
-  return v / 1e6
-}
+// yahoo-finance2 fundamentalsTimeSeries returns raw local-currency values; ModellingRow expects
+// USD millions. Pass fxRate (from apiData.providerStatus.fx.rate) to convert foreign-currency
+// companies (e.g. TSM reports in TWD; fxRate ≈ 0.031 converts TWD → USD).
 
 function buildRowsFromStatements(
   annual: { incomeStatement: AnyRow[]; balanceSheet: AnyRow[]; cashFlow: AnyRow[] },
   ttm: { incomeStatement: AnyRow | null; balanceSheet: AnyRow | null; cashFlow: AnyRow | null },
+  fxRate = 1,
 ): ModellingRow[] {
+  const toM = (v: unknown): number | null => {
+    if (typeof v !== 'number' || !isFinite(v)) return null
+    return v / 1e6 * fxRate
+  }
   // Map annual rows by endDate year
   const byYear = new Map<string, Partial<ModellingRow>>()
 
