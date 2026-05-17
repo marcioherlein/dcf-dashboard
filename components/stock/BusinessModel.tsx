@@ -32,6 +32,12 @@ interface CashFlowRow {
   year: string; freeCashFlow: number | null; isProjected: boolean
 }
 
+interface TTMLike {
+  incomeStatement: { totalRevenue?: number | null; netIncome?: number | null; grossProfit?: number | null } | null
+  cashFlow: { freeCashFlow?: number | null } | null
+  balanceSheet: Record<string, unknown> | null
+}
+
 interface Props {
   businessProfile: BusinessProfile
   historicalRevenues: number[]
@@ -39,10 +45,25 @@ interface Props {
   isDark?: boolean
   incomeStatement?: IncomeRow[]
   cashFlow?: CashFlowRow[]
+  statementsData?: { ttm: TTMLike } | null
 }
 
-export default function BusinessModel({ businessProfile, historicalRevenues, ticker, isDark, incomeStatement, cashFlow }: Props) {
+export default function BusinessModel({ businessProfile, historicalRevenues, ticker, isDark, incomeStatement, cashFlow, statementsData }: Props) {
   const { description, industry, country, employees, netMargin, fcfMargin, revenueM } = businessProfile
+
+  // Override metric cards with TTM data from Yahoo Finance statements when available
+  const ttmIS = statementsData?.ttm?.incomeStatement
+  const ttmCF = statementsData?.ttm?.cashFlow
+  const ttmRev  = typeof ttmIS?.totalRevenue === 'number' ? ttmIS.totalRevenue : null
+  const ttmNI   = typeof ttmIS?.netIncome    === 'number' ? ttmIS.netIncome    : null
+  const ttmFcf  = typeof ttmCF?.freeCashFlow  === 'number' ? ttmCF.freeCashFlow  : null
+  const ttmGM   = typeof ttmIS?.grossProfit  === 'number' && ttmRev != null && ttmRev > 0
+    ? ttmIS.grossProfit / ttmRev : null
+
+  const displayRevM   = ttmRev != null ? ttmRev / 1e6  : revenueM
+  const displayNetMgn = ttmRev != null && ttmNI  != null && ttmRev > 0 ? ttmNI  / ttmRev : netMargin
+  const displayFcfMgn = ttmRev != null && ttmFcf != null && ttmRev > 0 ? ttmFcf / ttmRev : fcfMargin
+  const usingTTM      = ttmRev != null
 
   const currentYear = new Date().getFullYear()
   const chartData = [...historicalRevenues]
@@ -78,39 +99,39 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
     })
     .filter((d) => d.gross !== null || d.net !== null)
 
-  // Plain-English stat values
-  const revenueB = revenueM >= 1000 ? `$${(revenueM / 1000).toFixed(1)}b` : `$${revenueM.toFixed(0)}m`
-  const netMarginKeep = netMargin != null ? `$${(netMargin * 100).toFixed(0)} of every $100` : null
-  const fcfB = fcfMargin != null && revenueM > 0
-    ? (fcfMargin * revenueM >= 1000 ? `$${((fcfMargin * revenueM) / 1000).toFixed(1)}b` : `$${(fcfMargin * revenueM).toFixed(0)}m`)
+  // Plain-English stat values using TTM data when available
+  const revenueB = displayRevM >= 1000 ? `$${(displayRevM / 1000).toFixed(1)}b` : `$${displayRevM.toFixed(0)}m`
+  const netMarginKeep = displayNetMgn != null ? `$${(displayNetMgn * 100).toFixed(0)} of every $100` : null
+  const fcfB = displayFcfMgn != null && displayRevM > 0
+    ? (displayFcfMgn * displayRevM >= 1000 ? `$${((displayFcfMgn * displayRevM) / 1000).toFixed(1)}b` : `$${(displayFcfMgn * displayRevM).toFixed(0)}m`)
     : null
 
-  // Summary callout — build from available financials-like data
+  // Summary callout — use TTM overrides when available
   const summaryCallout = buildBusinessSummary(ticker, {
     businessProfile,
     wacc: null,
     cagrAnalysis: null,
     scores: null,
-  } as any)
+  } as any, { fcfMargin: displayFcfMgn, grossMargin: ttmGM ?? businessProfile.grossMargin })
 
   const statCards = [
     {
       label: 'Annual Revenue',
       value: revenueB,
-      sub: 'Last reported year',
+      sub: usingTTM ? 'Trailing 12 months' : 'Last reported year',
       color: 'bg-blue-50 border-blue-100',
     },
     {
       label: 'Profit Margin',
-      value: netMarginKeep ?? (netMargin != null ? fmtPct(netMargin) : '—'),
-      sub: netMarginKeep ? 'Net income per $100 revenue' : 'Net margin',
-      color: netMargin != null && netMargin > 0.10 ? 'bg-green-50 border-green-100' : 'bg-slate-50 border-slate-100',
+      value: netMarginKeep ?? (displayNetMgn != null ? fmtPct(displayNetMgn) : '—'),
+      sub: netMarginKeep ? `Net income per $100 revenue${usingTTM ? ' (TTM)' : ''}` : 'Net margin',
+      color: displayNetMgn != null && displayNetMgn > 0.10 ? 'bg-green-50 border-green-100' : 'bg-slate-50 border-slate-100',
     },
     {
       label: 'Free Cash Flow',
-      value: fcfB ?? (fcfMargin != null ? fmtPct(fcfMargin) : '—'),
-      sub: fcfB ? 'Generated per year (est.)' : 'FCF margin',
-      color: fcfMargin != null && fcfMargin > 0.10 ? 'bg-green-50 border-green-100' : 'bg-slate-50 border-slate-100',
+      value: fcfB ?? (displayFcfMgn != null ? fmtPct(displayFcfMgn) : '—'),
+      sub: fcfB ? `Generated per year (est.)${usingTTM ? ' · TTM' : ''}` : 'FCF margin',
+      color: displayFcfMgn != null && displayFcfMgn > 0.10 ? 'bg-green-50 border-green-100' : 'bg-slate-50 border-slate-100',
     },
   ]
 

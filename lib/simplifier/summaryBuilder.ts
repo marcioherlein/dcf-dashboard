@@ -10,9 +10,13 @@ function num(v: number | null | undefined, d = 1): string {
   return v.toFixed(d)
 }
 
-export function buildBusinessSummary(companyName: string, data: FinancialsData): string {
-  const gm   = data.businessProfile?.grossMargin ?? null
-  const fcfM = data.businessProfile?.fcfMargin ?? null
+export function buildBusinessSummary(
+  companyName: string,
+  data: FinancialsData,
+  ttmOverrides?: { fcfMargin?: number | null; grossMargin?: number | null },
+): string {
+  const gm   = ttmOverrides?.grossMargin ?? data.businessProfile?.grossMargin ?? null
+  const fcfM = ttmOverrides?.fcfMargin   ?? data.businessProfile?.fcfMargin   ?? null
   const cagr = data.cagrAnalysis?.historicalCagr3y ?? null
   const beta = data.wacc?.inputs?.beta ?? null
 

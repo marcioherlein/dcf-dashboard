@@ -544,7 +544,8 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
   const ttmDAStmt    = (ttmIS.reconciledDepreciation as number | null) ?? null
   const ttmDACF      = ((ttmCF.depreciationAndAmortization ?? ttmCF.depreciationAmortizationDepletion) as number | null) ?? null
   const ttmDA        = ttmDAStmt ?? ttmDACF
-  const ttmNetIncome = (ttmIS.netIncome    as number | null) ?? null
+  const ttmNetIncome = (ttmIS.netIncome     as number | null) ?? null
+  const ttmGrossProfit = (ttmIS.grossProfit as number | null) ?? null
   const ttmTaxProv   = (ttmIS.taxProvision as number | null) ?? null
   const ttmIntExp    = Math.abs(((ttmIS.interestExpenseNonOperating ?? ttmIS.interestExpense) as number | null) ?? 0)
   // EBITDA: (1) direct field, (2) EBIT + D&A, (3) bottom-up: NI + Tax + Interest + D&A
@@ -645,9 +646,10 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
   // fairValue.sharesOutstanding is in millions (sharesM); TTM balance sheet shares are absolute
   const sharesAbsolute = ttmShares ?? (apiData?.fairValue?.sharesOutstanding != null ? apiData.fairValue.sharesOutstanding * 1e6 : null)
 
-  const ebitdaMargin = ttmRevenue && ttmRevenue > 0 && ttmEbitda    != null ? ttmEbitda    / ttmRevenue : null
-  const fcfMarginPct = ttmRevenue && ttmRevenue > 0 && ttmFCF       != null ? ttmFCF       / ttmRevenue : null
-  const netMarginPct = ttmRevenue && ttmRevenue > 0 && ttmNetIncome != null ? ttmNetIncome / ttmRevenue : null
+  const ebitdaMargin  = ttmRevenue && ttmRevenue > 0 && ttmEbitda     != null ? ttmEbitda     / ttmRevenue : null
+  const fcfMarginPct  = ttmRevenue && ttmRevenue > 0 && ttmFCF        != null ? ttmFCF        / ttmRevenue : null
+  const netMarginPct  = ttmRevenue && ttmRevenue > 0 && ttmNetIncome  != null ? ttmNetIncome  / ttmRevenue : null
+  const grossMarginPct = ttmRevenue && ttmRevenue > 0 && ttmGrossProfit != null ? ttmGrossProfit / ttmRevenue : null
 
   // ── Derived assumptions ──────────────────────────────────────────────────
   const fwdPEBase   = useMemo(() => deriveForwardPEAssumptions(apiData), [apiData])
@@ -917,11 +919,11 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
               <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
             <p className="text-sm text-blue-800 leading-relaxed">
-              {buildBusinessSummary(apiData?.companyName ?? ticker, {
-                ...apiData,
-                cagrAnalysis: { ...apiData?.cagrAnalysis, historicalCagr3y: stmtCagr3y ?? apiData?.cagrAnalysis?.historicalCagr3y },
-                businessProfile: { ...apiData?.businessProfile, fcfMargin: stmtFcfMarginForSummary ?? apiData?.businessProfile?.fcfMargin },
-              } as any)}
+              {buildBusinessSummary(
+                apiData?.companyName ?? ticker,
+                { ...apiData, cagrAnalysis: { ...apiData?.cagrAnalysis, historicalCagr3y: stmtCagr3y ?? apiData?.cagrAnalysis?.historicalCagr3y } } as any,
+                { fcfMargin: fcfMarginPct ?? stmtFcfMarginForSummary, grossMargin: grossMarginPct ?? apiData?.businessProfile?.grossMargin }
+              )}
             </p>
           </div>
 

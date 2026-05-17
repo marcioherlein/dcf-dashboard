@@ -220,8 +220,10 @@ export function calculateBeneish(
   const cl1 = (bs1.totalCurrentLiabilities ?? bs1.currentLiabilities ?? 0) as number
 
   // Depreciation (from income stmt or cash flow)
-  const dep0 = Math.abs((inc0.depreciationAmortization ?? cf0.depreciation ?? 0) as number)
-  const dep1 = Math.abs((inc1.depreciationAmortization ?? 0) as number)
+  const dep0 = Math.abs((inc0.depreciationAmortization
+    ?? cf0.depreciation ?? cf0.depreciationAndAmortization ?? cf0.reconciledDepreciation ?? 0) as number)
+  const dep1 = Math.abs((inc1.depreciationAmortization
+    ?? inc1.depreciationAndAmortizationDepletion ?? 0) as number)
 
   // SGA
   const sga0 = (inc0.sellingGeneralAdministrative ?? inc0.totalOperatingExpenses ?? 0) as number

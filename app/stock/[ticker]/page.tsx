@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import PriceHeader from '@/components/stock/PriceHeader'
@@ -11,6 +11,7 @@ import HealthSection from '@/components/stock/HealthSection'
 import TabNav, { type TabId } from '@/components/stock/TabNav'
 import ValuationLab from '@/components/valuation/ValuationLab'
 import FinancialsHub from '@/components/stock/FinancialsHub'
+import { calculatePiotroski, calculateAltman, calculateBeneish } from '@/lib/dcf/calculateScores'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
@@ -143,6 +144,50 @@ export default function StockPage() {
     setActiveTab('financials')
     setFinancialsHighlight({ rowKey, statement })
   }
+
+  // Recompute quality scores from Yahoo Finance fundamentalsTimeSeries data when available.
+  // The API-route scores use quoteSummary.incomeStatementHistory which is absent for many
+  // non-US companies, producing artificially low (e.g. 1/9) Piotroski results.
+  // fundamentalsTimeSeries (used by the three statements tab) is available for all companies.
+  const computedScores = useMemo(() => {
+    if (!statementsData?.annual || !data?.scores) return data?.scores ?? null
+    const annBS = statementsData.annual.balanceSheet
+    const annIS = statementsData.annual.incomeStatement
+    const annCF = statementsData.annual.cashFlow
+    if (!annBS?.length || !annIS?.length) return data.scores
+
+    // fundamentalsTimeSeries rows are ascending (oldest first); score functions expect [0] = most recent
+    const bsR = [...annBS].reverse()
+    const isR = [...annIS].reverse()
+    const cfR = [...annCF].reverse()
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sharesNow = (isR[0] as any)?.dilutedAverageShares
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ?? (isR[0] as any)?.ordinarySharesNumber
+      ?? ((data.quote?.marketCap ?? 0) / Math.max(0.01, data.quote?.price ?? 1))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sharesPrior = (isR[1] as any)?.dilutedAverageShares
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ?? (isR[1] as any)?.ordinarySharesNumber
+      ?? sharesNow
+
+    const fxRate = (data.wacc as any)?.fxRate ?? 1
+    const marketCapRaw = (data.quote?.marketCap ?? 0) / fxRate
+
+    const piotroski = calculatePiotroski(bsR, isR, cfR, sharesNow, sharesPrior)
+    const altman    = calculateAltman(bsR[0] ?? {}, isR[0] ?? {}, marketCapRaw)
+    const beneish   = bsR.length >= 2 && isR.length >= 2
+      ? calculateBeneish(bsR[0], bsR[1], isR[0], isR[1], cfR[0] ?? {})
+      : data.scores.beneish
+
+    return {
+      ...data.scores,
+      piotroski,
+      altman:  altman  ?? data.scores.altman,
+      beneish: beneish ?? data.scores.beneish,
+    }
+  }, [statementsData, data])
 
   useEffect(() => {
     setLoading(true)
@@ -277,18 +322,17 @@ export default function StockPage() {
                     isDark={false}
                     incomeStatement={data.financialStatements?.incomeStatement}
                     cashFlow={data.financialStatements?.cashFlow}
+                    statementsData={statementsData}
                   />
                 )}
 
                 {data.ratings && data.scores && (
                   <HealthSection
                     ratings={data.ratings}
-                    scores={data.scores}
+                    scores={computedScores ?? data.scores}
                     financialsData={data}
                   />
                 )}
-
-                {/* CTA to Valuation Lab */}
                 <div
                   className="bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors"
                   onClick={() => setActiveTab('valuation')}
@@ -328,11 +372,11 @@ export default function StockPage() {
                 {data.ratings && data.scores && (
                   <HealthSection
                     ratings={data.ratings}
-                    scores={data.scores}
+                    scores={computedScores ?? data.scores}
                     financialsData={data}
                   />
                 )}
-                {data.scores && <FinancialScores scores={data.scores} />}
+                {data.scores && <FinancialScores scores={computedScores ?? data.scores} />}
               </div>
             )}
 
