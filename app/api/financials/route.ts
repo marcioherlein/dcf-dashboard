@@ -130,7 +130,12 @@ export async function GET(req: NextRequest) {
     // Safety cap: debt should not exceed 3× market cap (prevents extreme leverage edge cases)
     const debtM = marketCapM > 0 ? Math.min(rawDebtM, marketCapM * 3) : rawDebtM
 
-    const sharesM = ((fin.defaultKeyStatistics?.sharesOutstanding ?? 0) as number) / 1e6
+    // Derive share count from market cap / price so ADR companies (TSM, etc.) get
+    // ADR-equivalent units rather than the underlying ordinary share count that Yahoo
+    // returns in defaultKeyStatistics.sharesOutstanding (5× too many for TSM).
+    const sharesM = (q.marketCap as number) > 0 && currentPrice > 0
+      ? (q.marketCap as number) / currentPrice / 1e6
+      : ((fin.defaultKeyStatistics?.sharesOutstanding ?? 0) as number) / 1e6
 
     // Fair value (FCFF)
     const fvResult = calculateFairValue(dcfResult, cashM, debtM, sharesM, currentPrice)
