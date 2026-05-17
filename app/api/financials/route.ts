@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getFmpBundle } from '@/lib/data/fmpClient'
+import { getFmpBundle, type FmpIncomeStatement, type FmpBalanceSheet, type FmpCashFlowStatement } from '@/lib/data/fmpClient'
 import { getFinancials, getQuote, getHistorical, getSPYHistorical, getFXRate, getPeerQuotes } from '@/lib/data/yahooClient'
 import { calculateBeta } from '@/lib/dcf/calculateBeta'
 import { calculateWACC, extractWACCInputs } from '@/lib/dcf/calculateWACC'
@@ -203,34 +203,56 @@ export async function GET(req: NextRequest) {
 
     // ─── Financial Quality Scores ─────────────────────────────────────────────
 
-    const rawBSStmts: any[] = fin.balanceSheetHistory?.balanceSheetStatements ?? []
-    const rawISStmts: any[] = fin.incomeStatementHistory?.incomeStatementHistory ?? []
-    const rawCFStmts: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
+    // yahoo-finance2 strips all balance sheet and cashflow fields via "additionalProperties: false"
+    // in its quoteSummary schema — only maxAge/endDate survive on BalanceSheetStatement, and only
+    // maxAge/endDate/netIncome on CashflowStatement. Use FMP statements instead (already fetched).
+    const fmpBS = fmp.balanceSheets as FmpBalanceSheet[]
+    const fmpIS = fmp.incomeStatements as FmpIncomeStatement[]
+    const fmpCF = fmp.cashFlowStatements as FmpCashFlowStatement[]
+
+    // Map FMP statements to the field names calculatePiotroski/Altman/Beneish/ROIC expect.
+    // FMP values are raw (not millions) in the company's reporting currency — fine for ratio-based scores.
+    const pBSStmts: any[] = fmpBS.slice(0, 4).map((bs) => ({
+      totalAssets: bs.totalAssets,
+      totalCurrentAssets: bs.totalCurrentAssets,
+      totalCurrentLiabilities: bs.totalCurrentLiabilities,
+      longTermDebt: bs.longTermDebt,
+      cash: bs.cashAndCashEquivalents,
+      cashAndShortTermInvestments: bs.cashAndShortTermInvestments,
+      totalLiab: bs.totalAssets - (bs.totalEquity ?? bs.totalStockholdersEquity ?? 0),
+      retainedEarnings: null,  // not in FMP free tier; Altman x2 will gracefully fallback to 0
+    }))
+    const pISStmts: any[] = fmpIS.slice(0, 4).map((is) => ({
+      totalRevenue: is.revenue,
+      grossProfit: is.grossProfit,
+      ebit: is.ebit,
+      netIncome: is.netIncome,
+      // diluted shares derived from EPS for year-over-year dilution check
+      dilutedAverageShares: Math.abs(is.epsDiluted ?? 0) > 0.001
+        ? Math.abs(is.netIncome / (is.epsDiluted as number))
+        : null,
+    }))
+    const pCFStmts: any[] = fmpCF.slice(0, 4).map((cf) => ({
+      totalCashFromOperatingActivities: cf.netCashProvidedByOperatingActivities,
+      operatingCashflow: cf.netCashProvidedByOperatingActivities,
+      depreciationAndAmortization: cf.depreciationAndAmortization,
+    }))
 
     // Market cap in financial (reporting) currency for Altman Z-Score comparability
     const marketCapLocal = (q.marketCap ?? 0) / fxRate
-    // Shares for dilution check: use dilutedAverageShares from income statements (year-over-year
-    // comparison of actual weighted-average share counts, not a dollar-amount approximation).
-    // Fallback: derive from dilutedEPS × netIncome when dilutedAverageShares is absent.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const impliedShares = (inc: any): number | null => {
-      if (!inc) return null
-      const das = inc.dilutedAverageShares as number | null
-      if (das && das > 0) return das
-      const eps = inc.dilutedEps as number | undefined
-      const ni = (inc.netIncome ?? inc.netIncomeApplicableToCommonShares) as number | undefined
-      if (eps && Math.abs(eps) > 0.001 && ni) return Math.abs(ni / eps)
-      return null
-    }
-    const sharesNow   = impliedShares(rawISStmts[0]) ?? (ks.sharesOutstanding ?? 0) as number
-    const sharesPrior = impliedShares(rawISStmts[1]) ?? sharesNow
 
-    const piotroski = calculatePiotroski(rawBSStmts, rawISStmts, rawCFStmts, sharesNow, sharesPrior)
-    const altman = calculateAltman(rawBSStmts[0] ?? {}, rawISStmts[0] ?? {}, marketCapLocal)
-    const beneish = rawBSStmts.length >= 2 && rawISStmts.length >= 2
-      ? calculateBeneish(rawBSStmts[0], rawBSStmts[1], rawISStmts[0], rawISStmts[1], rawCFStmts[0] ?? {})
+    // Shares for dilution check: prefer FMP-derived diluted average shares
+    const impliedSharesFmp = (is: typeof pISStmts[0]): number | null =>
+      is?.dilutedAverageShares as number | null ?? null
+    const sharesNow   = impliedSharesFmp(pISStmts[0]) ?? (ks.sharesOutstanding ?? 0) as number
+    const sharesPrior = impliedSharesFmp(pISStmts[1]) ?? sharesNow
+
+    const piotroski = calculatePiotroski(pBSStmts, pISStmts, pCFStmts, sharesNow, sharesPrior)
+    const altman = calculateAltman(pBSStmts[0] ?? {}, pISStmts[0] ?? {}, marketCapLocal)
+    const beneish = pBSStmts.length >= 2 && pISStmts.length >= 2
+      ? calculateBeneish(pBSStmts[0], pBSStmts[1], pISStmts[0], pISStmts[1], pCFStmts[0] ?? {})
       : null
-    const roicResult = calculateROIC(rawBSStmts[0] ?? {}, rawBSStmts[1] ?? {}, rawISStmts[0] ?? {}, waccResult.inputs.taxRate, waccResult.wacc, fxRate)
+    const roicResult = calculateROIC(pBSStmts[0] ?? {}, pBSStmts[1] ?? {}, pISStmts[0] ?? {}, waccResult.inputs.taxRate, waccResult.wacc, fxRate)
 
     const scores = { piotroski, altman, beneish, roic: roicResult }
 
