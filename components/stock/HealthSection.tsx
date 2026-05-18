@@ -48,10 +48,11 @@ function ScoreBar({ score, color }: { score: number; color: string }) {
 }
 
 export default function HealthSection({ ratings, scores, financialsData }: Props) {
-  const piotroski    = scores.piotroski?.score ?? null
-  const altmanZone   = scores.altman?.zone ?? null
-  const beneishFlag  = scores.beneish?.flag ?? null
-  const overallGrade = ratings.overall?.grade ?? 'N/A'
+  const piotroski       = scores.piotroski?.score ?? null
+  const altmanZone      = scores.altman?.zone ?? null
+  const altmanReliable  = scores.altman?.isReliable ?? true
+  const beneishFlag     = scores.beneish?.flag ?? null
+  const overallGrade    = ratings.overall?.grade ?? 'N/A'
 
   const healthInterp = buildHealthInterpretation({ piotroski, altmanZone, beneishFlag, overallGrade })
   const riskSummary  = financialsData ? buildRiskSummary('this company', financialsData) : null
@@ -107,7 +108,12 @@ export default function HealthSection({ ratings, scores, financialsData }: Props
               )}
               {altmanZone && (
                 <div className="flex items-center justify-between rounded-lg bg-slate-50 border border-slate-100 px-4 py-2.5">
-                  <span className="text-xs text-slate-600">Altman Z-Score</span>
+                  <span className="text-xs text-slate-600">
+                    Altman Z-Score
+                    {!altmanReliable && (
+                      <span className="ml-1.5 text-[10px] text-amber-600 font-medium">(EM — limited reliability)</span>
+                    )}
+                  </span>
                   <span className={`text-[11px] font-semibold rounded-full px-2 py-0.5 ${altmanZone === 'Safe' ? 'bg-green-100 text-green-700' : altmanZone === 'Grey' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
                     {altmanZone} Zone
                   </span>

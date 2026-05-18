@@ -77,7 +77,9 @@ export function extractWACCInputs(financials: any, rfRate: number, betaFromRegre
   // Beta: regression first, then Yahoo's published beta
   const beta = betaFromRegression > 0 ? betaFromRegression : (ks.beta ?? 1.0)
 
-  // Cost of debt: try income statement, else RF + 1.5% credit spread (investment grade default)
+  // Cost of debt: try income statement, else RF + country risk + 1.5% credit spread.
+  // The crp term prevents the fallback from being a pure US investment-grade floor
+  // for emerging-market companies (e.g. Argentina CRP ~15.4%).
   // interestExpense and rawDebtForRate are both in reporting currency → rate is currency-independent
   const interestExpense = Math.abs(inc0.interestExpense ?? 0)
   const rawDebtForRate = isFinancialSector
@@ -85,7 +87,7 @@ export function extractWACCInputs(financials: any, rfRate: number, betaFromRegre
     : (fd.totalDebt ?? 0) as number
   const costOfDebt = (interestExpense > 0 && rawDebtForRate > 0)
     ? Math.min(interestExpense / rawDebtForRate, 0.15)  // cap at 15%
-    : rfRate + 0.015
+    : rfRate + crp + 0.015
 
   // Tax rate: income stmt if available, else 21% US statutory
   const incomeTax: number = inc0.incomeTaxExpense ?? 0

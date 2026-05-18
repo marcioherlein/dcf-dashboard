@@ -248,8 +248,11 @@ export async function GET(req: NextRequest) {
     const sharesPrior = impliedSharesFmp(pISStmts[1]) ?? sharesNow
 
     const piotroski = calculatePiotroski(pBSStmts, pISStmts, pCFStmts, sharesNow, sharesPrior)
-    const altman = calculateAltman(pBSStmts[0] ?? {}, pISStmts[0] ?? {}, marketCapLocal)
-    const beneish = pBSStmts.length >= 2 && pISStmts.length >= 2
+    const isEmergingMarket = crp > 0
+    const altman = calculateAltman(pBSStmts[0] ?? {}, pISStmts[0] ?? {}, marketCapLocal, isEmergingMarket)
+    // Beneish M-Score is based on YoY ratio changes — unreliable for high-inflation currencies
+    // (e.g. ARS 117-211% annual inflation makes every ratio change look like manipulation).
+    const beneish = (fxRate === 1 && pBSStmts.length >= 2 && pISStmts.length >= 2)
       ? calculateBeneish(pBSStmts[0], pBSStmts[1], pISStmts[0], pISStmts[1], pCFStmts[0] ?? {})
       : null
     const roicResult = calculateROIC(pBSStmts[0] ?? {}, pBSStmts[1] ?? {}, pISStmts[0] ?? {}, waccResult.inputs.taxRate, waccResult.wacc, fxRate)

@@ -482,6 +482,7 @@ function StockPageBody() {
                   statementsData={statementsData}
                   financialsData={data}
                   currency={currency}
+                  reportingCurrency={statementsData?.financialCurrency}
                   cagr={data.cagr}
                   highlight={financialsHighlight}
                 />

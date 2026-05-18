@@ -16,7 +16,8 @@ interface Props {
   statementsData:  StatementsData | null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   financialsData?: any
-  currency?:       string
+  currency?:          string
+  reportingCurrency?: string
   cagr?:           number
   highlight?:      { rowKey: string; statement: 'income' | 'balance' | 'cashflow' } | null
 }
@@ -388,7 +389,7 @@ function toM(v: unknown): number | null {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export default function FinancialsHub({ statementsData, financialsData, currency = '$', highlight }: Props) {
+export default function FinancialsHub({ statementsData, financialsData, currency = '$', reportingCurrency, highlight }: Props) {
   const [subTab, setSubTab] = useState<SubTab>('statements')
 
   // When a navigation highlight arrives from Valuation Lab, switch to Statements sub-tab
@@ -613,6 +614,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
           <YahooFinancials
             statementsData={statementsData}
             currency={currency}
+            reportingCurrency={reportingCurrency}
             highlight={highlight ?? undefined}
           />
           {(finCF.length > 0) && (

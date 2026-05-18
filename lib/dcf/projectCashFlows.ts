@@ -193,11 +193,17 @@ export function extractFCFInputs(financials: any, foreignCurrency = false): {
     ? ((next2y?.earningsEstimate?.growth ?? next2y?.revenueEstimate?.growth ?? null) as number | null)
     : ((next2y?.revenueEstimate?.growth ?? null) as number | null)
 
-  // If 2Y is missing, estimate as a deceleration from 1Y (typical analyst pattern)
-  const analyst1y: number = analystRaw1y ?? historicalRevenues.length >= 2
-    ? (Math.pow(historicalRevenues[0] / historicalRevenues[Math.min(historicalRevenues.length - 1, 3)], 1 / Math.min(historicalRevenues.length - 1, 3)) - 1)
-    : ((fd.revenueGrowth ?? 0.07) as number)
-  const analyst2y: number = analystRaw2y ?? (analyst1y > 0.20 ? analyst1y * 0.80 : analyst1y * 0.88)
+  // If 2Y is missing, estimate as a deceleration from 1Y (typical analyst pattern).
+  // Guard: historical ARS revenues are inflation-distorted for foreign-currency companies,
+  // so only use historical CAGR when !foreignCurrency.
+  const analyst1y: number = analystRaw1y !== null && analystRaw1y !== undefined
+    ? analystRaw1y
+    : (historicalRevenues.length >= 2 && !foreignCurrency)
+      ? (Math.pow(historicalRevenues[0] / historicalRevenues[Math.min(historicalRevenues.length - 1, 3)], 1 / Math.min(historicalRevenues.length - 1, 3)) - 1)
+      : (fd.revenueGrowth ?? 0.07) as number
+  const analyst2y: number = analystRaw2y !== null && analystRaw2y !== undefined
+    ? analystRaw2y
+    : (analyst1y > 0.20 ? analyst1y * 0.80 : analyst1y * 0.88)
 
   // ── Source 2: Historical CAGR ────────────────────────────────────────────────
   // For foreign-currency companies this is in local currency (inflation-distorted)
@@ -297,11 +303,15 @@ export function extractFCFInputs(financials: any, foreignCurrency = false): {
     wTTM         /= wSum
   }
 
-  const rawBlended =
-    wAnalyst     * analyst1y +
-    wFundamental * (fundamentalGrowth ?? 0) +
-    wHistorical  * historicalCagr3y +
-    wTTM         * (ttmEarnings ?? 0)
+  // All-zero-weights edge case: no analyst data + no fundamentalGrowth + foreignCurrency.
+  // Fall back to fd.revenueGrowth (Yahoo TTM estimate) or 7% as a neutral assumption.
+  const allWeightsZero = wSum === 0
+  const rawBlended = allWeightsZero
+    ? ((fd.revenueGrowth as number | null) ?? 0.07)
+    : (wAnalyst     * analyst1y +
+       wFundamental * (fundamentalGrowth ?? 0) +
+       wHistorical  * historicalCagr3y +
+       wTTM         * (ttmEarnings ?? 0))
 
   // ── Convergence discount (Damodaran mean-reversion) ─────────────────────────
   // Growth rates above 20% are uncommon beyond 3-5 years even for top-quartile

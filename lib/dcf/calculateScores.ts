@@ -126,12 +126,14 @@ export interface AltmanResult {
   zScore: number
   zone: 'Safe' | 'Grey' | 'Distress'
   components: { x1: number; x2: number; x3: number; x4: number; x5: number }
+  isReliable: boolean  // false for non-US / emerging market companies
 }
 
 export function calculateAltman(
   bs: any,
   inc: any,
   marketCapRaw: number,   // in same raw currency units as balance sheet (not millions)
+  isEmergingMarket = false,
 ): AltmanResult | null {
   const ta = (bs.totalAssets ?? 0) as number
   if (ta <= 0) return null
@@ -165,6 +167,7 @@ export function calculateAltman(
   return {
     zScore: rounded,
     zone,
+    isReliable: !isEmergingMarket,
     components: {
       x1: Math.round(x1 * 1000) / 1000,
       x2: Math.round(x2 * 1000) / 1000,

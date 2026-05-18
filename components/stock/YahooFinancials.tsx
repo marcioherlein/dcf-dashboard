@@ -232,10 +232,11 @@ function groupSections(rows: RowDef[]): Section[] {
 interface Props {
   statementsData: StatementsData | null
   currency?: string
+  reportingCurrency?: string
   highlight?: { rowKey: string; statement: StatementType }
 }
 
-export default function YahooFinancials({ statementsData, currency = '$', highlight }: Props) {
+export default function YahooFinancials({ statementsData, currency = '$', reportingCurrency, highlight }: Props) {
   const [period, setPeriod]       = useState<Period>('annual')
   const [statement, setStatement] = useState<StatementType>('income')
   const [expanded, setExpanded]   = useState<Record<string, boolean>>({})
@@ -371,7 +372,7 @@ export default function YahooFinancials({ statementsData, currency = '$', highli
       </div>
 
       <div className="px-4 pt-2 pb-1 text-[11px] text-slate-400">
-        All figures in thousands ({currency}) · TTM = trailing twelve months
+        All figures in thousands ({reportingCurrency ?? currency}) · TTM = trailing twelve months
       </div>
 
       {/* Table */}
