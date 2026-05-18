@@ -27,14 +27,91 @@ interface Props {
 
 function computeConsensus(methods: MethodResult[], price: number) {
   const valid = methods.filter(m => m.fairValue != null && m.weight > 0)
-  if (!valid.length) return { weightedFV: null, weightedUpside: null, zone: null }
+  if (!valid.length) return { weightedFV: null, weightedBearFV: null, weightedBullFV: null, weightedUpside: null, zone: null }
 
   const totalWeight    = valid.reduce((s, m) => s + m.weight, 0)
   const weightedFV     = valid.reduce((s, m) => s + m.fairValue! * m.weight, 0) / totalWeight
+  const weightedBearFV = valid.reduce((s, m) => s + (m.bearFairValue ?? m.fairValue! * 0.85) * m.weight, 0) / totalWeight
+  const weightedBullFV = valid.reduce((s, m) => s + (m.bullFairValue ?? m.fairValue! * 1.15) * m.weight, 0) / totalWeight
   const weightedUpside = price > 0 ? (weightedFV - price) / price : null
   const zone           = upsideZone(weightedUpside)
 
-  return { weightedFV, weightedUpside, zone }
+  return { weightedFV, weightedBearFV, weightedBullFV, weightedUpside, zone }
+}
+
+function ConsensusRangeBar({
+  bear, base, bull, price, currency,
+}: { bear: number; base: number; bull: number; price: number; currency: string }) {
+  const lo   = Math.min(bear, price) * 0.94
+  const hi   = Math.max(bull, price) * 1.06
+  const span = hi - lo
+  if (span <= 0) return null
+
+  const p = (v: number) => Math.max(1, Math.min(99, ((v - lo) / span) * 100))
+  const isUnder = price <= base
+
+  const bearPct = p(bear)
+  const basePct = p(base)
+  const bullPct = p(bull)
+  const nowPct  = p(price)
+
+  return (
+    <div className="px-1 pt-3 pb-1 select-none">
+      {/* "Current" label above the bar */}
+      <div className="relative h-8 mb-0.5">
+        <div className="absolute -translate-x-1/2 flex flex-col items-center pointer-events-none"
+          style={{ left: `${nowPct}%` }}>
+          <span className="text-[11px] font-bold font-mono text-slate-900 leading-tight">
+            {fmtPrice(price, currency)}
+          </span>
+          <span className="text-[9px] text-slate-400 uppercase tracking-wider leading-none">Current</span>
+          {/* Connector line down to the bar */}
+          <span className="w-px h-2 bg-slate-400 mt-0.5" />
+        </div>
+      </div>
+
+      {/* Track */}
+      <div className="relative h-3 rounded-full bg-slate-100 overflow-hidden">
+        {/* Bear → Base fill */}
+        <div
+          className="absolute inset-y-0 bg-amber-300/70"
+          style={{ left: `${bearPct}%`, width: `${basePct - bearPct}%` }}
+        />
+        {/* Base → Bull fill */}
+        <div
+          className="absolute inset-y-0 bg-emerald-300/70"
+          style={{ left: `${basePct}%`, width: `${bullPct - basePct}%` }}
+        />
+        {/* Base divider */}
+        <div
+          className="absolute inset-y-0 w-0.5 bg-slate-400"
+          style={{ left: `${basePct}%`, transform: 'translateX(-50%)' }}
+        />
+        {/* Current price marker */}
+        <div
+          className={cn('absolute inset-y-0 w-[3px] rounded-sm', isUnder ? 'bg-emerald-700' : 'bg-red-600')}
+          style={{ left: `${nowPct}%`, transform: 'translateX(-50%)' }}
+        />
+      </div>
+
+      {/* Bear / Base / Bull labels below track */}
+      <div className="relative h-8 mt-1">
+        {([
+          { v: bear, label: 'Bear', cls: 'text-amber-600' },
+          { v: base, label: 'Base', cls: 'text-slate-700 font-semibold' },
+          { v: bull, label: 'Bull', cls: 'text-emerald-600' },
+        ] as const).map(({ v, label, cls }) => (
+          <div key={label}
+            className="absolute -translate-x-1/2 text-center pointer-events-none"
+            style={{ left: `${p(v)}%` }}
+          >
+            <div className={cn('text-[10px] font-mono leading-tight', cls)}>{fmtPrice(v, currency)}</div>
+            <div className={cn('text-[9px] uppercase tracking-wide leading-none', cls)}>{label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,7 +135,7 @@ function RangeTooltip({ active, payload }: { active?: boolean; payload?: any[] }
 }
 
 export default function ValuationSummary({ methods, currentPrice, currency = 'USD' }: Props) {
-  const { weightedFV, weightedUpside, zone } = computeConsensus(methods, currentPrice)
+  const { weightedFV, weightedBearFV, weightedBullFV, weightedUpside, zone } = computeConsensus(methods, currentPrice)
 
   const zoneStyle = zone === 'Attractive'
     ? { wrap: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700' }
@@ -105,6 +182,18 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
               )}
             </div>
           </div>
+          {/* Bear / Base / Bull consensus range bar */}
+          {weightedBearFV != null && weightedBullFV != null && (
+            <div className="mt-3 pt-3 border-t border-current/10">
+              <ConsensusRangeBar
+                bear={weightedBearFV}
+                base={weightedFV}
+                bull={weightedBullFV}
+                price={currentPrice}
+                currency={currency}
+              />
+            </div>
+          )}
         </div>
       )}
 

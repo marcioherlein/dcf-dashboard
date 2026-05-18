@@ -12,13 +12,12 @@ interface SearchResult {
 }
 
 const MORE_ITEMS = [
-  { href: '/monitor',        label: 'Market Monitor' },
-  { href: '/monitor?tab=portfolio', label: 'Portfolio' },
-  { href: '/factor-ranking', label: 'Screener' },
-  { href: '/compare',        label: 'Compare Pairs' },
-  { href: '/trading',        label: 'Trading Signals' },
-  { href: '/simplifier',     label: 'Watchlist' },
-  { href: '/strategies',     label: 'Strategies' },
+  { href: '/ai-stack',        label: 'AI Stack' },
+  { href: '/monitor',         label: 'Market Monitor' },
+  { href: '/factor-ranking',  label: 'Screener' },
+  { href: '/compare',         label: 'Compare Pairs' },
+  { href: '/trading',         label: 'Trading Signals' },
+  { href: '/strategies',      label: 'Strategies' },
 ]
 
 export default function TopBar() {
@@ -91,13 +90,22 @@ export default function TopBar() {
           Analyze
         </Link>
         <Link
-          href="/ai-stack"
+          href="/simplifier"
           className={[
             'h-8 flex items-center px-3 text-[13px] font-medium rounded-md transition-colors whitespace-nowrap',
-            pathname.startsWith('/ai-stack') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100',
+            pathname.startsWith('/simplifier') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100',
           ].join(' ')}
         >
-          AI Stack
+          Watchlist
+        </Link>
+        <Link
+          href="/monitor?tab=portfolio"
+          className={[
+            'h-8 flex items-center px-3 text-[13px] font-medium rounded-md transition-colors whitespace-nowrap',
+            pathname.startsWith('/monitor') && !pathname.startsWith('/monitor?') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100',
+          ].join(' ')}
+        >
+          Portfolio
         </Link>
 
         {/* More dropdown */}
