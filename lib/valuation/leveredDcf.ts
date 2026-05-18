@@ -52,10 +52,11 @@ export function computeLFCFRows(
     const nwcDelta = (r.nwc != null && prior?.nwc != null) ? r.nwc - prior.nwc : null
 
     let lfcf: number | null = null
-    if (r.netIncome != null && dna != null && r.capex != null) {
+    if (r.netIncome != null && dna != null) {
+      const capexComponent = r.capex ?? 0
       const dnwcComponent = nwcDelta ?? 0
       const debtComponent = r.netDebtRepayment ?? 0
-      lfcf = r.netIncome + dna + r.capex - dnwcComponent - debtComponent
+      lfcf = r.netIncome + dna + capexComponent - dnwcComponent - debtComponent
     }
 
     const projectedYearIndex = result.filter(x => x.isProjected).length + (r.isProjected ? 1 : 0)

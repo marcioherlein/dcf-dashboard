@@ -269,12 +269,11 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
     [lastLFCF, baseInput.costOfEquity, terminalG, exitMultiple, numProjectionYears, sumPvLFCF, baseInput.companyType]
   )
 
-  // EV and fair values (kept for potential future use)
+  // EV and fair values
   const ufcfTVDiscounted = tvUFCF.primaryMethod === 'perpetuity' ? tvUFCF.perpetuityTVDiscounted : tvUFCF.exitMultipleTVDiscounted
   const ufcfEV = computeUFCFEV(ufcfRows, ufcfTVDiscounted)
 
-  // Suppress unused-variable warnings
-  void tvLFCF
+  // Suppress unused-variable warning
   void ufcfEV
 
   // Build display rows
@@ -329,7 +328,14 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
     debtM: baseInput.debtM,
     sharesM,
     currentPrice: baseInput.currentPrice,
-  }), [tvUFCF, terminalMethod, exitMultiple, terminalG, sumPvUFCF, baseInput, sharesM])
+    // LFCF terminal values
+    lfcfPerpetualTV: tvLFCF.perpetuityTV,
+    lfcfPerpetualTVDiscounted: tvLFCF.perpetuityTVDiscounted,
+    lfcfExitMultipleTV: tvLFCF.exitMultipleTV,
+    lfcfExitMultipleTVDiscounted: tvLFCF.exitMultipleTVDiscounted,
+    lfcfGuardError: tvLFCF.guardError ?? null,
+    sumPvLfcf: sumPvLFCF,
+  }), [tvUFCF, tvLFCF, terminalMethod, exitMultiple, terminalG, sumPvUFCF, sumPvLFCF, baseInput, sharesM])
 
   const handleCellEdit = useCallback((year: string, field: string, value: number) => {
     setRowOverrides(prev => ({ ...prev, [year]: { ...prev[year], [field]: value } }))

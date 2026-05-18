@@ -10,7 +10,6 @@ import {
 } from './ValuationModelDrawer'
 import ValuationSummary, { type MethodResult } from './ValuationSummary'
 import ModellingWorkspace from '@/components/modelling/ModellingWorkspace'
-import DataQualityWarnings from '@/components/modelling/DataQualityWarnings'
 import { computeForwardPE } from '@/lib/valuation/methods/forwardPE'
 import { computeRevenueMultiple } from '@/lib/valuation/methods/revenueMultiple'
 import { computeReverseDCF } from '@/lib/valuation/methods/reverseDcf'
@@ -1140,14 +1139,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
                 Year-by-year unlevered FCF model grounded in Yahoo Finance statements
               </p>
             </div>
-            <DataQualityWarnings
-              terminalGError={null}
-              financialCurrencyNote={apiData?.financialCurrencyNote ?? null}
-              isFinancialSector={apiData?.valuationMethods?.companyType === 'financial'}
-              isNegativeFCF={apiData?.baseFCF != null && apiData.baseFCF < 0}
-              altmanZone={apiData?.scores?.altman?.zone ?? null}
-              beneishFlag={apiData?.scores?.beneish?.flag ?? null}
-            />
             <ModellingWorkspace apiData={apiData} ticker={ticker} statementsData={statementsData} />
           </div>
         )}

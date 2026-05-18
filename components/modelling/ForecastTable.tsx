@@ -63,12 +63,19 @@ export interface TerminalData {
   exitMultiple: number
   terminalG: number
   guardError: string | null
-  // Equity value bridge (all $M)
+  // UFCF equity value bridge (all $M)
   sumPvUfcf: number
   cashM: number | null
   debtM: number | null
   sharesM: number | null
   currentPrice: number
+  // LFCF terminal values (optional — populated when LFCF rows have non-null lfcf)
+  lfcfPerpetualTV?: number | null
+  lfcfPerpetualTVDiscounted?: number | null
+  lfcfExitMultipleTV?: number | null
+  lfcfExitMultipleTVDiscounted?: number | null
+  lfcfGuardError?: string | null
+  sumPvLfcf?: number
 }
 
 interface ForecastTableProps {
@@ -834,12 +841,24 @@ export default function ForecastTable({
   function renderTerminalSection() {
     const td = terminalData
     const isMultiple = td.method === 'multiple'
-    const tv   = isMultiple ? td.exitMultipleTV         : td.perpetuityTV
-    const pvTv = isMultiple ? td.exitMultipleTVDiscounted : td.perpetuityTVDiscounted
+    const isLfcf = mode === 'lfcf'
+
+    const tv = isMultiple
+      ? (isLfcf ? (td.lfcfExitMultipleTV ?? null)         : td.exitMultipleTV)
+      : (isLfcf ? (td.lfcfPerpetualTV ?? null)             : td.perpetuityTV)
+    const pvTv = isMultiple
+      ? (isLfcf ? (td.lfcfExitMultipleTVDiscounted ?? null) : td.exitMultipleTVDiscounted)
+      : (isLfcf ? (td.lfcfPerpetualTVDiscounted ?? null)    : td.perpetuityTVDiscounted)
+    const activeGuardError = isLfcf ? (td.lfcfGuardError ?? null) : td.guardError
+    const sumPvFlow = isLfcf ? (td.sumPvLfcf ?? 0) : td.sumPvUfcf
 
     // Equity value bridge
-    const ev           = pvTv != null ? td.sumPvUfcf + pvTv : null
-    const equityValue  = ev   != null ? ev + (td.cashM ?? 0) - (td.debtM ?? 0) : null
+    // UFCF: EV = sumPvUFCF + pvTV → equity = EV + cash − debt
+    // LFCF: equity = sumPvLFCF + pvTV directly (already levered)
+    const ev           = pvTv != null ? sumPvFlow + pvTv : null
+    const equityValue  = isLfcf
+      ? ev
+      : (ev != null ? ev + (td.cashM ?? 0) - (td.debtM ?? 0) : null)
     const impliedPrice = equityValue != null && td.sharesM != null && td.sharesM > 0
       ? equityValue / td.sharesM : null
     const upside = impliedPrice != null && td.currentPrice > 0
@@ -880,7 +899,7 @@ export default function ForecastTable({
           </div>
         </div>
 
-        {td.guardError && td.method === 'perpetuity' && (
+        {activeGuardError && td.method === 'perpetuity' && (
           <div className="mb-3 flex items-center gap-2 rounded border border-red-800 bg-red-950/40 px-3 py-2 text-xs text-red-400">
             <span className="font-bold">!</span>
             <span>{td.guardError}</span>
@@ -943,11 +962,17 @@ export default function ForecastTable({
         <div className="max-w-xs space-y-0">
           <SummaryRow label="Terminal Value"          value={tv   != null ? fmtLargeM(tv)   : '—'} />
           <SummaryRow label="PV of Terminal Value"    value={pvTv != null ? fmtLargeM(pvTv) : '—'} />
-          <SummaryRow label="Cumulative PV of UFCF"   value={fmtLargeM(td.sumPvUfcf)} />
-          <SummaryRow label="Enterprise Value"        value={ev   != null ? fmtLargeM(ev)   : '—'} bold />
-          <SummaryRow label="+ Cash"                  value={td.cashM != null ? fmtLargeM(td.cashM) : '—'} />
-          <SummaryRow label="− Debt"                  value={td.debtM != null ? fmtLargeM(td.debtM) : '—'} />
-          <SummaryRow label="Equity Value"            value={equityValue != null ? fmtLargeM(equityValue) : '—'} bold />
+          <SummaryRow label={isLfcf ? 'Cumulative PV of LFCF' : 'Cumulative PV of UFCF'} value={fmtLargeM(sumPvFlow)} />
+          {isLfcf ? (
+            <SummaryRow label="Equity Value (LFCF)"  value={ev   != null ? fmtLargeM(ev)   : '—'} bold />
+          ) : (
+            <>
+              <SummaryRow label="Enterprise Value"   value={ev   != null ? fmtLargeM(ev)   : '—'} bold />
+              <SummaryRow label="+ Cash"             value={td.cashM != null ? fmtLargeM(td.cashM) : '—'} />
+              <SummaryRow label="− Debt"             value={td.debtM != null ? fmtLargeM(td.debtM) : '—'} />
+              <SummaryRow label="Equity Value"       value={equityValue != null ? fmtLargeM(equityValue) : '—'} bold />
+            </>
+          )}
           <SummaryRow label="Shares Outstanding"      value={td.sharesM != null ? td.sharesM.toFixed(1) + 'M' : '—'} />
           <SummaryRow label="Implied Share Price"     value={impliedPrice != null ? `${curr}${impliedPrice.toFixed(2)}` : '—'} bold />
           <SummaryRow label="Current Share Price"     value={`${curr}${td.currentPrice.toFixed(2)}`} />
