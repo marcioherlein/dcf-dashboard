@@ -3,8 +3,6 @@ export type AnalyticsEvent =
   | 'tab_changed'
   | 'assumption_changed'
   | 'save_clicked'
-  | 'paywall_seen'
-  | 'upgrade_clicked'
   | 'advanced_mode_toggled'
   | 'thesis_started'
   | 'thesis_completed'
@@ -17,6 +15,12 @@ export type AnalyticsEvent =
   | 'watchlist_viewed'
   | 'portfolio_viewed'
   | 'fair_value_calculated'
+  | 'gated_action_clicked'
+  | 'login_modal_seen'
+  | 'login_started'
+  | 'login_completed'
+  | 'login_dismissed'
+  | 'saved_after_login'
 
 type EventProps = Record<string, string | number | boolean | null | undefined>
 

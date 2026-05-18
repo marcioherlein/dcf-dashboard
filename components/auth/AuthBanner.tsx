@@ -27,14 +27,14 @@ export default function AuthBanner() {
   return (
     <div className="sticky top-[52px] z-10 flex items-center justify-between gap-4 bg-blue-600 px-4 py-2.5 text-sm text-white sm:px-6">
       <span className="leading-snug">
-        <strong>Save this analysis</strong> — sign in free to keep your research in one place.
+        <strong>Save this analysis</strong> — sign in to keep your research in one place.
       </span>
       <div className="flex items-center gap-3 shrink-0">
         <button
-          onClick={() => requireAuth('Save this analysis to your watchlist — sign in to unlock it.')}
+          onClick={() => requireAuth({ intent: 'save_watchlist' })}
           className="rounded-lg bg-white px-3 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-50 transition-colors"
         >
-          Sign in free →
+          Save to watchlist →
         </button>
         <button
           onClick={() => setVisible(false)}

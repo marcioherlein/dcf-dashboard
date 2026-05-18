@@ -17,6 +17,8 @@ import { LoginGateProvider, useLoginGate } from '@/components/auth/LoginGateProv
 import AuthBanner from '@/components/auth/AuthBanner'
 import { calculatePiotroski, calculateAltman, calculateBeneish } from '@/lib/dcf/calculateScores'
 import { track } from '@/lib/analytics/events'
+import { loadPreLoginState, clearPreLoginState } from '@/lib/auth/preLoginState'
+import { useSession } from 'next-auth/react'
 import { Sparkles } from 'lucide-react'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
@@ -147,6 +149,7 @@ function StockPageBody() {
   const { ticker } = useParams<{ ticker: string }>()
   const router = useRouter()
   const { requireAuth } = useLoginGate()
+  const { data: session } = useSession()
   const [data, setData]             = useState<FinancialsData | null>(null)
   const [statementsData, setStatementsData] = useState<StatementsData | null>(null)
   const [loading, setLoading]       = useState(true)
@@ -154,6 +157,20 @@ function StockPageBody() {
   const [saving, setSaving]   = useState(false)
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [financialsHighlight, setFinancialsHighlight] = useState<{ rowKey: string; statement: 'income' | 'balance' | 'cashflow' } | null>(null)
+
+  // After Google OAuth redirect, restore the user's pre-login state (tab, etc.)
+  useEffect(() => {
+    if (!session?.user) return
+    const saved = loadPreLoginState()
+    if (!saved) return
+    clearPreLoginState()
+    if (saved.tab && ['overview', 'valuation', 'financials', 'risks', 'news'].includes(saved.tab)) {
+      setActiveTab(saved.tab as TabId)
+    }
+    track('saved_after_login', { intent: saved.intent, ticker: saved.ticker ?? ticker })
+  // Only run once when session first becomes available
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user])
 
   const handleNavigateToFinancials = (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => {
     setActiveTab('financials')
@@ -339,7 +356,7 @@ function StockPageBody() {
                 high52={data.quote.fiftyTwoWeekHigh}
                 low52={data.quote.fiftyTwoWeekLow}
                 analystTarget={data.quote.analystTargetMean}
-                onSave={() => requireAuth('Save this analysis to your watchlist — sign in to unlock it.')}
+                onSave={() => requireAuth({ intent: 'save_watchlist' })}
                 onViewDetails={() => handleTabChange('valuation')}
               />
             </div>
@@ -362,7 +379,7 @@ function StockPageBody() {
                   verdictZone={verdictZone}
                   topRisk={topRisk}
                   topDrivers={topDrivers}
-                  onSave={() => requireAuth('Save this analysis to your watchlist — sign in to unlock it.')}
+                  onSave={() => requireAuth({ intent: 'save_watchlist' })}
                   onViewValuation={() => handleTabChange('valuation')}
                 />
 
@@ -421,19 +438,19 @@ function StockPageBody() {
                   <span className="text-blue-600 font-medium text-[13px]">Valuation →</span>
                 </div>
 
-                {/* AI Analysis teaser */}
+                {/* AI Analysis teaser — no login gate; navigates to risks tab */}
                 <button
-                  onClick={() => requireAuth('Your AI analysis is ready — sign in to unlock it.')}
+                  onClick={() => handleTabChange('risks')}
                   className="w-full rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-violet-50 px-5 py-4 flex items-center justify-between hover:from-indigo-100 hover:to-violet-100 transition-colors text-left"
                 >
                   <div className="flex items-center gap-3">
                     <Sparkles size={18} className="text-indigo-500 shrink-0" />
                     <div>
-                      <div className="text-[13px] font-semibold text-indigo-900">Get AI Analysis</div>
+                      <div className="text-[13px] font-semibold text-indigo-900">Risks &amp; Signals</div>
                       <div className="text-[11px] text-indigo-500 mt-0.5">Plain-English breakdown of financials, risks, and key drivers</div>
                     </div>
                   </div>
-                  <span className="text-[12px] font-semibold text-indigo-600 shrink-0">Sign in free →</span>
+                  <span className="text-[12px] font-semibold text-indigo-600 shrink-0">View →</span>
                 </button>
               </div>
             )}

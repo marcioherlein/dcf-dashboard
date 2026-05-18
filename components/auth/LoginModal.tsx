@@ -2,20 +2,44 @@
 import { signIn } from 'next-auth/react'
 import { X } from 'lucide-react'
 import { useEffect } from 'react'
+import { track } from '@/lib/analytics/events'
+import type { LoginIntent } from './LoginGateProvider'
+
+const INTENT_COPY: Record<LoginIntent, { headline: string; sub: string }> = {
+  save_valuation:     { headline: 'Save your valuation',         sub: 'Keep your DCF model and assumptions in one place.'      },
+  save_watchlist:     { headline: 'Save to your watchlist',      sub: 'Track this stock alongside the rest of your research.'  },
+  export_report:      { headline: 'Export your report',          sub: 'Download a PDF of your full analysis.'                  },
+  portfolio_tracking: { headline: 'Track in your portfolio',     sub: 'Monitor positions and fair value gaps in one view.'     },
+  compare_models:     { headline: 'Save for comparison',         sub: 'Come back to this model any time.'                      },
+  save_thesis:        { headline: 'Save your thesis',            sub: 'Keep your investment reasoning alongside the numbers.'  },
+  create_alert:       { headline: 'Create a price alert',        sub: "We'll notify you when the fair value gap changes."      },
+}
 
 interface Props {
   onClose: () => void
-  /** Optional custom headline — defaults to the analysis-ready copy */
+  intent?: LoginIntent
   headline?: string
 }
 
-export default function LoginModal({ onClose, headline }: Props) {
-  // Close on Escape
+export default function LoginModal({ onClose, intent, headline }: Props) {
+  const copy = intent ? INTENT_COPY[intent] : null
+  const displayHeadline = headline ?? copy?.headline ?? 'Sign in to save your work'
+  const displaySub      = copy?.sub ?? 'Free during beta. No credit card required.'
+
+  const callbackUrl = typeof window !== 'undefined'
+    ? window.location.pathname + window.location.search
+    : '/'
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
+
+  const handleSignIn = () => {
+    track('login_started', { intent: intent ?? 'unknown', method: 'google' })
+    signIn('google', { callbackUrl })
+  }
 
   return (
     <div
@@ -42,14 +66,14 @@ export default function LoginModal({ onClose, headline }: Props) {
         </div>
 
         <h2 className="text-lg font-bold text-slate-900 leading-snug">
-          {headline ?? 'Your analysis is ready — sign in to unlock it.'}
+          {displayHeadline}
         </h2>
         <p className="mt-2 text-sm text-slate-500 leading-relaxed">
-          Free to join. No credit card. 30 seconds.
+          {displaySub}
         </p>
 
         <button
-          onClick={() => signIn('google')}
+          onClick={handleSignIn}
           className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white py-3 px-4 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 active:scale-[0.98] transition-all"
         >
           {/* Google G logo */}
@@ -63,7 +87,7 @@ export default function LoginModal({ onClose, headline }: Props) {
         </button>
 
         <p className="mt-5 text-[11px] text-slate-400">
-          Unlimited stock analysis is always free.
+          Clairo is free during beta. No credit card required.
         </p>
       </div>
     </div>
