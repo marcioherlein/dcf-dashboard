@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import type { MarketContextPayload, MacroSignalTile } from '@/lib/market-context/types'
+import type { MarketContextPayload } from '@/lib/market-context/types'
 
 interface Props {
   macroBrief: string | null

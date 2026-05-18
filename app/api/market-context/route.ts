@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getRfRate, get2YTreasury, getHYSpread } from '@/lib/data/fredClient'
+import { get2YTreasury, getHYSpread } from '@/lib/data/fredClient'
 import { createServiceClient } from '@/lib/supabase'
 import {
   computeSentimentScore, scoreToLabel,

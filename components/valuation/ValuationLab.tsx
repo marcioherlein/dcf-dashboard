@@ -611,7 +611,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
     warnings:    fwdPEResult.guardErrors,
     fairValueSummary: fwdPEResult.fairValueToday,
     currentPrice,
-  }), [fwdPEBase, fwdPEInputs, fwdPEResult, ticker, currency, currentPrice, apiData, ltvRevenueAbsolute])
+  }), [fwdPEBase, fwdPEInputs, fwdPEResult, ticker, currency, currentPrice, apiData, ltvRevenueAbsolute, sharesAbsolute])
 
   // ── Revenue Multiple ─────────────────────────────────────────────────────
   const revMultOverrides = overrides['revenue_multiple'] ?? {}
@@ -640,7 +640,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
     warnings:    revMultResult.guardErrors,
     fairValueSummary: revMultResult.fairValueToday,
     currentPrice,
-  }), [revMultBase, revMultInputs, revMultResult, ticker, currency, currentPrice, apiData])
+  }), [revMultBase, revMultInputs, revMultResult, ticker, currency, currentPrice, apiData, ltvRevenueAbsolute])
 
   // ── EV/EBITDA ────────────────────────────────────────────────────────────
   const evEbitdaOverrides = overrides['ev_ebitda'] ?? {}
