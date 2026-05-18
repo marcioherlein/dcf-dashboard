@@ -140,6 +140,28 @@ h1, h2, h3 {
   animation: row-flash 2.2s ease-out forwards;
 }
 
+/* ── Hero rotating word ───────────────────────────── */
+@keyframes word-in {
+  from { opacity: 0; transform: translateY(14px); filter: blur(6px); }
+  to   { opacity: 1; transform: translateY(0);    filter: blur(0);   }
+}
+@keyframes word-out {
+  from { opacity: 1; transform: translateY(0);     filter: blur(0);   }
+  to   { opacity: 0; transform: translateY(-14px); filter: blur(6px); }
+}
+.word-enter { animation: word-in  0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.word-exit  { animation: word-out 0.35s cubic-bezier(0.7,  0, 0.84, 0) forwards; }
+
+/* ── Hero staggered fade-up ───────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+.hero-reveal {
+  opacity: 0;
+  animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* ── Print styles ─────────────────────────────────── */
 @media print {
   body { background: white !important; color: #111 !important; }

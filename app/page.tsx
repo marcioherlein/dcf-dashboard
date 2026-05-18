@@ -11,6 +11,43 @@ interface SearchResult {
 
 const EXAMPLE_TICKERS = ['AAPL', 'NVDA', 'MSFT', 'AMZN']
 
+// ── Cycling word animation ─────────────────────────────────────────────────────
+const ROTATING_PHRASES = [
+  'worth buying',
+  'undervalued',
+  'overvalued',
+  'a great deal',
+  'a value trap',
+  'a hidden gem',
+]
+
+function RotatingText({ phrases }: { phrases: string[] }) {
+  const [idx, setIdx] = useState(0)
+  const [stage, setStage] = useState<'in' | 'out'>('in')
+
+  useEffect(() => {
+    if (stage === 'in') {
+      const t = setTimeout(() => setStage('out'), 2600)
+      return () => clearTimeout(t)
+    } else {
+      const t = setTimeout(() => {
+        setIdx(i => (i + 1) % phrases.length)
+        setStage('in')
+      }, 380)
+      return () => clearTimeout(t)
+    }
+  }, [stage, phrases.length])
+
+  return (
+    <span
+      className={stage === 'in' ? 'word-enter' : 'word-exit'}
+      style={{ display: 'inline-block', color: '#0F2A5E', minWidth: '9ch' }}
+    >
+      {phrases[idx]}
+    </span>
+  )
+}
+
 // ── Hero search ───────────────────────────────────────────────────────────────
 function HeroSearch() {
   const router = useRouter()
@@ -253,27 +290,33 @@ export default function LandingPage() {
 
         <div className="relative mx-auto max-w-3xl text-center">
           {/* Social proof pill */}
-          <div className="inline-flex items-center gap-2 rounded-full bg-white border border-slate-200 px-4 py-1.5 text-xs font-semibold text-slate-600 mb-6 shadow-sm">
+          <div className="hero-reveal inline-flex items-center gap-2 rounded-full bg-white border border-slate-200 px-4 py-1.5 text-xs font-semibold text-slate-600 mb-6 shadow-sm" style={{ animationDelay: '0ms' }}>
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             Free · No account required · 500+ stocks covered
           </div>
 
-          {/* New headline — know/buy framing */}
-          <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 tracking-tight leading-tight mb-4"
-            style={{ letterSpacing: '-0.03em' }}>
-            Know if a stock is worth buying —<br className="hidden sm:block" />{' '}
+          {/* Headline with rotating word */}
+          <h1
+            className="hero-reveal text-4xl sm:text-5xl font-bold text-slate-900 tracking-tight leading-tight mb-4"
+            style={{ letterSpacing: '-0.03em', animationDelay: '80ms' }}
+          >
+            Know if a stock is{' '}
+            <RotatingText phrases={ROTATING_PHRASES} />
+            {' '}—<br className="hidden sm:block" />{' '}
             <span style={{ color: '#0F2A5E' }}>before you buy.</span>
           </h1>
-          <p className="text-lg text-slate-500 mb-8 max-w-xl mx-auto leading-relaxed">
+          <p className="hero-reveal text-lg text-slate-500 mb-8 max-w-xl mx-auto leading-relaxed" style={{ animationDelay: '180ms' }}>
             DCF-based fair value, plain-English health grades, and interactive modeling.
             Designed for investors who want to understand, not just guess.
           </p>
 
           {/* Search FIRST — F-pattern primary zone */}
-          <HeroSearch />
+          <div className="hero-reveal" style={{ animationDelay: '260ms' }}>
+            <HeroSearch />
+          </div>
 
           {/* Example pills below search */}
-          <div className="mt-4 flex items-center justify-center gap-2 flex-wrap">
+          <div className="hero-reveal mt-4 flex items-center justify-center gap-2 flex-wrap" style={{ animationDelay: '340ms' }}>
             <span className="text-xs text-slate-400">Or try:</span>
             {EXAMPLE_TICKERS.map((t) => (
               <button
@@ -287,7 +330,7 @@ export default function LandingPage() {
           </div>
 
           {/* Demo card BELOW search — supporting evidence, not scroll terminator */}
-          <div className="mt-12">
+          <div className="hero-reveal mt-12" style={{ animationDelay: '440ms' }}>
             <p className="text-xs text-slate-400 mb-4 uppercase tracking-wider font-semibold">What an analysis looks like</p>
             <DemoGradeCard onAnalyze={(t) => router.push(`/stock/${t}`)} />
           </div>
