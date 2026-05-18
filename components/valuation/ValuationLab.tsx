@@ -482,10 +482,10 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
   const annualIS: any[] = statementsData?.annual?.incomeStatement ?? []
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const annualCF: any[] = statementsData?.annual?.cashFlow ?? []
-  const sparkRevenue  = annualIS.slice(-5).map((r: any) => (r.totalRevenue  as number | null) ?? null)
-  const sparkEbitda   = annualIS.slice(-5).map((r: any) => (r.EBITDA        as number | null) ?? null)
-  const sparkFCF      = annualCF.slice(-5).map((r: any) => (r.freeCashFlow  as number | null) ?? null)
-  const sparkNI       = annualIS.slice(-5).map((r: any) => (r.netIncome     as number | null) ?? null)
+  const sparkRevenue  = annualIS.slice(-5).map((r: any) => { const v = (r.totalRevenue as number | null) ?? null; return v != null ? v * stmtFxRate : null })
+  const sparkEbitda   = annualIS.slice(-5).map((r: any) => { const v = (r.EBITDA as number | null) ?? null; return v != null ? v * stmtFxRate : null })
+  const sparkFCF      = annualCF.slice(-5).map((r: any) => { const v = (r.freeCashFlow as number | null) ?? null; return v != null ? v * stmtFxRate : null })
+  const sparkNI       = annualIS.slice(-5).map((r: any) => { const v = (r.netIncome as number | null) ?? null; return v != null ? v * stmtFxRate : null })
 
   // Statement-derived 3Y revenue CAGR (uses fundamentalsTimeSeries annual data — same source as Financials tab)
   const annualRevs = annualIS
@@ -504,6 +504,10 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
 
   // CAGR analysis data
   const cagrAnalysis = apiData?.cagrAnalysis ?? {}
+
+  // FX rate: statementsData (fundamentalsTimeSeries) reports in financialCurrency (e.g. BRL for STNE).
+  // All absolute monetary TTM values must be converted to quote currency (USD for ADRs) before use.
+  const stmtFxRate = (apiData?.providerStatus?.fx?.rate as number | undefined) ?? 1
 
   // Annual chart data for method history panels
   const chartRevenueGrowth: HistoryChartDef['data'] = annualIS.slice(1).reduce<{ year: string; value: number }[]>((acc, r: any, i) => {
@@ -527,13 +531,13 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
 
   const chartEbitda: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r: any) => {
     const ebitda = r.EBITDA as number | null
-    if (ebitda != null) acc.push({ year: rowYear(r), value: ebitda / 1e6 })
+    if (ebitda != null) acc.push({ year: rowYear(r), value: ebitda / 1e6 * stmtFxRate })
     return acc
   }, []).slice(-5)
 
   const chartRevenue: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r: any) => {
     const rev = r.totalRevenue as number | null
-    if (rev != null && rev > 0) acc.push({ year: rowYear(r), value: rev / 1e6 })
+    if (rev != null && rev > 0) acc.push({ year: rowYear(r), value: rev / 1e6 * stmtFxRate })
     return acc
   }, []).slice(-5)
 
@@ -561,20 +565,24 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
   const fwdPEBase   = useMemo(() => deriveForwardPEAssumptions(apiData), [apiData])
   const revMultBase = useMemo(() => deriveRevenueMultipleAssumptions(apiData), [apiData])
 
-  // financialStatements revenue is in millions; TTM revenue is absolute — normalise to absolute $
+  // financialStatements revenue is in millions; TTM revenue is absolute — normalise to absolute USD
+  // Apply stmtFxRate so ADR stocks (BRL, CNY, etc.) produce USD fair values
   // Must be defined after fwdPEBase (which provides the financialStatements fallback)
-  const ltvRevenueAbsolute = ttmRevenue ?? (fwdPEBase.ltvRevenue != null ? fwdPEBase.ltvRevenue * 1e6 : null)
+  const ltvRevenueAbsolute = (ttmRevenue != null ? ttmRevenue * stmtFxRate : null) ?? (fwdPEBase.ltvRevenue != null ? fwdPEBase.ltvRevenue * 1e6 : null)
 
   const evEbitdaBase = useMemo(() => {
-    const ebitda   = ttmEbitda ?? (apiData?.financialStatements?.incomeStatement?.find((r: { isProjected?: boolean; ebitda?: number }) => !r.isProjected)?.ebitda ?? null)
-    const shares   = sharesAbsolute
-    const cashFMP  = apiData?.fairValue?.cash != null ? apiData.fairValue.cash * 1e6 : null
-    const debtFMP  = apiData?.fairValue?.debt != null ? apiData.fairValue.debt * 1e6 : null
-    const netDebt  = ttmNetDebt ?? (debtFMP != null && cashFMP != null ? debtFMP - cashFMP : null)
-    const sector   = apiData?.quote?.sector ?? null
-    const multiple = getDefaultEVEBITDAMultiple(sector)
+    // ttmEbitda / ttmNetDebt are in reporting currency (BRL for ADRs) — convert to quote currency
+    const ebitdaRaw  = ttmEbitda ?? (apiData?.financialStatements?.incomeStatement?.find((r: { isProjected?: boolean; ebitda?: number }) => !r.isProjected)?.ebitda ?? null)
+    const ebitda     = ebitdaRaw != null ? ebitdaRaw * stmtFxRate : null
+    const shares     = sharesAbsolute
+    const cashFMP    = apiData?.fairValue?.cash != null ? apiData.fairValue.cash * 1e6 : null
+    const debtFMP    = apiData?.fairValue?.debt != null ? apiData.fairValue.debt * 1e6 : null
+    const netDebtRaw = ttmNetDebt != null ? ttmNetDebt * stmtFxRate : null
+    const netDebt    = netDebtRaw ?? (debtFMP != null && cashFMP != null ? debtFMP - cashFMP : null)
+    const sector     = apiData?.quote?.sector ?? null
+    const multiple   = getDefaultEVEBITDAMultiple(sector)
     return { ebitda, netDebt, shares, exitMultiple: multiple, sector }
-  }, [apiData, ttmEbitda, ttmNetDebt, sharesAbsolute])
+  }, [apiData, ttmEbitda, ttmNetDebt, sharesAbsolute, stmtFxRate])
 
   // ── Forward P/E ──────────────────────────────────────────────────────────
   const fwdPEOverrides = overrides['forward_pe'] ?? {}
@@ -795,7 +803,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
     { id: 'forward_pe',       label: 'Forward P/E (5Y)',   fairValue: fwdPEResult.fairValueToday,       bullFairValue: scenarioResult.scenarios.find(s => s.label === 'bull')?.fairValue ?? null, bearFairValue: scenarioResult.scenarios.find(s => s.label === 'bear')?.fairValue ?? null, upsidePct: fwdPEResult.upsidePct,          weight: 0.30 },
     { id: 'ev_ebitda',        label: 'EV/EBITDA',          fairValue: evEbitdaResult.fairValuePerShare, upsidePct: evEbitdaResult.upsidePct,      weight: 0.25 },
     { id: 'revenue_multiple', label: 'Revenue Multiple',   fairValue: revMultResult.fairValueToday,     upsidePct: revMultResult.upsidePct,       weight: 0.20 },
-    { id: 'scenario_blend',   label: 'Scenario Blend',     fairValue: scenarioResult.weightedFairValue, upsidePct: scenarioResult.weightedUpsidePct, weight: 0.15 },
+    { id: 'scenario_blend',   label: 'DCF (FCFF Blend)',   fairValue: (apiData?.valuationMethods?.triangulatedFairValue as number | null) ?? null, upsidePct: (apiData?.valuationMethods?.triangulatedUpsidePct as number | null) ?? null, weight: 0.15 },
     { id: 'reverse_dcf',      label: 'Reverse DCF',        fairValue: null,                             upsidePct: null,                          weight: 0.10 },
   ]
 
@@ -871,10 +879,10 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
                 <>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
                     {([
-                      { label: 'Revenue',        value: ttmRevenue,   margin: null,          tag: '',            vals: sparkRevenue },
-                      { label: 'EBITDA',         value: ttmEbitda,    margin: ebitdaMargin,  tag: 'margin',      vals: sparkEbitda  },
-                      { label: 'Free Cash Flow', value: ttmFCF,       margin: fcfMarginPct,  tag: 'FCF margin',  vals: sparkFCF     },
-                      { label: 'Net Income',     value: ttmNetIncome, margin: netMarginPct,  tag: 'net margin',  vals: sparkNI      },
+                      { label: 'Revenue',        value: ttmRevenue   != null ? ttmRevenue   * stmtFxRate : null, margin: null,          tag: '',            vals: sparkRevenue },
+                      { label: 'EBITDA',         value: ttmEbitda    != null ? ttmEbitda    * stmtFxRate : null, margin: ebitdaMargin,  tag: 'margin',      vals: sparkEbitda  },
+                      { label: 'Free Cash Flow', value: ttmFCF       != null ? ttmFCF       * stmtFxRate : null, margin: fcfMarginPct,  tag: 'FCF margin',  vals: sparkFCF     },
+                      { label: 'Net Income',     value: ttmNetIncome != null ? ttmNetIncome * stmtFxRate : null, margin: netMarginPct,  tag: 'net margin',  vals: sparkNI      },
                     ] as const).map(({ label, value, margin, tag, vals }) => {
                       const nums = vals.filter((v): v is number => v != null)
                       const isPositive = nums.length >= 2 ? nums[nums.length - 1] >= nums[0] : true

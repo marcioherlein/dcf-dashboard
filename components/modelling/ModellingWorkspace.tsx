@@ -358,6 +358,7 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
         beneishFlag={baseInput.beneishFlag}
         crp={waccRaw.crp ?? 0}
         financialCurrency={waccRaw.financialCurrency ?? undefined}
+        fcfCapApplied={baseInput.fcfCapApplied ?? false}
       />
       <ForecastTable
         rows={displayRows}

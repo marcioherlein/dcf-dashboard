@@ -67,6 +67,7 @@ export interface ModellingInput {
   altmanZone: string | null
   beneishFlag: string | null
   isFinancialSector: boolean
+  fcfCapApplied: boolean
 }
 
 // Shape of /api/statements response (loose — fields are dynamic)
@@ -98,9 +99,13 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
     rows = buildRows(fs)
   }
 
-  // Derive CAGR: prefer 3Y historical from statements, then FMP blended
+  // Derive CAGR: prefer 3Y historical from statements, then FMP blended.
+  // For foreign-currency ADRs (fxRate ≠ 1) the statement-derived CAGR is in local currency —
+  // it reflects local-currency growth, not USD growth (which matters for USD investors).
+  // In that case, skip it and use cagrAnalysis.blended which already accounts for FX via
+  // extractFCFInputs zeroing the historical component for non-USD reporters.
   let cagr = nullable(apiData?.cagr) ?? cagrAnalysis.blended ?? 0.05
-  if ((statementsData?.annual?.incomeStatement?.length ?? 0) >= 3) {
+  if (fxRate === 1 && (statementsData?.annual?.incomeStatement?.length ?? 0) >= 3) {
     const stmtCagr = deriveCAGRFromStatements(statementsData!.annual.incomeStatement)
     if (stmtCagr !== null) cagr = stmtCagr
   }
@@ -169,6 +174,7 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
     altmanZone: nullable(scores.altman?.zone),
     beneishFlag: nullable(scores.beneish?.flag),
     isFinancialSector,
+    fcfCapApplied: (apiData?.fcfCapApplied as boolean | undefined) ?? false,
   }
 }
 

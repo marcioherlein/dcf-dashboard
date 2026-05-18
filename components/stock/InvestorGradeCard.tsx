@@ -70,8 +70,8 @@ export default function InvestorGradeCard({
   const verdict = upsidePct == null || fairValue == null
     ? null
     : isUndervalued
-      ? `Our DCF model suggests this may be undervalued — trading ${Math.abs(upsidePct * 100).toFixed(0)}% below our estimate. See the assumptions.`
-      : `Our DCF model flags this as potentially overvalued — trading ${Math.abs(upsidePct * 100).toFixed(0)}% above our estimate. Check if you agree.`
+      ? `Our valuation model suggests this may be undervalued — trading ${Math.abs(upsidePct * 100).toFixed(0)}% below our estimate. See the assumptions.`
+      : `Our valuation model flags this as potentially overvalued — trading ${Math.abs(upsidePct * 100).toFixed(0)}% above our estimate. Check if you agree.`
 
   return (
     <div className="rounded-xl bg-white shadow-card border border-slate-200 overflow-hidden">
@@ -155,7 +155,7 @@ export default function InvestorGradeCard({
               </div>
               {/* Right: fair value (dominant) */}
               <div className="flex-1 min-w-0 text-right">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">DCF Estimate</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Fair Value Estimate</p>
                 <p className={cn('mt-0.5 text-xl font-bold font-mono tabular-nums', isUndervalued ? 'text-emerald-700' : 'text-amber-700')}>
                   {currSymbol}{fairValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>

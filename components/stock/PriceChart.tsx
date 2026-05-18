@@ -112,8 +112,8 @@ function PriceTag({ viewBox, color, labelText }: {
 }
 
 const VAL_LINES = [
-  { key: 'fcffFairValue',         label: 'DCF',     color: '#6366f1', dash: '5 3' },
-  { key: 'triangulatedFairValue', label: '▲ Target', color: '#8b5cf6', dash: '4 2' },
+  { key: 'fcffFairValue',         label: 'FCFF',    color: '#6366f1', dash: '5 3' },
+  { key: 'triangulatedFairValue', label: 'Blended', color: '#8b5cf6', dash: '4 2' },
   { key: 'analystTarget',         label: 'Analyst',  color: '#f59e0b', dash: '4 3' },
 ] as const
 

@@ -371,8 +371,8 @@ function StockPageBody() {
                   gradeLabel={data.ratings?.overall?.label ?? ''}
                   fairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? null}
                   upsidePct={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null}
-                  bearFV={data.scenarios?.bear?.fairValue ?? null}
-                  bullFV={data.scenarios?.bull?.fairValue ?? null}
+                  bearFV={null}
+                  bullFV={null}
                   verdictZone={verdictZone}
                   topRisk={topRisk}
                   topDrivers={topDrivers}

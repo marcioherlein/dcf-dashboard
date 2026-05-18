@@ -137,6 +137,9 @@ function RangeTooltip({ active, payload }: { active?: boolean; payload?: any[] }
 export default function ValuationSummary({ methods, currentPrice, currency = 'USD' }: Props) {
   const { weightedFV, weightedBearFV, weightedBullFV, weightedUpside, zone } = computeConsensus(methods, currentPrice)
 
+  // Effective weights: normalize across methods that actually have a fair value
+  const effectiveTotalWeight = methods.filter(m => m.fairValue != null && m.weight > 0).reduce((s, m) => s + m.weight, 0)
+
   const zoneStyle = zone === 'Attractive'
     ? { wrap: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700' }
     : zone === 'Fair Value'
@@ -287,7 +290,10 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
                     }
                   </td>
                   <td className="px-4 py-3 text-right text-micro text-slate-400 font-mono">
-                    {(m.weight * 100).toFixed(0)}%
+                    {m.fairValue != null && effectiveTotalWeight > 0
+                      ? `${((m.weight / effectiveTotalWeight) * 100).toFixed(0)}%`
+                      : '—'
+                    }
                   </td>
                 </tr>
               ))}
@@ -295,7 +301,7 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
           </table>
           <div className="px-4 py-2.5 border-t border-slate-100 bg-slate-50/50">
             <p className="text-micro text-slate-400">
-              Weights reflect relative confidence in each method. Adjust assumptions in method drawers to refine.
+              Weights shown are effective weights after excluding methods with no available data. Adjust assumptions in method drawers to refine.
             </p>
           </div>
         </div>

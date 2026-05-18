@@ -69,8 +69,10 @@ export async function GET(req: NextRequest) {
 
     // Sanity check: FCF yield > 30% vs market cap is unrealistic — cap to 15%
     const marketCapM = (q.marketCap ?? 0) / 1e6
+    let fcfCapApplied = false
     if (marketCapM > 0 && baseFCF / marketCapM > 0.30) {
       baseFCF = marketCapM * 0.15
+      fcfCapApplied = true
     }
 
     // DCF (FCFF)
@@ -744,6 +746,7 @@ export async function GET(req: NextRequest) {
       fairValue: fvResult,
       scenarios,
       baseFCF,
+      fcfCapApplied,
       cagr,
       cagrAnalysis,
       isNegativeFCF,

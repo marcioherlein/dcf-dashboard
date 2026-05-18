@@ -14,6 +14,7 @@ interface DataQualityWarningsProps {
   beneishFlag?: string | null
   crp?: number
   financialCurrency?: string
+  fcfCapApplied?: boolean
 }
 
 export default function DataQualityWarnings({
@@ -25,6 +26,7 @@ export default function DataQualityWarnings({
   beneishFlag,
   crp,
   financialCurrency,
+  fcfCapApplied,
 }: DataQualityWarningsProps) {
   const warnings: Warning[] = []
 
@@ -48,6 +50,9 @@ export default function DataQualityWarnings({
   }
   if (beneishFlag === 'Manipulator') {
     warnings.push({ type: 'warning', message: 'Beneish M-Score flags potential earnings manipulation. Reported FCF may overstate true cash generation.' })
+  }
+  if (fcfCapApplied) {
+    warnings.push({ type: 'info', message: 'FCF was capped at 15% of market cap — raw FCF yield exceeded 30%, which may reflect a cyclical peak. Terminal value may dominate the valuation.' })
   }
 
   if (warnings.length === 0) return null
