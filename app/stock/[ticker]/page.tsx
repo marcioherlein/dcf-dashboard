@@ -401,8 +401,6 @@ function StockPageBody() {
                   currency={currency}
                   fairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue.fairValuePerShare}
                   upsidePct={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue.upsidePct}
-                  overallGrade={data.ratings?.overall?.grade ?? '—'}
-                  overallLabel={data.ratings?.overall?.label ?? ''}
                   statementsData={statementsData}
                 />
 

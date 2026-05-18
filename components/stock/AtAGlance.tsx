@@ -21,31 +21,14 @@ interface Props {
   currency: string
   fairValue: number | null
   upsidePct: number | null
-  overallGrade: string
-  overallLabel: string
   marketCap?: number | null
   statementsData?: StatementsData | null
-}
-
-function GradeBadge({ grade, label }: { grade: string; label: string }) {
-  const color =
-    grade.startsWith('A') ? 'text-emerald-700 bg-emerald-50 border-emerald-200' :
-    grade.startsWith('B') ? 'text-blue-700 bg-blue-50 border-blue-200' :
-    grade.startsWith('C') ? 'text-amber-700 bg-amber-50 border-amber-200' :
-    'text-red-700 bg-red-50 border-red-200'
-
-  return (
-    <div className={cn('inline-flex flex-col items-center rounded-xl border px-5 py-3', color)}>
-      <span className="text-3xl font-black leading-none">{grade}</span>
-      <span className="text-xs font-medium mt-0.5">{label}</span>
-    </div>
-  )
 }
 
 export default function AtAGlance({
   companyName, price, high52, low52,
   sector, country, currency, fairValue, upsidePct,
-  overallGrade, overallLabel, marketCap, statementsData,
+  marketCap, statementsData,
 }: Props) {
   const zone    = upsideZone(upsidePct)
   const summary = buildAtAGlanceSummary({ companyName, sector, upsidePct, upsideZone: zone ?? '', fairValue, currentPrice: price })
@@ -82,7 +65,7 @@ export default function AtAGlance({
 
   return (
     <div className="rounded-xl bg-white border border-slate-200 shadow-card p-5">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
         {/* Left: price + range */}
         <div className="space-y-3">
@@ -113,15 +96,15 @@ export default function AtAGlance({
           </div>
         </div>
 
-        {/* Center: fair value */}
-        <div className="space-y-2 sm:text-center sm:border-x sm:border-slate-100 sm:px-5">
+        {/* Right: fair value */}
+        <div className="space-y-2 sm:text-right sm:border-l sm:border-slate-100 sm:pl-5">
           <p className="text-label uppercase tracking-wider text-slate-400">Consensus Fair Value</p>
           {fairValue != null ? (
             <>
               <p className="text-3xl font-bold font-mono tabular-nums text-slate-900">
                 {fmtPrice(fairValue, currency)}
               </p>
-              <div className="flex items-center gap-2 sm:justify-center">
+              <div className="flex items-center gap-2 sm:justify-end">
                 <span className={cn('text-lg font-bold font-mono', upColor)}>
                   {upSign}{upPct}%
                 </span>
@@ -135,19 +118,10 @@ export default function AtAGlance({
           ) : (
             <div className="space-y-2">
               <div className="h-9 rounded-lg bg-slate-100 animate-pulse" />
-              <div className="h-5 w-24 mx-auto rounded-full bg-slate-100 animate-pulse" />
+              <div className="h-5 w-24 sm:ml-auto rounded-full bg-slate-100 animate-pulse" />
             </div>
           )}
           <p className="text-micro text-slate-400 leading-relaxed">{summary}</p>
-        </div>
-
-        {/* Right: health grade */}
-        <div className="space-y-2 flex flex-col sm:items-end">
-          <p className="text-label uppercase tracking-wider text-slate-400">Financial Health</p>
-          <GradeBadge grade={overallGrade} label={overallLabel} />
-          <p className="text-micro text-slate-400 sm:text-right">
-            Across profitability, liquidity, growth, moat, and valuation.
-          </p>
         </div>
       </div>
 

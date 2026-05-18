@@ -321,11 +321,11 @@ export function calculateRatings(input: {
   else if (upsidePct >= -0.30) valScore = 1.5
   else valScore = 1
 
-  const valLabel = valScore >= 4.5 ? 'Strong Buy'
-    : valScore >= 4 ? 'Buy'
-    : valScore >= 3 ? 'Hold'
-    : valScore >= 1.5 ? 'Sell'
-    : 'Strong Sell'
+  const valLabel = valScore >= 4.5 ? 'Deep Discount'
+    : valScore >= 4 ? 'Underpriced'
+    : valScore >= 3 ? 'Fairly Priced'
+    : valScore >= 1.5 ? 'Overpriced'
+    : 'Significantly Overpriced'
 
   const valuation: CategoryRating = {
     score: Math.round(valScore * 10) / 10,
