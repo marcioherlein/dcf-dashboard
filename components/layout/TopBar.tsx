@@ -107,6 +107,15 @@ export default function TopBar() {
           Portfolio
         </Link>
         <Link
+          href="/markets"
+          className={[
+            'h-8 flex items-center px-3 text-[13px] font-medium rounded-md transition-colors whitespace-nowrap',
+            pathname.startsWith('/markets') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100',
+          ].join(' ')}
+        >
+          Markets
+        </Link>
+        <Link
           href="/ai-stack"
           className={[
             'h-8 flex items-center px-3 text-[13px] font-medium rounded-md transition-colors whitespace-nowrap',
