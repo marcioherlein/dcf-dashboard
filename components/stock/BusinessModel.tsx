@@ -180,7 +180,7 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
         {chartData.length >= 2 && (
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Revenue History ($M)</p>
-            <ResponsiveContainer width="100%" height={110}>
+            <ResponsiveContainer width="100%" height={140}>
               <BarChart data={chartData} margin={{ top: 0, right: 4, left: 4, bottom: 0 }}>
                 <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
                 <YAxis hide />
@@ -199,7 +199,7 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
         {marginTrendData.length >= 2 && (
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Margin Trends (%)</p>
-            <ResponsiveContainer width="100%" height={110}>
+            <ResponsiveContainer width="100%" height={140}>
               <LineChart data={marginTrendData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
                 <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />

@@ -19,9 +19,9 @@ interface Props {
   analystRec: string
 }
 
-function StatBox({ label, value }: { label: string; value: string }) {
+function StatBox({ label, value, className }: { label: string; value: string; className?: string }) {
   return (
-    <div className="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3">
+    <div className={cn('rounded-xl bg-slate-50 border border-slate-100 px-4 py-3', className)}>
       <p className="text-label uppercase tracking-wider text-slate-400">{label}</p>
       <p className="mt-0.5 text-sm font-semibold font-mono text-slate-800">{value}</p>
     </div>
@@ -68,7 +68,7 @@ export default function PriceHeader({
         <StatBox label="Market Cap"     value={fmtLargeCurrency(marketCap, currency)} />
         <StatBox label="P/E Ratio"      value={peRatio ? peRatio.toFixed(1) + '×' : '—'} />
         <StatBox label="52-wk High"     value={fmtPrice(high52, currency)} />
-        <StatBox label="52-wk Low"      value={fmtPrice(low52, currency)} />
+        <StatBox label="52-wk Low"      value={fmtPrice(low52, currency)} className="hidden sm:block" />
         <StatBox label="Analyst Target" value={analystTarget ? fmtPrice(analystTarget, currency) : '—'} />
       </div>
     </div>

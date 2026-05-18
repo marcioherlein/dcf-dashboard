@@ -97,7 +97,7 @@ function ChartPanel({ item, onClose }: { item: MarketItem; onClose: () => void }
     <div className="fixed inset-0 z-50 flex" onClick={onClose}>
       <div className="flex-1 bg-black/30" />
       <div
-        className="w-[520px] bg-white border-l border-slate-200 flex flex-col h-full overflow-y-auto shadow-card-md"
+        className="w-full sm:w-[520px] bg-white border-l border-slate-200 flex flex-col h-full overflow-y-auto shadow-card-md"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -125,7 +125,7 @@ function ChartPanel({ item, onClose }: { item: MarketItem; onClose: () => void }
           <MultiTickerChart
             initialTickers={[item.ticker]}
             defaultPeriod="3m"
-            height={340}
+            height={280}
             showMetricSelect={true}
             className="border-0 shadow-none !rounded-none"
           />
@@ -150,7 +150,7 @@ function ChartPanel({ item, onClose }: { item: MarketItem; onClose: () => void }
 // ── Skeleton row ──────────────────────────────────────────────────────────────
 function SkeletonRow() {
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
       {[0, 1, 2, 3, 4, 5].map((i) => (
         <div key={i} className="animate-pulse bg-slate-100 border border-slate-200 rounded-xl h-20" />
       ))}
@@ -347,7 +347,7 @@ export default function MarketMonitor() {
                 </div>
 
                 {/* Cards grid */}
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
                   {group.items.map((item) => (
                     <MarketCard
                       key={item.ticker}
