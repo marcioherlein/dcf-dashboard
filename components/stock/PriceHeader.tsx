@@ -1,7 +1,7 @@
 'use client'
 import { fmtPrice, fmtPct, fmtLargeCurrency } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
-import { TrendingUp, TrendingDown } from 'lucide-react'
+import { TrendingUp, TrendingDown, Bookmark } from 'lucide-react'
 
 interface Props {
   ticker: string
@@ -17,6 +17,7 @@ interface Props {
   currency: string
   sector: string
   analystRec: string
+  onSave?: () => void
 }
 
 function StatBox({ label, value, className }: { label: string; value: string; className?: string }) {
@@ -30,7 +31,7 @@ function StatBox({ label, value, className }: { label: string; value: string; cl
 
 export default function PriceHeader({
   ticker, companyName, price, change, changePct, marketCap, peRatio,
-  high52, low52, analystTarget, currency, sector,
+  high52, low52, analystTarget, currency, sector, onSave,
 }: Props) {
   const up = change >= 0
   const currSymbol = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$ ' : currency + ' '
@@ -52,15 +53,26 @@ export default function PriceHeader({
           </h1>
         </div>
 
-        <div className="text-right shrink-0">
-          <div className="text-3xl font-extrabold text-slate-900 font-mono tabular-nums tracking-tight">
-            {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        <div className="flex items-start gap-3 shrink-0">
+          <div className="text-right">
+            <div className="text-3xl font-extrabold text-slate-900 font-mono tabular-nums tracking-tight">
+              {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <div className={cn('mt-1 flex items-center justify-end gap-1.5 text-sm font-semibold', up ? 'text-emerald-600' : 'text-red-600')}>
+              {up ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+              <span>{up ? '+' : ''}{change.toFixed(2)}</span>
+              <span className="text-xs opacity-80">({up ? '+' : ''}{fmtPct(changePct / 100)})</span>
+            </div>
           </div>
-          <div className={cn('mt-1 flex items-center justify-end gap-1.5 text-sm font-semibold', up ? 'text-emerald-600' : 'text-red-600')}>
-            {up ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-            <span>{up ? '+' : ''}{change.toFixed(2)}</span>
-            <span className="text-xs opacity-80">({up ? '+' : ''}{fmtPct(changePct / 100)})</span>
-          </div>
+          {onSave && (
+            <button
+              onClick={onSave}
+              title="Save to Watchlist"
+              className="mt-1 rounded-lg border border-slate-200 p-2 text-slate-400 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+            >
+              <Bookmark size={16} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -74,3 +86,4 @@ export default function PriceHeader({
     </div>
   )
 }
+

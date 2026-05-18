@@ -11,7 +11,10 @@ import HealthSection from '@/components/stock/HealthSection'
 import TabNav, { type TabId } from '@/components/stock/TabNav'
 import ValuationLab from '@/components/valuation/ValuationLab'
 import FinancialsHub from '@/components/stock/FinancialsHub'
+import { LoginGateProvider, useLoginGate } from '@/components/auth/LoginGateProvider'
+import AuthBanner from '@/components/auth/AuthBanner'
 import { calculatePiotroski, calculateAltman, calculateBeneish } from '@/lib/dcf/calculateScores'
+import { Sparkles } from 'lucide-react'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
@@ -130,8 +133,17 @@ interface FinancialsData {
 }
 
 export default function StockPage() {
+  return (
+    <LoginGateProvider>
+      <StockPageBody />
+    </LoginGateProvider>
+  )
+}
+
+function StockPageBody() {
   const { ticker } = useParams<{ ticker: string }>()
   const router = useRouter()
+  const { requireAuth } = useLoginGate()
   const [data, setData]             = useState<FinancialsData | null>(null)
   const [statementsData, setStatementsData] = useState<StatementsData | null>(null)
   const [loading, setLoading]       = useState(true)
@@ -232,6 +244,9 @@ export default function StockPage() {
         <TabNav activeTab={activeTab} onChange={setActiveTab} />
       )}
 
+      {/* Session-based soft auth nudge (appears on 2nd+ stock page view) */}
+      <AuthBanner />
+
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-16">
 
         {loading && (
@@ -284,6 +299,7 @@ export default function StockPage() {
                 currency={data.quote.currency ?? 'USD'}
                 sector={data.quote.sector ?? ''}
                 analystRec={data.analystRecommendation}
+                onSave={() => requireAuth('Save this analysis to your watchlist — sign in to unlock it.')}
               />
             </div>
 
@@ -343,6 +359,21 @@ export default function StockPage() {
                   </div>
                   <span className="text-blue-600 font-medium text-[13px]">Valuation Lab →</span>
                 </div>
+
+                {/* AI Analysis teaser */}
+                <button
+                  onClick={() => requireAuth('Your AI analysis is ready — sign in to unlock it.')}
+                  className="w-full rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-violet-50 px-5 py-4 flex items-center justify-between hover:from-indigo-100 hover:to-violet-100 transition-colors text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <Sparkles size={18} className="text-indigo-500 shrink-0" />
+                    <div>
+                      <div className="text-[13px] font-semibold text-indigo-900">Get AI Analysis</div>
+                      <div className="text-[11px] text-indigo-500 mt-0.5">Plain-English breakdown of financials, risks, and key drivers</div>
+                    </div>
+                  </div>
+                  <span className="text-[12px] font-semibold text-indigo-600 shrink-0">Sign in free →</span>
+                </button>
               </div>
             )}
 
