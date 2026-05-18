@@ -538,7 +538,7 @@ export default function LandingPage() {
           </p>
 
           {/* Search FIRST — F-pattern primary zone */}
-          <div className="hero-reveal" style={{ animationDelay: '260ms' }}>
+          <div className="hero-reveal relative z-10" style={{ animationDelay: '260ms' }}>
             <HeroSearch />
           </div>
 
