@@ -82,6 +82,10 @@ interface ForecastTableProps {
   onTerminalMethodChange: (method: 'perpetuity' | 'multiple') => void
   onExitMultipleChange: (value: number) => void
   onTerminalGChange: (value: number) => void
+  currentCagr?: number
+  onCagrChange?: (value: number) => void
+  currentWacc?: number
+  onWaccChange?: (value: number) => void
 }
 
 // ─── Column cell background by type ──────────────────────────────────────────
@@ -207,10 +211,16 @@ export default function ForecastTable({
   onTerminalMethodChange,
   onExitMultipleChange,
   onTerminalGChange,
+  currentCagr,
+  onCagrChange,
+  currentWacc,
+  onWaccChange,
 }: ForecastTableProps) {
   const [mode, setMode] = useState<'ufcf' | 'lfcf'>('ufcf')
   const [exitMultipleDraft, setExitMultipleDraft] = useState<string | null>(null)
   const [terminalGDraft, setTerminalGDraft] = useState<string | null>(null)
+  const [cagrDraft, setCagrDraft] = useState<string | null>(null)
+  const [waccDraft, setWaccDraft] = useState<string | null>(null)
 
   const curr = currency === 'USD' ? '$' : currency + ' '
 
@@ -977,6 +987,58 @@ export default function ForecastTable({
               </button>
             ))}
           </div>
+          {/* CAGR override */}
+          {onCagrChange && currentCagr != null && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[#555] text-[11px] uppercase tracking-wide">CAGR</span>
+              <input
+                className="w-14 border border-[#333] bg-[#1a1a1a] px-2 py-0.5 text-center text-xs text-[#e2e2e2] rounded focus:border-[#4a9eff] focus:outline-none"
+                value={cagrDraft ?? currentCagr.toFixed(1)}
+                onChange={e => setCagrDraft(e.target.value)}
+                onBlur={() => {
+                  if (cagrDraft != null) {
+                    const p = parseFloat(cagrDraft)
+                    if (!isNaN(p) && p >= -20 && p <= 80) onCagrChange(p)
+                    setCagrDraft(null)
+                  }
+                }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && cagrDraft != null) {
+                    const p = parseFloat(cagrDraft)
+                    if (!isNaN(p) && p >= -20 && p <= 80) onCagrChange(p)
+                    setCagrDraft(null)
+                  }
+                }}
+              />
+              <span className="text-[#555] text-[11px]">%</span>
+            </div>
+          )}
+          {/* WACC override */}
+          {onWaccChange && currentWacc != null && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[#555] text-[11px] uppercase tracking-wide">WACC</span>
+              <input
+                className="w-14 border border-[#333] bg-[#1a1a1a] px-2 py-0.5 text-center text-xs text-[#e2e2e2] rounded focus:border-[#4a9eff] focus:outline-none"
+                value={waccDraft ?? currentWacc.toFixed(1)}
+                onChange={e => setWaccDraft(e.target.value)}
+                onBlur={() => {
+                  if (waccDraft != null) {
+                    const p = parseFloat(waccDraft)
+                    if (!isNaN(p) && p > 0 && p < 50) onWaccChange(p)
+                    setWaccDraft(null)
+                  }
+                }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && waccDraft != null) {
+                    const p = parseFloat(waccDraft)
+                    if (!isNaN(p) && p > 0 && p < 50) onWaccChange(p)
+                    setWaccDraft(null)
+                  }
+                }}
+              />
+              <span className="text-[#555] text-[11px]">%</span>
+            </div>
+          )}
         </div>
 
         {/* Unlevered / Levered toggle */}

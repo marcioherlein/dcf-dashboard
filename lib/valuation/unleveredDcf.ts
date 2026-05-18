@@ -62,6 +62,11 @@ export function computeUFCFRows(
       const dnwcComponent = nwcDelta ?? 0
       ufcf = nopat + dna + r.capex - dnwcComponent
     }
+    // Fallback for projected rows where build-up components are incomplete (e.g. financial sector):
+    // use freeCashFlow if available (set from median historical FCF margin in normalizeInputs)
+    if (ufcf == null && r.isProjected && (r as any).freeCashFlow != null) {
+      ufcf = (r as any).freeCashFlow as number
+    }
 
     const projectedYearIndex = result.filter(x => x.isProjected).length + (r.isProjected ? 1 : 0)
     const pvUfcf = (ufcf != null && r.isProjected) ? ufcf / Math.pow(1 + wacc, projectedYearIndex) : null

@@ -147,9 +147,8 @@ function deriveExitPE(
 ): { pe: number; evidence: string; source: AssumptionSource } {
   const sectorNorm = sector ?? ''
   const target = SECTOR_PE[sectorNorm] ?? 18
-  const evidence = currentPE != null
-    ? `Current P/E ${currentPE.toFixed(0)}× → sector-normalized exit ${target}× (${sectorNorm || 'unknown sector'})`
-    : `No current P/E → sector target ${target}× (${sectorNorm || 'unknown sector'})`
+  const companyPEStr = currentPE != null && currentPE > 0 ? `${currentPE.toFixed(0)}×` : 'N/A'
+  const evidence = `Sector standard: ${target}× (${sectorNorm || 'unknown'} sector median); company current P/E: ${companyPEStr}`
   return { pe: target, evidence, source: 'sector_fallback' }
 }
 
@@ -352,7 +351,12 @@ export function deriveRevenueMultipleAssumptions(data: {
 
   const sectorEVRev     = SECTOR_EV_REVENUE[sector ?? ''] ?? 3
   const evRevSource     = sector && SECTOR_EV_REVENUE[sector] ? 'sector_fallback' : 'model_default'
-  const evRevEvidence   = `${sector ?? 'Unknown'} sector typical EV/Revenue: ${sectorEVRev}×`
+  const multEstimates: Array<{ multiple: string; actualValue: number }> =
+    (data as { valuationMethods?: { models?: { multiples?: { estimates?: unknown[] } } } })
+      ?.valuationMethods?.models?.multiples?.estimates as Array<{ multiple: string; actualValue: number }> ?? []
+  const actualEvRevenue = multEstimates.find(e => e.multiple === 'EV/Revenue')?.actualValue ?? null
+  const companyEVRevStr = actualEvRevenue != null && actualEvRevenue > 0 ? `${actualEvRevenue.toFixed(1)}×` : 'N/A'
+  const evRevEvidence   = `Sector standard: ${sectorEVRev}× (${sector ?? 'unknown'} sector median); company current EV/Revenue: ${companyEVRevStr}`
 
   const cashM    = data.fairValue?.cash ?? null
   const debtM    = data.fairValue?.debt ?? null

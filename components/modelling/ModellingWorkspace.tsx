@@ -215,6 +215,7 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
       capex:   ov.capex   != null ? ov.capex   : (r.capex ?? (r.freeCashFlow != null && r.operatingCF != null ? r.freeCashFlow - r.operatingCF : null)),
       nwc:     ov.nwc     != null ? ov.nwc     : deriveNWC(r),
       dnaFromCF: r.dna,
+      freeCashFlow: r.freeCashFlow,
     }
   }), [baseInput, rowOverrides])
 
@@ -333,9 +334,7 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
     setRowOverrides(prev => ({ ...prev, [year]: { ...prev[year], [field]: value } }))
   }, [])
 
-  // Global assumption changes (cagr, wacc) not yet exposed in UI
-  void setCagrOverride
-  void setWaccOverride
+  // Global assumption changes (cagr, wacc) now exposed in ForecastTable toolbar
 
   return (
     <div className="bg-[#111111] rounded-xl overflow-hidden border border-[#222]">
@@ -360,6 +359,10 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
         onTerminalMethodChange={setTerminalMethod}
         onExitMultipleChange={(v) => setExitMultipleOverride(v)}
         onTerminalGChange={setTerminalGOverride}
+        currentCagr={+(cagr * 100).toFixed(1)}
+        onCagrChange={(v) => setCagrOverride(v / 100)}
+        currentWacc={+(wacc * 100).toFixed(1)}
+        onWaccChange={(v) => setWaccOverride(v / 100)}
       />
     </div>
   )

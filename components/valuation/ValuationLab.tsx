@@ -21,7 +21,6 @@ import {
   deriveRevenueMultipleAssumptions,
 } from '@/lib/valuation/assumptions/deriveAssumptions'
 import { fmtPrice, fmtPct, fmtLarge, fmtLargeCurrency } from '@/lib/formatters'
-import { WizardSteps } from '@/components/ui/wizard-steps'
 import { SourceLabel } from '@/components/ui/source-label'
 import { TrendBadge } from '@/components/ui/trend-badge'
 import { MetricChip } from '@/components/ui/metric-chip'
@@ -518,17 +517,12 @@ interface ValuationLabProps {
   onNavigateToFinancials?: (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => void
 }
 
-const WIZARD_STEPS = [
-  { label: 'Base Data' },
-  { label: 'Methods' },
-  { label: 'Summary' },
-]
-
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function ValuationLab({ apiData, ticker, statementsData, onNavigateToFinancials }: ValuationLabProps) {
-  const [overrides,   setOverrides]   = useState<OverridesMap>({})
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1)
+  const [overrides,    setOverrides]    = useState<OverridesMap>({})
+  const [showBaseData, setShowBaseData] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
 
   const currency     = apiData?.quote?.currency ?? 'USD'
   const currentPrice = (apiData?.quote?.price   ?? 0) as number
@@ -897,248 +891,251 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
   return (
     <div className="space-y-4">
 
-      {/* ── Wizard progress ────────────────────────────────────────────────── */}
-      <div className="bg-white border border-slate-200 rounded-xl px-5 py-4 shadow-card">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <WizardSteps steps={WIZARD_STEPS} current={currentStep} />
-          <p className="text-micro text-slate-400 hidden sm:block">
-            {currentStep === 1 ? 'Review the data foundation before running models' :
-             currentStep === 2 ? 'Scroll through each method — edit any assumption live' :
-             'Weighted consensus across all methods'}
-          </p>
+      {/* ── 1. Valuation Summary — THE ANSWER (always first) ─────────────── */}
+      <ValuationSummary
+        methods={summaryMethods}
+        currentPrice={currentPrice}
+        currency={currency}
+      />
+
+      {/* ── 2. Key model inputs ──────────────────────────────────────────── */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-card">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-label uppercase tracking-wider text-slate-400">Model Inputs</p>
+          <SourceLabel source="calc">Derived from data</SourceLabel>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <AssumptionStat label="Revenue CAGR" value={`${(fwdPEBase.revenueCAGR  * 100).toFixed(1)}%`} sub="annual growth"     desc="How fast revenue grows each year" />
+          <AssumptionStat label="Net Margin"   value={`${(fwdPEBase.netMargin    * 100).toFixed(1)}%`} sub="exit year"         desc="Profit kept from every $1 of revenue" />
+          <AssumptionStat label="WACC"         value={`${(fwdPEBase.discountRate * 100).toFixed(1)}%`} sub="discount rate"     desc="Risk-adjusted return investors require" />
+          <AssumptionStat label="Exit P/E"     value={`${fwdPEBase.exitPE.toFixed(0)}×`}              sub="sector-normalized" desc="Earnings multiple at end of forecast" />
         </div>
       </div>
 
-      {/* ── Step 1: Base Data ──────────────────────────────────────────────── */}
-      {currentStep === 1 && (
-        <div className="space-y-4">
-
-          {/* Section A: Business Snapshot */}
-          <div className="bg-blue-50 border border-blue-100 rounded-xl px-5 py-4 flex gap-3 items-start">
-            <svg className="text-blue-400 mt-0.5 shrink-0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      {/* ── 3. Data foundation — collapsible ─────────────────────────────── */}
+      <div className="bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden">
+        <button
+          onClick={() => setShowBaseData(v => !v)}
+          className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-400">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
-            <p className="text-sm text-blue-800 leading-relaxed">
-              {buildBusinessSummary(
-                apiData?.companyName ?? ticker,
-                { ...apiData, cagrAnalysis: { ...apiData?.cagrAnalysis, historicalCagr3y: stmtCagr3y ?? apiData?.cagrAnalysis?.historicalCagr3y } } as any,
-                { fcfMargin: fcfMarginPct ?? stmtFcfMarginForSummary, grossMargin: grossMarginPct ?? apiData?.businessProfile?.grossMargin }
-              )}
-            </p>
+            <span className="text-sm font-semibold text-slate-700">Data Foundation</span>
+            <span className="text-micro text-slate-400">TTM financials · growth assumptions · business context</span>
           </div>
+          <svg
+            className={cn('text-slate-400 transition-transform', showBaseData && 'rotate-180')}
+            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
 
-          {/* Section B: TTM Performance */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-card">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-label uppercase tracking-wider text-slate-400">Trailing 12 Months</p>
-              <SourceLabel source="yahoo">Yahoo Finance Statements</SourceLabel>
+        {showBaseData && (
+          <div className="border-t border-slate-100 p-5 space-y-4">
+            {/* Business Snapshot */}
+            <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex gap-3 items-start">
+              <svg className="text-blue-400 mt-0.5 shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <p className="text-sm text-blue-800 leading-relaxed">
+                {buildBusinessSummary(
+                  apiData?.companyName ?? ticker,
+                  { ...apiData, cagrAnalysis: { ...apiData?.cagrAnalysis, historicalCagr3y: stmtCagr3y ?? apiData?.cagrAnalysis?.historicalCagr3y } } as any,
+                  { fcfMargin: fcfMarginPct ?? stmtFcfMarginForSummary, grossMargin: grossMarginPct ?? apiData?.businessProfile?.grossMargin }
+                )}
+              </p>
             </div>
 
-            {statementsAvailable ? (
-              <>
-                {/* 4 metric tiles with sparklines */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                  {([
-                    { label: 'Revenue',        value: ttmRevenue,   margin: null,          tag: '',            vals: sparkRevenue },
-                    { label: 'EBITDA',         value: ttmEbitda,    margin: ebitdaMargin,  tag: 'margin',      vals: sparkEbitda  },
-                    { label: 'Free Cash Flow', value: ttmFCF,       margin: fcfMarginPct,  tag: 'FCF margin',  vals: sparkFCF     },
-                    { label: 'Net Income',     value: ttmNetIncome, margin: netMarginPct,  tag: 'net margin',  vals: sparkNI      },
-                  ] as const).map(({ label, value, margin, tag, vals }) => {
-                    const nums = vals.filter((v): v is number => v != null)
-                    const isPositive = nums.length >= 2 ? nums[nums.length - 1] >= nums[0] : true
-                    return (
-                      <div key={label} className="bg-slate-50 border border-slate-100 rounded-xl px-3 py-3 flex flex-col gap-1">
-                        <span className="text-label uppercase tracking-wider text-slate-400">{label}</span>
-                        <span className="text-lg font-bold font-mono text-slate-900">{fmtLarge(value)}</span>
-                        {margin != null && (
-                          <span className="text-micro text-slate-500">{(margin * 100).toFixed(1)}% {tag}</span>
-                        )}
-                        <div className="mt-1">
-                          <MiniBarSparkline values={vals} positive={isPositive} />
+            {/* TTM Performance */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-label uppercase tracking-wider text-slate-400">Trailing 12 Months</p>
+                <SourceLabel source="yahoo">Yahoo Finance Statements</SourceLabel>
+              </div>
+
+              {statementsAvailable ? (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+                    {([
+                      { label: 'Revenue',        value: ttmRevenue,   margin: null,          tag: '',            vals: sparkRevenue },
+                      { label: 'EBITDA',         value: ttmEbitda,    margin: ebitdaMargin,  tag: 'margin',      vals: sparkEbitda  },
+                      { label: 'Free Cash Flow', value: ttmFCF,       margin: fcfMarginPct,  tag: 'FCF margin',  vals: sparkFCF     },
+                      { label: 'Net Income',     value: ttmNetIncome, margin: netMarginPct,  tag: 'net margin',  vals: sparkNI      },
+                    ] as const).map(({ label, value, margin, tag, vals }) => {
+                      const nums = vals.filter((v): v is number => v != null)
+                      const isPositive = nums.length >= 2 ? nums[nums.length - 1] >= nums[0] : true
+                      return (
+                        <div key={label} className="bg-slate-50 border border-slate-100 rounded-xl px-3 py-3 flex flex-col gap-1">
+                          <span className="text-label uppercase tracking-wider text-slate-400">{label}</span>
+                          <span className="text-lg font-bold font-mono text-slate-900">{fmtLarge(value)}</span>
+                          {margin != null && (
+                            <span className="text-micro text-slate-500">{(margin * 100).toFixed(1)}% {tag}</span>
+                          )}
+                          <div className="mt-1">
+                            <MiniBarSparkline values={vals} positive={isPositive} />
+                          </div>
                         </div>
-                      </div>
-                    )
-                  })}
-                </div>
-
-                {/* Balance sheet row */}
-                <div className="border-t border-slate-100 pt-4 flex flex-wrap gap-2">
-                  <MetricChip label="Total Debt"    value={ttmTotalDebt != null ? fmtLarge(ttmTotalDebt) : '—'} variant="default" />
-                  <MetricChip label="Cash & Equiv." value={ttmCash      != null ? fmtLarge(ttmCash)      : '—'} variant="positive" />
-                  <MetricChip
-                    label="Net Debt"
-                    value={ttmNetDebt != null ? fmtLarge(ttmNetDebt) : '—'}
-                    variant={ttmNetDebt == null ? 'default' : ttmNetDebt < 0 ? 'positive' : 'warning'}
-                  />
-                </div>
-              </>
-            ) : (
-              <Alert>
-                <AlertDescription>
-                  Statements data is loading. Key TTM metrics will appear once the data is available.
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
-
-          {/* Section C: Growth Assumption Breakdown */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-card">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-label uppercase tracking-wider text-slate-400">Revenue Growth Assumption</p>
-              {cagrAnalysis.confidenceLabel && (
-                <span className={cn(
-                  'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
-                  cagrAnalysis.confidenceLabel === 'High'   && 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                  cagrAnalysis.confidenceLabel === 'Medium' && 'bg-amber-50 text-amber-700 border-amber-200',
-                  cagrAnalysis.confidenceLabel === 'Low'    && 'bg-red-50 text-red-700 border-red-200',
-                )}>
-                  {cagrAnalysis.confidenceLabel} Confidence
-                  {cagrAnalysis.numAnalysts ? ` · ${cagrAnalysis.numAnalysts} analysts` : ''}
-                </span>
+                      )
+                    })}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <MetricChip label="Total Debt"    value={ttmTotalDebt != null ? fmtLarge(ttmTotalDebt) : '—'} variant="default" />
+                    <MetricChip label="Cash & Equiv." value={ttmCash      != null ? fmtLarge(ttmCash)      : '—'} variant="positive" />
+                    <MetricChip
+                      label="Net Debt"
+                      value={ttmNetDebt != null ? fmtLarge(ttmNetDebt) : '—'}
+                      variant={ttmNetDebt == null ? 'default' : ttmNetDebt < 0 ? 'positive' : 'warning'}
+                    />
+                  </div>
+                </>
+              ) : (
+                <Alert><AlertDescription>Statements data is loading.</AlertDescription></Alert>
               )}
             </div>
-            <div className="space-y-3 mb-4">
-              <GrowthBar label="Historical 3Y CAGR" value={cagrAnalysis.historicalCagr3y  ?? null} weight={cagrAnalysis.weights?.historical  ?? 0.35} />
-              <GrowthBar label="Analyst Consensus"  value={cagrAnalysis.analystEstimate1y ?? null} weight={cagrAnalysis.weights?.analyst     ?? 0.45} />
-              <GrowthBar label="Fundamental Growth" value={cagrAnalysis.fundamentalGrowth ?? null} weight={cagrAnalysis.weights?.fundamental ?? 0.20} />
-            </div>
-            <div className="flex items-center justify-between border-t border-slate-100 pt-3">
-              <span className="text-sm text-slate-700 font-medium">Blended CAGR (used in model)</span>
-              <span className="text-base font-bold font-mono text-emerald-700">
-                {cagrAnalysis.blended != null
-                  ? `${(cagrAnalysis.blended * 100).toFixed(1)}%`
-                  : `${(fwdPEBase.revenueCAGR * 100).toFixed(1)}%`}
-              </span>
-            </div>
-          </div>
 
-          {/* Section D: Model Inputs */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-card">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-label uppercase tracking-wider text-slate-400">Model Inputs</p>
-              <SourceLabel source="calc">Derived from data</SourceLabel>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <AssumptionStat label="Revenue CAGR" value={`${(fwdPEBase.revenueCAGR  * 100).toFixed(1)}%`} sub="annual growth"     desc="How fast revenue grows each year" />
-              <AssumptionStat label="Net Margin"   value={`${(fwdPEBase.netMargin    * 100).toFixed(1)}%`} sub="exit year"         desc="Profit kept from every $1 of revenue" />
-              <AssumptionStat label="WACC"         value={`${(fwdPEBase.discountRate * 100).toFixed(1)}%`} sub="discount rate"     desc="Risk-adjusted return investors require" />
-              <AssumptionStat label="Exit P/E"     value={`${fwdPEBase.exitPE.toFixed(0)}×`}              sub="sector-normalized" desc="Earnings multiple at end of forecast" />
-            </div>
-          </div>
-
-          {/* Section E: Methods Preview */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-card">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-label uppercase tracking-wider text-slate-400">Valuation Methods</p>
-              <span className="text-micro text-slate-400">4 approaches → 1 weighted answer</span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {([
-                { name: 'Forward P/E',      desc: '5-year earnings target discounted to today',  weight: '30%', cls: 'bg-indigo-50 border-indigo-100 text-indigo-700'  },
-                { name: 'EV/EBITDA',        desc: 'Profit-adjusted sector comparable multiple',  weight: '25%', cls: 'bg-blue-50 border-blue-100 text-blue-700'        },
-                { name: 'Revenue Multiple', desc: 'Top-line growth rate applied to revenue',     weight: '20%', cls: 'bg-violet-50 border-violet-100 text-violet-700'  },
-                { name: 'Scenario Blend',   desc: 'Bear / Base / Bull scenarios, DCF weighted',  weight: '15%', cls: 'bg-emerald-50 border-emerald-100 text-emerald-700' },
-              ] as const).map(m => (
-                <div key={m.name} className={`border rounded-xl px-3 py-2.5 ${m.cls}`}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[11px] font-semibold">{m.name}</span>
-                    <span className="text-[10px] font-mono font-bold opacity-50">{m.weight}</span>
-                  </div>
-                  <p className="text-[10px] leading-snug opacity-70">{m.desc}</p>
-                </div>
-              ))}
+            {/* Revenue Growth Assumption */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-label uppercase tracking-wider text-slate-400">Revenue Growth Assumption</p>
+                {cagrAnalysis.confidenceLabel && (
+                  <span className={cn(
+                    'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
+                    cagrAnalysis.confidenceLabel === 'High'   && 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                    cagrAnalysis.confidenceLabel === 'Medium' && 'bg-amber-50 text-amber-700 border-amber-200',
+                    cagrAnalysis.confidenceLabel === 'Low'    && 'bg-red-50 text-red-700 border-red-200',
+                  )}>
+                    {cagrAnalysis.confidenceLabel} Confidence
+                    {cagrAnalysis.numAnalysts ? ` · ${cagrAnalysis.numAnalysts} analysts` : ''}
+                  </span>
+                )}
+              </div>
+              <div className="space-y-3 mb-3">
+                <GrowthBar label="Historical 3Y CAGR" value={cagrAnalysis.historicalCagr3y  ?? null} weight={cagrAnalysis.weights?.historical  ?? 0.35} />
+                <GrowthBar label="Analyst Consensus"  value={cagrAnalysis.analystEstimate1y ?? null} weight={cagrAnalysis.weights?.analyst     ?? 0.45} />
+                <GrowthBar label="Fundamental Growth" value={cagrAnalysis.fundamentalGrowth ?? null} weight={cagrAnalysis.weights?.fundamental ?? 0.20} />
+              </div>
+              <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+                <span className="text-sm text-slate-700 font-medium">Blended CAGR (used in model)</span>
+                <span className="text-base font-bold font-mono text-emerald-700">
+                  {cagrAnalysis.blended != null
+                    ? `${(cagrAnalysis.blended * 100).toFixed(1)}%`
+                    : `${(fwdPEBase.revenueCAGR * 100).toFixed(1)}%`}
+                </span>
+              </div>
             </div>
           </div>
+        )}
+      </div>
 
-          <Button className="w-full" onClick={() => setCurrentStep(2)}>
-            Review Valuation Methods →
-          </Button>
-        </div>
-      )}
+      {/* ── 4. Method details ────────────────────────────────────────────────── */}
+      <div className="space-y-4">
+        <p className="text-label uppercase tracking-wider text-slate-400 px-1">Valuation Methods — Edit Any Assumption</p>
 
-      {/* ── Step 2: Methods (vertical scroll) ─────────────────────────────── */}
-      {currentStep === 2 && (
-        <div className="space-y-5">
+        <MethodInlinePanel
+          config={fwdPEConfig}
+          overrides={overrides['forward_pe'] ?? {}}
+          currency={currency}
+          onAssumptionChange={(key, val) => handleAssumptionChange('forward_pe', key, val)}
+          onResetOverrides={() => handleResetOverrides('forward_pe')}
+          onNavigateToFinancials={onNavigateToFinancials}
+          extraContent={
+            chartRevenueGrowth.length >= 2 || chartNetMargin.length >= 2 ? (
+              <MethodHistoryCharts charts={[
+                { title: 'Revenue Growth YoY', data: chartRevenueGrowth, unit: '%',  color: '#6366f1' },
+                { title: 'Net Margin',          data: chartNetMargin,    unit: '%',  color: '#10b981' },
+              ]} />
+            ) : undefined
+          }
+        />
 
-          <MethodInlinePanel
-            config={fwdPEConfig}
-            overrides={overrides['forward_pe'] ?? {}}
-            currency={currency}
-            onAssumptionChange={(key, val) => handleAssumptionChange('forward_pe', key, val)}
-            onResetOverrides={() => handleResetOverrides('forward_pe')}
-            onNavigateToFinancials={onNavigateToFinancials}
-            extraContent={
-              chartRevenueGrowth.length >= 2 || chartNetMargin.length >= 2 ? (
-                <MethodHistoryCharts charts={[
-                  { title: 'Revenue Growth YoY', data: chartRevenueGrowth, unit: '%',  color: '#6366f1' },
-                  { title: 'Net Margin',          data: chartNetMargin,    unit: '%',  color: '#10b981' },
-                ]} />
-              ) : undefined
-            }
-          />
+        <MethodInlinePanel
+          config={evEbitdaConfig}
+          overrides={overrides['ev_ebitda'] ?? {}}
+          currency={currency}
+          onAssumptionChange={(key, val) => handleAssumptionChange('ev_ebitda', key, val)}
+          onResetOverrides={() => handleResetOverrides('ev_ebitda')}
+          onNavigateToFinancials={onNavigateToFinancials}
+          extraContent={
+            chartEbitda.length >= 2 || chartEbitdaMargin.length >= 2 ? (
+              <MethodHistoryCharts charts={[
+                { title: 'EBITDA ($M)',    data: chartEbitda,       unit: '$M', color: '#3b82f6' },
+                { title: 'EBITDA Margin', data: chartEbitdaMargin, unit: '%',  color: '#f59e0b' },
+              ]} />
+            ) : undefined
+          }
+        />
 
-          <MethodInlinePanel
-            config={evEbitdaConfig}
-            overrides={overrides['ev_ebitda'] ?? {}}
-            currency={currency}
-            onAssumptionChange={(key, val) => handleAssumptionChange('ev_ebitda', key, val)}
-            onResetOverrides={() => handleResetOverrides('ev_ebitda')}
-            onNavigateToFinancials={onNavigateToFinancials}
-            extraContent={
-              chartEbitda.length >= 2 || chartEbitdaMargin.length >= 2 ? (
-                <MethodHistoryCharts charts={[
-                  { title: 'EBITDA ($M)',    data: chartEbitda,       unit: '$M', color: '#3b82f6' },
-                  { title: 'EBITDA Margin', data: chartEbitdaMargin, unit: '%',  color: '#f59e0b' },
-                ]} />
-              ) : undefined
-            }
-          />
+        <MethodInlinePanel
+          config={revMultConfig}
+          overrides={overrides['revenue_multiple'] ?? {}}
+          currency={currency}
+          onAssumptionChange={(key, val) => handleAssumptionChange('revenue_multiple', key, val)}
+          onResetOverrides={() => handleResetOverrides('revenue_multiple')}
+          onNavigateToFinancials={onNavigateToFinancials}
+          extraContent={
+            chartRevenue.length >= 2 ? (
+              <MethodHistoryCharts charts={[
+                { title: 'Revenue ($M)', data: chartRevenue, unit: '$M', color: '#8b5cf6' },
+              ]} />
+            ) : undefined
+          }
+        />
 
-          <MethodInlinePanel
-            config={revMultConfig}
-            overrides={overrides['revenue_multiple'] ?? {}}
-            currency={currency}
-            onAssumptionChange={(key, val) => handleAssumptionChange('revenue_multiple', key, val)}
-            onResetOverrides={() => handleResetOverrides('revenue_multiple')}
-            onNavigateToFinancials={onNavigateToFinancials}
-            extraContent={
-              chartRevenue.length >= 2 ? (
-                <MethodHistoryCharts charts={[
-                  { title: 'Revenue ($M)', data: chartRevenue, unit: '$M', color: '#8b5cf6' },
-                ]} />
-              ) : undefined
-            }
-          />
+        <MethodInlinePanel
+          config={scenarioConfig}
+          overrides={overrides['scenario_blend'] ?? {}}
+          currency={currency}
+          onAssumptionChange={(key, val) => handleAssumptionChange('scenario_blend', key, val)}
+          onResetOverrides={() => handleResetOverrides('scenario_blend')}
+          onNavigateToFinancials={onNavigateToFinancials}
+        />
 
-          <MethodInlinePanel
-            config={scenarioConfig}
-            overrides={overrides['scenario_blend'] ?? {}}
-            currency={currency}
-            onAssumptionChange={(key, val) => handleAssumptionChange('scenario_blend', key, val)}
-            onResetOverrides={() => handleResetOverrides('scenario_blend')}
-            onNavigateToFinancials={onNavigateToFinancials}
-          />
+        <MethodInlinePanel
+          config={reverseDCFConfig}
+          overrides={{}}
+          currency={currency}
+          onAssumptionChange={() => {}}
+          onResetOverrides={() => {}}
+          onNavigateToFinancials={onNavigateToFinancials}
+          extraContent={
+            chartRevenueGrowth.length >= 2 || chartFCFMargin.length >= 2 ? (
+              <MethodHistoryCharts charts={[
+                { title: 'Revenue Growth YoY', data: chartRevenueGrowth, unit: '%',  color: '#6366f1' },
+                { title: 'FCF Margin',          data: chartFCFMargin,    unit: '%',  color: '#0ea5e9' },
+              ]} />
+            ) : undefined
+          }
+        />
+      </div>
 
-          <MethodInlinePanel
-            config={reverseDCFConfig}
-            overrides={{}}
-            currency={currency}
-            onAssumptionChange={() => {}}
-            onResetOverrides={() => {}}
-            onNavigateToFinancials={onNavigateToFinancials}
-            extraContent={
-              chartRevenueGrowth.length >= 2 || chartFCFMargin.length >= 2 ? (
-                <MethodHistoryCharts charts={[
-                  { title: 'Revenue Growth YoY', data: chartRevenueGrowth, unit: '%',  color: '#6366f1' },
-                  { title: 'FCF Margin',          data: chartFCFMargin,    unit: '%',  color: '#0ea5e9' },
-                ]} />
-              ) : undefined
-            }
-          />
+      {/* ── 5. Advanced Mode — full DCF table ────────────────────────────── */}
+      <div className="bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden">
+        <button
+          onClick={() => setShowAdvanced(v => !v)}
+          className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-400">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span className="text-sm font-semibold text-slate-700">Advanced Mode</span>
+            <span className="text-micro text-slate-400">Year-by-year DCF model · UFCF &amp; LFCF · editable cells</span>
+          </div>
+          <svg
+            className={cn('text-slate-400 transition-transform', showAdvanced && 'rotate-180')}
+            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
 
-          {/* Full DCF Modelling Table */}
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-card">
-            <div className="px-5 py-4 border-b border-slate-100">
+        {showAdvanced && (
+          <div className="border-t border-slate-100">
+            <div className="px-5 pt-4 pb-2">
               <h3 className="text-base font-bold text-slate-900">Full DCF Modelling Table</h3>
               <p className="text-micro text-slate-400 mt-0.5">
                 Year-by-year unlevered FCF model grounded in Yahoo Finance statements
@@ -1154,36 +1151,8 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
             />
             <ModellingWorkspace apiData={apiData} ticker={ticker} statementsData={statementsData} />
           </div>
-
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={() => setCurrentStep(1)} className="flex-1">
-              ← Back to Base Data
-            </Button>
-            <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => setCurrentStep(3)}>
-              See Valuation Summary →
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* ── Step 3: Summary ───────────────────────────────────────────────── */}
-      {currentStep === 3 && (
-        <div className="space-y-4">
-          <div className="bg-white border border-slate-200 rounded-xl px-5 py-3 shadow-card">
-            <p className="text-label uppercase tracking-wider text-slate-500">
-              Valuation Summary — Weighted Consensus
-            </p>
-          </div>
-          <ValuationSummary
-            methods={summaryMethods}
-            currentPrice={currentPrice}
-            currency={currency}
-          />
-          <Button variant="outline" className="w-full" onClick={() => setCurrentStep(2)}>
-            ← Back to Methods
-          </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

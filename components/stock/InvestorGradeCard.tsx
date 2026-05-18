@@ -1,6 +1,5 @@
 'use client'
-import { useState } from 'react'
-import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Bookmark, DollarSign, Shield, BarChart2 } from 'lucide-react'
+import { TrendingUp, TrendingDown, Bookmark, DollarSign, Shield, BarChart2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { fmtPct, fmtLargeCurrency, fmtPrice } from '@/lib/formatters'
 
@@ -63,8 +62,6 @@ export default function InvestorGradeCard({
   marketCap, peRatio, high52, low52, analystTarget,
   onSave, onViewDetails,
 }: Props) {
-  const [expanded, setExpanded] = useState(false)
-
   const up = change >= 0
   const colors = gradeColors(grade)
   const currSymbol = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$ ' : currency + ' '
@@ -132,20 +129,10 @@ export default function InvestorGradeCard({
             )}
           </div>
         </div>
-
-        {/* Expand trigger */}
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="mt-4 w-full flex items-center justify-between text-[12px] font-medium text-slate-500 hover:text-slate-800 transition-colors"
-        >
-          <span>{expanded ? 'Hide details' : 'See full picture — profitability, debt & growth'}</span>
-          {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        </button>
       </div>
 
-      {/* ── STATE 2: expanded ── */}
-      {expanded && (
-        <div className="border-t border-slate-100 px-5 pb-5 pt-4 space-y-4 bg-slate-50/60">
+      {/* ── Expanded details — always visible ── */}
+      <div className="border-t border-slate-100 px-5 pb-5 pt-4 space-y-4 bg-slate-50/60">
 
           {/* Fair value row */}
           {fairValue != null && (
@@ -205,10 +192,9 @@ export default function InvestorGradeCard({
               </button>
             )}
           </div>
-        </div>
-      )}
+      </div>
 
-      {/* ── Stat grid — always visible below the fold ── */}
+      {/* ── Stat grid — always visible ── */}
       <div className="border-t border-slate-100 px-5 py-4">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
           <StatBox label="Market Cap"     value={fmtLargeCurrency(marketCap, currency)} />
