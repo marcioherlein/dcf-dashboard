@@ -11,6 +11,7 @@ import HealthSection from '@/components/stock/HealthSection'
 import TabNav, { type TabId } from '@/components/stock/TabNav'
 import ValuationLab from '@/components/valuation/ValuationLab'
 import FinancialsHub from '@/components/stock/FinancialsHub'
+import InvestorGradeCard from '@/components/stock/InvestorGradeCard'
 import { LoginGateProvider, useLoginGate } from '@/components/auth/LoginGateProvider'
 import AuthBanner from '@/components/auth/AuthBanner'
 import { calculatePiotroski, calculateAltman, calculateBeneish } from '@/lib/dcf/calculateScores'
@@ -283,23 +284,30 @@ function StockPageBody() {
 
         {data && !loading && (
           <>
-            {/* Always-visible price header */}
+            {/* ── InvestorGradeCard — replaces PriceHeader ── */}
             <div className="pt-5">
-              <PriceHeader
+              <InvestorGradeCard
                 ticker={data.ticker}
                 companyName={data.companyName}
+                sector={data.quote.sector ?? ''}
                 price={data.quote.price}
                 change={data.quote.change}
                 changePct={data.quote.changePct}
+                currency={data.quote.currency ?? 'USD'}
+                grade={data.ratings?.overall?.grade ?? 'N/A'}
+                gradeLabel={data.ratings?.overall?.label ?? ''}
+                fairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? null}
+                upsidePct={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null}
+                profitabilitySummary={data.ratings?.profitability?.summary ?? ''}
+                liquiditySummary={data.ratings?.liquidity?.summary ?? ''}
+                growthSummary={data.ratings?.growth?.summary ?? ''}
                 marketCap={data.quote.marketCap}
                 peRatio={data.quote.peRatio}
                 high52={data.quote.fiftyTwoWeekHigh}
                 low52={data.quote.fiftyTwoWeekLow}
                 analystTarget={data.quote.analystTargetMean}
-                currency={data.quote.currency ?? 'USD'}
-                sector={data.quote.sector ?? ''}
-                analystRec={data.analystRecommendation}
                 onSave={() => requireAuth('Save this analysis to your watchlist — sign in to unlock it.')}
+                onViewDetails={() => setActiveTab('valuation')}
               />
             </div>
 
