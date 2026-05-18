@@ -108,6 +108,16 @@ export default function TopBar() {
           Portfolio
         </Link>
 
+        <Link
+          href="/pricing"
+          className={[
+            'h-8 flex items-center px-3 text-[13px] font-medium rounded-md transition-colors whitespace-nowrap',
+            pathname.startsWith('/pricing') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100',
+          ].join(' ')}
+        >
+          Pricing
+        </Link>
+
         {/* More dropdown */}
         <div className="relative" ref={moreRef}>
           <button

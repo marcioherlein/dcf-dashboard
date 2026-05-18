@@ -12,6 +12,7 @@ import ForecastTable, {
   type TerminalData,
 } from './ForecastTable'
 import DataQualityWarnings from './DataQualityWarnings'
+import SensitivityTable from '@/components/valuation/SensitivityTable'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type StatementsDataLike = any
@@ -364,6 +365,24 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
         currentWacc={+(wacc * 100).toFixed(1)}
         onWaccChange={(v) => setWaccOverride(v / 100)}
       />
+
+      {/* Sensitivity heatmap: shown below the forecast table */}
+      {baseInput.baseFCF != null && baseInput.baseFCF !== 0 && sharesM != null && sharesM > 0 && (
+        <div className="mt-0">
+          <SensitivityTable
+            baseFCF={baseInput.baseFCF}
+            baseWacc={wacc}
+            baseCagr={cagr}
+            terminalG={terminalG}
+            cashM={baseInput.cashM ?? 0}
+            debtM={baseInput.debtM ?? 0}
+            sharesM={sharesM}
+            currentPrice={baseInput.currentPrice ?? 0}
+            numYears={numProjectionYears}
+            currency={baseInput.currency}
+          />
+        </div>
+      )}
     </div>
   )
 }

@@ -12,6 +12,7 @@ import TabNav, { type TabId } from '@/components/stock/TabNav'
 import ValuationLab from '@/components/valuation/ValuationLab'
 import FinancialsHub from '@/components/stock/FinancialsHub'
 import InvestorGradeCard from '@/components/stock/InvestorGradeCard'
+import ThesisBuilderTab from '@/components/stock/ThesisBuilderTab'
 import { LoginGateProvider, useLoginGate } from '@/components/auth/LoginGateProvider'
 import AuthBanner from '@/components/auth/AuthBanner'
 import { calculatePiotroski, calculateAltman, calculateBeneish } from '@/lib/dcf/calculateScores'
@@ -436,6 +437,13 @@ function StockPageBody() {
             {activeTab === 'news' && (
               <div className="space-y-4 pt-5">
                 <NewsPanel ticker={ticker} />
+              </div>
+            )}
+
+            {/* ── Thesis Builder tab ── */}
+            {activeTab === 'thesis' && (
+              <div className="pt-5">
+                <ThesisBuilderTab ticker={ticker} data={data} />
               </div>
             )}
           </>
