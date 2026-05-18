@@ -71,12 +71,12 @@ export default function TopBar() {
 
       {/* Logo */}
       <Link href="/" className="flex items-center gap-2 shrink-0">
-        <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
-          <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M3 3h18v2H3V3zm0 4h12v2H3V7zm0 4h18v2H3v-2zm0 4h12v2H3v-2zm0 4h18v2H3v-2z"/>
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#0F2A5E' }}>
+          <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
           </svg>
         </div>
-        <span className="font-semibold text-slate-900 text-sm tracking-tight hidden sm:block">Valuations</span>
+        <span className="font-bold text-slate-900 text-sm tracking-tight hidden sm:block" style={{ letterSpacing: '-0.02em' }}>Clairo</span>
       </Link>
 
       {/* Primary nav */}
@@ -193,7 +193,8 @@ export default function TopBar() {
         ) : (
           <button
             onClick={() => signIn('google')}
-            className="text-[12px] bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg transition-colors font-medium"
+            className="text-[12px] text-white px-3 py-1.5 rounded-lg transition-colors font-medium"
+            style={{ background: '#0F2A5E' }}
           >
             Sign in
           </button>

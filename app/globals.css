@@ -14,7 +14,7 @@
     --card-foreground:     222 47% 11%;
     --popover:             0 0% 100%;
     --popover-foreground:  222 47% 11%;
-    --primary:             221 83% 53%;    /* blue-600 #2563EB */
+    --primary:             222 80% 22%;    /* brand navy #0F2A5E */
     --primary-foreground:  210 40% 98%;
     --secondary:           210 40% 96%;
     --secondary-foreground:222 47% 11%;
@@ -26,7 +26,7 @@
     --destructive-foreground: 210 40% 98%;
     --border:              214 32% 91%;    /* slate-200 */
     --input:               214 32% 91%;
-    --ring:                221 83% 53%;    /* blue-600 */
+    --ring:                222 80% 22%;    /* brand navy */
     --radius:              0.5rem;
     /* Financial chart palette */
     --chart-1:             221 83% 53%;   /* blue */
@@ -50,14 +50,16 @@
 
 /* ── App-level custom variables ─────────────────────────────────────────────── */
 :root {
-  --surface:       #FFFFFF;
+  --surface:       #F6F7F9;
   --border-strong: #CBD5E1;
-  --blue:          #2563EB;
-  --blue-light:    #EFF6FF;
-  --green:         #059669;
+  --blue:          #0F2A5E;  /* brand navy */
+  --blue-light:    #EEF2F8;
+  --green:         #0B7A5E;  /* brand emerald */
   --green-light:   #ECFDF5;
-  --red:           #DC2626;
+  --red:           #B91C1C;  /* brand red */
   --amber:         #D97706;
+  --gold:          #8B6914;  /* WCAG-AA compliant gold for text */
+  --gold-decor:    #C9A84C;  /* decorative only */
 
   /* ── DCF table dark surface tokens ── */
   --dcf-bg:          #111111;

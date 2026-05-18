@@ -9,8 +9,8 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 const geist = Inter({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
-  title: "Stock Valuation — Understand What You Own",
-  description: "Professional-grade stock valuation explained in plain English. Multi-method DCF, financial health scores, and interactive modeling. Free.",
+  title: "Clairo — Know if a stock is worth buying",
+  description: "Know if a stock is worth buying — before you buy. DCF-based fair value, plain-English health grades, and interactive scenario modeling. Free.",
 };
 
 export default function RootLayout({

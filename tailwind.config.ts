@@ -26,9 +26,17 @@ const config: Config = {
 
         // ── Financial semantic tokens ─────────────────────────────────────────
         up:           '#059669',  // emerald-600
-        down:         '#DC2626',  // red-600
+        down:         '#B91C1C',  // red-700 (slightly darker, more gravitas)
         warn:         '#D97706',  // amber-600
-        'accent-blue':'#2563EB',  // blue-600
+        'accent-blue':'#0F2A5E',  // brand navy (replaces generic blue-600)
+
+        // ── Clairo brand palette ──────────────────────────────────────────────
+        'brand-navy':         '#0F2A5E',  // primary CTA, headers
+        'brand-emerald':      '#0B7A5E',  // positive signals (grade A)
+        'brand-gold':         '#8B6914',  // WCAG AA on light (#F6F7F9): ~5.2:1 — use for text/CTAs
+        'brand-gold-decor':   '#C9A84C',  // decorative borders/accents only (fails AA as text)
+        'brand-red':          '#B91C1C',  // grade F / negative
+        'brand-surface':      '#F6F7F9',  // page background
 
         // ── Legacy MDM3 tokens (Header/Sidebar — keep until refactored) ───────
         "on-primary":               "#ffffff",
