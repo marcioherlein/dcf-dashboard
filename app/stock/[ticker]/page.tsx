@@ -249,9 +249,7 @@ function StockPageBody() {
     if (!data) return 'unknown'
     const pct = data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null
     if (pct == null) return 'unknown'
-    const base: 'undervalued' | 'fairvalue' | 'overvalued' = pct > 0.15 ? 'undervalued' : pct < -0.10 ? 'overvalued' : 'fairvalue'
-    if (computedScores?.altman?.zone === 'Distress') return 'overvalued'
-    return base
+    return pct > 0.15 ? 'undervalued' : pct < -0.10 ? 'overvalued' : 'fairvalue'
   })()
 
   const topRisk: string | null = (() => {
