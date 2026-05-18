@@ -27,13 +27,13 @@ function RotatingText({ phrases }: { phrases: string[] }) {
 
   useEffect(() => {
     if (stage === 'in') {
-      const t = setTimeout(() => setStage('out'), 2600)
+      const t = setTimeout(() => setStage('out'), 1700)
       return () => clearTimeout(t)
     } else {
       const t = setTimeout(() => {
         setIdx(i => (i + 1) % phrases.length)
         setStage('in')
-      }, 380)
+      }, 310)
       return () => clearTimeout(t)
     }
   }, [stage, phrases.length])
@@ -45,6 +45,233 @@ function RotatingText({ phrases }: { phrases: string[] }) {
     >
       {phrases[idx]}
     </span>
+  )
+}
+
+// ── Animated investor journey ──────────────────────────────────────────────────
+const THESIS_TEXT = "Apple's services segment grows 14% YoY. Hardware at 25x P/E is a discount on a software company."
+
+const STEP_LABELS = [
+  { n: '01', title: 'Search' },
+  { n: '02', title: 'Read grade' },
+  { n: '03', title: 'Adjust model' },
+  { n: '04', title: 'Write thesis' },
+]
+const STEP_DURATIONS = [2800, 2800, 3200, 3600]
+
+function AnimatedJourney() {
+  const [step, setStep] = useState(0)
+  const [stepKey, setStepKey] = useState(0)
+  const [typedTicker, setTypedTicker] = useState('')
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [thesisLen, setThesisLen] = useState(0)
+  const [wacc, setWacc] = useState(9.2)
+  const [fairValue, setFairValue] = useState(236)
+
+  const goToStep = (i: number) => { setStep(i); setStepKey(k => k + 1) }
+
+  // Auto-advance
+  useEffect(() => {
+    const t = setTimeout(() => goToStep((step + 1) % 4), STEP_DURATIONS[step])
+    return () => clearTimeout(t)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, stepKey])
+
+  // Reset state on step change
+  useEffect(() => {
+    setTypedTicker(''); setShowDropdown(false); setThesisLen(0)
+    setWacc(9.2); setFairValue(236)
+  }, [stepKey])
+
+  // Step 0: typewriter
+  useEffect(() => {
+    if (step !== 0) return
+    let i = 0
+    const t = setInterval(() => {
+      i++; setTypedTicker('AAPL'.slice(0, i))
+      if (i >= 4) { clearInterval(t); setTimeout(() => setShowDropdown(true), 320) }
+    }, 130)
+    return () => clearInterval(t)
+  }, [stepKey, step])
+
+  // Step 2: animate WACC + fair value
+  useEffect(() => {
+    if (step !== 2) return
+    let f = 0
+    const t = setInterval(() => {
+      f++; setWacc(v => Math.max(8.6, v - 0.033)); setFairValue(v => Math.min(251, v + 0.78))
+      if (f >= 18) clearInterval(t)
+    }, 70)
+    return () => clearInterval(t)
+  }, [stepKey, step])
+
+  // Step 3: typewriter thesis
+  useEffect(() => {
+    if (step !== 3) return
+    let i = 0
+    const t = setInterval(() => {
+      i++; setThesisLen(i)
+      if (i >= THESIS_TEXT.length) clearInterval(t)
+    }, 26)
+    return () => clearInterval(t)
+  }, [stepKey, step])
+
+  return (
+    <div className="max-w-xl mx-auto">
+      {/* macOS browser chrome */}
+      <div className="rounded-2xl overflow-hidden border border-slate-200/80" style={{ boxShadow: '0 24px 64px rgba(15,42,94,0.13), 0 4px 12px rgba(15,42,94,0.06)' }}>
+        {/* Title bar */}
+        <div className="bg-slate-50 border-b border-slate-200 px-4 py-2.5 flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-full bg-[#FF5F57]" />
+          <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
+          <div className="w-3 h-3 rounded-full bg-[#28C840]" />
+          <div className="mx-auto flex items-center gap-1.5 bg-white border border-slate-200 rounded-md px-3 py-0.5">
+            <svg className="w-2.5 h-2.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx={12} cy={12} r={9}/></svg>
+            <span className="text-[11px] text-slate-400 font-mono">clairo.ai/stock/AAPL</span>
+          </div>
+          <div className="w-3 h-3 opacity-0" />
+        </div>
+
+        {/* Screen */}
+        <div
+          key={stepKey}
+          className="bg-[#F6F7F9] p-5 min-h-[240px] flex flex-col justify-center"
+          style={{ animation: 'step-fade-in 0.35s cubic-bezier(0.16,1,0.3,1) forwards' }}
+        >
+          {/* Step 0 — search */}
+          {step === 0 && (
+            <div className="space-y-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Analyze any stock</p>
+              <div className="flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-4 py-3 shadow-sm">
+                <svg className="h-4 w-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
+                </svg>
+                <span className="text-sm font-mono font-semibold text-slate-900 flex-1">
+                  {typedTicker}
+                  <span className="inline-block w-0.5 h-4 bg-slate-700 ml-0.5 align-middle animate-pulse" />
+                </span>
+                <span className="text-[12px] font-semibold text-white px-3 py-1 rounded-lg" style={{ background: '#0F2A5E' }}>Analyze</span>
+              </div>
+              {showDropdown && (
+                <div className="rounded-xl bg-white border border-slate-200 shadow-lg overflow-hidden" style={{ animation: 'step-fade-in 0.22s ease forwards' }}>
+                  <div className="flex items-center gap-3 px-4 py-2.5 bg-blue-50 border-b border-slate-100">
+                    <span className="text-[13px] font-bold text-blue-600 font-mono w-12">AAPL</span>
+                    <span className="text-[12px] text-slate-600">Apple Inc.</span>
+                    <span className="ml-auto text-[11px] font-semibold text-emerald-600">↗ +0.87%</span>
+                  </div>
+                  <div className="flex items-center gap-3 px-4 py-2 opacity-30">
+                    <span className="text-[13px] font-bold text-slate-400 font-mono w-12">AAPU</span>
+                    <span className="text-[12px] text-slate-400">Apple Ultra ETF</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 1 — grade card */}
+          {step === 1 && (
+            <div className="rounded-xl bg-white border border-slate-200 shadow-sm p-4 space-y-3" style={{ animation: 'step-scale-in 0.42s cubic-bezier(0.34,1.56,0.64,1) forwards' }}>
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 rounded-xl bg-emerald-600 flex items-center justify-center shrink-0">
+                  <span className="text-2xl font-extrabold text-white leading-none" style={{ fontFamily: 'Manrope, system-ui' }}>B+</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-[11px] font-bold bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-slate-700">AAPL</span>
+                    <span className="text-[10px] text-slate-400">Technology</span>
+                  </div>
+                  <div className="text-sm font-bold text-slate-900">Apple Inc.</div>
+                  <div className="text-[10px] text-slate-400">Good overall</div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-xl font-extrabold text-slate-900 font-mono">$211.40</div>
+                  <div className="text-[12px] font-semibold text-emerald-600">▲ +0.87%</div>
+                </div>
+              </div>
+              <div className="rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2 text-[11px] text-emerald-800">
+                DCF model suggests <strong>11% upside</strong> — trading below our $236 estimate.
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {[['Market Cap','$3.2T'],['P/E','34.1×'],['52w High','$237']].map(([l, v]) => (
+                  <div key={l} className="rounded-lg bg-slate-50 border border-slate-100 px-2 py-1.5">
+                    <div className="text-[9px] font-bold uppercase tracking-wide text-slate-400">{l}</div>
+                    <div className="text-[12px] font-semibold font-mono text-slate-800">{v}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 2 — adjust model */}
+          {step === 2 && (
+            <div className="space-y-2.5">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Adjust your DCF model</p>
+              {[
+                { label: 'WACC',       val: wacc.toFixed(1) + '%', pct: (wacc - 7) / (12 - 7) },
+                { label: 'CAGR',       val: '12.0%',               pct: 0.52 },
+                { label: 'Terminal G', val: '2.5%',                 pct: 0.25 },
+              ].map(({ label, val, pct }) => (
+                <div key={label} className="rounded-xl bg-white border border-slate-200 px-4 py-2.5">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[12px] font-semibold text-slate-700">{label}</span>
+                    <span className="text-[12px] font-bold font-mono text-slate-900">{val}</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                    <div className="h-full rounded-full bg-[#0F2A5E] transition-all duration-150" style={{ width: `${Math.min(100, pct * 100)}%` }} />
+                  </div>
+                </div>
+              ))}
+              <div className="rounded-xl bg-white border border-emerald-200 px-4 py-2.5 flex items-center justify-between">
+                <span className="text-[12px] font-semibold text-slate-700">Fair value per share</span>
+                <span className="text-lg font-extrabold font-mono text-emerald-700">${Math.round(fairValue)}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3 — thesis */}
+          {step === 3 && (
+            <div className="space-y-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Investment thesis</p>
+              <div className="rounded-xl bg-white border border-slate-200 px-4 py-3 min-h-[80px]">
+                <p className="text-[12px] text-slate-700 leading-relaxed">
+                  {THESIS_TEXT.slice(0, thesisLen)}
+                  {thesisLen < THESIS_TEXT.length && (
+                    <span className="inline-block w-0.5 h-3.5 bg-slate-700 ml-0.5 align-middle animate-pulse" />
+                  )}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2">
+                  <div className="text-[9px] font-bold uppercase text-emerald-600 mb-0.5">Bull case</div>
+                  <div className="text-sm font-bold font-mono text-emerald-700">$278</div>
+                </div>
+                <div className="rounded-lg bg-amber-50 border border-amber-100 px-3 py-2">
+                  <div className="text-[9px] font-bold uppercase text-amber-600 mb-0.5">Bear case</div>
+                  <div className="text-sm font-bold font-mono text-amber-700">$168</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Step selector */}
+      <div className="mt-5 flex items-center justify-center gap-1">
+        {STEP_LABELS.map((s, i) => (
+          <button
+            key={i}
+            onClick={() => goToStep(i)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-200"
+            style={i === step
+              ? { background: '#0F2A5E', color: 'white' }
+              : { color: '#94A3B8', background: 'transparent' }}
+          >
+            <span className="font-mono">{s.n}</span>
+            <span className="hidden sm:inline">{s.title}</span>
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -337,25 +564,13 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="mx-auto max-w-5xl px-6 py-20">
-        <div className="text-center mb-12">
+      {/* Animated investor journey */}
+      <section className="mx-auto max-w-3xl px-6 py-20">
+        <div className="text-center mb-10">
           <h2 className="text-2xl font-bold text-slate-900 mb-2">From ticker to insight in under a minute</h2>
-          <p className="text-slate-500 text-sm">No finance degree required.</p>
+          <p className="text-slate-500 text-sm">No finance degree required. Click any step to jump ahead.</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-          {[
-            { step: '01', title: 'Enter any stock',        body: 'Search by ticker or company name. NYSE, NASDAQ, and international ADRs.' },
-            { step: '02', title: 'Get an instant grade',   body: 'See the fair value, health grade, and plain-English verdict — all without jargon.' },
-            { step: '03', title: 'Adjust your assumptions',body: 'Change growth rate, WACC, and terminal growth. See fair value update live.' },
-          ].map((item) => (
-            <div key={item.step}>
-              <div className="text-5xl font-black text-slate-100 mb-3 leading-none select-none">{item.step}</div>
-              <h3 className="text-base font-semibold text-slate-900 mb-1">{item.title}</h3>
-              <p className="text-sm text-slate-500 leading-relaxed">{item.body}</p>
-            </div>
-          ))}
-        </div>
+        <AnimatedJourney />
       </section>
 
       {/* Trust points — methodology transparency, no accuracy claim */}
