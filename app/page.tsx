@@ -556,21 +556,18 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* Demo card BELOW search — supporting evidence, not scroll terminator */}
+          {/* Animated investor journey */}
           <div className="hero-reveal mt-12" style={{ animationDelay: '440ms' }}>
+            <p className="text-xs text-slate-400 mb-4 uppercase tracking-wider font-semibold">See how it works</p>
+            <AnimatedJourney />
+          </div>
+
+          {/* Demo card — supporting evidence */}
+          <div className="hero-reveal mt-12" style={{ animationDelay: '520ms' }}>
             <p className="text-xs text-slate-400 mb-4 uppercase tracking-wider font-semibold">What an analysis looks like</p>
             <DemoGradeCard onAnalyze={(t) => router.push(`/stock/${t}`)} />
           </div>
         </div>
-      </section>
-
-      {/* Animated investor journey */}
-      <section className="mx-auto max-w-3xl px-6 py-20">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">From ticker to insight in under a minute</h2>
-          <p className="text-slate-500 text-sm">No finance degree required. Click any step to jump ahead.</p>
-        </div>
-        <AnimatedJourney />
       </section>
 
       {/* Trust points — methodology transparency, no accuracy claim */}
