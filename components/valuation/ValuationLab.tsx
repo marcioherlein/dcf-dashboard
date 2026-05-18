@@ -40,45 +40,6 @@ function rowYear(r: { endDate?: string | null; year?: string; fiscalDate?: strin
 function fmtB(v: number | null): string { return fmtLargeCurrency(v) }
 function fmtPctSigned(v: number | null): string { return fmtPct(v) }
 
-// ─── Formula builders ─────────────────────────────────────────────────────────
-
-function buildForwardPEFormula(
-  inputs: { ltvRevenue: number | null; sharesOutstanding: number | null; revenueCAGR: number; netMargin: number; exitPE: number; dilutionRate: number; discountRate: number },
-  result: ReturnType<typeof computeForwardPE>,
-  N = 5,
-): string[] {
-  if (result.futureTargetPrice == null || inputs.ltvRevenue == null) return ['Insufficient inputs to display formula']
-  const sharesB    = inputs.sharesOutstanding != null ? (inputs.sharesOutstanding / 1e9).toFixed(3) + 'B' : '—'
-  const cagrPct    = (inputs.revenueCAGR  * 100).toFixed(1)
-  const marginPct  = (inputs.netMargin    * 100).toFixed(1)
-  const dilPct     = (inputs.dilutionRate * 100).toFixed(1)
-  const waccPct    = (inputs.discountRate * 100).toFixed(1)
-  const targetYear = new Date().getFullYear() + N
-  return [
-    `${fmtB(inputs.ltvRevenue)} × (1+${cagrPct}%)^${N} × ${marginPct}% × ${inputs.exitPE}×`,
-    `÷ [${sharesB} × (1+${dilPct}%)^${N}]`,
-    `= ${fmtPrice(result.futureTargetPrice)} target in ${targetYear}`,
-    `Discounted at ${waccPct}% for ${N} years → fair value today`,
-  ]
-}
-
-function buildRevMultipleFormula(
-  inputs: { ltvRevenue: number | null; revenueCAGR: number; exitEVRevenue: number; netDebt: number | null; dilutionRate: number; discountRate: number },
-  result: ReturnType<typeof computeRevenueMultiple>,
-  N = 5,
-): string[] {
-  if (result.futureTargetPrice == null || inputs.ltvRevenue == null) return ['Insufficient inputs to display formula']
-  const cagrPct    = (inputs.revenueCAGR  * 100).toFixed(1)
-  const waccPct    = (inputs.discountRate * 100).toFixed(1)
-  const targetYear = new Date().getFullYear() + N
-  return [
-    `${fmtB(inputs.ltvRevenue)} × (1+${cagrPct}%)^${N} × ${inputs.exitEVRevenue.toFixed(1)}× EV/Revenue`,
-    inputs.netDebt != null ? `- ${fmtB(inputs.netDebt)} net debt = equity value` : '÷ shares outstanding',
-    `= ${fmtPrice(result.futureTargetPrice)} target in ${targetYear}`,
-    `Discounted at ${waccPct}% for ${N} years → fair value today`,
-  ]
-}
-
 // ─── Result builders ──────────────────────────────────────────────────────────
 
 function upsideTone(v: number | null): ValuationResult['tone'] {
@@ -449,14 +410,7 @@ function GrowthBar({ label, value, weight }: { label: string; value: number | nu
   )
 }
 
-// ─── Method History Charts ────────────────────────────────────────────────────
-
-interface HistoryChartDef {
-  title: string
-  data: { year: string; value: number }[]
-  unit: '%' | '$M'
-  color: string
-}
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type EvidenceChartDef = {
   data: { year: string; value: number }[]
@@ -466,70 +420,9 @@ type EvidenceChartDef = {
   referenceLabel?: string
 }
 
-function MethodHistoryCharts({ charts }: { charts: HistoryChartDef[] }) {
-  if (charts.every(c => c.data.length < 2)) return null
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function MiniTooltip({ active, payload, unit }: any) {
-    if (!active || !payload?.length) return null
-    const v = payload[0]?.value as number | null
-    if (v == null) return null
-    const display = unit === '%' ? `${v.toFixed(1)}%` : `$${v.toFixed(0)}M`
-    return (
-      <div className="bg-slate-900 text-white text-[10px] rounded px-2 py-1 shadow-lg">
-        {payload[0]?.payload?.year}: <strong>{display}</strong>
-      </div>
-    )
-  }
-
-  return (
-    <div>
-      <p className="text-label uppercase tracking-wider text-slate-400 mb-3">Historical Context</p>
-      <div className="flex flex-wrap gap-6">
-        {charts.map(chart => {
-          if (chart.data.length < 2) return null
-          const min = Math.min(...chart.data.map(d => d.value))
-          const hasNegatives = min < 0
-          return (
-            <div key={chart.title} className="flex-1 min-w-[160px]">
-              <p className="text-[11px] font-medium text-slate-500 mb-1.5">{chart.title}</p>
-              <ResponsiveContainer width="100%" height={80}>
-                <BarChart data={chart.data} barSize={14} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-                  <XAxis
-                    dataKey="year"
-                    tick={{ fontSize: 9, fill: '#94a3b8' }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis hide domain={hasNegatives ? ['auto', 'auto'] : [0, 'auto']} />
-                  {hasNegatives && <ReferenceLine y={0} stroke="#e2e8f0" strokeWidth={1} />}
-                  <Tooltip
-                    content={(props) => <MiniTooltip {...props} unit={chart.unit} />}
-                    cursor={{ fill: 'rgba(148,163,184,0.1)' }}
-                  />
-                  <Bar dataKey="value" radius={[3, 3, 0, 0]} isAnimationActive={false}>
-                    {chart.data.map((entry, i) => (
-                      <Cell
-                        key={i}
-                        fill={
-                          hasNegatives
-                            ? entry.value >= 0 ? chart.color : '#f87171'
-                            : i === chart.data.length - 1 ? chart.color : `${chart.color}80`
-                        }
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
+interface HistoryChartDef {
+  data: { year: string; value: number }[]
 }
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 type OverridesMap = Partial<Record<ValuationMethodId | 'ev_ebitda', Record<string, number>>>
 
@@ -635,15 +528,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
   const chartEbitda: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r: any) => {
     const ebitda = r.EBITDA as number | null
     if (ebitda != null) acc.push({ year: rowYear(r), value: ebitda / 1e6 })
-    return acc
-  }, []).slice(-5)
-
-  const chartEbitdaMargin: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r: any) => {
-    const rev    = r.totalRevenue as number | null
-    const ebitda = r.EBITDA       as number | null
-    if (rev != null && rev > 0 && ebitda != null) {
-      acc.push({ year: rowYear(r), value: ebitda / rev * 100 })
-    }
     return acc
   }, []).slice(-5)
 
@@ -834,7 +718,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
   }), [currentPrice, apiData, lastActualRevenue, lastFCFMargin, sharesAbsolute])
 
   const reverseDCFConfig = useMemo((): ValuationMethodConfig => {
-    const implCAGRPct = reverseDCFResult.impliedCAGR != null ? (reverseDCFResult.impliedCAGR * 100).toFixed(1) + '%' : '—'
     return {
       id: 'reverse_dcf', title: 'Reverse DCF', subtitle: 'What growth rate the market is pricing in',
       methodDescription: "Works backwards from today's price to find the growth rate the market is implicitly pricing in. If the implied CAGR looks unrealistically high vs. analyst expectations, the stock may be expensive.",
