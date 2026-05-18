@@ -39,7 +39,7 @@ function computeConsensus(methods: MethodResult[], price: number) {
   return { weightedFV, weightedBearFV, weightedBullFV, weightedUpside, zone }
 }
 
-function ConsensusRangeBar({
+export function ConsensusRangeBar({
   bear, base, bull, price, currency,
 }: { bear: number; base: number; bull: number; price: number; currency: string }) {
   const lo   = Math.min(bear, price) * 0.94
@@ -167,7 +167,7 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
         <div className={cn('rounded-xl border px-6 py-5', zoneStyle.wrap)}>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-label uppercase tracking-wider text-slate-500 mb-1">Weighted Consensus Fair Value</p>
+              <p className="text-label uppercase tracking-wider text-slate-500 mb-1">Our fair value estimate</p>
               <NumberDisplay value={fmtPrice(weightedFV, currency)} size="xl" />
               <p className="text-micro text-slate-500 mt-1.5">vs. {fmtPrice(currentPrice, currency)} current price</p>
             </div>

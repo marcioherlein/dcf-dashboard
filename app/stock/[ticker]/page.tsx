@@ -2,7 +2,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import PriceHeader from '@/components/stock/PriceHeader'
 import NewsPanel from '@/components/stock/NewsPanel'
 import BusinessModel from '@/components/stock/BusinessModel'
 import FinancialScores from '@/components/stock/FinancialScores'
@@ -12,10 +11,12 @@ import TabNav, { type TabId } from '@/components/stock/TabNav'
 import ValuationLab from '@/components/valuation/ValuationLab'
 import FinancialsHub from '@/components/stock/FinancialsHub'
 import InvestorGradeCard from '@/components/stock/InvestorGradeCard'
+import InvestmentVerdictCard from '@/components/stock/InvestmentVerdictCard'
 import ThesisBuilderTab from '@/components/stock/ThesisBuilderTab'
 import { LoginGateProvider, useLoginGate } from '@/components/auth/LoginGateProvider'
 import AuthBanner from '@/components/auth/AuthBanner'
 import { calculatePiotroski, calculateAltman, calculateBeneish } from '@/lib/dcf/calculateScores'
+import { track } from '@/lib/analytics/events'
 import { Sparkles } from 'lucide-react'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
@@ -151,7 +152,7 @@ function StockPageBody() {
   const [loading, setLoading]       = useState(true)
   const [error, setError]     = useState('')
   const [saving, setSaving]   = useState(false)
-  const [activeTab, setActiveTab] = useState<TabId>('valuation')
+  const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [financialsHighlight, setFinancialsHighlight] = useState<{ rowKey: string; statement: 'income' | 'balance' | 'cashflow' } | null>(null)
 
   const handleNavigateToFinancials = (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => {
@@ -206,7 +207,7 @@ function StockPageBody() {
   useEffect(() => {
     setLoading(true)
     setError('')
-    setActiveTab('valuation')
+    setActiveTab('overview')
     Promise.all([
       fetch(`/api/financials?ticker=${ticker}`).then(r => r.json()),
       fetch(`/api/statements?ticker=${ticker}`).then(r => r.json()).catch(() => null),
@@ -216,6 +217,7 @@ function StockPageBody() {
         setData(finJson)
         setStatementsData(stmtJson ?? null)
         setLoading(false)
+        track('stock_viewed', { ticker, sector: finJson.quote?.sector ?? '' })
       })
       .catch((e) => { setError(String(e)); setLoading(false) })
   }, [ticker])
@@ -224,6 +226,36 @@ function StockPageBody() {
   void setSaving; void saving
 
   const currency = data?.quote.currency === 'USD' ? '$' : (data?.quote.currency ?? '$') + ' '
+
+  // Derive verdict zone and top risk for InvestmentVerdictCard
+  const verdictZone: 'undervalued' | 'fairvalue' | 'overvalued' | 'unknown' = (() => {
+    if (!data) return 'unknown'
+    const pct = data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null
+    if (pct == null) return 'unknown'
+    const base: 'undervalued' | 'fairvalue' | 'overvalued' = pct > 0.15 ? 'undervalued' : pct < -0.10 ? 'overvalued' : 'fairvalue'
+    if (computedScores?.altman?.zone === 'Distress') return 'overvalued'
+    return base
+  })()
+
+  const topRisk: string | null = (() => {
+    if (!data) return null
+    if (computedScores?.beneish?.mScore != null && computedScores.beneish.mScore > -1.78)
+      return 'Beneish M-Score flags possible earnings manipulation'
+    if (computedScores?.altman?.zone === 'Distress')
+      return 'Altman Z-Score in financial distress zone'
+    if ((computedScores?.piotroski?.score ?? 9) <= 2)
+      return 'Piotroski F-Score very low — weak fundamentals'
+    if (data.isNegativeFCF)
+      return 'Negative free cash flow — DCF relies on turnaround assumption'
+    return null
+  })()
+
+  const topDrivers: string[] = data?.cagrAnalysis?.drivers?.slice(0, 3) ?? []
+
+  const handleTabChange = (tab: TabId) => {
+    setActiveTab(tab)
+    if (data) track('tab_changed', { ticker, tab })
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFB]">
@@ -243,7 +275,7 @@ function StockPageBody() {
 
       {/* Tab navigation */}
       {data && !loading && (
-        <TabNav activeTab={activeTab} onChange={setActiveTab} />
+        <TabNav activeTab={activeTab} onChange={handleTabChange} />
       )}
 
       {/* Session-based soft auth nudge (appears on 2nd+ stock page view) */}
@@ -285,7 +317,7 @@ function StockPageBody() {
 
         {data && !loading && (
           <>
-            {/* ── InvestorGradeCard — replaces PriceHeader ── */}
+            {/* ── InvestorGradeCard — persistent above-fold summary ── */}
             <div className="pt-5">
               <InvestorGradeCard
                 ticker={data.ticker}
@@ -308,13 +340,32 @@ function StockPageBody() {
                 low52={data.quote.fiftyTwoWeekLow}
                 analystTarget={data.quote.analystTargetMean}
                 onSave={() => requireAuth('Save this analysis to your watchlist — sign in to unlock it.')}
-                onViewDetails={() => setActiveTab('valuation')}
+                onViewDetails={() => handleTabChange('valuation')}
               />
             </div>
 
-            {/* ── Summary tab ── */}
-            {activeTab === 'summary' && (
-              <div id="tabpanel-summary" role="tabpanel" className="space-y-4 pt-5">
+            {/* ── Overview tab ── */}
+            {activeTab === 'overview' && (
+              <div id="tabpanel-overview" role="tabpanel" className="space-y-4 pt-5">
+                <InvestmentVerdictCard
+                  ticker={data.ticker}
+                  companyName={data.companyName}
+                  sector={data.quote.sector ?? ''}
+                  price={data.quote.price}
+                  currency={data.quote.currency ?? 'USD'}
+                  grade={data.ratings?.overall?.grade ?? 'N/A'}
+                  gradeLabel={data.ratings?.overall?.label ?? ''}
+                  fairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? null}
+                  upsidePct={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null}
+                  bearFV={data.scenarios?.bear?.fairValue ?? null}
+                  bullFV={data.scenarios?.bull?.fairValue ?? null}
+                  verdictZone={verdictZone}
+                  topRisk={topRisk}
+                  topDrivers={topDrivers}
+                  onSave={() => requireAuth('Save this analysis to your watchlist — sign in to unlock it.')}
+                  onViewValuation={() => handleTabChange('valuation')}
+                />
+
                 <PriceChart
                   ticker={ticker}
                   isDark={false}
@@ -358,15 +409,16 @@ function StockPageBody() {
                     financialsData={data}
                   />
                 )}
+
                 <div
                   className="bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors"
-                  onClick={() => setActiveTab('valuation')}
+                  onClick={() => handleTabChange('valuation')}
                 >
                   <div>
                     <div className="text-[13px] font-semibold text-slate-800">Build your own valuation</div>
-                    <div className="text-[11px] text-slate-500 mt-0.5">Open Valuation Lab → adjust assumptions, see fair value live</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">Open Valuation → adjust assumptions, see fair value live</div>
                   </div>
-                  <span className="text-blue-600 font-medium text-[13px]">Valuation Lab →</span>
+                  <span className="text-blue-600 font-medium text-[13px]">Valuation →</span>
                 </div>
 
                 {/* AI Analysis teaser */}
@@ -386,10 +438,23 @@ function StockPageBody() {
               </div>
             )}
 
-            {/* ── Valuation Lab tab ── */}
+            {/* ── Valuation tab ── */}
             {activeTab === 'valuation' && (
               <div className="space-y-4 pt-5">
                 <ValuationLab apiData={data} ticker={ticker} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} />
+
+                {/* Thesis Builder — collapsible at bottom of Valuation tab */}
+                <details className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+                  <summary className="px-5 py-4 cursor-pointer text-[13px] font-semibold text-slate-700 hover:bg-slate-50 transition-colors list-none flex items-center justify-between">
+                    <span>Thesis Builder — build your investment case</span>
+                    <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </summary>
+                  <div className="p-5 border-t border-slate-100">
+                    <ThesisBuilderTab ticker={ticker} data={data} />
+                  </div>
+                </details>
               </div>
             )}
 
@@ -406,8 +471,8 @@ function StockPageBody() {
               </div>
             )}
 
-            {/* ── Quality & Risk tab ── */}
-            {activeTab === 'quality' && (
+            {/* ── Risks & Signals tab ── */}
+            {activeTab === 'risks' && (
               <div className="space-y-4 pt-5">
                 {data.ratings && data.scores && (
                   <HealthSection
@@ -420,30 +485,10 @@ function StockPageBody() {
               </div>
             )}
 
-            {/* ── Price & Technicals tab (ownership id reused) ── */}
-            {activeTab === 'ownership' && (
-              <div className="space-y-4 pt-5">
-                <PriceChart
-                  ticker={ticker}
-                  isDark={false}
-                  fcffFairValue={data.fairValue.fairValuePerShare}
-                  triangulatedFairValue={data.valuationMethods?.triangulatedFairValue}
-                  analystTarget={data.quote.analystTargetMean}
-                />
-              </div>
-            )}
-
             {/* ── News tab ── */}
             {activeTab === 'news' && (
               <div className="space-y-4 pt-5">
                 <NewsPanel ticker={ticker} />
-              </div>
-            )}
-
-            {/* ── Thesis Builder tab ── */}
-            {activeTab === 'thesis' && (
-              <div className="pt-5">
-                <ThesisBuilderTab ticker={ticker} data={data} />
               </div>
             )}
           </>

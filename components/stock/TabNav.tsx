@@ -1,19 +1,17 @@
 'use client'
 import { cn } from '@/lib/utils'
 import {
-  BarChart2, DollarSign, Table2, ShieldCheck, TrendingUp, Newspaper, ClipboardList,
+  BarChart2, DollarSign, Table2, ShieldCheck, Newspaper,
 } from 'lucide-react'
 
-export type TabId = 'summary' | 'valuation' | 'financials' | 'peers' | 'quality' | 'ownership' | 'news' | 'thesis'
+export type TabId = 'overview' | 'valuation' | 'financials' | 'risks' | 'news'
 
 const TABS = [
-  { id: 'summary'    as TabId, label: 'Summary',            Icon: BarChart2     },
-  { id: 'valuation'  as TabId, label: 'Valuation Lab',      Icon: DollarSign    },
-  { id: 'financials' as TabId, label: 'Financials',         Icon: Table2        },
-  { id: 'quality'    as TabId, label: 'Quality & Risk',     Icon: ShieldCheck   },
-  { id: 'ownership'  as TabId, label: 'Price & Technicals', Icon: TrendingUp    },
-  { id: 'thesis'     as TabId, label: 'Thesis Builder',     Icon: ClipboardList },
-  { id: 'news'       as TabId, label: 'News',               Icon: Newspaper     },
+  { id: 'overview'   as TabId, label: 'Overview',          Icon: BarChart2  },
+  { id: 'valuation'  as TabId, label: 'Valuation',         Icon: DollarSign },
+  { id: 'financials' as TabId, label: 'Financials',        Icon: Table2     },
+  { id: 'risks'      as TabId, label: 'Risks & Signals',   Icon: ShieldCheck},
+  { id: 'news'       as TabId, label: 'News',              Icon: Newspaper  },
 ]
 
 interface Props {

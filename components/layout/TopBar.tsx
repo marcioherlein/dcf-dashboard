@@ -12,12 +12,10 @@ interface SearchResult {
 }
 
 const MORE_ITEMS = [
-  { href: '/ai-stack',        label: 'AI Stack' },
-  { href: '/monitor',         label: 'Market Monitor' },
-  { href: '/factor-ranking',  label: 'Screener' },
-  { href: '/compare',         label: 'Compare Pairs' },
-  { href: '/trading',         label: 'Trading Signals' },
-  { href: '/strategies',      label: 'Strategies' },
+  { href: '/ai-stack',   label: 'AI Stack'         },
+  { href: '/monitor',    label: 'Market Monitor'    },
+  { href: '/trading',    label: 'Trading Signals'   },
+  { href: '/strategies', label: 'Strategies'        },
 ]
 
 export default function TopBar() {
@@ -90,32 +88,40 @@ export default function TopBar() {
           Analyze
         </Link>
         <Link
-          href="/simplifier"
+          href="/valuations"
           className={[
             'h-8 flex items-center px-3 text-[13px] font-medium rounded-md transition-colors whitespace-nowrap',
-            pathname.startsWith('/simplifier') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100',
+            pathname.startsWith('/valuations') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100',
           ].join(' ')}
         >
-          Watchlist
+          My Valuations
+        </Link>
+        <Link
+          href="/compare"
+          className={[
+            'h-8 flex items-center px-3 text-[13px] font-medium rounded-md transition-colors whitespace-nowrap',
+            pathname.startsWith('/compare') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100',
+          ].join(' ')}
+        >
+          Compare
         </Link>
         <Link
           href="/monitor?tab=portfolio"
           className={[
             'h-8 flex items-center px-3 text-[13px] font-medium rounded-md transition-colors whitespace-nowrap',
-            pathname.startsWith('/monitor') && !pathname.startsWith('/monitor?') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100',
+            pathname.startsWith('/monitor') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100',
           ].join(' ')}
         >
           Portfolio
         </Link>
-
         <Link
-          href="/pricing"
+          href="/factor-ranking"
           className={[
             'h-8 flex items-center px-3 text-[13px] font-medium rounded-md transition-colors whitespace-nowrap',
-            pathname.startsWith('/pricing') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100',
+            pathname.startsWith('/factor-ranking') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100',
           ].join(' ')}
         >
-          Pricing
+          Screener
         </Link>
 
         {/* More dropdown */}
