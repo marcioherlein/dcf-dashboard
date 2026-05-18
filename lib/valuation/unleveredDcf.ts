@@ -57,10 +57,14 @@ export function computeUFCFRows(
     const nopat = r.ebit != null ? r.ebit * (1 - effectiveTaxRate) : null
 
     let ufcf: number | null = null
-    if (nopat != null && dna != null && r.capex != null) {
-      // nwcDelta can be null if prior NWC is missing (first row) — treat as 0 only for actuals
+    if (nopat != null) {
+      // D&A: treat as 0 when not separately reported (e.g. financial sector)
+      const dnaComponent = dna ?? 0
+      // CapEx: treat as 0 for asset-light / financial companies where capex may be absent
+      const capexComponent = r.capex ?? 0
+      // nwcDelta can be null if prior NWC is missing (first row) — treat as 0
       const dnwcComponent = nwcDelta ?? 0
-      ufcf = nopat + dna + r.capex - dnwcComponent
+      ufcf = nopat + dnaComponent + capexComponent - dnwcComponent
     }
     // Fallback for projected rows where build-up components are incomplete (e.g. financial sector):
     // use freeCashFlow if available (set from median historical FCF margin in normalizeInputs)

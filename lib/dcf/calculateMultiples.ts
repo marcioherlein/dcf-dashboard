@@ -348,7 +348,7 @@ export function calculateMultiples(input: {
 
   estimates.push(makeEstimate(
     'EV/Revenue', input.evToRevenue, 'evToRevenue', staticMed.evRevenue,
-    ['startup', 'growth'],
+    ['startup', 'growth', 'standard', 'dividend', 'financial'],
     'EV/Revenue',
   ))
 

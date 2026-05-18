@@ -127,8 +127,6 @@ function buildDisplayRows(
 }
 
 export default function ModellingWorkspace({ apiData, ticker, statementsData }: ModellingWorkspaceProps) {
-  const baseInput: ModellingInput = useMemo(() => normalizeModellingInputs(ticker, apiData, statementsData), [ticker, apiData, statementsData])
-
   // Overridable assumptions
   const [waccOverride, setWaccOverride] = useState<number | null>(null)
   const [cagrOverride, setCagrOverride] = useState<number | null>(null)
@@ -146,6 +144,12 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
     base:         { cagr: 0,     wacc: 0,      terminalG: 0 },
     optimistic:   { cagr: 0.02,  wacc: -0.01,  terminalG: 0.005 },
   }
+
+  const baseInput: ModellingInput = useMemo(
+    () => normalizeModellingInputs(ticker, apiData, statementsData, cagrOverride !== null ? Math.max(0, cagrOverride + PRESET_OFFSETS[preset].cagr) : undefined),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ticker, apiData, statementsData, cagrOverride, preset]
+  )
 
   // Row-level cell overrides (keyed by year string then field name)
   const [rowOverrides, setRowOverrides] = useState<Record<string, Record<string, number>>>({})

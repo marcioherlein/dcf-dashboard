@@ -601,9 +601,11 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
     methodDescription: 'Projects revenue 5 years forward using analyst growth estimates, applies a net margin target, multiplies by an exit P/E to get a future market cap, then discounts back to today at the WACC.',
     companyName: apiData?.companyName ?? ticker, ticker, currency,
     evidence:    fwdPEBase.evidence,
-    assumptions: fwdPEBase.assumptions.map(a =>
-      a.key === 'ltvRevenue' && ltvRevenueAbsolute != null ? { ...a, value: ltvRevenueAbsolute } : a
-    ),
+    assumptions: fwdPEBase.assumptions.map(a => {
+      if (a.key === 'ltvRevenue' && ltvRevenueAbsolute != null) return { ...a, value: ltvRevenueAbsolute }
+      if (a.key === 'sharesOutstanding' && sharesAbsolute != null) return { ...a, value: sharesAbsolute }
+      return a
+    }),
     formulaLines: [],
     results:     buildForwardPEResults(fwdPEResult, currentPrice, currency),
     warnings:    fwdPEResult.guardErrors,
@@ -630,7 +632,9 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
     methodDescription: 'Projects revenue 5 years forward, applies an EV/Revenue exit multiple for a future enterprise value, subtracts net debt, and discounts back at the WACC. Common for pre-profit or high-growth companies.',
     companyName: apiData?.companyName ?? ticker, ticker, currency,
     evidence:    revMultBase.evidence,
-    assumptions: revMultBase.assumptions,
+    assumptions: revMultBase.assumptions.map(a =>
+      a.key === 'ltvRevenue' && ltvRevenueAbsolute != null ? { ...a, value: ltvRevenueAbsolute } : a
+    ),
     formulaLines: [],
     results:     buildRevMultipleResults(revMultResult, currentPrice, currency),
     warnings:    revMultResult.guardErrors,
@@ -925,7 +929,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
                 <GrowthBar label="Fundamental Growth" value={cagrAnalysis.fundamentalGrowth ?? null} weight={cagrAnalysis.weights?.fundamental ?? 0.20} />
               </div>
               <div className="flex items-center justify-between border-t border-slate-100 pt-3">
-                <span className="text-sm text-slate-700 font-medium">Blended CAGR (used in model)</span>
+                <span className="text-sm text-slate-700 font-medium">Blended CAGR (forward P/E and revenue methods)</span>
                 <span className="text-base font-bold font-mono text-emerald-700">
                   {cagrAnalysis.blended != null
                     ? `${(cagrAnalysis.blended * 100).toFixed(1)}%`

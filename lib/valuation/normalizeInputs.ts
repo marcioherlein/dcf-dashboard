@@ -80,7 +80,7 @@ interface StatementsDataLike {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function normalizeModellingInputs(ticker: string, apiData: any, statementsData?: StatementsDataLike | null): ModellingInput {
+export function normalizeModellingInputs(ticker: string, apiData: any, statementsData?: StatementsDataLike | null, cagrOverride?: number): ModellingInput {
   const wacc = apiData?.wacc ?? {}
   const fv = apiData?.fairValue ?? {}
   const cagrAnalysis = apiData?.cagrAnalysis ?? {}
@@ -108,7 +108,8 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
   // Append projected rows when none exist (e.g., built from statements which only has historical)
   if (!rows.some(r => r.isProjected)) {
     const nYears = apiData?.growthModel === 'three-stage' ? 7 : 5
-    rows = [...rows, ...buildProjectedRows(rows, cagr, nYears)]
+    const projectionCagr = cagrOverride !== undefined ? cagrOverride : cagr
+    rows = [...rows, ...buildProjectedRows(rows, projectionCagr, nYears)]
   }
 
   // Base FCF: prefer TTM FCF from statements (raw dollars → millions)
