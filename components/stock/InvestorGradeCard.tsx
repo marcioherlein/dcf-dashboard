@@ -1,7 +1,7 @@
 'use client'
-import { TrendingUp, TrendingDown, Bookmark, DollarSign, Shield, BarChart2 } from 'lucide-react'
+import { TrendingUp, TrendingDown, Bookmark, DollarSign, Shield, BarChart2, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { fmtPct, fmtLargeCurrency, fmtPrice } from '@/lib/formatters'
+import { fmtPct, fmtLargeCurrency, fmtPrice, upsideZone, zoneBadgeClass } from '@/lib/formatters'
 
 interface Props {
   ticker: string
@@ -23,7 +23,6 @@ interface Props {
   growthSummary: string
   // Stat grid
   marketCap: number
-  peRatio: number
   high52: number
   low52: number
   analystTarget: number
@@ -59,13 +58,14 @@ export default function InvestorGradeCard({
   ticker, companyName, sector, price, change, changePct, currency,
   grade, gradeLabel, fairValue, upsidePct,
   profitabilitySummary, liquiditySummary, growthSummary,
-  marketCap, peRatio, high52, low52, analystTarget,
+  marketCap, high52, low52, analystTarget,
   onSave, onViewDetails,
 }: Props) {
   const up = change >= 0
   const colors = gradeColors(grade)
   const currSymbol = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$ ' : currency + ' '
   const isUndervalued = (upsidePct ?? 0) > 0
+  const zone = upsidePct != null ? upsideZone(upsidePct) : null
 
   const verdict = upsidePct == null || fairValue == null
     ? null
@@ -116,7 +116,7 @@ export default function InvestorGradeCard({
               </div>
             </div>
 
-            {/* One-sentence verdict (max 4 chunks at first render) */}
+            {/* One-sentence verdict */}
             {verdict && (
               <p className={cn(
                 'mt-3 text-[12px] leading-relaxed rounded-lg px-3 py-2',
@@ -134,21 +134,36 @@ export default function InvestorGradeCard({
       {/* ── Expanded details — always visible ── */}
       <div className="border-t border-slate-100 px-5 pb-5 pt-4 space-y-4 bg-slate-50/60">
 
-          {/* Fair value row */}
+          {/* Fair value row — asymmetric: current price (small) → zone badge → DCF estimate (dominant) */}
           {fairValue != null && (
-            <div className="flex items-center justify-between rounded-xl bg-white border border-slate-200 px-4 py-3">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">What you pay today</p>
-                <p className="mt-0.5 text-lg font-bold font-mono text-slate-900 tabular-nums">
+            <div className="flex items-center gap-3 rounded-xl bg-white border border-slate-200 px-4 py-3">
+              {/* Left: current price (secondary) */}
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">You pay</p>
+                <p className="mt-0.5 text-sm font-semibold font-mono text-slate-600 tabular-nums">
                   {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
-              <div className="text-slate-300 text-lg font-light">vs</div>
-              <div className="text-right">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Our DCF model&apos;s estimate</p>
-                <p className={cn('mt-0.5 text-lg font-bold font-mono tabular-nums', isUndervalued ? 'text-emerald-700' : 'text-amber-700')}>
+              {/* Center: arrow + zone badge */}
+              <div className="flex flex-col items-center gap-1 shrink-0">
+                <ArrowRight size={14} className="text-slate-300" />
+                {zone && (
+                  <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap', zoneBadgeClass(zone))}>
+                    {zone}
+                  </span>
+                )}
+              </div>
+              {/* Right: fair value (dominant) */}
+              <div className="flex-1 min-w-0 text-right">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">DCF Estimate</p>
+                <p className={cn('mt-0.5 text-xl font-bold font-mono tabular-nums', isUndervalued ? 'text-emerald-700' : 'text-amber-700')}>
                   {currSymbol}{fairValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
+                {upsidePct != null && (
+                  <p className={cn('text-xs font-semibold', isUndervalued ? 'text-emerald-600' : 'text-amber-600')}>
+                    {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -196,9 +211,8 @@ export default function InvestorGradeCard({
 
       {/* ── Stat grid — always visible ── */}
       <div className="border-t border-slate-100 px-5 py-4">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <StatBox label="Market Cap"     value={fmtLargeCurrency(marketCap, currency)} />
-          <StatBox label="P/E Ratio"      value={peRatio ? peRatio.toFixed(1) + '×' : '—'} />
           <StatBox label="52-wk High"     value={fmtPrice(high52, currency)} />
           <StatBox label="52-wk Low"      value={fmtPrice(low52, currency)} hidden />
           <StatBox label="Analyst Target" value={analystTarget ? fmtPrice(analystTarget, currency) : '—'} />

@@ -17,7 +17,8 @@ interface Props {
   financialsData?: any
 }
 
-const CATEGORY_ORDER = ['profitability', 'liquidity', 'growth', 'moat', 'valuation'] as const
+const BUSINESS_QUALITY_KEYS = ['profitability', 'liquidity', 'growth', 'moat'] as const
+const VALUATION_KEYS = ['valuation'] as const
 
 const CATEGORY_LABELS: Record<string, string> = {
   profitability: 'Profitability',
@@ -47,6 +48,30 @@ function ScoreBar({ score, color }: { score: number; color: string }) {
   )
 }
 
+function CategoryRow({ catKey, ratings }: { catKey: string; ratings: StockRatings }) {
+  const cat = ratings[catKey as keyof StockRatings] as StockRatings['profitability'] | undefined
+  if (!cat || !('grade' in cat)) return null
+  return (
+    <div className="flex items-start gap-4">
+      <div className="w-32 shrink-0">
+        <p className="text-xs font-medium text-slate-700">{CATEGORY_LABELS[catKey]}</p>
+        <ScoreBar score={cat.score} color={cat.color} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <span className={`text-sm font-bold ${cat.color === 'emerald' || cat.color === 'green' ? 'text-green-600' : cat.color === 'blue' ? 'text-blue-600' : cat.color === 'amber' || cat.color === 'orange' ? 'text-amber-600' : 'text-red-600'}`}>
+            {cat.grade}
+          </span>
+          <span className="text-xs text-slate-500">{cat.label}</span>
+        </div>
+        {cat.summary && (
+          <p className="text-[11px] text-slate-500 leading-relaxed">{cat.summary}</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function HealthSection({ ratings, scores, financialsData }: Props) {
   const piotroski       = scores.piotroski?.score ?? null
   const altmanZone      = scores.altman?.zone ?? null
@@ -63,31 +88,27 @@ export default function HealthSection({ ratings, scores, financialsData }: Props
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-        {/* Category scores */}
-        <div className="space-y-4">
-          {CATEGORY_ORDER.map((key) => {
-            const cat = ratings[key]
-            if (!cat) return null
-            return (
-              <div key={key} className="flex items-start gap-4">
-                <div className="w-32 shrink-0">
-                  <p className="text-xs font-medium text-slate-700">{CATEGORY_LABELS[key]}</p>
-                  <ScoreBar score={cat.score} color={cat.color} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className={`text-sm font-bold ${cat.color === 'emerald' || cat.color === 'green' ? 'text-green-600' : cat.color === 'blue' ? 'text-blue-600' : cat.color === 'amber' || cat.color === 'orange' ? 'text-amber-600' : 'text-red-600'}`}>
-                      {cat.grade}
-                    </span>
-                    <span className="text-xs text-slate-500">{cat.label}</span>
-                  </div>
-                  {cat.summary && (
-                    <p className="text-[11px] text-slate-500 leading-relaxed">{cat.summary}</p>
-                  )}
-                </div>
-              </div>
-            )
-          })}
+        {/* Category scores — two labeled groups */}
+        <div className="space-y-5">
+          {/* Business Quality */}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Business Quality</p>
+            <div className="space-y-4">
+              {BUSINESS_QUALITY_KEYS.map((key) => (
+                <CategoryRow key={key} catKey={key} ratings={ratings} />
+              ))}
+            </div>
+          </div>
+
+          {/* Price vs. Value */}
+          <div className="pt-1 border-t border-slate-100">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3 mt-3">Price vs. Value</p>
+            <div className="space-y-4">
+              {VALUATION_KEYS.map((key) => (
+                <CategoryRow key={key} catKey={key} ratings={ratings} />
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Quality signals + summary */}

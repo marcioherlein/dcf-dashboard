@@ -52,6 +52,7 @@ export type ValuationMethodConfig = {
   id: ValuationMethodId
   title: string
   subtitle: string
+  methodDescription?: string
   companyName: string
   ticker: string
   currency: string

@@ -180,10 +180,10 @@ interface MethodInlinePanelProps {
   onAssumptionChange: (key: string, value: number) => void
   onResetOverrides: () => void
   onNavigateToFinancials?: (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => void
-  extraContent?: React.ReactNode
+  evidenceCharts?: Record<string, EvidenceChartDef | undefined>
 }
 
-function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, onResetOverrides, onNavigateToFinancials, extraContent }: MethodInlinePanelProps) {
+function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, onResetOverrides, onNavigateToFinancials, evidenceCharts }: MethodInlinePanelProps) {
   const isModified = Object.keys(overrides).length > 0
   const upside =
     config.fairValueSummary != null && config.currentPrice != null && config.currentPrice > 0
@@ -205,6 +205,9 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
         <div>
           <h3 className="text-base font-bold text-slate-900">{config.title}</h3>
           <p className="text-micro text-slate-400 mt-0.5">{config.subtitle}</p>
+          {config.methodDescription && (
+            <p className="text-xs text-slate-500 mt-2 leading-relaxed">{config.methodDescription}</p>
+          )}
         </div>
         {config.fairValueSummary != null && (
           <div className="flex items-center gap-3 shrink-0">
@@ -236,29 +239,62 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
           {config.evidence.length > 0 && (
             <div>
               <p className="text-label uppercase tracking-wider text-slate-400 mb-2">Evidence & Derivation</p>
-              <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 space-y-1.5">
+              <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 space-y-2">
                 {config.evidence.map(({ label, text, rowKey, statement }) => {
                   const isLink = !!rowKey && !!statement
+                  const chart  = evidenceCharts?.[label]
                   return (
-                    <div key={label} className="flex gap-3 text-xs">
-                      <span
-                        className={cn(
-                          'font-medium w-24 shrink-0',
-                          isLink
-                            ? 'cursor-pointer text-blue-600 hover:text-blue-800 hover:underline underline-offset-2'
-                            : 'text-slate-500',
-                        )}
-                        title={isLink ? 'View in Financials tab' : undefined}
-                        onClick={() => isLink && onNavigateToFinancials?.(rowKey!, statement!)}
-                      >
-                        {isLink && (
-                          <svg className="inline mr-0.5 mb-0.5" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                          </svg>
-                        )}
-                        {label}
-                      </span>
-                      <span className="text-slate-600 leading-relaxed">{text}</span>
+                    <div key={label} className="text-xs">
+                      <div className="flex gap-3">
+                        <span
+                          className={cn(
+                            'font-medium w-24 shrink-0',
+                            isLink
+                              ? 'cursor-pointer text-blue-600 hover:text-blue-800 hover:underline underline-offset-2'
+                              : 'text-slate-500',
+                          )}
+                          title={isLink ? 'View in Financials tab' : undefined}
+                          onClick={() => isLink && onNavigateToFinancials?.(rowKey!, statement!)}
+                        >
+                          {isLink && (
+                            <svg className="inline mr-0.5 mb-0.5" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                          )}
+                          {label}
+                        </span>
+                        <span className="text-slate-600 leading-relaxed">{text}</span>
+                      </div>
+                      {chart && chart.data.length >= 2 && (
+                        <div className="mt-1.5 h-[72px] w-full">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={chart.data} margin={{ top: 2, right: 4, left: -18, bottom: 0 }}>
+                              <XAxis dataKey="year" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
+                              <YAxis tick={{ fontSize: 9 }} axisLine={false} tickLine={false}
+                                tickFormatter={(v: number) =>
+                                  chart.unit === '%' ? `${v}%` : chart.unit === 'x' ? `${v}×` : `${v}`
+                                }
+                              />
+                              <Tooltip formatter={(v: unknown) => [
+                                typeof v === 'number'
+                                  ? `${v.toFixed(1)}${chart.unit === '%' ? '%' : chart.unit === 'x' ? '×' : chart.unit === '$M' ? 'M' : ''}`
+                                  : '—',
+                                label,
+                              ]} />
+                              <ReferenceLine y={0} stroke="#e2e8f0" />
+                              {chart.referenceValue != null && (
+                                <ReferenceLine y={chart.referenceValue} stroke={chart.color} strokeDasharray="3 3"
+                                  label={{ value: chart.referenceLabel ?? '', fontSize: 8, fill: chart.color, position: 'right' }} />
+                              )}
+                              <Bar dataKey="value" radius={[2, 2, 0, 0]} isAnimationActive={false}>
+                                {chart.data.map((entry, idx) => (
+                                  <Cell key={idx} fill={entry.value < 0 ? '#ef4444' : chart.color} />
+                                ))}
+                              </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      )}
                     </div>
                   )
                 })}
@@ -327,17 +363,8 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
           )}
         </div>
 
-        {/* Right column: Formula + Results */}
+        {/* Right column: Results */}
         <div className="space-y-5">
-          {config.formulaLines.length > 0 && config.formulaLines[0] !== 'See the full modelling table below.' && (
-            <div>
-              <p className="text-label uppercase tracking-wider text-slate-400 mb-2">Formula</p>
-              <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 font-mono text-xs text-slate-600 space-y-0.5">
-                {config.formulaLines.map((line, i) => <div key={i}>{line}</div>)}
-              </div>
-            </div>
-          )}
-
           {config.results.length > 0 && (
             <div>
               <p className="text-label uppercase tracking-wider text-slate-400 mb-2">Results</p>
@@ -355,11 +382,6 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
           )}
         </div>
       </div>
-      {extraContent && (
-        <div className="border-t border-slate-100 px-5 py-4">
-          {extraContent}
-        </div>
-      )}
     </div>
   )
 }
@@ -434,6 +456,14 @@ interface HistoryChartDef {
   data: { year: string; value: number }[]
   unit: '%' | '$M'
   color: string
+}
+
+type EvidenceChartDef = {
+  data: { year: string; value: number }[]
+  unit: '%' | '$M' | 'x' | '$'
+  color: string
+  referenceValue?: number
+  referenceLabel?: string
 }
 
 function MethodHistoryCharts({ charts }: { charts: HistoryChartDef[] }) {
@@ -676,14 +706,21 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
     dividendYield:     null,
   }), [fwdPEBase, fwdPEOverrides, currentPrice, ltvRevenueAbsolute, sharesAbsolute])
   const fwdPEResult = useMemo(() => computeForwardPE(fwdPEInputs), [fwdPEInputs])
+
+  const currentPERatio = apiData?.quote?.peRatio ?? null
+  const chartPEComparison: EvidenceChartDef['data'] = [
+    ...(currentPERatio != null && currentPERatio > 0 ? [{ year: 'TTM P/E', value: +currentPERatio.toFixed(1) }] : []),
+    ...(fwdPEInputs.exitPE != null ? [{ year: 'Exit P/E', value: +fwdPEInputs.exitPE.toFixed(1) }] : []),
+  ]
   const fwdPEConfig = useMemo((): ValuationMethodConfig => ({
     id: 'forward_pe', title: 'Forward P/E', subtitle: '5-year target price discounted to today',
+    methodDescription: 'Projects revenue 5 years forward using analyst growth estimates, applies a net margin target, multiplies by an exit P/E to get a future market cap, then discounts back to today at the WACC.',
     companyName: apiData?.companyName ?? ticker, ticker, currency,
     evidence:    fwdPEBase.evidence,
     assumptions: fwdPEBase.assumptions.map(a =>
       a.key === 'ltvRevenue' && ltvRevenueAbsolute != null ? { ...a, value: ltvRevenueAbsolute } : a
     ),
-    formulaLines: buildForwardPEFormula(fwdPEInputs, fwdPEResult),
+    formulaLines: [],
     results:     buildForwardPEResults(fwdPEResult, currentPrice, currency),
     warnings:    fwdPEResult.guardErrors,
     fairValueSummary: fwdPEResult.fairValueToday,
@@ -706,10 +743,11 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
   const revMultResult = useMemo(() => computeRevenueMultiple(revMultInputs), [revMultInputs])
   const revMultConfig = useMemo((): ValuationMethodConfig => ({
     id: 'revenue_multiple', title: 'Revenue Multiple', subtitle: 'EV/Revenue exit multiple discounted to today',
+    methodDescription: 'Projects revenue 5 years forward, applies an EV/Revenue exit multiple for a future enterprise value, subtracts net debt, and discounts back at the WACC. Common for pre-profit or high-growth companies.',
     companyName: apiData?.companyName ?? ticker, ticker, currency,
     evidence:    revMultBase.evidence,
     assumptions: revMultBase.assumptions,
-    formulaLines: buildRevMultipleFormula(revMultInputs, revMultResult),
+    formulaLines: [],
     results:     buildRevMultipleResults(revMultResult, currentPrice, currency),
     warnings:    revMultResult.guardErrors,
     fairValueSummary: revMultResult.fairValueToday,
@@ -738,6 +776,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
     return {
       id: 'reverse_dcf' as ValuationMethodId,
       title: 'EV/EBITDA', subtitle: 'Enterprise value to EBITDA exit multiple',
+      methodDescription: "Applies a sector-typical EV/EBITDA multiple to TTM earnings for a spot enterprise value. Subtracts net debt, divides by shares. No growth assumptions required — it's a current-state valuation.",
       companyName: apiData?.companyName ?? ticker, ticker, currency,
       evidence: [
         { label: 'TTM EBITDA',    text: evEbitdaInputs.ttmEbitda != null ? fmtB(evEbitdaInputs.ttmEbitda) + ' (trailing 12 months, Yahoo Finance)' : 'Not available', rowKey: 'EBITDA', statement: 'income' },
@@ -750,12 +789,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
         { key: 'netDebt',      label: 'Net Debt',           editable: false, value: evEbitdaInputs.netDebt,   unit: '$', source: 'historical_3y_median' as const },
         { key: 'exitMultiple', label: 'EV/EBITDA Multiple', editable: true,  value: multiple, unit: 'x', min: 1, max: 50, step: 0.5, source: 'sector_fallback' as const, sourceExplanation: exitMultipleText, description: 'Sector-typical exit multiple' },
       ],
-      formulaLines: [
-        `EV = ${fmtB(evEbitdaInputs.ttmEbitda)} × ${multiple.toFixed(0)}× = ${fmtB(evEbitdaResult.enterpriseValue)}`,
-        `Equity = EV ${evEbitdaInputs.netDebt != null ? `− ${fmtB(evEbitdaInputs.netDebt)} net debt` : ''} = ${fmtB(evEbitdaResult.equityValue)}`,
-        `Fair Value = ${fmtB(evEbitdaResult.equityValue)} ÷ ${evEbitdaInputs.shares != null ? (evEbitdaInputs.shares / 1e9).toFixed(2) + 'B' : '—'} shares`,
-        `= ${fmtPrice(evEbitdaResult.fairValuePerShare, currency)} per share`,
-      ],
+      formulaLines: [],
       results:  buildEVEBITDAResults(evEbitdaResult, currentPrice, currency),
       warnings: evEbitdaResult.guardErrors,
       fairValueSummary: evEbitdaResult.fairValuePerShare,
@@ -803,6 +837,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
     const implCAGRPct = reverseDCFResult.impliedCAGR != null ? (reverseDCFResult.impliedCAGR * 100).toFixed(1) + '%' : '—'
     return {
       id: 'reverse_dcf', title: 'Reverse DCF', subtitle: 'What growth rate the market is pricing in',
+      methodDescription: "Works backwards from today's price to find the growth rate the market is implicitly pricing in. If the implied CAGR looks unrealistically high vs. analyst expectations, the stock may be expensive.",
       companyName: apiData?.companyName ?? ticker, ticker, currency,
       evidence: [
         { label: 'Implied EV', text: reverseDCFResult.impliedEV != null ? fmtB(reverseDCFResult.impliedEV) + ' (price × shares + debt − cash)' : 'Cannot compute — missing inputs' },
@@ -818,12 +853,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
         { key: 'wacc',          label: 'WACC',            value: apiData?.wacc?.wacc ?? 0.09, unit: '%', editable: false, source: 'model_default' as const },
         { key: 'terminalG',     label: 'Terminal Growth', value: apiData?.terminalG ?? 0.025, unit: '%', editable: false, source: 'model_default' as const },
       ],
-      formulaLines: [
-        `Implied EV = ${fmtB(reverseDCFResult.impliedEV)}`,
-        `FCF margin fixed at ${lastFCFMargin != null ? (lastFCFMargin * 100).toFixed(1) + '%' : '—'}`,
-        `Solve for CAGR such that PV(FCF) + PV(TV) = Implied EV`,
-        `→ Required 5Y CAGR: ${implCAGRPct}`,
-      ],
+      formulaLines: [],
       results:  buildReverseDCFResults(reverseDCFResult),
       warnings: [...reverseDCFResult.guardErrors, ...(reverseDCFResult.interpretationText ? [reverseDCFResult.interpretationText] : [])],
       fairValueSummary: null,
@@ -843,6 +873,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
     const [bear, base, bull] = scenarioResult.scenarios
     return {
       id: 'scenario_blend', title: 'Scenario Blend', subtitle: 'Bear / Base / Bull probability-weighted',
+      methodDescription: 'Probability-weighted average of Bull (+5pp CAGR, +3pp margin, +3× P/E), Base, and Bear (−5pp, −3pp, −3×) outcomes. Gives a single fair value that accounts for forecast uncertainty.',
       companyName: apiData?.companyName ?? ticker, ticker, currency,
       evidence: [
         { label: 'Bear (25%)', text: `CAGR −5pp, margin −3pp, P/E −3× vs base → ${fmtPrice(bear?.fairValue, currency)}` },
@@ -850,12 +881,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
         { label: 'Bull (25%)', text: `CAGR +5pp, margin +3pp, P/E +3× vs base → ${fmtPrice(bull?.fairValue, currency)}` },
       ],
       assumptions: [],
-      formulaLines: [
-        `Bear: ${fmtPrice(bear?.fairValue, currency)} × 25%`,
-        `Base: ${fmtPrice(base?.fairValue, currency)} × 50%`,
-        `Bull: ${fmtPrice(bull?.fairValue, currency)} × 25%`,
-        `= ${fmtPrice(wFV, currency)} weighted fair value`,
-      ],
+      formulaLines: [],
       results: [
         { label: 'Bear Fair Value',     value: bear?.fairValue ?? null, formattedValue: fmtPrice(bear?.fairValue, currency),  tone: upsideTone(bear?.upsidePct) },
         { label: 'Base Fair Value',     value: base?.fairValue ?? null, formattedValue: fmtPrice(base?.fairValue, currency),  tone: upsideTone(base?.upsidePct) },
@@ -1039,14 +1065,11 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
           onAssumptionChange={(key, val) => handleAssumptionChange('forward_pe', key, val)}
           onResetOverrides={() => handleResetOverrides('forward_pe')}
           onNavigateToFinancials={onNavigateToFinancials}
-          extraContent={
-            chartRevenueGrowth.length >= 2 || chartNetMargin.length >= 2 ? (
-              <MethodHistoryCharts charts={[
-                { title: 'Revenue Growth YoY', data: chartRevenueGrowth, unit: '%',  color: '#6366f1' },
-                { title: 'Net Margin',          data: chartNetMargin,    unit: '%',  color: '#10b981' },
-              ]} />
-            ) : undefined
-          }
+          evidenceCharts={{
+            'Revenue CAGR': chartRevenueGrowth.length >= 2 ? { data: chartRevenueGrowth, unit: '%', color: '#6366f1', referenceValue: +(fwdPEBase.revenueCAGR * 100).toFixed(1), referenceLabel: 'Blended' } : undefined,
+            'Net Margin':   chartNetMargin.length   >= 2 ? { data: chartNetMargin,    unit: '%', color: '#10b981', referenceValue: +((fwdPEInputs.netMargin ?? 0) * 100).toFixed(1), referenceLabel: 'Exit target' } : undefined,
+            'Exit P/E':     chartPEComparison.length >= 2 ? { data: chartPEComparison, unit: 'x', color: '#f59e0b' } : undefined,
+          }}
         />
 
         <MethodInlinePanel
@@ -1056,14 +1079,9 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
           onAssumptionChange={(key, val) => handleAssumptionChange('ev_ebitda', key, val)}
           onResetOverrides={() => handleResetOverrides('ev_ebitda')}
           onNavigateToFinancials={onNavigateToFinancials}
-          extraContent={
-            chartEbitda.length >= 2 || chartEbitdaMargin.length >= 2 ? (
-              <MethodHistoryCharts charts={[
-                { title: 'EBITDA ($M)',    data: chartEbitda,       unit: '$M', color: '#3b82f6' },
-                { title: 'EBITDA Margin', data: chartEbitdaMargin, unit: '%',  color: '#f59e0b' },
-              ]} />
-            ) : undefined
-          }
+          evidenceCharts={{
+            'TTM EBITDA': chartEbitda.length >= 2 ? { data: chartEbitda, unit: '$M', color: '#3b82f6' } : undefined,
+          }}
         />
 
         <MethodInlinePanel
@@ -1073,13 +1091,9 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
           onAssumptionChange={(key, val) => handleAssumptionChange('revenue_multiple', key, val)}
           onResetOverrides={() => handleResetOverrides('revenue_multiple')}
           onNavigateToFinancials={onNavigateToFinancials}
-          extraContent={
-            chartRevenue.length >= 2 ? (
-              <MethodHistoryCharts charts={[
-                { title: 'Revenue ($M)', data: chartRevenue, unit: '$M', color: '#8b5cf6' },
-              ]} />
-            ) : undefined
-          }
+          evidenceCharts={{
+            'Revenue CAGR': chartRevenueGrowth.length >= 2 ? { data: chartRevenueGrowth, unit: '%', color: '#6366f1', referenceValue: +(revMultBase.revenueCAGR * 100).toFixed(1), referenceLabel: 'Blended' } : undefined,
+          }}
         />
 
         <MethodInlinePanel
@@ -1098,14 +1112,10 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
           onAssumptionChange={() => {}}
           onResetOverrides={() => {}}
           onNavigateToFinancials={onNavigateToFinancials}
-          extraContent={
-            chartRevenueGrowth.length >= 2 || chartFCFMargin.length >= 2 ? (
-              <MethodHistoryCharts charts={[
-                { title: 'Revenue Growth YoY', data: chartRevenueGrowth, unit: '%',  color: '#6366f1' },
-                { title: 'FCF Margin',          data: chartFCFMargin,    unit: '%',  color: '#0ea5e9' },
-              ]} />
-            ) : undefined
-          }
+          evidenceCharts={{
+            'FCF Margin': chartFCFMargin.length >= 2 ? { data: chartFCFMargin, unit: '%', color: '#0ea5e9' } : undefined,
+            'Revenue':    chartRevenue.length    >= 2 ? { data: chartRevenue,  unit: '$M', color: '#8b5cf6' } : undefined,
+          }}
         />
       </div>
 

@@ -352,7 +352,6 @@ function StockPageBody() {
                 liquiditySummary={data.ratings?.liquidity?.summary ?? ''}
                 growthSummary={data.ratings?.growth?.summary ?? ''}
                 marketCap={data.quote.marketCap}
-                peRatio={data.quote.peRatio}
                 high52={data.quote.fiftyTwoWeekHigh}
                 low52={data.quote.fiftyTwoWeekLow}
                 analystTarget={data.quote.analystTargetMean}
@@ -402,10 +401,18 @@ function StockPageBody() {
                   currency={currency}
                   fairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue.fairValuePerShare}
                   upsidePct={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue.upsidePct}
-                  overallGrade={data.ratings?.overall?.grade ?? 'N/A'}
+                  overallGrade={data.ratings?.overall?.grade ?? '—'}
                   overallLabel={data.ratings?.overall?.label ?? ''}
                   statementsData={statementsData}
                 />
+
+                {data.ratings && data.scores && (
+                  <HealthSection
+                    ratings={data.ratings}
+                    scores={computedScores ?? data.scores}
+                    financialsData={data}
+                  />
+                )}
 
                 {(data.businessProfile.description || data.historicalRevenues.length >= 2) && (
                   <BusinessModel
@@ -416,14 +423,6 @@ function StockPageBody() {
                     incomeStatement={data.financialStatements?.incomeStatement}
                     cashFlow={data.financialStatements?.cashFlow}
                     statementsData={statementsData}
-                  />
-                )}
-
-                {data.ratings && data.scores && (
-                  <HealthSection
-                    ratings={data.ratings}
-                    scores={computedScores ?? data.scores}
-                    financialsData={data}
                   />
                 )}
 
