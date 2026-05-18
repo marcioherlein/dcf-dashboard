@@ -63,7 +63,6 @@ function verdictText(zone: VerdictZone, upsidePct: number | null, fairValue: num
 }
 
 export default function InvestmentVerdictCard({
-  ticker, companyName, sector,
   price, currency,
   grade, gradeLabel,
   fairValue, upsidePct,
