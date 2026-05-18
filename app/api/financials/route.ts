@@ -450,7 +450,7 @@ export async function GET(req: NextRequest) {
       avgOpMarginRatio    = fmpIsSorted.reduce((s, r) => s + (r.revenue > 0 ? r.operatingIncome / r.revenue : 0), 0) / fmpIsSorted.length
       avgEbitdaMarginRatio = fmpIsSorted.reduce((s, r) => s + (r.revenue > 0 ? r.ebitda / r.revenue : 0), 0) / fmpIsSorted.length
       avgNetMarginRatio   = fmpIsSorted.reduce((s, r) => s + (r.revenue > 0 ? r.netIncome / r.revenue : 0), 0) / fmpIsSorted.length
-      latestRevM = fmpIsSorted[fmpIsSorted.length - 1].revenue / 1e6
+      latestRevM = fmpIsSorted[fmpIsSorted.length - 1].revenue / 1e6 * fxRate
       baseYear   = parseInt(fmpIsSorted[fmpIsSorted.length - 1].fiscalYear)
     } else {
       // Yahoo fallback
@@ -472,11 +472,11 @@ export async function GET(req: NextRequest) {
             : null
           return {
             year: s.fiscalYear,
-            revenue: s.revenue > 0 ? s.revenue / 1e6 : null,
-            grossProfit: s.grossProfit != null ? s.grossProfit / 1e6 : null,
-            operatingIncome: s.operatingIncome != null ? s.operatingIncome / 1e6 : null,
-            ebitda: s.ebitda != null ? s.ebitda / 1e6 : null,
-            netIncome: s.netIncome != null ? s.netIncome / 1e6 : null,
+            revenue: s.revenue > 0 ? s.revenue / 1e6 * fxRate : null,
+            grossProfit: s.grossProfit != null ? s.grossProfit / 1e6 * fxRate : null,
+            operatingIncome: s.operatingIncome != null ? s.operatingIncome / 1e6 * fxRate : null,
+            ebitda: s.ebitda != null ? s.ebitda / 1e6 * fxRate : null,
+            netIncome: s.netIncome != null ? s.netIncome / 1e6 * fxRate : null,
             eps: s.epsDiluted ?? null,
             operatingMargin: s.revenue > 0 && s.operatingIncome != null ? s.operatingIncome / s.revenue : null,
             taxRate: taxRawFmp != null ? Math.max(0.05, Math.min(0.55, taxRawFmp)) : null,
@@ -550,7 +550,7 @@ export async function GET(req: NextRequest) {
 
     // --- Cash Flow ---
     const avgCapexM: number = hasFmp && fmpCfSorted.length > 0
-      ? fmpCfSorted.reduce((s, r) => s + r.investmentsInPropertyPlantAndEquipment / 1e6, 0) / fmpCfSorted.length  // already negative
+      ? fmpCfSorted.reduce((s, r) => s + r.investmentsInPropertyPlantAndEquipment / 1e6 * fxRate, 0) / fmpCfSorted.length  // already negative
       : (() => {
           const rawCFHistory: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
           const cfHistorical = rawCFHistory.slice(-4).reverse()
@@ -558,7 +558,7 @@ export async function GET(req: NextRequest) {
         })()
 
     const avgDivPaidM: number = hasFmp && fmpCfSorted.length > 0
-      ? fmpCfSorted.reduce((s, r) => s + r.commonDividendsPaid / 1e6, 0) / fmpCfSorted.length  // stored negative in FMP
+      ? fmpCfSorted.reduce((s, r) => s + r.commonDividendsPaid / 1e6 * fxRate, 0) / fmpCfSorted.length  // stored negative in FMP
       : (() => {
           const rawCFHistory: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
           const cfHistorical = rawCFHistory.slice(-4).reverse()
@@ -566,7 +566,7 @@ export async function GET(req: NextRequest) {
         })()
 
     const avgBuybackM: number = hasFmp && fmpCfSorted.length > 0
-      ? fmpCfSorted.reduce((s, r) => s + Math.abs(r.commonStockRepurchased / 1e6), 0) / fmpCfSorted.length
+      ? fmpCfSorted.reduce((s, r) => s + Math.abs(r.commonStockRepurchased / 1e6 * fxRate), 0) / fmpCfSorted.length
       : (() => {
           const rawCFHistory: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
           const cfHistorical = rawCFHistory.slice(-4).reverse()
@@ -576,15 +576,15 @@ export async function GET(req: NextRequest) {
     const cfHistoricalRows = hasFmp
       ? fmpCfSorted.map(s => ({
           year: s.fiscalYear,
-          operatingCF: s.netCashProvidedByOperatingActivities != null ? s.netCashProvidedByOperatingActivities / 1e6 : null,
-          capex: s.investmentsInPropertyPlantAndEquipment != null ? s.investmentsInPropertyPlantAndEquipment / 1e6 : null,
-          freeCashFlow: s.freeCashFlow != null ? Math.round(s.freeCashFlow / 1e6) : null,
-          investingCF: s.netCashUsedForInvestingActivites != null ? s.netCashUsedForInvestingActivites / 1e6 : null,
-          financingCF: s.netCashUsedProvidedByFinancingActivities != null ? s.netCashUsedProvidedByFinancingActivities / 1e6 : null,
+          operatingCF: s.netCashProvidedByOperatingActivities != null ? s.netCashProvidedByOperatingActivities / 1e6 * fxRate : null,
+          capex: s.investmentsInPropertyPlantAndEquipment != null ? s.investmentsInPropertyPlantAndEquipment / 1e6 * fxRate : null,
+          freeCashFlow: s.freeCashFlow != null ? Math.round(s.freeCashFlow / 1e6 * fxRate) : null,
+          investingCF: s.netCashUsedForInvestingActivites != null ? s.netCashUsedForInvestingActivites / 1e6 * fxRate : null,
+          financingCF: s.netCashUsedProvidedByFinancingActivities != null ? s.netCashUsedProvidedByFinancingActivities / 1e6 * fxRate : null,
           // dividendsPaid in FMP is negative (outflow); store as negative to match Yahoo convention
-          dividendsPaid: s.commonDividendsPaid != null ? s.commonDividendsPaid / 1e6 : null,
-          buybacks: s.commonStockRepurchased != null ? Math.abs(s.commonStockRepurchased / 1e6) : null,
-          dna: s.depreciationAndAmortization != null ? s.depreciationAndAmortization / 1e6 : null,
+          dividendsPaid: s.commonDividendsPaid != null ? s.commonDividendsPaid / 1e6 * fxRate : null,
+          buybacks: s.commonStockRepurchased != null ? Math.abs(s.commonStockRepurchased / 1e6 * fxRate) : null,
+          dna: s.depreciationAndAmortization != null ? s.depreciationAndAmortization / 1e6 * fxRate : null,
           fiscalDate: s.date ?? s.fiscalYear,
           isProjected: false,
         }))
@@ -663,12 +663,12 @@ export async function GET(req: NextRequest) {
     const bsHistoricalRows = hasFmp
       ? fmpBsSorted.map(s => ({
           year: s.fiscalYear,
-          cash: s.cashAndShortTermInvestments > 0 ? s.cashAndShortTermInvestments / 1e6 : (s.cashAndCashEquivalents > 0 ? s.cashAndCashEquivalents / 1e6 : null),
-          totalCurrentAssets: s.totalCurrentAssets > 0 ? s.totalCurrentAssets / 1e6 : null,
-          totalAssets: s.totalAssets > 0 ? s.totalAssets / 1e6 : null,
-          longTermDebt: s.longTermDebt > 0 ? s.longTermDebt / 1e6 : null,
-          totalCurrentLiabilities: s.totalCurrentLiabilities > 0 ? s.totalCurrentLiabilities / 1e6 : null,
-          totalEquity: (s.totalStockholdersEquity ?? s.totalEquity) > 0 ? (s.totalStockholdersEquity ?? s.totalEquity) / 1e6 : null,
+          cash: s.cashAndShortTermInvestments > 0 ? s.cashAndShortTermInvestments / 1e6 * fxRate : (s.cashAndCashEquivalents > 0 ? s.cashAndCashEquivalents / 1e6 * fxRate : null),
+          totalCurrentAssets: s.totalCurrentAssets > 0 ? s.totalCurrentAssets / 1e6 * fxRate : null,
+          totalAssets: s.totalAssets > 0 ? s.totalAssets / 1e6 * fxRate : null,
+          longTermDebt: s.longTermDebt > 0 ? s.longTermDebt / 1e6 * fxRate : null,
+          totalCurrentLiabilities: s.totalCurrentLiabilities > 0 ? s.totalCurrentLiabilities / 1e6 * fxRate : null,
+          totalEquity: (s.totalStockholdersEquity ?? s.totalEquity) > 0 ? (s.totalStockholdersEquity ?? s.totalEquity) / 1e6 * fxRate : null,
           fiscalDate: s.date ?? s.fiscalYear,
           isProjected: false,
         }))
