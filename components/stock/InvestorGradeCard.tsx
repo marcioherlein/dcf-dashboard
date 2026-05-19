@@ -2,6 +2,7 @@
 import { TrendingUp, TrendingDown, Bookmark, DollarSign, Shield, BarChart2, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { fmtPct, fmtLargeCurrency, fmtPrice, upsideZone, zoneBadgeClass } from '@/lib/formatters'
+import { NABadge } from '@/components/ui/na-badge'
 
 interface Props {
   ticker: string
@@ -45,7 +46,7 @@ function pillIcon(type: 'profit' | 'debt' | 'growth') {
   return                        <BarChart2   size={14} className="shrink-0" />
 }
 
-function StatBox({ label, value, hidden }: { label: string; value: string; hidden?: boolean }) {
+function StatBox({ label, value, hidden }: { label: string; value: React.ReactNode; hidden?: boolean }) {
   return (
     <div className={cn('rounded-xl bg-slate-50 border border-slate-100 px-4 py-3', hidden && 'hidden sm:block')}>
       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</p>
@@ -215,7 +216,7 @@ export default function InvestorGradeCard({
           <StatBox label="Market Cap"     value={fmtLargeCurrency(marketCap, currency)} />
           <StatBox label="52-wk High"     value={fmtPrice(high52, currency)} />
           <StatBox label="52-wk Low"      value={fmtPrice(low52, currency)} hidden />
-          <StatBox label="Analyst Target" value={analystTarget ? fmtPrice(analystTarget, currency) : '—'} />
+          <StatBox label="Analyst Target" value={analystTarget ? fmtPrice(analystTarget, currency) : <NABadge reason="no-coverage" />} />
         </div>
       </div>
     </div>

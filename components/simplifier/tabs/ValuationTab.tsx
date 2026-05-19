@@ -8,6 +8,7 @@ import ScoreCircle from '../ScoreCircle'
 import SectionSummary from '../SectionSummary'
 import QuestionCircle from '../QuestionCircle'
 import { VALUATION_CONFIG } from '@/config/valuation.config'
+import { NABadge } from '@/components/ui/na-badge'
 
 interface ValuationTabProps {
   companyName: string
@@ -289,7 +290,7 @@ export default function ValuationTab({
             {triangulatedFV != null ? 'Triangulated' : 'DCF'} Fair Value
           </p>
           <p className={`text-2xl font-bold font-mono ${zone.color}`}>
-            {primaryFV != null ? money(primaryFV) : '—'}
+            {primaryFV != null ? money(primaryFV) : <NABadge reason="no-data" size="sm" />}
           </p>
           {primaryUpside != null && (
             <p className={`text-[11px] font-semibold ${zone.color}`}>
@@ -415,17 +416,20 @@ export default function ValuationTab({
             ))}
           </div>
           <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {[
-              { label: 'Current Price',    value: money(currentPrice) },
-              { label: 'Fair Value (DCF)', value: money(fcffFV) },
-              { label: 'P/E Ratio',        value: peRatio != null ? `${num(peRatio)}x` : '—' },
-              { label: 'Valuation Rating', value: valRating != null ? `${num(valRating)}/5` : '—' },
-              { label: 'Market Cap',       value: moneyM(marketCapM) },
-              { label: 'EV/EBITDA',        value: evEbitda != null ? `${num(evEbitda)}x` : '—' },
-            ].map(m => (
+            {([
+              { label: 'Current Price',    value: money(currentPrice),                                 naReason: 'no-data' },
+              { label: 'Fair Value (DCF)', value: money(fcffFV),                                       naReason: 'no-data' },
+              { label: 'P/E Ratio',        value: peRatio != null ? `${num(peRatio)}x` : null,         naReason: 'requires-positive-earnings' },
+              { label: 'Valuation Rating', value: valRating != null ? `${num(valRating)}/5` : null,    naReason: 'no-data' },
+              { label: 'Market Cap',       value: moneyM(marketCapM),                                  naReason: 'no-data' },
+              { label: 'EV/EBITDA',        value: evEbitda != null ? `${num(evEbitda)}x` : null,       naReason: 'negative-base' },
+            ] as { label: string; value: string | null; naReason: import('@/components/ui/na-badge').NAReasonId }[]).map(m => (
               <div key={m.label} className="rounded-xl border border-[#E8E6E0] bg-white px-4 py-3">
                 <p className="text-[11px] text-[#6B6A72] uppercase tracking-wider mb-1">{m.label}</p>
-                <p className="text-base font-semibold font-mono text-[#2D2C31]">{m.value}</p>
+                {m.value != null
+                  ? <p className="text-base font-semibold font-mono text-[#2D2C31]">{m.value}</p>
+                  : <NABadge reason={m.naReason} size="sm" />
+                }
               </div>
             ))}
           </div>

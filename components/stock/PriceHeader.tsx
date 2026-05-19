@@ -2,6 +2,7 @@
 import { fmtPrice, fmtPct, fmtLargeCurrency } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import { TrendingUp, TrendingDown, Bookmark } from 'lucide-react'
+import { NABadge } from '@/components/ui/na-badge'
 
 interface Props {
   ticker: string
@@ -20,7 +21,7 @@ interface Props {
   onSave?: () => void
 }
 
-function StatBox({ label, value, className }: { label: string; value: string; className?: string }) {
+function StatBox({ label, value, className }: { label: string; value: React.ReactNode; className?: string }) {
   return (
     <div className={cn('rounded-xl bg-slate-50 border border-slate-100 px-4 py-3', className)}>
       <p className="text-label uppercase tracking-wider text-slate-400">{label}</p>
@@ -78,10 +79,10 @@ export default function PriceHeader({
 
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
         <StatBox label="Market Cap"     value={fmtLargeCurrency(marketCap, currency)} />
-        <StatBox label="P/E Ratio"      value={peRatio ? peRatio.toFixed(1) + '×' : '—'} />
+        <StatBox label="P/E Ratio"      value={peRatio ? peRatio.toFixed(1) + '×' : <NABadge reason="requires-positive-earnings" />} />
         <StatBox label="52-wk High"     value={fmtPrice(high52, currency)} />
         <StatBox label="52-wk Low"      value={fmtPrice(low52, currency)} className="hidden sm:block" />
-        <StatBox label="Analyst Target" value={analystTarget ? fmtPrice(analystTarget, currency) : '—'} />
+        <StatBox label="Analyst Target" value={analystTarget ? fmtPrice(analystTarget, currency) : <NABadge reason="no-coverage" />} />
       </div>
     </div>
   )

@@ -8,6 +8,7 @@ import { fmtPrice, fmtPct, fmtAxisTick, upsideZone, zoneBadgeClass } from '@/lib
 import { cn } from '@/lib/utils'
 import { TrendBadge } from '@/components/ui/trend-badge'
 import { NumberDisplay } from '@/components/ui/number-display'
+import { NABadge } from '@/components/ui/na-badge'
 
 export interface MethodResult {
   id: string
@@ -322,7 +323,7 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
                   <div className="text-right">
                     {m.fairValue != null
                       ? <span className="font-mono font-semibold text-slate-900 text-sm">{fmtPrice(m.fairValue, currency)}</span>
-                      : <span className="text-slate-300">—</span>
+                      : <NABadge reason="model-unsupported" />
                     }
                   </div>
 
@@ -330,7 +331,7 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
                   <div className="text-right">
                     {m.upsidePct != null
                       ? <TrendBadge value={m.upsidePct} size="sm" />
-                      : <span className="text-slate-300">—</span>
+                      : <NABadge reason="model-unsupported" />
                     }
                   </div>
 
@@ -347,7 +348,7 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
                         </div>
                       </>
                     ) : (
-                      <span className="text-slate-300">—</span>
+                      <NABadge reason="model-unsupported" />
                     )}
                   </div>
                 </div>
