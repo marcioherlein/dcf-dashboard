@@ -7,6 +7,11 @@ import MarketNewsSection from '@/components/markets/MarketNewsSection'
 import BondYieldsCard from '@/components/markets/BondYieldsCard'
 import ModelAlerts from '@/components/markets/ModelAlerts'
 import MacroBrief from '@/components/markets/MacroBrief'
+import MarketPulse from '@/components/markets/MarketPulse'
+import SectorRotation from '@/components/markets/SectorRotation'
+import MacroSignals from '@/components/markets/MacroSignals'
+import ValuationContext from '@/components/markets/ValuationContext'
+import PortfolioExposure from '@/components/markets/PortfolioExposure'
 import type { MarketsData } from '@/app/api/markets/data/route'
 import type { MarketContextPayload } from '@/lib/market-context/types'
 
@@ -145,6 +150,9 @@ export default function MarketsPage() {
 
           {/* ── Center column ──────────────────────────────────────────────── */}
           <div className="space-y-4 order-1 lg:order-2 min-w-0">
+            {/* Market Pulse — sentiment + key numbers */}
+            {ctx && <MarketPulse pulse={ctx.pulse} />}
+
             {/* Model Alerts — always first if present */}
             {ctx && ctx.modelAlerts.length > 0 && (
               <ModelAlerts alerts={ctx.modelAlerts} />
@@ -209,6 +217,22 @@ export default function MarketsPage() {
           </div>
 
         </div>
+
+        {/* ── Sector Rotation & Macro Signals ──────────────────────────────── */}
+        {ctx && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+            <SectorRotation sectors={ctx.sectors} />
+            <MacroSignals signals={ctx.signals} />
+          </div>
+        )}
+
+        {/* ── Valuation Context & Portfolio Exposure ────────────────────────── */}
+        {ctx && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+            <ValuationContext valuation={ctx.valuation} />
+            <PortfolioExposure portfolioExposure={ctx.portfolioExposure} modelAlerts={ctx.modelAlerts} />
+          </div>
+        )}
 
         {/* ── Mobile-only extra sections ─────────────────────────────────── */}
         <div className="lg:hidden mt-4 space-y-4">
