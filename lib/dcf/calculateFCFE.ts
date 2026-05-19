@@ -71,8 +71,21 @@ export function calculateFCFE(
   // (debt is already excluded because we started from net income, not EBIT)
   const fvResult = calculateFairValue(dcfResult, 0, 0, shares, currentPrice)
 
-  // Sanity check: if fair value > 10× current price, something is still miscalibrated.
-  // Cap at 5× and flag with a note rather than silently inflating the result.
+  if (fvResult.fairValuePerShare == null) {
+    return {
+      fairValuePerShare: 0,
+      upsidePct: 0,
+      baseFCFE: Math.round(cappedBaseFCFE),
+      discountRate: costOfEquity,
+      applicable: false,
+      reason: dcfResult.terminalGrowthViolation
+        ? `Terminal growth (${(terminalG * 100).toFixed(1)}%) ≥ discount rate (${(costOfEquity * 100).toFixed(1)}%) — FCFE model invalid`
+        : 'Fair value could not be computed',
+    }
+  }
+
+  // Sanity check: if fair value > 5× current price, something is still miscalibrated.
+  // Cap and flag with a note rather than silently inflating the result.
   const rawFV = fvResult.fairValuePerShare
   const maxFV = currentPrice > 0 ? currentPrice * 5 : rawFV
   const clampedFV = Math.min(rawFV, maxFV)

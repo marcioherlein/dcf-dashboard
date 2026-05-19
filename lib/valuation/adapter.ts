@@ -52,7 +52,11 @@ export function adaptFinancialsToValuationInput(
   // ── Derived discount rates ────────────────────────────────────────────────
   const costOfEquity: number = d.wacc?.costOfEquity ?? rfRate + beta * erp
   const afterTaxCostOfDebt: number = d.wacc?.afterTaxCostOfDebt ?? costOfDebt * (1 - taxRate)
-  const wacc: number = d.wacc?.wacc ?? costOfEquity * 0.7 + afterTaxCostOfDebt * 0.3
+  // Use the actual computed WACC from the API (which uses the stock's real D/E ratio).
+  // If unavailable, compute from D/E rather than hardcoding 70/30 weights — a leveraged
+  // company's WACC is materially different from that hardcoded assumption.
+  const debtRatio = debtToEquity / (1 + debtToEquity)
+  const wacc: number = d.wacc?.wacc ?? (costOfEquity * (1 - debtRatio) + afterTaxCostOfDebt * debtRatio)
 
   // ── Cash flow inputs ──────────────────────────────────────────────────────
   const baseFCF: number = d.dcf?.baseFCF ?? 0

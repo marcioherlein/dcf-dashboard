@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { projectCashFlows } from '@/lib/dcf/projectCashFlows'
 import { calculateFairValue, buildScenarios } from '@/lib/dcf/calculateFairValue'
+import { VALUATION_CONFIG } from '@/config/valuation.config'
 
 // Stateless recalculation endpoint.
 // The client passes all base DCF inputs plus any overrides (CAGR, WACC, terminal g).
@@ -50,21 +51,42 @@ export async function GET(req: NextRequest) {
 
   const fv = calculateFairValue(dcf, cashM, debtM, sharesM, currentPrice)
 
-  // Rebuild scenarios using the same overridden WACC/CAGR/terminalG as base
+  // Accept actual WACC component inputs from the client when available.
+  // These are passed through from the initial /api/financials response so the
+  // WACC decomposition shown in scenarios reflects the stock's actual capital structure.
+  // Fall back to reasonable approximations only when not provided.
+  const rfRate       = parseFloat(p.get('rfRate') ?? '')
+  const beta         = parseFloat(p.get('beta') ?? '')
+  const crp          = parseFloat(p.get('crp') ?? '0')
+  const costOfDebt   = parseFloat(p.get('costOfDebt') ?? '')
+  const taxRate      = parseFloat(p.get('taxRate') ?? '')
+  const debtToEquity = parseFloat(p.get('debtToEquity') ?? '')
+
+  // Rebuild scenarios using the same overridden WACC/CAGR/terminalG as base.
+  // Use actual WACC inputs from the client; fall back gracefully when not supplied.
+  const effectiveRfRate  = !isNaN(rfRate) ? rfRate : safeWACC * 0.55   // approx RF component
+  const effectiveBeta    = !isNaN(beta) ? beta : 1.0
+  const effectiveCrp     = !isNaN(crp) ? crp : 0
+  const effectiveCoD     = !isNaN(costOfDebt) ? costOfDebt : effectiveRfRate + effectiveCrp + 0.015
+  const effectiveTax     = !isNaN(taxRate) ? taxRate : 0.21
+  const effectiveDtE     = !isNaN(debtToEquity) ? debtToEquity : (debtM > 0 && cashM > 0 ? debtM / (currentPrice * sharesM / 1000) : 0.25)
+  const effectiveKe      = effectiveRfRate + effectiveBeta * (VALUATION_CONFIG.erp + effectiveCrp)
+  const effectiveKd      = effectiveCoD * (1 - effectiveTax)
+  const effectiveDebtRatio = effectiveDtE / (1 + effectiveDtE)
   const waccLike = {
     wacc: safeWACC,
-    costOfEquity: safeWACC * 1.1,
-    afterTaxCostOfDebt: safeWACC * 0.6,
-    weightEquity: 0.8,
-    weightDebt: 0.2,
+    costOfEquity: effectiveKe,
+    afterTaxCostOfDebt: effectiveKd,
+    weightEquity: 1 - effectiveDebtRatio,
+    weightDebt: effectiveDebtRatio,
     inputs: {
-      rfRate: 0.045,
-      beta: 1.0,
-      erp: 0.055,
-      crp: 0,
-      costOfDebt: 0.04,
-      taxRate: 0.21,
-      debtToEquity: 0.25,
+      rfRate: effectiveRfRate,
+      beta: effectiveBeta,
+      erp: VALUATION_CONFIG.erp,
+      crp: effectiveCrp,
+      costOfDebt: effectiveCoD,
+      taxRate: effectiveTax,
+      debtToEquity: effectiveDtE,
     },
   }
   const scenarios = buildScenarios(waccLike, safeCAGR, safeTerminalG, baseFCF, cashM, debtM, sharesM, 0, effectiveGrowthModel)

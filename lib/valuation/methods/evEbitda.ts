@@ -6,24 +6,10 @@
  * Fair Value/Share = Equity Value / Shares
  */
 
-// ── Sector EV/EBITDA exit multiples ─────────────────────────────────────────
+import { getIndustryMultiples } from '@/lib/dcf/calculateMultiples'
 
-const SECTOR_EV_EBITDA: Record<string, number> = {
-  'Technology':             20,
-  'Communication Services': 15,
-  'Consumer Cyclical':      12,
-  'Consumer Defensive':     14,
-  'Healthcare':             16,
-  'Financial Services':     12,
-  'Industrials':            12,
-  'Basic Materials':        10,
-  'Energy':                  8,
-  'Utilities':              12,
-  'Real Estate':            20,
-}
-
-export function getDefaultEVEBITDAMultiple(sector: string | null): number {
-  return SECTOR_EV_EBITDA[sector ?? ''] ?? 13
+export function getDefaultEVEBITDAMultiple(sector: string | null, industry?: string | null): number {
+  return getIndustryMultiples(industry ?? '', sector ?? '').evEbitda
 }
 
 // ── Input / Output types ─────────────────────────────────────────────────────
@@ -51,16 +37,17 @@ export function computeEVEBITDA(inputs: EVEBITDAInputs): EVEBITDAResult {
   const errors: string[] = []
 
   if (ttmEbitda == null)    errors.push('TTM EBITDA is missing')
+  if (netDebt == null)      errors.push('Net debt data unavailable — equity bridge cannot be computed. Check balance sheet.')
   if (shares == null)       errors.push('Shares outstanding is missing')
   if (exitMultiple <= 0)    errors.push('Exit multiple must be positive')
   if (ttmEbitda != null && ttmEbitda <= 0) errors.push('TTM EBITDA must be positive for this method')
 
-  if (errors.length > 0 || ttmEbitda == null || shares == null || ttmEbitda <= 0) {
+  if (errors.length > 0 || ttmEbitda == null || netDebt == null || shares == null || ttmEbitda <= 0) {
     return { enterpriseValue: null, equityValue: null, fairValuePerShare: null, upsidePct: null, guardErrors: errors }
   }
 
   const enterpriseValue = ttmEbitda * exitMultiple
-  const equityValue     = enterpriseValue - (netDebt ?? 0)
+  const equityValue     = enterpriseValue - netDebt
   const fairValuePerShare = shares > 0 ? equityValue / shares : null
 
   if (fairValuePerShare == null || fairValuePerShare <= 0) {

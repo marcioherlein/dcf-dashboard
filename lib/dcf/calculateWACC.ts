@@ -1,3 +1,5 @@
+import { VALUATION_CONFIG } from '@/config/valuation.config'
+
 export interface WACCInputs {
   rfRate: number        // 10Y Treasury yield, e.g. 0.0429
   beta: number          // levered beta from regression
@@ -52,7 +54,14 @@ export function extractWACCInputs(financials: any, rfRate: number, betaFromRegre
   const industry = ((financials.summaryProfile?.industry ?? '') as string).toLowerCase()
   const isFinancialSector = /bank|insurance|financ|fintech|payment|credit|lending|capital market|asset management|brokerage/i.test(sector + ' ' + industry)
 
-  const marketCap: number = sd.marketCap ?? ks.enterpriseValue ?? 0
+  // Use market cap (equity value) for WACC weights — never enterpriseValue, which includes
+  // net debt and would overstate the equity weight, understating leverage in WACC.
+  // Fall back to price × shares if marketCap is missing rather than using EV.
+  const quotedPrice: number = (financials.price ?? financials.regularMarketPrice ?? 0) as number
+  const sharesObj = financials.defaultKeyStatistics?.sharesOutstanding
+  const sharesForMcap: number = typeof sharesObj === 'number' ? sharesObj : 0
+  const marketCap: number = (sd.marketCap as number | undefined)
+    ?? (quotedPrice > 0 && sharesForMcap > 0 ? quotedPrice * sharesForMcap : 0)
 
   // All debt figures come from Yahoo's financial statements in the reporting currency
   // (e.g. ARS for YPF, BRL for Petrobras), but marketCap is always in the quote currency
@@ -99,7 +108,7 @@ export function extractWACCInputs(financials: any, rfRate: number, betaFromRegre
   return {
     rfRate,
     beta,
-    erp: 0.046,   // Damodaran ERP — update annually
+    erp: VALUATION_CONFIG.erp,   // Damodaran ERP — sourced from config/valuation.config.ts
     crp,
     costOfDebt,
     taxRate,

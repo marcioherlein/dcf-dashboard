@@ -200,7 +200,7 @@ export async function GET(req: NextRequest) {
       earningsGrowthDisplay: (fd.earningsGrowth ?? null) as number | null,
       beta: waccResult.inputs.beta,
       marketCapB: (q.marketCap ?? 0) / 1e9,
-      upsidePct: fvResult.upsidePct,
+      upsidePct: fvResult.upsidePct ?? 0,
     })
 
     // ─── Financial Quality Scores ─────────────────────────────────────────────
@@ -345,7 +345,9 @@ export async function GET(req: NextRequest) {
     const modelValues: { weight: number; value: number }[] = []
 
     // FCFF always applicable
-    modelValues.push({ weight: weights.fcff, value: fvResult.fairValuePerShare })
+    if (fvResult.fairValuePerShare != null) {
+      modelValues.push({ weight: weights.fcff, value: fvResult.fairValuePerShare })
+    }
 
     if (fcfeResult.applicable) {
       modelValues.push({ weight: weights.fcfe, value: fcfeResult.fairValuePerShare })
@@ -361,8 +363,8 @@ export async function GET(req: NextRequest) {
     const totalWeight = modelValues.reduce((s, m) => s + m.weight, 0)
     const triangulatedFairValue = totalWeight > 0
       ? Math.round(modelValues.reduce((s, m) => s + (m.value * m.weight) / totalWeight, 0) * 100) / 100
-      : fvResult.fairValuePerShare
-    const triangulatedUpsidePct = currentPrice > 0
+      : (fvResult.fairValuePerShare ?? 0)
+    const triangulatedUpsidePct = currentPrice > 0 && triangulatedFairValue > 0
       ? Math.round((triangulatedFairValue - currentPrice) / currentPrice * 1000) / 1000
       : 0
 
@@ -481,7 +483,7 @@ export async function GET(req: NextRequest) {
             netIncome: s.netIncome != null ? s.netIncome / 1e6 * fxRate : null,
             eps: s.epsDiluted ?? null,
             operatingMargin: s.revenue > 0 && s.operatingIncome != null ? s.operatingIncome / s.revenue : null,
-            taxRate: taxRawFmp != null ? Math.max(0.05, Math.min(0.55, taxRawFmp)) : null,
+            taxRate: taxRawFmp != null ? Math.max(0.05, Math.min(0.40, taxRawFmp)) : null,
             fiscalDate: s.date ?? s.fiscalYear,
             isProjected: false,
           }
@@ -517,7 +519,7 @@ export async function GET(req: NextRequest) {
               netIncome: s.netIncome != null ? (s.netIncome as number) / 1e6 * fxRate : null,
               eps: s.dilutedEps != null ? (s.dilutedEps as number) : null,
               operatingMargin: null as number | null,
-              taxRate: taxRawYahoo != null ? Math.max(0.05, Math.min(0.55, taxRawYahoo)) : null,
+              taxRate: taxRawYahoo != null ? Math.max(0.05, Math.min(0.40, taxRawYahoo)) : null,
               fiscalDate: s.endDate ? new Date(s.endDate).toISOString().split('T')[0] : null,
               isProjected: false,
             }

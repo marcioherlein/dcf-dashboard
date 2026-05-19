@@ -7,22 +7,8 @@
  */
 
 import type { ValuationAssumption, EvidenceItem, AssumptionSource } from '@/components/valuation/ValuationModelDrawer'
-
-// ─── Sector P/E lookup by Yahoo Finance sector string ─────────────────────────
-
-const SECTOR_PE: Record<string, number> = {
-  'Technology':             25,
-  'Communication Services': 22,
-  'Consumer Cyclical':      20,
-  'Consumer Defensive':     18,
-  'Healthcare':             22,
-  'Financial Services':     14,
-  'Industrials':            18,
-  'Basic Materials':        13,
-  'Energy':                 12,
-  'Utilities':              15,
-  'Real Estate':            20,
-}
+import { VALUATION_CONFIG } from '@/config/valuation.config'
+import { getIndustryMultiples } from '@/lib/dcf/calculateMultiples'
 
 // ─── Sector CAGR fallback (when no analyst/historical data available) ─────────
 
@@ -38,22 +24,6 @@ const SECTOR_CAGR: Record<string, number> = {
   'Energy':                 0.03,
   'Utilities':              0.03,
   'Real Estate':            0.05,
-}
-
-// ─── Sector EV/Revenue lookup ─────────────────────────────────────────────────
-
-const SECTOR_EV_REVENUE: Record<string, number> = {
-  'Technology':             8,
-  'Communication Services': 4,
-  'Consumer Cyclical':      2,
-  'Consumer Defensive':     1.5,
-  'Healthcare':             4,
-  'Financial Services':     3,
-  'Industrials':            2,
-  'Basic Materials':        1.5,
-  'Energy':                 1.5,
-  'Utilities':              2.5,
-  'Real Estate':            8,   // REIT — EV/Rev not typical; placeholder
 }
 
 function pct(v: number): string { return (v * 100).toFixed(1) + '%' }
@@ -143,13 +113,14 @@ function deriveNetMargin(
 
 function deriveExitPE(
   sector: string | null,
+  industry: string | null,
   currentPE: number | null,
 ): { pe: number; evidence: string; source: AssumptionSource } {
-  const sectorNorm = sector ?? ''
-  const target = SECTOR_PE[sectorNorm] ?? 18
+  const { pe: target, source } = getIndustryMultiples(industry ?? '', sector ?? '')
+  const label = industry || sector || 'unknown'
   const companyPEStr = currentPE != null && currentPE > 0 ? `${currentPE.toFixed(0)}×` : 'N/A'
-  const evidence = `Sector standard: ${target}× (${sectorNorm || 'unknown'} sector median); company current P/E: ${companyPEStr}`
-  return { pe: target, evidence, source: 'sector_fallback' }
+  const evidence = `Damodaran median: ${target}× (${label}); company current P/E: ${companyPEStr}`
+  return { pe: target, evidence, source: source === 'industry-median' ? 'historical_3y_median' : 'sector_fallback' }
 }
 
 // ─── Dilution derivation ─────────────────────────────────────────────────────
@@ -178,7 +149,7 @@ function deriveDilution(
 // ─── WACC evidence text ───────────────────────────────────────────────────────
 
 function deriveWACCEvidence(waccInputs: WACCInputsLike, wacc: number): string {
-  const { rfRate = 0.045, beta = 1.0, erp = 0.055, costOfDebt, debtToEquity } = waccInputs
+  const { rfRate = 0.045, beta = 1.0, erp = VALUATION_CONFIG.erp, costOfDebt, debtToEquity } = waccInputs
   const wtEq  = debtToEquity != null ? `D/E ${(debtToEquity * 100).toFixed(0)}%` : ''
   const codStr = costOfDebt != null ? `, CoD ${pct(costOfDebt)}` : ''
   return `Beta ${beta.toFixed(2)}, RF ${pct(rfRate)}, ERP ${pct(erp)}${codStr}${wtEq ? ', ' + wtEq : ''} → WACC ${pct(wacc)}`
@@ -251,7 +222,7 @@ export interface DerivedRevenueMultipleAssumptions {
 // ─── Main exports ─────────────────────────────────────────────────────────────
 
 export function deriveForwardPEAssumptions(data: {
-  quote: { price: number; sector?: string | null; peRatio?: number | null; currency?: string }
+  quote: { price: number; sector?: string | null; industry?: string | null; peRatio?: number | null; currency?: string }
   wacc: { wacc: number; inputs: WACCInputsLike }
   cagrAnalysis: CAGRAnalysisLike | null
   fairValue: { sharesOutstanding: number | null }
@@ -260,6 +231,7 @@ export function deriveForwardPEAssumptions(data: {
   [k: string]: any
 }): DerivedForwardPEAssumptions {
   const sector       = data.quote?.sector ?? null
+  const industry     = data.quote?.industry ?? null
   const currentPrice = data.quote?.price ?? 0
   const wacc         = data.wacc?.wacc ?? 0.10
   const shares       = data.fairValue?.sharesOutstanding ?? null
@@ -269,7 +241,7 @@ export function deriveForwardPEAssumptions(data: {
 
   const cagrDerived     = deriveCagr(data.cagrAnalysis, sectorFallback)
   const marginDerived   = deriveNetMargin(incomeRows)
-  const peDerived       = deriveExitPE(sector, data.quote?.peRatio ?? null)
+  const peDerived       = deriveExitPE(sector, industry, data.quote?.peRatio ?? null)
   const dilutionDerived = deriveDilution(sector, marginDerived.margin)
   const waccEvidence    = deriveWACCEvidence(data.wacc?.inputs ?? {}, wacc)
   const ltmRev          = ltmRevenue(incomeRows)
@@ -329,7 +301,7 @@ export function deriveForwardPEAssumptions(data: {
 }
 
 export function deriveRevenueMultipleAssumptions(data: {
-  quote: { price: number; sector?: string | null; currency?: string }
+  quote: { price: number; sector?: string | null; industry?: string | null; currency?: string }
   wacc: { wacc: number; inputs: WACCInputsLike }
   cagrAnalysis: CAGRAnalysisLike | null
   fairValue: { sharesOutstanding: number | null; cash: number | null; debt: number | null }
@@ -338,6 +310,7 @@ export function deriveRevenueMultipleAssumptions(data: {
   [k: string]: any
 }): DerivedRevenueMultipleAssumptions {
   const sector       = data.quote?.sector ?? null
+  const industry     = data.quote?.industry ?? null
   const currentPrice = data.quote?.price ?? 0
   const wacc         = data.wacc?.wacc ?? 0.10
   const shares       = data.fairValue?.sharesOutstanding ?? null
@@ -349,14 +322,15 @@ export function deriveRevenueMultipleAssumptions(data: {
   const waccEvidence    = deriveWACCEvidence(data.wacc?.inputs ?? {}, wacc)
   const ltmRev          = ltmRevenue(incomeRows)
 
-  const sectorEVRev     = SECTOR_EV_REVENUE[sector ?? ''] ?? 3
-  const evRevSource     = sector && SECTOR_EV_REVENUE[sector] ? 'sector_fallback' : 'model_default'
+  const { evRevenue: sectorEVRev, source: evRevBenchmarkSource } = getIndustryMultiples(industry ?? '', sector ?? '')
+  const evRevSource: AssumptionSource = evRevBenchmarkSource === 'industry-median' ? 'historical_3y_median' : 'sector_fallback'
+  const label = industry || sector || 'unknown'
   const multEstimates: Array<{ multiple: string; actualValue: number }> =
     (data as { valuationMethods?: { models?: { multiples?: { estimates?: unknown[] } } } })
       ?.valuationMethods?.models?.multiples?.estimates as Array<{ multiple: string; actualValue: number }> ?? []
   const actualEvRevenue = multEstimates.find(e => e.multiple === 'EV/Revenue')?.actualValue ?? null
   const companyEVRevStr = actualEvRevenue != null && actualEvRevenue > 0 ? `${actualEvRevenue.toFixed(1)}×` : 'N/A'
-  const evRevEvidence   = `Sector standard: ${sectorEVRev}× (${sector ?? 'unknown'} sector median); company current EV/Revenue: ${companyEVRevStr}`
+  const evRevEvidence   = `Damodaran median: ${sectorEVRev}× (${label}); company current EV/Revenue: ${companyEVRevStr}`
 
   const cashM    = data.fairValue?.cash ?? null
   const debtM    = data.fairValue?.debt ?? null

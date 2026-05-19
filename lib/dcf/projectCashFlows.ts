@@ -18,12 +18,13 @@ export interface ProjectionInputs {
 
 export interface DCFResult {
   projections: CFProjection[]
-  terminalValue: number
-  terminalValueDiscounted: number
+  terminalValue: number | null
+  terminalValueDiscounted: number | null
   sumPV: number
-  ev: number
+  ev: number | null
   growthModel: GrowthModel
   yearlyGrowthRates: number[]  // per-year growth rate used (length === projections.length)
+  terminalGrowthViolation?: boolean  // true when terminalG >= wacc (Gordon Growth invalid)
 }
 
 export interface CAGRAnalysis {
@@ -65,10 +66,24 @@ export function projectCashFlows(inputs: ProjectionInputs): DCFResult {
     projections.push({ year: startYear + t - 1, cashFlow: Math.round(cf), discounted: Math.round(discounted) })
   }
 
-  const lastCF = projections[projections.length - 1].cashFlow
-  const terminalValue = wacc > terminalG ? (lastCF * (1 + terminalG)) / (wacc - terminalG) : lastCF * 15
-  const terminalValueDiscounted = terminalValue / Math.pow(1 + wacc, years)
   const sumPV = projections.reduce((sum, p) => sum + p.discounted, 0)
+  const lastCF = projections[projections.length - 1].cashFlow
+  // Gordon Growth Model requires wacc > terminalG; if violated return null terminal value
+  // so the caller can surface a proper validation error rather than hiding bad inputs.
+  if (wacc <= terminalG) {
+    return {
+      projections,
+      terminalValue: null,
+      terminalValueDiscounted: null,
+      sumPV: Math.round(sumPV),
+      ev: null,
+      growthModel,
+      yearlyGrowthRates,
+      terminalGrowthViolation: true,
+    }
+  }
+  const terminalValue = (lastCF * (1 + terminalG)) / (wacc - terminalG)
+  const terminalValueDiscounted = terminalValue / Math.pow(1 + wacc, years)
   const ev = sumPV + terminalValueDiscounted
 
   return {

@@ -228,6 +228,19 @@ function getMedians(industry: string, sector: string) {
   return { medians: INDUSTRY_MEDIANS['default'], source: 'sector-fallback' as BenchmarkSource }
 }
 
+/**
+ * Canonical multiple lookup — single source of truth for PE, EV/EBITDA and EV/Revenue
+ * benchmarks. All valuation methods that need static multiples must call this instead
+ * of maintaining their own sector/industry tables.
+ */
+export function getIndustryMultiples(
+  industry: string,
+  sector: string,
+): { pe: number; evEbitda: number; evRevenue: number; source: BenchmarkSource } {
+  const { medians, source } = getMedians(industry, sector)
+  return { pe: medians.pe, evEbitda: medians.evEbitda, evRevenue: medians.evRevenue, source }
+}
+
 function peerMedian(
   metricKey: keyof Omit<PeerQuote, 'ticker'>,
   peers: PeerQuote[],

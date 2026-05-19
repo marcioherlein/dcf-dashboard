@@ -47,6 +47,7 @@ export function computeRevenueMultiple(inputs: RevenueMultipleInputs): RevenueMu
   if (ltvRevenue == null)        errors.push('LTM Revenue is missing')
   if (revenueCAGR == null)        errors.push('Revenue CAGR is missing')
   if (exitEVRevenue == null)      errors.push('Exit EV/Revenue multiple is missing')
+  if (netDebt == null)            errors.push('Net debt data unavailable — equity bridge cannot be computed. Check balance sheet.')
   if (sharesOutstanding == null)  errors.push('Shares outstanding is missing')
   if (dilutionRate == null)       errors.push('Dilution rate is missing')
   if (discountRate == null)       errors.push('Discount rate is missing')
@@ -57,7 +58,7 @@ export function computeRevenueMultiple(inputs: RevenueMultipleInputs): RevenueMu
   if (discountRate != null && discountRate <= -1) errors.push('Discount rate must be > −100%')
 
   if (errors.length > 0 || ltvRevenue == null || revenueCAGR == null ||
-      exitEVRevenue == null || sharesOutstanding == null ||
+      exitEVRevenue == null || netDebt == null || sharesOutstanding == null ||
       dilutionRate == null || discountRate == null) {
     return {
       futureRevenue: null, futureEV: null, futureEquityValue: null,
@@ -69,8 +70,7 @@ export function computeRevenueMultiple(inputs: RevenueMultipleInputs): RevenueMu
 
   const futureRevenue     = ltvRevenue * Math.pow(1 + revenueCAGR, N)
   const futureEV          = futureRevenue * exitEVRevenue
-  const effectiveNetDebt  = netDebt ?? 0
-  const futureEquityValue = futureEV - effectiveNetDebt
+  const futureEquityValue = futureEV - netDebt
   const futureShares      = sharesOutstanding * Math.pow(1 + dilutionRate, N)
 
   if (futureEquityValue <= 0) {
