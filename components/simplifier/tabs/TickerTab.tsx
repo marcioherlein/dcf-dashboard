@@ -9,6 +9,7 @@ import {
   extractKeyOfferings,
   getSegmentAvailability,
 } from '@/lib/simplifier/companyMetadata'
+import { NABadge, type NAReasonId } from '@/components/ui/na-badge'
 
 interface TickerTabProps {
   ticker: string
@@ -71,14 +72,14 @@ export default function TickerTab({
     : upsidePct >= 0.05 ? 'text-[#9a6700]'
     : 'text-[#cf222e]'
 
-  const metrics = [
-    { label: 'Market Cap',   value: fmtCap(marketCap) },
-    { label: 'Price',        value: fmt(price, '$', '', 2) },
-    { label: 'P/E',          value: fmt(peRatio, '', 'x') },
-    { label: 'Beta',         value: fmt(beta, '', '', 2) },
-    { label: 'Gross Margin', value: fmtPct(grossMargin) },
-    { label: 'FCF Margin',   value: fmtPct(fcfMargin) },
-    { label: 'DCF Upside',   value: upsidePct != null ? `${upsidePct >= 0 ? '+' : ''}${(upsidePct * 100).toFixed(1)}%` : '—' },
+  const metrics: { label: string; value: string | null; naReason?: NAReasonId }[] = [
+    { label: 'Market Cap',   value: marketCap != null ? fmtCap(marketCap) : null,                        naReason: 'no-data' },
+    { label: 'Price',        value: price != null ? fmt(price, '$', '', 2) : null,                      naReason: 'no-data' },
+    { label: 'P/E',          value: peRatio != null ? fmt(peRatio, '', 'x') : null,                     naReason: 'requires-positive-earnings' },
+    { label: 'Beta',         value: beta != null ? fmt(beta, '', '', 2) : null,                         naReason: 'insufficient-history' },
+    { label: 'Gross Margin', value: grossMargin != null ? fmtPct(grossMargin) : null,                   naReason: 'no-data' },
+    { label: 'FCF Margin',   value: fcfMargin != null ? fmtPct(fcfMargin) : null,                       naReason: 'no-data' },
+    { label: 'DCF Upside',   value: upsidePct != null ? `${upsidePct >= 0 ? '+' : ''}${(upsidePct * 100).toFixed(1)}%` : null, naReason: 'no-data' },
     ...(foundedYear ? [{ label: 'Founded', value: foundedYear }] : []),
   ]
 
@@ -132,7 +133,7 @@ export default function TickerTab({
           <div key={m.label} className="rounded-xl border border-[#E8E6E0] bg-white px-4 py-3">
             <p className="text-[11px] text-[#6B6A72] uppercase tracking-wider mb-1">{m.label}</p>
             <p className={`text-base font-semibold font-mono ${m.label === 'DCF Upside' ? upsideColor : 'text-[#2D2C31]'}`}>
-              {m.value}
+              {m.value != null ? m.value : <NABadge reason={m.naReason ?? 'no-data'} size="sm" />}
             </p>
           </div>
         ))}

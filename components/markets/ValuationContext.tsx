@@ -1,6 +1,7 @@
 'use client'
 import { cn } from '@/lib/utils'
 import type { MarketContextPayload, ValuationContextBand } from '@/lib/market-context/types'
+import { NABadge } from '@/components/ui/na-badge'
 
 interface Props {
   valuation: MarketContextPayload['valuation']
@@ -47,7 +48,7 @@ export default function ValuationContext({ valuation }: Props) {
         <div className="flex items-baseline justify-between mb-2">
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">SPY Forward P/E</p>
           <p className="text-base font-bold font-mono text-slate-800">
-            {spyForwardPE != null ? `${spyForwardPE.toFixed(1)}×` : '—'}
+            {spyForwardPE != null ? `${spyForwardPE.toFixed(1)}×` : <NABadge reason="no-data" />}
           </p>
         </div>
         <div className="grid grid-cols-4 gap-1">
@@ -65,11 +66,13 @@ export default function ValuationContext({ valuation }: Props) {
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Equity Risk Premium</p>
           <div className="text-right">
             <span className={cn('text-base font-bold font-mono', erpColor(erp))}>
-              {erp != null ? `${(erp * 100).toFixed(2)}%` : '—'}
+              {erp != null ? `${(erp * 100).toFixed(2)}%` : <NABadge reason="calc-error" />}
             </span>
-            <span className={cn('text-xs ml-1.5 font-semibold', erpColor(erp))}>
-              — {erpLabel(erp)}
-            </span>
+            {erp != null && (
+              <span className={cn('text-xs ml-1.5 font-semibold', erpColor(erp))}>
+                — {erpLabel(erp)}
+              </span>
+            )}
           </div>
         </div>
         <div className="grid grid-cols-4 gap-1">

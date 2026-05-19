@@ -8,6 +8,7 @@ import { buildMoatSummary } from '@/lib/simplifier/summaryBuilder'
 import ScoreCircle from '../ScoreCircle'
 import SectionSummary from '../SectionSummary'
 import QuestionCircle from '../QuestionCircle'
+import { NABadge, type NAReasonId } from '@/components/ui/na-badge'
 
 interface MoatTabProps {
   companyName: string
@@ -137,10 +138,10 @@ export default function MoatTab({
   function pct(v: number | null) { return v == null ? '—' : `${(v * 100).toFixed(1)}%` }
   function num(v: number | null, d = 1) { return v == null ? '—' : v.toFixed(d) }
 
-  const metrics = [
-    { label: 'ROIC',        value: pct(roic) },
-    { label: 'ROIC Spread', value: pct(spread) },
-    { label: 'Moat Rating', value: moatScore != null ? `${num(moatScore)}/5` : '—' },
+  const metrics: { label: string; value: string | null; naReason?: NAReasonId }[] = [
+    { label: 'ROIC',        value: roic != null ? pct(roic) : null,                            naReason: 'no-data' },
+    { label: 'ROIC Spread', value: spread != null ? pct(spread) : null,                        naReason: 'no-data' },
+    { label: 'Moat Rating', value: moatScore != null ? `${num(moatScore)}/5` : null,            naReason: 'no-data' },
   ]
 
   const summary = buildMoatSummary(companyName, data, answers)
@@ -160,7 +161,9 @@ export default function MoatTab({
           {metrics.map(m => (
             <div key={m.label} className="text-right">
               <p className="text-[10px] text-[#6B6A72] uppercase tracking-wider">{m.label}</p>
-              <p className="text-sm font-semibold font-mono text-[#2D2C31]">{m.value}</p>
+              <p className="text-sm font-semibold font-mono text-[#2D2C31]">
+                {m.value != null ? m.value : <NABadge reason={m.naReason ?? 'no-data'} size="sm" />}
+              </p>
             </div>
           ))}
         </div>

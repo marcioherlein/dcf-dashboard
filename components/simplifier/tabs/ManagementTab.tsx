@@ -9,6 +9,7 @@ import ScoreCircle from '../ScoreCircle'
 import SectionSummary from '../SectionSummary'
 import QuestionCircle from '../QuestionCircle'
 import BarChart from '../BarChart'
+import { NABadge, type NAReasonId } from '@/components/ui/na-badge'
 
 interface ManagementTabProps {
   companyName: string
@@ -53,10 +54,10 @@ export default function ManagementTab({
     })
     .filter(r => r.value > 0)
 
-  const metrics = [
-    { label: 'Insider Own.',    value: pct(insiderPct) },
-    { label: 'Piotroski F',     value: piotroski != null ? `${piotroski}/9` : '—' },
-    { label: 'Beneish M',       value: beneishFlag ?? '—' },
+  const metrics: { label: string; value: string | null; naReason?: NAReasonId }[] = [
+    { label: 'Insider Own.', value: insiderPct != null ? pct(insiderPct) : null,           naReason: 'no-data' },
+    { label: 'Piotroski F',  value: piotroski != null ? `${piotroski}/9` : null,           naReason: 'insufficient-history' },
+    { label: 'Beneish M',    value: beneishFlag ?? null,                                   naReason: 'insufficient-history' },
   ]
 
   const beneishColor = beneishFlag === 'Clean' ? 'text-[#1f6feb]' : beneishFlag === 'Warning' ? 'text-[#9a6700]' : 'text-[#cf222e]'
@@ -77,7 +78,9 @@ export default function ManagementTab({
           {metrics.map(m => (
             <div key={m.label} className="text-right">
               <p className="text-[10px] text-[#6B6A72] uppercase tracking-wider">{m.label}</p>
-              <p className={`text-sm font-semibold font-mono ${m.label === 'Beneish M' ? beneishColor : 'text-[#2D2C31]'}`}>{m.value}</p>
+              <p className={`text-sm font-semibold font-mono ${m.label === 'Beneish M' ? beneishColor : 'text-[#2D2C31]'}`}>
+                {m.value != null ? m.value : <NABadge reason={m.naReason ?? 'no-data'} size="sm" />}
+              </p>
             </div>
           ))}
         </div>

@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { NABadge } from '@/components/ui/na-badge'
 
 interface Props {
   symbol: string
@@ -67,7 +68,7 @@ export default function MarketInstrumentRow({ symbol, name, price, change, chang
       {/* Price column */}
       <div className="text-right tabular-nums">
         <span className="text-[13px] font-semibold text-slate-900 font-mono">
-          {fmtNum(price, priceDecimals)}
+          {price != null && isFinite(price) ? fmtNum(price, priceDecimals) : <NABadge reason="no-data" />}
         </span>
       </div>
 
@@ -76,7 +77,7 @@ export default function MarketInstrumentRow({ symbol, name, price, change, chang
         <span className="text-[12px] font-mono">
           {change != null && isFinite(change)
             ? (change >= 0 ? '+' : '') + fmtNum(change, priceDecimals)
-            : '—'}
+            : <NABadge reason="no-data" />}
         </span>
       </div>
 

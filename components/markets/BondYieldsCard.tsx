@@ -2,6 +2,7 @@
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts'
 import { cn } from '@/lib/utils'
 import type { YieldCurvePoint } from '@/lib/data/fredClient'
+import { NABadge } from '@/components/ui/na-badge'
 
 function isInverted(curve: YieldCurvePoint[]): boolean {
   const two  = curve.find(p => p.tenor === '2Y')?.yield
@@ -75,7 +76,7 @@ export default function BondYieldsCard({ yieldCurve }: { yieldCurve: YieldCurveP
               <span className="ml-2 text-[10px] text-slate-400">{p.label} Bond Yield</span>
             </div>
             <span className="text-[12px] font-mono font-semibold text-slate-700">
-              {p.yield != null ? `${p.yield.toFixed(3)}%` : '—'}
+              {p.yield != null ? `${p.yield.toFixed(3)}%` : <NABadge reason="no-data" />}
             </span>
           </div>
         ))}

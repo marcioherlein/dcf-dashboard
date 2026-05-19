@@ -1,6 +1,7 @@
 'use client'
 
 import { fmtM, fmtPrice, fmtPct } from '@/lib/valuation/formatValuation'
+import { NABadge } from '@/components/ui/na-badge'
 
 interface ValuationOutputTableProps {
   // UFCF path
@@ -22,7 +23,7 @@ interface ValuationOutputTableProps {
   financialCurrencyNote?: string | null
 }
 
-function Row({ label, value, bold, highlight }: { label: string; value: string; bold?: boolean; highlight?: boolean }) {
+function Row({ label, value, bold, highlight }: { label: string; value: React.ReactNode; bold?: boolean; highlight?: boolean }) {
   return (
     <div className={`flex justify-between py-1.5 text-xs border-b border-slate-50 last:border-0 ${highlight ? 'bg-blue-50 -mx-4 px-4' : ''}`}>
       <span className={bold ? 'font-semibold text-slate-800' : 'text-slate-500'}>{label}</span>
@@ -32,7 +33,7 @@ function Row({ label, value, bold, highlight }: { label: string; value: string; 
 }
 
 function UpsideChip({ upside }: { upside: number | null }) {
-  if (upside == null) return <span className="text-slate-400">—</span>
+  if (upside == null) return <NABadge reason="calc-error" />
   const positive = upside >= 0
   return (
     <span className={`inline-block rounded px-2 py-0.5 text-xs font-semibold ${positive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
@@ -64,13 +65,13 @@ export default function ValuationOutputTable({
           <Row label="Enterprise Value" value={`${curr}${fmtM(ufcfEV)}`} />
           <Row label="+ Net Cash" value={`${curr}${fmtM(cashM ? cashM - (debtM ?? 0) : null)}`} />
           <Row label="= Equity Value" value={`${curr}${fmtM(ufcfEquityValue)}`} bold />
-          <Row label="÷ Shares" value={sharesM != null ? `${(sharesM / 1000).toFixed(0)}B` : '—'} />
+          <Row label="÷ Shares" value={sharesM != null ? `${(sharesM / 1000).toFixed(0)}B` : <NABadge reason="no-data" />} />
           {financialCurrencyNote ? (
             <div className="mt-2 text-[11px] text-amber-700 bg-amber-50 rounded px-2 py-1.5">FX adjusted — see main DCF</div>
           ) : (
             <div className="mt-3 flex items-center justify-between">
               <span className="text-xs font-semibold text-slate-700">Fair Value</span>
-              <span className="font-mono font-bold text-base text-slate-800">{financialCurrencyNote ? '—' : `${curr}${fmtPrice(ufcfFairValue, '')}`}</span>
+              <span className="font-mono font-bold text-base text-slate-800">{`${curr}${fmtPrice(ufcfFairValue, '')}`}</span>
             </div>
           )}
           <div className="mt-1.5 flex items-center justify-between text-xs">
@@ -85,10 +86,12 @@ export default function ValuationOutputTable({
             Levered DCF {isFinancialSector && <span className="ml-1 text-blue-600 normal-case">(primary)</span>}
           </p>
           <Row label="Equity Value (PV)" value={`${curr}${fmtM(lfcfEquityValue)}`} bold />
-          <Row label="÷ Shares" value={sharesM != null ? `${(sharesM / 1000).toFixed(0)}B` : '—'} />
+          <Row label="÷ Shares" value={sharesM != null ? `${(sharesM / 1000).toFixed(0)}B` : <NABadge reason="no-data" />} />
           <div className="mt-3 flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-700">Fair Value</span>
-            <span className="font-mono font-bold text-base text-slate-800">{financialCurrencyNote ? '—' : `${curr}${fmtPrice(lfcfFairValue, '')}`}</span>
+            <span className="font-mono font-bold text-base text-slate-800">
+              {financialCurrencyNote ? <NABadge reason="not-applicable" /> : `${curr}${fmtPrice(lfcfFairValue, '')}`}
+            </span>
           </div>
           <div className="mt-1.5 flex items-center justify-between text-xs">
             <span className="text-slate-500">vs {curr}{currentPrice.toFixed(2)}</span>
