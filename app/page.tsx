@@ -728,7 +728,67 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* Feature capability cards */}
+      <section className="bg-slate-50 border-y border-slate-200">
+        <div className="mx-auto max-w-5xl px-6 py-16">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Everything you need to value a stock</h2>
+            <p className="text-slate-500 text-sm">Four complementary methods. One clear verdict.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              {
+                icon: (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+                  </svg>
+                ),
+                title: 'DCF Valuation',
+                benefit: 'Intrinsic value from free cash flows — not just multiples. Adjust WACC and growth yourself.',
+              },
+              {
+                icon: (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.745 3.745 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.745 3.745 0 0 1 3.296-1.043A3.745 3.745 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.745 3.745 0 0 1 3.296 1.043 3.745 3.745 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
+                  </svg>
+                ),
+                title: 'Health Scores',
+                benefit: 'Piotroski F-Score, Altman Z-Score, Beneish M-Score, and ROIC vs WACC in one view.',
+              },
+              {
+                icon: (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z" />
+                  </svg>
+                ),
+                title: 'Scenario Analysis',
+                benefit: 'Bear, base, and bull cases with probability weighting — see the full range, not just a point estimate.',
+              },
+              {
+                icon: (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3" />
+                  </svg>
+                ),
+                title: 'Reverse DCF',
+                benefit: "See what growth rate the market is pricing in — decide if that expectation is achievable.",
+              },
+            ].map((card) => (
+              <div key={card.title} className="rounded-xl bg-white border border-slate-200 p-5 flex flex-col gap-3">
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center text-blue-700" style={{ background: '#EEF2F8' }}>
+                  {card.icon}
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-900 mb-1">{card.title}</p>
+                  <p className="text-xs text-slate-500 leading-relaxed">{card.benefit}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA — final call to action */}
       <section className="mx-auto max-w-2xl px-6 py-20 text-center">
         <h2 className="text-2xl font-bold text-slate-900 mb-2">Ready to analyze your first stock?</h2>
         <p className="text-slate-500 text-sm mb-8">Free to use. No account needed to start.</p>

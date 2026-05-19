@@ -134,11 +134,33 @@ function RangeTooltip({ active, payload, currency = 'USD' }: { active?: boolean;
   )
 }
 
+const METHOD_DESCRIPTIONS: Record<string, string> = {
+  forward_pe:       '5-yr EPS target × exit P/E, discounted to today',
+  ev_ebitda:        'Enterprise value using sector EV/EBITDA exit multiple',
+  revenue_multiple: 'EV/Revenue exit multiple — useful for growth-stage companies',
+  core_dcf:         'FCFF, FCFE & DDM triangulated — intrinsic value from cash flows',
+  scenario_blend:   'Bear / base / bull probability-weighted fair value',
+}
+
+function methodUpside(m: MethodResult): 'up' | 'neutral' | 'down' | null {
+  if (m.upsidePct == null) return null
+  if (m.upsidePct >= 0.10) return 'up'
+  if (m.upsidePct >= -0.05) return 'neutral'
+  return 'down'
+}
+
+const METHOD_BORDER_CLASS: Record<string, string> = {
+  up:      'border-l-emerald-400',
+  neutral: 'border-l-blue-300',
+  down:    'border-l-red-400',
+}
+
 export default function ValuationSummary({ methods, currentPrice, currency = 'USD' }: Props) {
   const { weightedFV, weightedBearFV, weightedBullFV, weightedUpside, zone } = computeConsensus(methods, currentPrice)
 
   // Effective weights: normalize across methods that actually have a fair value
   const effectiveTotalWeight = methods.filter(m => m.fairValue != null && m.weight > 0).reduce((s, m) => s + m.weight, 0)
+  const validMethodCount = methods.filter(m => m.fairValue != null && m.weight > 0).length
 
   const zoneStyle = zone === 'Attractive'
     ? { wrap: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700' }
@@ -170,9 +192,10 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
         <div className={cn('rounded-xl border px-6 py-5', zoneStyle.wrap)}>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-label uppercase tracking-wider text-slate-500 mb-1">Our fair value estimate</p>
+              <p className="text-label uppercase tracking-wider text-slate-500 mb-1">Weighted Fair Value Estimate</p>
               <NumberDisplay value={fmtPrice(weightedFV, currency)} size="xl" />
-              <p className="text-micro text-slate-500 mt-1.5">vs. {fmtPrice(currentPrice, currency)} current price</p>
+              <p className="text-micro text-slate-500 mt-1">vs. {fmtPrice(currentPrice, currency)} current price · based on {validMethodCount} method{validMethodCount !== 1 ? 's' : ''}</p>
+              <p className="text-[10px] text-slate-400 mt-0.5 italic">Model estimate, not a prediction</p>
             </div>
             <div className="flex flex-col items-end gap-2">
               {zone && (
@@ -264,44 +287,77 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
         </div>
       )}
 
-      {/* ── Method breakdown table ───────────────────────────────────────────── */}
+      {/* ── Method breakdown ─────────────────────────────────────────────────── */}
       {methods.length > 0 && (
         <div className="rounded-xl bg-white border border-slate-200 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50">
-                <th className="text-left px-4 py-3 text-label uppercase tracking-wider text-slate-400 font-bold">Method</th>
-                <th className="text-right px-4 py-3 text-label uppercase tracking-wider text-slate-400 font-bold">Fair Value</th>
-                <th className="text-right px-4 py-3 text-label uppercase tracking-wider text-slate-400 font-bold">Upside</th>
-                <th className="text-right px-4 py-3 text-label uppercase tracking-wider text-slate-400 font-bold">Weight</th>
-              </tr>
-            </thead>
-            <tbody>
-              {methods.map((m, i) => (
-                <tr key={m.id} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/60'}>
-                  <td className="px-4 py-3 font-medium text-slate-700">{m.label}</td>
-                  <td className="px-4 py-3 text-right font-mono font-semibold text-slate-900">
-                    {m.fairValue != null ? fmtPrice(m.fairValue, currency) : <span className="text-slate-300">—</span>}
-                  </td>
-                  <td className="px-4 py-3 text-right">
+          {/* Header row */}
+          <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-2.5 border-b border-slate-100 bg-slate-50">
+            <span className="text-label uppercase tracking-wider text-slate-400 font-bold">Method</span>
+            <span className="text-label uppercase tracking-wider text-slate-400 font-bold text-right">Fair Value</span>
+            <span className="text-label uppercase tracking-wider text-slate-400 font-bold text-right">Upside</span>
+            <span className="text-label uppercase tracking-wider text-slate-400 font-bold text-right w-20">Weight</span>
+          </div>
+
+          <div className="divide-y divide-slate-100">
+            {methods.map((m) => {
+              const side = methodUpside(m)
+              const borderClass = side ? METHOD_BORDER_CLASS[side] : 'border-l-slate-200'
+              const effectivePct = (m.fairValue != null && effectiveTotalWeight > 0)
+                ? (m.weight / effectiveTotalWeight) * 100
+                : 0
+              const desc = METHOD_DESCRIPTIONS[m.id] ?? ''
+
+              return (
+                <div
+                  key={m.id}
+                  className={cn('grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-3 border-l-4 items-center', borderClass)}
+                >
+                  {/* Method name + description */}
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-800 leading-snug">{m.label}</p>
+                    {desc && <p className="text-[11px] text-slate-400 leading-tight mt-0.5 truncate">{desc}</p>}
+                  </div>
+
+                  {/* Fair value */}
+                  <div className="text-right">
+                    {m.fairValue != null
+                      ? <span className="font-mono font-semibold text-slate-900 text-sm">{fmtPrice(m.fairValue, currency)}</span>
+                      : <span className="text-slate-300">—</span>
+                    }
+                  </div>
+
+                  {/* Upside */}
+                  <div className="text-right">
                     {m.upsidePct != null
                       ? <TrendBadge value={m.upsidePct} size="sm" />
                       : <span className="text-slate-300">—</span>
                     }
-                  </td>
-                  <td className="px-4 py-3 text-right text-micro text-slate-400 font-mono">
-                    {m.fairValue != null && effectiveTotalWeight > 0
-                      ? `${((m.weight / effectiveTotalWeight) * 100).toFixed(0)}%`
-                      : '—'
-                    }
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+
+                  {/* Weight mini bar */}
+                  <div className="w-20 flex flex-col gap-1 items-end">
+                    {m.fairValue != null && effectiveTotalWeight > 0 ? (
+                      <>
+                        <span className="text-[11px] font-mono text-slate-500">{effectivePct.toFixed(0)}%</span>
+                        <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                          <div
+                            className={cn('h-full rounded-full', side === 'up' ? 'bg-emerald-400' : side === 'down' ? 'bg-red-400' : 'bg-blue-300')}
+                            style={{ width: `${effectivePct}%` }}
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <span className="text-slate-300">—</span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
           <div className="px-4 py-2.5 border-t border-slate-100 bg-slate-50/50">
             <p className="text-micro text-slate-400">
-              Weights shown are effective weights after excluding methods with no available data. Adjust assumptions in method drawers to refine.
+              Effective weights exclude methods with no available data. Adjust assumptions in method drawers to refine.
             </p>
           </div>
         </div>

@@ -98,7 +98,7 @@ export default function AtAGlance({
 
         {/* Right: fair value */}
         <div className="space-y-2 sm:text-right sm:border-l sm:border-slate-100 sm:pl-5">
-          <p className="text-label uppercase tracking-wider text-slate-400">Consensus Fair Value</p>
+          <p className="text-label uppercase tracking-wider text-slate-400">Weighted Fair Value Estimate</p>
           {fairValue != null ? (
             <>
               <p className="text-3xl font-bold font-mono tabular-nums text-slate-900">
@@ -121,7 +121,7 @@ export default function AtAGlance({
               <div className="h-5 w-24 sm:ml-auto rounded-full bg-slate-100 animate-pulse" />
             </div>
           )}
-          <p className="text-micro text-slate-400 leading-relaxed">{summary}</p>
+          <p className="text-xs text-slate-400 leading-relaxed">{summary}</p>
         </div>
       </div>
 

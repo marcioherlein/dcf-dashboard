@@ -22,6 +22,7 @@ interface Props {
   verdictZone: VerdictZone
   topRisk: string | null
   topDrivers: string[]
+  methodCount?: number
   onSave: () => void
   onViewValuation: () => void
 }
@@ -68,6 +69,7 @@ export default function InvestmentVerdictCard({
   fairValue, upsidePct,
   bearFV, bullFV,
   verdictZone, topRisk, topDrivers,
+  methodCount,
   onSave, onViewValuation,
 }: Props) {
   const styles = ZONE_STYLES[verdictZone]
@@ -90,6 +92,9 @@ export default function InvestmentVerdictCard({
             </p>
             {gradeLabel && (
               <p className="text-[11px] text-slate-500 mt-0.5">{gradeLabel}</p>
+            )}
+            {methodCount != null && methodCount > 0 && (
+              <p className="text-[10px] text-slate-400 mt-0.5">Based on {methodCount} valuation method{methodCount !== 1 ? 's' : ''} · <span className="italic">model estimate, not a prediction</span></p>
             )}
             <div className="flex items-center gap-2 mt-1.5">
               <span className="text-[11px] text-slate-500">
@@ -157,16 +162,16 @@ export default function InvestmentVerdictCard({
       <div className="grid grid-cols-2 border-t border-current/10">
         <button
           onClick={onViewValuation}
-          className="flex items-center justify-center gap-1.5 px-4 py-3 text-[12px] font-semibold text-blue-700 hover:bg-white/60 transition-colors border-r border-current/10"
+          className="flex items-center justify-center gap-1.5 px-4 py-3.5 text-[13px] font-bold text-blue-700 hover:bg-blue-50 transition-colors border-r border-current/10"
         >
-          <TrendingUp size={13} className="shrink-0" />
+          <TrendingUp size={14} className="shrink-0" />
           View full valuation
         </button>
         <button
           onClick={onSave}
-          className="flex items-center justify-center gap-1.5 px-4 py-3 text-[12px] font-semibold text-slate-600 hover:bg-white/60 transition-colors"
+          className="flex items-center justify-center gap-1.5 px-4 py-3.5 text-[13px] font-bold text-slate-700 hover:bg-white/60 transition-colors"
         >
-          <Bookmark size={13} className="shrink-0" />
+          <Bookmark size={14} className="shrink-0" />
           Save analysis
         </button>
       </div>

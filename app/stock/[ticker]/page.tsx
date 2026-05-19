@@ -267,6 +267,10 @@ function StockPageBody() {
 
   const topDrivers: string[] = data?.cagrAnalysis?.drivers?.slice(0, 3) ?? []
 
+  const methodCount = data?.valuationMethods?.effectiveWeights
+    ? Object.values(data.valuationMethods.effectiveWeights as Record<string, number>).filter(w => w > 0).length
+    : null
+
   const handleTabChange = (tab: TabId) => {
     setActiveTab(tab)
     if (data) track('tab_changed', { ticker, tab })
@@ -376,6 +380,7 @@ function StockPageBody() {
                   verdictZone={verdictZone}
                   topRisk={topRisk}
                   topDrivers={topDrivers}
+                  methodCount={methodCount ?? undefined}
                   onSave={() => requireAuth({ intent: 'save_watchlist' })}
                   onViewValuation={() => handleTabChange('valuation')}
                 />
