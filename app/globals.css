@@ -45,6 +45,8 @@
   }
   html {
     font-family: 'Inter', system-ui, sans-serif;
+    /* Offset for fixed TopBar (52px) + sticky TabNav (~43px) so anchor links land visible */
+    scroll-padding-top: 100px;
   }
 }
 
@@ -129,6 +131,11 @@ h1, h2, h3 {
   .custom-scrollbar::-webkit-scrollbar { width: 4px; }
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+
+  /* Mobile bottom-nav clearance — accounts for BottomNav height + iOS home-indicator */
+  .pb-safe-nav {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 /* ── Row highlight flash ──────────────────────────── */

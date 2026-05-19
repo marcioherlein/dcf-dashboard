@@ -277,7 +277,7 @@ function StockPageBody() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFB]">
+    <div className="min-h-dvh bg-[#F8FAFB]">
 
       {/* Breadcrumb */}
       <div className="bg-white border-b border-slate-200 px-6 py-2 flex items-center gap-3">

@@ -187,7 +187,11 @@ export default function FinancialStatements({ incomeStatement, balanceSheet, cas
                   : 'text-gray-500 dark:text-white/40 hover:text-gray-700 dark:hover:text-white/60'
               }`}
             >
-              {t}
+              {/* Abbreviated labels on narrow screens, full labels on sm+ */}
+              <span className="sm:hidden">
+                {t === 'Income Statement' ? 'Income' : t === 'Balance Sheet' ? 'Balance' : 'Cash Flow'}
+              </span>
+              <span className="hidden sm:inline">{t}</span>
             </button>
           ))}
         </div>

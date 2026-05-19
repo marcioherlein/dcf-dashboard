@@ -144,7 +144,7 @@ export default function TopBar() {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search Tickers…"
-            className="flex-1 min-w-0 bg-transparent text-[13px] text-slate-900 placeholder-slate-400 focus:outline-none uppercase"
+            className="flex-1 min-w-0 bg-transparent text-[16px] text-slate-900 placeholder-slate-400 focus:outline-none uppercase"
           />
         </div>
 

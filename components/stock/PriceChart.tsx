@@ -209,6 +209,7 @@ export default function PriceChart({ ticker, isDark, fcffFairValue, triangulated
   const [showBB, setShowBB]         = useState(false)
   const [subPanel, setSubPanel]     = useState<SubPanel>('volume')
   const [showSubPanel, setShowSubPanel] = useState(true)
+  const [isMobile, setIsMobile]     = useState(false)
 
   // Compare state
   const [compareTickers, setCompareTickers] = useState<string[]>([])
@@ -216,6 +217,13 @@ export default function PriceChart({ ticker, isDark, fcffFairValue, triangulated
   const [compareMode, setCompareMode]       = useState<'price' | 'percent'>('price')
   const [compareRaw, setCompareRaw]         = useState<Record<string, Bar[]>>({})
   const compareInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   useEffect(() => {
     setLoading(true)
@@ -354,7 +362,9 @@ export default function PriceChart({ ticker, isDark, fcffFairValue, triangulated
   const tickFill = isDark ? 'rgba(255,255,255,0.3)' : '#9ca3af'
   const gridColor = isDark ? 'rgba(255,255,255,0.04)' : '#f3f4f6'
   const hasAnyLine = VAL_LINES.some(l => levels[l.key] != null && (levels[l.key] as number) > hardMin && (levels[l.key] as number) < hardMax)
-  const rightMargin = hasAnyLine ? 96 : 12
+  // On mobile, use a small rightMargin and render valuation labels in a legend row instead of inline SVG tags.
+  // On desktop (sm+), use 96px to accommodate the PriceTag SVG labels on the right edge.
+  const rightMargin = hasAnyLine ? (isMobile ? 8 : 96) : (isMobile ? 4 : 12)
 
   const toggleMA = (key: MAKey) => {
     setActiveMA(prev => {
@@ -395,7 +405,7 @@ export default function PriceChart({ ticker, isDark, fcffFairValue, triangulated
               {changePct >= 0 ? '+' : ''}{changePct.toFixed(2)}%
             </span>
           )}
-          {/* Valuation level legend */}
+          {/* Valuation level legend — desktop only (sm+). On mobile these appear below in their own row. */}
           {hasAnyLine && !isCompareMode && (
             <div className="hidden items-center gap-2.5 sm:flex">
               {VAL_LINES.map((l) => {
@@ -412,13 +422,13 @@ export default function PriceChart({ ticker, isDark, fcffFairValue, triangulated
           )}
         </div>
 
-        {/* Period selector */}
+        {/* Period selector — taller touch target on mobile */}
         <div className="flex gap-1">
           {PERIODS.map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`rounded-lg px-3 py-1 text-xs font-medium transition ${
+              className={`rounded-lg px-3 py-2 sm:py-1 text-xs font-medium transition ${
                 period === p
                   ? 'bg-gray-900 text-white dark:bg-white dark:text-black'
                   : 'text-gray-500 dark:text-white/40 hover:bg-gray-100 dark:hover:bg-white/10'
@@ -429,6 +439,22 @@ export default function PriceChart({ ticker, isDark, fcffFairValue, triangulated
           ))}
         </div>
       </div>
+
+      {/* Mobile-only valuation legend row */}
+      {hasAnyLine && !isCompareMode && isMobile && (
+        <div className="flex flex-wrap items-center gap-2.5 px-6 pb-2 sm:hidden">
+          {VAL_LINES.map((l) => {
+            const v = levels[l.key]
+            if (v == null || v <= hardMin || v >= hardMax) return null
+            return (
+              <span key={l.key} className="flex items-center gap-1 text-[10px] font-medium" style={{ color: l.color }}>
+                <span className="inline-block h-0.5 w-3.5" style={{ background: l.color, opacity: 0.7 }} />
+                {l.label} ${fmt(v as number)}
+              </span>
+            )
+          })}
+        </div>
+      )}
 
       {/* ── Compare tickers row ── */}
       <div className="flex flex-wrap items-center gap-2 px-6 pb-2">
@@ -460,7 +486,7 @@ export default function PriceChart({ ticker, isDark, fcffFairValue, triangulated
               onBlur={() => { if (compareInput.trim()) addCompareTicker(compareInput) }}
               placeholder="+ Compare"
               maxLength={10}
-              className="text-[11px] bg-transparent border-b border-dashed border-gray-300 dark:border-white/20 focus:outline-none focus:border-blue-500 w-20 py-0.5 placeholder:text-gray-400 dark:placeholder:text-white/25"
+              className="text-[16px] bg-transparent border-b border-dashed border-gray-300 dark:border-white/20 focus:outline-none focus:border-blue-500 w-20 py-0.5 placeholder:text-gray-400 dark:placeholder:text-white/25"
             />
           </form>
         )}
@@ -488,7 +514,7 @@ export default function PriceChart({ ticker, isDark, fcffFairValue, triangulated
               <button
                 key={ind.key}
                 onClick={() => toggleMA(ind.key as MAKey)}
-                className={`rounded px-2 py-0.5 text-[10px] font-semibold transition border ${
+                className={`rounded px-2 py-1.5 sm:py-0.5 text-[10px] font-semibold transition border ${
                   on ? 'opacity-100' : 'opacity-35'
                 }`}
                 style={{
@@ -503,7 +529,7 @@ export default function PriceChart({ ticker, isDark, fcffFairValue, triangulated
           })}
           <button
             onClick={() => setShowBB(!showBB)}
-            className={`rounded px-2 py-0.5 text-[10px] font-semibold transition border ${showBB ? 'opacity-100' : 'opacity-35'}`}
+            className={`rounded px-2 py-1.5 sm:py-0.5 text-[10px] font-semibold transition border ${showBB ? 'opacity-100' : 'opacity-35'}`}
             style={{
               borderColor: '#a78bfa',
               color: showBB ? '#a78bfa' : (isDark ? 'rgba(255,255,255,0.4)' : '#6b7280'),
@@ -518,7 +544,7 @@ export default function PriceChart({ ticker, isDark, fcffFairValue, triangulated
               <button
                 key={sp}
                 onClick={() => { setSubPanel(sp); setShowSubPanel(true) }}
-                className={`rounded px-2 py-0.5 text-[10px] font-medium transition ${
+                className={`rounded px-2 py-1.5 sm:py-0.5 text-[10px] font-medium transition ${
                   showSubPanel && subPanel === sp
                     ? 'bg-gray-200 dark:bg-white/15 text-gray-700 dark:text-white/70'
                     : 'text-gray-400 dark:text-white/25 hover:bg-gray-100 dark:hover:bg-white/8'
@@ -529,7 +555,7 @@ export default function PriceChart({ ticker, isDark, fcffFairValue, triangulated
             ))}
             <button
               onClick={() => setShowSubPanel(!showSubPanel)}
-              className="rounded px-1.5 py-0.5 text-[10px] text-gray-400 dark:text-white/25 hover:bg-gray-100 dark:hover:bg-white/8"
+              className="rounded px-1.5 py-1.5 sm:py-0.5 text-[10px] text-gray-400 dark:text-white/25 hover:bg-gray-100 dark:hover:bg-white/8"
             >
               {showSubPanel ? '↑' : '↓'}
             </button>
@@ -624,7 +650,7 @@ export default function PriceChart({ ticker, isDark, fcffFairValue, triangulated
                     strokeDasharray={l.dash}
                     strokeWidth={1.5}
                     strokeOpacity={0.75}
-                    label={{
+                    label={isMobile ? undefined : {
                       content: (props: unknown) => (
                         <PriceTag
                           // eslint-disable-next-line @typescript-eslint/no-explicit-any
