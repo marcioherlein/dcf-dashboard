@@ -102,7 +102,10 @@ function ModelPill({ label, value, upsidePct, weight, applicable }: {
   return (
     <div className={`rounded-lg border ${z.border || 'border-[#E8E6E0]'} ${z.bg || 'bg-white'} px-3 py-2.5`}>
       <p className="text-[10px] text-[#6B6A72] uppercase tracking-wider mb-0.5">{label}</p>
-      <p className={`text-base font-bold font-mono ${z.color}`}>{money(value)}</p>
+      {value != null
+        ? <p className={`text-base font-bold font-mono ${z.color}`}>{money(value)}</p>
+        : <NABadge reason="no-data" size="sm" />
+      }
       {upsidePct != null && (
         <p className={`text-[10px] font-semibold mt-0.5 ${z.color}`}>
           {sign(upsidePct)}{pct(upsidePct)} · {weight}% weight
@@ -145,9 +148,9 @@ function SensitivityTable({ baseWACC, baseCagr, scenarios }: {
                 <td className="py-2 pr-4">
                   <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${r.bg} ${r.color}`}>{r.label}</span>
                 </td>
-                <td className={`text-right py-2 pr-4 font-mono text-sm ${r.color}`}>{pct(w)}</td>
-                <td className={`text-right py-2 pr-4 font-mono text-sm ${r.color}`}>{pct(c)}</td>
-                <td className={`text-right py-2 font-mono font-bold text-sm ${r.color}`}>{money(fv)}</td>
+                <td className={`text-right py-2 pr-4 font-mono text-sm ${r.color}`}>{w != null ? pct(w) : <NABadge reason="no-data" />}</td>
+                <td className={`text-right py-2 pr-4 font-mono text-sm ${r.color}`}>{c != null ? pct(c) : <NABadge reason="no-data" />}</td>
+                <td className={`text-right py-2 font-mono font-bold text-sm ${r.color}`}>{fv != null ? money(fv) : <NABadge reason="no-data" />}</td>
               </tr>
             )
           })}
@@ -158,7 +161,7 @@ function SensitivityTable({ baseWACC, baseCagr, scenarios }: {
 }
 
 // ─── Assumption row ───────────────────────────────────────────────────────────
-function AssumptionRow({ label, value, source, warning }: { label: string; value: string; source?: string; warning?: boolean }) {
+function AssumptionRow({ label, value, source, warning }: { label: string; value: React.ReactNode; source?: string; warning?: boolean }) {
   return (
     <div className="flex items-center justify-between py-2 border-b border-[#F0EEE8] last:border-0">
       <div className="flex-1">
@@ -381,18 +384,18 @@ export default function ValuationTab({
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
           <div>
-            <AssumptionRow label="Risk-Free Rate (RF)" value={pct(rfRate)} source="FRED 10Y Treasury" />
-            <AssumptionRow label="Beta (levered, regression)" value={num(beta, 2)} source="5Y weekly return regression" />
+            <AssumptionRow label="Risk-Free Rate (RF)" value={rfRate != null ? pct(rfRate) : <NABadge reason="no-data" />} source="FRED 10Y Treasury" />
+            <AssumptionRow label="Beta (levered, regression)" value={beta != null ? num(beta, 2) : <NABadge reason="insufficient-history" />} source="5Y weekly return regression" />
             <AssumptionRow label="Equity Risk Premium" value={pct(erp)} source="Damodaran Jan 2025" />
-            <AssumptionRow label="Cost of Equity (Ke = RF + β×ERP)" value={pct(ke)} />
-            <AssumptionRow label="After-Tax Cost of Debt (Kd×(1−T))" value={pct(kd)} />
+            <AssumptionRow label="Cost of Equity (Ke = RF + β×ERP)" value={ke != null ? pct(ke) : <NABadge reason="calc-error" />} />
+            <AssumptionRow label="After-Tax Cost of Debt (Kd×(1−T))" value={kd != null ? pct(kd) : <NABadge reason="no-data" />} />
           </div>
           <div>
-            <AssumptionRow label="WACC" value={pct(wacc)} source="ssrn-1620871 eq[4],[5]" warning={wacc != null && wacc < 0.05} />
-            <AssumptionRow label="Tax Rate" value={pct(taxRate)} source="Effective rate from income stmt" />
-            <AssumptionRow label="Growth CAGR (blended)" value={pct(cagr)} source="3Y historical + analyst estimate" />
-            <AssumptionRow label="Terminal Growth" value={pct(terminalG)} source="GDP-based ceiling: WACC − 0.5%" warning={terminalG != null && wacc != null && terminalG > wacc - 0.005} />
-            <AssumptionRow label="D/E Ratio" value={debtToEquity != null ? `${debtToEquity.toFixed(2)}x` : '—'} />
+            <AssumptionRow label="WACC" value={wacc != null ? pct(wacc) : <NABadge reason="calc-error" />} source="ssrn-1620871 eq[4],[5]" warning={wacc != null && wacc < 0.05} />
+            <AssumptionRow label="Tax Rate" value={taxRate != null ? pct(taxRate) : <NABadge reason="no-data" />} source="Effective rate from income stmt" />
+            <AssumptionRow label="Growth CAGR (blended)" value={cagr != null ? pct(cagr) : <NABadge reason="insufficient-history" />} source="3Y historical + analyst estimate" />
+            <AssumptionRow label="Terminal Growth" value={terminalG != null ? pct(terminalG) : <NABadge reason="calc-error" />} source="GDP-based ceiling: WACC − 0.5%" warning={terminalG != null && wacc != null && terminalG > wacc - 0.005} />
+            <AssumptionRow label="D/E Ratio" value={debtToEquity != null ? `${debtToEquity.toFixed(2)}x` : <NABadge reason="no-data" />} />
           </div>
         </div>
       </div>
@@ -402,27 +405,38 @@ export default function ValuationTab({
         <div className="rounded-xl border border-[#E8E6E0] bg-white p-5">
           <p className="text-[11px] font-semibold text-[#6B6A72] uppercase tracking-wider mb-3">EV → Equity Bridge</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              { label: 'Enterprise Value',   value: moneyM(evM),          note: 'PV of FCF + terminal' },
-              { label: '+ Cash & Equiv',     value: moneyM(cashM),        note: 'Balance sheet cash' },
-              { label: '− Total Debt',       value: cashM != null && debtM != null ? `(${moneyM(debtM)})` : '—', note: 'Financial debt' },
-              { label: '= Equity Value',     value: moneyM(equityValueM), note: 'EV + Cash − Debt' },
-            ].map(m => (
+            {([
+              { label: 'Enterprise Value', value: evM != null ? moneyM(evM) : null,          note: 'PV of FCF + terminal' },
+              { label: '+ Cash & Equiv',   value: cashM != null ? moneyM(cashM) : null,      note: 'Balance sheet cash' },
+              { label: '= Equity Value',   value: equityValueM != null ? moneyM(equityValueM) : null, note: 'EV + Cash − Debt' },
+            ] as { label: string; value: string | null; note: string }[]).map(m => (
               <div key={m.label} className="rounded-lg border border-[#E8E6E0] bg-[#F7F6F1] px-3 py-2.5">
                 <p className="text-[10px] text-[#6B6A72] mb-0.5">{m.label}</p>
-                <p className="text-sm font-bold font-mono text-[#2D2C31]">{m.value}</p>
+                {m.value != null
+                  ? <p className="text-sm font-bold font-mono text-[#2D2C31]">{m.value}</p>
+                  : <NABadge reason="no-data" size="sm" />
+                }
                 <p className="text-[10px] text-[#6B6A72] mt-0.5">{m.note}</p>
               </div>
             ))}
+            {/* Total Debt — separate to use NABadge reason */}
+            <div className="rounded-lg border border-[#E8E6E0] bg-[#F7F6F1] px-3 py-2.5">
+              <p className="text-[10px] text-[#6B6A72] mb-0.5">− Total Debt</p>
+              {cashM != null && debtM != null
+                ? <p className="text-sm font-bold font-mono text-[#2D2C31]">({moneyM(debtM)})</p>
+                : <NABadge reason="no-data" size="sm" />
+              }
+              <p className="text-[10px] text-[#6B6A72] mt-0.5">Financial debt</p>
+            </div>
           </div>
           <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
             {([
-              { label: 'Current Price',    value: money(currentPrice),                                 naReason: 'no-data' },
-              { label: 'Fair Value (DCF)', value: money(fcffFV),                                       naReason: 'no-data' },
-              { label: 'P/E Ratio',        value: peRatio != null ? `${num(peRatio)}x` : null,         naReason: 'requires-positive-earnings' },
-              { label: 'Valuation Rating', value: valRating != null ? `${num(valRating)}/5` : null,    naReason: 'no-data' },
-              { label: 'Market Cap',       value: moneyM(marketCapM),                                  naReason: 'no-data' },
-              { label: 'EV/EBITDA',        value: evEbitda != null ? `${num(evEbitda)}x` : null,       naReason: 'negative-base' },
+              { label: 'Current Price',    value: currentPrice != null ? money(currentPrice) : null,        naReason: 'no-data' },
+              { label: 'Fair Value (DCF)', value: fcffFV != null ? money(fcffFV) : null,                    naReason: 'no-data' },
+              { label: 'P/E Ratio',        value: peRatio != null ? `${num(peRatio)}x` : null,              naReason: 'requires-positive-earnings' },
+              { label: 'Valuation Rating', value: valRating != null ? `${num(valRating)}/5` : null,         naReason: 'no-data' },
+              { label: 'Market Cap',       value: marketCapM != null ? moneyM(marketCapM) : null,           naReason: 'no-data' },
+              { label: 'EV/EBITDA',        value: evEbitda != null ? `${num(evEbitda)}x` : null,            naReason: 'negative-base' },
             ] as { label: string; value: string | null; naReason: import('@/components/ui/na-badge').NAReasonId }[]).map(m => (
               <div key={m.label} className="rounded-xl border border-[#E8E6E0] bg-white px-4 py-3">
                 <p className="text-[11px] text-[#6B6A72] uppercase tracking-wider mb-1">{m.label}</p>
