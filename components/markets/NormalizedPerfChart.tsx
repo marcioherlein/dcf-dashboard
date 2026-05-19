@@ -93,7 +93,7 @@ export default function NormalizedPerfChart() {
       <div className="px-4 pt-3 pb-2 border-b border-slate-100">
         <div className="flex items-center justify-between mb-2">
           <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Normalized Performance</span>
-          <div className="flex gap-0.5">
+          <div className="flex flex-wrap gap-1">
             {PERIODS.map(p => (
               <button
                 key={p}
@@ -138,7 +138,7 @@ export default function NormalizedPerfChart() {
       </div>
 
       {/* Chart */}
-      <div className="px-2 py-3" style={{ height: 280 }}>
+      <div className="px-4 py-3" style={{ height: 280 }}>
         {loading ? (
           <div className="h-full flex items-center justify-center">
             <div className="flex gap-1">
@@ -149,11 +149,11 @@ export default function NormalizedPerfChart() {
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={displayData} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
+            <LineChart data={displayData} margin={{ top: 4, right: 8, bottom: 4, left: 4 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 9, fill: '#94a3b8' }}
+                tick={{ fontSize: 10, fill: '#94a3b8' }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={fmtDate}
@@ -161,7 +161,7 @@ export default function NormalizedPerfChart() {
                 minTickGap={40}
               />
               <YAxis
-                tick={{ fontSize: 9, fill: '#94a3b8' }}
+                tick={{ fontSize: 10, fill: '#94a3b8' }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={v => `${v >= 0 ? '' : ''}${(v as number).toFixed(0)}%`}

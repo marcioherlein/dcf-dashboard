@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import PriceTable from '@/components/markets/PriceTable'
 import NormalizedPerfChart from '@/components/markets/NormalizedPerfChart'
 import MarketNewsSection from '@/components/markets/MarketNewsSection'
@@ -69,24 +70,37 @@ export default function MarketsPage() {
       <div className="border-b border-slate-200 bg-white">
         <div className="max-w-[1400px] mx-auto px-4 py-2 flex items-center gap-6 overflow-x-auto scrollbar-hide">
           {[
-            { label: 'S&P 500',   sym: spx  },
+            { label: 'S&P 500',    sym: spx  },
             { label: 'Nasdaq 100', sym: ndx  },
-            { label: 'Dow Jones', sym: dji  },
-            { label: 'VIX',       sym: vix  },
-            { label: 'USD Index', sym: dxy  },
-          ].map(({ label, sym }) => (
-            <div key={label} className="flex items-center gap-2 shrink-0">
-              <span className="text-[11px] text-slate-500 font-medium">{label}</span>
-              <span className="text-[12px] font-mono font-bold text-slate-900">
-                {sym?.price != null ? sym.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}
-              </span>
-              {sym?.changePct != null && (
-                <span className={`text-[11px] font-mono font-bold ${pctCls(sym.changePct)}`}>
-                  {pct(sym.changePct)}
+            { label: 'Dow Jones',  sym: dji  },
+            { label: 'VIX',        sym: vix  },
+            { label: 'USD Index',  sym: dxy  },
+          ].map(({ label, sym }) => {
+            const inner = (
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-[11px] text-slate-500 font-medium">{label}</span>
+                <span className="text-[12px] font-mono font-bold text-slate-900 tabular-nums">
+                  {sym?.price != null ? sym.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}
                 </span>
-              )}
-            </div>
-          ))}
+                {sym?.changePct != null && (
+                  <span className={`text-[11px] font-mono font-bold tabular-nums ${pctCls(sym.changePct)}`}>
+                    {pct(sym.changePct)}
+                  </span>
+                )}
+              </div>
+            )
+            return sym ? (
+              <Link
+                key={label}
+                href={`/markets/${encodeURIComponent(sym.symbol)}`}
+                className="hover:opacity-70 transition-opacity"
+              >
+                {inner}
+              </Link>
+            ) : (
+              <div key={label}>{inner}</div>
+            )
+          })}
           {mkt && (
             <span className="text-[10px] text-slate-300 font-mono ml-auto shrink-0">
               {new Date(mkt.fetchedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
@@ -104,10 +118,10 @@ export default function MarketsPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_260px] gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(280px,300px)_1fr_minmax(280px,300px)] gap-4">
 
           {/* ── Left column ────────────────────────────────────────────────── */}
-          <div className="space-y-4 order-2 lg:order-1">
+          <div className="space-y-4 order-2 lg:order-1 min-w-0">
             {mkt ? (
               <>
                 <Section title="U.S. Equity Markets">
@@ -130,7 +144,7 @@ export default function MarketsPage() {
           </div>
 
           {/* ── Center column ──────────────────────────────────────────────── */}
-          <div className="space-y-4 order-1 lg:order-2">
+          <div className="space-y-4 order-1 lg:order-2 min-w-0">
             {/* Model Alerts — always first if present */}
             {ctx && ctx.modelAlerts.length > 0 && (
               <ModelAlerts alerts={ctx.modelAlerts} />
@@ -163,7 +177,7 @@ export default function MarketsPage() {
           </div>
 
           {/* ── Right column ───────────────────────────────────────────────── */}
-          <div className="space-y-4 order-3 hidden lg:block">
+          <div className="space-y-4 order-3 hidden lg:block min-w-0">
             {mkt ? (
               <>
                 <Section title="Currencies">
