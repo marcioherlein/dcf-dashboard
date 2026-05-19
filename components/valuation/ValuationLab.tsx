@@ -482,6 +482,11 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
   const annualIS: any[] = statementsData?.annual?.incomeStatement ?? []
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const annualCF: any[] = statementsData?.annual?.cashFlow ?? []
+
+  // FX rate: statementsData (fundamentalsTimeSeries) reports in financialCurrency (e.g. BRL for STNE).
+  // All absolute monetary TTM values must be converted to quote currency (USD for ADRs) before use.
+  const stmtFxRate = (apiData?.providerStatus?.fx?.rate as number | undefined) ?? 1
+
   const sparkRevenue  = annualIS.slice(-5).map((r: any) => { const v = (r.totalRevenue as number | null) ?? null; return v != null ? v * stmtFxRate : null })
   const sparkEbitda   = annualIS.slice(-5).map((r: any) => { const v = (r.EBITDA as number | null) ?? null; return v != null ? v * stmtFxRate : null })
   const sparkFCF      = annualCF.slice(-5).map((r: any) => { const v = (r.freeCashFlow as number | null) ?? null; return v != null ? v * stmtFxRate : null })
@@ -504,10 +509,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
 
   // CAGR analysis data
   const cagrAnalysis = apiData?.cagrAnalysis ?? {}
-
-  // FX rate: statementsData (fundamentalsTimeSeries) reports in financialCurrency (e.g. BRL for STNE).
-  // All absolute monetary TTM values must be converted to quote currency (USD for ADRs) before use.
-  const stmtFxRate = (apiData?.providerStatus?.fx?.rate as number | undefined) ?? 1
 
   // Annual chart data for method history panels
   const chartRevenueGrowth: HistoryChartDef['data'] = annualIS.slice(1).reduce<{ year: string; value: number }[]>((acc, r: any, i) => {
