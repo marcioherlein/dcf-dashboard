@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import React from 'react'
+import { NABadge, type NAReasonId } from '@/components/ui/na-badge'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -796,8 +798,8 @@ export default function ForecastTable({
         ? wd.totalDebtM + wd.marketCapM
         : null
 
-    const rows2col = [
-      { label: 'Cost of Debt',        value: wd.costOfDebt != null ? (wd.costOfDebt * 100).toFixed(2) + '%' : '—' },
+    const rows2col: { label: string; value: string | null; naReason?: NAReasonId }[] = [
+      { label: 'Cost of Debt',        value: wd.costOfDebt != null ? (wd.costOfDebt * 100).toFixed(2) + '%' : null, naReason: 'no-data' },
       { label: 'Tax Rate',            value: (wd.taxRate * 100).toFixed(2) + '%' },
       { label: 'After Tax Cost Debt', value: (wd.afterTaxCostOfDebt * 100).toFixed(1) + '%' },
       { label: 'Risk Free Rate',      value: (wd.rfRate * 100).toFixed(2) + '%' },
@@ -811,22 +813,24 @@ export default function ForecastTable({
       },
       { label: 'Beta',                value: wd.beta.toFixed(2) },
       { label: 'Cost of Equity',      value: (wd.costOfEquity * 100).toFixed(0) + '%' },
-      { label: 'Total Debt',          value: wd.totalDebtM != null ? fmtLargeM(wd.totalDebtM) : '—' },
-      { label: 'Market Cap',          value: wd.marketCapM != null ? fmtLargeM(wd.marketCapM) : '—' },
-      { label: 'Total Capital',       value: totalCapital != null ? fmtLargeM(totalCapital) : '—' },
-      { label: 'Debt Weighting',      value: wd.debtWeighting != null ? (wd.debtWeighting * 100).toFixed(0) + '%' : '—' },
-      { label: 'Equity Weighting',    value: wd.equityWeighting != null ? (wd.equityWeighting * 100).toFixed(0) + '%' : '—' },
+      { label: 'Total Debt',          value: wd.totalDebtM != null ? fmtLargeM(wd.totalDebtM) : null,          naReason: 'no-data' },
+      { label: 'Market Cap',          value: wd.marketCapM != null ? fmtLargeM(wd.marketCapM) : null,          naReason: 'no-data' },
+      { label: 'Total Capital',       value: totalCapital != null ? fmtLargeM(totalCapital) : null,             naReason: 'calc-error' },
+      { label: 'Debt Weighting',      value: wd.debtWeighting != null ? (wd.debtWeighting * 100).toFixed(0) + '%' : null,   naReason: 'calc-error' },
+      { label: 'Equity Weighting',    value: wd.equityWeighting != null ? (wd.equityWeighting * 100).toFixed(0) + '%' : null, naReason: 'calc-error' },
     ]
 
     return (
       <div className="bg-[#0d0d0d] px-6 py-4 border-t border-[#222]">
         <p className="text-[11px] font-semibold uppercase tracking-widest text-[#555] mb-3">WACC</p>
         <div className="grid grid-cols-[1fr_auto] gap-y-1 max-w-xs">
-          {rows2col.map(({ label, value }) => (
-            <>
-              <span key={`lbl-${label}`} className="text-[#666] text-[12px]">{label}</span>
-              <span key={`val-${label}`} className="text-[#e2e2e2] text-[12px] text-right">{value}</span>
-            </>
+          {rows2col.map(({ label, value, naReason }) => (
+            <React.Fragment key={label}>
+              <span className="text-[#666] text-[12px]">{label}</span>
+              <span className="text-[#e2e2e2] text-[12px] text-right">
+                {value != null ? value : <NABadge reason={naReason ?? 'no-data'} />}
+              </span>
+            </React.Fragment>
           ))}
           <span className="text-[#e2e2e2] text-[13px] font-semibold mt-1">WACC</span>
           <span className="text-[#4a9eff] text-[13px] font-semibold text-right mt-1">
@@ -865,7 +869,7 @@ export default function ForecastTable({
       ? (impliedPrice - td.currentPrice) / td.currentPrice : null
     const upsideColor = upside == null ? 'text-[#888]' : upside >= 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
 
-    function SummaryRow({ label, value, bold, color }: { label: string; value: string; bold?: boolean; color?: string }) {
+    function SummaryRow({ label, value, bold, color }: { label: string; value: React.ReactNode; bold?: boolean; color?: string }) {
       return (
         <div className={`flex items-center justify-between py-1 border-b border-[#1e1e1e] ${bold ? 'bg-[#151515]' : ''}`}>
           <span className={`text-xs ${bold ? 'font-semibold text-[#ccc]' : 'text-[#666]'}`}>{label}</span>
@@ -960,25 +964,25 @@ export default function ForecastTable({
 
         {/* Valuation summary bridge */}
         <div className="max-w-xs space-y-0">
-          <SummaryRow label="Terminal Value"          value={tv   != null ? fmtLargeM(tv)   : '—'} />
-          <SummaryRow label="PV of Terminal Value"    value={pvTv != null ? fmtLargeM(pvTv) : '—'} />
+          <SummaryRow label="Terminal Value"          value={tv   != null ? fmtLargeM(tv)   : <NABadge reason="calc-error" />} />
+          <SummaryRow label="PV of Terminal Value"    value={pvTv != null ? fmtLargeM(pvTv) : <NABadge reason="calc-error" />} />
           <SummaryRow label={isLfcf ? 'Cumulative PV of LFCF' : 'Cumulative PV of UFCF'} value={fmtLargeM(sumPvFlow)} />
           {isLfcf ? (
-            <SummaryRow label="Equity Value (LFCF)"  value={ev   != null ? fmtLargeM(ev)   : '—'} bold />
+            <SummaryRow label="Equity Value (LFCF)"  value={ev   != null ? fmtLargeM(ev)   : <NABadge reason="calc-error" />} bold />
           ) : (
             <>
-              <SummaryRow label="Enterprise Value"   value={ev   != null ? fmtLargeM(ev)   : '—'} bold />
-              <SummaryRow label="+ Cash"             value={td.cashM != null ? fmtLargeM(td.cashM) : '—'} />
-              <SummaryRow label="− Debt"             value={td.debtM != null ? fmtLargeM(td.debtM) : '—'} />
-              <SummaryRow label="Equity Value"       value={equityValue != null ? fmtLargeM(equityValue) : '—'} bold />
+              <SummaryRow label="Enterprise Value"   value={ev   != null ? fmtLargeM(ev)   : <NABadge reason="calc-error" />} bold />
+              <SummaryRow label="+ Cash"             value={td.cashM != null ? fmtLargeM(td.cashM) : <NABadge reason="no-data" />} />
+              <SummaryRow label="− Debt"             value={td.debtM != null ? fmtLargeM(td.debtM) : <NABadge reason="no-data" />} />
+              <SummaryRow label="Equity Value"       value={equityValue != null ? fmtLargeM(equityValue) : <NABadge reason="calc-error" />} bold />
             </>
           )}
-          <SummaryRow label="Shares Outstanding"      value={td.sharesM != null ? td.sharesM.toFixed(1) + 'M' : '—'} />
-          <SummaryRow label="Implied Share Price"     value={impliedPrice != null ? `${curr}${impliedPrice.toFixed(2)}` : '—'} bold />
+          <SummaryRow label="Shares Outstanding"      value={td.sharesM != null ? td.sharesM.toFixed(1) + 'M' : <NABadge reason="no-data" />} />
+          <SummaryRow label="Implied Share Price"     value={impliedPrice != null ? `${curr}${impliedPrice.toFixed(2)}` : <NABadge reason="calc-error" />} bold />
           <SummaryRow label="Current Share Price"     value={`${curr}${td.currentPrice.toFixed(2)}`} />
           <SummaryRow
             label="Implied Upside / (Downside)"
-            value={upside != null ? (upside >= 0 ? '+' : '') + (upside * 100).toFixed(1) + '%' : '—'}
+            value={upside != null ? (upside >= 0 ? '+' : '') + (upside * 100).toFixed(1) + '%' : <NABadge reason="calc-error" />}
             bold
             color={upsideColor}
           />
