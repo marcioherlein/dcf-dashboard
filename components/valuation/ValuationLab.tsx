@@ -23,6 +23,7 @@ import { fmtPrice, fmtPct, fmtLarge, fmtLargeCurrency } from '@/lib/formatters'
 import { SourceLabel } from '@/components/ui/source-label'
 import { TrendBadge } from '@/components/ui/trend-badge'
 import { MetricChip } from '@/components/ui/metric-chip'
+import { NABadge } from '@/components/ui/na-badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { cn } from '@/lib/utils'
 import { buildBusinessSummary } from '@/lib/simplifier/summaryBuilder'
@@ -313,7 +314,10 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                         </div>
                       ) : (
                         <span className="text-xs font-mono text-slate-500 shrink-0">
-                          {displayVal}{a.unit === '%' ? '%' : a.unit === 'x' ? '×' : ''}
+                          {displayVal === '—'
+                            ? <NABadge reason="no-data" />
+                            : <>{displayVal}{a.unit === '%' ? '%' : a.unit === 'x' ? '×' : ''}</>
+                          }
                         </span>
                       )}
                     </div>
@@ -334,7 +338,7 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                   <div key={i} className="flex items-center justify-between py-1.5">
                     <span className="text-xs text-slate-500 font-medium">{r.label}</span>
                     <span className={cn('font-bold font-mono text-sm', resultToneClass(r.tone))}>
-                      {r.formattedValue}
+                      {r.formattedValue === '—' ? <NABadge reason="calc-error" /> : r.formattedValue}
                     </span>
                   </div>
                 ))}
@@ -907,11 +911,12 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
                     })}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <MetricChip label="Total Debt"    value={ttmTotalDebt != null ? fmtLarge(ttmTotalDebt) : '—'} variant="default" />
-                    <MetricChip label="Cash & Equiv." value={ttmCash      != null ? fmtLarge(ttmCash)      : '—'} variant="positive" />
+                    <MetricChip label="Total Debt"    value={ttmTotalDebt != null ? fmtLarge(ttmTotalDebt) : ''} naReason={ttmTotalDebt == null ? 'no-data' : undefined} variant="default" />
+                    <MetricChip label="Cash & Equiv." value={ttmCash      != null ? fmtLarge(ttmCash)      : ''} naReason={ttmCash == null ? 'no-data' : undefined} variant="positive" />
                     <MetricChip
                       label="Net Debt"
-                      value={ttmNetDebt != null ? fmtLarge(ttmNetDebt) : '—'}
+                      value={ttmNetDebt != null ? fmtLarge(ttmNetDebt) : ''}
+                      naReason={ttmNetDebt == null ? 'no-data' : undefined}
                       variant={ttmNetDebt == null ? 'default' : ttmNetDebt < 0 ? 'positive' : 'warning'}
                     />
                   </div>

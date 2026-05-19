@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { NABadge, type NAReasonId } from '@/components/ui/na-badge'
 
 const chipVariants = cva(
   'inline-flex flex-col items-center rounded-lg border px-3 py-2 min-w-[60px]',
@@ -33,17 +34,19 @@ const valueVariants = cva('text-sm font-bold font-mono mt-0.5', {
 interface MetricChipProps extends VariantProps<typeof chipVariants> {
   label: string
   value: string
+  naReason?: NAReasonId
   className?: string
 }
 
-export function MetricChip({ label, value, variant, className }: MetricChipProps) {
-  const isNA = value === '—'
+export function MetricChip({ label, value, naReason, variant, className }: MetricChipProps) {
+  const isNA = naReason != null || value === '—'
   return (
     <div className={cn(chipVariants({ variant: isNA ? 'default' : variant }), className)}>
       <span className="text-label uppercase tracking-wider text-slate-400">{label}</span>
-      <span className={cn(valueVariants({ variant: isNA ? 'default' : variant }), isNA && 'text-slate-300')}>
-        {value}
-      </span>
+      {isNA
+        ? <NABadge reason={naReason ?? 'no-data'} className="mt-0.5" />
+        : <span className={cn(valueVariants({ variant }))}>{value}</span>
+      }
     </div>
   )
 }
