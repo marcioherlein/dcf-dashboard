@@ -16,13 +16,10 @@ async function fetchFredSeries(seriesId: string, fallback: number, asPercent = t
   }
 }
 
-// Fetches the latest 10-year US Treasury yield (DGS10) from FRED
-// Free API key required: https://fred.stlouisfed.org/docs/api/api_key.html
 export async function getRfRate(): Promise<number> {
   return fetchFredSeries('DGS10', 0.0429)
 }
 
-// Fetches the 2-year US Treasury yield (DGS2) — returns decimal (e.g. 0.0449)
 export async function get2YTreasury(): Promise<number | null> {
   const apiKey = process.env.FRED_API_KEY
   if (!apiKey) return null
@@ -30,10 +27,39 @@ export async function get2YTreasury(): Promise<number | null> {
   return val === -1 ? null : val
 }
 
-// Fetches ICE BofA US High Yield OAS spread (BAMLH0A0HYM2) — returns basis points as raw number
 export async function getHYSpread(): Promise<number | null> {
   const apiKey = process.env.FRED_API_KEY
   if (!apiKey) return null
   const val = await fetchFredSeries('BAMLH0A0HYM2', -1, false)
   return val === -1 ? null : val
 }
+
+export type YieldCurvePoint = {
+  tenor: string
+  label: string
+  yield: number | null
+}
+
+// Returns the full US Treasury yield curve in percent (e.g. 4.62 for 4.62%)
+export async function getYieldCurve(): Promise<YieldCurvePoint[]> {
+  const series: { id: string; tenor: string; label: string; fallback: number }[] = [
+    { id: 'DGS3MO', tenor: '3M',  label: '3 Month', fallback: 4.3 },
+    { id: 'DGS1',   tenor: '1Y',  label: '1 Year',  fallback: 4.1 },
+    { id: 'DGS2',   tenor: '2Y',  label: '2 Year',  fallback: 4.1 },
+    { id: 'DGS5',   tenor: '5Y',  label: '5 Year',  fallback: 4.2 },
+    { id: 'DGS10',  tenor: '10Y', label: '10 Year', fallback: 4.3 },
+    { id: 'DGS20',  tenor: '20Y', label: '20 Year', fallback: 4.7 },
+    { id: 'DGS30',  tenor: '30Y', label: '30 Year', fallback: 4.8 },
+  ]
+  const apiKey = process.env.FRED_API_KEY
+  if (!apiKey) return series.map(s => ({ tenor: s.tenor, label: s.label, yield: null }))
+  const results = await Promise.allSettled(
+    series.map(s => fetchFredSeries(s.id, -1))
+  )
+  return series.map((s, i) => {
+    const r = results[i]
+    const raw = r.status === 'fulfilled' ? r.value : -1
+    return { tenor: s.tenor, label: s.label, yield: raw === -1 ? null : +(raw * 100).toFixed(3) }
+  })
+}
+
