@@ -2,6 +2,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { TrendingUp, ChevronDown, DollarSign, Shield, BarChart2 } from 'lucide-react'
+import TickerStrip from '@/components/home/TickerStrip'
+import StockCardStrip from '@/components/home/StockCardStrip'
+import ChartSection from '@/components/home/ChartSection'
 
 interface SearchResult {
   symbol: string
@@ -10,6 +13,12 @@ interface SearchResult {
 }
 
 const EXAMPLE_TICKERS = ['AAPL', 'NVDA', 'MSFT', 'AMZN']
+
+const MARKETS = [
+  { flag: '🇺🇸', label: 'NYSE · NASDAQ' },
+  { flag: '🇧🇷', label: 'B3' },
+  { flag: '🇬🇧', label: 'LSE' },
+]
 
 // ── Cycling word animation ─────────────────────────────────────────────────────
 const ROTATING_PHRASES = [
@@ -48,6 +57,17 @@ function RotatingText({ phrases }: { phrases: string[] }) {
   )
 }
 
+// ── Inline SVG sparkline helpers ───────────────────────────────────────────────
+function miniSparklinePath(data: number[]): string {
+  const min = Math.min(...data), max = Math.max(...data)
+  const range = max - min || 1
+  return data.map((v, i) => {
+    const x = (i / (data.length - 1)) * 50
+    const y = 14 - ((v - min) / range) * 12
+    return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)},${y.toFixed(1)}`
+  }).join(' ')
+}
+
 // ── Animated investor journey ──────────────────────────────────────────────────
 const THESIS_TEXT = "Apple's services segment grows 14% YoY. Hardware at 25x P/E is a discount on a software company."
 
@@ -57,7 +77,25 @@ const STEP_LABELS = [
   { n: '03', title: 'Adjust model' },
   { n: '04', title: 'Write thesis' },
 ]
-const STEP_DURATIONS = [2800, 2800, 3200, 3600]
+const STEP_DURATIONS = [2800, 3200, 3400, 3600]
+
+const FCF_BARS = [
+  { year: 'FY1', val: 68, projected: false },
+  { year: 'FY2', val: 76, projected: false },
+  { year: 'FY3', val: 85, projected: true },
+  { year: 'FY4', val: 96, projected: true },
+  { year: 'FY5', val: 108, projected: true },
+  { year: 'TV',  val: 112, projected: true, terminal: true },
+]
+
+const HEALTH_BARS_STEP1 = [
+  { label: 'Profitability', score: 85, color: '#0B7A5E' },
+  { label: 'Liquidity',     score: 78, color: '#0F2A5E' },
+  { label: 'Growth',        score: 72, color: '#4a9eff' },
+]
+
+const BULL_SPARK = [168, 178, 190, 208, 222, 241, 265, 278]
+const BEAR_SPARK = [168, 175, 172, 165, 162, 168, 170, 168]
 
 function AnimatedJourney() {
   const [step, setStep] = useState(0)
@@ -67,6 +105,7 @@ function AnimatedJourney() {
   const [thesisLen, setThesisLen] = useState(0)
   const [wacc, setWacc] = useState(9.2)
   const [fairValue, setFairValue] = useState(236)
+  const [barsVisible, setBarsVisible] = useState(false)
 
   const goToStep = (i: number) => { setStep(i); setStepKey(k => k + 1) }
 
@@ -80,7 +119,7 @@ function AnimatedJourney() {
   // Reset state on step change
   useEffect(() => {
     setTypedTicker(''); setShowDropdown(false); setThesisLen(0)
-    setWacc(9.2); setFairValue(236)
+    setWacc(9.2); setFairValue(236); setBarsVisible(false)
   }, [stepKey])
 
   // Step 0: typewriter
@@ -92,6 +131,13 @@ function AnimatedJourney() {
       if (i >= 4) { clearInterval(t); setTimeout(() => setShowDropdown(true), 320) }
     }, 130)
     return () => clearInterval(t)
+  }, [stepKey, step])
+
+  // Step 1: trigger health bars
+  useEffect(() => {
+    if (step !== 1) return
+    const t = setTimeout(() => setBarsVisible(true), 500)
+    return () => clearTimeout(t)
   }, [stepKey, step])
 
   // Step 2: animate WACC + fair value
@@ -135,7 +181,7 @@ function AnimatedJourney() {
         {/* Screen */}
         <div
           key={stepKey}
-          className="bg-[#F6F7F9] p-5 min-h-[240px] flex flex-col justify-center"
+          className="bg-[#F6F7F9] p-5 min-h-[260px] flex flex-col justify-center"
           style={{ animation: 'step-fade-in 0.35s cubic-bezier(0.16,1,0.3,1) forwards' }}
         >
           {/* Step 0 — search */}
@@ -168,59 +214,99 @@ function AnimatedJourney() {
             </div>
           )}
 
-          {/* Step 1 — grade card */}
+          {/* Step 1 — grade card + health bars */}
           {step === 1 && (
-            <div className="rounded-xl bg-white border border-slate-200 shadow-sm p-4 space-y-3" style={{ animation: 'step-scale-in 0.42s cubic-bezier(0.34,1.56,0.64,1) forwards' }}>
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 rounded-xl bg-emerald-600 flex items-center justify-center shrink-0">
-                  <span className="text-2xl font-extrabold text-white leading-none" style={{ fontFamily: 'Manrope, system-ui' }}>B+</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className="text-[11px] font-bold bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-slate-700">AAPL</span>
-                    <span className="text-[10px] text-slate-400">Technology</span>
+            <div className="space-y-2.5">
+              <div className="rounded-xl bg-white border border-slate-200 shadow-sm p-4 space-y-3" style={{ animation: 'step-scale-in 0.42s cubic-bezier(0.34,1.56,0.64,1) forwards' }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-xl bg-emerald-600 flex items-center justify-center shrink-0">
+                    <span className="text-2xl font-extrabold text-white leading-none" style={{ fontFamily: 'Manrope, system-ui' }}>B+</span>
                   </div>
-                  <div className="text-sm font-bold text-slate-900">Apple Inc.</div>
-                  <div className="text-[10px] text-slate-400">Good overall</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="text-[11px] font-bold bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-slate-700">AAPL</span>
+                      <span className="text-[10px] text-slate-400">Technology</span>
+                    </div>
+                    <div className="text-sm font-bold text-slate-900">Apple Inc.</div>
+                    <div className="text-[10px] text-slate-400">Good overall</div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-xl font-extrabold text-slate-900 font-mono">$211.40</div>
+                    <div className="text-[12px] font-semibold text-emerald-600">▲ +0.87%</div>
+                  </div>
                 </div>
-                <div className="text-right shrink-0">
-                  <div className="text-xl font-extrabold text-slate-900 font-mono">$211.40</div>
-                  <div className="text-[12px] font-semibold text-emerald-600">▲ +0.87%</div>
+                <div className="rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2 text-[11px] text-emerald-800">
+                  DCF model suggests <strong>11% upside</strong> — trading below our $236 estimate.
                 </div>
               </div>
-              <div className="rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2 text-[11px] text-emerald-800">
-                DCF model suggests <strong>11% upside</strong> — trading below our $236 estimate.
-              </div>
-              <div className="grid grid-cols-3 gap-1.5">
-                {[['Market Cap','$3.2T'],['P/E','34.1×'],['52w High','$237']].map(([l, v]) => (
-                  <div key={l} className="rounded-lg bg-slate-50 border border-slate-100 px-2 py-1.5">
-                    <div className="text-[9px] font-bold uppercase tracking-wide text-slate-400">{l}</div>
-                    <div className="text-[12px] font-semibold font-mono text-slate-800">{v}</div>
+
+              {/* Animated health bars */}
+              <div className="rounded-xl bg-white border border-slate-200 px-4 py-3 space-y-2" style={{ animation: 'step-fade-in 0.3s ease 0.3s both' }}>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Health scores</p>
+                {HEALTH_BARS_STEP1.map(({ label, score, color }, i) => (
+                  <div key={label}>
+                    <div className="flex justify-between mb-0.5">
+                      <span className="text-[10px] text-slate-500">{label}</span>
+                      <span className="text-[10px] font-mono font-semibold text-slate-700">{score}</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                      <div
+                        className="h-1.5 rounded-full"
+                        style={{
+                          width: barsVisible ? `${score}%` : '0%',
+                          background: color,
+                          transition: `width 0.55s cubic-bezier(0.16,1,0.3,1) ${i * 100}ms`,
+                        }}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Step 2 — adjust model */}
+          {/* Step 2 — DCF model with FCF bar chart */}
           {step === 2 && (
             <div className="space-y-2.5">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Adjust your DCF model</p>
-              {[
-                { label: 'WACC',       val: wacc.toFixed(1) + '%', pct: (wacc - 7) / (12 - 7) },
-                { label: 'CAGR',       val: '12.0%',               pct: 0.52 },
-                { label: 'Terminal G', val: '2.5%',                 pct: 0.25 },
-              ].map(({ label, val, pct }) => (
-                <div key={label} className="rounded-xl bg-white border border-slate-200 px-4 py-2.5">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[12px] font-semibold text-slate-700">{label}</span>
-                    <span className="text-[12px] font-bold font-mono text-slate-900">{val}</span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                    <div className="h-full rounded-full bg-[#0F2A5E] transition-all duration-150" style={{ width: `${Math.min(100, pct * 100)}%` }} />
-                  </div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">DCF cash flow model</p>
+
+              {/* Mini FCF bar chart */}
+              <div className="rounded-xl bg-white border border-slate-200 px-3 py-3">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-2.5">Projected free cash flow ($B)</p>
+                <div className="flex items-end gap-1" style={{ height: 56 }}>
+                  {FCF_BARS.map((bar, i) => (
+                    <div key={bar.year} className="flex-1 flex flex-col items-center gap-0.5">
+                      <div
+                        className="w-full rounded-t-sm"
+                        style={{
+                          height: `${(bar.val / 120) * 46}px`,
+                          background: bar.terminal ? '#C9A84C' : bar.projected ? '#1e3a6e' : '#0F2A5E',
+                          transformOrigin: 'bottom',
+                          animation: `bar-grow-up 0.45s ease-out ${i * 80}ms both`,
+                        }}
+                      />
+                      <span className="text-[7px] text-slate-400">{bar.year}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+                <div className="mt-1.5 flex gap-3 text-[8px] text-slate-400">
+                  <span><span className="inline-block w-1.5 h-1.5 rounded-sm bg-[#0F2A5E] mr-1 align-middle" />Actual</span>
+                  <span><span className="inline-block w-1.5 h-1.5 rounded-sm bg-[#1e3a6e] mr-1 align-middle opacity-75" />Projected</span>
+                  <span><span className="inline-block w-1.5 h-1.5 rounded-sm bg-[#C9A84C] mr-1 align-middle" />Terminal</span>
+                </div>
+              </div>
+
+              {/* WACC slider */}
+              <div className="rounded-xl bg-white border border-slate-200 px-4 py-2.5">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[12px] font-semibold text-slate-700">WACC</span>
+                  <span className="text-[12px] font-bold font-mono text-slate-900">{wacc.toFixed(1)}%</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                  <div className="h-full rounded-full bg-[#0F2A5E] transition-all duration-150" style={{ width: `${Math.min(100, ((wacc - 7) / (12 - 7)) * 100)}%` }} />
+                </div>
+              </div>
+
               <div className="rounded-xl bg-white border border-emerald-200 px-4 py-2.5 flex items-center justify-between">
                 <span className="text-[12px] font-semibold text-slate-700">Fair value per share</span>
                 <span className="text-lg font-extrabold font-mono text-emerald-700">${Math.round(fairValue)}</span>
@@ -228,11 +314,11 @@ function AnimatedJourney() {
             </div>
           )}
 
-          {/* Step 3 — thesis */}
+          {/* Step 3 — thesis with sparklines */}
           {step === 3 && (
             <div className="space-y-3">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Investment thesis</p>
-              <div className="rounded-xl bg-white border border-slate-200 px-4 py-3 min-h-[80px]">
+              <div className="rounded-xl bg-white border border-slate-200 px-4 py-3 min-h-[64px]">
                 <p className="text-[12px] text-slate-700 leading-relaxed">
                   {THESIS_TEXT.slice(0, thesisLen)}
                   {thesisLen < THESIS_TEXT.length && (
@@ -241,13 +327,35 @@ function AnimatedJourney() {
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <div className="rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2">
-                  <div className="text-[9px] font-bold uppercase text-emerald-600 mb-0.5">Bull case</div>
+                {/* Bull case with sparkline */}
+                <div className="rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2 space-y-1.5">
+                  <div className="text-[9px] font-bold uppercase text-emerald-600">Bull case</div>
                   <div className="text-sm font-bold font-mono text-emerald-700">$278</div>
+                  <svg width="50" height="16" viewBox="0 0 50 16" className="w-full" style={{ overflow: 'visible' }}>
+                    <path
+                      d={miniSparklinePath(BULL_SPARK)}
+                      fill="none"
+                      stroke="#0B7A5E"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 </div>
-                <div className="rounded-lg bg-amber-50 border border-amber-100 px-3 py-2">
-                  <div className="text-[9px] font-bold uppercase text-amber-600 mb-0.5">Bear case</div>
+                {/* Bear case with sparkline */}
+                <div className="rounded-lg bg-amber-50 border border-amber-100 px-3 py-2 space-y-1.5">
+                  <div className="text-[9px] font-bold uppercase text-amber-600">Bear case</div>
                   <div className="text-sm font-bold font-mono text-amber-700">$168</div>
+                  <svg width="50" height="16" viewBox="0 0 50 16" className="w-full" style={{ overflow: 'visible' }}>
+                    <path
+                      d={miniSparklinePath(BEAR_SPARK)}
+                      fill="none"
+                      stroke="#D97706"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 </div>
               </div>
             </div>
@@ -470,7 +578,7 @@ function DemoGradeCard({ onAnalyze }: { onAnalyze: (ticker: string) => void }) {
   )
 }
 
-// ── Trust points (methodology transparency — no accuracy claim) ───────────────
+// ── Trust points ──────────────────────────────────────────────────────────────
 const TRUST_POINTS = [
   {
     icon: (
@@ -542,9 +650,9 @@ export default function LandingPage() {
             <HeroSearch />
           </div>
 
-          {/* Example pills below search */}
+          {/* Example tickers + markets covered */}
           <div className="hero-reveal mt-4 flex items-center justify-center gap-2 flex-wrap" style={{ animationDelay: '340ms' }}>
-            <span className="text-xs text-slate-400">Or try:</span>
+            <span className="text-xs text-slate-400">Try:</span>
             {EXAMPLE_TICKERS.map((t) => (
               <button
                 key={t}
@@ -556,21 +664,46 @@ export default function LandingPage() {
             ))}
           </div>
 
+          {/* Markets covered */}
+          <div className="hero-reveal mt-3 flex items-center justify-center gap-2 flex-wrap" style={{ animationDelay: '390ms' }}>
+            <span className="text-xs text-slate-400">Markets:</span>
+            {MARKETS.map(({ flag, label }, i) => (
+              <span
+                key={label}
+                className="rounded-full bg-white/80 border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 shadow-sm"
+                style={{
+                  animation: `fade-up 0.4s cubic-bezier(0.16,1,0.3,1) ${420 + i * 60}ms both`,
+                }}
+              >
+                {flag} {label}
+              </span>
+            ))}
+          </div>
+
           {/* Animated investor journey */}
-          <div className="hero-reveal mt-12" style={{ animationDelay: '440ms' }}>
+          <div className="hero-reveal mt-12" style={{ animationDelay: '460ms' }}>
             <p className="text-xs text-slate-400 mb-4 uppercase tracking-wider font-semibold">See how it works</p>
             <AnimatedJourney />
           </div>
 
           {/* Demo card — supporting evidence */}
-          <div className="hero-reveal mt-12" style={{ animationDelay: '520ms' }}>
+          <div className="hero-reveal mt-12" style={{ animationDelay: '540ms' }}>
             <p className="text-xs text-slate-400 mb-4 uppercase tracking-wider font-semibold">What an analysis looks like</p>
             <DemoGradeCard onAnalyze={(t) => router.push(`/stock/${t}`)} />
           </div>
         </div>
       </section>
 
-      {/* Trust points — methodology transparency, no accuracy claim */}
+      {/* Live market ticker strip */}
+      <TickerStrip />
+
+      {/* Stock card strip — scroll-triggered */}
+      <StockCardStrip />
+
+      {/* Chart section — dark, data visualization */}
+      <ChartSection />
+
+      {/* Trust points — methodology transparency */}
       <section className="bg-white border-y border-slate-200">
         <div className="mx-auto max-w-5xl px-6 py-16">
           <div className="text-center mb-10">
