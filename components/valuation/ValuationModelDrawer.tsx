@@ -7,9 +7,10 @@
 export type ValuationMethodId =
   | 'forward_pe'
   | 'revenue_multiple'
-  | 'dcf'
+  | 'ev_ebitda'
   | 'reverse_dcf'
   | 'scenario_blend'
+  | 'core_dcf'
 
 export type AssumptionSource =
   | 'analyst_estimate'

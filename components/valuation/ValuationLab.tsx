@@ -52,7 +52,7 @@ function upsideTone(v: number | null): ValuationResult['tone'] {
 function buildForwardPEResults(result: ReturnType<typeof computeForwardPE>, currentPrice: number, currency = 'USD'): ValuationResult[] {
   const N = 5; const targetYear = new Date().getFullYear() + N
   return [
-    { label: 'Actual Price',         value: currentPrice,             formattedValue: fmtPrice(currentPrice, currency),             tone: 'neutral' },
+    { label: 'Current Price',        value: currentPrice,             formattedValue: fmtPrice(currentPrice, currency),             tone: 'neutral' },
     { label: `${targetYear} Target`, value: result.futureTargetPrice, formattedValue: fmtPrice(result.futureTargetPrice, currency), tone: 'neutral' },
     { label: 'Fair Value Today',     value: result.fairValueToday,    formattedValue: fmtPrice(result.fairValueToday, currency),    tone: upsideTone(result.upsidePct) },
     { label: '1Y Price Target',      value: result.target1Y,          formattedValue: fmtPrice(result.target1Y, currency),         tone: 'neutral' },
@@ -67,7 +67,7 @@ function buildForwardPEResults(result: ReturnType<typeof computeForwardPE>, curr
 function buildRevMultipleResults(result: ReturnType<typeof computeRevenueMultiple>, currentPrice: number, currency = 'USD'): ValuationResult[] {
   const N = 5; const targetYear = new Date().getFullYear() + N
   return [
-    { label: 'Actual Price',         value: currentPrice,             formattedValue: fmtPrice(currentPrice, currency),             tone: 'neutral' },
+    { label: 'Current Price',        value: currentPrice,             formattedValue: fmtPrice(currentPrice, currency),             tone: 'neutral' },
     { label: `${targetYear} Target`, value: result.futureTargetPrice, formattedValue: fmtPrice(result.futureTargetPrice, currency), tone: 'neutral' },
     { label: 'Fair Value Today',     value: result.fairValueToday,    formattedValue: fmtPrice(result.fairValueToday, currency),    tone: upsideTone(result.upsidePct) },
     { label: '1Y Price Target',      value: result.target1Y,          formattedValue: fmtPrice(result.target1Y, currency),         tone: 'neutral' },
@@ -95,7 +95,7 @@ function buildEVEBITDAResults(result: ReturnType<typeof computeEVEBITDA>, curren
     { label: 'Enterprise Value',   value: result.enterpriseValue,   formattedValue: fmtB(result.enterpriseValue),                tone: 'neutral' },
     { label: 'Equity Value',       value: result.equityValue,       formattedValue: fmtB(result.equityValue),                    tone: 'neutral' },
     { label: 'Fair Value / Share', value: result.fairValuePerShare, formattedValue: fmtPrice(result.fairValuePerShare, currency), tone: upsideTone(result.upsidePct) },
-    { label: 'Actual Price',       value: currentPrice,             formattedValue: fmtPrice(currentPrice, currency),            tone: 'neutral' },
+    { label: 'Current Price',      value: currentPrice,             formattedValue: fmtPrice(currentPrice, currency),            tone: 'neutral' },
     { label: 'Potential Upside',   value: result.upsidePct,         formattedValue: fmtPctSigned(result.upsidePct),              tone: upsideTone(result.upsidePct) },
   ]
 }
@@ -553,8 +553,9 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
     return acc
   }, []).slice(-5)
 
-  // fairValue.sharesOutstanding is in millions (sharesM); TTM balance sheet shares are absolute
-  const sharesAbsolute = ttmShares ?? (apiData?.fairValue?.sharesOutstanding != null ? apiData.fairValue.sharesOutstanding * 1e6 : null)
+  // fairValue.sharesOutstanding is in millions (ADR-equivalent); TTM balance sheet shares may be ordinary
+  // For ADRs (TSM: 5 ordinary = 1 ADR), fairValue.sharesOutstanding is already ADR-adjusted — prefer it
+  const sharesAbsolute = (apiData?.fairValue?.sharesOutstanding != null ? apiData.fairValue.sharesOutstanding * 1e6 : null) ?? ttmShares
 
   const ebitdaMargin  = ttmRevenue && ttmRevenue > 0 && ttmEbitda     != null ? ttmEbitda     / ttmRevenue : null
   const fcfMarginPct  = ttmRevenue && ttmRevenue > 0 && ttmFCF        != null ? ttmFCF        / ttmRevenue : null
@@ -669,8 +670,11 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
     const actualEvEbitda = multEstimates.find(e => e.multiple === 'EV/EBITDA')?.actualValue ?? null
     const companyEVEBITDAStr = actualEvEbitda != null && actualEvEbitda > 0 ? `${actualEvEbitda.toFixed(1)}×` : 'N/A'
     const exitMultipleText = `Sector standard: ${multiple.toFixed(0)}× (${sect} sector median); company current EV/EBITDA: ${companyEVEBITDAStr}`
+    const financialSectorWarning = /financial|bank|insurance|fintech|payment/i.test(sect)
+      ? 'EV/EBITDA is less reliable for financial-sector companies (banks, fintechs, payment processors) because balance-sheet debt is an operating input, not leverage — consider P/E or P/Book instead.'
+      : null
     return {
-      id: 'reverse_dcf' as ValuationMethodId,
+      id: 'ev_ebitda',
       title: 'EV/EBITDA', subtitle: 'Enterprise value to EBITDA exit multiple',
       methodDescription: "Applies a sector-typical EV/EBITDA multiple to TTM earnings for a spot enterprise value. Subtracts net debt, divides by shares. No growth assumptions required — it's a current-state valuation.",
       companyName: apiData?.companyName ?? ticker, ticker, currency,
@@ -687,7 +691,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
       ],
       formulaLines: [],
       results:  buildEVEBITDAResults(evEbitdaResult, currentPrice, currency),
-      warnings: evEbitdaResult.guardErrors,
+      warnings: [...(evEbitdaResult.guardErrors ?? []), ...(financialSectorWarning ? [financialSectorWarning] : [])],
       fairValueSummary: evEbitdaResult.fairValuePerShare,
       currentPrice,
     }
@@ -701,11 +705,12 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
     apiData?.financialStatements?.cashFlow ?? []
 
   const lastActualRevenue = useMemo(() => {
-    if (ttmRevenue != null) return ttmRevenue
+    // Apply stmtFxRate so revenue is in quote currency (USD for ADRs like STNE, PAGS, VALE, TSM)
+    if (ttmRevenue != null) return ttmRevenue * stmtFxRate
     const actuals = incomeRows.filter(r => !r.isProjected && r.revenue != null && r.revenue > 0)
     const revM = actuals.length > 0 ? actuals[actuals.length - 1].revenue! : null
-    return revM != null ? revM * 1e6 : null  // financialStatements revenue is in millions
-  }, [incomeRows, ttmRevenue])
+    return revM != null ? revM * 1e6 : null  // financialStatements revenue is already in USD millions
+  }, [incomeRows, ttmRevenue, stmtFxRate])
 
   const lastFCFMargin = useMemo(() => {
     // Use both from the same scale to keep the ratio consistent
@@ -800,11 +805,11 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
 
   // ── Summary ───────────────────────────────────────────────────────────────
   const summaryMethods: MethodResult[] = [
-    { id: 'forward_pe',       label: 'Forward P/E (5Y)',   fairValue: fwdPEResult.fairValueToday,       bullFairValue: scenarioResult.scenarios.find(s => s.label === 'bull')?.fairValue ?? null, bearFairValue: scenarioResult.scenarios.find(s => s.label === 'bear')?.fairValue ?? null, upsidePct: fwdPEResult.upsidePct,          weight: 0.30 },
-    { id: 'ev_ebitda',        label: 'EV/EBITDA',          fairValue: evEbitdaResult.fairValuePerShare, upsidePct: evEbitdaResult.upsidePct,      weight: 0.25 },
-    { id: 'revenue_multiple', label: 'Revenue Multiple',   fairValue: revMultResult.fairValueToday,     upsidePct: revMultResult.upsidePct,       weight: 0.20 },
-    { id: 'scenario_blend',   label: 'DCF (FCFF Blend)',   fairValue: (apiData?.valuationMethods?.triangulatedFairValue as number | null) ?? null, upsidePct: (apiData?.valuationMethods?.triangulatedUpsidePct as number | null) ?? null, weight: 0.15 },
-    { id: 'reverse_dcf',      label: 'Reverse DCF',        fairValue: null,                             upsidePct: null,                          weight: 0.10 },
+    { id: 'forward_pe',       label: 'Forward P/E (5Y)',        fairValue: fwdPEResult.fairValueToday,       bullFairValue: scenarioResult.scenarios.find(s => s.label === 'bull')?.fairValue ?? null, bearFairValue: scenarioResult.scenarios.find(s => s.label === 'bear')?.fairValue ?? null, upsidePct: fwdPEResult.upsidePct,                weight: 0.30 },
+    { id: 'ev_ebitda',        label: 'EV/EBITDA',               fairValue: evEbitdaResult.fairValuePerShare, upsidePct: evEbitdaResult.upsidePct,                                                                                                                                           weight: 0.25 },
+    { id: 'revenue_multiple', label: 'Revenue Multiple',        fairValue: revMultResult.fairValueToday,     upsidePct: revMultResult.upsidePct,                                                                                                                                            weight: 0.20 },
+    { id: 'scenario_blend',   label: 'Scenario Blend',          fairValue: scenarioResult.weightedFairValue ?? null, bullFairValue: scenarioResult.scenarios.find(s => s.label === 'bull')?.fairValue ?? null, bearFairValue: scenarioResult.scenarios.find(s => s.label === 'bear')?.fairValue ?? null, upsidePct: scenarioResult.weightedFairValue != null ? (scenarioResult.weightedFairValue - currentPrice) / currentPrice : null, weight: 0.15 },
+    { id: 'core_dcf',         label: 'Core DCF (FCFF/FCFE/DDM)', fairValue: (apiData?.valuationMethods?.triangulatedFairValue as number | null) ?? null, upsidePct: (apiData?.valuationMethods?.triangulatedUpsidePct as number | null) ?? null, weight: 0.10 },
   ]
 
   return (

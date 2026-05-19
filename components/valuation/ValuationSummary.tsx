@@ -4,7 +4,7 @@ import {
   ComposedChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   ReferenceLine, Cell,
 } from 'recharts'
-import { fmtPrice, fmtPct, upsideZone, zoneBadgeClass } from '@/lib/formatters'
+import { fmtPrice, fmtPct, fmtAxisTick, upsideZone, zoneBadgeClass } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import { TrendBadge } from '@/components/ui/trend-badge'
 import { NumberDisplay } from '@/components/ui/number-display'
@@ -115,16 +115,16 @@ export function ConsensusRangeBar({
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function RangeTooltip({ active, payload }: { active?: boolean; payload?: any[] }) {
+function RangeTooltip({ active, payload, currency = 'USD' }: { active?: boolean; payload?: any[]; currency?: string }) {
   if (!active || !payload?.length) return null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const d = payload[0]?.payload as Record<string, any>
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-float px-4 py-3 text-xs min-w-[160px]">
       <div className="font-bold text-slate-800 mb-2">{d.label}</div>
-      {d.base != null && <div className="text-slate-600 flex justify-between gap-4"><span>Base</span><span className="font-semibold font-mono text-slate-900">${d.base.toFixed(2)}</span></div>}
-      {d.high > 0 && <div className="text-emerald-600 flex justify-between gap-4"><span>Bull</span><span className="font-mono">${(d.base + d.range).toFixed(2)}</span></div>}
-      {d.low > 0  && <div className="text-red-500 flex justify-between gap-4"><span>Bear</span><span className="font-mono">${d.low.toFixed(2)}</span></div>}
+      {d.base != null && <div className="text-slate-600 flex justify-between gap-4"><span>Base</span><span className="font-semibold font-mono text-slate-900">{fmtPrice(d.base, currency)}</span></div>}
+      {d.high > 0 && <div className="text-emerald-600 flex justify-between gap-4"><span>Bull</span><span className="font-mono">{fmtPrice(d.base + d.range, currency)}</span></div>}
+      {d.low > 0  && <div className="text-red-500 flex justify-between gap-4"><span>Bear</span><span className="font-mono">{fmtPrice(d.low, currency)}</span></div>}
       {d.upside != null && (
         <div className={cn('mt-2 font-bold text-sm', d.upside >= 0 ? 'text-emerald-600' : 'text-red-500')}>
           {fmtPct(d.upside)} upside
@@ -217,7 +217,7 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
                   tick={{ fontSize: 10, fill: '#94a3b8' }}
                   tickLine={false}
                   axisLine={false}
-                  tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(0)}`}
+                  tickFormatter={v => fmtAxisTick(v as number, currency)}
                 />
                 <YAxis
                   type="category"
@@ -227,7 +227,7 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
                   axisLine={false}
                   width={112}
                 />
-                <Tooltip content={<RangeTooltip />} cursor={{ fill: '#f1f5f9' }} />
+                <Tooltip content={<RangeTooltip currency={currency} />} cursor={{ fill: '#f1f5f9' }} />
 
                 {/* Transparent offset bar (0 → low) */}
                 <Bar dataKey="low" stackId="r" fill="transparent" isAnimationActive={false} />
@@ -250,7 +250,7 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
                   strokeWidth={2}
                   strokeDasharray="4 3"
                   label={{
-                    value: `$${currentPrice.toFixed(0)}`,
+                    value: fmtPrice(currentPrice, currency),
                     position: 'insideTopRight',
                     fontSize: 10,
                     fill: '#475569',
