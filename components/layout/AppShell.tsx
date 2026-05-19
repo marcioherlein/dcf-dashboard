@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import TopBar from './TopBar'
+import BottomNav from './BottomNav'
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -9,9 +10,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       }>
         <TopBar />
       </Suspense>
-      <div className="pt-12">
+      {/* pb-16 on mobile to clear the bottom nav; no padding on lg+ */}
+      <div className="pt-12 pb-16 lg:pb-0">
         {children}
       </div>
+      <BottomNav />
     </div>
   )
 }
