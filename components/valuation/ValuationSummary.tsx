@@ -1,6 +1,6 @@
 'use client'
 
-import { fmtPrice, fmtPct, upsideZone, zoneBadgeClass } from '@/lib/formatters'
+import { fmtPrice, upsideZone, zoneBadgeClass } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import { TrendBadge } from '@/components/ui/trend-badge'
 import { NumberDisplay } from '@/components/ui/number-display'

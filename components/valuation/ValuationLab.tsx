@@ -363,7 +363,7 @@ interface ValuationLabProps {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function ValuationLab({ apiData, ticker, statementsData, onNavigateToFinancials, onWeightedFVChange }: ValuationLabProps) {
+export default function ValuationLab({ apiData, ticker, statementsData, onWeightedFVChange }: ValuationLabProps) {
   const [overrides,    setOverrides]    = useState<OverridesMap>({})
 
   const currency     = apiData?.quote?.currency ?? 'USD'

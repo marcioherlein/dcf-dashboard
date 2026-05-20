@@ -137,31 +137,20 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
   const [terminalMethod, setTerminalMethod] = useState<'perpetuity' | 'multiple'>('multiple')
 
   // Scenario presets
-  type Preset = 'conservative' | 'base' | 'optimistic'
-  const [preset, setPreset] = useState<Preset>('base')
-  const PRESET_OFFSETS: Record<Preset, { cagr: number; wacc: number; terminalG: number }> = {
-    conservative: { cagr: -0.02, wacc: 0.01,  terminalG: -0.005 },
-    base:         { cagr: 0,     wacc: 0,      terminalG: 0 },
-    optimistic:   { cagr: 0.02,  wacc: -0.01,  terminalG: 0.005 },
-  }
+  const PRESET_OFFSETS = { cagr: 0, wacc: 0, terminalG: 0 }
 
   const baseInput: ModellingInput = useMemo(
-    () => normalizeModellingInputs(ticker, apiData, statementsData, cagrOverride !== null ? Math.max(0, cagrOverride + PRESET_OFFSETS[preset].cagr) : undefined),
+    () => normalizeModellingInputs(ticker, apiData, statementsData, cagrOverride !== null ? Math.max(0, cagrOverride + PRESET_OFFSETS.cagr) : undefined),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ticker, apiData, statementsData, cagrOverride, preset]
+    [ticker, apiData, statementsData, cagrOverride]
   )
 
   // Row-level cell overrides (keyed by year string then field name)
   const [rowOverrides, setRowOverrides] = useState<Record<string, Record<string, number>>>({})
 
-  // Reset row overrides whenever the preset changes
-  useEffect(() => {
-    setRowOverrides({})
-  }, [preset])
-
-  const wacc = Math.max(0.01, (waccOverride ?? baseInput.wacc) + PRESET_OFFSETS[preset].wacc)
-  const cagr = Math.max(0, (cagrOverride ?? baseInput.cagr) + PRESET_OFFSETS[preset].cagr)
-  const terminalG = Math.max(0, (terminalGOverride ?? baseInput.terminalG) + PRESET_OFFSETS[preset].terminalG)
+  const wacc = Math.max(0.01, (waccOverride ?? baseInput.wacc) + PRESET_OFFSETS.wacc)
+  const cagr = Math.max(0, (cagrOverride ?? baseInput.cagr) + PRESET_OFFSETS.cagr)
+  const terminalG = Math.max(0, (terminalGOverride ?? baseInput.terminalG) + PRESET_OFFSETS.terminalG)
   const taxRate = baseInput.taxRate
 
   // Build assumption set (for exitMultiple default)
