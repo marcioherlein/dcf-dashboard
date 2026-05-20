@@ -9,7 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 const geist = Inter({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
-  title: "Clairo — Know if a stock is worth buying",
+  title: "Rationale — Know if a stock is worth buying",
   description: "Know if a stock is worth buying — before you buy. DCF-based fair value, plain-English health grades, and interactive scenario modeling. Free.",
 };
 

@@ -173,7 +173,7 @@ function AnimatedJourney() {
           <div className="w-3 h-3 rounded-full bg-[#28C840]" />
           <div className="mx-auto flex items-center gap-1.5 bg-white border border-slate-200 rounded-md px-3 py-0.5">
             <svg className="w-2.5 h-2.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx={12} cy={12} r={9}/></svg>
-            <span className="text-[11px] text-slate-400 font-mono">clairo.ai/stock/AAPL</span>
+            <span className="text-[11px] text-slate-400 font-mono">rationale.capital/stock/AAPL</span>
           </div>
           <div className="w-3 h-3 opacity-0" />
         </div>

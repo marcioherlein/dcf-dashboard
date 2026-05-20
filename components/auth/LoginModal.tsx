@@ -87,7 +87,7 @@ export default function LoginModal({ onClose, intent, headline }: Props) {
         </button>
 
         <p className="mt-5 text-[11px] text-slate-400">
-          Clairo is free during beta. No credit card required.
+          Rationale is free during beta. No credit card required.
         </p>
       </div>
     </div>
