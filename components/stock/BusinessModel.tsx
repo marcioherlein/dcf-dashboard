@@ -136,14 +136,14 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
   ]
 
   return (
-    <div className="rounded-2xl bg-white border border-slate-200 shadow-card p-6">
-      <h2 className="text-base font-semibold text-slate-900 mb-4">The Business</h2>
+    <div className="rounded-2xl glass-card border-[rgba(59,130,246,0.15)] p-6">
+      <h2 className="text-base font-semibold text-slate-100 mb-4">The Business</h2>
 
       {/* Context pills */}
       {pills.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
           {pills.map((p) => (
-            <span key={p.label} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
+            <span key={p.label} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-400">
               {p.label}
             </span>
           ))}
@@ -152,9 +152,9 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
 
       {/* Full description */}
       {description ? (
-        <p className="text-sm text-slate-600 leading-relaxed mb-6">{description}</p>
+        <p className="text-sm text-slate-400 leading-relaxed mb-6">{description}</p>
       ) : (
-        <p className="text-sm text-slate-400 mb-6">No business description available for {ticker}.</p>
+        <p className="text-sm text-slate-500 mb-6">No business description available for {ticker}.</p>
       )}
 
       {/* Plain-English stat cards */}

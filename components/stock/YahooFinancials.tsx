@@ -444,7 +444,7 @@ export default function YahooFinancials({ statementsData, currency = '$', report
                   const rvt = row.valueType ?? 'money'
                   return (
                     <tr key={`row-${si}-${ri}`} id={`yfrow-${row.key}`} className={`border-b border-slate-50 hover:bg-slate-50/40 ${flashKey === row.key ? 'row-flash' : ''}`}>
-                      <td className="sticky left-0 z-10 bg-white pl-10 pr-4 py-1.5 text-slate-500 whitespace-nowrap">
+                      <td className="sticky left-0 z-10 bg-[#050D1F] pl-10 pr-4 py-1.5 text-slate-500 whitespace-nowrap">
                         {row.label}
                       </td>
                       {showTTM && ttmData && (

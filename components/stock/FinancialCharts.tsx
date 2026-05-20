@@ -11,6 +11,7 @@ const Tooltip = dynamic(() => import('recharts').then((m) => m.Tooltip), { ssr: 
 const Legend = dynamic(() => import('recharts').then((m) => m.Legend), { ssr: false })
 const ResponsiveContainer = dynamic(() => import('recharts').then((m) => m.ResponsiveContainer), { ssr: false })
 const Cell = dynamic(() => import('recharts').then((m) => m.Cell), { ssr: false })
+const CartesianGrid = dynamic(() => import('recharts').then((m) => m.CartesianGrid), { ssr: false })
 
 interface ISRow {
   year: string
@@ -47,10 +48,10 @@ function fmtPct(v: number): string {
 }
 
 export default function FinancialCharts({ incomeStatement, cashFlow, currency = '$', isDark }: Props) {
-  const tickFill = isDark ? 'rgba(255,255,255,0.25)' : '#9ca3af'
+  const tickFill = isDark ? 'rgba(255,255,255,0.25)' : '#94a3b8'
   const tooltipStyle = isDark
-    ? { background: '#1c1c1e', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, fontSize: 11, color: '#fff' }
-    : { background: '#fff', border: '1px solid rgba(0,0,0,0.07)', borderRadius: 8, fontSize: 11, color: '#111' }
+    ? { background: 'rgba(10,22,40,0.95)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, fontSize: 11, color: '#F1F5F9', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }
+    : { background: 'rgba(10,22,40,0.95)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, fontSize: 11, color: '#F1F5F9', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }
 
   const historicalIS = incomeStatement.filter((r) => !r.isProjected)
   const projectedIS = incomeStatement.filter((r) => r.isProjected)
@@ -96,8 +97,8 @@ export default function FinancialCharts({ incomeStatement, cashFlow, currency = 
 
   if (historicalIS.length < 2) return null
 
-  const sectionTitle = 'text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-white/25 mb-3'
-  const panel = 'rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8 p-5'
+  const sectionTitle = 'text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3'
+  const panel = 'rounded-xl glass-card border-[rgba(59,130,246,0.15)] p-5'
 
   return (
     <div className="space-y-4">
@@ -110,6 +111,7 @@ export default function FinancialCharts({ incomeStatement, cashFlow, currency = 
             <BarChart data={revenueData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barGap={2}>
               <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={fmtM} width={42} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" vertical={false} />
               <Tooltip
                 contentStyle={tooltipStyle}
                 wrapperStyle={{ zIndex: 50 }}
@@ -123,16 +125,16 @@ export default function FinancialCharts({ incomeStatement, cashFlow, currency = 
                 formatter={(v) => v === 'revenue' ? 'Revenue' : 'Net Income'}
                 wrapperStyle={{ fontSize: '10px', color: tickFill }}
               />
-              <Bar dataKey="revenue" name="revenue" fill={isDark ? '#818cf8' : '#6366f1'} radius={[3, 3, 0, 0]} isAnimationActive={false}
+              <Bar dataKey="revenue" name="revenue" fill="#3B82F6" radius={[3, 3, 0, 0]} isAnimationActive={false}
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 opacity={undefined}>
                 {revenueData.map((entry, i) => (
-                  <Cell key={i} opacity={entry.isProjected ? 0.4 : 1} />
+                  <Cell key={i} opacity={entry.isProjected ? 0.35 : 1} />
                 ))}
               </Bar>
-              <Bar dataKey="netIncome" name="netIncome" fill={isDark ? '#34d399' : '#10b981'} radius={[3, 3, 0, 0]} isAnimationActive={false}>
+              <Bar dataKey="netIncome" name="netIncome" fill="#10B981" radius={[3, 3, 0, 0]} isAnimationActive={false}>
                 {revenueData.map((entry, i) => (
-                  <Cell key={i} opacity={entry.isProjected ? 0.4 : 1} />
+                  <Cell key={i} opacity={entry.isProjected ? 0.35 : 1} />
                 ))}
               </Bar>
             </BarChart>
@@ -146,6 +148,7 @@ export default function FinancialCharts({ incomeStatement, cashFlow, currency = 
             <BarChart data={fcfData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
               <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={fmtM} width={42} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" vertical={false} />
               <Tooltip
                 contentStyle={tooltipStyle}
                 wrapperStyle={{ zIndex: 50 }}
@@ -155,10 +158,8 @@ export default function FinancialCharts({ incomeStatement, cashFlow, currency = 
               <Bar dataKey="fcf" radius={[3, 3, 0, 0]} isAnimationActive={false}>
                 {fcfData.map((entry, i) => {
                   const positive = (entry.fcf ?? 0) >= 0
-                  const base = positive
-                    ? (isDark ? '#34d399' : '#10b981')
-                    : (isDark ? '#f87171' : '#ef4444')
-                  return <Cell key={i} fill={base} opacity={entry.isProjected ? 0.4 : 1} />
+                  const base = positive ? '#10B981' : '#EF4444'
+                  return <Cell key={i} fill={base} opacity={entry.isProjected ? 0.35 : 1} />
                 })}
               </Bar>
             </BarChart>
@@ -173,6 +174,7 @@ export default function FinancialCharts({ incomeStatement, cashFlow, currency = 
               <LineChart data={marginData} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
                 <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={fmtPct} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" vertical={false} />
                 <Tooltip
                   contentStyle={tooltipStyle}
                   wrapperStyle={{ zIndex: 50 }}
@@ -186,10 +188,10 @@ export default function FinancialCharts({ incomeStatement, cashFlow, currency = 
                   formatter={(v) => v === 'gross' ? 'Gross' : v === 'net' ? 'Net' : v === 'fcfMgn' ? 'FCF' : 'Operating'}
                   wrapperStyle={{ fontSize: '10px', color: tickFill }}
                 />
-                <Line type="monotone" dataKey="gross" stroke="#6366f1" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
-                <Line type="monotone" dataKey="opMgn" stroke="#f59e0b" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} strokeDasharray="4 2" />
-                <Line type="monotone" dataKey="net" stroke="#10b981" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
-                <Line type="monotone" dataKey="fcfMgn" stroke="#f97316" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} strokeDasharray="2 3" />
+                <Line type="monotone" dataKey="gross" stroke="#60A5FA" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
+                <Line type="monotone" dataKey="opMgn" stroke="#F59E0B" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} strokeDasharray="4 2" />
+                <Line type="monotone" dataKey="net" stroke="#10B981" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
+                <Line type="monotone" dataKey="fcfMgn" stroke="#06B6D4" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} strokeDasharray="2 3" />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -203,6 +205,7 @@ export default function FinancialCharts({ incomeStatement, cashFlow, currency = 
               <BarChart data={ebitdaData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barGap={2}>
                 <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={fmtM} width={42} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" vertical={false} />
                 <Tooltip
                   contentStyle={tooltipStyle}
                   wrapperStyle={{ zIndex: 50 }}
@@ -216,14 +219,14 @@ export default function FinancialCharts({ incomeStatement, cashFlow, currency = 
                   formatter={(v) => v === 'ebitda' ? 'EBITDA' : 'Operating Income'}
                   wrapperStyle={{ fontSize: '10px', color: tickFill }}
                 />
-                <Bar dataKey="ebitda" name="ebitda" fill={isDark ? '#c084fc' : '#a855f7'} radius={[3, 3, 0, 0]} isAnimationActive={false}>
+                <Bar dataKey="ebitda" name="ebitda" fill="#A78BFA" radius={[3, 3, 0, 0]} isAnimationActive={false}>
                   {ebitdaData.map((entry, i) => (
-                    <Cell key={i} opacity={entry.isProjected ? 0.4 : 1} />
+                    <Cell key={i} opacity={entry.isProjected ? 0.35 : 1} />
                   ))}
                 </Bar>
-                <Bar dataKey="opIncome" name="opIncome" fill={isDark ? '#fbbf24' : '#f59e0b'} radius={[3, 3, 0, 0]} isAnimationActive={false}>
+                <Bar dataKey="opIncome" name="opIncome" fill="#FBBF24" radius={[3, 3, 0, 0]} isAnimationActive={false}>
                   {ebitdaData.map((entry, i) => (
-                    <Cell key={i} opacity={entry.isProjected ? 0.4 : 1} />
+                    <Cell key={i} opacity={entry.isProjected ? 0.35 : 1} />
                   ))}
                 </Bar>
               </BarChart>
@@ -234,7 +237,7 @@ export default function FinancialCharts({ incomeStatement, cashFlow, currency = 
       </div>
 
       {/* Legend note */}
-      <p className="text-[10px] text-gray-400 dark:text-white/20">
+      <p className="text-[10px] text-slate-500">
         Faded bars = model projections · Solid bars = historical actuals
         {projectedIS.length > 0 && ` · ${historicalIS.length} historical + ${projectedIS.length} projected years`}
       </p>

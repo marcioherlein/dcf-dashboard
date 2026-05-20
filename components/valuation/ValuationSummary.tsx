@@ -306,7 +306,7 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
 
       {/* ── Method dots lollipop chart ──────────────────────────────────────── */}
       {methods.some(m => m.fairValue != null) && (
-        <div className="rounded-xl bg-white border border-slate-200 p-5">
+        <div className="rounded-xl glass-card border-[rgba(59,130,246,0.15)] p-5">
           <p className="text-label uppercase tracking-wider text-slate-400 mb-4">Fair Value by Method</p>
           <MethodDotsChart
             methods={methods}
@@ -322,18 +322,18 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
 
       {/* ── Method breakdown table ──────────────────────────────────────────── */}
       {methods.length > 0 && (
-        <div className="rounded-xl bg-white border border-slate-200 overflow-hidden">
-          <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-2.5 border-b border-slate-100 bg-slate-50">
+        <div className="rounded-xl glass-card border-[rgba(59,130,246,0.15)] overflow-hidden">
+          <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-2.5 border-b border-white/8 bg-white/3">
             <span className="text-label uppercase tracking-wider text-slate-400 font-bold">Method</span>
             <span className="text-label uppercase tracking-wider text-slate-400 font-bold text-right">Fair Value</span>
             <span className="text-label uppercase tracking-wider text-slate-400 font-bold text-right">Upside</span>
             <span className="text-label uppercase tracking-wider text-slate-400 font-bold text-right w-20">Weight</span>
           </div>
 
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-white/5">
             {methods.map((m, i) => {
               const side = methodUpside(m)
-              const borderClass = side ? METHOD_BORDER_CLASS[side] : 'border-l-slate-200'
+              const borderClass = side ? METHOD_BORDER_CLASS[side] : 'border-l-slate-700'
               const effectivePct = (m.fairValue != null && effectiveTotalWeight > 0)
                 ? (m.weight / effectiveTotalWeight) * 100
                 : 0
@@ -345,13 +345,13 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
                   className={cn('grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-3 border-l-4 items-center', borderClass)}
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 leading-snug">{m.label}</p>
-                    {desc && <p className="text-[11px] text-slate-400 leading-tight mt-0.5 truncate">{desc}</p>}
+                    <p className="text-sm font-semibold text-slate-200 leading-snug">{m.label}</p>
+                    {desc && <p className="text-[11px] text-slate-500 leading-tight mt-0.5 truncate">{desc}</p>}
                   </div>
 
                   <div className="text-right">
                     {m.fairValue != null
-                      ? <span className="font-mono font-semibold text-slate-900 text-sm">{fmtPrice(m.fairValue, currency)}</span>
+                      ? <span className="font-mono font-semibold text-slate-100 text-sm">{fmtPrice(m.fairValue, currency)}</span>
                       : <NABadge reason="model-unsupported" />
                     }
                   </div>

@@ -133,17 +133,17 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin 
   const toneIcon = tone === 'positive' ? '✓' : tone === 'warning' ? '⚠' : tone === 'negative' ? '✗' : '–'
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden">
+    <div className="glass-card border-[rgba(59,130,246,0.15)] rounded-xl overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-slate-100">
-        <h3 className="text-base font-bold text-slate-900">Reverse DCF</h3>
+      <div className="px-5 py-4 border-b border-white/8">
+        <h3 className="text-base font-bold text-slate-100">Reverse DCF</h3>
         <p className="text-xs text-slate-400 mt-0.5">
           Works backwards from today&apos;s price to find the growth rate the market is implicitly pricing in.
         </p>
       </div>
 
       {/* Three-column hero */}
-      <div className="grid grid-cols-3 divide-x divide-slate-100">
+      <div className="grid grid-cols-3 divide-x divide-white/8">
         <div className="flex flex-col items-center px-4 py-5 gap-1">
           <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Market Implies</p>
           <p className="text-2xl font-bold tabular-nums" style={{ color: toneColor }}>
@@ -229,18 +229,18 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
   const readonlyAssumptions   = config.assumptions.filter(a => !a.editable && a.unit !== 'shares')
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden">
+    <div className="glass-card border-[rgba(59,130,246,0.15)] rounded-xl overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-slate-100 flex items-start justify-between gap-4">
+      <div className="px-5 py-4 border-b border-white/8 flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-base font-bold text-slate-900">{config.title}</h3>
+          <h3 className="text-base font-bold text-slate-100">{config.title}</h3>
           <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{config.methodDescription ?? config.subtitle}</p>
         </div>
         {config.fairValueSummary != null && (
           <div className="flex items-center gap-3 shrink-0">
             <div className="text-right">
               <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Fair Value</p>
-              <p className="text-lg font-bold tabular-nums text-slate-900">
+              <p className="text-lg font-bold tabular-nums text-slate-100">
                 {fmtPrice(config.fairValueSummary, currency)}
               </p>
             </div>
@@ -309,9 +309,9 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
         <div className="px-5 pt-4 pb-2">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {readonlyAssumptions.map(a => (
-              <div key={a.key} className="bg-slate-50 rounded-lg px-3 py-2">
+              <div key={a.key} className="bg-white/5 rounded-lg px-3 py-2">
                 <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{a.label}</p>
-                <p className="text-sm font-semibold tabular-nums text-slate-800 mt-0.5">
+                <p className="text-sm font-semibold tabular-nums text-slate-200 mt-0.5">
                   {fmtAssumptionDisplay(a, overrides)}{a.unit === '%' ? '%' : a.unit === 'x' ? '×' : ''}
                 </p>
               </div>
@@ -615,7 +615,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
 
       {/* ── 2. Method details ────────────────────────────────────────────────── */}
       <div className="space-y-4">
-        <p className="text-label uppercase tracking-wider text-slate-400 px-1">How each method is computed</p>
+        <p className="text-[11px] font-bold uppercase tracking-widest bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent px-1">How each method is computed</p>
 
         <MethodInlinePanel
           config={fwdPEConfig}
@@ -651,9 +651,9 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
       </div>
 
       {/* ── 5. Full DCF Modelling Table ──────────────────────────────────── */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden">
-        <div className="px-5 pt-4 pb-2 border-b border-slate-100">
-          <h3 className="text-base font-bold text-slate-900">Full DCF Modelling Table</h3>
+      <div className="glass-card border-[rgba(59,130,246,0.15)] rounded-xl overflow-hidden">
+        <div className="px-5 pt-4 pb-2 border-b border-white/8">
+          <h3 className="text-base font-bold text-slate-100">Full DCF Modelling Table</h3>
           <p className="text-micro text-slate-400 mt-0.5">
             Year-by-year unlevered FCF model grounded in Yahoo Finance statements
           </p>

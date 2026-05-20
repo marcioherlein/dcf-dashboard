@@ -1,9 +1,11 @@
 'use client'
+import { useState, useEffect } from 'react'
 import { TrendingUp, TrendingDown, Bookmark, DollarSign, Shield, BarChart2, ArrowRight } from 'lucide-react'
-import { motion } from 'motion/react'
+import { motion, useMotionValue, animate } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { fmtPct, fmtLargeCurrency, fmtPrice, upsideZone, zoneBadgeClass } from '@/lib/formatters'
 import { NABadge } from '@/components/ui/na-badge'
+import ArcGauge from '@/components/ui/arc-gauge'
 
 interface Props {
   ticker: string
@@ -37,12 +39,23 @@ interface Props {
   compact?: boolean  // true = 1-line strip (used on valuation tab)
 }
 
-function gradeColors(grade: string): { bg: string; text: string; badge: string } {
+function gradeColors(grade: string): { bg: string; text: string; badge: string; hex: string } {
   const g = grade.replace('+', '').replace('-', '')
-  if (g === 'A')  return { bg: 'bg-emerald-500/20 border border-emerald-500/40', text: 'text-emerald-300', badge: 'border-emerald-500/30' }
-  if (g === 'B')  return { bg: 'bg-blue-500/20 border border-blue-500/40',       text: 'text-blue-300',   badge: 'border-blue-500/30'   }
-  if (g === 'C')  return { bg: 'bg-amber-500/20 border border-amber-500/40',     text: 'text-amber-300',  badge: 'border-amber-500/30'  }
-  return           { bg: 'bg-red-500/20 border border-red-500/40',               text: 'text-red-300',    badge: 'border-red-500/30'    }
+  if (g === 'A')  return { bg: 'bg-emerald-500/20 border border-emerald-500/40', text: 'text-emerald-300', badge: 'border-emerald-500/30', hex: '#10B981' }
+  if (g === 'B')  return { bg: 'bg-blue-500/20 border border-blue-500/40',       text: 'text-blue-300',   badge: 'border-blue-500/30',   hex: '#3B82F6' }
+  if (g === 'C')  return { bg: 'bg-amber-500/20 border border-amber-500/40',     text: 'text-amber-300',  badge: 'border-amber-500/30',  hex: '#F59E0B' }
+  return           { bg: 'bg-red-500/20 border border-red-500/40',               text: 'text-red-300',    badge: 'border-red-500/30',    hex: '#EF4444' }
+}
+
+function gradeToValue(grade: string): number {
+  const map: Record<string, number> = {
+    'A+': 97, 'A': 90, 'A-': 83,
+    'B+': 77, 'B': 70, 'B-': 63,
+    'C+': 57, 'C': 50, 'C-': 43,
+    'D+': 37, 'D': 30, 'D-': 23,
+    'F': 10,
+  }
+  return map[grade] ?? 50
 }
 
 function pillIcon(type: 'profit' | 'debt' | 'growth') {
@@ -74,6 +87,21 @@ export default function InvestorGradeCard({
   const currSymbol = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$ ' : currency + ' '
   const isUndervalued = (upsidePct ?? 0) > 0
   const zone = upsidePct != null ? upsideZone(upsidePct) : null
+  const gaugeValue = gradeToValue(grade)
+
+  // Animated fair value counter
+  const fvMotion = useMotionValue(0)
+  const [displayFV, setDisplayFV] = useState(0)
+  useEffect(() => {
+    if (fairValue == null) return
+    const controls = animate(fvMotion, fairValue, {
+      duration: 0.9,
+      ease: [0.16, 1, 0.3, 1],
+      onUpdate: (v) => setDisplayFV(v),
+    })
+    return controls.stop
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fairValue])
 
   const verdict = upsidePct == null || fairValue == null
     ? null
@@ -123,19 +151,21 @@ export default function InvestorGradeCard({
       <div className="p-5">
         <div className="flex items-start gap-4">
 
-          {/* Grade badge */}
+          {/* Grade arc gauge */}
           <motion.div
             initial={{ scale: 0.55, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 380, damping: 18, delay: 0.05 }}
-            className={cn(
-              'w-[72px] h-[72px] shrink-0 rounded-2xl flex items-center justify-center',
-              colors.bg,
-            )}
+            className="shrink-0 animate-glow-pulse"
+            style={{ borderRadius: '50%' }}
           >
-            <span className={cn('text-[2.75rem] font-extrabold leading-none tracking-tight', colors.text)} style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>
-              {grade}
-            </span>
+            <ArcGauge
+              value={gaugeValue}
+              size={84}
+              strokeWidth={7}
+              color={colors.hex}
+              displayValue={grade}
+            />
           </motion.div>
 
           {/* Company + price */}
@@ -206,7 +236,7 @@ export default function InvestorGradeCard({
               <div className="flex-1 min-w-0 text-right">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Fair Value Estimate</p>
                 <p className={cn('mt-0.5 text-xl font-bold tabular-nums', isUndervalued ? 'text-emerald-400' : 'text-amber-400')}>
-                  {currSymbol}{fairValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {currSymbol}{displayFV.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
                 {upsidePct != null && (
                   <p className={cn('text-xs font-semibold', isUndervalued ? 'text-emerald-400' : 'text-amber-400')}>
@@ -257,7 +287,7 @@ export default function InvestorGradeCard({
             {onViewDetails && (
               <button
                 onClick={onViewDetails}
-                className="flex-1 rounded-xl py-2.5 text-[13px] font-semibold text-white transition-all bg-[#3B82F6] hover:bg-[#60A5FA] hover:shadow-glow-sm"
+                className="flex-1 rounded-xl py-2.5 text-[13px] font-semibold text-white transition-all bg-gradient-to-r from-blue-600 to-blue-500 shadow-glow-sm hover:shadow-glow-md hover:from-blue-500 hover:to-blue-400 active:scale-95"
               >
                 Explore full valuation →
               </button>

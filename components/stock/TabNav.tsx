@@ -40,7 +40,7 @@ export default function TabNav({ activeTab, onChange }: Props) {
                 className={cn(
                   'relative flex items-center gap-1.5 px-4 py-3.5 text-[13px] font-medium whitespace-nowrap transition-colors border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
                   active
-                    ? 'border-blue-400 text-blue-400'
+                    ? 'border-blue-400 text-blue-300 bg-blue-500/5'
                     : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600',
                 )}
               >
@@ -49,6 +49,9 @@ export default function TabNav({ activeTab, onChange }: Props) {
                   className={cn('shrink-0', active ? 'text-blue-400' : 'text-slate-500')}
                 />
                 {label}
+                {id === 'valuation' && !active && (
+                  <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-blue-400 animate-glow-pulse shrink-0" />
+                )}
               </button>
             )
           })}

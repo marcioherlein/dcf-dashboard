@@ -250,7 +250,9 @@ function StockPageBody() {
   }
 
   return (
-    <div className="min-h-dvh bg-[#050D1F]">
+    <div className="min-h-dvh bg-[#050D1F] relative overflow-hidden">
+      {/* Ambient depth blob */}
+      <div className="pointer-events-none absolute top-20 right-0 w-80 h-80 bg-blue-600/10 blur-3xl rounded-full animate-blob" />
 
       {/* Breadcrumb */}
       <div className="glass-nav border-b border-[rgba(59,130,246,0.15)] px-6 py-2 flex items-center gap-3">

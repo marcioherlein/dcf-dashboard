@@ -47,9 +47,9 @@ function ChartTooltip({ active, payload, currency }: { active?: boolean; payload
   if (!active || !payload?.length) return null
   const d = payload[0]?.payload as HistoryPoint
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-lg px-3 py-2 text-xs">
-      <div className="text-slate-400 font-mono text-[10px] mb-1">{d.date}</div>
-      <div className="font-bold text-slate-900 font-mono tabular-nums">{fmtPrice(d.close, currency)}</div>
+    <div className="bg-[rgba(10,22,40,0.95)] border border-[rgba(59,130,246,0.2)] rounded-xl shadow-lg px-3 py-2 text-xs">
+      <div className="text-slate-500 font-mono text-[10px] mb-1">{d.date}</div>
+      <div className="font-bold text-slate-100 font-mono tabular-nums">{fmtPrice(d.close, currency)}</div>
       {d.volume != null && (
         <div className="text-slate-400 text-[10px] mt-0.5">
           Vol: {d.volume.toLocaleString('en-US')}
@@ -97,10 +97,10 @@ export default function InstrumentPriceChart({ symbol, currency = 'USD' }: Props
   const domainMax  = allCloses.length ? Math.max(...allCloses) * 1.002 : 100
 
   return (
-    <div className="rounded-xl bg-white border border-slate-200 overflow-hidden">
+    <div className="rounded-xl glass-card border-[rgba(59,130,246,0.15)] overflow-hidden">
       {/* Header */}
-      <div className="px-4 pt-3 pb-2 border-b border-slate-100 flex items-center justify-between">
-        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Price Chart</span>
+      <div className="px-4 pt-3 pb-2 border-b border-white/8 flex items-center justify-between">
+        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Price Chart</span>
         <div className="flex flex-wrap gap-1">
           {PERIODS.map(p => (
             <button
@@ -109,8 +109,8 @@ export default function InstrumentPriceChart({ symbol, currency = 'USD' }: Props
               className={cn(
                 'px-2 py-0.5 text-[11px] font-semibold rounded transition-colors',
                 period === p
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100',
+                  ? 'bg-blue-500/20 text-blue-300'
+                  : 'text-slate-500 hover:text-slate-200 hover:bg-white/5',
               )}
             >
               {p}
@@ -146,7 +146,7 @@ export default function InstrumentPriceChart({ symbol, currency = 'USD' }: Props
                   <stop offset="95%" stopColor={isUp ? '#10b981' : '#ef4444'} stopOpacity={0}    />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.08)" vertical={false} />
               <XAxis
                 dataKey="date"
                 tick={{ fontSize: 10, fill: '#94a3b8' }}
@@ -168,7 +168,7 @@ export default function InstrumentPriceChart({ symbol, currency = 'USD' }: Props
               {firstClose != null && (
                 <ReferenceLine
                   y={firstClose}
-                  stroke="#cbd5e1"
+                  stroke="rgba(148,163,184,0.2)"
                   strokeWidth={1}
                   strokeDasharray="3 2"
                 />

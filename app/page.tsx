@@ -593,6 +593,9 @@ export default function LandingPage() {
         <div className="pointer-events-none absolute inset-0 bg-radial-blue" />
         {/* Grid overlay */}
         <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-60" />
+        {/* Ambient depth blobs */}
+        <div className="pointer-events-none absolute top-0 right-0 w-96 h-96 bg-blue-600/15 blur-3xl rounded-full animate-blob" />
+        <div className="pointer-events-none absolute bottom-0 left-0 w-72 h-72 bg-cyan-500/10 blur-3xl rounded-full animate-blob-delay" />
 
         <div className="relative mx-auto max-w-3xl text-center">
           {/* Social proof pill */}
