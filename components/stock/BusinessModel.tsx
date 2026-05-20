@@ -119,19 +119,19 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
       label: 'Annual Revenue',
       value: revenueB,
       sub: usingTTM ? 'Trailing 12 months' : 'Last reported year',
-      color: 'bg-blue-50 border-blue-100',
+      color: 'bg-blue-500/10 border-blue-500/20',
     },
     {
       label: 'Profit Margin',
       value: netMarginKeep ?? (displayNetMgn != null ? fmtPct(displayNetMgn) : '—'),
       sub: netMarginKeep ? `Net income per $100 revenue${usingTTM ? ' (TTM)' : ''}` : 'Net margin',
-      color: displayNetMgn != null && displayNetMgn > 0.10 ? 'bg-green-50 border-green-100' : 'bg-slate-50 border-slate-100',
+      color: displayNetMgn != null && displayNetMgn > 0.10 ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-white/5 border-white/10',
     },
     {
       label: 'Free Cash Flow',
       value: fcfB ?? (displayFcfMgn != null ? fmtPct(displayFcfMgn) : '—'),
       sub: fcfB ? `Generated per year (est.)${usingTTM ? ' · TTM' : ''}` : 'FCF margin',
-      color: displayFcfMgn != null && displayFcfMgn > 0.10 ? 'bg-green-50 border-green-100' : 'bg-slate-50 border-slate-100',
+      color: displayFcfMgn != null && displayFcfMgn > 0.10 ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-white/5 border-white/10',
     },
   ]
 
@@ -161,8 +161,8 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
         {statCards.map((card) => (
           <div key={card.label} className={`rounded-xl border px-4 py-3 ${card.color}`}>
-            <p className="text-xs text-slate-500 mb-1">{card.label}</p>
-            <p className="text-lg font-bold text-slate-900">{card.value}</p>
+            <p className="text-xs text-slate-400 mb-1">{card.label}</p>
+            <p className="text-lg font-bold text-slate-100">{card.value}</p>
             <p className="text-[11px] text-slate-400 mt-0.5">{card.sub}</p>
           </div>
         ))}
@@ -170,8 +170,8 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
 
       {/* Summary callout */}
       {summaryCallout && summaryCallout !== 'Insufficient data to generate a business quality summary.' && (
-        <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 mb-5">
-          <p className="text-xs text-blue-700 leading-relaxed">{summaryCallout}</p>
+        <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 px-4 py-3 mb-5">
+          <p className="text-xs text-blue-300 leading-relaxed">{summaryCallout}</p>
         </div>
       )}
 

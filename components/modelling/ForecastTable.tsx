@@ -123,15 +123,15 @@ function fmtLargeM(v: number | null): string {
 // ─── Cell helpers ─────────────────────────────────────────────────────────────
 
 function cellBg(row: { isProjected: boolean; year: string }): string {
-  if (row.year === 'TTM') return 'bg-amber-50'
-  if (row.isProjected) return 'bg-blue-50/40'
-  return 'bg-white'
+  if (row.year === 'TTM') return 'bg-amber-500/10'
+  if (row.isProjected) return 'bg-blue-500/8'
+  return 'bg-[#080F1E]'
 }
 
 function cellText(row: { isProjected: boolean; year: string }): string {
-  if (row.year === 'TTM') return 'text-amber-700'
-  if (row.isProjected) return 'text-slate-700'
-  return 'text-slate-600'
+  if (row.year === 'TTM') return 'text-amber-400'
+  if (row.isProjected) return 'text-slate-300'
+  return 'text-slate-400'
 }
 
 function colHeader(row: DisplayRow): string {
@@ -175,15 +175,15 @@ function GrowthEditCell({ growthPct, prevRevenue, year, isProjected, projectedIn
 
   const isPositive = growthPct != null && growthPct > 0
   const isNegative = growthPct != null && growthPct < 0
-  const growthColor = isPositive ? 'text-emerald-600' : isNegative ? 'text-red-500' : 'text-slate-400'
+  const growthColor = isPositive ? 'text-emerald-400' : isNegative ? 'text-red-400' : 'text-slate-500'
 
   if (editing && canEdit) {
     return (
-      <td className="px-2 py-1 text-right whitespace-nowrap bg-blue-50 border-b-2 border-blue-400">
+      <td className="px-2 py-1 text-right whitespace-nowrap bg-blue-900/30 border-b-2 border-blue-400">
         <div className="flex items-center justify-end gap-1">
           <input
             autoFocus
-            className="w-16 border-2 border-blue-500 bg-white px-1.5 py-0.5 text-right text-xs text-blue-700 focus:outline-none rounded font-semibold"
+            className="w-16 border-2 border-blue-500 bg-[#0A1628] px-1.5 py-0.5 text-right text-xs text-blue-300 focus:outline-none rounded font-semibold"
             value={draft}
             onChange={e => setDraft(e.target.value)}
             onKeyDown={e => {
@@ -210,7 +210,7 @@ function GrowthEditCell({ growthPct, prevRevenue, year, isProjected, projectedIn
     <td
       className={cn(
         'px-2 py-1.5 text-right text-xs whitespace-nowrap tabular-nums cursor-pointer group',
-        canEdit ? 'bg-blue-50 border-b-2 border-blue-300 hover:bg-blue-100' : cellBg({ isProjected, year }),
+        canEdit ? 'bg-blue-500/10 border-b-2 border-blue-500/40 hover:bg-blue-500/20' : cellBg({ isProjected, year }),
       )}
       onClick={startEdit}
       title="Click to edit"
@@ -218,13 +218,13 @@ function GrowthEditCell({ growthPct, prevRevenue, year, isProjected, projectedIn
       <div className="flex flex-col items-end gap-0.5">
         <div className="flex items-center gap-1 justify-end">
           {canEdit && <span className="text-[9px] text-blue-400 opacity-60 group-hover:opacity-100 transition-opacity">✎</span>}
-          <span className={cn('font-semibold', canEdit ? 'text-blue-700' : growthColor)}>
+          <span className={cn('font-semibold', canEdit ? 'text-blue-300' : growthColor)}>
             {fmtPctDisplay(growthPct)}
           </span>
         </div>
         <span className={cn(
           'text-[8px] px-1 py-px rounded font-semibold',
-          isAnalyst ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-500'
+          isAnalyst ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'
         )}>
           {isAnalyst ? 'Analyst' : 'Model'}
         </span>
@@ -253,7 +253,7 @@ function DataCell({ value, row, bold, color }: { value: string; row: DisplayRow;
 function SectionHeader({ label, colSpan }: { label: string; colSpan: number }) {
   return (
     <tr>
-      <td colSpan={colSpan} className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-50 border-b border-slate-100">
+      <td colSpan={colSpan} className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500 bg-white/4 border-b border-white/8">
         {label}
       </td>
     </tr>
@@ -315,19 +315,19 @@ export default function ForecastTable({
 
     return (
       <th key={row.year} className={cn(
-        'px-2 py-2.5 text-right text-[11px] font-semibold whitespace-nowrap border-b border-slate-200',
+        'px-2 py-2.5 text-right text-[11px] font-semibold whitespace-nowrap border-b border-white/10',
         row.year === 'TTM'
-          ? 'bg-amber-50 text-amber-600'
+          ? 'bg-amber-500/10 text-amber-400'
           : row.isProjected
-            ? 'bg-blue-50/40 text-blue-700'
-            : 'bg-slate-50 text-slate-500'
+            ? 'bg-blue-500/8 text-blue-300'
+            : 'bg-white/5 text-slate-400'
       )}>
         <div className="flex flex-col items-end gap-0.5">
           <span>{label}</span>
           {row.isProjected && (
             <span className={cn(
               'text-[8px] px-1 rounded font-semibold',
-              isAnalyst ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-400'
+              isAnalyst ? 'bg-amber-500/20 text-amber-400' : 'bg-white/8 text-slate-500'
             )}>
               {isAnalyst ? 'Analyst' : 'Model'}
             </span>
@@ -341,16 +341,16 @@ export default function ForecastTable({
 
   function revenueRows() {
     return [
-      <tr key="revenue" className="hover:bg-slate-50/50">
-        <td className="sticky left-0 z-10 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 whitespace-nowrap w-52 min-w-[200px] border-r border-slate-100">
-          Revenue <span className="text-[10px] text-slate-400 font-normal">$M</span>
+      <tr key="revenue" className="hover:bg-white/4">
+        <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap w-52 min-w-[200px] border-r border-white/8">
+          Revenue <span className="text-[10px] text-slate-500 font-normal">$M</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.revenue)} row={r} />)}
       </tr>,
-      <tr key="revenue-growth" className="hover:bg-slate-50/50 border-b border-slate-100">
-        <td className="sticky left-0 z-10 bg-white pl-6 pr-4 py-0.5 text-[11px] font-bold text-blue-600 whitespace-nowrap border-r border-slate-100">
+      <tr key="revenue-growth" className="hover:bg-white/4 border-b border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] font-bold text-blue-400 whitespace-nowrap border-r border-white/8">
           Revenue % Growth
-          <span className="ml-1.5 inline-flex items-center gap-0.5 bg-blue-100 text-blue-600 text-[8px] font-semibold px-1.5 py-px rounded-full">✎ editable</span>
+          <span className="ml-1.5 inline-flex items-center gap-0.5 bg-blue-500/15 text-blue-400 text-[8px] font-semibold px-1.5 py-px rounded-full">✎ editable</span>
         </td>
         {rows.map((r) => {
           const rIdx = rows.indexOf(r)
@@ -381,14 +381,14 @@ export default function ForecastTable({
       ...revenueRows(),
 
       // EBIT
-      <tr key="ebit" className="hover:bg-slate-50/50">
-        <td className="sticky left-0 z-10 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 whitespace-nowrap border-r border-slate-100">
+      <tr key="ebit" className="hover:bg-white/4">
+        <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap border-r border-white/8">
           EBIT <span className="text-[10px] text-slate-400 font-normal">$M</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.ebit)} row={r} />)}
       </tr>,
-      <tr key="ebit-margin" className="hover:bg-slate-50/50 border-b border-slate-100">
-        <td className="sticky left-0 z-10 bg-white pl-6 pr-4 py-0.5 text-[11px] text-slate-400 whitespace-nowrap border-r border-slate-100">
+      <tr key="ebit-margin" className="hover:bg-white/4 border-b border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           EBIT Margin
         </td>
         {rows.map(r => (
@@ -399,8 +399,8 @@ export default function ForecastTable({
       </tr>,
 
       // Tax Rate
-      <tr key="taxrate" className="hover:bg-slate-50/50 border-b border-slate-100">
-        <td className="sticky left-0 z-10 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 whitespace-nowrap border-r border-slate-100">
+      <tr key="taxrate" className="hover:bg-white/4 border-b border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap border-r border-white/8">
           Tax Rate
         </td>
         {rows.map(r => (
@@ -411,14 +411,14 @@ export default function ForecastTable({
       </tr>,
 
       // NOPAT
-      <tr key="nopat" className="hover:bg-slate-50/50 bg-slate-50/40">
-        <td className="sticky left-0 z-10 bg-slate-50 px-4 py-1.5 text-xs font-semibold text-slate-700 whitespace-nowrap border-r border-slate-100">
+      <tr key="nopat" className="hover:bg-white/4 bg-white/5">
+        <td className="sticky left-0 z-10 bg-white/5 px-4 py-1.5 text-xs font-semibold text-slate-200 whitespace-nowrap border-r border-white/8">
           NOPAT <span className="text-[10px] text-slate-400 font-normal">$M</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.nopat)} row={r} bold />)}
       </tr>,
-      <tr key="nopat-margin" className="hover:bg-slate-50/50 border-b border-slate-200">
-        <td className="sticky left-0 z-10 bg-white pl-6 pr-4 py-0.5 text-[11px] text-slate-400 whitespace-nowrap border-r border-slate-100">
+      <tr key="nopat-margin" className="hover:bg-white/4 border-b border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           NOPAT Margin
         </td>
         {rows.map(r => (
@@ -429,14 +429,14 @@ export default function ForecastTable({
       </tr>,
 
       // D&A
-      <tr key="dna" className="hover:bg-slate-50/50">
-        <td className="sticky left-0 z-10 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 whitespace-nowrap border-r border-slate-100">
+      <tr key="dna" className="hover:bg-white/4">
+        <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap border-r border-white/8">
           D&amp;A <span className="text-[10px] text-slate-400 font-normal">$M</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.dna)} row={r} />)}
       </tr>,
-      <tr key="dna-pct" className="hover:bg-slate-50/50">
-        <td className="sticky left-0 z-10 bg-white pl-6 pr-4 py-0.5 text-[11px] text-slate-400 whitespace-nowrap border-r border-slate-100">
+      <tr key="dna-pct" className="hover:bg-white/4">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           D&amp;A / Revenue
         </td>
         {rows.map(r => (
@@ -447,8 +447,8 @@ export default function ForecastTable({
       </tr>,
 
       // Capex
-      <tr key="capex" className="hover:bg-slate-50/50">
-        <td className="sticky left-0 z-10 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 whitespace-nowrap border-r border-slate-100">
+      <tr key="capex" className="hover:bg-white/4">
+        <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap border-r border-white/8">
           Capex <span className="text-[10px] text-slate-400 font-normal">$M</span>
         </td>
         {rows.map(r => (
@@ -456,8 +456,8 @@ export default function ForecastTable({
             color={r.capex != null && r.capex < 0 ? 'text-red-500' : undefined} />
         ))}
       </tr>,
-      <tr key="capex-pct" className="hover:bg-slate-50/50">
-        <td className="sticky left-0 z-10 bg-white pl-6 pr-4 py-0.5 text-[11px] text-slate-400 whitespace-nowrap border-r border-slate-100">
+      <tr key="capex-pct" className="hover:bg-white/4">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           Capex / Revenue
         </td>
         {rows.map(r => (
@@ -469,8 +469,8 @@ export default function ForecastTable({
       </tr>,
 
       // Chg NWC
-      <tr key="nwcdelta" className="hover:bg-slate-50/50">
-        <td className="sticky left-0 z-10 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 whitespace-nowrap border-r border-slate-100">
+      <tr key="nwcdelta" className="hover:bg-white/4">
+        <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap border-r border-white/8">
           Chg. NWC <span className="text-[10px] text-slate-400 font-normal">$M</span>
         </td>
         {rows.map(r => (
@@ -478,47 +478,47 @@ export default function ForecastTable({
             color={r.nwcDelta != null && r.nwcDelta < 0 ? 'text-red-500' : undefined} />
         ))}
       </tr>,
-      <tr key="nwcdelta-pct" className="hover:bg-slate-50/50 border-b border-slate-200">
-        <td className="sticky left-0 z-10 bg-white pl-6 pr-4 py-0.5 text-[11px] text-slate-400 whitespace-nowrap border-r border-slate-100">
+      <tr key="nwcdelta-pct" className="hover:bg-white/4 border-b border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           Chg. NWC / Revenue
         </td>
         {rows.map(r => (
           <td key={r.year} className={cn('px-2 py-0.5 text-right text-[11px] tabular-nums font-mono whitespace-nowrap',
-            cellBg(r), r.nwcDeltaPct != null && r.nwcDeltaPct < 0 ? 'text-red-500' : 'text-slate-500')}>
+            cellBg(r), r.nwcDeltaPct != null && r.nwcDeltaPct < 0 ? 'text-red-400' : 'text-slate-500')}>
             {fmtPctDisplay(r.nwcDeltaPct)}
           </td>
         ))}
       </tr>,
 
       // UFCF highlight
-      <tr key="ufcf" className="border-t-2 border-slate-300">
-        <td className="sticky left-0 z-10 bg-blue-50 px-4 py-2.5 text-xs font-bold text-slate-800 whitespace-nowrap border-r border-slate-200">
+      <tr key="ufcf" className="border-t-2 border-blue-500/30">
+        <td className="sticky left-0 z-10 bg-blue-500/10 px-4 py-2.5 text-xs font-bold text-slate-100 whitespace-nowrap border-r border-white/10">
           Unlevered FCF (UFCF)
         </td>
         {rows.map(r => (
           <td key={r.year} className={cn(
             'px-2 py-2.5 text-right text-xs font-bold tabular-nums font-mono whitespace-nowrap',
             cellBg(r),
-            r.ufcf != null && r.ufcf < 0 ? 'text-red-600' : 'text-slate-900'
+            r.ufcf != null && r.ufcf < 0 ? 'text-red-400' : 'text-slate-100'
           )}>
             {fmtVal(r.ufcf)}
           </td>
         ))}
       </tr>,
-      <tr key="ufcf-growth" className="hover:bg-slate-50/50">
-        <td className="sticky left-0 z-10 bg-white pl-6 pr-4 py-0.5 text-[11px] text-slate-400 whitespace-nowrap border-r border-slate-100">
+      <tr key="ufcf-growth" className="hover:bg-white/4">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           UFCF % Chg
         </td>
         {rows.map(r => (
           <td key={r.year} className={cn('px-2 py-0.5 text-right text-[11px] tabular-nums font-mono whitespace-nowrap', cellBg(r),
-            r.ufcfGrowthPct != null && r.ufcfGrowthPct > 0 ? 'text-emerald-600'
-              : r.ufcfGrowthPct != null && r.ufcfGrowthPct < 0 ? 'text-red-500' : 'text-slate-400')}>
+            r.ufcfGrowthPct != null && r.ufcfGrowthPct > 0 ? 'text-emerald-400'
+              : r.ufcfGrowthPct != null && r.ufcfGrowthPct < 0 ? 'text-red-400' : 'text-slate-400')}>
             {fmtPctDisplay(r.ufcfGrowthPct)}
           </td>
         ))}
       </tr>,
-      <tr key="pv-ufcf" className="hover:bg-slate-50/50 border-b border-slate-100">
-        <td className="sticky left-0 z-10 bg-white px-4 py-0.5 text-[11px] text-slate-400 whitespace-nowrap border-r border-slate-100">
+      <tr key="pv-ufcf" className="hover:bg-white/4 border-b border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-0.5 text-[11px] text-slate-400 whitespace-nowrap border-r border-white/8">
           PV of UFCF
         </td>
         {rows.map(r => (
@@ -539,14 +539,14 @@ export default function ForecastTable({
       ...revenueRows(),
 
       // Net Income
-      <tr key="netincome" className="hover:bg-slate-50/50">
-        <td className="sticky left-0 z-10 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 whitespace-nowrap border-r border-slate-100">
+      <tr key="netincome" className="hover:bg-white/4">
+        <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap border-r border-white/8">
           Net Income <span className="text-[10px] text-slate-400 font-normal">$M</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.netIncome)} row={r} />)}
       </tr>,
-      <tr key="net-margin" className="hover:bg-slate-50/50 border-b border-slate-100">
-        <td className="sticky left-0 z-10 bg-white pl-6 pr-4 py-0.5 text-[11px] text-slate-400 whitespace-nowrap border-r border-slate-100">
+      <tr key="net-margin" className="hover:bg-white/4 border-b border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           Net Margin
         </td>
         {rows.map(r => (
@@ -557,14 +557,14 @@ export default function ForecastTable({
       </tr>,
 
       // D&A
-      <tr key="dna" className="hover:bg-slate-50/50">
-        <td className="sticky left-0 z-10 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 whitespace-nowrap border-r border-slate-100">
+      <tr key="dna" className="hover:bg-white/4">
+        <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap border-r border-white/8">
           D&amp;A <span className="text-[10px] text-slate-400 font-normal">$M</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.dna)} row={r} />)}
       </tr>,
-      <tr key="dna-pct" className="hover:bg-slate-50/50">
-        <td className="sticky left-0 z-10 bg-white pl-6 pr-4 py-0.5 text-[11px] text-slate-400 whitespace-nowrap border-r border-slate-100">
+      <tr key="dna-pct" className="hover:bg-white/4">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           D&amp;A / Revenue
         </td>
         {rows.map(r => (
@@ -575,8 +575,8 @@ export default function ForecastTable({
       </tr>,
 
       // Capex
-      <tr key="capex" className="hover:bg-slate-50/50">
-        <td className="sticky left-0 z-10 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 whitespace-nowrap border-r border-slate-100">
+      <tr key="capex" className="hover:bg-white/4">
+        <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap border-r border-white/8">
           Capex <span className="text-[10px] text-slate-400 font-normal">$M</span>
         </td>
         {rows.map(r => (
@@ -584,8 +584,8 @@ export default function ForecastTable({
             color={r.capex != null && r.capex < 0 ? 'text-red-500' : undefined} />
         ))}
       </tr>,
-      <tr key="capex-pct" className="hover:bg-slate-50/50">
-        <td className="sticky left-0 z-10 bg-white pl-6 pr-4 py-0.5 text-[11px] text-slate-400 whitespace-nowrap border-r border-slate-100">
+      <tr key="capex-pct" className="hover:bg-white/4">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           Capex / Revenue
         </td>
         {rows.map(r => (
@@ -597,8 +597,8 @@ export default function ForecastTable({
       </tr>,
 
       // NWC
-      <tr key="nwcdelta" className="hover:bg-slate-50/50">
-        <td className="sticky left-0 z-10 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 whitespace-nowrap border-r border-slate-100">
+      <tr key="nwcdelta" className="hover:bg-white/4">
+        <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap border-r border-white/8">
           Chg. NWC <span className="text-[10px] text-slate-400 font-normal">$M</span>
         </td>
         {rows.map(r => (
@@ -606,8 +606,8 @@ export default function ForecastTable({
             color={r.nwcDelta != null && r.nwcDelta < 0 ? 'text-red-500' : undefined} />
         ))}
       </tr>,
-      <tr key="nwcdelta-pct" className="hover:bg-slate-50/50">
-        <td className="sticky left-0 z-10 bg-white pl-6 pr-4 py-0.5 text-[11px] text-slate-400 whitespace-nowrap border-r border-slate-100">
+      <tr key="nwcdelta-pct" className="hover:bg-white/4">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           Chg. NWC / Revenue
         </td>
         {rows.map(r => (
@@ -619,14 +619,14 @@ export default function ForecastTable({
       </tr>,
 
       // Net Debt Repayment
-      <tr key="netdebt" className="hover:bg-slate-50/50">
-        <td className="sticky left-0 z-10 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 whitespace-nowrap border-r border-slate-100">
+      <tr key="netdebt" className="hover:bg-white/4">
+        <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap border-r border-white/8">
           Net Debt Repayment <span className="text-[10px] text-slate-400 font-normal">$M</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.netDebtRepayment)} row={r} />)}
       </tr>,
-      <tr key="netdebt-pct" className="hover:bg-slate-50/50 border-b border-slate-200">
-        <td className="sticky left-0 z-10 bg-white pl-6 pr-4 py-0.5 text-[11px] text-slate-400 whitespace-nowrap border-r border-slate-100">
+      <tr key="netdebt-pct" className="hover:bg-white/4 border-b border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           Net Debt Repayment / Rev
         </td>
         {rows.map(r => (
@@ -637,34 +637,34 @@ export default function ForecastTable({
       </tr>,
 
       // LFCF highlight
-      <tr key="lfcf" className="border-t-2 border-slate-300">
-        <td className="sticky left-0 z-10 bg-blue-50 px-4 py-2.5 text-xs font-bold text-slate-800 whitespace-nowrap border-r border-slate-200">
+      <tr key="lfcf" className="border-t-2 border-blue-500/30">
+        <td className="sticky left-0 z-10 bg-blue-500/10 px-4 py-2.5 text-xs font-bold text-slate-100 whitespace-nowrap border-r border-white/10">
           Levered FCF (LFCF)
         </td>
         {rows.map(r => (
           <td key={r.year} className={cn(
             'px-2 py-2.5 text-right text-xs font-bold tabular-nums font-mono whitespace-nowrap',
             cellBg(r),
-            r.lfcf != null && r.lfcf < 0 ? 'text-red-600' : 'text-slate-900'
+            r.lfcf != null && r.lfcf < 0 ? 'text-red-400' : 'text-slate-100'
           )}>
             {fmtVal(r.lfcf)}
           </td>
         ))}
       </tr>,
-      <tr key="lfcf-growth" className="hover:bg-slate-50/50">
-        <td className="sticky left-0 z-10 bg-white pl-6 pr-4 py-0.5 text-[11px] text-slate-400 whitespace-nowrap border-r border-slate-100">
+      <tr key="lfcf-growth" className="hover:bg-white/4">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           LFCF % Chg
         </td>
         {rows.map(r => (
           <td key={r.year} className={cn('px-2 py-0.5 text-right text-[11px] tabular-nums font-mono whitespace-nowrap', cellBg(r),
-            r.lfcfGrowthPct != null && r.lfcfGrowthPct > 0 ? 'text-emerald-600'
-              : r.lfcfGrowthPct != null && r.lfcfGrowthPct < 0 ? 'text-red-500' : 'text-slate-400')}>
+            r.lfcfGrowthPct != null && r.lfcfGrowthPct > 0 ? 'text-emerald-400'
+              : r.lfcfGrowthPct != null && r.lfcfGrowthPct < 0 ? 'text-red-400' : 'text-slate-400')}>
             {fmtPctDisplay(r.lfcfGrowthPct)}
           </td>
         ))}
       </tr>,
-      <tr key="pv-lfcf" className="hover:bg-slate-50/50 border-b border-slate-100">
-        <td className="sticky left-0 z-10 bg-white px-4 py-0.5 text-[11px] text-slate-400 whitespace-nowrap border-r border-slate-100">
+      <tr key="pv-lfcf" className="hover:bg-white/4 border-b border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-0.5 text-[11px] text-slate-400 whitespace-nowrap border-r border-white/8">
           PV of LFCF
         </td>
         {rows.map(r => (
@@ -683,7 +683,7 @@ export default function ForecastTable({
     const displayWacc = currentWacc ?? wd.wacc * 100
 
     return (
-      <div className="bg-white px-6 py-5 border-t border-slate-200">
+      <div className="bg-[#080F1E] px-6 py-5 border-t border-white/10">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Discount Rate (WACC)</p>
@@ -692,7 +692,7 @@ export default function ForecastTable({
             </p>
           </div>
           <div className="text-right">
-            <span className="text-2xl font-extrabold text-[#0F2A5E] tabular-nums">{displayWacc.toFixed(1)}%</span>
+            <span className="text-2xl font-extrabold text-blue-300 tabular-nums">{displayWacc.toFixed(1)}%</span>
             {onWaccChange && <p className="text-[10px] text-slate-400 mt-0.5">drag slider to adjust</p>}
           </div>
         </div>
@@ -706,11 +706,11 @@ export default function ForecastTable({
               step={0.1}
               value={displayWacc}
               onChange={e => onWaccChange(parseFloat(e.target.value))}
-              className="w-full h-2 accent-[#0F2A5E] rounded-lg cursor-pointer"
+              className="w-full h-2 accent-blue-500 rounded-lg cursor-pointer"
             />
             <div className="flex justify-between text-[10px] text-slate-400 mt-1">
               <span>5%</span>
-              <span className="text-[#0F2A5E] font-bold">{displayWacc.toFixed(1)}% current</span>
+              <span className="text-blue-400 font-bold">{displayWacc.toFixed(1)}% current</span>
               <span>25%</span>
             </div>
           </div>
@@ -718,7 +718,7 @@ export default function ForecastTable({
 
         <div className="grid grid-cols-2 gap-4">
           {/* Equity side */}
-          <div className="rounded-xl bg-slate-50 border border-slate-100 p-4">
+          <div className="rounded-xl bg-white/5 border border-white/8 p-4">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Equity Side</p>
             <div className="space-y-2.5">
               {([
@@ -734,8 +734,8 @@ export default function ForecastTable({
                 { label: 'Equity Weight', value: wd.equityWeighting != null ? (wd.equityWeighting * 100).toFixed(0) + '%' : null },
               ] as { label: string; value: string | null; bold?: boolean }[]).map(({ label, value, bold }) => (
                 <div key={label} className="flex items-center justify-between">
-                  <span className="text-[11px] text-slate-500">{label}</span>
-                  <span className={cn('text-[11px] tabular-nums font-mono', bold ? 'font-bold text-slate-800' : 'text-slate-600')}>
+                  <span className="text-[11px] text-slate-400">{label}</span>
+                  <span className={cn('text-[11px] tabular-nums font-mono', bold ? 'font-bold text-slate-100' : 'text-slate-300')}>
                     {value ?? <NABadge reason="no-data" />}
                   </span>
                 </div>
@@ -744,7 +744,7 @@ export default function ForecastTable({
           </div>
 
           {/* Debt side */}
-          <div className="rounded-xl bg-slate-50 border border-slate-100 p-4">
+          <div className="rounded-xl bg-white/5 border border-white/8 p-4">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Debt Side</p>
             <div className="space-y-2.5">
               {([
@@ -755,8 +755,8 @@ export default function ForecastTable({
                 { label: 'Debt Weight', value: wd.debtWeighting != null ? (wd.debtWeighting * 100).toFixed(0) + '%' : null },
               ] as { label: string; value: string | null; bold?: boolean }[]).map(({ label, value, bold }) => (
                 <div key={label} className="flex items-center justify-between">
-                  <span className="text-[11px] text-slate-500">{label}</span>
-                  <span className={cn('text-[11px] tabular-nums font-mono', bold ? 'font-bold text-slate-800' : 'text-slate-600')}>
+                  <span className="text-[11px] text-slate-400">{label}</span>
+                  <span className={cn('text-[11px] tabular-nums font-mono', bold ? 'font-bold text-slate-100' : 'text-slate-300')}>
                     {value ?? <NABadge reason="no-data" />}
                   </span>
                 </div>
@@ -820,18 +820,18 @@ export default function ForecastTable({
     ]
 
     return (
-      <div className="bg-white px-6 py-5 border-t border-slate-200">
+      <div className="bg-[#080F1E] px-6 py-5 border-t border-white/10">
         {/* Method toggle */}
         <div className="flex items-center justify-between mb-4">
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Terminal Value</p>
-          <div className="flex rounded-lg border border-slate-200 overflow-hidden">
+          <div className="flex rounded-lg border border-white/10 overflow-hidden">
             {(['perpetuity', 'multiple'] as const).map(m => (
               <button
                 key={m}
                 onClick={() => onTerminalMethodChange(m)}
                 className={cn(
                   'px-4 py-1.5 text-xs font-semibold transition-colors',
-                  td.method === m ? 'bg-[#0F2A5E] text-white' : 'text-slate-500 hover:bg-slate-50'
+                  td.method === m ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-white/8'
                 )}
               >
                 {m === 'perpetuity' ? 'Perpetuity Growth' : 'Exit Multiple'}
@@ -841,7 +841,7 @@ export default function ForecastTable({
         </div>
 
         {activeGuardError && td.method === 'perpetuity' && (
-          <div className="mb-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+          <div className="mb-3 flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-400">
             <span className="font-bold">!</span>
             <span>{activeGuardError}</span>
           </div>
@@ -850,18 +850,18 @@ export default function ForecastTable({
         {/* Method input */}
         <div className="mb-5">
           {isMultiple ? (
-            <div className="flex items-center gap-3 rounded-xl bg-slate-50 border border-slate-100 px-4 py-3">
+            <div className="flex items-center gap-3 rounded-xl bg-white/5 border border-white/8 px-4 py-3">
               <div className="flex-1">
-                <p className="text-[11px] font-semibold text-slate-700">Exit Multiple (EV / FCF)</p>
+                <p className="text-[11px] font-semibold text-slate-200">Exit Multiple (EV / FCF)</p>
                 <p className="text-[10px] text-slate-400 mt-0.5">Applied to final-year FCF to compute terminal enterprise value</p>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => onExitMultipleChange(Math.round(Math.max(1, td.exitMultiple - 1) * 10) / 10)}
-                  className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 font-bold text-sm flex items-center justify-center"
+                  className="w-7 h-7 rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 font-bold text-sm flex items-center justify-center"
                 >−</button>
                 <input
-                  className="w-16 border border-slate-200 bg-white px-2 py-1 text-center text-sm font-bold text-slate-800 rounded-lg focus:border-blue-400 focus:outline-none"
+                  className="w-16 border border-white/10 bg-[#0A1628] px-2 py-1 text-center text-sm font-bold text-slate-100 rounded-lg focus:border-blue-400 focus:outline-none"
                   value={exitMultipleDraft ?? Math.max(1, td.exitMultiple).toFixed(1)}
                   onChange={e => setExitMultipleDraft(e.target.value)}
                   onBlur={() => {
@@ -882,23 +882,23 @@ export default function ForecastTable({
                 <span className="text-xs text-slate-400">×</span>
                 <button
                   onClick={() => onExitMultipleChange(Math.round((td.exitMultiple + 1) * 10) / 10)}
-                  className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 font-bold text-sm flex items-center justify-center"
+                  className="w-7 h-7 rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 font-bold text-sm flex items-center justify-center"
                 >+</button>
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-3 rounded-xl bg-slate-50 border border-slate-100 px-4 py-3">
+            <div className="flex items-center gap-3 rounded-xl bg-white/5 border border-white/8 px-4 py-3">
               <div className="flex-1">
-                <p className="text-[11px] font-semibold text-slate-700">Terminal Growth Rate</p>
+                <p className="text-[11px] font-semibold text-slate-200">Terminal Growth Rate</p>
                 <p className="text-[10px] text-slate-400 mt-0.5">Long-run FCF growth rate beyond projection period (typically 2–3%)</p>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => onTerminalGChange(Math.round(Math.max(0, td.terminalG - 0.005) * 1000) / 1000)}
-                  className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 font-bold text-sm flex items-center justify-center"
+                  className="w-7 h-7 rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 font-bold text-sm flex items-center justify-center"
                 >−</button>
                 <input
-                  className="w-16 border border-slate-200 bg-white px-2 py-1 text-center text-sm font-bold text-slate-800 rounded-lg focus:border-blue-400 focus:outline-none"
+                  className="w-16 border border-white/10 bg-[#0A1628] px-2 py-1 text-center text-sm font-bold text-slate-100 rounded-lg focus:border-blue-400 focus:outline-none"
                   value={terminalGDraft ?? (td.terminalG * 100).toFixed(1)}
                   onChange={e => setTerminalGDraft(e.target.value)}
                   onBlur={() => {
@@ -919,7 +919,7 @@ export default function ForecastTable({
                 <span className="text-xs text-slate-400">%</span>
                 <button
                   onClick={() => onTerminalGChange(Math.round(Math.min(0.14, td.terminalG + 0.005) * 1000) / 1000)}
-                  className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 font-bold text-sm flex items-center justify-center"
+                  className="w-7 h-7 rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 font-bold text-sm flex items-center justify-center"
                 >+</button>
               </div>
             </div>
@@ -930,9 +930,9 @@ export default function ForecastTable({
         {fcfShare != null && tvShare != null && (
           <div className="mb-5">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[11px] font-semibold text-slate-600">Valuation Composition</p>
+              <p className="text-[11px] font-semibold text-slate-300">Valuation Composition</p>
               {tvWarning && (
-                <span className="text-[10px] text-amber-700 font-semibold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] text-amber-400 font-semibold bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
                   TV {tvShare.toFixed(0)}% — high terminal reliance
                 </span>
               )}
@@ -962,37 +962,37 @@ export default function ForecastTable({
         )}
 
         {/* Equity bridge */}
-        <div className="rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Equity Value Bridge</p>
+        <div className="rounded-xl border border-white/10 overflow-hidden">
+          <div className="px-4 py-2 bg-white/5 border-b border-white/8">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Equity Value Bridge</p>
           </div>
-          <div className="divide-y divide-slate-100 bg-white">
+          <div className="divide-y divide-white/8">
             {bridgeRows.map(({ label, value, bold, sub }) => (
-              <div key={label} className={cn('flex items-center justify-between px-4 py-2', bold && 'bg-slate-50/60')}>
-                <span className={cn('text-xs', sub ? 'text-slate-400 pl-3' : bold ? 'font-semibold text-slate-700' : 'text-slate-600')}>
+              <div key={label} className={cn('flex items-center justify-between px-4 py-2', bold && 'bg-white/5')}>
+                <span className={cn('text-xs', sub ? 'text-slate-400 pl-3' : bold ? 'font-semibold text-slate-200' : 'text-slate-400')}>
                   {label}
                 </span>
-                <span className={cn('text-xs tabular-nums font-mono', bold ? 'font-bold text-slate-900' : 'text-slate-700')}>
+                <span className={cn('text-xs tabular-nums font-mono', bold ? 'font-bold text-slate-100' : 'text-slate-300')}>
                   {value ?? <NABadge reason="calc-error" />}
                 </span>
               </div>
             ))}
 
             {/* Implied price hero */}
-            <div className="flex items-center justify-between px-4 py-4 bg-white border-t-2 border-slate-200">
+            <div className="flex items-center justify-between px-4 py-4 border-t-2 border-white/10">
               <div>
-                <p className="text-sm font-bold text-slate-800">Implied Share Price</p>
+                <p className="text-sm font-bold text-slate-100">Implied Share Price</p>
                 <p className="text-[11px] text-slate-400 mt-0.5">vs. {curr}{td.currentPrice.toFixed(2)} current price</p>
               </div>
               <div className="text-right">
                 <p className={cn('text-2xl font-extrabold tabular-nums',
-                  impliedUpside != null && impliedUpside >= 0 ? 'text-emerald-600' : 'text-red-500'
+                  impliedUpside != null && impliedUpside >= 0 ? 'text-emerald-400' : 'text-red-400'
                 )}>
                   {impliedPrice != null ? `${curr}${impliedPrice.toFixed(2)}` : <NABadge reason="calc-error" />}
                 </p>
                 {impliedUpside != null && (
                   <p className={cn('text-sm font-semibold mt-0.5',
-                    impliedUpside >= 0 ? 'text-emerald-500' : 'text-red-400'
+                    impliedUpside >= 0 ? 'text-emerald-400' : 'text-red-400'
                   )}>
                     {impliedUpside >= 0 ? '+' : ''}{(impliedUpside * 100).toFixed(1)}%
                   </p>
@@ -1008,12 +1008,12 @@ export default function ForecastTable({
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="bg-white rounded-xl overflow-hidden">
+    <div className="bg-[#080F1E] rounded-xl overflow-hidden">
       {/* Header bar */}
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 bg-slate-50 flex-wrap gap-3">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/10 bg-white/5 flex-wrap gap-3">
         <div className="flex items-center gap-3 flex-wrap">
           <div>
-            <h3 className="text-sm font-bold text-slate-800">Full DCF Model</h3>
+            <h3 className="text-sm font-bold text-slate-100">Full DCF Model</h3>
             <p className="text-[10px] text-slate-400 mt-0.5">
               {mode === 'ufcf' ? 'Unlevered Free Cash Flow · discounted at WACC' : 'Levered Free Cash Flow · discounted at Cost of Equity'}
             </p>
@@ -1021,9 +1021,9 @@ export default function ForecastTable({
 
           {/* Computed CAGR badge */}
           {computedCagr != null && (
-            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold">Avg CAGR</span>
-              <span className="text-sm font-bold text-[#0F2A5E] tabular-nums">{computedCagr.toFixed(1)}%</span>
+            <div className="flex items-center gap-1.5 bg-white/8 border border-white/10 rounded-lg px-3 py-1.5">
+              <span className="text-[10px] text-slate-400 uppercase tracking-wide font-semibold">Avg CAGR</span>
+              <span className="text-sm font-bold text-blue-300 tabular-nums">{computedCagr.toFixed(1)}%</span>
               <span className="text-[9px] text-slate-400">(geom.)</span>
             </div>
           )}
@@ -1032,11 +1032,11 @@ export default function ForecastTable({
           {cagrAnalysis?.analystEstimate1y != null && (
             <div className="flex items-center gap-1.5 text-[10px]">
               <span className="text-slate-400">Analyst est:</span>
-              <span className="font-semibold text-amber-700 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded">
-                FY+1 {(cagrAnalysis.analystEstimate1y * 100).toFixed(1)}%
-              </span>
+              <span className="font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">
+                  FY+1 {(cagrAnalysis.analystEstimate1y * 100).toFixed(1)}%
+                </span>
               {cagrAnalysis.analystEstimate2y != null && (
-                <span className="font-semibold text-amber-700 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded">
+                <span className="font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">
                   FY+2 {(cagrAnalysis.analystEstimate2y * 100).toFixed(1)}%
                 </span>
               )}
@@ -1047,15 +1047,15 @@ export default function ForecastTable({
         <div className="flex items-center gap-2 flex-wrap">
           {/* Implied price badge */}
           {titleImpliedPrice != null && (
-            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-1.5">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold">Implied</span>
+            <div className="flex items-center gap-2 bg-white/8 border border-white/10 rounded-lg px-3 py-1.5">
+              <span className="text-[10px] text-slate-400 uppercase tracking-wide font-semibold">Implied</span>
               <span className={cn('text-sm font-bold tabular-nums',
-                titleUpside != null && titleUpside >= 0 ? 'text-emerald-600' : 'text-red-500'
+                titleUpside != null && titleUpside >= 0 ? 'text-emerald-400' : 'text-red-400'
               )}>
                 {curr}{titleImpliedPrice.toFixed(2)}
               </span>
               {titleUpside != null && (
-                <span className={cn('text-[10px] font-semibold', titleUpside >= 0 ? 'text-emerald-500' : 'text-red-400')}>
+                <span className={cn('text-[10px] font-semibold', titleUpside >= 0 ? 'text-emerald-400' : 'text-red-400')}>
                   {titleUpside >= 0 ? '+' : ''}{(titleUpside * 100).toFixed(1)}%
                 </span>
               )}
@@ -1063,14 +1063,14 @@ export default function ForecastTable({
           )}
 
           {/* Unlevered / Levered toggle */}
-          <div className="flex rounded-lg overflow-hidden border border-slate-200">
+          <div className="flex rounded-lg overflow-hidden border border-white/10">
             {(['ufcf', 'lfcf'] as const).map(m => (
               <button
                 key={m}
                 onClick={() => setMode(m)}
                 className={cn(
                   'px-3 py-1.5 text-xs font-semibold transition-colors',
-                  mode === m ? 'bg-[#0F2A5E] text-white' : 'text-slate-500 hover:bg-slate-100 bg-white'
+                  mode === m ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-white/8 bg-transparent'
                 )}
               >
                 {m === 'ufcf' ? 'Unlevered' : 'Levered'}
@@ -1081,9 +1081,9 @@ export default function ForecastTable({
       </div>
 
       {/* Edit hint bar */}
-      <div className="px-5 py-2 bg-blue-50/60 border-b border-blue-100 flex items-center gap-2">
-        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />
-        <p className="text-[11px] text-blue-700">
+      <div className="px-5 py-2 bg-blue-500/10 border-b border-blue-500/20 flex items-center gap-2">
+        <span className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" />
+        <p className="text-[11px] text-blue-300">
           Click any <span className="font-bold">Revenue % Growth</span> cell in a projected column to adjust that year&apos;s growth assumption.
           All other values are computed automatically.
         </p>
@@ -1094,7 +1094,7 @@ export default function ForecastTable({
         <table className="w-full min-w-max border-collapse">
           <thead>
             <tr>
-              <th className="sticky left-0 z-10 bg-slate-50 px-4 py-2.5 text-left text-[11px] font-semibold text-slate-400 w-52 min-w-[200px] border-r border-slate-200 border-b border-slate-200">
+              <th className="sticky left-0 z-10 bg-[#080F1E] px-4 py-2.5 text-left text-[11px] font-semibold text-slate-400 w-52 min-w-[200px] border-r border-white/10 border-b border-white/10">
                 {curr}M
               </th>
               {rows.map(r => colHeaderEl(r))}

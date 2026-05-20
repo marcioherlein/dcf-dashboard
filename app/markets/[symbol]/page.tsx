@@ -44,31 +44,31 @@ function fmtRange(lo: number | null, hi: number | null, currency: string): strin
 
 function changeCls(v: number | null) {
   if (v == null) return 'text-slate-500'
-  return v > 0 ? 'text-emerald-600' : v < 0 ? 'text-red-500' : 'text-slate-500'
+  return v > 0 ? 'text-emerald-400' : v < 0 ? 'text-red-400' : 'text-slate-500'
 }
 
 // ── Type badge ──────────────────────────────────────────────────────────────
 const TYPE_BADGE: Record<string, { label: string; cls: string }> = {
-  index:      { label: 'Index',       cls: 'bg-blue-100 text-blue-700' },
-  etf:        { label: 'ETF',         cls: 'bg-violet-100 text-violet-700' },
-  fx:         { label: 'FX',          cls: 'bg-amber-100 text-amber-700' },
-  commodity:  { label: 'Commodity',   cls: 'bg-orange-100 text-orange-700' },
-  volatility: { label: 'Volatility',  cls: 'bg-rose-100 text-rose-700' },
-  crypto:     { label: 'Crypto',      cls: 'bg-cyan-100 text-cyan-700' },
-  other:      { label: 'Instrument',  cls: 'bg-slate-100 text-slate-600' },
+  index:      { label: 'Index',       cls: 'bg-blue-500/15 text-blue-300' },
+  etf:        { label: 'ETF',         cls: 'bg-violet-500/15 text-violet-300' },
+  fx:         { label: 'FX',          cls: 'bg-amber-500/15 text-amber-300' },
+  commodity:  { label: 'Commodity',   cls: 'bg-orange-500/15 text-orange-300' },
+  volatility: { label: 'Volatility',  cls: 'bg-rose-500/15 text-rose-300' },
+  crypto:     { label: 'Crypto',      cls: 'bg-cyan-500/15 text-cyan-300' },
+  other:      { label: 'Instrument',  cls: 'bg-white/8 text-slate-400' },
 }
 
 // ── Skeleton ────────────────────────────────────────────────────────────────
 function Skeleton({ className }: { className?: string }) {
-  return <div className={cn('animate-pulse rounded bg-slate-100', className)} />
+  return <div className={cn('animate-pulse rounded bg-white/8', className)} />
 }
 
 function PageSkeleton() {
   return (
-    <div className="min-h-screen bg-[#F8FAFB] pt-[52px]">
+    <div className="min-h-screen bg-[#050D1F] pt-[52px]">
       <div className="max-w-[900px] mx-auto px-4 py-6 space-y-4">
         <Skeleton className="h-5 w-28" />
-        <div className="rounded-xl bg-white border border-slate-200 p-6 space-y-3">
+        <div className="rounded-xl bg-white/5 border border-white/10 p-6 space-y-3">
           <div className="flex items-center gap-3">
             <Skeleton className="h-8 w-20" />
             <Skeleton className="h-5 w-48" />
@@ -93,9 +93,9 @@ function PageSkeleton() {
 // ── Stat tile ───────────────────────────────────────────────────────────────
 function StatTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-white border border-slate-200 px-4 py-3">
+    <div className="rounded-xl bg-white/5 border border-white/10 px-4 py-3">
       <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{label}</div>
-      <div className="text-[14px] font-semibold text-slate-900 font-mono tabular-nums truncate" title={value}>
+      <div className="text-[14px] font-semibold text-slate-100 font-mono tabular-nums truncate" title={value}>
         {value}
       </div>
     </div>
@@ -106,8 +106,8 @@ function StatTile({ label, value }: { label: string; value: string }) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function NewsItem({ item }: { item: any }) {
   const inner = (
-    <div className="px-4 py-3 hover:bg-slate-50/70 transition-colors group">
-      <p className="text-[12.5px] font-medium text-slate-800 leading-snug line-clamp-2 group-hover:text-slate-900">
+    <div className="px-4 py-3 hover:bg-white/5 transition-colors group">
+      <p className="text-[12.5px] font-medium text-slate-200 leading-snug line-clamp-2 group-hover:text-slate-100">
         {item.title}
       </p>
       <div className="flex items-center gap-2 mt-1.5">
@@ -169,12 +169,12 @@ export default function InstrumentDetailPage() {
 
   if (error || !detail) {
     return (
-      <div className="min-h-screen bg-[#F8FAFB] pt-[52px]">
+      <div className="min-h-screen bg-[#050D1F] pt-[52px]">
         <div className="max-w-[900px] mx-auto px-4 py-6">
-          <Link href="/markets" className="inline-flex items-center gap-1.5 text-[13px] text-slate-500 hover:text-slate-900 transition-colors mb-4">
+          <Link href="/markets" className="inline-flex items-center gap-1.5 text-[13px] text-slate-400 hover:text-slate-100 transition-colors mb-4">
             <ArrowLeft className="w-4 h-4" /> Back to Markets
           </Link>
-          <div className="rounded-xl bg-white border border-red-200 px-6 py-5">
+          <div className="rounded-xl bg-red-500/10 border border-red-500/30 px-6 py-5">
             <p className="text-sm font-semibold text-red-700 mb-1">Unable to load instrument data</p>
             <p className="text-xs text-red-500">{error ?? 'Unknown error'}</p>
           </div>
@@ -187,23 +187,23 @@ export default function InstrumentDetailPage() {
   const priceDecimals = detail.type === 'fx' || (detail.price != null && detail.price < 5) ? 4 : 2
 
   return (
-    <div className="min-h-screen bg-[#F8FAFB] pt-[52px]">
+    <div className="min-h-screen bg-[#050D1F] pt-[52px]">
       <div className="max-w-[900px] mx-auto px-4 py-6 space-y-4">
 
         {/* Back link */}
         <Link
           href="/markets"
-          className="inline-flex items-center gap-1.5 text-[13px] text-slate-500 hover:text-slate-900 transition-colors"
+          className="inline-flex items-center gap-1.5 text-[13px] text-slate-400 hover:text-slate-100 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Markets
         </Link>
 
         {/* ── Header card ──────────────────────────────────────────────────── */}
-        <div className="rounded-xl bg-white border border-slate-200 px-6 py-5">
+        <div className="rounded-xl bg-white/5 border border-white/10 px-6 py-5">
           {/* Symbol + name + badges */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
-            <h1 className="text-[22px] font-bold text-slate-900 tracking-tight">
+            <h1 className="text-[22px] font-bold text-slate-100 tracking-tight">
               {symbol.replace(/=X$/, '').replace(/^[\^]/, '').replace(/-USD$/, 'USD').replace(/=F$/, '')}
             </h1>
             <span className="text-[15px] text-slate-500 font-medium">{detail.name}</span>
@@ -211,7 +211,7 @@ export default function InstrumentDetailPage() {
               {typeBadge.label}
             </span>
             {detail.category && (
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600">
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-white/8 text-slate-400">
                 {detail.category}
               </span>
             )}
@@ -222,7 +222,7 @@ export default function InstrumentDetailPage() {
 
           {/* Price + change */}
           <div className="flex flex-wrap items-baseline gap-3 mb-4">
-            <span className="text-[32px] font-bold font-mono tabular-nums text-slate-900 leading-none">
+            <span className="text-[32px] font-bold font-mono tabular-nums text-slate-100 leading-none">
               {fmtPrice(detail.price, detail.currency, priceDecimals)}
             </span>
             <span className={cn('text-[16px] font-semibold font-mono tabular-nums', changeCls(detail.changePct))}>
@@ -239,7 +239,7 @@ export default function InstrumentDetailPage() {
           </div>
 
           {/* Description */}
-          <p className="text-[13px] text-slate-600 leading-relaxed">{detail.description}</p>
+          <p className="text-[13px] text-slate-300 leading-relaxed">{detail.description}</p>
 
           {/* Meta pills */}
           <div className="flex flex-wrap gap-2 mt-3">
@@ -297,9 +297,9 @@ export default function InstrumentDetailPage() {
                 <Link
                   key={sym}
                   href={`/markets/${encodeURIComponent(sym)}`}
-                  className="flex-shrink-0 rounded-xl bg-white border border-slate-200 px-4 py-3 hover:border-blue-300 hover:bg-blue-50/30 transition-colors"
+                className="flex-shrink-0 rounded-xl bg-white/5 border border-white/10 px-4 py-3 hover:border-blue-500/40 hover:bg-blue-500/10 transition-colors"
                 >
-                  <div className="text-[13px] font-semibold text-slate-800 tabular-nums">
+                  <div className="text-[13px] font-semibold text-slate-200 tabular-nums">
                     {sym.replace(/=X$/, '').replace(/^[\^]/, '').replace(/-USD$/, 'USD').replace(/=F$/, '')}
                   </div>
                   <div className="text-[10px] text-slate-400 mt-0.5">View →</div>
@@ -313,7 +313,7 @@ export default function InstrumentDetailPage() {
         {news.length > 0 && (
           <div>
             <h2 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Recent News</h2>
-            <div className="rounded-xl bg-white border border-slate-200 overflow-hidden divide-y divide-slate-50">
+            <div className="rounded-xl bg-white/5 border border-white/10 overflow-hidden divide-y divide-white/5">
               {news.map((item, i) => (
                 <NewsItem key={i} item={item} />
               ))}

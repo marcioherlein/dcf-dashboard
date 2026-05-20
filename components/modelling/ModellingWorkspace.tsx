@@ -377,7 +377,7 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
   }, [])
 
   return (
-    <div className="bg-white rounded-xl overflow-hidden border border-slate-200">
+    <div className="bg-[#080F1E] rounded-xl overflow-hidden border border-white/10">
       <DataQualityWarnings
         terminalGError={tvUFCF.guardError}
         financialCurrencyNote={baseInput.financialCurrencyNote}

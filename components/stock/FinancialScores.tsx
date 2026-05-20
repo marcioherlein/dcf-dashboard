@@ -41,7 +41,7 @@ function CriterionRow({ pass, name, detail }: { pass: boolean | null; name: stri
   return (
     <div className="flex items-center gap-2.5 py-1.5">
       <div className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${
-        pass === null ? 'bg-slate-200 text-slate-500' : pass ? 'bg-emerald-500' : 'bg-red-400'
+        pass === null ? 'bg-white/15 text-slate-400' : pass ? 'bg-emerald-500' : 'bg-red-400'
       }`}>
         {pass === null ? '?' : pass ? '✓' : '✗'}
       </div>
@@ -302,7 +302,7 @@ export default function FinancialScores({ scores }: Props) {
 
         {/* ── ROIC vs WACC ── */}
         {roic.dataAvailable && (
-          <div className={`rounded-xl border p-4 ${spreadGood ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+          <div className={`rounded-xl border p-4 ${spreadGood ? 'bg-emerald-500/10 border-emerald-500/25' : 'bg-red-500/10 border-red-500/25'}`}>
             <div className="flex items-start justify-between mb-1">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">ROIC vs WACC</p>
