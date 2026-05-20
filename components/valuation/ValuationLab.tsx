@@ -365,7 +365,6 @@ interface ValuationLabProps {
 
 export default function ValuationLab({ apiData, ticker, statementsData, onNavigateToFinancials, onWeightedFVChange }: ValuationLabProps) {
   const [overrides,    setOverrides]    = useState<OverridesMap>({})
-  const [showAdvanced, setShowAdvanced] = useState(false)
 
   const currency     = apiData?.quote?.currency ?? 'USD'
   const currentPrice = (apiData?.quote?.price   ?? 0) as number
@@ -645,39 +644,15 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
         />
       </div>
 
-      {/* ── 5. Advanced Mode — full DCF table ────────────────────────────── */}
+      {/* ── 5. Full DCF Modelling Table ──────────────────────────────────── */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden">
-        <button
-          onClick={() => setShowAdvanced(v => !v)}
-          className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-400">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <span className="text-sm font-semibold text-slate-700">Advanced DCF model</span>
-            <span className="text-micro text-slate-400">Year-by-year DCF model · UFCF &amp; LFCF · editable cells</span>
-          </div>
-          <svg
-            className={cn('text-slate-400 transition-transform', showAdvanced && 'rotate-180')}
-            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-
-        {showAdvanced && (
-          <div className="border-t border-slate-100">
-            <div className="px-5 pt-4 pb-2">
-              <h3 className="text-base font-bold text-slate-900">Full DCF Modelling Table</h3>
-              <p className="text-micro text-slate-400 mt-0.5">
-                Year-by-year unlevered FCF model grounded in Yahoo Finance statements
-              </p>
-            </div>
-            <ModellingWorkspace apiData={apiData} ticker={ticker} statementsData={statementsData} />
-          </div>
-        )}
+        <div className="px-5 pt-4 pb-2 border-b border-slate-100">
+          <h3 className="text-base font-bold text-slate-900">Full DCF Modelling Table</h3>
+          <p className="text-micro text-slate-400 mt-0.5">
+            Year-by-year unlevered FCF model grounded in Yahoo Finance statements
+          </p>
+        </div>
+        <ModellingWorkspace apiData={apiData} ticker={ticker} statementsData={statementsData} />
       </div>
     </div>
   )

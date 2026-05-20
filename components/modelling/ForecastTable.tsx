@@ -85,8 +85,6 @@ interface ForecastTableProps {
   waccData: WACCData
   terminalData: TerminalData
   currency: string
-  preset: 'conservative' | 'base' | 'optimistic'
-  onPresetChange: (p: 'conservative' | 'base' | 'optimistic') => void
   onCellEdit: (year: string, field: string, value: number) => void
   onTerminalMethodChange: (method: 'perpetuity' | 'multiple') => void
   onExitMultipleChange: (value: number) => void
@@ -214,8 +212,6 @@ export default function ForecastTable({
   waccData,
   terminalData,
   currency,
-  preset,
-  onPresetChange,
   onCellEdit,
   onTerminalMethodChange,
   onExitMultipleChange,
@@ -232,6 +228,19 @@ export default function ForecastTable({
   const [waccDraft, setWaccDraft] = useState<string | null>(null)
 
   const curr = currency === 'USD' ? '$' : currency + ' '
+
+  // Implied price computed at component level so the title bar can show it
+  const titleImpliedPrice = (() => {
+    const td = terminalData
+    const isLfcf = mode === 'lfcf'
+    const tv = td.method === 'multiple'
+      ? (isLfcf ? (td.lfcfExitMultipleTVDiscounted ?? null) : td.exitMultipleTVDiscounted)
+      : (isLfcf ? (td.lfcfPerpetualTVDiscounted   ?? null) : td.perpetuityTVDiscounted)
+    const sumPvFlow = isLfcf ? (td.sumPvLfcf ?? 0) : td.sumPvUfcf
+    const ev = tv != null ? sumPvFlow + tv : null
+    const equity = isLfcf ? ev : (ev != null ? ev + (td.cashM ?? 0) - (td.debtM ?? 0) : null)
+    return equity != null && td.sharesM != null && td.sharesM > 0 ? equity / td.sharesM : null
+  })()
 
   // Build compact column header label: "2024", "2025E", "TTM"
   function colHeader(row: DisplayRow): string {
@@ -1000,22 +1009,6 @@ export default function ForecastTable({
           <h3 className="text-xs font-semibold uppercase tracking-widest text-[#888]">
             Build Up Free Cash Flow
           </h3>
-          {/* Preset pills */}
-          <div className="flex gap-1">
-            {(['conservative', 'base', 'optimistic'] as const).map(p => (
-              <button
-                key={p}
-                onClick={() => onPresetChange(p)}
-                className={`px-2.5 py-0.5 text-[11px] rounded-full capitalize transition-colors ${
-                  preset === p
-                    ? 'bg-[#4a9eff] text-white'
-                    : 'border border-[#333] text-[#888] hover:border-[#555]'
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
           {/* CAGR override */}
           {onCagrChange && currentCagr != null && (
             <div className="flex items-center gap-1.5">
@@ -1070,24 +1063,37 @@ export default function ForecastTable({
           )}
         </div>
 
-        {/* Unlevered / Levered toggle */}
-        <div className="flex rounded overflow-hidden border border-[#333] text-xs">
-          <button
-            onClick={() => setMode('ufcf')}
-            className={`px-3 py-1 transition-colors ${
-              mode === 'ufcf' ? 'bg-[#4a9eff] text-white' : 'text-[#888] hover:text-[#ccc]'
-            }`}
-          >
-            Unlevered
-          </button>
-          <button
-            onClick={() => setMode('lfcf')}
-            className={`px-3 py-1 transition-colors ${
-              mode === 'lfcf' ? 'bg-[#4a9eff] text-white' : 'text-[#888] hover:text-[#ccc]'
-            }`}
-          >
-            Levered
-          </button>
+        <div className="flex items-center gap-3">
+          {/* Implied price pinned in header */}
+          {titleImpliedPrice != null && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[#555] text-[11px] uppercase tracking-wide">Implied</span>
+              <span className={`text-sm font-bold tabular-nums ${
+                titleImpliedPrice >= terminalData.currentPrice ? 'text-[#4ade80]' : 'text-[#f87171]'
+              }`}>
+                {curr}{titleImpliedPrice.toFixed(2)}
+              </span>
+            </div>
+          )}
+          {/* Unlevered / Levered toggle */}
+          <div className="flex rounded overflow-hidden border border-[#333] text-xs">
+            <button
+              onClick={() => setMode('ufcf')}
+              className={`px-3 py-1 transition-colors ${
+                mode === 'ufcf' ? 'bg-[#4a9eff] text-white' : 'text-[#888] hover:text-[#ccc]'
+              }`}
+            >
+              Unlevered
+            </button>
+            <button
+              onClick={() => setMode('lfcf')}
+              className={`px-3 py-1 transition-colors ${
+                mode === 'lfcf' ? 'bg-[#4a9eff] text-white' : 'text-[#888] hover:text-[#ccc]'
+              }`}
+            >
+              Levered
+            </button>
+          </div>
         </div>
       </div>
 

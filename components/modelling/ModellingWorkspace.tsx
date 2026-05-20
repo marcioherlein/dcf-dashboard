@@ -365,8 +365,6 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
         waccData={waccData}
         terminalData={terminalData}
         currency={baseInput.currency}
-        preset={preset}
-        onPresetChange={setPreset}
         onCellEdit={handleCellEdit}
         onTerminalMethodChange={setTerminalMethod}
         onExitMultipleChange={(v) => setExitMultipleOverride(v)}
