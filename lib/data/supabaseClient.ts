@@ -26,10 +26,24 @@ export interface ValuationSnapshot {
   scenarios: { bull: number; base: number; bear: number }
 }
 
-export async function saveValuation(snapshot: ValuationSnapshot): Promise<ValuationSnapshot> {
+export async function saveValuation(
+  snapshot: ValuationSnapshot,
+  userEmail?: string | null,
+): Promise<ValuationSnapshot> {
   const client = getClient()
   if (!client) throw new Error('Supabase not configured — add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local')
-  const { data, error } = await client.from('valuations').insert([snapshot]).select().single()
+
+  let userId: string | null = null
+  if (userEmail) {
+    const { data: user } = await client.from('users').select('id').eq('email', userEmail).single()
+    userId = user?.id ?? null
+  }
+
+  const { data, error } = await client
+    .from('valuations')
+    .insert([{ ...snapshot, user_id: userId }])
+    .select()
+    .single()
   if (error) throw error
   return data
 }
