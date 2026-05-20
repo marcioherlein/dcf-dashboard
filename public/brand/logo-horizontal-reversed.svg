@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 248 64" fill="none">
+  <!-- Navy field -->
+  <rect width="248" height="64" fill="#0F2A5E"/>
+
+  <!-- ── Mark ─────────────────────────────────────── -->
+  <path d="M 6 32 A 26 26 0 0 1 58 32 Z" fill="white"/>
+  <circle cx="32" cy="32" r="26" stroke="white" stroke-width="2.5"/>
+  <line x1="1" y1="32" x2="63" y2="32" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- ── Wordmark ───────────────────────────────────── -->
+  <text
+    x="80"
+    y="36"
+    font-family="'Manrope', 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-size="26"
+    font-weight="700"
+    letter-spacing="-0.3"
+    fill="white"
+  >Rationale</text>
+
+  <text
+    x="81"
+    y="52"
+    font-family="'Manrope', 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-size="9"
+    font-weight="500"
+    letter-spacing="3.2"
+    fill="rgba(255,255,255,0.55)"
+  >CAPITAL</text>
+</svg>

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 248 64" fill="none">
+  <!--
+    Rationale Capital — Horizontal Lockup
+    Mark: 64×64 canvas, circle r=26 centered at (32,32)
+    Wordmark: Manrope 700 + CAPITAL small-caps tracking
+  -->
+
+  <!-- ── Mark ─────────────────────────────────────── -->
+  <!-- Value foundation: bottom semicircle -->
+  <path d="M 6 32 A 26 26 0 0 1 58 32 Z" fill="#0F2A5E"/>
+
+  <!-- The entity: full circle outline -->
+  <circle cx="32" cy="32" r="26" stroke="#0F2A5E" stroke-width="2.5"/>
+
+  <!-- The threshold: decision line, 5px beyond circle each side -->
+  <line x1="1" y1="32" x2="63" y2="32" stroke="#0F2A5E" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- ── Wordmark ───────────────────────────────────── -->
+  <!-- "Rationale" — primary wordmark -->
+  <text
+    x="80"
+    y="36"
+    font-family="'Manrope', 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-size="26"
+    font-weight="700"
+    letter-spacing="-0.3"
+    fill="#0F2A5E"
+  >Rationale</text>
+
+  <!-- "CAPITAL" — secondary identifier, tracked out -->
+  <text
+    x="81"
+    y="52"
+    font-family="'Manrope', 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-size="9"
+    font-weight="500"
+    letter-spacing="3.2"
+    fill="#64748B"
+  >CAPITAL</text>
+</svg>
