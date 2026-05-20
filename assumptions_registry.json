@@ -1,0 +1,671 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Master assumption registry for the DCF valuation platform. Documents every model input: its derivation method, source hierarchy, confidence scoring, editability, validation bounds, and last-updated timestamp. Runtime instances should populate 'runtimeValue' and 'runtimeSource' fields for each assumption.",
+    "lastUpdated": "2026-05-19",
+    "maintainer": "marcioherlein",
+    "dataSourceVersions": {
+      "damodaran_erp": "January 2025 — https://pages.stern.nyu.edu/~adamodar/",
+      "damodaran_crp": "January 2025 — https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/ctryprem.html",
+      "damodaran_industry_multiples": "January 2025",
+      "yahoo_finance2": "^3.x",
+      "fred_api": "FRED / St. Louis Fed"
+    }
+  },
+
+  "globalConstants": {
+    "erp": {
+      "id": "erp",
+      "label": "Equity Risk Premium",
+      "value": 0.046,
+      "displayValue": "4.6%",
+      "source": "damodaran",
+      "sourceDetail": "Damodaran implied ERP — January 2025. Update annually from pages.stern.nyu.edu/~adamodar",
+      "codeRef": "config/valuation.config.ts VALUATION_CONFIG.erp",
+      "editability": "config-only",
+      "confidence": "high",
+      "updateFrequency": "annual",
+      "lastUpdated": "2025-01-01",
+      "validationBounds": { "min": 0.02, "max": 0.10 },
+      "notes": "Applied globally to all cost-of-equity computations. Single value — not ticker-specific."
+    },
+    "vtsTheory": {
+      "id": "vtsTheory",
+      "label": "Value of Tax Shield Theory",
+      "value": "T1_Fernandez_2007",
+      "source": "config",
+      "codeRef": "config/valuation.config.ts VALUATION_CONFIG.vtsTheory",
+      "editability": "config-only",
+      "confidence": "high",
+      "notes": "Fernandez 2007 assumes debt rebalanced to target D/E each period (most public companies). Must match betaLeveringFormula."
+    },
+    "betaLeveringFormula": {
+      "id": "betaLeveringFormula",
+      "label": "Beta Levering Formula",
+      "value": "Fernandez_2007",
+      "source": "config",
+      "codeRef": "config/valuation.config.ts VALUATION_CONFIG.betaLeveringFormula",
+      "editability": "config-only",
+      "confidence": "high",
+      "notes": "Must stay in sync with vtsTheory. Divergence causes leverage cost double-counting."
+    }
+  },
+
+  "assumptions": {
+
+    "rfRate": {
+      "id": "rfRate",
+      "label": "Risk-Free Rate (10Y Treasury Yield)",
+      "description": "10-year US Treasury yield used as the risk-free rate in CAPM.",
+      "formula": "Ke = rfRate + β × (ERP + CRP)",
+      "derivationMethod": "live_fetch",
+      "sourceHierarchy": [
+        { "rank": 1, "source": "FRED API — series TNX (^TNX)", "condition": "always attempted first" },
+        { "rank": 2, "source": "Yahoo Finance ^TNX quoteSummary", "condition": "FRED unavailable" },
+        { "rank": 3, "source": "Hardcoded fallback 0.0429 (4.29%)", "condition": "both APIs fail — RISK: stale rate, no alerting" }
+      ],
+      "codeRef": "lib/data/fredClient.ts getFredRate('TNX'); app/api/financials/route.ts rfRate",
+      "editability": "user-editable",
+      "confidence": "high",
+      "validationBounds": { "min": 0.001, "max": 0.20 },
+      "riskLevel": "medium",
+      "knownRisks": [
+        "Fallback 0.0429 is hardcoded and silently returns stale data if both APIs fail with no error surfaced to UI"
+      ],
+      "recommendedFix": "Log a warning or surface a banner when the fallback value is used; consider caching last-known-good rate in Supabase.",
+      "lastUpdated": "2026-05-19",
+      "runtimeValue": null,
+      "runtimeSource": null
+    },
+
+    "beta": {
+      "id": "beta",
+      "label": "Levered Beta",
+      "description": "Systematic risk of the stock relative to the market, derived from 5-year weekly regression against SPY.",
+      "formula": "β_levered = Cov(R_stock, R_SPY) / Var(R_SPY)",
+      "derivationMethod": "regression",
+      "sourceHierarchy": [
+        { "rank": 1, "source": "5Y weekly OLS regression vs SPY (lib/dcf/calculateBeta.ts)", "condition": "≥52 overlapping weekly returns" },
+        { "rank": 2, "source": "Yahoo Finance defaultKeyStatistics.beta", "condition": "regression returns ≤0 or insufficient history" },
+        { "rank": 3, "source": "Fallback 1.0 (market beta)", "condition": "Yahoo beta also unavailable" }
+      ],
+      "codeRef": "lib/dcf/calculateBeta.ts; lib/dcf/calculateWACC.ts extractWACCInputs line 87",
+      "editability": "user-editable",
+      "confidence": "medium",
+      "validationBounds": { "min": 0.3, "max": 3.5 },
+      "riskLevel": "medium",
+      "knownRisks": [
+        "5Y weekly uses end-of-week prices; IPOs < 5y default to Yahoo beta without disclosure",
+        "No Vasicek/Blume adjustment (raw OLS beta is noisy for illiquid stocks)"
+      ],
+      "recommendedFix": "Apply Vasicek shrinkage β_adj = 0.67×β_OLS + 0.33×1.0 for small-cap stocks; surface confidence interval to user.",
+      "lastUpdated": "2026-05-19",
+      "runtimeValue": null,
+      "runtimeSource": null
+    },
+
+    "crp": {
+      "id": "crp",
+      "label": "Country Risk Premium",
+      "description": "Additional risk premium for companies domiciled in emerging/frontier markets.",
+      "formula": "Ke = rfRate + β × (ERP + CRP)",
+      "derivationMethod": "lookup",
+      "sourceHierarchy": [
+        { "rank": 1, "source": "CRP_TABLE keyed by reporting currency (lib/dcf/countryRiskPremium.ts)", "condition": "currency code found in table" },
+        { "rank": 2, "source": "Fallback 1.0% (0.01)", "condition": "currency not in table — e.g. new or unlisted EM currencies" }
+      ],
+      "codeRef": "lib/dcf/countryRiskPremium.ts getCRP(currency)",
+      "editability": "config-only",
+      "confidence": "high",
+      "validationBounds": { "min": 0.0, "max": 0.30 },
+      "riskLevel": "low",
+      "knownRisks": [
+        "Table uses reporting currency as proxy for country — a USD-reporting EM company may have zero CRP",
+        "Fallback 1% is less than many real EM premiums (Nigeria 8.9%, Ukraine 8.9%)"
+      ],
+      "recommendedFix": "Key CRP on exchange country code from Yahoo summaryProfile.country, not reporting currency.",
+      "significantValues": {
+        "ARS": 0.1541,
+        "TRY": 0.0458,
+        "BRL": 0.0340,
+        "INR": 0.0325,
+        "USD": 0.0,
+        "EUR": 0.0
+      },
+      "lastUpdated": "2025-01-01",
+      "runtimeValue": null,
+      "runtimeSource": null
+    },
+
+    "costOfDebt": {
+      "id": "costOfDebt",
+      "label": "Pre-Tax Cost of Debt",
+      "description": "Effective interest rate on total debt, used in after-tax cost of debt calculation.",
+      "formula": "kd = interestExpense / avgGrossDebt; after-tax kd = kd × (1 - taxRate)",
+      "derivationMethod": "computed",
+      "sourceHierarchy": [
+        { "rank": 1, "source": "Income statement: interestExpense / totalDebt (both in reporting currency — rate is FX-independent)", "condition": "interestExpense > 0 AND totalDebt > 0" },
+        { "rank": 2, "source": "rfRate + CRP + 1.5% synthetic credit spread", "condition": "income statement data unavailable" }
+      ],
+      "codeRef": "lib/dcf/calculateWACC.ts extractWACCInputs lines 93–99",
+      "editability": "user-editable",
+      "confidence": "medium",
+      "validationBounds": { "min": 0.01, "max": 0.15 },
+      "capAt": 0.15,
+      "riskLevel": "low",
+      "knownRisks": [
+        "Cap at 15% may understate cost for distressed companies (HY bonds at 20%+)",
+        "Synthetic spread of 1.5% is flat across all credit ratings — ignores credit quality"
+      ],
+      "recommendedFix": "Use Damodaran's default spread table (keyed by interest coverage ratio) for fallback.",
+      "lastUpdated": "2026-05-19",
+      "runtimeValue": null,
+      "runtimeSource": null
+    },
+
+    "taxRate": {
+      "id": "taxRate",
+      "label": "Effective Tax Rate",
+      "description": "Effective corporate tax rate used to compute after-tax cost of debt and NOPAT.",
+      "formula": "taxRate = incomeTaxExpense / incomeBeforeTax",
+      "derivationMethod": "computed",
+      "sourceHierarchy": [
+        { "rank": 1, "source": "Latest income statement: incomeTaxExpense / incomeBeforeTax", "condition": "incomeTax > 0 AND preTaxIncome > 0" },
+        { "rank": 2, "source": "21% US statutory rate", "condition": "income statement data unavailable or non-positive" }
+      ],
+      "codeRef": "lib/dcf/calculateWACC.ts extractWACCInputs lines 102–106",
+      "editability": "read-only",
+      "confidence": "medium",
+      "validationBounds": { "min": 0.05, "max": 0.40 },
+      "clampAt": { "floor": 0.05, "ceiling": 0.40 },
+      "riskLevel": "low",
+      "knownRisks": [
+        "Single-year effective rate can be distorted by one-time deferred tax items",
+        "Previous version had ceiling of 0.55 (changed to 0.40 in a prior session — commit in git log)"
+      ],
+      "recommendedFix": "Use 3-year average effective tax rate to reduce single-year noise.",
+      "lastUpdated": "2026-05-19",
+      "runtimeValue": null,
+      "runtimeSource": null
+    },
+
+    "debtToEquity": {
+      "id": "debtToEquity",
+      "label": "Debt-to-Equity Ratio",
+      "description": "Market-value D/E used for WACC capital structure weights.",
+      "formula": "D/E = totalDebt / marketCap; debtWeight = D/E / (1 + D/E)",
+      "derivationMethod": "computed",
+      "sourceHierarchy": [
+        { "rank": 1, "source": "Yahoo summaryDetail.marketCap + financialData.totalDebt (FX-adjusted)", "condition": "marketCap > 0" },
+        { "rank": 2, "source": "Default D/E = 0.30", "condition": "marketCap = 0" }
+      ],
+      "codeRef": "lib/dcf/calculateWACC.ts extractWACCInputs lines 70–84",
+      "editability": "user-editable",
+      "confidence": "high",
+      "validationBounds": { "max": 3.0 },
+      "riskLevel": "medium",
+      "knownRisks": [
+        "Financial sector: capped at D/E ≤ 1.5 using longTermDebt only (deposit liabilities excluded)",
+        "FX conversion applied to debt but not to marketCap — correct behavior for ADRs, but must verify for dual-listed companies",
+        "Default 0.30 for marketCap=0 is ungrounded — should surface an error instead"
+      ],
+      "specialCases": {
+        "financialSector": "Uses longTermDebt only; hard cap at D/E ≤ 1.5 to prevent deposit liabilities from inflating leverage"
+      },
+      "lastUpdated": "2026-05-19",
+      "runtimeValue": null,
+      "runtimeSource": null
+    },
+
+    "cagr": {
+      "id": "cagr",
+      "label": "Revenue/Earnings CAGR",
+      "description": "Blended annual growth rate applied over the DCF projection period.",
+      "formula": "blended = wAnalyst×analyst1y + wFundamental×(ROE×retention) + wHistorical×hist3y + wTTM×earningsGrowth; convergenceDiscount applied above 20%; sizeCap applied by revenue tier",
+      "derivationMethod": "4-source-blend",
+      "sourceHierarchy": [
+        { "rank": 1, "source": "Analyst consensus FY+1/FY+2 revenue estimates (earningsTrend)", "weight_high_coverage": 0.55, "weight_medium_coverage": 0.45, "weight_low_coverage": 0.30 },
+        { "rank": 2, "source": "Fundamental growth (ROE × retention ratio) — Damodaran retention model", "weight_high_coverage": 0.25, "condition": "ROE ∈ (0, 0.80)" },
+        { "rank": 3, "source": "Historical 3Y revenue/NI CAGR from income statements", "weight_high_coverage": 0.15 },
+        { "rank": 4, "source": "TTM earnings growth (fd.earningsGrowth)", "weight_any_coverage": 0.05, "condition": "earningsGrowth ∈ (-0.60, 1.50)" }
+      ],
+      "codeRef": "lib/dcf/projectCashFlows.ts extractFCFInputs lines 178–438",
+      "editability": "user-editable",
+      "confidence": "model-computed",
+      "confidenceLevels": {
+        "high": { "condition": "confidence score > 0.65", "typical": "≥10 analysts, history agrees" },
+        "medium": { "condition": "confidence score 0.35–0.65" },
+        "low": { "condition": "confidence score < 0.35", "typical": "0 analysts, no fundamentals" }
+      },
+      "validationBounds": { "min": -0.10 },
+      "sizeCaps": {
+        "financialSector": 0.12,
+        "foreignCurrency": 0.18,
+        "megaCap_50B_plus_revenue": 0.22,
+        "largeCap_10B_to_50B_revenue": 0.28,
+        "midCap_2B_to_10B_revenue": 0.38,
+        "smallCap_under_2B_revenue": 0.55
+      },
+      "convergenceDiscount": "Excess above 20% discounted by 25% (Damodaran mean-reversion). rawBlended > 0.20 → blended = 0.20 + (rawBlended - 0.20) × 0.75",
+      "specialCases": {
+        "foreignCurrency": "Historical CAGR zeroed out (inflation-distorted local currency); weight shifted to analyst+fundamental",
+        "financialSector": "Uses net income CAGR (not revenue CAGR — bank revenues distorted by rate cycles)"
+      },
+      "riskLevel": "high",
+      "knownRisks": [
+        "Analyst estimates from Yahoo earningsTrend may lag consensus by days",
+        "foreignCurrency detection uses reportingCurrency, not company domicile — may miss USD-reporting EM companies",
+        "No cross-stock consistency enforcement — same ticker may get different CAGR in different sessions"
+      ],
+      "recommendedFix": "Persist blended CAGR in Supabase valuations table at fetch time; flag drift > 3% on re-load.",
+      "lastUpdated": "2026-05-19",
+      "runtimeValue": null,
+      "runtimeSource": null
+    },
+
+    "terminalG": {
+      "id": "terminalG",
+      "label": "Terminal Growth Rate",
+      "description": "Perpetual growth rate beyond the explicit projection period (Gordon Growth terminal value).",
+      "formula": "TV = FCF_n × (1 + terminalG) / (WACC - terminalG); hard constraint: terminalG < WACC",
+      "derivationMethod": "rule-based",
+      "derivationLogic": {
+        "highGrowthCompany_CAGR_gt_15pct": 0.025,
+        "standardCompany_CAGR_5_to_15pct": 0.020,
+        "matureCompany_CAGR_lt_5pct": 0.015,
+        "hardCeiling": "min(terminalG, WACC - 0.005)"
+      },
+      "codeRef": "config/valuation.config.ts VALUATION_CONFIG.terminalGrowth; lib/valuation/validator.ts guardTerminalGrowth",
+      "editability": "user-editable",
+      "confidence": "model",
+      "validationBounds": {
+        "absoluteFloor": 0.00,
+        "absoluteCeiling": 0.05,
+        "hardCeiling": "WACC - 0.005 (enforced; violation returns null EV)"
+      },
+      "riskLevel": "high",
+      "knownRisks": [
+        "Gordon Growth violation (terminalG ≥ WACC) propagates null EV correctly, but UI may show '—' without clear explanation to user",
+        "2.5% cap may be too low for EM companies where nominal GDP growth is 5–7%"
+      ],
+      "recommendedFix": "Surface Gordon Growth violation as an explicit user-facing error with suggested fix (lower terminalG or raise WACC).",
+      "lastUpdated": "2026-05-19",
+      "runtimeValue": null,
+      "runtimeSource": null
+    },
+
+    "baseFCF": {
+      "id": "baseFCF",
+      "label": "Base Free Cash Flow",
+      "description": "Starting FCF (in USD millions) for the DCF projection, representing normalized earnings power.",
+      "derivationMethod": "conditional",
+      "derivationLogic": {
+        "normalCompany_positiveFCF": "fd.freeCashflow / 1e6",
+        "normalCompany_negativeFCF_positiveOCF": "fd.operatingCashflow × 0.6 / 1e6 (capex haircut proxy)",
+        "normalCompany_negativeFCF_negativeOCF": "max(revenue × 0.02, 1) (pre-profitability seed)",
+        "financialSector_positiveNI": "normalizedNetIncome × 0.85 (2Y avg, 15% retention haircut)",
+        "financialSector_noNI_positiveFCF": "fd.freeCashflow / 1e6",
+        "financialSector_all_negative": "max(revenue × 0.02, 1)"
+      },
+      "codeRef": "lib/dcf/projectCashFlows.ts extractFCFInputs lines 153–176",
+      "editability": "user-editable",
+      "confidence": "model",
+      "riskLevel": "high",
+      "knownRisks": [
+        "OCF × 0.6 is a rough approximation with no theoretical basis — CapEx-intensity varies hugely by sector",
+        "2% revenue margin seed produces widely different FCF across industries",
+        "normalizedNetIncome for financial sector uses only last 2 years — insufficient for cyclical banks"
+      ],
+      "recommendedFix": "For negative FCF companies, compute normalized FCF as median of 5-year FCF history (if available) rather than ratio-based seed.",
+      "lastUpdated": "2026-05-19",
+      "runtimeValue": null,
+      "runtimeSource": null
+    },
+
+    "wacc": {
+      "id": "wacc",
+      "label": "Weighted Average Cost of Capital",
+      "description": "Blended discount rate used for present value calculations in FCFF DCF.",
+      "formula": "WACC = (E/V) × Ke + (D/V) × Kd × (1 - T); Ke = rfRate + β × (ERP + CRP); Kd_after_tax = costOfDebt × (1 - taxRate)",
+      "derivationMethod": "computed",
+      "dependencies": ["rfRate", "beta", "erp", "crp", "costOfDebt", "taxRate", "debtToEquity"],
+      "codeRef": "lib/dcf/calculateWACC.ts calculateWACC() and extractWACCInputs()",
+      "editability": "user-editable",
+      "confidence": "model",
+      "validationBounds": { "min": 0.04, "max": 0.35 },
+      "riskLevel": "high",
+      "knownRisks": [
+        "No Hamada equation for beta re-levering when user changes D/E assumption",
+        "Capital structure uses current-period D/E rather than target D/E — can be distorted in leveraged buyout or recapitalization years"
+      ],
+      "recommendedFix": "Implement Hamada re-levering so that changing D/E in UI propagates correctly to beta and cost of equity.",
+      "lastUpdated": "2026-05-19",
+      "runtimeValue": null,
+      "runtimeSource": null
+    },
+
+    "projectionYears": {
+      "id": "projectionYears",
+      "label": "Explicit Projection Years",
+      "description": "Length of the DCF projection horizon before terminal value.",
+      "value": 10,
+      "derivationMethod": "hardcoded",
+      "source": "constant",
+      "codeRef": "lib/dcf/projectCashFlows.ts ProjectionInputs.years default 10",
+      "editability": "not-user-editable",
+      "confidence": "high",
+      "riskLevel": "low",
+      "notes": "Standard for long-term DCF. Three-stage model splits this into two 5-year windows with linear fade in stage 2.",
+      "lastUpdated": "2026-05-19"
+    },
+
+    "growthModel": {
+      "id": "growthModel",
+      "label": "DCF Growth Model",
+      "description": "Whether to use flat CAGR (two-stage) or linearly fading CAGR in years 6–10 (three-stage/Damodaran fade).",
+      "values": ["two-stage", "three-stage"],
+      "derivationMethod": "rule-based",
+      "derivationLogic": "three-stage used for high-growth companies (CAGR > 15%); two-stage for standard/mature",
+      "codeRef": "lib/dcf/projectCashFlows.ts ProjectionInputs.growthModel; lib/dcf/detectCompanyType.ts",
+      "editability": "user-editable",
+      "confidence": "high",
+      "riskLevel": "low",
+      "lastUpdated": "2026-05-19",
+      "runtimeValue": null,
+      "runtimeSource": null
+    },
+
+    "cash": {
+      "id": "cash",
+      "label": "Cash & Equivalents",
+      "description": "Added to EV in the equity bridge: equityValue = EV + cash - debt.",
+      "formula": "equityValue = EV + cash - totalDebt",
+      "derivationMethod": "live_fetch",
+      "sourceHierarchy": [
+        { "rank": 1, "source": "Yahoo balanceSheetHistory.balanceSheetStatements[0].cash" },
+        { "rank": 2, "source": "0 if missing" }
+      ],
+      "codeRef": "app/api/financials/route.ts; lib/dcf/calculateFairValue.ts",
+      "editability": "not-user-editable",
+      "confidence": "medium",
+      "riskLevel": "low",
+      "knownRisks": [
+        "Uses single most-recent quarter balance sheet — not TTM average",
+        "Silent zero if missing (no error surfaced)"
+      ],
+      "lastUpdated": "2026-05-19",
+      "runtimeValue": null,
+      "runtimeSource": null
+    },
+
+    "totalDebt": {
+      "id": "totalDebt",
+      "label": "Total Debt",
+      "description": "Subtracted from EV in the equity bridge. FX-converted for non-USD reporting currencies.",
+      "formula": "equityValue = EV + cash - totalDebt",
+      "derivationMethod": "live_fetch",
+      "sourceHierarchy": [
+        { "rank": 1, "source": "fd.totalDebt × fxRate (non-financial sector)" },
+        { "rank": 2, "source": "bs0.longTermDebt × fxRate (financial sector — excludes deposit liabilities)" }
+      ],
+      "codeRef": "lib/dcf/calculateWACC.ts extractWACCInputs lines 70–83",
+      "editability": "not-user-editable",
+      "confidence": "medium",
+      "riskLevel": "medium",
+      "knownRisks": [
+        "FX rate from getFXRate() silently returns 1.0 (parity) if all currency pair lookups fail — will produce wrong equity bridge for non-USD companies with no error"
+      ],
+      "recommendedFix": "getFXRate() must throw or return null on API failure, not silently return 1.0. Caller should surface FX warning in UI.",
+      "lastUpdated": "2026-05-19",
+      "runtimeValue": null,
+      "runtimeSource": null
+    },
+
+    "fxRate": {
+      "id": "fxRate",
+      "label": "FX Rate (reportingCurrency → USD)",
+      "description": "Conversion factor applied to balance sheet and income statement figures reported in non-USD currency.",
+      "formula": "valueUSD_M = valueLocal / 1e6 × fxRate",
+      "derivationMethod": "live_fetch",
+      "sourceHierarchy": [
+        { "rank": 1, "source": "Yahoo Finance direct pair: {from}{to}=X.CURRENCY (e.g. JPYUSD=X)" },
+        { "rank": 2, "source": "Yahoo Finance inverse pair: {to}{from}=X.CURRENCY inverted" },
+        { "rank": 3, "source": "Yahoo Finance legacy single-currency symbol: {from}USD=X" },
+        { "rank": 4, "source": "1.0 (parity fallback) — SILENT, NO ERROR", "risk": "critical" }
+      ],
+      "codeRef": "lib/data/yahooClient.ts getFXRate()",
+      "editability": "not-user-editable",
+      "confidence": "high",
+      "riskLevel": "critical",
+      "knownRisks": [
+        "Silent parity fallback produces correct-looking but wrong valuations for foreign companies. ARS/USD ≈ 900:1, so parity fallback overstates equity value by ~900×."
+      ],
+      "recommendedFix": "Return null on failure; caller in api/financials/route.ts must surface 'FX data unavailable' error and abort valuation computation.",
+      "lastUpdated": "2026-05-19",
+      "runtimeValue": null,
+      "runtimeSource": null
+    },
+
+    "exitMultiple": {
+      "id": "exitMultiple",
+      "label": "Exit Multiple (FCF Multiple)",
+      "description": "Alternative terminal value approach: TV = FCF_n × exitMultiple. Not used in primary computation — shown as cross-check.",
+      "derivationMethod": "sector-default",
+      "defaults": {
+        "growth": 25,
+        "startup": 20,
+        "financial": 12,
+        "dividend": 15,
+        "standard": 18
+      },
+      "codeRef": "lib/valuation/assumptions.ts getDefaultExitMultiple()",
+      "editability": "user-editable",
+      "confidence": "low",
+      "riskLevel": "medium",
+      "knownRisks": [
+        "Sector defaults are not anchored to Damodaran industry data — hardcoded constants with no update mechanism",
+        "No peer-set median computation"
+      ],
+      "recommendedFix": "Compute from Damodaran industry EV/EBIT or EV/FCF median for the ticker's sector.",
+      "lastUpdated": "2026-05-19",
+      "runtimeValue": null,
+      "runtimeSource": null
+    },
+
+    "ebitMargin": {
+      "id": "ebitMargin",
+      "label": "EBIT Margin (by year)",
+      "description": "Operating income as a percentage of revenue for each projected year. Used in detailed FCFF build-up.",
+      "derivationMethod": "3y_median",
+      "formula": "median(historicalEbitMargins) + slight annual expansion of +0.2% per year, capped at 115% of base",
+      "sourceHierarchy": [
+        { "rank": 1, "source": "3-year median of historical EBIT margins from income statements" },
+        { "rank": 2, "source": "15% fallback if ≤1 historical data point" }
+      ],
+      "codeRef": "lib/valuation/assumptions.ts buildAssumptionSet lines 85–93",
+      "editability": "user-editable",
+      "confidence": "medium",
+      "riskLevel": "medium",
+      "knownRisks": [
+        "Linear expansion (+0.2%/yr) is applied regardless of sector — inappropriate for capital-intensive cyclical industries",
+        "115% ceiling on margin expansion is generous for mature companies"
+      ],
+      "lastUpdated": "2026-05-19",
+      "runtimeValue": null,
+      "runtimeSource": null
+    },
+
+    "capexPctRevenue": {
+      "id": "capexPctRevenue",
+      "label": "CapEx as % of Revenue",
+      "description": "Capital expenditure intensity, used to compute FCFF from EBIT in detailed projection.",
+      "derivationMethod": "3y_median",
+      "sourceHierarchy": [
+        { "rank": 1, "source": "3-year median of historical capex/revenue from cash flow statements" },
+        { "rank": 2, "source": "-5% fallback (typical manufacturing/tech assumption)" }
+      ],
+      "codeRef": "lib/valuation/assumptions.ts buildAssumptionSet lines 96–103",
+      "editability": "user-editable",
+      "confidence": "medium",
+      "riskLevel": "medium",
+      "knownRisks": [
+        "3Y median may not reflect inflection in capex cycle (e.g. AI infrastructure build-out for hyperscalers)"
+      ],
+      "lastUpdated": "2026-05-19",
+      "runtimeValue": null,
+      "runtimeSource": null
+    },
+
+    "dnaPctRevenue": {
+      "id": "dnaPctRevenue",
+      "label": "D&A as % of Revenue",
+      "description": "Depreciation & amortization intensity used in FCFF projection to compute EBITDA from EBIT.",
+      "derivationMethod": "3y_median",
+      "sourceHierarchy": [
+        { "rank": 1, "source": "3-year median of historical D&A/revenue" },
+        { "rank": 2, "source": "4% fallback" }
+      ],
+      "codeRef": "lib/valuation/assumptions.ts buildAssumptionSet lines 106–113",
+      "editability": "user-editable",
+      "confidence": "medium",
+      "riskLevel": "low",
+      "lastUpdated": "2026-05-19",
+      "runtimeValue": null,
+      "runtimeSource": null
+    },
+
+    "nwcPctRevChange": {
+      "id": "nwcPctRevChange",
+      "label": "ΔNWC as % of ΔRevenue",
+      "description": "Change in net working capital as a fraction of revenue change. Affects cash conversion in detailed FCFF model.",
+      "derivationMethod": "3y_median",
+      "sourceHierarchy": [
+        { "rank": 1, "source": "3-year median of historical ΔNWC/ΔRevenue" },
+        { "rank": 2, "source": "2% fallback" }
+      ],
+      "codeRef": "lib/valuation/assumptions.ts buildAssumptionSet lines 116–123",
+      "editability": "user-editable",
+      "confidence": "low",
+      "riskLevel": "medium",
+      "knownRisks": [
+        "NWC can be negative (negative cash conversion cycle for Amazon-type retailers) — median may smooth over important structural patterns"
+      ],
+      "lastUpdated": "2026-05-19",
+      "runtimeValue": null,
+      "runtimeSource": null
+    },
+
+    "dividendPerShare": {
+      "id": "dividendPerShare",
+      "label": "Dividend Per Share (TTM)",
+      "description": "Annual dividend used in DDM computation. Required for DDM applicability.",
+      "formula": "DDM: P = D1 / (Ke - g); D1 = dividendPerShare × (1 + g)",
+      "derivationMethod": "live_fetch",
+      "sourceHierarchy": [
+        { "rank": 1, "source": "Yahoo summaryDetail.dividendRate" },
+        { "rank": 2, "source": "0 — DDM marked inapplicable" }
+      ],
+      "codeRef": "lib/valuation/engine.ts computeDDM(); lib/dcf/calculateDDM.ts",
+      "editability": "not-user-editable",
+      "confidence": "high",
+      "riskLevel": "low",
+      "lastUpdated": "2026-05-19",
+      "runtimeValue": null,
+      "runtimeSource": null
+    },
+
+    "triangulationWeights": {
+      "id": "triangulationWeights",
+      "label": "Model Triangulation Weights",
+      "description": "Percentage weights applied to each valuation method when computing the blended triangulated fair value.",
+      "defaultWeights": {
+        "standard": { "fcff": 65, "multiples": 35, "fcfe": 0, "ddm": 0 },
+        "financial": { "fcfe": 65, "multiples": 35, "fcff": 0, "ddm": 0 },
+        "dividend": { "fcff": 50, "ddm": 15, "multiples": 35, "fcfe": 0 },
+        "growth": { "fcff": 65, "multiples": 35, "fcfe": 0, "ddm": 0 },
+        "startup": { "fcff": 60, "multiples": 40, "fcfe": 0, "ddm": 0 }
+      },
+      "codeRef": "lib/valuation/engine.ts computeTriangulation(); lib/dcf/detectCompanyType.ts",
+      "editability": "not-user-editable",
+      "confidence": "model",
+      "riskLevel": "medium",
+      "knownRisks": [
+        "Weights are hardcoded in engine.ts fallback — actual weights come from pre-computed adapter data which may differ",
+        "No transparency to user about how weight is computed or which method dominated"
+      ],
+      "recommendedFix": "Expose effectiveWeights breakdown in ValuationSummary component.",
+      "lastUpdated": "2026-05-19"
+    },
+
+    "scenarioAdjustments": {
+      "id": "scenarioAdjustments",
+      "label": "Bull/Base/Bear Scenario Adjustments",
+      "description": "Fixed deltas applied to WACC, CAGR, and terminal growth for scenario analysis.",
+      "values": {
+        "bull": { "waccAdj": -0.01, "cagrAdj": +0.02, "tgAdj": +0.005 },
+        "base": { "waccAdj": 0.00, "cagrAdj": 0.00, "tgAdj": 0.000 },
+        "bear": { "waccAdj": +0.01, "cagrAdj": -0.02, "tgAdj": -0.005 }
+      },
+      "codeRef": "config/valuation.config.ts VALUATION_CONFIG.scenarios; lib/dcf/calculateFairValue.ts buildScenarios()",
+      "editability": "config-only",
+      "confidence": "model",
+      "riskLevel": "low",
+      "knownRisks": [
+        "Flat ±1% WACC / ±2% CAGR deltas don't reflect actual uncertainty — a startup may have CAGR uncertainty of ±20%",
+        "Scenarios don't account for correlation between WACC and CAGR (high-rate environment suppresses growth)"
+      ],
+      "recommendedFix": "Make scenario deltas proportional to CAGR confidence level.",
+      "lastUpdated": "2026-05-19"
+    }
+  },
+
+  "qualityChecks": {
+    "piotroski_f_score": {
+      "id": "piotroski_f_score",
+      "label": "Piotroski F-Score",
+      "description": "Financial health score 0–9 based on 9 binary signals across profitability, leverage/liquidity, and operating efficiency.",
+      "sourceFields": "ROA, CFO, ΔROA, accruals, leverage change, current ratio change, shares issued, gross margin change, asset turnover change",
+      "codeRef": "lib/dcf/calculateScores.ts calculatePiotroski()",
+      "nullHandling": "explicit null propagation — each of the 9 tests returns null when data unavailable, not 0",
+      "riskLevel": "low",
+      "lastUpdated": "2026-05-19"
+    },
+    "altman_z_score": {
+      "id": "altman_z_score",
+      "label": "Altman Z-Score",
+      "description": "Bankruptcy prediction model. Z = 1.2×X1 + 1.4×X2 + 3.3×X3 + 0.6×X4 + 1.0×X5",
+      "formula": "X1=ΔNWC/Assets, X2=RetainedEarnings/Assets, X3=EBIT/Assets, X4=MktEquity/TotalLiabilities, X5=Revenue/Assets",
+      "codeRef": "lib/dcf/calculateScores.ts calculateAltmanZ()",
+      "nullHandling": "returns null when balance sheet data unavailable",
+      "riskLevel": "low",
+      "knownRisks": [
+        "Original 1968 model calibrated on manufacturing firms — less reliable for asset-light tech companies"
+      ],
+      "lastUpdated": "2026-05-19"
+    },
+    "beneish_m_score": {
+      "id": "beneish_m_score",
+      "label": "Beneish M-Score",
+      "description": "Earnings manipulation detection model. M > -1.78 flags potential manipulation.",
+      "formula": "M = -4.84 + 0.92×DSRI + 0.528×GMI + 0.404×AQI + 0.892×SGI + 0.115×DEPI - 0.172×SGAI + 4.679×TATA - 0.327×LVGI",
+      "codeRef": "lib/dcf/calculateScores.ts calculateBeneish()",
+      "nullHandling": "requires 2 years of history — returns null for single-year data",
+      "riskLevel": "low",
+      "lastUpdated": "2026-05-19"
+    }
+  },
+
+  "dataQualityRules": {
+    "historicalPriceClose": {
+      "id": "historicalPriceClose",
+      "description": "Close price from Yahoo historical endpoint used in beta regression and price chart.",
+      "fallback": "p.adjClose ?? 0",
+      "codeRef": "app/api/historical/route.ts",
+      "riskLevel": "medium",
+      "knownRisks": [
+        "Silent zero substitution when both close and adjClose are missing. Produces incorrect beta if any date has a 0 price."
+      ],
+      "recommendedFix": "Filter out rows where close === 0 before passing to regression."
+    }
+  }
+}
