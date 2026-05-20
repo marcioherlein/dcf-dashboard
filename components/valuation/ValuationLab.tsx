@@ -64,20 +64,6 @@ function buildRevMultipleResults(result: ReturnType<typeof computeRevenueMultipl
   ]
 }
 
-function buildReverseDCFResults(result: ReturnType<typeof computeReverseDCF>): ValuationResult[] {
-  const implCAGRFmt = result.impliedCAGR != null ? (result.impliedCAGR * 100).toFixed(1) + '%' : '—'
-  const interpTone: ValuationResult['tone'] =
-    result.interpretation === 'conservative'    ? 'positive' :
-    result.interpretation === 'reasonable'      ? 'positive' :
-    result.interpretation === 'aggressive'      ? 'warning'  :
-    result.interpretation === 'very_aggressive' ? 'negative' : 'neutral'
-  return [
-    { label: 'Implied 5Y CAGR', value: result.impliedCAGR,      formattedValue: implCAGRFmt, tone: interpTone },
-    { label: 'FCF Margin Used', value: result.impliedFCFMargin, formattedValue: result.impliedFCFMargin != null ? (result.impliedFCFMargin * 100).toFixed(1) + '%' : '—', tone: 'neutral' },
-    { label: 'Assessment',      value: null,                    formattedValue: result.interpretation.replace('_', ' '), tone: interpTone },
-  ]
-}
-
 function buildEVEBITDAResults(result: ReturnType<typeof computeEVEBITDA>, currentPrice: number, currency = 'USD'): ValuationResult[] {
   return [
     { label: 'Enterprise Value',   value: result.enterpriseValue,   formattedValue: fmtB(result.enterpriseValue),                tone: 'neutral' },
@@ -118,6 +104,108 @@ function fmtAssumptionDisplay(assumption: ValuationAssumption, overrides: Record
     return raw.toFixed(0)
   }
   return raw.toFixed(2)
+}
+
+// ─── ReverseDCFPanel ──────────────────────────────────────────────────────────
+
+function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin }: {
+  result: ReturnType<typeof computeReverseDCF>
+  cagrAnalysis: { analystEstimate1y?: number | null; historicalCagr3y?: number | null } | null
+  wacc: number
+  terminalG: number
+  lastFCFMargin: number | null
+}) {
+  const impliedCAGR  = result.impliedCAGR
+  const analystCAGR  = cagrAnalysis?.analystEstimate1y ?? null
+  const historicalCAGR = cagrAnalysis?.historicalCagr3y ?? null
+
+  const tone =
+    result.interpretation === 'conservative' || result.interpretation === 'reasonable' ? 'positive' :
+    result.interpretation === 'aggressive'      ? 'warning' :
+    result.interpretation === 'very_aggressive' ? 'negative' : 'neutral'
+  const toneColor =
+    tone === 'positive' ? '#10b981' : tone === 'warning' ? '#f59e0b' : tone === 'negative' ? '#ef4444' : '#6b7280'
+  const toneLabel =
+    result.interpretation === 'conservative'    ? 'Conservative' :
+    result.interpretation === 'reasonable'      ? 'Reasonable'   :
+    result.interpretation === 'aggressive'      ? 'Aggressive'   :
+    result.interpretation === 'very_aggressive' ? 'Very Aggressive' : ''
+  const toneIcon = tone === 'positive' ? '✓' : tone === 'warning' ? '⚠' : tone === 'negative' ? '✗' : '–'
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden">
+      {/* Header */}
+      <div className="px-5 py-4 border-b border-slate-100">
+        <h3 className="text-base font-bold text-slate-900">Reverse DCF</h3>
+        <p className="text-xs text-slate-400 mt-0.5">
+          Works backwards from today&apos;s price to find the growth rate the market is implicitly pricing in.
+        </p>
+      </div>
+
+      {/* Three-column hero */}
+      <div className="grid grid-cols-3 divide-x divide-slate-100">
+        <div className="flex flex-col items-center px-4 py-5 gap-1">
+          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Market Implies</p>
+          <p className="text-2xl font-bold tabular-nums" style={{ color: toneColor }}>
+            {impliedCAGR != null ? (impliedCAGR * 100).toFixed(1) + '%' : '—'}
+          </p>
+          <p className="text-xs text-slate-500">5Y CAGR</p>
+          {impliedCAGR != null && toneLabel && (
+            <span className="text-xs font-semibold mt-1" style={{ color: toneColor }}>
+              {toneIcon} {toneLabel}
+            </span>
+          )}
+        </div>
+        <div className="flex flex-col items-center px-4 py-5 gap-1">
+          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Analyst Says</p>
+          <p className="text-2xl font-bold tabular-nums text-slate-700">
+            {analystCAGR != null ? (analystCAGR * 100).toFixed(1) + '%' : '—'}
+          </p>
+          <p className="text-xs text-slate-500">FY+1 estimate</p>
+          {analystCAGR != null && <span className="text-xs text-slate-400 mt-1">─ Consensus</span>}
+        </div>
+        <div className="flex flex-col items-center px-4 py-5 gap-1">
+          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">History (3Y)</p>
+          <p className="text-2xl font-bold tabular-nums text-slate-700">
+            {historicalCAGR != null ? (historicalCAGR * 100).toFixed(1) + '%' : '—'}
+          </p>
+          <p className="text-xs text-slate-500">3Y revenue CAGR</p>
+          {historicalCAGR != null && <span className="text-xs text-slate-400 mt-1">─ Historical</span>}
+        </div>
+      </div>
+
+      {/* Assumptions + interpretation */}
+      <div className="px-5 py-4 border-t border-slate-100 bg-slate-50/40">
+        <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-3">Assumptions used</p>
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <p className="text-[10px] text-slate-400">FCF Margin</p>
+            <p className="text-sm font-semibold tabular-nums text-slate-800">
+              {lastFCFMargin != null ? (lastFCFMargin * 100).toFixed(1) + '%' : '—'}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-400">WACC</p>
+            <p className="text-sm font-semibold tabular-nums text-slate-800">{(wacc * 100).toFixed(1)}%</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-400">Terminal G</p>
+            <p className="text-sm font-semibold tabular-nums text-slate-800">{(terminalG * 100).toFixed(1)}%</p>
+          </div>
+        </div>
+        {result.interpretationText && (
+          <p className="text-xs text-slate-500 mt-3 leading-relaxed">{result.interpretationText}</p>
+        )}
+        {result.guardErrors.length > 0 && (
+          <div className="mt-2 space-y-1">
+            {result.guardErrors.map((w, i) => (
+              <p key={i} className="text-[10px] text-amber-600">⚠ {w}</p>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
 
 // ─── MethodInlinePanel ────────────────────────────────────────────────────────
@@ -483,33 +571,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
     historicalCAGR: apiData?.cagrAnalysis?.historicalCagr3y ?? null,
   }), [currentPrice, apiData, lastActualRevenue, lastFCFMargin, sharesAbsolute])
 
-  const reverseDCFConfig = useMemo((): ValuationMethodConfig => {
-    return {
-      id: 'reverse_dcf', title: 'Reverse DCF', subtitle: 'What growth rate the market is pricing in',
-      methodDescription: "Works backwards from today's price to find the growth rate the market is implicitly pricing in. If the implied CAGR looks unrealistically high vs. analyst expectations, the stock may be expensive.",
-      companyName: apiData?.companyName ?? ticker, ticker, currency,
-      evidence: [
-        { label: 'Implied EV', text: reverseDCFResult.impliedEV != null ? fmtB(reverseDCFResult.impliedEV) + ' (price × shares + debt − cash)' : 'Cannot compute — missing inputs' },
-        { label: 'FCF Margin', text: lastFCFMargin != null ? (lastFCFMargin * 100).toFixed(1) + '% (TTM FCF / revenue)' : 'Not available', rowKey: 'freeCashFlow', statement: 'cashflow' },
-        { label: 'Revenue',    text: lastActualRevenue != null ? fmtB(lastActualRevenue) + ' (TTM / last annual)' : 'Not available', rowKey: 'totalRevenue', statement: 'income' },
-        { label: 'WACC',       text: ((apiData?.wacc?.wacc ?? 0.09) * 100).toFixed(1) + '%' },
-        { label: 'Terminal G', text: ((apiData?.terminalG  ?? 0.025) * 100).toFixed(1) + '%' },
-      ],
-      assumptions: [
-        { key: 'currentPrice',  label: 'Current Price',   value: currentPrice,      unit: '$', editable: false, source: 'model_default' as const },
-        { key: 'lastRevenue',   label: 'LTM Revenue',     value: lastActualRevenue, unit: '$', editable: false, source: 'historical_3y_median' as const },
-        { key: 'lastFCFMargin', label: 'FCF Margin',      value: lastFCFMargin,     unit: '%', editable: false, source: 'historical_3y_median' as const },
-        { key: 'wacc',          label: 'WACC',            value: apiData?.wacc?.wacc ?? 0.09, unit: '%', editable: false, source: 'model_default' as const },
-        { key: 'terminalG',     label: 'Terminal Growth', value: apiData?.terminalG ?? 0.025, unit: '%', editable: false, source: 'model_default' as const },
-      ],
-      formulaLines: [],
-      results:  buildReverseDCFResults(reverseDCFResult),
-      warnings: [...reverseDCFResult.guardErrors, ...(reverseDCFResult.interpretationText ? [reverseDCFResult.interpretationText] : [])],
-      fairValueSummary: null,
-      currentPrice,
-    }
-  }, [reverseDCFResult, ticker, currency, currentPrice, lastActualRevenue, lastFCFMargin, apiData])
-
   // ── Handlers ─────────────────────────────────────────────────────────────
   function handleAssumptionChange(methodId: ValuationMethodId | 'ev_ebitda', key: string, value: number) {
     setOverrides(prev => ({ ...prev, [methodId]: { ...(prev[methodId] ?? {}), [key]: value } }))
@@ -575,12 +636,12 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
           onResetOverrides={() => handleResetOverrides('revenue_multiple')}
         />
 
-        <MethodInlinePanel
-          config={reverseDCFConfig}
-          overrides={{}}
-          currency={currency}
-          onAssumptionChange={() => {}}
-          onResetOverrides={() => {}}
+        <ReverseDCFPanel
+          result={reverseDCFResult}
+          cagrAnalysis={apiData?.cagrAnalysis ?? null}
+          wacc={apiData?.wacc?.wacc ?? 0.09}
+          terminalG={apiData?.terminalG ?? 0.025}
+          lastFCFMargin={lastFCFMargin}
         />
       </div>
 
