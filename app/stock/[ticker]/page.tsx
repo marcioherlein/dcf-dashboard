@@ -329,8 +329,10 @@ function StockPageBody() {
                 high52={data.quote.fiftyTwoWeekHigh}
                 low52={data.quote.fiftyTwoWeekLow}
                 analystTarget={data.quote.analystTargetMean}
+                drivers={data.cagrAnalysis?.drivers}
                 onSave={() => requireAuth({ intent: 'save_watchlist' })}
                 onViewDetails={() => handleTabChange('valuation')}
+                compact={activeTab === 'valuation'}
               />
             </div>
 

@@ -27,9 +27,13 @@ interface Props {
   high52: number
   low52: number
   analystTarget: number
+  // Key drivers (short strings shown as chips)
+  drivers?: string[]
   // Actions
   onSave?: () => void
   onViewDetails?: () => void   // navigate to Valuation tab
+  // Layout variant
+  compact?: boolean  // true = 1-line strip (used on valuation tab)
 }
 
 function gradeColors(grade: string): { bg: string; text: string; badge: string } {
@@ -60,7 +64,9 @@ export default function InvestorGradeCard({
   grade, gradeLabel, fairValue, upsidePct,
   profitabilitySummary, liquiditySummary, growthSummary,
   marketCap, high52, low52, analystTarget,
+  drivers,
   onSave, onViewDetails,
+  compact = false,
 }: Props) {
   const up = change >= 0
   const colors = gradeColors(grade)
@@ -74,6 +80,42 @@ export default function InvestorGradeCard({
       ? `Our valuation model suggests this may be undervalued — trading ${Math.abs(upsidePct * 100).toFixed(0)}% below our estimate. See the assumptions.`
       : `Our valuation model flags this as potentially overvalued — trading ${Math.abs(upsidePct * 100).toFixed(0)}% above our estimate. Check if you agree.`
 
+  // ── Compact 1-line strip (valuation tab) ──────────────────────────────────
+  if (compact) {
+    return (
+      <div className="rounded-xl bg-white shadow-card border border-slate-200 overflow-hidden">
+        <div className="flex items-center gap-3 px-4 py-2.5 flex-wrap">
+          <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center text-xs font-extrabold shrink-0', colors.bg, colors.text)}>
+            {grade.replace('+', '').replace('-', '')}
+          </div>
+          <span className="font-bold text-sm text-slate-800">{ticker}</span>
+          <span className="text-xs text-slate-400 truncate hidden sm:inline">{companyName}</span>
+          <span className="text-sm font-bold tabular-nums text-slate-900">
+            {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
+          <span className={cn('text-xs font-semibold', up ? 'text-emerald-600' : 'text-red-600')}>
+            {up ? '+' : ''}{fmtPct(changePct / 100)}
+          </span>
+          {fairValue != null && upsidePct != null && (
+            <>
+              <span className="text-slate-200 hidden sm:inline">|</span>
+              <span className="text-xs text-slate-500 hidden sm:inline">Blended: {currSymbol}{fairValue.toFixed(2)}</span>
+              <span className={cn('text-xs font-bold', upsidePct >= 0 ? 'text-emerald-600' : 'text-amber-600')}>
+                {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
+              </span>
+              {zone && (
+                <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap', zoneBadgeClass(zone))}>
+                  {zone}
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // ── Full card ─────────────────────────────────────────────────────────────
   return (
     <div className="rounded-xl bg-white shadow-card border border-slate-200 overflow-hidden">
       {/* ── STATE 1: always visible ── */}
@@ -186,6 +228,23 @@ export default function InvestorGradeCard({
               </div>
             ))}
           </div>
+
+          {/* Key Drivers — 2 chips + overflow count */}
+          {drivers && drivers.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Key drivers</p>
+              <div className="flex flex-col gap-1.5">
+                {drivers.slice(0, 2).map((d, i) => (
+                  <div key={i} className="flex items-start gap-2 rounded-md bg-white border border-slate-100 border-l-4 border-l-blue-300 px-3 py-2">
+                    <p className="text-[11px] text-slate-600 leading-snug">{d.split(' — ')[0]}</p>
+                  </div>
+                ))}
+                {drivers.length > 2 && (
+                  <p className="text-[11px] text-slate-400 px-1">and {drivers.length - 2} more</p>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Escalation hook */}
           <div className="flex items-center justify-between gap-4">
