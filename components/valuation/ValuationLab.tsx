@@ -13,20 +13,15 @@ import ModellingWorkspace from '@/components/modelling/ModellingWorkspace'
 import { computeForwardPE } from '@/lib/valuation/methods/forwardPE'
 import { computeRevenueMultiple } from '@/lib/valuation/methods/revenueMultiple'
 import { computeReverseDCF } from '@/lib/valuation/methods/reverseDcf'
-import { computeScenarioBlend } from '@/lib/valuation/methods/scenarioBlend'
 import { computeEVEBITDA, getDefaultEVEBITDAMultiple } from '@/lib/valuation/methods/evEbitda'
 import {
   deriveForwardPEAssumptions,
   deriveRevenueMultipleAssumptions,
 } from '@/lib/valuation/assumptions/deriveAssumptions'
-import { fmtPrice, fmtPct, fmtLarge, fmtLargeCurrency } from '@/lib/formatters'
-import { SourceLabel } from '@/components/ui/source-label'
+import { fmtPrice, fmtPct, fmtLargeCurrency } from '@/lib/formatters'
 import { TrendBadge } from '@/components/ui/trend-badge'
-import { MetricChip } from '@/components/ui/metric-chip'
 import { NABadge } from '@/components/ui/na-badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { cn } from '@/lib/utils'
-import { buildBusinessSummary } from '@/lib/simplifier/summaryBuilder'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Cell,
   ResponsiveContainer, ReferenceLine,
@@ -351,69 +346,6 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
   )
 }
 
-// ─── Mini Bar Sparkline ───────────────────────────────────────────────────────
-
-function MiniBarSparkline({ values, positive }: { values: (number | null)[]; positive?: boolean }) {
-  const nums = values.map(v => (v != null && isFinite(v) ? Math.abs(v) : null))
-  const max = Math.max(...nums.filter((v): v is number => v != null), 1)
-  const barColor = positive !== false ? '#10b981' : '#f87171'
-  const W = 80, H = 28, barW = 10, gap = 3
-  const n = Math.min(nums.length, 5)
-  const subset = nums.slice(-n)
-  const totalW = n * barW + (n - 1) * gap
-  const offsetX = (W - totalW) / 2
-  return (
-    <svg width={W} height={H} className="overflow-visible">
-      {subset.map((v, i) => {
-        const h = v != null ? Math.max(2, (v / max) * (H - 2)) : 2
-        const x = offsetX + i * (barW + gap)
-        const isLast = i === subset.length - 1
-        return (
-          <rect
-            key={i}
-            x={x} y={H - h} width={barW} height={h}
-            rx={2}
-            fill={isLast ? barColor : '#e2e8f0'}
-            opacity={v == null ? 0.3 : 1}
-          />
-        )
-      })}
-    </svg>
-  )
-}
-
-// ─── Stat Card ────────────────────────────────────────────────────────────────
-
-function AssumptionStat({ label, value, sub, desc }: { label: string; value: string; sub: string; desc?: string }) {
-  return (
-    <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2.5">
-      <div className="text-label uppercase tracking-wider text-blue-400 mb-0.5">{label}</div>
-      <div className="text-base font-bold font-mono text-blue-900">{value}</div>
-      <div className="text-micro text-blue-500">{sub}</div>
-      {desc && <div className="text-[10px] text-blue-400 mt-1 leading-snug">{desc}</div>}
-    </div>
-  )
-}
-
-// ─── Growth Bar ───────────────────────────────────────────────────────────────
-
-function GrowthBar({ label, value, weight }: { label: string; value: number | null; weight: number }) {
-  if (value == null) return null
-  const pctVal = value * 100
-  const barWidth = Math.min(Math.abs(pctVal) * 3, 100)
-  const barColor = pctVal > 10 ? 'bg-emerald-400' : pctVal > 5 ? 'bg-amber-400' : 'bg-slate-300'
-  return (
-    <div className="flex items-center gap-3">
-      <span className="text-xs text-slate-500 w-36 shrink-0">{label}</span>
-      <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
-        <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${barWidth}%` }} />
-      </div>
-      <span className="text-xs font-mono text-slate-700 w-12 text-right">{pctVal.toFixed(1)}%</span>
-      <span className="text-[10px] text-slate-400 w-8 text-right">{(weight * 100).toFixed(0)}%</span>
-    </div>
-  )
-}
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type EvidenceChartDef = {
@@ -446,7 +378,6 @@ interface ValuationLabProps {
 
 export default function ValuationLab({ apiData, ticker, statementsData, onNavigateToFinancials }: ValuationLabProps) {
   const [overrides,    setOverrides]    = useState<OverridesMap>({})
-  const [showBaseData, setShowBaseData] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
 
   const currency     = apiData?.quote?.currency ?? 'USD'
@@ -464,7 +395,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
   const ttmDACF      = ((ttmCF.depreciationAndAmortization ?? ttmCF.depreciationAmortizationDepletion) as number | null) ?? null
   const ttmDA        = ttmDAStmt ?? ttmDACF
   const ttmNetIncome = (ttmIS.netIncome     as number | null) ?? null
-  const ttmGrossProfit = (ttmIS.grossProfit as number | null) ?? null
   const ttmTaxProv   = (ttmIS.taxProvision as number | null) ?? null
   const ttmIntExp    = Math.abs(((ttmIS.interestExpenseNonOperating ?? ttmIS.interestExpense) as number | null) ?? 0)
   // EBITDA: (1) direct field, (2) EBIT + D&A, (3) bottom-up: NI + Tax + Interest + D&A
@@ -479,8 +409,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
   const ttmNetDebt   = ttmTotalDebt != null && ttmCash != null ? ttmTotalDebt - ttmCash : null
   const ttmShares    = ((ttmBS.commonStockSharesOutstanding ?? ttmBS.sharesOutstanding) as number | null) ?? null
 
-  const statementsAvailable = ttmRevenue != null || ttmEbitda != null || ttmFCF != null
-
   // Annual data — use any[] because fundamentalsTimeSeries uses totalRevenue/EBITDA (not revenue/ebitda)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const annualIS: any[] = statementsData?.annual?.incomeStatement ?? []
@@ -490,29 +418,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
   // FX rate: statementsData (fundamentalsTimeSeries) reports in financialCurrency (e.g. BRL for STNE).
   // All absolute monetary TTM values must be converted to quote currency (USD for ADRs) before use.
   const stmtFxRate = (apiData?.providerStatus?.fx?.rate as number | undefined) ?? 1
-
-  const sparkRevenue  = annualIS.slice(-5).map((r: any) => { const v = (r.totalRevenue as number | null) ?? null; return v != null ? v * stmtFxRate : null })
-  const sparkEbitda   = annualIS.slice(-5).map((r: any) => { const v = (r.EBITDA as number | null) ?? null; return v != null ? v * stmtFxRate : null })
-  const sparkFCF      = annualCF.slice(-5).map((r: any) => { const v = (r.freeCashFlow as number | null) ?? null; return v != null ? v * stmtFxRate : null })
-  const sparkNI       = annualIS.slice(-5).map((r: any) => { const v = (r.netIncome as number | null) ?? null; return v != null ? v * stmtFxRate : null })
-
-  // Statement-derived 3Y revenue CAGR (uses fundamentalsTimeSeries annual data — same source as Financials tab)
-  const annualRevs = annualIS
-    .map((r: any) => (r.totalRevenue as number | null) ?? null)
-    .filter((v): v is number => typeof v === 'number' && v > 0)
-  const stmtCagr3y = annualRevs.length >= 2
-    ? (() => {
-        const years  = Math.min(annualRevs.length - 1, 3)
-        const latest = annualRevs[annualRevs.length - 1]
-        const base   = annualRevs[annualRevs.length - 1 - years]
-        return base > 0 ? Math.pow(latest / base, 1 / years) - 1 : null
-      })()
-    : null
-  const stmtFcfMarginForSummary = ttmFCF != null && ttmRevenue != null && ttmRevenue > 0
-    ? ttmFCF / ttmRevenue : null
-
-  // CAGR analysis data
-  const cagrAnalysis = apiData?.cagrAnalysis ?? {}
 
   // Annual chart data for method history panels
   const chartRevenueGrowth: HistoryChartDef['data'] = annualIS.slice(1).reduce<{ year: string; value: number }[]>((acc, r: any, i) => {
@@ -561,11 +466,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
   // fairValue.sharesOutstanding is in millions (ADR-equivalent); TTM balance sheet shares may be ordinary
   // For ADRs (TSM: 5 ordinary = 1 ADR), fairValue.sharesOutstanding is already ADR-adjusted — prefer it
   const sharesAbsolute = (apiData?.fairValue?.sharesOutstanding != null ? apiData.fairValue.sharesOutstanding * 1e6 : null) ?? ttmShares
-
-  const ebitdaMargin  = ttmRevenue && ttmRevenue > 0 && ttmEbitda     != null ? ttmEbitda     / ttmRevenue : null
-  const fcfMarginPct  = ttmRevenue && ttmRevenue > 0 && ttmFCF        != null ? ttmFCF        / ttmRevenue : null
-  const netMarginPct  = ttmRevenue && ttmRevenue > 0 && ttmNetIncome  != null ? ttmNetIncome  / ttmRevenue : null
-  const grossMarginPct = ttmRevenue && ttmRevenue > 0 && ttmGrossProfit != null ? ttmGrossProfit / ttmRevenue : null
 
   // ── Derived assumptions ──────────────────────────────────────────────────
   const fwdPEBase   = useMemo(() => deriveForwardPEAssumptions(apiData), [apiData])
@@ -766,40 +666,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
     }
   }, [reverseDCFResult, ticker, currency, currentPrice, lastActualRevenue, lastFCFMargin, apiData])
 
-  // ── Scenario Blend ───────────────────────────────────────────────────────
-  const scenarioResult = useMemo(() => computeScenarioBlend([
-    { label: 'bear', probability: 0.25, methodId: 'forward_pe', assumptions: { ...fwdPEInputs, revenueCAGR: Math.max(0, fwdPEInputs.revenueCAGR - 0.05), netMargin: Math.max(0.01, (fwdPEInputs.netMargin ?? 0.10) - 0.03), exitPE: Math.max(5, (fwdPEInputs.exitPE ?? 15) - 3) } },
-    { label: 'base', probability: 0.50, methodId: 'forward_pe', assumptions: fwdPEInputs },
-    { label: 'bull', probability: 0.25, methodId: 'forward_pe', assumptions: { ...fwdPEInputs, revenueCAGR: fwdPEInputs.revenueCAGR + 0.05, netMargin: Math.min(0.50, (fwdPEInputs.netMargin ?? 0.10) + 0.03), exitPE: (fwdPEInputs.exitPE ?? 15) + 3 } },
-  ], currentPrice), [fwdPEInputs, currentPrice])
-
-  const scenarioConfig = useMemo((): ValuationMethodConfig => {
-    const wFV = scenarioResult.weightedFairValue; const wUpside = scenarioResult.weightedUpsidePct
-    const [bear, base, bull] = scenarioResult.scenarios
-    return {
-      id: 'scenario_blend', title: 'Scenario Blend', subtitle: 'Bear / Base / Bull probability-weighted',
-      methodDescription: 'Probability-weighted average of Bull (+5pp CAGR, +3pp margin, +3× P/E), Base, and Bear (−5pp, −3pp, −3×) outcomes. Gives a single fair value that accounts for forecast uncertainty.',
-      companyName: apiData?.companyName ?? ticker, ticker, currency,
-      evidence: [
-        { label: 'Bear (25%)', text: `CAGR −5pp, margin −3pp, P/E −3× vs base → ${fmtPrice(bear?.fairValue, currency)}` },
-        { label: 'Base (50%)', text: `Model assumptions → ${fmtPrice(base?.fairValue, currency)}` },
-        { label: 'Bull (25%)', text: `CAGR +5pp, margin +3pp, P/E +3× vs base → ${fmtPrice(bull?.fairValue, currency)}` },
-      ],
-      assumptions: [],
-      formulaLines: [],
-      results: [
-        { label: 'Bear Fair Value',     value: bear?.fairValue ?? null, formattedValue: fmtPrice(bear?.fairValue, currency),  tone: upsideTone(bear?.upsidePct) },
-        { label: 'Base Fair Value',     value: base?.fairValue ?? null, formattedValue: fmtPrice(base?.fairValue, currency),  tone: upsideTone(base?.upsidePct) },
-        { label: 'Bull Fair Value',     value: bull?.fairValue ?? null, formattedValue: fmtPrice(bull?.fairValue, currency),  tone: upsideTone(bull?.upsidePct) },
-        { label: 'Weighted Fair Value', value: wFV,                    formattedValue: fmtPrice(wFV, currency),              tone: upsideTone(wUpside) },
-        { label: 'Weighted Upside',     value: wUpside,                formattedValue: fmtPctSigned(wUpside),                tone: upsideTone(wUpside) },
-      ],
-      warnings: scenarioResult.guardErrors,
-      fairValueSummary: wFV,
-      currentPrice,
-    }
-  }, [scenarioResult, ticker, currency, currentPrice, apiData])
-
   // ── Handlers ─────────────────────────────────────────────────────────────
   function handleAssumptionChange(methodId: ValuationMethodId | 'ev_ebitda', key: string, value: number) {
     setOverrides(prev => ({ ...prev, [methodId]: { ...(prev[methodId] ?? {}), [key]: value } }))
@@ -810,11 +676,10 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
 
   // ── Summary ───────────────────────────────────────────────────────────────
   const summaryMethods: MethodResult[] = [
-    { id: 'forward_pe',       label: 'Forward P/E (5Y)',        fairValue: fwdPEResult.fairValueToday,       bullFairValue: scenarioResult.scenarios.find(s => s.label === 'bull')?.fairValue ?? null, bearFairValue: scenarioResult.scenarios.find(s => s.label === 'bear')?.fairValue ?? null, upsidePct: fwdPEResult.upsidePct,                weight: 0.30 },
-    { id: 'ev_ebitda',        label: 'EV/EBITDA',               fairValue: evEbitdaResult.fairValuePerShare, upsidePct: evEbitdaResult.upsidePct,                                                                                                                                           weight: 0.25 },
-    { id: 'revenue_multiple', label: 'Revenue Multiple',        fairValue: revMultResult.fairValueToday,     upsidePct: revMultResult.upsidePct,                                                                                                                                            weight: 0.20 },
-    { id: 'scenario_blend',   label: 'Scenario Blend',          fairValue: scenarioResult.weightedFairValue ?? null, bullFairValue: scenarioResult.scenarios.find(s => s.label === 'bull')?.fairValue ?? null, bearFairValue: scenarioResult.scenarios.find(s => s.label === 'bear')?.fairValue ?? null, upsidePct: scenarioResult.weightedFairValue != null ? (scenarioResult.weightedFairValue - currentPrice) / currentPrice : null, weight: 0.15 },
-    { id: 'core_dcf',         label: 'Core DCF (FCFF/FCFE/DDM)', fairValue: (apiData?.valuationMethods?.triangulatedFairValue as number | null) ?? null, upsidePct: (apiData?.valuationMethods?.triangulatedUpsidePct as number | null) ?? null, weight: 0.10 },
+    { id: 'forward_pe',       label: 'Forward P/E (5Y)',          fairValue: fwdPEResult.fairValueToday,       upsidePct: fwdPEResult.upsidePct,           weight: 0.35 },
+    { id: 'ev_ebitda',        label: 'EV/EBITDA',                 fairValue: evEbitdaResult.fairValuePerShare, upsidePct: evEbitdaResult.upsidePct,        weight: 0.30 },
+    { id: 'revenue_multiple', label: 'Revenue Multiple',          fairValue: revMultResult.fairValueToday,     upsidePct: revMultResult.upsidePct,         weight: 0.25 },
+    { id: 'core_dcf',         label: 'Core DCF (FCFF/FCFE/DDM)',  fairValue: (apiData?.valuationMethods?.triangulatedFairValue as number | null) ?? null, upsidePct: (apiData?.valuationMethods?.triangulatedUpsidePct as number | null) ?? null, weight: 0.10 },
   ]
 
   return (
@@ -827,142 +692,9 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
         currency={currency}
       />
 
-      {/* ── 2. Key model inputs ──────────────────────────────────────────── */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-card">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-label uppercase tracking-wider text-slate-400">What drives this valuation</p>
-          <SourceLabel source="calc">Derived from data</SourceLabel>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <AssumptionStat label="Revenue CAGR" value={`${(fwdPEBase.revenueCAGR  * 100).toFixed(1)}%`} sub="annual growth"     desc="How fast revenue grows each year" />
-          <AssumptionStat label="Net Margin"   value={`${(fwdPEBase.netMargin    * 100).toFixed(1)}%`} sub="exit year"         desc="Profit kept from every $1 of revenue" />
-          <AssumptionStat label="WACC"         value={`${(fwdPEBase.discountRate * 100).toFixed(1)}%`} sub="discount rate"     desc="Risk-adjusted return investors require" />
-          <AssumptionStat label="Exit P/E"     value={`${fwdPEBase.exitPE.toFixed(0)}×`}              sub="sector-normalized" desc="Earnings multiple at end of forecast" />
-        </div>
-      </div>
-
-      {/* ── 3. Data foundation — collapsible ─────────────────────────────── */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden">
-        <button
-          onClick={() => setShowBaseData(v => !v)}
-          className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-400">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            <span className="text-sm font-semibold text-slate-700">Data & assumptions</span>
-            <span className="text-micro text-slate-400">TTM financials · growth assumptions · business context</span>
-          </div>
-          <svg
-            className={cn('text-slate-400 transition-transform', showBaseData && 'rotate-180')}
-            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-
-        {showBaseData && (
-          <div className="border-t border-slate-100 p-5 space-y-4">
-            {/* Business Snapshot */}
-            <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex gap-3 items-start">
-              <svg className="text-blue-400 mt-0.5 shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-              <p className="text-sm text-blue-800 leading-relaxed">
-                {buildBusinessSummary(
-                  apiData?.companyName ?? ticker,
-                  { ...apiData, cagrAnalysis: { ...apiData?.cagrAnalysis, historicalCagr3y: stmtCagr3y ?? apiData?.cagrAnalysis?.historicalCagr3y } } as any,
-                  { fcfMargin: fcfMarginPct ?? stmtFcfMarginForSummary, grossMargin: grossMarginPct ?? apiData?.businessProfile?.grossMargin }
-                )}
-              </p>
-            </div>
-
-            {/* TTM Performance */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-label uppercase tracking-wider text-slate-400">Trailing 12 Months</p>
-                <SourceLabel source="yahoo">Yahoo Finance Statements</SourceLabel>
-              </div>
-
-              {statementsAvailable ? (
-                <>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-                    {([
-                      { label: 'Revenue',        value: ttmRevenue   != null ? ttmRevenue   * stmtFxRate : null, margin: null,          tag: '',            vals: sparkRevenue },
-                      { label: 'EBITDA',         value: ttmEbitda    != null ? ttmEbitda    * stmtFxRate : null, margin: ebitdaMargin,  tag: 'margin',      vals: sparkEbitda  },
-                      { label: 'Free Cash Flow', value: ttmFCF       != null ? ttmFCF       * stmtFxRate : null, margin: fcfMarginPct,  tag: 'FCF margin',  vals: sparkFCF     },
-                      { label: 'Net Income',     value: ttmNetIncome != null ? ttmNetIncome * stmtFxRate : null, margin: netMarginPct,  tag: 'net margin',  vals: sparkNI      },
-                    ] as const).map(({ label, value, margin, tag, vals }) => {
-                      const nums = vals.filter((v): v is number => v != null)
-                      const isPositive = nums.length >= 2 ? nums[nums.length - 1] >= nums[0] : true
-                      return (
-                        <div key={label} className="bg-slate-50 border border-slate-100 rounded-xl px-3 py-3 flex flex-col gap-1">
-                          <span className="text-label uppercase tracking-wider text-slate-400">{label}</span>
-                          <span className="text-lg font-bold font-mono text-slate-900">{fmtLarge(value)}</span>
-                          {margin != null && (
-                            <span className="text-micro text-slate-500">{(margin * 100).toFixed(1)}% {tag}</span>
-                          )}
-                          <div className="mt-1">
-                            <MiniBarSparkline values={vals} positive={isPositive} />
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <MetricChip label="Total Debt"    value={ttmTotalDebt != null ? fmtLarge(ttmTotalDebt) : ''} naReason={ttmTotalDebt == null ? 'no-data' : undefined} variant="default" />
-                    <MetricChip label="Cash & Equiv." value={ttmCash      != null ? fmtLarge(ttmCash)      : ''} naReason={ttmCash == null ? 'no-data' : undefined} variant="positive" />
-                    <MetricChip
-                      label="Net Debt"
-                      value={ttmNetDebt != null ? fmtLarge(ttmNetDebt) : ''}
-                      naReason={ttmNetDebt == null ? 'no-data' : undefined}
-                      variant={ttmNetDebt == null ? 'default' : ttmNetDebt < 0 ? 'positive' : 'warning'}
-                    />
-                  </div>
-                </>
-              ) : (
-                <Alert><AlertDescription>Statements data is loading.</AlertDescription></Alert>
-              )}
-            </div>
-
-            {/* Revenue Growth Assumption */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-label uppercase tracking-wider text-slate-400">Revenue Growth Assumption</p>
-                {cagrAnalysis.confidenceLabel && (
-                  <span className={cn(
-                    'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
-                    cagrAnalysis.confidenceLabel === 'High'   && 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                    cagrAnalysis.confidenceLabel === 'Medium' && 'bg-amber-50 text-amber-700 border-amber-200',
-                    cagrAnalysis.confidenceLabel === 'Low'    && 'bg-red-50 text-red-700 border-red-200',
-                  )}>
-                    {cagrAnalysis.confidenceLabel} Confidence
-                    {cagrAnalysis.numAnalysts ? ` · ${cagrAnalysis.numAnalysts} analysts` : ''}
-                  </span>
-                )}
-              </div>
-              <div className="space-y-3 mb-3">
-                <GrowthBar label="Historical 3Y CAGR" value={cagrAnalysis.historicalCagr3y  ?? null} weight={cagrAnalysis.weights?.historical  ?? 0.35} />
-                <GrowthBar label="Analyst Consensus"  value={cagrAnalysis.analystEstimate1y ?? null} weight={cagrAnalysis.weights?.analyst     ?? 0.45} />
-                <GrowthBar label="Fundamental Growth" value={cagrAnalysis.fundamentalGrowth ?? null} weight={cagrAnalysis.weights?.fundamental ?? 0.20} />
-              </div>
-              <div className="flex items-center justify-between border-t border-slate-100 pt-3">
-                <span className="text-sm text-slate-700 font-medium">Blended CAGR (forward P/E and revenue methods)</span>
-                <span className="text-base font-bold font-mono text-emerald-700">
-                  {cagrAnalysis.blended != null
-                    ? `${(cagrAnalysis.blended * 100).toFixed(1)}%`
-                    : `${(fwdPEBase.revenueCAGR * 100).toFixed(1)}%`}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ── 4. Method details ────────────────────────────────────────────────── */}
+      {/* ── 2. Method details ────────────────────────────────────────────────── */}
       <div className="space-y-4">
-        <p className="text-label uppercase tracking-wider text-slate-400 px-1">Valuation Methods — Edit Any Assumption</p>
+        <p className="text-label uppercase tracking-wider text-slate-400 px-1">How each method is computed</p>
 
         <MethodInlinePanel
           config={fwdPEConfig}
@@ -1000,15 +732,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
           evidenceCharts={{
             'Revenue CAGR': chartRevenueGrowth.length >= 2 ? { data: chartRevenueGrowth, unit: '%', color: '#6366f1', referenceValue: +(revMultBase.revenueCAGR * 100).toFixed(1), referenceLabel: 'Blended' } : undefined,
           }}
-        />
-
-        <MethodInlinePanel
-          config={scenarioConfig}
-          overrides={overrides['scenario_blend'] ?? {}}
-          currency={currency}
-          onAssumptionChange={(key, val) => handleAssumptionChange('scenario_blend', key, val)}
-          onResetOverrides={() => handleResetOverrides('scenario_blend')}
-          onNavigateToFinancials={onNavigateToFinancials}
         />
 
         <MethodInlinePanel
