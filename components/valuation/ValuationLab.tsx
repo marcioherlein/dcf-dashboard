@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   type ValuationMethodId,
   type ValuationMethodConfig,
@@ -372,11 +372,12 @@ interface ValuationLabProps {
   ticker: string
   statementsData?: StatementsData | null
   onNavigateToFinancials?: (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => void
+  onWeightedFVChange?: (fv: number | null) => void
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function ValuationLab({ apiData, ticker, statementsData, onNavigateToFinancials }: ValuationLabProps) {
+export default function ValuationLab({ apiData, ticker, statementsData, onNavigateToFinancials, onWeightedFVChange }: ValuationLabProps) {
   const [overrides,    setOverrides]    = useState<OverridesMap>({})
   const [showAdvanced, setShowAdvanced] = useState(false)
 
@@ -681,6 +682,17 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
     { id: 'revenue_multiple', label: 'Revenue Multiple',          fairValue: revMultResult.fairValueToday,     upsidePct: revMultResult.upsidePct,         weight: 0.25 },
     { id: 'core_dcf',         label: 'Core DCF (FCFF/FCFE/DDM)',  fairValue: (apiData?.valuationMethods?.triangulatedFairValue as number | null) ?? null, upsidePct: (apiData?.valuationMethods?.triangulatedUpsidePct as number | null) ?? null, weight: 0.10 },
   ]
+
+  // Lift weighted fair value to parent so PriceChart can show "Your Model" line
+  const weightedFV = useMemo(() => {
+    const valid = summaryMethods.filter(m => m.fairValue != null && m.weight > 0)
+    if (!valid.length) return null
+    const total = valid.reduce((s, m) => s + m.weight, 0)
+    return valid.reduce((s, m) => s + m.fairValue! * m.weight, 0) / total
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fwdPEResult, evEbitdaResult, revMultResult, apiData])
+
+  useEffect(() => { onWeightedFVChange?.(weightedFV) }, [weightedFV, onWeightedFVChange])
 
   return (
     <div className="space-y-4">

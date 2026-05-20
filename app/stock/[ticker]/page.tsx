@@ -154,6 +154,7 @@ function StockPageBody() {
   const [saving, setSaving]   = useState(false)
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [financialsHighlight, setFinancialsHighlight] = useState<{ rowKey: string; statement: 'income' | 'balance' | 'cashflow' } | null>(null)
+  const [userModelFairValue, setUserModelFairValue] = useState<number | null>(null)
 
   // After Google OAuth redirect, restore the user's pre-login state (tab, etc.)
   useEffect(() => {
@@ -341,6 +342,7 @@ function StockPageBody() {
                   isDark={false}
                   triangulatedFairValue={data.valuationMethods?.triangulatedFairValue}
                   analystTarget={data.quote.analystTargetMean}
+                  userModelFairValue={userModelFairValue}
                 />
 
                 <AtAGlance
@@ -379,7 +381,7 @@ function StockPageBody() {
             {/* ── Valuation tab ── */}
             {activeTab === 'valuation' && (
               <div className="space-y-4 pt-5">
-                <ValuationLab apiData={data} ticker={ticker} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} />
+                <ValuationLab apiData={data} ticker={ticker} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} onWeightedFVChange={setUserModelFairValue} />
               </div>
             )}
 
