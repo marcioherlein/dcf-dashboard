@@ -180,11 +180,11 @@ function GrowthEditCell({ growthPct, prevRevenue, year, isProjected, projectedIn
 
   if (editing && canEdit) {
     return (
-      <td className="px-2 py-1 text-right whitespace-nowrap bg-blue-50">
+      <td className="px-2 py-1 text-right whitespace-nowrap bg-blue-50 border-b-2 border-blue-400">
         <div className="flex items-center justify-end gap-1">
           <input
             autoFocus
-            className="w-16 border-2 border-blue-400 bg-white px-1.5 py-0.5 text-right text-xs text-blue-700 focus:outline-none rounded font-semibold"
+            className="w-16 border-2 border-blue-500 bg-white px-1.5 py-0.5 text-right text-xs text-blue-700 focus:outline-none rounded font-semibold"
             value={draft}
             onChange={e => setDraft(e.target.value)}
             onKeyDown={e => {
@@ -211,26 +211,24 @@ function GrowthEditCell({ growthPct, prevRevenue, year, isProjected, projectedIn
     <td
       className={cn(
         'px-2 py-1.5 text-right text-xs whitespace-nowrap tabular-nums cursor-pointer group',
-        cellBg({ isProjected, year }),
-        canEdit && 'hover:bg-blue-100/60',
+        canEdit ? 'bg-blue-50 border-b-2 border-blue-300 hover:bg-blue-100' : cellBg({ isProjected, year }),
       )}
       onClick={startEdit}
+      title="Click to edit"
     >
       <div className="flex flex-col items-end gap-0.5">
-        <span className={cn('font-semibold', growthColor)}>
-          {fmtPctDisplay(growthPct)}
-        </span>
-        <div className="flex items-center gap-1">
-          <span className={cn(
-            'text-[8px] px-1 py-px rounded font-semibold',
-            isAnalyst ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-400'
-          )}>
-            {isAnalyst ? 'Analyst' : 'Model'}
+        <div className="flex items-center gap-1 justify-end">
+          {canEdit && <span className="text-[9px] text-blue-400 opacity-60 group-hover:opacity-100 transition-opacity">✎</span>}
+          <span className={cn('font-semibold', canEdit ? 'text-blue-700' : growthColor)}>
+            {fmtPctDisplay(growthPct)}
           </span>
-          {canEdit && (
-            <span className="text-[8px] text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">edit</span>
-          )}
         </div>
+        <span className={cn(
+          'text-[8px] px-1 py-px rounded font-semibold',
+          isAnalyst ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-500'
+        )}>
+          {isAnalyst ? 'Analyst' : 'Model'}
+        </span>
       </div>
     </td>
   )
@@ -360,7 +358,7 @@ export default function ForecastTable({
       <tr key="revenue-growth" className="hover:bg-slate-50/50 border-b border-slate-100">
         <td className="sticky left-0 z-10 bg-white pl-6 pr-4 py-0.5 text-[11px] font-bold text-blue-600 whitespace-nowrap border-r border-slate-100">
           Revenue % Growth
-          <span className="ml-1 text-[9px] text-blue-400 font-normal">← click to edit</span>
+          <span className="ml-1.5 inline-flex items-center gap-0.5 bg-blue-100 text-blue-600 text-[8px] font-semibold px-1.5 py-px rounded-full">✎ editable</span>
         </td>
         {rows.map((r) => {
           const rIdx = rows.indexOf(r)

@@ -198,45 +198,91 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
 
   const exitMultiple = exitMultipleOverride ?? assumptions.exitMultiple.value
 
-  // Build UFCF rows
-  const ufcfInputRows = useMemo(() => baseInput.rows.map(r => {
-    const ov = rowOverrides[r.year] ?? {}
-    return {
-      year: r.year, isProjected: r.isProjected,
-      revenue: ov.revenue != null ? ov.revenue : r.revenue,
-      ebit:    ov.ebit    != null ? ov.ebit    : r.ebit,
-      ebitda:  ov.ebitda  != null ? ov.ebitda  : r.ebitda,
-      capex:   ov.capex   != null ? ov.capex   : (r.capex ?? (r.freeCashFlow != null && r.operatingCF != null ? r.freeCashFlow - r.operatingCF : null)),
-      nwc:     ov.nwc     != null ? ov.nwc     : deriveNWC(r),
-      dnaFromCF: r.dna,
-      freeCashFlow: r.freeCashFlow,
+  // Build UFCF rows — projected revenues chain from the previous row so that
+  // overriding one year's growth doesn't silently distort subsequent years' displayed %.
+  const ufcfInputRows = useMemo(() => {
+    const result: Array<{
+      year: string; isProjected: boolean; revenue: number | null
+      ebit: number | null; ebitda: number | null; capex: number | null
+      nwc: number | null; dnaFromCF: number | null; freeCashFlow: number | null
+    }> = []
+    for (let i = 0; i < baseInput.rows.length; i++) {
+      const r  = baseInput.rows[i]
+      const ov = rowOverrides[r.year] ?? {}
+      let revenue: number | null
+      if (!r.isProjected || ov.revenue != null) {
+        revenue = ov.revenue ?? r.revenue
+      } else {
+        const prevBuilt   = result[i - 1]?.revenue ?? null
+        const prevBase    = baseInput.rows[i - 1]?.revenue ?? null
+        const thisBase    = r.revenue
+        if (prevBuilt != null && prevBase != null && prevBase !== 0 && thisBase != null) {
+          const baseGrowth = (thisBase - prevBase) / Math.abs(prevBase)
+          revenue = prevBuilt * (1 + baseGrowth)
+        } else {
+          revenue = r.revenue
+        }
+      }
+      result.push({
+        year: r.year, isProjected: r.isProjected, revenue,
+        ebit:    ov.ebit    != null ? ov.ebit    : r.ebit,
+        ebitda:  ov.ebitda  != null ? ov.ebitda  : r.ebitda,
+        capex:   ov.capex   != null ? ov.capex   : (r.capex ?? (r.freeCashFlow != null && r.operatingCF != null ? r.freeCashFlow - r.operatingCF : null)),
+        nwc:     ov.nwc     != null ? ov.nwc     : deriveNWC(r),
+        dnaFromCF: r.dna,
+        freeCashFlow: r.freeCashFlow,
+      })
     }
-  }), [baseInput, rowOverrides])
+    return result
+  }, [baseInput, rowOverrides])
 
   const ufcfRows = useMemo(
     () => computeUFCFRows(ufcfInputRows, taxRate, wacc),
     [ufcfInputRows, taxRate, wacc]
   )
 
-  // Build LFCF rows
-  const lfcfInputRows = useMemo(() => baseInput.rows.map(r => {
-    const ov = rowOverrides[r.year] ?? {}
-    const baseNetDebtRepayment =
-      r.financingCF != null && r.dividendsPaid != null
-        ? -r.financingCF - Math.abs(r.dividendsPaid ?? 0)
-        : null
-    return {
-      year: r.year, isProjected: r.isProjected,
-      revenue:          ov.revenue          != null ? ov.revenue          : r.revenue,
-      netIncome:        ov.netIncome        != null ? ov.netIncome        : r.netIncome,
-      ebit:             ov.ebit             != null ? ov.ebit             : r.ebit,
-      ebitda:           ov.ebitda           != null ? ov.ebitda           : r.ebitda,
-      capex:            ov.capex            != null ? ov.capex            : (r.capex ?? (r.freeCashFlow != null && r.operatingCF != null ? r.freeCashFlow - r.operatingCF : null)),
-      nwc:              ov.nwc              != null ? ov.nwc              : deriveNWC(r),
-      netDebtRepayment: ov.netDebtRepayment != null ? ov.netDebtRepayment : baseNetDebtRepayment,
-      dnaFromCF: r.dna,
+  // Build LFCF rows — same chaining logic as ufcfInputRows
+  const lfcfInputRows = useMemo(() => {
+    const result: Array<{
+      year: string; isProjected: boolean; revenue: number | null
+      netIncome: number | null; ebit: number | null; ebitda: number | null
+      capex: number | null; nwc: number | null; netDebtRepayment: number | null
+      dnaFromCF: number | null
+    }> = []
+    for (let i = 0; i < baseInput.rows.length; i++) {
+      const r  = baseInput.rows[i]
+      const ov = rowOverrides[r.year] ?? {}
+      const baseNetDebtRepayment =
+        r.financingCF != null && r.dividendsPaid != null
+          ? -r.financingCF - Math.abs(r.dividendsPaid ?? 0)
+          : null
+      let revenue: number | null
+      if (!r.isProjected || ov.revenue != null) {
+        revenue = ov.revenue ?? r.revenue
+      } else {
+        const prevBuilt   = result[i - 1]?.revenue ?? null
+        const prevBase    = baseInput.rows[i - 1]?.revenue ?? null
+        const thisBase    = r.revenue
+        if (prevBuilt != null && prevBase != null && prevBase !== 0 && thisBase != null) {
+          const baseGrowth = (thisBase - prevBase) / Math.abs(prevBase)
+          revenue = prevBuilt * (1 + baseGrowth)
+        } else {
+          revenue = r.revenue
+        }
+      }
+      result.push({
+        year: r.year, isProjected: r.isProjected, revenue,
+        netIncome:        ov.netIncome        != null ? ov.netIncome        : r.netIncome,
+        ebit:             ov.ebit             != null ? ov.ebit             : r.ebit,
+        ebitda:           ov.ebitda           != null ? ov.ebitda           : r.ebitda,
+        capex:            ov.capex            != null ? ov.capex            : (r.capex ?? (r.freeCashFlow != null && r.operatingCF != null ? r.freeCashFlow - r.operatingCF : null)),
+        nwc:              ov.nwc              != null ? ov.nwc              : deriveNWC(r),
+        netDebtRepayment: ov.netDebtRepayment != null ? ov.netDebtRepayment : baseNetDebtRepayment,
+        dnaFromCF: r.dna,
+      })
     }
-  }), [baseInput, rowOverrides])
+    return result
+  }, [baseInput, rowOverrides])
 
   const lfcfRows = useMemo(
     () => computeLFCFRows(lfcfInputRows, baseInput.costOfEquity),
