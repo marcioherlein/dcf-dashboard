@@ -56,7 +56,7 @@ const FAQS = [
   },
   {
     q: 'What stocks are covered?',
-    a: 'Any ticker available on Yahoo Finance — NYSE, NASDAQ, LSE, TSX, ASX, B3, and 50+ other exchanges. ADRs are supported. Brazilian stocks (BOVESPA) work with full FX correction.',
+    a: 'NYSE and NASDAQ-listed stocks are fully supported. Additional exchanges are on the roadmap.',
   },
 ]
 
@@ -257,7 +257,7 @@ export default function PricingPage() {
               </thead>
               <tbody>
                 {[
-                  { label: 'Analyze any stock (500+ exchanges)',         free: true,  pro: true  },
+                  { label: 'Analyze NYSE & NASDAQ stocks',                free: true,  pro: true  },
                   { label: 'Grade badge (A / B / C / D)',                free: true,  pro: true  },
                   { label: 'Weighted consensus fair value',              free: true,  pro: true  },
                   { label: 'Bear / Base / Bull fair value range bar',    free: true,  pro: true  },

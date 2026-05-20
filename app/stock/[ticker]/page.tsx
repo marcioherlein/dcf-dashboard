@@ -302,8 +302,20 @@ function StockPageBody() {
         )}
 
         {error && (
-          <div className="mt-8 rounded-xl bg-red-50 border border-red-200 px-5 py-4 text-sm text-red-700">
-            <strong>Error:</strong> {error}. Yahoo Finance may be temporarily unavailable — try again in a moment.
+          <div className={`mt-8 rounded-xl border px-5 py-5 ${error.includes('NYSE and NASDAQ') ? 'bg-slate-50 border-slate-200' : 'bg-red-50 border-red-200'}`}>
+            {error.includes('NYSE and NASDAQ') ? (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-semibold text-slate-800">{error}</p>
+                <p className="text-xs text-slate-500">
+                  International markets and other exchanges are on the roadmap.
+                  Try searching for a US-listed equivalent or ADR.
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-red-700">
+                <strong>Error:</strong> {error}. Yahoo Finance may be temporarily unavailable — try again in a moment.
+              </p>
+            )}
           </div>
         )}
 

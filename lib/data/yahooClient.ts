@@ -6,8 +6,25 @@ const yf = new YahooFinance({ suppressNotices: ['ripHistorical', 'yahooSurvey'] 
 export async function searchTicker(query: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result: any = await yf.search(query, { newsCount: 0 })
+
+  // Allowed exchange codes for NYSE and NASDAQ
+  const NYSE_NASDAQ_CODES = new Set([
+    'NMS', 'NGM', 'NCM',           // NASDAQ (Global Select, Global Market, Capital Market)
+    'NYQ', 'NYS', 'ASE',           // NYSE, NYSE American (AMEX)
+    'PCX', 'BTS',                  // NYSE Arca, Bats (US-listed ETF venues — same securities)
+  ])
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (result.quotes ?? []).filter((q: any) => q.quoteType === 'EQUITY').slice(0, 8)
+  return (result.quotes ?? [])
+    .filter((q: any) => {
+      if (q.quoteType !== 'EQUITY') return false
+      const code = (q.exchange ?? '').toUpperCase()
+      const name = (q.exchDisp ?? q.fullExchangeName ?? '').toUpperCase()
+      return NYSE_NASDAQ_CODES.has(code)
+        || name.includes('NASDAQ')
+        || name.includes('NYSE')
+    })
+    .slice(0, 8)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

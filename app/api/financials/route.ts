@@ -35,6 +35,21 @@ export async function GET(req: NextRequest) {
     const currentPrice = (q.regularMarketPrice ?? 0) as number
     const quoteCurrency: string = q.currency ?? 'USD'
 
+    // --- Exchange restriction: NYSE and NASDAQ only ---
+    const NYSE_NASDAQ_CODES = new Set(['NMS', 'NGM', 'NCM', 'NYQ', 'NYS', 'ASE', 'PCX', 'BTS'])
+    const exchangeCode = (q.exchange ?? '').toUpperCase()
+    const exchangeName = (q.fullExchangeName ?? q.exchangeName ?? '').toUpperCase()
+    const isAllowed = NYSE_NASDAQ_CODES.has(exchangeCode)
+      || exchangeName.includes('NASDAQ')
+      || exchangeName.includes('NYSE')
+    if (!isAllowed) {
+      const displayExchange = q.fullExchangeName ?? q.exchange ?? 'unknown exchange'
+      return NextResponse.json(
+        { error: `${ticker} trades on ${displayExchange}. Analysis is currently available for NYSE and NASDAQ-listed stocks only.` },
+        { status: 403 }
+      )
+    }
+
     // --- Currency mismatch detection (e.g. BABA reports in CNY but trades in USD) ---
     const financialCurrency: string = fin.financialData?.financialCurrency ?? quoteCurrency
     let fxRate = 1 // multiplier to convert financial figures → quote currency

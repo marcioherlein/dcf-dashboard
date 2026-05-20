@@ -15,9 +15,8 @@ interface SearchResult {
 const EXAMPLE_TICKERS = ['AAPL', 'NVDA', 'MSFT', 'AMZN']
 
 const MARKETS = [
-  { flag: '🇺🇸', label: 'NYSE · NASDAQ' },
-  { flag: '🇧🇷', label: 'B3' },
-  { flag: '🇬🇧', label: 'LSE' },
+  { flag: '🇺🇸', label: 'NYSE' },
+  { flag: '🇺🇸', label: 'NASDAQ' },
 ]
 
 // ── Cycling word animation ─────────────────────────────────────────────────────
