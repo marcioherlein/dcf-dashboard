@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { normalizeModellingInputs, type ModellingInput, type ModellingRow } from '@/lib/valuation/normalizeInputs'
 import { buildAssumptionSet } from '@/lib/valuation/assumptions'
 import { computeUFCFRows, computeUFCFEV, type UFCFRow } from '@/lib/valuation/unleveredDcf'
