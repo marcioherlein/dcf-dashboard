@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { TrendBadge } from '@/components/ui/trend-badge'
 import { NumberDisplay } from '@/components/ui/number-display'
 import { NABadge } from '@/components/ui/na-badge'
+import { motion } from 'motion/react'
 
 export interface MethodResult {
   id: string
@@ -138,14 +139,23 @@ function MethodDotsChart({
             </text>
 
             {/* Horizontal stem: from dot to price line */}
-            <line
+            <motion.line
               x1={Math.min(xDot, xPrice)} y1={y}
               x2={Math.max(xDot, xPrice)} y2={y}
               stroke={lineColor} strokeWidth={8}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.25, delay: 0.05 + i * 0.07 }}
             />
 
             {/* Dot */}
-            <circle cx={xDot} cy={y} r={5} fill={dotColor} />
+            <motion.circle
+              cx={xDot} cy={y} r={5} fill={dotColor}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 22, delay: 0.1 + i * 0.07 }}
+              style={{ transformOrigin: `${xDot}px ${y}px` }}
+            />
 
             {/* Right: fair value */}
             <text
@@ -184,9 +194,13 @@ function MethodDotsChart({
             {/* Divider line */}
             <line x1={CHART_L} y1={y - 10} x2={CHART_R} y2={y - 10} stroke="#e2e8f0" strokeWidth={1} />
             {/* Diamond */}
-            <polygon
+            <motion.polygon
               points={`${xBlend},${y - 7} ${xBlend + 6},${y} ${xBlend},${y + 7} ${xBlend - 6},${y}`}
               fill={blendColor}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.1 + valid.length * 0.07 }}
+              style={{ transformOrigin: `${xBlend}px ${y}px` }}
             />
             {/* Label left of diamond */}
             <text
@@ -317,7 +331,7 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
           </div>
 
           <div className="divide-y divide-slate-100">
-            {methods.map((m) => {
+            {methods.map((m, i) => {
               const side = methodUpside(m)
               const borderClass = side ? METHOD_BORDER_CLASS[side] : 'border-l-slate-200'
               const effectivePct = (m.fairValue != null && effectiveTotalWeight > 0)
@@ -354,9 +368,11 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
                       <>
                         <span className="text-[11px] font-mono text-slate-500">{effectivePct.toFixed(0)}%</span>
                         <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                          <div
+                        <motion.div
                             className={cn('h-full rounded-full', side === 'up' ? 'bg-emerald-400' : side === 'down' ? 'bg-red-400' : 'bg-blue-300')}
-                            style={{ width: `${effectivePct}%` }}
+                            initial={{ width: '0%' }}
+                            animate={{ width: `${effectivePct}%` }}
+                            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.1 + i * 0.06 }}
                           />
                         </div>
                       </>

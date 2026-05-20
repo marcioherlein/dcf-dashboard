@@ -1,5 +1,6 @@
 'use client'
 import { TrendingUp, TrendingDown, Bookmark, DollarSign, Shield, BarChart2, ArrowRight } from 'lucide-react'
+import { motion } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { fmtPct, fmtLargeCurrency, fmtPrice, upsideZone, zoneBadgeClass } from '@/lib/formatters'
 import { NABadge } from '@/components/ui/na-badge'
@@ -123,7 +124,10 @@ export default function InvestorGradeCard({
         <div className="flex items-start gap-4">
 
           {/* Grade badge — pre-attentive size pop-out */}
-          <div
+          <motion.div
+            initial={{ scale: 0.55, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 18, delay: 0.05 }}
             className={cn(
               'w-[72px] h-[72px] shrink-0 rounded-2xl flex items-center justify-center',
               colors.bg, colors.text,
@@ -132,7 +136,7 @@ export default function InvestorGradeCard({
             <span className="text-[2.75rem] font-extrabold leading-none tracking-tight" style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>
               {grade}
             </span>
-          </div>
+          </motion.div>
 
           {/* Company + price */}
           <div className="flex-1 min-w-0">
@@ -161,14 +165,19 @@ export default function InvestorGradeCard({
 
             {/* One-sentence verdict */}
             {verdict && (
-              <p className={cn(
-                'mt-3 text-[12px] leading-relaxed rounded-lg px-3 py-2',
-                isUndervalued
-                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-100'
-                  : 'bg-amber-50 text-amber-800 border border-amber-100',
-              )}>
+              <motion.p
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, delay: 0.2 }}
+                className={cn(
+                  'mt-3 text-[12px] leading-relaxed rounded-lg px-3 py-2',
+                  isUndervalued
+                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-100'
+                    : 'bg-amber-50 text-amber-800 border border-amber-100',
+                )}
+              >
                 {verdict}
-              </p>
+              </motion.p>
             )}
           </div>
         </div>

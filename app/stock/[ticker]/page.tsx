@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useMemo } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useParams, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import NewsPanel from '@/components/stock/NewsPanel'
@@ -309,7 +310,12 @@ function StockPageBody() {
         {data && !loading && (
           <>
             {/* ── InvestorGradeCard — persistent above-fold summary ── */}
-            <div className="pt-5">
+            <motion.div
+              className="pt-5"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            >
               <InvestorGradeCard
                 ticker={data.ticker}
                 companyName={data.companyName}
@@ -334,93 +340,132 @@ function StockPageBody() {
                 onViewDetails={() => handleTabChange('valuation')}
                 compact={activeTab === 'valuation'}
               />
-            </div>
+            </motion.div>
 
-            {/* ── Overview tab ── */}
-            {activeTab === 'overview' && (
-              <div id="tabpanel-overview" role="tabpanel" className="space-y-4 pt-5">
-                <PriceChart
-                  ticker={ticker}
-                  isDark={false}
-                  triangulatedFairValue={data.valuationMethods?.triangulatedFairValue}
-                  analystTarget={data.quote.analystTargetMean}
-                  userModelFairValue={userModelFairValue}
-                />
-
-                <AtAGlance
-                  price={data.quote.price}
-                  marketCap={data.quote.marketCap}
-                  high52={data.quote.fiftyTwoWeekHigh}
-                  low52={data.quote.fiftyTwoWeekLow}
-                  sector={data.quote.sector ?? ''}
-                  country={data.businessProfile.country}
-                  currency={currency}
-                  statementsData={statementsData}
-                />
-
-                {data.ratings && data.scores && (
-                  <HealthSection
-                    ratings={data.ratings}
-                    scores={computedScores ?? data.scores}
-                    financialsData={data}
-                  />
-                )}
-
-                {(data.businessProfile.description || data.historicalRevenues.length >= 2) && (
-                  <BusinessModel
-                    businessProfile={data.businessProfile}
-                    historicalRevenues={data.historicalRevenues}
+            <AnimatePresence mode="wait">
+              {/* ── Overview tab ── */}
+              {activeTab === 'overview' && (
+                <motion.div
+                  key="tab-overview"
+                  id="tabpanel-overview"
+                  role="tabpanel"
+                  className="space-y-4 pt-5"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <PriceChart
                     ticker={ticker}
                     isDark={false}
-                    incomeStatement={data.financialStatements?.incomeStatement}
-                    cashFlow={data.financialStatements?.cashFlow}
+                    triangulatedFairValue={data.valuationMethods?.triangulatedFairValue}
+                    analystTarget={data.quote.analystTargetMean}
+                    userModelFairValue={userModelFairValue}
+                  />
+
+                  <AtAGlance
+                    price={data.quote.price}
+                    marketCap={data.quote.marketCap}
+                    high52={data.quote.fiftyTwoWeekHigh}
+                    low52={data.quote.fiftyTwoWeekLow}
+                    sector={data.quote.sector ?? ''}
+                    country={data.businessProfile.country}
+                    currency={currency}
                     statementsData={statementsData}
                   />
-                )}
-              </div>
-            )}
 
-            {/* ── Valuation tab ── */}
-            {activeTab === 'valuation' && (
-              <div className="space-y-4 pt-5">
-                <ValuationLab apiData={data} ticker={ticker} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} onWeightedFVChange={setUserModelFairValue} />
-              </div>
-            )}
+                  {data.ratings && data.scores && (
+                    <HealthSection
+                      ratings={data.ratings}
+                      scores={computedScores ?? data.scores}
+                      financialsData={data}
+                    />
+                  )}
 
-            {/* ── Financials tab ── */}
-            {activeTab === 'financials' && (
-              <div className="space-y-4 pt-5">
-                <FinancialsHub
-                  statementsData={statementsData}
-                  financialsData={data}
-                  currency={currency}
-                  reportingCurrency={statementsData?.financialCurrency}
-                  cagr={data.cagr}
-                  highlight={financialsHighlight}
-                />
-              </div>
-            )}
+                  {(data.businessProfile.description || data.historicalRevenues.length >= 2) && (
+                    <BusinessModel
+                      businessProfile={data.businessProfile}
+                      historicalRevenues={data.historicalRevenues}
+                      ticker={ticker}
+                      isDark={false}
+                      incomeStatement={data.financialStatements?.incomeStatement}
+                      cashFlow={data.financialStatements?.cashFlow}
+                      statementsData={statementsData}
+                    />
+                  )}
+                </motion.div>
+              )}
 
-            {/* ── Risks & Signals tab ── */}
-            {activeTab === 'risks' && (
-              <div className="space-y-4 pt-5">
-                {data.ratings && data.scores && (
-                  <HealthSection
-                    ratings={data.ratings}
-                    scores={computedScores ?? data.scores}
+              {/* ── Valuation tab ── */}
+              {activeTab === 'valuation' && (
+                <motion.div
+                  key="tab-valuation"
+                  className="space-y-4 pt-5"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <ValuationLab apiData={data} ticker={ticker} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} onWeightedFVChange={setUserModelFairValue} />
+                </motion.div>
+              )}
+
+              {/* ── Financials tab ── */}
+              {activeTab === 'financials' && (
+                <motion.div
+                  key="tab-financials"
+                  className="space-y-4 pt-5"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <FinancialsHub
+                    statementsData={statementsData}
                     financialsData={data}
+                    currency={currency}
+                    reportingCurrency={statementsData?.financialCurrency}
+                    cagr={data.cagr}
+                    highlight={financialsHighlight}
                   />
-                )}
-                {data.scores && <FinancialScores scores={computedScores ?? data.scores} />}
-              </div>
-            )}
+                </motion.div>
+              )}
 
-            {/* ── News tab ── */}
-            {activeTab === 'news' && (
-              <div className="space-y-4 pt-5">
-                <NewsPanel ticker={ticker} />
-              </div>
-            )}
+              {/* ── Risks & Signals tab ── */}
+              {activeTab === 'risks' && (
+                <motion.div
+                  key="tab-risks"
+                  className="space-y-4 pt-5"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  {data.ratings && data.scores && (
+                    <HealthSection
+                      ratings={data.ratings}
+                      scores={computedScores ?? data.scores}
+                      financialsData={data}
+                    />
+                  )}
+                  {data.scores && <FinancialScores scores={computedScores ?? data.scores} />}
+                </motion.div>
+              )}
+
+              {/* ── News tab ── */}
+              {activeTab === 'news' && (
+                <motion.div
+                  key="tab-news"
+                  className="space-y-4 pt-5"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <NewsPanel ticker={ticker} />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </>
         )}
       </div>
