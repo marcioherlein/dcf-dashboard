@@ -1,4 +1,4 @@
-export type CompanyType = 'financial' | 'dividend' | 'growth' | 'startup' | 'standard'
+export type CompanyType = 'financial' | 'dividend' | 'growth' | 'startup' | 'standard' | 'etf'
 
 export function detectCompanyType(input: {
   sector: string
@@ -9,9 +9,15 @@ export function detectCompanyType(input: {
   analystEstimate1y: number
   isNegativeFCF: boolean
   revenueM: number
+  quoteType?: string
 }): CompanyType {
-  const { sector, industry, dividendYield, payoutRatio, historicalCagr3y, analystEstimate1y, isNegativeFCF, revenueM } = input
+  const { sector, industry, dividendYield, payoutRatio, historicalCagr3y, analystEstimate1y, isNegativeFCF, revenueM, quoteType } = input
   const haystack = (sector + ' ' + industry).toLowerCase()
+
+  // 0. ETF / fund: no DCF applicable
+  if (quoteType === 'ETF' || quoteType === 'MUTUALFUND' || quoteType === 'INDEX') {
+    return 'etf'
+  }
 
   // 1. Financial: OCF is distorted by loan/fund flows — FCFE + DDM preferred
   if (/bank|insurance|financ|fintech|payment|credit|lending|capital market|asset management|brokerage/.test(haystack)) {
@@ -39,6 +45,7 @@ export function detectCompanyType(input: {
 
 export function primaryModelLabel(type: CompanyType, hasDividend: boolean): string {
   switch (type) {
+    case 'etf':      return 'N/A — ETF / Fund'
     case 'financial': return hasDividend ? 'FCFE + DDM blend' : 'FCFE (Equity DCF)'
     case 'dividend':  return 'DDM + DCF blend'
     case 'growth':    return 'DCF (FCFF) + EV Multiples'
@@ -49,6 +56,7 @@ export function primaryModelLabel(type: CompanyType, hasDividend: boolean): stri
 
 export function companyTypeLabel(type: CompanyType): string {
   switch (type) {
+    case 'etf':      return 'ETF / Fund'
     case 'financial': return 'Financial'
     case 'dividend':  return 'Dividend'
     case 'growth':    return 'High Growth'
@@ -59,6 +67,8 @@ export function companyTypeLabel(type: CompanyType): string {
 
 export function companyTypeRationale(type: CompanyType): string {
   switch (type) {
+    case 'etf':
+      return 'ETFs and funds are portfolios of assets, not operating companies. Intrinsic valuation models (DCF, DDM) are not applicable. Value is determined by the net asset value of underlying holdings.'
     case 'financial':
       return 'Banks, insurers, and fintechs have operating cash flows distorted by loan book changes and client fund flows. FCFE (using net income as the equity cash flow proxy) and DDM are preferred over FCFF for these companies.'
     case 'dividend':
@@ -88,6 +98,8 @@ export function getModelWeights(type: CompanyType, hasDividend: boolean): {
   fcff: number; fcfe: number; ddm: number; multiples: number
 } {
   switch (type) {
+    case 'etf':
+      return { fcff: 0.00, fcfe: 0.00, ddm: 0.00, multiples: 1.00 }
     case 'financial':
       return hasDividend
         ? { fcff: 0.05, fcfe: 0.50, ddm: 0.25, multiples: 0.20 }

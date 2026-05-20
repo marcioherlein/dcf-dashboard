@@ -320,6 +320,7 @@ export async function GET(req: NextRequest) {
       analystEstimate1y: cagrAnalysis.analystEstimate1y,
       isNegativeFCF,
       revenueM: rawRevMLocal * fxRate,
+      quoteType: (q.quoteType as string | undefined) ?? undefined,
     })
 
     const hasDividend = dividendPerShare > 0
