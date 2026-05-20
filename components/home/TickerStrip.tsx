@@ -60,9 +60,9 @@ function IndexCell({ label, value, change, up }: (typeof ROW_2)[0]) {
 export default function TickerStrip() {
   return (
     <div
-      className="w-full overflow-hidden py-2.5 border-y border-slate-200/60"
+      className="w-full overflow-hidden py-2.5 border-y border-[rgba(59,130,246,0.15)]"
       style={{
-        background: 'rgba(255,255,255,0.5)',
+        background: 'rgba(5,13,31,0.7)',
         maskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)',
         WebkitMaskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)',
       }}

@@ -25,18 +25,26 @@ const config: Config = {
         primary:    { DEFAULT: 'hsl(var(--primary))',     foreground: 'hsl(var(--primary-foreground))' },
 
         // ── Financial semantic tokens ─────────────────────────────────────────
-        up:           '#059669',  // emerald-600
-        down:         '#B91C1C',  // red-700 (slightly darker, more gravitas)
-        warn:         '#D97706',  // amber-600
-        'accent-blue':'#0F2A5E',  // brand navy (replaces generic blue-600)
+        up:           '#10B981',  // emerald-500 (brighter for dark bg)
+        down:         '#EF4444',  // red-500
+        warn:         '#F59E0B',  // amber-500
+        'accent-blue':'#3B82F6',  // accent blue
+
+        // ── Dark glass palette ────────────────────────────────────────────────
+        'deep':          '#050D1F',   // page base
+        'mid':           '#0A1628',   // section fills / elevated surfaces
+        'raised':        '#0E1F36',   // higher elevation
+        'neon':          '#3B82F6',   // accent blue
+        'neon-light':    '#60A5FA',   // blue-400
+        'neon-cyan':     '#06B6D4',   // cyan accent
 
         // ── Clairo brand palette ──────────────────────────────────────────────
-        'brand-navy':         '#0F2A5E',  // primary CTA, headers
-        'brand-emerald':      '#0B7A5E',  // positive signals (grade A)
-        'brand-gold':         '#8B6914',  // WCAG AA on light (#F6F7F9): ~5.2:1 — use for text/CTAs
-        'brand-gold-decor':   '#C9A84C',  // decorative borders/accents only (fails AA as text)
-        'brand-red':          '#B91C1C',  // grade F / negative
-        'brand-surface':      '#F6F7F9',  // page background
+        'brand-navy':         '#3B82F6',  // updated to accent blue
+        'brand-emerald':      '#10B981',  // positive signals
+        'brand-gold':         '#FBBF24',  // amber-400 on dark
+        'brand-gold-decor':   '#F59E0B',
+        'brand-red':          '#EF4444',
+        'brand-surface':      '#050D1F',
 
         // ── Legacy MDM3 tokens (Header/Sidebar — keep until refactored) ───────
         "on-primary":               "#ffffff",
@@ -99,10 +107,22 @@ const config: Config = {
         full:    "9999px",
       },
       boxShadow: {
-        card:     "0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)",
-        "card-md":"0 4px 12px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.04)",
-        float:    "0 8px 24px rgba(15,23,42,0.12), 0 2px 6px rgba(15,23,42,0.06)",
-        nav:      "0 2px 12px rgba(0,27,68,0.08)",
+        card:        "0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3)",
+        "card-md":   "0 4px 12px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.3)",
+        float:       "0 8px 32px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.3)",
+        nav:         "0 2px 12px rgba(0,0,0,0.4)",
+        "glow-sm":   "0 0 15px rgba(59,130,246,0.2), 0 0 5px rgba(59,130,246,0.1)",
+        "glow-md":   "0 0 30px rgba(59,130,246,0.35), 0 0 10px rgba(59,130,246,0.15)",
+        "glow-lg":   "0 0 50px rgba(59,130,246,0.5), 0 0 20px rgba(59,130,246,0.2)",
+        "glow-cyan": "0 0 20px rgba(6,182,212,0.4), 0 0 6px rgba(6,182,212,0.2)",
+      },
+      animation: {
+        'glow-pulse':    'glow-pulse 2.5s ease-in-out infinite',
+        'float':         'float 4s ease-in-out infinite',
+        'float-slow':    'float 6s ease-in-out infinite',
+        'float-delay':   'float 4s ease-in-out 1.2s infinite',
+        'border-rotate': 'border-rotate 4s linear infinite',
+        'scan-line':     'scan-line 4s ease-in-out infinite',
       },
     },
   },

@@ -20,9 +20,9 @@ export default function SectorRotation({ sectors }: Props) {
   }))
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
+    <div className="rounded-xl border border-[rgba(59,130,246,0.15)] glass-card px-5 py-4">
       <div className="mb-3">
-        <h2 className="text-sm font-bold text-slate-900">Sector Rotation</h2>
+        <h2 className="text-sm font-bold text-slate-100">Sector Rotation</h2>
         <p className="text-[10px] text-slate-400 mt-0.5">RS momentum vs S&P 500 — last 40 trading days</p>
       </div>
       <div className="h-[220px]">
@@ -34,7 +34,7 @@ export default function SectorRotation({ sectors }: Props) {
               formatter={(v) => [`${(v as number).toFixed(2)}%`, 'RS Momentum']}
               labelStyle={{ fontSize: 12, fontWeight: 600 }}
             />
-            <ReferenceLine x={0} stroke="#e2e8f0" />
+            <ReferenceLine x={0} stroke="rgba(148,163,184,0.08)" />
             <Bar dataKey="momentum" radius={[0, 3, 3, 0]}>
               {data.map((entry, i) => (
                 <Cell key={i} fill={barColor(entry.tone)} />

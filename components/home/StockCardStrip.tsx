@@ -63,10 +63,10 @@ const CARDS = [
 
 function gradeColor(grade: string) {
   const g = grade.replace('+', '').replace('-', '')
-  if (g === 'A') return { bg: 'bg-emerald-600', text: 'text-white' }
-  if (g === 'B') return { bg: 'bg-[#0F2A5E]', text: 'text-white' }
-  if (g === 'C') return { bg: 'bg-amber-500', text: 'text-white' }
-  return { bg: 'bg-red-600', text: 'text-white' }
+  if (g === 'A') return { bg: 'bg-emerald-500/20 border border-emerald-500/30', text: 'text-emerald-300' }
+  if (g === 'B') return { bg: 'bg-blue-500/20 border border-blue-500/30',       text: 'text-blue-300' }
+  if (g === 'C') return { bg: 'bg-amber-500/20 border border-amber-500/30',     text: 'text-amber-300' }
+  return { bg: 'bg-red-500/20 border border-red-500/30',                        text: 'text-red-300' }
 }
 
 function sparklinePath(data: number[], w: number, h: number): { line: string; area: string } {
@@ -87,17 +87,17 @@ function PriceRangeBar({ low, high, current }: { low: number; high: number; curr
   const pct = Math.max(0, Math.min(1, (current - low) / (high - low))) * 100
   return (
     <div className="mt-2">
-      <div className="relative h-1 rounded-full bg-slate-100">
-        <div className="absolute left-0 top-0 h-1 rounded-full bg-slate-200" style={{ width: '100%' }} />
+      <div className="relative h-1 rounded-full bg-white/10">
+        <div className="absolute left-0 top-0 h-1 rounded-full bg-white/5" style={{ width: '100%' }} />
         <div
           className="absolute left-0 top-0 h-1 rounded-full"
           style={{
             width: `${pct}%`,
-            background: 'linear-gradient(to right, #0F2A5E, #0B7A5E)',
+            background: 'linear-gradient(to right, #3B82F6, #10B981)',
           }}
         />
         <div
-          className="absolute -top-0.5 -translate-x-1/2 w-2 h-2 rounded-full bg-white border-2 border-slate-400 shadow"
+          className="absolute -top-0.5 -translate-x-1/2 w-2 h-2 rounded-full bg-[#050D1F] border-2 border-blue-400"
           style={{ left: `${pct}%` }}
         />
       </div>
@@ -117,14 +117,14 @@ function StockCard({ card, index, visible }: { card: typeof CARDS[0]; index: num
   const paths = sparklinePath(card.sparkData, W, H)
   const pathLen = 300
   const isUnder = card.fairValue > card.price
-  const sparkColor = isUnder ? '#0B7A5E' : '#B91C1C'
+  const sparkColor = isUnder ? '#10B981' : '#EF4444'
   const areaId = `area-${card.ticker}`
 
   return (
     <div
       className={cn(
-        'shrink-0 w-[220px] rounded-2xl bg-white border border-slate-200 shadow-card overflow-hidden',
-        'transition-all duration-300 hover:shadow-card-md hover:-translate-y-0.5 cursor-pointer',
+        'shrink-0 w-[220px] rounded-2xl glass-card border border-[rgba(59,130,246,0.18)] overflow-hidden',
+        'transition-all duration-300 hover:border-[rgba(59,130,246,0.45)] hover:shadow-glow-sm hover:-translate-y-0.5 cursor-pointer',
         visible ? 'opacity-100' : 'opacity-0',
       )}
       style={{
@@ -139,12 +139,12 @@ function StockCard({ card, index, visible }: { card: typeof CARDS[0]; index: num
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="rounded-md bg-slate-100 border border-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-700 tracking-wide">
+              <span className="rounded-md bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 text-[10px] font-bold text-blue-400 tracking-wide">
                 {card.ticker}
               </span>
-              <span className="text-[10px] text-slate-400 truncate">{card.sector}</span>
+              <span className="text-[10px] text-slate-500 truncate">{card.sector}</span>
             </div>
-            <p className="mt-1 text-sm font-semibold text-slate-800 leading-tight truncate">{card.name}</p>
+            <p className="mt-1 text-sm font-semibold text-slate-200 leading-tight truncate">{card.name}</p>
           </div>
           <div
             className={cn(
@@ -161,7 +161,7 @@ function StockCard({ card, index, visible }: { card: typeof CARDS[0]; index: num
         {/* Verdict pill */}
         <p className={cn(
           'mt-2.5 text-[11px] font-medium leading-snug rounded-lg px-2.5 py-1.5',
-          isUnder ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800',
+          isUnder ? 'bg-emerald-500/10 text-emerald-300' : 'bg-amber-500/10 text-amber-300',
         )}>
           {card.verdict}
         </p>
@@ -232,12 +232,12 @@ export default function StockCardStrip() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Live analysis</p>
-            <h2 className="text-2xl font-bold text-slate-900">Stocks investors are analyzing</h2>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1">Live analysis</p>
+            <h2 className="text-2xl font-bold text-slate-100">Stocks investors are analyzing</h2>
           </div>
           <a
             href="/screener"
-            className="text-sm font-semibold text-[#0F2A5E] hover:underline shrink-0 hidden sm:block"
+            className="text-sm font-semibold text-blue-400 hover:underline shrink-0 hidden sm:block"
           >
             View screener →
           </a>

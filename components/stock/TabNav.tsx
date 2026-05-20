@@ -24,7 +24,7 @@ export default function TabNav({ activeTab, onChange }: Props) {
     <div
       role="tablist"
       aria-label="Stock sections"
-      className="sticky top-[52px] z-20 bg-white/95 backdrop-blur-sm border-b border-slate-200"
+      className="sticky top-[52px] z-20 glass-nav border-b border-[rgba(59,130,246,0.15)]"
     >
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <div className="flex gap-0 overflow-x-auto scrollbar-hide -mb-px">
@@ -40,13 +40,13 @@ export default function TabNav({ activeTab, onChange }: Props) {
                 className={cn(
                   'relative flex items-center gap-1.5 px-4 py-3.5 text-[13px] font-medium whitespace-nowrap transition-colors border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
                   active
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300',
+                    ? 'border-blue-400 text-blue-400'
+                    : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600',
                 )}
               >
                 <Icon
                   size={14}
-                  className={cn('shrink-0', active ? 'text-blue-600' : 'text-slate-400')}
+                  className={cn('shrink-0', active ? 'text-blue-400' : 'text-slate-500')}
                 />
                 {label}
               </button>

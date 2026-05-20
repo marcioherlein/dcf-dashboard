@@ -16,7 +16,7 @@ import type { MarketsData } from '@/app/api/markets/data/route'
 import type { MarketContextPayload } from '@/lib/market-context/types'
 
 function Sk({ h = 'h-32' }: { h?: string }) {
-  return <div className={`animate-pulse rounded-xl bg-slate-100 ${h}`} />
+  return <div className={`animate-pulse rounded-xl bg-white/[0.06] ${h}`} />
 }
 
 function pct(v: number | null) {
@@ -25,8 +25,8 @@ function pct(v: number | null) {
 }
 
 function pctCls(v: number | null) {
-  if (v == null) return 'text-slate-400'
-  return v > 0 ? 'text-emerald-600' : v < 0 ? 'text-red-500' : 'text-slate-500'
+  if (v == null) return 'text-slate-500'
+  return v > 0 ? 'text-emerald-400' : v < 0 ? 'text-red-400' : 'text-slate-500'
 }
 
 // Collapsible section for mobile
@@ -69,10 +69,10 @@ export default function MarketsPage() {
   const dxy   = mkt?.currencies.find(i => i.symbol === 'DX-Y.NYB')
 
   return (
-    <div className="min-h-screen bg-[#F8FAFB] pt-[52px]">
+    <div className="min-h-screen bg-[#050D1F] pt-[52px]">
 
       {/* ── Top pulse bar ─────────────────────────────────────────────────── */}
-      <div className="border-b border-slate-200 bg-white">
+      <div className="border-b border-[rgba(59,130,246,0.15)] glass-nav">
         <div className="max-w-[1400px] mx-auto px-4 py-2 flex items-center gap-6 overflow-x-auto scrollbar-hide">
           {[
             { label: 'S&P 500',    sym: spx  },
@@ -84,7 +84,7 @@ export default function MarketsPage() {
             const inner = (
               <div className="flex items-center gap-2 shrink-0">
                 <span className="text-[11px] text-slate-500 font-medium">{label}</span>
-                <span className="text-[12px] font-mono font-bold text-slate-900 tabular-nums">
+                <span className="text-[12px] font-mono font-bold text-slate-100 tabular-nums">
                   {sym?.price != null ? sym.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}
                 </span>
                 {sym?.changePct != null && (
@@ -107,7 +107,7 @@ export default function MarketsPage() {
             )
           })}
           {mkt && (
-            <span className="text-[10px] text-slate-300 font-mono ml-auto shrink-0">
+            <span className="text-[10px] text-slate-600 font-mono ml-auto shrink-0">
               {new Date(mkt.fetchedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
@@ -118,7 +118,7 @@ export default function MarketsPage() {
       <div className="max-w-[1400px] mx-auto px-4 py-4">
 
         {err && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 mb-4">
+          <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400 mb-4">
             Failed to load market data. Check API keys and try again.
           </div>
         )}

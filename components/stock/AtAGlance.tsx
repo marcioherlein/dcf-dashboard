@@ -49,18 +49,18 @@ export default function AtAGlance({
   const showMultiples = pe != null || evEbitda != null || ps != null || pb != null
 
   return (
-    <div className="rounded-xl bg-white border border-slate-200 shadow-card p-5 space-y-4">
+    <div className="rounded-xl glass-card border border-[rgba(59,130,246,0.2)] p-5 space-y-4">
       {/* 52-week range */}
       {rangePosition != null && (
         <div>
-          <div className="flex justify-between text-micro text-slate-400 mb-1.5">
+          <div className="flex justify-between text-micro text-slate-500 mb-1.5">
             <span>52w Low {fmtPrice(low52, currency)}</span>
             <span>52w High {fmtPrice(high52, currency)}</span>
           </div>
-          <div className="relative h-1.5 rounded-full bg-slate-100">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-red-300 via-amber-300 to-emerald-400" />
+          <div className="relative h-1.5 rounded-full bg-white/10">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-red-500/60 via-amber-400/60 to-emerald-400/80" />
             <div
-              className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-blue-500 shadow-sm"
+              className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#050D1F] border-2 border-blue-400 shadow-glow-sm"
               style={{ left: `calc(${rangePosition}% - 6px)` }}
             />
           </div>
@@ -69,14 +69,14 @@ export default function AtAGlance({
 
       {/* Sector / country pills */}
       <div className="flex gap-1.5 flex-wrap">
-        {sector  && <span className="rounded-md bg-slate-100 text-slate-600 px-2 py-0.5 text-xs font-medium">{sector}</span>}
-        {country && <span className="rounded-md bg-slate-100 text-slate-600 px-2 py-0.5 text-xs font-medium">{country}</span>}
+        {sector  && <span className="rounded-md bg-white/5 border border-[rgba(59,130,246,0.15)] text-slate-300 px-2 py-0.5 text-xs font-medium">{sector}</span>}
+        {country && <span className="rounded-md bg-white/5 border border-[rgba(59,130,246,0.15)] text-slate-300 px-2 py-0.5 text-xs font-medium">{country}</span>}
       </div>
 
       {/* TTM Multiples */}
       {showMultiples && (
-        <div className="pt-3 border-t border-slate-100">
-          <p className="text-label uppercase tracking-wider text-slate-400 mb-2.5">TTM Multiples</p>
+        <div className="pt-3 border-t border-[rgba(59,130,246,0.1)]">
+          <p className="text-label uppercase tracking-wider text-slate-500 mb-2.5">TTM Multiples</p>
           <div className="flex flex-wrap gap-2">
             <MetricChip label="P/E"       value={fmtMultiple(pe)} />
             <MetricChip label="EV/EBITDA" value={fmtMultiple(evEbitda)} />

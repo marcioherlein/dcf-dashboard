@@ -7,28 +7,28 @@ interface Props {
 }
 
 function toneBadgeClass(tone: MacroSignalTile['tone']): string {
-  if (tone === 'positive') return 'bg-emerald-100 text-emerald-700'
-  if (tone === 'negative') return 'bg-red-100 text-red-700'
-  if (tone === 'warning')  return 'bg-amber-100 text-amber-700'
-  return 'bg-slate-100 text-slate-600'
+  if (tone === 'positive') return 'bg-emerald-500/10 text-emerald-400'
+  if (tone === 'negative') return 'bg-red-500/10 text-red-400'
+  if (tone === 'warning')  return 'bg-amber-500/10 text-amber-400'
+  return 'bg-white/8 text-slate-300'
 }
 
 function toneValueClass(tone: MacroSignalTile['tone']): string {
-  if (tone === 'positive') return 'text-emerald-700'
-  if (tone === 'negative') return 'text-red-700'
-  if (tone === 'warning')  return 'text-amber-700'
-  return 'text-slate-800'
+  if (tone === 'positive') return 'text-emerald-400'
+  if (tone === 'negative') return 'text-red-400'
+  if (tone === 'warning')  return 'text-amber-400'
+  return 'text-slate-100'
 }
 
 export default function MacroSignals({ signals }: Props) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
+    <div className="rounded-xl border border-[rgba(59,130,246,0.15)] glass-card px-5 py-4">
       <div className="mb-3">
-        <h2 className="text-sm font-bold text-slate-900">Macro Signals</h2>
+        <h2 className="text-sm font-bold text-slate-100">Macro Signals</h2>
       </div>
       <div className="grid grid-cols-2 gap-3">
         {signals.map(sig => (
-          <div key={sig.id} className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5">
+          <div key={sig.id} className="rounded-xl bg-white/[0.06] border border-[rgba(59,130,246,0.15)] px-3 py-2.5">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{sig.label}</p>
             <p className={cn('text-lg font-bold font-mono tabular-nums mt-0.5', toneValueClass(sig.tone))}>
               {sig.value}

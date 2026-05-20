@@ -250,19 +250,19 @@ function StockPageBody() {
   }
 
   return (
-    <div className="min-h-dvh bg-[#F8FAFB]">
+    <div className="min-h-dvh bg-[#050D1F]">
 
       {/* Breadcrumb */}
-      <div className="bg-white border-b border-slate-200 px-6 py-2 flex items-center gap-3">
+      <div className="glass-nav border-b border-[rgba(59,130,246,0.15)] px-6 py-2 flex items-center gap-3">
         <button
           onClick={() => router.push('/')}
-          className="flex items-center gap-1.5 text-[12px] text-slate-500 hover:text-blue-600 transition-colors"
+          className="flex items-center gap-1.5 text-[12px] text-slate-400 hover:text-blue-400 transition-colors"
         >
           ← Home
         </button>
-        <span className="text-slate-300">·</span>
-        <span className="text-[12px] text-blue-600 font-semibold">{ticker}</span>
-        {data && <span className="text-[12px] text-slate-400 truncate max-w-xs">{data.companyName}</span>}
+        <span className="text-slate-600">·</span>
+        <span className="text-[12px] text-blue-400 font-semibold">{ticker}</span>
+        {data && <span className="text-[12px] text-slate-500 truncate max-w-xs">{data.companyName}</span>}
       </div>
 
       {/* Tab navigation */}
@@ -278,26 +278,26 @@ function StockPageBody() {
         {loading && (
           <div className="pt-5 space-y-4 animate-pulse">
             {/* PriceHeader skeleton */}
-            <div className="rounded-xl bg-white border border-slate-200 p-5">
+            <div className="rounded-xl glass-card border border-[rgba(59,130,246,0.15)] p-5">
               <div className="flex justify-between gap-4">
                 <div className="space-y-2">
-                  <div className="h-6 w-20 rounded-lg bg-slate-100" />
-                  <div className="h-7 w-52 rounded-lg bg-slate-100" />
+                  <div className="h-6 w-20 rounded-lg bg-white/8" />
+                  <div className="h-7 w-52 rounded-lg bg-white/8" />
                 </div>
                 <div className="space-y-2 text-right">
-                  <div className="h-9 w-32 rounded-lg bg-slate-100 ml-auto" />
-                  <div className="h-4 w-24 rounded-lg bg-slate-100 ml-auto" />
+                  <div className="h-9 w-32 rounded-lg bg-white/8 ml-auto" />
+                  <div className="h-4 w-24 rounded-lg bg-white/8 ml-auto" />
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-5 gap-2">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="h-14 rounded-xl bg-slate-100" />
+                  <div key={i} className="h-14 rounded-xl bg-white/8" />
                 ))}
               </div>
             </div>
             {/* Content skeleton */}
-            <div className="h-72 rounded-xl bg-white border border-slate-200" />
-            <div className="h-48 rounded-xl bg-white border border-slate-200" />
+            <div className="h-72 rounded-xl glass-card border border-[rgba(59,130,246,0.15)]" />
+            <div className="h-48 rounded-xl glass-card border border-[rgba(59,130,246,0.15)]" />
           </div>
         )}
 

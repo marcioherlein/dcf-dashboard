@@ -22,15 +22,15 @@ const DEFAULT_SERIES = [
 function ChartTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-float px-3 py-2.5 text-xs min-w-[160px]">
+    <div className="bg-slate-800/80 border border-[rgba(59,130,246,0.15)] rounded-xl shadow-float px-3 py-2.5 text-xs min-w-[160px]">
       <div className="text-slate-400 font-mono mb-1.5 text-[10px]">{label}</div>
       {payload.map((p: { name: string; value: number; color: string }) => (
         <div key={p.name} className="flex items-center justify-between gap-4 mb-0.5">
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full shrink-0" style={{ background: p.color }} />
-            <span className="text-slate-600">{DEFAULT_SERIES.find(s => s.symbol === p.name)?.label ?? p.name}</span>
+            <span className="text-slate-300">{DEFAULT_SERIES.find(s => s.symbol === p.name)?.label ?? p.name}</span>
           </div>
-          <span className={cn('font-mono font-bold', p.value >= 0 ? 'text-emerald-600' : 'text-red-500')}>
+          <span className={cn('font-mono font-bold', p.value >= 0 ? 'text-emerald-400' : 'text-red-400')}>
             {p.value >= 0 ? '+' : ''}{p.value?.toFixed(2)}%
           </span>
         </div>
@@ -88,9 +88,9 @@ export default function NormalizedPerfChart() {
   const lastPoint = displayData[displayData.length - 1]
 
   return (
-    <div className="rounded-xl bg-white border border-slate-200 overflow-hidden">
+    <div className="rounded-xl glass-card border border-[rgba(59,130,246,0.15)] overflow-hidden">
       {/* Header */}
-      <div className="px-4 pt-3 pb-2 border-b border-slate-100">
+      <div className="px-4 pt-3 pb-2 border-b border-[rgba(59,130,246,0.15)]">
         <div className="flex items-center justify-between mb-2">
           <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Normalized Performance</span>
           <div className="flex flex-wrap gap-1">
@@ -100,7 +100,7 @@ export default function NormalizedPerfChart() {
                 onClick={() => setPeriod(p)}
                 className={cn(
                   'px-2 py-0.5 text-[11px] font-semibold rounded transition-colors',
-                  period === p ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                  period === p ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-200 hover:bg-white/[0.06]'
                 )}
               >
                 {p}
@@ -121,7 +121,7 @@ export default function NormalizedPerfChart() {
                   'flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-all',
                   isOn
                     ? 'border-transparent text-white'
-                    : 'border-slate-200 bg-white text-slate-400 opacity-50'
+                    : 'border-[rgba(59,130,246,0.15)] bg-transparent text-slate-500 opacity-50'
                 )}
                 style={isOn ? { background: s.color } : {}}
               >
@@ -150,7 +150,7 @@ export default function NormalizedPerfChart() {
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={displayData} margin={{ top: 4, right: 8, bottom: 4, left: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.08)" vertical={false} />
               <XAxis
                 dataKey="date"
                 tick={{ fontSize: 10, fill: '#94a3b8' }}
