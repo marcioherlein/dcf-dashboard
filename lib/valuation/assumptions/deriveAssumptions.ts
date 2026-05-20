@@ -334,7 +334,14 @@ export function deriveRevenueMultipleAssumptions(data: {
 
   const cashM    = data.fairValue?.cash ?? null
   const debtM    = data.fairValue?.debt ?? null
-  const netDebt  = (cashM != null && debtM != null) ? (debtM - cashM) * 1e6 : null
+  // Fallback from balance sheet rows (already in millions, already FX-converted)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const bsRow    = (data.financialStatements as any)?.balanceSheet?.find((r: { isProjected?: boolean }) => !r.isProjected)
+  const cashBSM  = (bsRow?.cash  as number | null | undefined) ?? null
+  const debtBSM  = (bsRow?.longTermDebt as number | null | undefined) ?? null
+  const netDebt  = (cashM != null && debtM != null)
+    ? (debtM - cashM) * 1e6
+    : (cashBSM != null && debtBSM != null ? (debtBSM - cashBSM) * 1e6 : null)
 
   const assumptions: ValuationAssumption[] = [
     {

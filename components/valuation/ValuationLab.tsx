@@ -413,14 +413,20 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
   const ltvRevenueAbsolute = (ttmRevenue != null ? ttmRevenue * stmtFxRate : null) ?? (fwdPEBase.ltvRevenue != null ? fwdPEBase.ltvRevenue * 1e6 : null)
 
   const evEbitdaBase = useMemo(() => {
-    // ttmEbitda / ttmNetDebt are in reporting currency (BRL for ADRs) — convert to quote currency
-    const ebitdaRaw  = ttmEbitda ?? (apiData?.financialStatements?.incomeStatement?.find((r: { isProjected?: boolean; ebitda?: number }) => !r.isProjected)?.ebitda ?? null)
-    const ebitda     = ebitdaRaw != null ? ebitdaRaw * stmtFxRate : null
+    // ttmEbitda is in absolute reporting currency — convert to quote currency via stmtFxRate
+    // financialStatements.incomeStatement.ebitda is in millions, already FX-converted — multiply by 1e6
+    const ebitdaFromTTM     = ttmEbitda != null ? ttmEbitda * stmtFxRate : null
+    const ebitdaFromFinStmt = (apiData?.financialStatements?.incomeStatement?.find((r: { isProjected?: boolean; ebitda?: number | null }) => !r.isProjected)?.ebitda ?? null) as number | null
+    const ebitda            = ebitdaFromTTM ?? (ebitdaFromFinStmt != null ? ebitdaFromFinStmt * 1e6 : null)
     const shares     = sharesAbsolute
     const cashFMP    = apiData?.fairValue?.cash != null ? apiData.fairValue.cash * 1e6 : null
     const debtFMP    = apiData?.fairValue?.debt != null ? apiData.fairValue.debt * 1e6 : null
     const netDebtRaw = ttmNetDebt != null ? ttmNetDebt * stmtFxRate : null
-    const netDebt    = netDebtRaw ?? (debtFMP != null && cashFMP != null ? debtFMP - cashFMP : null)
+    // Fallback from annual balance sheet (already in millions, already FX-converted)
+    const annualBS   = apiData?.financialStatements?.balanceSheet?.find((r: { isProjected?: boolean }) => !r.isProjected)
+    const cashBS     = annualBS?.cash != null ? (annualBS.cash as number) * 1e6 : null
+    const debtBS     = annualBS?.longTermDebt != null ? (annualBS.longTermDebt as number) * 1e6 : null
+    const netDebt    = netDebtRaw ?? (debtFMP != null && cashFMP != null ? debtFMP - cashFMP : null) ?? (debtBS != null && cashBS != null ? debtBS - cashBS : null)
     const sector     = apiData?.quote?.sector ?? null
     const multiple   = getDefaultEVEBITDAMultiple(sector)
     return { ebitda, netDebt, shares, exitMultiple: multiple, sector }
