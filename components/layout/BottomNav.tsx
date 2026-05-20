@@ -45,16 +45,6 @@ const NAV = [
     ),
   },
   {
-    href: '/compare',
-    label: 'Compare',
-    match: (p: string) => p.startsWith('/compare'),
-    icon: (active: boolean) => (
-      <svg className={cn('w-5 h-5', active ? 'text-[#60A5FA]' : 'text-slate-500')} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={active ? 2 : 1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 7h4v13H3zM10 4h4v16h-4zM17 10h4v10h-4z" />
-      </svg>
-    ),
-  },
-  {
     href: '/valuations',
     label: 'Valuations',
     match: (p: string) => p.startsWith('/valuations'),

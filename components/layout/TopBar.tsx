@@ -89,15 +89,6 @@ export default function TopBar() {
           My Valuations
         </Link>
         <Link
-          href="/compare"
-          className={[
-            'h-8 flex items-center px-3 text-[13px] font-medium rounded-md transition-colors whitespace-nowrap',
-            pathname.startsWith('/compare') ? 'bg-blue-500/10 text-blue-400' : 'text-slate-400 hover:text-white hover:bg-white/5',
-          ].join(' ')}
-        >
-          Compare
-        </Link>
-        <Link
           href="/monitor?tab=portfolio"
           className={[
             'h-8 flex items-center px-3 text-[13px] font-medium rounded-md transition-colors whitespace-nowrap',
