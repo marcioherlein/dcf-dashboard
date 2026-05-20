@@ -12,7 +12,7 @@ import { calculateDDM } from '@/lib/dcf/calculateDDM'
 import { calculateFCFE } from '@/lib/dcf/calculateFCFE'
 import { calculateMultiples, PEER_TICKERS } from '@/lib/dcf/calculateMultiples'
 import { calculatePiotroski, calculateAltman, calculateBeneish, calculateROIC } from '@/lib/dcf/calculateScores'
-import { getCRP } from '@/lib/dcf/countryRiskPremium'
+import { getCRPByCountry } from '@/lib/dcf/countryRiskPremium'
 
 export async function GET(req: NextRequest) {
   const ticker = req.nextUrl.searchParams.get('ticker')?.toUpperCase()
@@ -59,8 +59,9 @@ export async function GET(req: NextRequest) {
       financialCurrencyNote = `${financialCurrency}→${quoteCurrency} @ ${fxRate.toFixed(4)}`
     }
 
-    // Country Risk Premium (Damodaran): adjusts cost_of_equity for non-mature markets
-    const crp = getCRP(financialCurrency)
+    // Country Risk Premium (Damodaran): use country name first (handles USD-reporters from EM)
+    const domicileCountry: string | null = (fin.summaryProfile?.country as string | undefined) ?? null
+    const crp = getCRPByCountry(domicileCountry, financialCurrency)
 
     // Beta via regression
     const beta = calculateBeta(
