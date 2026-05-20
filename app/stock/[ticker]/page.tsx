@@ -11,15 +11,12 @@ import TabNav, { type TabId } from '@/components/stock/TabNav'
 import ValuationLab from '@/components/valuation/ValuationLab'
 import FinancialsHub from '@/components/stock/FinancialsHub'
 import InvestorGradeCard from '@/components/stock/InvestorGradeCard'
-import InvestmentVerdictCard from '@/components/stock/InvestmentVerdictCard'
-import ThesisBuilderTab from '@/components/stock/ThesisBuilderTab'
 import { LoginGateProvider, useLoginGate } from '@/components/auth/LoginGateProvider'
 import AuthBanner from '@/components/auth/AuthBanner'
 import { calculatePiotroski, calculateAltman, calculateBeneish } from '@/lib/dcf/calculateScores'
 import { track } from '@/lib/analytics/events'
 import { loadPreLoginState, clearPreLoginState } from '@/lib/auth/preLoginState'
 import { useSession } from 'next-auth/react'
-import { Sparkles } from 'lucide-react'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
@@ -244,35 +241,9 @@ function StockPageBody() {
 
   const currency = data?.quote.currency === 'USD' ? '$' : (data?.quote.currency ?? '$') + ' '
 
-  // Derive verdict zone and top risk for InvestmentVerdictCard
-  const verdictZone: 'undervalued' | 'fairvalue' | 'overvalued' | 'unknown' = (() => {
-    if (!data) return 'unknown'
-    const pct = data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null
-    if (pct == null) return 'unknown'
-    return pct > 0.15 ? 'undervalued' : pct < -0.10 ? 'overvalued' : 'fairvalue'
-  })()
-
-  const topRisk: string | null = (() => {
-    if (!data) return null
-    if (computedScores?.beneish?.mScore != null && computedScores.beneish.mScore > -1.78)
-      return 'Beneish M-Score flags possible earnings manipulation'
-    if (computedScores?.altman?.zone === 'Distress')
-      return 'Altman Z-Score in financial distress zone'
-    if ((computedScores?.piotroski?.score ?? 9) <= 2)
-      return 'Piotroski F-Score very low — weak fundamentals'
-    if (data.isNegativeFCF)
-      return 'Negative free cash flow — DCF relies on turnaround assumption'
-    return null
-  })()
-
-  const topDrivers: string[] = data?.cagrAnalysis?.drivers?.slice(0, 3) ?? []
-
-  const methodCount = data?.valuationMethods?.effectiveWeights
-    ? Object.values(data.valuationMethods.effectiveWeights as Record<string, number>).filter(w => w > 0).length
-    : null
-
   const handleTabChange = (tab: TabId) => {
     setActiveTab(tab)
+    window.scrollTo({ top: 0, behavior: 'instant' })
     if (data) track('tab_changed', { ticker, tab })
   }
 
@@ -365,36 +336,14 @@ function StockPageBody() {
             {/* ── Overview tab ── */}
             {activeTab === 'overview' && (
               <div id="tabpanel-overview" role="tabpanel" className="space-y-4 pt-5">
-                <InvestmentVerdictCard
-                  ticker={data.ticker}
-                  companyName={data.companyName}
-                  sector={data.quote.sector ?? ''}
-                  price={data.quote.price}
-                  currency={data.quote.currency ?? 'USD'}
-                  grade={data.ratings?.overall?.grade ?? 'N/A'}
-                  gradeLabel={data.ratings?.overall?.label ?? ''}
-                  fairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? null}
-                  upsidePct={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null}
-                  bearFV={null}
-                  bullFV={null}
-                  verdictZone={verdictZone}
-                  topRisk={topRisk}
-                  topDrivers={topDrivers}
-                  methodCount={methodCount ?? undefined}
-                  onSave={() => requireAuth({ intent: 'save_watchlist' })}
-                  onViewValuation={() => handleTabChange('valuation')}
-                />
-
                 <PriceChart
                   ticker={ticker}
                   isDark={false}
-                  fcffFairValue={data.fairValue.fairValuePerShare}
                   triangulatedFairValue={data.valuationMethods?.triangulatedFairValue}
                   analystTarget={data.quote.analystTargetMean}
                 />
 
                 <AtAGlance
-                  companyName={data.companyName}
                   price={data.quote.price}
                   marketCap={data.quote.marketCap}
                   high52={data.quote.fiftyTwoWeekHigh}
@@ -402,8 +351,6 @@ function StockPageBody() {
                   sector={data.quote.sector ?? ''}
                   country={data.businessProfile.country}
                   currency={currency}
-                  fairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue.fairValuePerShare}
-                  upsidePct={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue.upsidePct}
                   statementsData={statementsData}
                 />
 
@@ -426,32 +373,6 @@ function StockPageBody() {
                     statementsData={statementsData}
                   />
                 )}
-
-                <div
-                  className="bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors"
-                  onClick={() => handleTabChange('valuation')}
-                >
-                  <div>
-                    <div className="text-[13px] font-semibold text-slate-800">Build your own valuation</div>
-                    <div className="text-[11px] text-slate-500 mt-0.5">Open Valuation → adjust assumptions, see fair value live</div>
-                  </div>
-                  <span className="text-blue-600 font-medium text-[13px]">Valuation →</span>
-                </div>
-
-                {/* AI Analysis teaser — no login gate; navigates to risks tab */}
-                <button
-                  onClick={() => handleTabChange('risks')}
-                  className="w-full rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-violet-50 px-5 py-4 flex items-center justify-between hover:from-indigo-100 hover:to-violet-100 transition-colors text-left"
-                >
-                  <div className="flex items-center gap-3">
-                    <Sparkles size={18} className="text-indigo-500 shrink-0" />
-                    <div>
-                      <div className="text-[13px] font-semibold text-indigo-900">Risks &amp; Signals</div>
-                      <div className="text-[11px] text-indigo-500 mt-0.5">Plain-English breakdown of financials, risks, and key drivers</div>
-                    </div>
-                  </div>
-                  <span className="text-[12px] font-semibold text-indigo-600 shrink-0">View →</span>
-                </button>
               </div>
             )}
 
@@ -459,19 +380,6 @@ function StockPageBody() {
             {activeTab === 'valuation' && (
               <div className="space-y-4 pt-5">
                 <ValuationLab apiData={data} ticker={ticker} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} />
-
-                {/* Thesis Builder — collapsible at bottom of Valuation tab */}
-                <details className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-                  <summary className="px-5 py-4 cursor-pointer text-[13px] font-semibold text-slate-700 hover:bg-slate-50 transition-colors list-none flex items-center justify-between">
-                    <span>Thesis Builder — build your investment case</span>
-                    <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </summary>
-                  <div className="p-5 border-t border-slate-100">
-                    <ThesisBuilderTab ticker={ticker} data={data} />
-                  </div>
-                </details>
               </div>
             )}
 

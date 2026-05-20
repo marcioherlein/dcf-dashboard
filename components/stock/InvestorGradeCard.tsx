@@ -50,7 +50,7 @@ function StatBox({ label, value, hidden }: { label: string; value: React.ReactNo
   return (
     <div className={cn('rounded-xl bg-slate-50 border border-slate-100 px-4 py-3', hidden && 'hidden sm:block')}>
       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</p>
-      <p className="mt-0.5 text-sm font-semibold font-mono text-slate-800">{value}</p>
+      <p className="mt-0.5 text-sm font-semibold text-slate-800">{value}</p>
     </div>
   )
 }
@@ -106,7 +106,7 @@ export default function InvestorGradeCard({
                 <p className="mt-0.5 text-[11px] text-slate-500">{gradeLabel} overall</p>
               </div>
               <div className="text-right shrink-0">
-                <div className="text-2xl font-extrabold text-slate-900 font-mono tabular-nums leading-none">
+                <div className="text-2xl font-extrabold text-slate-900 tabular-nums leading-none">
                   {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
                 <div className={cn('mt-1 flex items-center justify-end gap-1 text-sm font-semibold', up ? 'text-emerald-600' : 'text-red-600')}>
@@ -141,7 +141,7 @@ export default function InvestorGradeCard({
               {/* Left: current price (secondary) */}
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">You pay</p>
-                <p className="mt-0.5 text-sm font-semibold font-mono text-slate-600 tabular-nums">
+                <p className="mt-0.5 text-sm font-semibold text-slate-600 tabular-nums">
                   {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
@@ -157,7 +157,7 @@ export default function InvestorGradeCard({
               {/* Right: fair value (dominant) */}
               <div className="flex-1 min-w-0 text-right">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Fair Value Estimate</p>
-                <p className={cn('mt-0.5 text-xl font-bold font-mono tabular-nums', isUndervalued ? 'text-emerald-700' : 'text-amber-700')}>
+                <p className={cn('mt-0.5 text-xl font-bold tabular-nums', isUndervalued ? 'text-emerald-700' : 'text-amber-700')}>
                   {currSymbol}{fairValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
                 {upsidePct != null && (
@@ -195,7 +195,7 @@ export default function InvestorGradeCard({
                 className="flex-1 rounded-xl py-2.5 text-[13px] font-semibold text-white transition-colors"
                 style={{ background: '#0F2A5E' }}
               >
-                See what&apos;s behind this grade →
+                Explore full valuation →
               </button>
             )}
             {onSave && (

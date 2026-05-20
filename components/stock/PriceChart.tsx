@@ -12,7 +12,6 @@ type Period = typeof PERIODS[number]
 const COMPARE_COLORS = ['#f97316', '#a855f7', '#06b6d4'] as const
 
 interface ValuationLevels {
-  fcffFairValue?: number | null
   triangulatedFairValue?: number | null
   analystTarget?: number | null
 }
@@ -112,9 +111,8 @@ function PriceTag({ viewBox, color, labelText }: {
 }
 
 const VAL_LINES = [
-  { key: 'fcffFairValue',         label: 'FCFF',    color: '#6366f1', dash: '5 3' },
-  { key: 'triangulatedFairValue', label: 'Blended', color: '#8b5cf6', dash: '4 2' },
-  { key: 'analystTarget',         label: 'Analyst',  color: '#f59e0b', dash: '4 3' },
+  { key: 'triangulatedFairValue', label: 'Blended Estimate', color: '#8b5cf6', dash: '4 2' },
+  { key: 'analystTarget',         label: 'Analyst Target',   color: '#f59e0b', dash: '4 3' },
 ] as const
 
 // MA indicator config
@@ -201,7 +199,7 @@ function RSITooltip({ active, payload, label, isDark }: {
   )
 }
 
-export default function PriceChart({ ticker, isDark, fcffFairValue, triangulatedFairValue, analystTarget }: Props) {
+export default function PriceChart({ ticker, isDark, triangulatedFairValue, analystTarget }: Props) {
   const [period, setPeriod]         = useState<Period>('1y')
   const [rawData, setRawData]       = useState<Bar[]>([])
   const [loading, setLoading]       = useState(true)
@@ -350,7 +348,7 @@ export default function PriceChart({ ticker, isDark, fcffFairValue, triangulated
   const up = data.length >= 2 && data[data.length - 1].close >= data[0].close
   const priceColor = up ? '#10b981' : '#ef4444'
 
-  const levels: Record<string, number | null | undefined> = { fcffFairValue, triangulatedFairValue, analystTarget }
+  const levels: Record<string, number | null | undefined> = { triangulatedFairValue, analystTarget }
   const hardMin = pDataMin * 0.4
   const hardMax = pDataMax * 2.2
   const valuationValues = VAL_LINES.map(l => levels[l.key]).filter((v): v is number => v != null && v > hardMin && v < hardMax)
