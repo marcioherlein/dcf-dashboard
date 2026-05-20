@@ -334,10 +334,21 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
     setRowOverrides(prev => ({ ...prev, [year]: { ...prev[year], [field]: value } }))
   }, [])
 
-  // Global assumption changes (cagr, wacc) now exposed in ForecastTable toolbar
+  const handleScenario = useCallback((type: 'bear' | 'base' | 'bull') => {
+    setRowOverrides({})
+    if (type === 'base') {
+      setCagrOverride(null)
+      setWaccOverride(null)
+      setTerminalGOverride(null)
+    } else if (type === 'bear') {
+      setCagrOverride(Math.max(0, cagr - 0.05))
+    } else {
+      setCagrOverride(Math.min(0.80, cagr + 0.05))
+    }
+  }, [cagr])
 
   return (
-    <div className="bg-[#111111] rounded-xl overflow-hidden border border-[#222]">
+    <div className="bg-white rounded-xl overflow-hidden border border-slate-200">
       <DataQualityWarnings
         terminalGError={tvUFCF.guardError}
         financialCurrencyNote={baseInput.financialCurrencyNote}
@@ -358,10 +369,10 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
         onTerminalMethodChange={setTerminalMethod}
         onExitMultipleChange={(v) => setExitMultipleOverride(v)}
         onTerminalGChange={setTerminalGOverride}
-        currentCagr={+(cagr * 100).toFixed(1)}
-        onCagrChange={(v) => setCagrOverride(v / 100)}
         currentWacc={+(wacc * 100).toFixed(1)}
         onWaccChange={(v) => setWaccOverride(v / 100)}
+        cagrAnalysis={apiData?.cagrAnalysis}
+        onScenario={handleScenario}
       />
 
       {/* Sensitivity heatmap: shown below the forecast table */}

@@ -16,8 +16,8 @@ interface Props {
   currency: string
 }
 
-// 7 WACC steps centred on base (±1.5pp in 0.5pp increments)
-const WACC_DELTAS  = [-0.015, -0.01, -0.005, 0, 0.005, 0.01, 0.015] as const
+// 7 WACC steps centred on base (±3pp in 1pp increments)
+const WACC_DELTAS  = [-0.03, -0.02, -0.01, 0, 0.01, 0.02, 0.03] as const
 
 // 9 CAGR steps centred on base (±4pp in 1pp increments)
 const CAGR_DELTAS  = [-0.04, -0.03, -0.02, -0.01, 0, 0.01, 0.02, 0.03, 0.04] as const
