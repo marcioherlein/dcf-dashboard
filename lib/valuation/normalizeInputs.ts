@@ -104,10 +104,20 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
   // it reflects local-currency growth, not USD growth (which matters for USD investors).
   // In that case, skip it and use cagrAnalysis.blended which already accounts for FX via
   // extractFCFInputs zeroing the historical component for non-USD reporters.
+  //
+  // When using statements-derived CAGR, apply the same Damodaran size cap + convergence
+  // discount as extractFCFInputs() — otherwise a high-growth mega-cap like NVDA gets its
+  // raw 70%+ historical CAGR used directly, overriding the carefully blended 22% cap.
   let cagr = nullable(apiData?.cagr) ?? cagrAnalysis.blended ?? 0.05
   if (fxRate === 1 && (statementsData?.annual?.incomeStatement?.length ?? 0) >= 3) {
-    const stmtCagr = deriveCAGRFromStatements(statementsData!.annual.incomeStatement)
-    if (stmtCagr !== null) cagr = stmtCagr
+    const rawStmtCagr = deriveCAGRFromStatements(statementsData!.annual.incomeStatement)
+    if (rawStmtCagr !== null) {
+      // Compute the base revenue for size-cap lookup (use TTM or most recent annual)
+      const allRows = buildRowsFromStatements(statementsData!.annual, statementsData!.ttm, fxRate)
+      const ttmOrLast = allRows.find(r => r.year === 'TTM') ?? allRows.filter(r => !r.isProjected).at(-1)
+      const revM = ttmOrLast?.revenue ?? null
+      cagr = applyCagrCapsFromRevenue(rawStmtCagr, revM)
+    }
   }
 
   // Append projected rows when none exist (e.g., built from statements which only has historical)
@@ -413,6 +423,27 @@ function deriveCAGRFromStatements(annualIS: AnyRow[]): number | null {
   if (oldest.rev == null || newest.rev == null || oldest.rev <= 0) return null
   const cagr = Math.pow(newest.rev / oldest.rev, 1 / n) - 1
   return Math.max(-0.20, Math.min(0.80, cagr))
+}
+
+// ── Apply Damodaran size caps + convergence discount to a raw CAGR ────────────
+// Mirrors the logic in extractFCFInputs() (projectCashFlows.ts) so both the
+// main valuation path and the ForecastTable modelling path use identical caps.
+function applyCagrCapsFromRevenue(rawCagr: number, revenueMillion: number | null): number {
+  const revB = (revenueMillion ?? 0) / 1000  // M → B
+  let sizeCap: number
+  if (revB > 50)       sizeCap = 0.22   // mega-cap  (>$50B revenue)
+  else if (revB > 10)  sizeCap = 0.28   // large-cap (>$10B)
+  else if (revB > 2)   sizeCap = 0.38   // mid-cap   (>$2B)
+  else                 sizeCap = 0.55   // small-cap
+
+  // Convergence discount: excess above 20% reduced by 25% (Damodaran mean-reversion)
+  let adjusted = rawCagr
+  if (rawCagr > 0.20) {
+    const excess = rawCagr - 0.20
+    adjusted = 0.20 + excess * 0.75
+  }
+
+  return Math.max(-0.10, Math.min(adjusted, sizeCap))
 }
 
 // ── Build rows from old /api/financials financialStatements ───────────────────
