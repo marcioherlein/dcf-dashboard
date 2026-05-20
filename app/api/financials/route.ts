@@ -569,7 +569,11 @@ export async function GET(req: NextRequest) {
 
     // --- Cash Flow ---
     const avgCapexM: number = hasFmp && fmpCfSorted.length > 0
-      ? fmpCfSorted.reduce((s, r) => s + r.investmentsInPropertyPlantAndEquipment / 1e6 * fxRate, 0) / fmpCfSorted.length  // already negative
+      ? (() => {
+          const vals = fmpCfSorted.map(r => r.investmentsInPropertyPlantAndEquipment)
+          const nonNull = vals.filter((v): v is number => v != null)
+          return nonNull.length > 0 ? nonNull.reduce((s, v) => s + v / 1e6 * fxRate, 0) / nonNull.length : 0
+        })()
       : (() => {
           const rawCFHistory: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
           const cfHistorical = rawCFHistory.slice(-4).reverse()
@@ -592,21 +596,51 @@ export async function GET(req: NextRequest) {
           return cfHistorical.length > 0 ? cfHistorical.reduce((s: number, s2: any) => s + Math.abs((s2.repurchaseOfStock ?? s2.repurchaseOfCommonStock ?? 0) as number) / 1e6 * fxRate, 0) / cfHistorical.length : 0
         })()
 
+    // Build Yahoo cashflow lookup by year for CapEx/D&A fallback when FMP lacks them
+    const yahooCfByYear: Record<string, { capex: number | null; dna: number | null; opCF: number | null; fcf: number | null }> = {}
+    for (const s of (fin.cashflowStatementHistory?.cashflowStatements ?? []) as any[]) {
+      const yr = String(new Date(s.endDate).getFullYear())
+      const rawCapex = s.capitalExpenditures ?? s.capitalExpenditure ?? s.purchaseOfPlantPropertyEquipment
+      const rawDna = s.depreciation ?? s.depreciationAndAmortization
+      const rawOpCF = s.operatingCashflow ?? s.totalCashFromOperatingActivities
+      const capexY = rawCapex != null ? (rawCapex as number) / 1e6 * fxRate : null
+      const dnaY   = rawDna   != null ? (rawDna   as number) / 1e6 * fxRate : null
+      const opCFY  = rawOpCF  != null ? (rawOpCF  as number) / 1e6 * fxRate : null
+      const fcfY   = capexY != null && opCFY != null ? Math.round(opCFY + capexY) : null
+      yahooCfByYear[yr] = { capex: capexY, dna: dnaY, opCF: opCFY, fcf: fcfY }
+    }
+
     const cfHistoricalRows = hasFmp
-      ? fmpCfSorted.map(s => ({
-          year: s.fiscalYear,
-          operatingCF: s.netCashProvidedByOperatingActivities != null ? s.netCashProvidedByOperatingActivities / 1e6 * fxRate : null,
-          capex: s.investmentsInPropertyPlantAndEquipment != null ? s.investmentsInPropertyPlantAndEquipment / 1e6 * fxRate : null,
-          freeCashFlow: s.freeCashFlow != null ? Math.round(s.freeCashFlow / 1e6 * fxRate) : null,
-          investingCF: s.netCashUsedForInvestingActivites != null ? s.netCashUsedForInvestingActivites / 1e6 * fxRate : null,
-          financingCF: s.netCashUsedProvidedByFinancingActivities != null ? s.netCashUsedProvidedByFinancingActivities / 1e6 * fxRate : null,
-          // dividendsPaid in FMP is negative (outflow); store as negative to match Yahoo convention
-          dividendsPaid: s.commonDividendsPaid != null ? s.commonDividendsPaid / 1e6 * fxRate : null,
-          buybacks: s.commonStockRepurchased != null ? Math.abs(s.commonStockRepurchased / 1e6 * fxRate) : null,
-          dna: s.depreciationAndAmortization != null ? s.depreciationAndAmortization / 1e6 * fxRate : null,
-          fiscalDate: s.date ?? s.fiscalYear,
-          isProjected: false,
-        }))
+      ? fmpCfSorted.map(s => {
+          const yr = s.fiscalYear
+          const yhoo = yahooCfByYear[yr] ?? {}
+          const fmpCapex = s.investmentsInPropertyPlantAndEquipment != null ? s.investmentsInPropertyPlantAndEquipment / 1e6 * fxRate : null
+          const fmpDna   = s.depreciationAndAmortization != null ? s.depreciationAndAmortization / 1e6 * fxRate : null
+          const fmpOpCF  = s.netCashProvidedByOperatingActivities != null ? s.netCashProvidedByOperatingActivities / 1e6 * fxRate : null
+          const capex = fmpCapex ?? yhoo.capex ?? null
+          const dna   = fmpDna   ?? yhoo.dna   ?? null
+          const opCF  = fmpOpCF  ?? yhoo.opCF  ?? null
+          // Recompute FCF when FMP has it but CapEx was missing (FCF = Net Income proxy bug)
+          // If we now have real capex, derive FCF = operatingCF + capex; else use FMP value
+          const fmpFcf = s.freeCashFlow != null ? Math.round(s.freeCashFlow / 1e6 * fxRate) : null
+          const freeCashFlow = opCF != null && capex != null
+            ? Math.round(opCF + capex)
+            : fmpCapex != null ? fmpFcf : (yhoo.fcf ?? fmpFcf)
+          return {
+            year: yr,
+            operatingCF: opCF,
+            capex,
+            freeCashFlow,
+            investingCF: s.netCashUsedForInvestingActivites != null ? s.netCashUsedForInvestingActivites / 1e6 * fxRate : null,
+            financingCF: s.netCashUsedProvidedByFinancingActivities != null ? s.netCashUsedProvidedByFinancingActivities / 1e6 * fxRate : null,
+            // dividendsPaid in FMP is negative (outflow); store as negative to match Yahoo convention
+            dividendsPaid: s.commonDividendsPaid != null ? s.commonDividendsPaid / 1e6 * fxRate : null,
+            buybacks: s.commonStockRepurchased != null ? Math.abs(s.commonStockRepurchased / 1e6 * fxRate) : null,
+            dna,
+            fiscalDate: s.date ?? s.fiscalYear,
+            isProjected: false,
+          }
+        })
       : (() => {
           const rawCFHistoryEarly: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
           const rawISStmts: any[] = fin.incomeStatementHistory?.incomeStatementHistory ?? []
@@ -756,7 +790,8 @@ export async function GET(req: NextRequest) {
         fiftyTwoWeekLow: q.fiftyTwoWeekLow ?? null,
         analystTargetMean: fin.financialData?.targetMeanPrice ?? null,
         currency: quoteCurrency,
-        sector: q.sector ?? '',
+        sector: profile.sector ?? q.sector ?? '',
+        industry: profile.industry ?? '',
       },
       wacc: { ...waccResult, crp, financialCurrency },
       dcf: dcfResult,

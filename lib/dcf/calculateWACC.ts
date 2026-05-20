@@ -98,11 +98,17 @@ export function extractWACCInputs(financials: any, rfRate: number, betaFromRegre
     ? Math.min(interestExpense / rawDebtForRate, 0.15)  // cap at 15%
     : rfRate + crp + 0.015
 
-  // Tax rate: income stmt if available, else 21% US statutory
-  const incomeTax: number = inc0.incomeTaxExpense ?? 0
-  const preTaxIncome: number = inc0.incomeBeforeTax ?? 0
-  const taxRate = (incomeTax > 0 && preTaxIncome > 0)
-    ? Math.min(Math.max(incomeTax / preTaxIncome, 0.05), 0.40)
+  // Tax rate: 3-year median from income statement history (single year is volatile)
+  const incHistory: { incomeTaxExpense?: number; incomeBeforeTax?: number }[] =
+    financials.incomeStatementHistory?.incomeStatementHistory ?? []
+  const taxRates = incHistory.slice(0, 3).map(r => {
+    const tax = r.incomeTaxExpense ?? 0
+    const pre = r.incomeBeforeTax ?? 0
+    if (tax <= 0 || pre <= 0) return null
+    return tax / pre
+  }).filter((v): v is number => v != null && v > 0.05 && v < 0.60)
+  const taxRate = taxRates.length > 0
+    ? (taxRates.sort((a, b) => a - b)[Math.floor(taxRates.length / 2)])
     : 0.21
 
   return {

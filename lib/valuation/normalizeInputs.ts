@@ -159,6 +159,18 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
   const companyType: ModellingInput['companyType'] = vm.companyType ?? 'standard'
   const isFinancialSector = companyType === 'financial'
 
+  // Derive effective tax rate from statement rows (3Y median of taxRateForCalcs)
+  // This overrides the WACC default (often 0.21) which may be wrong for non-US companies.
+  const historicalTaxRates = rows
+    .filter(r => !r.isProjected && r.taxRate != null && r.year !== 'TTM')
+    .map(r => r.taxRate!)
+    .filter(v => v > 0.05 && v < 0.60)
+    .slice(-3)
+  const medianTaxRate = historicalTaxRates.length > 0
+    ? (historicalTaxRates.sort((a, b) => a - b)[Math.floor(historicalTaxRates.length / 2)])
+    : null
+  const effectiveTaxRate = medianTaxRate ?? wacc.inputs?.taxRate ?? 0.21
+
   return {
     ticker,
     companyName: apiData?.companyName ?? ticker,
@@ -168,7 +180,7 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
     wacc: wacc.wacc ?? 0.10,
     costOfEquity: wacc.costOfEquity ?? 0.12,
     afterTaxCostOfDebt: wacc.afterTaxCostOfDebt ?? 0.04,
-    taxRate: wacc.inputs?.taxRate ?? 0.21,
+    taxRate: effectiveTaxRate,
     rfRate: wacc.inputs?.rfRate ?? 0.045,
     beta: wacc.inputs?.beta ?? 1.0,
     erp: wacc.inputs?.erp ?? 0.055,
