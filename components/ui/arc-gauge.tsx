@@ -30,8 +30,6 @@ export default function ArcGauge({
   const arcLength = circumference * (totalSweep / 360)
 
   const clampedValue = Math.max(0, Math.min(100, value))
-  const filledLength = arcLength * (clampedValue / 100)
-  const gapLength = arcLength - filledLength
 
   const toRad = (deg: number) => (deg * Math.PI) / 180
 
@@ -51,7 +49,7 @@ export default function ArcGauge({
   const fillPath = describeArc(totalSweep * (clampedValue / 100))
 
   const filterId = `arc-glow-${color.replace('#', '')}`
-  const glow = glowColor ?? color
+  const glowStroke = glowColor ?? color
 
   return (
     <svg
@@ -84,7 +82,7 @@ export default function ArcGauge({
       {clampedValue > 0 && (
         <path
           d={fillPath}
-          stroke={color}
+          stroke={glowStroke}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           fill="none"

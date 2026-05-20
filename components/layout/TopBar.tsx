@@ -180,6 +180,9 @@ export default function TopBar() {
                 className="rounded-full ring-2 ring-[rgba(59,130,246,0.4)]"
               />
             )}
+            <span className="text-[12px] text-slate-300">
+              Hi {session.user?.name?.split(' ')[0]}
+            </span>
             <button
               onClick={() => signOut()}
               className="text-[12px] text-slate-400 hover:text-white transition-colors"
