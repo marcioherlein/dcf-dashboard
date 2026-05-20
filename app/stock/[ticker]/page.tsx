@@ -18,6 +18,7 @@ import { calculatePiotroski, calculateAltman, calculateBeneish } from '@/lib/dcf
 import { track } from '@/lib/analytics/events'
 import { loadPreLoginState, clearPreLoginState } from '@/lib/auth/preLoginState'
 import { useSession } from 'next-auth/react'
+import SaveToWatchlistDialog, { type WatchlistSavePayload } from '@/components/watchlist/SaveToWatchlistDialog'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
@@ -67,7 +68,7 @@ interface FinancialsData {
   quote: {
     price: number; change: number; changePct: number; marketCap: number
     peRatio: number; fiftyTwoWeekHigh: number; fiftyTwoWeekLow: number
-    analystTargetMean: number; currency: string; sector: string
+    analystTargetMean: number; currency: string; sector: string; quoteType?: string
   }
   wacc: {
     wacc: number; costOfEquity: number; afterTaxCostOfDebt: number
@@ -153,6 +154,8 @@ function StockPageBody() {
   const [loading, setLoading]       = useState(true)
   const [error, setError]     = useState('')
   const [saving, setSaving]   = useState(false)
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false)
+  const [savePayload, setSavePayload] = useState<WatchlistSavePayload | null>(null)
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [financialsHighlight, setFinancialsHighlight] = useState<{ rowKey: string; statement: 'income' | 'balance' | 'cashflow' } | null>(null)
   const [userModelFairValue, setUserModelFairValue] = useState<number | null>(null)
@@ -250,6 +253,7 @@ function StockPageBody() {
   }
 
   return (
+    <>
     <div className="min-h-dvh bg-[#050D1F] relative overflow-hidden">
       {/* Ambient depth blob */}
       <div className="pointer-events-none absolute top-20 right-0 w-80 h-80 bg-blue-600/10 blur-3xl rounded-full animate-blob" />
@@ -350,7 +354,33 @@ function StockPageBody() {
                 low52={data.quote.fiftyTwoWeekLow}
                 analystTarget={data.quote.analystTargetMean}
                 drivers={data.cagrAnalysis?.drivers}
-                onSave={() => requireAuth({ intent: 'save_watchlist' })}
+                onSave={() => {
+                  if (!session?.user) { requireAuth({ intent: 'save_watchlist' }); return }
+                  const isETF = (data.quote.quoteType ?? '').toUpperCase() === 'ETF'
+                  setSavePayload({
+                    ticker: data.ticker,
+                    name: data.companyName,
+                    assetType: isETF ? 'etf' : 'stock',
+                    fairValue: data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? null,
+                    upsidePct: data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null,
+                    valuationSnapshot: isETF ? null : {
+                      price_at_save: data.quote.price,
+                      fair_value: data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? 0,
+                      wacc: data.wacc?.wacc ?? 0,
+                      beta: data.wacc?.inputs?.beta ?? 1,
+                      terminal_g: data.scenarios?.base?.terminalG ?? 0.025,
+                      cagr: data.scenarios?.base?.cagr ?? 0,
+                      upside_pct: data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? 0,
+                      inputs: data.wacc?.inputs ?? {},
+                      scenarios: {
+                        bull: data.scenarios?.bull?.fairValue ?? 0,
+                        base: data.scenarios?.base?.fairValue ?? 0,
+                        bear: data.scenarios?.bear?.fairValue ?? 0,
+                      },
+                    },
+                  })
+                  setSaveDialogOpen(true)
+                }}
                 onViewDetails={() => handleTabChange('valuation')}
                 compact={activeTab === 'valuation'}
               />
@@ -484,5 +514,13 @@ function StockPageBody() {
         )}
       </div>
     </div>
+
+    <SaveToWatchlistDialog
+      open={saveDialogOpen}
+      payload={savePayload}
+      onClose={() => setSaveDialogOpen(false)}
+      onReviewAssumptions={() => handleTabChange('valuation')}
+    />
+    </>
   )
 }
