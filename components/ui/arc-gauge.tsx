@@ -26,8 +26,6 @@ export default function ArcGauge({
   // 270° sweep: starts at 135° (bottom-left), ends at 45° (bottom-right)
   const startAngle = 135
   const totalSweep = 270
-  const circumference = 2 * Math.PI * r
-  const arcLength = circumference * (totalSweep / 360)
 
   const clampedValue = Math.max(0, Math.min(100, value))
 

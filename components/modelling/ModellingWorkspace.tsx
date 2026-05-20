@@ -129,7 +129,6 @@ function buildDisplayRows(
 export default function ModellingWorkspace({ apiData, ticker, statementsData }: ModellingWorkspaceProps) {
   // Overridable assumptions
   const [waccOverride, setWaccOverride] = useState<number | null>(null)
-  const [cagrOverride, setCagrOverride] = useState<number | null>(null)
   const [terminalGOverride, setTerminalGOverride] = useState<number | null>(null)
   const [exitMultipleOverride, setExitMultipleOverride] = useState<number | null>(null)
 
@@ -137,16 +136,16 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
   const [terminalMethod, setTerminalMethod] = useState<'perpetuity' | 'multiple'>('multiple')
 
   const baseInput: ModellingInput = useMemo(
-    () => normalizeModellingInputs(ticker, apiData, statementsData, cagrOverride !== null ? Math.max(0, cagrOverride) : undefined),
+    () => normalizeModellingInputs(ticker, apiData, statementsData),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ticker, apiData, statementsData, cagrOverride]
+    [ticker, apiData, statementsData]
   )
 
   // Row-level cell overrides (keyed by year string then field name)
   const [rowOverrides, setRowOverrides] = useState<Record<string, Record<string, number>>>({})
 
   const wacc = Math.max(0.01, waccOverride ?? baseInput.wacc)
-  const cagr = Math.max(0, cagrOverride ?? baseInput.cagr)
+  const cagr = Math.max(0, baseInput.cagr)
   const terminalG = Math.max(0, terminalGOverride ?? baseInput.terminalG)
   const taxRate = baseInput.taxRate
 
