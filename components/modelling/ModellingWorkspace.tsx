@@ -136,11 +136,8 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
   // Terminal method toggle
   const [terminalMethod, setTerminalMethod] = useState<'perpetuity' | 'multiple'>('multiple')
 
-  // Scenario presets
-  const PRESET_OFFSETS = { cagr: 0, wacc: 0, terminalG: 0 }
-
   const baseInput: ModellingInput = useMemo(
-    () => normalizeModellingInputs(ticker, apiData, statementsData, cagrOverride !== null ? Math.max(0, cagrOverride + PRESET_OFFSETS.cagr) : undefined),
+    () => normalizeModellingInputs(ticker, apiData, statementsData, cagrOverride !== null ? Math.max(0, cagrOverride) : undefined),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [ticker, apiData, statementsData, cagrOverride]
   )
@@ -148,9 +145,9 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
   // Row-level cell overrides (keyed by year string then field name)
   const [rowOverrides, setRowOverrides] = useState<Record<string, Record<string, number>>>({})
 
-  const wacc = Math.max(0.01, (waccOverride ?? baseInput.wacc) + PRESET_OFFSETS.wacc)
-  const cagr = Math.max(0, (cagrOverride ?? baseInput.cagr) + PRESET_OFFSETS.cagr)
-  const terminalG = Math.max(0, (terminalGOverride ?? baseInput.terminalG) + PRESET_OFFSETS.terminalG)
+  const wacc = Math.max(0.01, waccOverride ?? baseInput.wacc)
+  const cagr = Math.max(0, cagrOverride ?? baseInput.cagr)
+  const terminalG = Math.max(0, terminalGOverride ?? baseInput.terminalG)
   const taxRate = baseInput.taxRate
 
   // Build assumption set (for exitMultiple default)
@@ -380,19 +377,6 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
     setRowOverrides(prev => ({ ...prev, [year]: { ...prev[year], [field]: value } }))
   }, [])
 
-  const handleScenario = useCallback((type: 'bear' | 'base' | 'bull') => {
-    setRowOverrides({})
-    if (type === 'base') {
-      setCagrOverride(null)
-      setWaccOverride(null)
-      setTerminalGOverride(null)
-    } else if (type === 'bear') {
-      setCagrOverride(Math.max(0, cagr - 0.05))
-    } else {
-      setCagrOverride(Math.min(0.80, cagr + 0.05))
-    }
-  }, [cagr])
-
   return (
     <div className="bg-white rounded-xl overflow-hidden border border-slate-200">
       <DataQualityWarnings
@@ -418,7 +402,6 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
         currentWacc={+(wacc * 100).toFixed(1)}
         onWaccChange={(v) => setWaccOverride(v / 100)}
         cagrAnalysis={apiData?.cagrAnalysis}
-        onScenario={handleScenario}
       />
 
       {/* Sensitivity heatmap: shown below the forecast table */}

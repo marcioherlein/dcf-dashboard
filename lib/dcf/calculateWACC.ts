@@ -22,7 +22,10 @@ export interface WACCResult {
 export function calculateWACC(inputs: WACCInputs): WACCResult {
   const { rfRate, beta, erp, crp, costOfDebt, taxRate, debtToEquity } = inputs
 
-  const costOfEquity = rfRate + beta * (erp + crp)
+  // Damodaran additive CRP: Ke = Rf + β×ERP + CRP  (not β×(ERP+CRP))
+  // CRP is added independently — it's a country-level supplement, not proportional to beta.
+  // For US stocks (crp=0) the formula is identical to standard CAPM.
+  const costOfEquity = rfRate + beta * erp + crp
   const afterTaxCostOfDebt = costOfDebt * (1 - taxRate)
 
   const debtRatio = debtToEquity / (1 + debtToEquity)
@@ -83,8 +86,12 @@ export function extractWACCInputs(financials: any, rfRate: number, betaFromRegre
 
   const debtToEquity = marketCap > 0 ? totalDebt / marketCap : 0.30
 
-  // Beta: regression first, then Yahoo's published beta
-  const beta = betaFromRegression > 0 ? betaFromRegression : (ks.beta ?? 1.0)
+  // Beta: regression first, then Yahoo's published beta.
+  // Apply a floor for emerging-market stocks: ADR price correlation vs S&P500 is weak
+  // for country-specific businesses — Damodaran recommends using ≥ 0.75 for such stocks.
+  const rawBeta = betaFromRegression > 0 ? betaFromRegression : (ks.beta ?? 1.0)
+  const betaFloor = crp >= 0.05 ? 0.80 : (crp >= 0.02 ? 0.75 : 0.50)
+  const beta = Math.max(rawBeta, betaFloor)
 
   // Cost of debt: try income statement, else RF + country risk + 1.5% credit spread.
   // The crp term prevents the fallback from being a pure US investment-grade floor

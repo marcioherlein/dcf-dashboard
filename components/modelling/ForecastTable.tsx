@@ -93,7 +93,6 @@ interface ForecastTableProps {
     analystEstimate2y?: number | null
     historicalCagr3y?: number | null
   } | null
-  onScenario?: (type: 'bear' | 'base' | 'bull') => void
 }
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
@@ -275,12 +274,10 @@ export default function ForecastTable({
   currentWacc,
   onWaccChange,
   cagrAnalysis,
-  onScenario,
 }: ForecastTableProps) {
   const [mode, setMode] = useState<'ufcf' | 'lfcf'>('ufcf')
   const [exitMultipleDraft, setExitMultipleDraft] = useState<string | null>(null)
   const [terminalGDraft, setTerminalGDraft] = useState<string | null>(null)
-  const [activeScenario, setActiveScenario] = useState<'bear' | 'base' | 'bull'>('base')
 
   const curr = currency === 'USD' ? '$' : currency + ' '
 
@@ -308,11 +305,6 @@ export default function ForecastTable({
     const up = ip != null && td.currentPrice > 0 ? (ip - td.currentPrice) / td.currentPrice : null
     return { titleImpliedPrice: ip, titleUpside: up }
   }, [terminalData, mode])
-
-  const handleScenario = (type: 'bear' | 'base' | 'bull') => {
-    setActiveScenario(type)
-    onScenario?.(type)
-  }
 
   // ── Column header element ─────────────────────────────────────────────────────
 
@@ -1053,28 +1045,6 @@ export default function ForecastTable({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Scenario buttons */}
-          {onScenario && (
-            <div className="flex rounded-lg overflow-hidden border border-slate-200">
-              {(['bear', 'base', 'bull'] as const).map(s => (
-                <button
-                  key={s}
-                  onClick={() => handleScenario(s)}
-                  className={cn(
-                    'px-3 py-1.5 text-xs font-semibold transition-colors',
-                    activeScenario === s
-                      ? s === 'bear' ? 'bg-red-500 text-white'
-                        : s === 'bull' ? 'bg-emerald-600 text-white'
-                        : 'bg-[#0F2A5E] text-white'
-                      : 'text-slate-500 hover:bg-slate-100 bg-white'
-                  )}
-                >
-                  {s === 'bear' ? '↓ Bear −5pp' : s === 'bull' ? '↑ Bull +5pp' : '— Base'}
-                </button>
-              ))}
-            </div>
-          )}
-
           {/* Implied price badge */}
           {titleImpliedPrice != null && (
             <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-1.5">

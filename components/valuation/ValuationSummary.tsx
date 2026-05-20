@@ -351,7 +351,7 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
 
                   <div className="text-right">
                     {m.fairValue != null
-                      ? <span className="font-mono font-semibold text-slate-100 text-sm">{fmtPrice(m.fairValue, currency)}</span>
+                      ? <span className="font-semibold tabular-nums text-slate-100 text-sm">{fmtPrice(m.fairValue, currency)}</span>
                       : <NABadge reason="model-unsupported" />
                     }
                   </div>
