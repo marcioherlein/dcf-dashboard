@@ -22,16 +22,8 @@ import { fmtPrice, fmtPct, fmtLargeCurrency } from '@/lib/formatters'
 import { TrendBadge } from '@/components/ui/trend-badge'
 import { NABadge } from '@/components/ui/na-badge'
 import { cn } from '@/lib/utils'
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, Cell,
-  ResponsiveContainer, ReferenceLine,
-} from 'recharts'
 
 // ─── Local helpers ─────────────────────────────────────────────────────────────
-
-function rowYear(r: { endDate?: string | null; year?: string; fiscalDate?: string | null }): string {
-  return r.endDate?.slice(0, 4) ?? r.year ?? r.fiscalDate?.slice(0, 4) ?? ''
-}
 
 function fmtB(v: number | null): string { return fmtLargeCurrency(v) }
 function fmtPctSigned(v: number | null): string { return fmtPct(v) }
@@ -136,24 +128,17 @@ interface MethodInlinePanelProps {
   currency: string
   onAssumptionChange: (key: string, value: number) => void
   onResetOverrides: () => void
-  onNavigateToFinancials?: (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => void
-  evidenceCharts?: Record<string, EvidenceChartDef | undefined>
 }
 
-function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, onResetOverrides, onNavigateToFinancials, evidenceCharts }: MethodInlinePanelProps) {
+function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, onResetOverrides }: MethodInlinePanelProps) {
   const isModified = Object.keys(overrides).length > 0
   const upside =
     config.fairValueSummary != null && config.currentPrice != null && config.currentPrice > 0
       ? (config.fairValueSummary - config.currentPrice) / config.currentPrice
       : null
 
-  function handleInputChange(key: string, rawStr: string) {
-    const assumption = config.assumptions.find(a => a.key === key)
-    if (!assumption) return
-    const parsed = parseFloat(rawStr)
-    if (isNaN(parsed)) return
-    onAssumptionChange(key, assumption.unit === '%' ? parsed / 100 : parsed)
-  }
+  const editableAssumptions   = config.assumptions.filter(a => a.editable)
+  const readonlyAssumptions   = config.assumptions.filter(a => !a.editable && a.unit !== 'shares')
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden">
@@ -161,16 +146,13 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
       <div className="px-5 py-4 border-b border-slate-100 flex items-start justify-between gap-4">
         <div>
           <h3 className="text-base font-bold text-slate-900">{config.title}</h3>
-          <p className="text-micro text-slate-400 mt-0.5">{config.subtitle}</p>
-          {config.methodDescription && (
-            <p className="text-xs text-slate-500 mt-2 leading-relaxed">{config.methodDescription}</p>
-          )}
+          <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{config.methodDescription ?? config.subtitle}</p>
         </div>
         {config.fairValueSummary != null && (
           <div className="flex items-center gap-3 shrink-0">
             <div className="text-right">
-              <p className="text-label uppercase tracking-wider text-slate-400">Fair Value</p>
-              <p className="text-lg font-bold font-mono text-slate-900">
+              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Fair Value</p>
+              <p className="text-lg font-bold tabular-nums text-slate-900">
                 {fmtPrice(config.fairValueSummary, currency)}
               </p>
             </div>
@@ -190,175 +172,91 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
         </div>
       )}
 
-      <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Left column: Evidence + Assumptions */}
-        <div className="space-y-5">
-          {config.evidence.length > 0 && (
-            <div>
-              <p className="text-label uppercase tracking-wider text-slate-400 mb-2">Evidence & Derivation</p>
-              <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 space-y-2">
-                {config.evidence.map(({ label, text, rowKey, statement }) => {
-                  const isLink = !!rowKey && !!statement
-                  const chart  = evidenceCharts?.[label]
-                  return (
-                    <div key={label} className="text-xs">
-                      <div className="flex gap-3">
-                        <span
-                          className={cn(
-                            'font-medium w-24 shrink-0',
-                            isLink
-                              ? 'cursor-pointer text-blue-600 hover:text-blue-800 hover:underline underline-offset-2'
-                              : 'text-slate-500',
-                          )}
-                          title={isLink ? 'View in Financials tab' : undefined}
-                          onClick={() => isLink && onNavigateToFinancials?.(rowKey!, statement!)}
-                        >
-                          {isLink && (
-                            <svg className="inline mr-0.5 mb-0.5" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                          )}
-                          {label}
-                        </span>
-                        <span className="text-slate-600 leading-relaxed">{text}</span>
-                      </div>
-                      {chart && chart.data.length >= 2 && (
-                        <div className="mt-1.5 h-[72px] w-full">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={chart.data} margin={{ top: 2, right: 4, left: -18, bottom: 0 }}>
-                              <XAxis dataKey="year" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
-                              <YAxis tick={{ fontSize: 9 }} axisLine={false} tickLine={false}
-                                tickFormatter={(v: number) =>
-                                  chart.unit === '%' ? `${v}%` : chart.unit === 'x' ? `${v}×` : `${v}`
-                                }
-                              />
-                              <Tooltip formatter={(v: unknown) => [
-                                typeof v === 'number'
-                                  ? `${v.toFixed(1)}${chart.unit === '%' ? '%' : chart.unit === 'x' ? '×' : chart.unit === '$M' ? 'M' : ''}`
-                                  : '—',
-                                label,
-                              ]} />
-                              <ReferenceLine y={0} stroke="#e2e8f0" />
-                              {chart.referenceValue != null && (
-                                <ReferenceLine y={chart.referenceValue} stroke={chart.color} strokeDasharray="3 3"
-                                  label={{ value: chart.referenceLabel ?? '', fontSize: 8, fill: chart.color, position: 'right' }} />
-                              )}
-                              <Bar dataKey="value" radius={[2, 2, 0, 0]} isAnimationActive={false}>
-                                {chart.data.map((entry, idx) => (
-                                  <Cell key={idx} fill={entry.value < 0 ? '#ef4444' : chart.color} />
-                                ))}
-                              </Bar>
-                            </BarChart>
-                          </ResponsiveContainer>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {config.assumptions.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-label uppercase tracking-wider text-slate-400">
-                  Assumptions
-                  {isModified && <span className="text-blue-500 normal-case ml-1 font-normal">(modified)</span>}
-                </p>
-                {isModified && (
-                  <button
-                    onClick={onResetOverrides}
-                    className="text-xs text-blue-600 hover:text-blue-700 underline"
-                  >
-                    Reset to model
-                  </button>
-                )}
-              </div>
-              <div className="divide-y divide-slate-100">
-                {config.assumptions.map(a => {
-                  const displayVal = fmtAssumptionDisplay(a, overrides)
-                  const isOverridden = a.key in overrides
-                  return (
-                    <div key={a.key} className="flex items-center justify-between gap-3 py-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-xs font-medium text-slate-700">{a.label}</span>
-                          <span className={cn(
-                            'text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider',
-                            isOverridden ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500',
-                          )}>
-                            {isOverridden ? 'Override' : sourceLabel(a.source)}
-                          </span>
-                        </div>
-                        {a.description && (
-                          <p className="text-[10px] text-slate-400 mt-0.5">{a.description}</p>
-                        )}
-                      </div>
-                      {a.editable ? (
-                        <div className="flex items-center gap-1 shrink-0">
-                          <input
-                            type="number"
-                            value={displayVal}
-                            onChange={e => handleInputChange(a.key, e.target.value)}
-                            step={String(a.step ?? 0.1)}
-                            className="w-20 text-right border border-slate-200 rounded-md px-2 py-1 text-xs font-mono focus:outline-none focus:border-blue-400 bg-white text-slate-900"
-                          />
-                          {a.unit === '%' && <span className="text-slate-400 text-xs">%</span>}
-                          {a.unit === 'x' && <span className="text-slate-400 text-xs">×</span>}
-                        </div>
-                      ) : (
-                        <span className="text-xs font-mono text-slate-500 shrink-0">
-                          {displayVal === '—'
-                            ? <NABadge reason="no-data" />
-                            : <>{displayVal}{a.unit === '%' ? '%' : a.unit === 'x' ? '×' : ''}</>
-                          }
-                        </span>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right column: Results */}
-        <div className="space-y-5">
-          {config.results.length > 0 && (
-            <div>
-              <p className="text-label uppercase tracking-wider text-slate-400 mb-2">Results</p>
-              <div className="divide-y divide-slate-100">
-                {config.results.map((r, i) => (
-                  <div key={i} className="flex items-center justify-between py-1.5">
-                    <span className="text-xs text-slate-500 font-medium">{r.label}</span>
-                    <span className={cn('font-bold font-mono text-sm', resultToneClass(r.tone))}>
-                      {r.formattedValue === '—' ? <NABadge reason="calc-error" /> : r.formattedValue}
+      {/* Editable sliders */}
+      {editableAssumptions.length > 0 && (
+        <div className="px-5 pt-5 pb-2 space-y-5">
+          {editableAssumptions.map(a => {
+            const isOverridden = a.key in overrides
+            const raw = isOverridden ? overrides[a.key] : (a.value ?? 0)
+            const displayVal = fmtAssumptionDisplay(a, overrides)
+            const min  = a.min ?? 0
+            const max  = a.max ?? (a.unit === '%' ? 1 : 100)
+            const step = a.unit === '%' ? 0.005 : (a.step ?? 0.5)
+            return (
+              <div key={a.key}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-semibold text-slate-800">{a.label}</span>
+                    <span className={cn(
+                      'text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider',
+                      isOverridden ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500',
+                    )}>
+                      {isOverridden ? 'Override' : sourceLabel(a.source)}
                     </span>
                   </div>
-                ))}
+                  <span className="text-sm font-semibold tabular-nums text-slate-900">
+                    {displayVal}{a.unit === '%' ? '%' : a.unit === 'x' ? '×' : ''}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={min}
+                  max={max}
+                  step={step}
+                  value={raw}
+                  onChange={e => onAssumptionChange(a.key, parseFloat(e.target.value))}
+                  className="w-full h-1.5 rounded-full accent-blue-500 cursor-pointer"
+                />
+                {a.sourceExplanation && (
+                  <p className="text-[10px] text-slate-400 mt-1 leading-tight">▸ {a.sourceExplanation}</p>
+                )}
               </div>
-            </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Read-only key values (Reverse DCF has no editable sliders) */}
+      {editableAssumptions.length === 0 && readonlyAssumptions.length > 0 && (
+        <div className="px-5 pt-4 pb-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {readonlyAssumptions.map(a => (
+              <div key={a.key} className="bg-slate-50 rounded-lg px-3 py-2">
+                <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{a.label}</p>
+                <p className="text-sm font-semibold tabular-nums text-slate-800 mt-0.5">
+                  {fmtAssumptionDisplay(a, overrides)}{a.unit === '%' ? '%' : a.unit === 'x' ? '×' : ''}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Footer: Results + Reset */}
+      {(config.results.length > 0 || isModified) && (
+        <div className="px-5 py-3 mt-2 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex gap-4 flex-wrap">
+            {config.results.map((r, i) => (
+              <div key={i} className="text-xs">
+                <span className="text-slate-500">{r.label}: </span>
+                <span className={cn('font-semibold tabular-nums', resultToneClass(r.tone))}>
+                  {r.formattedValue === '—' ? <NABadge reason="calc-error" /> : r.formattedValue}
+                </span>
+              </div>
+            ))}
+          </div>
+          {isModified && (
+            <button onClick={onResetOverrides} className="text-xs text-blue-600 hover:text-blue-700 underline shrink-0">
+              Reset to model
+            </button>
           )}
         </div>
-      </div>
+      )}
     </div>
   )
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-type EvidenceChartDef = {
-  data: { year: string; value: number }[]
-  unit: '%' | '$M' | 'x' | '$'
-  color: string
-  referenceValue?: number
-  referenceLabel?: string
-}
-
-interface HistoryChartDef {
-  data: { year: string; value: number }[]
-}
 
 type OverridesMap = Partial<Record<ValuationMethodId | 'ev_ebitda', Record<string, number>>>
 
@@ -410,59 +308,9 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
   const ttmNetDebt   = ttmTotalDebt != null && ttmCash != null ? ttmTotalDebt - ttmCash : null
   const ttmShares    = ((ttmBS.commonStockSharesOutstanding ?? ttmBS.sharesOutstanding) as number | null) ?? null
 
-  // Annual data — use any[] because fundamentalsTimeSeries uses totalRevenue/EBITDA (not revenue/ebitda)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const annualIS: any[] = statementsData?.annual?.incomeStatement ?? []
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const annualCF: any[] = statementsData?.annual?.cashFlow ?? []
-
   // FX rate: statementsData (fundamentalsTimeSeries) reports in financialCurrency (e.g. BRL for STNE).
   // All absolute monetary TTM values must be converted to quote currency (USD for ADRs) before use.
   const stmtFxRate = (apiData?.providerStatus?.fx?.rate as number | undefined) ?? 1
-
-  // Annual chart data for method history panels
-  const chartRevenueGrowth: HistoryChartDef['data'] = annualIS.slice(1).reduce<{ year: string; value: number }[]>((acc, r: any, i) => {
-    const prev = annualIS[i]
-    const rev  = r.totalRevenue as number | null
-    const prevRev = prev.totalRevenue as number | null
-    if (rev != null && prevRev != null && prevRev > 0) {
-      acc.push({ year: rowYear(r), value: (rev - prevRev) / prevRev * 100 })
-    }
-    return acc
-  }, []).slice(-5)
-
-  const chartNetMargin: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r: any) => {
-    const rev = r.totalRevenue as number | null
-    const ni  = r.netIncome   as number | null
-    if (rev != null && rev > 0 && ni != null) {
-      acc.push({ year: rowYear(r), value: ni / rev * 100 })
-    }
-    return acc
-  }, []).slice(-5)
-
-  const chartEbitda: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r: any) => {
-    const ebitda = r.EBITDA as number | null
-    if (ebitda != null) acc.push({ year: rowYear(r), value: ebitda / 1e6 * stmtFxRate })
-    return acc
-  }, []).slice(-5)
-
-  const chartRevenue: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r: any) => {
-    const rev = r.totalRevenue as number | null
-    if (rev != null && rev > 0) acc.push({ year: rowYear(r), value: rev / 1e6 * stmtFxRate })
-    return acc
-  }, []).slice(-5)
-
-  const cfByYear = new Map(annualCF.map((r: any) => [rowYear(r), (r.freeCashFlow as number | null) ?? null]))
-
-  const chartFCFMargin: HistoryChartDef['data'] = annualIS.reduce<{ year: string; value: number }[]>((acc, r: any) => {
-    const yr  = rowYear(r)
-    const rev = r.totalRevenue as number | null
-    const fcf = cfByYear.get(yr)
-    if (rev != null && rev > 0 && fcf != null) {
-      acc.push({ year: yr, value: fcf / rev * 100 })
-    }
-    return acc
-  }, []).slice(-5)
 
   // fairValue.sharesOutstanding is in millions (ADR-equivalent); TTM balance sheet shares may be ordinary
   // For ADRs (TSM: 5 ordinary = 1 ADR), fairValue.sharesOutstanding is already ADR-adjusted — prefer it
@@ -506,11 +354,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
   }), [fwdPEBase, fwdPEOverrides, currentPrice, ltvRevenueAbsolute, sharesAbsolute])
   const fwdPEResult = useMemo(() => computeForwardPE(fwdPEInputs), [fwdPEInputs])
 
-  const currentPERatio = apiData?.quote?.peRatio ?? null
-  const chartPEComparison: EvidenceChartDef['data'] = [
-    ...(currentPERatio != null && currentPERatio > 0 ? [{ year: 'TTM P/E', value: +currentPERatio.toFixed(1) }] : []),
-    ...(fwdPEInputs.exitPE != null ? [{ year: 'Exit P/E', value: +fwdPEInputs.exitPE.toFixed(1) }] : []),
-  ]
   const fwdPEConfig = useMemo((): ValuationMethodConfig => ({
     id: 'forward_pe', title: 'Forward P/E', subtitle: '5-year target price discounted to today',
     methodDescription: 'Projects revenue 5 years forward using analyst growth estimates, applies a net margin target, multiplies by an exit P/E to get a future market cap, then discounts back to today at the WACC.',
@@ -714,12 +557,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
           currency={currency}
           onAssumptionChange={(key, val) => handleAssumptionChange('forward_pe', key, val)}
           onResetOverrides={() => handleResetOverrides('forward_pe')}
-          onNavigateToFinancials={onNavigateToFinancials}
-          evidenceCharts={{
-            'Revenue CAGR': chartRevenueGrowth.length >= 2 ? { data: chartRevenueGrowth, unit: '%', color: '#6366f1', referenceValue: +(fwdPEBase.revenueCAGR * 100).toFixed(1), referenceLabel: 'Blended' } : undefined,
-            'Net Margin':   chartNetMargin.length   >= 2 ? { data: chartNetMargin,    unit: '%', color: '#10b981', referenceValue: +((fwdPEInputs.netMargin ?? 0) * 100).toFixed(1), referenceLabel: 'Exit target' } : undefined,
-            'Exit P/E':     chartPEComparison.length >= 2 ? { data: chartPEComparison, unit: 'x', color: '#f59e0b' } : undefined,
-          }}
         />
 
         <MethodInlinePanel
@@ -728,10 +565,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
           currency={currency}
           onAssumptionChange={(key, val) => handleAssumptionChange('ev_ebitda', key, val)}
           onResetOverrides={() => handleResetOverrides('ev_ebitda')}
-          onNavigateToFinancials={onNavigateToFinancials}
-          evidenceCharts={{
-            'TTM EBITDA': chartEbitda.length >= 2 ? { data: chartEbitda, unit: '$M', color: '#3b82f6' } : undefined,
-          }}
         />
 
         <MethodInlinePanel
@@ -740,10 +573,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
           currency={currency}
           onAssumptionChange={(key, val) => handleAssumptionChange('revenue_multiple', key, val)}
           onResetOverrides={() => handleResetOverrides('revenue_multiple')}
-          onNavigateToFinancials={onNavigateToFinancials}
-          evidenceCharts={{
-            'Revenue CAGR': chartRevenueGrowth.length >= 2 ? { data: chartRevenueGrowth, unit: '%', color: '#6366f1', referenceValue: +(revMultBase.revenueCAGR * 100).toFixed(1), referenceLabel: 'Blended' } : undefined,
-          }}
         />
 
         <MethodInlinePanel
@@ -752,11 +581,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onNaviga
           currency={currency}
           onAssumptionChange={() => {}}
           onResetOverrides={() => {}}
-          onNavigateToFinancials={onNavigateToFinancials}
-          evidenceCharts={{
-            'FCF Margin': chartFCFMargin.length >= 2 ? { data: chartFCFMargin, unit: '%', color: '#0ea5e9' } : undefined,
-            'Revenue':    chartRevenue.length    >= 2 ? { data: chartRevenue,  unit: '$M', color: '#8b5cf6' } : undefined,
-          }}
         />
       </div>
 
