@@ -15,6 +15,33 @@ interface SearchResult {
 
 
 
+function UserAvatar({ image, name }: { image: string | null; name: string | null }) {
+  const initials = name
+    ? name.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase()
+    : '?'
+
+  if (image) {
+    return (
+      <Image
+        src={image}
+        alt={name ?? ''}
+        width={26}
+        height={26}
+        className="rounded-full ring-2 ring-[rgba(59,130,246,0.4)] shrink-0"
+      />
+    )
+  }
+
+  return (
+    <div
+      className="w-[26px] h-[26px] rounded-full ring-2 ring-[rgba(59,130,246,0.4)] bg-blue-600 flex items-center justify-center shrink-0"
+      aria-label={name ?? undefined}
+    >
+      <span className="text-[10px] font-bold text-white leading-none">{initials}</span>
+    </div>
+  )
+}
+
 export default function TopBar() {
   const pathname = usePathname()
   const router   = useRouter()
@@ -132,8 +159,8 @@ export default function TopBar() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search Tickers…"
-            className="flex-1 min-w-0 bg-transparent text-[16px] text-slate-100 placeholder-slate-500 focus:outline-none uppercase"
+            placeholder="Search tickers…"
+            className="flex-1 min-w-0 bg-transparent text-[16px] lg:text-[13px] text-slate-100 placeholder-slate-500 focus:outline-none uppercase"
           />
         </div>
 
@@ -171,16 +198,11 @@ export default function TopBar() {
 
         {session ? (
           <div className="flex items-center gap-2">
-            {session.user?.image && (
-              <Image
-                src={session.user.image}
-                alt={session.user.name ?? ''}
-                width={26}
-                height={26}
-                className="rounded-full ring-2 ring-[rgba(59,130,246,0.4)]"
-              />
-            )}
-            <span className="text-[12px] text-slate-300">
+            <UserAvatar
+              image={session.user?.image ?? null}
+              name={session.user?.name ?? null}
+            />
+            <span className="text-[12px] text-slate-300 hidden sm:block">
               Hi {session.user?.name?.split(' ')[0]}
             </span>
             <button
