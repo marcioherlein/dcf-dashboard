@@ -41,10 +41,10 @@ interface Props {
 
 function gradeColors(grade: string): { bg: string; text: string; badge: string; hex: string } {
   const g = grade.replace('+', '').replace('-', '')
-  if (g === 'A')  return { bg: 'bg-emerald-500/20 border border-emerald-500/40', text: 'text-emerald-300', badge: 'border-emerald-500/30', hex: '#10B981' }
-  if (g === 'B')  return { bg: 'bg-blue-500/20 border border-blue-500/40',       text: 'text-blue-300',   badge: 'border-blue-500/30',   hex: '#3B82F6' }
-  if (g === 'C')  return { bg: 'bg-amber-500/20 border border-amber-500/40',     text: 'text-amber-300',  badge: 'border-amber-500/30',  hex: '#F59E0B' }
-  return           { bg: 'bg-red-500/20 border border-red-500/40',               text: 'text-red-300',    badge: 'border-red-500/30',    hex: '#EF4444' }
+  if (g === 'A')  return { bg: 'bg-emerald-100 border border-emerald-300', text: 'text-emerald-800', badge: 'border-emerald-300', hex: '#059669' }
+  if (g === 'B')  return { bg: 'bg-blue-100 border border-blue-300',       text: 'text-blue-800',   badge: 'border-blue-300',   hex: '#2563EB' }
+  if (g === 'C')  return { bg: 'bg-amber-100 border border-amber-300',     text: 'text-amber-800',  badge: 'border-amber-300',  hex: '#D97706' }
+  return           { bg: 'bg-red-100 border border-red-300',               text: 'text-red-800',    badge: 'border-red-300',    hex: '#DC2626' }
 }
 
 function gradeToValue(grade: string): number {
@@ -66,9 +66,9 @@ function pillIcon(type: 'profit' | 'debt' | 'growth') {
 
 function StatBox({ label, value, hidden }: { label: string; value: React.ReactNode; hidden?: boolean }) {
   return (
-    <div className={cn('rounded-xl bg-white/5 border border-[rgba(59,130,246,0.15)] px-4 py-3', hidden && 'hidden sm:block')}>
-      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{label}</p>
-      <p className="mt-0.5 text-sm font-semibold text-slate-200">{value}</p>
+    <div className={cn('rounded-xl bg-slate-50 border border-slate-200 px-4 py-3', hidden && 'hidden sm:block')}>
+      <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600">{label}</p>
+      <p className="mt-0.5 text-sm font-semibold text-slate-900">{value}</p>
     </div>
   )
 }
@@ -130,24 +130,24 @@ export default function InvestorGradeCard({
   // ── Compact 1-line strip (valuation tab) ──────────────────────────────────
   if (compact) {
     return (
-      <div className="rounded-xl glass-card border border-[rgba(59,130,246,0.2)] overflow-hidden">
+      <div className="rounded-xl card overflow-hidden">
         <div className="flex items-center gap-3 px-4 py-2.5 flex-wrap">
           <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center text-xs font-extrabold shrink-0', colors.bg, colors.text)}>
             {grade.replace('+', '').replace('-', '')}
           </div>
-          <span className="font-bold text-sm text-slate-200">{ticker}</span>
-          <span className="text-xs text-slate-400 truncate hidden sm:inline">{companyName}</span>
-          <span className="text-sm font-bold tabular-nums text-slate-100">
+          <span className="font-bold text-sm text-slate-900">{ticker}</span>
+          <span className="text-xs text-slate-500 truncate hidden sm:inline">{companyName}</span>
+          <span className="text-sm font-bold tabular-nums text-slate-900">
             {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
-          <span className={cn('text-xs font-semibold', up ? 'text-emerald-400' : 'text-red-400')}>
+          <span className={cn('text-xs font-semibold', up ? 'text-emerald-600' : 'text-red-600')}>
             {up ? '+' : ''}{fmtPct(changePct / 100)}
           </span>
           {fairValue != null && upsidePct != null && (
             <>
-              <span className="text-slate-400 hidden sm:inline">|</span>
+              <span className="text-slate-300 hidden sm:inline">|</span>
               <span className="text-xs text-slate-500 hidden sm:inline">Blended: {currSymbol}{fairValue.toFixed(2)}</span>
-              <span className={cn('text-xs font-bold', upsidePct >= 0 ? 'text-emerald-400' : 'text-amber-400')}>
+              <span className={cn('text-xs font-bold', upsidePct >= 0 ? 'text-emerald-600' : 'text-amber-700')}>
                 {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
               </span>
               {zone && (
@@ -164,7 +164,7 @@ export default function InvestorGradeCard({
 
   // ── Full card ─────────────────────────────────────────────────────────────
   return (
-    <div className="rounded-xl glass-card border border-[rgba(59,130,246,0.2)] overflow-hidden">
+    <div className="rounded-xl card overflow-hidden border-l-4 border-l-blue-600">
       {/* ── STATE 1: always visible ── */}
       <div className="p-5">
         <div className="flex items-start gap-4">
@@ -191,19 +191,19 @@ export default function InvestorGradeCard({
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="rounded-md bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-xs font-bold text-blue-400 tracking-wide">
+                  <span className="rounded-md bg-blue-50 border border-blue-200 px-2 py-0.5 text-xs font-bold text-blue-700 tracking-wide">
                     {ticker}
                   </span>
                   {sector && <span className="text-[11px] text-slate-500">{sector}</span>}
                 </div>
-                <h1 className="mt-1.5 text-lg font-bold text-slate-100 leading-tight truncate">{companyName}</h1>
+                <h1 className="mt-1.5 text-lg font-bold text-slate-900 leading-tight truncate">{companyName}</h1>
                 <p className="mt-0.5 text-[11px] text-slate-500">{gradeLabel} overall</p>
               </div>
               <div className="text-right shrink-0">
-                <div className="text-2xl font-extrabold text-slate-100 tabular-nums leading-none">
+                <div className="text-2xl font-extrabold text-slate-900 tabular-nums leading-none">
                   {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
-                <div className={cn('mt-1 flex items-center justify-end gap-1 text-sm font-semibold', up ? 'text-emerald-400' : 'text-red-400')}>
+                <div className={cn('mt-1 flex items-center justify-end gap-1 text-sm font-semibold', up ? 'text-emerald-600' : 'text-red-600')}>
                   {up ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
                   <span>{up ? '+' : ''}{change.toFixed(2)}</span>
                   <span className="text-xs opacity-75">({up ? '+' : ''}{fmtPct(changePct / 100)})</span>
@@ -220,8 +220,8 @@ export default function InvestorGradeCard({
                 className={cn(
                   'mt-3 text-[12px] leading-relaxed rounded-lg px-3 py-2',
                   isUndervalued
-                    ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
-                    : 'bg-amber-500/10 text-amber-300 border border-amber-500/20',
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    : 'bg-amber-50 text-amber-700 border border-amber-200',
                 )}
               >
                 {verdict}
@@ -232,14 +232,14 @@ export default function InvestorGradeCard({
       </div>
 
       {/* ── Expanded details — always visible ── */}
-      <div className="border-t border-[rgba(59,130,246,0.1)] px-5 pb-5 pt-4 space-y-4 bg-[rgba(10,22,40,0.3)]">
+      <div className="border-t border-slate-200 px-5 pb-5 pt-4 space-y-4 bg-slate-50">
 
           {/* Fair value row */}
           {fairValue != null && (
-            <div className="flex items-center gap-3 rounded-xl glass-card border border-[rgba(59,130,246,0.15)] px-4 py-3">
+            <div className="flex items-center gap-3 rounded-xl card-tinted px-4 py-3">
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">You pay</p>
-                <p className="mt-0.5 text-sm font-semibold text-slate-300 tabular-nums">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600">You pay</p>
+                <p className="mt-0.5 text-sm font-semibold text-slate-900 tabular-nums">
                   {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
@@ -252,12 +252,12 @@ export default function InvestorGradeCard({
                 )}
               </div>
               <div className="flex-1 min-w-0 text-right">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Fair Value Estimate</p>
-                <p className={cn('mt-0.5 text-xl font-bold tabular-nums', isUndervalued ? 'text-emerald-400' : 'text-amber-400')}>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600">Fair Value Estimate</p>
+                <p className={cn('mt-0.5 text-xl font-bold tabular-nums', isUndervalued ? 'text-emerald-600' : 'text-amber-700')}>
                   {currSymbol}{displayFV.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
                 {upsidePct != null && (
-                  <p className={cn('text-xs font-semibold', isUndervalued ? 'text-emerald-400' : 'text-amber-400')}>
+                  <p className={cn('text-xs font-semibold', isUndervalued ? 'text-emerald-600' : 'text-amber-700')}>
                     {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
                   </p>
                 )}
@@ -267,17 +267,17 @@ export default function InvestorGradeCard({
 
           {/* Health pills */}
           <div className="space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Health check</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600">Health check</p>
             {[
               { type: 'profit' as const, label: 'Profitability', summary: profitabilitySummary },
               { type: 'debt'   as const, label: 'Financial Health', summary: liquiditySummary   },
               { type: 'growth' as const, label: 'Growth',            summary: growthSummary      },
             ].map(({ type, label, summary }) => (
-              <div key={type} className="flex items-start gap-2.5 rounded-xl glass-card border border-[rgba(59,130,246,0.12)] px-3 py-2.5" style={{ minHeight: '48px' }}>
-                <span className="text-blue-400 mt-0.5">{pillIcon(type)}</span>
+              <div key={type} className="flex items-start gap-2.5 rounded-xl card-tinted px-3 py-2.5" style={{ minHeight: '48px' }}>
+                <span className="text-blue-600 mt-0.5">{pillIcon(type)}</span>
                 <div>
-                  <p className="text-[11px] font-semibold text-slate-200">{label}</p>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">{summary}</p>
+                  <p className="text-[11px] font-semibold text-slate-800">{label}</p>
+                  <p className="text-[11px] text-slate-600 leading-relaxed">{summary}</p>
                 </div>
               </div>
             ))}
@@ -286,15 +286,15 @@ export default function InvestorGradeCard({
           {/* Key Drivers */}
           {drivers && drivers.length > 0 && (
             <div className="space-y-1.5">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Key drivers</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600">Key drivers</p>
               <div className="flex flex-col gap-1.5">
                 {drivers.slice(0, 2).map((d, i) => (
-                  <div key={i} className="flex items-start gap-2 rounded-md glass-card border border-[rgba(59,130,246,0.12)] border-l-4 border-l-blue-400/60 px-3 py-2">
-                    <p className="text-[11px] text-slate-300 leading-snug">{d.split(' — ')[0]}</p>
+                  <div key={i} className="flex items-start gap-2 rounded-md card-tinted border-l-4 border-l-blue-500 px-3 py-2">
+                    <p className="text-[11px] text-slate-700 leading-snug">{d.split(' — ')[0]}</p>
                   </div>
                 ))}
                 {drivers.length > 2 && (
-                  <p className="text-[11px] text-slate-500 px-1">and {drivers.length - 2} more</p>
+                  <p className="text-[11px] text-slate-400 px-1">and {drivers.length - 2} more</p>
                 )}
               </div>
             </div>
@@ -305,7 +305,7 @@ export default function InvestorGradeCard({
             {onViewDetails && (
               <button
                 onClick={onViewDetails}
-                className="flex-1 rounded-xl py-2.5 text-[13px] font-semibold text-white transition-all bg-gradient-to-r from-blue-600 to-blue-500 shadow-glow-sm hover:shadow-glow-md hover:from-blue-500 hover:to-blue-400 active:scale-95"
+                className="flex-1 rounded-xl py-2.5 text-[13px] font-semibold text-white transition-all bg-gradient-to-r from-blue-600 to-blue-500 shadow-sm hover:from-blue-700 hover:to-blue-600 active:scale-95"
               >
                 Explore full valuation →
               </button>
@@ -314,7 +314,7 @@ export default function InvestorGradeCard({
               <button
                 onClick={onSave}
                 title="Save to Watchlist"
-                className="rounded-xl border border-[rgba(59,130,246,0.2)] p-2.5 text-slate-500 hover:border-blue-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
+                className="rounded-xl border border-slate-200 p-2.5 text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
               >
                 <Bookmark size={16} />
               </button>
@@ -322,15 +322,15 @@ export default function InvestorGradeCard({
             <button
               onClick={handleShare}
               title="Copy share link"
-              className="rounded-xl border border-[rgba(59,130,246,0.2)] p-2.5 text-slate-500 hover:border-blue-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
+              className="rounded-xl border border-slate-200 p-2.5 text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
             >
-              {copied ? <Check size={16} className="text-emerald-400" /> : <Share2 size={16} />}
+              {copied ? <Check size={16} className="text-emerald-600" /> : <Share2 size={16} />}
             </button>
           </div>
       </div>
 
       {/* ── Stat grid — always visible ── */}
-      <div className="border-t border-[rgba(59,130,246,0.1)] px-5 py-4">
+      <div className="border-t border-slate-200 px-5 py-4">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <StatBox label="Market Cap"     value={fmtLargeCurrency(marketCap, currency)} />
           <StatBox label="52-wk High"     value={fmtPrice(high52, currency)} />

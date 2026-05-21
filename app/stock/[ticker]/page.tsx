@@ -266,20 +266,18 @@ function StockPageBody() {
 
   return (
     <>
-    <div className="min-h-dvh bg-[#050D1F] relative overflow-hidden">
-      {/* Ambient depth blob */}
-      <div className="pointer-events-none absolute top-20 right-0 w-80 h-80 bg-blue-600/10 blur-3xl rounded-full animate-blob" />
+    <div className="min-h-dvh bg-slate-100">
 
       {/* Breadcrumb */}
-      <div className="glass-nav border-b border-[rgba(59,130,246,0.15)] px-6 py-2 flex items-center gap-3">
+      <div className="bg-white border-b border-slate-200 px-6 py-2 flex items-center gap-3">
         <button
           onClick={() => router.push('/')}
-          className="flex items-center gap-1.5 text-[12px] text-slate-400 hover:text-blue-400 transition-colors"
+          className="flex items-center gap-1.5 text-[12px] text-slate-500 hover:text-blue-600 transition-colors"
         >
           ← Home
         </button>
-        <span className="text-slate-600">·</span>
-        <span className="text-[12px] text-blue-400 font-semibold">{ticker}</span>
+        <span className="text-slate-300">·</span>
+        <span className="text-[12px] text-blue-600 font-semibold">{ticker}</span>
         {data && <span className="text-[12px] text-slate-500 truncate max-w-xs">{data.companyName}</span>}
       </div>
 

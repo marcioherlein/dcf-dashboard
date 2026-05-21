@@ -270,10 +270,10 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
   const zoneStyle = zone === 'Attractive'
     ? { wrap: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700' }
     : zone === 'Fair Value'
-    ? { wrap: 'bg-blue-500/10 border-blue-500/20', text: 'text-blue-400' }
+    ? { wrap: 'bg-blue-50 border-blue-200', text: 'text-blue-600' }
     : zone === 'Expensive'
     ? { wrap: 'bg-red-50 border-red-200', text: 'text-red-700' }
-    : { wrap: 'bg-white/5 border-white/10', text: 'text-slate-300' }
+    : { wrap: 'bg-slate-50 border-slate-200', text: 'text-slate-500' }
 
   return (
     <div className="space-y-4">
@@ -283,7 +283,7 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
         <div className={cn('rounded-xl border px-6 py-5', zoneStyle.wrap)}>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-label uppercase tracking-wider text-slate-500 mb-1">Weighted Fair Value Estimate</p>
+              <p className="text-label uppercase tracking-wider text-blue-600 font-bold mb-1">Weighted Fair Value Estimate</p>
               <NumberDisplay value={fmtPrice(weightedFV, currency)} size="xl" />
               <p className="text-micro text-slate-500 mt-1">
                 vs. {fmtPrice(currentPrice, currency)} current price · {validMethodCount} method{validMethodCount !== 1 ? 's' : ''}
@@ -306,15 +306,15 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
 
       {/* ── Method dots lollipop chart ──────────────────────────────────────── */}
       {methods.some(m => m.fairValue != null) && (
-        <div className="rounded-xl glass-card border-[rgba(59,130,246,0.15)] p-5">
-          <p className="text-label uppercase tracking-wider text-slate-400 mb-4">Fair Value by Method</p>
+        <div className="rounded-xl card p-5">
+          <p className="text-label uppercase tracking-wider text-blue-600 font-bold mb-4">Fair Value by Method</p>
           <MethodDotsChart
             methods={methods}
             currentPrice={currentPrice}
             blendedFV={weightedFV ?? null}
             currency={currency}
           />
-          <p className="text-micro text-slate-400 mt-3">
+          <p className="text-micro text-slate-500 mt-3">
             Dot right of price line = undervalued by that method (emerald). Left = overvalued (red). ◆ = weighted blended estimate.
           </p>
         </div>
@@ -322,18 +322,18 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
 
       {/* ── Method breakdown table ──────────────────────────────────────────── */}
       {methods.length > 0 && (
-        <div className="rounded-xl glass-card border-[rgba(59,130,246,0.15)] overflow-hidden">
-          <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-2.5 border-b border-white/8 bg-white/3">
-            <span className="text-label uppercase tracking-wider text-slate-400 font-bold">Method</span>
-            <span className="text-label uppercase tracking-wider text-slate-400 font-bold text-right">Fair Value</span>
-            <span className="text-label uppercase tracking-wider text-slate-400 font-bold text-right">Upside</span>
-            <span className="text-label uppercase tracking-wider text-slate-400 font-bold text-right w-20">Weight</span>
+        <div className="rounded-xl card overflow-hidden">
+          <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-2.5 border-b border-slate-200 bg-slate-50">
+            <span className="text-label uppercase tracking-wider text-blue-600 font-bold">Method</span>
+            <span className="text-label uppercase tracking-wider text-blue-600 font-bold text-right">Fair Value</span>
+            <span className="text-label uppercase tracking-wider text-blue-600 font-bold text-right">Upside</span>
+            <span className="text-label uppercase tracking-wider text-blue-600 font-bold text-right w-20">Weight</span>
           </div>
 
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-slate-100">
             {methods.map((m, i) => {
               const side = methodUpside(m)
-              const borderClass = side ? METHOD_BORDER_CLASS[side] : 'border-l-slate-700'
+              const borderClass = side ? METHOD_BORDER_CLASS[side] : 'border-l-slate-300'
               const effectivePct = (m.fairValue != null && effectiveTotalWeight > 0)
                 ? (m.weight / effectiveTotalWeight) * 100
                 : 0
@@ -345,13 +345,13 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
                   className={cn('grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-3 border-l-4 items-center', borderClass)}
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-200 leading-snug">{m.label}</p>
+                    <p className="text-sm font-semibold text-slate-800 leading-snug">{m.label}</p>
                     {desc && <p className="text-[11px] text-slate-500 leading-tight mt-0.5 truncate">{desc}</p>}
                   </div>
 
                   <div className="text-right">
                     {m.fairValue != null
-                      ? <span className="font-semibold tabular-nums text-slate-100 text-sm">{fmtPrice(m.fairValue, currency)}</span>
+                      ? <span className="font-semibold tabular-nums text-slate-900 text-sm">{fmtPrice(m.fairValue, currency)}</span>
                       : <NABadge reason="model-unsupported" />
                     }
                   </div>
@@ -385,7 +385,7 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
             })}
           </div>
 
-          <div className="px-4 py-2.5 border-t border-white/10 bg-white/5">
+          <div className="px-4 py-2.5 border-t border-slate-100 bg-slate-50">
             <p className="text-micro text-slate-400">
               Effective weights exclude methods with no available data. Adjust assumptions in each method card to refine.
             </p>

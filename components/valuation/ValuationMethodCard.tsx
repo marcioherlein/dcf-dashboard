@@ -55,35 +55,35 @@ export default function ValuationMethodCard({
       onClick={onOpen}
       onKeyDown={e => e.key === 'Enter' && onOpen()}
       className={cn(
-        'rounded-xl border cursor-pointer transition-all select-none group glass-card',
+        'rounded-xl border cursor-pointer transition-all select-none group card',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
         isActive
-          ? 'border-blue-400/50 shadow-glow-sm'
-          : 'border-[rgba(59,130,246,0.15)] hover:border-[rgba(59,130,246,0.4)] hover:shadow-glow-sm',
+          ? 'border-blue-400 ring-1 ring-blue-200'
+          : 'border-slate-200 hover:border-blue-300',
       )}
     >
       {/* Header strip */}
       <div className={cn(
         'flex items-center justify-between px-4 py-3 rounded-t-xl border-b',
-        isActive ? 'bg-blue-500/15 border-blue-500/20' : 'bg-white/3 border-[rgba(59,130,246,0.08)]',
+        isActive ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-100',
       )}>
         <div className="flex items-center gap-2">
           <span className={cn(
             'text-label uppercase tracking-wider font-bold px-2 py-0.5 rounded-md border',
             isActive
-              ? 'bg-blue-500/20 text-blue-300 border-blue-400/40'
-              : 'bg-white/5 text-blue-400 border-blue-500/20',
+              ? 'bg-blue-100 text-blue-700 border-blue-300'
+              : 'bg-blue-50 text-blue-600 border-blue-200',
           )}>
             {abbr}
           </span>
           {isRecommended && (
-            <span className="bg-blue-500/20 text-blue-300 text-[9px] font-bold uppercase tracking-widest rounded-full px-2 py-0.5 border border-blue-400/30">
+            <span className="bg-blue-100 text-blue-700 text-[9px] font-bold uppercase tracking-widest rounded-full px-2 py-0.5 border border-blue-300">
               Recommended
             </span>
           )}
         </div>
         {fv != null && (
-          <span className="text-sm font-bold font-mono text-slate-100">
+          <span className="text-sm font-bold font-mono text-slate-900">
             {fmtPrice(fv, currency)}
           </span>
         )}
@@ -91,7 +91,7 @@ export default function ValuationMethodCard({
 
       {/* Body */}
       <div className="px-4 py-3 space-y-2">
-        <div className="text-sm font-semibold text-slate-200">{config.title}</div>
+        <div className="text-sm font-semibold text-slate-800">{config.title}</div>
         <div className="text-micro text-slate-500 leading-relaxed">{bestFor}</div>
 
         {upside != null ? (
@@ -108,8 +108,8 @@ export default function ValuationMethodCard({
       <div className={cn(
         'flex items-center justify-between px-4 py-2.5 rounded-b-xl border-t text-xs font-medium transition-colors',
         isActive
-          ? 'border-blue-500/20 bg-blue-500/10 text-blue-300'
-          : 'border-[rgba(59,130,246,0.08)] bg-white/3 text-slate-500 group-hover:text-blue-400',
+          ? 'border-blue-200 bg-blue-50 text-blue-600'
+          : 'border-slate-100 bg-slate-50 text-slate-500 group-hover:text-blue-600',
       )}>
         <span>{isActive ? 'Model open' : 'Open model'}</span>
         <ChevronRight size={14} className={cn('transition-transform', isActive && 'rotate-90')} />

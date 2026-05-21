@@ -13,21 +13,21 @@ interface Props {
 }
 
 function ScoreColor(value: number, thresholds: [number, number]): string {
-  if (value >= thresholds[1]) return 'text-emerald-400'
-  if (value >= thresholds[0]) return 'text-amber-400'
-  return 'text-red-400'
+  if (value >= thresholds[1]) return 'text-emerald-600'
+  if (value >= thresholds[0]) return 'text-amber-700'
+  return 'text-red-600'
 }
 
 function BgColor(value: number, thresholds: [number, number]): string {
-  if (value >= thresholds[1]) return 'bg-emerald-500/10 border-emerald-500/25'
-  if (value >= thresholds[0]) return 'bg-amber-500/10 border-amber-500/25'
-  return 'bg-red-500/10 border-red-500/25'
+  if (value >= thresholds[1]) return 'bg-emerald-50 border-emerald-200'
+  if (value >= thresholds[0]) return 'bg-amber-50 border-amber-200'
+  return 'bg-red-50 border-red-200'
 }
 
 function BadgeColor(value: number, thresholds: [number, number]): string {
-  if (value >= thresholds[1]) return 'bg-emerald-500/20 text-emerald-300'
-  if (value >= thresholds[0]) return 'bg-amber-500/20 text-amber-300'
-  return 'bg-red-500/20 text-red-300'
+  if (value >= thresholds[1]) return 'bg-emerald-100 text-emerald-800'
+  if (value >= thresholds[0]) return 'bg-amber-100 text-amber-800'
+  return 'bg-red-100 text-red-800'
 }
 
 // Groups: Profitability (0-3), Leverage/Cash (4-6), Efficiency (7-8)
@@ -41,11 +41,11 @@ function CriterionRow({ pass, name, detail }: { pass: boolean | null; name: stri
   return (
     <div className="flex items-center gap-2.5 py-1.5">
       <div className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${
-        pass === null ? 'bg-white/15 text-slate-400' : pass ? 'bg-emerald-500' : 'bg-red-400'
+        pass === null ? 'bg-slate-300 text-slate-600' : pass ? 'bg-emerald-500' : 'bg-red-500'
       }`}>
         {pass === null ? '?' : pass ? '✓' : '✗'}
       </div>
-      <span className="flex-1 text-[11px] text-slate-300">{name}</span>
+      <span className="flex-1 text-[11px] text-slate-700">{name}</span>
       <span className="text-[11px] text-slate-500 font-mono tabular-nums">{detail}</span>
     </div>
   )
@@ -67,16 +67,16 @@ export default function FinancialScores({ scores }: Props) {
 
   if (noData) {
     return (
-      <div className="rounded-xl glass-card border-[rgba(59,130,246,0.15)] p-6">
-        <h2 className="mb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Financial Quality Scores</h2>
+      <div className="rounded-xl card p-6">
+        <h2 className="mb-4 text-[11px] font-bold text-blue-600 uppercase tracking-widest">Financial Quality Scores</h2>
         <div className="flex flex-col items-center justify-center py-10 gap-3">
-          <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
-            <svg className="w-6 h-6 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
+            <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
             </svg>
           </div>
-          <p className="text-sm font-semibold text-slate-500">Fundamental data unavailable</p>
-          <p className="text-[11px] text-slate-400 text-center max-w-xs leading-relaxed">
+          <p className="text-sm font-semibold text-slate-600">Fundamental data unavailable</p>
+          <p className="text-[11px] text-slate-500 text-center max-w-xs leading-relaxed">
             Yahoo Finance did not return financial statements for this ticker. Quality scores require at least 2 years of income statement and balance sheet data.
           </p>
         </div>
@@ -87,17 +87,17 @@ export default function FinancialScores({ scores }: Props) {
   const altmanSafe = altman != null && isFinite(altman.zScore) && Math.abs(altman.zScore) <= 50 ? altman : null
   const altmanGood = altmanSafe != null && altmanSafe.zScore >= 3.0
   const altmanMid  = altmanSafe != null && altmanSafe.zScore >= 1.8 && altmanSafe.zScore < 3.0
-  const altmanColor = altmanSafe == null ? 'text-slate-400' : altmanGood ? 'text-emerald-400' : altmanMid ? 'text-amber-400' : 'text-red-400'
-  const altmanBg    = altmanSafe == null ? 'bg-slate-500/10 border-slate-500/25' : altmanGood ? 'bg-emerald-500/10 border-emerald-500/25' : altmanMid ? 'bg-amber-500/10 border-amber-500/25' : 'bg-red-500/10 border-red-500/25'
-  const altmanBadge = altmanSafe == null ? 'bg-slate-500/20 text-slate-400' : altmanGood ? 'bg-emerald-500/20 text-emerald-300' : altmanMid ? 'bg-amber-500/20 text-amber-300' : 'bg-red-500/20 text-red-300'
+  const altmanColor = altmanSafe == null ? 'text-slate-400' : altmanGood ? 'text-emerald-600' : altmanMid ? 'text-amber-700' : 'text-red-600'
+  const altmanBg    = altmanSafe == null ? 'bg-slate-50 border-slate-200' : altmanGood ? 'bg-emerald-50 border-emerald-200' : altmanMid ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200'
+  const altmanBadge = altmanSafe == null ? 'bg-slate-100 text-slate-600' : altmanGood ? 'bg-emerald-100 text-emerald-800' : altmanMid ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'
   const altmanZoneLabel = altmanSafe == null ? 'No data' : altmanSafe.zone === 'Safe' ? 'Safe Zone' : altmanSafe.zone === 'Grey' ? 'Grey Zone' : 'Distress Zone'
 
   const mScore = beneish?.mScore ?? 0
   const beneishClean = beneish?.flag === 'Clean'
   const beneishWarn  = beneish?.flag === 'Warning'
-  const beneishColor = beneishClean ? 'text-emerald-400' : beneishWarn ? 'text-amber-400' : 'text-red-400'
-  const beneishBg    = beneishClean ? 'bg-emerald-500/10 border-emerald-500/25' : beneishWarn ? 'bg-amber-500/10 border-amber-500/25' : 'bg-red-500/10 border-red-500/25'
-  const beneishBadge = beneishClean ? 'bg-emerald-500/20 text-emerald-300' : beneishWarn ? 'bg-amber-500/20 text-amber-300' : 'bg-red-500/20 text-red-300'
+  const beneishColor = beneishClean ? 'text-emerald-600' : beneishWarn ? 'text-amber-700' : 'text-red-600'
+  const beneishBg    = beneishClean ? 'bg-emerald-50 border-emerald-200' : beneishWarn ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200'
+  const beneishBadge = beneishClean ? 'bg-emerald-100 text-emerald-800' : beneishWarn ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'
   const beneishLabel = beneish?.flag === 'Clean' ? 'Unlikely Manipulator' : beneish?.flag === 'Warning' ? 'Watch' : 'Possible Manipulation'
 
   const spreadPp   = Math.round(roic.spread * 1000) / 10
@@ -109,8 +109,8 @@ export default function FinancialScores({ scores }: Props) {
   const barScale = 40  // 40% = full width
 
   return (
-    <div className="rounded-xl glass-card border-[rgba(59,130,246,0.15)] p-6">
-      <h2 className="mb-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Financial Quality Scores</h2>
+    <div className="rounded-xl card p-6">
+      <h2 className="mb-5 text-[11px] font-bold text-blue-600 uppercase tracking-widest">Financial Quality Scores</h2>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
@@ -118,7 +118,7 @@ export default function FinancialScores({ scores }: Props) {
         <div className={`rounded-xl border p-4 ${BgColor(piotroski.score, [4, 8])}`}>
           <div className="flex items-start justify-between mb-1">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Piotroski F-Score</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600">Piotroski F-Score</p>
               <p className={`mt-0.5 text-3xl font-bold tabular-nums ${ScoreColor(piotroski.score, [4, 8])}`}>
                 {piotroski.score}<span className="text-base font-normal text-slate-500"> / 9</span>
               </p>
@@ -139,10 +139,10 @@ export default function FinancialScores({ scores }: Props) {
               return (
                 <div key={group.label}>
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{group.label}</p>
-                    <p className="text-[10px] font-mono text-slate-400">{groupPass}/{group.indices.length}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">{group.label}</p>
+                    <p className="text-[10px] font-mono text-slate-500">{groupPass}/{group.indices.length}</p>
                   </div>
-                  <div className="divide-y divide-white/5 rounded-lg bg-white/5 border border-white/8 px-2">
+                  <div className="divide-y divide-slate-100 rounded-lg bg-white border border-slate-200 px-2">
                     {groupCriteria.map((c, j) => (
                       <CriterionRow key={j} pass={c.pass} name={c.name} detail={c.detail} />
                     ))}
@@ -157,7 +157,7 @@ export default function FinancialScores({ scores }: Props) {
         <div className={`rounded-xl border p-4 ${altmanBg}`}>
           <div className="flex items-start justify-between mb-1">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600">
                 Altman Z-Score
                 {altmanSafe && !altmanSafe.isReliable && (
                   <span className="ml-1.5 text-[10px] text-amber-600 font-medium">(EM)</span>
@@ -175,24 +175,24 @@ export default function FinancialScores({ scores }: Props) {
               {altmanZoneLabel}
             </span>
           </div>
-          <p className="mb-4 text-[11px] text-slate-400 leading-relaxed">
+          <p className="mb-4 text-[11px] text-slate-500 leading-relaxed">
             Predicts bankruptcy risk within 2 years using 5 financial ratios.
             Z &lt; 1.8 = distress · 1.8–3.0 = grey · Z ≥ 3.0 = safe.
             {altmanSafe && !altmanSafe.isReliable && (
-              <span className="text-amber-400"> Limited reliability for non-US/EM companies.</span>
+              <span className="text-amber-700"> Limited reliability for non-US/EM companies.</span>
             )}
           </p>
 
           {altmanSafe != null && (
             <div className="mb-4">
               {/* Proportional zone bar: 0–1.8 = distress (24%), 1.8–3.0 = grey (16%), 3.0–7.5 = safe (60%) */}
-              <div className="relative h-2.5 w-full rounded-full bg-white/10 overflow-hidden">
+              <div className="relative h-2.5 w-full rounded-full bg-slate-200 overflow-hidden">
                 <div className="absolute left-0 top-0 h-full bg-red-400" style={{ width: '24%' }} />
                 <div className="absolute top-0 h-full bg-amber-400" style={{ left: '24%', width: '16%' }} />
                 <div className="absolute top-0 h-full bg-emerald-400" style={{ left: '40%', width: '60%' }} />
                 {/* Pointer */}
                 <div
-                  className="absolute top-1/2 w-3 h-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#050D1F] bg-slate-300 shadow"
+                  className="absolute top-1/2 w-3 h-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-slate-700 shadow"
                   style={{ left: `${Math.min(Math.max(altmanSafe.zScore / 7.5 * 100, 2), 98)}%` }}
                 />
               </div>
@@ -208,12 +208,12 @@ export default function FinancialScores({ scores }: Props) {
             <>
               <button
                 onClick={() => setShowAltman(!showAltman)}
-                className="text-[11px] text-slate-500 hover:text-slate-300 underline underline-offset-2"
+                className="text-[11px] text-blue-600 hover:text-blue-800 underline underline-offset-2"
               >
                 {showAltman ? 'Hide components ↑' : 'Show components ↓'}
               </button>
               {showAltman && (
-                <ul className="mt-2 space-y-1 rounded-lg bg-white/5 border border-white/8 px-3 py-2">
+                <ul className="mt-2 space-y-1 rounded-lg bg-white border border-slate-200 px-3 py-2">
                   {[
                     { label: 'X1 · Working Capital / Assets', value: altmanSafe.components.x1, weight: '×1.2' },
                     { label: 'X2 · Retained Earnings / Assets', value: altmanSafe.components.x2, weight: '×1.4' },
@@ -223,8 +223,8 @@ export default function FinancialScores({ scores }: Props) {
                   ].map((row) => (
                     <li key={row.label} className="flex items-center gap-1 text-[11px] py-0.5">
                       <span className="text-slate-500 w-8 shrink-0">{row.weight}</span>
-                      <span className="flex-1 text-slate-400">{row.label}</span>
-                      <span className="tabular-nums text-slate-200 font-mono">{row.value.toFixed(3)}</span>
+                      <span className="flex-1 text-slate-600">{row.label}</span>
+                      <span className="tabular-nums text-slate-900 font-mono">{row.value.toFixed(3)}</span>
                     </li>
                   ))}
                 </ul>
@@ -234,10 +234,10 @@ export default function FinancialScores({ scores }: Props) {
         </div>
 
         {/* ── Beneish M-Score ── */}
-        <div className={`rounded-xl border p-4 ${beneish ? beneishBg : 'bg-slate-500/10 border-slate-500/25'}`}>
+        <div className={`rounded-xl border p-4 ${beneish ? beneishBg : 'bg-slate-50 border-slate-200'}`}>
           <div className="flex items-start justify-between mb-1">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Beneish M-Score</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600">Beneish M-Score</p>
               {beneish ? (
                 <p className={`mt-0.5 text-3xl font-bold tabular-nums ${beneishColor}`}>
                   {mScore.toFixed(2)}
@@ -251,34 +251,34 @@ export default function FinancialScores({ scores }: Props) {
                 {beneishLabel}
               </span>
             ) : (
-              <span className="rounded-full px-2.5 py-1 text-[11px] font-semibold bg-slate-500/20 text-slate-400">
+              <span className="rounded-full px-2.5 py-1 text-[11px] font-semibold bg-slate-100 text-slate-600">
                 N/A
               </span>
             )}
           </div>
-          <p className="mb-3 text-[11px] text-slate-400 leading-relaxed">
+          <p className="mb-3 text-[11px] text-slate-500 leading-relaxed">
             Detects earnings manipulation using 8 accounting ratios. M-Score ≤ −1.78 = unlikely manipulator.
             {!beneish && (
-              <span className="text-slate-500"> Not available — requires USD-reporting financials (YoY ratios are inflation-distorted for non-USD companies).</span>
+              <span className="text-slate-400"> Not available — requires USD-reporting financials (YoY ratios are inflation-distorted for non-USD companies).</span>
             )}
           </p>
 
           {beneish && (
             <>
-              <p className="mb-3 text-[11px] text-slate-400">
+              <p className="mb-3 text-[11px] text-slate-500">
                 Threshold ≤ −1.78 = clean.{' '}
-                <span className={beneishClean ? 'text-emerald-400' : 'text-amber-400'}>
+                <span className={beneishClean ? 'text-emerald-600' : 'text-amber-700'}>
                   {beneishClean ? 'Earnings quality looks intact.' : 'Review accounting signals.'}
                 </span>
               </p>
               <button
                 onClick={() => setShowBeneish(!showBeneish)}
-                className="text-[11px] text-slate-500 hover:text-slate-300 underline underline-offset-2"
+                className="text-[11px] text-blue-600 hover:text-blue-800 underline underline-offset-2"
               >
                 {showBeneish ? 'Hide indices ↑' : 'Show indices ↓'}
               </button>
               {showBeneish && (
-                <ul className="mt-2 space-y-1 rounded-lg bg-white/5 border border-white/8 px-3 py-2">
+                <ul className="mt-2 space-y-1 rounded-lg bg-white border border-slate-200 px-3 py-2">
                   {[
                     { label: 'DSRI · Receivables inflation', value: beneish.components.dsri },
                     { label: 'GMI · Gross margin change', value: beneish.components.gmi },
@@ -290,8 +290,8 @@ export default function FinancialScores({ scores }: Props) {
                     { label: 'LVGI · Leverage index', value: beneish.components.lvgi },
                   ].map((row) => (
                     <li key={row.label} className="flex items-center gap-1 text-[11px] py-0.5">
-                      <span className="flex-1 text-slate-400">{row.label}</span>
-                      <span className="tabular-nums text-slate-200 font-mono">{row.value.toFixed(4)}</span>
+                      <span className="flex-1 text-slate-600">{row.label}</span>
+                      <span className="tabular-nums text-slate-900 font-mono">{row.value.toFixed(4)}</span>
                     </li>
                   ))}
                 </ul>
@@ -302,20 +302,20 @@ export default function FinancialScores({ scores }: Props) {
 
         {/* ── ROIC vs WACC ── */}
         {roic.dataAvailable && (
-          <div className={`rounded-xl border p-4 ${spreadGood ? 'bg-emerald-500/10 border-emerald-500/25' : 'bg-red-500/10 border-red-500/25'}`}>
+          <div className={`rounded-xl border p-4 ${spreadGood ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
             <div className="flex items-start justify-between mb-1">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">ROIC vs WACC</p>
-                <p className={`mt-0.5 text-3xl font-bold tabular-nums ${spreadGood ? 'text-emerald-400' : 'text-red-400'}`}>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600">ROIC vs WACC</p>
+                <p className={`mt-0.5 text-3xl font-bold tabular-nums ${spreadGood ? 'text-emerald-600' : 'text-red-600'}`}>
                   {fmtPct(roic.roic)}
                 </p>
                 <p className="text-[11px] text-slate-500">ROIC</p>
               </div>
-              <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${spreadGood ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'}`}>
+              <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${spreadGood ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}>
                 {spreadGood ? 'Value Created' : 'Value Destroyed'}
               </span>
             </div>
-            <p className="mb-4 text-[11px] text-slate-400 leading-relaxed">
+            <p className="mb-4 text-[11px] text-slate-500 leading-relaxed">
               When ROIC exceeds WACC, each invested dollar generates more than it costs — compounding value over time.
             </p>
 
@@ -323,10 +323,10 @@ export default function FinancialScores({ scores }: Props) {
             <div className="space-y-2 mb-4">
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-[10px] text-slate-400 font-medium">ROIC</span>
-                  <span className={`text-[11px] font-mono font-semibold ${spreadGood ? 'text-emerald-400' : 'text-red-400'}`}>{fmtPct(roic.roic)}</span>
+                  <span className="text-[10px] text-slate-500 font-medium">ROIC</span>
+                  <span className={`text-[11px] font-mono font-semibold ${spreadGood ? 'text-emerald-600' : 'text-red-600'}`}>{fmtPct(roic.roic)}</span>
                 </div>
-                <div className="h-2 rounded-full bg-white/5 border border-white/8 overflow-hidden">
+                <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all ${spreadGood ? 'bg-emerald-500' : 'bg-red-500'}`}
                     style={{ width: `${(roicPct / barScale) * 100}%` }}
@@ -335,32 +335,32 @@ export default function FinancialScores({ scores }: Props) {
               </div>
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-[10px] text-slate-400 font-medium">WACC</span>
-                  <span className="text-[11px] font-mono font-semibold text-slate-300">{fmtPct(roic.roic - roic.spread)}</span>
+                  <span className="text-[10px] text-slate-500 font-medium">WACC</span>
+                  <span className="text-[11px] font-mono font-semibold text-slate-700">{fmtPct(roic.roic - roic.spread)}</span>
                 </div>
-                <div className="h-2 rounded-full bg-white/5 border border-white/8 overflow-hidden">
+                <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-slate-500"
+                    className="h-full rounded-full bg-slate-400"
                     style={{ width: `${(waccPct / barScale) * 100}%` }}
                   />
                 </div>
               </div>
-              <div className="flex items-center justify-between pt-1 border-t border-white/8">
-                <span className="text-[10px] text-slate-400">Spread (ROIC − WACC)</span>
-                <span className={`text-[12px] font-bold font-mono ${spreadGood ? 'text-emerald-400' : 'text-red-400'}`}>
+              <div className="flex items-center justify-between pt-1 border-t border-slate-200">
+                <span className="text-[10px] text-slate-500">Spread (ROIC − WACC)</span>
+                <span className={`text-[12px] font-bold font-mono ${spreadGood ? 'text-emerald-600' : 'text-red-600'}`}>
                   {spreadPp > 0 ? '+' : ''}{spreadPp.toFixed(1)} pp
                 </span>
               </div>
             </div>
 
-            <div className="rounded-lg bg-white/5 border border-white/8 px-3 py-2 text-[11px] space-y-1">
+            <div className="rounded-lg bg-white border border-slate-200 px-3 py-2 text-[11px] space-y-1">
               <div className="flex justify-between">
-                <span className="text-slate-400">NOPAT</span>
-                <span className="tabular-nums text-slate-200 font-mono">{fmtM(roic.nopat)}</span>
+                <span className="text-slate-500">NOPAT</span>
+                <span className="tabular-nums text-slate-900 font-mono">{fmtM(roic.nopat)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Invested Capital</span>
-                <span className="tabular-nums text-slate-200 font-mono">{fmtM(roic.investedCapital)}</span>
+                <span className="text-slate-500">Invested Capital</span>
+                <span className="tabular-nums text-slate-900 font-mono">{fmtM(roic.investedCapital)}</span>
               </div>
             </div>
           </div>

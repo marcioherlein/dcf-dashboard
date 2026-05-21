@@ -552,7 +552,7 @@ function DemoGradeCard({ onAnalyze }: { onAnalyze: (ticker: string) => void }) {
 const TRUST_POINTS = [
   {
     icon: (
-      <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
@@ -561,7 +561,7 @@ const TRUST_POINTS = [
   },
   {
     icon: (
-      <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
       </svg>
     ),
@@ -570,7 +570,7 @@ const TRUST_POINTS = [
   },
   {
     icon: (
-      <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
         <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>
@@ -585,17 +585,14 @@ export default function LandingPage() {
   const router = useRouter()
 
   return (
-    <div className="min-h-screen bg-[#050D1F]">
+    <div className="min-h-screen bg-slate-50">
 
-      {/* Hero */}
-      <section className="relative overflow-hidden border-b border-[rgba(59,130,246,0.1)] px-6 pt-16 pb-20">
+      {/* Hero — keeps dark treatment */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 border-b border-white/5 px-6 pt-16 pb-20">
         {/* Radial glow behind hero */}
         <div className="pointer-events-none absolute inset-0 bg-radial-blue" />
         {/* Grid overlay */}
-        <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-60" />
-        {/* Ambient depth blobs */}
-        <div className="pointer-events-none absolute top-0 right-0 w-96 h-96 bg-blue-600/15 blur-3xl rounded-full animate-blob" />
-        <div className="pointer-events-none absolute bottom-0 left-0 w-72 h-72 bg-cyan-500/10 blur-3xl rounded-full animate-blob-delay" />
+        <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-40" />
 
         <div className="relative mx-auto max-w-3xl text-center">
           {/* Social proof pill */}
@@ -678,23 +675,23 @@ export default function LandingPage() {
       <ChartSection />
 
       {/* Trust points */}
-      <section className="border-y border-[rgba(59,130,246,0.1)] bg-[#0A1628]/50">
+      <section className="border-y border-slate-200 bg-white">
         <div className="mx-auto max-w-5xl px-6 py-16">
           <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold text-slate-100 mb-2">Built on transparent methodology</h2>
-            <p className="text-slate-400 text-sm">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Built on transparent methodology</h2>
+            <p className="text-slate-500 text-sm">
               Our estimates are based on DCF analysis using publicly reported financials — every number is traceable.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
             {TRUST_POINTS.map((point) => (
               <div key={point.label} className="flex gap-4">
-                <div className="mt-0.5 shrink-0 w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                <div className="mt-0.5 shrink-0 w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
                   {point.icon}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-100 mb-1">{point.label}</p>
-                  <p className="text-xs text-slate-400 leading-relaxed">{point.sub}</p>
+                  <p className="text-sm font-semibold text-slate-900 mb-1">{point.label}</p>
+                  <p className="text-xs text-slate-500 leading-relaxed">{point.sub}</p>
                 </div>
               </div>
             ))}
@@ -703,17 +700,17 @@ export default function LandingPage() {
       </section>
 
       {/* Feature capability cards */}
-      <section className="border-b border-[rgba(59,130,246,0.1)] bg-[#050D1F]">
+      <section className="border-b border-slate-200 bg-slate-50">
         <div className="mx-auto max-w-5xl px-6 py-16">
           <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold text-slate-100 mb-2">Everything you need to value a stock</h2>
-            <p className="text-slate-400 text-sm">Four complementary methods. One clear verdict.</p>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Everything you need to value a stock</h2>
+            <p className="text-slate-500 text-sm">Four complementary methods. One clear verdict.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               {
                 icon: (
-                  <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
                   </svg>
                 ),
@@ -722,7 +719,7 @@ export default function LandingPage() {
               },
               {
                 icon: (
-                  <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.745 3.745 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.745 3.745 0 0 1 3.296-1.043A3.745 3.745 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.745 3.745 0 0 1 3.296 1.043 3.745 3.745 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
                   </svg>
                 ),
@@ -731,7 +728,7 @@ export default function LandingPage() {
               },
               {
                 icon: (
-                  <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z" />
                   </svg>
                 ),
@@ -740,7 +737,7 @@ export default function LandingPage() {
               },
               {
                 icon: (
-                  <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3" />
                   </svg>
                 ),
@@ -748,13 +745,13 @@ export default function LandingPage() {
                 benefit: "See what growth rate the market is pricing in — decide if that expectation is achievable.",
               },
             ].map((card) => (
-              <div key={card.title} className="rounded-xl glass-card glass-card-hover border border-[rgba(59,130,246,0.15)] p-5 flex flex-col gap-3">
-                <div className="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+              <div key={card.title} className="rounded-xl card card-hover p-5 flex flex-col gap-3">
+                <div className="w-9 h-9 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
                   {card.icon}
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-100 mb-1">{card.title}</p>
-                  <p className="text-xs text-slate-400 leading-relaxed">{card.benefit}</p>
+                  <p className="text-sm font-bold text-slate-900 mb-1">{card.title}</p>
+                  <p className="text-xs text-slate-500 leading-relaxed">{card.benefit}</p>
                 </div>
               </div>
             ))}
@@ -764,14 +761,14 @@ export default function LandingPage() {
 
       {/* CTA */}
       <section className="mx-auto max-w-2xl px-6 py-20 text-center">
-        <h2 className="text-2xl font-bold text-slate-100 mb-2">Ready to analyze your first stock?</h2>
-        <p className="text-slate-400 text-sm mb-8">Free to use. No account needed to start.</p>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Ready to analyze your first stock?</h2>
+        <p className="text-slate-500 text-sm mb-8">Free to use. No account needed to start.</p>
         <div className="flex items-center justify-center gap-3 flex-wrap">
           {EXAMPLE_TICKERS.slice(0, 3).map((t) => (
             <button
               key={t}
               onClick={() => router.push(`/stock/${t}`)}
-              className="rounded-xl px-6 py-3 text-sm font-semibold text-white transition-all hover:shadow-glow-md bg-[#3B82F6] hover:bg-[#60A5FA] font-mono"
+              className="rounded-xl px-6 py-3 text-sm font-semibold text-white transition-all hover:shadow-glow-md bg-blue-600 hover:bg-blue-700 font-mono"
             >
               Analyze {t}
             </button>
@@ -779,8 +776,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer className="border-t border-[rgba(59,130,246,0.1)] px-6 py-8 text-center">
-        <p className="text-xs text-slate-500">
+      <footer className="border-t border-slate-200 px-6 py-8 text-center">
+        <p className="text-xs text-slate-400">
           Data sourced from Yahoo Finance, FRED, and Damodaran&apos;s research.
           This is a research tool, not financial advice. All estimates are model outputs, not recommendations.
         </p>

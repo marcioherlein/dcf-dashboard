@@ -78,10 +78,10 @@ function buildEVEBITDAResults(result: ReturnType<typeof computeEVEBITDA>, curren
 
 function resultToneClass(tone: ValuationResult['tone']): string {
   switch (tone) {
-    case 'positive': return 'text-emerald-400'
-    case 'negative': return 'text-red-400'
-    case 'warning':  return 'text-amber-400'
-    default:         return 'text-slate-100'
+    case 'positive': return 'text-emerald-600'
+    case 'negative': return 'text-red-600'
+    case 'warning':  return 'text-amber-600'
+    default:         return 'text-slate-900'
   }
 }
 
@@ -124,7 +124,7 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin 
     result.interpretation === 'aggressive'      ? 'warning' :
     result.interpretation === 'very_aggressive' ? 'negative' : 'neutral'
   const toneColor =
-    tone === 'positive' ? '#10b981' : tone === 'warning' ? '#f59e0b' : tone === 'negative' ? '#ef4444' : '#6b7280'
+    tone === 'positive' ? '#059669' : tone === 'warning' ? '#D97706' : tone === 'negative' ? '#DC2626' : '#6b7280'
   const toneLabel =
     result.interpretation === 'conservative'    ? 'Conservative' :
     result.interpretation === 'reasonable'      ? 'Reasonable'   :
@@ -133,19 +133,19 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin 
   const toneIcon = tone === 'positive' ? '✓' : tone === 'warning' ? '⚠' : tone === 'negative' ? '✗' : '–'
 
   return (
-    <div className="glass-card border-[rgba(59,130,246,0.15)] rounded-xl overflow-hidden">
+    <div className="card rounded-xl overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-white/8">
-        <h3 className="text-base font-bold text-slate-100">Reverse DCF</h3>
-        <p className="text-xs text-slate-400 mt-0.5">
+      <div className="px-5 py-4 border-b border-slate-200">
+        <h3 className="text-sm font-semibold text-slate-800">Reverse DCF</h3>
+        <p className="text-xs text-slate-500 mt-0.5">
           Works backwards from today&apos;s price to find the growth rate the market is implicitly pricing in.
         </p>
       </div>
 
       {/* Three-column hero */}
-      <div className="grid grid-cols-3 divide-x divide-white/8">
+      <div className="grid grid-cols-3 divide-x divide-slate-200">
         <div className="flex flex-col items-center px-4 py-5 gap-1">
-          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Market Implies</p>
+          <p className="text-[10px] uppercase tracking-wider text-blue-600 font-bold">Market Implies</p>
           <p className="text-2xl font-bold tabular-nums" style={{ color: toneColor }}>
             {impliedCAGR != null ? (impliedCAGR * 100).toFixed(1) + '%' : '—'}
           </p>
@@ -157,16 +157,16 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin 
           )}
         </div>
         <div className="flex flex-col items-center px-4 py-5 gap-1">
-          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Analyst Says</p>
-          <p className="text-2xl font-bold tabular-nums text-slate-100">
+          <p className="text-[10px] uppercase tracking-wider text-blue-600 font-bold">Analyst Says</p>
+          <p className="text-2xl font-bold tabular-nums text-slate-900">
             {analystCAGR != null ? (analystCAGR * 100).toFixed(1) + '%' : '—'}
           </p>
           <p className="text-xs text-slate-500">FY+1 estimate</p>
           {analystCAGR != null && <span className="text-xs text-slate-400 mt-1">─ Consensus</span>}
         </div>
         <div className="flex flex-col items-center px-4 py-5 gap-1">
-          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">History (3Y)</p>
-          <p className="text-2xl font-bold tabular-nums text-slate-100">
+          <p className="text-[10px] uppercase tracking-wider text-blue-600 font-bold">History (3Y)</p>
+          <p className="text-2xl font-bold tabular-nums text-slate-900">
             {historicalCAGR != null ? (historicalCAGR * 100).toFixed(1) + '%' : '—'}
           </p>
           <p className="text-xs text-slate-500">3Y revenue CAGR</p>
@@ -175,22 +175,22 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin 
       </div>
 
       {/* Assumptions + interpretation */}
-      <div className="px-5 py-4 border-t border-white/10 bg-white/5">
-        <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-3">Assumptions used</p>
+      <div className="px-5 py-4 border-t border-slate-100 bg-slate-50">
+        <p className="text-[10px] uppercase tracking-wider text-blue-600 font-bold mb-3">Assumptions used</p>
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <p className="text-[10px] text-slate-400">FCF Margin</p>
-            <p className="text-sm font-semibold tabular-nums text-slate-100">
+            <p className="text-[10px] text-slate-500">FCF Margin</p>
+            <p className="text-sm font-semibold tabular-nums text-slate-900">
               {lastFCFMargin != null ? (lastFCFMargin * 100).toFixed(1) + '%' : '—'}
             </p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-400">WACC</p>
-            <p className="text-sm font-semibold tabular-nums text-slate-100">{(wacc * 100).toFixed(1)}%</p>
+            <p className="text-[10px] text-slate-500">WACC</p>
+            <p className="text-sm font-semibold tabular-nums text-slate-900">{(wacc * 100).toFixed(1)}%</p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-400">Terminal G</p>
-            <p className="text-sm font-semibold tabular-nums text-slate-100">{(terminalG * 100).toFixed(1)}%</p>
+            <p className="text-[10px] text-slate-500">Terminal G</p>
+            <p className="text-sm font-semibold tabular-nums text-slate-900">{(terminalG * 100).toFixed(1)}%</p>
           </div>
         </div>
         {result.interpretationText && (
@@ -229,18 +229,18 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
   const readonlyAssumptions   = config.assumptions.filter(a => !a.editable && a.unit !== 'shares')
 
   return (
-    <div className="glass-card border-[rgba(59,130,246,0.15)] rounded-xl overflow-hidden">
+    <div className="card rounded-xl overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-white/8 flex items-start justify-between gap-4">
+      <div className="px-5 py-4 border-b border-slate-200 flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-base font-bold text-slate-100">{config.title}</h3>
-          <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{config.methodDescription ?? config.subtitle}</p>
+          <h3 className="text-sm font-semibold text-slate-800">{config.title}</h3>
+          <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{config.methodDescription ?? config.subtitle}</p>
         </div>
         {config.fairValueSummary != null && (
           <div className="flex items-center gap-3 shrink-0">
             <div className="text-right">
-              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Fair Value</p>
-              <p className="text-lg font-bold tabular-nums text-slate-100">
+              <p className="text-[10px] uppercase tracking-wider text-blue-600 font-bold">Fair Value</p>
+              <p className="text-lg font-bold tabular-nums text-slate-900">
                 {fmtPrice(config.fairValueSummary, currency)}
               </p>
             </div>
@@ -277,12 +277,12 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                     <span className="text-sm font-semibold text-slate-100">{a.label}</span>
                     <span className={cn(
                       'text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider',
-                      isOverridden ? 'bg-blue-500/20 text-blue-300' : 'bg-white/8 text-slate-400',
+                      isOverridden ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500',
                     )}>
                       {isOverridden ? 'Override' : sourceLabel(a.source)}
                     </span>
                   </div>
-                  <span className="text-sm font-semibold tabular-nums text-slate-100">
+                  <span className="text-sm font-semibold tabular-nums text-slate-900">
                     {displayVal}{a.unit === '%' ? '%' : a.unit === 'x' ? '×' : ''}
                   </span>
                 </div>
@@ -309,9 +309,9 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
         <div className="px-5 pt-4 pb-2">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {readonlyAssumptions.map(a => (
-              <div key={a.key} className="bg-white/5 rounded-lg px-3 py-2">
-                <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{a.label}</p>
-                <p className="text-sm font-semibold tabular-nums text-slate-200 mt-0.5">
+              <div key={a.key} className="bg-slate-50 rounded-lg px-3 py-2">
+                <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">{a.label}</p>
+                <p className="text-sm font-semibold tabular-nums text-slate-800 mt-0.5">
                   {fmtAssumptionDisplay(a, overrides)}{a.unit === '%' ? '%' : a.unit === 'x' ? '×' : ''}
                 </p>
               </div>
@@ -322,7 +322,7 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
 
       {/* Footer: Results + Reset */}
       {(config.results.length > 0 || isModified) && (
-        <div className="px-5 py-3 mt-2 border-t border-white/10 bg-white/5 flex items-center justify-between gap-4 flex-wrap">
+        <div className="px-5 py-3 mt-2 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex gap-4 flex-wrap">
             {config.results.map((r, i) => (
               <div key={i} className="text-xs">
@@ -615,7 +615,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
 
       {/* ── 2. Method details ────────────────────────────────────────────────── */}
       <div className="space-y-4">
-        <p className="text-[11px] font-bold uppercase tracking-widest bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent px-1">How each method is computed</p>
+        <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600 px-1">How each method is computed</p>
 
         <MethodInlinePanel
           config={fwdPEConfig}
@@ -651,10 +651,10 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
       </div>
 
       {/* ── 5. Full DCF Modelling Table ──────────────────────────────────── */}
-      <div className="glass-card border-[rgba(59,130,246,0.15)] rounded-xl overflow-hidden">
-        <div className="px-5 pt-4 pb-2 border-b border-white/8">
-          <h3 className="text-base font-bold text-slate-100">Full DCF Modelling Table</h3>
-          <p className="text-micro text-slate-400 mt-0.5">
+      <div className="card rounded-xl overflow-hidden">
+        <div className="px-5 pt-4 pb-2 border-b border-slate-200">
+          <h3 className="text-sm font-semibold text-slate-800">Full DCF Modelling Table</h3>
+          <p className="text-micro text-slate-500 mt-0.5">
             Year-by-year unlevered FCF model grounded in Yahoo Finance statements
           </p>
         </div>

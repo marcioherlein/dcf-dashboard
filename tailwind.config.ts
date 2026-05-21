@@ -25,26 +25,26 @@ const config: Config = {
         primary:    { DEFAULT: 'hsl(var(--primary))',     foreground: 'hsl(var(--primary-foreground))' },
 
         // ── Financial semantic tokens ─────────────────────────────────────────
-        up:           '#10B981',  // emerald-500 (brighter for dark bg)
-        down:         '#EF4444',  // red-500
-        warn:         '#F59E0B',  // amber-500
-        'accent-blue':'#3B82F6',  // accent blue
+        up:           '#059669',  // emerald-600 (deeper for light bg)
+        down:         '#DC2626',  // red-600
+        warn:         '#D97706',  // amber-600
+        'accent-blue':'#2563EB',  // blue-600
 
-        // ── Dark glass palette ────────────────────────────────────────────────
-        'deep':          '#050D1F',   // page base
-        'mid':           '#0A1628',   // section fills / elevated surfaces
-        'raised':        '#0E1F36',   // higher elevation
-        'neon':          '#3B82F6',   // accent blue
-        'neon-light':    '#60A5FA',   // blue-400
-        'neon-cyan':     '#06B6D4',   // cyan accent
+        // ── Dark nav / hero palette (kept for TopBar, BottomNav, hero) ────────
+        'deep':          '#050D1F',
+        'mid':           '#0A1628',
+        'raised':        '#0E1F36',
+        'neon':          '#3B82F6',
+        'neon-light':    '#60A5FA',
+        'neon-cyan':     '#06B6D4',
 
         // ── Clairo brand palette ──────────────────────────────────────────────
-        'brand-navy':         '#3B82F6',  // updated to accent blue
-        'brand-emerald':      '#10B981',  // positive signals
-        'brand-gold':         '#FBBF24',  // amber-400 on dark
-        'brand-gold-decor':   '#F59E0B',
-        'brand-red':          '#EF4444',
-        'brand-surface':      '#050D1F',
+        'brand-navy':         '#2563EB',
+        'brand-emerald':      '#059669',
+        'brand-gold':         '#D97706',
+        'brand-gold-decor':   '#D97706',
+        'brand-red':          '#DC2626',
+        'brand-surface':      '#F1F5F9',
 
         // ── Legacy MDM3 tokens (Header/Sidebar — keep until refactored) ───────
         "on-primary":               "#ffffff",
@@ -107,14 +107,14 @@ const config: Config = {
         full:    "9999px",
       },
       boxShadow: {
-        card:        "0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3)",
-        "card-md":   "0 4px 12px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.3)",
-        float:       "0 8px 32px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.3)",
+        card:        "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+        "card-md":   "0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)",
+        float:       "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)",
         nav:         "0 2px 12px rgba(0,0,0,0.4)",
-        "glow-sm":   "0 0 15px rgba(59,130,246,0.2), 0 0 5px rgba(59,130,246,0.1)",
-        "glow-md":   "0 0 30px rgba(59,130,246,0.35), 0 0 10px rgba(59,130,246,0.15)",
-        "glow-lg":   "0 0 50px rgba(59,130,246,0.5), 0 0 20px rgba(59,130,246,0.2)",
-        "glow-cyan": "0 0 20px rgba(6,182,212,0.4), 0 0 6px rgba(6,182,212,0.2)",
+        "glow-sm":   "0 0 12px rgba(37,99,235,0.2), 0 0 4px rgba(37,99,235,0.1)",
+        "glow-md":   "0 0 24px rgba(37,99,235,0.3), 0 0 8px rgba(37,99,235,0.12)",
+        "glow-lg":   "0 0 40px rgba(37,99,235,0.4), 0 0 16px rgba(37,99,235,0.18)",
+        "glow-cyan": "0 0 20px rgba(6,182,212,0.35), 0 0 6px rgba(6,182,212,0.18)",
       },
       animation: {
         'glow-pulse':    'glow-pulse 2.5s ease-in-out infinite',

@@ -48,10 +48,10 @@ function fmtPct(v: number): string {
 }
 
 export default function FinancialCharts({ incomeStatement, cashFlow, currency = '$', isDark }: Props) {
-  const tickFill = isDark ? 'rgba(255,255,255,0.25)' : '#94a3b8'
+  const tickFill = isDark ? '#94a3b8' : '#94a3b8'
   const tooltipStyle = isDark
     ? { background: 'rgba(10,22,40,0.95)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, fontSize: 11, color: '#F1F5F9', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }
-    : { background: 'rgba(10,22,40,0.95)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, fontSize: 11, color: '#F1F5F9', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }
+    : { background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 8, fontSize: 11, color: '#0F172A', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }
 
   const historicalIS = incomeStatement.filter((r) => !r.isProjected)
   const projectedIS = incomeStatement.filter((r) => r.isProjected)
@@ -97,8 +97,8 @@ export default function FinancialCharts({ incomeStatement, cashFlow, currency = 
 
   if (historicalIS.length < 2) return null
 
-  const sectionTitle = 'text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3'
-  const panel = 'rounded-xl glass-card border-[rgba(59,130,246,0.15)] p-5'
+  const sectionTitle = 'text-[11px] font-bold uppercase tracking-widest text-blue-600 mb-3'
+  const panel = 'rounded-xl card p-5'
 
   return (
     <div className="space-y-4">
@@ -125,14 +125,14 @@ export default function FinancialCharts({ incomeStatement, cashFlow, currency = 
                 formatter={(v) => v === 'revenue' ? 'Revenue' : 'Net Income'}
                 wrapperStyle={{ fontSize: '10px', color: tickFill }}
               />
-              <Bar dataKey="revenue" name="revenue" fill="#3B82F6" radius={[3, 3, 0, 0]} isAnimationActive={false}
+              <Bar dataKey="revenue" name="revenue" fill="#2563EB" radius={[3, 3, 0, 0]} isAnimationActive={false}
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 opacity={undefined}>
                 {revenueData.map((entry, i) => (
                   <Cell key={i} opacity={entry.isProjected ? 0.35 : 1} />
                 ))}
               </Bar>
-              <Bar dataKey="netIncome" name="netIncome" fill="#10B981" radius={[3, 3, 0, 0]} isAnimationActive={false}>
+              <Bar dataKey="netIncome" name="netIncome" fill="#059669" radius={[3, 3, 0, 0]} isAnimationActive={false}>
                 {revenueData.map((entry, i) => (
                   <Cell key={i} opacity={entry.isProjected ? 0.35 : 1} />
                 ))}
@@ -158,7 +158,7 @@ export default function FinancialCharts({ incomeStatement, cashFlow, currency = 
               <Bar dataKey="fcf" radius={[3, 3, 0, 0]} isAnimationActive={false}>
                 {fcfData.map((entry, i) => {
                   const positive = (entry.fcf ?? 0) >= 0
-                  const base = positive ? '#10B981' : '#EF4444'
+                  const base = positive ? '#059669' : '#DC2626'
                   return <Cell key={i} fill={base} opacity={entry.isProjected ? 0.35 : 1} />
                 })}
               </Bar>
@@ -188,10 +188,10 @@ export default function FinancialCharts({ incomeStatement, cashFlow, currency = 
                   formatter={(v) => v === 'gross' ? 'Gross' : v === 'net' ? 'Net' : v === 'fcfMgn' ? 'FCF' : 'Operating'}
                   wrapperStyle={{ fontSize: '10px', color: tickFill }}
                 />
-                <Line type="monotone" dataKey="gross" stroke="#60A5FA" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
-                <Line type="monotone" dataKey="opMgn" stroke="#F59E0B" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} strokeDasharray="4 2" />
-                <Line type="monotone" dataKey="net" stroke="#10B981" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
-                <Line type="monotone" dataKey="fcfMgn" stroke="#06B6D4" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} strokeDasharray="2 3" />
+                <Line type="monotone" dataKey="gross" stroke="#2563EB" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
+                <Line type="monotone" dataKey="opMgn" stroke="#D97706" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} strokeDasharray="4 2" />
+                <Line type="monotone" dataKey="net" stroke="#059669" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
+                <Line type="monotone" dataKey="fcfMgn" stroke="#7C3AED" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} strokeDasharray="2 3" />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -219,12 +219,12 @@ export default function FinancialCharts({ incomeStatement, cashFlow, currency = 
                   formatter={(v) => v === 'ebitda' ? 'EBITDA' : 'Operating Income'}
                   wrapperStyle={{ fontSize: '10px', color: tickFill }}
                 />
-                <Bar dataKey="ebitda" name="ebitda" fill="#A78BFA" radius={[3, 3, 0, 0]} isAnimationActive={false}>
+                <Bar dataKey="ebitda" name="ebitda" fill="#7C3AED" radius={[3, 3, 0, 0]} isAnimationActive={false}>
                   {ebitdaData.map((entry, i) => (
                     <Cell key={i} opacity={entry.isProjected ? 0.35 : 1} />
                   ))}
                 </Bar>
-                <Bar dataKey="opIncome" name="opIncome" fill="#FBBF24" radius={[3, 3, 0, 0]} isAnimationActive={false}>
+                <Bar dataKey="opIncome" name="opIncome" fill="#D97706" radius={[3, 3, 0, 0]} isAnimationActive={false}>
                   {ebitdaData.map((entry, i) => (
                     <Cell key={i} opacity={entry.isProjected ? 0.35 : 1} />
                   ))}
@@ -237,7 +237,7 @@ export default function FinancialCharts({ incomeStatement, cashFlow, currency = 
       </div>
 
       {/* Legend note */}
-      <p className="text-[10px] text-slate-500">
+      <p className="text-[10px] text-slate-400">
         Faded bars = model projections · Solid bars = historical actuals
         {projectedIS.length > 0 && ` · ${historicalIS.length} historical + ${projectedIS.length} projected years`}
       </p>
