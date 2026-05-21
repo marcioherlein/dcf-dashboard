@@ -99,10 +99,10 @@ function TickerSearch({ onAdd, isDark, disabled }: {
 
   const select = (symbol: string) => { onAdd(symbol); setQuery(''); setOpen(false) }
 
-  const bg    = isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9'
-  const bdCol = isDark ? 'rgba(255,255,255,0.12)' : '#e2e8f0'
-  const txt   = isDark ? 'rgba(255,255,255,0.55)' : '#475569'
-  const ddBg  = isDark ? '#1e1e2e' : '#fff'
+  const bg    = 'rgba(255,255,255,0.06)'
+  const bdCol = 'rgba(255,255,255,0.12)'
+  const txt   = 'rgba(255,255,255,0.55)'
+  const ddBg  = '#1e1e2e'
 
   return (
     <div className="relative" ref={ref}>
@@ -137,11 +137,11 @@ function TickerSearch({ onAdd, isDark, disabled }: {
               onMouseDown={() => select(r.symbol)}
               className="flex w-full items-center gap-3 px-3 py-2 text-left"
               style={{ borderBottom: `1px solid ${bdCol}` }}
-              onMouseEnter={e => (e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.06)' : '#f8fafc')}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             >
               <span style={{ color: '#818cf8', fontSize: 11, fontWeight: 700, width: 56, flexShrink: 0 }}>{r.symbol}</span>
-              <span style={{ color: isDark ? 'rgba(255,255,255,0.4)' : '#64748b', fontSize: 10 }} className="truncate">
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10 }} className="truncate">
                 {r.longname ?? r.shortname}
               </span>
             </button>
@@ -159,10 +159,10 @@ function ChartTooltip({ active, payload, label, tickers, metric, isDark }: {
   tickers: string[]; metric: Metric; isDark?: boolean
 }) {
   if (!active || !payload?.length) return null
-  const bg  = isDark ? '#18182a' : '#fff'
-  const bd  = isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0'
-  const txt = isDark ? 'rgba(255,255,255,0.85)' : '#0f172a'
-  const mut = isDark ? 'rgba(255,255,255,0.35)' : '#64748b'
+  const bg  = 'rgba(10,22,40,0.95)'
+  const bd  = 'rgba(59,130,246,0.2)'
+  const txt = 'rgba(255,255,255,0.85)'
+  const mut = 'rgba(255,255,255,0.35)'
   return (
     <div style={{ background: bg, border: `1px solid ${bd}`, borderRadius: 10, padding: '8px 12px', fontSize: 11, color: txt, minWidth: 148, boxShadow: '0 4px 20px rgba(0,0,0,0.18)' }}>
       <div style={{ color: mut, marginBottom: 6, fontWeight: 500 }}>{label}</div>
@@ -324,9 +324,9 @@ export default function MultiTickerChart({
   }, [chartData, tickers, period])
 
   const isLoading = loading.size > 0
-  const gridColor = isDark ? 'rgba(255,255,255,0.04)' : '#f1f5f9'
-  const tickFill  = isDark ? 'rgba(255,255,255,0.25)' : '#94a3b8'
-  const bg        = isDark ? 'bg-[#111] border-white/8' : 'bg-white border-slate-200'
+  const gridColor = 'rgba(255,255,255,0.04)'
+  const tickFill  = 'rgba(255,255,255,0.25)'
+  const bg        = 'bg-[#0A1628] border-white/8'
 
   return (
     <div className={`rounded-xl border ${bg} ${className}`}>
@@ -347,9 +347,7 @@ export default function MultiTickerChart({
           disabled={!chartData.length}
           className={[
             'ml-auto flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-semibold transition-colors disabled:opacity-30',
-            isDark
-              ? 'bg-white/8 text-white/40 hover:bg-white/15 hover:text-white/70'
-              : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700',
+            'bg-white/8 text-white/40 hover:bg-white/15 hover:text-white/70',
           ].join(' ')}
         >
           ↓ CSV
@@ -367,9 +365,7 @@ export default function MultiTickerChart({
                 'px-2 py-0.5 rounded text-[10px] font-semibold transition-colors',
                 period === p.value
                   ? 'bg-indigo-500 text-white'
-                  : isDark
-                    ? 'text-white/30 hover:text-white/70 hover:bg-white/8'
-                    : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100',
+                  : 'text-white/30 hover:text-white/70 hover:bg-white/8',
               ].join(' ')}
             >
               {p.label}
@@ -380,7 +376,7 @@ export default function MultiTickerChart({
         {showMetricSelect && (
           <div
             className="ml-auto flex rounded-lg overflow-hidden"
-            style={{ border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}` }}
+            style={{ border: '1px solid rgba(255,255,255,0.1)' }}
           >
             {(['indexed', 'absolute'] as Metric[]).map(m => (
               <button
@@ -389,8 +385,8 @@ export default function MultiTickerChart({
                 className={[
                   'px-3 py-0.5 text-[10px] font-semibold transition-colors',
                   metric === m
-                    ? isDark ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-800'
-                    : isDark ? 'text-white/30 hover:bg-white/8' : 'text-slate-400 hover:bg-slate-50',
+                    ? 'bg-white/15 text-white'
+                    : 'text-white/30 hover:bg-white/8',
                 ].join(' ')}
               >
                 {m === 'indexed' ? '% Change' : 'Price'}
@@ -404,11 +400,11 @@ export default function MultiTickerChart({
       <div style={{ height }} className="px-1">
         {isLoading && chartData.length === 0 ? (
           <div className="flex h-full items-center justify-center gap-2">
-            <div className={`h-4 w-4 animate-spin rounded-full border-2 ${isDark ? 'border-white/15 border-t-indigo-400' : 'border-slate-200 border-t-indigo-500'}`} />
-            <span className={`text-xs ${isDark ? 'text-white/25' : 'text-slate-400'}`}>Loading…</span>
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/15 border-t-indigo-400" />
+            <span className="text-xs text-white/25">Loading…</span>
           </div>
         ) : chartData.length === 0 ? (
-          <div className={`flex h-full items-center justify-center text-xs ${isDark ? 'text-white/20' : 'text-slate-400'}`}>
+          <div className="flex h-full items-center justify-center text-xs text-white/20">
             No data
           </div>
         ) : (
@@ -434,13 +430,13 @@ export default function MultiTickerChart({
               {metric === 'indexed' && (
                 <ReferenceLine
                   y={100}
-                  stroke={isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}
+                  stroke="rgba(255,255,255,0.08)"
                   strokeDasharray="4 3"
                 />
               )}
               <Tooltip
                 content={<ChartTooltip tickers={tickers} metric={metric} isDark={isDark} />}
-                cursor={{ stroke: isDark ? 'rgba(255,255,255,0.18)' : '#94a3b8', strokeWidth: 1, strokeDasharray: '4 3' }}
+                cursor={{ stroke: 'rgba(255,255,255,0.18)', strokeWidth: 1, strokeDasharray: '4 3' }}
               />
               {tickers.map((ticker, i) => (
                 <Line
@@ -462,8 +458,8 @@ export default function MultiTickerChart({
       {/* Subtle loading indicator while refreshing existing chart */}
       {isLoading && chartData.length > 0 && (
         <div className="flex items-center gap-1.5 px-4 pb-2 pt-1">
-          <div className={`h-2 w-2 animate-spin rounded-full border ${isDark ? 'border-white/15 border-t-indigo-400' : 'border-slate-200 border-t-indigo-500'}`} />
-          <span className={`text-[10px] ${isDark ? 'text-white/20' : 'text-slate-400'}`}>Updating…</span>
+          <div className="h-2 w-2 animate-spin rounded-full border border-white/15 border-t-indigo-400" />
+          <span className="text-[10px] text-white/20">Updating…</span>
         </div>
       )}
       <div className="pb-3" />

@@ -27,24 +27,24 @@ export default function ScreenerChart({ ticker, displayTicker, name, price, chan
 
       {/* Panel */}
       <div
-        className="w-[520px] bg-white border-l border-slate-200 flex flex-col h-full overflow-y-auto shadow-card-md"
+        className="w-[520px] bg-[#080F1E] border-l border-white/10 flex flex-col h-full overflow-y-auto shadow-card-md"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between px-5 py-4 border-b border-slate-200">
+        <div className="flex items-start justify-between px-5 py-4 border-b border-white/10">
           <div>
             <div className="flex items-baseline gap-2">
-              <span className="text-lg font-bold text-slate-900">{displayTicker}</span>
+              <span className="text-lg font-bold text-slate-100">{displayTicker}</span>
               <span className="text-sm font-semibold" style={{ color: accentColor }}>
                 {isUp ? '+' : ''}{change1DPct.toFixed(2)}%
               </span>
             </div>
             <div className="text-[11px] text-slate-400 mt-0.5 truncate max-w-[360px]">{name}</div>
-            <div className="text-xl font-bold text-slate-900 mt-1">{fmtPrice(price)}</div>
+            <div className="text-xl font-bold text-slate-100 mt-1">{fmtPrice(price)}</div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-700 transition-colors mt-0.5 text-lg leading-none"
+            className="text-slate-400 hover:text-slate-200 transition-colors mt-0.5 text-lg leading-none"
           >
             ×
           </button>
@@ -57,12 +57,13 @@ export default function ScreenerChart({ ticker, displayTicker, name, price, chan
             defaultPeriod="3m"
             height={340}
             showMetricSelect={true}
+            isDark={true}
             className="border-0 shadow-none !rounded-none"
           />
         </div>
 
         {/* Footer CTA */}
-        <div className="px-5 py-3 border-t border-slate-200">
+        <div className="px-5 py-3 border-t border-white/10">
           <a
             href={`/stock/${ticker}`}
             className="flex items-center justify-center gap-2 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors"

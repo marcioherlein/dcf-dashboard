@@ -141,10 +141,10 @@ function PriceTooltip({ active, payload, label, isDark, compareMode, compareTick
   if (!active || !payload?.length) return null
   const d = payload[0]?.payload
   if (!d) return null
-  const bg = isDark ? '#1a1a1a' : '#fff'
-  const border = isDark ? 'rgba(255,255,255,0.08)' : '#e5e7eb'
-  const text = isDark ? '#fff' : '#111'
-  const muted = isDark ? 'rgba(255,255,255,0.4)' : '#6b7280'
+  const bg = 'rgba(10,22,40,0.95)'
+  const border = 'rgba(59,130,246,0.2)'
+  const text = 'rgba(255,255,255,0.9)'
+  const muted = 'rgba(255,255,255,0.4)'
   return (
     <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: '8px 12px', fontSize: 11, color: text, minWidth: 140 }}>
       <div style={{ fontWeight: 600, marginBottom: 4, color: muted }}>{label}</div>
@@ -191,12 +191,12 @@ function RSITooltip({ active, payload, label, isDark }: {
   if (!active || !payload?.length) return null
   const rsi = payload[0]?.value
   if (rsi == null) return null
-  const bg = isDark ? '#1a1a1a' : '#fff'
-  const border = isDark ? 'rgba(255,255,255,0.08)' : '#e5e7eb'
+  const bg = 'rgba(10,22,40,0.95)'
+  const border = 'rgba(59,130,246,0.2)'
   return (
     <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: 8, padding: '6px 10px', fontSize: 11 }}>
-      <span style={{ color: isDark ? 'rgba(255,255,255,0.4)' : '#6b7280' }}>{label} · </span>
-      <span style={{ fontWeight: 700, color: rsi > 70 ? '#ef4444' : rsi < 30 ? '#10b981' : isDark ? '#fff' : '#111' }}>RSI {rsi?.toFixed(1)}</span>
+      <span style={{ color: 'rgba(255,255,255,0.4)' }}>{label} · </span>
+      <span style={{ fontWeight: 700, color: rsi > 70 ? '#ef4444' : rsi < 30 ? '#10b981' : 'rgba(255,255,255,0.9)' }}>RSI {rsi?.toFixed(1)}</span>
     </div>
   )
 }
@@ -359,8 +359,8 @@ export default function PriceChart({ ticker, isDark, triangulatedFairValue, anal
 
   const maxVolume = data.length ? Math.max(...data.map((d) => d.volume)) : 1
 
-  const tickFill = isDark ? 'rgba(255,255,255,0.3)' : '#9ca3af'
-  const gridColor = isDark ? 'rgba(255,255,255,0.04)' : '#f3f4f6'
+  const tickFill = 'rgba(255,255,255,0.3)'
+  const gridColor = 'rgba(255,255,255,0.04)'
   const hasAnyLine = VAL_LINES.some(l => levels[l.key] != null && (levels[l.key] as number) > hardMin && (levels[l.key] as number) < hardMax)
   // On mobile, use a small rightMargin and render valuation labels in a legend row instead of inline SVG tags.
   // On desktop (sm+), use 96px to accommodate the PriceTag SVG labels on the right edge.
@@ -395,13 +395,13 @@ export default function PriceChart({ ticker, isDark, triangulatedFairValue, anal
   const isCompareMode = compareTickers.length > 0
 
   return (
-    <div className="rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8">
+    <div className="rounded-xl glass-card border-[rgba(59,130,246,0.15)]">
       {/* ── Header ── */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-6 pt-5 pb-3">
         <div className="flex items-center gap-3">
-          <h2 className="text-sm font-headline font-semibold text-on-surface dark:text-white/70">Price Chart</h2>
+          <h2 className="text-sm font-semibold text-slate-200">Price Chart</h2>
           {changePct != null && (
-            <span className={`text-xs font-semibold tabular-nums ${changePct >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
+            <span className={`text-xs font-semibold tabular-nums ${changePct >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
               {changePct >= 0 ? '+' : ''}{changePct.toFixed(2)}%
             </span>
           )}
@@ -430,8 +430,8 @@ export default function PriceChart({ ticker, isDark, triangulatedFairValue, anal
               onClick={() => setPeriod(p)}
               className={`rounded-lg px-3 py-2 sm:py-1 text-xs font-medium transition ${
                 period === p
-                  ? 'bg-gray-900 text-white dark:bg-white dark:text-black'
-                  : 'text-gray-500 dark:text-white/40 hover:bg-gray-100 dark:hover:bg-white/10'
+                  ? 'bg-blue-500/20 text-blue-300'
+                  : 'text-white/40 hover:bg-white/8'
               }`}
             >
               {p.toUpperCase()}
@@ -486,7 +486,7 @@ export default function PriceChart({ ticker, isDark, triangulatedFairValue, anal
               onBlur={() => { if (compareInput.trim()) addCompareTicker(compareInput) }}
               placeholder="+ Compare"
               maxLength={10}
-              className="text-[16px] bg-transparent border-b border-dashed border-gray-300 dark:border-white/20 focus:outline-none focus:border-blue-500 w-20 py-0.5 placeholder:text-gray-400 dark:placeholder:text-white/25"
+              className="text-[16px] bg-transparent border-b border-dashed border-white/20 focus:outline-none focus:border-blue-500 w-20 py-0.5 placeholder:text-white/25"
             />
           </form>
         )}
@@ -497,7 +497,7 @@ export default function PriceChart({ ticker, isDark, triangulatedFairValue, anal
             className={`ml-auto text-[11px] font-bold px-2.5 py-0.5 rounded-full border transition ${
               compareMode === 'percent'
                 ? 'bg-blue-600 text-white border-blue-600'
-                : 'border-gray-300 dark:border-white/20 text-gray-500 dark:text-white/40 hover:bg-gray-100 dark:hover:bg-white/10'
+                : 'border-white/20 text-white/40 hover:bg-white/8'
             }`}
           >
             {compareMode === 'percent' ? '% Return' : '$ Price'}
@@ -519,7 +519,7 @@ export default function PriceChart({ ticker, isDark, triangulatedFairValue, anal
                 }`}
                 style={{
                   borderColor: ind.color,
-                  color: on ? ind.color : (isDark ? 'rgba(255,255,255,0.4)' : '#6b7280'),
+                  color: on ? ind.color : 'rgba(255,255,255,0.4)',
                   background: on ? `${ind.color}18` : 'transparent',
                 }}
               >
@@ -532,7 +532,7 @@ export default function PriceChart({ ticker, isDark, triangulatedFairValue, anal
             className={`rounded px-2 py-1.5 sm:py-0.5 text-[10px] font-semibold transition border ${showBB ? 'opacity-100' : 'opacity-35'}`}
             style={{
               borderColor: '#a78bfa',
-              color: showBB ? '#a78bfa' : (isDark ? 'rgba(255,255,255,0.4)' : '#6b7280'),
+              color: showBB ? '#a78bfa' : 'rgba(255,255,255,0.4)',
               background: showBB ? '#a78bfa18' : 'transparent',
             }}
           >
@@ -546,8 +546,8 @@ export default function PriceChart({ ticker, isDark, triangulatedFairValue, anal
                 onClick={() => { setSubPanel(sp); setShowSubPanel(true) }}
                 className={`rounded px-2 py-1.5 sm:py-0.5 text-[10px] font-medium transition ${
                   showSubPanel && subPanel === sp
-                    ? 'bg-gray-200 dark:bg-white/15 text-gray-700 dark:text-white/70'
-                    : 'text-gray-400 dark:text-white/25 hover:bg-gray-100 dark:hover:bg-white/8'
+                    ? 'bg-white/15 text-white/70'
+                    : 'text-white/25 hover:bg-white/8'
                 }`}
               >
                 {sp.toUpperCase()}
@@ -555,7 +555,7 @@ export default function PriceChart({ ticker, isDark, triangulatedFairValue, anal
             ))}
             <button
               onClick={() => setShowSubPanel(!showSubPanel)}
-              className="rounded px-1.5 py-1.5 sm:py-0.5 text-[10px] text-gray-400 dark:text-white/25 hover:bg-gray-100 dark:hover:bg-white/8"
+              className="rounded px-1.5 py-1.5 sm:py-0.5 text-[10px] text-white/25 hover:bg-white/8"
             >
               {showSubPanel ? '↑' : '↓'}
             </button>
@@ -566,13 +566,13 @@ export default function PriceChart({ ticker, isDark, triangulatedFairValue, anal
       {/* ── Main price chart ── */}
       <div className="h-64 px-1">
         {loading ? (
-          <div className="flex h-full items-center justify-center text-sm text-gray-400 dark:text-white/25">Loading…</div>
+          <div className="flex h-full items-center justify-center text-sm text-white/25">Loading…</div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={chartData} margin={{ top: 4, right: rightMargin, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="priceGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={priceColor} stopOpacity={isDark ? 0.18 : 0.12} />
+                  <stop offset="5%"  stopColor={priceColor} stopOpacity={0.18} />
                   <stop offset="95%" stopColor={priceColor} stopOpacity={0} />
                 </linearGradient>
               </defs>
@@ -666,7 +666,7 @@ export default function PriceChart({ ticker, isDark, triangulatedFairValue, anal
 
               {/* Zero line in percent mode */}
               {compareMode === 'percent' && (
-                <ReferenceLine yAxisId="price" y={0} stroke={isDark ? 'rgba(255,255,255,0.15)' : '#cbd5e1'} strokeDasharray="3 2" />
+                <ReferenceLine yAxisId="price" y={0} stroke="rgba(255,255,255,0.15)" strokeDasharray="3 2" />
               )}
             </ComposedChart>
           </ResponsiveContainer>
@@ -692,14 +692,14 @@ export default function PriceChart({ ticker, isDark, triangulatedFairValue, anal
                     if (!active || !payload?.length) return null
                     const vol = payload[0]?.value as number
                     return (
-                      <div style={{ background: isDark ? '#1a1a1a' : '#fff', border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : '#e5e7eb'}`, borderRadius: 8, padding: '4px 8px', fontSize: 11 }}>
-                        <span style={{ color: isDark ? 'rgba(255,255,255,0.4)' : '#6b7280' }}>{label} · </span>
-                        <span style={{ fontWeight: 700, color: isDark ? '#fff' : '#111' }}>Vol {(vol / 1e6).toFixed(2)}M</span>
+                      <div style={{ background: 'rgba(10,22,40,0.95)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, padding: '4px 8px', fontSize: 11 }}>
+                        <span style={{ color: 'rgba(255,255,255,0.4)' }}>{label} · </span>
+                        <span style={{ fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>Vol {(vol / 1e6).toFixed(2)}M</span>
                       </div>
                     )
                   }}
                 />
-                <Bar dataKey="volume" fill={isDark ? 'rgba(255,255,255,0.12)' : '#d1d5db'} isAnimationActive={false} radius={[1, 1, 0, 0]} />
+                <Bar dataKey="volume" fill="rgba(255,255,255,0.12)" isAnimationActive={false} radius={[1, 1, 0, 0]} />
               </ComposedChart>
             </ResponsiveContainer>
           ) : (
@@ -717,13 +717,13 @@ export default function PriceChart({ ticker, isDark, triangulatedFairValue, anal
                 <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                 <ReferenceLine y={70} stroke="#ef4444" strokeDasharray="3 2" strokeWidth={1} strokeOpacity={0.5} />
                 <ReferenceLine y={30} stroke="#10b981" strokeDasharray="3 2" strokeWidth={1} strokeOpacity={0.5} />
-                <ReferenceLine y={50} stroke={isDark ? 'rgba(255,255,255,0.1)' : '#e5e7eb'} strokeWidth={1} />
+                <ReferenceLine y={50} stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
                 <Area type="monotone" dataKey="rsi" stroke="#8b5cf6" fill="#8b5cf618" strokeWidth={1.5} dot={false} isAnimationActive={false} />
               </ComposedChart>
             </ResponsiveContainer>
           )}
           <div className="flex justify-center">
-            <span className="text-[9px] text-gray-300 dark:text-white/20 font-medium tracking-wide">
+            <span className="text-[9px] text-white/20 font-medium tracking-wide">
               {subPanel === 'volume' ? 'VOLUME' : 'RSI (14)'}
             </span>
           </div>
