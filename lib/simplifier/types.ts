@@ -46,6 +46,7 @@ export interface FinancialSnapshot {
   upsidePct:      number | null
   price:          number | null
   marketCap:      number | null
+  fairValue:      number | null
 }
 
 export interface WatchlistEntry {

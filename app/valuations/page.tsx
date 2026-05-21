@@ -63,7 +63,13 @@ function ValuationCard({ entry }: { entry: WatchlistEntry }) {
             <p className="text-[13px] font-mono font-semibold text-slate-800">{fmtPrice(price, 'USD')}</p>
           </div>
         )}
-        {marketCap != null && (
+        {entry.snapshot.fairValue != null && (
+          <div>
+            <p className="text-[10px] text-slate-400 uppercase tracking-wider">Fair Value</p>
+            <p className="text-[13px] font-mono font-semibold text-slate-800">{fmtPrice(entry.snapshot.fairValue, 'USD')}</p>
+          </div>
+        )}
+        {entry.snapshot.fairValue == null && marketCap != null && (
           <div>
             <p className="text-[10px] text-slate-400 uppercase tracking-wider">Market Cap</p>
             <p className="text-[13px] font-mono font-semibold text-slate-800">{fmtLargeCurrency(marketCap, 'USD')}</p>

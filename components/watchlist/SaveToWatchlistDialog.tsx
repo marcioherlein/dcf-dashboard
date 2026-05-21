@@ -6,6 +6,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import { fmtPrice, fmtPct } from '@/lib/formatters'
+import { saveWatchlistEntry, getWatchlistEntry } from '@/lib/simplifier/watchlistStore'
+import type { WatchlistEntry } from '@/lib/simplifier/types'
 
 export interface WatchlistSavePayload {
   ticker: string
@@ -73,6 +75,41 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
       }
 
       setStatus('done')
+      // Mirror into localStorage so the /valuations page shows this stock
+      const existing = getWatchlistEntry(payload.ticker)
+      const entry: WatchlistEntry = existing
+        ? {
+            ...existing,
+            updatedAt: new Date().toISOString(),
+            snapshot: {
+              ...existing.snapshot,
+              upsidePct: payload.upsidePct ?? existing.snapshot.upsidePct,
+              price: payload.valuationSnapshot?.price_at_save ?? existing.snapshot.price,
+              beta: payload.valuationSnapshot?.beta ?? existing.snapshot.beta,
+              fairValue: payload.fairValue ?? existing.snapshot.fairValue,
+            },
+          }
+        : {
+            ticker: payload.ticker,
+            companyName: payload.name,
+            updatedAt: new Date().toISOString(),
+            currentPhase: 1,
+            answers: {},
+            notes: {},
+            phaseScores: {},
+            overallScore: null,
+            listTag: null,
+            snapshot: {
+              grossMargin: null, fcfMargin: null, moatScore: null,
+              roic: null, cagr3y: null, insiderPct: null,
+              beta: payload.valuationSnapshot?.beta ?? null,
+              upsidePct: payload.upsidePct ?? null,
+              price: payload.valuationSnapshot?.price_at_save ?? null,
+              marketCap: null,
+              fairValue: payload.fairValue ?? null,
+            },
+          }
+      saveWatchlistEntry(entry)
       setTimeout(() => {
         setStatus('idle')
         onClose()
