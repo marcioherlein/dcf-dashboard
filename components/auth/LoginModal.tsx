@@ -47,34 +47,34 @@ export default function LoginModal({ onClose, intent, headline }: Props) {
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8 text-center"
+        className="relative w-full max-w-sm bg-[#0d1117] border border-white/10 rounded-2xl shadow-2xl p-8 text-center"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-200 transition-colors"
           aria-label="Close"
         >
           <X size={18} />
         </button>
 
         {/* Icon */}
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-blue-50">
-          <svg className="h-7 w-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-blue-500/15">
+          <svg className="h-7 w-7 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
 
-        <h2 className="text-lg font-bold text-slate-900 leading-snug">
+        <h2 className="text-lg font-bold text-slate-100 leading-snug">
           {displayHeadline}
         </h2>
-        <p className="mt-2 text-sm text-slate-500 leading-relaxed">
+        <p className="mt-2 text-sm text-slate-400 leading-relaxed">
           {displaySub}
         </p>
 
         <button
           onClick={handleSignIn}
-          className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white py-3 px-4 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 active:scale-[0.98] transition-all"
+          className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/8 py-3 px-4 text-sm font-semibold text-slate-100 shadow-sm hover:bg-white/12 active:scale-[0.98] transition-all"
         >
           {/* Google G logo */}
           <svg className="h-5 w-5" viewBox="0 0 24 24">

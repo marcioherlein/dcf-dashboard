@@ -340,7 +340,7 @@ export default function YahooFinancials({ statementsData, currency = '$', report
               className={`px-4 py-2 text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap ${
                 statement === tab.id
                   ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-700'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
               }`}
             >
               {tab.label}
@@ -351,18 +351,18 @@ export default function YahooFinancials({ statementsData, currency = '$', report
           <div className="flex rounded-lg overflow-hidden border border-slate-200 text-[12px]">
             <button
               onClick={() => setPeriod('annual')}
-              className={`px-3 py-1.5 ${period === 'annual' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-slate-500 hover:bg-slate-50'}`}
+              className={`px-3 py-1.5 ${period === 'annual' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-slate-400 hover:bg-slate-50'}`}
             >
               Annual
             </button>
             <button
               onClick={() => setPeriod('quarterly')}
-              className={`px-3 py-1.5 border-l border-slate-200 ${period === 'quarterly' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-slate-500 hover:bg-slate-50'}`}
+              className={`px-3 py-1.5 border-l border-slate-200 ${period === 'quarterly' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-slate-400 hover:bg-slate-50'}`}
             >
               Quarterly
             </button>
           </div>
-          <button onClick={() => toggleAll(false)} className="text-[12px] text-slate-500 hover:text-slate-700 whitespace-nowrap">
+          <button onClick={() => toggleAll(false)} className="text-[12px] text-slate-400 hover:text-slate-200 whitespace-nowrap">
             Collapse all
           </button>
           <button onClick={() => toggleAll(true)} className="text-[12px] text-blue-600 hover:text-blue-700 whitespace-nowrap">
@@ -380,7 +380,7 @@ export default function YahooFinancials({ statementsData, currency = '$', report
         <table className="w-full text-[12px]">
           <thead>
             <tr className="border-b border-slate-100 bg-slate-50/50">
-              <th className="sticky left-0 z-10 bg-slate-50 text-left px-4 py-2 text-[11px] font-semibold text-slate-500 w-64 min-w-[220px]">
+              <th className="sticky left-0 z-10 bg-[#080F1E] text-left px-4 py-2 text-[11px] font-semibold text-slate-400 w-64 min-w-[220px]">
                 Breakdown
               </th>
               {showTTM && ttmData && (
@@ -389,7 +389,7 @@ export default function YahooFinancials({ statementsData, currency = '$', report
                 </th>
               )}
               {displayPeriods.map((p, i) => (
-                <th key={i} className="text-right px-3 py-2 text-[11px] font-semibold text-slate-600 min-w-[100px] whitespace-nowrap">
+                <th key={i} className="text-right px-3 py-2 text-[11px] font-semibold text-slate-300 min-w-[100px] whitespace-nowrap">
                   {formatDate(p.endDate)}
                 </th>
               ))}
@@ -411,7 +411,7 @@ export default function YahooFinancials({ statementsData, currency = '$', report
                     className={`border-b border-slate-100 bg-slate-50/60 hover:bg-slate-100/60 cursor-pointer select-none ${flashKey === hdr.key ? 'row-flash' : ''}`}
                     onClick={() => hasChildren && setExpanded(e => ({ ...e, [hdr.key]: !isOpen(hdr.key) }))}
                   >
-                    <td className="sticky left-0 z-10 bg-slate-50 px-4 py-2 font-semibold text-slate-800 whitespace-nowrap flex items-center gap-1.5">
+                    <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-2 font-semibold text-slate-100 whitespace-nowrap flex items-center gap-1.5">
                       {hasChildren && (
                         <svg
                           className={`w-3 h-3 text-slate-400 shrink-0 transition-transform ${open ? 'rotate-90' : ''}`}
@@ -425,14 +425,14 @@ export default function YahooFinancials({ statementsData, currency = '$', report
                     </td>
                     {showTTM && ttmData && (
                       <td className={`text-right px-3 py-2 tabular-nums font-semibold whitespace-nowrap ${
-                        isNegNum(ttmData[hdr.key], vt) ? 'text-red-600' : 'text-slate-800'
+                        isNegNum(ttmData[hdr.key], vt) ? 'text-red-400' : 'text-slate-100'
                       }`}>
                         {fmtValue(ttmData[hdr.key], vt)}
                       </td>
                     )}
                     {displayPeriods.map((p, j) => (
                       <td key={j} className={`text-right px-3 py-2 tabular-nums font-semibold whitespace-nowrap ${
-                        isNegNum(p[hdr.key], vt) ? 'text-red-600' : 'text-slate-700'
+                        isNegNum(p[hdr.key], vt) ? 'text-red-400' : 'text-slate-200'
                       }`}>
                         {fmtValue(p[hdr.key], vt)}
                       </td>
@@ -444,19 +444,19 @@ export default function YahooFinancials({ statementsData, currency = '$', report
                   const rvt = row.valueType ?? 'money'
                   return (
                     <tr key={`row-${si}-${ri}`} id={`yfrow-${row.key}`} className={`border-b border-slate-50 hover:bg-slate-50/40 ${flashKey === row.key ? 'row-flash' : ''}`}>
-                      <td className="sticky left-0 z-10 bg-[#050D1F] pl-10 pr-4 py-1.5 text-slate-500 whitespace-nowrap">
+                      <td className="sticky left-0 z-10 bg-[#050D1F] pl-10 pr-4 py-1.5 text-slate-400 whitespace-nowrap">
                         {row.label}
                       </td>
                       {showTTM && ttmData && (
                         <td className={`text-right px-3 py-1.5 tabular-nums whitespace-nowrap ${
-                          isNegNum(ttmData[row.key], rvt) ? 'text-red-500' : 'text-slate-600'
+                          isNegNum(ttmData[row.key], rvt) ? 'text-red-400' : 'text-slate-300'
                         }`}>
                           {fmtValue(ttmData[row.key], rvt)}
                         </td>
                       )}
                       {displayPeriods.map((p, j) => (
                         <td key={j} className={`text-right px-3 py-1.5 tabular-nums whitespace-nowrap ${
-                          isNegNum(p[row.key], rvt) ? 'text-red-500' : 'text-slate-600'
+                          isNegNum(p[row.key], rvt) ? 'text-red-400' : 'text-slate-300'
                         }`}>
                           {fmtValue(p[row.key], rvt)}
                         </td>

@@ -117,7 +117,7 @@ export default function RatingsPanel({ ratings }: Props) {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-sm font-headline font-semibold text-on-surface dark:text-white/70">Analysis Ratings</h2>
-          <p className="mt-0.5 text-xs text-gray-400 dark:text-white/25">Profitability · Liquidity · Growth · MOAT · Valuation</p>
+          <p className="mt-0.5 text-xs text-gray-400 dark:text-slate-400">Profitability · Liquidity · Growth · MOAT · Valuation</p>
         </div>
         <div className={`flex items-center gap-3 rounded-2xl border ${oc.border} ${oc.bg} px-5 py-3`}>
           <div>

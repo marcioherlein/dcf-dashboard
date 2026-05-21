@@ -62,18 +62,18 @@ const TABS = ['Income Statement', 'Balance Sheet', 'Cash Flow'] as const
 type Tab = typeof TABS[number]
 
 function fmtM(v: number | null, showSign = false): { text: string; color: string } {
-  if (v === null || v === undefined) return { text: '—', color: 'text-gray-400 dark:text-white/25' }
+  if (v === null || v === undefined) return { text: '—', color: 'text-gray-400 dark:text-slate-400' }
   const abs = Math.abs(v)
   let text: string
   if (abs >= 1000) text = `${(v / 1000).toFixed(1)}B`
   else text = `${v.toFixed(0)}M`
   if (showSign && v > 0) text = '+' + text
-  const color = v < 0 ? 'text-red-500 dark:text-red-400' : v === 0 ? 'text-gray-400 dark:text-white/25' : 'text-gray-800 dark:text-white/80'
+  const color = v < 0 ? 'text-red-500 dark:text-red-400' : v === 0 ? 'text-gray-400 dark:text-slate-400' : 'text-gray-800 dark:text-white/80'
   return { text, color }
 }
 
 function fmtEps(v: number | null): { text: string; color: string } {
-  if (v === null) return { text: '—', color: 'text-gray-400 dark:text-white/25' }
+  if (v === null) return { text: '—', color: 'text-gray-400 dark:text-slate-400' }
   const color = v < 0 ? 'text-red-500 dark:text-red-400' : 'text-gray-800 dark:text-white/80'
   return { text: `$${v.toFixed(2)}`, color }
 }
@@ -104,7 +104,7 @@ function RowLabel({ label, indent = false, bold = false }: { label: string; inde
   return (
     <td className={`sticky left-0 z-10 bg-white dark:bg-[#111] py-2 pr-4 text-xs whitespace-nowrap ${
       indent
-        ? 'pl-8 text-gray-400 dark:text-white/30'
+        ? 'pl-8 text-gray-400 dark:text-slate-300'
         : bold
         ? 'pl-4 font-semibold text-gray-700 dark:text-white/60'
         : 'pl-4 font-medium text-gray-600 dark:text-white/50'
@@ -129,7 +129,7 @@ function SectionHeader({ label, cols }: { label: string; cols: number }) {
     <tr className="bg-slate-50 dark:bg-white/[0.03]">
       <td
         colSpan={cols + 1}
-        className="sticky left-0 z-10 bg-slate-50 dark:bg-[#0e0e0e] px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-white/30"
+        className="sticky left-0 z-10 bg-slate-50 dark:bg-[#0e0e0e] px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-300"
       >
         {label}
       </td>
@@ -174,7 +174,7 @@ export default function FinancialStatements({ incomeStatement, balanceSheet, cas
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 dark:border-white/5 px-6 py-4">
         <div>
           <h2 className="text-sm font-headline font-semibold text-on-surface dark:text-white/70">Financial Statements</h2>
-          <p className="mt-0.5 text-xs text-gray-400 dark:text-white/25">Historical actuals · Model projections</p>
+          <p className="mt-0.5 text-xs text-gray-400 dark:text-slate-400">Historical actuals · Model projections</p>
         </div>
         <div className="flex rounded-xl bg-gray-100 dark:bg-white/5 p-1 gap-1">
           {TABS.map((t) => (
@@ -208,7 +208,7 @@ export default function FinancialStatements({ incomeStatement, balanceSheet, cas
             <table className="w-full min-w-[600px] text-sm">
               <thead>
                 <tr className="border-b border-gray-50 dark:border-white/5">
-                  <th className="sticky left-0 z-10 bg-white dark:bg-[#111] py-2 pl-4 pr-4 text-left text-[11px] font-medium text-gray-400 dark:text-white/25 whitespace-nowrap">
+                  <th className="sticky left-0 z-10 bg-white dark:bg-[#111] py-2 pl-4 pr-4 text-left text-[11px] font-medium text-gray-400 dark:text-slate-400 whitespace-nowrap">
                     {currency}M
                   </th>
                   {years.map((y, i) => <YearHeader key={i} year={y.year} isProjected={y.isProjected} />)}
@@ -249,7 +249,7 @@ export default function FinancialStatements({ incomeStatement, balanceSheet, cas
             <table className="w-full min-w-[600px] text-sm">
               <thead>
                 <tr className="border-b border-gray-50 dark:border-white/5">
-                  <th className="sticky left-0 z-10 bg-white dark:bg-[#111] py-2 pl-4 pr-4 text-left text-[11px] font-medium text-gray-400 dark:text-white/25 whitespace-nowrap">
+                  <th className="sticky left-0 z-10 bg-white dark:bg-[#111] py-2 pl-4 pr-4 text-left text-[11px] font-medium text-gray-400 dark:text-slate-400 whitespace-nowrap">
                     {currency}M
                   </th>
                   {years.map((y, i) => <YearHeader key={i} year={y.year} isProjected={y.isProjected} />)}
@@ -287,7 +287,7 @@ export default function FinancialStatements({ incomeStatement, balanceSheet, cas
             <table className="w-full min-w-[600px] text-sm">
               <thead>
                 <tr className="border-b border-gray-50 dark:border-white/5">
-                  <th className="sticky left-0 z-10 bg-white dark:bg-[#111] py-2 pl-4 pr-4 text-left text-[11px] font-medium text-gray-400 dark:text-white/25 whitespace-nowrap">
+                  <th className="sticky left-0 z-10 bg-white dark:bg-[#111] py-2 pl-4 pr-4 text-left text-[11px] font-medium text-gray-400 dark:text-slate-400 whitespace-nowrap">
                     {currency}M
                   </th>
                   {years.map((y, i) => <YearHeader key={i} year={y.year} isProjected={y.isProjected} />)}
@@ -321,7 +321,7 @@ export default function FinancialStatements({ incomeStatement, balanceSheet, cas
       </div>
 
       {/* Legend */}
-      <div className="border-t border-gray-50 dark:border-white/5 px-6 py-3 flex items-center gap-4 text-[10px] text-gray-400 dark:text-white/25">
+      <div className="border-t border-gray-50 dark:border-white/5 px-6 py-3 flex items-center gap-4 text-[10px] text-gray-400 dark:text-slate-400">
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-gray-400 dark:bg-white/30" />
           Historical actuals

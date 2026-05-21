@@ -270,10 +270,10 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
   const zoneStyle = zone === 'Attractive'
     ? { wrap: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700' }
     : zone === 'Fair Value'
-    ? { wrap: 'bg-blue-50 border-blue-200', text: 'text-blue-700' }
+    ? { wrap: 'bg-blue-500/10 border-blue-500/20', text: 'text-blue-400' }
     : zone === 'Expensive'
     ? { wrap: 'bg-red-50 border-red-200', text: 'text-red-700' }
-    : { wrap: 'bg-slate-50 border-slate-200', text: 'text-slate-600' }
+    : { wrap: 'bg-white/5 border-white/10', text: 'text-slate-300' }
 
   return (
     <div className="space-y-4">
@@ -385,7 +385,7 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
             })}
           </div>
 
-          <div className="px-4 py-2.5 border-t border-slate-100 bg-slate-50/50">
+          <div className="px-4 py-2.5 border-t border-white/10 bg-white/5">
             <p className="text-micro text-slate-400">
               Effective weights exclude methods with no available data. Adjust assumptions in each method card to refine.
             </p>

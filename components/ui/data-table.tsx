@@ -51,7 +51,7 @@ export function DataTable<TData>({
                     key={header.id}
                     className={cn(
                       cellPad, 'text-label uppercase tracking-wider text-slate-400 font-bold text-left select-none',
-                      stickyHeader && 'sticky top-0 bg-white z-10',
+                      stickyHeader && 'sticky top-0 bg-[#080F1E] z-10',
                       canSort && 'cursor-pointer hover:text-slate-600',
                       (header.column.columnDef.meta as { align?: string } | undefined)?.align === 'right' && 'text-right',
                     )}
@@ -80,12 +80,12 @@ export function DataTable<TData>({
             </tr>
           ) : (
             table.getRowModel().rows.map((row, i) => (
-              <tr key={row.id} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/60'}>
+              <tr key={row.id} className={i % 2 === 0 ? 'bg-transparent' : 'bg-white/4'}>
                 {row.getVisibleCells().map(cell => (
                   <td
                     key={cell.id}
                     className={cn(
-                      cellPad, 'text-slate-700',
+                      cellPad, 'text-slate-200',
                       (cell.column.columnDef.meta as { align?: string } | undefined)?.align === 'right' && 'text-right font-mono',
                     )}
                   >

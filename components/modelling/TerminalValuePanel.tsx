@@ -26,19 +26,19 @@ export default function TerminalValuePanel({
   terminalG, wacc, exitMultiple, currency,
 }: TerminalValuePanelProps) {
   return (
-    <div className="rounded-xl bg-white border border-slate-200 overflow-hidden">
-      <div className="px-5 py-3 border-b border-slate-100 bg-slate-50">
+    <div className="rounded-xl glass-card border-[rgba(59,130,246,0.15)] overflow-hidden">
+      <div className="px-5 py-3 border-b border-white/10 bg-white/5">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Terminal Value</h3>
         <p className="mt-0.5 text-[11px] text-slate-400">Both methods computed — primary is highlighted</p>
       </div>
 
       <div className="grid grid-cols-2 divide-x divide-slate-100">
         {/* Perpetuity Growth */}
-        <div className={`px-5 py-4 ${primaryMethod === 'perpetuity' ? 'bg-blue-50' : 'bg-white'}`}>
+        <div className={`px-5 py-4 ${primaryMethod === 'perpetuity' ? 'bg-blue-500/10' : 'bg-white/5'}`}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-slate-700">Perpetuity Growth</span>
+            <span className="text-xs font-semibold text-slate-200">Perpetuity Growth</span>
             {primaryMethod === 'perpetuity' && (
-              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700">Primary</span>
+              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-400">Primary</span>
             )}
           </div>
           <div className="text-[11px] text-slate-500 mb-3">
@@ -50,18 +50,18 @@ export default function TerminalValuePanel({
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
                 <span className="text-slate-500">Terminal Value</span>
-                <span className="font-mono font-semibold text-slate-800">{currency}{fmtM(perpetuityTV)}</span>
+                <span className="font-mono font-semibold text-slate-100">{currency}{fmtM(perpetuityTV)}</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-slate-500">PV (discounted)</span>
-                <span className={`font-mono font-semibold ${primaryMethod === 'perpetuity' ? 'text-blue-700' : 'text-slate-800'}`}>
+                <span className={`font-mono font-semibold ${primaryMethod === 'perpetuity' ? 'text-blue-400' : 'text-slate-100'}`}>
                   {currency}{fmtM(perpetuityTVDiscounted)}
                 </span>
               </div>
               {perpetuityResidualPct != null && (
                 <div className="flex justify-between text-xs">
                   <span className="text-slate-400">% of EV</span>
-                  <span className={`font-mono text-[11px] ${perpetuityResidualPct > 0.75 ? 'text-amber-600 font-semibold' : 'text-slate-500'}`}>
+                  <span className={`font-mono text-[11px] ${perpetuityResidualPct > 0.75 ? 'text-amber-400 font-semibold' : 'text-slate-500'}`}>
                     {(perpetuityResidualPct * 100).toFixed(0)}%
                     {perpetuityResidualPct > 0.75 && <span className="ml-1 text-[10px]">⚠ high</span>}
                   </span>
@@ -72,11 +72,11 @@ export default function TerminalValuePanel({
         </div>
 
         {/* Exit Multiple */}
-        <div className={`px-5 py-4 ${primaryMethod === 'exitMultiple' ? 'bg-blue-50' : 'bg-white'}`}>
+        <div className={`px-5 py-4 ${primaryMethod === 'exitMultiple' ? 'bg-blue-500/10' : 'bg-white/5'}`}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-slate-700">Exit Multiple</span>
+            <span className="text-xs font-semibold text-slate-200">Exit Multiple</span>
             {primaryMethod === 'exitMultiple' && (
-              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700">Primary</span>
+              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-400">Primary</span>
             )}
           </div>
           <div className="text-[11px] text-slate-500 mb-3">
@@ -85,18 +85,18 @@ export default function TerminalValuePanel({
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs">
               <span className="text-slate-500">Terminal Value</span>
-              <span className="font-mono font-semibold text-slate-800">{currency}{fmtM(exitMultipleTV)}</span>
+              <span className="font-mono font-semibold text-slate-100">{currency}{fmtM(exitMultipleTV)}</span>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-slate-500">PV (discounted)</span>
-              <span className={`font-mono font-semibold ${primaryMethod === 'exitMultiple' ? 'text-blue-700' : 'text-slate-800'}`}>
+              <span className={`font-mono font-semibold ${primaryMethod === 'exitMultiple' ? 'text-blue-400' : 'text-slate-100'}`}>
                 {currency}{fmtM(exitMultipleTVDiscounted)}
               </span>
             </div>
             {exitMultipleResidualPct != null && (
               <div className="flex justify-between text-xs">
                 <span className="text-slate-400">% of EV</span>
-                <span className={`font-mono text-[11px] ${exitMultipleResidualPct > 0.75 ? 'text-amber-600 font-semibold' : 'text-slate-500'}`}>
+                <span className={`font-mono text-[11px] ${exitMultipleResidualPct > 0.75 ? 'text-amber-400 font-semibold' : 'text-slate-500'}`}>
                   {(exitMultipleResidualPct * 100).toFixed(0)}%
                   {exitMultipleResidualPct > 0.75 && <span className="ml-1 text-[10px]">⚠ high</span>}
                 </span>

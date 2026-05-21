@@ -96,16 +96,16 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
         {status === 'done' ? (
           <div className="flex flex-col items-center gap-2 py-4 text-center">
             <CheckCircle2 size={32} className="text-emerald-500" />
-            <p className="text-sm font-semibold text-slate-800">Saved to your watchlist</p>
+            <p className="text-sm font-semibold text-slate-100">Saved to your watchlist</p>
           </div>
         ) : (
           <>
             {/* Valuation summary for stocks */}
             {!isETF && payload.fairValue != null && (
-              <div className="rounded-lg bg-slate-50 border border-slate-200 px-4 py-3 text-sm">
+              <div className="rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-slate-500">Fair Value</span>
-                  <span className="font-semibold text-slate-800">{fmtPrice(payload.fairValue)}</span>
+                  <span className="font-semibold text-slate-100">{fmtPrice(payload.fairValue)}</span>
                 </div>
                 {payload.upsidePct != null && (
                   <div className="flex justify-between mt-1">

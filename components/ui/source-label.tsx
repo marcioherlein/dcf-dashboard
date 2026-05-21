@@ -7,10 +7,10 @@ const sourceLabelVariants = cva(
     variants: {
       source: {
         yahoo:    'bg-violet-50 text-violet-600 border-violet-200',
-        wacc:     'bg-blue-50 text-blue-600 border-blue-200',
+        wacc:     'bg-blue-500/15 text-blue-400 border-blue-500/20',
         user:     'bg-amber-50 text-amber-600 border-amber-200',
-        calc:     'bg-slate-50 text-slate-500 border-slate-200',
-        default:  'bg-slate-50 text-slate-500 border-slate-200',
+        calc:     'bg-white/8 text-slate-400 border-white/12',
+        default:  'bg-white/8 text-slate-400 border-white/12',
       },
     },
     defaultVariants: { source: 'default' },

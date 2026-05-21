@@ -17,7 +17,7 @@ export function NumberDisplay({ value, size = 'lg', positive, className }: Numbe
   const colorClass =
     positive === true  ? 'text-emerald-600' :
     positive === false ? 'text-red-600' :
-    'text-slate-900'
+    'text-slate-100'
 
   return (
     <span className={cn('font-mono tabular-nums', sizeClass, colorClass, className)}>

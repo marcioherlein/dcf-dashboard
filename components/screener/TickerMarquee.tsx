@@ -15,7 +15,7 @@ function buildMarqueeItems(instruments: RankedInstrument[]) {
 export default function TickerMarquee({ instruments }: Props) {
   if (instruments.length === 0) {
     return (
-      <div className="h-9 bg-white border-b border-slate-200 flex items-center px-4">
+      <div className="h-9 bg-[#080F1E] border-b border-white/10 flex items-center px-4">
         <span className="text-slate-400 text-xs">Loading market data…</span>
       </div>
     )
@@ -26,7 +26,7 @@ export default function TickerMarquee({ instruments }: Props) {
   const doubled = [...items, ...items]
 
   return (
-    <div className="h-9 bg-white border-b border-slate-200 overflow-hidden flex items-center select-none">
+    <div className="h-9 bg-[#080F1E] border-b border-white/10 overflow-hidden flex items-center select-none">
       <div className="animate-marquee">
         {doubled.map((inst, idx) => {
           const isPositive = inst.change1DPct >= 0
@@ -37,7 +37,7 @@ export default function TickerMarquee({ instruments }: Props) {
               key={`${inst.ticker}-${idx}`}
               className="inline-flex items-center gap-1.5 px-4 border-r border-slate-100 text-xs whitespace-nowrap"
             >
-              <span className="font-semibold text-slate-800">{inst.displayTicker}</span>
+              <span className="font-semibold text-slate-100">{inst.displayTicker}</span>
               <span className="text-slate-400">{formatPrice(inst.price, inst.currency)}</span>
               <span style={{ color: changeColor }} className="font-semibold">
                 {arrow} {Math.abs(inst.change1DPct).toFixed(2)}%

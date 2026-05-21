@@ -33,19 +33,19 @@ export default function AssumptionSlider({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-semibold text-slate-800">{label}</p>
+          <p className="text-sm font-semibold text-slate-100">{label}</p>
           <p className="text-xs text-slate-400">{description}</p>
         </div>
         <div className="flex items-center gap-2">
           {isOverridden && (
             <button
               onClick={() => onChange(defaultValue)}
-              className="text-[11px] text-blue-600 hover:text-blue-800 underline underline-offset-2"
+              className="text-[11px] text-blue-400 hover:text-blue-800 underline underline-offset-2"
             >
               Reset
             </button>
           )}
-          <span className={`text-base font-bold tabular-nums min-w-[52px] text-right ${isOverridden ? 'text-blue-600' : 'text-slate-900'}`}>
+          <span className={`text-base font-bold tabular-nums min-w-[52px] text-right ${isOverridden ? 'text-blue-400' : 'text-slate-100'}`}>
             {toDisplay(value, unit)}
           </span>
         </div>

@@ -31,7 +31,7 @@ export default function PaywallModal({ gate, onClose }: Props) {
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8"
+        className="relative w-full max-w-sm bg-[#0d1117] border border-white/10 rounded-2xl shadow-2xl p-8"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -43,11 +43,11 @@ export default function PaywallModal({ gate, onClose }: Props) {
         </button>
 
         {/* Icon */}
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-blue-50">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-blue-500/15">
           <Lock className="h-7 w-7 text-blue-600" />
         </div>
 
-        <h2 className="text-lg font-bold text-slate-900 leading-snug">
+        <h2 className="text-lg font-bold text-slate-100 leading-snug">
           {config.label} is a Pro feature
         </h2>
         <p className="mt-2 text-sm text-slate-500 leading-relaxed">
@@ -56,8 +56,8 @@ export default function PaywallModal({ gate, onClose }: Props) {
 
         <ul className="mt-5 space-y-3">
           {PRO_BULLETS.map(({ Icon, text }, i) => (
-            <li key={i} className="flex items-center gap-3 text-sm text-slate-700">
-              <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+            <li key={i} className="flex items-center gap-3 text-sm text-slate-200">
+              <div className="w-7 h-7 rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0">
                 <Icon size={14} className="text-blue-600" />
               </div>
               {text}

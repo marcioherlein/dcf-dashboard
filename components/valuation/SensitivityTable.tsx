@@ -56,7 +56,7 @@ function upside2Color(upside: number): string {
   if (upside >=  0.30) return 'bg-emerald-600 text-white'
   if (upside >=  0.15) return 'bg-emerald-500 text-white'
   if (upside >=  0.05) return 'bg-emerald-200 text-emerald-900'
-  if (upside >= -0.05) return 'bg-slate-100 text-slate-600'
+  if (upside >= -0.05) return 'bg-white/8 text-slate-300'
   if (upside >= -0.15) return 'bg-amber-200 text-amber-900'
   if (upside >= -0.30) return 'bg-orange-400 text-white'
   return 'bg-red-600 text-white'
@@ -95,13 +95,13 @@ export default function SensitivityTable({
             Fair value at each Revenue CAGR × WACC combination — base case highlighted
           </p>
         </div>
-        <div className="text-[10px] text-slate-500 font-mono">
+        <div className="text-[10px] text-slate-400 font-mono">
           Terminal g = {(terminalG * 100).toFixed(1)}%  ·  {numYears}yr horizon
         </div>
       </div>
 
       {noData ? (
-        <div className="px-5 py-10 text-center text-[12px] text-slate-500">
+        <div className="px-5 py-10 text-center text-[12px] text-slate-400">
           Insufficient FCF data to build sensitivity table for this company.
         </div>
       ) : (
@@ -112,7 +112,7 @@ export default function SensitivityTable({
             <div className="flex items-end mb-1.5">
               {/* Corner: WACC label */}
               <div className="shrink-0 text-right pr-3" style={{ width: 90 }}>
-                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">WACC ↓</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">WACC ↓</span>
               </div>
 
               {/* CAGR column headers */}
@@ -133,7 +133,7 @@ export default function SensitivityTable({
                       </div>
                       <div className={cn(
                         'text-[9px] leading-none',
-                        isBase ? 'text-blue-500' : 'text-slate-600'
+                        isBase ? 'text-blue-400' : 'text-slate-400'
                       )}>
                         {cd === 0 ? 'base' : `${cd > 0 ? '+' : ''}${(cd * 100).toFixed(0)}pp`}
                       </div>
@@ -147,7 +147,7 @@ export default function SensitivityTable({
             <div className="flex items-start mb-2">
               <div className="shrink-0" style={{ width: 90 }} />
               <div className="flex-1 text-center">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Revenue CAGR →</span>
+                <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Revenue CAGR →</span>
               </div>
             </div>
 
@@ -167,7 +167,7 @@ export default function SensitivityTable({
                     </div>
                     <div className={cn(
                       'text-[9px] leading-none',
-                      isBaseRow ? 'text-blue-500' : 'text-slate-600'
+                      isBaseRow ? 'text-blue-400' : 'text-slate-400'
                     )}>
                       {wd === 0 ? 'base' : `${wd > 0 ? '+' : ''}${(wd * 100).toFixed(1)}pp`}
                     </div>
@@ -182,7 +182,7 @@ export default function SensitivityTable({
                           key={ci}
                           className={cn(
                             'rounded-sm py-2 px-0.5 text-center transition-opacity',
-                            cell ? upside2Color(cell.upside) : 'bg-[#1a1a1a] text-slate-600',
+                            cell ? upside2Color(cell.upside) : 'bg-[#1a1a1a] text-slate-400',
                             isBase && 'ring-2 ring-blue-400 ring-offset-1 ring-offset-[#0d1117] relative z-10',
                           )}
                           title={cell
@@ -212,7 +212,7 @@ export default function SensitivityTable({
 
             {/* Legend */}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-4 pt-3 border-t border-[#222]">
-              <span className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider">Upside vs current price:</span>
+              <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">Upside vs current price:</span>
               {[
                 { cls: 'bg-red-600',     label: '< −30%'     },
                 { cls: 'bg-orange-400',  label: '−15% to −30%' },
@@ -229,7 +229,7 @@ export default function SensitivityTable({
               ))}
             </div>
 
-            <p className="text-[9px] text-slate-600 mt-2">
+            <p className="text-[9px] text-slate-400 mt-2">
               Computed via Gordon Growth Model on projected terminal FCF. Does not account for dilution or changing capex ratios. Base case (⬤) matches current model assumptions.
             </p>
           </div>

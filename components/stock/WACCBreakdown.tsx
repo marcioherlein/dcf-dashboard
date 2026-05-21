@@ -30,7 +30,7 @@ export default function WACCBreakdown({ wacc, onWACCChange }: Props) {
         <h2 className="text-sm font-headline font-semibold text-on-surface dark:text-white/70">WACC Breakdown</h2>
         <div className="flex items-center gap-2">
           <span className="text-2xl font-bold text-gray-900 dark:text-white" style={{ letterSpacing: '-0.03em' }}>{fmtPct(wacc.wacc)}</span>
-          <span className="text-xs text-gray-400 dark:text-white/25">auto-calculated</span>
+          <span className="text-xs text-gray-400 dark:text-slate-400">auto-calculated</span>
         </div>
       </div>
 
@@ -39,7 +39,7 @@ export default function WACCBreakdown({ wacc, onWACCChange }: Props) {
           <thead className="bg-surface-container-low dark:bg-white/5">
             <tr>
               {['Variable', 'Formula', 'Value', 'Source'].map((h, i) => (
-                <th key={h} className={`px-4 py-2 text-xs font-medium text-gray-400 dark:text-white/25 ${i > 1 ? 'text-right' : 'text-left'}`}>{h}</th>
+                <th key={h} className={`px-4 py-2 text-xs font-medium text-gray-400 dark:text-slate-400 ${i > 1 ? 'text-right' : 'text-left'}`}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -47,9 +47,9 @@ export default function WACCBreakdown({ wacc, onWACCChange }: Props) {
             {rows.map((r, i) => (
               <tr key={r.label} className={`border-t border-gray-100 dark:border-white/5 ${i === rows.length - 1 ? 'bg-gray-50 font-medium dark:bg-white/5' : ''}`}>
                 <td className="px-4 py-2 text-gray-700 dark:text-white/60">{r.label}</td>
-                <td className="px-4 py-2 font-mono text-xs text-gray-400 dark:text-white/25">{r.formula}</td>
+                <td className="px-4 py-2 font-mono text-xs text-gray-400 dark:text-slate-400">{r.formula}</td>
                 <td className="px-4 py-2 text-right font-semibold text-gray-800 dark:text-white/80">{r.value}</td>
-                <td className="px-4 py-2 text-right text-xs text-gray-400 dark:text-white/25">{r.note}</td>
+                <td className="px-4 py-2 text-right text-xs text-gray-400 dark:text-slate-400">{r.note}</td>
               </tr>
             ))}
           </tbody>
@@ -67,21 +67,21 @@ export default function WACCBreakdown({ wacc, onWACCChange }: Props) {
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <label className="text-xs text-gray-500 dark:text-white/30">Override WACC:</label>
+        <label className="text-xs text-gray-500 dark:text-slate-300">Override WACC:</label>
         <input
           type="number" placeholder={`${(wacc.wacc * 100).toFixed(2)}`} value={overrideWACC}
           onChange={(e) => setOverrideWACC(e.target.value)} step="0.1" min="1" max="30"
-          className="w-24 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder-white/25 dark:focus:ring-white/20"
+          className="w-24 rounded-lg border dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-white/20 px-3 py-1.5 text-sm"
         />
-        <span className="text-xs text-gray-400 dark:text-white/25">%</span>
+        <span className="text-xs text-gray-400 dark:text-slate-400">%</span>
         <button
           onClick={() => onWACCChange?.(parseFloat(overrideWACC) / 100)}
           disabled={!overrideWACC}
-          className="rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-gray-700 disabled:opacity-40 dark:bg-white dark:text-black dark:hover:bg-white/80"
+          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-blue-500 disabled:opacity-40"
         >
           Apply
         </button>
-        <p className="text-xs text-gray-400 dark:text-white/25">Use this if auto-calculated values look wrong.</p>
+        <p className="text-xs text-gray-400 dark:text-slate-400">Use this if auto-calculated values look wrong.</p>
       </div>
     </div>
   )

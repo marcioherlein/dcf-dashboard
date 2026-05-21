@@ -127,7 +127,7 @@ export default function InvestorGradeCard({
           </span>
           {fairValue != null && upsidePct != null && (
             <>
-              <span className="text-slate-600 hidden sm:inline">|</span>
+              <span className="text-slate-400 hidden sm:inline">|</span>
               <span className="text-xs text-slate-500 hidden sm:inline">Blended: {currSymbol}{fairValue.toFixed(2)}</span>
               <span className={cn('text-xs font-bold', upsidePct >= 0 ? 'text-emerald-400' : 'text-amber-400')}>
                 {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
@@ -226,7 +226,7 @@ export default function InvestorGradeCard({
                 </p>
               </div>
               <div className="flex flex-col items-center gap-1 shrink-0">
-                <ArrowRight size={14} className="text-slate-600" />
+                <ArrowRight size={14} className="text-slate-400" />
                 {zone && (
                   <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap', zoneBadgeClass(zone))}>
                     {zone}

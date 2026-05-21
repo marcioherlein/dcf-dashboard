@@ -17,13 +17,13 @@ const SOURCE_LABELS: Record<string, string> = {
 const SOURCE_COLORS: Record<string, string> = {
   analyst:   'bg-blue-100 text-blue-700',
   '3y_median': 'bg-violet-100 text-violet-700',
-  model:     'bg-slate-100 text-slate-600',
+  model:     'bg-white/8 text-slate-300',
   fallback:  'bg-amber-100 text-amber-700',
 }
 
 function SourceBadge({ source }: { source: string }) {
   return (
-    <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${SOURCE_COLORS[source] ?? 'bg-slate-100 text-slate-600'}`}>
+    <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${SOURCE_COLORS[source] ?? 'bg-white/8 text-slate-300'}`}>
       {SOURCE_LABELS[source] ?? source}
     </span>
   )
@@ -44,10 +44,10 @@ function AssumptionRow({
     return (
       <div className="flex items-center justify-between py-1.5 text-xs">
         <div className="flex items-center gap-2">
-          <span className="text-slate-600">{label}</span>
+          <span className="text-slate-300">{label}</span>
           <SourceBadge source={source} />
         </div>
-        <span className="font-mono text-slate-500">{display}</span>
+        <span className="font-mono text-slate-400">{display}</span>
       </div>
     )
   }
@@ -56,7 +56,7 @@ function AssumptionRow({
     return (
       <div className="flex items-center justify-between py-1.5 text-xs">
         <div className="flex items-center gap-2">
-          <span className="text-slate-600">{label}</span>
+          <span className="text-slate-300">{label}</span>
         </div>
         <input
           autoFocus
@@ -84,7 +84,7 @@ function AssumptionRow({
   return (
     <div className="flex items-center justify-between py-1.5 text-xs group">
       <div className="flex items-center gap-2">
-        <span className="text-slate-600">{label}</span>
+        <span className="text-slate-300">{label}</span>
         <SourceBadge source={source} />
         <span className="hidden group-hover:block text-slate-400 text-[9px]" title={sourceLabel}>
           {sourceLabel.slice(0, 40)}{sourceLabel.length > 40 ? '…' : ''}
@@ -103,8 +103,8 @@ function AssumptionRow({
 
 export default function AssumptionPanel({ assumptions, onChange }: AssumptionPanelProps) {
   return (
-    <div className="rounded-xl bg-white border border-slate-200 px-5 py-4">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-3">Assumptions</h3>
+    <div className="rounded-xl glass-card border-[rgba(59,130,246,0.15)] px-5 py-4">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">Assumptions</h3>
       <div className="divide-y divide-slate-100">
         <AssumptionRow
           label="Revenue CAGR" value={assumptions.cagr.value} source={assumptions.cagr.source}

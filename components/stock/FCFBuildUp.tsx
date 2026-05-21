@@ -314,13 +314,13 @@ export default function FCFBuildUp({
     return <td className={cls}>{v}</td>
   }
   function subCell(v: string) {
-    return <td className="px-3 py-1 text-center text-[10px] text-gray-400 dark:text-white/20 tabular-nums">{v}</td>
+    return <td className="px-3 py-1 text-center text-[10px] text-gray-400 dark:text-slate-400 tabular-nums">{v}</td>
   }
   function labelCell(label: string, muted = false) {
-    return <td className={`px-4 py-2.5 text-xs whitespace-nowrap min-w-[164px] ${muted ? 'text-gray-400 dark:text-white/20' : 'text-gray-500 dark:text-white/30'}`}>{label}</td>
+    return <td className={`px-4 py-2.5 text-xs whitespace-nowrap min-w-[164px] ${muted ? 'text-gray-400 dark:text-slate-400' : 'text-gray-500 dark:text-slate-300'}`}>{label}</td>
   }
   function subLabelCell(label: string) {
-    return <td className="px-4 py-1 text-[10px] text-gray-400 dark:text-white/20 pl-7">{label}</td>
+    return <td className="px-4 py-1 text-[10px] text-gray-400 dark:text-slate-400 pl-7">{label}</td>
   }
 
   // ── Toggle button ───────────────────────────────────────────────────────────
@@ -329,7 +329,7 @@ export default function FCFBuildUp({
       <button onClick={onClick}
         className={`px-3 py-1.5 text-xs font-medium transition ${active
           ? 'bg-slate-800 text-white dark:bg-white/15 dark:text-white'
-          : 'text-gray-500 dark:text-white/30 hover:bg-gray-50 dark:hover:bg-white/5'}`}>
+          : 'text-gray-500 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-white/5'}`}>
         {label}
       </button>
     )
@@ -378,22 +378,22 @@ export default function FCFBuildUp({
           {/* Column headers */}
           <thead className="bg-surface-container-low dark:bg-white/5">
             <tr>
-              <td className="px-4 py-2 text-[10px] font-semibold text-gray-400 dark:text-white/25 uppercase tracking-wide min-w-[164px]">
+              <td className="px-4 py-2 text-[10px] font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wide min-w-[164px]">
                 {mode === 'unlevered' ? 'UNLEVERED FCF BUILD-UP' : 'LEVERED FCF BUILD-UP'}
               </td>
               {histRows.map(r => (
-                <td key={r.year} className="px-3 py-2 text-center text-xs font-medium text-gray-400 dark:text-white/20">{r.year}</td>
+                <td key={r.year} className="px-3 py-2 text-center text-xs font-medium text-gray-400 dark:text-slate-400">{r.year}</td>
               ))}
               {divider}
               {projRows.map(r => (
-                <td key={r.year} className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-white/30">{r.year}</td>
+                <td key={r.year} className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-slate-300">{r.year}</td>
               ))}
             </tr>
             <tr>
               <td className="px-4 py-0.5" />
-              {histRows.map(r => <td key={r.year} className="px-3 py-0.5 text-center text-[10px] text-gray-400 dark:text-white/20 italic">actual</td>)}
+              {histRows.map(r => <td key={r.year} className="px-3 py-0.5 text-center text-[10px] text-gray-400 dark:text-slate-400 italic">actual</td>)}
               <td className="px-1 py-0.5" />
-              {projRows.map(r => <td key={r.year} className="px-3 py-0.5 text-center text-[10px] text-gray-400 dark:text-white/20 italic">est.</td>)}
+              {projRows.map(r => <td key={r.year} className="px-3 py-0.5 text-center text-[10px] text-gray-400 dark:text-slate-400 italic">est.</td>)}
             </tr>
           </thead>
           <tbody>
@@ -429,9 +429,9 @@ export default function FCFBuildUp({
                 </tr>
                 <tr className="border-t border-gray-100 dark:border-white/5">
                   {labelCell('Tax Rate', true)}
-                  {histRows.map(r => <td key={r.year} className="px-3 py-2.5 text-center text-xs text-gray-400 dark:text-white/25 tabular-nums">{fmtPctPlain(r.taxRateVal)}</td>)}
+                  {histRows.map(r => <td key={r.year} className="px-3 py-2.5 text-center text-xs text-gray-400 dark:text-slate-400 tabular-nums">{fmtPctPlain(r.taxRateVal)}</td>)}
                   {divider}
-                  {projRows.map(r => <td key={r.year} className="px-3 py-2.5 text-center text-xs text-gray-400 dark:text-white/25 tabular-nums">{fmtPctPlain(r.taxRateVal)}</td>)}
+                  {projRows.map(r => <td key={r.year} className="px-3 py-2.5 text-center text-xs text-gray-400 dark:text-slate-400 tabular-nums">{fmtPctPlain(r.taxRateVal)}</td>)}
                 </tr>
                 <tr className="bg-gray-50 dark:bg-white/[0.02]">
                   {labelCell(`NOPAT (${scale})`)}
@@ -581,14 +581,14 @@ export default function FCFBuildUp({
       {/* ── Terminal Value Panel ────────────────────────────────────────────── */}
       <div className="border-t border-gray-100 dark:border-white/5 px-6 py-5">
         <div className="flex items-center gap-3 mb-4">
-          <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-white/30">Terminal Value</span>
-          <span className="text-xs text-gray-400 dark:text-white/20">Both methods shown simultaneously</span>
+          <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-300">Terminal Value</span>
+          <span className="text-xs text-gray-400 dark:text-slate-400">Both methods shown simultaneously</span>
         </div>
 
         {/* WACC input */}
         <div className="flex flex-wrap gap-4 mb-5">
           <div className="rounded-lg bg-gray-50 dark:bg-white/5 px-4 py-3 flex items-center gap-2">
-            <span className="text-[10px] text-gray-400 dark:text-white/25 uppercase tracking-wide">WACC</span>
+            <span className="text-[10px] text-gray-400 dark:text-slate-400 uppercase tracking-wide">WACC</span>
             <input type="number" step="0.1" min="1" max="30"
               value={waccEdit}
               onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v > 0) setWaccEdit(v) }}
@@ -596,7 +596,7 @@ export default function FCFBuildUp({
             />
             <span className="text-xs text-gray-400">%</span>
           </div>
-          <div className="text-xs text-gray-400 dark:text-white/25 self-center">
+          <div className="text-xs text-gray-400 dark:text-slate-400 self-center">
             Σ PV = <span className="font-semibold text-gray-700 dark:text-white/70">{fmtDollars(sumPV, scale)}</span>
             <span className="mx-1">·</span>
             Cash = <span className="font-semibold text-emerald-600 dark:text-emerald-400">{fmtDollars(cash, 'M')}</span>
@@ -612,7 +612,7 @@ export default function FCFBuildUp({
 
           {/* Perpetuity */}
           <div className="rounded-xl border border-gray-200 dark:border-white/8 p-4">
-            <div className="text-xs font-semibold text-gray-500 dark:text-white/30 uppercase tracking-wide mb-3">Perpetuity Growth Rate</div>
+            <div className="text-xs font-semibold text-gray-500 dark:text-slate-300 uppercase tracking-wide mb-3">Perpetuity Growth Rate</div>
             <div className="flex items-center gap-2 mb-3">
               <span className="text-[11px] text-gray-400">TGR</span>
               <input type="number" step="0.1" min="0" max="8"
@@ -628,20 +628,20 @@ export default function FCFBuildUp({
                 { label: 'PV of TV',        val: fmtDollars(pvTVP, scale) },
                 { label: 'Equity Value',    val: fmtDollars(eqValP, scale) },
               ].map(row => (
-                <div key={row.label} className="flex justify-between border-b border-gray-100 dark:border-white/5 pb-1.5 text-gray-500 dark:text-white/30">
+                <div key={row.label} className="flex justify-between border-b border-gray-100 dark:border-white/5 pb-1.5 text-gray-500 dark:text-slate-300">
                   <span>{row.label}</span>
                   <span className="font-medium text-gray-700 dark:text-white/70">{row.val}</span>
                 </div>
               ))}
               <div className="pt-1 flex justify-between">
-                <span className="text-gray-500 dark:text-white/30">Implied Price</span>
+                <span className="text-gray-500 dark:text-slate-300">Implied Price</span>
                 {financialCurrencyNote
                   ? <span className="text-[10px] text-amber-600 dark:text-amber-400">FX adjusted — see DCF model</span>
                   : <span className="font-bold text-gray-900 dark:text-white">{currency}{fmt(priceP)}</span>}
               </div>
               {!financialCurrencyNote && (
                 <div className="flex justify-between">
-                  <span className="text-gray-400 dark:text-white/25">vs {currency}{fmt(currentPrice)}</span>
+                  <span className="text-gray-400 dark:text-slate-400">vs {currency}{fmt(currentPrice)}</span>
                   <span className={`font-semibold ${upsideP >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
                     {upsideP >= 0 ? '+' : ''}{fmtPct(upsideP)}
                   </span>
@@ -652,7 +652,7 @@ export default function FCFBuildUp({
 
           {/* Exit Multiple */}
           <div className="rounded-xl border border-gray-200 dark:border-white/8 p-4">
-            <div className="text-xs font-semibold text-gray-500 dark:text-white/30 uppercase tracking-wide mb-3">
+            <div className="text-xs font-semibold text-gray-500 dark:text-slate-300 uppercase tracking-wide mb-3">
               Exit {mode === 'unlevered' ? 'EV/FCF' : 'P/E'} Multiple
             </div>
             <div className="flex items-center gap-2 mb-3">
@@ -670,20 +670,20 @@ export default function FCFBuildUp({
                 { label: 'PV of TV',        val: fmtDollars(pvTVM, scale) },
                 { label: 'Equity Value',    val: fmtDollars(eqValM, scale) },
               ].map(row => (
-                <div key={row.label} className="flex justify-between border-b border-gray-100 dark:border-white/5 pb-1.5 text-gray-500 dark:text-white/30">
+                <div key={row.label} className="flex justify-between border-b border-gray-100 dark:border-white/5 pb-1.5 text-gray-500 dark:text-slate-300">
                   <span>{row.label}</span>
                   <span className="font-medium text-gray-700 dark:text-white/70">{row.val}</span>
                 </div>
               ))}
               <div className="pt-1 flex justify-between">
-                <span className="text-gray-500 dark:text-white/30">Implied Price</span>
+                <span className="text-gray-500 dark:text-slate-300">Implied Price</span>
                 {financialCurrencyNote
                   ? <span className="text-[10px] text-amber-600 dark:text-amber-400">FX adjusted — see DCF model</span>
                   : <span className="font-bold text-gray-900 dark:text-white">{currency}{fmt(priceM)}</span>}
               </div>
               {!financialCurrencyNote && (
                 <div className="flex justify-between">
-                  <span className="text-gray-400 dark:text-white/25">vs {currency}{fmt(currentPrice)}</span>
+                  <span className="text-gray-400 dark:text-slate-400">vs {currency}{fmt(currentPrice)}</span>
                   <span className={`font-semibold ${upsideM >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
                     {upsideM >= 0 ? '+' : ''}{fmtPct(upsideM)}
                   </span>
@@ -694,7 +694,7 @@ export default function FCFBuildUp({
 
         </div>
 
-        <p className="mt-3 text-[10px] text-gray-400 dark:text-white/20">
+        <p className="mt-3 text-[10px] text-gray-400 dark:text-slate-400">
           D&A derived from EBITDA − EBIT. ΔNWC from operating working capital changes; projected years use historical avg ratio.
           {mode === 'unlevered' ? ' UFCF = NOPAT + D&A − CapEx − ΔNWC.' : ' LFCF = Net Income + D&A − CapEx − ΔNWC − Net Debt Repayment.'}
           {financialCurrencyNote && ` Financial statements in local currency (${financialCurrencyNote}); implied price not shown.`}

@@ -102,11 +102,11 @@ export default function WarrenTable({ instruments }: Props) {
 
   function marketBadgeColor(market: string) {
     switch (market) {
-      case 'MERVAL': return 'bg-blue-50 text-blue-700'
+      case 'MERVAL': return 'bg-blue-500/15 text-blue-400'
       case 'NYSE':   return 'bg-emerald-50 text-emerald-700'
       case 'NASDAQ': return 'bg-violet-50 text-violet-700'
       case 'ROFEX':  return 'bg-amber-50 text-amber-700'
-      default:       return 'bg-slate-100 text-slate-500'
+      default:       return 'bg-white/8 text-slate-400'
     }
   }
 
@@ -126,7 +126,7 @@ export default function WarrenTable({ instruments }: Props) {
       )}
       <div className="overflow-auto flex-1 custom-scrollbar">
         <table className="w-full border-collapse">
-          <thead className="sticky top-0 z-10 bg-white">
+          <thead className="sticky top-0 z-10 bg-[#080F1E]">
             <tr className="border-b border-slate-200">
               <th className="px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400 w-8">#</th>
               <SortHeader label="Ticker" id="rank" />
@@ -159,7 +159,7 @@ export default function WarrenTable({ instruments }: Props) {
                   {/* Ticker */}
                   <td className="px-3 py-2">
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-xs font-bold text-slate-800 leading-none">{inst.displayTicker}</span>
+                      <span className="text-xs font-bold text-slate-100 leading-none">{inst.displayTicker}</span>
                       <div className="flex items-center gap-1">
                         <span className={`text-[9px] font-semibold px-1 rounded ${marketBadgeColor(inst.market)}`}>{inst.market}</span>
                         {inst.isCedear && <span className="text-[9px] text-amber-600">CEDEAR</span>}
@@ -170,7 +170,7 @@ export default function WarrenTable({ instruments }: Props) {
                   {/* Score with bar */}
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-14 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="w-14 h-1.5 bg-white/10 rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full"
                           style={{ width: `${barWidth}%`, background: sc }}
@@ -182,7 +182,7 @@ export default function WarrenTable({ instruments }: Props) {
 
                   {/* Signal bar */}
                   <td className="px-3 py-2">
-                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full"
                         style={{
@@ -229,7 +229,7 @@ export default function WarrenTable({ instruments }: Props) {
           <span>{total} instruments</span>
           <div className="flex items-center gap-2">
             <button
-              className="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-600"
+              className="px-2 py-0.5 rounded bg-white/8 hover:bg-white/15 disabled:opacity-40 text-slate-600"
               disabled={page === 0}
               onClick={() => setPage((p) => p - 1)}
             >
@@ -237,7 +237,7 @@ export default function WarrenTable({ instruments }: Props) {
             </button>
             <span>{page + 1} / {Math.ceil(total / PAGE_SIZE)}</span>
             <button
-              className="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-600"
+              className="px-2 py-0.5 rounded bg-white/8 hover:bg-white/15 disabled:opacity-40 text-slate-600"
               disabled={(page + 1) * PAGE_SIZE >= total}
               onClick={() => setPage((p) => p + 1)}
             >

@@ -43,21 +43,20 @@ export default function MacroBrief({ macroBrief, briefCachedAt, signals, pulse }
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
+    <div className="rounded-xl glass-card border-[rgba(59,130,246,0.15)] px-5 py-4">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-bold text-slate-900">Macro Brief</h2>
+        <h2 className="text-sm font-bold text-slate-100">Macro Brief</h2>
         {cachedAt && <span className="text-[10px] text-slate-400">Updated {timeAgo(cachedAt)}</span>}
       </div>
       {text ? (
-        <p className="text-sm text-slate-600 leading-relaxed">{text}</p>
+        <p className="text-sm text-slate-300 leading-relaxed">{text}</p>
       ) : (
         <div className="flex items-center gap-3">
           <p className="text-sm text-slate-400 italic">AI analysis not yet generated for this regime.</p>
           <button
             onClick={generate}
             disabled={loading}
-            className="shrink-0 text-xs font-semibold text-white px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
-            style={{ background: '#0F2A5E' }}
+            className="shrink-0 text-xs font-semibold text-white px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 bg-blue-600 hover:bg-blue-500"
           >
             {loading ? 'Generating…' : 'Generate'}
           </button>

@@ -34,7 +34,7 @@ function WeightBar({ label, weight, color }: { label: string; weight: number; co
   if (pct === 0) return null
   return (
     <div className="flex items-center gap-2">
-      <span className="w-24 shrink-0 text-[10px] text-gray-400 dark:text-white/30">{label}</span>
+      <span className="w-24 shrink-0 text-[10px] text-gray-400 dark:text-slate-300">{label}</span>
       <div className="flex-1 rounded-full bg-surface-container dark:bg-white/8 h-1.5 overflow-hidden">
         <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
       </div>
@@ -117,9 +117,9 @@ export default function CAGRAnalysis({ cagrAnalysis: ca, isNegativeFCF, growthMo
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-outline-variant/15 dark:border-white/8">
-              <th className="pb-2 text-left text-xs font-medium text-gray-400 dark:text-white/25">Source</th>
-              <th className="pb-2 text-right text-xs font-medium text-gray-400 dark:text-white/25">Rate</th>
-              <th className="pb-2 text-right text-xs font-medium text-gray-400 dark:text-white/25">Note</th>
+              <th className="pb-2 text-left text-xs font-medium text-gray-400 dark:text-slate-400">Source</th>
+              <th className="pb-2 text-right text-xs font-medium text-gray-400 dark:text-slate-400">Rate</th>
+              <th className="pb-2 text-right text-xs font-medium text-gray-400 dark:text-slate-400">Note</th>
             </tr>
           </thead>
           <tbody>
@@ -134,7 +134,7 @@ export default function CAGRAnalysis({ cagrAnalysis: ca, isNegativeFCF, growthMo
                   (row as { bold?: boolean }).bold
                     ? 'font-semibold text-gray-800 dark:text-white'
                     : (row as { muted?: boolean }).muted
-                      ? 'text-gray-400 dark:text-white/25'
+                      ? 'text-gray-400 dark:text-slate-400'
                       : 'text-gray-600 dark:text-white/50'
                 }`}>
                   {row.label}
@@ -143,12 +143,12 @@ export default function CAGRAnalysis({ cagrAnalysis: ca, isNegativeFCF, growthMo
                   (row as { bold?: boolean }).bold
                     ? 'font-bold text-gray-900 dark:text-white'
                     : (row as { muted?: boolean }).muted
-                      ? 'text-gray-400 dark:text-white/25'
+                      ? 'text-gray-400 dark:text-slate-400'
                       : 'text-gray-700 dark:text-white/60'
                 }`}>
                   {fmtPct(row.value)}
                 </td>
-                <td className="py-2 text-right text-xs text-gray-400 dark:text-white/25">{row.note}</td>
+                <td className="py-2 text-right text-xs text-gray-400 dark:text-slate-400">{row.note}</td>
               </tr>
             ))}
           </tbody>
@@ -158,7 +158,7 @@ export default function CAGRAnalysis({ cagrAnalysis: ca, isNegativeFCF, growthMo
       {/* Blending weights visual */}
       {(ca.weights.historical > 0 || ca.weights.analyst > 0 || ca.weights.fundamental > 0) && (
         <div className="mb-4 rounded-xl border border-outline-variant/15 dark:border-white/8 bg-surface-container-low dark:bg-white/5 px-4 py-3">
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-white/25">Blending Weights</p>
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-slate-400">Blending Weights</p>
           <div className="space-y-1.5">
             <WeightBar label="Analyst"     weight={ca.weights.analyst}     color="#6366f1" />
             <WeightBar label="Fundamental" weight={ca.weights.fundamental} color="#10b981" />
@@ -178,14 +178,14 @@ export default function CAGRAnalysis({ cagrAnalysis: ca, isNegativeFCF, growthMo
           )}
         </div>
         {growthModel === 'three-stage' ? (
-          <p className="mt-1.5 text-[11px] text-gray-400 dark:text-white/25 leading-relaxed">
+          <p className="mt-1.5 text-[11px] text-gray-400 dark:text-slate-400 leading-relaxed">
             <span className="text-gray-600 dark:text-white/50">Years 1–5</span> at {fmtPct(ca.blended)}.{' '}
             <span className="text-violet-500 dark:text-violet-400">Years 6–10</span> fade linearly to terminal
             {terminalG != null ? ` ${fmtPct(terminalG)}` : ''}.
             Three-stage applied because CAGR exceeds 15% — prevents growth-cliff artifact.
           </p>
         ) : (
-          <p className="mt-1.5 text-[11px] text-gray-400 dark:text-white/25 leading-relaxed">
+          <p className="mt-1.5 text-[11px] text-gray-400 dark:text-slate-400 leading-relaxed">
             Constant {fmtPct(ca.blended)} for 10 years, then terminal value.
             Growth is near sustainable levels — no deceleration phase needed.
           </p>
@@ -193,7 +193,7 @@ export default function CAGRAnalysis({ cagrAnalysis: ca, isNegativeFCF, growthMo
       </div>
 
       {/* Growth drivers */}
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-white/25">Assumptions &amp; Adjustments</p>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-slate-400">Assumptions &amp; Adjustments</p>
       <ul className="space-y-1.5">
         {ca.drivers.map((driver, i) => (
           <li key={i} className="flex items-start gap-2 text-xs text-gray-600 dark:text-white/40">

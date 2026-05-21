@@ -163,19 +163,19 @@ export default function BubbleMap({ instruments }: Props) {
       {/* Tooltip */}
       {hovered && (
         <div
-          className="absolute z-20 pointer-events-none bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs shadow-card-md"
+          className="absolute z-20 pointer-events-none bg-[#0d1117] border border-white/15 rounded-lg px-3 py-2 text-xs"
           style={{
             left: tooltipPos.x + 12,
             top: tooltipPos.y - 24,
             transform: tooltipPos.x > W * 0.65 ? 'translateX(-110%)' : undefined,
           }}
         >
-          <div className="font-bold text-slate-800">{hovered.displayTicker}</div>
+          <div className="font-bold text-slate-100">{hovered.displayTicker}</div>
           <div className="text-slate-400">{hovered.name.slice(0, 28)}</div>
           <div className="mt-1 flex gap-3">
-            <span className="text-slate-400">Score <span className="text-slate-700 font-semibold">{hovered.finalScore}</span></span>
-            <span className="text-slate-400">RS <span className="text-slate-700 font-semibold">{(hovered.factorScores as unknown as Record<string, number>).momentum?.toFixed(0) ?? '—'}</span></span>
-            <span className="text-slate-400">52w <span className="text-slate-700 font-semibold">{(hovered.keyMetrics?.['Dist 52w Hi'] as number | null)?.toFixed(1) ?? '—'}%</span></span>
+            <span className="text-slate-400">Score <span className="text-slate-200 font-semibold">{hovered.finalScore}</span></span>
+            <span className="text-slate-400">RS <span className="text-slate-200 font-semibold">{(hovered.factorScores as unknown as Record<string, number>).momentum?.toFixed(0) ?? '—'}</span></span>
+            <span className="text-slate-400">52w <span className="text-slate-200 font-semibold">{(hovered.keyMetrics?.['Dist 52w Hi'] as number | null)?.toFixed(1) ?? '—'}%</span></span>
           </div>
         </div>
       )}
