@@ -74,6 +74,7 @@ export default function SimplifierTickerPage() {
       cagr3y:       (data as any).cagrAnalysis?.historicalCagr3y ?? null,
       insiderPct:   (data as any).ownership?.insiderPct ?? null,
       beta:         (data as any).wacc?.inputs?.beta ?? null,
+      fairValue:    (data as any).valuationMethods?.triangulatedFairValue ?? (data as any).fairValue?.fairValuePerShare ?? null,
       upsidePct:    (data as any).fairValue?.upsidePct ?? null,
       price:        (data as any).quote?.price ?? null,
       marketCap:    (data as any).quote?.marketCap ?? null,

@@ -49,6 +49,7 @@ export default function ThesisBuilderTab({ ticker, data }: Props) {
         cagr3y:       data?.cagrAnalysis?.historicalCagr3y ?? null,
         insiderPct:   data?.ownership?.insiderPct        ?? null,
         beta:         data?.wacc?.inputs?.beta           ?? null,
+        fairValue:    data?.valuationMethods?.triangulatedFairValue ?? data?.fairValue?.fairValuePerShare ?? null,
         upsidePct:    data?.valuationMethods?.triangulatedUpsidePct ?? data?.fairValue?.upsidePct ?? null,
         price:        data?.quote?.price                 ?? null,
         marketCap:    data?.quote?.marketCap             ?? null,
