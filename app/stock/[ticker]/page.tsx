@@ -542,7 +542,7 @@ function StockPageBody() {
             {/* Sidebar — desktop only, hidden on news tab */}
             {activeTab !== 'news' && (
               <aside className="hidden lg:block">
-                <div className="sticky top-[68px] space-y-3">
+                <div className="sticky top-[68px] max-h-[calc(100vh-88px)] overflow-y-auto space-y-3 pb-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full">
                   <StockSidebar activeTab={activeTab} data={data} statementsData={statementsData} />
                 </div>
               </aside>

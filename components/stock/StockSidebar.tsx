@@ -26,6 +26,7 @@ export default function StockSidebar({ activeTab, data, statementsData: _stateme
         analystRecommendation={data.analystRecommendation ?? ''}
         ratings={data.ratings}
         valuationMethods={data.valuationMethods}
+        financialStatements={data.financialStatements}
       />
     )
   }

@@ -31,20 +31,36 @@ export default function AtAGlance({
   const ttmIS = statementsData?.ttm?.incomeStatement
   const ttmBS = statementsData?.ttm?.balanceSheet
 
+  // P/E — use dilutedEPS average; dilutedEPS is already TTM-averaged in statements route
   const dilutedEPS = ttmIS?.dilutedEPS as number | null | undefined
   const pe         = (price > 0 && dilutedEPS != null && dilutedEPS > 0) ? price / dilutedEPS : null
 
-  const ebitda    = ttmIS?.EBITDA as number | null | undefined
-  const totalDebt = ttmBS?.totalDebt as number | null | undefined
-  const cashBS    = (ttmBS?.cashCashEquivalentsAndShortTermInvestments ?? ttmBS?.cash) as number | null | undefined
-  const ev        = (marketCap != null && totalDebt != null && cashBS != null) ? marketCap + totalDebt - cashBS : marketCap
+  // EV/EBITDA — try EBITDA first, then compute from EBIT + D&A if missing
+  const ebitdaRaw    = ttmIS?.EBITDA ?? ttmIS?.normalizedEBITDA
+  const ebitComputed = ttmIS?.EBIT != null && ttmIS?.reconciledDepreciation != null
+    ? (ttmIS.EBIT as number) + (ttmIS.reconciledDepreciation as number) : null
+  const ebitda = (ebitdaRaw as number | null | undefined) ?? ebitComputed
+
+  // Balance sheet fields — Yahoo fundamentalsTimeSeries uses camelCase with specific names
+  const totalDebt = (ttmBS?.totalDebt ?? ttmBS?.longTermDebtAndCapitalLeaseObligation ?? ttmBS?.longTermDebt) as number | null | undefined
+  const cashBS    = (ttmBS?.cashCashEquivalentsAndShortTermInvestments ?? ttmBS?.cashAndCashEquivalents) as number | null | undefined
+  const ev        = (marketCap != null && totalDebt != null && cashBS != null)
+    ? marketCap + totalDebt - cashBS
+    : marketCap
   const evEbitda  = (ev != null && ebitda != null && ebitda > 0) ? ev / ebitda : null
 
+  // P/S
   const revenue = ttmIS?.totalRevenue as number | null | undefined
   const ps      = (marketCap != null && marketCap > 0 && revenue != null && revenue > 0) ? marketCap / revenue : null
 
-  const equity = ttmBS?.totalStockholdersEquity as number | null | undefined
-  const pb     = (marketCap != null && marketCap > 0 && equity != null && equity > 0) ? marketCap / equity : null
+  // P/B — Yahoo time series uses commonStockEquity, NOT totalStockholdersEquity
+  const equity = (
+    ttmBS?.commonStockEquity
+    ?? ttmBS?.totalEquityGrossMinorityInterest
+    ?? ttmBS?.stockholdersEquity
+    ?? ttmBS?.totalStockholdersEquity
+  ) as number | null | undefined
+  const pb = (marketCap != null && marketCap > 0 && equity != null && equity > 0) ? marketCap / equity : null
 
   const showMultiples = pe != null || evEbitda != null || ps != null || pb != null
 
