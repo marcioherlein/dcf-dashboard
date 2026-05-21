@@ -124,7 +124,7 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
                 <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
                 <div className="text-xs text-amber-800 leading-relaxed">
                   <p className="font-semibold mb-0.5">Review assumptions before saving</p>
-                  <p>These inputs were auto-derived from Yahoo Finance data. Growth rates, WACC, and multiples may not reflect your own research. Don't rely on the model blindly.</p>
+                  <p>These inputs were auto-derived from Yahoo Finance data. Growth rates, WACC, and multiples may not reflect your own research. Don&apos;t rely on the model blindly.</p>
                   <button
                     onClick={() => { onClose(); onReviewAssumptions() }}
                     className="mt-1.5 underline font-semibold hover:text-amber-900"
