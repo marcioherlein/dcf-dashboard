@@ -11,11 +11,22 @@ interface Scores {
   piotroski?: { score: number }
   altman?: { score: number; zone: 'Safe' | 'Grey' | 'Distress' } | null
   beneish?: { flag: 'Clean' | 'Warning' | 'Manipulator' } | null
+  roic?: { roic: number | null; spread: number | null } | null
 }
 
 interface IncomeRow {
   year: string
   revenue: number | null
+  netIncome: number | null
+  ebitda: number | null
+  operatingMargin: number | null
+  isProjected: boolean
+}
+
+interface CashFlowRow {
+  year: string
+  freeCashFlow: number | null
+  operatingCF: number | null
   isProjected: boolean
 }
 
@@ -28,17 +39,20 @@ interface Ownership {
 interface Props {
   businessProfile: BusinessProfile
   scores?: Scores
-  financialStatements?: { incomeStatement: IncomeRow[] }
+  financialStatements?: {
+    incomeStatement: IncomeRow[]
+    cashFlow: CashFlowRow[]
+  }
   ownership?: Ownership
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">{children}</p>
+  return <p className="text-[10px] font-bold uppercase tracking-wider text-slate-300 mb-2">{children}</p>
 }
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-xl glass-card border-[rgba(59,130,246,0.15)] px-4 py-3">
+    <div className="rounded-xl glass-card border border-[rgba(59,130,246,0.25)] px-4 py-3">
       {children}
     </div>
   )
@@ -55,8 +69,8 @@ function MarginBar({ label, value }: { label: string; value: number | null }) {
   return (
     <div>
       <div className="flex justify-between mb-1">
-        <span className="text-[11px] text-slate-400">{label}</span>
-        <span className="text-[11px] font-semibold text-slate-200 tabular-nums">
+        <span className="text-[11px] text-slate-300">{label}</span>
+        <span className="text-[11px] font-semibold text-white tabular-nums">
           {pct != null ? pct.toFixed(1) + '%' : '—'}
         </span>
       </div>
@@ -69,49 +83,78 @@ function MarginBar({ label, value }: { label: string; value: number | null }) {
   )
 }
 
-function RevenueSparkline({ rows }: { rows: IncomeRow[] }) {
-  const historical = rows.filter(r => !r.isProjected && r.revenue != null).slice(-4)
-  if (historical.length < 2) return null
+function fmtM(v: number): string {
+  const abs = Math.abs(v)
+  if (abs >= 1000) return (v < 0 ? '-' : '') + '$' + (abs / 1000).toFixed(1) + 'B'
+  return (v < 0 ? '-' : '') + '$' + abs.toFixed(0) + 'M'
+}
 
-  const values = historical.map(r => r.revenue as number)
-  const max    = Math.max(...values)
-  const min    = Math.min(0, Math.min(...values))
-  const range  = max - min || 1
+function BarSparkline({ data, colorFn, label }: {
+  data: { year: string; value: number }[]
+  colorFn: (v: number) => string
+  label?: string
+}) {
+  if (data.length < 2) return null
+  const maxAbs = Math.max(...data.map(d => Math.abs(d.value)))
+  if (maxAbs === 0) return null
 
-  const W = 220; const H = 40; const BAR_W = 38; const GAP = 8
+  return (
+    <div>
+      {label && <SectionLabel>{label}</SectionLabel>}
+      <div className="flex items-end gap-1.5 h-10">
+        {data.map((d, i) => {
+          const h = Math.max(3, (Math.abs(d.value) / maxAbs) * 100)
+          const isLatest = i === data.length - 1
+          return (
+            <div key={d.year} className="flex-1 flex flex-col items-center justify-end gap-0.5">
+              <div
+                className={cn('w-full rounded-sm', colorFn(d.value), isLatest ? 'opacity-90' : 'opacity-50')}
+                style={{ height: `${h}%` }}
+              />
+              <span className="text-[9px] text-slate-500">{d.year.slice(-2)}</span>
+            </div>
+          )
+        })}
+      </div>
+      <div className="flex justify-between mt-0.5 text-[9px] text-slate-500 tabular-nums">
+        {data.map(d => (
+          <span key={d.year}>{fmtM(d.value)}</span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function RevenueBarChart({ rows }: { rows: IncomeRow[] }) {
+  const hist = rows.filter(r => !r.isProjected && r.revenue != null).slice(-4)
+  if (hist.length < 2) return null
+
+  const values = hist.map(r => r.revenue as number)
+  const max = Math.max(...values)
+  const range = max || 1
 
   return (
     <Card>
       <SectionLabel>Revenue Trend</SectionLabel>
-      <svg width="100%" viewBox={`0 0 ${W} ${H + 16}`} className="overflow-visible">
-        {values.map((v, i) => {
-          const barH = Math.max(2, ((v - min) / range) * H)
-          const x    = i * (BAR_W + GAP)
-          const y    = H - barH
-          const isLatest = i === values.length - 1
+      <div className="flex items-end gap-1.5 h-12">
+        {hist.map((r, i) => {
+          const h = Math.max(4, (r.revenue! / range) * 100)
+          const isLatest = i === hist.length - 1
           return (
-            <g key={i}>
-              <rect
-                x={x} y={y} width={BAR_W} height={barH}
-                rx={3}
-                fill={isLatest ? 'rgba(59,130,246,0.5)' : 'rgba(255,255,255,0.12)'}
+            <div key={r.year} className="flex-1 flex flex-col items-center justify-end gap-0.5">
+              <div
+                className={cn('w-full rounded-sm', isLatest ? 'bg-blue-400/70' : 'bg-white/15')}
+                style={{ height: `${h}%` }}
               />
-              <text
-                x={x + BAR_W / 2} y={H + 14}
-                textAnchor="middle"
-                fontSize={9}
-                fill="rgba(148,163,184,0.8)"
-              >
-                {historical[i].year.slice(-2)}
-              </text>
-            </g>
+              <span className="text-[9px] text-slate-500">{r.year.slice(-2)}</span>
+            </div>
           )
         })}
-      </svg>
-      <div className="flex justify-between mt-0.5 text-[9px] text-slate-500">
-        {values.map((v, i) => (
-          <span key={i} className="tabular-nums">
-            {v >= 1e9 ? '$' + (v / 1e9).toFixed(0) + 'B' : '$' + (v / 1e6).toFixed(0) + 'M'}
+      </div>
+      <div className="flex justify-between mt-0.5 text-[9px] text-slate-500 tabular-nums">
+        {hist.map(r => (
+          <span key={r.year}>
+            {r.revenue! >= 1e9 ? '$' + (r.revenue! / 1e9).toFixed(0) + 'B' : '$' + (r.revenue! / 1e6).toFixed(0) + 'M'}
           </span>
         ))}
       </div>
@@ -123,6 +166,7 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
   const piotroski = scores?.piotroski
   const altman    = scores?.altman
   const beneish   = scores?.beneish
+  const roic      = scores?.roic
 
   const altmanColor = altman?.zone === 'Safe' ? 'text-emerald-400 bg-emerald-500/15 border-emerald-500/20'
     : altman?.zone === 'Distress' ? 'text-red-400 bg-red-500/15 border-red-500/20'
@@ -132,22 +176,135 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
     : beneish?.flag === 'Manipulator' ? 'text-red-400 bg-red-500/15 border-red-500/20'
     : 'text-amber-400 bg-amber-500/15 border-amber-500/20'
 
+  const isRows = financialStatements?.incomeStatement ?? []
+  const cfRows = financialStatements?.cashFlow ?? []
+
+  // EBITDA margin from latest historical income statement row
+  const latestActual = [...isRows].filter(r => !r.isProjected).slice(-1)[0]
+  const ebitdaMargin = latestActual?.revenue && latestActual.revenue > 0 && latestActual.ebitda != null
+    ? latestActual.ebitda / latestActual.revenue
+    : null
+
+  // Build sparkline data
+  const niData = isRows
+    .filter(r => !r.isProjected && r.netIncome != null)
+    .slice(-4)
+    .map(r => ({ year: r.year, value: r.netIncome as number }))
+
+  const fcfData = cfRows
+    .filter(r => !r.isProjected && r.freeCashFlow != null)
+    .slice(-4)
+    .map(r => ({ year: r.year, value: r.freeCashFlow as number }))
+
+  // Operating margin trend (last 4 historical rows that have it)
+  const omData = isRows
+    .filter(r => !r.isProjected && r.operatingMargin != null)
+    .slice(-4)
+    .map(r => ({ year: r.year, value: (r.operatingMargin as number) * 100 }))
+
   return (
     <div className="space-y-3">
 
-      {/* Margins */}
+      {/* Profit Margins */}
       <Card>
         <SectionLabel>Profit Margins</SectionLabel>
         <div className="space-y-2.5">
-          <MarginBar label="Gross Margin"  value={businessProfile.grossMargin} />
-          <MarginBar label="Net Margin"    value={businessProfile.netMargin} />
-          <MarginBar label="FCF Margin"    value={businessProfile.fcfMargin} />
+          <MarginBar label="Gross Margin"   value={businessProfile.grossMargin} />
+          <MarginBar label="EBITDA Margin"  value={ebitdaMargin} />
+          <MarginBar label="Net Margin"     value={businessProfile.netMargin} />
+          <MarginBar label="FCF Margin"     value={businessProfile.fcfMargin} />
         </div>
       </Card>
 
-      {/* Revenue sparkline */}
-      {financialStatements?.incomeStatement && (
-        <RevenueSparkline rows={financialStatements.incomeStatement} />
+      {/* Revenue Trend */}
+      {isRows.length >= 2 && <RevenueBarChart rows={isRows} />}
+
+      {/* Net Income Trend */}
+      {niData.length >= 2 && (
+        <Card>
+          <BarSparkline
+            data={niData}
+            colorFn={v => v >= 0 ? 'bg-emerald-400' : 'bg-red-400'}
+            label="Net Income"
+          />
+        </Card>
+      )}
+
+      {/* Free Cash Flow Trend */}
+      {fcfData.length >= 2 && (
+        <Card>
+          <BarSparkline
+            data={fcfData}
+            colorFn={v => v >= 0 ? 'bg-blue-400' : 'bg-red-400'}
+            label="Free Cash Flow"
+          />
+        </Card>
+      )}
+
+      {/* Operating Margin Trend */}
+      {omData.length >= 2 && (
+        <Card>
+          <SectionLabel>Operating Margin %</SectionLabel>
+          <div className="flex items-end gap-1.5 h-10">
+            {omData.map((d, i) => {
+              const isLatest = i === omData.length - 1
+              return (
+                <div key={d.year} className="flex-1 flex flex-col items-center justify-end gap-0.5">
+                  <div
+                    className={cn(
+                      'w-full rounded-sm',
+                      d.value >= 15 ? 'bg-emerald-400' : d.value >= 5 ? 'bg-amber-400' : 'bg-red-400',
+                      isLatest ? 'opacity-90' : 'opacity-45'
+                    )}
+                    style={{ height: `${Math.max(4, Math.min(100, d.value * 2))}%` }}
+                  />
+                  <span className="text-[9px] text-slate-500">{d.year.slice(-2)}</span>
+                </div>
+              )
+            })}
+          </div>
+          <div className="flex justify-between mt-0.5 text-[9px] text-slate-500 tabular-nums">
+            {omData.map(d => (
+              <span key={d.year}>{d.value.toFixed(1)}%</span>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* ROIC */}
+      {roic?.roic != null && (
+        <Card>
+          <SectionLabel>Capital Returns</SectionLabel>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-slate-300">ROIC</span>
+              <span className={cn(
+                'text-[11px] font-semibold tabular-nums',
+                roic.roic >= 0.15 ? 'text-emerald-400' : roic.roic >= 0.08 ? 'text-amber-400' : 'text-red-400'
+              )}>
+                {(roic.roic * 100).toFixed(1)}%
+              </span>
+            </div>
+            {roic.spread != null && (
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-slate-300">ROIC − WACC spread</span>
+                <span className={cn(
+                  'text-[11px] font-semibold tabular-nums',
+                  roic.spread > 0 ? 'text-emerald-400' : 'text-red-400'
+                )}>
+                  {roic.spread > 0 ? '+' : ''}{(roic.spread * 100).toFixed(1)}%
+                </span>
+              </div>
+            )}
+            {roic.spread != null && (
+              <p className="text-[10px] text-slate-500 leading-tight mt-0.5">
+                {roic.spread > 0.05 ? 'Value creation: earning well above cost of capital'
+                  : roic.spread > 0 ? 'Modest value creation above cost of capital'
+                  : 'Returns below cost of capital — value erosion risk'}
+              </p>
+            )}
+          </div>
+        </Card>
       )}
 
       {/* Quality Scores */}
@@ -155,12 +312,10 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
         <Card>
           <SectionLabel>Quality Scores</SectionLabel>
           <div className="space-y-2">
-
-            {/* Piotroski */}
             {piotroski && (
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[11px] text-slate-400">Piotroski F-Score</span>
+                  <span className="text-[11px] text-slate-300">Piotroski F-Score</span>
                   <span className={cn(
                     'text-[11px] font-bold tabular-nums',
                     piotroski.score >= 7 ? 'text-emerald-400' : piotroski.score >= 4 ? 'text-amber-400' : 'text-red-400'
@@ -183,8 +338,6 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
                 </div>
               </div>
             )}
-
-            {/* Altman + Beneish chips */}
             <div className="flex flex-wrap gap-1.5 mt-1">
               {altman && (
                 <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full border', altmanColor)}>
@@ -212,8 +365,8 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
               { label: 'Short Float',   value: ownership.shortPct },
             ].map(({ label, value }) => (
               <div key={label} className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-400">{label}</span>
-                <span className="text-[11px] font-semibold text-slate-200 tabular-nums">
+                <span className="text-[11px] text-slate-300">{label}</span>
+                <span className="text-[11px] font-semibold text-white tabular-nums">
                   {value != null ? (value * 100).toFixed(1) + '%' : '—'}
                 </span>
               </div>

@@ -20,11 +20,21 @@ interface MultipleEstimate {
 interface ValuationMethods {
   triangulatedFairValue: number | null
   triangulatedUpsidePct: number | null
+  rationale?: string
+  effectiveWeights?: { fcff: number; fcfe: number; ddm: number; multiples: number }
   models?: {
-    multiples?: {
-      estimates: MultipleEstimate[]
-    }
+    fcff?: { fairValue: number | null; upsidePct: number | null }
+    fcfe?: { applicable: boolean; fairValuePerShare: number }
+    ddm?: { applicable: boolean; fairValuePerShare: number }
+    multiples?: { estimates: MultipleEstimate[]; blendedFairValue: number | null }
   }
+}
+
+interface Scenario {
+  fairValue: number | null
+  wacc: number
+  cagr: number
+  terminalG: number
 }
 
 interface FairValue {
@@ -38,6 +48,9 @@ interface Props {
   fairValue: FairValue
   currentPrice: number
   currency: string
+  scenarios?: { bull: Scenario; base: Scenario; bear: Scenario }
+  cagr?: number
+  terminalG?: number
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -59,16 +72,16 @@ function upsideColor(pct: number): string {
   return 'text-red-400'
 }
 
-export default function ValuationSidebar({ wacc, valuationMethods, fairValue, currentPrice, currency }: Props) {
+export default function ValuationSidebar({ wacc, valuationMethods, fairValue, currentPrice, currency, scenarios, cagr, terminalG }: Props) {
   const sym = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$' : currency
 
   const estimates = valuationMethods?.models?.multiples?.estimates ?? []
 
-  // Build method rows — multiples from estimates + Core DCF from fairValue
+  // By Method rows — multiples (applicable only) + Core DCF
   const methodDefs: { key: string; label: string }[] = [
-    { key: 'P/E',        label: 'P/E Multiple'   },
-    { key: 'EV/EBITDA',  label: 'EV/EBITDA'      },
-    { key: 'EV/Revenue', label: 'EV/Revenue'      },
+    { key: 'P/E',        label: 'P/E Multiple'  },
+    { key: 'EV/EBITDA',  label: 'EV/EBITDA'     },
+    { key: 'EV/Revenue', label: 'EV/Revenue'     },
   ]
   const methods: { label: string; fv: number | null; upside: number | null }[] = [
     ...methodDefs.map(({ key, label }) => {
@@ -84,6 +97,7 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
 
   const blended = valuationMethods?.triangulatedFairValue
   const blendedUpside = valuationMethods?.triangulatedUpsidePct
+  const weights = valuationMethods?.effectiveWeights
 
   // Peer multiples comparison rows
   const multipleRows = [
@@ -94,6 +108,14 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
     const e = estimates.find(x => x.multiple === key)
     return { label, company: e?.actualValue ?? null, sector: e?.sectorMedian ?? null }
   })
+
+  // Model weights for display (filter out zero-weight models)
+  const weightBars = weights ? [
+    { label: 'DCF (FCFF)',   pct: weights.fcff,     color: 'bg-blue-400' },
+    { label: 'FCFE',         pct: weights.fcfe,     color: 'bg-indigo-400' },
+    { label: 'DDM',          pct: weights.ddm,      color: 'bg-purple-400' },
+    { label: 'Multiples',    pct: weights.multiples, color: 'bg-sky-400' },
+  ].filter(w => w.pct > 0) : []
 
   return (
     <div className="space-y-3">
@@ -115,10 +137,13 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
           <p className="text-[10px] text-slate-400 mt-0.5">
             vs current {sym}{currentPrice.toFixed(2)}
           </p>
+          {valuationMethods?.rationale && (
+            <p className="text-[10px] text-slate-500 mt-1.5 leading-tight">{valuationMethods.rationale}</p>
+          )}
         </Card>
       )}
 
-      {/* Method Fair Values */}
+      {/* By Method */}
       <Card>
         <SectionLabel>By Method</SectionLabel>
         <div className="space-y-1.5">
@@ -140,14 +165,39 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
         </div>
       </Card>
 
-      {/* WACC Snapshot */}
+      {/* Model Weights */}
+      {weightBars.length > 0 && (
+        <Card>
+          <SectionLabel>Model Weights</SectionLabel>
+          {/* Stacked bar */}
+          <div className="flex h-2 rounded-full overflow-hidden mb-2.5">
+            {weightBars.map(w => (
+              <div key={w.label} className={cn(w.color, 'opacity-70')} style={{ width: `${w.pct}%` }} />
+            ))}
+          </div>
+          <div className="space-y-1">
+            {weightBars.map(w => (
+              <div key={w.label} className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <div className={cn('w-2 h-2 rounded-full', w.color)} />
+                  <span className="text-[11px] text-slate-300">{w.label}</span>
+                </div>
+                <span className="text-[11px] font-semibold text-white tabular-nums">{w.pct}%</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* WACC / Discount Rate */}
       <Card>
-        <SectionLabel>WACC Snapshot</SectionLabel>
+        <SectionLabel>Discount Rate</SectionLabel>
         <div className="space-y-1.5">
           {[
-            { label: 'WACC',              value: (wacc.wacc * 100).toFixed(1) + '%' },
-            { label: 'Cost of Equity',    value: (wacc.costOfEquity * 100).toFixed(1) + '%' },
-            { label: 'Beta',              value: wacc.inputs.beta.toFixed(2) },
+            { label: 'WACC',           value: (wacc.wacc * 100).toFixed(1) + '%' },
+            { label: 'Cost of Equity', value: (wacc.costOfEquity * 100).toFixed(1) + '%' },
+            { label: 'Beta',           value: wacc.inputs.beta.toFixed(2) },
+            { label: 'Risk-Free Rate', value: (wacc.inputs.rfRate * 100).toFixed(2) + '%' },
           ].map(({ label, value }) => (
             <div key={label} className="flex items-center justify-between">
               <span className="text-[11px] text-slate-300">{label}</span>
@@ -157,7 +207,75 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
         </div>
       </Card>
 
-      {/* Peer Multiples */}
+      {/* Growth Assumptions */}
+      {(cagr != null || terminalG != null) && (
+        <Card>
+          <SectionLabel>Growth Assumptions</SectionLabel>
+          <div className="space-y-1.5">
+            {cagr != null && (
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-slate-300">Revenue CAGR</span>
+                <span className="text-[11px] font-semibold text-white tabular-nums">
+                  {(cagr * 100).toFixed(1)}%
+                </span>
+              </div>
+            )}
+            {terminalG != null && (
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-slate-300">Terminal Growth</span>
+                <span className="text-[11px] font-semibold text-white tabular-nums">
+                  {(terminalG * 100).toFixed(1)}%
+                </span>
+              </div>
+            )}
+            {cagr != null && terminalG != null && (
+              <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">
+                {cagr > 0.15 ? 'High-growth: 3-stage DCF model' : 'Standard: 2-stage DCF model'}
+              </p>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {/* Scenario Analysis */}
+      {scenarios && (
+        <Card>
+          <SectionLabel>Scenario Analysis</SectionLabel>
+          <div className="space-y-1.5">
+            {[
+              { label: 'Bull', scenario: scenarios.bull, color: 'text-emerald-400' },
+              { label: 'Base', scenario: scenarios.base, color: 'text-blue-400'    },
+              { label: 'Bear', scenario: scenarios.bear, color: 'text-red-400'     },
+            ].map(({ label, scenario, color }) => {
+              const fv = scenario.fairValue
+              const upside = fv != null && currentPrice > 0 ? (fv - currentPrice) / currentPrice : null
+              return (
+                <div key={label} className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className={cn('text-[10px] font-bold w-8', color)}>{label}</span>
+                    <span className="text-[9px] text-slate-500 tabular-nums">
+                      {(scenario.cagr * 100).toFixed(0)}% / {(scenario.wacc * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] font-semibold text-white tabular-nums">
+                      {fv != null ? `${sym}${fv.toFixed(2)}` : '—'}
+                    </span>
+                    {upside != null && (
+                      <span className={cn('text-[10px] tabular-nums w-12 text-right', upsideColor(upside))}>
+                        {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(0)}%
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <p className="text-[9px] text-slate-600 mt-2">CAGR / WACC per scenario</p>
+        </Card>
+      )}
+
+      {/* vs Sector Median */}
       {multipleRows.some(r => r.company != null) && (
         <Card>
           <SectionLabel>vs Sector Median</SectionLabel>

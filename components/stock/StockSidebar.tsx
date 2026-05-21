@@ -2,7 +2,6 @@
 import OverviewSidebar from './sidebar/OverviewSidebar'
 import ValuationSidebar from './sidebar/ValuationSidebar'
 import FinancialsSidebar from './sidebar/FinancialsSidebar'
-import RisksSidebar from './sidebar/RisksSidebar'
 import type { TabId } from './TabNav'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,6 +37,9 @@ export default function StockSidebar({ activeTab, data, statementsData: _stateme
         fairValue={data.fairValue}
         currentPrice={data.quote.price}
         currency={data.quote.currency ?? 'USD'}
+        scenarios={data.scenarios}
+        cagr={data.cagr}
+        terminalG={data.terminalG}
       />
     )
   }
@@ -53,15 +55,6 @@ export default function StockSidebar({ activeTab, data, statementsData: _stateme
     )
   }
 
-  if (activeTab === 'risks') {
-    return (
-      <RisksSidebar
-        ratings={data.ratings}
-        scores={data.scores}
-        ownership={data.ownership}
-      />
-    )
-  }
-
+  // Risks tab: no sidebar (content is self-contained)
   return null
 }
