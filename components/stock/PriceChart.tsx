@@ -1,14 +1,14 @@
 'use client'
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import {
-  ComposedChart, Area, Bar, Line, XAxis, YAxis, Tooltip,
-  ResponsiveContainer, ReferenceLine, CartesianGrid,
-} from 'recharts'
-import { fmt } from '@/lib/utils'
+  createChart, ColorType, LineStyle, CrosshairMode,
+  AreaSeries, LineSeries, HistogramSeries,
+  type IChartApi, type ISeriesApi, type Time,
+} from 'lightweight-charts'
 
+// ─────────────────────────────────────────────────────────────────────────────
 const PERIODS = ['1mo', '3mo', '1y', '5y'] as const
 type Period = typeof PERIODS[number]
-
 const COMPARE_COLORS = ['#f97316', '#a855f7', '#06b6d4'] as const
 
 interface ValuationLevels {
@@ -16,718 +16,527 @@ interface ValuationLevels {
   analystTarget?: number | null
   userModelFairValue?: number | null
 }
+interface Props extends ValuationLevels { ticker: string; isDark?: boolean }
 
-interface Props extends ValuationLevels {
-  ticker: string
-  isDark?: boolean
+interface OHLCVBar {
+  time: Time
+  open: number; high: number; low: number; close: number; volume: number
 }
 
-interface Bar {
-  date: string
-  isoDate: string
-  open: number
-  high: number
-  low: number
-  close: number
-  volume: number
-}
-
-// ── Technical indicator helpers ──────────────────────────────────────────────
-
+// ── Technical indicators ──────────────────────────────────────────────────────
 function calcSMA(closes: number[], period: number): (number | null)[] {
   return closes.map((_, i) => {
     if (i < period - 1) return null
-    const slice = closes.slice(i - period + 1, i + 1)
-    return slice.reduce((a, b) => a + b, 0) / period
+    return closes.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0) / period
   })
 }
-
 function calcEMA(closes: number[], period: number): (number | null)[] {
-  const k = 2 / (period + 1)
-  const out: (number | null)[] = []
-  let ema: number | null = null
+  const k = 2 / (period + 1); const out: (number | null)[] = []; let ema: number | null = null
   for (let i = 0; i < closes.length; i++) {
     if (i < period - 1) { out.push(null); continue }
-    if (ema === null) {
-      ema = closes.slice(0, period).reduce((a, b) => a + b, 0) / period
-    } else {
-      ema = closes[i] * k + ema * (1 - k)
-    }
+    ema = ema === null ? closes.slice(0, period).reduce((a, b) => a + b, 0) / period : closes[i] * k + ema * (1 - k)
     out.push(Math.round(ema * 100) / 100)
   }
   return out
 }
-
 function calcRSI(closes: number[], period = 14): (number | null)[] {
   const out: (number | null)[] = Array(period).fill(null)
-  let avgGain = 0, avgLoss = 0
-  for (let i = 1; i <= period; i++) {
-    const diff = closes[i] - closes[i - 1]
-    if (diff > 0) avgGain += diff; else avgLoss += Math.abs(diff)
-  }
-  avgGain /= period; avgLoss /= period
-  out.push(avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss))
+  let ag = 0, al = 0
+  for (let i = 1; i <= period; i++) { const d = closes[i] - closes[i-1]; if (d > 0) ag += d; else al += Math.abs(d) }
+  ag /= period; al /= period
+  out.push(al === 0 ? 100 : 100 - 100 / (1 + ag / al))
   for (let i = period + 1; i < closes.length; i++) {
-    const diff = closes[i] - closes[i - 1]
-    const gain = diff > 0 ? diff : 0
-    const loss = diff < 0 ? Math.abs(diff) : 0
-    avgGain = (avgGain * (period - 1) + gain) / period
-    avgLoss = (avgLoss * (period - 1) + loss) / period
-    out.push(avgLoss === 0 ? 100 : Math.round((100 - 100 / (1 + avgGain / avgLoss)) * 10) / 10)
+    const d = closes[i] - closes[i-1]; const g = d > 0 ? d : 0; const l = d < 0 ? Math.abs(d) : 0
+    ag = (ag * (period-1) + g) / period; al = (al * (period-1) + l) / period
+    out.push(al === 0 ? 100 : Math.round((100 - 100 / (1 + ag / al)) * 10) / 10)
   }
   return out
 }
-
-function calcBB(closes: number[], period = 20, stdDev = 2): { upper: number | null; lower: number | null }[] {
+function calcBB(closes: number[], period = 20, sd = 2) {
   return closes.map((_, i) => {
-    if (i < period - 1) return { upper: null, lower: null }
-    const slice = closes.slice(i - period + 1, i + 1)
-    const mean = slice.reduce((a, b) => a + b, 0) / period
-    const std = Math.sqrt(slice.reduce((a, b) => a + (b - mean) ** 2, 0) / period)
-    return {
-      upper: Math.round((mean + stdDev * std) * 100) / 100,
-      lower: Math.round((mean - stdDev * std) * 100) / 100,
-    }
+    if (i < period - 1) return { upper: null as number|null, lower: null as number|null }
+    const s = closes.slice(i - period + 1, i + 1)
+    const mean = s.reduce((a, b) => a + b, 0) / period
+    const std = Math.sqrt(s.reduce((a, b) => a + (b - mean)**2, 0) / period)
+    return { upper: Math.round((mean + sd * std) * 100) / 100, lower: Math.round((mean - sd * std) * 100) / 100 }
   })
 }
 
-// ── Price label on right edge of reference line ───────────────────────────────
-function PriceTag({ viewBox, color, labelText }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  viewBox?: any; color: string; labelText: string
-}) {
-  if (!viewBox) return null
-  const { x, y, width } = viewBox
-  const rx = x + width + 6
-  const tagW = Math.max(labelText.length * 6.2, 64)
-  return (
-    <g>
-      <circle cx={x + width} cy={y} r={2.5} fill={color} opacity={0.9} />
-      <rect x={rx} y={y - 9} width={tagW} height={18} rx={4} fill={color} opacity={0.92} />
-      <text x={rx + 5} y={y + 4.5} fontSize={9.5} fontWeight={700} fill="#fff" fontFamily="-apple-system, monospace">
-        {labelText}
-      </text>
-    </g>
-  )
+// ── Chart theme ───────────────────────────────────────────────────────────────
+const BASE_OPTS = {
+  layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: 'rgba(255,255,255,0.35)', fontSize: 11 },
+  grid: { vertLines: { color: 'rgba(255,255,255,0.04)' }, horzLines: { color: 'rgba(255,255,255,0.04)' } },
+  crosshair: {
+    mode: CrosshairMode.Normal,
+    vertLine: { color: 'rgba(255,255,255,0.2)', width: 1 as const, style: LineStyle.Dashed, labelBackgroundColor: 'rgba(8,15,30,0.95)' },
+    horzLine: { color: 'rgba(255,255,255,0.2)', width: 1 as const, style: LineStyle.Dashed, labelBackgroundColor: 'rgba(8,15,30,0.95)' },
+  },
+  rightPriceScale: { borderColor: 'rgba(255,255,255,0.06)', textColor: 'rgba(255,255,255,0.35)' },
+  timeScale: { borderColor: 'rgba(255,255,255,0.06)', textColor: 'rgba(255,255,255,0.35)', rightOffset: 8, fixLeftEdge: true },
+  handleScroll: { mouseWheel: true, pressedMouseMove: true },
+  handleScale: { mouseWheel: true, pinch: true },
 }
+
+const MA_INDICATORS = [
+  { key: 'sma20'  as const, label: 'SMA 20',  color: '#f59e0b', calc: (c: number[]) => calcSMA(c, 20)  },
+  { key: 'sma50'  as const, label: 'SMA 50',  color: '#3b82f6', calc: (c: number[]) => calcSMA(c, 50)  },
+  { key: 'sma200' as const, label: 'SMA 200', color: '#ef4444', calc: (c: number[]) => calcSMA(c, 200) },
+  { key: 'ema20'  as const, label: 'EMA 20',  color: '#10b981', calc: (c: number[]) => calcEMA(c, 20)  },
+]
+type MAKey = typeof MA_INDICATORS[number]['key']
 
 const VAL_LINES = [
-  { key: 'triangulatedFairValue', label: 'Blended Estimate', color: '#8b5cf6', dash: '4 2' },
-  { key: 'analystTarget',         label: 'Analyst Target',   color: '#f59e0b', dash: '4 3' },
-  { key: 'userModelFairValue',    label: 'Your Model',       color: '#10b981', dash: '6 2' },
-] as const
-
-// MA indicator config
-const MA_INDICATORS = [
-  { key: 'sma20',  label: 'SMA 20',  color: '#f59e0b', type: 'sma' as const, period: 20 },
-  { key: 'sma50',  label: 'SMA 50',  color: '#3b82f6', type: 'sma' as const, period: 50 },
-  { key: 'sma200', label: 'SMA 200', color: '#ef4444', type: 'sma' as const, period: 200 },
-  { key: 'ema20',  label: 'EMA 20',  color: '#10b981', type: 'ema' as const, period: 20 },
+  { key: 'triangulatedFairValue' as const, label: 'Blended Estimate', color: '#8b5cf6' },
+  { key: 'analystTarget'         as const, label: 'Analyst Target',   color: '#f59e0b' },
+  { key: 'userModelFairValue'    as const, label: 'Your Model',       color: '#10b981' },
 ]
-
-type MAKey = typeof MA_INDICATORS[number]['key']
 type SubPanel = 'volume' | 'rsi'
 
-// ── Tooltip formatters ────────────────────────────────────────────────────────
-function PriceTooltip({ active, payload, label, isDark: _isDark, compareMode, compareTickers }: {
-  active?: boolean
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  payload?: any[]
-  label?: string
-  isDark?: boolean
-  compareMode?: 'price' | 'percent'
-  compareTickers?: string[]
-}) {
-  if (!active || !payload?.length) return null
-  const d = payload[0]?.payload
-  if (!d) return null
-  const bg = 'rgba(10,22,40,0.95)'
-  const border = 'rgba(59,130,246,0.2)'
-  const text = 'rgba(255,255,255,0.9)'
-  const muted = 'rgba(255,255,255,0.4)'
-  return (
-    <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: '8px 12px', fontSize: 11, color: text, minWidth: 140 }}>
-      <div style={{ fontWeight: 600, marginBottom: 4, color: muted }}>{label}</div>
-      {compareMode === 'percent' ? (
-        <>
-          {d.close != null && <div style={{ color: muted }}>Primary <span style={{ color: text, fontWeight: 700 }}>{d.close.toFixed(2)}%</span></div>}
-          {compareTickers?.map((ct, i) => {
-            const v = d[`cmp_${ct}`]
-            if (v == null) return null
-            return <div key={ct} style={{ color: COMPARE_COLORS[i % 3] }}>{ct} <span style={{ fontWeight: 700 }}>{v.toFixed(2)}%</span></div>
-          })}
-        </>
-      ) : (
-        <>
-          {d.open  != null && <div style={{ color: muted }}>O <span style={{ color: text, fontWeight: 600 }}>${fmt(d.open)}</span></div>}
-          {d.high  != null && <div style={{ color: muted }}>H <span style={{ color: '#10b981', fontWeight: 600 }}>${fmt(d.high)}</span></div>}
-          {d.low   != null && <div style={{ color: muted }}>L <span style={{ color: '#ef4444', fontWeight: 600 }}>${fmt(d.low)}</span></div>}
-          <div style={{ color: muted }}>C <span style={{ color: text, fontWeight: 700 }}>${fmt(d.close)}</span></div>
-          {d.volume > 0 && <div style={{ color: muted, marginTop: 2 }}>Vol <span style={{ color: text }}>{(d.volume / 1e6).toFixed(2)}M</span></div>}
-          {compareTickers?.map((ct, i) => {
-            const v = d[`cmp_${ct}`]
-            if (v == null) return null
-            return <div key={ct} style={{ color: COMPARE_COLORS[i % 3], marginTop: 2 }}>{ct} ${fmt(v)}</div>
-          })}
-          {d.sma20  != null && <div style={{ color: '#f59e0b', marginTop: 2 }}>SMA20 ${fmt(d.sma20)}</div>}
-          {d.sma50  != null && <div style={{ color: '#3b82f6' }}>SMA50 ${fmt(d.sma50)}</div>}
-          {d.sma200 != null && <div style={{ color: '#ef4444' }}>SMA200 ${fmt(d.sma200)}</div>}
-          {d.ema20  != null && <div style={{ color: '#10b981' }}>EMA20 ${fmt(d.ema20)}</div>}
-          {d.bbUpper != null && <div style={{ color: '#a78bfa', marginTop: 2 }}>BB+ ${fmt(d.bbUpper)}</div>}
-          {d.bbLower != null && <div style={{ color: '#a78bfa' }}>BB− ${fmt(d.bbLower)}</div>}
-        </>
-      )}
-    </div>
-  )
-}
-
-function RSITooltip({ active, payload, label, isDark: _isDark }: {
-  active?: boolean
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  payload?: any[]
-  label?: string
-  isDark?: boolean
-}) {
-  if (!active || !payload?.length) return null
-  const rsi = payload[0]?.value
-  if (rsi == null) return null
-  const bg = 'rgba(10,22,40,0.95)'
-  const border = 'rgba(59,130,246,0.2)'
-  return (
-    <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: 8, padding: '6px 10px', fontSize: 11 }}>
-      <span style={{ color: 'rgba(255,255,255,0.4)' }}>{label} · </span>
-      <span style={{ fontWeight: 700, color: rsi > 70 ? '#ef4444' : rsi < 30 ? '#10b981' : 'rgba(255,255,255,0.9)' }}>RSI {rsi?.toFixed(1)}</span>
-    </div>
-  )
-}
-
-export default function PriceChart({ ticker, isDark, triangulatedFairValue, analystTarget, userModelFairValue }: Props) {
-  const [period, setPeriod]         = useState<Period>('1y')
-  const [rawData, setRawData]       = useState<Bar[]>([])
-  const [loading, setLoading]       = useState(true)
-  const [activeMA, setActiveMA]     = useState<Set<MAKey>>(new Set(['sma50', 'sma200']))
-  const [showBB, setShowBB]         = useState(false)
-  const [subPanel, setSubPanel]     = useState<SubPanel>('volume')
+// ─────────────────────────────────────────────────────────────────────────────
+export default function PriceChart({ ticker, triangulatedFairValue, analystTarget, userModelFairValue }: Props) {
+  // state
+  const [period, setPeriod]             = useState<Period>('1y')
+  const [rawBars, setRawBars]           = useState<OHLCVBar[]>([])
+  const [loading, setLoading]           = useState(true)
+  const [activeMA, setActiveMA]         = useState<Set<MAKey>>(new Set(['sma50', 'sma200'] as MAKey[]))
+  const [showBB, setShowBB]             = useState(false)
+  const [subPanel, setSubPanel]         = useState<SubPanel>('volume')
   const [showSubPanel, setShowSubPanel] = useState(true)
-  const [isMobile, setIsMobile]     = useState(false)
-
-  // Compare state
   const [compareTickers, setCompareTickers] = useState<string[]>([])
   const [compareInput, setCompareInput]     = useState('')
+  const [compareRaw, setCompareRaw]         = useState<Record<string, OHLCVBar[]>>({})
   const [compareMode, setCompareMode]       = useState<'price' | 'percent'>('price')
-  const [compareRaw, setCompareRaw]         = useState<Record<string, Bar[]>>({})
   const compareInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 640)
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
+  // DOM refs
+  const mainRef    = useRef<HTMLDivElement>(null)
+  const subRef     = useRef<HTMLDivElement>(null)
+  const tooltipRef = useRef<HTMLDivElement>(null)
 
+  // chart instances
+  const mainChart = useRef<IChartApi | null>(null)
+  const subChart  = useRef<IChartApi | null>(null)
+
+  // series refs — v5: addSeries(AreaSeries) returns ISeriesApi<'Area'>
+  const areaSeries   = useRef<ISeriesApi<'Area'>   | null>(null)
+  const volSeries    = useRef<ISeriesApi<'Histogram'> | null>(null)
+  const rsiSeries    = useRef<ISeriesApi<'Area'>   | null>(null)
+  const bbUpperRef   = useRef<ISeriesApi<'Line'>   | null>(null)
+  const bbLowerRef   = useRef<ISeriesApi<'Line'>   | null>(null)
+  const maSeries     = useRef<Map<MAKey, ISeriesApi<'Line'>>>(new Map())
+  const cmpSeries    = useRef<Map<string, ISeriesApi<'Line'>>>(new Map())
+  const priceLinesRef = useRef<ReturnType<ISeriesApi<'Area'>['createPriceLine']>[]>([])
+  const rawBarsRef   = useRef<OHLCVBar[]>([])
+
+  // keep a ref of rawBars for tooltip access without re-creating the effect
+  useEffect(() => { rawBarsRef.current = rawBars }, [rawBars])
+
+  // ── Fetch ────────────────────────────────────────────────────────────────
   useEffect(() => {
     setLoading(true)
     fetch(`/api/historical?ticker=${ticker}&period=${period}`)
-      .then((r) => r.json())
+      .then(r => r.json())
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .then((raw: any[]) => {
-        setRawData(raw.map((p) => ({
-          date: new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: period === '5y' ? '2-digit' : undefined }),
-          isoDate: new Date(p.date).toISOString().split('T')[0],
-          open: p.open ?? p.close,
-          high: p.high ?? p.close,
-          low: p.low ?? p.close,
-          close: p.close,
-          volume: p.volume ?? 0,
+        setRawBars(raw.map(p => ({
+          time: new Date(p.date).toISOString().split('T')[0] as Time,
+          open: p.open ?? p.close, high: p.high ?? p.close,
+          low: p.low ?? p.close, close: p.close, volume: p.volume ?? 0,
         })))
         setLoading(false)
       })
       .catch(() => setLoading(false))
   }, [ticker, period])
 
-  // Fetch compare ticker price history
   useEffect(() => {
     for (const ct of compareTickers) {
-      if (compareRaw[ct]) continue // already fetched
+      if (compareRaw[ct]) continue
       fetch(`/api/historical?ticker=${ct}&period=${period}`)
-        .then((r) => r.json())
+        .then(r => r.json())
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .then((raw: any[]) => {
-          setCompareRaw(prev => ({
-            ...prev,
-            [ct]: raw.map((p) => ({
-              date: new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: period === '5y' ? '2-digit' : undefined }),
-              isoDate: new Date(p.date).toISOString().split('T')[0],
-              open: p.open ?? p.close,
-              high: p.high ?? p.close,
-              low: p.low ?? p.close,
-              close: p.close,
-              volume: p.volume ?? 0,
-            })),
-          }))
-        })
-        .catch(() => {})
+          setCompareRaw(prev => ({ ...prev, [ct]: raw.map(p => ({
+            time: new Date(p.date).toISOString().split('T')[0] as Time,
+            open: p.open ?? p.close, high: p.high ?? p.close,
+            low: p.low ?? p.close, close: p.close, volume: p.volume ?? 0,
+          })) }))
+        }).catch(() => {})
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [compareTickers, period])
 
-  // Clear compare data cache when period changes
+  useEffect(() => { setCompareRaw({}) }, [period])
+
+  // ── Create charts (once) ────────────────────────────────────────────────
   useEffect(() => {
-    setCompareRaw({})
-  }, [period])
+    if (!mainRef.current || !subRef.current) return
 
-  // Compute all indicators client-side
-  const data = useMemo(() => {
-    if (!rawData.length) return []
-    const closes = rawData.map((d) => d.close)
-    const sma20v  = calcSMA(closes, 20)
-    const sma50v  = calcSMA(closes, 50)
-    const sma200v = calcSMA(closes, 200)
-    const ema20v  = calcEMA(closes, 20)
-    const rsiV    = calcRSI(closes, 14)
-    const bbV     = calcBB(closes, 20, 2)
-    return rawData.map((d, i) => ({
-      ...d,
-      sma20:  sma20v[i],
-      sma50:  sma50v[i],
-      sma200: sma200v[i],
-      ema20:  ema20v[i],
-      rsi:    rsiV[i],
-      bbUpper: bbV[i].upper,
-      bbLower: bbV[i].lower,
-    }))
-  }, [rawData])
+    // ── Main chart ──
+    const mc = createChart(mainRef.current, {
+      ...BASE_OPTS,
+      width: mainRef.current.clientWidth,
+      height: 280,
+      rightPriceScale: { ...BASE_OPTS.rightPriceScale, scaleMargins: { top: 0.08, bottom: 0.04 } },
+    })
+    mainChart.current = mc
 
-  // Build compare lookups by formatted date
-  const compareByDate = useMemo(() => {
-    const result: Record<string, Map<string, number>> = {}
-    for (const ct of compareTickers) {
-      const arr = compareRaw[ct] ?? []
-      result[ct] = new Map(arr.map(d => [d.date, d.close]))
+    // Price area
+    areaSeries.current = mc.addSeries(AreaSeries, {
+      lineColor: '#10b981', topColor: 'rgba(16,185,129,0.12)', bottomColor: 'rgba(16,185,129,0)',
+      lineWidth: 2, crosshairMarkerVisible: true, crosshairMarkerRadius: 4,
+      priceLineVisible: false, lastValueVisible: true,
+    })
+
+    // Volume histogram (overlay at bottom 18% of main chart)
+    volSeries.current = mc.addSeries(HistogramSeries, {
+      color: 'rgba(255,255,255,0.1)',
+      priceFormat: { type: 'volume' },
+      priceScaleId: 'vol',
+    })
+    mc.priceScale('vol').applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } })
+
+    // MA lines
+    for (const ind of MA_INDICATORS) {
+      const s = mc.addSeries(LineSeries, {
+        color: ind.color, lineWidth: 1,
+        crosshairMarkerVisible: false, priceLineVisible: false, lastValueVisible: false, visible: false,
+      })
+      maSeries.current.set(ind.key, s)
     }
-    return result
-  }, [compareTickers, compareRaw])
 
-  // Merged data: primary + compare close prices
-  const mergedData = useMemo(() => {
-    return data.map(d => {
+    // Bollinger Bands
+    const bbOpts = { color: '#a78bfa', lineWidth: 1 as const, lineStyle: LineStyle.Dashed, crosshairMarkerVisible: false, priceLineVisible: false, lastValueVisible: false, visible: false }
+    bbUpperRef.current = mc.addSeries(LineSeries, bbOpts)
+    bbLowerRef.current = mc.addSeries(LineSeries, bbOpts)
+
+    // ── Sub chart (RSI) ──
+    const sc = createChart(subRef.current, {
+      ...BASE_OPTS,
+      width: subRef.current.clientWidth,
+      height: 80,
+      rightPriceScale: { ...BASE_OPTS.rightPriceScale, scaleMargins: { top: 0.1, bottom: 0.1 } },
+      timeScale: { ...BASE_OPTS.timeScale, visible: false },
+      crosshair: {
+        ...BASE_OPTS.crosshair,
+        horzLine: { ...BASE_OPTS.crosshair.horzLine, visible: false, labelVisible: false },
+      },
+    })
+    subChart.current = sc
+
+    rsiSeries.current = sc.addSeries(AreaSeries, {
+      lineColor: '#8b5cf6', topColor: 'rgba(139,92,246,0.15)', bottomColor: 'rgba(139,92,246,0)',
+      lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
+    })
+    for (const [p, col] of [[70, '#ef444488'], [50, 'rgba(255,255,255,0.1)'], [30, '#10b98188']] as [number, string][]) {
+      rsiSeries.current.createPriceLine({ price: p, color: col, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: p !== 50, title: '' })
+    }
+
+    // Sync time scales
+    mc.timeScale().subscribeVisibleLogicalRangeChange(range => { if (range) sc.timeScale().setVisibleLogicalRange(range) })
+    sc.timeScale().subscribeVisibleLogicalRangeChange(range => { if (range) mc.timeScale().setVisibleLogicalRange(range) })
+
+    // Crosshair sync main → sub (v5: setCrosshairPosition(price, time, series))
+    mc.subscribeCrosshairMove(param => {
+      if (!param.time || !rsiSeries.current) return
+      try { sc.setCrosshairPosition(50, param.time, rsiSeries.current) } catch { /* ignore */ }
+    })
+
+    // Custom floating tooltip
+    mc.subscribeCrosshairMove(param => {
+      const el = tooltipRef.current
+      if (!el || !mainRef.current) return
+      if (!param.point || !param.time || param.point.x < 0 || param.point.y < 0) { el.style.display = 'none'; return }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const base: Record<string, any> = { ...d }
-      for (const ct of compareTickers) {
-        base[`cmp_${ct}`] = compareByDate[ct]?.get(d.date) ?? null
-      }
-      return base
-    })
-  }, [data, compareTickers, compareByDate])
+      const aData = param.seriesData.get(areaSeries.current!) as any
+      const close = aData?.value as number | undefined
+      if (close == null) { el.style.display = 'none'; return }
 
-  // Normalize to % returns when compareMode === 'percent'
-  const chartData = useMemo(() => {
-    if (compareMode === 'price' || !mergedData.length) return mergedData
-    const firstClose = mergedData[0].close as number
-    const firstCmp: Record<string, number | null> = {}
-    for (const ct of compareTickers) {
-      const first = mergedData.find(d => d[`cmp_${ct}`] != null)
-      firstCmp[ct] = first ? (first[`cmp_${ct}`] as number) : null
+      const timeStr = param.time as string
+      const bar = rawBarsRef.current.find(b => b.time === timeStr)
+      const chartW = mainRef.current.clientWidth
+      const left   = param.point.x > chartW - 160 ? param.point.x - 155 : param.point.x + 12
+      const top    = Math.max(4, param.point.y - 70)
+
+      el.style.display = 'block'
+      el.style.left    = left + 'px'
+      el.style.top     = top + 'px'
+      el.innerHTML = `
+        <div style="color:rgba(255,255,255,0.4);font-size:10px;margin-bottom:3px">${timeStr}</div>
+        ${bar ? `
+          <div><span style="color:rgba(255,255,255,0.4)">O </span><span style="color:#fff;font-weight:600">$${bar.open.toFixed(2)}</span></div>
+          <div><span style="color:rgba(255,255,255,0.4)">H </span><span style="color:#10b981;font-weight:600">$${bar.high.toFixed(2)}</span></div>
+          <div><span style="color:rgba(255,255,255,0.4)">L </span><span style="color:#ef4444;font-weight:600">$${bar.low.toFixed(2)}</span></div>
+          <div><span style="color:rgba(255,255,255,0.4)">C </span><span style="color:#fff;font-weight:700">$${bar.close.toFixed(2)}</span></div>
+          ${bar.volume > 0 ? `<div style="margin-top:2px"><span style="color:rgba(255,255,255,0.4)">Vol </span><span style="color:#fff">${(bar.volume / 1e6).toFixed(2)}M</span></div>` : ''}
+        ` : `<div style="color:#fff;font-weight:700">$${close.toFixed(2)}</div>`}
+      `
+    })
+
+    // Resize observer
+    const ro = new ResizeObserver(() => {
+      if (mainRef.current) mc.applyOptions({ width: mainRef.current.clientWidth })
+      if (subRef.current)  sc.applyOptions({ width: subRef.current.clientWidth })
+    })
+    ro.observe(mainRef.current)
+    ro.observe(subRef.current)
+
+    return () => { ro.disconnect(); mc.remove(); sc.remove() }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // ── Update data when rawBars change ──────────────────────────────────────
+  useEffect(() => {
+    if (!areaSeries.current || !rawBars.length) return
+    const closes = rawBars.map(b => b.close)
+    const up = closes[closes.length - 1] >= closes[0]
+    areaSeries.current.applyOptions({
+      lineColor: up ? '#10b981' : '#ef4444',
+      topColor:  up ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+    })
+    areaSeries.current.setData(rawBars.map(b => ({ time: b.time, value: b.close })))
+
+    volSeries.current?.setData(rawBars.map((b, i) => ({
+      time: b.time, value: b.volume,
+      color: i > 0 && b.close < rawBars[i-1].close ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.12)',
+    })))
+
+    for (const ind of MA_INDICATORS) {
+      const vals = ind.calc(closes)
+      const s = maSeries.current.get(ind.key)
+      if (s) s.setData(rawBars.filter((_, i) => vals[i] != null).map((b, _, arr) => {
+        const idx = rawBars.indexOf(b)
+        return { time: b.time, value: vals[idx] as number }
+      }))
     }
-    return mergedData.map(d => ({
-      ...d,
-      close:  firstClose > 0 ? ((d.close - firstClose) / firstClose) * 100 : null,
-      open:   null, high: null, low: null, // hide OHLC in % mode
-      ...Object.fromEntries(compareTickers.map(ct => [
-        `cmp_${ct}`,
-        firstCmp[ct] != null && d[`cmp_${ct}`] != null
-          ? ((d[`cmp_${ct}`] - firstCmp[ct]!) / firstCmp[ct]!) * 100
-          : null,
-      ])),
-    }))
-  }, [mergedData, compareMode, compareTickers])
 
-  const rsiData = useMemo(() => data.filter((d) => d.rsi != null), [data])
+    const bbs = calcBB(closes)
+    bbUpperRef.current?.setData(rawBars.filter((_, i) => bbs[i].upper != null).map(b => ({ time: b.time, value: bbs[rawBars.indexOf(b)].upper as number })))
+    bbLowerRef.current?.setData(rawBars.filter((_, i) => bbs[i].lower != null).map(b => ({ time: b.time, value: bbs[rawBars.indexOf(b)].lower as number })))
 
-  const closes = data.map((d) => d.close)
-  const pDataMin = closes.length ? Math.min(...closes) : 0
-  const pDataMax = closes.length ? Math.max(...closes) : 1
-  const up = data.length >= 2 && data[data.length - 1].close >= data[0].close
-  const priceColor = up ? '#10b981' : '#ef4444'
+    const rsiVals = calcRSI(closes)
+    rsiSeries.current?.setData(rawBars.filter((_, i) => rsiVals[i] != null).map(b => ({ time: b.time, value: rsiVals[rawBars.indexOf(b)] as number })))
 
-  const levels: Record<string, number | null | undefined> = { triangulatedFairValue, analystTarget, userModelFairValue }
-  const hardMin = pDataMin * 0.4
-  const hardMax = pDataMax * 2.2
-  const valuationValues = VAL_LINES.map(l => levels[l.key]).filter((v): v is number => v != null && v > hardMin && v < hardMax)
-  const domainMin = Math.max(Math.min(pDataMin * 0.97, ...valuationValues) * 0.97, hardMin)
-  const domainMax = Math.min(Math.max(pDataMax * 1.01, ...valuationValues) * 1.02, hardMax)
+    mainChart.current?.timeScale().fitContent()
+  }, [rawBars])
 
-  const maxVolume = data.length ? Math.max(...data.map((d) => d.volume)) : 1
+  // ── MA / BB visibility ───────────────────────────────────────────────────
+  useEffect(() => {
+    for (const ind of MA_INDICATORS) {
+      maSeries.current.get(ind.key)?.applyOptions({ visible: activeMA.has(ind.key) })
+    }
+  }, [activeMA])
 
-  const tickFill = 'rgba(255,255,255,0.3)'
-  const gridColor = 'rgba(255,255,255,0.04)'
-  const hasAnyLine = VAL_LINES.some(l => levels[l.key] != null && (levels[l.key] as number) > hardMin && (levels[l.key] as number) < hardMax)
-  // On mobile, use a small rightMargin and render valuation labels in a legend row instead of inline SVG tags.
-  // On desktop (sm+), use 96px to accommodate the PriceTag SVG labels on the right edge.
-  const rightMargin = hasAnyLine ? (isMobile ? 8 : 96) : (isMobile ? 4 : 12)
+  useEffect(() => {
+    bbUpperRef.current?.applyOptions({ visible: showBB })
+    bbLowerRef.current?.applyOptions({ visible: showBB })
+  }, [showBB])
 
-  const toggleMA = (key: MAKey) => {
-    setActiveMA(prev => {
-      const next = new Set(prev)
-      if (next.has(key)) next.delete(key); else next.add(key)
-      return next
+  // ── Volume visibility (sub-panel toggle) ──────────────────────────────────
+  useEffect(() => {
+    volSeries.current?.applyOptions({ visible: showSubPanel && subPanel === 'volume' && compareTickers.length === 0 })
+  }, [showSubPanel, subPanel, compareTickers])
+
+  // ── Valuation price lines ─────────────────────────────────────────────────
+  useEffect(() => {
+    const series = areaSeries.current
+    if (!series) return
+    for (const pl of priceLinesRef.current) { try { series.removePriceLine(pl) } catch { /* ignore */ } }
+    priceLinesRef.current = []
+    const levels: Record<string, number | null | undefined> = { triangulatedFairValue, analystTarget, userModelFairValue }
+    for (const vl of VAL_LINES) {
+      const v = levels[vl.key]
+      if (!v || v <= 0) continue
+      priceLinesRef.current.push(series.createPriceLine({ price: v, color: vl.color, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: vl.label }))
+    }
+  }, [triangulatedFairValue, analystTarget, userModelFairValue])
+
+  // ── Compare tickers ───────────────────────────────────────────────────────
+  useEffect(() => {
+    const chart = mainChart.current
+    if (!chart) return
+
+    // Remove stale
+    Array.from(cmpSeries.current.entries()).forEach(([ct, s]) => {
+      if (!compareTickers.includes(ct)) { chart.removeSeries(s); cmpSeries.current.delete(ct) }
     })
-  }
+
+    compareTickers.forEach((ct, i) => {
+      const bars = compareRaw[ct]
+      if (!bars) return
+      let s = cmpSeries.current.get(ct)
+      if (!s) {
+        s = chart.addSeries(LineSeries, { color: COMPARE_COLORS[i % 3], lineWidth: 2, crosshairMarkerVisible: false, priceLineVisible: false, lastValueVisible: true })
+        cmpSeries.current.set(ct, s)
+      }
+      const firstClose = bars[0]?.close ?? 1
+      s.setData(compareMode === 'percent'
+        ? bars.map(b => ({ time: b.time, value: ((b.close - firstClose) / firstClose) * 100 }))
+        : bars.map(b => ({ time: b.time, value: b.close })))
+    })
+
+    // Normalise primary series in % mode
+    if (areaSeries.current && rawBars.length) {
+      const firstClose = rawBars[0].close ?? 1
+      areaSeries.current.setData(
+        compareMode === 'percent' && compareTickers.length > 0
+          ? rawBars.map(b => ({ time: b.time, value: ((b.close - firstClose) / firstClose) * 100 }))
+          : rawBars.map(b => ({ time: b.time, value: b.close }))
+      )
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [compareTickers, compareRaw, compareMode, rawBars])
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  const firstClose = rawBars.length ? rawBars[0].close : null
+  const lastClose  = rawBars.length ? rawBars[rawBars.length - 1].close : null
+  const changePct  = firstClose && lastClose ? ((lastClose - firstClose) / firstClose) * 100 : null
+  const isCompare  = compareTickers.length > 0
+
+  const toggleMA = useCallback((key: MAKey) => {
+    setActiveMA(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
+  }, [])
 
   const addCompareTicker = (raw: string) => {
     const ct = raw.trim().toUpperCase()
-    if (ct && ct !== ticker.toUpperCase() && !compareTickers.includes(ct) && compareTickers.length < 3) {
+    if (ct && ct !== ticker.toUpperCase() && !compareTickers.includes(ct) && compareTickers.length < 3)
       setCompareTickers(prev => [...prev, ct])
-    }
     setCompareInput('')
   }
-
   const removeCompareTicker = (ct: string) => {
     setCompareTickers(prev => prev.filter(t => t !== ct))
     setCompareRaw(prev => { const n = { ...prev }; delete n[ct]; return n })
   }
 
-  // Last close for display
-  const lastClose = data.length ? data[data.length - 1].close : null
-  const firstClose = data.length ? data[0].close : null
-  const changePct = firstClose && lastClose ? ((lastClose - firstClose) / firstClose) * 100 : null
+  const levels: Record<string, number | null | undefined> = { triangulatedFairValue, analystTarget, userModelFairValue }
+  const hasAnyLevel = VAL_LINES.some(l => (levels[l.key] ?? 0) > 0)
 
-  const isCompareMode = compareTickers.length > 0
-
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="rounded-xl glass-card border-[rgba(59,130,246,0.15)]">
-      {/* ── Header ── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-6 pt-5 pb-3">
-        <div className="flex items-center gap-3">
+
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-4 pb-2">
+        <div className="flex items-center gap-3 flex-wrap">
           <h2 className="text-sm font-semibold text-slate-200">Price Chart</h2>
           {changePct != null && (
             <span className={`text-xs font-semibold tabular-nums ${changePct >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
               {changePct >= 0 ? '+' : ''}{changePct.toFixed(2)}%
             </span>
           )}
-          {/* Valuation level legend — desktop only (sm+). On mobile these appear below in their own row. */}
-          {hasAnyLine && !isCompareMode && (
-            <div className="hidden items-center gap-2.5 sm:flex">
-              {VAL_LINES.map((l) => {
-                const v = levels[l.key]
-                if (v == null || v <= hardMin || v >= hardMax) return null
+          {hasAnyLevel && !isCompare && (
+            <div className="hidden sm:flex items-center gap-3">
+              {VAL_LINES.map(vl => {
+                const v = levels[vl.key]
+                if (!v) return null
                 return (
-                  <span key={l.key} className="flex items-center gap-1 text-[10px] font-medium" style={{ color: l.color }}>
-                    <span className="inline-block h-0.5 w-3.5" style={{ background: l.color, opacity: 0.7 }} />
-                    {l.label} ${fmt(v as number)}
+                  <span key={vl.key} className="flex items-center gap-1.5 text-[10px]" style={{ color: vl.color }}>
+                    <span className="inline-block h-px w-4 border-t border-dashed" style={{ borderColor: vl.color }} />
+                    {vl.label} ${v.toFixed(2)}
                   </span>
                 )
               })}
             </div>
           )}
         </div>
-
-        {/* Period selector — taller touch target on mobile */}
         <div className="flex gap-1">
-          {PERIODS.map((p) => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`rounded-lg px-3 py-2 sm:py-1 text-xs font-medium transition ${
-                period === p
-                  ? 'bg-blue-500/20 text-blue-300'
-                  : 'text-white/40 hover:bg-white/8'
-              }`}
-            >
+          {PERIODS.map(p => (
+            <button key={p} onClick={() => setPeriod(p)}
+              className={`rounded-lg px-3 py-1 text-xs font-medium transition ${period === p ? 'bg-blue-500/20 text-blue-300' : 'text-white/40 hover:bg-white/8'}`}>
               {p.toUpperCase()}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Mobile-only valuation legend row */}
-      {hasAnyLine && !isCompareMode && isMobile && (
-        <div className="flex flex-wrap items-center gap-2.5 px-6 pb-2 sm:hidden">
-          {VAL_LINES.map((l) => {
-            const v = levels[l.key]
-            if (v == null || v <= hardMin || v >= hardMax) return null
-            return (
-              <span key={l.key} className="flex items-center gap-1 text-[10px] font-medium" style={{ color: l.color }}>
-                <span className="inline-block h-0.5 w-3.5" style={{ background: l.color, opacity: 0.7 }} />
-                {l.label} ${fmt(v as number)}
-              </span>
-            )
-          })}
-        </div>
-      )}
-
-      {/* ── Compare tickers row ── */}
-      <div className="flex flex-wrap items-center gap-2 px-6 pb-2">
+      {/* Compare row */}
+      <div className="flex flex-wrap items-center gap-2 px-5 pb-1.5">
         {compareTickers.map((ct, i) => (
-          <span
-            key={ct}
-            className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold"
-            style={{ background: COMPARE_COLORS[i % 3] + '22', color: COMPARE_COLORS[i % 3] }}
-          >
+          <span key={ct} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold"
+            style={{ background: COMPARE_COLORS[i % 3] + '22', color: COMPARE_COLORS[i % 3] }}>
             {ct}
-            <button
-              onClick={() => removeCompareTicker(ct)}
-              className="leading-none opacity-70 hover:opacity-100 ml-0.5"
-            >
-              ×
-            </button>
+            <button onClick={() => removeCompareTicker(ct)} className="opacity-70 hover:opacity-100 leading-none ml-0.5">×</button>
           </span>
         ))}
         {compareTickers.length < 3 && (
-          <form
-            onSubmit={(e) => { e.preventDefault(); addCompareTicker(compareInput) }}
-            className="flex items-center"
-          >
-            <input
-              ref={compareInputRef}
-              type="text"
-              value={compareInput}
-              onChange={(e) => setCompareInput(e.target.value.toUpperCase())}
+          <form onSubmit={e => { e.preventDefault(); addCompareTicker(compareInput) }}>
+            <input ref={compareInputRef} type="text" value={compareInput}
+              onChange={e => setCompareInput(e.target.value.toUpperCase())}
               onBlur={() => { if (compareInput.trim()) addCompareTicker(compareInput) }}
-              placeholder="+ Compare"
-              maxLength={10}
-              className="text-[16px] bg-transparent border-b border-dashed border-white/20 focus:outline-none focus:border-blue-500 w-20 py-0.5 placeholder:text-white/25"
+              placeholder="+ Compare" maxLength={10}
+              className="text-xs bg-transparent border-b border-dashed border-white/20 focus:outline-none focus:border-blue-500 w-20 py-0.5 placeholder:text-white/25 text-white/80"
             />
           </form>
         )}
-        {/* $ / % mode toggle */}
-        {isCompareMode && (
-          <button
-            onClick={() => setCompareMode(prev => prev === 'price' ? 'percent' : 'price')}
-            className={`ml-auto text-[11px] font-bold px-2.5 py-0.5 rounded-full border transition ${
-              compareMode === 'percent'
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'border-white/20 text-white/40 hover:bg-white/8'
-            }`}
-          >
+        {isCompare && (
+          <button onClick={() => setCompareMode(p => p === 'price' ? 'percent' : 'price')}
+            className={`ml-auto text-[11px] font-bold px-2.5 py-0.5 rounded-full border transition ${compareMode === 'percent' ? 'bg-blue-600 text-white border-blue-600' : 'border-white/20 text-white/40 hover:bg-white/8'}`}>
             {compareMode === 'percent' ? '% Return' : '$ Price'}
           </button>
         )}
       </div>
 
-      {/* ── Indicator toggles (hidden in compare/percent mode) ── */}
-      {!isCompareMode && (
-        <div className="flex flex-wrap items-center gap-1.5 px-6 pb-3">
-          {MA_INDICATORS.map((ind) => {
-            const on = activeMA.has(ind.key as MAKey)
+      {/* MA / BB toggles */}
+      {!isCompare && (
+        <div className="flex flex-wrap items-center gap-1.5 px-5 pb-3">
+          {MA_INDICATORS.map(ind => {
+            const on = activeMA.has(ind.key)
             return (
-              <button
-                key={ind.key}
-                onClick={() => toggleMA(ind.key as MAKey)}
-                className={`rounded px-2 py-1.5 sm:py-0.5 text-[10px] font-semibold transition border ${
-                  on ? 'opacity-100' : 'opacity-35'
-                }`}
-                style={{
-                  borderColor: ind.color,
-                  color: on ? ind.color : 'rgba(255,255,255,0.4)',
-                  background: on ? `${ind.color}18` : 'transparent',
-                }}
-              >
+              <button key={ind.key} onClick={() => toggleMA(ind.key)}
+                className={`rounded px-2 py-0.5 text-[10px] font-semibold transition border ${on ? 'opacity-100' : 'opacity-30'}`}
+                style={{ borderColor: ind.color, color: on ? ind.color : 'rgba(255,255,255,0.4)', background: on ? `${ind.color}18` : 'transparent' }}>
                 {ind.label}
               </button>
             )
           })}
-          <button
-            onClick={() => setShowBB(!showBB)}
-            className={`rounded px-2 py-1.5 sm:py-0.5 text-[10px] font-semibold transition border ${showBB ? 'opacity-100' : 'opacity-35'}`}
-            style={{
-              borderColor: '#a78bfa',
-              color: showBB ? '#a78bfa' : 'rgba(255,255,255,0.4)',
-              background: showBB ? '#a78bfa18' : 'transparent',
-            }}
-          >
+          <button onClick={() => setShowBB(v => !v)}
+            className={`rounded px-2 py-0.5 text-[10px] font-semibold transition border ${showBB ? 'opacity-100' : 'opacity-30'}`}
+            style={{ borderColor: '#a78bfa', color: showBB ? '#a78bfa' : 'rgba(255,255,255,0.4)', background: showBB ? '#a78bfa18' : 'transparent' }}>
             BB (20,2)
           </button>
-
           <div className="ml-auto flex items-center gap-1">
-            {(['volume', 'rsi'] as SubPanel[]).map((sp) => (
-              <button
-                key={sp}
-                onClick={() => { setSubPanel(sp); setShowSubPanel(true) }}
-                className={`rounded px-2 py-1.5 sm:py-0.5 text-[10px] font-medium transition ${
-                  showSubPanel && subPanel === sp
-                    ? 'bg-white/15 text-white/70'
-                    : 'text-white/25 hover:bg-white/8'
-                }`}
-              >
+            {(['volume', 'rsi'] as SubPanel[]).map(sp => (
+              <button key={sp} onClick={() => { setSubPanel(sp); setShowSubPanel(true) }}
+                className={`rounded px-2 py-0.5 text-[10px] font-medium transition ${showSubPanel && subPanel === sp ? 'bg-white/15 text-white/70' : 'text-white/25 hover:bg-white/8'}`}>
                 {sp.toUpperCase()}
               </button>
             ))}
-            <button
-              onClick={() => setShowSubPanel(!showSubPanel)}
-              className="rounded px-1.5 py-1.5 sm:py-0.5 text-[10px] text-white/25 hover:bg-white/8"
-            >
+            <button onClick={() => setShowSubPanel(v => !v)}
+              className="rounded px-1.5 py-0.5 text-[10px] text-white/25 hover:bg-white/8">
               {showSubPanel ? '↑' : '↓'}
             </button>
           </div>
         </div>
       )}
 
-      {/* ── Main price chart ── */}
-      <div className="h-64 px-1">
-        {loading ? (
-          <div className="flex h-full items-center justify-center text-sm text-white/25">Loading…</div>
-        ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={chartData} margin={{ top: 4, right: rightMargin, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="priceGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={priceColor} stopOpacity={0.18} />
-                  <stop offset="95%" stopColor={priceColor} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 10, fill: tickFill }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-              <YAxis
-                yAxisId="price"
-                domain={compareMode === 'percent' ? ['auto', 'auto'] : [domainMin, domainMax]}
-                tick={{ fontSize: 10, fill: tickFill }}
-                tickLine={false} axisLine={false}
-                tickFormatter={compareMode === 'percent'
-                  ? (v) => `${v >= 0 ? '+' : ''}${v.toFixed(0)}%`
-                  : (v) => `$${v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(0)}`
-                }
-                width={50}
-              />
-              <Tooltip content={<PriceTooltip isDark={isDark} compareMode={compareMode} compareTickers={compareTickers} />} />
-
-              {/* Bollinger Bands (hidden in compare mode) */}
-              {showBB && !isCompareMode && (
-                <>
-                  <Line yAxisId="price" type="monotone" dataKey="bbUpper" stroke="#a78bfa" strokeWidth={1} dot={false} strokeDasharray="3 2" isAnimationActive={false} connectNulls />
-                  <Line yAxisId="price" type="monotone" dataKey="bbLower" stroke="#a78bfa" strokeWidth={1} dot={false} strokeDasharray="3 2" isAnimationActive={false} connectNulls />
-                </>
-              )}
-
-              {/* Price area */}
-              <Area yAxisId="price" type="monotone" dataKey="close" stroke={priceColor} fill="url(#priceGrad)" strokeWidth={2} dot={false} isAnimationActive={false} />
-
-              {/* Compare lines */}
-              {compareTickers.map((ct, i) => (
-                <Line
-                  key={`cmp_${ct}`}
-                  yAxisId="price"
-                  type="monotone"
-                  dataKey={`cmp_${ct}`}
-                  stroke={COMPARE_COLORS[i % 3]}
-                  strokeWidth={1.5}
-                  dot={false}
-                  isAnimationActive={false}
-                  connectNulls
-                  name={ct}
-                />
-              ))}
-
-              {/* MA lines (hidden in compare mode) */}
-              {!isCompareMode && MA_INDICATORS.map((ind) => {
-                if (!activeMA.has(ind.key as MAKey)) return null
-                return (
-                  <Line
-                    key={ind.key}
-                    yAxisId="price"
-                    type="monotone"
-                    dataKey={ind.key}
-                    stroke={ind.color}
-                    strokeWidth={1.5}
-                    dot={false}
-                    isAnimationActive={false}
-                    connectNulls
-                  />
-                )
-              })}
-
-              {/* Valuation reference lines (hidden in percent mode) */}
-              {!isCompareMode && compareMode !== 'percent' && VAL_LINES.map((l) => {
-                const v = levels[l.key]
-                if (v == null || v <= hardMin || v >= hardMax) return null
-                const labelText = `${l.label}  $${(v as number).toFixed(2)}`
-                return (
-                  <ReferenceLine
-                    key={l.key}
-                    yAxisId="price"
-                    y={v as number}
-                    stroke={l.color}
-                    strokeDasharray={l.dash}
-                    strokeWidth={1.5}
-                    strokeOpacity={0.75}
-                    label={isMobile ? undefined : {
-                      content: (props: unknown) => (
-                        <PriceTag
-                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                          viewBox={(props as any).viewBox}
-                          color={l.color}
-                          labelText={labelText}
-                        />
-                      ),
-                    }}
-                  />
-                )
-              })}
-
-              {/* Zero line in percent mode */}
-              {compareMode === 'percent' && (
-                <ReferenceLine yAxisId="price" y={0} stroke="rgba(255,255,255,0.15)" strokeDasharray="3 2" />
-              )}
-            </ComposedChart>
-          </ResponsiveContainer>
+      {/* Main chart */}
+      <div className="relative px-1">
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center text-sm text-white/25 z-10">Loading…</div>
         )}
+        <div ref={mainRef} className="w-full" style={{ height: 280 }} />
+        <div ref={tooltipRef} className="pointer-events-none absolute z-20 hidden rounded-lg px-2.5 py-2 text-[11px]"
+          style={{ background: 'rgba(8,15,30,0.95)', border: '1px solid rgba(59,130,246,0.2)', minWidth: 120, lineHeight: 1.6 }} />
       </div>
 
-      {/* ── Sub-panel: Volume or RSI (hidden in compare mode) ── */}
-      {!isCompareMode && showSubPanel && !loading && data.length > 0 && (
-        <div className="h-20 px-1 pb-3 pt-1">
-          {subPanel === 'volume' ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={data} margin={{ top: 0, right: rightMargin, left: 0, bottom: 0 }}>
-                <XAxis dataKey="date" hide />
-                <YAxis
-                  tick={{ fontSize: 9, fill: tickFill }}
-                  tickLine={false} axisLine={false}
-                  tickFormatter={(v) => `${(v / 1e6).toFixed(0)}M`}
-                  width={50}
-                  domain={[0, maxVolume * 3]}
-                />
-                <Tooltip
-                  content={({ active, payload, label }) => {
-                    if (!active || !payload?.length) return null
-                    const vol = payload[0]?.value as number
-                    return (
-                      <div style={{ background: 'rgba(10,22,40,0.95)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, padding: '4px 8px', fontSize: 11 }}>
-                        <span style={{ color: 'rgba(255,255,255,0.4)' }}>{label} · </span>
-                        <span style={{ fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>Vol {(vol / 1e6).toFixed(2)}M</span>
-                      </div>
-                    )
-                  }}
-                />
-                <Bar dataKey="volume" fill="rgba(255,255,255,0.12)" isAnimationActive={false} radius={[1, 1, 0, 0]} />
-              </ComposedChart>
-            </ResponsiveContainer>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={rsiData} margin={{ top: 0, right: rightMargin, left: 0, bottom: 0 }}>
-                <XAxis dataKey="date" hide />
-                <YAxis
-                  domain={[0, 100]}
-                  ticks={[30, 50, 70]}
-                  tick={{ fontSize: 9, fill: tickFill }}
-                  tickLine={false} axisLine={false}
-                  width={50}
-                />
-                <Tooltip content={<RSITooltip isDark={isDark} />} />
-                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-                <ReferenceLine y={70} stroke="#ef4444" strokeDasharray="3 2" strokeWidth={1} strokeOpacity={0.5} />
-                <ReferenceLine y={30} stroke="#10b981" strokeDasharray="3 2" strokeWidth={1} strokeOpacity={0.5} />
-                <ReferenceLine y={50} stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
-                <Area type="monotone" dataKey="rsi" stroke="#8b5cf6" fill="#8b5cf618" strokeWidth={1.5} dot={false} isAnimationActive={false} />
-              </ComposedChart>
-            </ResponsiveContainer>
-          )}
-          <div className="flex justify-center">
+      {/* RSI sub-panel */}
+      {!isCompare && showSubPanel && (
+        <div className="px-1 pb-3">
+          <div
+            ref={subRef}
+            className="w-full"
+            style={{ height: subPanel === 'rsi' ? 80 : 0, overflow: 'hidden' }}
+          />
+          <div className="flex items-center justify-center mt-0.5">
             <span className="text-[9px] text-white/20 font-medium tracking-wide">
               {subPanel === 'volume' ? 'VOLUME' : 'RSI (14)'}
             </span>
           </div>
         </div>
+      )}
+
+      {/* Keep subRef mounted when sub-panel is hidden so chart stays alive */}
+      {(isCompare || !showSubPanel) && (
+        <div ref={subRef} className="hidden" style={{ height: 0 }} />
       )}
     </div>
   )
