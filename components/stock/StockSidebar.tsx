@@ -22,9 +22,10 @@ export default function StockSidebar({ activeTab, data, statementsData: _stateme
         quote={data.quote}
         cagrAnalysis={data.cagrAnalysis}
         businessProfile={data.businessProfile}
-        ownership={data.ownership}
         wacc={data.wacc}
         analystRecommendation={data.analystRecommendation ?? ''}
+        ratings={data.ratings}
+        valuationMethods={data.valuationMethods}
       />
     )
   }
