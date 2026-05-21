@@ -118,7 +118,7 @@ export default function FinancialScores({ scores }: Props) {
         <div className={`rounded-xl border p-4 ${BgColor(piotroski.score, [4, 8])}`}>
           <div className="flex items-start justify-between mb-1">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600">Piotroski F-Score</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Piotroski F-Score</p>
               <p className={`mt-0.5 text-3xl font-bold tabular-nums ${ScoreColor(piotroski.score, [4, 8])}`}>
                 {piotroski.score}<span className="text-base font-normal text-slate-500"> / 9</span>
               </p>
@@ -139,7 +139,7 @@ export default function FinancialScores({ scores }: Props) {
               return (
                 <div key={group.label}>
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">{group.label}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{group.label}</p>
                     <p className="text-[10px] font-mono text-slate-500">{groupPass}/{group.indices.length}</p>
                   </div>
                   <div className="divide-y divide-slate-100 rounded-lg bg-white border border-slate-200 px-2">
@@ -157,7 +157,7 @@ export default function FinancialScores({ scores }: Props) {
         <div className={`rounded-xl border p-4 ${altmanBg}`}>
           <div className="flex items-start justify-between mb-1">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
                 Altman Z-Score
                 {altmanSafe && !altmanSafe.isReliable && (
                   <span className="ml-1.5 text-[10px] text-amber-600 font-medium">(EM)</span>
@@ -237,7 +237,7 @@ export default function FinancialScores({ scores }: Props) {
         <div className={`rounded-xl border p-4 ${beneish ? beneishBg : 'bg-slate-50 border-slate-200'}`}>
           <div className="flex items-start justify-between mb-1">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600">Beneish M-Score</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Beneish M-Score</p>
               {beneish ? (
                 <p className={`mt-0.5 text-3xl font-bold tabular-nums ${beneishColor}`}>
                   {mScore.toFixed(2)}
@@ -305,7 +305,7 @@ export default function FinancialScores({ scores }: Props) {
           <div className={`rounded-xl border p-4 ${spreadGood ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
             <div className="flex items-start justify-between mb-1">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600">ROIC vs WACC</p>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">ROIC vs WACC</p>
                 <p className={`mt-0.5 text-3xl font-bold tabular-nums ${spreadGood ? 'text-emerald-600' : 'text-red-600'}`}>
                   {fmtPct(roic.roic)}
                 </p>

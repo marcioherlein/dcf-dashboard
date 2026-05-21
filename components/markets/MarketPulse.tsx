@@ -37,7 +37,7 @@ export default function MarketPulse({ pulse }: Props) {
       <div className="grid grid-cols-3 gap-4">
         {/* SPX change */}
         <div className="text-center">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-1">S&P 500</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">S&P 500</p>
           <p className={cn('text-2xl font-extrabold font-mono tabular-nums', spxUp ? 'text-emerald-600' : 'text-red-600')}>
             {spxUp ? '+' : ''}{spxChange1d.toFixed(2)}%
           </p>
@@ -45,7 +45,7 @@ export default function MarketPulse({ pulse }: Props) {
         </div>
         {/* VIX */}
         <div className="text-center border-x border-slate-200">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-1">VIX</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">VIX</p>
           <p className={cn('text-2xl font-extrabold font-mono tabular-nums', vixColor(vix))}>
             {vix.toFixed(1)}
           </p>
@@ -53,7 +53,7 @@ export default function MarketPulse({ pulse }: Props) {
         </div>
         {/* 10Y yield */}
         <div className="text-center">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-1">10Y Treasury</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">10Y Treasury</p>
           <p className="text-2xl font-extrabold font-mono tabular-nums text-slate-900">
             {tnxYield.toFixed(2)}%
           </p>

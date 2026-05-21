@@ -84,7 +84,7 @@ export default function HealthSection({ ratings, scores, financialsData }: Props
 
   return (
     <div className="rounded-xl card p-6">
-      <h2 className="text-[11px] font-bold uppercase tracking-widest text-blue-600 mb-5">Financial Health</h2>
+      <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-5">Financial Health</h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
@@ -92,7 +92,7 @@ export default function HealthSection({ ratings, scores, financialsData }: Props
         <div className="space-y-5">
           {/* Business Quality */}
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-3">Business Quality</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Business Quality</p>
             <div className="space-y-4">
               {BUSINESS_QUALITY_KEYS.map((key) => (
                 <CategoryRow key={key} catKey={key} ratings={ratings} />
@@ -102,7 +102,7 @@ export default function HealthSection({ ratings, scores, financialsData }: Props
 
           {/* Price vs. Value */}
           <div className="pt-1 border-t border-slate-200">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-3 mt-3">Price vs. Value</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3 mt-3">Price vs. Value</p>
             <div className="space-y-4">
               {VALUATION_KEYS.map((key) => (
                 <CategoryRow key={key} catKey={key} ratings={ratings} />
@@ -114,7 +114,7 @@ export default function HealthSection({ ratings, scores, financialsData }: Props
         {/* Quality signals + summary */}
         <div className="space-y-5">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-3">Quality Signals</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Quality Signals</p>
             <div className="space-y-2">
               {piotroski != null && (
                 <div className="flex items-center justify-between rounded-lg bg-white border border-slate-200 px-4 py-2.5">

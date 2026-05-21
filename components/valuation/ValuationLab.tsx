@@ -145,7 +145,7 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin 
       {/* Three-column hero */}
       <div className="grid grid-cols-3 divide-x divide-slate-200">
         <div className="flex flex-col items-center px-4 py-5 gap-1">
-          <p className="text-[10px] uppercase tracking-wider text-blue-600 font-bold">Market Implies</p>
+          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Market Implies</p>
           <p className="text-2xl font-bold tabular-nums" style={{ color: toneColor }}>
             {impliedCAGR != null ? (impliedCAGR * 100).toFixed(1) + '%' : '—'}
           </p>
@@ -157,7 +157,7 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin 
           )}
         </div>
         <div className="flex flex-col items-center px-4 py-5 gap-1">
-          <p className="text-[10px] uppercase tracking-wider text-blue-600 font-bold">Analyst Says</p>
+          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Analyst Says</p>
           <p className="text-2xl font-bold tabular-nums text-slate-900">
             {analystCAGR != null ? (analystCAGR * 100).toFixed(1) + '%' : '—'}
           </p>
@@ -165,7 +165,7 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin 
           {analystCAGR != null && <span className="text-xs text-slate-400 mt-1">─ Consensus</span>}
         </div>
         <div className="flex flex-col items-center px-4 py-5 gap-1">
-          <p className="text-[10px] uppercase tracking-wider text-blue-600 font-bold">History (3Y)</p>
+          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">History (3Y)</p>
           <p className="text-2xl font-bold tabular-nums text-slate-900">
             {historicalCAGR != null ? (historicalCAGR * 100).toFixed(1) + '%' : '—'}
           </p>
@@ -176,7 +176,7 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin 
 
       {/* Assumptions + interpretation */}
       <div className="px-5 py-4 border-t border-slate-100 bg-slate-50">
-        <p className="text-[10px] uppercase tracking-wider text-blue-600 font-bold mb-3">Assumptions used</p>
+        <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-3">Assumptions used</p>
         <div className="grid grid-cols-3 gap-3">
           <div>
             <p className="text-[10px] text-slate-500">FCF Margin</p>
@@ -239,7 +239,7 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
         {config.fairValueSummary != null && (
           <div className="flex items-center gap-3 shrink-0">
             <div className="text-right">
-              <p className="text-[10px] uppercase tracking-wider text-blue-600 font-bold">Fair Value</p>
+              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Fair Value</p>
               <p className="text-lg font-bold tabular-nums text-slate-900">
                 {fmtPrice(config.fairValueSummary, currency)}
               </p>

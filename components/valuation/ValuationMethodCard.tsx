@@ -58,7 +58,7 @@ export default function ValuationMethodCard({
         'rounded-xl border cursor-pointer transition-all select-none group card',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
         isActive
-          ? 'border-blue-400 ring-1 ring-blue-200'
+          ? 'border-blue-400'
           : 'border-slate-200 hover:border-blue-300',
       )}
     >

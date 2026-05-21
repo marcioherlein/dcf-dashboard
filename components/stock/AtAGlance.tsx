@@ -92,7 +92,7 @@ export default function AtAGlance({
       {/* TTM Multiples */}
       {showMultiples && (
         <div className="pt-3 border-t border-slate-200">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600 mb-2.5">TTM Multiples</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2.5">TTM Multiples</p>
           <div className="flex flex-wrap gap-2">
             <MetricChip label="P/E"       value={fmtMultiple(pe)} />
             <MetricChip label="EV/EBITDA" value={fmtMultiple(evEbitda)} />

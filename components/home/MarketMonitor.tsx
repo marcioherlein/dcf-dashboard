@@ -339,7 +339,7 @@ export default function MarketMonitor() {
               <div key={group.name}>
                 {/* Section header */}
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="text-[11px] font-semibold text-blue-600 uppercase tracking-wider">
+                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                     {group.label}
                   </span>
                   <div className="flex-1 h-px bg-slate-200" />

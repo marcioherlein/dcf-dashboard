@@ -104,7 +104,7 @@ export default function InstrumentPriceChart({ symbol, currency = 'USD' }: Props
     <div className="rounded-xl card overflow-hidden">
       {/* Header */}
       <div className="px-4 pt-3 pb-2 border-b border-slate-200 flex items-center justify-between">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-blue-600">Price Chart</span>
+        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Price Chart</span>
         <div className="flex flex-wrap gap-1">
           {PERIODS.map(p => (
             <button

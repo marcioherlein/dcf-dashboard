@@ -97,7 +97,7 @@ export default function FinancialCharts({ incomeStatement, cashFlow, currency = 
 
   if (historicalIS.length < 2) return null
 
-  const sectionTitle = 'text-[11px] font-bold uppercase tracking-widest text-blue-600 mb-3'
+  const sectionTitle = 'text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3'
   const panel = 'rounded-xl card p-5'
 
   return (

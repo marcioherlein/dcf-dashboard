@@ -283,7 +283,7 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
         <div className={cn('rounded-xl border px-6 py-5', zoneStyle.wrap)}>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-label uppercase tracking-wider text-blue-600 font-bold mb-1">Weighted Fair Value Estimate</p>
+              <p className="text-label uppercase tracking-wider text-slate-400 font-bold mb-1">Weighted Fair Value Estimate</p>
               <NumberDisplay value={fmtPrice(weightedFV, currency)} size="xl" />
               <p className="text-micro text-slate-500 mt-1">
                 vs. {fmtPrice(currentPrice, currency)} current price · {validMethodCount} method{validMethodCount !== 1 ? 's' : ''}
@@ -307,7 +307,7 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
       {/* ── Method dots lollipop chart ──────────────────────────────────────── */}
       {methods.some(m => m.fairValue != null) && (
         <div className="rounded-xl card p-5">
-          <p className="text-label uppercase tracking-wider text-blue-600 font-bold mb-4">Fair Value by Method</p>
+          <p className="text-label uppercase tracking-wider text-slate-400 font-bold mb-4">Fair Value by Method</p>
           <MethodDotsChart
             methods={methods}
             currentPrice={currentPrice}
@@ -324,10 +324,10 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
       {methods.length > 0 && (
         <div className="rounded-xl card overflow-hidden">
           <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-2.5 border-b border-slate-200 bg-slate-50">
-            <span className="text-label uppercase tracking-wider text-blue-600 font-bold">Method</span>
-            <span className="text-label uppercase tracking-wider text-blue-600 font-bold text-right">Fair Value</span>
-            <span className="text-label uppercase tracking-wider text-blue-600 font-bold text-right">Upside</span>
-            <span className="text-label uppercase tracking-wider text-blue-600 font-bold text-right w-20">Weight</span>
+            <span className="text-label uppercase tracking-wider text-slate-400 font-bold">Method</span>
+            <span className="text-label uppercase tracking-wider text-slate-400 font-bold text-right">Fair Value</span>
+            <span className="text-label uppercase tracking-wider text-slate-400 font-bold text-right">Upside</span>
+            <span className="text-label uppercase tracking-wider text-slate-400 font-bold text-right w-20">Weight</span>
           </div>
 
           <div className="divide-y divide-slate-100">

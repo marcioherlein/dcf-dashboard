@@ -137,7 +137,7 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
 
   return (
     <div className="rounded-xl card p-6">
-      <h2 className="text-[11px] font-bold uppercase tracking-widest text-blue-600 mb-4">The Business</h2>
+      <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-4">The Business</h2>
 
       {/* Context pills */}
       {pills.length > 0 && (
@@ -179,7 +179,7 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         {chartData.length >= 2 && (
           <div>
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-blue-600">Revenue History ($M)</p>
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Revenue History ($M)</p>
             <ResponsiveContainer width="100%" height={140}>
               <BarChart data={chartData} margin={{ top: 0, right: 4, left: 4, bottom: 0 }}>
                 <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
@@ -198,7 +198,7 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
 
         {marginTrendData.length >= 2 && (
           <div>
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-blue-600">Margin Trends (%)</p>
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Margin Trends (%)</p>
             <ResponsiveContainer width="100%" height={140}>
               <LineChart data={marginTrendData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
                 <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />

@@ -24,7 +24,7 @@ interface Props {
 function StatBox({ label, value, className }: { label: string; value: React.ReactNode; className?: string }) {
   return (
     <div className={cn('rounded-xl bg-slate-50 border border-slate-200 px-4 py-3', className)}>
-      <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600">{label}</p>
+      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">{label}</p>
       <p className="mt-0.5 text-sm font-semibold font-mono text-slate-900">{value}</p>
     </div>
   )
@@ -38,7 +38,7 @@ export default function PriceHeader({
   const currSymbol = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$ ' : currency + ' '
 
   return (
-    <div className="rounded-xl card p-5 border-l-4 border-l-blue-600">
+    <div className="rounded-xl card p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">

@@ -67,7 +67,7 @@ function pillIcon(type: 'profit' | 'debt' | 'growth') {
 function StatBox({ label, value, hidden }: { label: string; value: React.ReactNode; hidden?: boolean }) {
   return (
     <div className={cn('rounded-xl bg-slate-50 border border-slate-200 px-4 py-3', hidden && 'hidden sm:block')}>
-      <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600">{label}</p>
+      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">{label}</p>
       <p className="mt-0.5 text-sm font-semibold text-slate-900">{value}</p>
     </div>
   )
@@ -164,7 +164,7 @@ export default function InvestorGradeCard({
 
   // ── Full card ─────────────────────────────────────────────────────────────
   return (
-    <div className="rounded-xl card overflow-hidden border-l-4 border-l-blue-600">
+    <div className="rounded-xl card overflow-hidden">
       {/* ── STATE 1: always visible ── */}
       <div className="p-5">
         <div className="flex items-start gap-4">
@@ -238,7 +238,7 @@ export default function InvestorGradeCard({
           {fairValue != null && (
             <div className="flex items-center gap-3 rounded-xl card-tinted px-4 py-3">
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600">You pay</p>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">You pay</p>
                 <p className="mt-0.5 text-sm font-semibold text-slate-900 tabular-nums">
                   {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
@@ -252,7 +252,7 @@ export default function InvestorGradeCard({
                 )}
               </div>
               <div className="flex-1 min-w-0 text-right">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600">Fair Value Estimate</p>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Fair Value Estimate</p>
                 <p className={cn('mt-0.5 text-xl font-bold tabular-nums', isUndervalued ? 'text-emerald-600' : 'text-amber-700')}>
                   {currSymbol}{displayFV.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
@@ -267,7 +267,7 @@ export default function InvestorGradeCard({
 
           {/* Health pills */}
           <div className="space-y-2">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600">Health check</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Health check</p>
             {[
               { type: 'profit' as const, label: 'Profitability', summary: profitabilitySummary },
               { type: 'debt'   as const, label: 'Financial Health', summary: liquiditySummary   },
@@ -286,7 +286,7 @@ export default function InvestorGradeCard({
           {/* Key Drivers */}
           {drivers && drivers.length > 0 && (
             <div className="space-y-1.5">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600">Key drivers</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Key drivers</p>
               <div className="flex flex-col gap-1.5">
                 {drivers.slice(0, 2).map((d, i) => (
                   <div key={i} className="flex items-start gap-2 rounded-md card-tinted border-l-4 border-l-blue-500 px-3 py-2">
