@@ -14,6 +14,7 @@ interface MultipleEstimate {
   upsidePct: number
   sectorMedian: number
   actualValue: number
+  applicable: boolean
 }
 
 interface ValuationMethods {
@@ -40,12 +41,12 @@ interface Props {
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">{children}</p>
+  return <p className="text-[10px] font-bold uppercase tracking-wider text-slate-300 mb-2">{children}</p>
 }
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-xl glass-card border-[rgba(59,130,246,0.15)] px-4 py-3">
+    <div className="rounded-xl glass-card border border-[rgba(59,130,246,0.25)] px-4 py-3">
       {children}
     </div>
   )
@@ -64,10 +65,15 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
   const estimates = valuationMethods?.models?.multiples?.estimates ?? []
 
   // Build method rows — multiples from estimates + Core DCF from fairValue
-  const methods: { label: string; fv: number | null; upside: number | null; isBlended?: boolean }[] = [
-    ...['Forward P/E', 'EV/EBITDA', 'Revenue Multiple'].map(name => {
-      const e = estimates.find(x => x.multiple === name || x.multiple.startsWith(name.split(' ')[0]))
-      return { label: name, fv: e?.impliedFairValue ?? null, upside: e?.upsidePct ?? null }
+  const methodDefs: { key: string; label: string }[] = [
+    { key: 'P/E',        label: 'P/E Multiple'   },
+    { key: 'EV/EBITDA',  label: 'EV/EBITDA'      },
+    { key: 'EV/Revenue', label: 'EV/Revenue'      },
+  ]
+  const methods: { label: string; fv: number | null; upside: number | null }[] = [
+    ...methodDefs.map(({ key, label }) => {
+      const e = estimates.find(x => x.multiple === key)
+      return { label, fv: (e?.applicable && e.impliedFairValue > 0) ? e.impliedFairValue : null, upside: e?.applicable ? e.upsidePct : null }
     }),
     {
       label: 'Core DCF',
@@ -80,9 +86,13 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
   const blendedUpside = valuationMethods?.triangulatedUpsidePct
 
   // Peer multiples comparison rows
-  const multipleRows = ['EV/EBITDA', 'P/E', 'P/S'].map(name => {
-    const e = estimates.find(x => x.multiple === name || x.multiple.startsWith(name.split('/')[0]))
-    return { label: name, company: e?.actualValue ?? null, sector: e?.sectorMedian ?? null }
+  const multipleRows = [
+    { key: 'EV/EBITDA', label: 'EV/EBITDA' },
+    { key: 'P/E',       label: 'P/E'        },
+    { key: 'P/Sales',   label: 'P/Sales'    },
+  ].map(({ key, label }) => {
+    const e = estimates.find(x => x.multiple === key)
+    return { label, company: e?.actualValue ?? null, sector: e?.sectorMedian ?? null }
   })
 
   return (
@@ -114,9 +124,9 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
         <div className="space-y-1.5">
           {methods.map(({ label, fv, upside }) => (
             <div key={label} className="flex items-center justify-between">
-              <span className="text-[11px] text-slate-400 truncate pr-2">{label}</span>
+              <span className="text-[11px] text-slate-300 truncate pr-2">{label}</span>
               <div className="flex items-center gap-1.5 shrink-0">
-                <span className="text-[11px] font-semibold text-slate-200 tabular-nums">
+                <span className="text-[11px] font-semibold text-white tabular-nums">
                   {fv != null ? `${sym}${fv.toFixed(2)}` : '—'}
                 </span>
                 {upside != null && (
@@ -140,8 +150,8 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
             { label: 'Beta',              value: wacc.inputs.beta.toFixed(2) },
           ].map(({ label, value }) => (
             <div key={label} className="flex items-center justify-between">
-              <span className="text-[11px] text-slate-400">{label}</span>
-              <span className="text-[11px] font-semibold text-slate-200 tabular-nums">{value}</span>
+              <span className="text-[11px] text-slate-300">{label}</span>
+              <span className="text-[11px] font-semibold text-white tabular-nums">{value}</span>
             </div>
           ))}
         </div>
@@ -152,7 +162,7 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
         <Card>
           <SectionLabel>vs Sector Median</SectionLabel>
           <div className="space-y-1.5">
-            <div className="flex justify-between text-[9px] text-slate-500 mb-1">
+            <div className="flex justify-between text-[9px] text-slate-400 mb-1">
               <span>Multiple</span>
               <div className="flex gap-4">
                 <span>Company</span>
@@ -165,11 +175,11 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
               const isCheap     = company != null && sector != null && company < sector * 0.9
               return (
                 <div key={label} className="flex items-center justify-between">
-                  <span className="text-[11px] text-slate-400">{label}</span>
+                  <span className="text-[11px] text-slate-300">{label}</span>
                   <div className="flex gap-4">
                     <span className={cn(
                       'text-[11px] font-semibold tabular-nums w-12 text-right',
-                      isExpensive ? 'text-amber-400' : isCheap ? 'text-emerald-400' : 'text-slate-200'
+                      isExpensive ? 'text-amber-400' : isCheap ? 'text-emerald-400' : 'text-white'
                     )}>
                       {company != null ? company.toFixed(1) + '×' : '—'}
                     </span>

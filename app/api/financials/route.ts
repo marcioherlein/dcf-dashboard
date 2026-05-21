@@ -323,8 +323,18 @@ export async function GET(req: NextRequest) {
     const trailingPE = (q.trailingPE ?? null) as number | null
     const priceToBook = (ks.priceToBook ?? null) as number | null
     const priceToSales = (ks.priceToSalesTrailing12Months ?? null) as number | null
-    const evToEbitda = (fd.enterpriseToEbitda ?? null) as number | null
+    let evToEbitda = (fd.enterpriseToEbitda ?? null) as number | null
     const evToRevenue = (fd.enterpriseToRevenue ?? null) as number | null
+
+    // Compute EV/EBITDA from FMP statements when Yahoo doesn't provide it
+    if (evToEbitda === null && fmp.incomeStatements[0] != null) {
+      const fmpEbitda = fmp.incomeStatements[0].ebitda
+      if (fmpEbitda != null && fmpEbitda > 0) {
+        const evM = marketCapM + debtM - cashM
+        const ebitdaM = fmpEbitda / 1e6
+        if (ebitdaM > 0) evToEbitda = Math.round((evM / ebitdaM) * 100) / 100
+      }
+    }
 
     // Net income for FCFE — use normalizedNetIncomeM (2-year avg from income stmt).
     // fd.netIncomeToCommon from financialData is null for many banks (Yahoo doesn't always
