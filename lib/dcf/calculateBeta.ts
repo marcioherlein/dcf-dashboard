@@ -28,10 +28,11 @@ function variance(arr: number[]): number {
 }
 
 export function calculateBeta(stockPrices: PricePoint[], spyPrices: PricePoint[]): number {
+  if (stockPrices.length < 60) return 1.0 // insufficient price history (e.g. recent IPO)
   const stockRet = weeklyReturns(stockPrices)
   const spyRet = weeklyReturns(spyPrices)
   const n = Math.min(stockRet.length, spyRet.length)
-  if (n < 20) return 1.0 // not enough data
+  if (n < 20) return 1.0
 
   const cov = covariance(stockRet.slice(0, n), spyRet.slice(0, n))
   const varSpy = variance(spyRet.slice(0, n))

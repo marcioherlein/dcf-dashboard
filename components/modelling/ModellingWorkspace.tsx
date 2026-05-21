@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { normalizeModellingInputs, type ModellingInput, type ModellingRow } from '@/lib/valuation/normalizeInputs'
 import { buildAssumptionSet } from '@/lib/valuation/assumptions'
 import { computeUFCFRows, computeUFCFEV, type UFCFRow } from '@/lib/valuation/unleveredDcf'
@@ -376,6 +376,31 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
     setRowOverrides(prev => ({ ...prev, [year]: { ...prev[year], [field]: value } }))
   }, [])
 
+  // Fair value derived from terminal data for delta flash feedback
+  const derivedFV: number | null = useMemo(() => {
+    const tv = terminalMethod === 'perpetuity'
+      ? tvUFCF.perpetuityTVDiscounted
+      : tvUFCF.exitMultipleTVDiscounted
+    if (tv == null || sharesM == null || sharesM <= 0) return null
+    return (sumPvUFCF + tv + (baseInput.cashM ?? 0) - (baseInput.debtM ?? 0)) / sharesM
+  }, [terminalMethod, tvUFCF, sumPvUFCF, sharesM, baseInput.cashM, baseInput.debtM])
+
+  const prevFV = useRef<number | null>(null)
+  const [delta, setDelta] = useState<{ amount: number; pct: number } | null>(null)
+  const deltaTimer = useRef<ReturnType<typeof setTimeout>>()
+
+  useEffect(() => {
+    if (prevFV.current == null) { prevFV.current = derivedFV; return }
+    if (derivedFV == null) return
+    const diff = derivedFV - prevFV.current
+    if (Math.abs(diff) > 0.05) {
+      clearTimeout(deltaTimer.current)
+      setDelta({ amount: diff, pct: diff / Math.abs(prevFV.current) })
+      deltaTimer.current = setTimeout(() => setDelta(null), 2000)
+    }
+    prevFV.current = derivedFV
+  }, [derivedFV])
+
   return (
     <div className="bg-[#080F1E] rounded-xl overflow-hidden border border-white/10">
       <DataQualityWarnings
@@ -389,6 +414,18 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
         financialCurrency={waccRaw.financialCurrency ?? undefined}
         fcfCapApplied={baseInput.fcfCapApplied ?? false}
       />
+
+      {/* Assumption-change delta badge */}
+      {delta && (
+        <div className={[
+          'flex items-center justify-center gap-1.5 py-1.5 text-[12px] font-semibold tabular-nums transition-opacity',
+          delta.amount >= 0 ? 'text-emerald-400 bg-emerald-400/10' : 'text-red-400 bg-red-400/10',
+        ].join(' ')}>
+          <span>{delta.amount >= 0 ? '▲' : '▼'}</span>
+          <span>Fair Value {delta.amount >= 0 ? '+' : ''}{delta.amount.toFixed(2)}</span>
+          <span className="opacity-60">({delta.amount >= 0 ? '+' : ''}{(delta.pct * 100).toFixed(1)}%)</span>
+        </div>
+      )}
       <ForecastTable
         rows={displayRows}
         waccData={waccData}

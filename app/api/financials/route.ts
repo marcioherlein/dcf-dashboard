@@ -71,6 +71,30 @@ export async function GET(req: NextRequest) {
       (spyHistory as any[]).map((p) => ({ date: new Date(p.date), close: p.close ?? p.adjclose ?? 0 })),
     )
 
+    // Holding-period returns — use already-fetched 5y price history
+    const periodReturn = (prices: { date: string; close: number }[], yearsBack: number): number | null => {
+      if (!prices.length) return null
+      const sorted = [...prices].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      const cutoff = new Date()
+      cutoff.setFullYear(cutoff.getFullYear() - yearsBack)
+      const entry = sorted.find(p => new Date(p.date) >= cutoff)
+      const exit = sorted[sorted.length - 1]
+      if (!entry || !exit || entry.close <= 0) return null
+      return (exit.close - entry.close) / entry.close
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sH = (stockHistory as any[]).map(p => ({ date: String(p.date), close: p.close ?? p.adjclose ?? 0 }))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const spH = (spyHistory as any[]).map(p => ({ date: String(p.date), close: p.close ?? p.adjclose ?? 0 }))
+    const holdingReturns = {
+      stock1y: periodReturn(sH, 1),
+      stock3y: periodReturn(sH, 3),
+      stock5y: periodReturn(sH, 5),
+      spy1y: periodReturn(spH, 1),
+      spy3y: periodReturn(spH, 3),
+      spy5y: periodReturn(spH, 5),
+    }
+
     // WACC (uses percentages/ratios — not currency-sensitive)
     const waccInputs = extractWACCInputs(fin, rfRate, beta, fxRate, crp)
     const waccResult = calculateWACC(waccInputs)
@@ -814,6 +838,7 @@ export async function GET(req: NextRequest) {
       ratings,
       scores,
       ownership,
+      holdingReturns,
       valuationMethods,
       financialStatements,
       providerStatus: {

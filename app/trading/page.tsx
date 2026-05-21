@@ -196,9 +196,6 @@ export default function TradingPage() {
           <div className="border border-red-200 bg-red-50 rounded-lg p-4">
             <div className="text-xs font-semibold text-red-700 mb-1 uppercase tracking-wider">Data Not Available</div>
             <pre className="text-xs text-red-600 whitespace-pre-wrap">{error}</pre>
-            <div className="mt-3 text-xs text-slate-500">
-              Run: <code className="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-xs">python3 scripts/fetch_live.py</code> then refresh.
-            </div>
           </div>
         )}
 
@@ -485,7 +482,7 @@ export default function TradingPage() {
                 </tbody>
               </table>
               <div className="mt-2 text-[11px] text-slate-300">
-                Analyst consensus · delayed · run <code className="bg-slate-100 border border-slate-200 px-1 rounded">python3 scripts/fetch_fundamentals.py</code> to refresh
+                Analyst consensus · delayed
               </div>
             </div>
           </details>

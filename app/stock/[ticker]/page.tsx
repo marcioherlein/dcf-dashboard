@@ -8,7 +8,11 @@ import BusinessModel from '@/components/stock/BusinessModel'
 import FinancialScores from '@/components/stock/FinancialScores'
 import AtAGlance from '@/components/stock/AtAGlance'
 import HealthSection from '@/components/stock/HealthSection'
+import OwnershipPanel from '@/components/stock/OwnershipPanel'
+import HoldingReturns from '@/components/stock/HoldingReturns'
 import TabNav, { type TabId } from '@/components/stock/TabNav'
+import StockSidebar from '@/components/stock/StockSidebar'
+import { cn } from '@/lib/utils'
 import ValuationLab from '@/components/valuation/ValuationLab'
 import FinancialsHub from '@/components/stock/FinancialsHub'
 import InvestorGradeCard from '@/components/stock/InvestorGradeCard'
@@ -116,6 +120,14 @@ interface FinancialsData {
     shortPct: number | null
     shortRatio: number | null
     sharesShort: number | null
+  }
+  holdingReturns?: {
+    stock1y: number | null
+    stock3y: number | null
+    stock5y: number | null
+    spy1y: number | null
+    spy3y: number | null
+    spy5y: number | null
   }
   financialStatements?: {
     incomeStatement: Array<{
@@ -279,7 +291,7 @@ function StockPageBody() {
       {/* Session-based soft auth nudge (appears on 2nd+ stock page view) */}
       <AuthBanner />
 
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-16">
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 pb-16">
 
         {loading && (
           <div className="pt-5 space-y-4 animate-pulse">
@@ -386,6 +398,13 @@ function StockPageBody() {
               />
             </motion.div>
 
+            {/* ── Desktop grid: main content + contextual sidebar ── */}
+            <div className={cn(
+              activeTab !== 'news'
+                ? 'lg:grid lg:grid-cols-[1fr_300px] lg:gap-6 lg:items-start'
+                : ''
+            )}>
+            <div className="min-w-0">
             <AnimatePresence mode="wait">
               {/* ── Overview tab ── */}
               {activeTab === 'overview' && (
@@ -417,6 +436,14 @@ function StockPageBody() {
                     currency={currency}
                     statementsData={statementsData}
                   />
+
+                  {data.ownership && (
+                    <OwnershipPanel ownership={data.ownership} />
+                  )}
+
+                  {data.holdingReturns && (
+                    <HoldingReturns returns={data.holdingReturns} ticker={data.ticker} />
+                  )}
 
                   {data.ratings && data.scores && (
                     <HealthSection
@@ -510,6 +537,17 @@ function StockPageBody() {
                 </motion.div>
               )}
             </AnimatePresence>
+            </div>{/* end main column */}
+
+            {/* Sidebar — desktop only, hidden on news tab */}
+            {activeTab !== 'news' && (
+              <aside className="hidden lg:block">
+                <div className="sticky top-[68px] space-y-3">
+                  <StockSidebar activeTab={activeTab} data={data} statementsData={statementsData} />
+                </div>
+              </aside>
+            )}
+            </div>{/* end grid */}
           </>
         )}
       </div>

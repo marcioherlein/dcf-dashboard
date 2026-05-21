@@ -1,6 +1,6 @@
 'use client'
-import { useState, useEffect } from 'react'
-import { TrendingUp, TrendingDown, Bookmark, DollarSign, Shield, BarChart2, ArrowRight } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { TrendingUp, TrendingDown, Bookmark, Share2, Check, DollarSign, Shield, BarChart2, ArrowRight } from 'lucide-react'
 import { motion, useMotionValue, animate } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { fmtPct, fmtLargeCurrency, fmtPrice, upsideZone, zoneBadgeClass } from '@/lib/formatters'
@@ -88,6 +88,24 @@ export default function InvestorGradeCard({
   const isUndervalued = (upsidePct ?? 0) > 0
   const zone = upsidePct != null ? upsideZone(upsidePct) : null
   const gaugeValue = gradeToValue(grade)
+
+  const [copied, setCopied] = useState(false)
+  const handleShare = useCallback(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams({
+      ticker,
+      price: price.toFixed(2),
+      ...(fairValue != null ? { fv: fairValue.toFixed(2) } : {}),
+      ...(upsidePct != null ? { upside: upsidePct.toFixed(4) } : {}),
+      currency,
+      ...(companyName ? { name: companyName } : {}),
+    })
+    const shareUrl = `${window.location.origin}/stock/${ticker}?${params.toString()}`
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }, [ticker, price, fairValue, upsidePct, currency, companyName])
 
   // Animated fair value counter
   const fvMotion = useMotionValue(0)
@@ -301,6 +319,13 @@ export default function InvestorGradeCard({
                 <Bookmark size={16} />
               </button>
             )}
+            <button
+              onClick={handleShare}
+              title="Copy share link"
+              className="rounded-xl border border-[rgba(59,130,246,0.2)] p-2.5 text-slate-500 hover:border-blue-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
+            >
+              {copied ? <Check size={16} className="text-emerald-400" /> : <Share2 size={16} />}
+            </button>
           </div>
       </div>
 
