@@ -153,7 +153,7 @@ function TickerSearch({ onAdd, isDark, disabled }: {
 }
 
 // ─── Custom Crosshair Tooltip ─────────────────────────────────────────────────
-function ChartTooltip({ active, payload, label, tickers, metric, isDark }: {
+function ChartTooltip({ active, payload, label, tickers, metric, isDark: _isDark }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   active?: boolean; payload?: any[]; label?: string
   tickers: string[]; metric: Metric; isDark?: boolean

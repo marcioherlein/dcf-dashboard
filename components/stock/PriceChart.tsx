@@ -129,7 +129,7 @@ type MAKey = typeof MA_INDICATORS[number]['key']
 type SubPanel = 'volume' | 'rsi'
 
 // ── Tooltip formatters ────────────────────────────────────────────────────────
-function PriceTooltip({ active, payload, label, isDark, compareMode, compareTickers }: {
+function PriceTooltip({ active, payload, label, isDark: _isDark, compareMode, compareTickers }: {
   active?: boolean
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any[]
@@ -181,7 +181,7 @@ function PriceTooltip({ active, payload, label, isDark, compareMode, compareTick
   )
 }
 
-function RSITooltip({ active, payload, label, isDark }: {
+function RSITooltip({ active, payload, label, isDark: _isDark }: {
   active?: boolean
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any[]

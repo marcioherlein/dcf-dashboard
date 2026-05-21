@@ -14,7 +14,7 @@ interface Props {
   statementsData: AnyData
 }
 
-export default function StockSidebar({ activeTab, data, statementsData }: Props) {
+export default function StockSidebar({ activeTab, data, statementsData: _statementsData }: Props) {
   if (!data) return null
 
   if (activeTab === 'overview') {
