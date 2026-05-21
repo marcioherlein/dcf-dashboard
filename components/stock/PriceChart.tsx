@@ -303,7 +303,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
     for (const ind of MA_INDICATORS) {
       const vals = ind.calc(closes)
       const s = maSeries.current.get(ind.key)
-      if (s) s.setData(rawBars.filter((_, i) => vals[i] != null).map((b, _, arr) => {
+      if (s) s.setData(rawBars.filter((_, i) => vals[i] != null).map((b) => {
         const idx = rawBars.indexOf(b)
         return { time: b.time, value: vals[idx] as number }
       }))
@@ -393,7 +393,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
   const isCompare  = compareTickers.length > 0
 
   const toggleMA = useCallback((key: MAKey) => {
-    setActiveMA(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
+    setActiveMA(prev => { const n = new Set(prev); if (n.has(key)) { n.delete(key) } else { n.add(key) } return n })
   }, [])
 
   const addCompareTicker = (raw: string) => {
