@@ -60,7 +60,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-xl bg-white border border-slate-200 px-4 py-3">
+    <div className="rounded-xl bg-white border border-slate-200 px-5 py-4">
       {children}
     </div>
   )
@@ -109,7 +109,7 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
   ].filter(w => w.pct > 0) : []
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
 
       {/* Blended Fair Value hero */}
       {blended != null && (

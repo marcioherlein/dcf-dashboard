@@ -90,7 +90,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('rounded-xl bg-white border border-slate-200 px-4 py-3', className)}>
+    <div className={cn('rounded-xl bg-white border border-slate-200 px-5 py-4', className)}>
       {children}
     </div>
   )
@@ -194,7 +194,7 @@ export default function OverviewSidebar({
   ]
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
 
       {/* Analyst Consensus */}
       <Card>

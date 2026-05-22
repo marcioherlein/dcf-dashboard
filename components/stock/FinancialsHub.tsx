@@ -90,7 +90,7 @@ function valColor(v: number | null, positiveIsGood = true): string {
   if (v == null) return 'text-slate-400'
   if (v === 0) return 'text-slate-500'
   const good = v > 0 ? positiveIsGood : !positiveIsGood
-  return good ? 'text-slate-100' : 'text-red-500'
+  return good ? 'text-slate-700' : 'text-red-500'
 }
 
 // ── Mini sparkline ─────────────────────────────────────────────────────────────

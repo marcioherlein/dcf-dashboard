@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils'
 import ValuationLab from '@/components/valuation/ValuationLab'
 import FinancialsHub from '@/components/stock/FinancialsHub'
 import InvestorGradeCard from '@/components/stock/InvestorGradeCard'
+import MobileKeyInsights from '@/components/stock/MobileKeyInsights'
 import InvestorVerdictCard from '@/components/stock/InvestorVerdictCard'
 import { LoginGateProvider, useLoginGate } from '@/components/auth/LoginGateProvider'
 import AuthBanner from '@/components/auth/AuthBanner'
@@ -341,7 +342,7 @@ function StockPageBody() {
             {/* ── Desktop grid: main content + contextual sidebar ── */}
             <div className={cn(
               activeTab !== 'news'
-                ? 'lg:grid lg:grid-cols-[1fr_300px] lg:gap-6 lg:items-start'
+                ? 'lg:grid lg:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_400px] lg:gap-6 lg:items-start'
                 : ''
             )}>
             <div className="min-w-0">
@@ -403,6 +404,8 @@ function StockPageBody() {
                 compact={activeTab === 'valuation'}
               />
             </motion.div>
+            {/* Mobile-only collapsible quick insights — hidden on desktop where sidebar shows */}
+            <MobileKeyInsights data={data} />
             <AnimatePresence mode="wait">
               {/* ── Overview tab ── */}
               {activeTab === 'overview' && (

@@ -274,7 +274,7 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
               <div key={a.key}>
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-semibold text-slate-100">{a.label}</span>
+                    <span className="text-sm font-semibold text-slate-700">{a.label}</span>
                     <span className={cn(
                       'text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider',
                       isOverridden ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500',
