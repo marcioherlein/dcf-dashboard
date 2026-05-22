@@ -19,6 +19,7 @@ interface IncomeRow {
   revenue: number | null
   netIncome: number | null
   ebitda: number | null
+  operatingIncome: number | null
   operatingMargin: number | null
   isProjected: boolean
 }
@@ -83,6 +84,7 @@ function MarginBar({ label, value }: { label: string; value: number | null }) {
   )
 }
 
+// Values are in millions
 function fmtM(v: number): string {
   const abs = Math.abs(v)
   if (abs >= 1000) return (v < 0 ? '-' : '') + '$' + (abs / 1000).toFixed(1) + 'B'
@@ -90,7 +92,7 @@ function fmtM(v: number): string {
 }
 
 function BarSparkline({ data, colorFn, label }: {
-  data: { year: string; value: number }[]
+  data: { year: string; value: number; isProjected?: boolean }[]
   colorFn: (v: number) => string
   label?: string
 }) {
@@ -98,27 +100,37 @@ function BarSparkline({ data, colorFn, label }: {
   const maxAbs = Math.max(...data.map(d => Math.abs(d.value)))
   if (maxAbs === 0) return null
 
+  const lastActualIdx = data.reduce((acc, d, i) => (!d.isProjected ? i : acc), -1)
+
   return (
     <div>
       {label && <SectionLabel>{label}</SectionLabel>}
       <div className="flex items-end gap-1.5 h-10">
         {data.map((d, i) => {
           const h = Math.max(3, (Math.abs(d.value) / maxAbs) * 100)
-          const isLatest = i === data.length - 1
+          const isProj = d.isProjected ?? false
+          const isLatest = !isProj && i === lastActualIdx
           return (
             <div key={d.year} className="flex-1 flex flex-col items-center justify-end gap-0.5">
               <div
-                className={cn('w-full rounded-sm', colorFn(d.value), isLatest ? 'opacity-90' : 'opacity-50')}
+                className={cn(
+                  'w-full rounded-sm',
+                  colorFn(d.value),
+                  isProj ? 'opacity-25' : isLatest ? 'opacity-90' : 'opacity-50',
+                  isProj ? 'border border-dashed border-slate-300' : '',
+                )}
                 style={{ height: `${h}%` }}
               />
-              <span className="text-[9px] text-slate-500">{d.year.slice(-2)}</span>
+              <span className={cn('text-[9px]', isProj ? 'text-slate-400' : 'text-slate-500')}>
+                {d.year.slice(-2)}
+              </span>
             </div>
           )
         })}
       </div>
       <div className="flex justify-between mt-0.5 text-[9px] text-slate-500 tabular-nums">
         {data.map(d => (
-          <span key={d.year}>{fmtM(d.value)}</span>
+          <span key={d.year} className={d.isProjected ? 'text-slate-400' : ''}>{fmtM(d.value)}</span>
         ))}
       </div>
     </div>
@@ -126,10 +138,13 @@ function BarSparkline({ data, colorFn, label }: {
 }
 
 function RevenueBarChart({ rows }: { rows: IncomeRow[] }) {
+  // Include up to 4 historical + up to 2 projected
   const hist = rows.filter(r => !r.isProjected && r.revenue != null).slice(-4)
-  if (hist.length < 2) return null
+  const proj = rows.filter(r =>  r.isProjected && r.revenue != null).slice(0, 2)
+  const all  = [...hist, ...proj]
+  if (all.length < 2) return null
 
-  const values = hist.map(r => r.revenue as number)
+  const values = all.map(r => r.revenue as number)
   const max = Math.max(...values)
   const range = max || 1
 
@@ -137,24 +152,30 @@ function RevenueBarChart({ rows }: { rows: IncomeRow[] }) {
     <Card>
       <SectionLabel>Revenue Trend</SectionLabel>
       <div className="flex items-end gap-1.5 h-12">
-        {hist.map((r, i) => {
+        {all.map((r, i) => {
           const h = Math.max(4, (r.revenue! / range) * 100)
-          const isLatest = i === hist.length - 1
+          const isProj = r.isProjected
+          const isLatest = !isProj && i === hist.length - 1
           return (
             <div key={r.year} className="flex-1 flex flex-col items-center justify-end gap-0.5">
               <div
-                className={cn('w-full rounded-sm', isLatest ? 'bg-blue-400/70' : 'bg-slate-200')}
+                className={cn(
+                  'w-full rounded-sm',
+                  isProj ? 'bg-blue-200/70' : isLatest ? 'bg-blue-400/70' : 'bg-slate-200',
+                )}
                 style={{ height: `${h}%` }}
               />
-              <span className="text-[9px] text-slate-500">{r.year.slice(-2)}</span>
+              <span className={cn('text-[9px]', isProj ? 'text-slate-400' : 'text-slate-500')}>
+                {r.year.slice(-2)}
+              </span>
             </div>
           )
         })}
       </div>
       <div className="flex justify-between mt-0.5 text-[9px] text-slate-500 tabular-nums">
-        {hist.map(r => (
-          <span key={r.year}>
-            {r.revenue! >= 1e9 ? '$' + (r.revenue! / 1e9).toFixed(0) + 'B' : '$' + (r.revenue! / 1e6).toFixed(0) + 'M'}
+        {all.map(r => (
+          <span key={r.year} className={r.isProjected ? 'text-slate-400' : ''}>
+            {fmtM(r.revenue!)}
           </span>
         ))}
       </div>
@@ -179,28 +200,35 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
   const isRows = financialStatements?.incomeStatement ?? []
   const cfRows = financialStatements?.cashFlow ?? []
 
-  // EBITDA margin from latest historical income statement row
+  // EBITDA/EBIT margin from latest historical row — fallback to operatingIncome * 1.1
   const latestActual = [...isRows].filter(r => !r.isProjected).slice(-1)[0]
-  const ebitdaMargin = latestActual?.revenue && latestActual.revenue > 0 && latestActual.ebitda != null
-    ? latestActual.ebitda / latestActual.revenue
+  const ebitdaMargin = latestActual?.revenue && latestActual.revenue > 0
+    ? (latestActual.ebitda != null
+        ? latestActual.ebitda / latestActual.revenue
+        : latestActual.operatingIncome != null
+          ? (latestActual.operatingIncome * 1.1) / latestActual.revenue
+          : null)
     : null
 
-  // Build sparkline data
+  const ebitMargin = latestActual?.revenue && latestActual.revenue > 0 && latestActual.operatingIncome != null
+    ? latestActual.operatingIncome / latestActual.revenue
+    : null
+
+  // Build sparkline data — include projected rows (lighter opacity)
+  const ebitData = isRows
+    .filter(r => r.operatingIncome != null)
+    .slice(-6)
+    .map(r => ({ year: r.year, value: r.operatingIncome as number, isProjected: r.isProjected }))
+
   const niData = isRows
-    .filter(r => !r.isProjected && r.netIncome != null)
-    .slice(-4)
-    .map(r => ({ year: r.year, value: r.netIncome as number }))
+    .filter(r => r.netIncome != null)
+    .slice(-6)
+    .map(r => ({ year: r.year, value: r.netIncome as number, isProjected: r.isProjected }))
 
   const fcfData = cfRows
-    .filter(r => !r.isProjected && r.freeCashFlow != null)
-    .slice(-4)
-    .map(r => ({ year: r.year, value: r.freeCashFlow as number }))
-
-  // Operating margin trend (last 4 historical rows that have it)
-  const omData = isRows
-    .filter(r => !r.isProjected && r.operatingMargin != null)
-    .slice(-4)
-    .map(r => ({ year: r.year, value: (r.operatingMargin as number) * 100 }))
+    .filter(r => r.freeCashFlow != null)
+    .slice(-6)
+    .map(r => ({ year: r.year, value: r.freeCashFlow as number, isProjected: r.isProjected }))
 
   return (
     <div className="space-y-3">
@@ -210,21 +238,33 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
         <SectionLabel>Profit Margins</SectionLabel>
         <div className="space-y-2.5">
           <MarginBar label="Gross Margin"   value={businessProfile.grossMargin} />
+          <MarginBar label="EBIT Margin"    value={ebitMargin ?? businessProfile.netMargin} />
           <MarginBar label="EBITDA Margin"  value={ebitdaMargin} />
           <MarginBar label="Net Margin"     value={businessProfile.netMargin} />
           <MarginBar label="FCF Margin"     value={businessProfile.fcfMargin} />
         </div>
       </Card>
 
-      {/* Revenue Trend */}
+      {/* Revenue Trend — includes projected */}
       {isRows.length >= 2 && <RevenueBarChart rows={isRows} />}
+
+      {/* EBIT Trend */}
+      {ebitData.length >= 2 && (
+        <Card>
+          <BarSparkline
+            data={ebitData}
+            colorFn={v => v >= 0 ? 'bg-emerald-400' : 'bg-red-400'}
+            label="EBIT (Operating Income)"
+          />
+        </Card>
+      )}
 
       {/* Net Income Trend */}
       {niData.length >= 2 && (
         <Card>
           <BarSparkline
             data={niData}
-            colorFn={v => v >= 0 ? 'bg-emerald-400' : 'bg-red-400'}
+            colorFn={v => v >= 0 ? 'bg-blue-400' : 'bg-red-400'}
             label="Net Income"
           />
         </Card>
@@ -235,40 +275,17 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
         <Card>
           <BarSparkline
             data={fcfData}
-            colorFn={v => v >= 0 ? 'bg-blue-400' : 'bg-red-400'}
+            colorFn={v => v >= 0 ? 'bg-indigo-400' : 'bg-red-400'}
             label="Free Cash Flow"
           />
         </Card>
       )}
 
-      {/* Operating Margin Trend */}
-      {omData.length >= 2 && (
-        <Card>
-          <SectionLabel>Operating Margin %</SectionLabel>
-          <div className="flex items-end gap-1.5 h-10">
-            {omData.map((d, i) => {
-              const isLatest = i === omData.length - 1
-              return (
-                <div key={d.year} className="flex-1 flex flex-col items-center justify-end gap-0.5">
-                  <div
-                    className={cn(
-                      'w-full rounded-sm',
-                      d.value >= 15 ? 'bg-emerald-400' : d.value >= 5 ? 'bg-amber-400' : 'bg-red-400',
-                      isLatest ? 'opacity-90' : 'opacity-45'
-                    )}
-                    style={{ height: `${Math.max(4, Math.min(100, d.value * 2))}%` }}
-                  />
-                  <span className="text-[9px] text-slate-500">{d.year.slice(-2)}</span>
-                </div>
-              )
-            })}
-          </div>
-          <div className="flex justify-between mt-0.5 text-[9px] text-slate-500 tabular-nums">
-            {omData.map(d => (
-              <span key={d.year}>{d.value.toFixed(1)}%</span>
-            ))}
-          </div>
-        </Card>
+      {/* Projected sparkline legend */}
+      {(ebitData.some(d => d.isProjected) || niData.some(d => d.isProjected) || fcfData.some(d => d.isProjected)) && (
+        <p className="text-[9px] text-slate-400 px-1">
+          Faded bars = DCF model projections
+        </p>
       )}
 
       {/* ROIC */}

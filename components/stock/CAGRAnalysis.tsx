@@ -83,7 +83,7 @@ export default function CAGRAnalysis({ cagrAnalysis: ca, isNegativeFCF, growthMo
       muted: true,
     }] : []),
     {
-      label: 'Blended CAGR — DCF Input',
+      label: 'Blended CAGR (5Y) — DCF Input',
       value: ca.blended,
       note: capApplied ? `capped at ${fmtPct(ca.cagrCap)}` : 'final',
       bold: true,

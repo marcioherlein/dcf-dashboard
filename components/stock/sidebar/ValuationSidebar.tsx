@@ -218,16 +218,16 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
           <div className="space-y-1.5">
             {cagr != null && (
               <div className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-300">Revenue CAGR</span>
-                <span className="text-[11px] font-semibold text-white tabular-nums">
+                <span className="text-[11px] text-slate-500">Revenue CAGR (5Y)</span>
+                <span className="text-[11px] font-semibold text-slate-900 tabular-nums">
                   {(cagr * 100).toFixed(1)}%
                 </span>
               </div>
             )}
             {terminalG != null && (
               <div className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-300">Terminal Growth</span>
-                <span className="text-[11px] font-semibold text-white tabular-nums">
+                <span className="text-[11px] text-slate-500">Terminal Growth</span>
+                <span className="text-[11px] font-semibold text-slate-900 tabular-nums">
                   {(terminalG * 100).toFixed(1)}%
                 </span>
               </div>

@@ -474,10 +474,21 @@ function StockPageBody() {
                       statementsData={statementsData}
                     />
                   )}
+                  {/* ── Overview → Valuation CTA ── */}
+                  <div className="rounded-xl border border-blue-200 bg-blue-50 px-5 py-4 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">Ready to analyze the valuation?</p>
+                      <p className="text-xs text-slate-500 mt-0.5">Adjust growth assumptions and see what this stock is worth</p>
+                    </div>
+                    <button
+                      onClick={() => handleTabChange('valuation')}
+                      className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors shrink-0"
+                    >
+                      Go to Valuation →
+                    </button>
+                  </div>
                 </motion.div>
               )}
-
-              {/* ── Valuation tab ── */}
               {activeTab === 'valuation' && (
                 <motion.div
                   key="tab-valuation"
@@ -487,6 +498,16 @@ function StockPageBody() {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
                 >
+                  {/* Save CTA */}
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 flex items-center justify-between gap-4">
+                    <p className="text-xs text-slate-600">Review and adjust the assumptions below, then save your analysis</p>
+                    <a
+                      href={`/simplifier/${ticker}`}
+                      className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-medium text-white hover:bg-emerald-500 transition-colors shrink-0"
+                    >
+                      Save to My Valuations →
+                    </a>
+                  </div>
                   <ValuationLab apiData={data} ticker={ticker} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} onWeightedFVChange={setUserModelFairValue} />
                 </motion.div>
               )}
@@ -552,7 +573,7 @@ function StockPageBody() {
             {/* Sidebar — desktop only, hidden on news tab */}
             {activeTab !== 'news' && (
               <aside className="hidden lg:block">
-                <div className="sticky top-[68px] max-h-[calc(100vh-88px)] overflow-y-auto space-y-3 pb-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full">
+                <div className="sticky top-[68px] self-start space-y-3 pb-4">
                   <StockSidebar activeTab={activeTab} data={data} statementsData={statementsData} />
                 </div>
               </aside>

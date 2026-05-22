@@ -1,11 +1,12 @@
 'use client'
 
-import { fmtPrice, upsideZone, zoneBadgeClass } from '@/lib/formatters'
+import { useState } from 'react'
+import { fmtPrice, upsideZone } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import { TrendBadge } from '@/components/ui/trend-badge'
-import { NumberDisplay } from '@/components/ui/number-display'
 import { NABadge } from '@/components/ui/na-badge'
-import { motion } from 'motion/react'
+import { ChevronDown } from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
 
 export interface MethodResult {
   id: string
@@ -262,47 +263,13 @@ const METHOD_BORDER_CLASS: Record<string, string> = {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function ValuationSummary({ methods, currentPrice, currency = 'USD' }: Props) {
-  const { weightedFV, weightedUpside, zone } = computeConsensus(methods, currentPrice)
+  const { weightedFV } = computeConsensus(methods, currentPrice)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const effectiveTotalWeight = methods.filter(m => m.fairValue != null && m.weight > 0).reduce((s, m) => s + m.weight, 0)
-  const validMethodCount = methods.filter(m => m.fairValue != null && m.weight > 0).length
-
-  const zoneStyle = zone === 'Attractive'
-    ? { wrap: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700' }
-    : zone === 'Fair Value'
-    ? { wrap: 'bg-blue-50 border-blue-200', text: 'text-blue-600' }
-    : zone === 'Expensive'
-    ? { wrap: 'bg-red-50 border-red-200', text: 'text-red-700' }
-    : { wrap: 'bg-slate-50 border-slate-200', text: 'text-slate-500' }
 
   return (
     <div className="space-y-4">
-
-      {/* ── Weighted consensus hero ─────────────────────────────────────────── */}
-      {weightedFV != null && (
-        <div className={cn('rounded-xl border px-6 py-5', zoneStyle.wrap)}>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-label uppercase tracking-wider text-slate-400 font-bold mb-1">Weighted Fair Value Estimate</p>
-              <NumberDisplay value={fmtPrice(weightedFV, currency)} size="xl" />
-              <p className="text-micro text-slate-500 mt-1">
-                vs. {fmtPrice(currentPrice, currency)} current price · {validMethodCount} method{validMethodCount !== 1 ? 's' : ''}
-              </p>
-              <p className="text-[10px] text-slate-400 mt-0.5 italic">Model estimate, not a prediction</p>
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              {zone && (
-                <span className={cn('rounded-full border px-4 py-1.5 text-sm font-bold', zoneBadgeClass(zone))}>
-                  {zone}
-                </span>
-              )}
-              {weightedUpside != null && (
-                <TrendBadge value={weightedUpside} size="lg" />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── Method dots lollipop chart ──────────────────────────────────────── */}
       {methods.some(m => m.fairValue != null) && (
@@ -320,7 +287,7 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
         </div>
       )}
 
-      {/* ── Method breakdown table ──────────────────────────────────────────── */}
+      {/* ── Method breakdown table (expandable rows) ───────────────────────── */}
       {methods.length > 0 && (
         <div className="rounded-xl card overflow-hidden">
           <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-2.5 border-b border-slate-200 bg-slate-50">
@@ -338,56 +305,87 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
                 ? (m.weight / effectiveTotalWeight) * 100
                 : 0
               const desc = METHOD_DESCRIPTIONS[m.id] ?? ''
+              const isExpanded = expandedId === m.id
 
               return (
-                <div
-                  key={m.id}
-                  className={cn('grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-3 border-l-4 items-center', borderClass)}
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 leading-snug">{m.label}</p>
-                    {desc && <p className="text-[11px] text-slate-500 leading-tight mt-0.5 truncate">{desc}</p>}
-                  </div>
+                <div key={m.id}>
+                  <button
+                    onClick={() => setExpandedId(isExpanded ? null : m.id)}
+                    className={cn('w-full grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-3 border-l-4 items-center text-left hover:bg-slate-50/60 transition-colors', borderClass)}
+                  >
+                    <div className="min-w-0 flex items-center gap-1.5">
+                      <ChevronDown
+                        size={13}
+                        className={cn('shrink-0 text-slate-400 transition-transform', isExpanded ? 'rotate-180' : '')}
+                      />
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800 leading-snug">{m.label}</p>
+                        {desc && <p className="text-[11px] text-slate-500 leading-tight mt-0.5 truncate">{desc}</p>}
+                      </div>
+                    </div>
 
-                  <div className="text-right">
-                    {m.fairValue != null
-                      ? <span className="font-semibold tabular-nums text-slate-900 text-sm">{fmtPrice(m.fairValue, currency)}</span>
-                      : <NABadge reason="model-unsupported" />
-                    }
-                  </div>
+                    <div className="text-right">
+                      {m.fairValue != null
+                        ? <span className="font-semibold tabular-nums text-slate-900 text-sm">{fmtPrice(m.fairValue, currency)}</span>
+                        : <NABadge reason="model-unsupported" />
+                      }
+                    </div>
 
-                  <div className="text-right">
-                    {m.upsidePct != null
-                      ? <TrendBadge value={m.upsidePct} size="sm" />
-                      : <NABadge reason="model-unsupported" />
-                    }
-                  </div>
+                    <div className="text-right">
+                      {m.upsidePct != null
+                        ? <TrendBadge value={m.upsidePct} size="sm" />
+                        : <NABadge reason="model-unsupported" />
+                      }
+                    </div>
 
-                  <div className="w-20 flex flex-col gap-1 items-end">
-                    {m.fairValue != null && effectiveTotalWeight > 0 ? (
-                      <>
-                        <span className="text-[11px] font-mono text-slate-500">{effectivePct.toFixed(0)}%</span>
-                        <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                        <motion.div
-                            className={cn('h-full rounded-full', side === 'up' ? 'bg-emerald-400' : side === 'down' ? 'bg-red-400' : 'bg-blue-300')}
-                            initial={{ width: '0%' }}
-                            animate={{ width: `${effectivePct}%` }}
-                            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.1 + i * 0.06 }}
-                          />
+                    <div className="w-20 flex flex-col gap-1 items-end">
+                      {m.fairValue != null && effectiveTotalWeight > 0 ? (
+                        <>
+                          <span className="text-[11px] font-mono text-slate-500">{effectivePct.toFixed(0)}%</span>
+                          <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                            <motion.div
+                              className={cn('h-full rounded-full', side === 'up' ? 'bg-emerald-400' : side === 'down' ? 'bg-red-400' : 'bg-blue-300')}
+                              initial={{ width: '0%' }}
+                              animate={{ width: `${effectivePct}%` }}
+                              transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.1 + i * 0.06 }}
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <NABadge reason="model-unsupported" />
+                      )}
+                    </div>
+                  </button>
+
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-8 py-3 bg-slate-50 border-t border-slate-100">
+                          <p className="text-[11px] text-slate-600 leading-relaxed mb-2">{desc}</p>
+                          <p className="text-[11px] text-blue-600 font-medium">
+                            ↓ Scroll down to adjust this method&apos;s assumptions
+                          </p>
                         </div>
-                      </>
-                    ) : (
-                      <NABadge reason="model-unsupported" />
+                      </motion.div>
                     )}
-                  </div>
+                  </AnimatePresence>
                 </div>
               )
             })}
           </div>
 
-          <div className="px-4 py-2.5 border-t border-slate-100 bg-slate-50">
+          <div className="px-4 py-2.5 border-t border-slate-100 bg-slate-50 space-y-0.5">
+            <p className="text-micro text-slate-500">
+              These are model estimates. Review and adjust each method&apos;s assumptions below before saving.
+            </p>
             <p className="text-micro text-slate-400">
-              Effective weights exclude methods with no available data. Adjust assumptions in each method card to refine.
+              Effective weights exclude methods with no available data. Click a row to expand.
             </p>
           </div>
         </div>

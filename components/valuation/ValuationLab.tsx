@@ -365,6 +365,7 @@ interface ValuationLabProps {
 
 export default function ValuationLab({ apiData, ticker, statementsData, onWeightedFVChange }: ValuationLabProps) {
   const [overrides,    setOverrides]    = useState<OverridesMap>({})
+  const [linkedCAGR,   setLinkedCAGR]   = useState(true)
 
   const currency     = apiData?.quote?.currency ?? 'USD'
   const currentPrice = (apiData?.quote?.price   ?? 0) as number
@@ -578,7 +579,15 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
 
   // ── Handlers ─────────────────────────────────────────────────────────────
   function handleAssumptionChange(methodId: ValuationMethodId | 'ev_ebitda', key: string, value: number) {
-    setOverrides(prev => ({ ...prev, [methodId]: { ...(prev[methodId] ?? {}), [key]: value } }))
+    setOverrides(prev => {
+      const updated = { ...prev, [methodId]: { ...(prev[methodId] ?? {}), [key]: value } }
+      // When CAGR is linked, propagate revenueCAGR across Forward P/E and Revenue Multiple
+      if (linkedCAGR && key === 'revenueCAGR' && (methodId === 'forward_pe' || methodId === 'revenue_multiple')) {
+        updated['forward_pe']       = { ...(updated['forward_pe']       ?? {}), revenueCAGR: value }
+        updated['revenue_multiple'] = { ...(updated['revenue_multiple'] ?? {}), revenueCAGR: value }
+      }
+      return updated
+    })
   }
   function handleResetOverrides(methodId: ValuationMethodId | 'ev_ebitda') {
     setOverrides(prev => { const n = { ...prev }; delete n[methodId]; return n })
@@ -632,6 +641,23 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
           onAssumptionChange={(key, val) => handleAssumptionChange('ev_ebitda', key, val)}
           onResetOverrides={() => handleResetOverrides('ev_ebitda')}
         />
+
+        {/* Linked CAGR toggle — sits between Forward P/E and Revenue Multiple */}
+        <div className="flex items-center justify-center gap-2 py-1">
+          <span className="text-[11px] text-slate-400">Revenue CAGR (5Y)</span>
+          <button
+            onClick={() => setLinkedCAGR(v => !v)}
+            className={`rounded-full px-3 py-1 text-[11px] font-semibold border transition-colors ${
+              linkedCAGR
+                ? 'bg-blue-50 border-blue-200 text-blue-600'
+                : 'bg-slate-50 border-slate-200 text-slate-500'
+            }`}
+            title={linkedCAGR ? 'CAGR is shared between Forward P/E and Revenue Multiple — click to unlink' : 'CAGR is independent per method — click to link'}
+          >
+            {linkedCAGR ? '🔗 Linked' : '🔓 Unlinked'}
+          </button>
+          <span className="text-[11px] text-slate-400">shared across models below</span>
+        </div>
 
         <MethodInlinePanel
           config={revMultConfig}

@@ -70,7 +70,7 @@ export default function ArcGauge({
       {/* Track */}
       <path
         d={trackPath}
-        stroke="rgba(255,255,255,0.06)"
+        stroke="rgba(15,23,42,0.08)"
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         fill="none"
@@ -95,7 +95,7 @@ export default function ArcGauge({
         y={cy - (label ? 6 : 0)}
         textAnchor="middle"
         dominantBaseline="middle"
-        fill="white"
+        fill="#1E293B"
         fontSize={size * 0.22}
         fontWeight="700"
         fontFamily="'IBM Plex Mono', monospace"

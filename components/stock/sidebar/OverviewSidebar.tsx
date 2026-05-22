@@ -46,6 +46,7 @@ interface IncomeRow {
   netIncome: number | null
   ebitda: number | null
   grossProfit: number | null
+  operatingIncome: number | null
   isProjected: boolean
 }
 
@@ -75,12 +76,12 @@ function fmtCap(v: number): string {
   return '$' + v.toFixed(0)
 }
 
+// API values are in millions — convert to B/T for display
 function fmtShort(v: number): string {
   const a = Math.abs(v)
-  if (a >= 1e12) return (v < 0 ? '-' : '') + '$' + (a / 1e12).toFixed(1) + 'T'
-  if (a >= 1e9)  return (v < 0 ? '-' : '') + '$' + (a / 1e9).toFixed(1) + 'B'
-  if (a >= 1e6)  return (v < 0 ? '-' : '') + '$' + (a / 1e6).toFixed(0) + 'M'
-  return (v < 0 ? '-' : '') + '$' + a.toFixed(0)
+  if (a >= 1e6)  return (v < 0 ? '-' : '') + '$' + (a / 1e6).toFixed(1) + 'T'
+  if (a >= 1000) return (v < 0 ? '-' : '') + '$' + (a / 1000).toFixed(1) + 'B'
+  return (v < 0 ? '-' : '') + '$' + a.toFixed(0) + 'M'
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -173,11 +174,11 @@ export default function OverviewSidebar({
       color: (r.netIncome as number) >= 0 ? 'bg-emerald-400/60' : 'bg-red-400/60',
     }))
 
-  // Margin trend across last 4 years
+  // Margin trend across last 4 years — use EBIT and Net (Gross unreliable from API)
   const marginRows = histRows.filter(r => r.revenue != null && r.revenue > 0)
-  const grossMargins = marginRows
-    .filter(r => r.grossProfit != null)
-    .map(r => ({ year: r.year.slice(-2), v: (r.grossProfit! / r.revenue!) * 100 }))
+  const ebitMargins = marginRows
+    .filter(r => r.operatingIncome != null)
+    .map(r => ({ year: r.year.slice(-2), v: (r.operatingIncome! / r.revenue!) * 100 }))
   const netMargins = marginRows
     .filter(r => r.netIncome != null)
     .map(r => ({ year: r.year.slice(-2), v: (r.netIncome! / r.revenue!) * 100 }))
@@ -334,28 +335,30 @@ export default function OverviewSidebar({
       )}
 
       {/* Margin Trend */}
-      {(grossMargins.length >= 2 || netMargins.length >= 2) && (
+      {(ebitMargins.length >= 2 || netMargins.length >= 2) && (
         <Card>
           <SectionLabel>Margin Trend</SectionLabel>
           {/* Header row */}
           <div className="flex justify-between text-[9px] text-slate-500 mb-1.5">
             <span>Year</span>
             <div className="flex gap-4">
-              {grossMargins.length >= 2 && <span className="text-emerald-500/80">Gross</span>}
+              {ebitMargins.length >= 2 && <span className="text-emerald-500/80">EBIT</span>}
               {netMargins.length   >= 2 && <span className="text-blue-400/80">Net</span>}
             </div>
           </div>
           <div className="space-y-1">
             {marginRows.map((r, i) => {
-              const gross = grossMargins[i]?.v
-              const net   = netMargins[i]?.v
+              const ebit = ebitMargins[i]?.v
+              const net  = netMargins[i]?.v
               return (
                 <div key={r.year} className="flex items-center justify-between">
                   <span className="text-[10px] text-slate-400">{r.year.slice(-2)}</span>
                   <div className="flex gap-4">
-                    {grossMargins.length >= 2 && (
-                      <span className="text-[10px] font-semibold tabular-nums text-right w-10 text-emerald-600/90">
-                        {gross != null ? gross.toFixed(1) + '%' : '—'}
+                    {ebitMargins.length >= 2 && (
+                      <span className={cn('text-[10px] font-semibold tabular-nums text-right w-10',
+                        ebit != null && ebit >= 15 ? 'text-emerald-600' : ebit != null && ebit >= 5 ? 'text-emerald-500' : 'text-amber-600'
+                      )}>
+                        {ebit != null ? ebit.toFixed(1) + '%' : '—'}
                       </span>
                     )}
                     {netMargins.length >= 2 && (
