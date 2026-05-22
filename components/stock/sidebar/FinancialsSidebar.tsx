@@ -53,7 +53,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-xl bg-white border border-slate-200 px-5 py-4">
+    <div className="rounded-xl glass-card-light px-5 py-4">
       {children}
     </div>
   )

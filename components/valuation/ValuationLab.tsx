@@ -382,7 +382,7 @@ interface MethodAccordionProps {
 
 function MethodAccordion({ title, bestFor, isOpen, onToggle, innerRef, fairValue, upsidePct, currency, chips, children }: MethodAccordionProps) {
   return (
-    <div ref={innerRef} className="card rounded-xl overflow-hidden scroll-mt-4">
+    <div ref={innerRef} className="glass-accordion-header rounded-xl overflow-hidden scroll-mt-4">
       <button
         onClick={onToggle}
         className="w-full px-5 py-4 flex items-start gap-3 text-left hover:bg-slate-50/60 transition-colors"
@@ -421,7 +421,7 @@ function MethodAccordion({ title, bestFor, isOpen, onToggle, innerRef, fairValue
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="overflow-hidden border-t border-slate-100"
+            className="overflow-hidden border-t border-slate-100 bg-white"
           >
             {/* Suppress inner card borders when embedded */}
             <div className="[&_.card]:rounded-none [&_.card]:border-0 [&_.card]:shadow-none">

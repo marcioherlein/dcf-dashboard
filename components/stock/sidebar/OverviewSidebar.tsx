@@ -50,7 +50,7 @@ interface Props {
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('rounded-xl bg-white border border-slate-200 px-5 py-4', className)}>
+    <div className={cn('rounded-xl glass-card-light px-5 py-4', className)}>
       {children}
     </div>
   )

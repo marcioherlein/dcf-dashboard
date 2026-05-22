@@ -24,7 +24,7 @@ export default function TabNav({ activeTab, onChange }: Props) {
     <div
       role="tablist"
       aria-label="Stock sections"
-      className="sticky top-[52px] z-20 bg-white border-b border-slate-200"
+      className="sticky top-[52px] z-20 glass-toolbar"
     >
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <div className="flex gap-0 overflow-x-auto scrollbar-hide -mb-px">

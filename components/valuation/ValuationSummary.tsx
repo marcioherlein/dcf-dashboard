@@ -274,7 +274,7 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
 
       {/* ── Method dots lollipop chart ──────────────────────────────────────── */}
       {methods.some(m => m.fairValue != null) && (
-        <div className="rounded-xl card p-5">
+        <div className="rounded-xl glass-card-light p-5">
           <p className="text-label uppercase tracking-wider text-slate-400 font-bold mb-4">Fair Value by Method</p>
           <MethodDotsChart
             methods={methods}
