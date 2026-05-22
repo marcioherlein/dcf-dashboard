@@ -105,7 +105,7 @@ const CHART_H = 44
 const LABEL_H = 12
 const BAR_H = CHART_H - LABEL_H
 
-function MiniRevChart({ points, currency }: { points: TrendPoint[]; currency: string }) {
+function MiniRevChart({ points, currency: _currency }: { points: TrendPoint[]; currency: string }) {
   const valid = points.filter(p => p.value != null)
   if (valid.length < 2) return null
   const maxVal = Math.max(...valid.map(p => Math.abs(p.value!)))
@@ -271,7 +271,7 @@ export default function OverviewSidebar({
   const currency = quote.currency ?? 'USD'
   const sym = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$' : currency + ' '
 
-  const { latestMetrics, revenueTrend, marginTrend, cashFlowTrend, dataQualityWarnings } = derivedInsights
+  const { latestMetrics, revenueTrend, marginTrend, cashFlowTrend: _cashFlowTrend, dataQualityWarnings } = derivedInsights
   const isFinancialSector = dataQualityWarnings.some(w => w.field === 'ebitda')
 
   // ── Analyst Consensus values ──────────────────────────────────────────────
