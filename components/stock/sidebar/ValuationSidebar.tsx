@@ -21,6 +21,8 @@ interface MultipleEstimate {
   sectorMedian: number
   actualValue: number
   applicable: boolean
+  peerTickers?: string[]
+  benchmarkSource?: 'live-peers' | 'industry-median' | 'sector-fallback'
 }
 
 interface ValuationMethods {
@@ -429,22 +431,56 @@ function EVEBITDAContext({
   valuationMethods?: ValuationMethods
   derivedInsights: DerivedFinancialInsights
 }) {
-  const sectorDefault = getDefaultEVEBITDAMultiple(sector ?? null)
-  const estimates = valuationMethods?.models?.multiples?.estimates ?? []
-  const companyActual = estimates.find(e => e.multiple === 'EV/EBITDA')?.actualValue ?? null
+  const estimates    = valuationMethods?.models?.multiples?.estimates ?? []
+  const evEbitdaEst  = estimates.find(e => e.multiple === 'EV/EBITDA')
+
+  const companyActual  = evEbitdaEst?.actualValue ?? null
+  // Prefer the live estimate's sectorMedian — fall back to Damodaran static table
+  const sectorMedian   = evEbitdaEst?.sectorMedian ?? getDefaultEVEBITDAMultiple(sector ?? null)
+  const peerTickers    = evEbitdaEst?.peerTickers ?? []
+  const benchmarkSrc   = evEbitdaEst?.benchmarkSource ?? 'industry-median'
+
+  const premium = companyActual != null && sectorMedian > 0
+    ? (companyActual - sectorMedian) / sectorMedian
+    : null
 
   const multipleVerdict: Verdict =
     companyActual == null ? 'neutral' :
-    companyActual > sectorDefault * 1.3 ? 'watch' :
-    companyActual < sectorDefault * 0.7 ? 'good' : 'neutral'
-  const multipleLabel =
-    companyActual == null ? 'No data' :
-    companyActual > sectorDefault * 1.3 ? 'Trading at premium to sector' :
-    companyActual < sectorDefault * 0.7 ? 'Trading below sector median' : 'Near sector median'
+    companyActual > sectorMedian * 1.3 ? 'watch' :
+    companyActual < sectorMedian * 0.7 ? 'good' : 'neutral'
 
-  const ebitdaPoints = derivedInsights.marginTrend.ebitda.points.filter(p => p.value != null).slice(-4)
-  const netDebt = derivedInsights.latestMetrics.netDebt
-  const isFinancial = /financial|bank|insurance|fintech|payment/i.test(sector ?? '')
+  const multipleLabel =
+    companyActual == null          ? 'No data' :
+    companyActual > sectorMedian * 1.3 ? 'Premium to sector' :
+    companyActual < sectorMedian * 0.7 ? 'Discount to sector' : 'Near sector median'
+
+  function premiumText(): string {
+    if (companyActual == null || premium == null) return ''
+    const pctAbs  = Math.abs(premium * 100).toFixed(0)
+    const current = companyActual.toFixed(1)
+    const median  = sectorMedian.toFixed(1)
+    if (premium > 0.3) {
+      return `At ${current}× vs ${median}× sector median, the company trades at a ${pctAbs}% premium. The implied fair value shows what the stock would be worth if it re-rated toward sector norms — it won't unless growth expectations normalise.`
+    }
+    if (premium > 0) {
+      return `A modest ${pctAbs}% premium over the sector median. The model's implied fair value assumes gradual re-rating toward the peer average.`
+    }
+    if (premium < -0.3) {
+      return `At ${current}× vs ${median}× sector median, the company trades at a ${pctAbs}% discount — potential undervaluation, or the market sees lower quality/growth relative to peers.`
+    }
+    return `The company's EV/EBITDA broadly matches the sector median. The implied fair value is relatively close to the current price on this method.`
+  }
+
+  const sourceLabel =
+    benchmarkSrc === 'live-peers' && peerTickers.length > 0
+      ? `Live peers: ${peerTickers.slice(0, 3).join(', ')}${peerTickers.length > 3 ? ` +${peerTickers.length - 3} more` : ''}`
+      : benchmarkSrc === 'industry-median'
+      ? 'Damodaran Jan 2025 — industry median'
+      : 'Broad sector fallback — less precise'
+
+  const ebitdaPoints = derivedInsights.cashFlowTrend.ebitda.points.filter(p => p.value != null).slice(-5)
+  const netDebt      = derivedInsights.latestMetrics.netDebt
+  const isFinancial  = /financial|bank|insurance|fintech|payment/i.test(sector ?? '')
 
   return (
     <>
@@ -457,25 +493,37 @@ function EVEBITDAContext({
         </Card>
       )}
 
-      {ebitdaPoints.length >= 2 && (
-        <Card>
-          <SectionLabel>EBITDA Margin Trend</SectionLabel>
-          <TrendBars points={ebitdaPoints} unit="percent" />
-        </Card>
-      )}
-
+      {/* ── Current multiple vs sector median ── */}
       <Card>
         <div className="flex items-center justify-between mb-2">
-          <SectionLabel>Multiple in Context</SectionLabel>
+          <SectionLabel>Multiple vs Sector</SectionLabel>
           <DecisionLabel verdict={multipleVerdict} text={multipleLabel} />
         </div>
         <ThreeCol
-          a={{ label: 'Sector default', value: sectorDefault.toFixed(1) + '×' }}
-          b={{ label: 'Co. current',    value: companyActual != null ? companyActual.toFixed(1) + '×' : null }}
-          c={{ label: 'Model uses',     value: sectorDefault.toFixed(1) + '×' }}
+          a={{ label: 'Co. Current',   value: companyActual != null ? companyActual.toFixed(1) + '×' : null, highlight: multipleVerdict }}
+          b={{ label: 'Sector Median', value: sectorMedian.toFixed(1) + '×' }}
+          c={{ label: 'Premium / Disc', value: premium != null ? (premium >= 0 ? '+' : '') + (premium * 100).toFixed(0) + '%' : null, highlight: premium != null ? (premium > 0.3 ? 'watch' : premium < -0.3 ? 'good' : 'neutral') : 'neutral' }}
         />
+        {companyActual != null && (
+          <p className="text-[10px] text-slate-500 leading-snug mt-2.5">{premiumText()}</p>
+        )}
+        <p className="text-[9px] text-slate-400 mt-2 leading-snug">
+          <span className="font-medium">Benchmark: </span>{sourceLabel}
+        </p>
       </Card>
 
+      {/* ── Absolute EBITDA trend ── */}
+      {ebitdaPoints.length >= 2 && (
+        <Card>
+          <SectionLabel>EBITDA Growth (Historical)</SectionLabel>
+          <TrendBars points={ebitdaPoints} unit="currency_millions" />
+          <p className="text-[10px] text-slate-400 mt-1.5 leading-snug">
+            Rising EBITDA can justify a higher multiple — flat or falling makes the premium harder to defend.
+          </p>
+        </Card>
+      )}
+
+      {/* ── Net Debt context ── */}
       {netDebt != null && (
         <Card>
           <SectionLabel>Net Debt Impact</SectionLabel>
@@ -486,11 +534,30 @@ function EVEBITDAContext({
             </span>
           </div>
           <div className="space-y-2">
-            <DefinitionRow term="Net Debt" definition="Total borrowings minus cash. Positive = more debt than cash — reduces equity value." />
-            <DefinitionRow term="Net Cash" definition="Holds more cash than debt — adds to equity value per share." />
+            <DefinitionRow term="Why it matters" definition="EV includes debt. A company with heavy debt needs much higher EBITDA to justify the same EV/EBITDA multiple as a debt-free peer." />
+            <DefinitionRow term="Net Cash" definition="Cash exceeds debt — this reduces EV and makes the multiple look lower than a levered peer." />
           </div>
         </Card>
       )}
+
+      {/* ── What the model assumes ── */}
+      <Card>
+        <SectionLabel>What This Model Assumes</SectionLabel>
+        <div className="space-y-2.5">
+          <DefinitionRow
+            term="Implied fair value"
+            definition="What the stock would be worth if the market priced it at the sector median multiple — not a prediction, but a re-rating reference point."
+          />
+          <DefinitionRow
+            term="When to trust it"
+            definition="Most reliable for mature, profitable companies in a sector with many comparable peers. Less reliable for high-growth or negative-EBITDA businesses."
+          />
+          <DefinitionRow
+            term="Limitation"
+            definition="Trailing multiple — uses last 12 months of EBITDA. Cyclical companies near peak earnings will look expensive; near a trough, cheap."
+          />
+        </div>
+      </Card>
     </>
   )
 }

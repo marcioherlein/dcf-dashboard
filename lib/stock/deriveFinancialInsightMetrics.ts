@@ -139,6 +139,7 @@ export interface DerivedFinancialInsights {
     fcf:         MetricTrend
     operatingCF: MetricTrend
     capex:       MetricTrend
+    ebitda:      MetricTrend
   }
   balanceSheetTrend: {
     currentRatio: MetricTrend
@@ -561,6 +562,14 @@ export function deriveFinancialInsightMetrics({
       // CapEx stored as negative; expose as absolute (spending amount)
       value: r.capex != null ? Math.abs(r.capex) : null,
     }), 'cashflow', 'capitalExpenditure'),
+
+    ebitda: trend('EBITDA', 'currency_millions', r => {
+      if (isFinancialSector) return { value: null }
+      if (r.ebitda != null) return { value: r.ebitda }
+      // Approximate from EBIT + D&A when direct field absent
+      if (r.ebit != null && r.dna != null) return { value: r.ebit + r.dna, isEstimated: true }
+      return { value: null }
+    }, 'income', 'EBITDA'),
   }
 
   const balanceSheetTrend = {
