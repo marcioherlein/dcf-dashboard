@@ -54,22 +54,22 @@ interface Props {
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-[10px] font-bold uppercase tracking-wider text-slate-300 mb-2">{children}</p>
+  return <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">{children}</p>
 }
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-xl glass-card border border-[rgba(59,130,246,0.25)] px-4 py-3">
+    <div className="rounded-xl bg-white border border-slate-200 px-4 py-3">
       {children}
     </div>
   )
 }
 
 function upsideColor(pct: number): string {
-  if (pct >=  0.15) return 'text-emerald-400'
-  if (pct >=  0.00) return 'text-emerald-300'
-  if (pct >= -0.15) return 'text-amber-400'
-  return 'text-red-400'
+  if (pct >=  0.15) return 'text-emerald-600'
+  if (pct >=  0.00) return 'text-emerald-500'
+  if (pct >= -0.15) return 'text-amber-600'
+  return 'text-red-600'
 }
 
 export default function ValuationSidebar({ wacc, valuationMethods, fairValue, currentPrice, currency, scenarios, cagr, terminalG }: Props) {
@@ -125,7 +125,7 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
         <Card>
           <SectionLabel>Blended Fair Value</SectionLabel>
           <div className="flex items-end justify-between">
-            <span className="text-2xl font-bold text-slate-100 tabular-nums">
+            <span className="text-2xl font-bold text-slate-900 tabular-nums">
               {sym}{blended.toFixed(2)}
             </span>
             {blendedUpside != null && (
@@ -149,9 +149,9 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
         <div className="space-y-1.5">
           {methods.map(({ label, fv, upside }) => (
             <div key={label} className="flex items-center justify-between">
-              <span className="text-[11px] text-slate-300 truncate pr-2">{label}</span>
+              <span className="text-[11px] text-slate-500 truncate pr-2">{label}</span>
               <div className="flex items-center gap-1.5 shrink-0">
-                <span className="text-[11px] font-semibold text-white tabular-nums">
+                <span className="text-[11px] font-semibold text-slate-900 tabular-nums">
                   {fv != null ? `${sym}${fv.toFixed(2)}` : '—'}
                 </span>
                 {upside != null && (
@@ -180,9 +180,9 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
               <div key={w.label} className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <div className={cn('w-2 h-2 rounded-full', w.color)} />
-                  <span className="text-[11px] text-slate-300">{w.label}</span>
+                  <span className="text-[11px] text-slate-500">{w.label}</span>
                 </div>
-                <span className="text-[11px] font-semibold text-white tabular-nums">{w.pct}%</span>
+                <span className="text-[11px] font-semibold text-slate-900 tabular-nums">{w.pct}%</span>
               </div>
             ))}
           </div>
@@ -200,8 +200,8 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
             { label: 'Risk-Free Rate', value: (wacc.inputs.rfRate * 100).toFixed(2) + '%' },
           ].map(({ label, value }) => (
             <div key={label} className="flex items-center justify-between">
-              <span className="text-[11px] text-slate-300">{label}</span>
-              <span className="text-[11px] font-semibold text-white tabular-nums">{value}</span>
+              <span className="text-[11px] text-slate-500">{label}</span>
+              <span className="text-[11px] font-semibold text-slate-900 tabular-nums">{value}</span>
             </div>
           ))}
         </div>
@@ -243,9 +243,9 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
           <SectionLabel>Scenario Analysis</SectionLabel>
           <div className="space-y-1.5">
             {[
-              { label: 'Bull', scenario: scenarios.bull, color: 'text-emerald-400' },
-              { label: 'Base', scenario: scenarios.base, color: 'text-blue-400'    },
-              { label: 'Bear', scenario: scenarios.bear, color: 'text-red-400'     },
+              { label: 'Bull', scenario: scenarios.bull, color: 'text-emerald-600' },
+              { label: 'Base', scenario: scenarios.base, color: 'text-blue-600'    },
+              { label: 'Bear', scenario: scenarios.bear, color: 'text-red-600'     },
             ].map(({ label, scenario, color }) => {
               const fv = scenario.fairValue
               const upside = fv != null && currentPrice > 0 ? (fv - currentPrice) / currentPrice : null
@@ -258,7 +258,7 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] font-semibold text-white tabular-nums">
+                    <span className="text-[11px] font-semibold text-slate-900 tabular-nums">
                       {fv != null ? `${sym}${fv.toFixed(2)}` : '—'}
                     </span>
                     {upside != null && (
@@ -297,7 +297,7 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
                   <div className="flex gap-4">
                     <span className={cn(
                       'text-[11px] font-semibold tabular-nums w-12 text-right',
-                      isExpensive ? 'text-amber-400' : isCheap ? 'text-emerald-400' : 'text-white'
+                      isExpensive ? 'text-amber-600' : isCheap ? 'text-emerald-600' : 'text-slate-900'
                     )}>
                       {company != null ? company.toFixed(1) + '×' : '—'}
                     </span>

@@ -23,9 +23,9 @@ function Stat({ label, value, highlight }: { label: string; value: string; highl
       <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{label}</span>
       <span className={[
         'text-[13px] font-semibold tabular-nums',
-        highlight === 'red'   ? 'text-red-400'   :
-        highlight === 'green' ? 'text-emerald-400' :
-        'text-slate-200',
+        highlight === 'red'   ? 'text-red-600'   :
+        highlight === 'green' ? 'text-emerald-600' :
+        'text-slate-900',
       ].join(' ')}>
         {value}
       </span>
@@ -41,7 +41,7 @@ export default function OwnershipPanel({ ownership }: Props) {
     : undefined
 
   return (
-    <div className="rounded-xl glass-card border border-[rgba(59,130,246,0.2)] px-5 py-4">
+    <div className="rounded-xl card px-5 py-4">
       <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-3">Ownership &amp; Short Interest</div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
         <Stat label="Insider Ownership"       value={pct(insiderPct)} />

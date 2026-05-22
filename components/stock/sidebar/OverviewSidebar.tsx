@@ -83,23 +83,23 @@ function fmtShort(v: number): string {
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-[10px] font-bold uppercase tracking-wider text-slate-300 mb-2">{children}</p>
+  return <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">{children}</p>
 }
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('rounded-xl glass-card border border-[rgba(59,130,246,0.25)] px-4 py-3', className)}>
+    <div className={cn('rounded-xl bg-white border border-slate-200 px-4 py-3', className)}>
       {children}
     </div>
   )
 }
 
 function gradeColor(grade: string): string {
-  if (grade === 'A+' || grade === 'A') return 'text-emerald-400 bg-emerald-500/15 border-emerald-500/25'
-  if (grade === 'B+' || grade === 'B') return 'text-blue-400 bg-blue-500/15 border-blue-500/25'
-  if (grade === 'C')                   return 'text-amber-400 bg-amber-500/15 border-amber-500/25'
-  if (grade === 'D')                   return 'text-orange-400 bg-orange-500/15 border-orange-500/25'
-  return 'text-red-400 bg-red-500/15 border-red-500/25'
+  if (grade === 'A+' || grade === 'A') return 'text-emerald-600 bg-emerald-50 border-emerald-200'
+  if (grade === 'B+' || grade === 'B') return 'text-blue-600 bg-blue-50 border-blue-200'
+  if (grade === 'C')                   return 'text-amber-600 bg-amber-50 border-amber-200'
+  if (grade === 'D')                   return 'text-orange-600 bg-orange-50 border-orange-200'
+  return 'text-red-600 bg-red-50 border-red-200'
 }
 
 function MiniBarChart({
@@ -142,8 +142,8 @@ export default function OverviewSidebar({
   const isBuy   = recNorm.includes('buy') || recNorm === 'strong_buy' || recNorm === 'strongbuy'
   const isSell  = recNorm.includes('sell') || recNorm.includes('underperform') || recNorm.includes('underweight')
   const recLabel = isBuy ? 'Buy' : isSell ? 'Sell' : 'Hold'
-  const recColor = isBuy ? 'text-emerald-400' : isSell ? 'text-red-400' : 'text-amber-400'
-  const recBg    = isBuy ? 'bg-emerald-500/15 border-emerald-500/20' : isSell ? 'bg-red-500/15 border-red-500/20' : 'bg-amber-500/15 border-amber-500/20'
+  const recColor = isBuy ? 'text-emerald-600' : isSell ? 'text-red-600' : 'text-amber-600'
+  const recBg    = isBuy ? 'bg-emerald-50 border-emerald-200' : isSell ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'
   const targetUpside = analystTargetMean && price > 0 ? (analystTargetMean - price) / price : null
 
   const blendedFV: number | null = valuationMethods?.triangulatedFairValue ?? null
@@ -205,13 +205,13 @@ export default function OverviewSidebar({
         </div>
         {analystTargetMean > 0 && (
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-slate-300">Avg. target</span>
+            <span className="text-[10px] text-slate-500">Avg. target</span>
             <div className="text-right">
-              <span className="text-sm font-semibold text-white tabular-nums">
+              <span className="text-sm font-semibold text-slate-900 tabular-nums">
                 {sym}{analystTargetMean.toFixed(2)}
               </span>
               {targetUpside != null && (
-                <span className={cn('ml-1.5 text-[11px] font-semibold tabular-nums', targetUpside >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                <span className={cn('ml-1.5 text-[11px] font-semibold tabular-nums', targetUpside >= 0 ? 'text-emerald-600' : 'text-red-600')}>
                   {targetUpside >= 0 ? '+' : ''}{(targetUpside * 100).toFixed(1)}%
                 </span>
               )}
@@ -225,13 +225,13 @@ export default function OverviewSidebar({
         <Card>
           <SectionLabel>Intrinsic Value Estimate</SectionLabel>
           <div className="flex items-end justify-between mb-1">
-            <span className="text-xl font-bold text-white tabular-nums">
+            <span className="text-xl font-bold text-slate-900 tabular-nums">
               {sym}{blendedFV.toFixed(2)}
             </span>
             {blendedUpside != null && (
               <span className={cn(
                 'text-sm font-bold tabular-nums mb-0.5',
-                blendedUpside >= 0.15 ? 'text-emerald-400' : blendedUpside >= 0 ? 'text-emerald-300' : blendedUpside >= -0.15 ? 'text-amber-400' : 'text-red-400'
+                blendedUpside >= 0.15 ? 'text-emerald-600' : blendedUpside >= 0 ? 'text-emerald-500' : blendedUpside >= -0.15 ? 'text-amber-600' : 'text-red-600'
               )}>
                 {blendedUpside >= 0 ? '+' : ''}{(blendedUpside * 100).toFixed(1)}%
               </span>
@@ -244,7 +244,7 @@ export default function OverviewSidebar({
       {/* 52-Week Range */}
       <Card>
         <SectionLabel>52-Week Range</SectionLabel>
-        <div className="relative h-1.5 rounded-full bg-white/10 mb-2.5">
+        <div className="relative h-1.5 rounded-full bg-slate-200 mb-2.5">
           <div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-red-500/60 via-amber-400/60 to-emerald-500/60 w-full" />
           {targetPct != null && (
             <div
@@ -254,13 +254,13 @@ export default function OverviewSidebar({
             />
           )}
           <div
-            className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white border-2 border-[#0d1117] shadow"
+            className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white border-2 border-slate-500 shadow"
             style={{ left: `calc(${pricePct * 100}% - 5px)` }}
           />
         </div>
         <div className="flex justify-between text-[10px] text-slate-400 tabular-nums">
           <span>{sym}{fiftyTwoWeekLow.toFixed(2)}</span>
-          <span className="text-white font-semibold">{sym}{price.toFixed(2)}</span>
+          <span className="text-slate-900 font-semibold">{sym}{price.toFixed(2)}</span>
           <span>{sym}{fiftyTwoWeekHigh.toFixed(2)}</span>
         </div>
         <div className="flex justify-between mt-0.5 text-[9px] text-slate-500">
@@ -281,8 +281,8 @@ export default function OverviewSidebar({
             { label: 'Beta',         value: wacc?.inputs?.beta != null ? wacc.inputs.beta.toFixed(2) : '—' },
           ].map(({ label, value }) => (
             <div key={label} className="flex items-center justify-between">
-              <span className="text-[11px] text-slate-300">{label}</span>
-              <span className="text-[11px] font-semibold text-white tabular-nums">{value}</span>
+              <span className="text-[11px] text-slate-500">{label}</span>
+              <span className="text-[11px] font-semibold text-slate-900 tabular-nums">{value}</span>
             </div>
           ))}
         </div>
@@ -306,7 +306,7 @@ export default function OverviewSidebar({
                 ? Math.pow(last / first, 1 / (histRows.length - 1)) - 1 : null
               return cagr != null ? (
                 <p className="text-[10px] text-slate-500 mt-1.5">
-                  Rev. CAGR (3Y): <span className={cn('font-semibold', cagr >= 0.1 ? 'text-emerald-400' : cagr >= 0 ? 'text-slate-300' : 'text-red-400')}>
+                  Rev. CAGR (3Y): <span className={cn('font-semibold', cagr >= 0.1 ? 'text-emerald-600' : cagr >= 0 ? 'text-slate-600' : 'text-red-600')}>
                     {cagr >= 0 ? '+' : ''}{(cagr * 100).toFixed(1)}%
                   </span>
                 </p>
@@ -350,13 +350,13 @@ export default function OverviewSidebar({
                   <span className="text-[10px] text-slate-400">{r.year.slice(-2)}</span>
                   <div className="flex gap-4">
                     {grossMargins.length >= 2 && (
-                      <span className="text-[10px] font-semibold tabular-nums text-right w-10 text-emerald-400/90">
+                      <span className="text-[10px] font-semibold tabular-nums text-right w-10 text-emerald-600/90">
                         {gross != null ? gross.toFixed(1) + '%' : '—'}
                       </span>
                     )}
                     {netMargins.length >= 2 && (
                       <span className={cn('text-[10px] font-semibold tabular-nums text-right w-10',
-                        net != null && net >= 15 ? 'text-emerald-400' : net != null && net >= 5 ? 'text-blue-400' : 'text-amber-400'
+                        net != null && net >= 15 ? 'text-emerald-600' : net != null && net >= 5 ? 'text-blue-600' : 'text-amber-600'
                       )}>
                         {net != null ? net.toFixed(1) + '%' : '—'}
                       </span>
@@ -378,7 +378,7 @@ export default function OverviewSidebar({
               const cat = ratings[key]
               return (
                 <div key={key} className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] text-slate-300 shrink-0">{label}</span>
+                  <span className="text-[11px] text-slate-500 shrink-0">{label}</span>
                   <span className="text-[10px] text-slate-500 truncate flex-1 text-right">{cat.summary}</span>
                   <span className={cn('text-[11px] font-bold px-1.5 py-0 rounded border leading-5 shrink-0', gradeColor(cat.grade))}>
                     {cat.grade}

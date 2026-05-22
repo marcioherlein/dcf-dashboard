@@ -39,7 +39,7 @@ function ReturnPair({
         <span className={[
           'text-[15px] font-bold tabular-nums',
           stock == null ? 'text-slate-500' :
-          stock >= 0 ? 'text-emerald-400' : 'text-red-400',
+          stock >= 0 ? 'text-emerald-600' : 'text-red-600',
         ].join(' ')}>
           {pctStr(stock)}
         </span>
@@ -58,8 +58,8 @@ function ReturnPair({
             <span className={[
               'text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full',
               outperformed
-                ? 'text-emerald-400 bg-emerald-400/10'
-                : 'text-red-400 bg-red-400/10',
+                ? 'text-emerald-600 bg-emerald-50'
+                : 'text-red-600 bg-red-50',
             ].join(' ')}>
               {outperformed ? 'Beat' : 'Lagged'}
             </span>
@@ -75,7 +75,7 @@ export default function HoldingReturns({ returns, ticker }: Props) {
   if (stock1y == null && stock3y == null && stock5y == null) return null
 
   return (
-    <div className="rounded-xl glass-card border border-[rgba(59,130,246,0.2)] px-5 py-4">
+    <div className="rounded-xl card px-5 py-4">
       <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-3">
         If You Had Held…
       </div>

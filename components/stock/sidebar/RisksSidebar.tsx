@@ -39,18 +39,18 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-xl glass-card border-[rgba(59,130,246,0.15)] px-4 py-3">
+    <div className="rounded-xl bg-white border border-slate-200 px-4 py-3">
       {children}
     </div>
   )
 }
 
 function gradeColor(grade: string): string {
-  if (grade === 'A+' || grade === 'A') return 'text-emerald-400 bg-emerald-500/15 border-emerald-500/25'
-  if (grade === 'B+' || grade === 'B') return 'text-blue-400 bg-blue-500/15 border-blue-500/25'
-  if (grade === 'C')                   return 'text-amber-400 bg-amber-500/15 border-amber-500/25'
-  if (grade === 'D')                   return 'text-orange-400 bg-orange-500/15 border-orange-500/25'
-  return 'text-red-400 bg-red-500/15 border-red-500/25'
+  if (grade === 'A+' || grade === 'A') return 'text-emerald-600 bg-emerald-50 border-emerald-200'
+  if (grade === 'B+' || grade === 'B') return 'text-blue-600 bg-blue-50 border-blue-200'
+  if (grade === 'C')                   return 'text-amber-600 bg-amber-50 border-amber-200'
+  if (grade === 'D')                   return 'text-orange-600 bg-orange-50 border-orange-200'
+  return 'text-red-600 bg-red-50 border-red-200'
 }
 
 export default function RisksSidebar({ ratings, scores, ownership }: Props) {
@@ -58,13 +58,13 @@ export default function RisksSidebar({ ratings, scores, ownership }: Props) {
   const altman    = scores?.altman
   const beneish   = scores?.beneish
 
-  const altmanColor = altman?.zone === 'Safe' ? 'text-emerald-400 bg-emerald-500/15 border-emerald-500/20'
-    : altman?.zone === 'Distress' ? 'text-red-400 bg-red-500/15 border-red-500/20'
-    : 'text-amber-400 bg-amber-500/15 border-amber-500/20'
+  const altmanColor = altman?.zone === 'Safe' ? 'text-emerald-600 bg-emerald-50 border-emerald-200'
+    : altman?.zone === 'Distress' ? 'text-red-600 bg-red-50 border-red-200'
+    : 'text-amber-600 bg-amber-50 border-amber-200'
 
-  const beneishColor = beneish?.flag === 'Clean' ? 'text-emerald-400 bg-emerald-500/15 border-emerald-500/20'
-    : beneish?.flag === 'Manipulator' ? 'text-red-400 bg-red-500/15 border-red-500/20'
-    : 'text-amber-400 bg-amber-500/15 border-amber-500/20'
+  const beneishColor = beneish?.flag === 'Clean' ? 'text-emerald-600 bg-emerald-50 border-emerald-200'
+    : beneish?.flag === 'Manipulator' ? 'text-red-600 bg-red-50 border-red-200'
+    : 'text-amber-600 bg-amber-50 border-amber-200'
 
   const ratingCategories: { label: string; key: keyof Ratings }[] = [
     { label: 'Profitability', key: 'profitability' },
@@ -89,7 +89,7 @@ export default function RisksSidebar({ ratings, scores, ownership }: Props) {
                   <span className="text-[11px] text-slate-400">Piotroski F-Score</span>
                   <span className={cn(
                     'text-xs font-bold tabular-nums',
-                    piotroski.score >= 7 ? 'text-emerald-400' : piotroski.score >= 4 ? 'text-amber-400' : 'text-red-400'
+                    piotroski.score >= 7 ? 'text-emerald-600' : piotroski.score >= 4 ? 'text-amber-600' : 'text-red-600'
                   )}>
                     {piotroski.score} / 9
                   </span>
@@ -102,7 +102,7 @@ export default function RisksSidebar({ ratings, scores, ownership }: Props) {
                         'h-1.5 flex-1 rounded-full',
                         i < piotroski.score
                           ? piotroski.score >= 7 ? 'bg-emerald-400' : piotroski.score >= 4 ? 'bg-amber-400' : 'bg-red-400'
-                          : 'bg-white/10'
+                          : 'bg-slate-200'
                       )}
                     />
                   ))}
@@ -161,7 +161,7 @@ export default function RisksSidebar({ ratings, scores, ownership }: Props) {
                 <span className="text-[11px] text-slate-400">Short Float</span>
                 <span className={cn(
                   'text-[11px] font-semibold tabular-nums',
-                  ownership.shortPct > 0.1 ? 'text-amber-400' : 'text-slate-200'
+                  ownership.shortPct > 0.1 ? 'text-amber-600' : 'text-slate-700'
                 )}>
                   {(ownership.shortPct * 100).toFixed(1)}%
                 </span>
@@ -170,7 +170,7 @@ export default function RisksSidebar({ ratings, scores, ownership }: Props) {
             {ownership.shortRatio != null && (
               <div className="flex items-center justify-between">
                 <span className="text-[11px] text-slate-400">Short Ratio (days)</span>
-                <span className="text-[11px] font-semibold text-slate-200 tabular-nums">
+                <span className="text-[11px] font-semibold text-slate-700 tabular-nums">
                   {ownership.shortRatio.toFixed(1)}
                 </span>
               </div>
@@ -178,7 +178,7 @@ export default function RisksSidebar({ ratings, scores, ownership }: Props) {
             {ownership.insiderPct != null && (
               <div className="flex items-center justify-between">
                 <span className="text-[11px] text-slate-400">Insider Ownership</span>
-                <span className="text-[11px] font-semibold text-slate-200 tabular-nums">
+                <span className="text-[11px] font-semibold text-slate-700 tabular-nums">
                   {(ownership.insiderPct * 100).toFixed(1)}%
                 </span>
               </div>

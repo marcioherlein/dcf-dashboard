@@ -37,7 +37,7 @@ function deriveCagr(
   if (!cagrAnalysis) {
     return {
       cagr: sectorFallback,
-      evidence: `No growth data available → sector default ${pct(sectorFallback)}`,
+      evidence: `No analyst or historical growth data · using sector default ${pct(sectorFallback)} (adjust manually in Valuation tab)`,
       source: 'sector_fallback',
     }
   }

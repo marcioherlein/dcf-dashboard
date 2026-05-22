@@ -47,12 +47,12 @@ interface Props {
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-[10px] font-bold uppercase tracking-wider text-slate-300 mb-2">{children}</p>
+  return <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">{children}</p>
 }
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-xl glass-card border border-[rgba(59,130,246,0.25)] px-4 py-3">
+    <div className="rounded-xl bg-white border border-slate-200 px-4 py-3">
       {children}
     </div>
   )
@@ -60,7 +60,7 @@ function Card({ children }: { children: React.ReactNode }) {
 
 function MarginBar({ label, value }: { label: string; value: number | null }) {
   const pct = value != null ? Math.min(100, Math.max(0, value * 100)) : null
-  const color = pct == null ? 'bg-white/10'
+  const color = pct == null ? 'bg-slate-100'
     : pct >= 30 ? 'bg-emerald-500/70'
     : pct >= 15 ? 'bg-emerald-400/60'
     : pct >= 5  ? 'bg-amber-400/60'
@@ -69,12 +69,12 @@ function MarginBar({ label, value }: { label: string; value: number | null }) {
   return (
     <div>
       <div className="flex justify-between mb-1">
-        <span className="text-[11px] text-slate-300">{label}</span>
-        <span className="text-[11px] font-semibold text-white tabular-nums">
+        <span className="text-[11px] text-slate-500">{label}</span>
+        <span className="text-[11px] font-semibold text-slate-900 tabular-nums">
           {pct != null ? pct.toFixed(1) + '%' : '—'}
         </span>
       </div>
-      <div className="h-1 rounded-full bg-white/8">
+      <div className="h-1 rounded-full bg-slate-100">
         {pct != null && (
           <div className={cn('h-1 rounded-full transition-all', color)} style={{ width: `${pct}%` }} />
         )}
@@ -143,7 +143,7 @@ function RevenueBarChart({ rows }: { rows: IncomeRow[] }) {
           return (
             <div key={r.year} className="flex-1 flex flex-col items-center justify-end gap-0.5">
               <div
-                className={cn('w-full rounded-sm', isLatest ? 'bg-blue-400/70' : 'bg-white/15')}
+                className={cn('w-full rounded-sm', isLatest ? 'bg-blue-400/70' : 'bg-slate-200')}
                 style={{ height: `${h}%` }}
               />
               <span className="text-[9px] text-slate-500">{r.year.slice(-2)}</span>
@@ -168,13 +168,13 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
   const beneish   = scores?.beneish
   const roic      = scores?.roic
 
-  const altmanColor = altman?.zone === 'Safe' ? 'text-emerald-400 bg-emerald-500/15 border-emerald-500/20'
-    : altman?.zone === 'Distress' ? 'text-red-400 bg-red-500/15 border-red-500/20'
-    : 'text-amber-400 bg-amber-500/15 border-amber-500/20'
+  const altmanColor = altman?.zone === 'Safe' ? 'text-emerald-600 bg-emerald-50 border-emerald-200'
+    : altman?.zone === 'Distress' ? 'text-red-600 bg-red-50 border-red-200'
+    : 'text-amber-600 bg-amber-50 border-amber-200'
 
-  const beneishColor = beneish?.flag === 'Clean' ? 'text-emerald-400 bg-emerald-500/15 border-emerald-500/20'
-    : beneish?.flag === 'Manipulator' ? 'text-red-400 bg-red-500/15 border-red-500/20'
-    : 'text-amber-400 bg-amber-500/15 border-amber-500/20'
+  const beneishColor = beneish?.flag === 'Clean' ? 'text-emerald-600 bg-emerald-50 border-emerald-200'
+    : beneish?.flag === 'Manipulator' ? 'text-red-600 bg-red-50 border-red-200'
+    : 'text-amber-600 bg-amber-50 border-amber-200'
 
   const isRows = financialStatements?.incomeStatement ?? []
   const cfRows = financialStatements?.cashFlow ?? []
@@ -277,20 +277,20 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
           <SectionLabel>Capital Returns</SectionLabel>
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] text-slate-300">ROIC</span>
+              <span className="text-[11px] text-slate-500">ROIC</span>
               <span className={cn(
                 'text-[11px] font-semibold tabular-nums',
-                roic.roic >= 0.15 ? 'text-emerald-400' : roic.roic >= 0.08 ? 'text-amber-400' : 'text-red-400'
+                roic.roic >= 0.15 ? 'text-emerald-600' : roic.roic >= 0.08 ? 'text-amber-600' : 'text-red-600'
               )}>
                 {(roic.roic * 100).toFixed(1)}%
               </span>
             </div>
             {roic.spread != null && (
               <div className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-300">ROIC − WACC spread</span>
+                <span className="text-[11px] text-slate-500">ROIC − WACC spread</span>
                 <span className={cn(
                   'text-[11px] font-semibold tabular-nums',
-                  roic.spread > 0 ? 'text-emerald-400' : 'text-red-400'
+                  roic.spread > 0 ? 'text-emerald-600' : 'text-red-600'
                 )}>
                   {roic.spread > 0 ? '+' : ''}{(roic.spread * 100).toFixed(1)}%
                 </span>
@@ -315,10 +315,10 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
             {piotroski && (
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[11px] text-slate-300">Piotroski F-Score</span>
+                  <span className="text-[11px] text-slate-500">Piotroski F-Score</span>
                   <span className={cn(
                     'text-[11px] font-bold tabular-nums',
-                    piotroski.score >= 7 ? 'text-emerald-400' : piotroski.score >= 4 ? 'text-amber-400' : 'text-red-400'
+                    piotroski.score >= 7 ? 'text-emerald-600' : piotroski.score >= 4 ? 'text-amber-600' : 'text-red-600'
                   )}>
                     {piotroski.score}/9
                   </span>
@@ -331,7 +331,7 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
                         'h-1.5 flex-1 rounded-full',
                         i < piotroski.score
                           ? piotroski.score >= 7 ? 'bg-emerald-400' : piotroski.score >= 4 ? 'bg-amber-400' : 'bg-red-400'
-                          : 'bg-white/10'
+                          : 'bg-slate-200'
                       )}
                     />
                   ))}
@@ -365,8 +365,8 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
               { label: 'Short Float',   value: ownership.shortPct },
             ].map(({ label, value }) => (
               <div key={label} className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-300">{label}</span>
-                <span className="text-[11px] font-semibold text-white tabular-nums">
+                <span className="text-[11px] text-slate-500">{label}</span>
+                <span className="text-[11px] font-semibold text-slate-900 tabular-nums">
                   {value != null ? (value * 100).toFixed(1) + '%' : '—'}
                 </span>
               </div>

@@ -121,11 +121,13 @@ export default function InvestorGradeCard({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fairValue])
 
-  const verdict = upsidePct == null || fairValue == null
+  const verdict = upsidePct == null || fairValue == null || zone == null
     ? null
-    : isUndervalued
-      ? `Our valuation model suggests this may be undervalued — trading ${Math.abs(upsidePct * 100).toFixed(0)}% below our estimate. See the assumptions.`
-      : `Our valuation model flags this as potentially overvalued — trading ${Math.abs(upsidePct * 100).toFixed(0)}% above our estimate. Check if you agree.`
+    : zone === 'Attractive'
+      ? `Our model estimates ${Math.abs(upsidePct * 100).toFixed(0)}% upside — trading below our fair value estimate. Preliminary · adjust assumptions in Valuation tab.`
+      : zone === 'Fair Value'
+        ? `Our model estimates this trades near fair value (${upsidePct >= 0 ? '+' : ''}${(upsidePct * 100).toFixed(0)}%). Preliminary · adjust assumptions in Valuation tab.`
+        : `Our model estimates this may be overvalued — trading ${Math.abs(upsidePct * 100).toFixed(0)}% above our estimate. Preliminary · adjust assumptions in Valuation tab.`
 
   // ── Compact 1-line strip (valuation tab) ──────────────────────────────────
   if (compact) {
@@ -219,9 +221,11 @@ export default function InvestorGradeCard({
                 transition={{ duration: 0.25, delay: 0.2 }}
                 className={cn(
                   'mt-3 text-[12px] leading-relaxed rounded-lg px-3 py-2',
-                  isUndervalued
+                  zone === 'Attractive'
                     ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                    : 'bg-amber-50 text-amber-700 border border-amber-200',
+                    : zone === 'Fair Value'
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                      : 'bg-amber-50 text-amber-700 border border-amber-200',
                 )}
               >
                 {verdict}

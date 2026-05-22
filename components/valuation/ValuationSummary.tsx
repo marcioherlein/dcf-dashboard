@@ -248,8 +248,8 @@ const METHOD_DESCRIPTIONS: Record<string, string> = {
 
 function methodUpside(m: MethodResult): 'up' | 'neutral' | 'down' | null {
   if (m.upsidePct == null) return null
-  if (m.upsidePct >= 0.10) return 'up'
-  if (m.upsidePct >= -0.05) return 'neutral'
+  if (m.upsidePct >= 0.20) return 'up'
+  if (m.upsidePct >= 0.05) return 'neutral'
   return 'down'
 }
 

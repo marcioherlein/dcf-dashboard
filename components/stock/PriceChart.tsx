@@ -64,15 +64,15 @@ function calcBB(closes: number[], period = 20, sd = 2) {
 
 // ── Chart theme ───────────────────────────────────────────────────────────────
 const BASE_OPTS = {
-  layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: 'rgba(255,255,255,0.35)', fontSize: 11 },
-  grid: { vertLines: { color: 'rgba(255,255,255,0.04)' }, horzLines: { color: 'rgba(255,255,255,0.04)' } },
+  layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: 'rgba(71,85,105,0.9)', fontSize: 11 },
+  grid: { vertLines: { color: 'rgba(0,0,0,0.05)' }, horzLines: { color: 'rgba(0,0,0,0.05)' } },
   crosshair: {
     mode: CrosshairMode.Normal,
-    vertLine: { color: 'rgba(255,255,255,0.2)', width: 1 as const, style: LineStyle.Dashed, labelBackgroundColor: 'rgba(8,15,30,0.95)' },
-    horzLine: { color: 'rgba(255,255,255,0.2)', width: 1 as const, style: LineStyle.Dashed, labelBackgroundColor: 'rgba(8,15,30,0.95)' },
+    vertLine: { color: 'rgba(100,116,139,0.4)', width: 1 as const, style: LineStyle.Dashed, labelBackgroundColor: '#1e293b' },
+    horzLine: { color: 'rgba(100,116,139,0.4)', width: 1 as const, style: LineStyle.Dashed, labelBackgroundColor: '#1e293b' },
   },
-  rightPriceScale: { borderColor: 'rgba(255,255,255,0.06)', textColor: 'rgba(255,255,255,0.35)' },
-  timeScale: { borderColor: 'rgba(255,255,255,0.06)', textColor: 'rgba(255,255,255,0.35)', rightOffset: 8, fixLeftEdge: true },
+  rightPriceScale: { borderColor: 'rgba(0,0,0,0.08)', textColor: 'rgba(71,85,105,0.9)' },
+  timeScale: { borderColor: 'rgba(0,0,0,0.08)', textColor: 'rgba(71,85,105,0.9)', rightOffset: 8, fixLeftEdge: true },
   handleScroll: { mouseWheel: true, pressedMouseMove: true },
   handleScale: { mouseWheel: true, pinch: true },
 }
@@ -412,14 +412,14 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="rounded-xl glass-card border-[rgba(59,130,246,0.15)]">
+    <div className="rounded-xl card">
 
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-4 pb-2">
         <div className="flex items-center gap-3 flex-wrap">
-          <h2 className="text-sm font-semibold text-slate-200">Price Chart</h2>
+          <h2 className="text-sm font-semibold text-slate-900">Price Chart</h2>
           {changePct != null && (
-            <span className={`text-xs font-semibold tabular-nums ${changePct >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            <span className={`text-xs font-semibold tabular-nums ${changePct >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
               {changePct >= 0 ? '+' : ''}{changePct.toFixed(2)}%
             </span>
           )}
@@ -441,7 +441,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
         <div className="flex gap-1">
           {PERIODS.map(p => (
             <button key={p} onClick={() => setPeriod(p)}
-              className={`rounded-lg px-3 py-1 text-xs font-medium transition ${period === p ? 'bg-blue-500/20 text-blue-300' : 'text-white/40 hover:bg-white/8'}`}>
+              className={`rounded-lg px-3 py-1 text-xs font-medium transition ${period === p ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'}`}>
               {p.toUpperCase()}
             </button>
           ))}
@@ -463,13 +463,13 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
               onChange={e => setCompareInput(e.target.value.toUpperCase())}
               onBlur={() => { if (compareInput.trim()) addCompareTicker(compareInput) }}
               placeholder="+ Compare" maxLength={10}
-              className="text-xs bg-transparent border-b border-dashed border-white/20 focus:outline-none focus:border-blue-500 w-20 py-0.5 placeholder:text-white/25 text-white/80"
+              className="text-xs bg-transparent border-b border-dashed border-slate-300 focus:outline-none focus:border-blue-500 w-20 py-0.5 placeholder:text-slate-400 text-slate-900"
             />
           </form>
         )}
         {isCompare && (
           <button onClick={() => setCompareMode(p => p === 'price' ? 'percent' : 'price')}
-            className={`ml-auto text-[11px] font-bold px-2.5 py-0.5 rounded-full border transition ${compareMode === 'percent' ? 'bg-blue-600 text-white border-blue-600' : 'border-white/20 text-white/40 hover:bg-white/8'}`}>
+            className={`ml-auto text-[11px] font-bold px-2.5 py-0.5 rounded-full border transition ${compareMode === 'percent' ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
             {compareMode === 'percent' ? '% Return' : '$ Price'}
           </button>
         )}
@@ -483,25 +483,25 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
             return (
               <button key={ind.key} onClick={() => toggleMA(ind.key)}
                 className={`rounded px-2 py-0.5 text-[10px] font-semibold transition border ${on ? 'opacity-100' : 'opacity-30'}`}
-                style={{ borderColor: ind.color, color: on ? ind.color : 'rgba(255,255,255,0.4)', background: on ? `${ind.color}18` : 'transparent' }}>
+                style={{ borderColor: ind.color, color: on ? ind.color : 'rgba(100,116,139,0.5)', background: on ? `${ind.color}18` : 'transparent' }}>
                 {ind.label}
               </button>
             )
           })}
           <button onClick={() => setShowBB(v => !v)}
             className={`rounded px-2 py-0.5 text-[10px] font-semibold transition border ${showBB ? 'opacity-100' : 'opacity-30'}`}
-            style={{ borderColor: '#a78bfa', color: showBB ? '#a78bfa' : 'rgba(255,255,255,0.4)', background: showBB ? '#a78bfa18' : 'transparent' }}>
+            style={{ borderColor: '#a78bfa', color: showBB ? '#a78bfa' : 'rgba(100,116,139,0.5)', background: showBB ? '#a78bfa18' : 'transparent' }}>
             BB (20,2)
           </button>
           <div className="ml-auto flex items-center gap-1">
             {(['volume', 'rsi'] as SubPanel[]).map(sp => (
               <button key={sp} onClick={() => { setSubPanel(sp); setShowSubPanel(true) }}
-                className={`rounded px-2 py-0.5 text-[10px] font-medium transition ${showSubPanel && subPanel === sp ? 'bg-white/15 text-white/70' : 'text-white/25 hover:bg-white/8'}`}>
+                className={`rounded px-2 py-0.5 text-[10px] font-medium transition ${showSubPanel && subPanel === sp ? 'bg-slate-100 text-slate-700' : 'text-slate-400 hover:bg-slate-50'}`}>
                 {sp.toUpperCase()}
               </button>
             ))}
             <button onClick={() => setShowSubPanel(v => !v)}
-              className="rounded px-1.5 py-0.5 text-[10px] text-white/25 hover:bg-white/8">
+              className="rounded px-1.5 py-0.5 text-[10px] text-slate-400 hover:bg-slate-100">
               {showSubPanel ? '↑' : '↓'}
             </button>
           </div>
@@ -511,11 +511,11 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
       {/* Main chart */}
       <div className="relative px-1">
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center text-sm text-white/25 z-10">Loading…</div>
+          <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-400 z-10">Loading…</div>
         )}
         <div ref={mainRef} className="w-full" style={{ height: 280 }} />
         <div ref={tooltipRef} className="pointer-events-none absolute z-20 hidden rounded-lg px-2.5 py-2 text-[11px]"
-          style={{ background: 'rgba(8,15,30,0.95)', border: '1px solid rgba(59,130,246,0.2)', minWidth: 120, lineHeight: 1.6 }} />
+          style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', minWidth: 120, lineHeight: 1.6 }} />
       </div>
 
       {/* RSI sub-panel */}
@@ -527,7 +527,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
             style={{ height: subPanel === 'rsi' ? 80 : 0, overflow: 'hidden' }}
           />
           <div className="flex items-center justify-center mt-0.5">
-            <span className="text-[9px] text-white/20 font-medium tracking-wide">
+            <span className="text-[9px] text-slate-400 font-medium tracking-wide">
               {subPanel === 'volume' ? 'VOLUME' : 'RSI (14)'}
             </span>
           </div>

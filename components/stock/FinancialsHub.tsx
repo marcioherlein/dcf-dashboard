@@ -141,7 +141,7 @@ function MetricsTable({ columns, rows }: { columns: string[]; rows: MetricRowDef
   const cellColor = (v: number | null, fmt: string, positiveIsGood = true) => {
     if (fmt === 'growth') return growthColor(v)
     if (fmt === 'pct' || fmt === 'x' || fmt === 'days' || fmt === 'score') return valColor(v, positiveIsGood)
-    return 'text-slate-100'
+    return 'text-slate-700'
   }
 
   return (
@@ -149,7 +149,7 @@ function MetricsTable({ columns, rows }: { columns: string[]; rows: MetricRowDef
       <table className="w-full min-w-max border-collapse">
         <thead>
           <tr className="border-b border-slate-100">
-            <th className="sticky left-0 z-10 bg-[#080F1E] px-4 py-2 text-left text-[11px] font-medium text-slate-400 w-56 min-w-[224px]">
+            <th className="sticky left-0 z-10 bg-white px-4 py-2 text-left text-[11px] font-medium text-slate-400 w-56 min-w-[224px]">
               Metric
             </th>
             {columns.map(col => (
@@ -165,7 +165,7 @@ function MetricsTable({ columns, rows }: { columns: string[]; rows: MetricRowDef
           {rows.map((row, i) => {
             if (row.isHeader) {
               return (
-                <tr key={i} className="bg-white/5 border-y border-white/8">
+                <tr key={i} className="bg-slate-50 border-y border-slate-100">
                   <td colSpan={columns.length + 1} className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
                     {row.label}
                   </td>
@@ -175,9 +175,9 @@ function MetricsTable({ columns, rows }: { columns: string[]; rows: MetricRowDef
 
             const pig = row.positiveIsGood ?? true
             return (
-              <tr key={i} className="border-b border-slate-50 hover:bg-white/5/50 transition-colors">
-                <td className={`sticky left-0 z-10 bg-[#080F1E] px-4 py-2 text-xs whitespace-nowrap ${
-                  row.indent ? 'pl-8 text-slate-400' : 'font-medium text-slate-300'
+              <tr key={i} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                <td className={`sticky left-0 z-10 bg-white px-4 py-2 text-xs whitespace-nowrap ${
+                  row.indent ? 'pl-8 text-slate-400' : 'font-medium text-slate-600'
                 }`}>
                   <Sparkline values={row.values} positiveIsGood={pig} />
                   {row.label}
@@ -209,7 +209,7 @@ function CAGRTable({ rows }: { rows: CAGRRow[] }) {
       <table className="w-full min-w-max border-collapse">
         <thead>
           <tr className="border-b border-slate-100">
-            <th className="sticky left-0 z-10 bg-[#080F1E] px-4 py-2 text-left text-[11px] font-medium text-slate-400 w-56 min-w-[224px]">Metric</th>
+            <th className="sticky left-0 z-10 bg-white px-4 py-2 text-left text-[11px] font-medium text-slate-400 w-56 min-w-[224px]">Metric</th>
             {horizons.map(h => (
               <th key={h} className="px-5 py-2 text-right text-[11px] font-semibold text-slate-500 whitespace-nowrap">{h}</th>
             ))}
@@ -217,8 +217,8 @@ function CAGRTable({ rows }: { rows: CAGRRow[] }) {
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i} className="border-b border-slate-50 hover:bg-white/5/50">
-              <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-2.5 text-xs font-medium text-slate-300 whitespace-nowrap">
+            <tr key={i} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+              <td className="sticky left-0 z-10 bg-white px-4 py-2.5 text-xs font-medium text-slate-600 whitespace-nowrap">
                 {row.label}
               </td>
               {[row.yoy, row.y3, row.y5].map((v, j) => (
@@ -582,7 +582,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
   const hasData = periods.length > 0
 
   return (
-    <div className="rounded-xl glass-card border-[rgba(59,130,246,0.15)] overflow-hidden">
+    <div className="rounded-xl card overflow-hidden">
       {/* Sub-tab nav */}
       <div className="flex items-center justify-between px-5 pt-4 pb-0 border-b border-slate-100">
         <div className="flex gap-0">

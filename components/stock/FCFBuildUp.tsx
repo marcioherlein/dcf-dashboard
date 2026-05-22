@@ -299,28 +299,28 @@ export default function FCFBuildUp({
 
   // ── Cell helpers ────────────────────────────────────────────────────────────
   const cellBase = 'px-3 py-2.5 text-center text-xs tabular-nums'
-  const divider = <td className="px-1 py-2.5 text-center text-xs text-gray-200 dark:text-white/10">│</td>
-  const inputCls = 'w-16 bg-transparent border-b border-gray-300 dark:border-white/20 text-sm font-semibold text-gray-900 dark:text-white outline-none tabular-nums focus:border-indigo-400'
+  const divider = <td className="px-1 py-2.5 text-center text-xs text-slate-200">│</td>
+  const inputCls = 'w-16 bg-transparent border-b border-slate-300 text-sm font-semibold text-slate-900 outline-none tabular-nums focus:border-indigo-400'
 
   function numCell(v: string, isProj: boolean, bold = false, red = false, green = false) {
     const cls = [
       cellBase,
-      isProj ? 'text-gray-600 dark:text-white/50' : 'text-gray-800 dark:text-white/75',
+      isProj ? 'text-slate-600' : 'text-slate-800',
       bold ? 'font-semibold' : '',
-      red ? '!text-red-500 dark:!text-red-400' : '',
-      green ? '!text-emerald-600 dark:!text-emerald-400' : '',
-      v === '—' ? '!text-gray-300 dark:!text-white/15' : '',
+      red ? '!text-red-500' : '',
+      green ? '!text-emerald-600' : '',
+      v === '—' ? '!text-slate-300' : '',
     ].join(' ')
     return <td className={cls}>{v}</td>
   }
   function subCell(v: string) {
-    return <td className="px-3 py-1 text-center text-[10px] text-gray-400 dark:text-slate-400 tabular-nums">{v}</td>
+    return <td className="px-3 py-1 text-center text-[10px] text-slate-400 tabular-nums">{v}</td>
   }
   function labelCell(label: string, muted = false) {
-    return <td className={`px-4 py-2.5 text-xs whitespace-nowrap min-w-[164px] ${muted ? 'text-gray-400 dark:text-slate-400' : 'text-gray-500 dark:text-slate-300'}`}>{label}</td>
+    return <td className={`px-4 py-2.5 text-xs whitespace-nowrap min-w-[164px] ${muted ? 'text-slate-400' : 'text-slate-500'}`}>{label}</td>
   }
   function subLabelCell(label: string) {
-    return <td className="px-4 py-1 text-[10px] text-gray-400 dark:text-slate-400 pl-7">{label}</td>
+    return <td className="px-4 py-1 text-[10px] text-slate-400 pl-7">{label}</td>
   }
 
   // ── Toggle button ───────────────────────────────────────────────────────────
@@ -328,8 +328,8 @@ export default function FCFBuildUp({
     return (
       <button onClick={onClick}
         className={`px-3 py-1.5 text-xs font-medium transition ${active
-          ? 'bg-slate-800 text-white dark:bg-white/15 dark:text-white'
-          : 'text-gray-500 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-white/5'}`}>
+          ? 'bg-blue-600 text-white'
+          : 'text-slate-500 hover:bg-slate-100'}`}>
         {label}
       </button>
     )
@@ -338,27 +338,27 @@ export default function FCFBuildUp({
   const fcfLabel = mode === 'unlevered' ? 'UFCF' : 'LFCF'
 
   return (
-    <div className="rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8">
+    <div className="rounded-xl card">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="px-6 pt-5 pb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <h2 className="text-sm font-headline font-semibold text-on-surface dark:text-white/70">FCF Build-Up</h2>
-          <div className="flex rounded-lg border border-gray-200 dark:border-white/10 overflow-hidden">
+          <h2 className="text-sm font-headline font-semibold text-slate-900">FCF Build-Up</h2>
+          <div className="flex rounded-lg border border-slate-200 overflow-hidden">
             <ToggleBtn label="Unlevered" active={mode === 'unlevered'} onClick={() => setMode('unlevered')} />
             <ToggleBtn label="Levered"   active={mode === 'levered'}   onClick={() => setMode('levered')} />
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex rounded-lg border border-gray-200 dark:border-white/10 overflow-hidden">
+          <div className="flex rounded-lg border border-slate-200 overflow-hidden">
             <ToggleBtn label="M" active={scale === 'M'} onClick={() => setScale('M')} />
             <ToggleBtn label="B" active={scale === 'B'} onClick={() => setScale('B')} />
           </div>
           {cagrAnalysis && (
             <span className={`text-[10px] font-medium px-2 py-1 rounded-full ${
-              cagrAnalysis.confidenceLabel === 'High'   ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' :
-              cagrAnalysis.confidenceLabel === 'Medium' ? 'bg-amber-50  text-amber-700  dark:bg-amber-500/10  dark:text-amber-400'  :
-                                                          'bg-red-50    text-red-700    dark:bg-red-500/10    dark:text-red-400'
+            cagrAnalysis.confidenceLabel === 'High'   ? 'bg-emerald-50 text-emerald-700' :
+              cagrAnalysis.confidenceLabel === 'Medium' ? 'bg-amber-50  text-amber-700'  :
+                                                          'bg-red-50    text-red-700'
             }`}>
               {cagrAnalysis.confidenceLabel} confidence · {cagrAnalysis.numAnalysts} analyst{cagrAnalysis.numAnalysts !== 1 ? 's' : ''}
             </span>
@@ -367,7 +367,7 @@ export default function FCFBuildUp({
       </div>
 
       {isFinancialLike && mode === 'unlevered' && (
-        <div className="mx-6 mb-3 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 rounded-lg px-3 py-2">
+        <div className="mx-6 mb-3 text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
           EBIT data is limited for this company (financial sector). Switch to <button className="underline font-medium" onClick={() => setMode('levered')}>Levered mode</button> for a better view.
         </div>
       )}
@@ -376,30 +376,30 @@ export default function FCFBuildUp({
       <div className="overflow-x-auto">
         <table className="w-full min-w-[780px]">
           {/* Column headers */}
-          <thead className="bg-surface-container-low dark:bg-white/5">
+          <thead className="bg-slate-50">
             <tr>
-              <td className="px-4 py-2 text-[10px] font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wide min-w-[164px]">
+              <td className="px-4 py-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wide min-w-[164px]">
                 {mode === 'unlevered' ? 'UNLEVERED FCF BUILD-UP' : 'LEVERED FCF BUILD-UP'}
               </td>
               {histRows.map(r => (
-                <td key={r.year} className="px-3 py-2 text-center text-xs font-medium text-gray-400 dark:text-slate-400">{r.year}</td>
+                <td key={r.year} className="px-3 py-2 text-center text-xs font-medium text-slate-400">{r.year}</td>
               ))}
               {divider}
               {projRows.map(r => (
-                <td key={r.year} className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-slate-300">{r.year}</td>
+                <td key={r.year} className="px-3 py-2 text-center text-xs font-medium text-slate-500">{r.year}</td>
               ))}
             </tr>
             <tr>
               <td className="px-4 py-0.5" />
-              {histRows.map(r => <td key={r.year} className="px-3 py-0.5 text-center text-[10px] text-gray-400 dark:text-slate-400 italic">actual</td>)}
+              {histRows.map(r => <td key={r.year} className="px-3 py-0.5 text-center text-[10px] text-slate-400 italic">actual</td>)}
               <td className="px-1 py-0.5" />
-              {projRows.map(r => <td key={r.year} className="px-3 py-0.5 text-center text-[10px] text-gray-400 dark:text-slate-400 italic">est.</td>)}
+              {projRows.map(r => <td key={r.year} className="px-3 py-0.5 text-center text-[10px] text-slate-400 italic">est.</td>)}
             </tr>
           </thead>
           <tbody>
 
             {/* ── Revenue ── */}
-            <tr className="border-t border-gray-100 dark:border-white/5">
+            <tr className="border-t border-slate-100">
               {labelCell(`Revenue (${scale})`)}
               {histRows.map(r => numCell(fmtDollars(r.revenue, scale), false))}
               {divider}
@@ -415,7 +415,7 @@ export default function FCFBuildUp({
             {/* ── EBIT (unlevered) OR Net Income (levered) ── */}
             {mode === 'unlevered' ? (
               <>
-                <tr className="border-t border-gray-100 dark:border-white/5">
+                <tr className="border-t border-slate-100">
                   {labelCell(`EBIT (${scale})`)}
                   {histRows.map(r => numCell(fmtDollars(r.ebit, scale), false))}
                   {divider}
@@ -427,19 +427,19 @@ export default function FCFBuildUp({
                   <td className="px-1 py-1" />
                   {projRows.map(r => subCell(fmtPctPlain(r.ebitMargin)))}
                 </tr>
-                <tr className="border-t border-gray-100 dark:border-white/5">
+                <tr className="border-t border-slate-100">
                   {labelCell('Tax Rate', true)}
-                  {histRows.map(r => <td key={r.year} className="px-3 py-2.5 text-center text-xs text-gray-400 dark:text-slate-400 tabular-nums">{fmtPctPlain(r.taxRateVal)}</td>)}
+                  {histRows.map(r => <td key={r.year} className="px-3 py-2.5 text-center text-xs text-slate-400 tabular-nums">{fmtPctPlain(r.taxRateVal)}</td>)}
                   {divider}
-                  {projRows.map(r => <td key={r.year} className="px-3 py-2.5 text-center text-xs text-gray-400 dark:text-slate-400 tabular-nums">{fmtPctPlain(r.taxRateVal)}</td>)}
+                  {projRows.map(r => <td key={r.year} className="px-3 py-2.5 text-center text-xs text-slate-400 tabular-nums">{fmtPctPlain(r.taxRateVal)}</td>)}
                 </tr>
-                <tr className="bg-gray-50 dark:bg-white/[0.02]">
+                <tr className="bg-slate-50">
                   {labelCell(`NOPAT (${scale})`)}
                   {histRows.map(r => numCell(fmtDollars(r.nopat, scale), false, true))}
                   {divider}
                   {projRows.map(r => numCell(fmtDollars(r.nopat, scale), true, true))}
                 </tr>
-                <tr className="bg-gray-50 dark:bg-white/[0.02]">
+                <tr className="bg-slate-50">
                   {subLabelCell('NOPAT Margin')}
                   {histRows.map(r => subCell(fmtPctPlain(r.nopatMargin)))}
                   <td className="px-1 py-1" />
@@ -448,13 +448,13 @@ export default function FCFBuildUp({
               </>
             ) : (
               <>
-                <tr className="border-t border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/[0.02]">
+                <tr className="border-t border-slate-100 bg-slate-50">
                   {labelCell(`Net Income (${scale})`)}
                   {histRows.map(r => numCell(fmtDollars(r.netIncome, scale), false, true))}
                   {divider}
                   {projRows.map(r => numCell(fmtDollars(r.netIncome, scale), true, true))}
                 </tr>
-                <tr className="bg-gray-50 dark:bg-white/[0.02]">
+                <tr className="bg-slate-50">
                   {subLabelCell('Net Margin')}
                   {histRows.map(r => subCell(fmtPctPlain(r.netMargin)))}
                   <td className="px-1 py-1" />
@@ -464,7 +464,7 @@ export default function FCFBuildUp({
             )}
 
             {/* ── D&A ── */}
-            <tr className="border-t border-gray-100 dark:border-white/5">
+            <tr className="border-t border-slate-100">
               {labelCell(`+ D&A (${scale})`)}
               {histRows.map(r => numCell(fmtDollars(r.da, scale), false, false, false, r.da != null && r.da > 0))}
               {divider}
@@ -478,7 +478,7 @@ export default function FCFBuildUp({
             </tr>
 
             {/* ── CapEx ── */}
-            <tr className="border-t border-gray-100 dark:border-white/5">
+            <tr className="border-t border-slate-100">
               {labelCell(`− CapEx (${scale})`)}
               {histRows.map(r => numCell(fmtDollars(r.capex, scale), false, false, r.capex != null && r.capex < 0))}
               {divider}
@@ -492,7 +492,7 @@ export default function FCFBuildUp({
             </tr>
 
             {/* ── ΔNWC ── */}
-            <tr className="border-t border-gray-100 dark:border-white/5">
+            <tr className="border-t border-slate-100">
               {labelCell(`Δ NWC (${scale})`)}
               {histRows.map(r => numCell(fmtDollars(r.dnwc, scale), false))}
               {divider}
@@ -512,63 +512,63 @@ export default function FCFBuildUp({
             {/* ── Net Debt Repayment (levered only) ── */}
             {mode === 'levered' && (
               <>
-                <tr className="border-t border-gray-100 dark:border-white/5">
+                <tr className="border-t border-slate-100">
                   {labelCell(`Net Debt Repmt (${scale})`)}
                   {histRows.map(r => numCell(fmtDollars(r.netDebtRepayment, scale), false))}
                   {divider}
-                  {projRows.map(r => <td key={r.year} className="px-3 py-2.5 text-center text-[10px] text-gray-300 dark:text-white/15">—</td>)}
+                  {projRows.map(r => <td key={r.year} className="px-3 py-2.5 text-center text-[10px] text-slate-300">—</td>)}
                 </tr>
               </>
             )}
 
             {/* ── FCF (highlighted row) ── */}
-            <tr className="border-t-2 border-gray-200 dark:border-white/10 bg-indigo-50/40 dark:bg-indigo-500/5">
+            <tr className="border-t-2 border-slate-200 bg-indigo-50/40">
               {labelCell(`${fcfLabel} (${scale})`)}
               {histRows.map(r => {
                 const v = mode === 'unlevered' ? r.ufcf : r.lfcf
                 const s = fmtDollars(v, scale)
-                return <td key={r.year} className={`px-3 py-3 text-center text-sm font-bold tabular-nums ${v == null ? 'text-gray-300 dark:text-white/15' : (v ?? 0) >= 0 ? 'text-gray-900 dark:text-white/90' : 'text-red-600 dark:text-red-400'}`}>{s}</td>
+                return <td key={r.year} className={`px-3 py-3 text-center text-sm font-bold tabular-nums ${v == null ? 'text-slate-300' : (v ?? 0) >= 0 ? 'text-slate-900' : 'text-red-600'}`}>{s}</td>
               })}
               {divider}
               {projRows.map(r => {
                 const v = mode === 'unlevered' ? r.ufcf : r.lfcf
                 const s = fmtDollars(v, scale)
-                return <td key={r.year} className={`px-3 py-3 text-center text-sm font-bold tabular-nums ${v == null ? 'text-gray-300 dark:text-white/15' : (v ?? 0) >= 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-red-500 dark:text-red-400'}`}>{s}</td>
+                return <td key={r.year} className={`px-3 py-3 text-center text-sm font-bold tabular-nums ${v == null ? 'text-slate-300' : (v ?? 0) >= 0 ? 'text-indigo-600' : 'text-red-500'}`}>{s}</td>
               })}
             </tr>
-            <tr className="bg-indigo-50/40 dark:bg-indigo-500/5">
+            <tr className="bg-indigo-50/40">
               {subLabelCell(`${fcfLabel} %Chg`)}
               {histRows.map(r => {
                 const g = mode === 'unlevered' ? r.ufcfGrowth : r.lfcfGrowth
                 const v = fmtPctSign(g)
-                return <td key={r.year} className={`px-3 py-1 text-center text-[10px] tabular-nums ${g == null ? 'text-gray-300 dark:text-white/15' : g >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>{v}</td>
+                return <td key={r.year} className={`px-3 py-1 text-center text-[10px] tabular-nums ${g == null ? 'text-slate-300' : g >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{v}</td>
               })}
               <td className="px-1 py-1" />
               {projRows.map(r => {
                 const g = mode === 'unlevered' ? r.ufcfGrowth : r.lfcfGrowth
                 const v = fmtPctSign(g)
-                return <td key={r.year} className={`px-3 py-1 text-center text-[10px] tabular-nums ${g == null ? 'text-gray-300 dark:text-white/15' : g >= 0 ? 'text-emerald-500/70 dark:text-emerald-400/60' : 'text-red-400/70 dark:text-red-400/60'}`}>{v}</td>
+                return <td key={r.year} className={`px-3 py-1 text-center text-[10px] tabular-nums ${g == null ? 'text-slate-300' : g >= 0 ? 'text-emerald-500/70' : 'text-red-400/70'}`}>{v}</td>
               })}
             </tr>
 
             {/* ── PV of FCF ── */}
-            <tr className="border-t border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/[0.03]">
+            <tr className="border-t border-slate-100 bg-slate-50">
               {labelCell(`PV of ${fcfLabel} (${scale})`, true)}
-              {histRows.map(r => <td key={r.year} className="px-3 py-2.5 text-center text-xs text-gray-300 dark:text-white/15">—</td>)}
+              {histRows.map(r => <td key={r.year} className="px-3 py-2.5 text-center text-xs text-slate-300">—</td>)}
               {divider}
               {projRows.map(r => {
                 const v = mode === 'unlevered' ? r.pvUFCF : r.pvLFCF
-                return <td key={r.year} className={`px-3 py-2.5 text-center text-xs tabular-nums ${v == null ? 'text-gray-300 dark:text-white/15' : 'text-gray-600 dark:text-white/50'}`}>{fmtDollars(v, scale)}</td>
+                return <td key={r.year} className={`px-3 py-2.5 text-center text-xs tabular-nums ${v == null ? 'text-slate-300' : 'text-slate-600'}`}>{fmtDollars(v, scale)}</td>
               })}
             </tr>
 
             {/* ── Cumulative PV ── */}
-            <tr className="border-t border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/[0.03]">
+            <tr className="border-t border-slate-100 bg-slate-50">
               {labelCell(`Σ PV (${scale})`, true)}
-              {histRows.map(r => <td key={r.year} className="px-3 py-2.5 text-center text-xs text-gray-300 dark:text-white/15">—</td>)}
+              {histRows.map(r => <td key={r.year} className="px-3 py-2.5 text-center text-xs text-slate-300">—</td>)}
               {divider}
               {projRows.map(r => (
-                <td key={r.year} className="px-3 py-2.5 text-center text-xs font-semibold text-indigo-600 dark:text-indigo-400 tabular-nums">
+                <td key={r.year} className="px-3 py-2.5 text-center text-xs font-semibold text-indigo-600 tabular-nums">
                   {fmtDollars(cumPVMap[r.year] ?? null, scale)}
                 </td>
               ))}
@@ -579,16 +579,16 @@ export default function FCFBuildUp({
       </div>
 
       {/* ── Terminal Value Panel ────────────────────────────────────────────── */}
-      <div className="border-t border-gray-100 dark:border-white/5 px-6 py-5">
+      <div className="border-t border-slate-100 px-6 py-5">
         <div className="flex items-center gap-3 mb-4">
-          <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-300">Terminal Value</span>
-          <span className="text-xs text-gray-400 dark:text-slate-400">Both methods shown simultaneously</span>
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Terminal Value</span>
+          <span className="text-xs text-slate-400">Both methods shown simultaneously</span>
         </div>
 
         {/* WACC input */}
         <div className="flex flex-wrap gap-4 mb-5">
-          <div className="rounded-lg bg-gray-50 dark:bg-white/5 px-4 py-3 flex items-center gap-2">
-            <span className="text-[10px] text-gray-400 dark:text-slate-400 uppercase tracking-wide">WACC</span>
+          <div className="rounded-lg bg-slate-50 px-4 py-3 flex items-center gap-2">
+            <span className="text-[10px] text-slate-400 uppercase tracking-wide">WACC</span>
             <input type="number" step="0.1" min="1" max="30"
               value={waccEdit}
               onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v > 0) setWaccEdit(v) }}
@@ -596,14 +596,14 @@ export default function FCFBuildUp({
             />
             <span className="text-xs text-gray-400">%</span>
           </div>
-          <div className="text-xs text-gray-400 dark:text-slate-400 self-center">
-            Σ PV = <span className="font-semibold text-gray-700 dark:text-white/70">{fmtDollars(sumPV, scale)}</span>
+          <div className="text-xs text-slate-400 self-center">
+            Σ PV = <span className="font-semibold text-slate-700">{fmtDollars(sumPV, scale)}</span>
             <span className="mx-1">·</span>
-            Cash = <span className="font-semibold text-emerald-600 dark:text-emerald-400">{fmtDollars(cash, 'M')}</span>
+            Cash = <span className="font-semibold text-emerald-600">{fmtDollars(cash, 'M')}</span>
             <span className="mx-1">·</span>
-            Debt = <span className="font-semibold text-red-500 dark:text-red-400">{fmtDollars(debt, 'M')}</span>
+            Debt = <span className="font-semibold text-red-500">{fmtDollars(debt, 'M')}</span>
             <span className="mx-1">·</span>
-            Shares = <span className="font-semibold text-gray-700 dark:text-white/70">{fmt(sharesOutstanding, 0)}M</span>
+            Shares = <span className="font-semibold text-slate-700">{fmt(sharesOutstanding, 0)}M</span>
           </div>
         </div>
 
@@ -611,8 +611,8 @@ export default function FCFBuildUp({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
           {/* Perpetuity */}
-          <div className="rounded-xl border border-gray-200 dark:border-white/8 p-4">
-            <div className="text-xs font-semibold text-gray-500 dark:text-slate-300 uppercase tracking-wide mb-3">Perpetuity Growth Rate</div>
+          <div className="rounded-xl border border-slate-200 p-4">
+            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Perpetuity Growth Rate</div>
             <div className="flex items-center gap-2 mb-3">
               <span className="text-[11px] text-gray-400">TGR</span>
               <input type="number" step="0.1" min="0" max="8"
@@ -628,21 +628,21 @@ export default function FCFBuildUp({
                 { label: 'PV of TV',        val: fmtDollars(pvTVP, scale) },
                 { label: 'Equity Value',    val: fmtDollars(eqValP, scale) },
               ].map(row => (
-                <div key={row.label} className="flex justify-between border-b border-gray-100 dark:border-white/5 pb-1.5 text-gray-500 dark:text-slate-300">
+                <div key={row.label} className="flex justify-between border-b border-slate-100 pb-1.5 text-slate-500">
                   <span>{row.label}</span>
-                  <span className="font-medium text-gray-700 dark:text-white/70">{row.val}</span>
+                  <span className="font-medium text-slate-700">{row.val}</span>
                 </div>
               ))}
               <div className="pt-1 flex justify-between">
-                <span className="text-gray-500 dark:text-slate-300">Implied Price</span>
+                <span className="text-slate-500">Implied Price</span>
                 {financialCurrencyNote
-                  ? <span className="text-[10px] text-amber-600 dark:text-amber-400">FX adjusted — see DCF model</span>
-                  : <span className="font-bold text-gray-900 dark:text-white">{currency}{fmt(priceP)}</span>}
+                  ? <span className="text-[10px] text-amber-600">FX adjusted — see DCF model</span>
+                  : <span className="font-bold text-slate-900">{currency}{fmt(priceP)}</span>}
               </div>
               {!financialCurrencyNote && (
                 <div className="flex justify-between">
-                  <span className="text-gray-400 dark:text-slate-400">vs {currency}{fmt(currentPrice)}</span>
-                  <span className={`font-semibold ${upsideP >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
+                  <span className="text-slate-400">vs {currency}{fmt(currentPrice)}</span>
+                  <span className={`font-semibold ${upsideP >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                     {upsideP >= 0 ? '+' : ''}{fmtPct(upsideP)}
                   </span>
                 </div>
@@ -651,8 +651,8 @@ export default function FCFBuildUp({
           </div>
 
           {/* Exit Multiple */}
-          <div className="rounded-xl border border-gray-200 dark:border-white/8 p-4">
-            <div className="text-xs font-semibold text-gray-500 dark:text-slate-300 uppercase tracking-wide mb-3">
+          <div className="rounded-xl border border-slate-200 p-4">
+            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
               Exit {mode === 'unlevered' ? 'EV/FCF' : 'P/E'} Multiple
             </div>
             <div className="flex items-center gap-2 mb-3">
@@ -670,21 +670,21 @@ export default function FCFBuildUp({
                 { label: 'PV of TV',        val: fmtDollars(pvTVM, scale) },
                 { label: 'Equity Value',    val: fmtDollars(eqValM, scale) },
               ].map(row => (
-                <div key={row.label} className="flex justify-between border-b border-gray-100 dark:border-white/5 pb-1.5 text-gray-500 dark:text-slate-300">
+                <div key={row.label} className="flex justify-between border-b border-slate-100 pb-1.5 text-slate-500">
                   <span>{row.label}</span>
-                  <span className="font-medium text-gray-700 dark:text-white/70">{row.val}</span>
+                  <span className="font-medium text-slate-700">{row.val}</span>
                 </div>
               ))}
               <div className="pt-1 flex justify-between">
-                <span className="text-gray-500 dark:text-slate-300">Implied Price</span>
+                <span className="text-slate-500">Implied Price</span>
                 {financialCurrencyNote
-                  ? <span className="text-[10px] text-amber-600 dark:text-amber-400">FX adjusted — see DCF model</span>
-                  : <span className="font-bold text-gray-900 dark:text-white">{currency}{fmt(priceM)}</span>}
+                  ? <span className="text-[10px] text-amber-600">FX adjusted — see DCF model</span>
+                  : <span className="font-bold text-slate-900">{currency}{fmt(priceM)}</span>}
               </div>
               {!financialCurrencyNote && (
                 <div className="flex justify-between">
-                  <span className="text-gray-400 dark:text-slate-400">vs {currency}{fmt(currentPrice)}</span>
-                  <span className={`font-semibold ${upsideM >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
+                  <span className="text-slate-400">vs {currency}{fmt(currentPrice)}</span>
+                  <span className={`font-semibold ${upsideM >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                     {upsideM >= 0 ? '+' : ''}{fmtPct(upsideM)}
                   </span>
                 </div>
@@ -694,7 +694,7 @@ export default function FCFBuildUp({
 
         </div>
 
-        <p className="mt-3 text-[10px] text-gray-400 dark:text-slate-400">
+        <p className="mt-3 text-[10px] text-slate-400">
           D&A derived from EBITDA − EBIT. ΔNWC from operating working capital changes; projected years use historical avg ratio.
           {mode === 'unlevered' ? ' UFCF = NOPAT + D&A − CapEx − ΔNWC.' : ' LFCF = Net Income + D&A − CapEx − ΔNWC − Net Debt Repayment.'}
           {financialCurrencyNote && ` Financial statements in local currency (${financialCurrencyNote}); implied price not shown.`}

@@ -276,7 +276,7 @@ function StockPageBody() {
         >
           ← Home
         </button>
-        <span className="text-slate-300">·</span>
+        <span className="text-slate-400">·</span>
         <span className="text-[12px] text-blue-600 font-semibold">{ticker}</span>
         {data && <span className="text-[12px] text-slate-500 truncate max-w-xs">{data.companyName}</span>}
       </div>
@@ -294,26 +294,26 @@ function StockPageBody() {
         {loading && (
           <div className="pt-5 space-y-4 animate-pulse">
             {/* PriceHeader skeleton */}
-            <div className="rounded-xl glass-card border border-[rgba(59,130,246,0.15)] p-5">
+            <div className="rounded-xl bg-white border border-slate-200 p-5">
               <div className="flex justify-between gap-4">
                 <div className="space-y-2">
-                  <div className="h-6 w-20 rounded-lg bg-white/8" />
-                  <div className="h-7 w-52 rounded-lg bg-white/8" />
+                  <div className="h-6 w-20 rounded-lg bg-slate-100" />
+                  <div className="h-7 w-52 rounded-lg bg-slate-100" />
                 </div>
                 <div className="space-y-2 text-right">
-                  <div className="h-9 w-32 rounded-lg bg-white/8 ml-auto" />
-                  <div className="h-4 w-24 rounded-lg bg-white/8 ml-auto" />
+                  <div className="h-9 w-32 rounded-lg bg-slate-100 ml-auto" />
+                  <div className="h-4 w-24 rounded-lg bg-slate-100 ml-auto" />
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-5 gap-2">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="h-14 rounded-xl bg-white/8" />
+                  <div key={i} className="h-14 rounded-xl bg-slate-100" />
                 ))}
               </div>
             </div>
             {/* Content skeleton */}
-            <div className="h-72 rounded-xl glass-card border border-[rgba(59,130,246,0.15)]" />
-            <div className="h-48 rounded-xl glass-card border border-[rgba(59,130,246,0.15)]" />
+            <div className="h-72 rounded-xl bg-white border border-slate-200" />
+            <div className="h-48 rounded-xl bg-white border border-slate-200" />
           </div>
         )}
 
@@ -540,7 +540,7 @@ function StockPageBody() {
             {/* Sidebar — desktop only, hidden on news tab */}
             {activeTab !== 'news' && (
               <aside className="hidden lg:block">
-                <div className="sticky top-[68px] max-h-[calc(100vh-88px)] overflow-y-auto space-y-3 pb-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full">
+                <div className="sticky top-[68px] max-h-[calc(100vh-88px)] overflow-y-auto space-y-3 pb-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full">
                   <StockSidebar activeTab={activeTab} data={data} statementsData={statementsData} />
                 </div>
               </aside>

@@ -62,19 +62,19 @@ const TABS = ['Income Statement', 'Balance Sheet', 'Cash Flow'] as const
 type Tab = typeof TABS[number]
 
 function fmtM(v: number | null, showSign = false): { text: string; color: string } {
-  if (v === null || v === undefined) return { text: '—', color: 'text-gray-400 dark:text-slate-400' }
+  if (v === null || v === undefined) return { text: '—', color: 'text-slate-400' }
   const abs = Math.abs(v)
   let text: string
   if (abs >= 1000) text = `${(v / 1000).toFixed(1)}B`
   else text = `${v.toFixed(0)}M`
   if (showSign && v > 0) text = '+' + text
-  const color = v < 0 ? 'text-red-500 dark:text-red-400' : v === 0 ? 'text-gray-400 dark:text-slate-400' : 'text-gray-800 dark:text-white/80'
+  const color = v < 0 ? 'text-red-500' : v === 0 ? 'text-slate-400' : 'text-slate-800'
   return { text, color }
 }
 
 function fmtEps(v: number | null): { text: string; color: string } {
-  if (v === null) return { text: '—', color: 'text-gray-400 dark:text-slate-400' }
-  const color = v < 0 ? 'text-red-500 dark:text-red-400' : 'text-gray-800 dark:text-white/80'
+  if (v === null) return { text: '—', color: 'text-slate-400' }
+  const color = v < 0 ? 'text-red-500' : 'text-slate-800'
   return { text: `$${v.toFixed(2)}`, color }
 }
 
@@ -92,7 +92,7 @@ function Cell({ v, showSign = false, isMoney = true, isProjected = false }: {
 function YearHeader({ year, isProjected }: { year: string; isProjected: boolean }) {
   return (
     <th className={`px-3 py-2 text-right text-[11px] font-semibold whitespace-nowrap ${
-      isProjected ? 'text-violet-500 dark:text-violet-400' : 'text-gray-500 dark:text-white/40'
+      isProjected ? 'text-violet-500' : 'text-slate-500'
     }`}>
       {year}
       {isProjected && <span className="ml-1 text-[9px] opacity-60">proj</span>}
@@ -102,12 +102,12 @@ function YearHeader({ year, isProjected }: { year: string; isProjected: boolean 
 
 function RowLabel({ label, indent = false, bold = false }: { label: string; indent?: boolean; bold?: boolean }) {
   return (
-    <td className={`sticky left-0 z-10 bg-white dark:bg-[#111] py-2 pr-4 text-xs whitespace-nowrap ${
+    <td className={`sticky left-0 z-10 bg-white py-2 pr-4 text-xs whitespace-nowrap ${
       indent
-        ? 'pl-8 text-gray-400 dark:text-slate-300'
+        ? 'pl-8 text-slate-400'
         : bold
-        ? 'pl-4 font-semibold text-gray-700 dark:text-white/60'
-        : 'pl-4 font-medium text-gray-600 dark:text-white/50'
+        ? 'pl-4 font-semibold text-slate-700'
+        : 'pl-4 font-medium text-slate-600'
     }`}>
       {label}
     </td>
@@ -118,7 +118,7 @@ function Divider({ cols }: { cols: number }) {
   return (
     <tr>
       <td colSpan={cols + 1} className="py-0">
-        <div className="h-px bg-gray-100 dark:bg-white/5" />
+        <div className="h-px bg-slate-100" />
       </td>
     </tr>
   )
@@ -126,10 +126,10 @@ function Divider({ cols }: { cols: number }) {
 
 function SectionHeader({ label, cols }: { label: string; cols: number }) {
   return (
-    <tr className="bg-slate-50 dark:bg-white/[0.03]">
+    <tr className="bg-slate-50">
       <td
         colSpan={cols + 1}
-        className="sticky left-0 z-10 bg-slate-50 dark:bg-[#0e0e0e] px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-300"
+        className="sticky left-0 z-10 bg-slate-50 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500"
       >
         {label}
       </td>
@@ -150,8 +150,8 @@ function DataRow<T>({
   highlight?: boolean
 }) {
   const base = highlight
-    ? 'bg-gray-50/60 dark:bg-white/[0.025] hover:bg-gray-100/60 dark:hover:bg-white/[0.04]'
-    : 'hover:bg-gray-50/50 dark:hover:bg-white/[0.02]'
+    ? 'bg-slate-50/60 hover:bg-slate-100/60'
+    : 'hover:bg-slate-50/50'
   return (
     <tr className={base}>
       <RowLabel label={label} indent={indent} bold={bold} />
@@ -169,22 +169,22 @@ export default function FinancialStatements({ incomeStatement, balanceSheet, cas
     rows.map(r => ({ year: r.year, isProjected: r.isProjected }))
 
   return (
-    <div className="rounded-xl bg-surface-container-lowest dark:bg-[#111] shadow-card border border-outline-variant/10 dark:border-white/8">
+    <div className="rounded-xl card">
       {/* Header + Tabs */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 dark:border-white/5 px-6 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
         <div>
-          <h2 className="text-sm font-headline font-semibold text-on-surface dark:text-white/70">Financial Statements</h2>
-          <p className="mt-0.5 text-xs text-gray-400 dark:text-slate-400">Historical actuals · Model projections</p>
+          <h2 className="text-sm font-headline font-semibold text-slate-900">Financial Statements</h2>
+          <p className="mt-0.5 text-xs text-slate-400">Historical actuals · Model projections</p>
         </div>
-        <div className="flex rounded-xl bg-gray-100 dark:bg-white/5 p-1 gap-1">
+        <div className="flex rounded-xl bg-slate-100 p-1 gap-1">
           {TABS.map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
                 tab === t
-                  ? 'bg-white dark:bg-white/15 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 dark:text-white/40 hover:text-gray-700 dark:hover:text-white/60'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
               }`}
             >
               {/* Abbreviated labels on narrow screens, full labels on sm+ */}
@@ -207,8 +207,8 @@ export default function FinancialStatements({ incomeStatement, balanceSheet, cas
           return (
             <table className="w-full min-w-[600px] text-sm">
               <thead>
-                <tr className="border-b border-gray-50 dark:border-white/5">
-                  <th className="sticky left-0 z-10 bg-white dark:bg-[#111] py-2 pl-4 pr-4 text-left text-[11px] font-medium text-gray-400 dark:text-slate-400 whitespace-nowrap">
+                <tr className="border-b border-slate-50">
+                  <th className="sticky left-0 z-10 bg-white py-2 pl-4 pr-4 text-left text-[11px] font-medium text-slate-400 whitespace-nowrap">
                     {currency}M
                   </th>
                   {years.map((y, i) => <YearHeader key={i} year={y.year} isProjected={y.isProjected} />)}
@@ -248,8 +248,8 @@ export default function FinancialStatements({ incomeStatement, balanceSheet, cas
           return (
             <table className="w-full min-w-[600px] text-sm">
               <thead>
-                <tr className="border-b border-gray-50 dark:border-white/5">
-                  <th className="sticky left-0 z-10 bg-white dark:bg-[#111] py-2 pl-4 pr-4 text-left text-[11px] font-medium text-gray-400 dark:text-slate-400 whitespace-nowrap">
+                <tr className="border-b border-slate-50">
+                  <th className="sticky left-0 z-10 bg-white py-2 pl-4 pr-4 text-left text-[11px] font-medium text-slate-400 whitespace-nowrap">
                     {currency}M
                   </th>
                   {years.map((y, i) => <YearHeader key={i} year={y.year} isProjected={y.isProjected} />)}
@@ -286,8 +286,8 @@ export default function FinancialStatements({ incomeStatement, balanceSheet, cas
           return (
             <table className="w-full min-w-[600px] text-sm">
               <thead>
-                <tr className="border-b border-gray-50 dark:border-white/5">
-                  <th className="sticky left-0 z-10 bg-white dark:bg-[#111] py-2 pl-4 pr-4 text-left text-[11px] font-medium text-gray-400 dark:text-slate-400 whitespace-nowrap">
+                <tr className="border-b border-slate-50">
+                  <th className="sticky left-0 z-10 bg-white py-2 pl-4 pr-4 text-left text-[11px] font-medium text-slate-400 whitespace-nowrap">
                     {currency}M
                   </th>
                   {years.map((y, i) => <YearHeader key={i} year={y.year} isProjected={y.isProjected} />)}
@@ -321,9 +321,9 @@ export default function FinancialStatements({ incomeStatement, balanceSheet, cas
       </div>
 
       {/* Legend */}
-      <div className="border-t border-gray-50 dark:border-white/5 px-6 py-3 flex items-center gap-4 text-[10px] text-gray-400 dark:text-slate-400">
+      <div className="border-t border-slate-50 px-6 py-3 flex items-center gap-4 text-[10px] text-slate-400">
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-gray-400 dark:bg-white/30" />
+          <span className="h-2 w-2 rounded-full bg-slate-400" />
           Historical actuals
         </span>
         <span className="flex items-center gap-1.5">
