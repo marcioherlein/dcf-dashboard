@@ -1,5 +1,6 @@
 'use client'
 import { cn } from '@/lib/utils'
+import { InfoTooltip } from '@/components/ui/info-tooltip'
 
 interface WACCData {
   wacc: number
@@ -194,13 +195,16 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
         <SectionLabel>Discount Rate</SectionLabel>
         <div className="space-y-1.5">
           {[
-            { label: 'WACC',           value: (wacc.wacc * 100).toFixed(1) + '%' },
-            { label: 'Cost of Equity', value: (wacc.costOfEquity * 100).toFixed(1) + '%' },
-            { label: 'Beta',           value: wacc.inputs.beta.toFixed(2) },
-            { label: 'Risk-Free Rate', value: (wacc.inputs.rfRate * 100).toFixed(2) + '%' },
-          ].map(({ label, value }) => (
+            { label: 'WACC',           value: (wacc.wacc * 100).toFixed(1) + '%',           tip: 'Weighted Average Cost of Capital — the minimum annual return this investment needs to justify its risk. Higher WACC = tougher bar to clear, lower fair value.' },
+            { label: 'Cost of Equity', value: (wacc.costOfEquity * 100).toFixed(1) + '%',   tip: 'The return equity investors require for holding this stock, based on its risk (beta) and the broader market return.' },
+            { label: 'Beta',           value: wacc.inputs.beta.toFixed(2),                   tip: 'Measures how much this stock moves relative to the market. Beta > 1 = more volatile than the market; < 1 = less volatile.' },
+            { label: 'Risk-Free Rate', value: (wacc.inputs.rfRate * 100).toFixed(2) + '%',  tip: 'The yield on long-term government bonds — the baseline "safe" return everything else is measured against.' },
+          ].map(({ label, value, tip }) => (
             <div key={label} className="flex items-center justify-between">
-              <span className="text-[11px] text-slate-500">{label}</span>
+              <span className="text-[11px] text-slate-500 flex items-center gap-1">
+                {label}
+                <InfoTooltip text={tip} side="left" />
+              </span>
               <span className="text-[11px] font-semibold text-slate-900 tabular-nums">{value}</span>
             </div>
           ))}
@@ -275,43 +279,63 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
         </Card>
       )}
 
-      {/* vs Sector Median */}
-      {multipleRows.some(r => r.company != null) && (
-        <Card>
-          <SectionLabel>vs Sector Median</SectionLabel>
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-[9px] text-slate-400 mb-1">
-              <span>Multiple</span>
-              <div className="flex gap-4">
-                <span>Company</span>
-                <span>Sector</span>
+      {/* How We Value This Stock */}
+      <Card>
+        <SectionLabel>How We Value This Stock</SectionLabel>
+        <div className="space-y-3">
+          {[
+            {
+              dot: 'bg-blue-500',
+              label: 'DCF (Discounted Cash Flow)',
+              desc: 'Projects how much free cash this business will generate over the next 5–10 years, then asks: "What is that future money worth in today\'s dollars?" The discount rate (WACC) reflects the risk — the higher the risk, the less today\'s dollars are worth.',
+            },
+            {
+              dot: 'bg-sky-500',
+              label: 'Multiples (P/E, EV/EBITDA)',
+              desc: 'Compares this company to similar ones in its sector. If peers trade at 20× earnings and this company earns $5/share, the implied fair value is $100. It\'s anchored to what the market is currently paying — not what the company is fundamentally worth.',
+            },
+            {
+              dot: 'bg-purple-500',
+              label: 'DDM (Dividend Discount Model)',
+              desc: 'Only applies to dividend-paying stocks. Values the company as the sum of all future dividend payments, discounted back to today. Irrelevant for companies that don\'t pay dividends.',
+            },
+            {
+              dot: 'bg-indigo-500',
+              label: 'FCFE (Free Cash Flow to Equity)',
+              desc: 'Similar to DCF but focuses only on cash left over for shareholders after the company services its debt. More relevant for highly leveraged companies where debt repayment significantly affects equity value.',
+            },
+          ].map(({ dot, label, desc }) => (
+            <div key={label} className="flex gap-2.5">
+              <span className={cn('w-2 h-2 rounded-full shrink-0 mt-1.5', dot)} />
+              <div>
+                <p className="text-[11px] font-semibold text-slate-700 leading-tight">{label}</p>
+                <p className="text-[10px] text-slate-500 leading-snug mt-0.5">{desc}</p>
               </div>
             </div>
-            {multipleRows.map(({ label, company, sector }) => {
-              if (company == null && sector == null) return null
-              const isExpensive = company != null && sector != null && company > sector * 1.1
-              const isCheap     = company != null && sector != null && company < sector * 0.9
-              return (
-                <div key={label} className="flex items-center justify-between">
-                  <span className="text-[11px] text-slate-300">{label}</span>
-                  <div className="flex gap-4">
-                    <span className={cn(
-                      'text-[11px] font-semibold tabular-nums w-12 text-right',
-                      isExpensive ? 'text-amber-600' : isCheap ? 'text-emerald-600' : 'text-slate-900'
-                    )}>
-                      {company != null ? company.toFixed(1) + '×' : '—'}
-                    </span>
-                    <span className="text-[11px] text-slate-400 tabular-nums w-12 text-right">
-                      {sector != null ? sector.toFixed(1) + '×' : '—'}
-                    </span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </Card>
-      )}
+          ))}
+        </div>
+      </Card>
+
+      {/* Why Methods Disagree */}
+      <Card>
+        <SectionLabel>Why Methods Can Disagree</SectionLabel>
+        <div className="space-y-2 text-[11px] text-slate-500 leading-snug">
+          <p>
+            <span className="font-semibold text-slate-700">DCF is forward-looking.</span>{' '}
+            It values future growth. If a company is expected to grow fast, DCF tends to produce higher fair values — but it&apos;s sensitive to the assumptions you make.
+          </p>
+          <p>
+            <span className="font-semibold text-slate-700">Multiples are market-based.</span>{' '}
+            They reflect what investors are paying today for similar companies. In bull markets, multiples expand; in downturns, they compress — regardless of fundamentals.
+          </p>
+          <p>
+            <span className="font-semibold text-slate-700">Large divergence = more uncertainty.</span>{' '}
+            When methods produce very different numbers, it often means the market is pricing in a growth story the fundamentals don&apos;t yet confirm — or vice versa. The blended value averages them, weighted by applicability.
+          </p>
+        </div>
+      </Card>
 
     </div>
   )
 }
+

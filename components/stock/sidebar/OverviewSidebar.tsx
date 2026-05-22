@@ -1,5 +1,6 @@
 'use client'
 import { cn } from '@/lib/utils'
+import { InfoTooltip } from '@/components/ui/info-tooltip'
 
 interface Quote {
   price: number
@@ -273,15 +274,18 @@ export default function OverviewSidebar({
         <SectionLabel>Key Stats</SectionLabel>
         <div className="space-y-1.5">
           {[
-            { label: 'Market Cap',   value: fmtCap(marketCap) },
-            { label: 'P/E (TTM)',    value: peRatio > 0 ? peRatio.toFixed(1) + '×' : '—' },
-            { label: 'Gross Margin', value: fmtPct(businessProfile.grossMargin) },
-            { label: 'Net Margin',   value: fmtPct(businessProfile.netMargin) },
-            { label: 'FCF Margin',   value: fmtPct(businessProfile.fcfMargin) },
-            { label: 'Beta',         value: wacc?.inputs?.beta != null ? wacc.inputs.beta.toFixed(2) : '—' },
-          ].map(({ label, value }) => (
+            { label: 'Market Cap',   value: fmtCap(marketCap),                                              tip: 'Total market value of all shares outstanding. Large-cap (>$10B) stocks are generally more stable; small-cap (<$2B) stocks carry more risk and growth potential.' },
+            { label: 'P/E (TTM)',    value: peRatio > 0 ? peRatio.toFixed(1) + '×' : '—',                  tip: 'Price-to-Earnings based on the last 12 months of profits. Tells you how much the market pays per dollar of earnings. High P/E = high growth expectations; low P/E = cheaper or slower growth.' },
+            { label: 'Gross Margin', value: fmtPct(businessProfile.grossMargin),                           tip: 'Revenue minus cost of goods sold, as a % of revenue. Higher = more pricing power. Software companies often exceed 70%; retailers may be 20–30%.' },
+            { label: 'Net Margin',   value: fmtPct(businessProfile.netMargin),                             tip: 'Profit after all expenses (including taxes and interest) as a % of revenue. What the company actually keeps from each dollar of sales.' },
+            { label: 'FCF Margin',   value: fmtPct(businessProfile.fcfMargin),                             tip: 'Free Cash Flow as a % of revenue — the cash left after maintaining and growing the business. Often more reliable than net income as it\'s harder to manipulate.' },
+            { label: 'Beta',         value: wacc?.inputs?.beta != null ? wacc.inputs.beta.toFixed(2) : '—', tip: 'How much this stock moves relative to the broader market. Beta 1.5 means it moves ~50% more than the market in both directions. Higher beta = higher risk and potential reward.' },
+          ].map(({ label, value, tip }) => (
             <div key={label} className="flex items-center justify-between">
-              <span className="text-[11px] text-slate-500">{label}</span>
+              <span className="text-[11px] text-slate-500 flex items-center gap-1">
+                {label}
+                <InfoTooltip text={tip} side="left" />
+              </span>
               <span className="text-[11px] font-semibold text-slate-900 tabular-nums">{value}</span>
             </div>
           ))}

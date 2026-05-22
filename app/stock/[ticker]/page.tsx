@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils'
 import ValuationLab from '@/components/valuation/ValuationLab'
 import FinancialsHub from '@/components/stock/FinancialsHub'
 import InvestorGradeCard from '@/components/stock/InvestorGradeCard'
+import InvestorVerdictCard from '@/components/stock/InvestorVerdictCard'
 import { LoginGateProvider, useLoginGate } from '@/components/auth/LoginGateProvider'
 import AuthBanner from '@/components/auth/AuthBanner'
 import { calculatePiotroski, calculateAltman, calculateBeneish } from '@/lib/dcf/calculateScores'
@@ -416,6 +417,17 @@ function StockPageBody() {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
                 >
+                  <InvestorVerdictCard
+                    upside={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null}
+                    fairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? null}
+                    price={data.quote.price}
+                    currency={currency}
+                    analystRecommendation={data.analystRecommendation ?? ''}
+                    ratings={data.ratings ?? null}
+                    confidence={data.cagrAnalysis?.confidenceLabel}
+                    growthModel={data.growthModel}
+                  />
+
                   <PriceChart
                     ticker={ticker}
                     isDark={false}

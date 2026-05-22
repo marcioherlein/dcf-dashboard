@@ -94,10 +94,10 @@ export default function AtAGlance({
         <div className="pt-3 border-t border-slate-200">
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2.5">TTM Multiples</p>
           <div className="flex flex-wrap gap-2">
-            <MetricChip label="P/E"       value={fmtMultiple(pe)} />
-            <MetricChip label="EV/EBITDA" value={fmtMultiple(evEbitda)} />
-            <MetricChip label="P/S"       value={fmtMultiple(ps)} />
-            <MetricChip label="P/B"       value={fmtMultiple(pb)} />
+            <MetricChip label="P/E"       value={fmtMultiple(pe)}       tooltip="Price-to-Earnings: how much you're paying for each dollar of profit. Lower = cheaper relative to earnings. Compare to sector peers for context." />
+            <MetricChip label="EV/EBITDA" value={fmtMultiple(evEbitda)} tooltip="Enterprise Value to EBITDA: compares the company's total value (including debt) to its operating earnings. Useful for comparing companies with different debt levels." />
+            <MetricChip label="P/S"       value={fmtMultiple(ps)}       tooltip="Price-to-Sales: how much you're paying per dollar of revenue. Useful when a company isn't yet profitable. Lower generally means cheaper." />
+            <MetricChip label="P/B"       value={fmtMultiple(pb)}       tooltip="Price-to-Book: compares market price to the company's net assets. A P/B above 1 means you're paying a premium over accounting book value." />
           </div>
         </div>
       )}
