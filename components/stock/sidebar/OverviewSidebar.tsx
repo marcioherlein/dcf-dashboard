@@ -113,13 +113,15 @@ function MiniBarChart({
 }) {
   const max = Math.max(...bars.map(b => Math.abs(b.value)))
   if (max === 0) return null
+  const LABEL_H = 12
+  const barAreaH = height - LABEL_H
   return (
     <div className="flex items-end gap-1.5" style={{ height }}>
       {bars.map(b => {
-        const h = Math.max(3, (Math.abs(b.value) / max) * 100)
+        const barH = Math.max(2, (Math.abs(b.value) / max) * barAreaH)
         return (
           <div key={b.label} className="flex-1 flex flex-col items-center justify-end gap-0.5">
-            <div className={cn('w-full rounded-sm', b.color)} style={{ height: `${h}%` }} />
+            <div className={cn('w-full rounded-sm', b.color)} style={{ height: barH }} />
             <span className="text-[9px] text-slate-500 tabular-nums leading-none">{b.label}</span>
           </div>
         )

@@ -338,7 +338,14 @@ function StockPageBody() {
 
         {data && !loading && (
           <>
-            {/* ── InvestorGradeCard — persistent above-fold summary ── */}
+            {/* ── Desktop grid: main content + contextual sidebar ── */}
+            <div className={cn(
+              activeTab !== 'news'
+                ? 'lg:grid lg:grid-cols-[1fr_300px] lg:gap-6 lg:items-start'
+                : ''
+            )}>
+            <div className="min-w-0">
+            {/* ── InvestorGradeCard — top of main column, sidebar starts alongside it ── */}
             <motion.div
               className="pt-5"
               initial={{ opacity: 0, y: 16 }}
@@ -396,14 +403,6 @@ function StockPageBody() {
                 compact={activeTab === 'valuation'}
               />
             </motion.div>
-
-            {/* ── Desktop grid: main content + contextual sidebar ── */}
-            <div className={cn(
-              activeTab !== 'news'
-                ? 'lg:grid lg:grid-cols-[1fr_300px] lg:gap-6 lg:items-start'
-                : ''
-            )}>
-            <div className="min-w-0">
             <AnimatePresence mode="wait">
               {/* ── Overview tab ── */}
               {activeTab === 'overview' && (
@@ -573,7 +572,7 @@ function StockPageBody() {
             {/* Sidebar — desktop only, hidden on news tab */}
             {activeTab !== 'news' && (
               <aside className="hidden lg:block">
-                <div className="sticky top-[68px] self-start space-y-3 pb-4">
+                <div className="sticky top-[68px] self-start space-y-3 pb-4 pt-5">
                   <StockSidebar activeTab={activeTab} data={data} statementsData={statementsData} />
                 </div>
               </aside>

@@ -91,6 +91,10 @@ function fmtM(v: number): string {
   return (v < 0 ? '-' : '') + '$' + abs.toFixed(0) + 'M'
 }
 
+const SPARKLINE_H = 40
+const SPARKLINE_LABEL_H = 12
+const SPARKLINE_BAR_H = SPARKLINE_H - SPARKLINE_LABEL_H
+
 function BarSparkline({ data, colorFn, label }: {
   data: { year: string; value: number; isProjected?: boolean }[]
   colorFn: (v: number) => string
@@ -105,9 +109,9 @@ function BarSparkline({ data, colorFn, label }: {
   return (
     <div>
       {label && <SectionLabel>{label}</SectionLabel>}
-      <div className="flex items-end gap-1.5 h-10">
+      <div className="flex items-end gap-1.5" style={{ height: SPARKLINE_H }}>
         {data.map((d, i) => {
-          const h = Math.max(3, (Math.abs(d.value) / maxAbs) * 100)
+          const barH = Math.max(2, (Math.abs(d.value) / maxAbs) * SPARKLINE_BAR_H)
           const isProj = d.isProjected ?? false
           const isLatest = !isProj && i === lastActualIdx
           return (
@@ -119,7 +123,7 @@ function BarSparkline({ data, colorFn, label }: {
                   isProj ? 'opacity-25' : isLatest ? 'opacity-90' : 'opacity-50',
                   isProj ? 'border border-dashed border-slate-300' : '',
                 )}
-                style={{ height: `${h}%` }}
+                style={{ height: barH }}
               />
               <span className={cn('text-[9px]', isProj ? 'text-slate-400' : 'text-slate-500')}>
                 {d.year.slice(-2)}
@@ -137,6 +141,10 @@ function BarSparkline({ data, colorFn, label }: {
   )
 }
 
+const REV_CHART_H = 48
+const REV_LABEL_H = 12
+const REV_BAR_H = REV_CHART_H - REV_LABEL_H
+
 function RevenueBarChart({ rows }: { rows: IncomeRow[] }) {
   // Include up to 4 historical + up to 2 projected
   const hist = rows.filter(r => !r.isProjected && r.revenue != null).slice(-4)
@@ -151,9 +159,9 @@ function RevenueBarChart({ rows }: { rows: IncomeRow[] }) {
   return (
     <Card>
       <SectionLabel>Revenue Trend</SectionLabel>
-      <div className="flex items-end gap-1.5 h-12">
+      <div className="flex items-end gap-1.5" style={{ height: REV_CHART_H }}>
         {all.map((r, i) => {
-          const h = Math.max(4, (r.revenue! / range) * 100)
+          const barH = Math.max(3, (r.revenue! / range) * REV_BAR_H)
           const isProj = r.isProjected
           const isLatest = !isProj && i === hist.length - 1
           return (
@@ -163,7 +171,7 @@ function RevenueBarChart({ rows }: { rows: IncomeRow[] }) {
                   'w-full rounded-sm',
                   isProj ? 'bg-blue-200/70' : isLatest ? 'bg-blue-400/70' : 'bg-slate-200',
                 )}
-                style={{ height: `${h}%` }}
+                style={{ height: barH }}
               />
               <span className={cn('text-[9px]', isProj ? 'text-slate-400' : 'text-slate-500')}>
                 {r.year.slice(-2)}
