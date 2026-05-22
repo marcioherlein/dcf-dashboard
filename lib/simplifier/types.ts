@@ -60,4 +60,5 @@ export interface WatchlistEntry {
   overallScore:     number | null     // 0.0–1.0
   snapshot:         FinancialSnapshot
   listTag:          ListTag           // user's manual classification
+  groupName?:       string | null     // user-defined portfolio group
 }

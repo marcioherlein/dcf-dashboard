@@ -104,6 +104,7 @@ export async function saveWatchlistEntry(
         overall_score: entry.overallScore,
         financial_snapshot: entry.snapshot,
         list_tag: entry.listTag ?? null,
+        group_name: entry.groupName ?? null,
       },
       { onConflict: 'user_id,ticker' },
     )
@@ -174,6 +175,35 @@ export async function updateListTag(
   }
 }
 
+/**
+ * Update only the groupName for an entry (local + Supabase).
+ */
+export async function updateGroupName(
+  ticker: string,
+  groupName: string | null,
+  userEmail?: string | null,
+): Promise<void> {
+  const local = readLocal()
+  const idx = local.findIndex((e) => e.ticker === ticker)
+  if (idx >= 0) {
+    local[idx] = { ...local[idx], groupName: groupName ?? undefined }
+    writeLocal(local)
+  }
+
+  const client = getClient()
+  if (!client || !userEmail) return
+
+  try {
+    await client
+      .from('simplifier_watchlist')
+      .update({ group_name: groupName })
+      .eq('user_id', userEmail)
+      .eq('ticker', ticker)
+  } catch {
+    // Silent — data is safe in localStorage
+  }
+}
+
 // ── Shape conversion ──────────────────────────────────────────────────────────
 
 function rowToEntry(row: Record<string, unknown>): WatchlistEntry {
@@ -187,10 +217,11 @@ function rowToEntry(row: Record<string, unknown>): WatchlistEntry {
     phaseScores:  (row.phase_scores as WatchlistEntry['phaseScores']) ?? {},
     overallScore: (row.overall_score as number | null) ?? null,
     listTag:      (row.list_tag as WatchlistEntry['listTag']) ?? null,
+    groupName:    (row.group_name as string | null) ?? null,
     snapshot:     (row.financial_snapshot as WatchlistEntry['snapshot']) ?? {
       grossMargin: null, fcfMargin: null, moatScore: null, roic: null,
       cagr3y: null, insiderPct: null, beta: null, upsidePct: null,
-      price: null, marketCap: null,
+      price: null, marketCap: null, fairValue: null,
     },
   }
 }

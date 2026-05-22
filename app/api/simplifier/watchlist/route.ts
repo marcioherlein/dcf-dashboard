@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
           overall_score: entry.overallScore,
           financial_snapshot: entry.snapshot,
           list_tag: entry.listTag ?? null,
+          group_name: entry.groupName ?? null,
         },
         { onConflict: 'user_id,ticker' },
       )

@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import MultiTickerChart from '@/components/charts/MultiTickerChart'
+import { Sparkline } from '@/components/ui/Sparkline'
 
 interface MarketItem {
   ticker: string
@@ -52,33 +53,6 @@ function fmtPrice(price: number, ticker: string): string {
   if (price >= 1000)  return price.toLocaleString('en-US', { maximumFractionDigits: 2 })
   if (price >= 10)    return price.toFixed(2)
   return price.toFixed(4)
-}
-
-// ── Inline Sparkline ──────────────────────────────────────────────────────────
-function Sparkline({ prices, up }: { prices: number[]; up: boolean }) {
-  if (prices.length < 2) return <div className="h-8 w-full" />
-  const min = Math.min(...prices)
-  const max = Math.max(...prices)
-  const range = max - min || 1
-  const W = 100, H = 32
-  const step = W / (prices.length - 1)
-  const pts = prices
-    .map((p, i) => `${(i * step).toFixed(1)},${(H - ((p - min) / range) * (H - 2) - 1).toFixed(1)}`)
-    .join(' ')
-  const areaPts = `0,${H} ${pts} ${((prices.length - 1) * step).toFixed(1)},${H}`
-  const color = up ? '#059669' : '#DC2626'
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="h-8 w-full" preserveAspectRatio="none" fill="none">
-      <defs>
-        <linearGradient id={`sg-${up}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity={0.3} />
-          <stop offset="100%" stopColor={color} stopOpacity={0} />
-        </linearGradient>
-      </defs>
-      <polygon points={areaPts} fill={`url(#sg-${up})`} />
-      <polyline points={pts} stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
 }
 
 // ── Chart slide-in panel ─────────────────────────────────────────────────────
@@ -181,7 +155,7 @@ function MarketCard({ item, onClick }: { item: MarketItem; onClick: () => void }
         {fmtPrice(item.price, item.ticker)}
       </div>
       <div className="mt-auto">
-        <Sparkline prices={item.sparkline} up={isUp} />
+        <Sparkline prices={item.sparkline} up={isUp} className="h-8 w-full" />
       </div>
     </button>
   )
