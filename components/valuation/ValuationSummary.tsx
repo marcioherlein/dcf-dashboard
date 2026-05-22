@@ -22,6 +22,7 @@ interface Props {
   methods: MethodResult[]
   currentPrice: number
   currency?: string
+  onMethodClick?: (id: string) => void
 }
 
 function computeConsensus(methods: MethodResult[], price: number) {
@@ -262,7 +263,7 @@ const METHOD_BORDER_CLASS: Record<string, string> = {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function ValuationSummary({ methods, currentPrice, currency = 'USD' }: Props) {
+export default function ValuationSummary({ methods, currentPrice, currency = 'USD', onMethodClick }: Props) {
   const { weightedFV } = computeConsensus(methods, currentPrice)
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
@@ -310,7 +311,10 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
               return (
                 <div key={m.id}>
                   <button
-                    onClick={() => setExpandedId(isExpanded ? null : m.id)}
+                    onClick={() => {
+                      setExpandedId(isExpanded ? null : m.id)
+                      onMethodClick?.(m.id)
+                    }}
                     className={cn('w-full grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-3 border-l-4 items-center text-left hover:bg-slate-50/60 transition-colors', borderClass)}
                   >
                     <div className="min-w-0 flex items-center gap-1.5">
@@ -369,7 +373,7 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
                         <div className="px-8 py-3 bg-slate-50 border-t border-slate-100">
                           <p className="text-[11px] text-slate-600 leading-relaxed mb-2">{desc}</p>
                           <p className="text-[11px] text-blue-600 font-medium">
-                            ↓ Scroll down to adjust this method&apos;s assumptions
+                            ↓ Opening method details below…
                           </p>
                         </div>
                       </motion.div>

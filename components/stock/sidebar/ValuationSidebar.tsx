@@ -1,6 +1,11 @@
 'use client'
 import { cn } from '@/lib/utils'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
+import { fmtLargeCurrency } from '@/lib/formatters'
+import { getDefaultEVEBITDAMultiple } from '@/lib/valuation/methods/evEbitda'
+import type { DerivedFinancialInsights, TrendPoint } from '@/lib/stock/deriveFinancialInsightMetrics'
+
+// ─── Interfaces ───────────────────────────────────────────────────────────────
 
 interface WACCData {
   wacc: number
@@ -43,6 +48,13 @@ interface FairValue {
   upsidePct: number
 }
 
+interface CagrAnalysis {
+  blended?: number | null
+  analystEstimate1y?: number | null
+  historicalCagr3y?: number | null
+  numAnalysts?: number
+}
+
 interface Props {
   wacc: WACCData
   valuationMethods?: ValuationMethods
@@ -52,15 +64,21 @@ interface Props {
   scenarios?: { bull: Scenario; base: Scenario; bear: Scenario }
   cagr?: number
   terminalG?: number
+  activeMethodId?: string | null
+  derivedInsights: DerivedFinancialInsights
+  cagrAnalysis?: CagrAnalysis
+  sector?: string | null
 }
+
+// ─── Shared helpers ───────────────────────────────────────────────────────────
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">{children}</p>
 }
 
-function Card({ children }: { children: React.ReactNode }) {
+function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className="rounded-xl bg-white border border-slate-200 px-5 py-4">
+    <div className={cn('rounded-xl bg-white border border-slate-200 px-5 py-4', className)}>
       {children}
     </div>
   )
@@ -73,45 +91,174 @@ function upsideColor(pct: number): string {
   return 'text-red-600'
 }
 
-export default function ValuationSidebar({ wacc, valuationMethods, fairValue, currentPrice, currency, scenarios, cagr, terminalG }: Props) {
+type Verdict = 'good' | 'watch' | 'risk' | 'neutral'
+
+function DecisionLabel({ verdict, text }: { verdict: Verdict; text: string }) {
+  const cls =
+    verdict === 'good'  ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+    verdict === 'watch' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+    verdict === 'risk'  ? 'bg-red-50 text-red-700 border-red-200' :
+                          'bg-slate-50 text-slate-600 border-slate-200'
+  return (
+    <span className={cn('inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border', cls)}>
+      {text}
+    </span>
+  )
+}
+
+function DefinitionRow({ term, definition }: { term: string; definition: string }) {
+  return (
+    <div className="flex gap-2">
+      <span className="text-[10px] font-semibold text-slate-700 shrink-0 w-24 leading-snug">{term}</span>
+      <span className="text-[10px] text-slate-500 leading-snug">{definition}</span>
+    </div>
+  )
+}
+
+// Vertical bar sparkline
+const BAR_H = 28
+
+function TrendBars({ points, unit }: { points: TrendPoint[]; unit: 'percent' | 'currency_millions' | 'ratio' }) {
+  const valid = points.filter(p => p.value != null).slice(-5)
+  if (valid.length < 2) return null
+
+  const vals = valid.map(p => p.value!)
+  const maxAbs = Math.max(...vals.map(Math.abs), 1)
+
+  function fmt(v: number) {
+    if (unit === 'percent') return (v * 100).toFixed(1) + '%'
+    if (unit === 'currency_millions') return fmtLargeCurrency(v * 1e6)
+    return v.toFixed(2)
+  }
+
+  return (
+    <div className="flex items-end gap-1.5 mt-2">
+      {valid.map((p, i) => {
+        const ratio = Math.abs(p.value!) / maxAbs
+        const barPx = Math.max(3, Math.round(ratio * BAR_H))
+        const isLast = i === valid.length - 1
+        const isPos = p.value! >= 0
+        return (
+          <div key={p.year} className="flex flex-col items-center gap-1 flex-1 min-w-0">
+            <span className={cn(
+              'text-[9px] tabular-nums leading-none truncate w-full text-center',
+              isLast ? 'font-semibold text-slate-800' : 'text-slate-400',
+            )}>
+              {fmt(p.value!)}
+            </span>
+            <div
+              className={cn(
+                'w-full rounded-sm',
+                isPos
+                  ? isLast ? 'bg-blue-500 opacity-80' : 'bg-blue-400 opacity-50'
+                  : isLast ? 'bg-red-400 opacity-80' : 'bg-red-300 opacity-50',
+              )}
+              style={{ height: `${barPx}px` }}
+            />
+            <span className="text-[9px] text-slate-400 leading-none">{p.year.slice(-2)}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// N-column comparison (label on top, large value below)
+interface ColDef { label: string; value: string | null; highlight?: Verdict }
+
+function colValColor(h?: Verdict): string {
+  if (h === 'good')  return 'text-emerald-700'
+  if (h === 'watch') return 'text-amber-700'
+  if (h === 'risk')  return 'text-red-700'
+  return 'text-slate-900'
+}
+
+function ThreeCol({ a, b, c }: { a: ColDef; b: ColDef; c: ColDef }) {
+  return (
+    <div className="grid grid-cols-3 divide-x divide-slate-100 -mx-5 px-5">
+      {[a, b, c].map(col => (
+        <div key={col.label} className="flex flex-col items-center px-1 py-2 gap-0.5">
+          <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 text-center leading-tight">{col.label}</p>
+          <p className={cn('text-base font-bold tabular-nums', colValColor(col.highlight))}>
+            {col.value ?? '—'}
+          </p>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function TwoCol({ a, b }: { a: ColDef; b: ColDef }) {
+  return (
+    <div className="grid grid-cols-2 divide-x divide-slate-100 -mx-5 px-5">
+      {[a, b].map(col => (
+        <div key={col.label} className="flex flex-col items-center px-1 py-2 gap-0.5">
+          <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 text-center leading-tight">{col.label}</p>
+          <p className={cn('text-base font-bold tabular-nums', colValColor(col.highlight))}>
+            {col.value ?? '—'}
+          </p>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function pctStr(v: number | null | undefined, decimals = 1): string | null {
+  if (v == null) return null
+  return (v >= 0 ? '+' : '') + (v * 100).toFixed(decimals) + '%'
+}
+
+// ─── Default view ─────────────────────────────────────────────────────────────
+
+function DefaultView({
+  blended, blendedUpside, currentPrice, currency, valuationMethods, scenarios, weights,
+}: {
+  blended: number | null
+  blendedUpside: number | null
+  currentPrice: number
+  currency: string
+  valuationMethods?: ValuationMethods
+  scenarios?: { bull: Scenario; base: Scenario; bear: Scenario }
+  weights?: { fcff: number; fcfe: number; ddm: number; multiples: number }
+}) {
   const sym = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$' : currency
 
   const estimates = valuationMethods?.models?.multiples?.estimates ?? []
-
-  // By Method rows — multiples (applicable only) + Core DCF
-  const methodDefs: { key: string; label: string }[] = [
-    { key: 'P/E',        label: 'P/E Multiple'  },
-    { key: 'EV/EBITDA',  label: 'EV/EBITDA'     },
-    { key: 'EV/Revenue', label: 'EV/Revenue'     },
-  ]
-  const methods: { label: string; fv: number | null; upside: number | null }[] = [
-    ...methodDefs.map(({ key, label }) => {
-      const e = estimates.find(x => x.multiple === key)
-      return { label, fv: (e?.applicable && e.impliedFairValue > 0) ? e.impliedFairValue : null, upside: e?.applicable ? e.upsidePct : null }
-    }),
-    {
-      label: 'Core DCF',
-      fv: fairValue?.fairValuePerShare ?? null,
-      upside: fairValue?.upsidePct ?? null,
-    },
+  const methodFVs: number[] = [
+    ...estimates.filter(e => e.applicable && e.impliedFairValue > 0).map(e => e.impliedFairValue),
+    ...(valuationMethods?.models?.fcff?.fairValue != null ? [valuationMethods.models.fcff.fairValue] : []),
+    ...(blended != null ? [blended] : []),
   ]
 
-  const blended = valuationMethods?.triangulatedFairValue
-  const blendedUpside = valuationMethods?.triangulatedUpsidePct
-  const weights = valuationMethods?.effectiveWeights
+  const minFV = methodFVs.length > 1 ? Math.min(...methodFVs) : null
+  const maxFV = methodFVs.length > 1 ? Math.max(...methodFVs) : null
+  const spread = (minFV != null && maxFV != null && minFV > 0)
+    ? (maxFV - minFV) / ((maxFV + minFV) / 2)
+    : null
+  const spreadLabel: Verdict =
+    spread == null ? 'neutral' :
+    spread >= 0.40 ? 'risk' :
+    spread >= 0.20 ? 'watch' : 'good'
+  const spreadText =
+    spread == null ? 'Insufficient data' :
+    spread >= 0.40 ? 'High model disagreement' :
+    spread >= 0.20 ? 'Moderate disagreement' : 'Methods broadly agree'
 
-  // Model weights for display (filter out zero-weight models)
+  const rangeMin = minFV != null ? Math.min(minFV, currentPrice) * 0.96 : null
+  const rangeMax = maxFV != null ? Math.max(maxFV, currentPrice) * 1.04 : null
+  const pricePct = (rangeMin != null && rangeMax != null && rangeMax > rangeMin)
+    ? (currentPrice - rangeMin) / (rangeMax - rangeMin)
+    : null
+
   const weightBars = weights ? [
-    { label: 'DCF (FCFF)',   pct: weights.fcff,     color: 'bg-blue-400' },
-    { label: 'FCFE',         pct: weights.fcfe,     color: 'bg-indigo-400' },
-    { label: 'DDM',          pct: weights.ddm,      color: 'bg-purple-400' },
+    { label: 'DCF (FCFF)',   pct: weights.fcff,      color: 'bg-blue-400' },
+    { label: 'FCFE',         pct: weights.fcfe,      color: 'bg-indigo-400' },
+    { label: 'DDM',          pct: weights.ddm,       color: 'bg-purple-400' },
     { label: 'Multiples',    pct: weights.multiples, color: 'bg-sky-400' },
   ].filter(w => w.pct > 0) : []
 
   return (
-    <div className="space-y-4">
-
-      {/* Blended Fair Value hero */}
+    <>
       {blended != null && (
         <Card>
           <SectionLabel>Blended Fair Value</SectionLabel>
@@ -125,42 +272,39 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
               </span>
             )}
           </div>
-          <p className="text-[10px] text-slate-400 mt-0.5">
-            vs current {sym}{currentPrice.toFixed(2)}
-          </p>
+          <p className="text-[10px] text-slate-400 mt-0.5">vs current {sym}{currentPrice.toFixed(2)}</p>
           {valuationMethods?.rationale && (
             <p className="text-[10px] text-slate-500 mt-1.5 leading-tight">{valuationMethods.rationale}</p>
           )}
         </Card>
       )}
 
-      {/* By Method */}
-      <Card>
-        <SectionLabel>By Method</SectionLabel>
-        <div className="space-y-1.5">
-          {methods.map(({ label, fv, upside }) => (
-            <div key={label} className="flex items-center justify-between">
-              <span className="text-[11px] text-slate-500 truncate pr-2">{label}</span>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <span className="text-[11px] font-semibold text-slate-900 tabular-nums">
-                  {fv != null ? `${sym}${fv.toFixed(2)}` : '—'}
-                </span>
-                {upside != null && (
-                  <span className={cn('text-[10px] font-semibold tabular-nums w-14 text-right', upsideColor(upside))}>
-                    {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(1)}%
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
+      {minFV != null && maxFV != null && (
+        <Card>
+          <div className="flex items-center justify-between mb-2">
+            <SectionLabel>Model Confidence</SectionLabel>
+            <DecisionLabel verdict={spreadLabel} text={spreadText} />
+          </div>
+          <div className="relative h-1.5 rounded-full overflow-hidden bg-gradient-to-r from-red-300/60 via-amber-300/60 to-emerald-300/60 mb-1">
+            {pricePct != null && (
+              <div
+                className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white border-2 border-slate-600 shadow-sm"
+                style={{ left: `calc(${Math.max(2, Math.min(98, pricePct * 100))}% - 5px)` }}
+              />
+            )}
+          </div>
+          <div className="flex justify-between text-[9px] text-slate-400 tabular-nums">
+            <span>{sym}{minFV.toFixed(0)}</span>
+            <span className="text-slate-500 font-medium">{sym}{currentPrice.toFixed(0)} now</span>
+            <span>{sym}{maxFV.toFixed(0)}</span>
+          </div>
+          <p className="text-[10px] text-slate-400 mt-1.5">Range across valuation methods</p>
+        </Card>
+      )}
 
-      {/* Model Weights */}
       {weightBars.length > 0 && (
         <Card>
           <SectionLabel>Model Weights</SectionLabel>
-          {/* Stacked bar */}
           <div className="flex h-2 rounded-full overflow-hidden mb-2.5">
             {weightBars.map(w => (
               <div key={w.label} className={cn(w.color, 'opacity-70')} style={{ width: `${w.pct}%` }} />
@@ -180,15 +324,325 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
         </Card>
       )}
 
-      {/* WACC / Discount Rate */}
+      {scenarios && (
+        <Card>
+          <SectionLabel>Scenario Range</SectionLabel>
+          <div className="flex gap-1.5">
+            {[
+              { label: 'Bear', fv: scenarios.bear.fairValue, cls: 'bg-red-50 border-red-200 text-red-700' },
+              { label: 'Base', fv: scenarios.base.fairValue, cls: 'bg-blue-50 border-blue-200 text-blue-700' },
+              { label: 'Bull', fv: scenarios.bull.fairValue, cls: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+            ].map(({ label, fv, cls }) => (
+              <div key={label} className={cn('flex-1 rounded-lg border px-2 py-2 text-center', cls)}>
+                <p className="text-[9px] font-bold uppercase tracking-wider opacity-70">{label}</p>
+                <p className="text-[11px] font-bold tabular-nums mt-0.5">
+                  {fv != null ? `${sym}${fv.toFixed(0)}` : '—'}
+                </p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       <Card>
-        <SectionLabel>Discount Rate</SectionLabel>
+        <SectionLabel>Start Here</SectionLabel>
+        <div className="space-y-2">
+          {[
+            'Open Forward P/E to review the growth assumption',
+            'Open EV/EBITDA for a quick earnings sanity check',
+            'Open Full DCF for a deeper cash-flow dive',
+          ].map((tip, i) => (
+            <div key={i} className="flex gap-2">
+              <span className="text-[10px] text-blue-500 shrink-0 mt-0.5">→</span>
+              <p className="text-[10px] text-slate-600 leading-snug">{tip}</p>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </>
+  )
+}
+
+// ─── Forward P/E context ──────────────────────────────────────────────────────
+
+function ForwardPEContext({
+  cagr, cagrAnalysis, derivedInsights,
+}: {
+  cagr?: number
+  cagrAnalysis?: CagrAnalysis
+  derivedInsights: DerivedFinancialInsights
+}) {
+  const modelCAGR = cagr ?? null
+  const historical = cagrAnalysis?.historicalCagr3y ?? null
+  const analyst = cagrAnalysis?.analystEstimate1y ?? null
+
+  const diff = modelCAGR != null && analyst != null ? modelCAGR - analyst : null
+  const cagrVerdict: Verdict = diff == null ? 'neutral' : diff > 0.05 ? 'risk' : diff > 0 ? 'watch' : 'good'
+  const cagrLabel =
+    diff == null ? 'No comparison data' :
+    diff > 0.05  ? 'Aggressive vs analysts' :
+    diff > 0     ? 'Slightly above analyst' : 'In line with analysts'
+
+  const netMarginPoints = derivedInsights.marginTrend.net.points.filter(p => p.value != null).slice(-4)
+
+  return (
+    <>
+      <Card>
+        <SectionLabel>Revenue CAGR in Context</SectionLabel>
+        <ThreeCol
+          a={{ label: 'Historical (3Y)', value: pctStr(historical) }}
+          b={{ label: 'Analyst FY+1',   value: pctStr(analyst) }}
+          c={{ label: 'Model (5Y)',      value: pctStr(modelCAGR), highlight: cagrVerdict }}
+        />
+        <div className="mt-2">
+          <DecisionLabel verdict={cagrVerdict} text={cagrLabel} />
+        </div>
+      </Card>
+
+      {netMarginPoints.length >= 2 && (
+        <Card>
+          <SectionLabel>Net Margin Trend (Historical)</SectionLabel>
+          <TrendBars points={netMarginPoints} unit="percent" />
+          <p className="text-[10px] text-slate-400 mt-2">Model target shown in accordion above</p>
+        </Card>
+      )}
+
+      <Card>
+        <SectionLabel>Exit P/E — What It Means</SectionLabel>
+        <div className="space-y-2.5">
+          <DefinitionRow term="Exit P/E" definition="The earnings multiple you expect the market to pay in year 5." />
+          <DefinitionRow term="10–20×" definition="Conservative — typical for mature, slow-growth companies." />
+          <DefinitionRow term="20–30×" definition="Growth premium — requires sustained earnings momentum." />
+          <DefinitionRow term="30×+" definition="High-growth pricing — highly sensitive to assumptions." />
+        </div>
+      </Card>
+    </>
+  )
+}
+
+// ─── EV/EBITDA context ────────────────────────────────────────────────────────
+
+function EVEBITDAContext({
+  sector, valuationMethods, derivedInsights,
+}: {
+  sector?: string | null
+  valuationMethods?: ValuationMethods
+  derivedInsights: DerivedFinancialInsights
+}) {
+  const sectorDefault = getDefaultEVEBITDAMultiple(sector ?? null)
+  const estimates = valuationMethods?.models?.multiples?.estimates ?? []
+  const companyActual = estimates.find(e => e.multiple === 'EV/EBITDA')?.actualValue ?? null
+
+  const multipleVerdict: Verdict =
+    companyActual == null ? 'neutral' :
+    companyActual > sectorDefault * 1.3 ? 'watch' :
+    companyActual < sectorDefault * 0.7 ? 'good' : 'neutral'
+  const multipleLabel =
+    companyActual == null ? 'No data' :
+    companyActual > sectorDefault * 1.3 ? 'Trading at premium to sector' :
+    companyActual < sectorDefault * 0.7 ? 'Trading below sector median' : 'Near sector median'
+
+  const ebitdaPoints = derivedInsights.marginTrend.ebitda.points.filter(p => p.value != null).slice(-4)
+  const netDebt = derivedInsights.latestMetrics.netDebt
+  const isFinancial = /financial|bank|insurance|fintech|payment/i.test(sector ?? '')
+
+  return (
+    <>
+      {isFinancial && (
+        <Card className="border-amber-200 bg-amber-50">
+          <p className="text-[11px] font-semibold text-amber-800 mb-1">Sector Warning</p>
+          <p className="text-[10px] text-amber-700 leading-snug">
+            EV/EBITDA is less reliable for financial companies — debt is an operating input, not leverage. Consider P/E or P/Book instead.
+          </p>
+        </Card>
+      )}
+
+      {ebitdaPoints.length >= 2 && (
+        <Card>
+          <SectionLabel>EBITDA Margin Trend</SectionLabel>
+          <TrendBars points={ebitdaPoints} unit="percent" />
+        </Card>
+      )}
+
+      <Card>
+        <div className="flex items-center justify-between mb-2">
+          <SectionLabel>Multiple in Context</SectionLabel>
+          <DecisionLabel verdict={multipleVerdict} text={multipleLabel} />
+        </div>
+        <ThreeCol
+          a={{ label: 'Sector default', value: sectorDefault.toFixed(1) + '×' }}
+          b={{ label: 'Co. current',    value: companyActual != null ? companyActual.toFixed(1) + '×' : null }}
+          c={{ label: 'Model uses',     value: sectorDefault.toFixed(1) + '×' }}
+        />
+      </Card>
+
+      {netDebt != null && (
+        <Card>
+          <SectionLabel>Net Debt Impact</SectionLabel>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] text-slate-600">Net Debt</span>
+            <span className={cn('text-sm font-semibold tabular-nums', netDebt > 0 ? 'text-red-600' : 'text-emerald-600')}>
+              {netDebt <= 0 ? '(net cash) ' : ''}{fmtLargeCurrency(Math.abs(netDebt) * 1e6)}
+            </span>
+          </div>
+          <div className="space-y-2">
+            <DefinitionRow term="Net Debt" definition="Total borrowings minus cash. Positive = more debt than cash — reduces equity value." />
+            <DefinitionRow term="Net Cash" definition="Holds more cash than debt — adds to equity value per share." />
+          </div>
+        </Card>
+      )}
+    </>
+  )
+}
+
+// ─── Revenue Multiple context ─────────────────────────────────────────────────
+
+function RevMultipleContext({
+  cagr, cagrAnalysis, derivedInsights,
+}: {
+  cagr?: number
+  cagrAnalysis?: CagrAnalysis
+  derivedInsights: DerivedFinancialInsights
+}) {
+  const modelCAGR = cagr ?? null
+  const historical = cagrAnalysis?.historicalCagr3y ?? null
+  const analyst = cagrAnalysis?.analystEstimate1y ?? null
+
+  const diff = modelCAGR != null && analyst != null ? modelCAGR - analyst : null
+  const cagrVerdict: Verdict = diff == null ? 'neutral' : diff > 0.05 ? 'risk' : diff > 0 ? 'watch' : 'good'
+  const cagrLabel =
+    diff == null ? 'No comparison data' :
+    diff > 0.05  ? 'Aggressive vs analysts' :
+    diff > 0     ? 'Slightly above analyst' : 'In line with analysts'
+
+  const netMargin = derivedInsights.latestMetrics.netMargin
+  const isUnprofitable = netMargin != null && netMargin < 0
+
+  return (
+    <>
+      <Card>
+        <SectionLabel>Revenue Growth in Context</SectionLabel>
+        <ThreeCol
+          a={{ label: 'Historical (3Y)', value: pctStr(historical) }}
+          b={{ label: 'Analyst FY+1',   value: pctStr(analyst) }}
+          c={{ label: 'Model (5Y)',      value: pctStr(modelCAGR), highlight: cagrVerdict }}
+        />
+        <div className="mt-2">
+          <DecisionLabel verdict={cagrVerdict} text={cagrLabel} />
+        </div>
+      </Card>
+
+      <Card>
+        <SectionLabel>EV/Revenue Quick Guide</SectionLabel>
+        <div className="space-y-2.5">
+          <DefinitionRow term="High-growth SaaS" definition="8–15× typical when ARR is growing >30%/yr with strong retention." />
+          <DefinitionRow term="Growth tech" definition="3–8× for 15–30% revenue growth with a path to profitability." />
+          <DefinitionRow term="Mature / cyclical" definition="1–3× for slower growth or commodity-like businesses." />
+        </div>
+      </Card>
+
+      {isUnprofitable && (
+        <Card className="border-amber-200 bg-amber-50">
+          <p className="text-[11px] font-semibold text-amber-800 mb-1">Profitability Warning</p>
+          <p className="text-[10px] text-amber-700 leading-snug">
+            Revenue multiples for unprofitable companies are speculative — there&apos;s no earnings anchor. Treat this as a ceiling estimate.
+          </p>
+        </Card>
+      )}
+    </>
+  )
+}
+
+// ─── Reverse DCF context ──────────────────────────────────────────────────────
+
+function ReverseDCFContext({
+  cagrAnalysis, wacc, terminalG,
+}: {
+  cagrAnalysis?: CagrAnalysis
+  wacc: WACCData
+  terminalG?: number
+}) {
+  const historical = cagrAnalysis?.historicalCagr3y ?? null
+  const analyst = cagrAnalysis?.analystEstimate1y ?? null
+
+  const contextVerdict: Verdict =
+    analyst == null || historical == null ? 'neutral' :
+    analyst > historical + 0.05 ? 'watch' :
+    analyst < historical - 0.05 ? 'good' : 'neutral'
+  const contextLabel =
+    analyst == null || historical == null ? 'Limited data' :
+    analyst > historical + 0.05 ? 'Analyst is bullish vs history' :
+    analyst < historical - 0.05 ? 'Analyst is cautious vs history' : 'Analyst aligns with history'
+
+  return (
+    <>
+      <Card>
+        <SectionLabel>What Growth Does This Price Assume?</SectionLabel>
+        <TwoCol
+          a={{ label: 'Analyst FY+1',  value: pctStr(analyst) }}
+          b={{ label: 'History (3Y)',  value: pctStr(historical) }}
+        />
+        <div className="mt-2">
+          <DecisionLabel verdict={contextVerdict} text={contextLabel} />
+        </div>
+        <p className="text-[10px] text-slate-400 mt-2">
+          Market-implied CAGR shown in the accordion above
+        </p>
+      </Card>
+
+      <Card>
+        <SectionLabel>What Each Label Means</SectionLabel>
+        <div className="space-y-2.5">
+          <DefinitionRow term="Conservative" definition="Market expects less growth than history — potential upside if the company recovers." />
+          <DefinitionRow term="Reasonable" definition="Market's expectation aligns with analysts and historical performance." />
+          <DefinitionRow term="Aggressive" definition="Market prices in faster growth than analysts expect — higher risk if missed." />
+          <DefinitionRow term="Very Aggressive" definition="Requires exceptional growth to justify the price — limited margin of safety." />
+        </div>
+      </Card>
+
+      <Card>
+        <SectionLabel>Assumptions Used</SectionLabel>
+        <div className="flex gap-6">
+          <div>
+            <p className="text-[10px] text-slate-500">WACC</p>
+            <p className="text-sm font-semibold tabular-nums text-slate-900">{(wacc.wacc * 100).toFixed(1)}%</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-500">Terminal G</p>
+            <p className="text-sm font-semibold tabular-nums text-slate-900">{((terminalG ?? 0.025) * 100).toFixed(1)}%</p>
+          </div>
+        </div>
+      </Card>
+    </>
+  )
+}
+
+// ─── Full DCF context ─────────────────────────────────────────────────────────
+
+function FullDCFContext({
+  wacc, cagr, terminalG, derivedInsights,
+}: {
+  wacc: WACCData
+  cagr?: number
+  terminalG?: number
+  derivedInsights: DerivedFinancialInsights
+}) {
+  const tG = terminalG ?? 0.025
+  const termVerdict: Verdict = tG > 0.03 ? 'watch' : 'good'
+  const termLabel = tG > 0.03 ? 'Above long-term GDP growth' : 'Standard long-term growth'
+
+  const fcfPoints = derivedInsights.marginTrend.fcf.points.filter(p => p.value != null).slice(-4)
+
+  return (
+    <>
+      <Card>
+        <SectionLabel>Discount Rate (WACC)</SectionLabel>
         <div className="space-y-1.5">
           {[
-            { label: 'WACC',           value: (wacc.wacc * 100).toFixed(1) + '%',           tip: 'Weighted Average Cost of Capital — the minimum annual return this investment needs to justify its risk. Higher WACC = tougher bar to clear, lower fair value.' },
-            { label: 'Cost of Equity', value: (wacc.costOfEquity * 100).toFixed(1) + '%',   tip: 'The return equity investors require for holding this stock, based on its risk (beta) and the broader market return.' },
-            { label: 'Beta',           value: wacc.inputs.beta.toFixed(2),                   tip: 'Measures how much this stock moves relative to the market. Beta > 1 = more volatile than the market; < 1 = less volatile.' },
-            { label: 'Risk-Free Rate', value: (wacc.inputs.rfRate * 100).toFixed(2) + '%',  tip: 'The yield on long-term government bonds — the baseline "safe" return everything else is measured against.' },
+            { label: 'WACC',           value: (wacc.wacc * 100).toFixed(1) + '%',          tip: 'The minimum annual return this investment needs to justify its risk. Higher WACC = lower fair value.' },
+            { label: 'Cost of Equity', value: (wacc.costOfEquity * 100).toFixed(1) + '%',  tip: 'The return equity holders require, based on the stock\'s risk (beta) and the broader market return.' },
+            { label: 'Beta',           value: wacc.inputs.beta.toFixed(2),                  tip: 'How much this stock moves relative to the market. >1 = more volatile; <1 = more stable.' },
+            { label: 'Risk-Free Rate', value: (wacc.inputs.rfRate * 100).toFixed(2) + '%', tip: 'The yield on long-term government bonds — the baseline "safe" return everything else is measured against.' },
           ].map(({ label, value, tip }) => (
             <div key={label} className="flex items-center justify-between">
               <span className="text-[11px] text-slate-500 flex items-center gap-1">
@@ -201,131 +655,78 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
         </div>
       </Card>
 
-      {/* Growth Assumptions */}
-      {(cagr != null || terminalG != null) && (
+      {fcfPoints.length >= 2 && (
         <Card>
-          <SectionLabel>Growth Assumptions</SectionLabel>
-          <div className="space-y-1.5">
-            {cagr != null && (
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-500">Revenue CAGR (5Y)</span>
-                <span className="text-[11px] font-semibold text-slate-900 tabular-nums">
-                  {(cagr * 100).toFixed(1)}%
-                </span>
-              </div>
-            )}
-            {terminalG != null && (
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-500">Terminal Growth</span>
-                <span className="text-[11px] font-semibold text-slate-900 tabular-nums">
-                  {(terminalG * 100).toFixed(1)}%
-                </span>
-              </div>
-            )}
-            {cagr != null && terminalG != null && (
-              <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">
-                {cagr > 0.15 ? 'High-growth: 3-stage DCF model' : 'Standard: 2-stage DCF model'}
-              </p>
-            )}
-          </div>
+          <SectionLabel>FCF Margin Trend</SectionLabel>
+          <TrendBars points={fcfPoints} unit="percent" />
         </Card>
       )}
 
-      {/* Scenario Analysis */}
-      {scenarios && (
-        <Card>
-          <SectionLabel>Scenario Analysis</SectionLabel>
-          <div className="space-y-1.5">
-            {[
-              { label: 'Bull', scenario: scenarios.bull, color: 'text-emerald-600' },
-              { label: 'Base', scenario: scenarios.base, color: 'text-blue-600'    },
-              { label: 'Bear', scenario: scenarios.bear, color: 'text-red-600'     },
-            ].map(({ label, scenario, color }) => {
-              const fv = scenario.fairValue
-              const upside = fv != null && currentPrice > 0 ? (fv - currentPrice) / currentPrice : null
-              return (
-                <div key={label} className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className={cn('text-[10px] font-bold w-8', color)}>{label}</span>
-                    <span className="text-[9px] text-slate-500 tabular-nums">
-                      {(scenario.cagr * 100).toFixed(0)}% / {(scenario.wacc * 100).toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] font-semibold text-slate-900 tabular-nums">
-                      {fv != null ? `${sym}${fv.toFixed(2)}` : '—'}
-                    </span>
-                    {upside != null && (
-                      <span className={cn('text-[10px] tabular-nums w-12 text-right', upsideColor(upside))}>
-                        {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(0)}%
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-          <p className="text-[9px] text-slate-600 mt-2">CAGR / WACC per scenario</p>
-        </Card>
-      )}
-
-      {/* How We Value This Stock */}
       <Card>
-        <SectionLabel>How We Value This Stock</SectionLabel>
-        <div className="space-y-3">
-          {[
-            {
-              dot: 'bg-blue-500',
-              label: 'DCF (Discounted Cash Flow)',
-              desc: 'Projects how much free cash this business will generate over the next 5–10 years, then asks: "What is that future money worth in today\'s dollars?" The discount rate (WACC) reflects the risk — the higher the risk, the less today\'s dollars are worth.',
-            },
-            {
-              dot: 'bg-sky-500',
-              label: 'Multiples (P/E, EV/EBITDA)',
-              desc: 'Compares this company to similar ones in its sector. If peers trade at 20× earnings and this company earns $5/share, the implied fair value is $100. It\'s anchored to what the market is currently paying — not what the company is fundamentally worth.',
-            },
-            {
-              dot: 'bg-purple-500',
-              label: 'DDM (Dividend Discount Model)',
-              desc: 'Only applies to dividend-paying stocks. Values the company as the sum of all future dividend payments, discounted back to today. Irrelevant for companies that don\'t pay dividends.',
-            },
-            {
-              dot: 'bg-indigo-500',
-              label: 'FCFE (Free Cash Flow to Equity)',
-              desc: 'Similar to DCF but focuses only on cash left over for shareholders after the company services its debt. More relevant for highly leveraged companies where debt repayment significantly affects equity value.',
-            },
-          ].map(({ dot, label, desc }) => (
-            <div key={label} className="flex gap-2.5">
-              <span className={cn('w-2 h-2 rounded-full shrink-0 mt-1.5', dot)} />
-              <div>
-                <p className="text-[11px] font-semibold text-slate-700 leading-tight">{label}</p>
-                <p className="text-[10px] text-slate-500 leading-snug mt-0.5">{desc}</p>
-              </div>
-            </div>
-          ))}
+        <SectionLabel>Growth Inputs</SectionLabel>
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[11px] text-slate-600">Revenue CAGR (5Y)</span>
+          <span className="text-[11px] font-semibold tabular-nums text-slate-900">
+            {cagr != null ? (cagr * 100).toFixed(1) + '%' : '—'}
+          </span>
         </div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[11px] text-slate-600">Terminal Growth</span>
+          <span className="text-[11px] font-semibold tabular-nums text-slate-900">{(tG * 100).toFixed(1)}%</span>
+        </div>
+        <DecisionLabel verdict={termVerdict} text={termLabel} />
       </Card>
 
-      {/* Why Methods Disagree */}
       <Card>
-        <SectionLabel>Why Methods Can Disagree</SectionLabel>
-        <div className="space-y-2 text-[11px] text-slate-500 leading-snug">
-          <p>
-            <span className="font-semibold text-slate-700">DCF is forward-looking.</span>{' '}
-            It values future growth. If a company is expected to grow fast, DCF tends to produce higher fair values — but it&apos;s sensitive to the assumptions you make.
-          </p>
-          <p>
-            <span className="font-semibold text-slate-700">Multiples are market-based.</span>{' '}
-            They reflect what investors are paying today for similar companies. In bull markets, multiples expand; in downturns, they compress — regardless of fundamentals.
-          </p>
-          <p>
-            <span className="font-semibold text-slate-700">Large divergence = more uncertainty.</span>{' '}
-            When methods produce very different numbers, it often means the market is pricing in a growth story the fundamentals don&apos;t yet confirm — or vice versa. The blended value averages them, weighted by applicability.
-          </p>
-        </div>
+        <SectionLabel>Sensitivity Note</SectionLabel>
+        <p className="text-[10px] text-slate-500 leading-snug">
+          DCF fair values are highly sensitive to WACC and terminal growth. A 1% change in WACC typically moves fair value ±15–20%. Use the scenario range as a sanity check.
+        </p>
       </Card>
-
-    </div>
+    </>
   )
 }
 
+// ─── Main component ───────────────────────────────────────────────────────────
+
+export default function ValuationSidebar({
+  wacc, valuationMethods, fairValue: _fairValue, currentPrice, currency,
+  scenarios, cagr, terminalG,
+  activeMethodId, derivedInsights, cagrAnalysis, sector,
+}: Props) {
+  const blended = valuationMethods?.triangulatedFairValue ?? null
+  const blendedUpside = valuationMethods?.triangulatedUpsidePct ?? null
+  const weights = valuationMethods?.effectiveWeights
+  const ctx = activeMethodId ?? null
+
+  return (
+    <div className="space-y-4">
+      {ctx === 'forward_pe' && (
+        <ForwardPEContext cagr={cagr} cagrAnalysis={cagrAnalysis} derivedInsights={derivedInsights} />
+      )}
+      {ctx === 'ev_ebitda' && (
+        <EVEBITDAContext sector={sector} valuationMethods={valuationMethods} derivedInsights={derivedInsights} />
+      )}
+      {ctx === 'revenue_multiple' && (
+        <RevMultipleContext cagr={cagr} cagrAnalysis={cagrAnalysis} derivedInsights={derivedInsights} />
+      )}
+      {ctx === 'reverse_dcf' && (
+        <ReverseDCFContext cagrAnalysis={cagrAnalysis} wacc={wacc} terminalG={terminalG} />
+      )}
+      {ctx === 'full_dcf' && (
+        <FullDCFContext wacc={wacc} cagr={cagr} terminalG={terminalG} derivedInsights={derivedInsights} />
+      )}
+      {!ctx && (
+        <DefaultView
+          blended={blended}
+          blendedUpside={blendedUpside}
+          currentPrice={currentPrice}
+          currency={currency}
+          valuationMethods={valuationMethods}
+          scenarios={scenarios}
+          weights={weights}
+        />
+      )}
+    </div>
+  )
+}

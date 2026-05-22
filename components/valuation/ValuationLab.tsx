@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import {
   type ValuationMethodId,
   type ValuationMethodConfig,
@@ -22,6 +22,8 @@ import { fmtPrice, fmtPct, fmtLargeCurrency } from '@/lib/formatters'
 import { TrendBadge } from '@/components/ui/trend-badge'
 import { NABadge } from '@/components/ui/na-badge'
 import { cn } from '@/lib/utils'
+import { ChevronDown } from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
 
 // ─── Local helpers ─────────────────────────────────────────────────────────────
 
@@ -359,13 +361,86 @@ interface ValuationLabProps {
   statementsData?: StatementsData | null
   onNavigateToFinancials?: (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => void
   onWeightedFVChange?: (fv: number | null) => void
+  onActiveMethodChange?: (id: string | null) => void
+}
+
+// ─── MethodAccordion ──────────────────────────────────────────────────────────
+
+interface MethodAccordionProps {
+  id: string
+  title: string
+  bestFor: string
+  isOpen: boolean
+  onToggle: () => void
+  innerRef: (el: HTMLDivElement | null) => void
+  fairValue: number | null
+  upsidePct: number | null
+  currency: string
+  chips: Array<{ label: string; value: string }>
+  children: React.ReactNode
+}
+
+function MethodAccordion({ title, bestFor, isOpen, onToggle, innerRef, fairValue, upsidePct, currency, chips, children }: MethodAccordionProps) {
+  return (
+    <div ref={innerRef} className="card rounded-xl overflow-hidden scroll-mt-4">
+      <button
+        onClick={onToggle}
+        className="w-full px-5 py-4 flex items-start gap-3 text-left hover:bg-slate-50/60 transition-colors"
+      >
+        <ChevronDown
+          size={14}
+          className={cn('shrink-0 text-slate-400 transition-transform mt-0.5', isOpen ? 'rotate-180' : '')}
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-semibold text-slate-800">{title}</span>
+            {fairValue != null && (
+              <span className="text-sm font-bold tabular-nums text-slate-900 ml-auto">
+                {fmtPrice(fairValue, currency)}
+              </span>
+            )}
+            {upsidePct != null && <TrendBadge value={upsidePct} size="sm" />}
+          </div>
+          <p className="text-[11px] text-slate-500 mt-0.5">{bestFor}</p>
+          {chips.length > 0 && !isOpen && (
+            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+              {chips.map(c => (
+                <span key={c.label} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
+                  {c.label}: {c.value}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden border-t border-slate-100"
+          >
+            {/* Suppress inner card borders when embedded */}
+            <div className="[&_.card]:rounded-none [&_.card]:border-0 [&_.card]:shadow-none">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function ValuationLab({ apiData, ticker, statementsData, onWeightedFVChange }: ValuationLabProps) {
+export default function ValuationLab({ apiData, ticker, statementsData, onWeightedFVChange, onActiveMethodChange }: ValuationLabProps) {
   const [overrides,    setOverrides]    = useState<OverridesMap>({})
   const [linkedCAGR,   setLinkedCAGR]   = useState(true)
+  const [openMethodId, setOpenMethodId] = useState<string | null>(null)
+  const methodRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   const currency     = apiData?.quote?.currency ?? 'USD'
   const currentPrice = (apiData?.quote?.price   ?? 0) as number
@@ -593,6 +668,13 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
     setOverrides(prev => { const n = { ...prev }; delete n[methodId]; return n })
   }
 
+  function handleSummaryMethodClick(id: string) {
+    setOpenMethodId(prev => (prev === id ? null : id))
+    setTimeout(() => {
+      methodRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 80)
+  }
+
   // ── Summary ───────────────────────────────────────────────────────────────
   const summaryMethods: MethodResult[] = [
     { id: 'forward_pe',       label: 'Forward P/E (5Y)',          fairValue: fwdPEResult.fairValueToday,       upsidePct: fwdPEResult.upsidePct,           weight: 0.35 },
@@ -611,6 +693,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
   }, [fwdPEResult, evEbitdaResult, revMultResult, apiData])
 
   useEffect(() => { onWeightedFVChange?.(weightedFV) }, [weightedFV, onWeightedFVChange])
+  useEffect(() => { onActiveMethodChange?.(openMethodId) }, [openMethodId, onActiveMethodChange])
 
   return (
     <div className="space-y-4">
@@ -620,71 +703,186 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
         methods={summaryMethods}
         currentPrice={currentPrice}
         currency={currency}
+        onMethodClick={handleSummaryMethodClick}
       />
 
-      {/* ── 2. Method details ────────────────────────────────────────────────── */}
-      <div className="space-y-4">
-        <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600 px-1">How each method is computed</p>
+      {/* ── 2. Method accordions ─────────────────────────────────────────── */}
+      <div className="space-y-3">
+        <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600 px-1">Explore each method</p>
 
-        <MethodInlinePanel
-          config={fwdPEConfig}
-          overrides={overrides['forward_pe'] ?? {}}
+        {/* Forward P/E */}
+        <MethodAccordion
+          id="forward_pe"
+          title={fwdPEConfig.title}
+          bestFor="Best for profitable companies with stable earnings growth"
+          isOpen={openMethodId === 'forward_pe'}
+          onToggle={() => setOpenMethodId(p => p === 'forward_pe' ? null : 'forward_pe')}
+          innerRef={el => { methodRefs.current['forward_pe'] = el }}
+          fairValue={fwdPEResult.fairValueToday}
+          upsidePct={fwdPEResult.upsidePct}
           currency={currency}
-          onAssumptionChange={(key, val) => handleAssumptionChange('forward_pe', key, val)}
-          onResetOverrides={() => handleResetOverrides('forward_pe')}
-        />
+          chips={[
+            { label: 'CAGR', value: fwdPEInputs.revenueCAGR != null ? (fwdPEInputs.revenueCAGR * 100).toFixed(1) + '%' : '—' },
+            { label: 'Exit P/E', value: fwdPEInputs.exitPE != null ? (fwdPEInputs.exitPE as number).toFixed(1) + '×' : '—' },
+            { label: 'Margin', value: fwdPEInputs.netMargin != null ? (fwdPEInputs.netMargin * 100).toFixed(1) + '%' : '—' },
+          ]}
+        >
+          <MethodInlinePanel
+            config={fwdPEConfig}
+            overrides={overrides['forward_pe'] ?? {}}
+            currency={currency}
+            onAssumptionChange={(key, val) => handleAssumptionChange('forward_pe', key, val)}
+            onResetOverrides={() => handleResetOverrides('forward_pe')}
+          />
+        </MethodAccordion>
 
-        <MethodInlinePanel
-          config={evEbitdaConfig}
-          overrides={overrides['ev_ebitda'] ?? {}}
+        {/* EV/EBITDA */}
+        <MethodAccordion
+          id="ev_ebitda"
+          title={evEbitdaConfig.title}
+          bestFor="Best for comparing businesses regardless of capital structure"
+          isOpen={openMethodId === 'ev_ebitda'}
+          onToggle={() => setOpenMethodId(p => p === 'ev_ebitda' ? null : 'ev_ebitda')}
+          innerRef={el => { methodRefs.current['ev_ebitda'] = el }}
+          fairValue={evEbitdaResult.fairValuePerShare}
+          upsidePct={evEbitdaResult.upsidePct}
           currency={currency}
-          onAssumptionChange={(key, val) => handleAssumptionChange('ev_ebitda', key, val)}
-          onResetOverrides={() => handleResetOverrides('ev_ebitda')}
-        />
+          chips={[
+            { label: 'Multiple', value: evEbitdaInputs.exitMultiple != null ? evEbitdaInputs.exitMultiple.toFixed(1) + '×' : '—' },
+            { label: 'EBITDA', value: evEbitdaInputs.ttmEbitda != null ? fmtLargeCurrency(evEbitdaInputs.ttmEbitda) : '—' },
+          ]}
+        >
+          <MethodInlinePanel
+            config={evEbitdaConfig}
+            overrides={overrides['ev_ebitda'] ?? {}}
+            currency={currency}
+            onAssumptionChange={(key, val) => handleAssumptionChange('ev_ebitda', key, val)}
+            onResetOverrides={() => handleResetOverrides('ev_ebitda')}
+          />
+        </MethodAccordion>
 
-        {/* Linked CAGR toggle — sits between Forward P/E and Revenue Multiple */}
-        <div className="flex items-center justify-center gap-2 py-1">
-          <span className="text-[11px] text-slate-400">Revenue CAGR (5Y)</span>
+        {/* Shared Assumptions interstitial */}
+        <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-blue-50/60 border border-blue-100">
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-semibold text-blue-700">Shared: Revenue CAGR (5Y)</p>
+            <p className="text-[10px] text-blue-500 mt-0.5">
+              {linkedCAGR ? 'Linked — changing CAGR in one method updates the other.' : 'Unlinked — each method uses an independent CAGR.'}
+            </p>
+          </div>
           <button
             onClick={() => setLinkedCAGR(v => !v)}
-            className={`rounded-full px-3 py-1 text-[11px] font-semibold border transition-colors ${
+            className={`rounded-full px-3 py-1 text-[11px] font-semibold border transition-colors shrink-0 ${
               linkedCAGR
-                ? 'bg-blue-50 border-blue-200 text-blue-600'
+                ? 'bg-blue-100 border-blue-200 text-blue-700'
                 : 'bg-slate-50 border-slate-200 text-slate-500'
             }`}
-            title={linkedCAGR ? 'CAGR is shared between Forward P/E and Revenue Multiple — click to unlink' : 'CAGR is independent per method — click to link'}
           >
             {linkedCAGR ? '🔗 Linked' : '🔓 Unlinked'}
           </button>
-          <span className="text-[11px] text-slate-400">shared across models below</span>
         </div>
 
-        <MethodInlinePanel
-          config={revMultConfig}
-          overrides={overrides['revenue_multiple'] ?? {}}
+        {/* Revenue Multiple */}
+        <MethodAccordion
+          id="revenue_multiple"
+          title={revMultConfig.title}
+          bestFor="Best for high-growth or pre-profit companies"
+          isOpen={openMethodId === 'revenue_multiple'}
+          onToggle={() => setOpenMethodId(p => p === 'revenue_multiple' ? null : 'revenue_multiple')}
+          innerRef={el => { methodRefs.current['revenue_multiple'] = el }}
+          fairValue={revMultResult.fairValueToday}
+          upsidePct={revMultResult.upsidePct}
           currency={currency}
-          onAssumptionChange={(key, val) => handleAssumptionChange('revenue_multiple', key, val)}
-          onResetOverrides={() => handleResetOverrides('revenue_multiple')}
-        />
+          chips={[
+            { label: 'CAGR', value: revMultInputs.revenueCAGR != null ? (revMultInputs.revenueCAGR * 100).toFixed(1) + '%' : '—' },
+            { label: 'EV/Rev', value: revMultInputs.exitEVRevenue != null ? (revMultInputs.exitEVRevenue as number).toFixed(1) + '×' : '—' },
+          ]}
+        >
+          <MethodInlinePanel
+            config={revMultConfig}
+            overrides={overrides['revenue_multiple'] ?? {}}
+            currency={currency}
+            onAssumptionChange={(key, val) => handleAssumptionChange('revenue_multiple', key, val)}
+            onResetOverrides={() => handleResetOverrides('revenue_multiple')}
+          />
+        </MethodAccordion>
 
-        <ReverseDCFPanel
-          result={reverseDCFResult}
-          cagrAnalysis={apiData?.cagrAnalysis ?? null}
-          wacc={apiData?.wacc?.wacc ?? 0.09}
-          terminalG={apiData?.terminalG ?? 0.025}
-          lastFCFMargin={lastFCFMargin}
-        />
-      </div>
+        {/* Reverse DCF */}
+        <MethodAccordion
+          id="reverse_dcf"
+          title="Reverse DCF"
+          bestFor="Best for checking what growth rate today's price implies"
+          isOpen={openMethodId === 'reverse_dcf'}
+          onToggle={() => setOpenMethodId(p => p === 'reverse_dcf' ? null : 'reverse_dcf')}
+          innerRef={el => { methodRefs.current['reverse_dcf'] = el }}
+          fairValue={null}
+          upsidePct={null}
+          currency={currency}
+          chips={[
+            { label: 'Implied CAGR', value: reverseDCFResult.impliedCAGR != null ? (reverseDCFResult.impliedCAGR * 100).toFixed(1) + '%' : '—' },
+            { label: 'WACC', value: ((apiData?.wacc?.wacc ?? 0.09) * 100).toFixed(1) + '%' },
+          ]}
+        >
+          <ReverseDCFPanel
+            result={reverseDCFResult}
+            cagrAnalysis={apiData?.cagrAnalysis ?? null}
+            wacc={apiData?.wacc?.wacc ?? 0.09}
+            terminalG={apiData?.terminalG ?? 0.025}
+            lastFCFMargin={lastFCFMargin}
+          />
+        </MethodAccordion>
 
-      {/* ── 5. Full DCF Modelling Table ──────────────────────────────────── */}
-      <div className="card rounded-xl overflow-hidden">
-        <div className="px-5 pt-4 pb-2 border-b border-slate-200">
-          <h3 className="text-sm font-semibold text-slate-800">Full DCF Modelling Table</h3>
-          <p className="text-micro text-slate-500 mt-0.5">
-            Year-by-year unlevered FCF model grounded in Yahoo Finance statements
-          </p>
-        </div>
-        <ModellingWorkspace apiData={apiData} ticker={ticker} statementsData={statementsData} />
+        {/* Full DCF */}
+        <MethodAccordion
+          id="full_dcf"
+          title="Full DCF Modelling Table"
+          bestFor="Best for deep-dive year-by-year cash flow projection with custom assumptions"
+          isOpen={openMethodId === 'full_dcf'}
+          onToggle={() => setOpenMethodId(p => p === 'full_dcf' ? null : 'full_dcf')}
+          innerRef={el => { methodRefs.current['full_dcf'] = el }}
+          fairValue={(apiData?.valuationMethods?.triangulatedFairValue as number | null) ?? null}
+          upsidePct={(apiData?.valuationMethods?.triangulatedUpsidePct as number | null) ?? null}
+          currency={currency}
+          chips={[
+            { label: 'WACC', value: ((apiData?.wacc?.wacc ?? 0.09) * 100).toFixed(1) + '%' },
+            { label: 'Terminal G', value: ((apiData?.terminalG ?? 0.025) * 100).toFixed(1) + '%' },
+          ]}
+        >
+          {/* Executive DCF summary */}
+          {(apiData?.valuationMethods?.triangulatedFairValue != null) && (
+            <div className="px-5 pt-4 pb-3 border-b border-slate-100 bg-slate-50/50">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Core DCF Result</p>
+              <div className="flex items-center gap-3 flex-wrap">
+                <div>
+                  <p className="text-[10px] text-slate-500">Fair Value</p>
+                  <p className="text-lg font-bold tabular-nums text-slate-900">
+                    {fmtPrice(apiData.valuationMethods.triangulatedFairValue as number, currency)}
+                  </p>
+                </div>
+                {(apiData?.valuationMethods?.triangulatedUpsidePct as number | null) != null && (
+                  <TrendBadge value={apiData.valuationMethods.triangulatedUpsidePct as number} size="lg" />
+                )}
+                <div className="ml-auto flex gap-4">
+                  <div>
+                    <p className="text-[10px] text-slate-500">WACC</p>
+                    <p className="text-sm font-semibold tabular-nums text-slate-800">
+                      {((apiData?.wacc?.wacc ?? 0.09) * 100).toFixed(1)}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-500">Terminal G</p>
+                    <p className="text-sm font-semibold tabular-nums text-slate-800">
+                      {((apiData?.terminalG ?? 0.025) * 100).toFixed(1)}%
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-500 mt-2">
+                FCFF, FCFE &amp; DDM triangulated — intrinsic value from projected free cash flows.
+              </p>
+            </div>
+          )}
+          <ModellingWorkspace apiData={apiData} ticker={ticker} statementsData={statementsData} />
+        </MethodAccordion>
       </div>
     </div>
   )

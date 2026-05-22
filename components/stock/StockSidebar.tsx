@@ -14,9 +14,10 @@ interface Props {
   data: AnyData
   statementsData: AnyData
   onNavigateToFinancials?: (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => void
+  activeValuationMethodId?: string | null
 }
 
-export default function StockSidebar({ activeTab, data, statementsData, onNavigateToFinancials }: Props) {
+export default function StockSidebar({ activeTab, data, statementsData, onNavigateToFinancials, activeValuationMethodId }: Props) {
   const derivedInsights = useMemo(() => {
     if (!data) return null
     return deriveFinancialInsightMetrics({
@@ -56,6 +57,10 @@ export default function StockSidebar({ activeTab, data, statementsData, onNaviga
         scenarios={data.scenarios}
         cagr={data.cagr}
         terminalG={data.terminalG}
+        activeMethodId={activeValuationMethodId}
+        derivedInsights={derivedInsights!}
+        cagrAnalysis={data.cagrAnalysis}
+        sector={data.quote?.sector ?? null}
       />
     )
   }

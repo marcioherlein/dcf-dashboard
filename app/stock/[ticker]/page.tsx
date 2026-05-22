@@ -173,6 +173,7 @@ function StockPageBody() {
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [financialsHighlight, setFinancialsHighlight] = useState<{ rowKey: string; statement: 'income' | 'balance' | 'cashflow' } | null>(null)
   const [userModelFairValue, setUserModelFairValue] = useState<number | null>(null)
+  const [activeValuationMethod, setActiveValuationMethod] = useState<string | null>(null)
 
   // After Google OAuth redirect, restore the user's pre-login state (tab, etc.)
   useEffect(() => {
@@ -510,7 +511,7 @@ function StockPageBody() {
                       Save to My Valuations →
                     </a>
                   </div>
-                  <ValuationLab apiData={data} ticker={ticker} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} onWeightedFVChange={setUserModelFairValue} />
+                  <ValuationLab apiData={data} ticker={ticker} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} onWeightedFVChange={setUserModelFairValue} onActiveMethodChange={setActiveValuationMethod} />
                 </motion.div>
               )}
 
@@ -576,7 +577,7 @@ function StockPageBody() {
             {activeTab !== 'news' && (
               <aside className="hidden lg:block">
                 <div className="sticky top-[68px] self-start space-y-3 pb-4 pt-5">
-                  <StockSidebar activeTab={activeTab} data={data} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} />
+                  <StockSidebar activeTab={activeTab} data={data} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} activeValuationMethodId={activeValuationMethod} />
                 </div>
               </aside>
             )}
