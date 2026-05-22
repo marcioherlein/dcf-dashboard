@@ -269,23 +269,25 @@ export default function InvestorGradeCard({
             </div>
           )}
 
-          {/* Health pills */}
-          <div className="space-y-2">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Health check</p>
-            {[
-              { type: 'profit' as const, label: 'Profitability', summary: profitabilitySummary },
-              { type: 'debt'   as const, label: 'Financial Health', summary: liquiditySummary   },
-              { type: 'growth' as const, label: 'Growth',            summary: growthSummary      },
-            ].map(({ type, label, summary }) => (
-              <div key={type} className="flex items-start gap-2.5 rounded-xl card-tinted px-3 py-2.5" style={{ minHeight: '48px' }}>
-                <span className="text-blue-600 mt-0.5">{pillIcon(type)}</span>
-                <div>
-                  <p className="text-[11px] font-semibold text-slate-800">{label}</p>
-                  <p className="text-[11px] text-slate-600 leading-relaxed">{summary}</p>
+          {/* Health pills — only render if at least one summary exists */}
+          {(profitabilitySummary || liquiditySummary || growthSummary) && (
+            <div className="space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Health check</p>
+              {[
+                { type: 'profit' as const, label: 'Profitability', summary: profitabilitySummary },
+                { type: 'debt'   as const, label: 'Financial Health', summary: liquiditySummary   },
+                { type: 'growth' as const, label: 'Growth',            summary: growthSummary      },
+              ].filter(p => p.summary).map(({ type, label, summary }) => (
+                <div key={type} className="flex items-start gap-2.5 rounded-xl card-tinted px-3 py-2.5">
+                  <span className="text-blue-600 mt-0.5">{pillIcon(type)}</span>
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-800">{label}</p>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">{summary}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Key Drivers */}
           {drivers && drivers.length > 0 && (
