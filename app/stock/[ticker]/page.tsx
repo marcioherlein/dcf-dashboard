@@ -576,7 +576,7 @@ function StockPageBody() {
             {activeTab !== 'news' && (
               <aside className="hidden lg:block">
                 <div className="sticky top-[68px] self-start space-y-3 pb-4 pt-5">
-                  <StockSidebar activeTab={activeTab} data={data} statementsData={statementsData} />
+                  <StockSidebar activeTab={activeTab} data={data} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} />
                 </div>
               </aside>
             )}

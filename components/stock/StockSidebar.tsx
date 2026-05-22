@@ -1,7 +1,9 @@
 'use client'
+import { useMemo } from 'react'
 import OverviewSidebar from './sidebar/OverviewSidebar'
 import ValuationSidebar from './sidebar/ValuationSidebar'
 import FinancialsSidebar from './sidebar/FinancialsSidebar'
+import { deriveFinancialInsightMetrics } from '@/lib/stock/deriveFinancialInsightMetrics'
 import type { TabId } from './TabNav'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -11,9 +13,22 @@ interface Props {
   activeTab: TabId
   data: AnyData
   statementsData: AnyData
+  onNavigateToFinancials?: (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => void
 }
 
-export default function StockSidebar({ activeTab, data, statementsData: _statementsData }: Props) {
+export default function StockSidebar({ activeTab, data, statementsData, onNavigateToFinancials }: Props) {
+  const derivedInsights = useMemo(() => {
+    if (!data) return null
+    return deriveFinancialInsightMetrics({
+      statementsData,
+      financialStatements: data.financialStatements,
+      quote: data.quote,
+      businessProfile: data.businessProfile,
+      valuationMethods: data.valuationMethods,
+      fxRate: data.providerStatus?.fx?.rate ?? 1,
+    })
+  }, [statementsData, data])
+
   if (!data) return null
 
   if (activeTab === 'overview') {
@@ -21,12 +36,11 @@ export default function StockSidebar({ activeTab, data, statementsData: _stateme
       <OverviewSidebar
         quote={data.quote}
         cagrAnalysis={data.cagrAnalysis}
-        businessProfile={data.businessProfile}
-        wacc={data.wacc}
         analystRecommendation={data.analystRecommendation ?? ''}
         ratings={data.ratings}
         valuationMethods={data.valuationMethods}
-        financialStatements={data.financialStatements}
+        derivedInsights={derivedInsights!}
+        onNavigateToFinancials={onNavigateToFinancials}
       />
     )
   }
