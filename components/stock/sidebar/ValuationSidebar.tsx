@@ -100,16 +100,6 @@ export default function ValuationSidebar({ wacc, valuationMethods, fairValue, cu
   const blendedUpside = valuationMethods?.triangulatedUpsidePct
   const weights = valuationMethods?.effectiveWeights
 
-  // Peer multiples comparison rows
-  const multipleRows = [
-    { key: 'EV/EBITDA', label: 'EV/EBITDA' },
-    { key: 'P/E',       label: 'P/E'        },
-    { key: 'P/Sales',   label: 'P/Sales'    },
-  ].map(({ key, label }) => {
-    const e = estimates.find(x => x.multiple === key)
-    return { label, company: e?.actualValue ?? null, sector: e?.sectorMedian ?? null }
-  })
-
   // Model weights for display (filter out zero-weight models)
   const weightBars = weights ? [
     { label: 'DCF (FCFF)',   pct: weights.fcff,     color: 'bg-blue-400' },
