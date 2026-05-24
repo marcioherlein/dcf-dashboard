@@ -29,7 +29,9 @@ export interface DCFResult {
 
 export interface CAGRAnalysis {
   historicalCagr3y: number
-  analystEstimate1y: number
+  analystEstimate1y: number         // clamped to [-0.50, 1.50] for display/comparison
+  analystEstimate1yRaw: number      // raw value from Yahoo (may be >150% due to base effects)
+  analystBaseEffect: boolean        // true when raw analyst 1Y > 150% (base-effect distortion)
   analystEstimate2y: number      // estimated fade (analyst2y or analyst1y × 0.85)
   fundamentalGrowth: number | null  // ROE × (1 − payout), valid only when 0 < ROE < 0.80
   blended: number                // final model input, post-cap
@@ -419,9 +421,11 @@ export function extractFCFInputs(financials: any, foreignCurrency = false): {
   }
 
   const cagrAnalysis: CAGRAnalysis = {
-    historicalCagr3y:  Math.round(historicalCagr3y * 1000) / 1000,
-    analystEstimate1y: Math.round(analyst1y * 1000) / 1000,
-    analystEstimate2y: Math.round(analyst2y * 1000) / 1000,
+    historicalCagr3y:    Math.round(historicalCagr3y * 1000) / 1000,
+    analystEstimate1y:   Math.round(Math.min(Math.max(analyst1y, -0.50), 1.50) * 1000) / 1000,
+    analystEstimate1yRaw: Math.round(analyst1y * 1000) / 1000,
+    analystBaseEffect:   analyst1y > 1.50,
+    analystEstimate2y:   Math.round(analyst2y * 1000) / 1000,
     fundamentalGrowth: fundamentalGrowth != null ? Math.round(fundamentalGrowth * 1000) / 1000 : null,
     blended:           Math.round(cagr * 1000) / 1000,
     rawBlended:        Math.round(rawBlended * 1000) / 1000,

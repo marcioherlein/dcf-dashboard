@@ -1,43 +1,26 @@
 {
-  "runAt": "2026-05-24T15:48:29.970Z",
+  "runAt": "2026-05-24T21:45:26.056Z",
   "count": 21,
   "results": [
     {
       "ticker": "AAPL",
-      "timestamp": "2026-05-24T15:34:35.419Z",
+      "timestamp": "2026-05-24T21:44:15.883Z",
       "companyName": "Apple Inc.",
       "sector": "Technology",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 98,
+      "overallScore": 100,
       "apiScore": 100,
       "financialScore": 100,
-      "valuationScore": 93,
-      "uiScore": 100,
+      "valuationScore": 99,
+      "uiScore": null,
       "criticalIssues": [],
-      "warnings": [
-        {
-          "sev": "WARN",
-          "code": "CAGR_SOURCES_SPREAD",
-          "msg": "CAGR sources spread 650bps: api.cagr=6.4%, cagrAnalysis.blended=6.4%, cagrAnalysis.analystEstimate1y=8.3%, cagrAnalysis.historicalCagr3y=1.8%",
-          "detail": {
-            "api.cagr": 0.064,
-            "cagrAnalysis.blended": 0.064,
-            "cagrAnalysis.analystEstimate1y": 0.083,
-            "cagrAnalysis.historicalCagr3y": 0.018
-          }
-        }
-      ],
+      "warnings": [],
       "infoFlags": [
         {
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [],
@@ -50,8 +33,8 @@
       "sectorFlags": [],
       "keyMetrics": {
         "price": 308.82,
-        "fairValue": 126.65,
-        "upside": "-59.0%",
+        "fairValue": 124.97,
+        "upside": "-59.5%",
         "wacc": "9.53%",
         "beta": 1.16,
         "cagr": "6.4%",
@@ -59,79 +42,22 @@
         "numAnalysts": 42
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $211.91",
-            "after": "Fair Value Today: $671.36",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/AAPL-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/AAPL-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/AAPL-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/AAPL-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     },
     {
       "ticker": "AMD",
-      "timestamp": "2026-05-24T15:34:39.432Z",
+      "timestamp": "2026-05-24T21:44:23.671Z",
       "companyName": "Advanced Micro Devices, Inc.",
       "sector": "Technology",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 97,
+      "overallScore": 99,
       "apiScore": 100,
-      "financialScore": 95,
-      "valuationScore": 92,
-      "uiScore": 100,
+      "financialScore": 100,
+      "valuationScore": 98,
+      "uiScore": null,
       "criticalIssues": [],
-      "warnings": [
-        {
-          "sev": "WARN",
-          "code": "CAGR_MISMATCH",
-          "msg": "Historical revenue CAGR 20.5% vs api.cagr 28.0% — 751bps gap",
-          "detail": {
-            "calculatedCAGR": 0.20491251645171027,
-            "apiCAGR": 0.28,
-            "diffBps": 750.8748354828975,
-            "label": "WARN"
-          }
-        },
-        {
-          "sev": "WARN",
-          "code": "CAGR_SOURCES_SPREAD",
-          "msg": "CAGR sources spread 4010bps: api.cagr=28.0%, cagrAnalysis.blended=28.0%, cagrAnalysis.analystEstimate1y=53.7%, cagrAnalysis.historicalCagr3y=13.6%",
-          "detail": {
-            "api.cagr": 0.28,
-            "cagrAnalysis.blended": 0.28,
-            "cagrAnalysis.analystEstimate1y": 0.537,
-            "cagrAnalysis.historicalCagr3y": 0.136
-          }
-        }
-      ],
+      "warnings": [],
       "infoFlags": [
         {
           "sev": "INFO",
@@ -142,11 +68,6 @@
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [],
@@ -159,8 +80,8 @@
       "sectorFlags": [],
       "keyMetrics": {
         "price": 467.51,
-        "fairValue": 140.09,
-        "upside": "-70.0%",
+        "fairValue": 149.25,
+        "upside": "-68.1%",
         "wacc": "12.80%",
         "beta": 1.86,
         "cagr": "28.0%",
@@ -168,89 +89,27 @@
         "numAnalysts": 47
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $237.78",
-            "after": "Fair Value Today: $298.98",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/AMD-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/AMD-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/AMD-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/AMD-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     },
     {
       "ticker": "AMZN",
-      "timestamp": "2026-05-24T15:34:41.373Z",
+      "timestamp": "2026-05-24T21:44:27.650Z",
       "companyName": "Amazon.com, Inc.",
       "sector": "Consumer Cyclical",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 97,
+      "overallScore": 100,
       "apiScore": 100,
-      "financialScore": 95,
-      "valuationScore": 93,
-      "uiScore": 100,
+      "financialScore": 100,
+      "valuationScore": 99,
+      "uiScore": null,
       "criticalIssues": [],
-      "warnings": [
-        {
-          "sev": "WARN",
-          "code": "CAGR_MISMATCH",
-          "msg": "Historical revenue CAGR 11.1% vs api.cagr 18.7% — 756bps gap",
-          "detail": {
-            "calculatedCAGR": 0.11143723551067208,
-            "apiCAGR": 0.187,
-            "diffBps": 755.6276448932791,
-            "label": "WARN"
-          }
-        },
-        {
-          "sev": "WARN",
-          "code": "CAGR_SOURCES_SPREAD",
-          "msg": "CAGR sources spread 700bps: api.cagr=18.7%, cagrAnalysis.blended=18.7%, cagrAnalysis.analystEstimate1y=12.9%, cagrAnalysis.historicalCagr3y=11.7%",
-          "detail": {
-            "api.cagr": 0.187,
-            "cagrAnalysis.blended": 0.187,
-            "cagrAnalysis.analystEstimate1y": 0.129,
-            "cagrAnalysis.historicalCagr3y": 0.117
-          }
-        }
-      ],
+      "warnings": [],
       "infoFlags": [
         {
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [],
@@ -263,8 +122,8 @@
       "sectorFlags": [],
       "keyMetrics": {
         "price": 266.32,
-        "fairValue": 139.91,
-        "upside": "-47.5%",
+        "fairValue": 130.41,
+        "upside": "-51.0%",
         "wacc": "10.35%",
         "beta": 1.42,
         "cagr": "18.7%",
@@ -272,45 +131,11 @@
         "numAnalysts": 62
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $458.10",
-            "after": "Fair Value Today: $839.90",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/AMZN-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/AMZN-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/AMZN-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/AMZN-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     },
     {
       "ticker": "AVGO",
-      "timestamp": "2026-05-24T15:35:06.168Z",
+      "timestamp": "2026-05-24T21:45:14.630Z",
       "companyName": "Broadcom Inc.",
       "sector": "Technology",
       "currency": "USD",
@@ -318,25 +143,14 @@
       "overallScore": 97,
       "apiScore": 100,
       "financialScore": 95,
-      "valuationScore": 91,
-      "uiScore": 100,
+      "valuationScore": 97,
+      "uiScore": null,
       "criticalIssues": [],
       "warnings": [
         {
           "sev": "WARN",
           "code": "FCF_EQUALS_NI",
           "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
-        },
-        {
-          "sev": "WARN",
-          "code": "CAGR_SOURCES_SPREAD",
-          "msg": "CAGR sources spread 3180bps: api.cagr=22.0%, cagrAnalysis.blended=22.0%, cagrAnalysis.analystEstimate1y=53.8%, cagrAnalysis.historicalCagr3y=24.4%",
-          "detail": {
-            "api.cagr": 0.22,
-            "cagrAnalysis.blended": 0.22,
-            "cagrAnalysis.analystEstimate1y": 0.538,
-            "cagrAnalysis.historicalCagr3y": 0.244
-          }
         }
       ],
       "infoFlags": [
@@ -354,11 +168,6 @@
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [],
@@ -371,8 +180,8 @@
       "sectorFlags": [],
       "keyMetrics": {
         "price": 414.14,
-        "fairValue": 162.74,
-        "upside": "-60.7%",
+        "fairValue": 148.04,
+        "upside": "-64.3%",
         "wacc": "12.00%",
         "beta": 1.73,
         "cagr": "22.0%",
@@ -380,45 +189,11 @@
         "numAnalysts": 47
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $231.52",
-            "after": "Fair Value Today: $370.09",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/AVGO-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/AVGO-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/AVGO-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/AVGO-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     },
     {
       "ticker": "COIN",
-      "timestamp": "2026-05-24T15:35:02.155Z",
+      "timestamp": "2026-05-24T21:45:07.001Z",
       "companyName": "Coinbase Global, Inc.",
       "sector": "Financial Services",
       "currency": "USD",
@@ -426,30 +201,18 @@
       "overallScore": 97,
       "apiScore": 100,
       "financialScore": 94,
-      "valuationScore": 92,
-      "uiScore": 100,
+      "valuationScore": 98,
+      "uiScore": null,
       "criticalIssues": [],
       "warnings": [
         {
           "sev": "WARN",
           "code": "CAGR_MISMATCH",
-          "msg": "Historical revenue CAGR -2.2% vs api.cagr 12.0% — 1417bps gap",
+          "msg": "Computed 3Y historical CAGR 31.0% vs cagrAnalysis.historicalCagr3y 20.0% — 1100bps gap",
           "detail": {
-            "calculatedCAGR": -0.02168248264317696,
-            "apiCAGR": 0.12,
-            "diffBps": 1416.8248264317695,
-            "label": "WARN"
-          }
-        },
-        {
-          "sev": "WARN",
-          "code": "CAGR_SOURCES_SPREAD",
-          "msg": "CAGR sources spread 29270bps: api.cagr=12.0%, cagrAnalysis.blended=12.0%, cagrAnalysis.analystEstimate1y=304.7%, cagrAnalysis.historicalCagr3y=20.0%",
-          "detail": {
-            "api.cagr": 0.12,
-            "cagrAnalysis.blended": 0.12,
-            "cagrAnalysis.analystEstimate1y": 3.047,
-            "cagrAnalysis.historicalCagr3y": 0.2
+            "calc3yCAGR": 0.3100276522124539,
+            "historicalCagr3y": 0.2,
+            "diffBps": 1100.2765221245386
           }
         }
       ],
@@ -468,11 +231,6 @@
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [],
@@ -488,8 +246,8 @@
       ],
       "keyMetrics": {
         "price": 184.99,
-        "fairValue": 98.76,
-        "upside": "-46.6%",
+        "fairValue": 112.22,
+        "upside": "-39.3%",
         "wacc": "17.26%",
         "beta": 2.82,
         "cagr": "12.0%",
@@ -497,89 +255,27 @@
         "numAnalysts": 26
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $285.13",
-            "after": "Fair Value Today: $699.00",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/COIN-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/COIN-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/COIN-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/COIN-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     },
     {
       "ticker": "GOOGL",
-      "timestamp": "2026-05-24T15:34:49.462Z",
+      "timestamp": "2026-05-24T21:44:43.547Z",
       "companyName": "Alphabet Inc.",
       "sector": "Communication Services",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 97,
+      "overallScore": 100,
       "apiScore": 100,
-      "financialScore": 95,
-      "valuationScore": 93,
-      "uiScore": 100,
+      "financialScore": 100,
+      "valuationScore": 99,
+      "uiScore": null,
       "criticalIssues": [],
-      "warnings": [
-        {
-          "sev": "WARN",
-          "code": "CAGR_MISMATCH",
-          "msg": "Historical revenue CAGR 11.8% vs api.cagr 21.6% — 977bps gap",
-          "detail": {
-            "calculatedCAGR": 0.11831521699421477,
-            "apiCAGR": 0.216,
-            "diffBps": 976.8478300578523,
-            "label": "WARN"
-          }
-        },
-        {
-          "sev": "WARN",
-          "code": "CAGR_SOURCES_SPREAD",
-          "msg": "CAGR sources spread 910bps: api.cagr=21.6%, cagrAnalysis.blended=21.6%, cagrAnalysis.analystEstimate1y=18.1%, cagrAnalysis.historicalCagr3y=12.5%",
-          "detail": {
-            "api.cagr": 0.216,
-            "cagrAnalysis.blended": 0.216,
-            "cagrAnalysis.analystEstimate1y": 0.181,
-            "cagrAnalysis.historicalCagr3y": 0.125
-          }
-        }
-      ],
+      "warnings": [],
       "infoFlags": [
         {
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [],
@@ -592,8 +288,8 @@
       "sectorFlags": [],
       "keyMetrics": {
         "price": 382.97,
-        "fairValue": 150.68,
-        "upside": "-60.7%",
+        "fairValue": 145.46,
+        "upside": "-62.0%",
         "wacc": "9.70%",
         "beta": 1.2,
         "cagr": "21.6%",
@@ -601,45 +297,11 @@
         "numAnalysts": 54
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $477.09",
-            "after": "Fair Value Today: $775.28",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/GOOGL-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/GOOGL-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/GOOGL-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/GOOGL-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     },
     {
       "ticker": "HOOD",
-      "timestamp": "2026-05-24T15:35:10.637Z",
+      "timestamp": "2026-05-24T21:45:22.175Z",
       "companyName": "Robinhood Markets, Inc.",
       "sector": "Financial Services",
       "currency": "USD",
@@ -647,30 +309,18 @@
       "overallScore": 97,
       "apiScore": 100,
       "financialScore": 94,
-      "valuationScore": 92,
-      "uiScore": 100,
+      "valuationScore": 98,
+      "uiScore": null,
       "criticalIssues": [],
       "warnings": [
         {
           "sev": "WARN",
           "code": "CAGR_MISMATCH",
-          "msg": "Historical revenue CAGR 25.3% vs api.cagr 12.0% — 1329bps gap",
+          "msg": "Computed 3Y historical CAGR 48.8% vs cagrAnalysis.historicalCagr3y 20.0% — 2879bps gap",
           "detail": {
-            "calculatedCAGR": 0.25294084509815096,
-            "apiCAGR": 0.12,
-            "diffBps": 1329.4084509815095,
-            "label": "WARN"
-          }
-        },
-        {
-          "sev": "WARN",
-          "code": "CAGR_SOURCES_SPREAD",
-          "msg": "CAGR sources spread 2090bps: api.cagr=12.0%, cagrAnalysis.blended=12.0%, cagrAnalysis.analystEstimate1y=32.9%, cagrAnalysis.historicalCagr3y=20.0%",
-          "detail": {
-            "api.cagr": 0.12,
-            "cagrAnalysis.blended": 0.12,
-            "cagrAnalysis.analystEstimate1y": 0.329,
-            "cagrAnalysis.historicalCagr3y": 0.2
+            "calc3yCAGR": 0.4878747583673768,
+            "historicalCagr3y": 0.2,
+            "diffBps": 2878.747583673768
           }
         }
       ],
@@ -689,11 +339,6 @@
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [],
@@ -709,8 +354,8 @@
       ],
       "keyMetrics": {
         "price": 73.64,
-        "fairValue": 30.77,
-        "upside": "-58.2%",
+        "fairValue": 29.27,
+        "upside": "-60.3%",
         "wacc": "14.84%",
         "beta": 2.294,
         "cagr": "12.0%",
@@ -718,79 +363,22 @@
         "numAnalysts": 23
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $30.86",
-            "after": "Fair Value Today: $75.65",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/HOOD-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/HOOD-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/HOOD-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/HOOD-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     },
     {
       "ticker": "INTC",
-      "timestamp": "2026-05-24T15:34:47.310Z",
+      "timestamp": "2026-05-24T21:44:39.719Z",
       "companyName": "Intel Corporation",
       "sector": "Technology",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 97,
+      "overallScore": 99,
       "apiScore": 99,
-      "financialScore": 95,
-      "valuationScore": 92,
-      "uiScore": 100,
+      "financialScore": 100,
+      "valuationScore": 98,
+      "uiScore": null,
       "criticalIssues": [],
-      "warnings": [
-        {
-          "sev": "WARN",
-          "code": "CAGR_MISMATCH",
-          "msg": "Historical revenue CAGR -9.6% vs api.cagr 4.0% — 1357bps gap",
-          "detail": {
-            "calculatedCAGR": -0.09566849990677329,
-            "apiCAGR": 0.04,
-            "diffBps": 1356.6849990677329,
-            "label": "WARN"
-          }
-        },
-        {
-          "sev": "WARN",
-          "code": "CAGR_SOURCES_SPREAD",
-          "msg": "CAGR sources spread 1670bps: api.cagr=4.0%, cagrAnalysis.blended=4.0%, cagrAnalysis.analystEstimate1y=11.0%, cagrAnalysis.historicalCagr3y=-5.7%",
-          "detail": {
-            "api.cagr": 0.04,
-            "cagrAnalysis.blended": 0.04,
-            "cagrAnalysis.analystEstimate1y": 0.11,
-            "cagrAnalysis.historicalCagr3y": -0.057
-          }
-        }
-      ],
+      "warnings": [],
       "infoFlags": [
         {
           "sev": "INFO",
@@ -806,11 +394,6 @@
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [
@@ -825,8 +408,8 @@
       "sectorFlags": [],
       "keyMetrics": {
         "price": 119.84,
-        "fairValue": 72.67,
-        "upside": "-39.4%",
+        "fairValue": 60.34,
+        "upside": "-49.6%",
         "wacc": "10.73%",
         "beta": 1.5,
         "cagr": "4.0%",
@@ -834,67 +417,22 @@
         "numAnalysts": 39
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $51.53",
-            "after": "Fair Value Today: $182.97",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/INTC-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/INTC-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/INTC-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/INTC-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     },
     {
       "ticker": "LCID",
-      "timestamp": "2026-05-24T15:35:12.629Z",
+      "timestamp": "2026-05-24T21:45:26.035Z",
       "companyName": "Lucid Group, Inc.",
       "sector": "Consumer Cyclical",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 91,
+      "overallScore": 92,
       "apiScore": 99,
-      "financialScore": 75,
-      "valuationScore": 90,
-      "uiScore": 100,
+      "financialScore": 80,
+      "valuationScore": 96,
+      "uiScore": null,
       "criticalIssues": [],
       "warnings": [
-        {
-          "sev": "WARN",
-          "code": "CAGR_MISMATCH",
-          "msg": "Historical revenue CAGR 165.8% vs api.cagr 55.0% — 11083bps gap",
-          "detail": {
-            "calculatedCAGR": 1.6582843910976557,
-            "apiCAGR": 0.55,
-            "diffBps": 11082.843910976557,
-            "label": "WARN"
-          }
-        },
         {
           "sev": "WARN",
           "code": "MARGIN_EXTREME",
@@ -926,17 +464,6 @@
           "sev": "WARN",
           "code": "FCF_MARGIN_EXTREME",
           "msg": "FCF margin -282.8% is unusually large (expected for pre-profit/capex-heavy companies)"
-        },
-        {
-          "sev": "WARN",
-          "code": "CAGR_SOURCES_SPREAD",
-          "msg": "CAGR sources spread 8350bps: api.cagr=55.0%, cagrAnalysis.blended=55.0%, cagrAnalysis.analystEstimate1y=114.1%, cagrAnalysis.historicalCagr3y=30.6%",
-          "detail": {
-            "api.cagr": 0.55,
-            "cagrAnalysis.blended": 0.55,
-            "cagrAnalysis.analystEstimate1y": 1.141,
-            "cagrAnalysis.historicalCagr3y": 0.306
-          }
         }
       ],
       "infoFlags": [
@@ -964,11 +491,6 @@
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [
@@ -983,8 +505,8 @@
       "sectorFlags": [],
       "keyMetrics": {
         "price": 5.84,
-        "fairValue": 17.72,
-        "upside": "203.4%",
+        "fairValue": 11.94,
+        "upside": "104.5%",
         "wacc": "7.30%",
         "beta": 1.48,
         "cagr": "55.0%",
@@ -992,45 +514,11 @@
         "numAnalysts": 11
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $6.45",
-            "after": "Fair Value Today: $3.11",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/LCID-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/LCID-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/LCID-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/LCID-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     },
     {
       "ticker": "MARA",
-      "timestamp": "2026-05-24T15:34:57.855Z",
+      "timestamp": "2026-05-24T21:44:58.936Z",
       "companyName": "MARA Holdings, Inc.",
       "sector": "Financial Services",
       "currency": "USD",
@@ -1038,36 +526,24 @@
       "overallScore": 95,
       "apiScore": 99,
       "financialScore": 89,
-      "valuationScore": 91,
-      "uiScore": 100,
+      "valuationScore": 97,
+      "uiScore": null,
       "criticalIssues": [],
       "warnings": [
         {
           "sev": "WARN",
           "code": "CAGR_MISMATCH",
-          "msg": "Historical revenue CAGR 97.5% vs api.cagr 12.0% — 8550bps gap",
+          "msg": "Computed 3Y historical CAGR 97.5% vs cagrAnalysis.historicalCagr3y 20.0% — 7750bps gap",
           "detail": {
-            "calculatedCAGR": 0.9749674623753362,
-            "apiCAGR": 0.12,
-            "diffBps": 8549.67462375336,
-            "label": "WARN"
+            "calc3yCAGR": 0.9749674623753362,
+            "historicalCagr3y": 0.2,
+            "diffBps": 7749.674623753362
           }
         },
         {
           "sev": "WARN",
           "code": "FCF_EQUALS_NI",
           "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
-        },
-        {
-          "sev": "WARN",
-          "code": "CAGR_SOURCES_SPREAD",
-          "msg": "CAGR sources spread 5350bps: api.cagr=12.0%, cagrAnalysis.blended=12.0%, cagrAnalysis.analystEstimate1y=65.5%, cagrAnalysis.historicalCagr3y=20.0%",
-          "detail": {
-            "api.cagr": 0.12,
-            "cagrAnalysis.blended": 0.12,
-            "cagrAnalysis.analystEstimate1y": 0.655,
-            "cagrAnalysis.historicalCagr3y": 0.2
-          }
         }
       ],
       "infoFlags": [
@@ -1095,11 +571,6 @@
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [
@@ -1117,8 +588,8 @@
       ],
       "keyMetrics": {
         "price": 13.81,
-        "fairValue": 13.06,
-        "upside": "-5.4%",
+        "fairValue": 11.54,
+        "upside": "-16.4%",
         "wacc": "18.64%",
         "beta": 3.12,
         "cagr": "12.0%",
@@ -1126,78 +597,27 @@
         "numAnalysts": 8
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $11.65",
-            "after": "Fair Value Today: $28.56",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/MARA-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/MARA-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/MARA-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/MARA-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     },
     {
       "ticker": "META",
-      "timestamp": "2026-05-24T15:34:45.257Z",
+      "timestamp": "2026-05-24T21:44:36.002Z",
       "companyName": "Meta Platforms, Inc.",
       "sector": "Communication Services",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 98,
+      "overallScore": 100,
       "apiScore": 100,
-      "financialScore": 95,
-      "valuationScore": 98,
-      "uiScore": 100,
+      "financialScore": 100,
+      "valuationScore": 99,
+      "uiScore": null,
       "criticalIssues": [],
-      "warnings": [
-        {
-          "sev": "WARN",
-          "code": "CAGR_MISMATCH",
-          "msg": "Historical revenue CAGR 14.3% vs api.cagr 22.0% — 774bps gap",
-          "detail": {
-            "calculatedCAGR": 0.14255073267286789,
-            "apiCAGR": 0.22,
-            "diffBps": 774.4926732713211,
-            "label": "WARN"
-          }
-        }
-      ],
+      "warnings": [],
       "infoFlags": [
         {
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [],
@@ -1210,8 +630,8 @@
       "sectorFlags": [],
       "keyMetrics": {
         "price": 610.26,
-        "fairValue": 445.73,
-        "upside": "-27.0%",
+        "fairValue": 433.12,
+        "upside": "-29.0%",
         "wacc": "10.19%",
         "beta": 1.35,
         "cagr": "22.0%",
@@ -1219,78 +639,27 @@
         "numAnalysts": 58
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $1,316",
-            "after": "Fair Value Today: $2,104",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/META-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/META-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/META-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/META-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     },
     {
       "ticker": "MSFT",
-      "timestamp": "2026-05-24T15:34:43.235Z",
+      "timestamp": "2026-05-24T21:44:31.819Z",
       "companyName": "Microsoft Corporation",
       "sector": "Technology",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 98,
+      "overallScore": 100,
       "apiScore": 100,
       "financialScore": 100,
-      "valuationScore": 93,
-      "uiScore": 100,
+      "valuationScore": 99,
+      "uiScore": null,
       "criticalIssues": [],
-      "warnings": [
-        {
-          "sev": "WARN",
-          "code": "CAGR_SOURCES_SPREAD",
-          "msg": "CAGR sources spread 600bps: api.cagr=18.4%, cagrAnalysis.blended=18.4%, cagrAnalysis.analystEstimate1y=16.5%, cagrAnalysis.historicalCagr3y=12.4%",
-          "detail": {
-            "api.cagr": 0.184,
-            "cagrAnalysis.blended": 0.184,
-            "cagrAnalysis.analystEstimate1y": 0.165,
-            "cagrAnalysis.historicalCagr3y": 0.124
-          }
-        }
-      ],
+      "warnings": [],
       "infoFlags": [
         {
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [],
@@ -1303,8 +672,8 @@
       "sectorFlags": [],
       "keyMetrics": {
         "price": 418.57,
-        "fairValue": 288.32,
-        "upside": "-31.1%",
+        "fairValue": 274.49,
+        "upside": "-34.4%",
         "wacc": "9.16%",
         "beta": 1.1,
         "cagr": "18.4%",
@@ -1312,82 +681,26 @@
         "numAnalysts": 53
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $680.04",
-            "after": "Fair Value Today: $1,263",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/MSFT-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/MSFT-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/MSFT-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/MSFT-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     },
     {
       "ticker": "MU",
-      "timestamp": "2026-05-24T15:34:53.706Z",
+      "timestamp": "2026-05-24T21:44:51.506Z",
       "companyName": "Micron Technology, Inc.",
       "sector": "Technology",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 95,
+      "overallScore": 97,
       "apiScore": 100,
-      "financialScore": 90,
-      "valuationScore": 91,
-      "uiScore": 100,
+      "financialScore": 95,
+      "valuationScore": 97,
+      "uiScore": null,
       "criticalIssues": [],
       "warnings": [
         {
           "sev": "WARN",
-          "code": "CAGR_MISMATCH",
-          "msg": "Historical revenue CAGR 6.7% vs api.cagr 22.0% — 1529bps gap",
-          "detail": {
-            "calculatedCAGR": 0.06713489726936261,
-            "apiCAGR": 0.22,
-            "diffBps": 1528.6510273063739,
-            "label": "WARN"
-          }
-        },
-        {
-          "sev": "WARN",
           "code": "FCF_EQUALS_NI",
           "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
-        },
-        {
-          "sev": "WARN",
-          "code": "CAGR_SOURCES_SPREAD",
-          "msg": "CAGR sources spread 5080bps: api.cagr=22.0%, cagrAnalysis.blended=22.0%, cagrAnalysis.analystEstimate1y=57.5%, cagrAnalysis.historicalCagr3y=6.7%",
-          "detail": {
-            "api.cagr": 0.22,
-            "cagrAnalysis.blended": 0.22,
-            "cagrAnalysis.analystEstimate1y": 0.575,
-            "cagrAnalysis.historicalCagr3y": 0.067
-          }
         }
       ],
       "infoFlags": [
@@ -1405,11 +718,6 @@
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [],
@@ -1422,8 +730,8 @@
       "sectorFlags": [],
       "keyMetrics": {
         "price": 751,
-        "fairValue": 349.92,
-        "upside": "-53.4%",
+        "fairValue": 267.17,
+        "upside": "-64.4%",
         "wacc": "12.51%",
         "beta": 1.81,
         "cagr": "22.0%",
@@ -1431,89 +739,27 @@
         "numAnalysts": 39
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $597.14",
-            "after": "Fair Value Today: $954.55",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/MU-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/MU-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/MU-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/MU-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     },
     {
       "ticker": "NFLX",
-      "timestamp": "2026-05-24T15:35:08.542Z",
+      "timestamp": "2026-05-24T21:45:18.278Z",
       "companyName": "Netflix, Inc.",
       "sector": "Communication Services",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 97,
+      "overallScore": 100,
       "apiScore": 100,
-      "financialScore": 95,
-      "valuationScore": 93,
-      "uiScore": 100,
+      "financialScore": 100,
+      "valuationScore": 99,
+      "uiScore": null,
       "criticalIssues": [],
-      "warnings": [
-        {
-          "sev": "WARN",
-          "code": "CAGR_MISMATCH",
-          "msg": "Historical revenue CAGR 11.1% vs api.cagr 18.9% — 784bps gap",
-          "detail": {
-            "calculatedCAGR": 0.11061266556973681,
-            "apiCAGR": 0.189,
-            "diffBps": 783.8733443026318,
-            "label": "WARN"
-          }
-        },
-        {
-          "sev": "WARN",
-          "code": "CAGR_SOURCES_SPREAD",
-          "msg": "CAGR sources spread 720bps: api.cagr=18.9%, cagrAnalysis.blended=18.9%, cagrAnalysis.analystEstimate1y=11.7%, cagrAnalysis.historicalCagr3y=12.6%",
-          "detail": {
-            "api.cagr": 0.189,
-            "cagrAnalysis.blended": 0.189,
-            "cagrAnalysis.analystEstimate1y": 0.117,
-            "cagrAnalysis.historicalCagr3y": 0.126
-          }
-        }
-      ],
+      "warnings": [],
       "infoFlags": [
         {
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [],
@@ -1526,8 +772,8 @@
       "sectorFlags": [],
       "keyMetrics": {
         "price": 88.6,
-        "fairValue": 156.23,
-        "upside": "76.3%",
+        "fairValue": 152.08,
+        "upside": "71.6%",
         "wacc": "10.33%",
         "beta": 1.37,
         "cagr": "18.9%",
@@ -1535,76 +781,30 @@
         "numAnalysts": 45
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $126.15",
-            "after": "Fair Value Today: $229.36",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/NFLX-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/NFLX-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/NFLX-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/NFLX-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     },
     {
       "ticker": "NVDA",
-      "timestamp": "2026-05-24T15:34:33.470Z",
+      "timestamp": "2026-05-24T21:44:12.153Z",
       "companyName": "NVIDIA Corporation",
       "sector": "Technology",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 97,
+      "overallScore": 98,
       "apiScore": 100,
       "financialScore": 95,
-      "valuationScore": 92,
-      "uiScore": 100,
+      "valuationScore": 98,
+      "uiScore": null,
       "criticalIssues": [],
       "warnings": [
         {
           "sev": "WARN",
           "code": "CAGR_MISMATCH",
-          "msg": "Historical revenue CAGR 68.3% vs api.cagr 22.0% — 4630bps gap",
+          "msg": "Computed 3Y historical CAGR 100.0% vs cagrAnalysis.historicalCagr3y 60.0% — 4005bps gap",
           "detail": {
-            "calculatedCAGR": 0.6830139148028267,
-            "apiCAGR": 0.22,
-            "diffBps": 4630.139148028267,
-            "label": "WARN"
-          }
-        },
-        {
-          "sev": "WARN",
-          "code": "CAGR_SOURCES_SPREAD",
-          "msg": "CAGR sources spread 3800bps: api.cagr=22.0%, cagrAnalysis.blended=22.0%, cagrAnalysis.analystEstimate1y=38.1%, cagrAnalysis.historicalCagr3y=60.0%",
-          "detail": {
-            "api.cagr": 0.22,
-            "cagrAnalysis.blended": 0.22,
-            "cagrAnalysis.analystEstimate1y": 0.381,
-            "cagrAnalysis.historicalCagr3y": 0.6
+            "calc3yCAGR": 1.0004509499443963,
+            "historicalCagr3y": 0.6,
+            "diffBps": 4004.5094994439633
           }
         }
       ],
@@ -1618,11 +818,6 @@
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [],
@@ -1635,8 +830,8 @@
       "sectorFlags": [],
       "keyMetrics": {
         "price": 215.33,
-        "fairValue": 119.39,
-        "upside": "-44.6%",
+        "fairValue": 99.24,
+        "upside": "-53.9%",
         "wacc": "13.70%",
         "beta": 2.05,
         "cagr": "22.0%",
@@ -1644,54 +839,20 @@
         "numAnalysts": 55
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $184.12",
-            "after": "Fair Value Today: $294.33",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/NVDA-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/NVDA-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/NVDA-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/NVDA-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     },
     {
       "ticker": "PAGS",
-      "timestamp": "2026-05-24T15:35:14.843Z",
+      "timestamp": "2026-05-24T21:44:07.933Z",
       "companyName": "PagSeguro Digital Ltd.",
       "sector": "Technology",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 98,
+      "overallScore": 97,
       "apiScore": 100,
       "financialScore": 94,
-      "valuationScore": 97,
-      "uiScore": 100,
+      "valuationScore": 98,
+      "uiScore": null,
       "criticalIssues": [],
       "warnings": [
         {
@@ -1704,10 +865,10 @@
         {
           "sev": "INFO",
           "code": "CAGR_FX_LIKELY",
-          "msg": "CAGR gap 260bps — probable FX effect (stmts in USD, quote in USD)",
+          "msg": "CAGR gap 450bps — probable FX effect (stmts in USD, quote in USD)",
           "detail": {
-            "calculatedCAGR": 0.10000412219704757,
-            "apiCAGR": 0.074
+            "calc3yCAGR": 0.10000412219704757,
+            "historicalCagr3y": 0.055
           }
         },
         {
@@ -1719,11 +880,6 @@
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [],
@@ -1736,8 +892,8 @@
       "sectorFlags": [],
       "keyMetrics": {
         "price": 9.14,
-        "fairValue": 31.32,
-        "upside": "242.7%",
+        "fairValue": 33.57,
+        "upside": "267.3%",
         "wacc": "13.22%",
         "beta": 1.46,
         "cagr": "7.4%",
@@ -1745,68 +901,22 @@
         "numAnalysts": 10
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $40.52",
-            "after": "Fair Value Today: $122.51",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/PAGS-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/PAGS-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/PAGS-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/PAGS-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     },
     {
       "ticker": "PLTR",
-      "timestamp": "2026-05-24T15:34:51.409Z",
+      "timestamp": "2026-05-24T21:44:47.221Z",
       "companyName": "Palantir Technologies Inc.",
       "sector": "Technology",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 98,
+      "overallScore": 99,
       "apiScore": 100,
       "financialScore": 100,
-      "valuationScore": 92,
-      "uiScore": 100,
+      "valuationScore": 98,
+      "uiScore": null,
       "criticalIssues": [],
-      "warnings": [
-        {
-          "sev": "WARN",
-          "code": "CAGR_SOURCES_SPREAD",
-          "msg": "CAGR sources spread 1180bps: api.cagr=33.3%, cagrAnalysis.blended=33.3%, cagrAnalysis.analystEstimate1y=44.7%, cagrAnalysis.historicalCagr3y=32.9%",
-          "detail": {
-            "api.cagr": 0.333,
-            "cagrAnalysis.blended": 0.333,
-            "cagrAnalysis.analystEstimate1y": 0.447,
-            "cagrAnalysis.historicalCagr3y": 0.329
-          }
-        }
-      ],
+      "warnings": [],
       "infoFlags": [
         {
           "sev": "INFO",
@@ -1817,11 +927,6 @@
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [],
@@ -1834,8 +939,8 @@
       "sectorFlags": [],
       "keyMetrics": {
         "price": 136.88,
-        "fairValue": 28.93,
-        "upside": "-78.9%",
+        "fairValue": 28.32,
+        "upside": "-79.3%",
         "wacc": "13.53%",
         "beta": 2.01,
         "cagr": "33.3%",
@@ -1843,79 +948,22 @@
         "numAnalysts": 30
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $50.93",
-            "after": "Fair Value Today: $52.28",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/PLTR-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/PLTR-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/PLTR-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/PLTR-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     },
     {
       "ticker": "RIVN",
-      "timestamp": "2026-05-24T15:35:04.193Z",
+      "timestamp": "2026-05-24T21:45:10.941Z",
       "companyName": "Rivian Automotive, Inc.",
       "sector": "Consumer Cyclical",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 96,
+      "overallScore": 98,
       "apiScore": 99,
-      "financialScore": 95,
-      "valuationScore": 90,
-      "uiScore": 100,
+      "financialScore": 100,
+      "valuationScore": 96,
+      "uiScore": null,
       "criticalIssues": [],
-      "warnings": [
-        {
-          "sev": "WARN",
-          "code": "CAGR_MISMATCH",
-          "msg": "Historical revenue CAGR 214.6% vs api.cagr 38.0% — 17659bps gap",
-          "detail": {
-            "calculatedCAGR": 2.1459083889516504,
-            "apiCAGR": 0.38,
-            "diffBps": 17659.083889516503,
-            "label": "WARN"
-          }
-        },
-        {
-          "sev": "WARN",
-          "code": "CAGR_SOURCES_SPREAD",
-          "msg": "CAGR sources spread 2650bps: api.cagr=38.0%, cagrAnalysis.blended=38.0%, cagrAnalysis.analystEstimate1y=64.5%, cagrAnalysis.historicalCagr3y=48.1%",
-          "detail": {
-            "api.cagr": 0.38,
-            "cagrAnalysis.blended": 0.38,
-            "cagrAnalysis.analystEstimate1y": 0.645,
-            "cagrAnalysis.historicalCagr3y": 0.481
-          }
-        }
-      ],
+      "warnings": [],
       "infoFlags": [
         {
           "sev": "INFO",
@@ -1941,11 +989,6 @@
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [
@@ -1960,8 +1003,8 @@
       "sectorFlags": [],
       "keyMetrics": {
         "price": 14.22,
-        "fairValue": 16.44,
-        "upside": "15.6%",
+        "fairValue": 11.67,
+        "upside": "-17.9%",
         "wacc": "6.16%",
         "beta": 0.5,
         "cagr": "38.0%",
@@ -1969,82 +1012,26 @@
         "numAnalysts": 24
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $4.36",
-            "after": "Fair Value Today: $3.77",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/RIVN-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/RIVN-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/RIVN-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/RIVN-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     },
     {
       "ticker": "SMCI",
-      "timestamp": "2026-05-24T15:34:55.516Z",
+      "timestamp": "2026-05-24T21:44:55.129Z",
       "companyName": "Super Micro Computer, Inc.",
       "sector": "Technology",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 95,
+      "overallScore": 97,
       "apiScore": 100,
-      "financialScore": 90,
-      "valuationScore": 91,
-      "uiScore": 100,
+      "financialScore": 95,
+      "valuationScore": 97,
+      "uiScore": null,
       "criticalIssues": [],
       "warnings": [
         {
           "sev": "WARN",
-          "code": "CAGR_MISMATCH",
-          "msg": "Historical revenue CAGR 61.7% vs api.cagr 28.0% — 3371bps gap",
-          "detail": {
-            "calculatedCAGR": 0.6170781210288652,
-            "apiCAGR": 0.28,
-            "diffBps": 3370.7812102886514,
-            "label": "WARN"
-          }
-        },
-        {
-          "sev": "WARN",
           "code": "FCF_EQUALS_NI",
           "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
-        },
-        {
-          "sev": "WARN",
-          "code": "CAGR_SOURCES_SPREAD",
-          "msg": "CAGR sources spread 3200bps: api.cagr=28.0%, cagrAnalysis.blended=28.0%, cagrAnalysis.analystEstimate1y=29.9%, cagrAnalysis.historicalCagr3y=60.0%",
-          "detail": {
-            "api.cagr": 0.28,
-            "cagrAnalysis.blended": 0.28,
-            "cagrAnalysis.analystEstimate1y": 0.299,
-            "cagrAnalysis.historicalCagr3y": 0.6
-          }
         }
       ],
       "infoFlags": [
@@ -2062,11 +1049,6 @@
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [],
@@ -2079,8 +1061,8 @@
       "sectorFlags": [],
       "keyMetrics": {
         "price": 35.58,
-        "fairValue": 37.16,
-        "upside": "4.4%",
+        "fairValue": 45.49,
+        "upside": "27.9%",
         "wacc": "10.92%",
         "beta": 2.03,
         "cagr": "28.0%",
@@ -2088,45 +1070,11 @@
         "numAnalysts": 16
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $224.05",
-            "after": "Fair Value Today: $281.72",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/SMCI-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/SMCI-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/SMCI-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/SMCI-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     },
     {
       "ticker": "SOFI",
-      "timestamp": "2026-05-24T15:35:00.153Z",
+      "timestamp": "2026-05-24T21:45:02.742Z",
       "companyName": "SoFi Technologies, Inc.",
       "sector": "Financial Services",
       "currency": "USD",
@@ -2134,30 +1082,18 @@
       "overallScore": 97,
       "apiScore": 100,
       "financialScore": 94,
-      "valuationScore": 92,
-      "uiScore": 100,
+      "valuationScore": 98,
+      "uiScore": null,
       "criticalIssues": [],
       "warnings": [
         {
           "sev": "WARN",
           "code": "CAGR_MISMATCH",
-          "msg": "Historical revenue CAGR 44.7% vs api.cagr 12.0% — 3271bps gap",
+          "msg": "Computed 3Y historical CAGR 39.3% vs cagrAnalysis.historicalCagr3y -3.5% — 4285bps gap",
           "detail": {
-            "calculatedCAGR": 0.4470992884739893,
-            "apiCAGR": 0.12,
-            "diffBps": 3270.992884739893,
-            "label": "WARN"
-          }
-        },
-        {
-          "sev": "WARN",
-          "code": "CAGR_SOURCES_SPREAD",
-          "msg": "CAGR sources spread 3800bps: api.cagr=12.0%, cagrAnalysis.blended=12.0%, cagrAnalysis.analystEstimate1y=34.5%, cagrAnalysis.historicalCagr3y=-3.5%",
-          "detail": {
-            "api.cagr": 0.12,
-            "cagrAnalysis.blended": 0.12,
-            "cagrAnalysis.analystEstimate1y": 0.345,
-            "cagrAnalysis.historicalCagr3y": -0.035
+            "calc3yCAGR": 0.39345215006393763,
+            "historicalCagr3y": -0.035,
+            "diffBps": 4284.521500639376
           }
         }
       ],
@@ -2176,11 +1112,6 @@
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [],
@@ -2196,8 +1127,8 @@
       ],
       "keyMetrics": {
         "price": 15.62,
-        "fairValue": 14.08,
-        "upside": "-9.9%",
+        "fairValue": 12.84,
+        "upside": "-17.8%",
         "wacc": "13.40%",
         "beta": 1.98,
         "cagr": "12.0%",
@@ -2205,78 +1136,27 @@
         "numAnalysts": 19
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $8.35",
-            "after": "Fair Value Today: $20.46",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/SOFI-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/SOFI-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/SOFI-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/SOFI-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     },
     {
       "ticker": "TSLA",
-      "timestamp": "2026-05-24T15:34:37.509Z",
+      "timestamp": "2026-05-24T21:44:19.986Z",
       "companyName": "Tesla, Inc.",
       "sector": "Consumer Cyclical",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 98,
+      "overallScore": 100,
       "apiScore": 100,
       "financialScore": 100,
-      "valuationScore": 93,
-      "uiScore": 100,
+      "valuationScore": 99,
+      "uiScore": null,
       "criticalIssues": [],
-      "warnings": [
-        {
-          "sev": "WARN",
-          "code": "CAGR_SOURCES_SPREAD",
-          "msg": "CAGR sources spread 1030bps: api.cagr=10.9%, cagrAnalysis.blended=10.9%, cagrAnalysis.analystEstimate1y=15.5%, cagrAnalysis.historicalCagr3y=5.2%",
-          "detail": {
-            "api.cagr": 0.109,
-            "cagrAnalysis.blended": 0.109,
-            "cagrAnalysis.analystEstimate1y": 0.155,
-            "cagrAnalysis.historicalCagr3y": 0.052
-          }
-        }
-      ],
+      "warnings": [],
       "infoFlags": [
         {
           "sev": "INFO",
           "code": "METHOD_NOT_APPLICABLE",
           "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
-        },
-        {
-          "sev": "INFO",
-          "code": "METHOD_NOT_APPLICABLE",
-          "msg": "EV/Revenue marked not applicable — ensure UI shows clear N/A reason"
         }
       ],
       "missingFields": [],
@@ -2289,8 +1169,8 @@
       "sectorFlags": [],
       "keyMetrics": {
         "price": 426.01,
-        "fairValue": 28.75,
-        "upside": "-93.3%",
+        "fairValue": 28.3,
+        "upside": "-93.4%",
         "wacc": "12.86%",
         "beta": 1.88,
         "cagr": "10.9%",
@@ -2298,41 +1178,7 @@
         "numAnalysts": 45
       },
       "recommendedFixes": [],
-      "fixed": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "badTextFound": [],
-      "tabResults": {
-        "overview": {
-          "tab": "overview",
-          "issues": []
-        },
-        "valuation": {
-          "tab": "valuation",
-          "issues": [],
-          "sliderTest": {
-            "before": "Fair Value Today: $39.59",
-            "after": "Fair Value Today: $101.96",
-            "changed": true
-          }
-        },
-        "financials": {
-          "tab": "financials",
-          "issues": []
-        },
-        "risks": {
-          "tab": "risks",
-          "issues": []
-        }
-      },
-      "screenshotPaths": {
-        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/TSLA-overview.png",
-        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/TSLA-valuation.png",
-        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/TSLA-financials.png",
-        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/TSLA-risks.png"
-      },
-      "uiIssues": [],
-      "failedSelectors": []
+      "fixed": false
     }
   ]
 }
