@@ -76,6 +76,34 @@ function buildEVEBITDAResults(result: ReturnType<typeof computeEVEBITDA>, curren
   ]
 }
 
+// ─── Confidence badge ─────────────────────────────────────────────────────────
+
+type ConfidenceLevel = 'high' | 'medium' | 'low'
+
+function ConfidenceBadge({ level }: { level: ConfidenceLevel }) {
+  const cfg = {
+    high:   { label: 'High Confidence',   bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+    medium: { label: 'Medium Confidence', bg: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-200'   },
+    low:    { label: 'Low Confidence',    bg: 'bg-red-50',     text: 'text-red-700',     border: 'border-red-200'     },
+  }[level]
+  return (
+    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border uppercase tracking-wider shrink-0 ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+      {cfg.label}
+    </span>
+  )
+}
+
+function methodVerdict(upsidePct: number | null, reverseDCFLabel?: string): string {
+  if (reverseDCFLabel !== undefined) return reverseDCFLabel
+  if (upsidePct == null) return 'Insufficient data to compute fair value'
+  const pct = upsidePct * 100
+  if (pct >= 25)  return `Suggests ${pct.toFixed(0)}% undervaluation — model sees meaningful upside`
+  if (pct >= 10)  return `${pct.toFixed(0)}% below model fair value — potential buy zone by this measure`
+  if (pct >= -5)  return `Trading near fair value — limited margin of safety by this measure`
+  if (pct >= -20) return `${Math.abs(pct).toFixed(0)}% premium to model — priced for continued execution`
+  return `${Math.abs(pct).toFixed(0)}% above model fair value — high expectations embedded in price`
+}
+
 // ─── Inline method panel helpers ──────────────────────────────────────────────
 
 function resultToneClass(tone: ValuationResult['tone']): string {
@@ -136,14 +164,6 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin 
 
   return (
     <div className="card rounded-xl overflow-hidden">
-      {/* Header */}
-      <div className="px-5 py-4 border-b border-slate-200">
-        <h3 className="text-sm font-semibold text-slate-800">Reverse DCF</h3>
-        <p className="text-xs text-slate-500 mt-0.5">
-          Works backwards from today&apos;s price to find the growth rate the market is implicitly pricing in.
-        </p>
-      </div>
-
       {/* Three-column hero */}
       <div className="grid grid-cols-3 divide-x divide-slate-200">
         <div className="flex flex-col items-center px-4 py-5 gap-1">
@@ -235,7 +255,6 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
       {/* Header */}
       <div className="px-5 py-4 border-b border-slate-200 flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-sm font-semibold text-slate-800">{config.title}</h3>
           <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{config.methodDescription ?? config.subtitle}</p>
         </div>
         {config.fairValueSummary != null && (
@@ -306,7 +325,7 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
         </div>
       )}
 
-      {/* Read-only key values (Reverse DCF has no editable sliders) */}
+      {/* Read-only key values */}
       {editableAssumptions.length === 0 && readonlyAssumptions.length > 0 && (
         <div className="px-5 pt-4 pb-2">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -366,23 +385,37 @@ interface ValuationLabProps {
 
 // ─── MethodAccordion ──────────────────────────────────────────────────────────
 
+interface MethodChip {
+  label: string
+  value: string
+  linked?: boolean
+  onToggleLink?: () => void
+}
+
 interface MethodAccordionProps {
   id: string
   title: string
-  bestFor: string
+  confidence: ConfidenceLevel | null
+  verdict: string
+  weight: number
   isOpen: boolean
   onToggle: () => void
   innerRef: (el: HTMLDivElement | null) => void
   fairValue: number | null
   upsidePct: number | null
   currency: string
-  chips: Array<{ label: string; value: string }>
+  chips: MethodChip[]
+  guide: string[]
   children: React.ReactNode
 }
 
-function MethodAccordion({ title, bestFor, isOpen, onToggle, innerRef, fairValue, upsidePct, currency, chips, children }: MethodAccordionProps) {
+function MethodAccordion({
+  title, confidence, verdict, weight, isOpen, onToggle, innerRef,
+  fairValue, upsidePct, currency, chips, guide, children,
+}: MethodAccordionProps) {
   return (
     <div ref={innerRef} className="glass-accordion-header rounded-xl overflow-hidden scroll-mt-4">
+      {/* Clickable header row */}
       <button
         onClick={onToggle}
         className="w-full px-5 py-4 flex items-start gap-3 text-left hover:bg-slate-50/60 transition-colors"
@@ -392,8 +425,10 @@ function MethodAccordion({ title, bestFor, isOpen, onToggle, innerRef, fairValue
           className={cn('shrink-0 text-slate-400 transition-transform mt-0.5', isOpen ? 'rotate-180' : '')}
         />
         <div className="min-w-0 flex-1">
+          {/* Row 1: name + confidence badge + FV + upside */}
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-semibold text-slate-800">{title}</span>
+            {confidence && <ConfidenceBadge level={confidence} />}
             {fairValue != null && (
               <span className="text-sm font-bold tabular-nums text-slate-900 ml-auto">
                 {fmtPrice(fairValue, currency)}
@@ -401,18 +436,41 @@ function MethodAccordion({ title, bestFor, isOpen, onToggle, innerRef, fairValue
             )}
             {upsidePct != null && <TrendBadge value={upsidePct} size="sm" />}
           </div>
-          <p className="text-[11px] text-slate-500 mt-0.5">{bestFor}</p>
-          {chips.length > 0 && !isOpen && (
-            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-              {chips.map(c => (
-                <span key={c.label} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
-                  {c.label}: {c.value}
-                </span>
-              ))}
+          {/* Row 2: verdict */}
+          {verdict && <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">{verdict}</p>}
+        </div>
+      </button>
+
+      {/* Chips + weight bar row (outside the button to allow nested controls) */}
+      {!isOpen && chips.length > 0 && (
+        <div className="px-5 pb-3 -mt-1 flex items-center gap-1.5 flex-wrap">
+          {chips.map(c => (
+            <span
+              key={c.label}
+              className="inline-flex items-center gap-0.5 text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200"
+            >
+              {c.label}: {c.value}
+              {c.onToggleLink && (
+                <button
+                  onClick={e => { e.stopPropagation(); c.onToggleLink!() }}
+                  className="ml-0.5 opacity-50 hover:opacity-100 transition-opacity"
+                  title={c.linked ? 'CAGR linked — click to unlink' : 'CAGR unlinked — click to link'}
+                >
+                  {c.linked ? '🔗' : '🔓'}
+                </button>
+              )}
+            </span>
+          ))}
+          {weight > 0 && (
+            <div className="ml-auto flex items-center gap-1.5 shrink-0">
+              <span className="text-[10px] text-slate-400">{(weight * 100).toFixed(0)}% weight</span>
+              <div className="w-14 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                <div className="h-full rounded-full bg-blue-300" style={{ width: `${weight * 100}%` }} />
+              </div>
             </div>
           )}
         </div>
-      </button>
+      )}
 
       <AnimatePresence>
         {isOpen && (
@@ -423,8 +481,23 @@ function MethodAccordion({ title, bestFor, isOpen, onToggle, innerRef, fairValue
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden border-t border-slate-100 bg-white"
           >
-            {/* Suppress inner card borders when embedded */}
             <div className="[&_.card]:rounded-none [&_.card]:border-0 [&_.card]:shadow-none">
+              {/* 3-step guide */}
+              {guide.length > 0 && (
+                <div className="px-5 pt-4 pb-3 bg-blue-50/40 border-b border-blue-100">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-2">How to use this model</p>
+                  <ol className="space-y-1.5">
+                    {guide.map((step, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="shrink-0 w-4 h-4 rounded-full bg-blue-100 text-blue-700 text-[9px] font-bold flex items-center justify-center mt-0.5">
+                          {i + 1}
+                        </span>
+                        <span className="text-[11px] text-slate-600 leading-snug">{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
               {children}
             </div>
           </motion.div>
@@ -432,6 +505,36 @@ function MethodAccordion({ title, bestFor, isOpen, onToggle, innerRef, fairValue
       </AnimatePresence>
     </div>
   )
+}
+
+// ─── Method guides ────────────────────────────────────────────────────────────
+
+const METHOD_GUIDES: Record<string, string[]> = {
+  forward_pe: [
+    'Check the Revenue CAGR — does it align with analyst consensus or your own growth outlook?',
+    'Adjust the Exit P/E to reflect the company\'s mature multiple. Lower = conservative; higher = growth premium.',
+    'Review Net Margin — ensure it reflects a sustainable long-term profitability level for this business.',
+  ],
+  ev_ebitda: [
+    'Confirm the TTM EBITDA (trailing 12-month earnings before interest, taxes, D&A) is correct.',
+    'The sector median multiple is applied automatically — adjust if you believe this company deserves a premium or discount.',
+    'EV/EBITDA is less reliable for financial companies (banks, fintechs). Use Forward P/E or P/Book instead.',
+  ],
+  revenue_multiple: [
+    'Revenue CAGR is shared with Forward P/E by default — changing it in either model updates both.',
+    'Adjust the EV/Revenue exit multiple based on the company\'s expected profitability at maturity.',
+    'Best suited for pre-profit or high-growth companies where earnings are not yet stable.',
+  ],
+  reverse_dcf: [
+    'Read the "Market Implies" growth rate — this is the CAGR that justifies buying at today\'s price.',
+    'Compare it to analyst consensus and 3-year historical CAGR. A large gap signals elevated expectations.',
+    'If market-implied CAGR far exceeds both analyst and historical data, the stock may be priced for perfection.',
+  ],
+  full_dcf: [
+    'Review WACC and terminal growth rate — small changes have outsized impact on fair value.',
+    'The three models (FCFF, FCFE, DDM) are triangulated into a blended intrinsic estimate.',
+    'Edit year-by-year projections in the table below for a precise, customized valuation.',
+  ],
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -459,7 +562,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
   const ttmNetIncome = (ttmIS.netIncome     as number | null) ?? null
   const ttmTaxProv   = (ttmIS.taxProvision as number | null) ?? null
   const ttmIntExp    = Math.abs(((ttmIS.interestExpenseNonOperating ?? ttmIS.interestExpense) as number | null) ?? 0)
-  // EBITDA: (1) direct field, (2) EBIT + D&A, (3) bottom-up: NI + Tax + Interest + D&A
   const ttmEbitda    = ttmEbitdaRaw
     ?? (ttmEbit != null && ttmDA != null ? ttmEbit + ttmDA : null)
     ?? (ttmNetIncome != null && ttmDA != null
@@ -471,26 +573,17 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
   const ttmNetDebt   = ttmTotalDebt != null && ttmCash != null ? ttmTotalDebt - ttmCash : null
   const ttmShares    = ((ttmBS.commonStockSharesOutstanding ?? ttmBS.sharesOutstanding) as number | null) ?? null
 
-  // FX rate: statementsData (fundamentalsTimeSeries) reports in financialCurrency (e.g. BRL for STNE).
-  // All absolute monetary TTM values must be converted to quote currency (USD for ADRs) before use.
   const stmtFxRate = (apiData?.providerStatus?.fx?.rate as number | undefined) ?? 1
 
-  // fairValue.sharesOutstanding is in millions (ADR-equivalent); TTM balance sheet shares may be ordinary
-  // For ADRs (TSM: 5 ordinary = 1 ADR), fairValue.sharesOutstanding is already ADR-adjusted — prefer it
   const sharesAbsolute = (apiData?.fairValue?.sharesOutstanding != null ? apiData.fairValue.sharesOutstanding * 1e6 : null) ?? ttmShares
 
   // ── Derived assumptions ──────────────────────────────────────────────────
   const fwdPEBase   = useMemo(() => deriveForwardPEAssumptions(apiData), [apiData])
   const revMultBase = useMemo(() => deriveRevenueMultipleAssumptions(apiData), [apiData])
 
-  // financialStatements revenue is in millions; TTM revenue is absolute — normalise to absolute USD
-  // Apply stmtFxRate so ADR stocks (BRL, CNY, etc.) produce USD fair values
-  // Must be defined after fwdPEBase (which provides the financialStatements fallback)
   const ltvRevenueAbsolute = (ttmRevenue != null ? ttmRevenue * stmtFxRate : null) ?? (fwdPEBase.ltvRevenue != null ? fwdPEBase.ltvRevenue * 1e6 : null)
 
   const evEbitdaBase = useMemo(() => {
-    // ttmEbitda is in absolute reporting currency — convert to quote currency via stmtFxRate
-    // financialStatements.incomeStatement.ebitda is in millions, already FX-converted — multiply by 1e6
     const ebitdaFromTTM     = ttmEbitda != null ? ttmEbitda * stmtFxRate : null
     const ebitdaFromFinStmt = (apiData?.financialStatements?.incomeStatement?.find((r: { isProjected?: boolean; ebitda?: number | null }) => !r.isProjected)?.ebitda ?? null) as number | null
     const ebitda            = ebitdaFromTTM ?? (ebitdaFromFinStmt != null ? ebitdaFromFinStmt * 1e6 : null)
@@ -498,7 +591,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
     const cashFMP    = apiData?.fairValue?.cash != null ? apiData.fairValue.cash * 1e6 : null
     const debtFMP    = apiData?.fairValue?.debt != null ? apiData.fairValue.debt * 1e6 : null
     const netDebtRaw = ttmNetDebt != null ? ttmNetDebt * stmtFxRate : null
-    // Fallback from annual balance sheet (already in millions, already FX-converted)
     const annualBS   = apiData?.financialStatements?.balanceSheet?.find((r: { isProjected?: boolean }) => !r.isProjected)
     const cashBS     = annualBS?.cash != null ? (annualBS.cash as number) * 1e6 : null
     const debtBS     = annualBS?.longTermDebt != null ? (annualBS.longTermDebt as number) * 1e6 : null
@@ -623,15 +715,13 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
     apiData?.financialStatements?.cashFlow ?? []
 
   const lastActualRevenue = useMemo(() => {
-    // Apply stmtFxRate so revenue is in quote currency (USD for ADRs like STNE, PAGS, VALE, TSM)
     if (ttmRevenue != null) return ttmRevenue * stmtFxRate
     const actuals = incomeRows.filter(r => !r.isProjected && r.revenue != null && r.revenue > 0)
     const revM = actuals.length > 0 ? actuals[actuals.length - 1].revenue! : null
-    return revM != null ? revM * 1e6 : null  // financialStatements revenue is already in USD millions
+    return revM != null ? revM * 1e6 : null
   }, [incomeRows, ttmRevenue, stmtFxRate])
 
   const lastFCFMargin = useMemo(() => {
-    // Use both from the same scale to keep the ratio consistent
     if (ttmRevenue != null && ttmFCF != null && ttmRevenue > 0) return ttmFCF / ttmRevenue
     const actRev = incomeRows.filter(r => !r.isProjected && r.revenue != null && r.revenue > 0)
     const actFCF = cashFlowRows.filter(r => !r.isProjected && r.freeCashFlow != null)
@@ -656,7 +746,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
   function handleAssumptionChange(methodId: ValuationMethodId | 'ev_ebitda', key: string, value: number) {
     setOverrides(prev => {
       const updated = { ...prev, [methodId]: { ...(prev[methodId] ?? {}), [key]: value } }
-      // When CAGR is linked, propagate revenueCAGR across Forward P/E and Revenue Multiple
       if (linkedCAGR && key === 'revenueCAGR' && (methodId === 'forward_pe' || methodId === 'revenue_multiple')) {
         updated['forward_pe']       = { ...(updated['forward_pe']       ?? {}), revenueCAGR: value }
         updated['revenue_multiple'] = { ...(updated['revenue_multiple'] ?? {}), revenueCAGR: value }
@@ -668,13 +757,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
     setOverrides(prev => { const n = { ...prev }; delete n[methodId]; return n })
   }
 
-  function handleSummaryMethodClick(id: string) {
-    setOpenMethodId(prev => (prev === id ? null : id))
-    setTimeout(() => {
-      methodRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 80)
-  }
-
   // ── Summary ───────────────────────────────────────────────────────────────
   const summaryMethods: MethodResult[] = [
     { id: 'forward_pe',       label: 'Forward P/E (5Y)',          fairValue: fwdPEResult.fairValueToday,       upsidePct: fwdPEResult.upsidePct,           weight: 0.35 },
@@ -683,7 +765,6 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
     { id: 'core_dcf',         label: 'Core DCF (FCFF/FCFE/DDM)',  fairValue: (apiData?.valuationMethods?.triangulatedFairValue as number | null) ?? null, upsidePct: (apiData?.valuationMethods?.triangulatedUpsidePct as number | null) ?? null, weight: 0.10 },
   ]
 
-  // Lift weighted fair value to parent so PriceChart can show "Your Model" line
   const weightedFV = useMemo(() => {
     const valid = summaryMethods.filter(m => m.fairValue != null && m.weight > 0)
     if (!valid.length) return null
@@ -695,26 +776,36 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
   useEffect(() => { onWeightedFVChange?.(weightedFV) }, [weightedFV, onWeightedFVChange])
   useEffect(() => { onActiveMethodChange?.(openMethodId) }, [openMethodId, onActiveMethodChange])
 
+  // ── Reverse DCF verdict ───────────────────────────────────────────────────
+  const reverseDCFVerdictMap: Record<string, string> = {
+    conservative:    'Market implies conservative growth — stock may be undervalued',
+    reasonable:      'Market growth expectations look reasonable relative to fundamentals',
+    aggressive:      'Market implies aggressive growth — high bar for the company to meet',
+    very_aggressive: 'Implied growth is very aggressive — significant execution risk priced in',
+  }
+  const reverseDCFVerdict = (reverseDCFResult.interpretation ? reverseDCFVerdictMap[reverseDCFResult.interpretation] : null)
+    ?? 'What growth rate does today\'s price require?'
+
   return (
     <div className="space-y-4">
 
-      {/* ── 1. Valuation Summary — THE ANSWER (always first) ─────────────── */}
+      {/* ── 1. Valuation Summary — lollipop chart ────────────────────────── */}
       <ValuationSummary
         methods={summaryMethods}
         currentPrice={currentPrice}
         currency={currency}
-        onMethodClick={handleSummaryMethodClick}
       />
 
-      {/* ── 2. Method accordions ─────────────────────────────────────────── */}
+      {/* ── 2. Unified method cards ──────────────────────────────────────── */}
       <div className="space-y-3">
-        <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600 px-1">Explore each method</p>
 
         {/* Forward P/E */}
         <MethodAccordion
           id="forward_pe"
           title={fwdPEConfig.title}
-          bestFor="Best for profitable companies with stable earnings growth"
+          confidence="high"
+          verdict={methodVerdict(fwdPEResult.upsidePct)}
+          weight={0.35}
           isOpen={openMethodId === 'forward_pe'}
           onToggle={() => setOpenMethodId(p => p === 'forward_pe' ? null : 'forward_pe')}
           innerRef={el => { methodRefs.current['forward_pe'] = el }}
@@ -722,10 +813,11 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
           upsidePct={fwdPEResult.upsidePct}
           currency={currency}
           chips={[
-            { label: 'CAGR', value: fwdPEInputs.revenueCAGR != null ? (fwdPEInputs.revenueCAGR * 100).toFixed(1) + '%' : '—' },
+            { label: 'CAGR', value: fwdPEInputs.revenueCAGR != null ? (fwdPEInputs.revenueCAGR * 100).toFixed(1) + '%' : '—', linked: linkedCAGR, onToggleLink: () => setLinkedCAGR(v => !v) },
             { label: 'Exit P/E', value: fwdPEInputs.exitPE != null ? (fwdPEInputs.exitPE as number).toFixed(1) + '×' : '—' },
             { label: 'Margin', value: fwdPEInputs.netMargin != null ? (fwdPEInputs.netMargin * 100).toFixed(1) + '%' : '—' },
           ]}
+          guide={METHOD_GUIDES.forward_pe}
         >
           <MethodInlinePanel
             config={fwdPEConfig}
@@ -740,7 +832,9 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
         <MethodAccordion
           id="ev_ebitda"
           title={evEbitdaConfig.title}
-          bestFor="Best for comparing businesses regardless of capital structure"
+          confidence="medium"
+          verdict={methodVerdict(evEbitdaResult.upsidePct)}
+          weight={0.30}
           isOpen={openMethodId === 'ev_ebitda'}
           onToggle={() => setOpenMethodId(p => p === 'ev_ebitda' ? null : 'ev_ebitda')}
           innerRef={el => { methodRefs.current['ev_ebitda'] = el }}
@@ -751,6 +845,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
             { label: 'Multiple', value: evEbitdaInputs.exitMultiple != null ? evEbitdaInputs.exitMultiple.toFixed(1) + '×' : '—' },
             { label: 'EBITDA', value: evEbitdaInputs.ttmEbitda != null ? fmtLargeCurrency(evEbitdaInputs.ttmEbitda) : '—' },
           ]}
+          guide={METHOD_GUIDES.ev_ebitda}
         >
           <MethodInlinePanel
             config={evEbitdaConfig}
@@ -761,31 +856,13 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
           />
         </MethodAccordion>
 
-        {/* Shared Assumptions interstitial */}
-        <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-blue-50/60 border border-blue-100">
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-semibold text-blue-700">Shared: Revenue CAGR (5Y)</p>
-            <p className="text-[10px] text-blue-500 mt-0.5">
-              {linkedCAGR ? 'Linked — changing CAGR in one method updates the other.' : 'Unlinked — each method uses an independent CAGR.'}
-            </p>
-          </div>
-          <button
-            onClick={() => setLinkedCAGR(v => !v)}
-            className={`rounded-full px-3 py-1 text-[11px] font-semibold border transition-colors shrink-0 ${
-              linkedCAGR
-                ? 'bg-blue-100 border-blue-200 text-blue-700'
-                : 'bg-slate-50 border-slate-200 text-slate-500'
-            }`}
-          >
-            {linkedCAGR ? '🔗 Linked' : '🔓 Unlinked'}
-          </button>
-        </div>
-
         {/* Revenue Multiple */}
         <MethodAccordion
           id="revenue_multiple"
           title={revMultConfig.title}
-          bestFor="Best for high-growth or pre-profit companies"
+          confidence="medium"
+          verdict={methodVerdict(revMultResult.upsidePct)}
+          weight={0.25}
           isOpen={openMethodId === 'revenue_multiple'}
           onToggle={() => setOpenMethodId(p => p === 'revenue_multiple' ? null : 'revenue_multiple')}
           innerRef={el => { methodRefs.current['revenue_multiple'] = el }}
@@ -793,9 +870,10 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
           upsidePct={revMultResult.upsidePct}
           currency={currency}
           chips={[
-            { label: 'CAGR', value: revMultInputs.revenueCAGR != null ? (revMultInputs.revenueCAGR * 100).toFixed(1) + '%' : '—' },
+            { label: 'CAGR', value: revMultInputs.revenueCAGR != null ? (revMultInputs.revenueCAGR * 100).toFixed(1) + '%' : '—', linked: linkedCAGR, onToggleLink: () => setLinkedCAGR(v => !v) },
             { label: 'EV/Rev', value: revMultInputs.exitEVRevenue != null ? (revMultInputs.exitEVRevenue as number).toFixed(1) + '×' : '—' },
           ]}
+          guide={METHOD_GUIDES.revenue_multiple}
         >
           <MethodInlinePanel
             config={revMultConfig}
@@ -810,7 +888,9 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
         <MethodAccordion
           id="reverse_dcf"
           title="Reverse DCF"
-          bestFor="Best for checking what growth rate today's price implies"
+          confidence={null}
+          verdict={reverseDCFVerdict}
+          weight={0}
           isOpen={openMethodId === 'reverse_dcf'}
           onToggle={() => setOpenMethodId(p => p === 'reverse_dcf' ? null : 'reverse_dcf')}
           innerRef={el => { methodRefs.current['reverse_dcf'] = el }}
@@ -821,6 +901,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
             { label: 'Implied CAGR', value: reverseDCFResult.impliedCAGR != null ? (reverseDCFResult.impliedCAGR * 100).toFixed(1) + '%' : '—' },
             { label: 'WACC', value: ((apiData?.wacc?.wacc ?? 0.09) * 100).toFixed(1) + '%' },
           ]}
+          guide={METHOD_GUIDES.reverse_dcf}
         >
           <ReverseDCFPanel
             result={reverseDCFResult}
@@ -835,7 +916,9 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
         <MethodAccordion
           id="full_dcf"
           title="Full DCF Modelling Table"
-          bestFor="Best for deep-dive year-by-year cash flow projection with custom assumptions"
+          confidence="high"
+          verdict={methodVerdict((apiData?.valuationMethods?.triangulatedUpsidePct as number | null) ?? null)}
+          weight={0.10}
           isOpen={openMethodId === 'full_dcf'}
           onToggle={() => setOpenMethodId(p => p === 'full_dcf' ? null : 'full_dcf')}
           innerRef={el => { methodRefs.current['full_dcf'] = el }}
@@ -846,6 +929,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
             { label: 'WACC', value: ((apiData?.wacc?.wacc ?? 0.09) * 100).toFixed(1) + '%' },
             { label: 'Terminal G', value: ((apiData?.terminalG ?? 0.025) * 100).toFixed(1) + '%' },
           ]}
+          guide={METHOD_GUIDES.full_dcf}
         >
           {/* Executive DCF summary */}
           {(apiData?.valuationMethods?.triangulatedFairValue != null) && (
