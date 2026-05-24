@@ -341,9 +341,12 @@ function StockPageBody() {
         {data && !loading && (
           <>
             {/* ── Desktop grid: main content + contextual sidebar ── */}
+            {/* Full DCF collapses to single column so the modelling table gets the full width */}
             <div className={cn(
               activeTab !== 'news'
-                ? 'lg:grid lg:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_400px] lg:gap-6 lg:items-start'
+                ? (activeTab === 'valuation' && activeValuationMethod === 'full_dcf'
+                    ? 'lg:block'
+                    : 'lg:grid lg:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_400px] lg:gap-6 lg:items-start')
                 : ''
             )}>
             <div className="min-w-0">
@@ -573,8 +576,8 @@ function StockPageBody() {
             </AnimatePresence>
             </div>{/* end main column */}
 
-            {/* Sidebar — desktop only, hidden on news tab */}
-            {activeTab !== 'news' && (
+            {/* Sidebar — desktop only, hidden on news tab and when Full DCF is open */}
+            {activeTab !== 'news' && !(activeTab === 'valuation' && activeValuationMethod === 'full_dcf') && (
               <aside className="hidden lg:block">
                 <div className="sticky top-[68px] self-start space-y-3 pb-4 pt-5">
                   <StockSidebar activeTab={activeTab} data={data} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} activeValuationMethodId={activeValuationMethod} />
