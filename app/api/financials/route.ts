@@ -324,8 +324,9 @@ export async function GET(req: NextRequest) {
     const trailingPE = (q.trailingPE ?? null) as number | null
     const priceToBook = (ks.priceToBook ?? null) as number | null
     const priceToSales = (ks.priceToSalesTrailing12Months ?? null) as number | null
-    let evToEbitda = (fd.enterpriseToEbitda ?? null) as number | null
-    const evToRevenue = (fd.enterpriseToRevenue ?? null) as number | null
+    // financialData module often misses these; quote module is a reliable second source
+    let evToEbitda = (fd.enterpriseToEbitda ?? (q.enterpriseToEbitda ?? null)) as number | null
+    let evToRevenue = (fd.enterpriseToRevenue ?? (q.enterpriseToRevenue ?? null)) as number | null
 
     // Compute EV/EBITDA from FMP statements when Yahoo doesn't provide it
     if (evToEbitda === null && fmp.incomeStatements[0] != null) {
@@ -335,6 +336,13 @@ export async function GET(req: NextRequest) {
         const ebitdaM = fmpEbitda / 1e6
         if (ebitdaM > 0) evToEbitda = Math.round((evM / ebitdaM) * 100) / 100
       }
+    }
+
+    // Compute EV/Revenue when Yahoo doesn't provide it
+    if (evToRevenue === null && rawRevMLocal > 0) {
+      const evM = marketCapM + debtM - cashM
+      const revM = rawRevMLocal * fxRate
+      if (revM > 0) evToRevenue = Math.round((evM / revM) * 100) / 100
     }
 
     // Net income for FCFE — use normalizedNetIncomeM (2-year avg from income stmt).
