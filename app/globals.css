@@ -143,60 +143,118 @@ h1, h2, h3 {
   }
   /* Kept for TopBar / BottomNav / landing hero (dark sections only) */
   .glass-card {
-    background: rgba(10, 22, 40, 0.65);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(59, 130, 246, 0.18);
-    box-shadow: 0 0 30px rgba(59, 130, 246, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    background: rgba(10, 22, 40, 0.50);
+    backdrop-filter: blur(28px) saturate(200%);
+    -webkit-backdrop-filter: blur(28px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.07);
   }
   .glass-nav {
-    background: rgba(5, 13, 31, 0.92);
-    backdrop-filter: blur(24px) saturate(200%);
-    -webkit-backdrop-filter: blur(24px) saturate(200%);
-    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(5, 13, 31, 0.82);
+    backdrop-filter: blur(32px) saturate(220%);
+    -webkit-backdrop-filter: blur(32px) saturate(220%);
+    border-color: rgba(255, 255, 255, 0.10);
   }
 
-  /* ── Apple Liquid Glass — Light Surface System ──────────────────────────── */
+  /* ── iOS Liquid Glass — Vibrant Light Surface System ──────────────────── */
+
+  /* Page gradient mesh — applied to AppShell root div */
+  .lqg-bg {
+    background:
+      radial-gradient(ellipse 70% 60% at 8%  18%, rgba(99,  102, 241, 0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 92% 12%, rgba(168,  85, 247, 0.14) 0%, transparent 55%),
+      radial-gradient(ellipse 55% 50% at 18% 88%, rgba(236,  72, 153, 0.12) 0%, transparent 55%),
+      radial-gradient(ellipse 65% 55% at 82% 82%, rgba( 20, 184, 166, 0.12) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 52% 48%, rgba(245, 158,  11, 0.07) 0%, transparent 50%),
+      #EEF2FF;
+  }
 
   .glass-toolbar {
-    background: rgba(255, 255, 255, 0.90);
-    backdrop-filter: blur(24px) saturate(160%);
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
-    border-bottom: 1px solid rgba(148, 163, 184, 0.20);
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.80) inset, 0 1px 8px rgba(0, 0, 0, 0.04);
+    position: relative;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(32px) saturate(200%) brightness(1.04);
+    -webkit-backdrop-filter: blur(32px) saturate(200%) brightness(1.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.72);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.92) inset, 0 2px 16px rgba(99, 102, 241, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04);
   }
+  .glass-toolbar::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 4%; right: 4%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.60) 25%, rgba(255,255,255,0.80) 50%, rgba(255,255,255,0.60) 75%, transparent 100%);
+    pointer-events: none;
+  }
+
   .glass-panel {
-    background: rgba(248, 250, 252, 0.75);
-    backdrop-filter: blur(20px) saturate(150%);
-    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    background: rgba(248, 250, 252, 0.58);
+    backdrop-filter: blur(24px) saturate(180%) brightness(1.03);
+    -webkit-backdrop-filter: blur(24px) saturate(180%) brightness(1.03);
   }
+
   .glass-card-light {
-    background: rgba(255, 255, 255, 0.82);
-    backdrop-filter: blur(16px) saturate(140%);
-    -webkit-backdrop-filter: blur(16px) saturate(140%);
-    border: 1px solid rgba(148, 163, 184, 0.22);
+    position: relative;
+    background: rgba(255, 255, 255, 0.62);
+    backdrop-filter: blur(28px) saturate(200%) brightness(1.05);
+    -webkit-backdrop-filter: blur(28px) saturate(200%) brightness(1.05);
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-top-color: rgba(255, 255, 255, 0.90);
     box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.90) inset,
-      0 2px 12px rgba(0, 0, 0, 0.05),
-      0 1px 3px rgba(0, 0, 0, 0.04);
+      0 1px 0 rgba(255, 255, 255, 0.95) inset,
+      0 4px 24px rgba(99, 102, 241, 0.08),
+      0 2px 8px rgba(0, 0, 0, 0.05);
     transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .glass-card-light::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 6%; right: 6%;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.65) 20%,
+      rgba(255, 255, 255, 0.90) 50%,
+      rgba(255, 255, 255, 0.65) 80%,
+      transparent 100%
+    );
+    z-index: 1;
+    pointer-events: none;
   }
   .glass-card-light:hover {
     box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.90) inset,
-      0 4px 20px rgba(0, 0, 0, 0.08),
-      0 2px 6px rgba(0, 0, 0, 0.05);
+      0 1px 0 rgba(255, 255, 255, 0.95) inset,
+      0 8px 32px rgba(99, 102, 241, 0.12),
+      0 4px 12px rgba(0, 0, 0, 0.07);
     transform: translateY(-1px);
   }
+
   .glass-accordion-header {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(14px) saturate(145%);
-    -webkit-backdrop-filter: blur(14px) saturate(145%);
-    border: 1px solid rgba(148, 163, 184, 0.20);
+    position: relative;
+    background: rgba(255, 255, 255, 0.62);
+    backdrop-filter: blur(24px) saturate(190%) brightness(1.05);
+    -webkit-backdrop-filter: blur(24px) saturate(190%) brightness(1.05);
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-top-color: rgba(255, 255, 255, 0.90);
     box-shadow:
       0 1px 0 rgba(255, 255, 255, 0.95) inset,
-      0 2px 8px rgba(0, 0, 0, 0.04);
+      0 2px 12px rgba(99, 102, 241, 0.06),
+      0 1px 4px rgba(0, 0, 0, 0.04);
     transition: box-shadow 0.18s ease;
+  }
+  .glass-accordion-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 6%; right: 6%;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.65) 20%,
+      rgba(255, 255, 255, 0.90) 50%,
+      rgba(255, 255, 255, 0.65) 80%,
+      transparent 100%
+    );
+    z-index: 1;
+    pointer-events: none;
   }
   .solid-data-card {
     background: #ffffff;
@@ -226,7 +284,7 @@ h1, h2, h3 {
 /* ── Glass accessibility fallbacks ──────────────────────────────────────────── */
 
 @supports not (backdrop-filter: blur(1px)) {
-  .glass-toolbar          { background: rgba(255, 255, 255, 0.98); }
+  .glass-toolbar          { background: rgba(255, 255, 255, 0.96); }
   .glass-panel            { background: rgb(248, 250, 252); }
   .glass-card-light       { background: #ffffff; }
   .glass-accordion-header { background: #ffffff; }
