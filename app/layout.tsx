@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "./providers";
 import AppShell from "@/components/layout/AppShell";
-import { Inter } from "next/font/google";
+import { Inter, Space_Grotesk, DM_Mono } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip"
 
-const geist = Inter({subsets:['latin'],variable:'--font-sans'});
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-display', weight: ['400', '500', '600', '700'] });
+const dmMono = DM_Mono({ subsets: ['latin'], variable: '--font-mono', weight: ['400', '500'] });
 
 export const metadata: Metadata = {
   title: "Rationale — Know if a stock is worth buying",
@@ -19,7 +21,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn("font-sans dark", geist.variable)}>
+    <html lang="en" className={cn("font-sans", inter.variable, spaceGrotesk.variable, dmMono.variable)}>
+      <head>
+        <meta name="theme-color" content="#F9F5EF" />
+      </head>
       <body className="antialiased bg-background">
         <Providers>
           <TooltipProvider>

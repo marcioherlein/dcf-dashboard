@@ -24,6 +24,10 @@ const config: Config = {
         destructive:{ DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
         primary:    { DEFAULT: 'hsl(var(--primary))',     foreground: 'hsl(var(--primary-foreground))' },
 
+        // ── Warm cream palette ────────────────────────────────────────────────
+        cream: { DEFAULT: '#F9F5EF', dark: '#F0EBE3' },
+        'amber-gold': '#F59E0B',
+
         // ── Financial semantic tokens ─────────────────────────────────────────
         up:           '#059669',  // emerald-600 (deeper for light bg)
         down:         '#DC2626',  // red-600
@@ -83,11 +87,12 @@ const config: Config = {
         "on-error-container":       "#93000a",
       },
       fontFamily: {
-        headline: ["Manrope",       "system-ui", "sans-serif"],
-        body:     ["Inter",         "system-ui", "sans-serif"],
-        label:    ["Inter",         "system-ui", "sans-serif"],
-        sans:     ["Inter",         "system-ui", "sans-serif"],
-        mono:     ["IBM Plex Mono", "Courier New", "monospace"],
+        display:  ["var(--font-display)", "Space Grotesk", "system-ui", "sans-serif"],
+        headline: ["Manrope",             "system-ui", "sans-serif"],
+        body:     ["Inter",               "system-ui", "sans-serif"],
+        label:    ["Inter",               "system-ui", "sans-serif"],
+        sans:     ["Inter",               "system-ui", "sans-serif"],
+        mono:     ["var(--font-mono)", "DM Mono", "IBM Plex Mono", "Courier New", "monospace"],
       },
       fontSize: {
         'display':  ['2rem',    { lineHeight: '1.15', fontWeight: '900', letterSpacing: '-0.03em' }],

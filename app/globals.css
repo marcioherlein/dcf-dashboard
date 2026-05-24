@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 @import "tw-animate-css";
 
 @tailwind base;
@@ -8,24 +8,24 @@
 /* ── shadcn CSS variables — LIGHT PROFESSIONAL THEME ────────────────────────── */
 @layer base {
   :root {
-    --background:          210 40% 96%;     /* #F1F5F9 slate-100 page bg */
-    --foreground:          222 47% 7%;      /* #0F172A slate-900 */
+    --background:          33 40% 97%;      /* #F9F5EF warm cream */
+    --foreground:          25 10% 11%;      /* #1c1917 stone-900 */
     --card:                0 0% 100%;       /* #FFFFFF card surface */
-    --card-foreground:     222 47% 7%;
+    --card-foreground:     25 10% 11%;
     --popover:             0 0% 100%;
-    --popover-foreground:  222 47% 7%;
+    --popover-foreground:  25 10% 11%;
     --primary:             221 83% 53%;     /* #2563EB blue-600 */
     --primary-foreground:  0 0% 100%;
-    --secondary:           210 40% 94%;     /* slate-100 fills */
-    --secondary-foreground:222 47% 7%;
-    --muted:               210 40% 94%;
-    --muted-foreground:    215 16% 47%;     /* #64748B slate-500 */
+    --secondary:           30 20% 94%;      /* warm tinted fills */
+    --secondary-foreground:25 10% 11%;
+    --muted:               30 20% 94%;
+    --muted-foreground:    25 6% 45%;       /* stone-500 */
     --accent:              221 83% 53%;     /* blue-600 */
     --accent-foreground:   0 0% 100%;
     --destructive:         0 72% 51%;       /* #DC2626 red-600 */
     --destructive-foreground: 0 0% 100%;
-    --border:              214 32% 91%;     /* #E2E8F0 slate-200 */
-    --input:               214 32% 91%;
+    --border:              30 15% 88%;      /* warm stone-200 */
+    --input:               30 15% 88%;
     --ring:                221 83% 53%;     /* blue-600 focus ring */
     --radius:              0.75rem;
     /* Light chart palette — vibrant on white */
@@ -51,12 +51,12 @@
 
 /* ── App-level custom variables ─────────────────────────────────────────────── */
 :root {
-  /* Light content palette */
-  --page-bg:       #F1F5F9;
+  /* Warm cream content palette */
+  --page-bg:       #F9F5EF;
   --card-bg:       #FFFFFF;
-  --card-bg-tinted:#F8FAFC;
-  --card-border:   #E2E8F0;
-  --card-border-strong: #CBD5E1;
+  --card-bg-tinted:#FAF7F3;
+  --card-border:   #E8E2D9;
+  --card-border-strong: #D4C9BB;
 
   /* Nav stays dark */
   --nav-bg:        rgba(15, 23, 42, 0.92);
@@ -67,7 +67,7 @@
   --blue-light:    #DBEAFE;
   --blue-hover:    #1D4ED8;
 
-  /* Semantic colors (deeper tones for light bg) */
+  /* Semantic colors (deeper tones for warm bg) */
   --green:         #059669;
   --green-light:   #D1FAE5;
   --red:           #DC2626;
@@ -75,23 +75,23 @@
   --amber:         #D97706;
   --amber-light:   #FEF3C7;
 
-  /* Text hierarchy */
-  --text-primary:  #0F172A;
-  --text-secondary:#475569;
-  --text-muted:    #94A3B8;
+  /* Text hierarchy — warm stone tones */
+  --text-primary:  #1c1917;
+  --text-secondary:#44403c;
+  --text-muted:    #78716c;
 
-  /* DCF table tokens — light version */
+  /* DCF table tokens — warm light version */
   --dcf-bg:          #FFFFFF;
-  --dcf-bg-deep:     #F8FAFC;
-  --dcf-bg-raised:   #F1F5F9;
+  --dcf-bg-deep:     #FAF7F3;
+  --dcf-bg-raised:   #F9F5EF;
   --dcf-projected:   #EFF6FF;
   --dcf-ttm:         #FEFCE8;
-  --dcf-border:      #E2E8F0;
-  --dcf-border-sep:  #CBD5E1;
-  --dcf-text:        #0F172A;
-  --dcf-text-dim:    #475569;
-  --dcf-text-muted:  #94A3B8;
-  --dcf-text-faint:  #CBD5E1;
+  --dcf-border:      #E8E2D9;
+  --dcf-border-sep:  #D4C9BB;
+  --dcf-text:        #1c1917;
+  --dcf-text-dim:    #44403c;
+  --dcf-text-muted:  #78716c;
+  --dcf-text-faint:  #D4C9BB;
   --dcf-accent:      #2563EB;
   --dcf-amber:       #D97706;
 
@@ -109,6 +109,10 @@ body {
 h1, h2, h3 {
   font-family: 'Inter', 'IBM Plex Sans', system-ui, sans-serif;
   font-weight: 600;
+}
+
+.font-display {
+  font-family: var(--font-display, 'Space Grotesk'), 'Space Grotesk', system-ui, sans-serif;
 }
 
 .font-terminal {
@@ -470,6 +474,20 @@ h1, h2, h3 {
     padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
   }
 }
+
+/* ── Scroll entrance animations ──────────────────────────────────────────────── */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.scroll-reveal.in-view {
+  opacity: 1;
+  transform: none;
+}
+.scroll-reveal-delay-1 { transition-delay: 80ms; }
+.scroll-reveal-delay-2 { transition-delay: 160ms; }
+.scroll-reveal-delay-3 { transition-delay: 240ms; }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee,

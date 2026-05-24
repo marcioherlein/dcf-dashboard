@@ -19,6 +19,22 @@ const MARKETS = [
   { flag: '🇺🇸', label: 'NASDAQ' },
 ]
 
+// ── Scroll reveal hook ─────────────────────────────────────────────────────────
+function useScrollReveal(threshold = 0.15) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { el.classList.add('in-view'); obs.disconnect() } },
+      { threshold },
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [threshold])
+  return ref
+}
+
 // ── Cycling word animation ─────────────────────────────────────────────────────
 const ROTATING_PHRASES = [
   'worth buying',
@@ -49,7 +65,7 @@ function RotatingText({ phrases }: { phrases: string[] }) {
   return (
     <span
       className={stage === 'in' ? 'word-enter' : 'word-exit'}
-      style={{ display: 'inline-block', color: '#60A5FA', minWidth: '9ch' }}
+      style={{ display: 'inline-block', color: '#F59E0B', minWidth: '9ch' }}
     >
       {phrases[idx]}
     </span>
@@ -156,7 +172,7 @@ function AnimatedJourney() {
   }, [stepKey, step])
 
   return (
-    <div className="max-w-xl mx-auto">
+    <div className="max-w-2xl mx-auto">
       {/* Browser chrome */}
       <div className="rounded-2xl overflow-hidden border border-[rgba(59,130,246,0.25)]" style={{ boxShadow: '0 24px 64px rgba(0,0,0,0.5), 0 4px 12px rgba(59,130,246,0.1)' }}>
         {/* Title bar */}
@@ -189,7 +205,7 @@ function AnimatedJourney() {
                   {typedTicker}
                   <span className="inline-block w-0.5 h-4 bg-blue-400 ml-0.5 align-middle animate-pulse" />
                 </span>
-                <span className="text-[12px] font-semibold text-white px-3 py-1 rounded-lg bg-[#3B82F6] shadow-glow-sm">Analyze</span>
+                <span className="text-[12px] font-semibold text-white px-3 py-1 rounded-lg bg-[#F59E0B] shadow-glow-sm">Analyze</span>
               </div>
               {showDropdown && (
                 <div className="rounded-xl glass-card border border-[rgba(59,130,246,0.2)] overflow-hidden" style={{ animation: 'step-fade-in 0.22s ease forwards' }}>
@@ -271,7 +287,7 @@ function AnimatedJourney() {
                         className="w-full rounded-t-sm"
                         style={{
                           height: `${(bar.val / 120) * 46}px`,
-                          background: bar.terminal ? '#FBBF24' : bar.projected ? '#1e3a6e' : '#3B82F6',
+                          background: bar.terminal ? '#F59E0B' : bar.projected ? '#1e3a6e' : '#3B82F6',
                           transformOrigin: 'bottom',
                           animation: `bar-grow-up 0.45s ease-out ${i * 80}ms both`,
                         }}
@@ -283,7 +299,7 @@ function AnimatedJourney() {
                 <div className="mt-1.5 flex gap-3 text-[8px] text-slate-500">
                   <span><span className="inline-block w-1.5 h-1.5 rounded-sm bg-[#3B82F6] mr-1 align-middle" />Actual</span>
                   <span><span className="inline-block w-1.5 h-1.5 rounded-sm bg-[#1e3a6e] mr-1 align-middle opacity-75" />Projected</span>
-                  <span><span className="inline-block w-1.5 h-1.5 rounded-sm bg-[#FBBF24] mr-1 align-middle" />Terminal</span>
+                  <span><span className="inline-block w-1.5 h-1.5 rounded-sm bg-[#F59E0B] mr-1 align-middle" />Terminal</span>
                 </div>
               </div>
 
@@ -345,8 +361,8 @@ function AnimatedJourney() {
             onClick={() => goToStep(i)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-200"
             style={i === step
-              ? { background: 'rgba(59,130,246,0.2)', color: '#60A5FA', border: '1px solid rgba(59,130,246,0.4)' }
-              : { color: '#475569', background: 'transparent' }}
+              ? { background: 'rgba(245,158,11,0.15)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.4)' }
+              : { color: '#9CA3AF', background: 'transparent' }}
           >
             <span className="font-mono">{s.n}</span>
             <span className="hidden sm:inline">{s.title}</span>
@@ -398,9 +414,9 @@ function HeroSearch() {
   }
 
   return (
-    <div className="relative w-full max-w-lg mx-auto" ref={containerRef}>
-      <div className="flex items-center gap-3 rounded-2xl glass-card border border-[rgba(59,130,246,0.3)] px-5 py-4 focus-within:border-[rgba(59,130,246,0.6)] focus-within:shadow-glow-md transition-all">
-        <svg className="h-5 w-5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <div className="relative w-full max-w-xl mx-auto" ref={containerRef}>
+      <div className="flex items-center gap-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 px-5 py-4 focus-within:border-amber-400/60 focus-within:bg-white/15 transition-all shadow-xl">
+        <svg className="h-5 w-5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
         </svg>
         <input
@@ -413,13 +429,13 @@ function HeroSearch() {
           autoFocus
         />
         {loading
-          ? <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-700 border-t-blue-400 shrink-0" />
+          ? <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-700 border-t-amber-400 shrink-0" />
           : (
             <button
               onClick={() => { if (query.trim()) select(query.trim().toUpperCase()) }}
-              className="rounded-xl px-5 py-2 text-sm font-semibold text-white transition-all shrink-0 bg-[#3B82F6] hover:bg-[#60A5FA] shadow-glow-sm"
+              className="rounded-xl px-5 py-2.5 text-sm font-bold text-stone-900 transition-all shrink-0 bg-[#F59E0B] hover:bg-[#FBBF24] shadow-md hover:shadow-lg hover:-translate-y-px"
             >
-              Analyze
+              Analyze →
             </button>
           )
         }
@@ -433,7 +449,7 @@ function HeroSearch() {
               onClick={() => select(r.symbol)}
               className="flex w-full items-center gap-3 px-5 py-3 text-left hover:bg-white/5 border-b border-[rgba(59,130,246,0.08)] last:border-b-0 transition-colors"
             >
-              <span className="text-sm font-bold text-blue-400 w-16 shrink-0 font-mono">{r.symbol}</span>
+              <span className="text-sm font-bold text-amber-400 w-16 shrink-0 font-mono">{r.symbol}</span>
               <span className="text-sm text-slate-400 truncate">{r.longname ?? r.shortname}</span>
             </button>
           ))}
@@ -443,15 +459,15 @@ function HeroSearch() {
   )
 }
 
-// ── Demo grade card (static example, AAPL-inspired) ───────────────────────────
+// ── Demo grade card ───────────────────────────────────────────────────────────
 function DemoGradeCard({ onAnalyze }: { onAnalyze: (ticker: string) => void }) {
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <div className="rounded-2xl glass-card border border-[rgba(59,130,246,0.2)] overflow-hidden max-w-lg mx-auto">
+    <div className="rounded-2xl glass-card border border-[rgba(59,130,246,0.2)] overflow-hidden max-w-xl mx-auto">
       {/* Label */}
       <div className="px-5 pt-4 pb-0">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 px-3 py-1 text-[11px] font-semibold text-blue-400">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1 text-[11px] font-semibold text-amber-400">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           Example analysis · Apple Inc. (AAPL)
         </span>
@@ -539,7 +555,7 @@ function DemoGradeCard({ onAnalyze }: { onAnalyze: (ticker: string) => void }) {
       <div className="border-t border-[rgba(59,130,246,0.1)] px-5 py-4">
         <button
           onClick={() => onAnalyze('AAPL')}
-          className="w-full rounded-xl py-2.5 text-[13px] font-semibold text-white transition-all hover:shadow-glow-sm bg-[#3B82F6] hover:bg-[#60A5FA]"
+          className="w-full rounded-xl py-2.5 text-[13px] font-bold text-stone-900 transition-all hover:shadow-lg hover:-translate-y-px bg-[#F59E0B] hover:bg-[#FBBF24]"
         >
           Open live analysis for AAPL →
         </button>
@@ -548,11 +564,18 @@ function DemoGradeCard({ onAnalyze }: { onAnalyze: (ticker: string) => void }) {
   )
 }
 
+// ── Stats strip ───────────────────────────────────────────────────────────────
+const STATS = [
+  { value: '2,400+', label: 'Analyses run', sub: 'and growing daily' },
+  { value: '500+',   label: 'Stocks covered', sub: 'NYSE & NASDAQ' },
+  { value: '4',      label: 'Valuation methods', sub: 'DCF, DDM, FCFE, Multiples' },
+]
+
 // ── Trust points ──────────────────────────────────────────────────────────────
 const TRUST_POINTS = [
   {
     icon: (
-      <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
@@ -561,16 +584,16 @@ const TRUST_POINTS = [
   },
   {
     icon: (
-      <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
       </svg>
     ),
-    label: 'Built on public financials — every number is traceable',
+    label: 'Built on public financials — every number traceable',
     sub: 'Our estimates are based on DCF analysis using publicly reported financials. Risk-free rate from FRED, ERP from Damodaran.',
   },
   {
     icon: (
-      <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
         <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>
@@ -580,55 +603,111 @@ const TRUST_POINTS = [
   },
 ]
 
+// ── Feature cards ─────────────────────────────────────────────────────────────
+const FEATURES = [
+  {
+    icon: (
+      <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+      </svg>
+    ),
+    title: 'DCF Valuation',
+    benefit: 'Intrinsic value from free cash flows — not just multiples. Adjust WACC and growth yourself.',
+  },
+  {
+    icon: (
+      <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.745 3.745 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.745 3.745 0 0 1 3.296-1.043A3.745 3.745 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.745 3.745 0 0 1 3.296 1.043 3.745 3.745 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
+      </svg>
+    ),
+    title: 'Health Scores',
+    benefit: 'Piotroski F-Score, Altman Z-Score, Beneish M-Score, and ROIC vs WACC in one view.',
+  },
+  {
+    icon: (
+      <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z" />
+      </svg>
+    ),
+    title: 'Scenario Analysis',
+    benefit: 'Bear, base, and bull cases with probability weighting — see the full range, not just a point estimate.',
+  },
+  {
+    icon: (
+      <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3" />
+      </svg>
+    ),
+    title: 'Reverse DCF',
+    benefit: "See what growth rate the market is pricing in — decide if that expectation is achievable.",
+  },
+]
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function LandingPage() {
   const router = useRouter()
+  const statsRef    = useScrollReveal()
+  const trustRef    = useScrollReveal()
+  const featuresRef = useScrollReveal()
+  const ctaRef      = useScrollReveal()
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen" style={{ background: '#F9F5EF' }}>
 
-      {/* Hero — keeps dark treatment */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 border-b border-white/5 px-6 pt-16 pb-20">
-        {/* Radial glow behind hero */}
-        <div className="pointer-events-none absolute inset-0 bg-radial-blue" />
-        {/* Grid overlay */}
-        <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-40" />
+      {/* ── Hero — dark treatment ── */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#050D1F] via-[#0A1628] to-[#0B1A35] border-b border-white/5 px-6 pt-20 pb-28">
+        {/* Ambient glow layers */}
+        <div className="pointer-events-none absolute inset-0 bg-radial-blue opacity-80" />
+        <div className="pointer-events-none absolute top-0 right-0 w-[60%] h-[60%]" style={{ background: 'radial-gradient(ellipse 60% 60% at 80% 10%, rgba(245,158,11,0.06) 0%, transparent 60%)' }} />
+        <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-30" />
 
-        <div className="relative mx-auto max-w-3xl text-center">
+        <div className="relative mx-auto max-w-4xl text-center">
           {/* Social proof pill */}
-          <div className="hero-reveal inline-flex items-center gap-2 rounded-full glass-card border border-[rgba(59,130,246,0.2)] px-4 py-1.5 text-xs font-semibold text-slate-300 mb-6" style={{ animationDelay: '0ms' }}>
+          <div
+            className="hero-reveal inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold text-slate-300 mb-8 border"
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              borderColor: 'rgba(255,255,255,0.12)',
+              backdropFilter: 'blur(12px)',
+              animationDelay: '0ms',
+            }}
+          >
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             Free · No account required · 500+ stocks covered
           </div>
 
           {/* Headline with rotating word */}
           <h1
-            className="hero-reveal text-4xl sm:text-5xl font-bold text-slate-100 tracking-tight leading-tight mb-4"
-            style={{ letterSpacing: '-0.03em', animationDelay: '80ms' }}
+            className="hero-reveal font-display text-5xl sm:text-6xl text-slate-100 leading-tight mb-5"
+            style={{ letterSpacing: '-0.04em', fontWeight: 500, animationDelay: '80ms' }}
           >
             Know if a stock is{' '}
             <RotatingText phrases={ROTATING_PHRASES} />
             {' '}—<br className="hidden sm:block" />{' '}
-            <span className="text-blue-400">before you buy.</span>
+            <span className="text-slate-300">before you buy.</span>
           </h1>
-          <p className="hero-reveal text-lg text-slate-400 mb-8 max-w-xl mx-auto leading-relaxed" style={{ animationDelay: '180ms' }}>
+
+          <p
+            className="hero-reveal text-xl text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed"
+            style={{ animationDelay: '160ms' }}
+          >
             DCF-based fair value, plain-English health grades, and interactive modeling.
             Designed for investors who want to understand, not just guess.
           </p>
 
-          {/* Search FIRST — F-pattern primary zone */}
-          <div className="hero-reveal relative z-10" style={{ animationDelay: '260ms' }}>
+          {/* Search */}
+          <div className="hero-reveal relative z-10" style={{ animationDelay: '240ms' }}>
             <HeroSearch />
           </div>
 
           {/* Example tickers */}
-          <div className="hero-reveal mt-4 flex items-center justify-center gap-2 flex-wrap" style={{ animationDelay: '340ms' }}>
+          <div className="hero-reveal mt-5 flex items-center justify-center gap-2 flex-wrap" style={{ animationDelay: '320ms' }}>
             <span className="text-xs text-slate-500">Try:</span>
             {EXAMPLE_TICKERS.map((t) => (
               <button
                 key={t}
                 onClick={() => router.push(`/stock/${t}`)}
-                className="rounded-lg glass-card border border-[rgba(59,130,246,0.2)] hover:border-[rgba(59,130,246,0.5)] px-3 py-1 text-xs font-semibold text-slate-300 hover:text-white transition-all font-mono"
+                className="rounded-lg border border-white/10 hover:border-amber-400/40 bg-white/5 hover:bg-amber-400/10 px-3 py-1 text-xs font-semibold text-slate-400 hover:text-amber-300 transition-all font-mono"
               >
                 {t}
               </button>
@@ -636,148 +715,170 @@ export default function LandingPage() {
           </div>
 
           {/* Markets covered */}
-          <div className="hero-reveal mt-3 flex items-center justify-center gap-2 flex-wrap" style={{ animationDelay: '390ms' }}>
+          <div className="hero-reveal mt-3 flex items-center justify-center gap-2 flex-wrap" style={{ animationDelay: '370ms' }}>
             <span className="text-xs text-slate-500">Markets:</span>
             {MARKETS.map(({ flag, label }, i) => (
               <span
                 key={label}
-                className="rounded-full glass-card border border-[rgba(59,130,246,0.15)] px-3 py-1 text-xs font-medium text-slate-400"
-                style={{
-                  animation: `fade-up 0.4s cubic-bezier(0.16,1,0.3,1) ${420 + i * 60}ms both`,
-                }}
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-400"
+                style={{ animation: `fade-up 0.4s cubic-bezier(0.16,1,0.3,1) ${400 + i * 60}ms both` }}
               >
                 {flag} {label}
               </span>
             ))}
           </div>
 
-          {/* Animated investor journey */}
-          <div className="hero-reveal mt-12" style={{ animationDelay: '460ms' }}>
-            <p className="text-xs text-slate-500 mb-4 uppercase tracking-wider font-semibold">See how it works</p>
+          {/* Animated journey */}
+          <div className="hero-reveal mt-14" style={{ animationDelay: '440ms' }}>
+            <p className="text-xs text-slate-500 mb-5 uppercase tracking-widest font-semibold">See how it works</p>
             <AnimatedJourney />
           </div>
 
           {/* Demo card */}
-          <div className="hero-reveal mt-12" style={{ animationDelay: '540ms' }}>
-            <p className="text-xs text-slate-500 mb-4 uppercase tracking-wider font-semibold">What an analysis looks like</p>
+          <div className="hero-reveal mt-14" style={{ animationDelay: '520ms' }}>
+            <p className="text-xs text-slate-500 mb-5 uppercase tracking-widest font-semibold">What an analysis looks like</p>
             <DemoGradeCard onAnalyze={(t) => router.push(`/stock/${t}`)} />
           </div>
         </div>
       </section>
 
-      {/* Live market ticker strip */}
+      {/* ── Live market ticker strip ── */}
       <TickerStrip />
 
-      {/* Stock card strip */}
+      {/* ── Stats strip ── */}
+      <div ref={statsRef} className="scroll-reveal">
+        <section style={{ background: '#F0EBE3', borderBottom: '1px solid #E8E2D9' }}>
+          <div className="mx-auto max-w-5xl px-6 py-12">
+            <div className="grid grid-cols-3 gap-8 text-center">
+              {STATS.map((s) => (
+                <div key={s.label}>
+                  <div
+                    className="text-4xl font-display font-semibold mb-1"
+                    style={{ color: '#1c1917', letterSpacing: '-0.03em' }}
+                  >
+                    {s.value}
+                  </div>
+                  <div className="text-sm font-semibold text-stone-700">{s.label}</div>
+                  <div className="text-xs text-stone-400 mt-0.5">{s.sub}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* ── Stock card strip ── */}
       <StockCardStrip />
 
-      {/* Chart section */}
+      {/* ── Chart section ── */}
       <ChartSection />
 
-      {/* Trust points */}
-      <section className="border-y border-slate-200 bg-white">
-        <div className="mx-auto max-w-5xl px-6 py-16">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Built on transparent methodology</h2>
-            <p className="text-slate-500 text-sm">
-              Our estimates are based on DCF analysis using publicly reported financials — every number is traceable.
-            </p>
+      {/* ── Trust points ── */}
+      <div ref={trustRef} className="scroll-reveal">
+        <section style={{ background: '#FFFFFF', borderTop: '1px solid #E8E2D9', borderBottom: '1px solid #E8E2D9' }}>
+          <div className="mx-auto max-w-5xl px-6 py-20">
+            <div className="text-center mb-12">
+              <h2
+                className="font-display text-3xl sm:text-4xl mb-3"
+                style={{ color: '#1c1917', fontWeight: 500, letterSpacing: '-0.03em' }}
+              >
+                Built on transparent methodology
+              </h2>
+              <p className="text-stone-500 text-base max-w-xl mx-auto">
+                Every number is traceable back to a public source. No estimates hidden behind a paywall.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+              {TRUST_POINTS.map((point, i) => (
+                <div
+                  key={point.label}
+                  className="scroll-reveal rounded-2xl bg-stone-50 border p-6 hover:-translate-y-0.5 hover:shadow-md transition-all"
+                  style={{ borderColor: '#E8E2D9', transitionDelay: `${i * 80}ms` }}
+                >
+                  <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-4">
+                    {point.icon}
+                  </div>
+                  <p className="text-sm font-bold text-stone-800 mb-2 leading-snug">{point.label}</p>
+                  <p className="text-sm text-stone-500 leading-relaxed">{point.sub}</p>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-            {TRUST_POINTS.map((point) => (
-              <div key={point.label} className="flex gap-4">
-                <div className="mt-0.5 shrink-0 w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
-                  {point.icon}
+        </section>
+      </div>
+
+      {/* ── Feature cards ── */}
+      <div ref={featuresRef} className="scroll-reveal">
+        <section style={{ background: '#F9F5EF', borderBottom: '1px solid #E8E2D9' }}>
+          <div className="mx-auto max-w-5xl px-6 py-20">
+            <div className="text-center mb-12">
+              <h2
+                className="font-display text-3xl sm:text-4xl mb-3"
+                style={{ color: '#1c1917', fontWeight: 500, letterSpacing: '-0.03em' }}
+              >
+                Everything you need to value a stock
+              </h2>
+              <p className="text-stone-500 text-base">Four complementary methods. One clear verdict.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {FEATURES.map((card, i) => (
+                <div
+                  key={card.title}
+                  className="scroll-reveal group rounded-2xl bg-white border p-6 flex flex-col gap-4 hover:-translate-y-1 hover:shadow-lg transition-all cursor-default"
+                  style={{ borderColor: '#E8E2D9', transitionDelay: `${i * 60}ms` }}
+                >
+                  <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+                    {card.icon}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-stone-900 mb-2">{card.title}</p>
+                    <p className="text-sm text-stone-500 leading-relaxed">{card.benefit}</p>
+                  </div>
+                  <div className="flex items-center gap-1 text-blue-600 text-xs font-semibold mt-auto">
+                    <span>Try it</span>
+                    <svg
+                      className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1"
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                    </svg>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-900 mb-1">{point.label}</p>
-                  <p className="text-xs text-slate-500 leading-relaxed">{point.sub}</p>
-                </div>
-              </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* ── CTA — inverted dark section ── */}
+      <div ref={ctaRef} className="scroll-reveal">
+        <section style={{ background: '#1c1917' }} className="px-6 py-24 text-center">
+          <h2
+            className="font-display text-4xl sm:text-5xl text-stone-100 mb-4"
+            style={{ fontWeight: 400, letterSpacing: '-0.04em' }}
+          >
+            Ready to know what a stock<br className="hidden sm:block" /> is really worth?
+          </h2>
+          <p className="text-stone-400 text-lg mb-10 max-w-md mx-auto">
+            Free to use. No account needed. Results in seconds.
+          </p>
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            {EXAMPLE_TICKERS.slice(0, 3).map((t) => (
+              <button
+                key={t}
+                onClick={() => router.push(`/stock/${t}`)}
+                className="rounded-xl px-7 py-3.5 text-sm font-bold text-stone-900 transition-all bg-[#F59E0B] hover:bg-[#FBBF24] hover:shadow-lg hover:-translate-y-0.5 font-mono"
+              >
+                Analyze {t}
+              </button>
             ))}
           </div>
-        </div>
-      </section>
+          <p className="mt-8 text-xs text-stone-600">NYSE · NASDAQ · No signup required</p>
+        </section>
+      </div>
 
-      {/* Feature capability cards */}
-      <section className="border-b border-slate-200 bg-slate-50">
-        <div className="mx-auto max-w-5xl px-6 py-16">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Everything you need to value a stock</h2>
-            <p className="text-slate-500 text-sm">Four complementary methods. One clear verdict.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              {
-                icon: (
-                  <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
-                  </svg>
-                ),
-                title: 'DCF Valuation',
-                benefit: 'Intrinsic value from free cash flows — not just multiples. Adjust WACC and growth yourself.',
-              },
-              {
-                icon: (
-                  <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.745 3.745 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.745 3.745 0 0 1 3.296-1.043A3.745 3.745 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.745 3.745 0 0 1 3.296 1.043 3.745 3.745 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
-                  </svg>
-                ),
-                title: 'Health Scores',
-                benefit: 'Piotroski F-Score, Altman Z-Score, Beneish M-Score, and ROIC vs WACC in one view.',
-              },
-              {
-                icon: (
-                  <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z" />
-                  </svg>
-                ),
-                title: 'Scenario Analysis',
-                benefit: 'Bear, base, and bull cases with probability weighting — see the full range, not just a point estimate.',
-              },
-              {
-                icon: (
-                  <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3" />
-                  </svg>
-                ),
-                title: 'Reverse DCF',
-                benefit: "See what growth rate the market is pricing in — decide if that expectation is achievable.",
-              },
-            ].map((card) => (
-              <div key={card.title} className="rounded-xl card card-hover p-5 flex flex-col gap-3">
-                <div className="w-9 h-9 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
-                  {card.icon}
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-900 mb-1">{card.title}</p>
-                  <p className="text-xs text-slate-500 leading-relaxed">{card.benefit}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="mx-auto max-w-2xl px-6 py-20 text-center">
-        <h2 className="text-2xl font-bold text-slate-900 mb-2">Ready to analyze your first stock?</h2>
-        <p className="text-slate-500 text-sm mb-8">Free to use. No account needed to start.</p>
-        <div className="flex items-center justify-center gap-3 flex-wrap">
-          {EXAMPLE_TICKERS.slice(0, 3).map((t) => (
-            <button
-              key={t}
-              onClick={() => router.push(`/stock/${t}`)}
-              className="rounded-xl px-6 py-3 text-sm font-semibold text-white transition-all hover:shadow-glow-md bg-blue-600 hover:bg-blue-700 font-mono"
-            >
-              Analyze {t}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <footer className="border-t border-slate-200 px-6 py-8 text-center">
-        <p className="text-xs text-slate-400">
+      <footer style={{ background: '#F0EBE3', borderTop: '1px solid #E8E2D9' }} className="px-6 py-10 text-center">
+        <p className="text-sm text-stone-400 max-w-xl mx-auto leading-relaxed">
           Data sourced from Yahoo Finance, FRED, and Damodaran&apos;s research.
           This is a research tool, not financial advice. All estimates are model outputs, not recommendations.
         </p>
