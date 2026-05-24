@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getFmpBundle, type FmpIncomeStatement, type FmpBalanceSheet, type FmpCashFlowStatement } from '@/lib/data/fmpClient'
-import { getFinancials, getQuote, getHistorical, getSPYHistorical, getFXRate, getPeerQuotes } from '@/lib/data/yahooClient'
+import { getFinancials, getQuote, getHistorical, getSPYHistorical, getFXRate, getPeerQuotes, getAnnualBalanceSheet } from '@/lib/data/yahooClient'
 import { calculateBeta } from '@/lib/dcf/calculateBeta'
 import { calculateWACC, extractWACCInputs } from '@/lib/dcf/calculateWACC'
 import { projectCashFlows, extractFCFInputs } from '@/lib/dcf/projectCashFlows'
@@ -19,13 +19,14 @@ export async function GET(req: NextRequest) {
   if (!ticker) return NextResponse.json({ error: 'ticker required' }, { status: 400 })
 
   try {
-    const [financials, quote, stockHistory, spyHistory, rfRate, fmp] = await Promise.all([
+    const [financials, quote, stockHistory, spyHistory, rfRate, fmp, annualBSRows] = await Promise.all([
       getFinancials(ticker),
       getQuote(ticker),
       getHistorical(ticker, '5y'),
       getSPYHistorical(),
       getRfRate(),
       getFmpBundle(ticker).catch(() => ({ incomeStatements: [], cashFlowStatements: [], balanceSheets: [], keyMetrics: [], ratios: [] })),
+      getAnnualBalanceSheet(ticker).catch(() => []),
     ])
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -632,6 +633,18 @@ export async function GET(req: NextRequest) {
           return cfHistorical.length > 0 ? cfHistorical.reduce((s: number, s2: any) => s + Math.abs((s2.repurchaseOfStock ?? s2.repurchaseOfCommonStock ?? 0) as number) / 1e6 * fxRate, 0) / cfHistorical.length : 0
         })()
 
+    // Build Yahoo balance sheet lookup by year for totalAssets fallback when FMP lacks it
+    const yahooBsByYear: Record<string, { totalAssets: number | null; cash: number | null }> = {}
+    for (const s of (fin.balanceSheetHistory?.balanceSheetStatements ?? []) as any[]) {
+      const yr = String(new Date(s.endDate).getFullYear())
+      const rawAssets = s.totalAssets ?? null
+      const rawCash   = s.cash ?? s.cashAndCashEquivalents ?? s.cashAndShortTermInvestments ?? null
+      yahooBsByYear[yr] = {
+        totalAssets: rawAssets != null ? (rawAssets as number) / 1e6 * fxRate : null,
+        cash:        rawCash   != null ? (rawCash   as number) / 1e6 * fxRate : null,
+      }
+    }
+
     // Build Yahoo cashflow lookup by year for CapEx/D&A fallback when FMP lacks them
     const yahooCfByYear: Record<string, { capex: number | null; dna: number | null; opCF: number | null; fcf: number | null }> = {}
     for (const s of (fin.cashflowStatementHistory?.cashflowStatements ?? []) as any[]) {
@@ -750,31 +763,57 @@ export async function GET(req: NextRequest) {
 
     // --- Balance Sheet ---
     const bsHistoricalRows = hasFmp
-      ? fmpBsSorted.map(s => ({
-          year: s.fiscalYear,
-          cash: s.cashAndShortTermInvestments > 0 ? s.cashAndShortTermInvestments / 1e6 * fxRate : (s.cashAndCashEquivalents > 0 ? s.cashAndCashEquivalents / 1e6 * fxRate : null),
-          totalCurrentAssets: s.totalCurrentAssets > 0 ? s.totalCurrentAssets / 1e6 * fxRate : null,
-          totalAssets: s.totalAssets > 0 ? s.totalAssets / 1e6 * fxRate : null,
-          longTermDebt: s.longTermDebt > 0 ? s.longTermDebt / 1e6 * fxRate : null,
-          totalCurrentLiabilities: s.totalCurrentLiabilities > 0 ? s.totalCurrentLiabilities / 1e6 * fxRate : null,
-          totalEquity: (s.totalStockholdersEquity ?? s.totalEquity) > 0 ? (s.totalStockholdersEquity ?? s.totalEquity) / 1e6 * fxRate : null,
-          fiscalDate: s.date ?? s.fiscalYear,
-          isProjected: false,
-        }))
+      ? fmpBsSorted.map(s => {
+          const yr = s.fiscalYear
+          const yhooBS = yahooBsByYear[yr] ?? {}
+          const fmpCash       = s.cashAndShortTermInvestments > 0 ? s.cashAndShortTermInvestments / 1e6 * fxRate : (s.cashAndCashEquivalents > 0 ? s.cashAndCashEquivalents / 1e6 * fxRate : null)
+          const fmpTotalAssets = s.totalAssets > 0 ? s.totalAssets / 1e6 * fxRate : null
+          return {
+            year: yr,
+            cash: fmpCash ?? yhooBS.cash ?? null,
+            totalCurrentAssets: s.totalCurrentAssets > 0 ? s.totalCurrentAssets / 1e6 * fxRate : null,
+            totalAssets: fmpTotalAssets ?? yhooBS.totalAssets ?? null,
+            longTermDebt: s.longTermDebt > 0 ? s.longTermDebt / 1e6 * fxRate : null,
+            totalCurrentLiabilities: s.totalCurrentLiabilities > 0 ? s.totalCurrentLiabilities / 1e6 * fxRate : null,
+            totalEquity: (s.totalStockholdersEquity ?? s.totalEquity) > 0 ? (s.totalStockholdersEquity ?? s.totalEquity) / 1e6 * fxRate : null,
+            fiscalDate: s.date ?? s.fiscalYear,
+            isProjected: false,
+          }
+        })
       : (() => {
+          // Build fundamentalsTimeSeries balance sheet lookup by year (has totalAssets when quoteSummary strips it)
+          const ftsBsByYear: Record<string, any> = {}
+          for (const r of annualBSRows) {
+            const yr = String(new Date(r.date instanceof Date ? r.date : String(r.date)).getFullYear())
+            ftsBsByYear[yr] = r
+          }
+
           const rawBSHistory: any[] = fin.balanceSheetHistory?.balanceSheetStatements ?? []
           const bsHistorical = rawBSHistory.slice(-4).reverse()
-          return bsHistorical.map((s: any) => ({
-            year: String(new Date(s.endDate).getFullYear()),
-            cash: (() => { const v = s.cash ?? s.cashAndCashEquivalents ?? s.cashAndShortTermInvestments ?? s.cashCashEquivalentsAndShortTermInvestments ?? s.cashAndCashEquivalentsAtCarryingValue; return v != null ? (v as number) / 1e6 * fxRate : null })(),
-            totalCurrentAssets: s.totalCurrentAssets != null ? (s.totalCurrentAssets as number) / 1e6 * fxRate : null,
-            totalAssets: s.totalAssets != null ? (s.totalAssets as number) / 1e6 * fxRate : null,
-            longTermDebt: s.longTermDebt != null ? (s.longTermDebt as number) / 1e6 * fxRate : null,
-            totalCurrentLiabilities: s.totalCurrentLiabilities != null ? (s.totalCurrentLiabilities as number) / 1e6 * fxRate : null,
-            totalEquity: (s.totalStockholderEquity ?? s.stockholdersEquity) != null ? ((s.totalStockholderEquity ?? s.stockholdersEquity) as number) / 1e6 * fxRate : null,
-            fiscalDate: s.endDate ? new Date(s.endDate).toISOString().split('T')[0] : null,
-            isProjected: false,
-          }))
+          return bsHistorical.map((s: any) => {
+            const yr = String(new Date(s.endDate).getFullYear())
+            const fts = ftsBsByYear[yr] ?? {}
+            const ftsAssets = fts.totalAssets != null ? (fts.totalAssets as number) / 1e6 * fxRate : null
+            const ftsCA     = fts.currentAssets != null ? (fts.currentAssets as number) / 1e6 * fxRate : null
+            const ftsCash   = (fts.cashCashEquivalentsAndShortTermInvestments ?? fts.cashAndCashEquivalents) != null
+              ? ((fts.cashCashEquivalentsAndShortTermInvestments ?? fts.cashAndCashEquivalents) as number) / 1e6 * fxRate : null
+            const ftsCL     = fts.currentLiabilities != null ? (fts.currentLiabilities as number) / 1e6 * fxRate : null
+            const ftsEquity = fts.stockholdersEquity != null ? (fts.stockholdersEquity as number) / 1e6 * fxRate : null
+            const ftsLTD    = (fts.longTermDebtAndCapitalLeaseObligation ?? fts.longTermDebt) != null
+              ? ((fts.longTermDebtAndCapitalLeaseObligation ?? fts.longTermDebt) as number) / 1e6 * fxRate : null
+            const rawCash = s.cash ?? s.cashAndCashEquivalents ?? s.cashAndShortTermInvestments ?? s.cashCashEquivalentsAndShortTermInvestments ?? s.cashAndCashEquivalentsAtCarryingValue
+            return {
+              year: yr,
+              cash: (rawCash != null ? (rawCash as number) / 1e6 * fxRate : null) ?? ftsCash ?? null,
+              totalCurrentAssets: (s.totalCurrentAssets != null ? (s.totalCurrentAssets as number) / 1e6 * fxRate : null) ?? ftsCA ?? null,
+              totalAssets: (s.totalAssets != null ? (s.totalAssets as number) / 1e6 * fxRate : null) ?? ftsAssets ?? null,
+              longTermDebt: (s.longTermDebt != null ? (s.longTermDebt as number) / 1e6 * fxRate : null) ?? ftsLTD ?? null,
+              totalCurrentLiabilities: (s.totalCurrentLiabilities != null ? (s.totalCurrentLiabilities as number) / 1e6 * fxRate : null) ?? ftsCL ?? null,
+              totalEquity: ((s.totalStockholderEquity ?? s.stockholdersEquity) != null ? ((s.totalStockholderEquity ?? s.stockholdersEquity) as number) / 1e6 * fxRate : null) ?? ftsEquity ?? null,
+              fiscalDate: s.endDate ? new Date(s.endDate).toISOString().split('T')[0] : null,
+              isProjected: false,
+            }
+          })
         })()
 
     // Projected balance sheet

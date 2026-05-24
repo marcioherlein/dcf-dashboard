@@ -55,6 +55,22 @@ export async function getFinancials(ticker: string): Promise<any> {
 export type HistoricalPeriod = '1d' | '5d' | '1mo' | '3mo' | '6mo' | 'ytd' | '1y' | '2y' | '3y' | '5y' | '10y' | 'max'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function getAnnualBalanceSheet(ticker: string): Promise<any[]> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rows: any[] = await yf.fundamentalsTimeSeries(ticker, {
+      type: 'annual',
+      module: 'balance-sheet',
+      period1: '2015-01-01',
+    })
+    return rows ?? []
+  } catch {
+    return []
+  }
+}
+
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getHistorical(ticker: string, period: HistoricalPeriod = '1y'): Promise<any[]> {
   const period2 = new Date()
   let period1 = new Date()
