@@ -19,7 +19,7 @@ interface Props {
   currency?: string
 }
 
-function computeConsensus(methods: MethodResult[], price: number) {
+function computeConsensus(methods: MethodResult[]) {
   const valid = methods.filter(m => m.fairValue != null && m.weight > 0)
   if (!valid.length) return { weightedFV: null }
   const totalWeight = valid.reduce((s, m) => s + m.weight, 0)
@@ -151,7 +151,7 @@ function MethodDotsChart({ methods, currentPrice, blendedFV, currency }: {
 }
 
 export default function ValuationSummary({ methods, currentPrice, currency = 'USD' }: Props) {
-  const { weightedFV } = computeConsensus(methods, currentPrice)
+  const { weightedFV } = computeConsensus(methods)
   if (!methods.some(m => m.fairValue != null)) return null
 
   return (
