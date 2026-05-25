@@ -196,6 +196,34 @@ h1, h2, h3 {
     -webkit-backdrop-filter: blur(24px) saturate(180%) brightness(1.03);
   }
 
+  /* iOS Liquid Glass — bottom navigation bar */
+  .glass-bottom-nav {
+    position: relative;
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(40px) saturate(210%) brightness(1.05);
+    -webkit-backdrop-filter: blur(40px) saturate(210%) brightness(1.05);
+    border-top: 1px solid rgba(255, 255, 255, 0.80);
+    box-shadow:
+      0 -1px 0 rgba(255, 255, 255, 0.95) inset,
+      0 -4px 24px rgba(99, 102, 241, 0.06),
+      0 -1px 6px rgba(0, 0, 0, 0.04);
+  }
+  .glass-bottom-nav::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 4%; right: 4%;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.65) 20%,
+      rgba(255, 255, 255, 0.95) 50%,
+      rgba(255, 255, 255, 0.65) 80%,
+      transparent 100%
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
   .glass-card-light {
     position: relative;
     background: rgba(255, 255, 255, 0.62);
@@ -315,6 +343,7 @@ h1, h2, h3 {
   .glass-panel            { background: rgb(248, 250, 252); }
   .glass-card-light       { background: #ffffff; }
   .glass-accordion-header { background: #ffffff; }
+  .glass-bottom-nav       { background: rgba(255, 255, 255, 0.97); }
 }
 
 @media (prefers-reduced-transparency: reduce) {
@@ -322,6 +351,7 @@ h1, h2, h3 {
   .glass-panel            { background: rgb(248, 250, 252); backdrop-filter: none; -webkit-backdrop-filter: none; }
   .glass-card-light       { background: #ffffff; backdrop-filter: none; -webkit-backdrop-filter: none; }
   .glass-accordion-header { background: #ffffff; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .glass-bottom-nav       { background: #ffffff; backdrop-filter: none; -webkit-backdrop-filter: none; }
   .glass-interactive      { transition: none; transform: none; }
 }
 

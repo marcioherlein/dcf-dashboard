@@ -71,13 +71,8 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 lg:hidden border-t border-slate-200/80"
-      style={{
-        background: 'rgba(255, 255, 255, 0.88)',
-        backdropFilter: 'blur(32px) saturate(200%) brightness(1.04)',
-        WebkitBackdropFilter: 'blur(32px) saturate(200%) brightness(1.04)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-      }}
+      className="fixed bottom-0 left-0 right-0 z-40 lg:hidden glass-bottom-nav"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex items-end justify-around h-14">
         {NAV.map(({ href, label, match, icon }) => {
