@@ -1,5 +1,6 @@
 'use client'
 import { cn } from '@/lib/utils'
+import type { PiotroskiResult, AltmanResult, BeneishResult, ROICResult } from '@/lib/dcf/calculateScores'
 
 interface Ratings {
   profitability: { grade: string }
@@ -7,6 +8,13 @@ interface Ratings {
   growth:        { grade: string }
   moat:          { grade: string }
   valuation:     { grade: string }
+}
+
+interface Scores {
+  piotroski?: PiotroskiResult | null
+  altman?:    AltmanResult    | null
+  beneish?:   BeneishResult   | null
+  roic?:      ROICResult      | null
 }
 
 interface Props {
@@ -18,6 +26,48 @@ interface Props {
   ratings?: Ratings | null
   confidence?: 'High' | 'Medium' | 'Low'
   growthModel?: 'two-stage' | 'three-stage'
+  scores?: Scores | null
+}
+
+interface RedFlag {
+  label: string
+  level: 'danger' | 'warning'
+}
+
+function extractRedFlags(scores: Scores): RedFlag[] {
+  const flags: RedFlag[] = []
+
+  if (scores.beneish) {
+    if (scores.beneish.flag === 'Manipulator') {
+      flags.push({ label: 'Earnings manipulation risk', level: 'danger' })
+    } else if (scores.beneish.flag === 'Warning') {
+      flags.push({ label: 'Earnings quality concern', level: 'warning' })
+    }
+  }
+
+  if (scores.altman) {
+    if (scores.altman.zone === 'Distress') {
+      flags.push({
+        label: `Financial distress zone${!scores.altman.isReliable ? ' (EM)' : ''}`,
+        level: 'danger',
+      })
+    }
+  }
+
+  if (scores.piotroski) {
+    const hasRealData = scores.piotroski.criteria.some(
+      c => c.pass !== null && !c.detail.includes('unavailable'),
+    )
+    if (hasRealData && scores.piotroski.score <= 2) {
+      flags.push({ label: `Weak financials (F-Score: ${scores.piotroski.score}/9)`, level: 'warning' })
+    }
+  }
+
+  if (scores.roic?.dataAvailable && scores.roic.spread < -0.02) {
+    flags.push({ label: 'Value destruction (ROIC < WACC)', level: 'warning' })
+  }
+
+  return flags
 }
 
 function gradeToScore(g: string): number {
@@ -63,7 +113,6 @@ function plainEnglishSummary(
     return `The stock is trading close to the model's fair value estimate. You're paying roughly what the company appears to be worth today — no significant discount or premium.`
   }
 
-  // overvalued
   const pctAbove = Math.abs(upside * 100).toFixed(0)
   return `The stock appears to be trading about ${pctAbove}% above its estimated fair value. The market may be pricing in growth that the model doesn't yet see, or the stock may need time to grow into its valuation.`
 }
@@ -71,42 +120,45 @@ function plainEnglishSummary(
 const VERDICT_CONFIG = {
   'undervalued': {
     label: 'Looks Undervalued',
-    bg: 'bg-emerald-500/10 border-emerald-500/30',
-    dot: 'bg-emerald-400',
-    text: 'text-emerald-400',
-    badge: 'bg-emerald-500/15 border-emerald-500/25 text-emerald-300',
+    bg: 'bg-emerald-50 border-emerald-200',
+    dot: 'bg-emerald-500',
+    text: 'text-emerald-700',
+    badge: 'bg-emerald-50 border-emerald-200 text-emerald-700',
+    divider: 'border-emerald-100',
   },
   'fairly-valued': {
     label: 'Fairly Valued',
-    bg: 'bg-blue-500/10 border-blue-500/30',
-    dot: 'bg-blue-400',
-    text: 'text-blue-400',
-    badge: 'bg-blue-500/15 border-blue-500/25 text-blue-300',
+    bg: 'bg-blue-50 border-blue-200',
+    dot: 'bg-blue-500',
+    text: 'text-blue-700',
+    badge: 'bg-blue-50 border-blue-200 text-blue-700',
+    divider: 'border-blue-100',
   },
   'overvalued': {
     label: 'Looks Overvalued',
-    bg: 'bg-amber-500/10 border-amber-500/30',
-    dot: 'bg-amber-400',
-    text: 'text-amber-400',
-    badge: 'bg-amber-500/15 border-amber-500/25 text-amber-300',
+    bg: 'bg-amber-50 border-amber-200',
+    dot: 'bg-amber-500',
+    text: 'text-amber-700',
+    badge: 'bg-amber-50 border-amber-200 text-amber-700',
+    divider: 'border-amber-100',
   },
 }
 
 const QUALITY_COLOR: Record<string, string> = {
-  Strong: 'text-emerald-400 bg-emerald-500/15 border-emerald-500/25',
-  Solid:  'text-blue-400 bg-blue-500/15 border-blue-500/25',
-  Mixed:  'text-amber-400 bg-amber-500/15 border-amber-500/25',
-  Weak:   'text-red-400 bg-red-500/15 border-red-500/25',
+  Strong: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+  Solid:  'text-blue-700 bg-blue-50 border-blue-200',
+  Mixed:  'text-amber-700 bg-amber-50 border-amber-200',
+  Weak:   'text-red-700 bg-red-50 border-red-200',
 }
 
 const CONFIDENCE_COLOR: Record<string, string> = {
-  High:   'text-emerald-400 bg-emerald-500/15 border-emerald-500/25',
-  Medium: 'text-amber-400 bg-amber-500/15 border-amber-500/25',
-  Low:    'text-slate-400 bg-slate-500/15 border-slate-500/25',
+  High:   'text-emerald-700 bg-emerald-50 border-emerald-200',
+  Medium: 'text-amber-700 bg-amber-50 border-amber-200',
+  Low:    'text-slate-500 bg-slate-50 border-slate-200',
 }
 
 export default function InvestorVerdictCard({
-  upside, fairValue, price, currency, analystRecommendation, ratings, confidence, growthModel,
+  upside, fairValue, price, currency, analystRecommendation, ratings, confidence, growthModel, scores,
 }: Props) {
   if (upside == null || fairValue == null) return null
 
@@ -120,12 +172,13 @@ export default function InvestorVerdictCard({
   const isSell  = recNorm.includes('sell') || recNorm.includes('underperform') || recNorm.includes('underweight')
   const analystLabel = isBuy ? 'Analysts: Buy' : isSell ? 'Analysts: Sell' : 'Analysts: Hold'
   const analystColor = isBuy
-    ? 'text-emerald-400 bg-emerald-500/15 border-emerald-500/25'
+    ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
     : isSell
-    ? 'text-red-400 bg-red-500/15 border-red-500/25'
-    : 'text-amber-400 bg-amber-500/15 border-amber-500/25'
+    ? 'text-red-700 bg-red-50 border-red-200'
+    : 'text-amber-700 bg-amber-50 border-amber-200'
 
   const summary = plainEnglishSummary(upside, price, fairValue, sym, quality)
+  const flags = scores ? extractRedFlags(scores) : null
 
   return (
     <div className={cn('rounded-xl border px-5 py-4 space-y-3', config.bg)}>
@@ -138,19 +191,17 @@ export default function InvestorVerdictCard({
           </span>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
-          {/* Upside badge */}
           <span className={cn('text-xs font-semibold px-2 py-0.5 rounded-full border tabular-nums', config.badge)}>
             {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(1)}% vs fair value
           </span>
-          {/* Fair value */}
-          <span className="text-xs text-slate-400 tabular-nums">
+          <span className="text-xs text-slate-500 tabular-nums">
             FV {sym}{fairValue.toFixed(2)}
           </span>
         </div>
       </div>
 
       {/* Plain English summary */}
-      <p className="text-[12px] text-slate-300 leading-relaxed">{summary}</p>
+      <p className="text-[12px] text-slate-600 leading-relaxed">{summary}</p>
 
       {/* Signal pills */}
       <div className="flex gap-2 flex-wrap pt-0.5">
@@ -168,15 +219,40 @@ export default function InvestorVerdictCard({
           </span>
         )}
         {growthModel && (
-          <span className="text-[11px] text-slate-500 px-2.5 py-0.5 rounded-full border border-slate-700">
+          <span className="text-[11px] text-slate-500 px-2.5 py-0.5 rounded-full border border-slate-200 bg-white">
             {growthModel === 'three-stage' ? '3-stage DCF' : '2-stage DCF'}
           </span>
         )}
       </div>
 
+      {/* Red flags row */}
+      {flags !== null && (
+        <div className={cn('flex flex-wrap gap-1.5 pt-0.5 border-t', config.divider)}>
+          {flags.length === 0 ? (
+            <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700">
+              ✓ No major red flags
+            </span>
+          ) : (
+            flags.map((flag, i) => (
+              <span
+                key={i}
+                className={cn(
+                  'text-[11px] font-semibold px-2.5 py-1 rounded-full border',
+                  flag.level === 'danger'
+                    ? 'bg-red-50 border-red-200 text-red-700'
+                    : 'bg-amber-50 border-amber-200 text-amber-700',
+                )}
+              >
+                ⚠ {flag.label}
+              </span>
+            ))
+          )}
+        </div>
+      )}
+
       {/* Disclaimer */}
-      <p className="text-[10px] text-slate-600 leading-tight border-t border-white/5 pt-2">
-        This is a model-based estimate, not financial advice. All valuations involve assumptions — treat this as one input alongside your own research.
+      <p className="text-[10px] text-slate-400 leading-tight border-t border-slate-200/70 pt-2">
+        Model-based estimate, not financial advice. Treat as one input alongside your own research.
       </p>
     </div>
   )

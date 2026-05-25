@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
-import { TrendingUp, TrendingDown, Bookmark, Share2, Check, DollarSign, Shield, BarChart2, ArrowRight } from 'lucide-react'
+import { TrendingUp, TrendingDown, Bookmark, Share2, Check, DollarSign, Shield, BarChart2, ArrowRight, Bell, BellOff } from 'lucide-react'
 import { motion, useMotionValue, animate } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { fmtPct, fmtLargeCurrency, fmtPrice, upsideZone, zoneBadgeClass } from '@/lib/formatters'
@@ -90,6 +90,35 @@ export default function InvestorGradeCard({
   const gaugeValue = gradeToValue(grade)
 
   const [copied, setCopied] = useState(false)
+  const [alertActive, setAlertActive] = useState(false)
+  const [alertTriggered, setAlertTriggered] = useState(false)
+
+  // Load alert state from localStorage on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const stored = localStorage.getItem(`fv_alert_${ticker}`)
+      if (!stored) return
+      const parsed = JSON.parse(stored) as { fairValue: number; threshold: number }
+      setAlertActive(true)
+      if (fairValue != null && Math.abs((price - fairValue) / fairValue) <= parsed.threshold) {
+        setAlertTriggered(true)
+      }
+    } catch {}
+  }, [ticker, price, fairValue])
+
+  function toggleAlert() {
+    if (typeof window === 'undefined') return
+    if (alertActive) {
+      localStorage.removeItem(`fv_alert_${ticker}`)
+      setAlertActive(false)
+      setAlertTriggered(false)
+    } else {
+      if (fairValue == null) return
+      localStorage.setItem(`fv_alert_${ticker}`, JSON.stringify({ fairValue, threshold: 0.10 }))
+      setAlertActive(true)
+    }
+  }
   const handleShare = useCallback(() => {
     if (typeof window === 'undefined') return
     const params = new URLSearchParams({
@@ -240,33 +269,61 @@ export default function InvestorGradeCard({
 
           {/* Fair value row */}
           {fairValue != null && (
-            <div className="flex items-center gap-3 rounded-xl card-tinted px-4 py-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">You pay</p>
-                <p className="mt-0.5 text-sm font-semibold text-slate-900 tabular-nums">
-                  {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </p>
-              </div>
-              <div className="flex flex-col items-center gap-1 shrink-0">
-                <ArrowRight size={14} className="text-slate-400" />
-                {zone && (
-                  <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap', zoneBadgeClass(zone))}>
-                    {zone}
-                  </span>
-                )}
-              </div>
-              <div className="flex-1 min-w-0 text-right">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Fair Value Estimate</p>
-                <p className={cn('mt-0.5 text-xl font-bold tabular-nums', isUndervalued ? 'text-emerald-600' : 'text-amber-700')}>
-                  {currSymbol}{displayFV.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </p>
-                {upsidePct != null && (
-                  <p className={cn('text-xs font-semibold', isUndervalued ? 'text-emerald-600' : 'text-amber-700')}>
-                    {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
+            <>
+              {/* Alert triggered banner */}
+              {alertTriggered && (
+                <div className="flex items-center gap-2 rounded-xl bg-blue-50 border border-blue-200 px-3 py-2">
+                  <Bell size={13} className="text-blue-600 shrink-0" />
+                  <p className="text-[11px] text-blue-700 font-medium">
+                    {ticker} is now within 10% of your fair value alert ({fmtPrice(fairValue, currency)})
                   </p>
-                )}
+                </div>
+              )}
+              <div className="flex items-center gap-3 rounded-xl card-tinted px-4 py-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">You pay</p>
+                  <p className="mt-0.5 text-sm font-semibold text-slate-900 tabular-nums">
+                    {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                </div>
+                <div className="flex flex-col items-center gap-1 shrink-0">
+                  <ArrowRight size={14} className="text-slate-400" />
+                  {zone && (
+                    <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap', zoneBadgeClass(zone))}>
+                      {zone}
+                    </span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 text-right">
+                  <div className="flex items-start justify-end gap-2">
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Fair Value Estimate</p>
+                      <p className={cn('mt-0.5 text-xl font-bold tabular-nums', isUndervalued ? 'text-emerald-600' : 'text-amber-700')}>
+                        {currSymbol}{displayFV.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                      {upsidePct != null && (
+                        <p className={cn('text-xs font-semibold', isUndervalued ? 'text-emerald-600' : 'text-amber-700')}>
+                          {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
+                        </p>
+                      )}
+                    </div>
+                    {/* Alert toggle */}
+                    <button
+                      onClick={toggleAlert}
+                      title={alertActive ? 'Remove fair value alert' : 'Alert me when price is within 10% of fair value'}
+                      className={cn(
+                        'mt-1 rounded-lg border p-1.5 transition-colors',
+                        alertActive
+                          ? 'bg-blue-50 border-blue-300 text-blue-600'
+                          : 'bg-white border-slate-200 text-slate-400 hover:border-blue-300 hover:text-blue-600',
+                      )}
+                    >
+                      {alertActive ? <BellOff size={13} /> : <Bell size={13} />}
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
+            </>
           )}
 
           {/* Health pills — only render if at least one summary exists */}

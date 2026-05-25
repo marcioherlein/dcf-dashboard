@@ -2,16 +2,17 @@
 import { cn } from '@/lib/utils'
 import { motion, useReducedMotion } from 'motion/react'
 import {
-  BarChart2, DollarSign, Table2, ShieldCheck, Newspaper,
+  BarChart2, DollarSign, Table2, ShieldCheck, Newspaper, BookOpen,
 } from 'lucide-react'
 
-export type TabId = 'overview' | 'valuation' | 'financials' | 'risks' | 'news'
+export type TabId = 'overview' | 'valuation' | 'financials' | 'risks' | 'thesis' | 'news'
 
 const TABS = [
   { id: 'overview'   as TabId, label: 'Overview',          Icon: BarChart2,   primary: true  },
   { id: 'valuation'  as TabId, label: 'Valuation',         Icon: DollarSign,  primary: true  },
   { id: 'financials' as TabId, label: 'Financials',        Icon: Table2,      primary: false },
   { id: 'risks'      as TabId, label: 'Risks & Signals',   Icon: ShieldCheck, primary: false },
+  { id: 'thesis'     as TabId, label: 'My Thesis',         Icon: BookOpen,    primary: false },
   { id: 'news'       as TabId, label: 'News',              Icon: Newspaper,   primary: false },
 ]
 

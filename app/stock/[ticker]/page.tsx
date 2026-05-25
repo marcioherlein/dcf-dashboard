@@ -20,6 +20,9 @@ import FinancialsHub from '@/components/stock/FinancialsHub'
 import InvestorGradeCard from '@/components/stock/InvestorGradeCard'
 import MobileKeyInsights from '@/components/stock/MobileKeyInsights'
 import InvestorVerdictCard from '@/components/stock/InvestorVerdictCard'
+import ReverseDcfCallout from '@/components/stock/ReverseDcfCallout'
+import PreTradeChecklist from '@/components/stock/PreTradeChecklist'
+import ThesisBuilderTab from '@/components/stock/ThesisBuilderTab'
 import { LoginGateProvider, useLoginGate } from '@/components/auth/LoginGateProvider'
 import AuthBanner from '@/components/auth/AuthBanner'
 import { calculatePiotroski, calculateAltman, calculateBeneish } from '@/lib/dcf/calculateScores'
@@ -185,7 +188,7 @@ function StockPageBody() {
     const saved = loadPreLoginState()
     if (!saved) return
     clearPreLoginState()
-    if (saved.tab && ['overview', 'valuation', 'financials', 'risks', 'news'].includes(saved.tab)) {
+    if (saved.tab && ['overview', 'valuation', 'financials', 'risks', 'thesis', 'news'].includes(saved.tab)) {
       setActiveTab(saved.tab as TabId)
     }
     track('saved_after_login', { intent: saved.intent, ticker: saved.ticker ?? ticker })
@@ -265,7 +268,7 @@ function StockPageBody() {
 
   const currency = data?.quote.currency === 'USD' ? '$' : (data?.quote.currency ?? '$') + ' '
 
-  const TAB_ORDER: TabId[] = ['overview', 'valuation', 'financials', 'risks', 'news']
+  const TAB_ORDER: TabId[] = ['overview', 'valuation', 'financials', 'risks', 'thesis', 'news']
 
   const handleTabChange = (tab: TabId) => {
     const dir = TAB_ORDER.indexOf(tab) > TAB_ORDER.indexOf(activeTab) ? 1 : -1
@@ -440,6 +443,7 @@ function StockPageBody() {
                     ratings={data.ratings ?? null}
                     confidence={data.cagrAnalysis?.confidenceLabel}
                     growthModel={data.growthModel}
+                    scores={computedScores ?? data.scores}
                   />
 
                   <PriceChart
@@ -461,13 +465,19 @@ function StockPageBody() {
                     statementsData={statementsData}
                   />
 
-                  {data.ownership && (
-                    <OwnershipPanel ownership={data.ownership} />
-                  )}
-
-                  {data.holdingReturns && (
-                    <HoldingReturns returns={data.holdingReturns} ticker={data.ticker} />
-                  )}
+                  {/* Reverse DCF — signature card */}
+                  <ReverseDcfCallout
+                    price={data.quote.price}
+                    sharesM={data.fairValue?.sharesOutstanding ?? null}
+                    cashM={data.fairValue?.cash ?? null}
+                    debtM={data.fairValue?.debt ?? null}
+                    revenueM={data.businessProfile?.revenueM ?? null}
+                    fcfMargin={data.businessProfile?.fcfMargin ?? null}
+                    wacc={data.wacc?.wacc ?? 0.09}
+                    terminalG={data.terminalG ?? 0.025}
+                    historicalCAGR={data.cagrAnalysis?.historicalCagr3y ?? null}
+                    isEmergingMarket={computedScores?.altman?.isReliable === false}
+                  />
 
                   {data.ratings && data.scores && (
                     <HealthSection
@@ -487,6 +497,14 @@ function StockPageBody() {
                       cashFlow={data.financialStatements?.cashFlow}
                       statementsData={statementsData}
                     />
+                  )}
+
+                  {data.ownership && (
+                    <OwnershipPanel ownership={data.ownership} />
+                  )}
+
+                  {data.holdingReturns && (
+                    <HoldingReturns returns={data.holdingReturns} ticker={data.ticker} />
                   )}
                   {/* ── Overview → Valuation CTA ── */}
                   <div className="rounded-xl border border-blue-200 bg-blue-50 px-5 py-4 flex items-center justify-between gap-4">
@@ -541,6 +559,38 @@ function StockPageBody() {
                       sector={data.quote.sector ?? ''}
                     />
                   )}
+
+                  {/* Pre-trade decision checklist */}
+                  <PreTradeChecklist
+                    ticker={ticker}
+                    onSaveToWatchlist={() => {
+                      if (!session?.user) { requireAuth({ intent: 'save_watchlist' }); return }
+                      const isETF = (data.quote.quoteType ?? '').toUpperCase() === 'ETF'
+                      setSavePayload({
+                        ticker: data.ticker,
+                        name: data.companyName,
+                        assetType: isETF ? 'etf' : 'stock',
+                        fairValue: data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? null,
+                        upsidePct: data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null,
+                        valuationSnapshot: isETF ? null : {
+                          price_at_save: data.quote.price,
+                          fair_value: data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? 0,
+                          wacc: data.wacc?.wacc ?? 0,
+                          beta: data.wacc?.inputs?.beta ?? 1,
+                          terminal_g: data.scenarios?.base?.terminalG ?? 0.025,
+                          cagr: data.scenarios?.base?.cagr ?? 0,
+                          upside_pct: data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? 0,
+                          inputs: data.wacc?.inputs ?? {},
+                          scenarios: {
+                            bull: data.scenarios?.bull?.fairValue ?? 0,
+                            base: data.scenarios?.base?.fairValue ?? 0,
+                            bear: data.scenarios?.bear?.fairValue ?? 0,
+                          },
+                        },
+                      })
+                      setSaveDialogOpen(true)
+                    }}
+                  />
                 </motion.div>
               )}
 
@@ -583,6 +633,20 @@ function StockPageBody() {
                     />
                   )}
                   {data.scores && <FinancialScores scores={computedScores ?? data.scores} />}
+                </motion.div>
+              )}
+
+              {/* ── My Thesis tab ── */}
+              {activeTab === 'thesis' && (
+                <motion.div
+                  key="tab-thesis"
+                  className="space-y-4 pt-5"
+                  initial={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
+                  transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
+                >
+                  <ThesisBuilderTab ticker={ticker} data={data} />
                 </motion.div>
               )}
 
