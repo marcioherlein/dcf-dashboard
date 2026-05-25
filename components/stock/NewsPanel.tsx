@@ -1,5 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
+import { stagger } from '@/lib/motion'
 
 interface NewsItem { title: string; link: string; publisher: string; providerPublishTime: number }
 
@@ -28,6 +30,7 @@ function SkeletonCard() {
 export default function NewsPanel({ ticker }: { ticker: string }) {
   const [news, setNews] = useState<NewsItem[]>([])
   const [loading, setLoading] = useState(true)
+  const reduced = useReducedMotion()
 
   useEffect(() => {
     setLoading(true)
@@ -59,13 +62,19 @@ export default function NewsPanel({ ticker }: { ticker: string }) {
           <p className="text-xs text-slate-400 mt-1">Check back later for updates</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <motion.div
+          className="space-y-2"
+          initial="hidden"
+          animate="visible"
+          variants={reduced ? {} : { visible: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } } }}
+        >
           {news.map((item, i) => (
-            <a
+            <motion.a
               key={i}
               href={item.link}
               target="_blank"
               rel="noreferrer"
+              variants={reduced ? {} : stagger.item}
               className="group block rounded-xl border border-slate-200 bg-white p-4 hover:border-blue-300 hover:bg-slate-50 transition-all"
             >
               <p className="text-[13px] font-medium leading-snug text-slate-800 group-hover:text-blue-600 transition-colors mb-2.5 line-clamp-2">
@@ -85,9 +94,9 @@ export default function NewsPanel({ ticker }: { ticker: string }) {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                 </svg>
               </div>
-            </a>
+            </motion.a>
           ))}
-        </div>
+        </motion.div>
       )}
     </div>
   )

@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import Image from 'next/image'
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
+import { slideDown, stagger } from '@/lib/motion'
 
 interface SearchResult {
   symbol: string
@@ -51,6 +53,7 @@ export default function TopBar() {
   const [results, setResults] = useState<SearchResult[]>([])
   const [open, setOpen]       = useState(false)
   const [loading, setLoading] = useState(false)
+  const reduced = useReducedMotion()
   const debounce  = useRef<ReturnType<typeof setTimeout>>()
   const searchRef = useRef<HTMLDivElement>(null)
 
@@ -164,32 +167,49 @@ export default function TopBar() {
           />
         </div>
 
-        {open && (
-          <div className="absolute left-0 right-0 top-full mt-1 overflow-hidden glass-card rounded-xl z-50 max-h-[70vh] overflow-y-auto border border-[rgba(59,130,246,0.2)]">
-            {results.map((r) => (
-              <button
-                key={r.symbol}
-                onClick={() => select(r.symbol)}
-                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-white/5 border-b border-[rgba(59,130,246,0.08)] last:border-b-0 transition-colors"
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              key="search-dropdown"
+              variants={reduced ? {} : slideDown}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              style={{ originY: 0 }}
+              className="absolute left-0 right-0 top-full mt-1 overflow-hidden glass-card rounded-xl z-50 max-h-[70vh] overflow-y-auto border border-[rgba(59,130,246,0.2)]"
+            >
+              <motion.div
+                variants={reduced ? {} : { visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } } }}
+                initial="hidden"
+                animate="visible"
               >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-[14px] font-bold text-slate-100 font-mono">{r.symbol}</span>
-                    {r.exchange && (
-                      <span className="text-[10px] text-slate-500 font-medium uppercase">{r.exchange}</span>
+                {results.map((r) => (
+                  <motion.button
+                    key={r.symbol}
+                    variants={reduced ? {} : { hidden: { opacity: 0, x: -6 }, visible: { opacity: 1, x: 0, transition: { duration: 0.18 } } }}
+                    onClick={() => select(r.symbol)}
+                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-white/5 border-b border-[rgba(59,130,246,0.08)] last:border-b-0 transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-[14px] font-bold text-slate-100 font-mono">{r.symbol}</span>
+                        {r.exchange && (
+                          <span className="text-[10px] text-slate-500 font-medium uppercase">{r.exchange}</span>
+                        )}
+                      </div>
+                      <span className="text-[12px] text-slate-400 truncate block">{r.longname ?? r.shortname}</span>
+                    </div>
+                    {r.quoteType && (
+                      <span className="shrink-0 text-[11px] font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md">
+                        {r.quoteType === 'EQUITY' ? 'Equity' : r.quoteType === 'ETF' ? 'ETF' : r.quoteType === 'INDEX' ? 'Index' : r.quoteType}
+                      </span>
                     )}
-                  </div>
-                  <span className="text-[12px] text-slate-400 truncate block">{r.longname ?? r.shortname}</span>
-                </div>
-                {r.quoteType && (
-                  <span className="shrink-0 text-[11px] font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md">
-                    {r.quoteType === 'EQUITY' ? 'Equity' : r.quoteType === 'ETF' ? 'ETF' : r.quoteType === 'INDEX' ? 'Index' : r.quoteType}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        )}
+                  </motion.button>
+                ))}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Right: clock + auth */}

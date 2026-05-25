@@ -1,5 +1,6 @@
 'use client'
 import { cn } from '@/lib/utils'
+import { motion, useReducedMotion } from 'motion/react'
 import {
   BarChart2, DollarSign, Table2, ShieldCheck, Newspaper,
 } from 'lucide-react'
@@ -20,6 +21,8 @@ interface Props {
 }
 
 export default function TabNav({ activeTab, onChange }: Props) {
+  const reduced = useReducedMotion()
+
   return (
     <div
       role="tablist"
@@ -43,7 +46,7 @@ export default function TabNav({ activeTab, onChange }: Props) {
                   primary ? 'text-[13px] font-medium' : 'text-[12px] font-normal',
                   isFirstSecondary ? 'ml-2 pl-5 border-l border-slate-200' : '',
                   active
-                    ? 'border-blue-600 text-blue-600 bg-blue-50/60'
+                    ? 'border-transparent text-blue-600 bg-blue-50/60'
                     : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300',
                 )}
               >
@@ -52,6 +55,14 @@ export default function TabNav({ activeTab, onChange }: Props) {
                   className={cn('shrink-0', active ? 'text-blue-600' : 'text-slate-400')}
                 />
                 {label}
+
+                {active && (
+                  <motion.span
+                    layoutId="tab-indicator"
+                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-600 rounded-full"
+                    transition={reduced ? { duration: 0 } : { type: 'spring', duration: 0.35, bounce: 0.15 }}
+                  />
+                )}
               </button>
             )
           })}

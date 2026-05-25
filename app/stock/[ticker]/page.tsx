@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useMemo } from 'react'
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useParams, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import NewsPanel from '@/components/stock/NewsPanel'
@@ -173,6 +173,8 @@ function StockPageBody() {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
   const [savePayload, setSavePayload] = useState<WatchlistSavePayload | null>(null)
   const [activeTab, setActiveTab] = useState<TabId>('overview')
+  const [tabDirection, setTabDirection] = useState(0)
+  const reducedMotion = useReducedMotion()
   const [financialsHighlight, setFinancialsHighlight] = useState<{ rowKey: string; statement: 'income' | 'balance' | 'cashflow' } | null>(null)
   const [userModelFairValue, setUserModelFairValue] = useState<number | null>(null)
   const [activeValuationMethod, setActiveValuationMethod] = useState<string | null>(null)
@@ -263,7 +265,11 @@ function StockPageBody() {
 
   const currency = data?.quote.currency === 'USD' ? '$' : (data?.quote.currency ?? '$') + ' '
 
+  const TAB_ORDER: TabId[] = ['overview', 'valuation', 'financials', 'risks', 'news']
+
   const handleTabChange = (tab: TabId) => {
+    const dir = TAB_ORDER.indexOf(tab) > TAB_ORDER.indexOf(activeTab) ? 1 : -1
+    setTabDirection(dir)
     setActiveTab(tab)
     window.scrollTo({ top: 0, behavior: 'instant' })
     if (data) track('tab_changed', { ticker, tab })
@@ -420,10 +426,10 @@ function StockPageBody() {
                   id="tabpanel-overview"
                   role="tabpanel"
                   className="space-y-4 pt-5"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  initial={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
+                  transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
                   <InvestorVerdictCard
                     upside={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null}
@@ -501,10 +507,10 @@ function StockPageBody() {
                 <motion.div
                   key="tab-valuation"
                   className="space-y-4 pt-5"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  initial={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
+                  transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
                   {/* Save CTA */}
                   <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 flex items-center justify-between gap-4">
@@ -543,10 +549,10 @@ function StockPageBody() {
                 <motion.div
                   key="tab-financials"
                   className="space-y-4 pt-5"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  initial={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
+                  transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
                   <FinancialsHub
                     statementsData={statementsData}
@@ -564,10 +570,10 @@ function StockPageBody() {
                 <motion.div
                   key="tab-risks"
                   className="space-y-4 pt-5"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  initial={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
+                  transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
                   {data.ratings && data.scores && (
                     <HealthSection
@@ -585,10 +591,10 @@ function StockPageBody() {
                 <motion.div
                   key="tab-news"
                   className="space-y-4 pt-5"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  initial={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
+                  transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
                   <NewsPanel ticker={ticker} />
                 </motion.div>

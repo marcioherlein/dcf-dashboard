@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { motion, useReducedMotion } from 'motion/react'
 import type { PiotroskiResult, AltmanResult, BeneishResult, ROICResult } from '@/lib/dcf/calculateScores'
 import { fmtPct } from '@/lib/utils'
 
@@ -55,6 +56,7 @@ export default function FinancialScores({ scores }: Props) {
   const { piotroski, altman, beneish, roic } = scores
   const [showAltman, setShowAltman] = useState(false)
   const [showBeneish, setShowBeneish] = useState(false)
+  const reduced = useReducedMotion()
 
   const fmtM = (n: number) => {
     if (Math.abs(n) >= 1000) return `$${(n / 1000).toFixed(1)}B`
@@ -132,12 +134,20 @@ export default function FinancialScores({ scores }: Props) {
           </p>
 
           {/* Grouped criteria — always visible */}
-          <div className="space-y-3">
+          <motion.div
+            className="space-y-3"
+            initial="hidden"
+            animate="visible"
+            variants={reduced ? {} : { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } } }}
+          >
             {PIOTROSKI_GROUPS.map((group) => {
               const groupCriteria = group.indices.map(i => piotroski.criteria[i]).filter(Boolean)
               const groupPass = groupCriteria.filter(c => c.pass === true).length
               return (
-                <div key={group.label}>
+                <motion.div
+                  key={group.label}
+                  variants={reduced ? {} : { hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3 } } }}
+                >
                   <div className="flex items-center justify-between mb-1">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{group.label}</p>
                     <p className="text-[10px] font-mono text-slate-500">{groupPass}/{group.indices.length}</p>
@@ -147,10 +157,10 @@ export default function FinancialScores({ scores }: Props) {
                       <CriterionRow key={j} pass={c.pass} name={c.name} detail={c.detail} />
                     ))}
                   </div>
-                </div>
+                </motion.div>
               )
             })}
-          </div>
+          </motion.div>
         </div>
 
         {/* ── Altman Z-Score ── */}
