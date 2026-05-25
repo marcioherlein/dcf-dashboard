@@ -298,6 +298,7 @@ export default function InvestorGradeCard({
                 <p className={cn('text-2xl font-bold tabular-nums leading-none', isUndervalued ? 'text-emerald-600' : 'text-amber-700')}>
                   {currSymbol}{displayFV.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
+                <p className="text-[9px] text-slate-400 mt-1">Blended from multiple models</p>
               </div>
             </div>
 

@@ -1,5 +1,6 @@
 'use client'
 import { cn } from '@/lib/utils'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import type { PiotroskiResult, AltmanResult, BeneishResult, ROICResult } from '@/lib/dcf/calculateScores'
 
 interface Ratings {
@@ -228,17 +229,31 @@ export default function InvestorVerdictCard({
       {/* Signal pills */}
       <div className="flex gap-2 flex-wrap pt-0.5">
         {quality && (
-          <span className={cn('text-[11px] font-semibold px-2.5 py-0.5 rounded-full border', QUALITY_COLOR[quality])}>
-            Quality: {quality}
-          </span>
+          <Tooltip>
+            <TooltipTrigger
+              render={<span className={cn('text-[11px] font-semibold px-2.5 py-0.5 rounded-full border cursor-help', QUALITY_COLOR[quality])} />}
+            >
+              Business Quality: {quality}
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[220px] text-center text-[11px]">
+              Based on profitability, liquidity, economic moat, and Piotroski F-Score. Strong = company earns well and doesn&apos;t rely on debt.
+            </TooltipContent>
+          </Tooltip>
         )}
         <span className={cn('text-[11px] font-semibold px-2.5 py-0.5 rounded-full border', analystColor)}>
           {analystLabel}
         </span>
         {confidence && (
-          <span className={cn('text-[11px] font-semibold px-2.5 py-0.5 rounded-full border', CONFIDENCE_COLOR[confidence])}>
-            Model confidence: {confidence}
-          </span>
+          <Tooltip>
+            <TooltipTrigger
+              render={<span className={cn('text-[11px] font-semibold px-2.5 py-0.5 rounded-full border cursor-help', CONFIDENCE_COLOR[confidence])} />}
+            >
+              Model confidence: {confidence}
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[220px] text-center text-[11px]">
+              How reliable the fair value estimate is. High = analyst data + stable earnings. Low = limited data or volatile financials.
+            </TooltipContent>
+          </Tooltip>
         )}
         {growthModel && (
           <span className="text-[11px] text-slate-500 px-2.5 py-0.5 rounded-full border border-slate-200 bg-white">

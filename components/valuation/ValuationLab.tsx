@@ -723,12 +723,13 @@ interface MethodAccordionProps {
   currency: string
   chips: MethodChip[]
   guide: string[]
+  bestFor?: string
   children: React.ReactNode
 }
 
 function MethodAccordion({
   title, confidence, verdict, weight, isOpen, onToggle, innerRef,
-  fairValue, upsidePct, currency, chips, guide, children,
+  fairValue, upsidePct, currency, chips, guide, bestFor, children,
 }: MethodAccordionProps) {
   return (
     <div ref={innerRef} className="glass-accordion-header rounded-xl overflow-hidden scroll-mt-4">
@@ -755,6 +756,12 @@ function MethodAccordion({
           </div>
           {/* Row 2: verdict */}
           {verdict && <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">{verdict}</p>}
+          {/* Row 3: best for */}
+          {bestFor && (
+            <p className="text-[10px] text-slate-400 mt-1">
+              <span className="font-semibold text-slate-500">Best for:</span> {bestFor}
+            </p>
+          )}
         </div>
       </button>
 
@@ -1135,6 +1142,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
             { label: 'Margin', value: fwdPEInputs.netMargin != null ? (fwdPEInputs.netMargin * 100).toFixed(1) + '%' : '—' },
           ]}
           guide={METHOD_GUIDES.forward_pe}
+          bestFor="Profitable companies with stable, predictable earnings"
         >
           <MethodInlinePanel
             config={fwdPEConfig}
@@ -1163,6 +1171,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
             { label: 'EBITDA', value: evEbitdaInputs.ttmEbitda != null ? fmtLargeCurrency(evEbitdaInputs.ttmEbitda) : '—' },
           ]}
           guide={METHOD_GUIDES.ev_ebitda}
+          bestFor="Capital-intensive or mature businesses with stable EBITDA"
         >
           <MethodInlinePanel
             config={evEbitdaConfig}
@@ -1191,6 +1200,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
             { label: 'EV/Rev', value: revMultInputs.exitEVRevenue != null ? (revMultInputs.exitEVRevenue as number).toFixed(1) + '×' : '—' },
           ]}
           guide={METHOD_GUIDES.revenue_multiple}
+          bestFor="Pre-profit or high-growth companies where earnings aren't stable yet"
         >
           <MethodInlinePanel
             config={revMultConfig}
@@ -1219,6 +1229,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
             { label: 'WACC', value: ((apiData?.wacc?.wacc ?? 0.09) * 100).toFixed(1) + '%' },
           ]}
           guide={METHOD_GUIDES.reverse_dcf}
+          bestFor="Checking whether the market's growth expectations are realistic"
         >
           <ReverseDCFPanel
             result={reverseDCFResult}
@@ -1253,6 +1264,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
             { label: 'Terminal G', value: ((apiData?.terminalG ?? 0.025) * 100).toFixed(1) + '%' },
           ]}
           guide={METHOD_GUIDES.full_dcf}
+          bestFor="Deep custom analysis — adjust year-by-year projections for a precise estimate"
         >
           {/* Executive DCF summary */}
           {(apiData?.valuationMethods?.triangulatedFairValue != null) && (

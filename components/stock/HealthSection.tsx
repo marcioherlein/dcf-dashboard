@@ -84,7 +84,15 @@ export default function HealthSection({ ratings, scores, financialsData }: Props
 
   return (
     <div className="rounded-xl card p-6">
-      <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-5">Financial Health</h2>
+      <div className="flex items-baseline justify-between mb-5 flex-wrap gap-2">
+        <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Financial Health</h2>
+        <p className="text-[10px] text-slate-400">
+          <span className="text-emerald-600 font-semibold">A</span> Excellent&nbsp;·&nbsp;
+          <span className="text-blue-500 font-semibold">B</span> Good&nbsp;·&nbsp;
+          <span className="text-amber-600 font-semibold">C</span> Average&nbsp;·&nbsp;
+          <span className="text-red-500 font-semibold">D/F</span> Weak
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 

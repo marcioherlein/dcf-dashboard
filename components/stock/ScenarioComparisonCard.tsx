@@ -1,6 +1,7 @@
 'use client'
 
 import { fmtPrice } from '@/lib/formatters'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
 interface ScenarioData {
   fairValue: number
@@ -76,15 +77,42 @@ function ScenarioCol({
       </div>
       <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 pt-2 border-t border-slate-100">
         <div>
-          <p className="text-[9px] text-slate-400 uppercase tracking-wider">WACC</p>
+          <Tooltip>
+            <TooltipTrigger
+              render={<p className="text-[9px] text-slate-400 uppercase tracking-wider cursor-help underline decoration-dotted" />}
+            >
+              WACC
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[200px] text-[11px]">
+              Discount rate used to value future cash flows. Higher WACC = stricter hurdle = lower fair value.
+            </TooltipContent>
+          </Tooltip>
           <p className="text-xs font-semibold tabular-nums text-slate-700">{(scenario.wacc * 100).toFixed(1)}%</p>
         </div>
         <div>
-          <p className="text-[9px] text-slate-400 uppercase tracking-wider">CAGR</p>
+          <Tooltip>
+            <TooltipTrigger
+              render={<p className="text-[9px] text-slate-400 uppercase tracking-wider cursor-help underline decoration-dotted" />}
+            >
+              CAGR
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[200px] text-[11px]">
+              Assumed annual revenue growth rate for the next 5 years in this scenario.
+            </TooltipContent>
+          </Tooltip>
           <p className="text-xs font-semibold tabular-nums text-slate-700">{(scenario.cagr * 100).toFixed(1)}%</p>
         </div>
         <div>
-          <p className="text-[9px] text-slate-400 uppercase tracking-wider">Terminal G</p>
+          <Tooltip>
+            <TooltipTrigger
+              render={<p className="text-[9px] text-slate-400 uppercase tracking-wider cursor-help underline decoration-dotted" />}
+            >
+              Terminal G
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[200px] text-[11px]">
+              Growth rate assumed to continue forever after year 5. Typically kept near long-run GDP growth (2–4%).
+            </TooltipContent>
+          </Tooltip>
           <p className="text-xs font-semibold tabular-nums text-slate-700">{(scenario.terminalG * 100).toFixed(1)}%</p>
         </div>
       </div>

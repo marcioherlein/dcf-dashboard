@@ -82,6 +82,20 @@ export default function ReverseDcfCallout({
         </span>
       </div>
 
+      {/* Scale legend */}
+      {result.interpretation !== 'not_meaningful' && (
+        <div className="px-5 pt-3 pb-0 flex items-center gap-1.5 text-[10px] text-slate-400 flex-wrap">
+          <span className="font-medium">Expectation scale:</span>
+          <span className="px-1.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700">Conservative</span>
+          <span className="text-slate-300">→</span>
+          <span className="px-1.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-500">Moderate</span>
+          <span className="text-slate-300">→</span>
+          <span className="px-1.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700">Aggressive</span>
+          <span className="text-slate-300">→</span>
+          <span className="px-1.5 py-0.5 rounded-full bg-red-50 border border-red-200 text-red-700">Very Aggressive</span>
+        </div>
+      )}
+
       {/* Body */}
       <div className="px-5 py-4 space-y-4">
         {result.interpretation === 'not_meaningful' ? (
