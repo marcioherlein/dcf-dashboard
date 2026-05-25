@@ -303,6 +303,9 @@ export function ValuationTable({ entries, sparklines, groups, onDelete, onTagUpd
                 Fair Value
               </th>
               <Th label="Upside" sortKey="upsidePct" current={sortKey} dir={sortDir} onSort={handleSort} />
+              <th className="px-3 py-2.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wide text-right whitespace-nowrap">
+                Since Save
+              </th>
               <Th label="Score" sortKey="overallScore" current={sortKey} dir={sortDir} onSort={handleSort} />
               <Th label="Updated" sortKey="updatedAt" current={sortKey} dir={sortDir} onSort={handleSort} />
               <th className="px-3 py-2.5 w-10" />
@@ -376,6 +379,33 @@ export function ValuationTable({ entries, sparklines, groups, onDelete, onTagUpd
                     >
                       {fmtPct(entry.snapshot.upsidePct)}
                     </span>
+                  </td>
+
+                  {/* Since Save */}
+                  <td className="px-3 py-3 text-right whitespace-nowrap">
+                    {(() => {
+                      const currentPrice = prices?.[prices.length - 1] ?? null
+                      const savedPrice = entry.snapshot.price
+                      if (currentPrice == null || savedPrice == null || savedPrice === 0 || sparkLoading) {
+                        return <span className="text-slate-300 font-mono text-[12px]">—</span>
+                      }
+                      const delta = (currentPrice - savedPrice) / savedPrice
+                      const priceRose = delta > 0
+                      const isUndervalued = (entry.snapshot.upsidePct ?? 0) > 0
+                      const towardFV = (isUndervalued && priceRose) || (!isUndervalued && !priceRose)
+                      return (
+                        <div className="text-right">
+                          <span className={cn('text-[13px] font-mono font-semibold', priceRose ? 'text-emerald-600' : 'text-red-500')}>
+                            {priceRose ? '+' : ''}{(delta * 100).toFixed(1)}% {priceRose ? '↗' : '↘'}
+                          </span>
+                          {entry.snapshot.upsidePct != null && (
+                            <div className={cn('text-[10px] mt-0.5', towardFV ? 'text-emerald-500' : 'text-slate-400')}>
+                              {towardFV ? '↑ Toward FV' : '↓ Away from FV'}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })()}
                   </td>
 
                   {/* Score */}

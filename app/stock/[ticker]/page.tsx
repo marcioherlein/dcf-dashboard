@@ -21,7 +21,6 @@ import InvestorGradeCard from '@/components/stock/InvestorGradeCard'
 import MobileKeyInsights from '@/components/stock/MobileKeyInsights'
 import InvestorVerdictCard from '@/components/stock/InvestorVerdictCard'
 import ReverseDcfCallout from '@/components/stock/ReverseDcfCallout'
-import PreTradeChecklist from '@/components/stock/PreTradeChecklist'
 import ThesisBuilderTab from '@/components/stock/ThesisBuilderTab'
 import { LoginGateProvider, useLoginGate } from '@/components/auth/LoginGateProvider'
 import AuthBanner from '@/components/auth/AuthBanner'
@@ -560,37 +559,7 @@ function StockPageBody() {
                     />
                   )}
 
-                  {/* Pre-trade decision checklist */}
-                  <PreTradeChecklist
-                    ticker={ticker}
-                    onSaveToWatchlist={() => {
-                      if (!session?.user) { requireAuth({ intent: 'save_watchlist' }); return }
-                      const isETF = (data.quote.quoteType ?? '').toUpperCase() === 'ETF'
-                      setSavePayload({
-                        ticker: data.ticker,
-                        name: data.companyName,
-                        assetType: isETF ? 'etf' : 'stock',
-                        fairValue: data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? null,
-                        upsidePct: data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null,
-                        valuationSnapshot: isETF ? null : {
-                          price_at_save: data.quote.price,
-                          fair_value: data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? 0,
-                          wacc: data.wacc?.wacc ?? 0,
-                          beta: data.wacc?.inputs?.beta ?? 1,
-                          terminal_g: data.scenarios?.base?.terminalG ?? 0.025,
-                          cagr: data.scenarios?.base?.cagr ?? 0,
-                          upside_pct: data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? 0,
-                          inputs: data.wacc?.inputs ?? {},
-                          scenarios: {
-                            bull: data.scenarios?.bull?.fairValue ?? 0,
-                            base: data.scenarios?.base?.fairValue ?? 0,
-                            bear: data.scenarios?.bear?.fairValue ?? 0,
-                          },
-                        },
-                      })
-                      setSaveDialogOpen(true)
-                    }}
-                  />
+
                 </motion.div>
               )}
 

@@ -29,6 +29,44 @@ function useScrollReveal(threshold = 0.12) {
   return ref
 }
 
+const LIVE_EXAMPLES = [
+  {
+    ticker: 'NVDA',
+    price: '~$118',
+    impliedCAGR: 22,
+    interpretation: 'very_aggressive',
+    question: "Do you believe NVIDIA can grow revenue 22% per year for the next 5 years?",
+  },
+  {
+    ticker: 'AAPL',
+    price: '~$211',
+    impliedCAGR: 9,
+    interpretation: 'reasonable',
+    question: "Apple's price implies moderate 9% growth — does that match your view?",
+  },
+  {
+    ticker: 'MELI',
+    price: '~$2,100',
+    impliedCAGR: 15,
+    interpretation: 'aggressive',
+    question: "MercadoLibre is priced for 15% growth — aggressive for a maturing LatAm market?",
+  },
+]
+
+const INTERP_CHIP: Record<string, string> = {
+  conservative:    'bg-emerald-500/15 border-emerald-500/30 text-emerald-400',
+  reasonable:      'bg-blue-500/15 border-blue-500/30 text-blue-400',
+  aggressive:      'bg-amber-500/15 border-amber-500/30 text-amber-400',
+  very_aggressive: 'bg-red-500/15 border-red-500/30 text-red-400',
+}
+
+const INTERP_LABEL: Record<string, string> = {
+  conservative:    'Conservative',
+  reasonable:      'Reasonable',
+  aggressive:      'Aggressive',
+  very_aggressive: 'Very Aggressive',
+}
+
 // ── Typewriter headline ────────────────────────────────────────────────────────
 const TYPEWRITER_PHRASES = [
   'worth buying',
@@ -511,7 +549,7 @@ const FEATURES = [
       </svg>
     ),
     title: 'DCF Valuation',
-    benefit: 'Intrinsic value from free cash flows — not just multiples. Adjust WACC and growth yourself.',
+    benefit: 'What is this stock actually worth based on its cash flows? Adjust growth and discount rate yourself — see the fair value change in real time.',
   },
   {
     icon: (
@@ -519,8 +557,8 @@ const FEATURES = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.745 3.745 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.745 3.745 0 0 1 3.296-1.043A3.745 3.745 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.745 3.745 0 0 1 3.296 1.043 3.745 3.745 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
       </svg>
     ),
-    title: 'Health Scores',
-    benefit: 'Piotroski F-Score, Altman Z-Score, Beneish M-Score, and ROIC vs WACC in one view.',
+    title: 'Financial Health',
+    benefit: 'Is this company financially sound? Nine signals across profitability, debt, and efficiency — plus earnings quality and bankruptcy risk — in one view.',
   },
   {
     icon: (
@@ -529,7 +567,7 @@ const FEATURES = [
       </svg>
     ),
     title: 'Scenario Analysis',
-    benefit: 'Bear, base, and bull cases with probability weighting — see the full range, not just a point estimate.',
+    benefit: 'What if I\'m wrong? Bear, base, and bull cases with probability weighting show the full range — not just the optimistic number.',
   },
   {
     icon: (
@@ -538,7 +576,7 @@ const FEATURES = [
       </svg>
     ),
     title: 'Reverse DCF',
-    benefit: "See what growth rate the market is pricing in — decide if that expectation is achievable.",
+    benefit: "What growth is this stock already priced for? Know if today's price requires you to be an optimist — before you buy.",
   },
 ]
 
@@ -571,22 +609,23 @@ export default function LandingPage() {
             Free · No account required · 500+ stocks
           </div>
 
-          {/* Headline with typewriter */}
+          {/* Headline */}
           <h1
             className="hero-reveal font-display text-5xl sm:text-[3.6rem] text-slate-100 leading-[1.1] mb-5"
             style={{ letterSpacing: '-0.04em', fontWeight: 500, animationDelay: '80ms' }}
           >
-            Know if a stock is{' '}
-            <TypewriterHeadline phrases={TYPEWRITER_PHRASES} />
+            Know what growth a stock<br className="hidden sm:block" />
+            <span className="text-blue-400"> is already priced for</span>
             <br className="hidden sm:block" />
-            <span className="text-slate-300" style={{ fontWeight: 400 }}>before you buy.</span>
+            <span className="text-slate-300" style={{ fontWeight: 400 }}>— before you buy.</span>
           </h1>
 
           <p
             className="hero-reveal text-[1.1rem] text-slate-400 mb-9 max-w-2xl mx-auto leading-relaxed"
             style={{ animationDelay: '160ms' }}
           >
-            DCF-based fair value, plain-English health grades, and interactive scenario modeling.
+            Most stocks fail because expectations were too high, not because the company was bad.
+            See exactly what today&apos;s price assumes.
           </p>
 
           {/* Search */}
@@ -615,6 +654,41 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ── Live Example strip ── */}
+      <div style={{ background: '#0A1628', borderBottom: '1px solid rgba(59,130,246,0.15)' }}>
+        <div className="mx-auto max-w-4xl px-6 py-10">
+          <p className="text-center text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-6">
+            What today&apos;s price already assumes
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {LIVE_EXAMPLES.map((ex) => (
+              <a
+                key={ex.ticker}
+                href={`/stock/${ex.ticker}`}
+                className="group rounded-2xl border border-white/8 bg-white/3 hover:bg-white/6 hover:border-blue-500/30 transition-all px-5 py-4"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <span className="text-xs font-bold text-slate-200 font-mono">{ex.ticker}</span>
+                    <span className="text-[10px] text-slate-500 block mt-0.5">{ex.price}</span>
+                  </div>
+                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${INTERP_CHIP[ex.interpretation]}`}>
+                    {INTERP_LABEL[ex.interpretation]}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold font-mono text-slate-100 leading-none">{ex.impliedCAGR}%</p>
+                  <p className="text-[11px] text-slate-400 mt-1">implied annual growth <span className="text-slate-500">(5Y)</span></p>
+                </div>
+                <p className="mt-3 text-[11px] text-slate-500 leading-relaxed border-t border-white/6 pt-3">
+                  {ex.question}
+                </p>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* ── Unified dark band: tickers + stock cards ── */}
       <div style={{ background: '#050D1F' }}>

@@ -256,27 +256,27 @@ export function deriveForwardPEAssumptions(data: {
       value: shares, unit: 'shares', source: 'model_default',
     },
     {
-      key: 'revenueCAGR', label: '5Y Revenue CAGR', description: 'Annual revenue growth rate',
+      key: 'revenueCAGR', label: '5Y Revenue CAGR', description: 'How fast you expect revenue to grow each year for the next 5 years. This is your most important assumption — small changes here have a big impact on fair value.',
       value: cagrDerived.cagr, unit: '%', min: -0.10, max: 1.00, step: 0.5,
       editable: true, source: cagrDerived.source, sourceExplanation: cagrDerived.evidence,
     },
     {
-      key: 'netMargin', label: 'Net Margin (exit year)', description: 'Projected net profit margin',
+      key: 'netMargin', label: 'Net Margin (exit year)', description: 'What fraction of revenue becomes profit by year 5. Higher margin = more valuable company. Mature tech companies often land at 15–30%.',
       value: marginDerived.margin, unit: '%', min: -0.50, max: 0.70, step: 0.5,
       editable: true, source: marginDerived.source, sourceExplanation: marginDerived.evidence,
     },
     {
-      key: 'exitPE', label: 'Exit P/E', description: 'Sector-normalized P/E multiple at exit',
+      key: 'exitPE', label: 'Exit P/E', description: 'The price-to-earnings ratio you expect the stock to trade at when you\'d sell (year 5). Lower = more conservative. Most mature companies trade at 15–25×.',
       value: peDerived.pe, unit: 'x', min: 1, max: 100, step: 1,
       editable: true, source: peDerived.source, sourceExplanation: peDerived.evidence,
     },
     {
-      key: 'dilutionRate', label: 'Annual Dilution', description: 'Stock-based comp / share count growth',
+      key: 'dilutionRate', label: 'Annual Dilution', description: 'How much your ownership shrinks each year as the company issues new shares (stock compensation). 1–3% is typical for tech; lower for mature companies.',
       value: dilutionDerived.rate, unit: '%', min: 0, max: 0.15, step: 0.5,
       editable: true, source: dilutionDerived.source, sourceExplanation: dilutionDerived.evidence,
     },
     {
-      key: 'discountRate', label: 'Discount Rate (WACC)', description: 'Required return on equity + debt',
+      key: 'discountRate', label: 'Discount Rate (WACC)', description: 'The annual return you demand for the risk of owning this stock. Higher = riskier company = lower fair value. Ranges from ~7% (blue chip) to ~15%+ (speculative).',
       value: wacc, unit: '%', min: 0.03, max: 0.30, step: 0.5,
       editable: true, source: 'model_default', sourceExplanation: waccEvidence,
     },
@@ -353,12 +353,12 @@ export function deriveRevenueMultipleAssumptions(data: {
       value: shares, unit: 'shares', source: 'model_default',
     },
     {
-      key: 'revenueCAGR', label: '5Y Revenue CAGR', description: 'Annual revenue growth rate',
+      key: 'revenueCAGR', label: '5Y Revenue CAGR', description: 'How fast you expect revenue to grow each year for the next 5 years. This is your most important assumption — small changes here have a big impact on fair value.',
       value: cagrDerived.cagr, unit: '%', min: -0.10, max: 1.00, step: 0.5,
       editable: true, source: cagrDerived.source, sourceExplanation: cagrDerived.evidence,
     },
     {
-      key: 'exitEVRevenue', label: 'Exit EV/Revenue', description: 'Enterprise value multiple at exit year',
+      key: 'exitEVRevenue', label: 'Exit EV/Revenue', description: 'How many times annual revenue the entire company is worth at exit. Tech companies typically trade at 3–10×; mature businesses at 1–3×.',
       value: sectorEVRev, unit: 'x', min: 0.5, max: 50, step: 0.5,
       editable: true, source: evRevSource as AssumptionSource, sourceExplanation: evRevEvidence,
     },
@@ -368,12 +368,12 @@ export function deriveRevenueMultipleAssumptions(data: {
       source: 'historical_3y_median',
     },
     {
-      key: 'dilutionRate', label: 'Annual Dilution', description: 'Stock-based comp / share count growth',
+      key: 'dilutionRate', label: 'Annual Dilution', description: 'How much your ownership shrinks each year as the company issues new shares (stock compensation). 1–3% is typical for tech; lower for mature companies.',
       value: dilutionDerived.rate, unit: '%', min: 0, max: 0.15, step: 0.5,
       editable: true, source: dilutionDerived.source, sourceExplanation: dilutionDerived.evidence,
     },
     {
-      key: 'discountRate', label: 'Discount Rate (WACC)', description: 'Required return on equity + debt',
+      key: 'discountRate', label: 'Discount Rate (WACC)', description: 'The annual return you demand for the risk of owning this stock. Higher = riskier company = lower fair value. Ranges from ~7% (blue chip) to ~15%+ (speculative).',
       value: wacc, unit: '%', min: 0.03, max: 0.30, step: 0.5,
       editable: true, source: 'model_default', sourceExplanation: waccEvidence,
     },

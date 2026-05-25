@@ -24,6 +24,7 @@ import { NABadge } from '@/components/ui/na-badge'
 import { cn } from '@/lib/utils'
 import { ChevronDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
 
 // ─── Local helpers ─────────────────────────────────────────────────────────────
 
@@ -571,6 +572,18 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm font-semibold text-slate-700">{a.label}</span>
+                    {a.description && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <span className="inline-flex w-4 h-4 items-center justify-center rounded-full bg-slate-100 text-slate-400 text-[10px] cursor-help">?</span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs text-[12px]">
+                            {a.description}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
                     <span className={cn(
                       'text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider',
                       isOverridden ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500',
