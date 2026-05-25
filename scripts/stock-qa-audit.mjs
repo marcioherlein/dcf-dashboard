@@ -17,34 +17,25 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname  = dirname(__filename)
 
 const BASE       = 'http://localhost:3000'
-const DELAY_MS   = 2500
-const TIMEOUT_MS = 45000
+const DELAY_MS   = 800
+const TIMEOUT_MS = 30000
 const OUT_PATH   = join(__dirname, 'stock-audit-results.json')
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
 
-async function fetchWithTimeout(url, retries = 2) {
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    const ctrl  = new AbortController()
-    const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS)
-    try {
-      const res = await fetch(url, { signal: ctrl.signal })
-      clearTimeout(timer)
-      if (!res.ok) {
-        if (attempt < retries && (res.status >= 500 || res.status === 429)) {
-          await sleep(3000 * (attempt + 1))
-          continue
-        }
-        return { __httpError: res.status, __url: url }
-      }
-      return res.json()
-    } catch (e) {
-      clearTimeout(timer)
-      if (attempt < retries) { await sleep(3000 * (attempt + 1)); continue }
-      return { __fetchError: e.message, __url: url }
-    }
+async function fetchWithTimeout(url) {
+  const ctrl  = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS)
+  try {
+    const res = await fetch(url, { signal: ctrl.signal })
+    clearTimeout(timer)
+    if (!res.ok) return { __httpError: res.status, __url: url }
+    return res.json()
+  } catch (e) {
+    clearTimeout(timer)
+    return { __fetchError: e.message, __url: url }
   }
 }
 
@@ -166,25 +157,23 @@ function auditFinancialConsistency(fin, stmts) {
 
   if (revenues.length >= 3) {
     const n = revenues.length
-    // Use last 4 rows (3-year CAGR) to match cagrAnalysis.historicalCagr3y
-    const rev3y = revenues.slice(-4)
-    const calc3yCAGR = calcCAGR(rev3y[0], rev3y[rev3y.length - 1], rev3y.length - 1)
+    const calculatedCAGR = calcCAGR(revenues[0], revenues[n - 1], n - 1)
     const apiCAGR = fin.cagr ?? null
     const blendedCAGR = fin.cagrAnalysis?.blended ?? null
 
-    // Compare computed 3Y historical CAGR vs cagrAnalysis.historicalCagr3y — both backward-looking
+    // Compare calculatedCAGR vs historicalCagr3y — both historical, apples-to-apples
     const historicalCagr3y = fin.cagrAnalysis?.historicalCagr3y ?? null
-    if (calc3yCAGR != null && historicalCagr3y != null) {
-      const diffBps = Math.abs(calc3yCAGR - historicalCagr3y) * 10000
+    if (calculatedCAGR != null && historicalCagr3y != null) {
+      const diffBps = Math.abs(calculatedCAGR - historicalCagr3y) * 10000
       if (diffBps > 500 && !isForeign) {
         issues.push(issue('WARN', 'CAGR_MISMATCH',
-          `Computed 3Y historical CAGR ${(calc3yCAGR * 100).toFixed(1)}% vs cagrAnalysis.historicalCagr3y ${(historicalCagr3y * 100).toFixed(1)}% — ${diffBps.toFixed(0)}bps gap`,
-          { calc3yCAGR, historicalCagr3y, diffBps }
+          `Computed historical CAGR ${(calculatedCAGR * 100).toFixed(1)}% vs cagrAnalysis.historicalCagr3y ${(historicalCagr3y * 100).toFixed(1)}% — ${diffBps.toFixed(0)}bps gap`,
+          { calculatedCAGR, historicalCagr3y, diffBps }
         ))
       } else if (diffBps > 200 && isForeign) {
         issues.push(issue('INFO', 'CAGR_FX_LIKELY',
           `CAGR gap ${diffBps.toFixed(0)}bps — probable FX effect (stmts in ${stmts?.financialCurrency}, quote in ${fin.quote?.currency})`,
-          { calc3yCAGR, historicalCagr3y }
+          { calculatedCAGR, historicalCagr3y }
         ))
       }
     }
@@ -440,16 +429,22 @@ function auditValuationMethods(fin, stmts) {
     issues.push(issue('INFO', 'TTM_FCF_MARGIN_UNAVAIL', 'TTM FCF or Revenue not in statements — Reverse DCF may use financial statements row'))
   }
 
-  // CAGR internal consistency: api.cagr and cagrAnalysis.blended should be identical (same value)
-  // Analyst estimate vs blended is intentionally divergent for capped growth companies — skip that comparison
-  const apiCagrVal = fin.cagr ?? null
-  const blendedCagrVal = fin.cagrAnalysis?.blended ?? null
-  if (apiCagrVal != null && blendedCagrVal != null) {
-    const spreadBps = Math.abs(apiCagrVal - blendedCagrVal) * 10000
-    if (spreadBps > 100) {
+  // CAGR consistency: compare only forward-looking sources (exclude historical which naturally diverges)
+  const analystBaseEffect = fin.cagrAnalysis?.analystBaseEffect ?? false
+  const cagrValues = {
+    'api.cagr':                       fin.cagr,
+    'cagrAnalysis.blended':           fin.cagrAnalysis?.blended,
+    // Exclude analyst estimate when base-effect distortion present; exclude historicalCagr3y (backward-looking)
+    'cagrAnalysis.analystEstimate1y': analystBaseEffect ? undefined : fin.cagrAnalysis?.analystEstimate1y,
+  }
+  const definedCAGRs = Object.entries(cagrValues).filter(([, v]) => isFiniteNum(v))
+  if (definedCAGRs.length >= 2) {
+    const vals = definedCAGRs.map(([, v]) => v)
+    const spread = (Math.max(...vals) - Math.min(...vals)) * 10000
+    if (spread > 500) {
       issues.push(issue('WARN', 'CAGR_SOURCES_SPREAD',
-        `api.cagr ${(apiCagrVal * 100).toFixed(1)}% vs cagrAnalysis.blended ${(blendedCagrVal * 100).toFixed(1)}% — ${spreadBps.toFixed(0)}bps spread (should be identical)`,
-        { 'api.cagr': apiCagrVal, 'cagrAnalysis.blended': blendedCagrVal }
+        `CAGR sources spread ${spread.toFixed(0)}bps: ${definedCAGRs.map(([k, v]) => `${k}=${(v * 100).toFixed(1)}%`).join(', ')}`,
+        cagrValues
       ))
     }
   }

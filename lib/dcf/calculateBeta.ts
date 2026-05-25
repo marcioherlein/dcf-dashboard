@@ -12,17 +12,20 @@ function weeklyReturns(prices: PricePoint[]): number[] {
 }
 
 function mean(arr: number[]) {
+  if (arr.length === 0) return 0
   return arr.reduce((a, b) => a + b, 0) / arr.length
 }
 
 function covariance(x: number[], y: number[]): number {
   const n = Math.min(x.length, y.length)
+  if (n < 2) return 0
   const mx = mean(x.slice(0, n))
   const my = mean(y.slice(0, n))
   return x.slice(0, n).reduce((sum, xi, i) => sum + (xi - mx) * (y[i] - my), 0) / (n - 1)
 }
 
 function variance(arr: number[]): number {
+  if (arr.length < 2) return 0
   const m = mean(arr)
   return arr.reduce((sum, x) => sum + (x - m) ** 2, 0) / (arr.length - 1)
 }

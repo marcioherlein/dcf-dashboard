@@ -32,11 +32,11 @@ export interface CAGRAnalysis {
   analystEstimate1y: number         // clamped to [-0.50, 1.50] for display/comparison
   analystEstimate1yRaw: number      // raw value from Yahoo (may be >150% due to base effects)
   analystBaseEffect: boolean        // true when raw analyst 1Y > 150% (base-effect distortion)
-  analystEstimate2y: number      // estimated fade (analyst2y or analyst1y × 0.85)
+  analystEstimate2y: number         // estimated fade (analyst2y or analyst1y × 0.85)
   fundamentalGrowth: number | null  // ROE × (1 − payout), valid only when 0 < ROE < 0.80
-  blended: number                // final model input, post-cap
-  rawBlended: number             // pre-cap, pre-convergence-discount (for transparency)
-  cagrCap: number                // size/sector cap applied
+  blended: number                   // final model input, post-cap
+  rawBlended: number                // pre-cap, pre-convergence-discount (for transparency)
+  cagrCap: number                   // size/sector cap applied
   weights: { historical: number; analyst: number; fundamental: number }
   confidence: number
   confidenceLabel: 'High' | 'Medium' | 'Low'
@@ -69,6 +69,9 @@ export function projectCashFlows(inputs: ProjectionInputs): DCFResult {
   }
 
   const sumPV = projections.reduce((sum, p) => sum + p.discounted, 0)
+  if (projections.length === 0) {
+    return { projections, terminalValue: null, terminalValueDiscounted: null, sumPV: 0, ev: null, growthModel, yearlyGrowthRates }
+  }
   const lastCF = projections[projections.length - 1].cashFlow
   // Gordon Growth Model requires wacc > terminalG; if violated return null terminal value
   // so the caller can surface a proper validation error rather than hiding bad inputs.
@@ -425,11 +428,11 @@ export function extractFCFInputs(financials: any, foreignCurrency = false): {
     analystEstimate1y:   Math.round(Math.min(Math.max(analyst1y, -0.50), 1.50) * 1000) / 1000,
     analystEstimate1yRaw: Math.round(analyst1y * 1000) / 1000,
     analystBaseEffect:   analyst1y > 1.50,
-    analystEstimate2y:   Math.round(analyst2y * 1000) / 1000,
+    analystEstimate2y:   Math.round(Math.min(analyst2y, 1.50) * 1000) / 1000,
     fundamentalGrowth: fundamentalGrowth != null ? Math.round(fundamentalGrowth * 1000) / 1000 : null,
-    blended:           Math.round(cagr * 1000) / 1000,
-    rawBlended:        Math.round(rawBlended * 1000) / 1000,
-    cagrCap:           sizeCap,
+    blended:             Math.round(cagr * 1000) / 1000,
+    rawBlended:          Math.round(rawBlended * 1000) / 1000,
+    cagrCap:             sizeCap,
     weights: {
       historical:  Math.round(wHistorical * 100) / 100,
       analyst:     Math.round(wAnalyst    * 100) / 100,

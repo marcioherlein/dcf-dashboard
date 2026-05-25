@@ -136,18 +136,64 @@ function fmtAssumptionDisplay(assumption: ValuationAssumption, overrides: Record
   return raw.toFixed(2)
 }
 
+// ─── ReverseDCF helpers ───────────────────────────────────────────────────────
+
+interface EVRow { year: number; revenue: number; fcf: number; discountFactor: number; pv: number }
+
+function computeEVRows(lastRevenue: number, fcfMargin: number, cagr: number, wacc: number, terminalG: number, N = 5): { rows: EVRow[]; tv: number; pvTv: number; totalEV: number } {
+  const rows: EVRow[] = []
+  let sumPv = 0
+  for (let t = 1; t <= N; t++) {
+    const revenue = lastRevenue * Math.pow(1 + cagr, t)
+    const fcf = revenue * fcfMargin
+    const discountFactor = Math.pow(1 + wacc, t)
+    const pv = fcf / discountFactor
+    sumPv += pv
+    rows.push({ year: t, revenue, fcf, discountFactor, pv })
+  }
+  const lastFCF = lastRevenue * Math.pow(1 + cagr, N) * fcfMargin
+  const tv = (lastFCF * (1 + terminalG)) / (wacc - terminalG)
+  const pvTv = tv / Math.pow(1 + wacc, N)
+  return { rows, tv, pvTv, totalEV: sumPv + pvTv }
+}
+
+function computeFVPerShare(lastRevenue: number, fcfMargin: number, cagr: number, wacc: number, terminalG: number, cashDollars: number, debtDollars: number, shares: number, N = 5): number | null {
+  if (wacc <= terminalG) return null
+  const { totalEV } = computeEVRows(lastRevenue, fcfMargin, cagr, wacc, terminalG, N)
+  const equity = totalEV + cashDollars - debtDollars
+  return shares > 0 ? equity / shares : null
+}
+
+function fmtCompact(v: number | null): string {
+  if (v == null) return '—'
+  const abs = Math.abs(v)
+  if (abs >= 1e12) return `$${(v / 1e12).toFixed(1)}T`
+  if (abs >= 1e9)  return `$${(v / 1e9).toFixed(1)}B`
+  if (abs >= 1e6)  return `$${(v / 1e6).toFixed(0)}M`
+  return `$${v.toFixed(0)}`
+}
+
 // ─── ReverseDCFPanel ──────────────────────────────────────────────────────────
 
-function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin }: {
+function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
+  lastRevenue, currentPrice, cashM, debtM, sharesAbsolute, currency = 'USD' }: {
   result: ReturnType<typeof computeReverseDCF>
   cagrAnalysis: { analystEstimate1y?: number | null; historicalCagr3y?: number | null } | null
   wacc: number
   terminalG: number
   lastFCFMargin: number | null
+  lastRevenue: number | null
+  currentPrice: number
+  cashM: number | null
+  debtM: number | null
+  sharesAbsolute: number | null
+  currency?: string
 }) {
-  const impliedCAGR  = result.impliedCAGR
-  const analystCAGR  = cagrAnalysis?.analystEstimate1y ?? null
+  const [showMath, setShowMath] = useState(false)
+  const impliedCAGR    = result.impliedCAGR
+  const analystCAGR    = cagrAnalysis?.analystEstimate1y ?? null
   const historicalCAGR = cagrAnalysis?.historicalCagr3y ?? null
+  const N = 5
 
   const tone =
     result.interpretation === 'conservative' || result.interpretation === 'reasonable' ? 'positive' :
@@ -162,33 +208,68 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin 
     result.interpretation === 'very_aggressive' ? 'Very Aggressive' : ''
   const toneIcon = tone === 'positive' ? '✓' : tone === 'warning' ? '⚠' : tone === 'negative' ? '✗' : '–'
 
+  // Projection table rows (memoised to avoid recalc on every render)
+  const projectionData = useMemo(() => {
+    if (lastRevenue == null || lastFCFMargin == null || impliedCAGR == null) return null
+    if (wacc <= terminalG) return null
+    if (lastFCFMargin <= 0) return null
+    return computeEVRows(lastRevenue, lastFCFMargin, impliedCAGR, wacc, terminalG, N)
+  }, [lastRevenue, lastFCFMargin, impliedCAGR, wacc, terminalG])
+
+  // Sensitivity scenarios
+  const sensitivityScenarios = useMemo(() => {
+    if (impliedCAGR == null || lastRevenue == null || lastFCFMargin == null || lastFCFMargin <= 0 || sharesAbsolute == null || sharesAbsolute <= 0) return []
+    const cashDollars = (cashM ?? 0) * 1e6
+    const debtDollars = (debtM ?? 0) * 1e6
+
+    const slots: Array<{ label: string; sublabel?: string; cagr: number; isImplied?: boolean }> = []
+    if (historicalCAGR != null && Math.abs(historicalCAGR - impliedCAGR) > 0.01)
+      slots.push({ label: (historicalCAGR * 100).toFixed(1) + '%', sublabel: '3Y History', cagr: historicalCAGR })
+    if (analystCAGR != null && Math.abs(analystCAGR - impliedCAGR) > 0.01)
+      slots.push({ label: (analystCAGR * 100).toFixed(1) + '%', sublabel: 'Analyst est.', cagr: analystCAGR })
+    slots.push({ label: (impliedCAGR * 100).toFixed(1) + '%', sublabel: 'Market implies', cagr: impliedCAGR, isImplied: true })
+    for (const gap of [0.05, 0.10, 0.15]) {
+      if (slots.length >= 5) break
+      const c = impliedCAGR + gap
+      slots.push({ label: (c * 100).toFixed(0) + '%', sublabel: gap > 0 ? `+${(gap * 100).toFixed(0)}pp` : '', cagr: c })
+    }
+
+    return slots.map(s => ({
+      ...s,
+      fvPerShare: computeFVPerShare(lastRevenue, lastFCFMargin, s.cagr, wacc, terminalG, cashDollars, debtDollars, sharesAbsolute, N),
+    }))
+  }, [impliedCAGR, lastRevenue, lastFCFMargin, sharesAbsolute, cashM, debtM, wacc, terminalG, historicalCAGR, analystCAGR])
+
+  const canShowMath = projectionData != null && sensitivityScenarios.length > 0
+
   return (
     <div className="card rounded-xl overflow-hidden">
-      {/* Three-column hero */}
+
+      {/* ① Three-column hero */}
       <div className="grid grid-cols-3 divide-x divide-slate-200">
-        <div className="flex flex-col items-center px-4 py-5 gap-1">
-          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Market Implies</p>
-          <p className="text-2xl font-bold tabular-nums" style={{ color: toneColor }}>
+        <div className="flex flex-col items-center px-3 sm:px-4 py-5 gap-1">
+          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold text-center">Market Implies</p>
+          <p className="text-xl sm:text-2xl font-bold tabular-nums" style={{ color: toneColor }}>
             {impliedCAGR != null ? (impliedCAGR * 100).toFixed(1) + '%' : '—'}
           </p>
           <p className="text-xs text-slate-500">5Y CAGR</p>
           {impliedCAGR != null && toneLabel && (
-            <span className="text-xs font-semibold mt-1" style={{ color: toneColor }}>
+            <span className="text-xs font-semibold mt-1 text-center" style={{ color: toneColor }}>
               {toneIcon} {toneLabel}
             </span>
           )}
         </div>
-        <div className="flex flex-col items-center px-4 py-5 gap-1">
-          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Analyst Says</p>
-          <p className="text-2xl font-bold tabular-nums text-slate-900">
+        <div className="flex flex-col items-center px-3 sm:px-4 py-5 gap-1">
+          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold text-center">Analyst Says</p>
+          <p className="text-xl sm:text-2xl font-bold tabular-nums text-slate-900">
             {analystCAGR != null ? (analystCAGR * 100).toFixed(1) + '%' : '—'}
           </p>
           <p className="text-xs text-slate-500">FY+1 estimate</p>
           {analystCAGR != null && <span className="text-xs text-slate-400 mt-1">─ Consensus</span>}
         </div>
-        <div className="flex flex-col items-center px-4 py-5 gap-1">
-          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">History (3Y)</p>
-          <p className="text-2xl font-bold tabular-nums text-slate-900">
+        <div className="flex flex-col items-center px-3 sm:px-4 py-5 gap-1">
+          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold text-center">History (3Y)</p>
+          <p className="text-xl sm:text-2xl font-bold tabular-nums text-slate-900">
             {historicalCAGR != null ? (historicalCAGR * 100).toFixed(1) + '%' : '—'}
           </p>
           <p className="text-xs text-slate-500">3Y revenue CAGR</p>
@@ -196,7 +277,201 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin 
         </div>
       </div>
 
-      {/* Assumptions + interpretation */}
+      {/* ② Show / hide calculations toggle */}
+      {canShowMath && (
+        <div className="px-5 py-2 border-t border-slate-100">
+          <button
+            onClick={() => setShowMath(v => !v)}
+            className="text-[11px] text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 transition-colors"
+          >
+            <ChevronDown size={12} className={cn('transition-transform duration-200', showMath ? 'rotate-180' : '')} />
+            {showMath ? 'Hide calculations' : 'Show calculations'}
+          </button>
+        </div>
+      )}
+
+      {/* ③ Math panel (collapsible) */}
+      <AnimatePresence>
+        {showMath && canShowMath && projectionData && (
+          <motion.div
+            key="math"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+            className="overflow-hidden"
+          >
+
+            {/* Fixed inputs grid */}
+            <div className="px-5 py-4 border-t border-slate-100 bg-blue-50/30">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Fixed assumptions (locked inputs)</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3">
+                {lastRevenue != null && (
+                  <div>
+                    <p className="text-[10px] text-slate-500">Starting Revenue (TTM)</p>
+                    <p className="text-sm font-semibold tabular-nums text-slate-900">{fmtCompact(lastRevenue)}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-[10px] text-slate-500">FCF Margin</p>
+                  <p className="text-sm font-semibold tabular-nums text-slate-900">
+                    {lastFCFMargin != null ? (lastFCFMargin * 100).toFixed(1) + '%' : '—'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-500">WACC</p>
+                  <p className="text-sm font-semibold tabular-nums text-slate-900">{(wacc * 100).toFixed(1)}%</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-500">Terminal Growth</p>
+                  <p className="text-sm font-semibold tabular-nums text-slate-900">{(terminalG * 100).toFixed(1)}%</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-500">Projection Years</p>
+                  <p className="text-sm font-semibold tabular-nums text-slate-900">5 years</p>
+                </div>
+                {sharesAbsolute != null && (
+                  <div>
+                    <p className="text-[10px] text-slate-500">Shares Outstanding</p>
+                    <p className="text-sm font-semibold tabular-nums text-slate-900">
+                      {sharesAbsolute >= 1e9 ? (sharesAbsolute / 1e9).toFixed(2) + 'B' : (sharesAbsolute / 1e6).toFixed(0) + 'M'}
+                    </p>
+                  </div>
+                )}
+                {cashM != null && debtM != null && (
+                  <div>
+                    <p className="text-[10px] text-slate-500">Net Cash / (Debt)</p>
+                    <p className={cn('text-sm font-semibold tabular-nums', cashM - debtM >= 0 ? 'text-emerald-600' : 'text-red-600')}>
+                      {fmtCompact((cashM - debtM) * 1e6)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Year-by-year projection table */}
+            <div className="px-5 py-4 border-t border-slate-100">
+              <div className="flex items-center gap-2 mb-3 flex-wrap">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Year-by-year projection
+                </p>
+                <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">
+                  ★ X = {impliedCAGR != null ? (impliedCAGR * 100).toFixed(1) + '%' : '—'} CAGR (solved)
+                </span>
+              </div>
+              <div className="overflow-x-auto -mx-5 px-5">
+                <table className="w-full min-w-[420px] text-[11px]">
+                  <thead>
+                    <tr className="border-b border-slate-200">
+                      <th className="pb-2 text-left font-semibold text-slate-500 pr-2 w-10">Yr</th>
+                      <th className="pb-2 text-right font-bold text-blue-600 px-2 bg-blue-50/60 rounded-t-sm">★ Rev. Growth</th>
+                      <th className="pb-2 text-right font-semibold text-slate-500 px-2">Revenue</th>
+                      <th className="pb-2 text-right font-semibold text-slate-500 px-2 hidden sm:table-cell">FCF</th>
+                      <th className="pb-2 text-right font-semibold text-slate-500 px-2 hidden md:table-cell">Disc. Factor</th>
+                      <th className="pb-2 text-right font-semibold text-slate-700 pl-2">PV of FCF</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {projectionData.rows.map((row, i) => (
+                      <tr key={row.year} className={cn('border-b border-slate-100', i % 2 === 0 ? '' : 'bg-slate-50/40')}>
+                        <td className="py-1.5 text-left text-slate-500 font-medium pr-2">{row.year}</td>
+                        <td className="py-1.5 text-right text-blue-700 font-bold bg-blue-50/40 px-2">
+                          {impliedCAGR != null ? '+' + (impliedCAGR * 100).toFixed(1) + '%' : '—'}
+                        </td>
+                        <td className="py-1.5 text-right text-slate-700 px-2 tabular-nums">{fmtCompact(row.revenue)}</td>
+                        <td className="py-1.5 text-right text-slate-700 px-2 tabular-nums hidden sm:table-cell">{fmtCompact(row.fcf)}</td>
+                        <td className="py-1.5 text-right text-slate-500 px-2 tabular-nums hidden md:table-cell">÷ {row.discountFactor.toFixed(3)}</td>
+                        <td className="py-1.5 text-right text-slate-900 font-semibold pl-2 tabular-nums">{fmtCompact(row.pv)}</td>
+                      </tr>
+                    ))}
+                    {/* Terminal value row */}
+                    <tr className="border-t-2 border-dashed border-slate-300">
+                      <td className="py-1.5 text-left text-slate-500 font-medium pr-2">TV</td>
+                      <td className="py-1.5 text-right text-blue-600 bg-blue-50/40 px-2 text-[10px]">
+                        g = {(terminalG * 100).toFixed(1)}% ∞
+                      </td>
+                      <td className="py-1.5 text-right text-slate-400 px-2">—</td>
+                      <td className="py-1.5 text-right text-slate-700 px-2 tabular-nums hidden sm:table-cell">{fmtCompact(projectionData.tv)}</td>
+                      <td className="py-1.5 text-right text-slate-500 px-2 tabular-nums hidden md:table-cell">÷ {Math.pow(1 + wacc, N).toFixed(3)}</td>
+                      <td className="py-1.5 text-right text-slate-900 font-semibold pl-2 tabular-nums">{fmtCompact(projectionData.pvTv)}</td>
+                    </tr>
+                    {/* Total EV row */}
+                    <tr className="border-t-2 border-slate-300 bg-slate-50">
+                      <td colSpan={3} className="py-2 text-left font-bold text-slate-700 pr-2 text-xs">Implied Enterprise Value</td>
+                      <td className="py-2 text-right font-bold text-slate-900 tabular-nums hidden sm:table-cell px-2"></td>
+                      <td className="py-2 text-right font-bold text-slate-900 tabular-nums hidden md:table-cell px-2"></td>
+                      <td className="py-2 text-right font-bold text-slate-900 tabular-nums pl-2 text-xs">
+                        {fmtCompact(projectionData.totalEV)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              {result.impliedEV != null && (
+                <p className="text-[10px] text-slate-400 mt-2">
+                  Cross-check: market cap + debt − cash = {fmtCompact(result.impliedEV)}.
+                  {Math.abs(projectionData.totalEV - result.impliedEV) / result.impliedEV < 0.01
+                    ? ' ✓ Table matches.'
+                    : ' Small rounding difference expected.'}
+                </p>
+              )}
+            </div>
+
+            {/* Sensitivity strip */}
+            {sensitivityScenarios.length > 0 && (
+              <div className="px-5 py-4 border-t border-slate-100 bg-slate-50/60">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">What if growth is different?</p>
+                <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5 snap-x">
+                  {sensitivityScenarios.map(s => {
+                    const isImplied  = !!s.isImplied
+                    const isCheap    = s.fvPerShare != null && s.fvPerShare > currentPrice * 1.02
+                    const isExpensive = s.fvPerShare != null && s.fvPerShare < currentPrice * 0.98
+                    return (
+                      <div
+                        key={s.label + s.sublabel}
+                        className={cn(
+                          'shrink-0 snap-start flex flex-col items-center px-3 py-3 rounded-xl border text-center min-w-[90px]',
+                          isImplied
+                            ? 'border-blue-300 bg-blue-50 ring-1 ring-blue-200 shadow-sm'
+                            : 'border-slate-200 bg-white'
+                        )}
+                      >
+                        <p className={cn('text-sm font-bold tabular-nums', isImplied ? 'text-blue-700' : 'text-slate-700')}>
+                          {s.label}
+                        </p>
+                        {s.sublabel && (
+                          <p className={cn('text-[9px] mt-0.5 leading-tight', isImplied ? 'text-blue-500' : 'text-slate-400')}>
+                            {s.sublabel}
+                          </p>
+                        )}
+                        <div className="mt-2 pt-2 border-t border-slate-100 w-full">
+                          <p className={cn('text-sm font-bold tabular-nums',
+                            isImplied ? 'text-blue-700' : isCheap ? 'text-emerald-600' : isExpensive ? 'text-red-600' : 'text-slate-700'
+                          )}>
+                            {s.fvPerShare != null ? fmtPrice(s.fvPerShare, currency) : '—'}
+                          </p>
+                          {isImplied
+                            ? <p className="text-[9px] text-blue-500 mt-0.5">= market price</p>
+                            : <p className={cn('text-[9px] mt-0.5', isCheap ? 'text-emerald-500' : isExpensive ? 'text-red-500' : 'text-slate-400')}>
+                                {s.fvPerShare != null ? (isCheap ? 'undervalued' : isExpensive ? 'overvalued' : 'near fair') : ''}
+                              </p>
+                          }
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                <p className="text-[10px] text-slate-400 mt-2.5 leading-relaxed">
+                  Fair value at each growth scenario, holding WACC, FCF margin and all other inputs constant. Green = stock looks cheap; red = expensive.
+                </p>
+              </div>
+            )}
+
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ④ Assumptions + interpretation (always visible) */}
       <div className="px-5 py-4 border-t border-slate-100 bg-slate-50">
         <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-3">Assumptions used</p>
         <div className="grid grid-cols-3 gap-3">
@@ -909,6 +1184,12 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
             wacc={apiData?.wacc?.wacc ?? 0.09}
             terminalG={apiData?.terminalG ?? 0.025}
             lastFCFMargin={lastFCFMargin}
+            lastRevenue={lastActualRevenue}
+            currentPrice={currentPrice}
+            cashM={apiData?.fairValue?.cash ?? null}
+            debtM={apiData?.fairValue?.debt ?? null}
+            sharesAbsolute={sharesAbsolute}
+            currency={currency}
           />
         </MethodAccordion>
 

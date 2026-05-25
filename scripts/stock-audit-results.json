@@ -1,21 +1,33 @@
 {
-  "runAt": "2026-05-24T21:45:26.056Z",
+  "runAt": "2026-05-24T16:07:27.682Z",
   "count": 21,
   "results": [
     {
       "ticker": "AAPL",
-      "timestamp": "2026-05-24T21:44:15.883Z",
+      "timestamp": "2026-05-24T16:06:49.844Z",
       "companyName": "Apple Inc.",
       "sector": "Technology",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 100,
+      "overallScore": 98,
       "apiScore": 100,
       "financialScore": 100,
-      "valuationScore": 99,
+      "valuationScore": 94,
       "uiScore": null,
       "criticalIssues": [],
-      "warnings": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 650bps: api.cagr=6.4%, cagrAnalysis.blended=6.4%, cagrAnalysis.analystEstimate1y=8.3%, cagrAnalysis.historicalCagr3y=1.8%",
+          "detail": {
+            "api.cagr": 0.064,
+            "cagrAnalysis.blended": 0.064,
+            "cagrAnalysis.analystEstimate1y": 0.083,
+            "cagrAnalysis.historicalCagr3y": 0.018
+          }
+        }
+      ],
       "infoFlags": [
         {
           "sev": "INFO",
@@ -46,18 +58,40 @@
     },
     {
       "ticker": "AMD",
-      "timestamp": "2026-05-24T21:44:23.671Z",
+      "timestamp": "2026-05-24T16:06:54.229Z",
       "companyName": "Advanced Micro Devices, Inc.",
       "sector": "Technology",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 99,
+      "overallScore": 96,
       "apiScore": 100,
-      "financialScore": 100,
-      "valuationScore": 98,
+      "financialScore": 95,
+      "valuationScore": 93,
       "uiScore": null,
       "criticalIssues": [],
-      "warnings": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "CAGR_MISMATCH",
+          "msg": "Computed historical CAGR 20.5% vs cagrAnalysis.historicalCagr3y 13.6% — 689bps gap",
+          "detail": {
+            "calculatedCAGR": 0.20491251645171027,
+            "historicalCagr3y": 0.136,
+            "diffBps": 689.1251645171026
+          }
+        },
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 4010bps: api.cagr=28.0%, cagrAnalysis.blended=28.0%, cagrAnalysis.analystEstimate1y=53.7%, cagrAnalysis.historicalCagr3y=13.6%",
+          "detail": {
+            "api.cagr": 0.28,
+            "cagrAnalysis.blended": 0.28,
+            "cagrAnalysis.analystEstimate1y": 0.537,
+            "cagrAnalysis.historicalCagr3y": 0.136
+          }
+        }
+      ],
       "infoFlags": [
         {
           "sev": "INFO",
@@ -93,18 +127,30 @@
     },
     {
       "ticker": "AMZN",
-      "timestamp": "2026-05-24T21:44:27.650Z",
+      "timestamp": "2026-05-24T16:06:56.340Z",
       "companyName": "Amazon.com, Inc.",
       "sector": "Consumer Cyclical",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 100,
+      "overallScore": 98,
       "apiScore": 100,
       "financialScore": 100,
-      "valuationScore": 99,
+      "valuationScore": 94,
       "uiScore": null,
       "criticalIssues": [],
-      "warnings": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 700bps: api.cagr=18.7%, cagrAnalysis.blended=18.7%, cagrAnalysis.analystEstimate1y=12.9%, cagrAnalysis.historicalCagr3y=11.7%",
+          "detail": {
+            "api.cagr": 0.187,
+            "cagrAnalysis.blended": 0.187,
+            "cagrAnalysis.analystEstimate1y": 0.129,
+            "cagrAnalysis.historicalCagr3y": 0.117
+          }
+        }
+      ],
       "infoFlags": [
         {
           "sev": "INFO",
@@ -135,15 +181,15 @@
     },
     {
       "ticker": "AVGO",
-      "timestamp": "2026-05-24T21:45:14.630Z",
+      "timestamp": "2026-05-24T16:07:21.708Z",
       "companyName": "Broadcom Inc.",
       "sector": "Technology",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 97,
+      "overallScore": 96,
       "apiScore": 100,
       "financialScore": 95,
-      "valuationScore": 97,
+      "valuationScore": 92,
       "uiScore": null,
       "criticalIssues": [],
       "warnings": [
@@ -151,6 +197,17 @@
           "sev": "WARN",
           "code": "FCF_EQUALS_NI",
           "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
+        },
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 3180bps: api.cagr=22.0%, cagrAnalysis.blended=22.0%, cagrAnalysis.analystEstimate1y=53.8%, cagrAnalysis.historicalCagr3y=24.4%",
+          "detail": {
+            "api.cagr": 0.22,
+            "cagrAnalysis.blended": 0.22,
+            "cagrAnalysis.analystEstimate1y": 0.538,
+            "cagrAnalysis.historicalCagr3y": 0.244
+          }
         }
       ],
       "infoFlags": [
@@ -193,26 +250,36 @@
     },
     {
       "ticker": "COIN",
-      "timestamp": "2026-05-24T21:45:07.001Z",
+      "timestamp": "2026-05-24T16:07:17.643Z",
       "companyName": "Coinbase Global, Inc.",
       "sector": "Financial Services",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 97,
+      "overallScore": 96,
       "apiScore": 100,
       "financialScore": 94,
-      "valuationScore": 98,
+      "valuationScore": 93,
       "uiScore": null,
       "criticalIssues": [],
       "warnings": [
         {
           "sev": "WARN",
           "code": "CAGR_MISMATCH",
-          "msg": "Computed 3Y historical CAGR 31.0% vs cagrAnalysis.historicalCagr3y 20.0% — 1100bps gap",
+          "msg": "Computed historical CAGR -2.2% vs cagrAnalysis.historicalCagr3y 20.0% — 2217bps gap",
           "detail": {
-            "calc3yCAGR": 0.3100276522124539,
+            "calculatedCAGR": -0.02168248264317696,
             "historicalCagr3y": 0.2,
-            "diffBps": 1100.2765221245386
+            "diffBps": 2216.82482643177
+          }
+        },
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 800bps: api.cagr=12.0%, cagrAnalysis.blended=12.0%, cagrAnalysis.historicalCagr3y=20.0%",
+          "detail": {
+            "api.cagr": 0.12,
+            "cagrAnalysis.blended": 0.12,
+            "cagrAnalysis.historicalCagr3y": 0.2
           }
         }
       ],
@@ -237,7 +304,7 @@
       "cagrConsistency": {
         "apiCagr": 0.12,
         "blended": 0.12,
-        "analystEstimate1y": 3.047,
+        "analystEstimate1y": 1.5,
         "historicalCagr3y": 0.2
       },
       "sectorFlags": [
@@ -259,18 +326,30 @@
     },
     {
       "ticker": "GOOGL",
-      "timestamp": "2026-05-24T21:44:43.547Z",
+      "timestamp": "2026-05-24T16:07:04.519Z",
       "companyName": "Alphabet Inc.",
       "sector": "Communication Services",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 100,
+      "overallScore": 98,
       "apiScore": 100,
       "financialScore": 100,
-      "valuationScore": 99,
+      "valuationScore": 94,
       "uiScore": null,
       "criticalIssues": [],
-      "warnings": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 910bps: api.cagr=21.6%, cagrAnalysis.blended=21.6%, cagrAnalysis.analystEstimate1y=18.1%, cagrAnalysis.historicalCagr3y=12.5%",
+          "detail": {
+            "api.cagr": 0.216,
+            "cagrAnalysis.blended": 0.216,
+            "cagrAnalysis.analystEstimate1y": 0.181,
+            "cagrAnalysis.historicalCagr3y": 0.125
+          }
+        }
+      ],
       "infoFlags": [
         {
           "sev": "INFO",
@@ -301,26 +380,37 @@
     },
     {
       "ticker": "HOOD",
-      "timestamp": "2026-05-24T21:45:22.175Z",
+      "timestamp": "2026-05-24T16:07:25.699Z",
       "companyName": "Robinhood Markets, Inc.",
       "sector": "Financial Services",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 97,
+      "overallScore": 96,
       "apiScore": 100,
       "financialScore": 94,
-      "valuationScore": 98,
+      "valuationScore": 93,
       "uiScore": null,
       "criticalIssues": [],
       "warnings": [
         {
           "sev": "WARN",
           "code": "CAGR_MISMATCH",
-          "msg": "Computed 3Y historical CAGR 48.8% vs cagrAnalysis.historicalCagr3y 20.0% — 2879bps gap",
+          "msg": "Computed historical CAGR 25.3% vs cagrAnalysis.historicalCagr3y 20.0% — 529bps gap",
           "detail": {
-            "calc3yCAGR": 0.4878747583673768,
+            "calculatedCAGR": 0.25294084509815096,
             "historicalCagr3y": 0.2,
-            "diffBps": 2878.747583673768
+            "diffBps": 529.4084509815094
+          }
+        },
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 2090bps: api.cagr=12.0%, cagrAnalysis.blended=12.0%, cagrAnalysis.analystEstimate1y=32.9%, cagrAnalysis.historicalCagr3y=20.0%",
+          "detail": {
+            "api.cagr": 0.12,
+            "cagrAnalysis.blended": 0.12,
+            "cagrAnalysis.analystEstimate1y": 0.329,
+            "cagrAnalysis.historicalCagr3y": 0.2
           }
         }
       ],
@@ -367,18 +457,30 @@
     },
     {
       "ticker": "INTC",
-      "timestamp": "2026-05-24T21:44:39.719Z",
+      "timestamp": "2026-05-24T16:07:02.519Z",
       "companyName": "Intel Corporation",
       "sector": "Technology",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 99,
+      "overallScore": 97,
       "apiScore": 99,
       "financialScore": 100,
-      "valuationScore": 98,
+      "valuationScore": 93,
       "uiScore": null,
       "criticalIssues": [],
-      "warnings": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 1670bps: api.cagr=4.0%, cagrAnalysis.blended=4.0%, cagrAnalysis.analystEstimate1y=11.0%, cagrAnalysis.historicalCagr3y=-5.7%",
+          "detail": {
+            "api.cagr": 0.04,
+            "cagrAnalysis.blended": 0.04,
+            "cagrAnalysis.analystEstimate1y": 0.11,
+            "cagrAnalysis.historicalCagr3y": -0.057
+          }
+        }
+      ],
       "infoFlags": [
         {
           "sev": "INFO",
@@ -421,18 +523,28 @@
     },
     {
       "ticker": "LCID",
-      "timestamp": "2026-05-24T21:45:26.035Z",
+      "timestamp": "2026-05-24T16:07:27.674Z",
       "companyName": "Lucid Group, Inc.",
       "sector": "Consumer Cyclical",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 92,
+      "overallScore": 88,
       "apiScore": 99,
-      "financialScore": 80,
-      "valuationScore": 96,
+      "financialScore": 75,
+      "valuationScore": 91,
       "uiScore": null,
       "criticalIssues": [],
       "warnings": [
+        {
+          "sev": "WARN",
+          "code": "CAGR_MISMATCH",
+          "msg": "Computed historical CAGR 165.8% vs cagrAnalysis.historicalCagr3y 30.6% — 13523bps gap",
+          "detail": {
+            "calculatedCAGR": 1.6582843910976557,
+            "historicalCagr3y": 0.306,
+            "diffBps": 13522.843910976557
+          }
+        },
         {
           "sev": "WARN",
           "code": "MARGIN_EXTREME",
@@ -464,6 +576,17 @@
           "sev": "WARN",
           "code": "FCF_MARGIN_EXTREME",
           "msg": "FCF margin -282.8% is unusually large (expected for pre-profit/capex-heavy companies)"
+        },
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 8350bps: api.cagr=55.0%, cagrAnalysis.blended=55.0%, cagrAnalysis.analystEstimate1y=114.1%, cagrAnalysis.historicalCagr3y=30.6%",
+          "detail": {
+            "api.cagr": 0.55,
+            "cagrAnalysis.blended": 0.55,
+            "cagrAnalysis.analystEstimate1y": 1.141,
+            "cagrAnalysis.historicalCagr3y": 0.306
+          }
         }
       ],
       "infoFlags": [
@@ -518,24 +641,24 @@
     },
     {
       "ticker": "MARA",
-      "timestamp": "2026-05-24T21:44:58.936Z",
+      "timestamp": "2026-05-24T16:07:12.906Z",
       "companyName": "MARA Holdings, Inc.",
       "sector": "Financial Services",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 95,
+      "overallScore": 93,
       "apiScore": 99,
       "financialScore": 89,
-      "valuationScore": 97,
+      "valuationScore": 92,
       "uiScore": null,
       "criticalIssues": [],
       "warnings": [
         {
           "sev": "WARN",
           "code": "CAGR_MISMATCH",
-          "msg": "Computed 3Y historical CAGR 97.5% vs cagrAnalysis.historicalCagr3y 20.0% — 7750bps gap",
+          "msg": "Computed historical CAGR 97.5% vs cagrAnalysis.historicalCagr3y 20.0% — 7750bps gap",
           "detail": {
-            "calc3yCAGR": 0.9749674623753362,
+            "calculatedCAGR": 0.9749674623753362,
             "historicalCagr3y": 0.2,
             "diffBps": 7749.674623753362
           }
@@ -544,6 +667,17 @@
           "sev": "WARN",
           "code": "FCF_EQUALS_NI",
           "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
+        },
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 5350bps: api.cagr=12.0%, cagrAnalysis.blended=12.0%, cagrAnalysis.analystEstimate1y=65.5%, cagrAnalysis.historicalCagr3y=20.0%",
+          "detail": {
+            "api.cagr": 0.12,
+            "cagrAnalysis.blended": 0.12,
+            "cagrAnalysis.analystEstimate1y": 0.655,
+            "cagrAnalysis.historicalCagr3y": 0.2
+          }
         }
       ],
       "infoFlags": [
@@ -601,18 +735,29 @@
     },
     {
       "ticker": "META",
-      "timestamp": "2026-05-24T21:44:36.002Z",
+      "timestamp": "2026-05-24T16:07:00.544Z",
       "companyName": "Meta Platforms, Inc.",
       "sector": "Communication Services",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 100,
+      "overallScore": 98,
       "apiScore": 100,
-      "financialScore": 100,
+      "financialScore": 95,
       "valuationScore": 99,
       "uiScore": null,
       "criticalIssues": [],
-      "warnings": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "CAGR_MISMATCH",
+          "msg": "Computed historical CAGR 14.3% vs cagrAnalysis.historicalCagr3y 19.9% — 564bps gap",
+          "detail": {
+            "calculatedCAGR": 0.14255073267286789,
+            "historicalCagr3y": 0.199,
+            "diffBps": 564.4926732713212
+          }
+        }
+      ],
       "infoFlags": [
         {
           "sev": "INFO",
@@ -643,18 +788,30 @@
     },
     {
       "ticker": "MSFT",
-      "timestamp": "2026-05-24T21:44:31.819Z",
+      "timestamp": "2026-05-24T16:06:58.432Z",
       "companyName": "Microsoft Corporation",
       "sector": "Technology",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 100,
+      "overallScore": 98,
       "apiScore": 100,
       "financialScore": 100,
-      "valuationScore": 99,
+      "valuationScore": 94,
       "uiScore": null,
       "criticalIssues": [],
-      "warnings": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 600bps: api.cagr=18.4%, cagrAnalysis.blended=18.4%, cagrAnalysis.analystEstimate1y=16.5%, cagrAnalysis.historicalCagr3y=12.4%",
+          "detail": {
+            "api.cagr": 0.184,
+            "cagrAnalysis.blended": 0.184,
+            "cagrAnalysis.analystEstimate1y": 0.165,
+            "cagrAnalysis.historicalCagr3y": 0.124
+          }
+        }
+      ],
       "infoFlags": [
         {
           "sev": "INFO",
@@ -685,15 +842,15 @@
     },
     {
       "ticker": "MU",
-      "timestamp": "2026-05-24T21:44:51.506Z",
+      "timestamp": "2026-05-24T16:07:08.708Z",
       "companyName": "Micron Technology, Inc.",
       "sector": "Technology",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 97,
+      "overallScore": 96,
       "apiScore": 100,
       "financialScore": 95,
-      "valuationScore": 97,
+      "valuationScore": 92,
       "uiScore": null,
       "criticalIssues": [],
       "warnings": [
@@ -701,6 +858,17 @@
           "sev": "WARN",
           "code": "FCF_EQUALS_NI",
           "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
+        },
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 5080bps: api.cagr=22.0%, cagrAnalysis.blended=22.0%, cagrAnalysis.analystEstimate1y=57.5%, cagrAnalysis.historicalCagr3y=6.7%",
+          "detail": {
+            "api.cagr": 0.22,
+            "cagrAnalysis.blended": 0.22,
+            "cagrAnalysis.analystEstimate1y": 0.575,
+            "cagrAnalysis.historicalCagr3y": 0.067
+          }
         }
       ],
       "infoFlags": [
@@ -743,18 +911,30 @@
     },
     {
       "ticker": "NFLX",
-      "timestamp": "2026-05-24T21:45:18.278Z",
+      "timestamp": "2026-05-24T16:07:23.656Z",
       "companyName": "Netflix, Inc.",
       "sector": "Communication Services",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 100,
+      "overallScore": 98,
       "apiScore": 100,
       "financialScore": 100,
-      "valuationScore": 99,
+      "valuationScore": 94,
       "uiScore": null,
       "criticalIssues": [],
-      "warnings": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 720bps: api.cagr=18.9%, cagrAnalysis.blended=18.9%, cagrAnalysis.analystEstimate1y=11.7%, cagrAnalysis.historicalCagr3y=12.6%",
+          "detail": {
+            "api.cagr": 0.189,
+            "cagrAnalysis.blended": 0.189,
+            "cagrAnalysis.analystEstimate1y": 0.117,
+            "cagrAnalysis.historicalCagr3y": 0.126
+          }
+        }
+      ],
       "infoFlags": [
         {
           "sev": "INFO",
@@ -785,26 +965,37 @@
     },
     {
       "ticker": "NVDA",
-      "timestamp": "2026-05-24T21:44:12.153Z",
+      "timestamp": "2026-05-24T16:06:47.547Z",
       "companyName": "NVIDIA Corporation",
       "sector": "Technology",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 98,
+      "overallScore": 96,
       "apiScore": 100,
       "financialScore": 95,
-      "valuationScore": 98,
+      "valuationScore": 93,
       "uiScore": null,
       "criticalIssues": [],
       "warnings": [
         {
           "sev": "WARN",
           "code": "CAGR_MISMATCH",
-          "msg": "Computed 3Y historical CAGR 100.0% vs cagrAnalysis.historicalCagr3y 60.0% — 4005bps gap",
+          "msg": "Computed historical CAGR 68.3% vs cagrAnalysis.historicalCagr3y 60.0% — 830bps gap",
           "detail": {
-            "calc3yCAGR": 1.0004509499443963,
+            "calculatedCAGR": 0.6830139148028267,
             "historicalCagr3y": 0.6,
-            "diffBps": 4004.5094994439633
+            "diffBps": 830.1391480282672
+          }
+        },
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 3800bps: api.cagr=22.0%, cagrAnalysis.blended=22.0%, cagrAnalysis.analystEstimate1y=38.1%, cagrAnalysis.historicalCagr3y=60.0%",
+          "detail": {
+            "api.cagr": 0.22,
+            "cagrAnalysis.blended": 0.22,
+            "cagrAnalysis.analystEstimate1y": 0.381,
+            "cagrAnalysis.historicalCagr3y": 0.6
           }
         }
       ],
@@ -843,7 +1034,7 @@
     },
     {
       "ticker": "PAGS",
-      "timestamp": "2026-05-24T21:44:07.933Z",
+      "timestamp": "2026-05-24T16:06:42.792Z",
       "companyName": "PagSeguro Digital Ltd.",
       "sector": "Technology",
       "currency": "USD",
@@ -867,7 +1058,7 @@
           "code": "CAGR_FX_LIKELY",
           "msg": "CAGR gap 450bps — probable FX effect (stmts in USD, quote in USD)",
           "detail": {
-            "calc3yCAGR": 0.10000412219704757,
+            "calculatedCAGR": 0.10000412219704757,
             "historicalCagr3y": 0.055
           }
         },
@@ -905,18 +1096,30 @@
     },
     {
       "ticker": "PLTR",
-      "timestamp": "2026-05-24T21:44:47.221Z",
+      "timestamp": "2026-05-24T16:07:06.203Z",
       "companyName": "Palantir Technologies Inc.",
       "sector": "Technology",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 99,
+      "overallScore": 98,
       "apiScore": 100,
       "financialScore": 100,
-      "valuationScore": 98,
+      "valuationScore": 93,
       "uiScore": null,
       "criticalIssues": [],
-      "warnings": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 1180bps: api.cagr=33.3%, cagrAnalysis.blended=33.3%, cagrAnalysis.analystEstimate1y=44.7%, cagrAnalysis.historicalCagr3y=32.9%",
+          "detail": {
+            "api.cagr": 0.333,
+            "cagrAnalysis.blended": 0.333,
+            "cagrAnalysis.analystEstimate1y": 0.447,
+            "cagrAnalysis.historicalCagr3y": 0.329
+          }
+        }
+      ],
       "infoFlags": [
         {
           "sev": "INFO",
@@ -952,18 +1155,40 @@
     },
     {
       "ticker": "RIVN",
-      "timestamp": "2026-05-24T21:45:10.941Z",
+      "timestamp": "2026-05-24T16:07:19.718Z",
       "companyName": "Rivian Automotive, Inc.",
       "sector": "Consumer Cyclical",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 98,
+      "overallScore": 95,
       "apiScore": 99,
-      "financialScore": 100,
-      "valuationScore": 96,
+      "financialScore": 95,
+      "valuationScore": 91,
       "uiScore": null,
       "criticalIssues": [],
-      "warnings": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "CAGR_MISMATCH",
+          "msg": "Computed historical CAGR 214.6% vs cagrAnalysis.historicalCagr3y 48.1% — 16649bps gap",
+          "detail": {
+            "calculatedCAGR": 2.1459083889516504,
+            "historicalCagr3y": 0.481,
+            "diffBps": 16649.083889516503
+          }
+        },
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 2650bps: api.cagr=38.0%, cagrAnalysis.blended=38.0%, cagrAnalysis.analystEstimate1y=64.5%, cagrAnalysis.historicalCagr3y=48.1%",
+          "detail": {
+            "api.cagr": 0.38,
+            "cagrAnalysis.blended": 0.38,
+            "cagrAnalysis.analystEstimate1y": 0.645,
+            "cagrAnalysis.historicalCagr3y": 0.481
+          }
+        }
+      ],
       "infoFlags": [
         {
           "sev": "INFO",
@@ -1016,15 +1241,15 @@
     },
     {
       "ticker": "SMCI",
-      "timestamp": "2026-05-24T21:44:55.129Z",
+      "timestamp": "2026-05-24T16:07:10.481Z",
       "companyName": "Super Micro Computer, Inc.",
       "sector": "Technology",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 97,
+      "overallScore": 96,
       "apiScore": 100,
       "financialScore": 95,
-      "valuationScore": 97,
+      "valuationScore": 92,
       "uiScore": null,
       "criticalIssues": [],
       "warnings": [
@@ -1032,6 +1257,17 @@
           "sev": "WARN",
           "code": "FCF_EQUALS_NI",
           "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
+        },
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 3200bps: api.cagr=28.0%, cagrAnalysis.blended=28.0%, cagrAnalysis.analystEstimate1y=29.9%, cagrAnalysis.historicalCagr3y=60.0%",
+          "detail": {
+            "api.cagr": 0.28,
+            "cagrAnalysis.blended": 0.28,
+            "cagrAnalysis.analystEstimate1y": 0.299,
+            "cagrAnalysis.historicalCagr3y": 0.6
+          }
         }
       ],
       "infoFlags": [
@@ -1074,26 +1310,37 @@
     },
     {
       "ticker": "SOFI",
-      "timestamp": "2026-05-24T21:45:02.742Z",
+      "timestamp": "2026-05-24T16:07:15.402Z",
       "companyName": "SoFi Technologies, Inc.",
       "sector": "Financial Services",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 97,
+      "overallScore": 96,
       "apiScore": 100,
       "financialScore": 94,
-      "valuationScore": 98,
+      "valuationScore": 93,
       "uiScore": null,
       "criticalIssues": [],
       "warnings": [
         {
           "sev": "WARN",
           "code": "CAGR_MISMATCH",
-          "msg": "Computed 3Y historical CAGR 39.3% vs cagrAnalysis.historicalCagr3y -3.5% — 4285bps gap",
+          "msg": "Computed historical CAGR 44.7% vs cagrAnalysis.historicalCagr3y -3.5% — 4821bps gap",
           "detail": {
-            "calc3yCAGR": 0.39345215006393763,
+            "calculatedCAGR": 0.4470992884739893,
             "historicalCagr3y": -0.035,
-            "diffBps": 4284.521500639376
+            "diffBps": 4820.992884739893
+          }
+        },
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 3800bps: api.cagr=12.0%, cagrAnalysis.blended=12.0%, cagrAnalysis.analystEstimate1y=34.5%, cagrAnalysis.historicalCagr3y=-3.5%",
+          "detail": {
+            "api.cagr": 0.12,
+            "cagrAnalysis.blended": 0.12,
+            "cagrAnalysis.analystEstimate1y": 0.345,
+            "cagrAnalysis.historicalCagr3y": -0.035
           }
         }
       ],
@@ -1140,18 +1387,40 @@
     },
     {
       "ticker": "TSLA",
-      "timestamp": "2026-05-24T21:44:19.986Z",
+      "timestamp": "2026-05-24T16:06:52.004Z",
       "companyName": "Tesla, Inc.",
       "sector": "Consumer Cyclical",
       "currency": "USD",
       "financialCurrency": "USD",
-      "overallScore": 100,
+      "overallScore": 96,
       "apiScore": 100,
-      "financialScore": 100,
-      "valuationScore": 99,
+      "financialScore": 95,
+      "valuationScore": 94,
       "uiScore": null,
       "criticalIssues": [],
-      "warnings": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "CAGR_MISMATCH",
+          "msg": "Computed historical CAGR 15.2% vs cagrAnalysis.historicalCagr3y 5.2% — 1001bps gap",
+          "detail": {
+            "calculatedCAGR": 0.15210225739354444,
+            "historicalCagr3y": 0.052,
+            "diffBps": 1001.0225739354445
+          }
+        },
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 1030bps: api.cagr=10.9%, cagrAnalysis.blended=10.9%, cagrAnalysis.analystEstimate1y=15.5%, cagrAnalysis.historicalCagr3y=5.2%",
+          "detail": {
+            "api.cagr": 0.109,
+            "cagrAnalysis.blended": 0.109,
+            "cagrAnalysis.analystEstimate1y": 0.155,
+            "cagrAnalysis.historicalCagr3y": 0.052
+          }
+        }
+      ],
       "infoFlags": [
         {
           "sev": "INFO",

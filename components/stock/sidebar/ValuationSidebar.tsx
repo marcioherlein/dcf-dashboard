@@ -53,8 +53,8 @@ interface FairValue {
 interface CagrAnalysis {
   blended?: number | null
   analystEstimate1y?: number | null
-  historicalCagr3y?: number | null
   analystBaseEffect?: boolean
+  historicalCagr3y?: number | null
   numAnalysts?: number
 }
 
@@ -378,23 +378,23 @@ function ForwardPEContext({
   const modelCAGR = cagr ?? null
   const historical = cagrAnalysis?.historicalCagr3y ?? null
   const analyst = cagrAnalysis?.analystEstimate1y ?? null
+  const baseEffect = cagrAnalysis?.analystBaseEffect ?? false
 
-  const baseEffectFwd = cagrAnalysis?.analystBaseEffect ?? false
-  const diffFwd = (!baseEffectFwd && modelCAGR != null && analyst != null) ? modelCAGR - analyst : null
+  const diff = (!baseEffect && modelCAGR != null && analyst != null) ? modelCAGR - analyst : null
   const cagrVerdict: Verdict =
-    baseEffectFwd ? 'neutral' :
-    diffFwd == null ? 'neutral' :
-    diffFwd > 0.10  ? 'risk'   :
-    diffFwd > 0.03  ? 'watch'  :
-    diffFwd > -0.10 ? 'good'   : 'neutral'
+    baseEffect                   ? 'neutral' :
+    diff == null                 ? 'neutral' :
+    diff > 0.10                  ? 'risk'    :
+    diff > 0.03                  ? 'watch'   :
+    diff > -0.10                 ? 'good'    : 'neutral'
   const cagrLabel =
-    baseEffectFwd   ? 'Base effect in 1Y est. — comparison unreliable' :
-    diffFwd == null ? 'No comparison data' :
-    diffFwd > 0.10  ? 'More aggressive than analysts' :
-    diffFwd > 0.03  ? 'Slightly above analysts' :
-    diffFwd > -0.10 ? 'In line with analysts' :
-    diffFwd > -0.25 ? 'Conservative vs analysts' :
-                      'Significantly conservative vs analysts'
+    baseEffect                   ? 'Base effect in 1Y est. — comparison unreliable' :
+    diff == null                 ? 'No comparison data' :
+    diff > 0.10                  ? 'More aggressive than analysts' :
+    diff > 0.03                  ? 'Slightly above analysts' :
+    diff > -0.10                 ? 'In line with analysts' :
+    diff > -0.25                 ? 'Conservative vs analysts' :
+                                   'Significantly conservative vs analysts'
 
   const netMarginPoints = derivedInsights.marginTrend.net.points.filter(p => p.value != null).slice(-4)
 
@@ -586,22 +586,22 @@ function RevMultipleContext({
   const historical = cagrAnalysis?.historicalCagr3y ?? null
   const analyst = cagrAnalysis?.analystEstimate1y ?? null
 
-  const baseEffectRev = cagrAnalysis?.analystBaseEffect ?? false
-  const diffRev = (!baseEffectRev && modelCAGR != null && analyst != null) ? modelCAGR - analyst : null
+  const baseEffect = cagrAnalysis?.analystBaseEffect ?? false
+  const diff = (!baseEffect && modelCAGR != null && analyst != null) ? modelCAGR - analyst : null
   const cagrVerdict: Verdict =
-    baseEffectRev ? 'neutral' :
-    diffRev == null ? 'neutral' :
-    diffRev > 0.10  ? 'risk'   :
-    diffRev > 0.03  ? 'watch'  :
-    diffRev > -0.10 ? 'good'   : 'neutral'
+    baseEffect ? 'neutral' :
+    diff == null ? 'neutral' :
+    diff > 0.10  ? 'risk'   :
+    diff > 0.03  ? 'watch'  :
+    diff > -0.10 ? 'good'   : 'neutral'
   const cagrLabel =
-    baseEffectRev   ? 'Base effect in 1Y est. — comparison unreliable' :
-    diffRev == null ? 'No comparison data' :
-    diffRev > 0.10  ? 'More aggressive than analysts' :
-    diffRev > 0.03  ? 'Slightly above analysts' :
-    diffRev > -0.10 ? 'In line with analysts' :
-    diffRev > -0.25 ? 'Conservative vs analysts' :
-                      'Significantly conservative vs analysts'
+    baseEffect   ? 'Base effect in 1Y est. — comparison unreliable' :
+    diff == null ? 'No comparison data' :
+    diff > 0.10  ? 'More aggressive than analysts' :
+    diff > 0.03  ? 'Slightly above analysts' :
+    diff > -0.10 ? 'In line with analysts' :
+    diff > -0.25 ? 'Conservative vs analysts' :
+                   'Significantly conservative vs analysts'
 
   const netMargin = derivedInsights.latestMetrics.netMargin
   const isUnprofitable = netMargin != null && netMargin < 0
