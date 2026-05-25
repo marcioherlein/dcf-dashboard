@@ -29,11 +29,12 @@ export default function SectorRotation({ sectors }: Props) {
   }))
 
   return (
-    <div className="rounded-xl glass-card-light px-5 py-4">
-      <div className="mb-3">
-        <h2 className="text-sm font-bold text-slate-900">Sector Rotation</h2>
-        <p className="text-[10px] text-slate-500 mt-0.5">RS momentum vs S&P 500 — last 40 trading days</p>
+    <div className="rounded-xl glass-card-light overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-slate-200">
+        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Sector Rotation</span>
+        <p className="text-[10px] text-slate-400 mt-0.5">RS momentum vs S&P 500 — last 40 trading days</p>
       </div>
+      <div className="px-5 py-4">
       <div className="h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} layout="vertical" margin={{ top: 0, right: 40, left: 4, bottom: 0 }}>
@@ -54,7 +55,7 @@ export default function SectorRotation({ sectors }: Props) {
         </ResponsiveContainer>
       </div>
       {/* Trend legend */}
-      <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-0.5">
+      <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
         {data.map((d, i) => {
           const trend = trendLabel(d.raw)
           return (
@@ -64,6 +65,7 @@ export default function SectorRotation({ sectors }: Props) {
             </div>
           )
         })}
+      </div>
       </div>
     </div>
   )

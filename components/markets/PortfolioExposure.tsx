@@ -20,28 +20,26 @@ export default function PortfolioExposure({ portfolioExposure, modelAlerts }: Pr
   }
 
   return (
-    <div className="rounded-xl glass-card-light px-5 py-4 space-y-3">
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-sm font-bold text-slate-900">Saved Valuations</h2>
-        <span className="text-xs text-slate-500">{totalSaved} model{totalSaved !== 1 ? 's' : ''}</span>
+    <div className="rounded-xl glass-card-light overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-slate-200 flex items-center justify-between">
+        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Saved Valuations</span>
+        <span className="text-[10px] text-slate-400">{totalSaved} model{totalSaved !== 1 ? 's' : ''}</span>
       </div>
+      <div className="px-5 py-4 space-y-3">
 
       {/* Fragility summary */}
-      <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2.5">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Fragility Summary</p>
-        <div className="flex items-center gap-4">
-          <div>
-            <p className="text-xl font-bold text-slate-900 font-mono">{modelAlerts.filter(a => a.severity === 'high').length}</p>
-            <p className="text-[10px] text-red-600 font-semibold">High Risk</p>
-          </div>
-          <div>
-            <p className="text-xl font-bold text-slate-900 font-mono">{modelAlerts.filter(a => a.severity === 'medium').length}</p>
-            <p className="text-[10px] text-amber-600 font-semibold">Medium Risk</p>
-          </div>
-          <div>
-            <p className="text-xl font-bold text-slate-900 font-mono">{totalSaved - uniqueTickers.length}</p>
-            <p className="text-[10px] text-emerald-600 font-semibold">Healthy</p>
-          </div>
+      <div className="grid grid-cols-3 gap-2">
+        <div className="rounded-lg border border-red-200 bg-red-50/70 px-3 py-2.5 text-center">
+          <p className="text-2xl font-bold text-red-700 font-mono leading-none">{modelAlerts.filter(a => a.severity === 'high').length}</p>
+          <p className="text-[10px] text-red-600 font-semibold mt-1 uppercase tracking-wider">High Risk</p>
+        </div>
+        <div className="rounded-lg border border-amber-200 bg-amber-50/70 px-3 py-2.5 text-center">
+          <p className="text-2xl font-bold text-amber-700 font-mono leading-none">{modelAlerts.filter(a => a.severity === 'medium').length}</p>
+          <p className="text-[10px] text-amber-600 font-semibold mt-1 uppercase tracking-wider">Medium</p>
+        </div>
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 px-3 py-2.5 text-center">
+          <p className="text-2xl font-bold text-emerald-700 font-mono leading-none">{totalSaved - uniqueTickers.length}</p>
+          <p className="text-[10px] text-emerald-600 font-semibold mt-1 uppercase tracking-wider">Healthy</p>
         </div>
       </div>
 
@@ -57,6 +55,7 @@ export default function PortfolioExposure({ portfolioExposure, modelAlerts }: Pr
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }

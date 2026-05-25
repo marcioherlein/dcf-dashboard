@@ -58,8 +58,9 @@ export default function EconomicCalendar() {
         <div className="divide-y divide-slate-100 max-h-[400px] overflow-y-auto">
           {Object.entries(byDate).map(([date, dayEvents]) => (
             <div key={date}>
-              <div className="px-4 py-1.5 bg-slate-50 border-b border-slate-100 sticky top-0">
-                <span className="text-[11px] font-bold text-slate-600">{fmtDate(date)}</span>
+              <div className="px-4 py-1.5 sticky top-0 z-10 border-b border-slate-100"
+                style={{ background: 'rgba(248,250,252,0.92)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+                <span className="text-[11px] font-bold text-slate-700">{fmtDate(date)}</span>
               </div>
               {dayEvents.map((e, i) => (
                 <div key={i} className="px-4 py-2.5 flex items-center gap-3 hover:bg-indigo-50/30 transition-colors">

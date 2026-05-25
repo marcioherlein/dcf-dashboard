@@ -39,8 +39,11 @@ export default function ValuationContext({ valuation }: Props) {
   const { spyForwardPE, erp, forwardPEBands, erpBands } = valuation
 
   return (
-    <div className="rounded-xl glass-card-light px-5 py-4 space-y-4">
-      <h2 className="text-sm font-bold text-slate-900">Valuation Context</h2>
+    <div className="rounded-xl glass-card-light overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-slate-200">
+        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Valuation Context</span>
+      </div>
+      <div className="px-5 py-4 space-y-4">
 
       {/* Forward P/E */}
       <div>
@@ -82,6 +85,7 @@ export default function ValuationContext({ valuation }: Props) {
           ))}
         </div>
         <p className="text-[10px] text-slate-400 mt-1.5">ERP = 1 / Forward P/E − 10Y yield. Positive = stocks offer premium vs bonds.</p>
+      </div>
       </div>
     </div>
   )

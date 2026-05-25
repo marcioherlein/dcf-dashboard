@@ -33,9 +33,9 @@ export default function ModelAlerts({ alerts }: Props) {
 
   return (
     <div className="rounded-xl glass-card-light overflow-hidden">
-      <div className="px-4 py-3 border-b border-slate-200">
-        <h2 className="text-sm font-bold text-slate-900">Model Fragility Alerts</h2>
-        <p className="text-xs text-slate-500 mt-0.5">{alerts.length} saved {alerts.length === 1 ? 'valuation' : 'valuations'} may be stale given today&apos;s rates</p>
+      <div className="px-4 py-2.5 border-b border-slate-200">
+        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Model Fragility Alerts</span>
+        <p className="text-[10px] text-slate-400 mt-0.5">{alerts.length} saved {alerts.length === 1 ? 'valuation' : 'valuations'} may be stale given today&apos;s rates</p>
       </div>
       <div className="divide-y divide-slate-100">
         {alerts.map((a, i) => (

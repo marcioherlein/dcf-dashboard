@@ -20,15 +20,23 @@ function toneValueClass(tone: MacroSignalTile['tone']): string {
   return 'text-slate-900'
 }
 
+function toneTileClass(tone: MacroSignalTile['tone']): string {
+  if (tone === 'positive') return 'border-l-4 border-l-emerald-400 bg-emerald-50/60 border border-emerald-100'
+  if (tone === 'negative') return 'border-l-4 border-l-red-400 bg-red-50/60 border border-red-100'
+  if (tone === 'warning')  return 'border-l-4 border-l-amber-400 bg-amber-50/60 border border-amber-100'
+  return 'border-l-4 border-l-slate-300 bg-slate-50/80 border border-slate-100'
+}
+
 export default function MacroSignals({ signals }: Props) {
   return (
-    <div className="rounded-xl glass-card-light px-5 py-4">
-      <div className="mb-3">
-        <h2 className="text-sm font-bold text-slate-900">Macro Signals</h2>
+    <div className="rounded-xl glass-card-light overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-slate-200">
+        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Macro Signals</span>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="px-5 py-4">
+      <div className="grid grid-cols-2 gap-2.5">
         {signals.map(sig => (
-          <div key={sig.id} className="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5">
+          <div key={sig.id} className={cn('rounded-xl px-3 py-2.5', toneTileClass(sig.tone))}>
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{sig.label}</p>
             <p className={cn('text-lg font-bold font-mono tabular-nums mt-0.5', toneValueClass(sig.tone))}>
               {sig.value}
@@ -42,6 +50,7 @@ export default function MacroSignals({ signals }: Props) {
             )}
           </div>
         ))}
+      </div>
       </div>
     </div>
   )
