@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { TrendingUp, ChevronDown, DollarSign, Shield, BarChart2 } from 'lucide-react'
 import TickerStrip from '@/components/home/TickerStrip'
 import StockCardStrip from '@/components/home/StockCardStrip'
 import ChartSection from '@/components/home/ChartSection'
@@ -14,13 +13,8 @@ interface SearchResult {
 
 const EXAMPLE_TICKERS = ['AAPL', 'NVDA', 'MSFT', 'AMZN']
 
-const MARKETS = [
-  { flag: '🇺🇸', label: 'NYSE' },
-  { flag: '🇺🇸', label: 'NASDAQ' },
-]
-
 // ── Scroll reveal hook ─────────────────────────────────────────────────────────
-function useScrollReveal(threshold = 0.15) {
+function useScrollReveal(threshold = 0.12) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const el = ref.current
@@ -35,337 +29,335 @@ function useScrollReveal(threshold = 0.15) {
   return ref
 }
 
-// ── Cycling word animation ─────────────────────────────────────────────────────
-const ROTATING_PHRASES = [
+// ── Typewriter headline ────────────────────────────────────────────────────────
+const TYPEWRITER_PHRASES = [
   'worth buying',
   'undervalued',
-  'overvalued',
   'a great deal',
+  'truly overpriced',
   'a value trap',
   'a hidden gem',
 ]
 
-function RotatingText({ phrases }: { phrases: string[] }) {
-  const [idx, setIdx] = useState(0)
-  const [stage, setStage] = useState<'in' | 'out'>('in')
+function TypewriterHeadline({ phrases }: { phrases: string[] }) {
+  const [phraseIdx, setPhraseIdx] = useState(0)
+  const [displayText, setDisplayText] = useState('')
+  const [stage, setStage] = useState<'typing' | 'holding' | 'deleting'>('typing')
 
   useEffect(() => {
-    if (stage === 'in') {
-      const t = setTimeout(() => setStage('out'), 1700)
-      return () => clearTimeout(t)
+    const phrase = phrases[phraseIdx]
+    let timer: ReturnType<typeof setTimeout>
+
+    if (stage === 'typing') {
+      const len = displayText.length
+      if (len < phrase.length) {
+        timer = setTimeout(() => setDisplayText(phrase.slice(0, len + 1)), 68)
+      } else {
+        timer = setTimeout(() => setStage('holding'), 80)
+      }
+    } else if (stage === 'holding') {
+      timer = setTimeout(() => setStage('deleting'), 1600)
     } else {
-      const t = setTimeout(() => {
-        setIdx(i => (i + 1) % phrases.length)
-        setStage('in')
-      }, 310)
-      return () => clearTimeout(t)
+      const len = displayText.length
+      if (len > 0) {
+        timer = setTimeout(() => setDisplayText(displayText.slice(0, len - 1)), 38)
+      } else {
+        setPhraseIdx(i => (i + 1) % phrases.length)
+        setStage('typing')
+      }
     }
-  }, [stage, phrases.length])
+
+    return () => clearTimeout(timer)
+  }, [stage, displayText, phraseIdx, phrases])
 
   return (
-    <span
-      className={stage === 'in' ? 'word-enter' : 'word-exit'}
-      style={{ display: 'inline-block', color: '#F59E0B', minWidth: '9ch' }}
-    >
-      {phrases[idx]}
+    <span className="text-blue-400 font-medium">
+      {displayText || '​'}
+      <span
+        className="inline-block w-[2px] h-[0.88em] bg-blue-400 ml-[2px] align-middle rounded-sm"
+        style={{ animation: stage === 'holding' ? 'pulse 1s ease-in-out infinite' : 'none', opacity: stage === 'holding' ? undefined : 1 }}
+      />
     </span>
   )
 }
 
-// ── Inline SVG sparkline helpers ───────────────────────────────────────────────
-function miniSparklinePath(data: number[]): string {
-  const min = Math.min(...data), max = Math.max(...data)
-  const range = max - min || 1
-  return data.map((v, i) => {
-    const x = (i / (data.length - 1)) * 50
-    const y = 14 - ((v - min) / range) * 12
-    return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)},${y.toFixed(1)}`
-  }).join(' ')
+// ── Mac browser mockup ─────────────────────────────────────────────────────────
+const MOCK_SCREENS = [
+  { label: 'Search', url: 'rationale.capital' },
+  { label: 'Analysis', url: 'rationale.capital/stock/AAPL' },
+  { label: 'DCF Model', url: 'rationale.capital/stock/AAPL#dcf' },
+  { label: 'Watchlist', url: 'rationale.capital/valuations' },
+]
+
+function ScreenSearch() {
+  return (
+    <div className="p-5 space-y-3">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Analyze any stock</p>
+      <div className="flex items-center gap-2 rounded-xl bg-[#0A1628] border border-[rgba(59,130,246,0.35)] px-4 py-3 shadow-inner">
+        <svg className="h-4 w-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
+        </svg>
+        <span className="text-sm font-mono text-slate-200 flex-1">Apple Inc.</span>
+        <span className="text-[11px] text-slate-500 border-l border-white/10 pl-2">AAPL</span>
+        <span className="text-xs font-bold text-white px-3 py-1.5 rounded-lg bg-[#2563EB] shadow">Analyze →</span>
+      </div>
+      <div className="rounded-xl border border-[rgba(59,130,246,0.18)] overflow-hidden" style={{ background: 'rgba(10,22,40,0.5)' }}>
+        <div className="flex items-center gap-3 px-4 py-2.5 bg-blue-500/10 border-b border-[rgba(59,130,246,0.1)]">
+          <span className="text-[12px] font-bold text-blue-400 font-mono w-12 shrink-0">AAPL</span>
+          <span className="text-[11px] text-slate-300">Apple Inc.</span>
+          <span className="ml-auto text-[11px] font-semibold text-emerald-400">↗ +0.87%</span>
+          <span className="text-[11px] font-mono text-slate-200 ml-2">$211.40</span>
+        </div>
+        <div className="flex items-center gap-3 px-4 py-2 opacity-25">
+          <span className="text-[12px] font-bold text-slate-500 font-mono w-12">AAPU</span>
+          <span className="text-[11px] text-slate-500">Apple Ultra 2× ETF</span>
+        </div>
+      </div>
+      <div className="pt-1">
+        <p className="text-[9px] text-slate-500 mb-2">Popular searches</p>
+        <div className="flex gap-1.5 flex-wrap">
+          {['NVDA', 'MSFT', 'AMZN', 'GOOGL', 'META'].map(t => (
+            <span key={t} className="rounded-md border border-white/8 bg-white/4 px-2 py-1 text-[10px] font-mono font-semibold text-slate-400">{t}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
 }
 
-// ── Animated investor journey ──────────────────────────────────────────────────
-const THESIS_TEXT = "Apple's services segment grows 14% YoY. Hardware at 25x P/E is a discount on a software company."
+function ScreenAnalysis() {
+  return (
+    <div className="p-5 space-y-3">
+      <div className="flex items-center gap-3 rounded-xl border border-[rgba(59,130,246,0.18)] px-4 py-3" style={{ background: 'rgba(10,22,40,0.5)' }}>
+        <div className="w-11 h-11 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0">
+          <span className="text-xl font-extrabold text-emerald-400 leading-none" style={{ fontFamily: 'Manrope, system-ui' }}>B+</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <span className="text-[10px] font-bold bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded text-blue-400 font-mono">AAPL</span>
+            <span className="text-[9px] text-slate-500">Technology · NASDAQ</span>
+          </div>
+          <div className="text-sm font-bold text-slate-100 leading-tight">Apple Inc.</div>
+          <div className="text-[10px] text-slate-500">Good overall</div>
+        </div>
+        <div className="text-right shrink-0">
+          <div className="text-lg font-extrabold text-slate-100 font-mono">$211.40</div>
+          <div className="text-[11px] font-semibold text-emerald-400">▲ +0.87%</div>
+        </div>
+      </div>
+      <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-[11px] text-emerald-300">
+        11% upside · DCF fair value <strong className="text-emerald-200">$236.00</strong> vs current $211.40
+      </div>
+      <div className="space-y-2">
+        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Health scores</p>
+        {[
+          { label: 'Profitability', score: 85, color: '#10B981' },
+          { label: 'Liquidity',     score: 78, color: '#3B82F6' },
+          { label: 'Growth',        score: 72, color: '#60A5FA' },
+        ].map(({ label, score, color }, i) => (
+          <div key={label}>
+            <div className="flex justify-between mb-1">
+              <span className="text-[9px] text-slate-400">{label}</span>
+              <span className="text-[9px] font-mono font-semibold text-slate-300">{score}/100</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-white/5">
+              <div
+                className="h-1.5 rounded-full"
+                style={{ width: `${score}%`, background: color, transition: `width 0.55s cubic-bezier(0.16,1,0.3,1) ${i * 120}ms` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
-const STEP_LABELS = [
-  { n: '01', title: 'Search' },
-  { n: '02', title: 'Read grade' },
-  { n: '03', title: 'Adjust model' },
-  { n: '04', title: 'Write thesis' },
+function ScreenDCF() {
+  return (
+    <div className="p-5 space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">DCF Model · AAPL</p>
+        <span className="text-[9px] font-semibold text-blue-400 border border-blue-500/20 bg-blue-500/10 rounded px-2 py-0.5">Interactive</span>
+      </div>
+      <div className="rounded-xl border border-[rgba(59,130,246,0.15)] overflow-hidden" style={{ background: 'rgba(10,22,40,0.4)' }}>
+        <div className="grid grid-cols-4 text-[8px] text-slate-500 bg-white/3 px-3 py-1.5 border-b border-white/5">
+          <span>Year</span><span className="text-right">FCF ($B)</span><span className="text-right">Growth</span><span className="text-right">PV</span>
+        </div>
+        {[
+          { year: 'FY1', fcf: 68,  growth: '—',      pv: 62.0, proj: false },
+          { year: 'FY2', fcf: 76,  growth: '+11.8%',  pv: 64.1, proj: false },
+          { year: 'FY3', fcf: 85,  growth: '+11.8%',  pv: 66.5, proj: true },
+          { year: 'FY4', fcf: 96,  growth: '+12.9%',  pv: 69.4, proj: true },
+          { year: 'FY5', fcf: 108, growth: '+12.5%',  pv: 72.7, proj: true },
+        ].map(row => (
+          <div key={row.year} className={`grid grid-cols-4 px-3 py-1.5 border-b border-white/3 text-[9px] ${row.proj ? 'bg-blue-500/3' : ''}`}>
+            <span className="text-slate-400 font-mono">{row.year}</span>
+            <span className="text-right text-slate-300 font-mono">${row.fcf}B</span>
+            <span className="text-right text-slate-500">{row.growth}</span>
+            <span className="text-right text-slate-300 font-mono">${row.pv}B</span>
+          </div>
+        ))}
+        <div className="px-3 py-2 text-[9px] bg-emerald-500/6 border-t border-emerald-500/15 flex justify-between items-center">
+          <span className="text-slate-400">WACC 8.9% · Terminal growth 3%</span>
+          <span className="text-emerald-300 font-bold font-mono text-[12px]">$236.00</span>
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <div className="flex-1 rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2 text-center">
+          <div className="text-[8px] font-bold uppercase text-red-400 mb-0.5">Bear</div>
+          <div className="text-[13px] font-extrabold font-mono text-red-300">$168</div>
+        </div>
+        <div className="flex-1 rounded-lg bg-blue-500/10 border border-blue-500/20 px-3 py-2 text-center">
+          <div className="text-[8px] font-bold uppercase text-blue-400 mb-0.5">Base</div>
+          <div className="text-[13px] font-extrabold font-mono text-blue-300">$236</div>
+        </div>
+        <div className="flex-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-center">
+          <div className="text-[8px] font-bold uppercase text-emerald-400 mb-0.5">Bull</div>
+          <div className="text-[13px] font-extrabold font-mono text-emerald-300">$278</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ScreenWatchlist() {
+  const rows = [
+    { ticker: 'AAPL', name: 'Apple Inc.',     grade: 'B+', price: 211.40, fv: 236.00, upside:  11.7 },
+    { ticker: 'NVDA', name: 'NVIDIA Corp.',    grade: 'A+', price: 118.20, fv: 163.50, upside:  38.3 },
+    { ticker: 'MSFT', name: 'Microsoft',       grade: 'A',  price: 415.10, fv: 506.40, upside:  22.0 },
+    { ticker: 'TSLA', name: 'Tesla Inc.',       grade: 'C',  price: 177.80, fv: 134.50, upside: -24.3 },
+  ]
+  return (
+    <div className="p-5 space-y-2">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">My Watchlist</p>
+        <span className="text-[9px] font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded px-2 py-0.5">4 stocks</span>
+      </div>
+      {rows.map(r => (
+        <div key={r.ticker} className="flex items-center gap-2.5 rounded-lg border border-white/6 px-3 py-2.5 hover:bg-white/3 transition-colors" style={{ background: 'rgba(10,22,40,0.4)' }}>
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-[11px] font-extrabold ${r.upside > 0 ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400' : 'bg-red-500/20 border border-red-500/30 text-red-400'}`} style={{ fontFamily: 'Manrope, system-ui' }}>
+            {r.grade}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[11px] font-bold text-slate-200 font-mono leading-tight">{r.ticker}</div>
+            <div className="text-[9px] text-slate-500 truncate">{r.name}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-[11px] font-mono text-slate-200">${r.price.toFixed(2)}</div>
+            <div className={`text-[9px] font-semibold ${r.upside > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              {r.upside > 0 ? '▲' : '▼'} {Math.abs(r.upside).toFixed(1)}%
+            </div>
+          </div>
+          <div className="text-right border-l border-white/8 pl-2.5">
+            <div className="text-[9px] text-slate-600">Fair value</div>
+            <div className="text-[11px] font-mono text-blue-300">${r.fv.toFixed(2)}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const MOCK_SCREEN_COMPONENTS = [
+  <ScreenSearch key="search" />,
+  <ScreenAnalysis key="analysis" />,
+  <ScreenDCF key="dcf" />,
+  <ScreenWatchlist key="watchlist" />,
 ]
-const STEP_DURATIONS = [2800, 3200, 3400, 3600]
 
-const FCF_BARS = [
-  { year: 'FY1', val: 68, projected: false },
-  { year: 'FY2', val: 76, projected: false },
-  { year: 'FY3', val: 85, projected: true },
-  { year: 'FY4', val: 96, projected: true },
-  { year: 'FY5', val: 108, projected: true },
-  { year: 'TV',  val: 112, projected: true, terminal: true },
-]
+function MacMockup() {
+  const [screenIdx, setScreenIdx] = useState(0)
+  const [fading, setFading] = useState(false)
 
-const HEALTH_BARS_STEP1 = [
-  { label: 'Profitability', score: 85, color: '#10B981' },
-  { label: 'Liquidity',     score: 78, color: '#3B82F6' },
-  { label: 'Growth',        score: 72, color: '#60A5FA' },
-]
-
-const BULL_SPARK = [168, 178, 190, 208, 222, 241, 265, 278]
-const BEAR_SPARK = [168, 175, 172, 165, 162, 168, 170, 168]
-
-function AnimatedJourney() {
-  const [step, setStep] = useState(0)
-  const [stepKey, setStepKey] = useState(0)
-  const [typedTicker, setTypedTicker] = useState('')
-  const [showDropdown, setShowDropdown] = useState(false)
-  const [thesisLen, setThesisLen] = useState(0)
-  const [wacc, setWacc] = useState(9.2)
-  const [fairValue, setFairValue] = useState(236)
-  const [barsVisible, setBarsVisible] = useState(false)
-
-  const goToStep = (i: number) => { setStep(i); setStepKey(k => k + 1) }
+  const goTo = (i: number) => {
+    if (i === screenIdx || fading) return
+    setFading(true)
+    setTimeout(() => { setScreenIdx(i); setFading(false) }, 260)
+  }
 
   useEffect(() => {
-    const t = setTimeout(() => goToStep((step + 1) % 4), STEP_DURATIONS[step])
-    return () => clearTimeout(t)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, stepKey])
-
-  useEffect(() => {
-    setTypedTicker(''); setShowDropdown(false); setThesisLen(0)
-    setWacc(9.2); setFairValue(236); setBarsVisible(false)
-  }, [stepKey])
-
-  useEffect(() => {
-    if (step !== 0) return
-    let i = 0
     const t = setInterval(() => {
-      i++; setTypedTicker('AAPL'.slice(0, i))
-      if (i >= 4) { clearInterval(t); setTimeout(() => setShowDropdown(true), 320) }
-    }, 130)
+      setFading(true)
+      setTimeout(() => {
+        setScreenIdx(prev => (prev + 1) % MOCK_SCREENS.length)
+        setFading(false)
+      }, 260)
+    }, 3600)
     return () => clearInterval(t)
-  }, [stepKey, step])
-
-  useEffect(() => {
-    if (step !== 1) return
-    const t = setTimeout(() => setBarsVisible(true), 500)
-    return () => clearTimeout(t)
-  }, [stepKey, step])
-
-  useEffect(() => {
-    if (step !== 2) return
-    let f = 0
-    const t = setInterval(() => {
-      f++; setWacc(v => Math.max(8.6, v - 0.033)); setFairValue(v => Math.min(251, v + 0.78))
-      if (f >= 18) clearInterval(t)
-    }, 70)
-    return () => clearInterval(t)
-  }, [stepKey, step])
-
-  useEffect(() => {
-    if (step !== 3) return
-    let i = 0
-    const t = setInterval(() => {
-      i++; setThesisLen(i)
-      if (i >= THESIS_TEXT.length) clearInterval(t)
-    }, 26)
-    return () => clearInterval(t)
-  }, [stepKey, step])
+  }, [])
 
   return (
     <div className="max-w-2xl mx-auto">
-      {/* Browser chrome */}
-      <div className="rounded-2xl overflow-hidden border border-[rgba(59,130,246,0.25)]" style={{ boxShadow: '0 24px 64px rgba(0,0,0,0.5), 0 4px 12px rgba(59,130,246,0.1)' }}>
-        {/* Title bar */}
-        <div className="bg-[#0A1628] border-b border-[rgba(59,130,246,0.15)] px-4 py-2.5 flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-[#FF5F57]" />
-          <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
-          <div className="w-3 h-3 rounded-full bg-[#28C840]" />
-          <div className="mx-auto flex items-center gap-1.5 bg-[#050D1F] border border-[rgba(59,130,246,0.2)] rounded-md px-3 py-0.5">
-            <svg className="w-2.5 h-2.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx={12} cy={12} r={9}/></svg>
-            <span className="text-[11px] text-slate-500 font-mono">rationale.capital/stock/AAPL</span>
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{
+          border: '1px solid rgba(59,130,246,0.22)',
+          boxShadow: '0 28px 72px rgba(0,0,0,0.65), 0 4px 14px rgba(59,130,246,0.1), 0 0 0 1px rgba(255,255,255,0.04) inset',
+        }}
+      >
+        {/* Mac title bar */}
+        <div
+          className="flex items-center gap-3 px-4 py-2.5"
+          style={{ background: 'linear-gradient(to bottom, #0F1C30, #0A1628)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+        >
+          <div className="flex gap-1.5 shrink-0">
+            <div className="w-3 h-3 rounded-full bg-[#FF5F57] shadow-sm" />
+            <div className="w-3 h-3 rounded-full bg-[#FFBD2E] shadow-sm" />
+            <div className="w-3 h-3 rounded-full bg-[#28C840] shadow-sm" />
           </div>
-          <div className="w-3 h-3 opacity-0" />
+          {/* URL bar */}
+          <div className="flex-1 flex justify-center">
+            <div
+              className="flex items-center gap-2 rounded-md px-3 py-1 max-w-[300px] w-full"
+              style={{ background: '#050D1F', border: '1px solid rgba(255,255,255,0.07)' }}
+            >
+              <svg className="w-2.5 h-2.5 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <circle cx={11} cy={11} r={7} /><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4-4" />
+              </svg>
+              <span
+                className="text-[10.5px] text-slate-500 font-mono truncate transition-all duration-300"
+                key={MOCK_SCREENS[screenIdx].url}
+                style={{ animation: 'step-fade-in 0.25s ease forwards' }}
+              >
+                {MOCK_SCREENS[screenIdx].url}
+              </span>
+            </div>
+          </div>
+          <div className="w-[54px] shrink-0" />
         </div>
 
-        {/* Screen */}
+        {/* App content */}
         <div
-          key={stepKey}
-          className="bg-[#070E1C] p-5 min-h-[260px] flex flex-col justify-center"
-          style={{ animation: 'step-fade-in 0.35s cubic-bezier(0.16,1,0.3,1) forwards' }}
+          className="overflow-hidden"
+          style={{
+            background: '#070E1C',
+            minHeight: 290,
+            opacity: fading ? 0 : 1,
+            transition: 'opacity 0.24s ease',
+          }}
         >
-          {/* Step 0 — search */}
-          {step === 0 && (
-            <div className="space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Analyze any stock</p>
-              <div className="flex items-center gap-2 rounded-xl bg-[#0A1628] border border-[rgba(59,130,246,0.2)] px-4 py-3">
-                <svg className="h-4 w-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
-                </svg>
-                <span className="text-sm font-mono font-semibold text-slate-100 flex-1">
-                  {typedTicker}
-                  <span className="inline-block w-0.5 h-4 bg-blue-400 ml-0.5 align-middle animate-pulse" />
-                </span>
-                <span className="text-[12px] font-semibold text-white px-3 py-1 rounded-lg bg-[#F59E0B] shadow-glow-sm">Analyze</span>
-              </div>
-              {showDropdown && (
-                <div className="rounded-xl glass-card border border-[rgba(59,130,246,0.2)] overflow-hidden" style={{ animation: 'step-fade-in 0.22s ease forwards' }}>
-                  <div className="flex items-center gap-3 px-4 py-2.5 bg-blue-500/10 border-b border-[rgba(59,130,246,0.12)]">
-                    <span className="text-[13px] font-bold text-blue-400 font-mono w-12">AAPL</span>
-                    <span className="text-[12px] text-slate-300">Apple Inc.</span>
-                    <span className="ml-auto text-[11px] font-semibold text-emerald-400">↗ +0.87%</span>
-                  </div>
-                  <div className="flex items-center gap-3 px-4 py-2 opacity-30">
-                    <span className="text-[13px] font-bold text-slate-500 font-mono w-12">AAPU</span>
-                    <span className="text-[12px] text-slate-500">Apple Ultra ETF</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Step 1 — grade card + health bars */}
-          {step === 1 && (
-            <div className="space-y-2.5">
-              <div className="rounded-xl glass-card border border-[rgba(59,130,246,0.2)] p-4 space-y-3" style={{ animation: 'step-scale-in 0.42s cubic-bezier(0.34,1.56,0.64,1) forwards' }}>
-                <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0">
-                    <span className="text-2xl font-extrabold text-emerald-400 leading-none" style={{ fontFamily: 'Manrope, system-ui' }}>B+</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <span className="text-[11px] font-bold bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded text-blue-400">AAPL</span>
-                      <span className="text-[10px] text-slate-500">Technology</span>
-                    </div>
-                    <div className="text-sm font-bold text-slate-100">Apple Inc.</div>
-                    <div className="text-[10px] text-slate-500">Good overall</div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className="text-xl font-extrabold text-slate-100 font-mono">$211.40</div>
-                    <div className="text-[12px] font-semibold text-emerald-400">▲ +0.87%</div>
-                  </div>
-                </div>
-                <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-[11px] text-emerald-300">
-                  DCF model suggests <strong>11% upside</strong> — trading below our $236 estimate.
-                </div>
-              </div>
-
-              <div className="rounded-xl glass-card border border-[rgba(59,130,246,0.15)] px-4 py-3 space-y-2" style={{ animation: 'step-fade-in 0.3s ease 0.3s both' }}>
-                <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Health scores</p>
-                {HEALTH_BARS_STEP1.map(({ label, score, color }, i) => (
-                  <div key={label}>
-                    <div className="flex justify-between mb-0.5">
-                      <span className="text-[10px] text-slate-400">{label}</span>
-                      <span className="text-[10px] font-mono font-semibold text-slate-300">{score}</span>
-                    </div>
-                    <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
-                      <div
-                        className="h-1.5 rounded-full"
-                        style={{
-                          width: barsVisible ? `${score}%` : '0%',
-                          background: color,
-                          transition: `width 0.55s cubic-bezier(0.16,1,0.3,1) ${i * 100}ms`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Step 2 — DCF model with FCF bar chart */}
-          {step === 2 && (
-            <div className="space-y-2.5">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">DCF cash flow model</p>
-
-              <div className="rounded-xl glass-card border border-[rgba(59,130,246,0.15)] px-3 py-3">
-                <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-2.5">Projected free cash flow ($B)</p>
-                <div className="flex items-end gap-1" style={{ height: 56 }}>
-                  {FCF_BARS.map((bar, i) => (
-                    <div key={bar.year} className="flex-1 flex flex-col items-center gap-0.5">
-                      <div
-                        className="w-full rounded-t-sm"
-                        style={{
-                          height: `${(bar.val / 120) * 46}px`,
-                          background: bar.terminal ? '#F59E0B' : bar.projected ? '#1e3a6e' : '#3B82F6',
-                          transformOrigin: 'bottom',
-                          animation: `bar-grow-up 0.45s ease-out ${i * 80}ms both`,
-                        }}
-                      />
-                      <span className="text-[7px] text-slate-500">{bar.year}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-1.5 flex gap-3 text-[8px] text-slate-500">
-                  <span><span className="inline-block w-1.5 h-1.5 rounded-sm bg-[#3B82F6] mr-1 align-middle" />Actual</span>
-                  <span><span className="inline-block w-1.5 h-1.5 rounded-sm bg-[#1e3a6e] mr-1 align-middle opacity-75" />Projected</span>
-                  <span><span className="inline-block w-1.5 h-1.5 rounded-sm bg-[#F59E0B] mr-1 align-middle" />Terminal</span>
-                </div>
-              </div>
-
-              <div className="rounded-xl glass-card border border-[rgba(59,130,246,0.15)] px-4 py-2.5">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[12px] font-semibold text-slate-300">WACC</span>
-                  <span className="text-[12px] font-bold font-mono text-slate-100">{wacc.toFixed(1)}%</span>
-                </div>
-                <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
-                  <div className="h-full rounded-full bg-[#3B82F6] transition-all duration-150" style={{ width: `${Math.min(100, ((wacc - 7) / (12 - 7)) * 100)}%` }} />
-                </div>
-              </div>
-
-              <div className="rounded-xl glass-card border border-emerald-500/20 px-4 py-2.5 flex items-center justify-between">
-                <span className="text-[12px] font-semibold text-slate-300">Fair value per share</span>
-                <span className="text-lg font-extrabold font-mono text-emerald-400">${Math.round(fairValue)}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3 — thesis with sparklines */}
-          {step === 3 && (
-            <div className="space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Investment thesis</p>
-              <div className="rounded-xl glass-card border border-[rgba(59,130,246,0.15)] px-4 py-3 min-h-[64px]">
-                <p className="text-[12px] text-slate-300 leading-relaxed">
-                  {THESIS_TEXT.slice(0, thesisLen)}
-                  {thesisLen < THESIS_TEXT.length && (
-                    <span className="inline-block w-0.5 h-3.5 bg-blue-400 ml-0.5 align-middle animate-pulse" />
-                  )}
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 space-y-1.5">
-                  <div className="text-[9px] font-bold uppercase text-emerald-400">Bull case</div>
-                  <div className="text-sm font-bold font-mono text-emerald-300">$278</div>
-                  <svg width="50" height="16" viewBox="0 0 50 16" className="w-full" style={{ overflow: 'visible' }}>
-                    <path d={miniSparklinePath(BULL_SPARK)} fill="none" stroke="#10B981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-                <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2 space-y-1.5">
-                  <div className="text-[9px] font-bold uppercase text-amber-400">Bear case</div>
-                  <div className="text-sm font-bold font-mono text-amber-300">$168</div>
-                  <svg width="50" height="16" viewBox="0 0 50 16" className="w-full" style={{ overflow: 'visible' }}>
-                    <path d={miniSparklinePath(BEAR_SPARK)} fill="none" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          )}
+          {MOCK_SCREEN_COMPONENTS[screenIdx]}
         </div>
       </div>
 
-      {/* Step selector */}
-      <div className="mt-5 flex items-center justify-center gap-1">
-        {STEP_LABELS.map((s, i) => (
+      {/* Screen navigation pills */}
+      <div className="mt-4 flex items-center justify-center gap-1.5">
+        {MOCK_SCREENS.map((s, i) => (
           <button
             key={i}
-            onClick={() => goToStep(i)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-200"
-            style={i === step
-              ? { background: 'rgba(245,158,11,0.15)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.4)' }
-              : { color: '#9CA3AF', background: 'transparent' }}
+            onClick={() => goTo(i)}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-200 focus:outline-none"
+            style={i === screenIdx
+              ? { background: 'rgba(59,130,246,0.15)', color: '#93C5FD', border: '1px solid rgba(59,130,246,0.35)' }
+              : { color: '#6B7280', background: 'transparent', border: '1px solid transparent' }
+            }
           >
-            <span className="font-mono">{s.n}</span>
-            <span className="hidden sm:inline">{s.title}</span>
+            <span
+              className="w-1.5 h-1.5 rounded-full shrink-0 transition-all"
+              style={{ background: i === screenIdx ? '#3B82F6' : '#374151' }}
+            />
+            {s.label}
           </button>
         ))}
       </div>
@@ -404,8 +396,7 @@ function HeroSearch() {
   }, [])
 
   const select = (symbol: string) => {
-    setOpen(false)
-    setQuery('')
+    setOpen(false); setQuery('')
     router.push(`/stock/${symbol}`)
   }
 
@@ -415,7 +406,9 @@ function HeroSearch() {
 
   return (
     <div className="relative w-full max-w-xl mx-auto" ref={containerRef}>
-      <div className="flex items-center gap-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 px-5 py-4 focus-within:border-amber-400/60 focus-within:bg-white/15 transition-all shadow-xl">
+      <div className="flex items-center gap-3 rounded-2xl border px-5 py-4 transition-all shadow-xl focus-within:border-blue-500/50 focus-within:shadow-2xl"
+        style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)', borderColor: 'rgba(255,255,255,0.15)' }}
+      >
         <svg className="h-5 w-5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
         </svg>
@@ -429,11 +422,12 @@ function HeroSearch() {
           autoFocus
         />
         {loading
-          ? <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-700 border-t-amber-400 shrink-0" />
+          ? <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-700 border-t-blue-500 shrink-0" />
           : (
             <button
               onClick={() => { if (query.trim()) select(query.trim().toUpperCase()) }}
-              className="rounded-xl px-5 py-2.5 text-sm font-bold text-stone-900 transition-all shrink-0 bg-[#F59E0B] hover:bg-[#FBBF24] shadow-md hover:shadow-lg hover:-translate-y-px"
+              className="rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all shrink-0 hover:shadow-lg hover:-translate-y-px"
+              style={{ background: '#2563EB', boxShadow: '0 2px 8px rgba(37,99,235,0.4)' }}
             >
               Analyze →
             </button>
@@ -449,7 +443,7 @@ function HeroSearch() {
               onClick={() => select(r.symbol)}
               className="flex w-full items-center gap-3 px-5 py-3 text-left hover:bg-white/5 border-b border-[rgba(59,130,246,0.08)] last:border-b-0 transition-colors"
             >
-              <span className="text-sm font-bold text-amber-400 w-16 shrink-0 font-mono">{r.symbol}</span>
+              <span className="text-sm font-bold text-blue-400 w-16 shrink-0 font-mono">{r.symbol}</span>
               <span className="text-sm text-slate-400 truncate">{r.longname ?? r.shortname}</span>
             </button>
           ))}
@@ -459,115 +453,10 @@ function HeroSearch() {
   )
 }
 
-// ── Demo grade card ───────────────────────────────────────────────────────────
-function DemoGradeCard({ onAnalyze }: { onAnalyze: (ticker: string) => void }) {
-  const [expanded, setExpanded] = useState(false)
-
-  return (
-    <div className="rounded-2xl glass-card border border-[rgba(59,130,246,0.2)] overflow-hidden max-w-xl mx-auto">
-      {/* Label */}
-      <div className="px-5 pt-4 pb-0">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1 text-[11px] font-semibold text-amber-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          Example analysis · Apple Inc. (AAPL)
-        </span>
-      </div>
-
-      {/* State 1 */}
-      <div className="p-5">
-        <div className="flex items-start gap-4">
-          {/* Grade badge */}
-          <div className="w-[72px] h-[72px] shrink-0 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
-            <span className="text-[2.75rem] font-extrabold leading-none tracking-tight text-emerald-400" style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>
-              B+
-            </span>
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="rounded-md bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-xs font-bold text-blue-400">AAPL</span>
-                  <span className="text-[11px] text-slate-500">Technology</span>
-                </div>
-                <h3 className="mt-1.5 text-lg font-bold text-slate-100">Apple Inc.</h3>
-                <p className="mt-0.5 text-[11px] text-slate-500">Good overall</p>
-              </div>
-              <div className="text-right shrink-0">
-                <div className="text-2xl font-extrabold text-slate-100 font-mono tabular-nums">$211.40</div>
-                <div className="mt-1 flex items-center justify-end gap-1 text-sm font-semibold text-emerald-400">
-                  <TrendingUp size={13} />
-                  <span>+1.82</span>
-                  <span className="text-xs opacity-75">(+0.87%)</span>
-                </div>
-              </div>
-            </div>
-            <p className="mt-3 text-[12px] leading-relaxed rounded-lg px-3 py-2 bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
-              Our DCF model suggests this may be undervalued — trading 11% below our estimate. See the assumptions.
-            </p>
-          </div>
-        </div>
-
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="mt-4 w-full flex items-center justify-between text-[12px] font-medium text-slate-500 hover:text-slate-200 transition-colors"
-        >
-          <span>{expanded ? 'Hide details' : 'See full picture — profitability, debt & growth'}</span>
-          <ChevronDown size={14} className={expanded ? 'rotate-180 transition-transform' : 'transition-transform'} />
-        </button>
-      </div>
-
-      {/* State 2 */}
-      {expanded && (
-        <div className="border-t border-[rgba(59,130,246,0.1)] px-5 pb-5 pt-4 space-y-4 bg-[rgba(10,22,40,0.4)]">
-          <div className="flex items-center justify-between rounded-xl glass-card border border-[rgba(59,130,246,0.15)] px-4 py-3">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">What you pay today</p>
-              <p className="mt-0.5 text-lg font-bold font-mono text-slate-100">$211.40</p>
-            </div>
-            <div className="text-slate-600 text-lg font-light">vs</div>
-            <div className="text-right">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Our DCF model&apos;s estimate</p>
-              <p className="mt-0.5 text-lg font-bold font-mono text-emerald-400">$236.00</p>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Health check</p>
-            {[
-              { icon: <DollarSign size={14} />, label: 'Profitability', text: 'Strong and consistent — net margins above 25% for 5+ years.' },
-              { icon: <Shield      size={14} />, label: 'Financial Health', text: 'Very low debt relative to earnings; substantial cash position.' },
-              { icon: <BarChart2   size={14} />, label: 'Growth',         text: 'Services segment growing 14% year-over-year; hardware slower.' },
-            ].map(({ icon, label, text }) => (
-              <div key={label} className="flex items-start gap-2.5 rounded-xl glass-card border border-[rgba(59,130,246,0.12)] px-3 py-2.5" style={{ minHeight: '48px' }}>
-                <span className="text-blue-400 mt-0.5">{icon}</span>
-                <div>
-                  <p className="text-[11px] font-semibold text-slate-200">{label}</p>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">{text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* CTA */}
-      <div className="border-t border-[rgba(59,130,246,0.1)] px-5 py-4">
-        <button
-          onClick={() => onAnalyze('AAPL')}
-          className="w-full rounded-xl py-2.5 text-[13px] font-bold text-stone-900 transition-all hover:shadow-lg hover:-translate-y-px bg-[#F59E0B] hover:bg-[#FBBF24]"
-        >
-          Open live analysis for AAPL →
-        </button>
-      </div>
-    </div>
-  )
-}
-
 // ── Stats strip ───────────────────────────────────────────────────────────────
 const STATS = [
-  { value: '2,400+', label: 'Analyses run', sub: 'and growing daily' },
-  { value: '500+',   label: 'Stocks covered', sub: 'NYSE & NASDAQ' },
+  { value: '2,400+', label: 'Analyses run',     sub: 'and growing daily' },
+  { value: '500+',   label: 'Stocks covered',   sub: 'NYSE & NASDAQ' },
   { value: '4',      label: 'Valuation methods', sub: 'DCF, DDM, FCFE, Multiples' },
 ]
 
@@ -588,8 +477,8 @@ const TRUST_POINTS = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
       </svg>
     ),
-    label: 'Built on public financials — every number traceable',
-    sub: 'Our estimates are based on DCF analysis using publicly reported financials. Risk-free rate from FRED, ERP from Damodaran.',
+    label: 'Every number is traceable',
+    sub: 'Financials from Yahoo Finance. Risk-free rate from FRED. ERP from Damodaran. No black boxes.',
   },
   {
     icon: (
@@ -598,8 +487,8 @@ const TRUST_POINTS = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>
     ),
-    label: 'No black boxes',
-    sub: 'See exactly why the fair value is what it is — every assumption is visible and adjustable.',
+    label: 'See and change every assumption',
+    sub: 'Adjust WACC, growth rates, and terminal value yourself. Understand why the verdict changes.',
   },
 ]
 
@@ -652,47 +541,42 @@ export default function LandingPage() {
   const ctaRef      = useScrollReveal()
 
   return (
-    <div className="min-h-screen" style={{ background: '#F9F5EF' }}>
+    <div className="min-h-screen" style={{ background: '#F1F5F9' }}>
 
-      {/* ── Hero — dark treatment ── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#050D1F] via-[#0A1628] to-[#0B1A35] border-b border-white/5 px-6 pt-20 pb-28">
-        {/* Ambient glow layers */}
-        <div className="pointer-events-none absolute inset-0 bg-radial-blue opacity-80" />
-        <div className="pointer-events-none absolute top-0 right-0 w-[60%] h-[60%]" style={{ background: 'radial-gradient(ellipse 60% 60% at 80% 10%, rgba(245,158,11,0.06) 0%, transparent 60%)' }} />
-        <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-30" />
+      {/* ── Hero ── */}
+      <section className="relative overflow-hidden px-6 pt-14 pb-20" style={{ background: 'linear-gradient(135deg, #050D1F 0%, #0A1628 55%, #0B1E38 100%)' }}>
+        {/* Ambient glows */}
+        <div className="pointer-events-none absolute inset-0 bg-radial-blue opacity-70" />
+        <div className="pointer-events-none absolute top-0 right-0 w-1/2 h-1/2" style={{ background: 'radial-gradient(ellipse 55% 55% at 85% 10%, rgba(59,130,246,0.12) 0%, transparent 65%)' }} />
+        <div className="pointer-events-none absolute bottom-0 left-0 w-1/3 h-1/2" style={{ background: 'radial-gradient(ellipse 50% 60% at 10% 95%, rgba(16,185,129,0.06) 0%, transparent 65%)' }} />
+        <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-25" />
 
         <div className="relative mx-auto max-w-4xl text-center">
           {/* Social proof pill */}
           <div
-            className="hero-reveal inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold text-slate-300 mb-8 border"
-            style={{
-              background: 'rgba(255,255,255,0.06)',
-              borderColor: 'rgba(255,255,255,0.12)',
-              backdropFilter: 'blur(12px)',
-              animationDelay: '0ms',
-            }}
+            className="hero-reveal inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold text-slate-300 mb-7"
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', animationDelay: '0ms' }}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Free · No account required · 500+ stocks covered
+            Free · No account required · 500+ stocks
           </div>
 
-          {/* Headline with rotating word */}
+          {/* Headline with typewriter */}
           <h1
-            className="hero-reveal font-display text-5xl sm:text-6xl text-slate-100 leading-tight mb-5"
+            className="hero-reveal font-display text-5xl sm:text-[3.6rem] text-slate-100 leading-[1.1] mb-5"
             style={{ letterSpacing: '-0.04em', fontWeight: 500, animationDelay: '80ms' }}
           >
             Know if a stock is{' '}
-            <RotatingText phrases={ROTATING_PHRASES} />
-            {' '}—<br className="hidden sm:block" />{' '}
-            <span className="text-slate-300">before you buy.</span>
+            <TypewriterHeadline phrases={TYPEWRITER_PHRASES} />
+            <br className="hidden sm:block" />
+            <span className="text-slate-300" style={{ fontWeight: 400 }}>before you buy.</span>
           </h1>
 
           <p
-            className="hero-reveal text-xl text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed"
+            className="hero-reveal text-[1.1rem] text-slate-400 mb-9 max-w-2xl mx-auto leading-relaxed"
             style={{ animationDelay: '160ms' }}
           >
-            DCF-based fair value, plain-English health grades, and interactive modeling.
-            Designed for investors who want to understand, not just guess.
+            DCF-based fair value, plain-English health grades, and interactive scenario modeling.
           </p>
 
           {/* Search */}
@@ -701,65 +585,48 @@ export default function LandingPage() {
           </div>
 
           {/* Example tickers */}
-          <div className="hero-reveal mt-5 flex items-center justify-center gap-2 flex-wrap" style={{ animationDelay: '320ms' }}>
+          <div className="hero-reveal mt-4 flex items-center justify-center gap-2 flex-wrap" style={{ animationDelay: '310ms' }}>
             <span className="text-xs text-slate-500">Try:</span>
             {EXAMPLE_TICKERS.map((t) => (
               <button
                 key={t}
                 onClick={() => router.push(`/stock/${t}`)}
-                className="rounded-lg border border-white/10 hover:border-amber-400/40 bg-white/5 hover:bg-amber-400/10 px-3 py-1 text-xs font-semibold text-slate-400 hover:text-amber-300 transition-all font-mono"
+                className="rounded-lg border border-white/10 hover:border-blue-500/40 bg-white/5 hover:bg-blue-500/10 px-3 py-1 text-xs font-semibold text-slate-400 hover:text-blue-300 transition-all font-mono"
               >
                 {t}
               </button>
             ))}
           </div>
 
-          {/* Markets covered */}
-          <div className="hero-reveal mt-3 flex items-center justify-center gap-2 flex-wrap" style={{ animationDelay: '370ms' }}>
-            <span className="text-xs text-slate-500">Markets:</span>
-            {MARKETS.map(({ flag, label }, i) => (
-              <span
-                key={label}
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-400"
-                style={{ animation: `fade-up 0.4s cubic-bezier(0.16,1,0.3,1) ${400 + i * 60}ms both` }}
-              >
-                {flag} {label}
-              </span>
-            ))}
-          </div>
-
-          {/* Animated journey */}
-          <div className="hero-reveal mt-14" style={{ animationDelay: '440ms' }}>
-            <p className="text-xs text-slate-500 mb-5 uppercase tracking-widest font-semibold">See how it works</p>
-            <AnimatedJourney />
-          </div>
-
-          {/* Demo card */}
-          <div className="hero-reveal mt-14" style={{ animationDelay: '520ms' }}>
-            <p className="text-xs text-slate-500 mb-5 uppercase tracking-widest font-semibold">What an analysis looks like</p>
-            <DemoGradeCard onAnalyze={(t) => router.push(`/stock/${t}`)} />
+          {/* Mac mockup */}
+          <div className="hero-reveal mt-12" style={{ animationDelay: '400ms' }}>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-5">See how it works</p>
+            <MacMockup />
           </div>
         </div>
       </section>
 
-      {/* ── Live market ticker strip ── */}
-      <TickerStrip />
+      {/* ── Unified dark band: tickers + stock cards ── */}
+      <div style={{ background: '#050D1F' }}>
+        <TickerStrip />
+        <StockCardStrip />
+      </div>
 
       {/* ── Stats strip ── */}
       <div ref={statsRef} className="scroll-reveal">
-        <section style={{ background: '#F0EBE3', borderBottom: '1px solid #E8E2D9' }}>
-          <div className="mx-auto max-w-5xl px-6 py-12">
-            <div className="grid grid-cols-3 gap-8 text-center">
+        <section style={{ background: '#FFFFFF', borderTop: '1px solid #E2E8F0', borderBottom: '1px solid #E2E8F0' }}>
+          <div className="mx-auto max-w-5xl px-6 py-10">
+            <div className="grid grid-cols-3 gap-6 text-center divide-x divide-slate-100">
               {STATS.map((s) => (
-                <div key={s.label}>
+                <div key={s.label} className="px-4">
                   <div
-                    className="text-4xl font-display font-semibold mb-1"
-                    style={{ color: '#1c1917', letterSpacing: '-0.03em' }}
+                    className="font-display font-semibold mb-1"
+                    style={{ color: '#0F172A', letterSpacing: '-0.03em', fontSize: '2.25rem', lineHeight: 1 }}
                   >
                     {s.value}
                   </div>
-                  <div className="text-sm font-semibold text-stone-700">{s.label}</div>
-                  <div className="text-xs text-stone-400 mt-0.5">{s.sub}</div>
+                  <div className="text-sm font-semibold text-slate-700 mt-1">{s.label}</div>
+                  <div className="text-xs text-slate-400 mt-0.5">{s.sub}</div>
                 </div>
               ))}
             </div>
@@ -767,39 +634,36 @@ export default function LandingPage() {
         </section>
       </div>
 
-      {/* ── Stock card strip ── */}
-      <StockCardStrip />
-
       {/* ── Chart section ── */}
       <ChartSection />
 
       {/* ── Trust points ── */}
       <div ref={trustRef} className="scroll-reveal">
-        <section style={{ background: '#FFFFFF', borderTop: '1px solid #E8E2D9', borderBottom: '1px solid #E8E2D9' }}>
-          <div className="mx-auto max-w-5xl px-6 py-20">
-            <div className="text-center mb-12">
+        <section style={{ background: '#F8FAFC', borderTop: '1px solid #E2E8F0', borderBottom: '1px solid #E2E8F0' }}>
+          <div className="mx-auto max-w-5xl px-6 py-16">
+            <div className="text-center mb-10">
               <h2
                 className="font-display text-3xl sm:text-4xl mb-3"
-                style={{ color: '#1c1917', fontWeight: 500, letterSpacing: '-0.03em' }}
+                style={{ color: '#0F172A', fontWeight: 500, letterSpacing: '-0.03em' }}
               >
                 Built on transparent methodology
               </h2>
-              <p className="text-stone-500 text-base max-w-xl mx-auto">
+              <p className="text-slate-500 text-base max-w-xl mx-auto">
                 Every number is traceable back to a public source. No estimates hidden behind a paywall.
               </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {TRUST_POINTS.map((point, i) => (
                 <div
                   key={point.label}
-                  className="scroll-reveal rounded-2xl bg-stone-50 border p-6 hover:-translate-y-0.5 hover:shadow-md transition-all"
-                  style={{ borderColor: '#E8E2D9', transitionDelay: `${i * 80}ms` }}
+                  className="scroll-reveal rounded-2xl bg-white border p-6 hover:-translate-y-0.5 hover:shadow-md transition-all"
+                  style={{ borderColor: '#E2E8F0', transitionDelay: `${i * 80}ms` }}
                 >
                   <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-4">
                     {point.icon}
                   </div>
-                  <p className="text-sm font-bold text-stone-800 mb-2 leading-snug">{point.label}</p>
-                  <p className="text-sm text-stone-500 leading-relaxed">{point.sub}</p>
+                  <p className="text-sm font-bold text-slate-800 mb-2 leading-snug">{point.label}</p>
+                  <p className="text-sm text-slate-500 leading-relaxed">{point.sub}</p>
                 </div>
               ))}
             </div>
@@ -809,30 +673,30 @@ export default function LandingPage() {
 
       {/* ── Feature cards ── */}
       <div ref={featuresRef} className="scroll-reveal">
-        <section style={{ background: '#F9F5EF', borderBottom: '1px solid #E8E2D9' }}>
-          <div className="mx-auto max-w-5xl px-6 py-20">
-            <div className="text-center mb-12">
+        <section style={{ background: '#FFFFFF', borderBottom: '1px solid #E2E8F0' }}>
+          <div className="mx-auto max-w-5xl px-6 py-16">
+            <div className="text-center mb-10">
               <h2
                 className="font-display text-3xl sm:text-4xl mb-3"
-                style={{ color: '#1c1917', fontWeight: 500, letterSpacing: '-0.03em' }}
+                style={{ color: '#0F172A', fontWeight: 500, letterSpacing: '-0.03em' }}
               >
                 Everything you need to value a stock
               </h2>
-              <p className="text-stone-500 text-base">Four complementary methods. One clear verdict.</p>
+              <p className="text-slate-500 text-base">Four complementary methods. One clear verdict.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {FEATURES.map((card, i) => (
                 <div
                   key={card.title}
                   className="scroll-reveal group rounded-2xl bg-white border p-6 flex flex-col gap-4 hover:-translate-y-1 hover:shadow-lg transition-all cursor-default"
-                  style={{ borderColor: '#E8E2D9', transitionDelay: `${i * 60}ms` }}
+                  style={{ borderColor: '#E2E8F0', transitionDelay: `${i * 60}ms` }}
                 >
                   <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
                     {card.icon}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-bold text-stone-900 mb-2">{card.title}</p>
-                    <p className="text-sm text-stone-500 leading-relaxed">{card.benefit}</p>
+                    <p className="text-sm font-bold text-slate-900 mb-2">{card.title}</p>
+                    <p className="text-sm text-slate-500 leading-relaxed">{card.benefit}</p>
                   </div>
                   <div className="flex items-center gap-1 text-blue-600 text-xs font-semibold mt-auto">
                     <span>Try it</span>
@@ -850,35 +714,46 @@ export default function LandingPage() {
         </section>
       </div>
 
-      {/* ── CTA — inverted dark section ── */}
+      {/* ── CTA ── */}
       <div ref={ctaRef} className="scroll-reveal">
-        <section style={{ background: '#1c1917' }} className="px-6 py-24 text-center">
+        <section
+          className="px-6 py-20 text-center"
+          style={{ background: 'linear-gradient(135deg, #0A1628 0%, #050D1F 100%)' }}
+        >
+          <div
+            className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold text-slate-400 mb-6"
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+            Free · No account needed · Results in seconds
+          </div>
           <h2
-            className="font-display text-4xl sm:text-5xl text-stone-100 mb-4"
+            className="font-display text-4xl sm:text-5xl text-slate-100 mb-4"
             style={{ fontWeight: 400, letterSpacing: '-0.04em' }}
           >
             Ready to know what a stock<br className="hidden sm:block" /> is really worth?
           </h2>
-          <p className="text-stone-400 text-lg mb-10 max-w-md mx-auto">
-            Free to use. No account needed. Results in seconds.
+          <p className="text-slate-500 text-lg mb-9 max-w-md mx-auto">
+            Start with any ticker — free, no signup required.
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             {EXAMPLE_TICKERS.slice(0, 3).map((t) => (
               <button
                 key={t}
                 onClick={() => router.push(`/stock/${t}`)}
-                className="rounded-xl px-7 py-3.5 text-sm font-bold text-stone-900 transition-all bg-[#F59E0B] hover:bg-[#FBBF24] hover:shadow-lg hover:-translate-y-0.5 font-mono"
+                className="rounded-xl px-7 py-3.5 text-sm font-bold text-white transition-all hover:shadow-lg hover:-translate-y-0.5 font-mono"
+                style={{ background: '#2563EB', boxShadow: '0 2px 10px rgba(37,99,235,0.35)' }}
               >
                 Analyze {t}
               </button>
             ))}
           </div>
-          <p className="mt-8 text-xs text-stone-600">NYSE · NASDAQ · No signup required</p>
+          <p className="mt-8 text-xs text-slate-600">NYSE · NASDAQ · No signup required</p>
         </section>
       </div>
 
-      <footer style={{ background: '#F0EBE3', borderTop: '1px solid #E8E2D9' }} className="px-6 py-10 text-center">
-        <p className="text-sm text-stone-400 max-w-xl mx-auto leading-relaxed">
+      <footer style={{ background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }} className="px-6 py-9 text-center">
+        <p className="text-sm text-slate-400 max-w-xl mx-auto leading-relaxed">
           Data sourced from Yahoo Finance, FRED, and Damodaran&apos;s research.
           This is a research tool, not financial advice. All estimates are model outputs, not recommendations.
         </p>

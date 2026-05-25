@@ -8,24 +8,24 @@
 /* ── shadcn CSS variables — LIGHT PROFESSIONAL THEME ────────────────────────── */
 @layer base {
   :root {
-    --background:          33 40% 97%;      /* #F9F5EF warm cream */
-    --foreground:          25 10% 11%;      /* #1c1917 stone-900 */
+    --background:          210 40% 96%;     /* #F1F5F9 slate-100 */
+    --foreground:          222 47% 7%;      /* #0F172A slate-900 */
     --card:                0 0% 100%;       /* #FFFFFF card surface */
-    --card-foreground:     25 10% 11%;
+    --card-foreground:     222 47% 7%;
     --popover:             0 0% 100%;
-    --popover-foreground:  25 10% 11%;
+    --popover-foreground:  222 47% 7%;
     --primary:             221 83% 53%;     /* #2563EB blue-600 */
     --primary-foreground:  0 0% 100%;
-    --secondary:           30 20% 94%;      /* warm tinted fills */
-    --secondary-foreground:25 10% 11%;
-    --muted:               30 20% 94%;
-    --muted-foreground:    25 6% 45%;       /* stone-500 */
+    --secondary:           210 40% 96%;     /* slate-100 fills */
+    --secondary-foreground:222 47% 7%;
+    --muted:               210 40% 96%;
+    --muted-foreground:    215 16% 47%;     /* slate-500 */
     --accent:              221 83% 53%;     /* blue-600 */
     --accent-foreground:   0 0% 100%;
     --destructive:         0 72% 51%;       /* #DC2626 red-600 */
     --destructive-foreground: 0 0% 100%;
-    --border:              30 15% 88%;      /* warm stone-200 */
-    --input:               30 15% 88%;
+    --border:              214 32% 91%;     /* slate-200 */
+    --input:               214 32% 91%;
     --ring:                221 83% 53%;     /* blue-600 focus ring */
     --radius:              0.75rem;
     /* Light chart palette — vibrant on white */
@@ -51,12 +51,12 @@
 
 /* ── App-level custom variables ─────────────────────────────────────────────── */
 :root {
-  /* Warm cream content palette */
-  --page-bg:       #F9F5EF;
+  /* Cool slate content palette */
+  --page-bg:       #F1F5F9;
   --card-bg:       #FFFFFF;
-  --card-bg-tinted:#FAF7F3;
-  --card-border:   #E8E2D9;
-  --card-border-strong: #D4C9BB;
+  --card-bg-tinted:#F8FAFC;
+  --card-border:   #E2E8F0;
+  --card-border-strong: #CBD5E1;
 
   /* Nav stays dark */
   --nav-bg:        rgba(15, 23, 42, 0.92);
@@ -75,23 +75,23 @@
   --amber:         #D97706;
   --amber-light:   #FEF3C7;
 
-  /* Text hierarchy — warm stone tones */
-  --text-primary:  #1c1917;
-  --text-secondary:#44403c;
-  --text-muted:    #78716c;
+  /* Text hierarchy — cool slate tones */
+  --text-primary:  #0F172A;
+  --text-secondary:#334155;
+  --text-muted:    #64748B;
 
-  /* DCF table tokens — warm light version */
+  /* DCF table tokens — cool light version */
   --dcf-bg:          #FFFFFF;
-  --dcf-bg-deep:     #FAF7F3;
-  --dcf-bg-raised:   #F9F5EF;
+  --dcf-bg-deep:     #F8FAFC;
+  --dcf-bg-raised:   #F1F5F9;
   --dcf-projected:   #EFF6FF;
   --dcf-ttm:         #FEFCE8;
-  --dcf-border:      #E8E2D9;
-  --dcf-border-sep:  #D4C9BB;
-  --dcf-text:        #1c1917;
-  --dcf-text-dim:    #44403c;
-  --dcf-text-muted:  #78716c;
-  --dcf-text-faint:  #D4C9BB;
+  --dcf-border:      #E2E8F0;
+  --dcf-border-sep:  #CBD5E1;
+  --dcf-text:        #0F172A;
+  --dcf-text-dim:    #334155;
+  --dcf-text-muted:  #64748B;
+  --dcf-text-faint:  #CBD5E1;
   --dcf-accent:      #2563EB;
   --dcf-amber:       #D97706;
 

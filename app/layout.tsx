@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("font-sans", inter.variable, spaceGrotesk.variable, dmMono.variable)}>
       <head>
-        <meta name="theme-color" content="#F9F5EF" />
+        <meta name="theme-color" content="#F1F5F9" />
       </head>
       <body className="antialiased bg-background">
         <Providers>
