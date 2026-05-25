@@ -1,6 +1,6 @@
 {
-  "runAt": "2026-05-24T16:07:27.682Z",
-  "count": 21,
+  "runAt": "2026-05-25T14:18:50.793Z",
+  "count": 37,
   "results": [
     {
       "ticker": "AAPL",
@@ -249,6 +249,399 @@
       "fixed": false
     },
     {
+      "ticker": "BABA",
+      "timestamp": "2026-05-25T03:58:59.714Z",
+      "companyName": "Alibaba Group Holding Limited",
+      "sector": "Consumer Cyclical",
+      "currency": "USD",
+      "financialCurrency": "USD",
+      "overallScore": 98,
+      "apiScore": 100,
+      "financialScore": 99,
+      "valuationScore": 99,
+      "uiScore": 95,
+      "criticalIssues": [],
+      "warnings": [],
+      "infoFlags": [
+        {
+          "sev": "INFO",
+          "code": "CAGR_FX_LIKELY",
+          "msg": "CAGR gap 4709bps — probable FX effect (stmts in USD, quote in USD)",
+          "detail": {
+            "calculatedCAGR": -0.35888639056475136,
+            "historicalCagr3y": 0.112
+          }
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
+        }
+      ],
+      "missingFields": [],
+      "cagrConsistency": {
+        "apiCagr": 0.103,
+        "blended": 0.103,
+        "analystEstimate1y": 0.112,
+        "historicalCagr3y": 0.112
+      },
+      "sectorFlags": [],
+      "keyMetrics": {
+        "price": 130,
+        "fairValue": 148,
+        "upside": "13.8%",
+        "wacc": "8.68%",
+        "beta": 0.9,
+        "cagr": "10.3%",
+        "terminalG": "2.00%",
+        "numAnalysts": 39
+      },
+      "recommendedFixes": [],
+      "fixed": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "badTextFound": [],
+      "tabResults": {},
+      "screenshotPaths": {},
+      "uiIssues": [
+        "Unexpected error: Page.captureScreenshot timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed."
+      ],
+      "failedSelectors": []
+    },
+    {
+      "ticker": "BBAR",
+      "timestamp": "2026-05-25T03:58:25.541Z",
+      "companyName": "Banco BBVA Argentina S.A.",
+      "sector": "Financial Services",
+      "currency": "USD",
+      "financialCurrency": "USD",
+      "overallScore": 98,
+      "apiScore": 100,
+      "financialScore": 93,
+      "valuationScore": 98,
+      "uiScore": 100,
+      "criticalIssues": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "FCF_EQUALS_NI",
+          "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
+        }
+      ],
+      "infoFlags": [
+        {
+          "sev": "INFO",
+          "code": "CAGR_FX_LIKELY",
+          "msg": "CAGR gap 7718bps — probable FX effect (stmts in USD, quote in USD)",
+          "detail": {
+            "calculatedCAGR": 1.0302396536178198,
+            "historicalCagr3y": 1.802
+          }
+        },
+        {
+          "sev": "INFO",
+          "code": "FINTECH_SECTOR",
+          "msg": "Sector \"Financial Services\" is financial/fintech — EV/EBITDA and debt metrics may be misleading; ensure sector warning displays"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "EV/EBITDA marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
+        }
+      ],
+      "missingFields": [],
+      "cagrConsistency": {
+        "apiCagr": 0.12,
+        "blended": 0.12,
+        "analystEstimate1y": 1.5,
+        "historicalCagr3y": 1.802
+      },
+      "sectorFlags": [
+        "fintech-debt-warning",
+        "fintech-evebitda-warning"
+      ],
+      "keyMetrics": {
+        "price": 15.28,
+        "fairValue": 14.96,
+        "upside": "-2.1%",
+        "wacc": "23.43%",
+        "beta": 0.81,
+        "cagr": "12.0%",
+        "terminalG": "2.00%",
+        "numAnalysts": 6
+      },
+      "recommendedFixes": [],
+      "fixed": false,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "pageErrors": [],
+      "badTextFound": [],
+      "tabResults": {
+        "overview": {
+          "tab": "overview",
+          "issues": []
+        },
+        "valuation": {
+          "tab": "valuation",
+          "issues": [],
+          "sliderTest": {
+            "before": "Fair Value Today: $15.64",
+            "after": "Fair Value Today: $38.34",
+            "changed": true
+          }
+        },
+        "financials": {
+          "tab": "financials",
+          "issues": []
+        },
+        "risks": {
+          "tab": "risks",
+          "issues": []
+        }
+      },
+      "screenshotPaths": {
+        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/BBAR-overview.png",
+        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/BBAR-valuation.png",
+        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/BBAR-financials.png",
+        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/BBAR-risks.png"
+      },
+      "uiIssues": [],
+      "failedSelectors": []
+    },
+    {
+      "ticker": "BMA",
+      "timestamp": "2026-05-25T03:58:27.408Z",
+      "companyName": "Banco Macro S.A.",
+      "sector": "Financial Services",
+      "currency": "USD",
+      "financialCurrency": "USD",
+      "overallScore": 93,
+      "apiScore": 100,
+      "financialScore": 78,
+      "valuationScore": 93,
+      "uiScore": 100,
+      "criticalIssues": [
+        {
+          "sev": "CRITICAL",
+          "code": "TOTAL_ASSETS_MISSING",
+          "msg": "totalAssets null in latest balance sheet row"
+        }
+      ],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "FCF_EQUALS_NI",
+          "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
+        },
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 4630bps: api.cagr=12.0%, cagrAnalysis.blended=12.0%, cagrAnalysis.analystEstimate1y=58.3%",
+          "detail": {
+            "api.cagr": 0.12,
+            "cagrAnalysis.blended": 0.12,
+            "cagrAnalysis.analystEstimate1y": 0.583
+          }
+        }
+      ],
+      "infoFlags": [
+        {
+          "sev": "INFO",
+          "code": "CAGR_FX_LIKELY",
+          "msg": "CAGR gap 5922bps — probable FX effect (stmts in USD, quote in USD)",
+          "detail": {
+            "calculatedCAGR": 1.1752407088470789,
+            "historicalCagr3y": 0.583
+          }
+        },
+        {
+          "sev": "INFO",
+          "code": "FINTECH_SECTOR",
+          "msg": "Sector \"Financial Services\" is financial/fintech — EV/EBITDA and debt metrics may be misleading; ensure sector warning displays"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "EV/EBITDA marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
+        }
+      ],
+      "missingFields": [
+        "totalAssets null in latest balance sheet row"
+      ],
+      "cagrConsistency": {
+        "apiCagr": 0.12,
+        "blended": 0.12,
+        "analystEstimate1y": 0.583,
+        "historicalCagr3y": 0.583
+      },
+      "sectorFlags": [
+        "fintech-debt-warning",
+        "fintech-evebitda-warning"
+      ],
+      "keyMetrics": {
+        "price": 75.95,
+        "fairValue": 45.44,
+        "upside": "-40.2%",
+        "wacc": "23.61%",
+        "beta": 0.85,
+        "cagr": "12.0%",
+        "terminalG": "2.00%",
+        "numAnalysts": 9
+      },
+      "recommendedFixes": [
+        "[CRITICAL] TOTAL_ASSETS_MISSING: totalAssets null in latest balance sheet row"
+      ],
+      "fixed": false,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "pageErrors": [],
+      "badTextFound": [],
+      "tabResults": {
+        "overview": {
+          "tab": "overview",
+          "issues": []
+        },
+        "valuation": {
+          "tab": "valuation",
+          "issues": [],
+          "sliderTest": {
+            "before": "Fair Value Today: $179.09",
+            "after": "Fair Value Today: $439.04",
+            "changed": true
+          }
+        },
+        "financials": {
+          "tab": "financials",
+          "issues": []
+        },
+        "risks": {
+          "tab": "risks",
+          "issues": []
+        }
+      },
+      "screenshotPaths": {
+        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/BMA-overview.png",
+        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/BMA-valuation.png",
+        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/BMA-financials.png",
+        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/BMA-risks.png"
+      },
+      "uiIssues": [],
+      "failedSelectors": []
+    },
+    {
+      "ticker": "CEPU",
+      "timestamp": "2026-05-25T03:58:29.173Z",
+      "companyName": "Central Puerto S.A.",
+      "sector": "Utilities",
+      "currency": "USD",
+      "financialCurrency": "USD",
+      "overallScore": 98,
+      "apiScore": 100,
+      "financialScore": 94,
+      "valuationScore": 98,
+      "uiScore": 100,
+      "criticalIssues": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "FCF_EQUALS_NI",
+          "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
+        }
+      ],
+      "infoFlags": [
+        {
+          "sev": "INFO",
+          "code": "CAGR_FX_LIKELY",
+          "msg": "CAGR gap 10700bps — probable FX effect (stmts in USD, quote in USD)",
+          "detail": {
+            "calculatedCAGR": 1.2160207029876613,
+            "historicalCagr3y": 0.146
+          }
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "EV/EBITDA marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
+        }
+      ],
+      "missingFields": [],
+      "cagrConsistency": {
+        "apiCagr": 0.158,
+        "blended": 0.158,
+        "analystEstimate1y": 0.146,
+        "historicalCagr3y": 0.146
+      },
+      "sectorFlags": [],
+      "keyMetrics": {
+        "price": 13.91,
+        "fairValue": 13.19,
+        "upside": "-5.2%",
+        "wacc": "22.03%",
+        "beta": 0.8,
+        "cagr": "15.8%",
+        "terminalG": "2.50%",
+        "numAnalysts": 3
+      },
+      "recommendedFixes": [],
+      "fixed": false,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "pageErrors": [],
+      "badTextFound": [],
+      "tabResults": {
+        "overview": {
+          "tab": "overview",
+          "issues": []
+        },
+        "valuation": {
+          "tab": "valuation",
+          "issues": [],
+          "sliderTest": {
+            "before": "Fair Value Today: $38.36",
+            "after": "Fair Value Today: $79.58",
+            "changed": true
+          }
+        },
+        "financials": {
+          "tab": "financials",
+          "issues": []
+        },
+        "risks": {
+          "tab": "risks",
+          "issues": []
+        }
+      },
+      "screenshotPaths": {
+        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/CEPU-overview.png",
+        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/CEPU-valuation.png",
+        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/CEPU-financials.png",
+        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/CEPU-risks.png"
+      },
+      "uiIssues": [],
+      "failedSelectors": []
+    },
+    {
       "ticker": "COIN",
       "timestamp": "2026-05-24T16:07:17.643Z",
       "companyName": "Coinbase Global, Inc.",
@@ -323,6 +716,327 @@
       },
       "recommendedFixes": [],
       "fixed": false
+    },
+    {
+      "ticker": "CRESY",
+      "timestamp": "2026-05-25T03:58:30.996Z",
+      "companyName": "Cresud Sociedad Anónima, Comercial, Inmobiliaria, Financiera y Agropecuaria",
+      "sector": "Industrials",
+      "currency": "USD",
+      "financialCurrency": "USD",
+      "overallScore": 93,
+      "apiScore": 100,
+      "financialScore": 75,
+      "valuationScore": 97,
+      "uiScore": 100,
+      "criticalIssues": [
+        {
+          "sev": "CRITICAL",
+          "code": "TOTAL_ASSETS_MISSING",
+          "msg": "totalAssets null in latest balance sheet row"
+        }
+      ],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "REVENUE_HISTORY_SHORT",
+          "msg": "Only 1 historical revenue rows — need ≥ 3 for CAGR"
+        },
+        {
+          "sev": "WARN",
+          "code": "FCF_EQUALS_NI",
+          "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
+        }
+      ],
+      "infoFlags": [
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "EV/EBITDA marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Book marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
+        }
+      ],
+      "missingFields": [
+        "totalAssets null in latest balance sheet row"
+      ],
+      "cagrConsistency": {
+        "apiCagr": 0.138,
+        "blended": 0.138,
+        "analystEstimate1y": 0.166,
+        "historicalCagr3y": 0.166
+      },
+      "sectorFlags": [],
+      "keyMetrics": {
+        "price": 11.02,
+        "fairValue": 6.81,
+        "upside": "-38.2%",
+        "wacc": "19.14%",
+        "beta": 0.8,
+        "cagr": "13.8%",
+        "terminalG": "2.00%",
+        "numAnalysts": 1
+      },
+      "recommendedFixes": [
+        "[CRITICAL] TOTAL_ASSETS_MISSING: totalAssets null in latest balance sheet row"
+      ],
+      "fixed": false,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "pageErrors": [],
+      "badTextFound": [],
+      "tabResults": {
+        "overview": {
+          "tab": "overview",
+          "issues": []
+        },
+        "valuation": {
+          "tab": "valuation",
+          "issues": [],
+          "sliderTest": {
+            "before": "Fair Value Today: $21.82",
+            "after": "Fair Value Today: $48.75",
+            "changed": true
+          }
+        },
+        "financials": {
+          "tab": "financials",
+          "issues": []
+        },
+        "risks": {
+          "tab": "risks",
+          "issues": []
+        }
+      },
+      "screenshotPaths": {
+        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/CRESY-overview.png",
+        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/CRESY-valuation.png",
+        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/CRESY-financials.png",
+        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/CRESY-risks.png"
+      },
+      "uiIssues": [],
+      "failedSelectors": []
+    },
+    {
+      "ticker": "EDN",
+      "timestamp": "2026-05-25T03:58:32.805Z",
+      "companyName": "Empresa Distribuidora y Comercializadora Norte Sociedad Anónima",
+      "sector": "Utilities",
+      "currency": "USD",
+      "financialCurrency": "USD",
+      "overallScore": 98,
+      "apiScore": 100,
+      "financialScore": 94,
+      "valuationScore": 98,
+      "uiScore": 100,
+      "criticalIssues": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "FCF_EQUALS_NI",
+          "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
+        }
+      ],
+      "infoFlags": [
+        {
+          "sev": "INFO",
+          "code": "CAGR_FX_LIKELY",
+          "msg": "CAGR gap 13092bps — probable FX effect (stmts in USD, quote in USD)",
+          "detail": {
+            "calculatedCAGR": 1.4402095402734205,
+            "historicalCagr3y": 0.131
+          }
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "EV/EBITDA marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
+        }
+      ],
+      "missingFields": [],
+      "cagrConsistency": {
+        "apiCagr": 0.138,
+        "blended": 0.138,
+        "analystEstimate1y": 0.131,
+        "historicalCagr3y": 0.131
+      },
+      "sectorFlags": [],
+      "keyMetrics": {
+        "price": 24.1,
+        "fairValue": 33.54,
+        "upside": "39.2%",
+        "wacc": "20.71%",
+        "beta": 0.84,
+        "cagr": "13.8%",
+        "terminalG": "2.00%",
+        "numAnalysts": 1
+      },
+      "recommendedFixes": [],
+      "fixed": false,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "pageErrors": [],
+      "badTextFound": [],
+      "tabResults": {
+        "overview": {
+          "tab": "overview",
+          "issues": []
+        },
+        "valuation": {
+          "tab": "valuation",
+          "issues": [],
+          "sliderTest": {
+            "before": "Fair Value Today: $100.07",
+            "after": "Fair Value Today: $226.53",
+            "changed": true
+          }
+        },
+        "financials": {
+          "tab": "financials",
+          "issues": []
+        },
+        "risks": {
+          "tab": "risks",
+          "issues": []
+        }
+      },
+      "screenshotPaths": {
+        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/EDN-overview.png",
+        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/EDN-valuation.png",
+        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/EDN-financials.png",
+        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/EDN-risks.png"
+      },
+      "uiIssues": [],
+      "failedSelectors": []
+    },
+    {
+      "ticker": "GGAL",
+      "timestamp": "2026-05-25T03:58:36.745Z",
+      "companyName": "Grupo Financiero Galicia S.A.",
+      "sector": "Financial Services",
+      "currency": "USD",
+      "financialCurrency": "USD",
+      "overallScore": 98,
+      "apiScore": 100,
+      "financialScore": 98,
+      "valuationScore": 93,
+      "uiScore": 100,
+      "criticalIssues": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 5410bps: api.cagr=12.0%, cagrAnalysis.blended=12.0%, cagrAnalysis.analystEstimate1y=66.1%",
+          "detail": {
+            "api.cagr": 0.12,
+            "cagrAnalysis.blended": 0.12,
+            "cagrAnalysis.analystEstimate1y": 0.661
+          }
+        }
+      ],
+      "infoFlags": [
+        {
+          "sev": "INFO",
+          "code": "CAGR_FX_LIKELY",
+          "msg": "CAGR gap 931bps — probable FX effect (stmts in USD, quote in USD)",
+          "detail": {
+            "calculatedCAGR": 0.5678630413860539,
+            "historicalCagr3y": 0.661
+          }
+        },
+        {
+          "sev": "INFO",
+          "code": "FINTECH_SECTOR",
+          "msg": "Sector \"Financial Services\" is financial/fintech — EV/EBITDA and debt metrics may be misleading; ensure sector warning displays"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "EV/EBITDA marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
+        }
+      ],
+      "missingFields": [],
+      "cagrConsistency": {
+        "apiCagr": 0.12,
+        "blended": 0.12,
+        "analystEstimate1y": 0.661,
+        "historicalCagr3y": 0.661
+      },
+      "sectorFlags": [
+        "fintech-debt-warning",
+        "fintech-evebitda-warning"
+      ],
+      "keyMetrics": {
+        "price": 43.55,
+        "fairValue": 16.4,
+        "upside": "-62.3%",
+        "wacc": "23.75%",
+        "beta": 0.88,
+        "cagr": "12.0%",
+        "terminalG": "2.00%",
+        "numAnalysts": 7
+      },
+      "recommendedFixes": [],
+      "fixed": false,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "pageErrors": [],
+      "badTextFound": [],
+      "tabResults": {
+        "overview": {
+          "tab": "overview",
+          "issues": []
+        },
+        "valuation": {
+          "tab": "valuation",
+          "issues": [],
+          "sliderTest": {
+            "before": "Fair Value Today: $93.81",
+            "after": "Fair Value Today: $229.98",
+            "changed": true
+          }
+        },
+        "financials": {
+          "tab": "financials",
+          "issues": []
+        },
+        "risks": {
+          "tab": "risks",
+          "issues": []
+        }
+      },
+      "screenshotPaths": {
+        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/GGAL-overview.png",
+        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/GGAL-valuation.png",
+        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/GGAL-financials.png",
+        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/GGAL-risks.png"
+      },
+      "uiIssues": [],
+      "failedSelectors": []
     },
     {
       "ticker": "GOOGL",
@@ -522,6 +1236,120 @@
       "fixed": false
     },
     {
+      "ticker": "IRS",
+      "timestamp": "2026-05-25T03:58:38.938Z",
+      "companyName": "IRSA Inversiones y Representaciones Sociedad Anónima",
+      "sector": "Real Estate",
+      "currency": "USD",
+      "financialCurrency": "USD",
+      "overallScore": 94,
+      "apiScore": 100,
+      "financialScore": 79,
+      "valuationScore": 97,
+      "uiScore": 100,
+      "criticalIssues": [
+        {
+          "sev": "CRITICAL",
+          "code": "TOTAL_ASSETS_MISSING",
+          "msg": "totalAssets null in latest balance sheet row"
+        }
+      ],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "FCF_EQUALS_NI",
+          "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
+        }
+      ],
+      "infoFlags": [
+        {
+          "sev": "INFO",
+          "code": "CAGR_FX_LIKELY",
+          "msg": "CAGR gap 27573bps — probable FX effect (stmts in USD, quote in USD)",
+          "detail": {
+            "calculatedCAGR": 2.8213412845528327,
+            "historicalCagr3y": 0.064
+          }
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "EV/EBITDA marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Book marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
+        }
+      ],
+      "missingFields": [
+        "totalAssets null in latest balance sheet row"
+      ],
+      "cagrConsistency": {
+        "apiCagr": 0.081,
+        "blended": 0.081,
+        "analystEstimate1y": 0.064,
+        "historicalCagr3y": 0.064
+      },
+      "sectorFlags": [],
+      "keyMetrics": {
+        "price": 14.02,
+        "fairValue": 17.81,
+        "upside": "27.0%",
+        "wacc": "20.98%",
+        "beta": 0.8,
+        "cagr": "8.1%",
+        "terminalG": "2.00%",
+        "numAnalysts": 2
+      },
+      "recommendedFixes": [
+        "[CRITICAL] TOTAL_ASSETS_MISSING: totalAssets null in latest balance sheet row"
+      ],
+      "fixed": false,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "pageErrors": [],
+      "badTextFound": [],
+      "tabResults": {
+        "overview": {
+          "tab": "overview",
+          "issues": []
+        },
+        "valuation": {
+          "tab": "valuation",
+          "issues": [],
+          "sliderTest": {
+            "before": "Fair Value Today: $24.50",
+            "after": "Fair Value Today: $71.70",
+            "changed": true
+          }
+        },
+        "financials": {
+          "tab": "financials",
+          "issues": []
+        },
+        "risks": {
+          "tab": "risks",
+          "issues": []
+        }
+      },
+      "screenshotPaths": {
+        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/IRS-overview.png",
+        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/IRS-valuation.png",
+        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/IRS-financials.png",
+        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/IRS-risks.png"
+      },
+      "uiIssues": [],
+      "failedSelectors": []
+    },
+    {
       "ticker": "LCID",
       "timestamp": "2026-05-24T16:07:27.674Z",
       "companyName": "Lucid Group, Inc.",
@@ -640,6 +1468,105 @@
       "fixed": false
     },
     {
+      "ticker": "LOMA",
+      "timestamp": "2026-05-25T03:58:42.409Z",
+      "companyName": "Loma Negra Compañía Industrial Argentina Sociedad Anónima",
+      "sector": "Basic Materials",
+      "currency": "USD",
+      "financialCurrency": "USD",
+      "overallScore": 98,
+      "apiScore": 100,
+      "financialScore": 94,
+      "valuationScore": 98,
+      "uiScore": 100,
+      "criticalIssues": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "FCF_EQUALS_NI",
+          "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
+        }
+      ],
+      "infoFlags": [
+        {
+          "sev": "INFO",
+          "code": "CAGR_FX_LIKELY",
+          "msg": "CAGR gap 6202bps — probable FX effect (stmts in USD, quote in USD)",
+          "detail": {
+            "calculatedCAGR": 0.8011839892897237,
+            "historicalCagr3y": 0.181
+          }
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "EV/EBITDA marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
+        }
+      ],
+      "missingFields": [],
+      "cagrConsistency": {
+        "apiCagr": 0.144,
+        "blended": 0.144,
+        "analystEstimate1y": 0.181,
+        "historicalCagr3y": 0.181
+      },
+      "sectorFlags": [],
+      "keyMetrics": {
+        "price": 10.95,
+        "fairValue": 3.82,
+        "upside": "-65.1%",
+        "wacc": "22.40%",
+        "beta": 0.8,
+        "cagr": "14.4%",
+        "terminalG": "2.00%",
+        "numAnalysts": 5
+      },
+      "recommendedFixes": [],
+      "fixed": false,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "pageErrors": [],
+      "badTextFound": [],
+      "tabResults": {
+        "overview": {
+          "tab": "overview",
+          "issues": []
+        },
+        "valuation": {
+          "tab": "valuation",
+          "issues": [],
+          "sliderTest": {
+            "before": "Fair Value Today: $14.88",
+            "after": "Fair Value Today: $32.81",
+            "changed": true
+          }
+        },
+        "financials": {
+          "tab": "financials",
+          "issues": []
+        },
+        "risks": {
+          "tab": "risks",
+          "issues": []
+        }
+      },
+      "screenshotPaths": {
+        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/LOMA-overview.png",
+        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/LOMA-valuation.png",
+        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/LOMA-financials.png",
+        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/LOMA-risks.png"
+      },
+      "uiIssues": [],
+      "failedSelectors": []
+    },
+    {
       "ticker": "MARA",
       "timestamp": "2026-05-24T16:07:12.906Z",
       "companyName": "MARA Holdings, Inc.",
@@ -732,6 +1659,73 @@
       },
       "recommendedFixes": [],
       "fixed": false
+    },
+    {
+      "ticker": "MELI",
+      "timestamp": "2026-05-25T03:58:57.616Z",
+      "companyName": "MercadoLibre, Inc.",
+      "sector": "Consumer Cyclical",
+      "currency": "USD",
+      "financialCurrency": "USD",
+      "overallScore": 97,
+      "apiScore": 100,
+      "financialScore": 95,
+      "valuationScore": 97,
+      "uiScore": 95,
+      "criticalIssues": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "FCF_EQUALS_NI",
+          "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
+        }
+      ],
+      "infoFlags": [
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "EV/EBITDA marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Book marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
+        }
+      ],
+      "missingFields": [],
+      "cagrConsistency": {
+        "apiCagr": 0.241,
+        "blended": 0.241,
+        "analystEstimate1y": 0.255,
+        "historicalCagr3y": 0.4
+      },
+      "sectorFlags": [],
+      "keyMetrics": {
+        "price": 1664.42,
+        "fairValue": 3873.22,
+        "upside": "132.7%",
+        "wacc": "11.92%",
+        "beta": 1.59,
+        "cagr": "24.1%",
+        "terminalG": "2.50%",
+        "numAnalysts": 24
+      },
+      "recommendedFixes": [],
+      "fixed": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "badTextFound": [],
+      "tabResults": {},
+      "screenshotPaths": {},
+      "uiIssues": [
+        "Unexpected error: Page.captureScreenshot timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed."
+      ],
+      "failedSelectors": []
     },
     {
       "ticker": "META",
@@ -1095,6 +2089,121 @@
       "fixed": false
     },
     {
+      "ticker": "PAM",
+      "timestamp": "2026-05-25T03:58:44.466Z",
+      "companyName": "Pampa Energía S.A.",
+      "sector": "Industrials",
+      "currency": "USD",
+      "financialCurrency": "USD",
+      "overallScore": 96,
+      "apiScore": 100,
+      "financialScore": 90,
+      "valuationScore": 92,
+      "uiScore": 100,
+      "criticalIssues": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "CAGR_MISMATCH",
+          "msg": "Computed historical CAGR 126.3% vs cagrAnalysis.historicalCagr3y 60.0% — 6626bps gap",
+          "detail": {
+            "calculatedCAGR": 1.262595453437367,
+            "historicalCagr3y": 0.6,
+            "diffBps": 6625.954534373669
+          }
+        },
+        {
+          "sev": "WARN",
+          "code": "FCF_EQUALS_NI",
+          "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
+        },
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 850bps: api.cagr=25.9%, cagrAnalysis.blended=25.9%, cagrAnalysis.analystEstimate1y=17.4%",
+          "detail": {
+            "api.cagr": 0.259,
+            "cagrAnalysis.blended": 0.259,
+            "cagrAnalysis.analystEstimate1y": 0.174
+          }
+        }
+      ],
+      "infoFlags": [
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "EV/EBITDA marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Book marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
+        }
+      ],
+      "missingFields": [],
+      "cagrConsistency": {
+        "apiCagr": 0.259,
+        "blended": 0.259,
+        "analystEstimate1y": 0.174,
+        "historicalCagr3y": 0.6
+      },
+      "sectorFlags": [],
+      "keyMetrics": {
+        "price": 80.68,
+        "fairValue": 76.03,
+        "upside": "-5.8%",
+        "wacc": "21.35%",
+        "beta": 0.8,
+        "cagr": "25.9%",
+        "terminalG": "2.50%",
+        "numAnalysts": 8
+      },
+      "recommendedFixes": [],
+      "fixed": false,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "pageErrors": [],
+      "badTextFound": [],
+      "tabResults": {
+        "overview": {
+          "tab": "overview",
+          "issues": []
+        },
+        "valuation": {
+          "tab": "valuation",
+          "issues": [],
+          "sliderTest": {
+            "before": "Fair Value Today: $351.60",
+            "after": "Fair Value Today: $480.23",
+            "changed": true
+          }
+        },
+        "financials": {
+          "tab": "financials",
+          "issues": []
+        },
+        "risks": {
+          "tab": "risks",
+          "issues": []
+        }
+      },
+      "screenshotPaths": {
+        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/PAM-overview.png",
+        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/PAM-valuation.png",
+        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/PAM-financials.png",
+        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/PAM-risks.png"
+      },
+      "uiIssues": [],
+      "failedSelectors": []
+    },
+    {
       "ticker": "PLTR",
       "timestamp": "2026-05-24T16:07:06.203Z",
       "companyName": "Palantir Technologies Inc.",
@@ -1386,6 +2495,323 @@
       "fixed": false
     },
     {
+      "ticker": "SUPV",
+      "timestamp": "2026-05-25T03:58:46.666Z",
+      "companyName": "Grupo Supervielle S.A.",
+      "sector": "Financial Services",
+      "currency": "USD",
+      "financialCurrency": "USD",
+      "overallScore": 96,
+      "apiScore": 99,
+      "financialScore": 93,
+      "valuationScore": 92,
+      "uiScore": 100,
+      "criticalIssues": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "FCF_EQUALS_NI",
+          "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
+        },
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 1560bps: api.cagr=12.0%, cagrAnalysis.blended=12.0%, cagrAnalysis.analystEstimate1y=27.6%",
+          "detail": {
+            "api.cagr": 0.12,
+            "cagrAnalysis.blended": 0.12,
+            "cagrAnalysis.analystEstimate1y": 0.276
+          }
+        }
+      ],
+      "infoFlags": [
+        {
+          "sev": "INFO",
+          "code": "FIELD_SOFT_MISSING",
+          "msg": "Optional field missing: quote.peRatio — ensure UI shows fallback"
+        },
+        {
+          "sev": "INFO",
+          "code": "CAGR_FX_LIKELY",
+          "msg": "CAGR gap 7266bps — probable FX effect (stmts in USD, quote in USD)",
+          "detail": {
+            "calculatedCAGR": 1.002637341425117,
+            "historicalCagr3y": 0.276
+          }
+        },
+        {
+          "sev": "INFO",
+          "code": "FINTECH_SECTOR",
+          "msg": "Sector \"Financial Services\" is financial/fintech — EV/EBITDA and debt metrics may be misleading; ensure sector warning displays"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/E marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "EV/EBITDA marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
+        }
+      ],
+      "missingFields": [
+        "Optional field missing: quote.peRatio — ensure UI shows fallback"
+      ],
+      "cagrConsistency": {
+        "apiCagr": 0.12,
+        "blended": 0.12,
+        "analystEstimate1y": 0.276,
+        "historicalCagr3y": 0.276
+      },
+      "sectorFlags": [
+        "fintech-debt-warning",
+        "fintech-evebitda-warning"
+      ],
+      "keyMetrics": {
+        "price": 7.93,
+        "fairValue": 10.3,
+        "upside": "29.9%",
+        "wacc": "24.25%",
+        "beta": 0.99,
+        "cagr": "12.0%",
+        "terminalG": "2.00%",
+        "numAnalysts": 4
+      },
+      "recommendedFixes": [],
+      "fixed": false,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "pageErrors": [],
+      "badTextFound": [],
+      "tabResults": {
+        "overview": {
+          "tab": "overview",
+          "issues": []
+        },
+        "valuation": {
+          "tab": "valuation",
+          "issues": [],
+          "sliderTest": {
+            "before": "Fair Value Today: $9.06",
+            "after": "Fair Value Today: $22.22",
+            "changed": true
+          }
+        },
+        "financials": {
+          "tab": "financials",
+          "issues": []
+        },
+        "risks": {
+          "tab": "risks",
+          "issues": []
+        }
+      },
+      "screenshotPaths": {
+        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/SUPV-overview.png",
+        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/SUPV-valuation.png",
+        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/SUPV-financials.png",
+        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/SUPV-risks.png"
+      },
+      "uiIssues": [],
+      "failedSelectors": []
+    },
+    {
+      "ticker": "TEO",
+      "timestamp": "2026-05-25T03:58:48.905Z",
+      "companyName": "Telecom Argentina S.A.",
+      "sector": "Communication Services",
+      "currency": "USD",
+      "financialCurrency": "USD",
+      "overallScore": 100,
+      "apiScore": 100,
+      "financialScore": 100,
+      "valuationScore": 98,
+      "uiScore": 100,
+      "criticalIssues": [],
+      "warnings": [],
+      "infoFlags": [
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "EV/EBITDA marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
+        }
+      ],
+      "missingFields": [],
+      "cagrConsistency": {
+        "apiCagr": 0.138,
+        "blended": 0.138,
+        "analystEstimate1y": 0.168,
+        "historicalCagr3y": 0.168
+      },
+      "sectorFlags": [],
+      "keyMetrics": {
+        "price": 11.86,
+        "fairValue": 7.44,
+        "upside": "-37.3%",
+        "wacc": "20.38%",
+        "beta": 0.8,
+        "cagr": "13.8%",
+        "terminalG": "2.00%",
+        "numAnalysts": 4
+      },
+      "recommendedFixes": [],
+      "fixed": false,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "pageErrors": [],
+      "badTextFound": [],
+      "tabResults": {
+        "overview": {
+          "tab": "overview",
+          "issues": []
+        },
+        "valuation": {
+          "tab": "valuation",
+          "issues": [],
+          "sliderTest": {
+            "before": "Fair Value Today: $41.44",
+            "after": "Fair Value Today: $93.82",
+            "changed": true
+          }
+        },
+        "financials": {
+          "tab": "financials",
+          "issues": []
+        },
+        "risks": {
+          "tab": "risks",
+          "issues": []
+        }
+      },
+      "screenshotPaths": {
+        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/TEO-overview.png",
+        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/TEO-valuation.png",
+        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/TEO-financials.png",
+        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/TEO-risks.png"
+      },
+      "uiIssues": [],
+      "failedSelectors": []
+    },
+    {
+      "ticker": "TGS",
+      "timestamp": "2026-05-25T03:58:51.108Z",
+      "companyName": "Transportadora de Gas del Sur S.A.",
+      "sector": "Energy",
+      "currency": "USD",
+      "financialCurrency": "USD",
+      "overallScore": 98,
+      "apiScore": 100,
+      "financialScore": 94,
+      "valuationScore": 97,
+      "uiScore": 100,
+      "criticalIssues": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "FCF_EQUALS_NI",
+          "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
+        }
+      ],
+      "infoFlags": [
+        {
+          "sev": "INFO",
+          "code": "CAGR_FX_LIKELY",
+          "msg": "CAGR gap 11861bps — probable FX effect (stmts in USD, quote in USD)",
+          "detail": {
+            "calculatedCAGR": 1.2751296497667708,
+            "historicalCagr3y": 0.089
+          }
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "EV/EBITDA marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Book marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
+        }
+      ],
+      "missingFields": [],
+      "cagrConsistency": {
+        "apiCagr": 0.089,
+        "blended": 0.089,
+        "analystEstimate1y": 0.089,
+        "historicalCagr3y": 0.089
+      },
+      "sectorFlags": [],
+      "keyMetrics": {
+        "price": 29.07,
+        "fairValue": 12.98,
+        "upside": "-55.3%",
+        "wacc": "22.03%",
+        "beta": 0.8,
+        "cagr": "8.9%",
+        "terminalG": "2.00%",
+        "numAnalysts": 5
+      },
+      "recommendedFixes": [],
+      "fixed": false,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "pageErrors": [],
+      "badTextFound": [],
+      "tabResults": {
+        "overview": {
+          "tab": "overview",
+          "issues": []
+        },
+        "valuation": {
+          "tab": "valuation",
+          "issues": [],
+          "sliderTest": {
+            "before": "Fair Value Today: $17.41",
+            "after": "Fair Value Today: $49.10",
+            "changed": true
+          }
+        },
+        "financials": {
+          "tab": "financials",
+          "issues": []
+        },
+        "risks": {
+          "tab": "risks",
+          "issues": []
+        }
+      },
+      "screenshotPaths": {
+        "overview": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/TGS-overview.png",
+        "valuation": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/TGS-valuation.png",
+        "financials": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/TGS-financials.png",
+        "risks": "/Users/i502042/Desktop/dcf-dashboard/scripts/screenshots/TGS-risks.png"
+      },
+      "uiIssues": [],
+      "failedSelectors": []
+    },
+    {
       "ticker": "TSLA",
       "timestamp": "2026-05-24T16:06:52.004Z",
       "companyName": "Tesla, Inc.",
@@ -1448,6 +2874,166 @@
       },
       "recommendedFixes": [],
       "fixed": false
+    },
+    {
+      "ticker": "VIST",
+      "timestamp": "2026-05-25T03:58:53.090Z",
+      "companyName": "Vista Energy, S.A.B. de C.V.",
+      "sector": "Energy",
+      "currency": "USD",
+      "financialCurrency": "USD",
+      "overallScore": 96,
+      "apiScore": 100,
+      "financialScore": 95,
+      "valuationScore": 92,
+      "uiScore": 95,
+      "criticalIssues": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "FCF_EQUALS_NI",
+          "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
+        },
+        {
+          "sev": "WARN",
+          "code": "CAGR_SOURCES_SPREAD",
+          "msg": "CAGR sources spread 1240bps: api.cagr=16.2%, cagrAnalysis.blended=16.2%, cagrAnalysis.analystEstimate1y=3.8%",
+          "detail": {
+            "api.cagr": 0.162,
+            "cagrAnalysis.blended": 0.162,
+            "cagrAnalysis.analystEstimate1y": 0.038
+          }
+        }
+      ],
+      "infoFlags": [
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "EV/EBITDA marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Book marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
+        }
+      ],
+      "missingFields": [],
+      "cagrConsistency": {
+        "apiCagr": 0.162,
+        "blended": 0.162,
+        "analystEstimate1y": 0.038,
+        "historicalCagr3y": 0.293
+      },
+      "sectorFlags": [],
+      "keyMetrics": {
+        "price": 75.41,
+        "fairValue": 105.59,
+        "upside": "40.0%",
+        "wacc": "8.90%",
+        "beta": 0.75,
+        "cagr": "16.2%",
+        "terminalG": "2.50%",
+        "numAnalysts": 7
+      },
+      "recommendedFixes": [],
+      "fixed": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "badTextFound": [],
+      "tabResults": {},
+      "screenshotPaths": {},
+      "uiIssues": [
+        "Unexpected error: Page.captureScreenshot timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed."
+      ],
+      "failedSelectors": []
+    },
+    {
+      "ticker": "YPF",
+      "timestamp": "2026-05-25T03:58:55.313Z",
+      "companyName": "YPF Sociedad Anónima",
+      "sector": "Energy",
+      "currency": "USD",
+      "financialCurrency": "USD",
+      "overallScore": 96,
+      "apiScore": 99,
+      "financialScore": 94,
+      "valuationScore": 97,
+      "uiScore": 95,
+      "criticalIssues": [],
+      "warnings": [
+        {
+          "sev": "WARN",
+          "code": "FCF_EQUALS_NI",
+          "msg": "FCF ≈ Net Income in ≥60% of rows — verify CapEx is deducted (may be expected for fintech/financial companies)"
+        }
+      ],
+      "infoFlags": [
+        {
+          "sev": "INFO",
+          "code": "FIELD_SOFT_MISSING",
+          "msg": "Optional field missing: quote.peRatio — ensure UI shows fallback"
+        },
+        {
+          "sev": "INFO",
+          "code": "CAGR_FX_LIKELY",
+          "msg": "CAGR gap 9221bps — probable FX effect (stmts in USD, quote in USD)",
+          "detail": {
+            "calculatedCAGR": 0.9021033243558487,
+            "historicalCagr3y": -0.02
+          }
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/E marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "EV/EBITDA marked not applicable — ensure UI shows clear N/A reason"
+        },
+        {
+          "sev": "INFO",
+          "code": "METHOD_NOT_APPLICABLE",
+          "msg": "P/Sales marked not applicable — ensure UI shows clear N/A reason"
+        }
+      ],
+      "missingFields": [
+        "Optional field missing: quote.peRatio — ensure UI shows fallback"
+      ],
+      "cagrConsistency": {
+        "apiCagr": -0.02,
+        "blended": -0.02,
+        "analystEstimate1y": -0.02,
+        "historicalCagr3y": -0.02
+      },
+      "sectorFlags": [],
+      "keyMetrics": {
+        "price": 47.99,
+        "fairValue": 27.65,
+        "upside": "-42.4%",
+        "wacc": "21.10%",
+        "beta": 0.8,
+        "cagr": "-2.0%",
+        "terminalG": "1.50%",
+        "numAnalysts": 10
+      },
+      "recommendedFixes": [],
+      "fixed": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "badTextFound": [],
+      "tabResults": {},
+      "screenshotPaths": {},
+      "uiIssues": [
+        "Unexpected error: Page.captureScreenshot timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed."
+      ],
+      "failedSelectors": []
     }
   ]
 }

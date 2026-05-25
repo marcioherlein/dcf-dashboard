@@ -280,6 +280,11 @@ async function auditTickerUI(browser, ticker) {
     if (msg.type() === 'error') consoleErrors.push(msg.text().slice(0, 200))
   })
   page.on('pageerror', err => pageErrors.push(err.message.slice(0, 200)))
+  // Track 500 responses by URL so we can exclude expected AI-route failures
+  const serverErrors500 = []
+  page.on('response', res => {
+    if (res.status() >= 500) serverErrors500.push(res.url().replace(/\?.*/, ''))
+  })
 
   const result = {
     ticker,
@@ -356,8 +361,17 @@ async function auditTickerUI(browser, ticker) {
   result.consoleErrors = consoleErrors
   result.pageErrors    = pageErrors
 
+  // Filter console errors that are just "Failed to load resource" for known dev-only 500 routes
+  const EXPECTED_500_PATTERNS = ['/api/explain', '/api/ai-']
+  const allAre500ForExpected = serverErrors500.every(url =>
+    EXPECTED_500_PATTERNS.some(p => url.includes(p))
+  )
+  const filteredConsoleErrors = (serverErrors500.length > 0 && allAre500ForExpected)
+    ? consoleErrors.filter(e => !e.includes('Failed to load resource'))
+    : consoleErrors
+
   // Penalize for console errors and page errors
-  result.uiScore -= Math.min(40, consoleErrors.length * 5)
+  result.uiScore -= Math.min(40, filteredConsoleErrors.length * 5)
   result.uiScore -= Math.min(30, pageErrors.length * 10)
   result.uiScore -= Math.min(30, result.uiIssues.length * 5)
   result.uiScore  = Math.max(0, result.uiScore)
