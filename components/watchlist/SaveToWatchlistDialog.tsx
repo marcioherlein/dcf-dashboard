@@ -5,9 +5,42 @@ import { AlertTriangle, Bookmark, CheckCircle2, Loader2 } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
+import { cn } from '@/lib/utils'
 import { fmtPrice, fmtPct } from '@/lib/formatters'
 import { saveWatchlistEntry, getWatchlistEntry } from '@/lib/simplifier/watchlistStore'
 import type { WatchlistEntry } from '@/lib/simplifier/types'
+
+type ListTag = 'buy' | 'watch' | 'pass'
+
+const DECISION_OPTIONS: Array<{
+  tag: ListTag
+  label: string
+  description: string
+  active: string
+  inactive: string
+}> = [
+  {
+    tag: 'buy',
+    label: '🟢 Buy',
+    description: "I'm convinced this is undervalued",
+    active:   'bg-emerald-50 border-emerald-400 text-emerald-800',
+    inactive: 'bg-white border-slate-200 text-slate-600 hover:border-emerald-200',
+  },
+  {
+    tag: 'watch',
+    label: '🟡 Watch',
+    description: "Interesting — monitoring for a better entry",
+    active:   'bg-amber-50 border-amber-400 text-amber-800',
+    inactive: 'bg-white border-slate-200 text-slate-600 hover:border-amber-200',
+  },
+  {
+    tag: 'pass',
+    label: '🔴 Pass',
+    description: "Not at this price — saving for reference",
+    active:   'bg-red-50 border-red-400 text-red-800',
+    inactive: 'bg-white border-slate-200 text-slate-600 hover:border-red-200',
+  },
+]
 
 export interface WatchlistSavePayload {
   ticker: string
@@ -37,8 +70,9 @@ interface Props {
 }
 
 export default function SaveToWatchlistDialog({ open, payload, onClose, onReviewAssumptions }: Props) {
-  const [status, setStatus] = useState<'idle' | 'saving' | 'done' | 'error'>('idle')
+  const [status,   setStatus]   = useState<'idle' | 'saving' | 'done' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
+  const [listTag,  setListTag]  = useState<ListTag>('watch')
 
   if (!payload) return null
 
@@ -57,6 +91,7 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
           ticker: payload.ticker,
           name: payload.name,
           asset_type: payload.assetType,
+          list_tag: listTag,
         }),
       })
       if (!wRes.ok) {
@@ -86,6 +121,7 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
       const entry: WatchlistEntry = existing
         ? {
             ...existing,
+            listTag,
             updatedAt: new Date().toISOString(),
             snapshot: {
               ...existing.snapshot,
@@ -104,7 +140,7 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
             notes: {},
             phaseScores: {},
             overallScore: null,
-            listTag: null,
+            listTag,
             snapshot: {
               grossMargin: null, fcfMargin: null, moatScore: null,
               roic: null, cagr3y: null, insiderPct: null,
@@ -158,6 +194,28 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
                     </span>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Decision picker */}
+            {!isETF && (
+              <div>
+                <p className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Your conviction</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {DECISION_OPTIONS.map(opt => (
+                    <button
+                      key={opt.tag}
+                      onClick={() => setListTag(opt.tag)}
+                      className={cn(
+                        'flex flex-col items-center gap-0.5 rounded-xl border-2 px-2 py-2.5 text-center transition-all',
+                        listTag === opt.tag ? opt.active : opt.inactive,
+                      )}
+                    >
+                      <span className="text-sm font-bold">{opt.label}</span>
+                      <span className="text-[10px] leading-tight opacity-75">{opt.description}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -216,7 +274,10 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
             >
               {status === 'saving'
                 ? <><Loader2 size={14} className="animate-spin" /> Saving…</>
-                : isETF ? 'Add to Watchlist' : 'Save Anyway'
+                : isETF ? 'Add to Watchlist'
+                : listTag === 'buy'   ? 'Save as Buy →'
+                : listTag === 'pass'  ? 'Save as Pass →'
+                : 'Save to Watch List →'
               }
             </button>
           </DialogFooter>

@@ -71,6 +71,7 @@ export async function POST(req: Request) {
         asset_type: body.asset_type ?? 'stock',
         notes: body.notes ?? null,
         tags: body.tags ?? [],
+        list_tag: body.list_tag ?? null,
       },
       { onConflict: 'user_id,ticker' },
     )

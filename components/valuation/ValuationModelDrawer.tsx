@@ -33,6 +33,7 @@ export type ValuationAssumption = {
   editable: boolean
   source: AssumptionSource
   sourceExplanation?: string
+  benchmarks?: Array<{ label: string; value: number }>
 }
 
 export type EvidenceItem = {

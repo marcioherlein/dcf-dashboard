@@ -636,6 +636,28 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                 {a.sourceExplanation && (
                   <p className="text-[10px] text-slate-400 mt-1 leading-tight">▸ {a.sourceExplanation}</p>
                 )}
+                {a.benchmarks && a.benchmarks.length > 0 && (
+                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                    <span className="text-[10px] text-slate-400 shrink-0">Compare:</span>
+                    {a.benchmarks.map(b => {
+                      const isCurrent = Math.abs((a.key in overrides ? overrides[a.key] : (a.value ?? 0)) - b.value) < 0.0005
+                      return (
+                        <button
+                          key={b.label}
+                          onClick={() => onAssumptionChange(a.key, b.value)}
+                          className={cn(
+                            'text-[10px] px-2 py-0.5 rounded-full border tabular-nums transition-colors',
+                            isCurrent
+                              ? 'bg-blue-50 border-blue-300 text-blue-700 font-semibold'
+                              : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700',
+                          )}
+                        >
+                          {b.label}: {(b.value * 100).toFixed(1)}%
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             )
           })}
@@ -872,6 +894,15 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
   const currency     = apiData?.quote?.currency ?? 'USD'
   const currentPrice = (apiData?.quote?.price   ?? 0) as number
 
+  const cagrBenchmarks = useMemo(() => {
+    const out: Array<{ label: string; value: number }> = []
+    const analyst    = apiData?.cagrAnalysis?.analystEstimate1y ?? null
+    const historical = apiData?.cagrAnalysis?.historicalCagr3y  ?? null
+    if (analyst    != null) out.push({ label: 'Analyst consensus', value: analyst })
+    if (historical != null) out.push({ label: '3Y historical',     value: historical })
+    return out
+  }, [apiData])
+
   // ── TTM data from statements ─────────────────────────────────────────────
   const ttmIS = statementsData?.ttm?.incomeStatement ?? {}
   const ttmCF = statementsData?.ttm?.cashFlow        ?? {}
@@ -947,6 +978,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
     assumptions: fwdPEBase.assumptions.map(a => {
       if (a.key === 'ltvRevenue' && ltvRevenueAbsolute != null) return { ...a, value: ltvRevenueAbsolute }
       if (a.key === 'sharesOutstanding' && sharesAbsolute != null) return { ...a, value: sharesAbsolute }
+      if (a.key === 'revenueCAGR' && cagrBenchmarks.length > 0) return { ...a, benchmarks: cagrBenchmarks }
       return a
     }),
     formulaLines: [],
@@ -954,7 +986,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
     warnings:    fwdPEResult.guardErrors,
     fairValueSummary: fwdPEResult.fairValueToday,
     currentPrice,
-  }), [fwdPEBase, fwdPEInputs, fwdPEResult, ticker, currency, currentPrice, apiData, ltvRevenueAbsolute, sharesAbsolute])
+  }), [fwdPEBase, fwdPEInputs, fwdPEResult, ticker, currency, currentPrice, apiData, ltvRevenueAbsolute, sharesAbsolute, cagrBenchmarks])
 
   // ── Revenue Multiple ─────────────────────────────────────────────────────
   const revMultOverrides = overrides['revenue_multiple'] ?? {}
@@ -976,14 +1008,16 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
     companyName: apiData?.companyName ?? ticker, ticker, currency,
     evidence:    revMultBase.evidence,
     assumptions: revMultBase.assumptions.map(a =>
-      a.key === 'ltvRevenue' && ltvRevenueAbsolute != null ? { ...a, value: ltvRevenueAbsolute } : a
+      a.key === 'ltvRevenue' && ltvRevenueAbsolute != null ? { ...a, value: ltvRevenueAbsolute }
+      : a.key === 'revenueCAGR' && cagrBenchmarks.length > 0 ? { ...a, benchmarks: cagrBenchmarks }
+      : a
     ),
     formulaLines: [],
     results:     buildRevMultipleResults(revMultResult, currentPrice, currency),
     warnings:    revMultResult.guardErrors,
     fairValueSummary: revMultResult.fairValueToday,
     currentPrice,
-  }), [revMultBase, revMultInputs, revMultResult, ticker, currency, currentPrice, apiData, ltvRevenueAbsolute])
+  }), [revMultBase, revMultInputs, revMultResult, ticker, currency, currentPrice, apiData, ltvRevenueAbsolute, cagrBenchmarks])
 
   // ── EV/EBITDA ────────────────────────────────────────────────────────────
   const evEbitdaOverrides = overrides['ev_ebitda'] ?? {}
@@ -1123,7 +1157,16 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
       {/* ── 2. Unified method cards ──────────────────────────────────────── */}
       <div className="space-y-3">
 
-        {/* Forward P/E */}
+        {/* Orientation banner */}
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">How to use these models</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-[11px] text-slate-600 leading-relaxed">
+            <p><span className="font-semibold text-slate-700">1. Start with Forward P/E</span> — the most analyst-aligned method. Check if the default growth rate matches what you believe.</p>
+            <p><span className="font-semibold text-slate-700">2. Check Reverse DCF</span> — see what growth the market is already pricing in. A reality check before you model.</p>
+            <p><span className="font-semibold text-slate-700">3. Adjust assumptions</span> — click any method to open it. Use the <em>Compare</em> chips to snap to analyst or historical growth.</p>
+            <p><span className="font-semibold text-slate-700">4. Trust the blended estimate</span> — the lollipop above is a weighted average: Forward P/E 35%, EV/EBITDA 30%, Revenue Multiple 25%, Core DCF 10%.</p>
+          </div>
+        </div>
         <MethodAccordion
           id="forward_pe"
           title={fwdPEConfig.title}
