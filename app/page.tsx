@@ -991,11 +991,25 @@ export default function LandingPage() {
         </section>
       </div>
 
-      <footer style={{ background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }} className="px-6 py-9 text-center">
-        <p className="text-sm text-slate-400 max-w-xl mx-auto leading-relaxed">
-          Data sourced from Yahoo Finance, FRED, and Damodaran&apos;s research.
-          This is a research tool, not financial advice. All estimates are model outputs, not recommendations.
+      <footer style={{ background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }} className="px-6 py-10 text-center">
+        <p className="text-xs text-slate-500 max-w-2xl mx-auto leading-relaxed mb-3">
+          <strong className="text-slate-600">Not financial advice.</strong>{' '}
+          All content — DCF models, fair value estimates, health scores, and scenario analyses — is provided
+          for informational and educational purposes only. Model outputs are based on publicly available data
+          and mathematical assumptions; they are not recommendations to buy, sell, or hold any security.
+          Always consult a qualified financial advisor before making investment decisions.
         </p>
+        <p className="text-xs text-slate-400 mb-4">
+          Data sourced from Yahoo Finance, FRED, and Damodaran&apos;s research.
+        </p>
+        <div className="flex items-center justify-center gap-5 text-xs text-slate-400">
+          <a href="/terms" className="hover:text-slate-600 transition-colors">Terms of Service</a>
+          <span className="text-slate-300">·</span>
+          <a href="/privacy" className="hover:text-slate-600 transition-colors">Privacy Policy</a>
+          <span className="text-slate-300">·</span>
+          <a href="mailto:hello@rationale.capital" className="hover:text-slate-600 transition-colors">Contact</a>
+        </div>
+        <p className="mt-4 text-[11px] text-slate-300">© {new Date().getFullYear()} Rationale. All rights reserved.</p>
       </footer>
     </div>
   )

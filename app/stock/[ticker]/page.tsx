@@ -619,6 +619,21 @@ function StockPageBody() {
             </div>{/* end grid */}
           </>
         )}
+
+        {/* ── Investment disclaimer ── */}
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-8 pt-2">
+          <p className="text-[11px] text-slate-400 leading-relaxed text-center max-w-3xl mx-auto">
+            <strong className="font-semibold text-slate-500">Not financial advice.</strong>{' '}
+            All outputs — DCF estimates, fair values, health scores, and scenarios — are model results
+            based on publicly available data and mathematical assumptions. They are for informational
+            purposes only and are not recommendations to buy, sell, or hold any security.
+            Always consult a qualified financial advisor before making investment decisions.{' '}
+            <a href="/terms" className="underline hover:text-slate-600 transition-colors">Terms</a>
+            {' '}·{' '}
+            <a href="/privacy" className="underline hover:text-slate-600 transition-colors">Privacy</a>
+          </p>
+        </div>
+
       </div>
     </div>
 

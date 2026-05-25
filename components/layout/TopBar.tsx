@@ -233,12 +233,20 @@ export default function TopBar() {
             </button>
           </div>
         ) : (
-          <button
-            onClick={() => signIn('google')}
-            className="text-[12px] text-white px-3 py-1.5 rounded-lg transition-all font-medium bg-[#3B82F6] hover:bg-[#60A5FA] shadow-glow-sm"
-          >
-            Sign in
-          </button>
+          <div className="flex flex-col items-end gap-0.5">
+            <button
+              onClick={() => signIn('google')}
+              className="text-[12px] text-white px-3 py-1.5 rounded-lg transition-all font-medium bg-[#3B82F6] hover:bg-[#60A5FA] shadow-glow-sm"
+            >
+              Sign in
+            </button>
+            <p className="text-[9px] text-slate-500 hidden sm:block leading-tight">
+              By signing in you agree to our{' '}
+              <a href="/terms" className="underline hover:text-slate-300" onClick={e => e.stopPropagation()}>Terms</a>
+              {' '}&amp;{' '}
+              <a href="/privacy" className="underline hover:text-slate-300" onClick={e => e.stopPropagation()}>Privacy Policy</a>
+            </p>
+          </div>
         )}
       </div>
     </header>

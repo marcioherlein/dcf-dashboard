@@ -1,0 +1,157 @@
+import Link from 'next/link'
+
+export const metadata = { title: 'Terms of Service — Rationale' }
+
+const EFFECTIVE_DATE = 'June 1, 2025'
+
+export default function TermsPage() {
+  return (
+    <div className="min-h-dvh bg-slate-50">
+      <div className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+
+        <div className="mb-10">
+          <Link href="/" className="text-sm text-blue-600 hover:underline">← Back to Rationale</Link>
+        </div>
+
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Terms of Service</h1>
+        <p className="text-sm text-slate-400 mb-10">Effective date: {EFFECTIVE_DATE}</p>
+
+        <div className="prose prose-slate max-w-none space-y-8 text-sm text-slate-600 leading-relaxed">
+
+          {/* ── 1 ── */}
+          <section>
+            <h2 className="text-base font-semibold text-slate-800 mb-2">1. Acceptance of Terms</h2>
+            <p>
+              By accessing or using Rationale (&quot;the Service&quot;, &quot;we&quot;, &quot;us&quot;), you agree to be bound by
+              these Terms of Service. If you do not agree, do not use the Service.
+              We reserve the right to update these terms at any time; continued use
+              after changes constitutes acceptance.
+            </p>
+          </section>
+
+          {/* ── 2 ── */}
+          <section>
+            <h2 className="text-base font-semibold text-slate-800 mb-2">2. Not Financial Advice</h2>
+            <p className="font-medium text-slate-700">
+              Nothing on this platform constitutes financial, investment, legal, or tax
+              advice of any kind.
+            </p>
+            <p className="mt-2">
+              All content — including DCF models, fair value estimates, health scores,
+              valuation multiples, scenario analyses, and any other outputs — is provided
+              for <strong>informational and educational purposes only</strong>. These are
+              model outputs based on publicly available data and mathematical assumptions.
+              They are not recommendations to buy, sell, or hold any security.
+            </p>
+            <p className="mt-2">
+              Financial models are inherently limited. Inputs may be inaccurate or
+              outdated, assumptions may not reflect reality, and even well-constructed
+              models frequently produce incorrect estimates. Past performance of any
+              security does not guarantee future results.
+            </p>
+            <p className="mt-2">
+              Always consult a qualified, licensed financial advisor before making any
+              investment decision. You are solely responsible for your own investment
+              decisions and their outcomes.
+            </p>
+          </section>
+
+          {/* ── 3 ── */}
+          <section>
+            <h2 className="text-base font-semibold text-slate-800 mb-2">3. Eligibility</h2>
+            <p>
+              You must be at least 18 years old to use the Service. By using it, you
+              confirm that you meet this requirement.
+            </p>
+          </section>
+
+          {/* ── 4 ── */}
+          <section>
+            <h2 className="text-base font-semibold text-slate-800 mb-2">4. User Accounts</h2>
+            <p>
+              Accounts are created via Google OAuth. You are responsible for all activity
+              that occurs under your account. We reserve the right to suspend or terminate
+              accounts that violate these terms or are used for abuse.
+            </p>
+          </section>
+
+          {/* ── 5 ── */}
+          <section>
+            <h2 className="text-base font-semibold text-slate-800 mb-2">5. Acceptable Use</h2>
+            <p>You agree not to:</p>
+            <ul className="list-disc pl-5 mt-2 space-y-1">
+              <li>Use the Service for any unlawful purpose</li>
+              <li>Scrape, crawl, or systematically extract data from the platform</li>
+              <li>Reverse engineer, decompile, or attempt to extract source code</li>
+              <li>Resell, redistribute, or commercially exploit outputs without permission</li>
+              <li>Attempt to gain unauthorized access to any part of the Service</li>
+            </ul>
+          </section>
+
+          {/* ── 6 ── */}
+          <section>
+            <h2 className="text-base font-semibold text-slate-800 mb-2">6. Data Sources and Accuracy</h2>
+            <p>
+              Financial data is sourced from third parties including Yahoo Finance, FRED
+              (Federal Reserve Economic Data), and Damodaran&apos;s publicly available research.
+              We do not guarantee the accuracy, completeness, or timeliness of any data.
+              Errors in source data will produce errors in model outputs.
+            </p>
+          </section>
+
+          {/* ── 7 ── */}
+          <section>
+            <h2 className="text-base font-semibold text-slate-800 mb-2">7. Intellectual Property</h2>
+            <p>
+              All content, design, code, and branding on the Service is the property of
+              Rationale and may not be copied, reproduced, or distributed without written
+              permission, except for personal, non-commercial use.
+            </p>
+          </section>
+
+          {/* ── 8 ── */}
+          <section>
+            <h2 className="text-base font-semibold text-slate-800 mb-2">8. Limitation of Liability</h2>
+            <p>
+              To the fullest extent permitted by law, Rationale and its operators shall
+              not be liable for any direct, indirect, incidental, special, consequential,
+              or punitive damages arising from your use of the Service, including but not
+              limited to investment losses resulting from reliance on model outputs.
+            </p>
+            <p className="mt-2">
+              The Service is provided &quot;as is&quot; and &quot;as available&quot; without warranties of any
+              kind, either express or implied.
+            </p>
+          </section>
+
+          {/* ── 9 ── */}
+          <section>
+            <h2 className="text-base font-semibold text-slate-800 mb-2">9. Governing Law</h2>
+            <p>
+              These terms are governed by applicable law. Any disputes shall be resolved
+              through good-faith negotiation before pursuing formal legal remedies.
+            </p>
+          </section>
+
+          {/* ── 10 ── */}
+          <section>
+            <h2 className="text-base font-semibold text-slate-800 mb-2">10. Contact</h2>
+            <p>
+              Questions about these terms? Reach us at{' '}
+              <a href="mailto:hello@rationale.capital" className="text-blue-600 hover:underline">
+                hello@rationale.capital
+              </a>.
+            </p>
+          </section>
+
+        </div>
+
+        <div className="mt-12 pt-8 border-t border-slate-200 flex gap-6 text-sm text-slate-400">
+          <Link href="/privacy" className="hover:text-slate-600 transition-colors">Privacy Policy</Link>
+          <Link href="/" className="hover:text-slate-600 transition-colors">Back to home</Link>
+        </div>
+
+      </div>
+    </div>
+  )
+}
