@@ -67,68 +67,6 @@ const INTERP_LABEL: Record<string, string> = {
   very_aggressive: 'Very Aggressive',
 }
 
-// ── Typewriter headline ────────────────────────────────────────────────────────
-const TYPEWRITER_PHRASES = [
-  'worth buying',
-  'undervalued',
-  'a great deal',
-  'truly overpriced',
-  'a value trap',
-  'a hidden gem',
-]
-
-function TypewriterHeadline({ phrases }: { phrases: string[] }) {
-  const [phraseIdx, setPhraseIdx] = useState(0)
-  const [displayText, setDisplayText] = useState('')
-  const [stage, setStage] = useState<'typing' | 'holding' | 'deleting'>('typing')
-
-  // longest phrase reserves a fixed container width — layout never reflows as text changes
-  const longest = phrases.reduce((a, b) => a.length > b.length ? a : b)
-
-  useEffect(() => {
-    const phrase = phrases[phraseIdx]
-    let timer: ReturnType<typeof setTimeout>
-
-    if (stage === 'typing') {
-      const len = displayText.length
-      if (len < phrase.length) {
-        timer = setTimeout(() => setDisplayText(phrase.slice(0, len + 1)), 68)
-      } else {
-        timer = setTimeout(() => setStage('holding'), 80)
-      }
-    } else if (stage === 'holding') {
-      timer = setTimeout(() => setStage('deleting'), 1600)
-    } else {
-      const len = displayText.length
-      if (len > 0) {
-        timer = setTimeout(() => setDisplayText(displayText.slice(0, len - 1)), 38)
-      } else {
-        setPhraseIdx(i => (i + 1) % phrases.length)
-        setStage('typing')
-      }
-    }
-
-    return () => clearTimeout(timer)
-  }, [stage, displayText, phraseIdx, phrases])
-
-  return (
-    <span className="relative inline-block" style={{ verticalAlign: 'bottom' }}>
-      {/* invisible spacer — locks the container to the longest phrase width so the h1 never reflows */}
-      <span className="invisible whitespace-nowrap select-none pointer-events-none" aria-hidden="true">
-        {longest}
-      </span>
-      {/* typewriter text overlaid on top — position:absolute keeps it out of layout flow */}
-      <span className="absolute inset-0 text-blue-400 font-medium whitespace-nowrap">
-        {displayText}
-        <span
-          className="inline-block w-[2px] h-[0.88em] bg-blue-400 ml-[2px] align-middle rounded-sm"
-          style={{ animation: stage === 'holding' ? 'pulse 1s ease-in-out infinite' : 'none', opacity: stage === 'holding' ? undefined : 1 }}
-        />
-      </span>
-    </span>
-  )
-}
-
 // ── Mac browser mockup ─────────────────────────────────────────────────────────
 const MOCK_SCREENS = [
   { label: 'Search', url: 'rationale.capital' },
