@@ -100,7 +100,7 @@ export default function ScenarioComparisonCard({ scenarios, currentPrice, curren
         </ProGate>
       </div>
       <p className="text-[10px] text-slate-400 mt-3 leading-relaxed">
-        Bear: WACC +1%, CAGR −20%. Bull: WACC −1%, CAGR +20%. Base is the model's central estimate.
+        Bear: WACC +1%, CAGR −20%. Bull: WACC −1%, CAGR +20%. Base is the model&apos;s central estimate.
       </p>
     </div>
   )
