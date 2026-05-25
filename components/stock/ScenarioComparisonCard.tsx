@@ -33,7 +33,6 @@ function ScenarioCol({
   isFeatured?: boolean
 }) {
   const upside = currentPrice > 0 ? (scenario.fairValue - currentPrice) / currentPrice : null
-  const isUp = upside != null && upside >= 0
 
   return (
     <div className={`flex flex-col gap-3 px-4 py-4 rounded-xl border ${
