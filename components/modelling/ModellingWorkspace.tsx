@@ -13,6 +13,7 @@ import ForecastTable, {
 } from './ForecastTable'
 import DataQualityWarnings from './DataQualityWarnings'
 import SensitivityTable from '@/components/valuation/SensitivityTable'
+import ProGate from '@/components/monetization/ProGate'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type StatementsDataLike = any
@@ -440,21 +441,23 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
         cagrAnalysis={apiData?.cagrAnalysis}
       />
 
-      {/* Sensitivity heatmap: shown below the forecast table */}
+      {/* Sensitivity heatmap: Pro feature — shown blurred with paywall gate for free users */}
       {baseInput.baseFCF != null && baseInput.baseFCF !== 0 && sharesM != null && sharesM > 0 && (
         <div className="mt-0">
-          <SensitivityTable
-            baseFCF={baseInput.baseFCF}
-            baseWacc={wacc}
-            baseCagr={cagr}
-            terminalG={terminalG}
-            cashM={baseInput.cashM ?? 0}
-            debtM={baseInput.debtM ?? 0}
-            sharesM={sharesM}
-            currentPrice={baseInput.currentPrice ?? 0}
-            numYears={numProjectionYears}
-            currency={baseInput.currency}
-          />
+          <ProGate gate="sensitivity_table">
+            <SensitivityTable
+              baseFCF={baseInput.baseFCF}
+              baseWacc={wacc}
+              baseCagr={cagr}
+              terminalG={terminalG}
+              cashM={baseInput.cashM ?? 0}
+              debtM={baseInput.debtM ?? 0}
+              sharesM={sharesM}
+              currentPrice={baseInput.currentPrice ?? 0}
+              numYears={numProjectionYears}
+              currency={baseInput.currency}
+            />
+          </ProGate>
         </div>
       )}
     </div>

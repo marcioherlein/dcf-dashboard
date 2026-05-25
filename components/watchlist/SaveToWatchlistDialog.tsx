@@ -59,7 +59,13 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
           asset_type: payload.assetType,
         }),
       })
-      if (!wRes.ok) throw new Error('Failed to save to watchlist')
+      if (!wRes.ok) {
+        const errBody = await wRes.json().catch(() => ({}))
+        if (wRes.status === 402 && errBody.gate === 'unlimited_saves') {
+          throw new Error('FREE_LIMIT')
+        }
+        throw new Error('Failed to save to watchlist')
+      }
 
       // 2. Save valuation snapshot for stocks
       if (!isETF && payload.valuationSnapshot) {
@@ -180,7 +186,17 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
             )}
 
             {status === 'error' && (
-              <p className="text-xs text-red-600">{errorMsg}</p>
+              errorMsg === 'FREE_LIMIT' ? (
+                <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800">
+                  <p className="font-semibold mb-0.5">Free tier limit reached (3 saves)</p>
+                  <p>Upgrade to Pro for unlimited watchlist saves.</p>
+                  <a href="/pricing" className="mt-1.5 inline-block underline font-semibold hover:text-blue-900">
+                    View Pro plans →
+                  </a>
+                </div>
+              ) : (
+                <p className="text-xs text-red-600">{errorMsg}</p>
+              )
             )}
           </>
         )}

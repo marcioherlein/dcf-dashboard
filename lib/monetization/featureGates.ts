@@ -9,6 +9,7 @@ export type FeatureGate =
   | 'portfolio_tracker'
   | 'scenario_builder'
   | 'compare_tool'
+  | 'macro_brief'
 
 interface GateConfig {
   label: string
@@ -55,6 +56,11 @@ export const GATE_CONFIG: Record<FeatureGate, GateConfig> = {
   compare_tool: {
     label: 'Compare Stocks',
     description: 'Side-by-side valuation comparison for two tickers',
+    tier: 'pro',
+  },
+  macro_brief: {
+    label: 'AI Macro Brief',
+    description: 'Claude-generated market regime analysis and investment implications',
     tier: 'pro',
   },
 }

@@ -38,6 +38,29 @@ export async function POST(req: Request) {
   if (!body.ticker) return NextResponse.json({ error: 'ticker is required' }, { status: 400 })
 
   const sb = createServiceClient()
+
+  // Free-tier cap: max 3 unique tickers. Check before upsert so an update to an
+  // existing ticker (same user_id+ticker) doesn't count as a new save.
+  const { count: existingCount } = await sb
+    .from('watchlist')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+
+  const { count: alreadySaved } = await sb
+    .from('watchlist')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('ticker', body.ticker.toUpperCase())
+
+  const FREE_TIER_LIMIT = 3
+  const isNew = (alreadySaved ?? 0) === 0
+  if (isNew && (existingCount ?? 0) >= FREE_TIER_LIMIT) {
+    return NextResponse.json(
+      { error: 'Free tier limit reached', gate: 'unlimited_saves', limit: FREE_TIER_LIMIT },
+      { status: 402 }
+    )
+  }
+
   const { data, error } = await sb
     .from('watchlist')
     .upsert(

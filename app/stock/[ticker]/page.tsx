@@ -10,6 +10,8 @@ import AtAGlance from '@/components/stock/AtAGlance'
 import HealthSection from '@/components/stock/HealthSection'
 import OwnershipPanel from '@/components/stock/OwnershipPanel'
 import HoldingReturns from '@/components/stock/HoldingReturns'
+import ScenarioComparisonCard from '@/components/stock/ScenarioComparisonCard'
+import MispricingExplainer from '@/components/stock/MispricingExplainer'
 import TabNav, { type TabId } from '@/components/stock/TabNav'
 import StockSidebar from '@/components/stock/StockSidebar'
 import { cn } from '@/lib/utils'
@@ -515,6 +517,24 @@ function StockPageBody() {
                     </a>
                   </div>
                   <ValuationLab apiData={data} ticker={ticker} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} onWeightedFVChange={setUserModelFairValue} onActiveMethodChange={setActiveValuationMethod} />
+                  {data.scenarios && (
+                    <ScenarioComparisonCard
+                      scenarios={data.scenarios}
+                      currentPrice={data.quote.price}
+                      currency={data.quote.currency ?? 'USD'}
+                    />
+                  )}
+                  {data.fairValue?.fairValuePerShare != null && (
+                    <MispricingExplainer
+                      ticker={ticker}
+                      fairValue={data.fairValue.fairValuePerShare}
+                      currentPrice={data.quote.price}
+                      upsidePct={data.fairValue.upsidePct ?? null}
+                      wacc={data.wacc?.wacc ?? null}
+                      cagr={data.cagr ?? null}
+                      sector={data.quote.sector ?? ''}
+                    />
+                  )}
                 </motion.div>
               )}
 
