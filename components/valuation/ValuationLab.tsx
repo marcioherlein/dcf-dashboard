@@ -1147,26 +1147,117 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
   return (
     <div className="space-y-4">
 
-      {/* ── 1. Valuation Summary — lollipop chart ────────────────────────── */}
+      {/* ── 1. How to use — above the chart so users see context first ─────── */}
+      <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-400 mb-2">How to use these models</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-[11px] text-slate-600 leading-relaxed">
+          <p><span className="font-semibold text-slate-700">1. Start with Reverse DCF</span> — see what growth rate today&apos;s price already assumes. That&apos;s the bar the company must clear.</p>
+          <p><span className="font-semibold text-slate-700">2. Check the Full DCF</span> — enter your own growth and WACC assumptions to build a fair-value estimate from first principles.</p>
+          <p><span className="font-semibold text-slate-700">3. Validate with multiples</span> — Forward P/E, EV/EBITDA and Revenue Multiple act as sanity checks against how the market prices peers.</p>
+          <p><span className="font-semibold text-slate-700">4. Trust the blended estimate</span> — the chart above weights all methods: Forward P/E 35%, EV/EBITDA 30%, Revenue Multiple 25%, Core DCF 10%.</p>
+        </div>
+      </div>
+
+      {/* ── 2. Valuation Summary — lollipop chart ────────────────────────── */}
       <ValuationSummary
         methods={summaryMethods}
         currentPrice={currentPrice}
         currency={currency}
       />
 
-      {/* ── 2. Unified method cards ──────────────────────────────────────── */}
+      {/* ── 3. Method cards ──────────────────────────────────────────────── */}
       <div className="space-y-3">
+        {/* Reverse DCF — what growth does the price assume? */}
+        <MethodAccordion
+          id="reverse_dcf"
+          title="Reverse DCF"
+          confidence={null}
+          verdict={reverseDCFVerdict}
+          weight={0}
+          isOpen={openMethodId === 'reverse_dcf'}
+          onToggle={() => setOpenMethodId(p => p === 'reverse_dcf' ? null : 'reverse_dcf')}
+          innerRef={el => { methodRefs.current['reverse_dcf'] = el }}
+          fairValue={null}
+          upsidePct={null}
+          currency={currency}
+          chips={[
+            { label: 'Implied CAGR', value: reverseDCFResult.impliedCAGR != null ? (reverseDCFResult.impliedCAGR * 100).toFixed(1) + '%' : '—' },
+            { label: 'WACC', value: ((apiData?.wacc?.wacc ?? 0.09) * 100).toFixed(1) + '%' },
+          ]}
+          guide={METHOD_GUIDES.reverse_dcf}
+          bestFor="Checking whether the market's growth expectations are realistic"
+        >
+          <ReverseDCFPanel
+            result={reverseDCFResult}
+            cagrAnalysis={apiData?.cagrAnalysis ?? null}
+            wacc={apiData?.wacc?.wacc ?? 0.09}
+            terminalG={apiData?.terminalG ?? 0.025}
+            lastFCFMargin={lastFCFMargin}
+            lastRevenue={lastActualRevenue}
+            currentPrice={currentPrice}
+            cashM={apiData?.fairValue?.cash ?? null}
+            debtM={apiData?.fairValue?.debt ?? null}
+            sharesAbsolute={sharesAbsolute}
+            currency={currency}
+          />
+        </MethodAccordion>
 
-        {/* Orientation banner */}
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">How to use these models</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-[11px] text-slate-600 leading-relaxed">
-            <p><span className="font-semibold text-slate-700">1. Start with Forward P/E</span> — the most analyst-aligned method. Check if the default growth rate matches what you believe.</p>
-            <p><span className="font-semibold text-slate-700">2. Check Reverse DCF</span> — see what growth the market is already pricing in. A reality check before you model.</p>
-            <p><span className="font-semibold text-slate-700">3. Adjust assumptions</span> — click any method to open it. Use the <em>Compare</em> chips to snap to analyst or historical growth.</p>
-            <p><span className="font-semibold text-slate-700">4. Trust the blended estimate</span> — the lollipop above is a weighted average: Forward P/E 35%, EV/EBITDA 30%, Revenue Multiple 25%, Core DCF 10%.</p>
-          </div>
-        </div>
+        {/* Full DCF — build your own estimate */}
+        <MethodAccordion
+          id="full_dcf"
+          title="Full DCF Modelling Table"
+          confidence="high"
+          verdict={methodVerdict((apiData?.valuationMethods?.triangulatedUpsidePct as number | null) ?? null)}
+          weight={0.10}
+          isOpen={openMethodId === 'full_dcf'}
+          onToggle={() => setOpenMethodId(p => p === 'full_dcf' ? null : 'full_dcf')}
+          innerRef={el => { methodRefs.current['full_dcf'] = el }}
+          fairValue={(apiData?.valuationMethods?.triangulatedFairValue as number | null) ?? null}
+          upsidePct={(apiData?.valuationMethods?.triangulatedUpsidePct as number | null) ?? null}
+          currency={currency}
+          chips={[
+            { label: 'WACC', value: ((apiData?.wacc?.wacc ?? 0.09) * 100).toFixed(1) + '%' },
+            { label: 'Terminal G', value: ((apiData?.terminalG ?? 0.025) * 100).toFixed(1) + '%' },
+          ]}
+          guide={METHOD_GUIDES.full_dcf}
+          bestFor="Deep custom analysis — adjust year-by-year projections for a precise estimate"
+        >
+          {/* Executive DCF summary */}
+          {(apiData?.valuationMethods?.triangulatedFairValue != null) && (
+            <div className="px-5 pt-4 pb-3 border-b border-slate-100 bg-slate-50/50">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Core DCF Result</p>
+              <div className="flex items-center gap-3 flex-wrap">
+                <div>
+                  <p className="text-[10px] text-slate-500">Fair Value</p>
+                  <p className="text-lg font-bold tabular-nums text-slate-900">
+                    {fmtPrice(apiData.valuationMethods.triangulatedFairValue as number, currency)}
+                  </p>
+                </div>
+                {(apiData?.valuationMethods?.triangulatedUpsidePct as number | null) != null && (
+                  <TrendBadge value={apiData.valuationMethods.triangulatedUpsidePct as number} size="lg" />
+                )}
+                <div className="ml-auto flex gap-4">
+                  <div>
+                    <p className="text-[10px] text-slate-500">WACC</p>
+                    <p className="text-sm font-semibold tabular-nums text-slate-800">
+                      {((apiData?.wacc?.wacc ?? 0.09) * 100).toFixed(1)}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-500">Terminal G</p>
+                    <p className="text-sm font-semibold tabular-nums text-slate-800">
+                      {((apiData?.terminalG ?? 0.025) * 100).toFixed(1)}%
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-500 mt-2">
+                FCFF, FCFE &amp; DDM triangulated — intrinsic value from projected free cash flows.
+              </p>
+            </div>
+          )}
+          <ModellingWorkspace apiData={apiData} ticker={ticker} statementsData={statementsData} />
+        </MethodAccordion>        {/* Multiples — sanity check against peers */}
         <MethodAccordion
           id="forward_pe"
           title={fwdPEConfig.title}
@@ -1254,97 +1345,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
           />
         </MethodAccordion>
 
-        {/* Reverse DCF */}
-        <MethodAccordion
-          id="reverse_dcf"
-          title="Reverse DCF"
-          confidence={null}
-          verdict={reverseDCFVerdict}
-          weight={0}
-          isOpen={openMethodId === 'reverse_dcf'}
-          onToggle={() => setOpenMethodId(p => p === 'reverse_dcf' ? null : 'reverse_dcf')}
-          innerRef={el => { methodRefs.current['reverse_dcf'] = el }}
-          fairValue={null}
-          upsidePct={null}
-          currency={currency}
-          chips={[
-            { label: 'Implied CAGR', value: reverseDCFResult.impliedCAGR != null ? (reverseDCFResult.impliedCAGR * 100).toFixed(1) + '%' : '—' },
-            { label: 'WACC', value: ((apiData?.wacc?.wacc ?? 0.09) * 100).toFixed(1) + '%' },
-          ]}
-          guide={METHOD_GUIDES.reverse_dcf}
-          bestFor="Checking whether the market's growth expectations are realistic"
-        >
-          <ReverseDCFPanel
-            result={reverseDCFResult}
-            cagrAnalysis={apiData?.cagrAnalysis ?? null}
-            wacc={apiData?.wacc?.wacc ?? 0.09}
-            terminalG={apiData?.terminalG ?? 0.025}
-            lastFCFMargin={lastFCFMargin}
-            lastRevenue={lastActualRevenue}
-            currentPrice={currentPrice}
-            cashM={apiData?.fairValue?.cash ?? null}
-            debtM={apiData?.fairValue?.debt ?? null}
-            sharesAbsolute={sharesAbsolute}
-            currency={currency}
-          />
-        </MethodAccordion>
 
-        {/* Full DCF */}
-        <MethodAccordion
-          id="full_dcf"
-          title="Full DCF Modelling Table"
-          confidence="high"
-          verdict={methodVerdict((apiData?.valuationMethods?.triangulatedUpsidePct as number | null) ?? null)}
-          weight={0.10}
-          isOpen={openMethodId === 'full_dcf'}
-          onToggle={() => setOpenMethodId(p => p === 'full_dcf' ? null : 'full_dcf')}
-          innerRef={el => { methodRefs.current['full_dcf'] = el }}
-          fairValue={(apiData?.valuationMethods?.triangulatedFairValue as number | null) ?? null}
-          upsidePct={(apiData?.valuationMethods?.triangulatedUpsidePct as number | null) ?? null}
-          currency={currency}
-          chips={[
-            { label: 'WACC', value: ((apiData?.wacc?.wacc ?? 0.09) * 100).toFixed(1) + '%' },
-            { label: 'Terminal G', value: ((apiData?.terminalG ?? 0.025) * 100).toFixed(1) + '%' },
-          ]}
-          guide={METHOD_GUIDES.full_dcf}
-          bestFor="Deep custom analysis — adjust year-by-year projections for a precise estimate"
-        >
-          {/* Executive DCF summary */}
-          {(apiData?.valuationMethods?.triangulatedFairValue != null) && (
-            <div className="px-5 pt-4 pb-3 border-b border-slate-100 bg-slate-50/50">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Core DCF Result</p>
-              <div className="flex items-center gap-3 flex-wrap">
-                <div>
-                  <p className="text-[10px] text-slate-500">Fair Value</p>
-                  <p className="text-lg font-bold tabular-nums text-slate-900">
-                    {fmtPrice(apiData.valuationMethods.triangulatedFairValue as number, currency)}
-                  </p>
-                </div>
-                {(apiData?.valuationMethods?.triangulatedUpsidePct as number | null) != null && (
-                  <TrendBadge value={apiData.valuationMethods.triangulatedUpsidePct as number} size="lg" />
-                )}
-                <div className="ml-auto flex gap-4">
-                  <div>
-                    <p className="text-[10px] text-slate-500">WACC</p>
-                    <p className="text-sm font-semibold tabular-nums text-slate-800">
-                      {((apiData?.wacc?.wacc ?? 0.09) * 100).toFixed(1)}%
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-slate-500">Terminal G</p>
-                    <p className="text-sm font-semibold tabular-nums text-slate-800">
-                      {((apiData?.terminalG ?? 0.025) * 100).toFixed(1)}%
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <p className="text-[10px] text-slate-500 mt-2">
-                FCFF, FCFE &amp; DDM triangulated — intrinsic value from projected free cash flows.
-              </p>
-            </div>
-          )}
-          <ModellingWorkspace apiData={apiData} ticker={ticker} statementsData={statementsData} />
-        </MethodAccordion>
       </div>
     </div>
   )

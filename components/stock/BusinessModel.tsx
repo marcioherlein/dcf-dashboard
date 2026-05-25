@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { fmt, fmtPct } from '@/lib/utils'
 import { buildBusinessSummary } from '@/lib/simplifier/summaryBuilder'
@@ -48,8 +49,13 @@ interface Props {
   statementsData?: { ttm: TTMLike } | null
 }
 
+const TRUNCATE_AT = 280
+
 export default function BusinessModel({ businessProfile, historicalRevenues, ticker, isDark, incomeStatement, cashFlow, statementsData }: Props) {
   const { description, industry, country, employees, netMargin, fcfMargin, revenueM } = businessProfile
+  const [descExpanded, setDescExpanded] = useState(false)
+  const isLongDesc = !!description && description.length > TRUNCATE_AT
+  const displayDesc = isLongDesc && !descExpanded ? description.slice(0, TRUNCATE_AT).trimEnd() + '…' : description
 
   // Override metric cards with TTM data from Yahoo Finance statements when available
   const ttmIS = statementsData?.ttm?.incomeStatement
@@ -152,7 +158,17 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
 
       {/* Full description */}
       {description ? (
-        <p className="text-sm text-slate-600 leading-relaxed mb-6">{description}</p>
+        <div className="mb-6">
+          <p className="text-sm text-slate-600 leading-relaxed">{displayDesc}</p>
+          {isLongDesc && (
+            <button
+              onClick={() => setDescExpanded(e => !e)}
+              className="mt-1.5 text-xs font-medium text-blue-600 hover:text-blue-500 transition-colors"
+            >
+              {descExpanded ? 'Show less' : 'Read more'}
+            </button>
+          )}
+        </div>
       ) : (
         <p className="text-sm text-slate-500 mb-6">No business description available for {ticker}.</p>
       )}

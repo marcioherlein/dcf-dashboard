@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import { buildHealthInterpretation, buildRiskSummary } from '@/lib/simplifier/summaryBuilder'
 import type { StockRatings } from '@/lib/dcf/calculateRatings'
 import type { PiotroskiResult, AltmanResult, BeneishResult, ROICResult } from '@/lib/dcf/calculateScores'
@@ -15,6 +16,20 @@ interface Props {
   scores: ScoresData
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   financialsData?: any
+  collapsible?: boolean
+}
+
+function InfoTip({ text }: { text: string }) {
+  return (
+    <span className="relative group/tip inline-flex items-center ml-1 align-middle">
+      <svg className="w-3 h-3 text-slate-400 cursor-help" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 11-2 0 1 1 0 012 0z" />
+      </svg>
+      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-52 rounded-lg bg-slate-800 px-2.5 py-2 text-[11px] text-white shadow-lg opacity-0 group-hover/tip:opacity-100 transition-opacity z-50 leading-snug text-left normal-case tracking-normal font-normal">
+        {text}
+      </span>
+    </span>
+  )
 }
 
 const BUSINESS_QUALITY_KEYS = ['profitability', 'liquidity', 'growth', 'moat'] as const
@@ -72,7 +87,8 @@ function CategoryRow({ catKey, ratings }: { catKey: string; ratings: StockRating
   )
 }
 
-export default function HealthSection({ ratings, scores, financialsData }: Props) {
+export default function HealthSection({ ratings, scores, financialsData, collapsible }: Props) {
+  const [open, setOpen] = useState(true)
   const piotroski       = scores.piotroski?.score ?? null
   const altmanZone      = scores.altman?.zone ?? null
   const altmanReliable  = scores.altman?.isReliable ?? true
@@ -83,17 +99,39 @@ export default function HealthSection({ ratings, scores, financialsData }: Props
   const riskSummary  = financialsData ? buildRiskSummary('this company', financialsData) : null
 
   return (
-    <div className="rounded-xl card p-6">
-      <div className="flex items-baseline justify-between mb-5 flex-wrap gap-2">
-        <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Financial Health</h2>
-        <p className="text-[10px] text-slate-400">
-          <span className="text-emerald-600 font-semibold">A</span> Excellent&nbsp;·&nbsp;
-          <span className="text-blue-500 font-semibold">B</span> Good&nbsp;·&nbsp;
-          <span className="text-amber-600 font-semibold">C</span> Average&nbsp;·&nbsp;
-          <span className="text-red-500 font-semibold">D/F</span> Weak
-        </p>
-      </div>
+    <div className="rounded-xl card overflow-hidden">
+      {collapsible ? (
+        <button
+          onClick={() => setOpen(o => !o)}
+          className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50/60 transition-colors"
+        >
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Financial Health</h2>
+            <p className="text-[10px] text-slate-400">
+              <span className="text-emerald-600 font-semibold">A</span> Excellent&nbsp;·&nbsp;
+              <span className="text-blue-500 font-semibold">B</span> Good&nbsp;·&nbsp;
+              <span className="text-amber-600 font-semibold">C</span> Average&nbsp;·&nbsp;
+              <span className="text-red-500 font-semibold">D/F</span> Weak
+            </p>
+          </div>
+          <svg className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      ) : (
+        <div className="flex items-baseline justify-between px-6 pt-5 pb-1 flex-wrap gap-2">
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Financial Health</h2>
+          <p className="text-[10px] text-slate-400">
+            <span className="text-emerald-600 font-semibold">A</span> Excellent&nbsp;·&nbsp;
+            <span className="text-blue-500 font-semibold">B</span> Good&nbsp;·&nbsp;
+            <span className="text-amber-600 font-semibold">C</span> Average&nbsp;·&nbsp;
+            <span className="text-red-500 font-semibold">D/F</span> Weak
+          </p>
+        </div>
+      )}
 
+      {(!collapsible || open) && (
+      <div className="px-6 pb-6 pt-4">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
         {/* Category scores — two labeled groups */}
@@ -126,7 +164,10 @@ export default function HealthSection({ ratings, scores, financialsData }: Props
             <div className="space-y-2">
               {piotroski != null && (
                 <div className="flex items-center justify-between rounded-lg bg-white border border-slate-200 px-4 py-2.5">
-                  <span className="text-xs text-slate-500">Piotroski F-Score</span>
+                  <span className="text-xs text-slate-500">
+                    Piotroski F-Score
+                    <InfoTip text="9-point checklist of profitability, leverage, and efficiency. Score 7–9 = strong financial health; below 4 = signals weakness." />
+                  </span>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-slate-900 tabular-nums">{piotroski}/9</span>
                     <span className={`text-[11px] font-medium rounded-full px-2 py-0.5 ${piotroski >= 7 ? 'bg-emerald-100 text-emerald-700' : piotroski >= 4 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
@@ -139,6 +180,7 @@ export default function HealthSection({ ratings, scores, financialsData }: Props
                 <div className="flex items-center justify-between rounded-lg bg-white border border-slate-200 px-4 py-2.5">
                   <span className="text-xs text-slate-500">
                     Altman Z-Score
+                    <InfoTip text="Predicts bankruptcy risk using financial ratios. Safe Zone (above 2.99) = low risk; Distress Zone (below 1.81) = elevated risk." />
                     {!altmanReliable && (
                       <span className="ml-1.5 text-[10px] text-amber-600 font-medium">(EM — limited reliability)</span>
                     )}
@@ -150,7 +192,10 @@ export default function HealthSection({ ratings, scores, financialsData }: Props
               )}
               {beneishFlag && (
                 <div className="flex items-center justify-between rounded-lg bg-white border border-slate-200 px-4 py-2.5">
-                  <span className="text-xs text-slate-500">Beneish M-Score</span>
+                  <span className="text-xs text-slate-500">
+                    Beneish M-Score
+                    <InfoTip text="Statistical model detecting potential earnings manipulation. 'Clean' = low manipulation risk; 'Suspect' = elevated risk of misreporting." />
+                  </span>
                   <span className={`text-[11px] font-semibold rounded-full px-2 py-0.5 ${beneishFlag === 'Clean' ? 'bg-emerald-100 text-emerald-700' : beneishFlag === 'Warning' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
                     {beneishFlag}
                   </span>
@@ -168,6 +213,8 @@ export default function HealthSection({ ratings, scores, financialsData }: Props
           </div>
         </div>
       </div>
+      </div>
+      )} {/* end collapsible content */}
     </div>
   )
 }

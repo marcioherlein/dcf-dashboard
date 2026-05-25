@@ -177,6 +177,7 @@ function StockPageBody() {
   const [financialsHighlight, setFinancialsHighlight] = useState<{ rowKey: string; statement: 'income' | 'balance' | 'cashflow' } | null>(null)
   const [userModelFairValue, setUserModelFairValue] = useState<number | null>(null)
   const [activeValuationMethod, setActiveValuationMethod] = useState<string | null>(null)
+  const [companyExpanded, setCompanyExpanded] = useState(true)
 
   // After Google OAuth redirect, restore the user's pre-login state (tab, etc.)
   useEffect(() => {
@@ -469,43 +470,68 @@ function StockPageBody() {
                       ratings={data.ratings}
                       scores={computedScores ?? data.scores}
                       financialsData={data}
+                      collapsible
                     />
                   )}
 
+                  {/* Company Overview — collapsible */}
                   {(data.businessProfile.description || data.historicalRevenues.length >= 2) && (
-                    <BusinessModel
-                      businessProfile={data.businessProfile}
-                      historicalRevenues={data.historicalRevenues}
-                      ticker={ticker}
-                      isDark={false}
-                      incomeStatement={data.financialStatements?.incomeStatement}
-                      cashFlow={data.financialStatements?.cashFlow}
-                      statementsData={statementsData}
-                    />
-                  )}
-
-                  <AtAGlance
-                    price={data.quote.price}
-                    marketCap={data.quote.marketCap}
-                    high52={data.quote.fiftyTwoWeekHigh}
-                    low52={data.quote.fiftyTwoWeekLow}
-                    sector={data.quote.sector ?? ''}
-                    country={data.businessProfile.country}
-                    currency={currency}
-                    statementsData={statementsData}
-                  />
-                  {/* ── Overview → Valuation CTA ── */}
-                  <div className="rounded-xl border border-blue-200 bg-blue-50 px-5 py-4 flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">Ready to analyze the valuation?</p>
-                      <p className="text-xs text-slate-500 mt-0.5">Adjust growth assumptions and see what this stock is worth</p>
+                      <button
+                        onClick={() => setCompanyExpanded(e => !e)}
+                        className="flex items-center gap-2 w-full text-left px-1 mb-2 group"
+                      >
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-slate-500 transition-colors">Company Overview</span>
+                        <svg className={`w-3.5 h-3.5 text-slate-400 ml-auto transition-transform duration-200 ${companyExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      {companyExpanded && (
+                        <div className="space-y-4">
+                          <BusinessModel
+                            businessProfile={data.businessProfile}
+                            historicalRevenues={data.historicalRevenues}
+                            ticker={ticker}
+                            isDark={false}
+                            incomeStatement={data.financialStatements?.incomeStatement}
+                            cashFlow={data.financialStatements?.cashFlow}
+                            statementsData={statementsData}
+                          />
+                          <AtAGlance
+                            price={data.quote.price}
+                            marketCap={data.quote.marketCap}
+                            high52={data.quote.fiftyTwoWeekHigh}
+                            low52={data.quote.fiftyTwoWeekLow}
+                            sector={data.quote.sector ?? ''}
+                            country={data.businessProfile.country}
+                            currency={currency}
+                            statementsData={statementsData}
+                          />
+                        </div>
+                      )}
                     </div>
-                    <button
-                      onClick={() => handleTabChange('valuation')}
-                      className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors shrink-0"
-                    >
-                      Go to Valuation →
-                    </button>
+                  )}
+                  {/* ── Overview → Valuation CTA ── */}
+                  <div className="rounded-xl glass-card-light px-5 py-5">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                            <svg className="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                          </div>
+                          <p className="text-sm font-semibold text-slate-900">Explore the full valuation</p>
+                        </div>
+                        <p className="text-xs text-slate-500 ml-8">Adjust growth assumptions, compare DCF methods, and build your own fair-value estimate.</p>
+                      </div>
+                      <button
+                        onClick={() => handleTabChange('valuation')}
+                        className="w-full sm:w-auto rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-500 transition-colors shadow-sm shadow-blue-200 shrink-0"
+                      >
+                        Go to Valuation →
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -525,16 +551,6 @@ function StockPageBody() {
                       currency={data.quote.currency ?? 'USD'}
                     />
                   )}
-                  {/* Save CTA */}
-                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 flex items-center justify-between gap-4">
-                    <p className="text-xs text-slate-600">Agree with these numbers? Save your analysis and track if the price moves toward fair value.</p>
-                    <a
-                      href={`/simplifier/${ticker}`}
-                      className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-medium text-white hover:bg-emerald-500 transition-colors shrink-0"
-                    >
-                      Save to My Valuations →
-                    </a>
-                  </div>
                   <ValuationLab apiData={data} ticker={ticker} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} onWeightedFVChange={setUserModelFairValue} onActiveMethodChange={setActiveValuationMethod} />
                   {data.fairValue?.fairValuePerShare != null && (
                     <MispricingExplainer
@@ -547,6 +563,33 @@ function StockPageBody() {
                       sector={data.quote.sector ?? ''}
                     />
                   )}
+                  {/* End-of-page CTA */}
+                  <div className="rounded-xl glass-card-light px-5 py-5">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">What do you want to do next?</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <a
+                        href={`/simplifier/${ticker}`}
+                        className="flex flex-col gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 hover:bg-emerald-100 transition-colors"
+                      >
+                        <span className="text-sm font-bold text-emerald-700">Save valuation →</span>
+                        <span className="text-[11px] text-slate-500">Track when the price hits your fair value estimate</span>
+                      </a>
+                      <button
+                        onClick={() => { const el = document.getElementById('full_dcf'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}
+                        className="flex flex-col gap-1 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 hover:bg-blue-100 transition-colors text-left"
+                      >
+                        <span className="text-sm font-bold text-blue-700">Adjust assumptions →</span>
+                        <span className="text-[11px] text-slate-500">Open the Full DCF and change WACC or growth rate</span>
+                      </button>
+                      <button
+                        onClick={() => handleTabChange('financials')}
+                        className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 hover:bg-slate-100 transition-colors text-left"
+                      >
+                        <span className="text-sm font-bold text-slate-700">Check the financials →</span>
+                        <span className="text-[11px] text-slate-500">Revenue, margins, cash flow and debt history</span>
+                      </button>
+                    </div>
+                  </div>
                 </motion.div>
               )}
 
