@@ -100,7 +100,7 @@ export default function ScenarioComparisonCard({ scenarios, currentPrice, curren
       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">
         Bull / Base / Bear Scenarios
       </p>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <ScenarioCol label="Bear" scenario={scenarios.bear} currentPrice={currentPrice} currency={currency} />
         <ScenarioCol label="Base" scenario={scenarios.base} currentPrice={currentPrice} currency={currency} isFeatured />
         <ScenarioCol label="Bull" scenario={scenarios.bull} currentPrice={currentPrice} currency={currency} />

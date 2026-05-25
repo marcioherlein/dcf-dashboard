@@ -19,7 +19,7 @@ function gradeChipClass(grade: string): string {
 }
 
 export default function MobileKeyInsights({ data }: Props) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(true)
   if (!data) return null
 
   const { quote, analystRecommendation, ratings, valuationMethods, cagrAnalysis } = data

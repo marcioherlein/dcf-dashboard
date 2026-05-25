@@ -247,7 +247,7 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
     <div className="card rounded-xl overflow-hidden">
 
       {/* ① Three-column hero */}
-      <div className="grid grid-cols-3 divide-x divide-slate-200">
+      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-200">
         <div className="flex flex-col items-center px-3 sm:px-4 py-5 gap-1">
           <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold text-center">Market Implies</p>
           <p className="text-xl sm:text-2xl font-bold tabular-nums" style={{ color: toneColor }}>
@@ -475,7 +475,7 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
       {/* ④ Assumptions + interpretation (always visible) */}
       <div className="px-5 py-4 border-t border-slate-100 bg-slate-50">
         <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-3">Assumptions used</p>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <div>
             <p className="text-[10px] text-slate-500">FCF Margin</p>
             <p className="text-sm font-semibold tabular-nums text-slate-900">

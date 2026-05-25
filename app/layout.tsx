@@ -15,6 +15,11 @@ export const metadata: Metadata = {
   description: "Know if a stock is worth buying — before you buy. DCF-based fair value, plain-English health grades, and interactive scenario modeling. Free.",
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
