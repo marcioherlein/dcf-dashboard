@@ -1,21 +1,20 @@
 'use client'
 import { cn } from '@/lib/utils'
-import type { MarketContextPayload, ValuationContextBand } from '@/lib/market-context/types'
-import { NABadge } from '@/components/ui/na-badge'
+import type { MarketContextPayload } from '@/lib/market-context/types'
 
 interface Props {
   valuation: MarketContextPayload['valuation']
 }
 
-function bandBarClass(b: ValuationContextBand): string {
+function bandBarClass(b: { label: string; current?: boolean }): string {
   if (b.current) return 'bg-blue-600 text-white font-bold'
-  if (b.label.startsWith('Cheap'))     return 'bg-emerald-500/10 text-emerald-400'
-  if (b.label.startsWith('Fair'))      return 'bg-white/[0.06] text-slate-300'
-  if (b.label.startsWith('Elevated'))  return 'bg-amber-500/10 text-amber-400'
-  if (b.label.startsWith('Attractive'))return 'bg-emerald-500/10 text-emerald-400'
-  if (b.label.startsWith('Compressed'))return 'bg-amber-500/10 text-amber-400'
-  if (b.label.startsWith('Negative'))  return 'bg-red-500/10 text-red-400'
-  return 'bg-red-500/10 text-red-400'
+  if (b.label.startsWith('Cheap'))      return 'bg-emerald-50 text-emerald-700'
+  if (b.label.startsWith('Fair'))       return 'bg-slate-100 text-slate-600'
+  if (b.label.startsWith('Elevated'))   return 'bg-amber-50 text-amber-700'
+  if (b.label.startsWith('Attractive')) return 'bg-emerald-50 text-emerald-700'
+  if (b.label.startsWith('Compressed')) return 'bg-amber-50 text-amber-700'
+  if (b.label.startsWith('Negative'))   return 'bg-red-50 text-red-600'
+  return 'bg-red-50 text-red-600'
 }
 
 function erpLabel(erp: number | null): string {
@@ -30,25 +29,25 @@ function erpLabel(erp: number | null): string {
 function erpColor(erp: number | null): string {
   if (erp == null) return 'text-slate-500'
   const pct = erp * 100
-  if (pct > 3.5) return 'text-emerald-400'
-  if (pct > 2)   return 'text-slate-200'
-  if (pct > 0)   return 'text-amber-400'
-  return 'text-red-400'
+  if (pct > 3.5) return 'text-emerald-700'
+  if (pct > 2)   return 'text-slate-700'
+  if (pct > 0)   return 'text-amber-700'
+  return 'text-red-600'
 }
 
 export default function ValuationContext({ valuation }: Props) {
   const { spyForwardPE, erp, forwardPEBands, erpBands } = valuation
 
   return (
-    <div className="rounded-xl border border-[rgba(59,130,246,0.15)] glass-card px-5 py-4 space-y-4">
-      <h2 className="text-sm font-bold text-slate-100">Valuation Context</h2>
+    <div className="rounded-xl glass-card-light px-5 py-4 space-y-4">
+      <h2 className="text-sm font-bold text-slate-900">Valuation Context</h2>
 
       {/* Forward P/E */}
       <div>
         <div className="flex items-baseline justify-between mb-2">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">SPY Forward P/E</p>
-          <p className="text-base font-bold font-mono text-slate-100">
-            {spyForwardPE != null ? `${spyForwardPE.toFixed(1)}×` : <NABadge reason="no-data" />}
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">SPY Forward P/E</p>
+          <p className="text-base font-bold font-mono text-slate-900">
+            {spyForwardPE != null ? `${spyForwardPE.toFixed(1)}×` : '—'}
           </p>
         </div>
         <div className="grid grid-cols-4 gap-1">
@@ -63,10 +62,10 @@ export default function ValuationContext({ valuation }: Props) {
       {/* ERP */}
       <div>
         <div className="flex items-baseline justify-between mb-2">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Equity Risk Premium</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Equity Risk Premium</p>
           <div className="text-right">
             <span className={cn('text-base font-bold font-mono', erpColor(erp))}>
-              {erp != null ? `${(erp * 100).toFixed(2)}%` : <NABadge reason="calc-error" />}
+              {erp != null ? `${(erp * 100).toFixed(2)}%` : '—'}
             </span>
             {erp != null && (
               <span className={cn('text-xs ml-1.5 font-semibold', erpColor(erp))}>

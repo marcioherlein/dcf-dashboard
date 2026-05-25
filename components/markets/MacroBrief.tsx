@@ -46,18 +46,17 @@ export default function MacroBrief({ macroBrief, briefCachedAt, signals, pulse }
     }
   }
 
-  // Split text into first sentence (free preview) and remainder (Pro)
   const firstSentenceEnd = text ? text.search(/[.!?]\s/) : -1
   const preview = text && firstSentenceEnd > 0 ? text.slice(0, firstSentenceEnd + 1) : text
   const remainder = text && firstSentenceEnd > 0 ? text.slice(firstSentenceEnd + 2) : null
 
   return (
-    <div className="rounded-xl glass-card border-[rgba(59,130,246,0.15)] px-5 py-4">
+    <div className="rounded-xl glass-card-light px-5 py-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <h2 className="text-sm font-bold text-slate-100">Macro Brief</h2>
+          <h2 className="text-sm font-bold text-slate-900">Macro Brief</h2>
           {!allowed && (
-            <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold border border-blue-500/30">
+            <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold border border-blue-200">
               <Lock size={8} /> PRO
             </span>
           )}
@@ -67,13 +66,13 @@ export default function MacroBrief({ macroBrief, briefCachedAt, signals, pulse }
 
       {text ? (
         <div>
-          <p className="text-sm text-slate-300 leading-relaxed">{preview}</p>
+          <p className="text-sm text-slate-700 leading-relaxed">{preview}</p>
           {remainder && (
             allowed ? (
-              <p className="text-sm text-slate-300 leading-relaxed mt-2">{remainder}</p>
+              <p className="text-sm text-slate-700 leading-relaxed mt-2">{remainder}</p>
             ) : (
               <div className="relative mt-2">
-                <p className="text-sm text-slate-300 leading-relaxed blur-sm select-none" aria-hidden>
+                <p className="text-sm text-slate-700 leading-relaxed blur-sm select-none" aria-hidden>
                   {remainder}
                 </p>
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -90,7 +89,7 @@ export default function MacroBrief({ macroBrief, briefCachedAt, signals, pulse }
         </div>
       ) : (
         <div className="flex items-center gap-3">
-          <p className="text-sm text-slate-400 italic">AI analysis not yet generated for this regime.</p>
+          <p className="text-sm text-slate-500 italic">AI analysis not yet generated for this regime.</p>
           {allowed ? (
             <button
               onClick={generate}
@@ -102,7 +101,7 @@ export default function MacroBrief({ macroBrief, briefCachedAt, signals, pulse }
           ) : (
             <Link
               href="/pricing"
-              className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors"
+              className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-500 transition-colors"
             >
               <Lock size={11} /> Upgrade for full brief
             </Link>

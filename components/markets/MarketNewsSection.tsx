@@ -3,52 +3,52 @@ import { ExternalLink } from 'lucide-react'
 import type { NewsItem } from '@/app/api/markets/data/route'
 
 const SOURCE_COLORS: Record<string, string> = {
-  'Reuters':          'bg-orange-500/20 text-orange-300',
-  'Reuters Finance':  'bg-orange-500/20 text-orange-300',
-  'BBC Business':     'bg-red-500/20 text-red-300',
-  'The Guardian':     'bg-blue-500/20 text-blue-300',
-  'MarketWatch':      'bg-green-500/20 text-green-300',
-  'MarketWatch RT':   'bg-green-500/20 text-green-300',
-  'CNBC':             'bg-sky-500/20 text-sky-300',
-  'CNBC Investing':   'bg-sky-500/20 text-sky-300',
-  'Yahoo Finance':    'bg-violet-500/20 text-violet-300',
-  'WSJ Markets':      'bg-white/10 text-slate-300',
-  'CNN Business':     'bg-red-500/20 text-red-300',
-  'Investopedia':     'bg-teal-500/20 text-teal-300',
-  "Barron's":         'bg-white/10 text-slate-300',
-  'Nasdaq':           'bg-blue-500/20 text-blue-300',
-  'Forbes':           'bg-yellow-500/20 text-yellow-300',
-  'TheStreet':        'bg-emerald-500/20 text-emerald-300',
-  'Seeking Alpha':    'bg-indigo-500/20 text-indigo-300',
-  'Motley Fool':      'bg-purple-500/20 text-purple-300',
-  'Kiplinger':        'bg-cyan-500/20 text-cyan-300',
-  'Business Insider': 'bg-pink-500/20 text-pink-300',
-  'Zacks':            'bg-amber-500/20 text-amber-300',
-  'Bloomberg':        'bg-white/10 text-slate-200',
+  'Reuters':          'bg-orange-50 text-orange-700',
+  'Reuters Finance':  'bg-orange-50 text-orange-700',
+  'BBC Business':     'bg-red-50 text-red-700',
+  'The Guardian':     'bg-blue-50 text-blue-700',
+  'MarketWatch':      'bg-green-50 text-green-700',
+  'MarketWatch RT':   'bg-green-50 text-green-700',
+  'CNBC':             'bg-sky-50 text-sky-700',
+  'CNBC Investing':   'bg-sky-50 text-sky-700',
+  'Yahoo Finance':    'bg-violet-50 text-violet-700',
+  'WSJ Markets':      'bg-slate-100 text-slate-600',
+  'CNN Business':     'bg-red-50 text-red-700',
+  'Investopedia':     'bg-teal-50 text-teal-700',
+  "Barron's":         'bg-slate-100 text-slate-600',
+  'Nasdaq':           'bg-blue-50 text-blue-700',
+  'Forbes':           'bg-yellow-50 text-yellow-700',
+  'TheStreet':        'bg-emerald-50 text-emerald-700',
+  'Seeking Alpha':    'bg-indigo-50 text-indigo-700',
+  'Motley Fool':      'bg-purple-50 text-purple-700',
+  'Kiplinger':        'bg-cyan-50 text-cyan-700',
+  'Business Insider': 'bg-pink-50 text-pink-700',
+  'Zacks':            'bg-amber-50 text-amber-700',
+  'Bloomberg':        'bg-slate-100 text-slate-700',
 }
 
 export default function MarketNewsSection({ news }: { news: NewsItem[] }) {
   if (!news.length) return null
 
   return (
-    <div className="rounded-xl glass-card border-[rgba(59,130,246,0.15)] overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-white/10 flex items-center justify-between">
-        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Market News</span>
+    <div className="rounded-xl glass-card-light overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-slate-200 flex items-center justify-between">
+        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Market News</span>
         <span className="text-[10px] text-slate-400 font-mono">{news.length} articles</span>
       </div>
 
-      <div className="overflow-y-auto max-h-[600px] divide-y divide-white/8">
+      <div className="overflow-y-auto max-h-[600px] divide-y divide-slate-100">
         {news.map((item, i) => {
-          const sourceCls = SOURCE_COLORS[item.source] ?? 'bg-white/8 text-slate-400'
+          const sourceCls = SOURCE_COLORS[item.source] ?? 'bg-slate-100 text-slate-600'
           const inner = (
-            <div className="px-4 py-3 hover:bg-white/5 transition-colors group">
+            <div className="px-4 py-3 hover:bg-indigo-50/40 transition-colors group">
               <div className="flex items-start justify-between gap-2">
-                <p className="text-[12.5px] font-medium text-slate-200 leading-snug line-clamp-2 flex-1 group-hover:text-slate-100">
+                <p className="text-[12.5px] font-medium text-slate-700 leading-snug line-clamp-2 flex-1 group-hover:text-slate-900">
                   {item.title}
                 </p>
                 {item.url && (
                   <ExternalLink
-                    className="shrink-0 mt-0.5 w-3 h-3 text-slate-500 group-hover:text-slate-300 transition-colors"
+                    className="shrink-0 mt-0.5 w-3 h-3 text-slate-400 group-hover:text-slate-600 transition-colors"
                   />
                 )}
               </div>

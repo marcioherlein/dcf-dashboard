@@ -1,10 +1,11 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
   ReferenceLine, CartesianGrid,
 } from 'recharts'
 import { cn } from '@/lib/utils'
+import { Plus, X } from 'lucide-react'
 import type { ChartPoint } from '@/app/api/markets/chart/route'
 
 const PERIODS = ['5D', '1M', '3M', '6M', 'YTD', '1Y', '3Y', '5Y'] as const
@@ -18,19 +19,21 @@ const DEFAULT_SERIES = [
   { symbol: 'FXI',   label: 'China',      color: '#ef4444' },
 ]
 
+const COLORS = ['#ec4899', '#14b8a6', '#f97316', '#84cc16', '#06b6d4', '#a855f7']
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function ChartTooltip({ active, payload, label }: any) {
+function ChartTooltip({ active, payload, label, allSeries }: any) {
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-slate-800/80 border border-[rgba(59,130,246,0.15)] rounded-xl shadow-float px-3 py-2.5 text-xs min-w-[160px]">
-      <div className="text-slate-400 font-mono mb-1.5 text-[10px]">{label}</div>
+    <div className="bg-white/97 border border-slate-200 rounded-xl shadow-lg px-3 py-2.5 text-xs min-w-[160px]">
+      <div className="text-slate-500 font-mono mb-1.5 text-[10px]">{label}</div>
       {payload.map((p: { name: string; value: number; color: string }) => (
         <div key={p.name} className="flex items-center justify-between gap-4 mb-0.5">
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full shrink-0" style={{ background: p.color }} />
-            <span className="text-slate-300">{DEFAULT_SERIES.find(s => s.symbol === p.name)?.label ?? p.name}</span>
+            <span className="text-slate-600">{allSeries.find((s: { symbol: string }) => s.symbol === p.name)?.label ?? p.name}</span>
           </div>
-          <span className={cn('font-mono font-bold', p.value >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+          <span className={cn('font-mono font-bold', p.value >= 0 ? 'text-emerald-700' : 'text-red-600')}>
             {p.value >= 0 ? '+' : ''}{p.value?.toFixed(2)}%
           </span>
         </div>
@@ -41,15 +44,20 @@ function ChartTooltip({ active, payload, label }: any) {
 
 export default function NormalizedPerfChart() {
   const [period, setPeriod] = useState<Period>('YTD')
+  const [customSeries, setCustomSeries] = useState<{ symbol: string; label: string; color: string }[]>([])
   const [active, setActive] = useState<Set<string>>(new Set(DEFAULT_SERIES.map(s => s.symbol)))
   const [data, setData] = useState<ChartPoint[]>([])
   const [loading, setLoading] = useState(true)
+  const [showAddInput, setShowAddInput] = useState(false)
+  const [addValue, setAddValue] = useState('')
+  const addInputRef = useRef<HTMLInputElement>(null)
 
-  const fetchData = useCallback(async (p: Period) => {
+  const allSeries = [...DEFAULT_SERIES, ...customSeries]
+
+  const fetchData = useCallback(async (p: Period, symbols: string[]) => {
     setLoading(true)
     try {
-      const symbols = DEFAULT_SERIES.map(s => s.symbol).join(',')
-      const res = await fetch(`/api/markets/chart?symbols=${symbols}&period=${p}`)
+      const res = await fetch(`/api/markets/chart?symbols=${symbols.join(',')}&period=${p}`)
       const json = await res.json()
       setData(json.points ?? [])
     } catch {
@@ -59,7 +67,14 @@ export default function NormalizedPerfChart() {
     }
   }, [])
 
-  useEffect(() => { fetchData(period) }, [period, fetchData])
+  useEffect(() => {
+    fetchData(period, allSeries.map(s => s.symbol))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period, customSeries])
+
+  useEffect(() => {
+    if (showAddInput) addInputRef.current?.focus()
+  }, [showAddInput])
 
   const toggleSeries = (sym: string) => {
     setActive(prev => {
@@ -70,12 +85,30 @@ export default function NormalizedPerfChart() {
     })
   }
 
-  // Thin the data for display — show at most 200 points
+  function addCustomSymbol() {
+    const sym = addValue.trim().toUpperCase()
+    if (!sym || allSeries.find(s => s.symbol === sym)) {
+      setAddValue('')
+      setShowAddInput(false)
+      return
+    }
+    const color = COLORS[customSeries.length % COLORS.length]
+    const newSeries = { symbol: sym, label: sym, color }
+    setCustomSeries(prev => [...prev, newSeries])
+    setActive(prev => new Set(Array.from(prev).concat(sym)))
+    setAddValue('')
+    setShowAddInput(false)
+  }
+
+  function removeCustomSymbol(sym: string) {
+    setCustomSeries(prev => prev.filter(s => s.symbol !== sym))
+    setActive(prev => { const n = new Set(prev); n.delete(sym); return n })
+  }
+
   const displayData = data.length > 200
     ? data.filter((_, i) => i % Math.ceil(data.length / 200) === 0 || i === data.length - 1)
     : data
 
-  // Format x-axis date labels
   const fmtDate = (d: string) => {
     if (!d) return ''
     const date = new Date(d)
@@ -84,13 +117,12 @@ export default function NormalizedPerfChart() {
     return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
   }
 
-  // Compute last values for legend chips
   const lastPoint = displayData[displayData.length - 1]
 
   return (
-    <div className="rounded-xl glass-card border border-[rgba(59,130,246,0.15)] overflow-hidden">
+    <div className="rounded-xl glass-card-light overflow-hidden">
       {/* Header */}
-      <div className="px-4 pt-3 pb-2 border-b border-[rgba(59,130,246,0.15)]">
+      <div className="px-4 pt-3 pb-2 border-b border-slate-200">
         <div className="flex items-center justify-between mb-2">
           <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Normalized Performance</span>
           <div className="flex flex-wrap gap-1">
@@ -100,7 +132,7 @@ export default function NormalizedPerfChart() {
                 onClick={() => setPeriod(p)}
                 className={cn(
                   'px-2 py-0.5 text-[11px] font-semibold rounded transition-colors',
-                  period === p ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-200 hover:bg-white/[0.06]'
+                  period === p ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
                 )}
               >
                 {p}
@@ -109,31 +141,65 @@ export default function NormalizedPerfChart() {
           </div>
         </div>
         {/* Series toggle chips */}
-        <div className="flex flex-wrap gap-1.5">
-          {DEFAULT_SERIES.map(s => {
+        <div className="flex flex-wrap gap-1.5 items-center">
+          {allSeries.map(s => {
             const val = lastPoint?.[s.symbol] as number | undefined
             const isOn = active.has(s.symbol)
+            const isCustom = customSeries.find(c => c.symbol === s.symbol)
             return (
-              <button
-                key={s.symbol}
-                onClick={() => toggleSeries(s.symbol)}
-                className={cn(
-                  'flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-all',
-                  isOn
-                    ? 'border-transparent text-white'
-                    : 'border-[rgba(59,130,246,0.15)] bg-transparent text-slate-500 opacity-50'
+              <div key={s.symbol} className="relative group">
+                <button
+                  onClick={() => toggleSeries(s.symbol)}
+                  className={cn(
+                    'flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-all',
+                    isOn
+                      ? 'border-transparent text-white'
+                      : 'border-slate-200 bg-transparent text-slate-400 opacity-50'
+                  )}
+                  style={isOn ? { background: s.color } : {}}
+                >
+                  <span>{s.label}</span>
+                  {val != null && isOn && (
+                    <span className="opacity-90">
+                      {val >= 0 ? '+' : ''}{val.toFixed(2)}%
+                    </span>
+                  )}
+                </button>
+                {isCustom && (
+                  <button
+                    onClick={() => removeCustomSymbol(s.symbol)}
+                    className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-slate-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X size={8} />
+                  </button>
                 )}
-                style={isOn ? { background: s.color } : {}}
-              >
-                <span>{s.label}</span>
-                {val != null && isOn && (
-                  <span className="opacity-90">
-                    {val >= 0 ? '+' : ''}{val.toFixed(2)}%
-                  </span>
-                )}
-              </button>
+              </div>
             )
           })}
+          {/* Add symbol button */}
+          {showAddInput ? (
+            <form
+              onSubmit={e => { e.preventDefault(); addCustomSymbol() }}
+              className="flex items-center gap-1"
+            >
+              <input
+                ref={addInputRef}
+                value={addValue}
+                onChange={e => setAddValue(e.target.value.toUpperCase())}
+                placeholder="AAPL"
+                className="w-20 px-2 py-0.5 text-[11px] rounded-full border border-blue-300 bg-white text-slate-700 outline-none focus:border-blue-500"
+              />
+              <button type="submit" className="text-[11px] font-semibold text-blue-600 hover:text-blue-500">Add</button>
+              <button type="button" onClick={() => setShowAddInput(false)} className="text-[11px] text-slate-400 hover:text-slate-600">✕</button>
+            </form>
+          ) : (
+            <button
+              onClick={() => setShowAddInput(true)}
+              className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-dashed border-slate-300 text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-colors"
+            >
+              <Plus size={10} /> Add
+            </button>
+          )}
         </div>
       </div>
 
@@ -142,7 +208,7 @@ export default function NormalizedPerfChart() {
         {loading ? (
           <div className="h-full flex items-center justify-center">
             <div className="flex gap-1">
-              {[0,1,2].map(i => (
+              {[0, 1, 2].map(i => (
                 <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: `${i * 150}ms` }} />
               ))}
             </div>
@@ -150,10 +216,10 @@ export default function NormalizedPerfChart() {
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={displayData} margin={{ top: 4, right: 8, bottom: 4, left: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.08)" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" vertical={false} />
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 10, fill: '#94a3b8' }}
+                tick={{ fontSize: 10, fill: '#64748b' }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={fmtDate}
@@ -161,15 +227,15 @@ export default function NormalizedPerfChart() {
                 minTickGap={40}
               />
               <YAxis
-                tick={{ fontSize: 10, fill: '#94a3b8' }}
+                tick={{ fontSize: 10, fill: '#64748b' }}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={v => `${v >= 0 ? '' : ''}${(v as number).toFixed(0)}%`}
+                tickFormatter={v => `${(v as number).toFixed(0)}%`}
                 width={36}
               />
-              <Tooltip content={<ChartTooltip />} />
+              <Tooltip content={<ChartTooltip allSeries={allSeries} />} />
               <ReferenceLine y={0} stroke="#cbd5e1" strokeWidth={1} strokeDasharray="3 2" />
-              {DEFAULT_SERIES.filter(s => active.has(s.symbol)).map(s => (
+              {allSeries.filter(s => active.has(s.symbol)).map(s => (
                 <Line
                   key={s.symbol}
                   type="monotone"

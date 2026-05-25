@@ -30,11 +30,10 @@ function changeCls(v: number | null) {
 }
 
 function badgeCls(v: number | null) {
-  if (v == null) return 'bg-white/8 text-slate-400'
-  return v > 0 ? 'bg-emerald-500/15 text-emerald-400' : v < 0 ? 'bg-red-500/15 text-red-400' : 'bg-white/8 text-slate-400'
+  if (v == null) return 'bg-slate-100 text-slate-500'
+  return v > 0 ? 'bg-emerald-50 text-emerald-700' : v < 0 ? 'bg-red-50 text-red-600' : 'bg-slate-100 text-slate-500'
 }
 
-// Sanitize symbol for display (strips exchange suffixes)
 function displaySymbol(symbol: string): string {
   return symbol.replace(/=X$/, '').replace(/^[\^]/, '').replace(/-USD$/, 'USD').replace(/=F$/, '')
 }
@@ -48,31 +47,25 @@ export default function MarketInstrumentRow({ symbol, name, price, change, chang
       aria-label={`${name} — ${price != null ? fmtNum(price, priceDecimals) : 'N/A'}`}
       className={cn(
         'grid grid-cols-[1fr_72px_68px_68px] items-center px-3 py-2',
-        'hover:bg-slate-50/80 cursor-pointer transition-colors',
+        'hover:bg-indigo-50/60 cursor-pointer transition-colors',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500',
       )}
     >
-      {/* Instrument name column */}
       <div className="min-w-0 pr-2">
-        <div className="text-[13px] font-semibold text-slate-100 leading-tight tracking-tight truncate">
+        <div className="text-[13px] font-semibold text-slate-800 leading-tight tracking-tight truncate">
           {displaySymbol(symbol)}
         </div>
-        <div
-          className="text-[11px] text-slate-400 leading-tight truncate"
-          title={name}
-        >
+        <div className="text-[11px] text-slate-500 leading-tight truncate" title={name}>
           {name}
         </div>
       </div>
 
-      {/* Price column */}
       <div className="text-right tabular-nums">
-        <span className="text-[13px] font-semibold text-slate-100 font-mono">
+        <span className="text-[13px] font-semibold text-slate-700 font-mono">
           {price != null && isFinite(price) ? fmtNum(price, priceDecimals) : <NABadge reason="no-data" />}
         </span>
       </div>
 
-      {/* Absolute change column */}
       <div className={cn('text-right tabular-nums', changeCls(changePct))}>
         <span className="text-[12px] font-mono">
           {change != null && isFinite(change)
@@ -81,7 +74,6 @@ export default function MarketInstrumentRow({ symbol, name, price, change, chang
         </span>
       </div>
 
-      {/* Percent change column */}
       <div className="flex justify-end">
         <span className={cn(
           'inline-block text-right text-[11.5px] font-semibold font-mono tabular-nums',
