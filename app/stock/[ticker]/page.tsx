@@ -8,8 +8,6 @@ import BusinessModel from '@/components/stock/BusinessModel'
 import FinancialScores from '@/components/stock/FinancialScores'
 import AtAGlance from '@/components/stock/AtAGlance'
 import HealthSection from '@/components/stock/HealthSection'
-import OwnershipPanel from '@/components/stock/OwnershipPanel'
-import HoldingReturns from '@/components/stock/HoldingReturns'
 import ScenarioComparisonCard from '@/components/stock/ScenarioComparisonCard'
 import MispricingExplainer from '@/components/stock/MispricingExplainer'
 import TabNav, { type TabId } from '@/components/stock/TabNav'
@@ -21,7 +19,6 @@ import InvestorGradeCard from '@/components/stock/InvestorGradeCard'
 import MobileKeyInsights from '@/components/stock/MobileKeyInsights'
 import InvestorVerdictCard from '@/components/stock/InvestorVerdictCard'
 import ReverseDcfCallout from '@/components/stock/ReverseDcfCallout'
-import ThesisBuilderTab from '@/components/stock/ThesisBuilderTab'
 import { LoginGateProvider, useLoginGate } from '@/components/auth/LoginGateProvider'
 import AuthBanner from '@/components/auth/AuthBanner'
 import { calculatePiotroski, calculateAltman, calculateBeneish } from '@/lib/dcf/calculateScores'
@@ -187,7 +184,7 @@ function StockPageBody() {
     const saved = loadPreLoginState()
     if (!saved) return
     clearPreLoginState()
-    if (saved.tab && ['overview', 'valuation', 'financials', 'risks', 'thesis', 'news'].includes(saved.tab)) {
+    if (saved.tab && ['overview', 'valuation', 'financials', 'risks', 'news'].includes(saved.tab)) {
       setActiveTab(saved.tab as TabId)
     }
     track('saved_after_login', { intent: saved.intent, ticker: saved.ticker ?? ticker })
@@ -267,7 +264,7 @@ function StockPageBody() {
 
   const currency = data?.quote.currency === 'USD' ? '$' : (data?.quote.currency ?? '$') + ' '
 
-  const TAB_ORDER: TabId[] = ['overview', 'valuation', 'financials', 'risks', 'thesis', 'news']
+  const TAB_ORDER: TabId[] = ['overview', 'valuation', 'financials', 'risks', 'news']
 
   const handleTabChange = (tab: TabId) => {
     const dir = TAB_ORDER.indexOf(tab) > TAB_ORDER.indexOf(activeTab) ? 1 : -1
@@ -445,25 +442,6 @@ function StockPageBody() {
                     scores={computedScores ?? data.scores}
                   />
 
-                  <PriceChart
-                    ticker={ticker}
-                    isDark={false}
-                    triangulatedFairValue={data.valuationMethods?.triangulatedFairValue}
-                    analystTarget={data.quote.analystTargetMean}
-                    userModelFairValue={userModelFairValue}
-                  />
-
-                  <AtAGlance
-                    price={data.quote.price}
-                    marketCap={data.quote.marketCap}
-                    high52={data.quote.fiftyTwoWeekHigh}
-                    low52={data.quote.fiftyTwoWeekLow}
-                    sector={data.quote.sector ?? ''}
-                    country={data.businessProfile.country}
-                    currency={currency}
-                    statementsData={statementsData}
-                  />
-
                   {/* Reverse DCF — signature card */}
                   <ReverseDcfCallout
                     price={data.quote.price}
@@ -476,6 +454,14 @@ function StockPageBody() {
                     terminalG={data.terminalG ?? 0.025}
                     historicalCAGR={data.cagrAnalysis?.historicalCagr3y ?? null}
                     isEmergingMarket={computedScores?.altman?.isReliable === false}
+                  />
+
+                  <PriceChart
+                    ticker={ticker}
+                    isDark={false}
+                    triangulatedFairValue={data.valuationMethods?.triangulatedFairValue}
+                    analystTarget={data.quote.analystTargetMean}
+                    userModelFairValue={userModelFairValue}
                   />
 
                   {data.ratings && data.scores && (
@@ -498,13 +484,16 @@ function StockPageBody() {
                     />
                   )}
 
-                  {data.ownership && (
-                    <OwnershipPanel ownership={data.ownership} />
-                  )}
-
-                  {data.holdingReturns && (
-                    <HoldingReturns returns={data.holdingReturns} ticker={data.ticker} />
-                  )}
+                  <AtAGlance
+                    price={data.quote.price}
+                    marketCap={data.quote.marketCap}
+                    high52={data.quote.fiftyTwoWeekHigh}
+                    low52={data.quote.fiftyTwoWeekLow}
+                    sector={data.quote.sector ?? ''}
+                    country={data.businessProfile.country}
+                    currency={currency}
+                    statementsData={statementsData}
+                  />
                   {/* ── Overview → Valuation CTA ── */}
                   <div className="rounded-xl border border-blue-200 bg-blue-50 px-5 py-4 flex items-center justify-between gap-4">
                     <div>
@@ -529,6 +518,13 @@ function StockPageBody() {
                   exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
+                  {data.scenarios && (
+                    <ScenarioComparisonCard
+                      scenarios={data.scenarios}
+                      currentPrice={data.quote.price}
+                      currency={data.quote.currency ?? 'USD'}
+                    />
+                  )}
                   {/* Save CTA */}
                   <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 flex items-center justify-between gap-4">
                     <p className="text-xs text-slate-600">Review and adjust the assumptions below, then save your analysis</p>
@@ -540,13 +536,6 @@ function StockPageBody() {
                     </a>
                   </div>
                   <ValuationLab apiData={data} ticker={ticker} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} onWeightedFVChange={setUserModelFairValue} onActiveMethodChange={setActiveValuationMethod} />
-                  {data.scenarios && (
-                    <ScenarioComparisonCard
-                      scenarios={data.scenarios}
-                      currentPrice={data.quote.price}
-                      currency={data.quote.currency ?? 'USD'}
-                    />
-                  )}
                   {data.fairValue?.fairValuePerShare != null && (
                     <MispricingExplainer
                       ticker={ticker}
@@ -558,8 +547,6 @@ function StockPageBody() {
                       sector={data.quote.sector ?? ''}
                     />
                   )}
-
-
                 </motion.div>
               )}
 
@@ -602,20 +589,6 @@ function StockPageBody() {
                     />
                   )}
                   {data.scores && <FinancialScores scores={computedScores ?? data.scores} />}
-                </motion.div>
-              )}
-
-              {/* ── My Thesis tab ── */}
-              {activeTab === 'thesis' && (
-                <motion.div
-                  key="tab-thesis"
-                  className="space-y-4 pt-5"
-                  initial={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
-                  transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
-                >
-                  <ThesisBuilderTab ticker={ticker} data={data} />
                 </motion.div>
               )}
 

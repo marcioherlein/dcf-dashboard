@@ -1,7 +1,6 @@
 'use client'
 
 import { fmtPrice } from '@/lib/formatters'
-import ProGate from '@/components/monetization/ProGate'
 
 interface ScenarioData {
   fairValue: number
@@ -91,13 +90,9 @@ export default function ScenarioComparisonCard({ scenarios, currentPrice, curren
         Bull / Base / Bear Scenarios
       </p>
       <div className="grid grid-cols-3 gap-3">
-        <ProGate gate="scenario_builder">
-          <ScenarioCol label="Bear" scenario={scenarios.bear} currentPrice={currentPrice} currency={currency} />
-        </ProGate>
+        <ScenarioCol label="Bear" scenario={scenarios.bear} currentPrice={currentPrice} currency={currency} />
         <ScenarioCol label="Base" scenario={scenarios.base} currentPrice={currentPrice} currency={currency} isFeatured />
-        <ProGate gate="scenario_builder">
-          <ScenarioCol label="Bull" scenario={scenarios.bull} currentPrice={currentPrice} currency={currency} />
-        </ProGate>
+        <ScenarioCol label="Bull" scenario={scenarios.bull} currentPrice={currentPrice} currency={currency} />
       </div>
       <p className="text-[10px] text-slate-400 mt-3 leading-relaxed">
         Bear: WACC +1%, CAGR −20%. Bull: WACC −1%, CAGR +20%. Base is the model&apos;s central estimate.

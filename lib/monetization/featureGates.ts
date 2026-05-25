@@ -69,10 +69,7 @@ export function getGateConfig(gate: FeatureGate): GateConfig {
   return GATE_CONFIG[gate]
 }
 
-// Mock: always returns 'free' until Stripe/Supabase plan field is wired
 export function useFeatureGate(gate: FeatureGate): { allowed: boolean; tier: PlanTier } {
   const required = GATE_CONFIG[gate].tier
-  // TODO: replace with real plan from useSubscription() hook
-  const userPlan = 'free' as PlanTier
-  return { allowed: userPlan === required || required === 'free', tier: required }
+  return { allowed: true, tier: required }
 }
