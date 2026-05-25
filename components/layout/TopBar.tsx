@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import Image from 'next/image'
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
-import { slideDown, stagger } from '@/lib/motion'
+import { slideDown } from '@/lib/motion'
 
 interface SearchResult {
   symbol: string

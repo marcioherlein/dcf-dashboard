@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import { stagger } from '@/lib/motion'
 
 interface NewsItem { title: string; link: string; publisher: string; providerPublishTime: number }
