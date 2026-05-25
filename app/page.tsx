@@ -44,6 +44,9 @@ function TypewriterHeadline({ phrases }: { phrases: string[] }) {
   const [displayText, setDisplayText] = useState('')
   const [stage, setStage] = useState<'typing' | 'holding' | 'deleting'>('typing')
 
+  // longest phrase reserves a fixed container width — layout never reflows as text changes
+  const longest = phrases.reduce((a, b) => a.length > b.length ? a : b)
+
   useEffect(() => {
     const phrase = phrases[phraseIdx]
     let timer: ReturnType<typeof setTimeout>
@@ -71,12 +74,19 @@ function TypewriterHeadline({ phrases }: { phrases: string[] }) {
   }, [stage, displayText, phraseIdx, phrases])
 
   return (
-    <span className="text-blue-400 font-medium">
-      {displayText || '​'}
-      <span
-        className="inline-block w-[2px] h-[0.88em] bg-blue-400 ml-[2px] align-middle rounded-sm"
-        style={{ animation: stage === 'holding' ? 'pulse 1s ease-in-out infinite' : 'none', opacity: stage === 'holding' ? undefined : 1 }}
-      />
+    <span className="relative inline-block" style={{ verticalAlign: 'bottom' }}>
+      {/* invisible spacer — locks the container to the longest phrase width so the h1 never reflows */}
+      <span className="invisible whitespace-nowrap select-none pointer-events-none" aria-hidden="true">
+        {longest}
+      </span>
+      {/* typewriter text overlaid on top — position:absolute keeps it out of layout flow */}
+      <span className="absolute inset-0 text-blue-400 font-medium whitespace-nowrap">
+        {displayText}
+        <span
+          className="inline-block w-[2px] h-[0.88em] bg-blue-400 ml-[2px] align-middle rounded-sm"
+          style={{ animation: stage === 'holding' ? 'pulse 1s ease-in-out infinite' : 'none', opacity: stage === 'holding' ? undefined : 1 }}
+        />
+      </span>
     </span>
   )
 }
