@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
-import { TrendingUp, TrendingDown, Bookmark, Share2, Check, DollarSign, Shield, BarChart2, ArrowRight, Bell, BellOff } from 'lucide-react'
+import { TrendingUp, TrendingDown, Bookmark, Share2, Check, Bell, BellOff } from 'lucide-react'
 import { motion, useMotionValue, animate } from 'motion/react'
 import { cn } from '@/lib/utils'
-import { fmtPct, fmtLargeCurrency, fmtPrice, upsideZone, zoneBadgeClass } from '@/lib/formatters'
-import { NABadge } from '@/components/ui/na-badge'
+import { fmtPct, fmtPrice, upsideZone, zoneBadgeClass } from '@/lib/formatters'
 import ArcGauge from '@/components/ui/arc-gauge'
 
 interface Props {
@@ -21,30 +20,30 @@ interface Props {
   // Fair value
   fairValue: number | null
   upsidePct: number | null   // positive = undervalued, negative = overvalued
-  // Health pills (plain-English one-sentence summaries)
+  // Health pills (kept for API compat, not rendered)
   profitabilitySummary: string
   liquiditySummary: string
   growthSummary: string
-  // Stat grid
+  // Stat grid (kept for API compat, not rendered)
   marketCap: number
   high52: number
   low52: number
   analystTarget: number
-  // Key drivers (short strings shown as chips)
+  // Key drivers (kept for API compat, not rendered)
   drivers?: string[]
   // Actions
   onSave?: () => void
-  onViewDetails?: () => void   // navigate to Valuation tab
+  onViewDetails?: () => void
   // Layout variant
   compact?: boolean  // true = 1-line strip (used on valuation tab)
 }
 
-function gradeColors(grade: string): { bg: string; text: string; badge: string; hex: string } {
+function gradeColors(grade: string): { bg: string; text: string; hex: string } {
   const g = grade.replace('+', '').replace('-', '')
-  if (g === 'A')  return { bg: 'bg-emerald-100 border border-emerald-300', text: 'text-emerald-800', badge: 'border-emerald-300', hex: '#059669' }
-  if (g === 'B')  return { bg: 'bg-blue-100 border border-blue-300',       text: 'text-blue-800',   badge: 'border-blue-300',   hex: '#2563EB' }
-  if (g === 'C')  return { bg: 'bg-amber-100 border border-amber-300',     text: 'text-amber-800',  badge: 'border-amber-300',  hex: '#D97706' }
-  return           { bg: 'bg-red-100 border border-red-300',               text: 'text-red-800',    badge: 'border-red-300',    hex: '#DC2626' }
+  if (g === 'A')  return { bg: 'bg-emerald-100 border border-emerald-300', text: 'text-emerald-800', hex: '#059669' }
+  if (g === 'B')  return { bg: 'bg-blue-100 border border-blue-300',       text: 'text-blue-800',   hex: '#2563EB' }
+  if (g === 'C')  return { bg: 'bg-amber-100 border border-amber-300',     text: 'text-amber-800',  hex: '#D97706' }
+  return           { bg: 'bg-red-100 border border-red-300',               text: 'text-red-800',    hex: '#DC2626' }
 }
 
 function gradeToValue(grade: string): number {
@@ -58,27 +57,9 @@ function gradeToValue(grade: string): number {
   return map[grade] ?? 50
 }
 
-function pillIcon(type: 'profit' | 'debt' | 'growth') {
-  if (type === 'profit') return <DollarSign size={14} className="shrink-0" />
-  if (type === 'debt')   return <Shield      size={14} className="shrink-0" />
-  return                        <BarChart2   size={14} className="shrink-0" />
-}
-
-function StatBox({ label, value, hidden }: { label: string; value: React.ReactNode; hidden?: boolean }) {
-  return (
-    <div className={cn('rounded-xl bg-slate-50 border border-slate-200 px-4 py-3', hidden && 'hidden sm:block')}>
-      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">{label}</p>
-      <p className="mt-0.5 text-sm font-semibold text-slate-900">{value}</p>
-    </div>
-  )
-}
-
 export default function InvestorGradeCard({
   ticker, companyName, sector, price, change, changePct, currency,
   grade, gradeLabel, fairValue, upsidePct,
-  profitabilitySummary, liquiditySummary, growthSummary,
-  marketCap, high52, low52, analystTarget,
-  drivers,
   onSave, onViewDetails,
   compact = false,
 }: Props) {
@@ -93,7 +74,6 @@ export default function InvestorGradeCard({
   const [alertActive, setAlertActive] = useState(false)
   const [alertTriggered, setAlertTriggered] = useState(false)
 
-  // Load alert state from localStorage on mount
   useEffect(() => {
     if (typeof window === 'undefined') return
     try {
@@ -119,6 +99,7 @@ export default function InvestorGradeCard({
       setAlertActive(true)
     }
   }
+
   const handleShare = useCallback(() => {
     if (typeof window === 'undefined') return
     const params = new URLSearchParams({
@@ -136,7 +117,6 @@ export default function InvestorGradeCard({
     })
   }, [ticker, price, fairValue, upsidePct, currency, companyName])
 
-  // Animated fair value counter
   const fvMotion = useMotionValue(0)
   const [displayFV, setDisplayFV] = useState(0)
   useEffect(() => {
@@ -196,7 +176,7 @@ export default function InvestorGradeCard({
   // ── Full card ─────────────────────────────────────────────────────────────
   return (
     <div className="rounded-xl card overflow-hidden">
-      {/* ── STATE 1: always visible ── */}
+      {/* Identity + price */}
       <div className="p-5">
         <div className="flex items-start gap-4">
 
@@ -264,141 +244,109 @@ export default function InvestorGradeCard({
         </div>
       </div>
 
-      {/* ── Expanded details — always visible ── */}
+      {/* Fair value visual + actions */}
       <div className="border-t border-slate-200 px-5 pb-5 pt-4 space-y-4 bg-slate-50">
 
-          {/* Fair value row */}
-          {fairValue != null && (
-            <>
-              {/* Alert triggered banner */}
-              {alertTriggered && (
-                <div className="flex items-center gap-2 rounded-xl bg-blue-50 border border-blue-200 px-3 py-2">
-                  <Bell size={13} className="text-blue-600 shrink-0" />
-                  <p className="text-[11px] text-blue-700 font-medium">
-                    {ticker} is now within 10% of your fair value alert ({fmtPrice(fairValue, currency)})
-                  </p>
+        {/* Alert triggered banner */}
+        {alertTriggered && fairValue != null && (
+          <div className="flex items-center gap-2 rounded-xl bg-blue-50 border border-blue-200 px-3 py-2">
+            <Bell size={13} className="text-blue-600 shrink-0" />
+            <p className="text-[11px] text-blue-700 font-medium">
+              {ticker} is now within 10% of your fair value alert ({fmtPrice(fairValue, currency)})
+            </p>
+          </div>
+        )}
+
+        {/* Fair value visual */}
+        {fairValue != null && (
+          <div className="rounded-xl card-tinted px-4 py-4 space-y-3">
+            {/* Price vs Fair Value numbers */}
+            <div className="flex items-end justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Current Price</p>
+                <p className="text-2xl font-bold text-slate-900 tabular-nums leading-none">
+                  {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+              </div>
+
+              {/* Upside badge centered */}
+              {upsidePct != null && zone && (
+                <div className="flex flex-col items-center gap-1 shrink-0">
+                  <span className={cn('text-sm font-bold tabular-nums px-3 py-1 rounded-full border whitespace-nowrap', zoneBadgeClass(zone))}>
+                    {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
+                  </span>
+                  <span className="text-[10px] text-slate-400">{zone}</span>
                 </div>
               )}
-              <div className="flex items-center gap-3 rounded-xl card-tinted px-4 py-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">You pay</p>
-                  <p className="mt-0.5 text-sm font-semibold text-slate-900 tabular-nums">
-                    {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </p>
-                </div>
-                <div className="flex flex-col items-center gap-1 shrink-0">
-                  <ArrowRight size={14} className="text-slate-400" />
-                  {zone && (
-                    <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap', zoneBadgeClass(zone))}>
-                      {zone}
-                    </span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0 text-right">
-                  <div className="flex items-start justify-end gap-2">
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Fair Value Estimate</p>
-                      <p className={cn('mt-0.5 text-xl font-bold tabular-nums', isUndervalued ? 'text-emerald-600' : 'text-amber-700')}>
-                        {currSymbol}{displayFV.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </p>
-                      {upsidePct != null && (
-                        <p className={cn('text-xs font-semibold', isUndervalued ? 'text-emerald-600' : 'text-amber-700')}>
-                          {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
-                        </p>
-                      )}
-                    </div>
-                    {/* Alert toggle */}
-                    <button
-                      onClick={toggleAlert}
-                      title={alertActive ? 'Remove fair value alert' : 'Alert me when price is within 10% of fair value'}
-                      className={cn(
-                        'mt-1 rounded-lg border p-1.5 transition-colors',
-                        alertActive
-                          ? 'bg-blue-50 border-blue-300 text-blue-600'
-                          : 'bg-white border-slate-200 text-slate-400 hover:border-blue-300 hover:text-blue-600',
-                      )}
-                    >
-                      {alertActive ? <BellOff size={13} /> : <Bell size={13} />}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
 
-          {/* Health pills — only render if at least one summary exists */}
-          {(profitabilitySummary || liquiditySummary || growthSummary) && (
-            <div className="space-y-2">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Health check</p>
-              {[
-                { type: 'profit' as const, label: 'Profitability', summary: profitabilitySummary },
-                { type: 'debt'   as const, label: 'Financial Health', summary: liquiditySummary   },
-                { type: 'growth' as const, label: 'Growth',            summary: growthSummary      },
-              ].filter(p => p.summary).map(({ type, label, summary }) => (
-                <div key={type} className="flex items-start gap-2.5 rounded-xl card-tinted px-3 py-2.5">
-                  <span className="text-blue-600 mt-0.5">{pillIcon(type)}</span>
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-800">{label}</p>
-                    <p className="text-[11px] text-slate-600 leading-relaxed">{summary}</p>
-                  </div>
+              <div className="text-right min-w-0">
+                <div className="flex items-center justify-end gap-1.5 mb-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Fair Value Est.</p>
+                  <button
+                    onClick={toggleAlert}
+                    title={alertActive ? 'Remove fair value alert' : 'Alert me when price nears fair value'}
+                    className={cn(
+                      'rounded-md border p-1 transition-colors shrink-0',
+                      alertActive
+                        ? 'bg-blue-50 border-blue-300 text-blue-600'
+                        : 'bg-white border-slate-200 text-slate-300 hover:border-blue-300 hover:text-blue-600',
+                    )}
+                  >
+                    {alertActive ? <BellOff size={11} /> : <Bell size={11} />}
+                  </button>
                 </div>
-              ))}
-            </div>
-          )}
-
-          {/* Key Drivers */}
-          {drivers && drivers.length > 0 && (
-            <div className="space-y-1.5">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Key drivers</p>
-              <div className="flex flex-col gap-1.5">
-                {drivers.slice(0, 2).map((d, i) => (
-                  <div key={i} className="flex items-start gap-2 rounded-md card-tinted border-l-4 border-l-blue-500 px-3 py-2">
-                    <p className="text-[11px] text-slate-700 leading-snug">{d.split(' — ')[0]}</p>
-                  </div>
-                ))}
-                {drivers.length > 2 && (
-                  <p className="text-[11px] text-slate-400 px-1">and {drivers.length - 2} more</p>
-                )}
+                <p className={cn('text-2xl font-bold tabular-nums leading-none', isUndervalued ? 'text-emerald-600' : 'text-amber-700')}>
+                  {currSymbol}{displayFV.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
               </div>
             </div>
-          )}
 
-          {/* Escalation hook */}
-          <div className="flex items-center justify-between gap-4">
-            {onViewDetails && (
-              <button
-                onClick={onViewDetails}
-                className="flex-1 rounded-xl py-2.5 text-[13px] font-semibold text-white transition-all bg-gradient-to-r from-blue-600 to-blue-500 shadow-sm hover:from-blue-700 hover:to-blue-600 active:scale-95"
-              >
-                Explore full valuation →
-              </button>
-            )}
-            {onSave && (
-              <button
-                onClick={onSave}
-                title="Save to Watchlist"
-                className="rounded-xl border border-slate-200 p-2.5 text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-              >
-                <Bookmark size={16} />
-              </button>
-            )}
+            {/* Progress bar: how far current price is toward fair value */}
+            <div>
+              <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
+                <motion.div
+                  className={cn('h-full rounded-full', isUndervalued ? 'bg-emerald-500' : 'bg-amber-500')}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(100, Math.max(4, (price / Math.max(price, fairValue)) * 100))}%` }}
+                  transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+                />
+              </div>
+              <div className="flex justify-between mt-1">
+                <span className="text-[10px] text-slate-400">Today</span>
+                <span className={cn('text-[10px] font-medium', isUndervalued ? 'text-emerald-600' : 'text-amber-700')}>
+                  Fair Value
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Action bar */}
+        <div className="flex items-center justify-between gap-4">
+          {onViewDetails && (
             <button
-              onClick={handleShare}
-              title="Copy share link"
+              onClick={onViewDetails}
+              className="flex-1 rounded-xl py-2.5 text-[13px] font-semibold text-white transition-all bg-gradient-to-r from-blue-600 to-blue-500 shadow-sm hover:from-blue-700 hover:to-blue-600 active:scale-95"
+            >
+              Explore full valuation →
+            </button>
+          )}
+          {onSave && (
+            <button
+              onClick={onSave}
+              title="Save to Watchlist"
               className="rounded-xl border border-slate-200 p-2.5 text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
             >
-              {copied ? <Check size={16} className="text-emerald-600" /> : <Share2 size={16} />}
+              <Bookmark size={16} />
             </button>
-          </div>
-      </div>
-
-      {/* ── Stat grid — always visible ── */}
-      <div className="border-t border-slate-200 px-5 py-4">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <StatBox label="Market Cap"     value={fmtLargeCurrency(marketCap, currency)} />
-          <StatBox label="52-wk High"     value={fmtPrice(high52, currency)} />
-          <StatBox label="52-wk Low"      value={fmtPrice(low52, currency)} hidden />
-          <StatBox label="Analyst Target" value={analystTarget ? fmtPrice(analystTarget, currency) : <NABadge reason="no-coverage" />} />
+          )}
+          <button
+            onClick={handleShare}
+            title="Copy share link"
+            className="rounded-xl border border-slate-200 p-2.5 text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+          >
+            {copied ? <Check size={16} className="text-emerald-600" /> : <Share2 size={16} />}
+          </button>
         </div>
       </div>
     </div>

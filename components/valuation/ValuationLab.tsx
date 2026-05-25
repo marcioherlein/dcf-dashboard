@@ -557,6 +557,27 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
         </div>
       )}
 
+      {/* Assumption anchor — plain-English summary of key assumption → fair value */}
+      {editableAssumptions.length > 0 && (() => {
+        const cagrA = config.assumptions.find(a => a.key === 'revenueCAGR')
+        const cagrVal = cagrA != null ? ((cagrA.key in overrides ? overrides[cagrA.key] : cagrA.value ?? 0) * 100).toFixed(1) : null
+        if (!cagrVal || !config.fairValueSummary) return null
+        const upsideNum = config.currentPrice && config.currentPrice > 0
+          ? ((config.fairValueSummary - config.currentPrice) / config.currentPrice * 100)
+          : null
+        return (
+          <p className="mx-5 mt-4 text-[11px] text-slate-500 bg-slate-50 rounded-lg px-3 py-2 border border-slate-100 leading-relaxed">
+            With <strong className="text-slate-700">{cagrVal}% annual revenue growth</strong>, this model estimates{' '}
+            <strong className="text-slate-700">{fmtPrice(config.fairValueSummary, currency)}</strong> fair value
+            {upsideNum != null && (
+              <> (<span className={upsideNum >= 0 ? 'text-emerald-700 font-semibold' : 'text-amber-700 font-semibold'}>
+                {upsideNum >= 0 ? '+' : ''}{upsideNum.toFixed(1)}% vs today
+              </span>)</>
+            )}.
+          </p>
+        )
+      })()}
+
       {/* Editable sliders */}
       {editableAssumptions.length > 0 && (
         <div className="px-5 pt-5 pb-2 space-y-5">
@@ -586,7 +607,15 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                     )}
                     <span className={cn(
                       'text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider',
-                      isOverridden ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500',
+                      isOverridden
+                        ? 'bg-blue-100 text-blue-700'
+                        : a.source === 'analyst_estimate'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : a.source === 'historical_3y_median' || a.source === 'historical_5y_median'
+                        ? 'bg-blue-100 text-blue-600'
+                        : a.source === 'sector_fallback'
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-slate-100 text-slate-500',
                     )}>
                       {isOverridden ? 'Override' : sourceLabel(a.source)}
                     </span>

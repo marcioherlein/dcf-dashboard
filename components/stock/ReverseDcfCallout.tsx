@@ -111,6 +111,17 @@ export default function ReverseDcfCallout({
               )}
             </div>
 
+            {/* Gap callout */}
+            {historicalPct != null && impliedPct != null && Math.abs(impliedPct - historicalPct) > 1 && (
+              <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-[12px] text-slate-600 leading-relaxed">
+                The market assumes <strong>{impliedPct.toFixed(1)}%</strong> growth — that&apos;s{' '}
+                <strong className={impliedPct < historicalPct ? 'text-amber-700' : 'text-emerald-700'}>
+                  {Math.abs(impliedPct - historicalPct).toFixed(1)}pp {impliedPct < historicalPct ? 'below' : 'above'}
+                </strong>{' '}
+                the 3-year historical track record of <strong>{historicalPct.toFixed(1)}%</strong>.
+              </div>
+            )}
+
             {/* Comparison progress bars */}
             <div className="space-y-3">
               <div>

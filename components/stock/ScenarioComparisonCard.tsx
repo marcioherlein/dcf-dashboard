@@ -50,18 +50,30 @@ function ScenarioCol({
           <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">Base case</span>
         )}
       </div>
+
+      {/* Consequence — primary signal */}
+      {upside != null && (
+        <div>
+          <p className={`text-2xl font-bold tabular-nums leading-none ${
+            upside >= 0 ? 'text-emerald-600' : 'text-red-600'
+          }`}>
+            {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(1)}%
+          </p>
+          <p className="text-[10px] text-slate-400 mt-1">
+            {label === 'Bull' ? 'if growth exceeds expectations'
+             : label === 'Bear' ? 'if growth disappoints'
+             : 'central estimate'}
+          </p>
+        </div>
+      )}
+
       <div>
         <p className="text-[10px] text-slate-500">Fair Value</p>
-        <p className={`text-xl font-bold tabular-nums ${
-          isFeatured ? 'text-blue-700' : isUp ? 'text-emerald-600' : 'text-red-600'
+        <p className={`text-base font-semibold tabular-nums ${
+          isFeatured ? 'text-blue-700' : upside != null && upside >= 0 ? 'text-emerald-600' : 'text-red-600'
         }`}>
           {fmtPrice(scenario.fairValue, currency)}
         </p>
-        {upside != null && (
-          <p className={`text-xs font-semibold mt-0.5 ${isUp ? 'text-emerald-600' : 'text-red-600'}`}>
-            {isUp ? '+' : ''}{(upside * 100).toFixed(1)}% vs current
-          </p>
-        )}
       </div>
       <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 pt-2 border-t border-slate-100">
         <div>

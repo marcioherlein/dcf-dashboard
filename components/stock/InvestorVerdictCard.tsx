@@ -89,6 +89,21 @@ function verdictFromUpside(upside: number): 'undervalued' | 'fairly-valued' | 'o
   return 'overvalued'
 }
 
+type Decision = 'BUY' | 'WATCH' | 'AVOID'
+
+function decisionFromUpside(upside: number): { decision: Decision; note: string } {
+  if (upside >= 0.20) return { decision: 'BUY',   note: `Strong margin of safety — ${(upside * 100).toFixed(0)}% below fair value` }
+  if (upside >= 0.05) return { decision: 'BUY',   note: `Moderate upside — ${(upside * 100).toFixed(0)}% below fair value` }
+  if (upside >= -0.10) return { decision: 'WATCH', note: 'Near fair value — monitor for a better entry' }
+  return { decision: 'AVOID', note: `${Math.abs(upside * 100).toFixed(0)}% above fair value estimate — wait for a better price` }
+}
+
+const DECISION_COLORS: Record<Decision, string> = {
+  BUY:   'bg-emerald-100 border-emerald-300 text-emerald-800',
+  WATCH: 'bg-amber-100 border-amber-300 text-amber-800',
+  AVOID: 'bg-red-100 border-red-300 text-red-800',
+}
+
 function plainEnglishSummary(
   upside: number,
   price: number,
@@ -179,15 +194,19 @@ export default function InvestorVerdictCard({
 
   const summary = plainEnglishSummary(upside, price, fairValue, sym, quality)
   const flags = scores ? extractRedFlags(scores) : null
+  const { decision, note } = decisionFromUpside(upside)
 
   return (
     <div className={cn('rounded-xl border px-5 py-4 space-y-3', config.bg)}>
       {/* Header row */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className={cn('w-2 h-2 rounded-full shrink-0', config.dot)} />
           <span className={cn('text-sm font-bold tracking-wide', config.text)}>
             {config.label}
+          </span>
+          <span className={cn('text-[11px] font-bold px-2 py-0.5 rounded-full border', DECISION_COLORS[decision])}>
+            {decision}
           </span>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -200,8 +219,11 @@ export default function InvestorVerdictCard({
         </div>
       </div>
 
-      {/* Plain English summary */}
+      {/* Plain English summary + margin of safety */}
       <p className="text-[12px] text-slate-600 leading-relaxed">{summary}</p>
+      <p className={cn('text-[12px] font-medium leading-tight', decision === 'BUY' ? 'text-emerald-700' : decision === 'WATCH' ? 'text-amber-700' : 'text-red-700')}>
+        {note}.
+      </p>
 
       {/* Signal pills */}
       <div className="flex gap-2 flex-wrap pt-0.5">

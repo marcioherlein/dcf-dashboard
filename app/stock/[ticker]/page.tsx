@@ -527,7 +527,7 @@ function StockPageBody() {
                   )}
                   {/* Save CTA */}
                   <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 flex items-center justify-between gap-4">
-                    <p className="text-xs text-slate-600">Review and adjust the assumptions below, then save your analysis</p>
+                    <p className="text-xs text-slate-600">Agree with these numbers? Save your analysis and track if the price moves toward fair value.</p>
                     <a
                       href={`/simplifier/${ticker}`}
                       className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-medium text-white hover:bg-emerald-500 transition-colors shrink-0"
