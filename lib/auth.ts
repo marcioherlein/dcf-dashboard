@@ -18,17 +18,21 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user }) {
       if (user.email) {
-        await serviceClient()
-          .from('users')
-          .upsert(
-            {
-              email: user.email,
-              name: user.name ?? null,
-              avatar_url: user.image ?? null,
-              last_seen: new Date().toISOString(),
-            },
-            { onConflict: 'email' },
-          )
+        try {
+          await serviceClient()
+            .from('users')
+            .upsert(
+              {
+                email: user.email,
+                name: user.name ?? null,
+                avatar_url: user.image ?? null,
+                last_seen: new Date().toISOString(),
+              },
+              { onConflict: 'email' },
+            )
+        } catch {
+          // Never block login if email capture fails
+        }
       }
       return true
     },
