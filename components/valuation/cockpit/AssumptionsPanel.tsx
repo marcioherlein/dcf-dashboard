@@ -34,10 +34,7 @@ function fmtVal(val: number, unit: '%' | 'x'): string {
 
 function SparkBars({ points, unit }: { points: SparkPoint[]; unit: '%' | 'x' }) {
   if (!points.length) return null
-  const W = 56
-  const H = 28
-  const LABEL_H = 9
-  const BAR_AREA = H - LABEL_H
+  const W = 56, H = 28, LABEL_H = 9, BAR_AREA = H - LABEL_H
   const vals = points.map(p => p.value)
   const hasNeg = vals.some(v => v < 0)
   const rawMin = hasNeg ? Math.min(...vals) : 0
@@ -49,29 +46,19 @@ function SparkBars({ points, unit }: { points: SparkPoint[]; unit: '%' | 'x' }) 
   const offsetX = Math.floor((W - totalW) / 2)
   const zeroY = hasNeg ? (rawMax / range) * BAR_AREA : BAR_AREA
   return (
-    <svg width={W} height={H} style={{ display: 'block', flexShrink: 0 }}>
-      {hasNeg && (
-        <line x1={0} y1={zeroY} x2={W} y2={zeroY} stroke="#cbd5e1" strokeWidth={0.5} strokeDasharray="2 2" />
-      )}
+    <svg width={W} height={H} style={{ display: 'block', flexShrink: 0 }} aria-hidden="true">
+      {hasNeg && <line x1={0} y1={zeroY} x2={W} y2={zeroY} stroke="#cbd5e1" strokeWidth={0.5} strokeDasharray="2 2" />}
       {points.map((p, i) => {
         const x = offsetX + i * (BAR_W + 2)
         const isNeg = p.value < 0
-        let barTop: number, barH: number
-        if (isNeg) {
-          barTop = zeroY
-          barH = Math.max(1.5, ((-p.value) / range) * BAR_AREA)
-        } else {
-          barH = Math.max(1.5, (p.value / range) * BAR_AREA)
-          barTop = zeroY - barH
-        }
+        const barH = Math.max(1.5, (Math.abs(p.value) / range) * BAR_AREA)
+        const barTop = isNeg ? zeroY : zeroY - barH
         return (
           <g key={i}>
             <title>{fmtVal(p.value, unit)}</title>
             <rect x={x} y={barTop} width={BAR_W} height={barH} fill={isNeg ? '#fca5a5' : '#93c5fd'} rx={1} />
             <text x={x + BAR_W / 2} y={H - 1} textAnchor="middle" fontSize={6} fill="#94a3b8"
-              fontFamily="-apple-system, system-ui, sans-serif">
-              {p.label}
-            </text>
+              fontFamily="-apple-system, system-ui, sans-serif">{p.label}</text>
           </g>
         )
       })}
@@ -84,10 +71,17 @@ interface Props {
   defaults: ValuationAssumptions
   onChange: (a: ValuationAssumptions) => void
   onReset: () => void
+  onUndo?: () => void
+  canUndo?: boolean
   historicalData?: Partial<Record<keyof ValuationAssumptions, SparkPoint[]>>
+  blendedFairValue?: number | null
+  defaultBlendedFairValue?: number | null
 }
 
-export default function AssumptionsPanel({ assumptions, defaults, onChange, onReset, historicalData }: Props) {
+export default function AssumptionsPanel({
+  assumptions, defaults, onChange, onReset, onUndo, canUndo,
+  historicalData, blendedFairValue, defaultBlendedFairValue,
+}: Props) {
   function adjust(key: keyof ValuationAssumptions, delta: number) {
     const f = FIELDS.find(x => x.key === key)!
     const next = Math.min(f.max, Math.max(f.min, (assumptions[key] as number) + delta))
@@ -100,16 +94,42 @@ export default function AssumptionsPanel({ assumptions, defaults, onChange, onRe
     if (!isNaN(val)) onChange({ ...assumptions, [key]: Math.min(f.max, Math.max(f.min, val)) })
   }
 
+  const deltaPct = (blendedFairValue != null && defaultBlendedFairValue != null && defaultBlendedFairValue > 0)
+    ? (blendedFairValue - defaultBlendedFairValue) / defaultBlendedFairValue
+    : null
+
+  const isModified = FIELDS.some(f => Math.abs((assumptions[f.key] as number) - (defaults[f.key] as number)) > 0.00001)
+
   return (
     <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-6 py-5">
       <div className="flex items-center justify-between mb-5">
-        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Assumptions</p>
-        <button
-          onClick={onReset}
-          className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors px-3 py-1.5 rounded-lg hover:bg-blue-50"
-        >
-          Reset to defaults
-        </button>
+        <div className="flex items-center gap-3">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Assumptions</p>
+          {/* Real-time delta vs defaults (Fix #22) */}
+          {deltaPct != null && isModified && Math.abs(deltaPct) > 0.001 && (
+            <span className={`text-xs font-semibold tabular-nums ${deltaPct >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+              {deltaPct >= 0 ? '+' : ''}{(deltaPct * 100).toFixed(1)}% vs default
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Undo button (Fix #23) */}
+          {canUndo && onUndo && (
+            <button
+              onClick={onUndo}
+              className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-2 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+              title="Undo last change"
+            >
+              ↩ Undo
+            </button>
+          )}
+          <button
+            onClick={onReset}
+            className="text-xs font-semibold text-blue-600 hover:text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+          >
+            Reset to defaults
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-5">
@@ -149,7 +169,6 @@ export default function AssumptionsPanel({ assumptions, defaults, onChange, onRe
               {/* Row 2: slider + sparkline */}
               <div className="flex items-center gap-3">
                 <div className="relative flex items-center h-5 flex-1">
-                  {/* Track background */}
                   <div className="absolute inset-y-0 flex items-center w-full pointer-events-none">
                     <div className="w-full h-2 rounded-full bg-slate-200" />
                     <div
@@ -159,10 +178,7 @@ export default function AssumptionsPanel({ assumptions, defaults, onChange, onRe
                   </div>
                   <input
                     type="range"
-                    min={f.min}
-                    max={f.max}
-                    step={f.step}
-                    value={val}
+                    min={f.min} max={f.max} step={f.step} value={val}
                     onChange={e => handleSlider(f.key, e.target.value)}
                     className="relative w-full cursor-pointer appearance-none bg-transparent
                       [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4
@@ -172,7 +188,6 @@ export default function AssumptionsPanel({ assumptions, defaults, onChange, onRe
                       [&::-moz-range-thumb]:bg-blue-600 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer"
                   />
                 </div>
-
                 {sparkPoints && sparkPoints.length > 0 ? (
                   <div className="flex flex-col items-center gap-0.5 shrink-0">
                     <p className="text-[7px] text-slate-400 uppercase tracking-wide leading-none">hist</p>

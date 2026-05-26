@@ -9,120 +9,129 @@ interface Props {
   currency: string
   ticker: string
   onViewFullDCF?: () => void
-  onViewAllAssumptions?: () => void
 }
 
 const VERDICT_COLORS = {
-  Undervalued:         'text-emerald-400',
-  'Fairly Valued':     'text-amber-400',
-  Overvalued:          'text-red-400',
-  'Insufficient Data': 'text-white/40',
+  Undervalued:         { text: 'text-emerald-400', bg: 'bg-emerald-400/10 border-emerald-400/30' },
+  'Fairly Valued':     { text: 'text-blue-400',    bg: 'bg-blue-400/10 border-blue-400/30' },
+  Overvalued:          { text: 'text-red-400',     bg: 'bg-red-400/10 border-red-400/30' },
+  'Insufficient Data': { text: 'text-white/60',    bg: 'bg-white/5 border-white/10' },
 }
 
-function ConfidenceRangeBar({ methods, blendedFairValue, currentPrice, currency }: {
+const DIVERGENCE_STYLE = {
+  low:      { text: 'text-emerald-400', label: 'Models agree' },
+  moderate: { text: 'text-amber-400',   label: 'Moderate spread' },
+  high:     { text: 'text-red-400',     label: 'High divergence' },
+}
+
+const METHOD_COLORS = ['bg-blue-400', 'bg-indigo-400', 'bg-violet-400', 'bg-purple-400']
+
+function ModelAnalysis({ methods, blendedFairValue, currentPrice, currency }: {
   methods: CockpitMethodResult[]
   blendedFairValue: number | null
   currentPrice: number
   currency: string
 }) {
   const valid = methods.filter(m => m.fairValue != null && m.fairValue > 0)
-  if (valid.length < 2) return null
-  const vals = valid.map(m => m.fairValue!)
-  const min = Math.min(...vals)
-  const max = Math.max(...vals)
-  const range = max - min
-  const blendedPct = blendedFairValue != null && range > 0
-    ? Math.max(2, Math.min(98, ((blendedFairValue - min) / range) * 100))
-    : null
-  const currentPct = range > 0
-    ? Math.max(2, Math.min(98, ((currentPrice - min) / range) * 100))
-    : null
 
   return (
     <div>
-      <div className="flex justify-between text-[9px] text-white/40 mb-1.5">
-        <span>{fmtPrice(min, currency)}</span>
-        <span className="text-white/25">model range</span>
-        <span>{fmtPrice(max, currency)}</span>
-      </div>
-      <div className="relative h-2 bg-white/10 rounded-full">
-        <div className="absolute inset-0 bg-gradient-to-r from-red-500/40 via-amber-400/40 to-emerald-500/40 rounded-full" />
-        {/* Current price tick */}
-        {currentPct != null && (
-          <div
-            className="absolute top-0 bottom-0 w-0.5 bg-white/50"
-            style={{ left: `${currentPct}%` }}
-          />
-        )}
-        {/* Blended value dot */}
-        {blendedPct != null && (
-          <div
-            className="absolute w-3 h-3 bg-white rounded-full shadow-sm"
-            style={{ left: `${blendedPct}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
-          />
-        )}
-      </div>
-      <div className="flex justify-between text-[9px] text-white/30 mt-1">
-        <span>Low</span>
-        {range > 0 && currentPrice > 0 && (
-          <span>{(range / currentPrice * 100).toFixed(0)}% spread</span>
-        )}
-        <span>High</span>
-      </div>
-    </div>
-  )
-}
-
-function WeightBars({ methods }: { methods: CockpitMethodResult[] }) {
-  const colors = ['bg-blue-400', 'bg-indigo-400', 'bg-violet-400', 'bg-purple-400']
-  return (
-    <div className="flex flex-col gap-2.5">
-      {methods.map((m, i) => (
-        <div key={m.id} className="flex items-center gap-2">
-          <span className="text-[9px] text-white/60 w-24 shrink-0 truncate">{m.method}</span>
-          <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
-            <div
-              className={`h-full rounded-full ${colors[i]} ${m.fairValue == null ? 'opacity-30' : ''} transition-all`}
-              style={{ width: `${m.weight * 100}%` }}
-            />
+      {/* Range bar — only if 2+ methods computed */}
+      {valid.length >= 2 && (() => {
+        const vals = valid.map(m => m.fairValue!)
+        const min = Math.min(...vals)
+        const max = Math.max(...vals)
+        const range = max - min
+        const blendedPct = blendedFairValue != null && range > 0
+          ? Math.max(3, Math.min(97, ((blendedFairValue - min) / range) * 100))
+          : null
+        const currentPct = range > 0
+          ? Math.max(3, Math.min(97, ((currentPrice - min) / range) * 100))
+          : null
+        return (
+          <div className="mb-4">
+            <div className="flex justify-between text-[10px] text-white/60 mb-1.5">
+              <span>{fmtPrice(min, currency)}</span>
+              <span className="text-white/40">model range</span>
+              <span>{fmtPrice(max, currency)}</span>
+            </div>
+            <div className="relative h-3 bg-white/10 rounded-full">
+              <div className="absolute inset-0 bg-gradient-to-r from-red-500/40 via-amber-400/40 to-emerald-500/40 rounded-full" />
+              {/* Current price — vertical tick with "Now" label */}
+              {currentPct != null && (
+                <div className="absolute top-0 h-full w-0.5 bg-white/70" style={{ left: `${currentPct}%`, transform: 'translateX(-50%)' }} />
+              )}
+              {/* Blended estimate dot */}
+              {blendedPct != null && (
+                <div
+                  className="absolute w-4 h-4 bg-white rounded-full shadow border-2 border-blue-400"
+                  style={{ left: `${blendedPct}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
+                />
+              )}
+            </div>
+            {/* "Now" label under current price tick */}
+            {currentPct != null && (
+              <div className="relative h-4 mt-0.5">
+                <span
+                  className="absolute text-[10px] text-white/50 -translate-x-1/2"
+                  style={{ left: `${currentPct}%` }}
+                >Now</span>
+              </div>
+            )}
           </div>
-          <span className="text-[9px] text-white/50 w-6 text-right tabular-nums">{Math.round(m.weight * 100)}%</span>
-        </div>
-      ))}
+        )
+      })()}
+
+      {/* Weight bars with N/A treatment */}
+      <div className="flex flex-col gap-2.5">
+        {methods.map((m, i) => {
+          const isAvail = m.fairValue != null
+          return (
+            <div key={m.id} className="flex items-center gap-2">
+              <span className={`text-[10px] w-24 shrink-0 truncate ${isAvail ? 'text-white/70' : 'text-white/30 line-through'}`}>
+                {m.method}
+              </span>
+              <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                {isAvail ? (
+                  <div
+                    className={`h-full rounded-full ${METHOD_COLORS[i]} transition-all`}
+                    style={{ width: `${m.weight * 100}%` }}
+                  />
+                ) : (
+                  <div className="h-full w-full bg-white/[0.05] rounded-full" />
+                )}
+              </div>
+              <span className={`text-[10px] w-7 text-right tabular-nums ${isAvail ? 'text-white/60' : 'text-white/30'}`}>
+                {isAvail ? `${Math.round(m.weight * 100)}%` : 'N/A'}
+              </span>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
 
-export default function RightSidebar({ output, currentPrice, currency, ticker, onViewFullDCF, onViewAllAssumptions }: Props) {
-  const hasData = output.blendedFairValue != null
-  const vColor = VERDICT_COLORS[output.verdict]
-  const upsideSign = output.upsidePct != null && output.upsidePct >= 0 ? '+' : ''
-  const upColor = output.upsidePct != null ? (output.upsidePct >= 0 ? 'text-emerald-400' : 'text-red-400') : 'text-white/40'
+export default function RightSidebar({ output, currentPrice, currency, ticker, onViewFullDCF }: Props) {
+  const vc = VERDICT_COLORS[output.verdict]
+  const ds = DIVERGENCE_STYLE[output.divergence.level]
 
   return (
     <div className="bg-[#0f1a2e] rounded-xl px-5 py-5 flex flex-col gap-5 h-fit sticky top-4">
-      {/* Blended Estimate + Verdict */}
-      {hasData && (
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">Blended Estimate</p>
-          <p className="text-2xl font-bold tabular-nums text-white leading-none mb-1.5">
-            {fmtPrice(output.blendedFairValue!, currency)}
-          </p>
-          <div className="flex items-center gap-2">
-            {output.upsidePct != null && (
-              <span className={`text-sm font-bold tabular-nums ${upColor}`}>
-                {upsideSign}{(output.upsidePct * 100).toFixed(1)}%
-              </span>
-            )}
-            <span className={`text-[11px] font-bold ${vColor}`}>{output.verdict}</span>
-          </div>
-        </div>
-      )}
+      {/* Verdict + Divergence badges */}
+      <div className="flex flex-wrap gap-2">
+        <span className={`text-xs font-bold px-3 py-1.5 rounded-full border ${vc.bg} ${vc.text}`}>
+          {output.verdict}
+        </span>
+        <span className={`text-xs font-semibold px-3 py-1.5 rounded-full bg-white/5 border border-white/10 ${ds.text}`}>
+          {ds.label}
+        </span>
+      </div>
 
-      {/* Model Confidence Range */}
+      {/* Model Analysis — range bar + weight bars merged */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-3">Model Range</p>
-        <ConfidenceRangeBar
+        <p className="text-xs font-bold uppercase tracking-wider text-white/60 mb-3">Model Analysis</p>
+        <ModelAnalysis
           methods={output.methods}
           blendedFairValue={output.blendedFairValue}
           currentPrice={currentPrice}
@@ -130,37 +139,15 @@ export default function RightSidebar({ output, currentPrice, currency, ticker, o
         />
       </div>
 
-      {/* Model Weights */}
+      {/* Quick Actions — minimal, no duplicate of bottom CTA */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-3">Model Weights</p>
-        <WeightBars methods={output.methods} />
-      </div>
-
-      {/* What's Next */}
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-3">What&apos;s Next?</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-white/60 mb-2">Quick Actions</p>
         <div className="flex flex-col gap-1.5">
-          {onViewAllAssumptions && (
-            <button
-              onClick={onViewAllAssumptions}
-              className="flex items-start gap-2.5 text-left text-[11px] text-white/80 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg px-3 py-2.5 transition-colors"
-            >
-              <span className="text-sm leading-none mt-0.5 shrink-0">⚙️</span>
-              <div>
-                <p className="font-semibold">Open Assumptions Editor</p>
-                <p className="text-[9px] text-white/40 mt-0.5">Adjust WACC, margins and multiples</p>
-              </div>
-            </button>
-          )}
           <a
             href={`/simplifier/${ticker}`}
-            className="flex items-start gap-2.5 text-[11px] text-white/80 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg px-3 py-2.5 transition-colors"
+            className="text-xs font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg px-3 py-2 transition-colors"
           >
-            <span className="text-sm leading-none mt-0.5 shrink-0">💾</span>
-            <div>
-              <p className="font-semibold">Save Valuation</p>
-              <p className="text-[9px] text-white/40 mt-0.5">Track when price hits your estimate</p>
-            </div>
+            Save valuation →
           </a>
           <button
             onClick={() => {
@@ -168,30 +155,22 @@ export default function RightSidebar({ output, currentPrice, currency, ticker, o
                 navigator.clipboard?.writeText(output.blendedFairValue.toFixed(2)).catch(() => {})
               }
             }}
-            className="flex items-start gap-2.5 text-left text-[11px] text-white/80 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg px-3 py-2.5 transition-colors"
+            className="text-left text-xs font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg px-3 py-2 transition-colors"
           >
-            <span className="text-sm leading-none mt-0.5 shrink-0">📋</span>
-            <div>
-              <p className="font-semibold">Copy Fair Value</p>
-              <p className="text-[9px] text-white/40 mt-0.5">Copy blended estimate to clipboard</p>
-            </div>
+            Copy fair value
           </button>
           {onViewFullDCF && (
             <button
               onClick={onViewFullDCF}
-              className="flex items-start gap-2.5 text-left text-[11px] text-white/80 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg px-3 py-2.5 transition-colors"
+              className="text-left text-xs font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg px-3 py-2 transition-colors"
             >
-              <span className="text-sm leading-none mt-0.5 shrink-0">📊</span>
-              <div>
-                <p className="font-semibold">View Full DCF Model</p>
-                <p className="text-[9px] text-white/40 mt-0.5">Edit year-by-year projections</p>
-              </div>
+              Open Full DCF Model ↓
             </button>
           )}
         </div>
       </div>
 
-      <p className="text-[9px] text-white/20 leading-relaxed pt-2 border-t border-white/10">
+      <p className="text-[10px] text-white/30 leading-relaxed pt-2 border-t border-white/10">
         Blended estimate from Forward P/E, EV/EBITDA, Revenue Multiple, and Core DCF. Not investment advice.
       </p>
     </div>

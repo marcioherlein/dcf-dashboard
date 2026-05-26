@@ -13,7 +13,6 @@ import SummaryCards from './cockpit/SummaryCards'
 import GuidanceStrip from './cockpit/GuidanceStrip'
 import FairValueChart from './cockpit/FairValueChart'
 import AssumptionsPanel, { type SparkPoint } from './cockpit/AssumptionsPanel'
-import KeyAssumptions from './cockpit/KeyAssumptions'
 import ScenarioCards from './cockpit/ScenarioCards'
 import ValuationMethodCards from './cockpit/ValuationMethodCards'
 import ModelDivergencePanel from './cockpit/ModelDivergencePanel'
@@ -147,11 +146,18 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
   const snapshot       = useMemo(() => buildSnapshot(apiData), [apiData])
   const defaults       = useMemo(() => seedAssumptions(apiData), [apiData])
   const historicalData = useMemo(() => buildHistoricalData(apiData), [apiData])
+
   const [assumptions, setAssumptions] = useState<ValuationAssumptions>(() => seedAssumptions(apiData))
+  const [history, setHistory] = useState<ValuationAssumptions[]>([])
 
   const output = useMemo(
     () => computeCockpitOutput(assumptions, snapshot),
     [assumptions, snapshot]
+  )
+
+  const defaultOutput = useMemo(
+    () => computeCockpitOutput(defaults, snapshot),
+    [defaults, snapshot]
   )
 
   const currency     = apiData.quote?.currency === 'USD' ? '$' : (apiData.quote?.currency ?? '$') + ' '
@@ -161,18 +167,30 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
   const fullDcfRef        = useRef<HTMLDetailsElement>(null)
   const assumptionsPanelRef = useRef<HTMLDivElement>(null)
 
+  function handleAssumptionChange(next: ValuationAssumptions) {
+    setHistory(h => [...h.slice(-9), assumptions])
+    setAssumptions(next)
+  }
+
+  function handleUndo() {
+    if (history.length === 0) return
+    setAssumptions(history[history.length - 1])
+    setHistory(h => h.slice(0, -1))
+  }
+
+  function handleReset() {
+    setHistory([])
+    setAssumptions(defaults)
+  }
+
   function scrollToFullDCF() {
     fullDcfRef.current?.setAttribute('open', '')
     fullDcfRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  function scrollToAssumptions() {
-    assumptionsPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-
   return (
     <div className="space-y-4">
-      {/* Unified 4-item summary strip */}
+      {/* 5-item summary strip */}
       <SummaryCards
         output={output}
         currentPrice={currentPrice}
@@ -180,120 +198,104 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
         currency={currency}
       />
 
-      {/* Scenario Range — Bear / Base / Bull */}
+      {/* Collapsible guidance at top */}
+      <GuidanceStrip />
+
+      {/* Scenario Range */}
       <ScenarioCards
         scenarios={output.scenarios}
         currentPrice={currentPrice}
         currency={currency}
       />
 
-      {/* Main two-column layout */}
+      {/* Two-column: chart + sidebar */}
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_280px] gap-4 items-start">
-        {/* Left column */}
-        <div className="space-y-4 min-w-0">
-          {/* Fair Value Chart + Key Assumptions side by side */}
-          <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-4 items-stretch">
-            <FairValueChart
-              methods={output.methods}
-              blendedFairValue={output.blendedFairValue}
-              currentPrice={currentPrice}
-              currency={currency}
-            />
-            <KeyAssumptions
-              assumptions={assumptions}
-              defaults={defaults}
-              onChange={setAssumptions}
-              onReset={() => setAssumptions(defaults)}
-              onViewAll={scrollToAssumptions}
-            />
-          </div>
-
-          {/* Valuation Models — 4 method cards */}
-          <ValuationMethodCards
-            methods={output.methods}
-            currentPrice={currentPrice}
-            currency={currency}
-          />
-
-          {/* Model Divergence & Confidence */}
-          <ModelDivergencePanel
-            divergence={output.divergence}
-            blendedFairValue={output.blendedFairValue}
-            currency={currency}
-          />
-
-          {/* Full Assumptions Panel */}
-          <div ref={assumptionsPanelRef}>
-            <AssumptionsPanel
-              assumptions={assumptions}
-              defaults={defaults}
-              onChange={setAssumptions}
-              onReset={() => setAssumptions(defaults)}
-              historicalData={historicalData}
-            />
-          </div>
-
-          {/* Advanced: Full DCF Modelling Table */}
-          <details ref={fullDcfRef} className="group" id="full_dcf">
-            <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-3 hover:bg-slate-50 transition-colors select-none">
-              <span className="text-slate-400 text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                Advanced: Full DCF Modelling Table
-              </span>
-              <span className="ml-auto text-[10px] text-slate-400">Damodaran 4-model blend · editable year-by-year</span>
-            </summary>
-            <div className="mt-2">
-              <ModellingWorkspace
-                apiData={apiData}
-                ticker={ticker}
-                statementsData={statementsData}
-              />
-            </div>
-          </details>
-
-          {/* End-of-page CTA */}
-          <div className="rounded-xl bg-white border border-slate-100 shadow-sm px-5 py-5">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">What do you want to do next?</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <a
-                href={`/simplifier/${ticker}`}
-                className="flex flex-col gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 hover:bg-emerald-100 transition-colors"
-              >
-                <span className="text-sm font-bold text-emerald-700">Save valuation →</span>
-                <span className="text-[11px] text-slate-500">Track when the price hits your fair value estimate</span>
-              </a>
-              <button
-                onClick={scrollToFullDCF}
-                className="flex flex-col gap-1 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 hover:bg-blue-100 transition-colors text-left"
-              >
-                <span className="text-sm font-bold text-blue-700">Full DCF table →</span>
-                <span className="text-[11px] text-slate-500">Edit WACC, year-by-year projections, and 4-model blend</span>
-              </button>
-              {onNavigateToFinancials && (
-                <button
-                  onClick={() => onNavigateToFinancials('revenue', 'income')}
-                  className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 hover:bg-slate-100 transition-colors text-left"
-                >
-                  <span className="text-sm font-bold text-slate-700">Check the financials →</span>
-                  <span className="text-[11px] text-slate-500">Revenue, margins, cash flow and debt history</span>
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Guidance Strip — how to read this valuation */}
-          <GuidanceStrip />
-        </div>
-
-        {/* Right sidebar */}
+        <FairValueChart
+          methods={output.methods}
+          blendedFairValue={output.blendedFairValue}
+          currentPrice={currentPrice}
+          currency={currency}
+        />
         <RightSidebar
           output={output}
           currentPrice={currentPrice}
           currency={currency}
           ticker={ticker}
           onViewFullDCF={scrollToFullDCF}
-          onViewAllAssumptions={scrollToAssumptions}
         />
+      </div>
+
+      {/* Full-width: divergence context before method numbers */}
+      <ModelDivergencePanel divergence={output.divergence} />
+
+      {/* Full-width: method cards */}
+      <ValuationMethodCards
+        methods={output.methods}
+        currentPrice={currentPrice}
+        currency={currency}
+      />
+
+      {/* Full-width: assumptions editor (single instance, no duplicate) */}
+      <div ref={assumptionsPanelRef}>
+        <AssumptionsPanel
+          assumptions={assumptions}
+          defaults={defaults}
+          onChange={handleAssumptionChange}
+          onReset={handleReset}
+          onUndo={handleUndo}
+          canUndo={history.length > 0}
+          historicalData={historicalData}
+          blendedFairValue={output.blendedFairValue}
+          defaultBlendedFairValue={defaultOutput.blendedFairValue}
+        />
+      </div>
+
+      {/* Full DCF Model — blue header, more visible */}
+      <details ref={fullDcfRef} className="group" id="full_dcf">
+        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-blue-100 shadow-sm px-5 py-3.5 hover:bg-blue-50 transition-colors select-none">
+          <span className="text-blue-400 text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
+            Full DCF Model — Year-by-Year Projections
+          </span>
+          <span className="ml-auto text-xs text-slate-400">Damodaran 4-model blend · editable</span>
+        </summary>
+        <div className="mt-2">
+          <ModellingWorkspace
+            apiData={apiData}
+            ticker={ticker}
+            statementsData={statementsData}
+          />
+        </div>
+      </details>
+
+      {/* End-of-page CTA */}
+      <div className="rounded-xl bg-white border border-slate-100 shadow-sm px-5 py-5">
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">What do you want to do next?</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <a
+            href={`/simplifier/${ticker}`}
+            className="flex flex-col gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 hover:bg-emerald-100 transition-colors"
+          >
+            <span className="text-sm font-bold text-emerald-700">Save valuation →</span>
+            <span className="text-xs text-slate-500">Track when the price hits your fair value estimate</span>
+          </a>
+          <button
+            onClick={scrollToFullDCF}
+            className="flex flex-col gap-1 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 hover:bg-blue-100 transition-colors text-left"
+          >
+            <span className="text-sm font-bold text-blue-700">Full DCF table →</span>
+            <span className="text-xs text-slate-500">Edit WACC, year-by-year projections, and 4-model blend</span>
+          </button>
+          {onNavigateToFinancials && (
+            <button
+              onClick={() => onNavigateToFinancials('revenue', 'income')}
+              className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 hover:bg-slate-100 transition-colors text-left"
+            >
+              <span className="text-sm font-bold text-slate-700">Check the financials →</span>
+              <span className="text-xs text-slate-500">Revenue, margins, cash flow and debt history</span>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )
