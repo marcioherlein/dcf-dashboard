@@ -156,7 +156,7 @@ function GrowthOutlookCard({ ratings, cagrAnalysis }: { ratings: StockRatings; c
       <div className="space-y-2.5">
         {hist != null && (
           <div>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 min-w-0">
               <span className="text-[11px] text-slate-500 w-28 shrink-0">3Y Historical CAGR</span>
               <MiniBar value={Math.abs(hist)} max={maxBar} color={hist >= 0 ? 'blue' : 'amber'} />
               <span className="text-[12px] font-semibold tabular-nums text-slate-700 w-12 text-right">{fmtPct(hist)}</span>
@@ -165,7 +165,7 @@ function GrowthOutlookCard({ ratings, cagrAnalysis }: { ratings: StockRatings; c
         )}
         {analyst != null && (
           <div>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 min-w-0">
               <span className="text-[11px] text-slate-500 w-28 shrink-0">Analyst Est. (1Y)</span>
               <MiniBar value={Math.abs(analyst)} max={maxBar} color={analyst >= 0 ? 'emerald' : 'amber'} />
               <span className="text-[12px] font-semibold tabular-nums text-slate-700 w-12 text-right">{fmtPct(analyst)}</span>
@@ -394,7 +394,7 @@ export default function OverviewMetricGrid({ ratings, scores, businessProfile, c
   if (!ratings) return null
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       <BusinessQualityCard ratings={ratings} scores={scores ?? {}} />
       <GrowthOutlookCard ratings={ratings} cagrAnalysis={cagrAnalysis} />
       <ProfitabilityCard ratings={ratings} businessProfile={businessProfile} statementsData={statementsData} />

@@ -76,7 +76,7 @@ function deriveVerdict(upsidePct: number | null, fv: number | null): Verdict {
 
 function MetricBox({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('bg-white border border-slate-200 rounded-xl p-4 shadow-sm', className)}>
+    <div className={cn('bg-white border border-slate-200 rounded-xl p-3 sm:p-4 shadow-sm', className)}>
       {children}
     </div>
   )
@@ -124,15 +124,15 @@ export default function StockSummaryCard({
       </div>
 
       {/* ── 4 metric boxes ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 items-start">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
 
         {/* Box 1: Current Price */}
         <MetricBox>
           <BoxLabel>Current Price</BoxLabel>
-          <p className="text-[26px] font-bold tabular-nums text-slate-900 leading-none mb-1">
+          <p className="text-[22px] sm:text-[26px] font-bold tabular-nums text-slate-900 leading-none mb-1">
             {fmtPrice(price, currency)}
           </p>
-          <p className={cn('text-[12px] font-semibold tabular-nums', isUp ? 'text-emerald-600' : 'text-red-600')}>
+          <p className={cn('text-[11px] sm:text-[12px] font-semibold tabular-nums', isUp ? 'text-emerald-600' : 'text-red-600')}>
             {isUp ? '+' : ''}{fmtPrice(change, currency)} ({isUp ? '+' : ''}{changePct.toFixed(2)}%)
           </p>
           <p className="text-[11px] text-slate-400 mb-3">today</p>
@@ -156,7 +156,7 @@ export default function StockSummaryCard({
           <BoxLabel>Fair Value (Intrinsic)</BoxLabel>
           {fairValue != null ? (
             <>
-              <p className="text-[26px] font-bold tabular-nums text-slate-900 leading-none mb-1">
+              <p className="text-[22px] sm:text-[26px] font-bold tabular-nums text-slate-900 leading-none mb-1">
                 {fmtPrice(fairValue, currency)}
               </p>
               {upsidePct != null && (
