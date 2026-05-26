@@ -22,6 +22,7 @@ interface ModellingWorkspaceProps {
   apiData: any
   ticker: string
   statementsData?: StatementsDataLike | null
+  onDerivedFVChange?: (fv: number | null) => void
 }
 
 // Derive ΔNWC from balance sheet: NWC = (currentAssets - cash) - currentLiabilities
@@ -126,7 +127,7 @@ function buildDisplayRows(
   })
 }
 
-export default function ModellingWorkspace({ apiData, ticker, statementsData }: ModellingWorkspaceProps) {
+export default function ModellingWorkspace({ apiData, ticker, statementsData, onDerivedFVChange }: ModellingWorkspaceProps) {
   // Overridable assumptions
   const [waccOverride, setWaccOverride] = useState<number | null>(null)
   const [terminalGOverride, setTerminalGOverride] = useState<number | null>(null)
@@ -388,6 +389,8 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData }: 
   const prevFV = useRef<number | null>(null)
   const [delta, setDelta] = useState<{ amount: number; pct: number } | null>(null)
   const deltaTimer = useRef<ReturnType<typeof setTimeout>>()
+
+  useEffect(() => { onDerivedFVChange?.(derivedFV) }, [derivedFV, onDerivedFVChange])
 
   useEffect(() => {
     if (prevFV.current == null) { prevFV.current = derivedFV; return }

@@ -890,6 +890,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
   const [linkedCAGR,   setLinkedCAGR]   = useState(true)
   const [openMethodId, setOpenMethodId] = useState<string | null>(null)
   const [sanityChecksOpen, setSanityChecksOpen] = useState(true)
+  const [fullDcfLiveFV, setFullDcfLiveFV] = useState<number | null>(null)
   const methodRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   const currency     = apiData?.quote?.currency ?? 'USD'
@@ -1117,11 +1118,13 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
   }
 
   // ── Summary ───────────────────────────────────────────────────────────────
+  const coreDcfFV = fullDcfLiveFV ?? (apiData?.valuationMethods?.triangulatedFairValue as number | null) ?? null
+  const coreDcfUpside = coreDcfFV != null && currentPrice > 0 ? (coreDcfFV - currentPrice) / currentPrice : (apiData?.valuationMethods?.triangulatedUpsidePct as number | null) ?? null
   const summaryMethods: MethodResult[] = [
     { id: 'forward_pe',       label: 'Forward P/E (5Y)',          fairValue: fwdPEResult.fairValueToday,       upsidePct: fwdPEResult.upsidePct,           weight: 0.35 },
     { id: 'ev_ebitda',        label: 'EV/EBITDA',                 fairValue: evEbitdaResult.fairValuePerShare, upsidePct: evEbitdaResult.upsidePct,        weight: 0.30 },
     { id: 'revenue_multiple', label: 'Revenue Multiple',          fairValue: revMultResult.fairValueToday,     upsidePct: revMultResult.upsidePct,         weight: 0.25 },
-    { id: 'core_dcf',         label: 'Core DCF (FCFF/FCFE/DDM)',  fairValue: (apiData?.valuationMethods?.triangulatedFairValue as number | null) ?? null, upsidePct: (apiData?.valuationMethods?.triangulatedUpsidePct as number | null) ?? null, weight: 0.10 },
+    { id: 'core_dcf',         label: 'Core DCF (FCFF/FCFE/DDM)',  fairValue: coreDcfFV, upsidePct: coreDcfUpside, weight: 0.10 },
   ]
 
   const weightedFV = useMemo(() => {
@@ -1208,13 +1211,13 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
           id="full_dcf"
           title="Full DCF Modelling Table"
           confidence="high"
-          verdict={methodVerdict((apiData?.valuationMethods?.triangulatedUpsidePct as number | null) ?? null)}
+          verdict={methodVerdict(coreDcfUpside)}
           weight={0.10}
           isOpen={openMethodId === 'full_dcf'}
           onToggle={() => setOpenMethodId(p => p === 'full_dcf' ? null : 'full_dcf')}
           innerRef={el => { methodRefs.current['full_dcf'] = el }}
-          fairValue={(apiData?.valuationMethods?.triangulatedFairValue as number | null) ?? null}
-          upsidePct={(apiData?.valuationMethods?.triangulatedUpsidePct as number | null) ?? null}
+          fairValue={coreDcfFV}
+          upsidePct={coreDcfUpside}
           currency={currency}
           chips={[
             { label: 'WACC', value: ((apiData?.wacc?.wacc ?? 0.09) * 100).toFixed(1) + '%' },
@@ -1224,18 +1227,20 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
           bestFor="Advanced: adjust year-by-year projections for a precise, customised estimate"
         >
           {/* Executive DCF summary */}
-          {(apiData?.valuationMethods?.triangulatedFairValue != null) && (
+          {coreDcfFV != null && (
             <div className="px-5 pt-4 pb-3 border-b border-slate-100 bg-slate-50/50">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Core DCF Result</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                {fullDcfLiveFV != null ? 'Modelling Table Result' : 'Core DCF Result'}
+              </p>
               <div className="flex items-center gap-3 flex-wrap">
                 <div>
                   <p className="text-[10px] text-slate-500">Fair Value</p>
                   <p className="text-lg font-bold tabular-nums text-slate-900">
-                    {fmtPrice(apiData.valuationMethods.triangulatedFairValue as number, currency)}
+                    {fmtPrice(coreDcfFV!, currency)}
                   </p>
                 </div>
-                {(apiData?.valuationMethods?.triangulatedUpsidePct as number | null) != null && (
-                  <TrendBadge value={apiData.valuationMethods.triangulatedUpsidePct as number} size="lg" />
+                {coreDcfUpside != null && (
+                  <TrendBadge value={coreDcfUpside} size="lg" />
                 )}
                 <div className="ml-auto flex gap-4">
                   <div>
@@ -1253,11 +1258,13 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
                 </div>
               </div>
               <p className="text-[10px] text-slate-500 mt-2">
-                FCFF, FCFE &amp; DDM triangulated — intrinsic value from projected free cash flows.
+                {fullDcfLiveFV != null
+                  ? 'Derived from the modelling table below — updates as you edit projections.'
+                  : 'FCFF, FCFE & DDM triangulated — intrinsic value from projected free cash flows.'}
               </p>
             </div>
           )}
-          <ModellingWorkspace apiData={apiData} ticker={ticker} statementsData={statementsData} />
+          <ModellingWorkspace apiData={apiData} ticker={ticker} statementsData={statementsData} onDerivedFVChange={setFullDcfLiveFV} />
         </MethodAccordion>        {/* ── Sanity Checks — Multiples ─────────────────────────────────────── */}
         <div className="glass-accordion-header rounded-xl overflow-hidden">
           <button
