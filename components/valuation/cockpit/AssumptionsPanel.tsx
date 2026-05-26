@@ -102,7 +102,7 @@ export default function AssumptionsPanel({
 
   return (
     <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-6 py-5">
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
         <div className="flex items-center gap-3">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Assumptions</p>
           {/* Real-time delta vs defaults (Fix #22) */}

@@ -16,7 +16,7 @@ export default function GuidanceStrip() {
         <span className="ml-auto text-xs text-slate-400 group-open:hidden">4-step guide ↓</span>
       </summary>
       <div className="mt-2 bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-4">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {STEPS.map(s => (
             <div key={s.num} className="flex gap-3">
               <div className={`${s.color} text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5`}>

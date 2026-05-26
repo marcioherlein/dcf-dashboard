@@ -122,7 +122,7 @@ export function AssumptionInputRow({ assumption, displayValue, onChange, isOverr
   const badgeText = isOverridden ? 'Override' : sourceLabel(source)
 
   return (
-    <div className="flex items-start justify-between gap-3 py-1.5">
+    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3 py-1.5">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-[12px] font-medium text-[#c8c8c8]">{label}</span>
@@ -170,8 +170,8 @@ export function EvidenceDerivationBlock({ items }: { items: EvidenceItem[] }) {
       </div>
       <div className="bg-[#0d0d0d] border border-[#1e1e1e] rounded-xl px-4 py-3 space-y-2">
         {items.map(({ label, text }) => (
-          <div key={label} className="flex gap-2">
-            <span className="text-[#555] w-28 shrink-0 text-[11px] font-medium">{label}</span>
+          <div key={label} className="flex flex-col sm:flex-row gap-1 sm:gap-2">
+            <span className="text-[#555] sm:w-28 sm:shrink-0 text-[11px] font-medium">{label}</span>
             <span className="text-[#888] text-[11px] leading-relaxed">{text}</span>
           </div>
         ))}

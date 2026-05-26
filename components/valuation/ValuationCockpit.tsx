@@ -262,12 +262,12 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
 
       {/* Full DCF Model — blue header, more visible */}
       <details ref={fullDcfRef} className="group" id="full_dcf">
-        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-blue-100 shadow-sm px-5 py-3.5 hover:bg-blue-50 transition-colors select-none">
+        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-blue-100 shadow-sm px-4 sm:px-5 py-3.5 hover:bg-blue-50 transition-colors select-none">
           <span className="text-blue-400 text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
           <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
             Full DCF Model — Year-by-Year Projections
           </span>
-          <span className="ml-auto text-xs text-slate-400">Damodaran 4-model blend · editable</span>
+          <span className="ml-auto text-xs text-slate-400 hidden sm:inline">Damodaran 4-model blend · editable</span>
         </summary>
         <div className="mt-2">
           <ModellingWorkspace

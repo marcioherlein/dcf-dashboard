@@ -27,7 +27,7 @@ export default function ModelDivergencePanel({ divergence }: Props) {
   return (
     <div className={`rounded-xl border ${s.border} ${s.bg} px-5 py-4`}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full ${s.dot}`} />
           <p className="text-xs font-bold uppercase tracking-wider text-slate-600">Model Divergence</p>

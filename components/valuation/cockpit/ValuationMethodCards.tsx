@@ -26,7 +26,7 @@ export default function ValuationMethodCards({ methods, currentPrice: _currentPr
   return (
     <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-4">
       <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Valuation Models</p>
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {methods.map(m => {
           const conf = CONFIDENCE_STYLE[m.confidence]
           const upColor = m.upsidePct != null ? (m.upsidePct >= 0 ? 'text-emerald-600' : 'text-red-600') : 'text-slate-400'

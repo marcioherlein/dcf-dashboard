@@ -19,8 +19,9 @@ const LABEL: Record<string, string> = {
   core_dcf:         'Core DCF',
 }
 
-const LABEL_W = 100 // px — left label column
-const VALUE_W = 116 // px — right value column
+// Responsive Tailwind classes for the fixed columns
+const LABEL_COL = 'w-16 sm:w-[100px] shrink-0'
+const VALUE_COL = 'w-20 sm:w-[116px] shrink-0'
 
 export default function FairValueChart({ methods, blendedFairValue, currentPrice, currency }: Props) {
   const [ready, setReady] = useState(false)
@@ -67,7 +68,7 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
 
       {/* Current price label — floats above the track at the right position */}
       <div className="flex items-end h-8 mb-1.5">
-        <div style={{ width: LABEL_W }} className="shrink-0" />
+        <div className={LABEL_COL} />
         <div className="flex-1 relative">
           <div
             className="absolute bottom-0 flex flex-col items-center gap-px -translate-x-1/2"
@@ -81,7 +82,7 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
             </span>
           </div>
         </div>
-        <div style={{ width: VALUE_W }} className="shrink-0" />
+        <div className={VALUE_COL} />
       </div>
 
       {/* Method rows — no gap so per-row price ticks form one continuous vertical line */}
@@ -97,7 +98,7 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
           return (
             <div key={m.id} className="flex items-center h-10">
               {/* Label */}
-              <div style={{ width: LABEL_W }} className="shrink-0 text-right pr-3">
+              <div className={`${LABEL_COL} text-right pr-3`}>
                 <span
                   className={`text-[11px] font-medium leading-none ${
                     hasVal ? 'text-slate-600' : 'text-slate-300'
@@ -150,7 +151,7 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
               </div>
 
               {/* Value */}
-              <div style={{ width: VALUE_W }} className="shrink-0 pl-3">
+              <div className={`${VALUE_COL} pl-3`}>
                 {hasVal && fv != null ? (
                   <div className="flex flex-col gap-[1px]">
                     <span className="text-xs font-bold tabular-nums text-slate-900 leading-tight">
@@ -182,11 +183,10 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
           return (
             <>
               <div
-                className="border-t border-slate-100 my-0.5"
-                style={{ marginLeft: LABEL_W }}
+                className="border-t border-slate-100 my-0.5 ml-16 sm:ml-[100px]"
               />
               <div className="flex items-center h-10">
-                <div style={{ width: LABEL_W }} className="shrink-0 text-right pr-3">
+                <div className={`${LABEL_COL} text-right pr-3`}>
                   <span className="text-[10px] font-bold uppercase tracking-wide text-blue-600">
                     Blended
                   </span>
@@ -219,7 +219,7 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
                   />
                 </div>
 
-                <div style={{ width: VALUE_W }} className="shrink-0 pl-3">
+                <div className={`${VALUE_COL} pl-3`}>
                   <div className="flex flex-col gap-[1px]">
                     <span className="text-xs font-bold tabular-nums text-blue-600 leading-tight">
                       {fmtPrice(blendedFairValue, currency)}
