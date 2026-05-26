@@ -180,7 +180,7 @@ export async function GET(req: NextRequest) {
       ? (q.marketCap as number) / currentPrice / 1e6
       : ((fin.defaultKeyStatistics?.sharesOutstanding ?? 0) as number) / 1e6
 
-    // Fair value (FCFF)
+    // Fair value (FCFF — perpetuity growth terminal value)
     const fvResult = calculateFairValue(dcfResult, cashM, debtM, sharesM, currentPrice)
 
     // Scenarios
@@ -201,7 +201,33 @@ export async function GET(req: NextRequest) {
     const recentOpCF = ((recentCF.operatingCashflow ?? recentCF.totalCashFromOperatingActivities ?? fd.operatingCashflow ?? 0) as number)
     const recentCapex = ((recentCF.capitalExpenditures ?? recentCF.capitalExpenditure ?? 0) as number)
     // annualFCFLocal = OCF + CapEx (CapEx is stored negative in Yahoo data, so this is OCF - |CapEx|)
-    const annualFCFLocal = recentOpCF !== 0 ? (recentOpCF + recentCapex) / 1e6 : rawFCFLocal
+    const mostRecentFCF = recentOpCF !== 0 ? (recentOpCF + recentCapex) / 1e6 : rawFCFLocal
+
+    // Normalize FCF for heavy capex investment cycles (e.g. Amazon AI infrastructure, Tesla Gigafactory).
+    // Yahoo's cashflowStatementHistory[0] may reflect a TTM period where capex spike compresses FCF to near-zero
+    // even though the business generates strong operating cash. Detect this pattern (healthy OCF margin but
+    // FCF margin < 2%) and substitute a median of positive FCF years as a more representative base.
+    let annualFCFLocal = mostRecentFCF
+    if (rawRevMLocal > 0) {
+      const mostRecentFCFMargin = mostRecentFCF / rawRevMLocal
+      const recentOpCFMargin = recentOpCF > 0 ? (recentOpCF / 1e6) / rawRevMLocal : 0
+      if (mostRecentFCFMargin < 0.02 && recentOpCFMargin > 0.10 && rawCFHistoryEarly.length >= 2) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const positiveFCFs = rawCFHistoryEarly.slice(0, 4).flatMap((cf: any) => {
+          const opCF = ((cf.operatingCashflow ?? cf.totalCashFromOperatingActivities ?? 0) as number)
+          const capex = ((cf.capitalExpenditures ?? cf.capitalExpenditure ?? 0) as number)
+          const fcfM = opCF !== 0 ? (opCF + capex) / 1e6 : null
+          return fcfM !== null && fcfM > 0 ? [fcfM] : []
+        })
+        if (positiveFCFs.length >= 2) {
+          const sorted = [...positiveFCFs].sort((a, b) => a - b)
+          const medianFCF = sorted[Math.floor(sorted.length / 2)]
+          if (medianFCF / rawRevMLocal > 0.03) {
+            annualFCFLocal = medianFCF
+          }
+        }
+      }
+    }
 
     const businessProfile = {
       description: (profile.longBusinessSummary ?? '') as string,
@@ -368,6 +394,34 @@ export async function GET(req: NextRequest) {
 
     const hasDividend = dividendPerShare > 0
 
+    // Veto gate — detect inputs that cannot support a reliable DCF
+    const vetoReasons: string[] = []
+    if (companyType === 'etf') {
+      vetoReasons.push('ETF/fund — DCF does not apply. Valuation is based on NAV and tracking error, not free cash flow.')
+    } else {
+      const nonZeroRevYears = historicalRevenues.filter((r) => r > 0).length
+      if (nonZeroRevYears < 2) {
+        vetoReasons.push('Insufficient revenue history — need at least 2 years of data for a reliable DCF.')
+      }
+      if ((baseFCF === null || baseFCF === 0) && nonZeroRevYears === 0) {
+        vetoReasons.push('No revenue or FCF data found — unable to project cash flows.')
+      }
+    }
+    const canComputeDCF = vetoReasons.length === 0
+
+    // UFCF + Exit Multiple variant — complement to the Gordon Growth result from calculateFairValue.
+    // Uses the same projected cash flows but swaps in an FCF exit multiple terminal value.
+    const _exitMultByType: Record<string, number> = { growth: 25, startup: 20, financial: 12, dividend: 15 }
+    const _exitMult = _exitMultByType[companyType] ?? 18
+    const _lastCF = dcfResult.projections.length > 0 ? dcfResult.projections[dcfResult.projections.length - 1].cashFlow : null
+    const _nYrs = dcfResult.projections.length
+    const _exitTVDisc = _lastCF != null && _nYrs > 0
+      ? (_lastCF * _exitMult) / Math.pow(1 + waccResult.wacc, _nYrs)
+      : null
+    const ufcfEM_FV = _exitTVDisc != null && sharesM > 0
+      ? (dcfResult.sumPV + _exitTVDisc + cashM - debtM) / sharesM
+      : null
+
     // DDM
     const roe = (fd.returnOnEquity ?? null) as number | null
     const ddmResult = calculateDDM(dividendPerShare, waccResult.costOfEquity, roe, payoutRatio, currentPrice)
@@ -404,9 +458,19 @@ export async function GET(req: NextRequest) {
     const weights = getModelWeights(companyType, hasDividend)
     const modelValues: { weight: number; value: number }[] = []
 
-    // FCFF always applicable
-    if (fvResult.fairValuePerShare != null) {
-      modelValues.push({ weight: weights.fcff, value: fvResult.fairValuePerShare })
+    // DCF component: blend UFCF+PGM and UFCF+EM (50/50) so the Core DCF Result uses both
+    // terminal value methods rather than just the Gordon Growth result. This mirrors the
+    // four-model Damodaran blend computed live in ModellingWorkspace.
+    const ufcfBlendParts = [
+      fvResult.fairValuePerShare != null ? fvResult.fairValuePerShare : null,
+      ufcfEM_FV,
+    ].filter((v): v is number => v != null)
+    const ufcfBlendedFV = ufcfBlendParts.length > 0
+      ? ufcfBlendParts.reduce((s, v) => s + v, 0) / ufcfBlendParts.length
+      : null
+
+    if (ufcfBlendedFV != null) {
+      modelValues.push({ weight: weights.fcff, value: ufcfBlendedFV })
     }
 
     if (fcfeResult.applicable) {
@@ -423,7 +487,7 @@ export async function GET(req: NextRequest) {
     const totalWeight = modelValues.reduce((s, m) => s + m.weight, 0)
     const triangulatedFairValue = totalWeight > 0
       ? Math.round(modelValues.reduce((s, m) => s + (m.value * m.weight) / totalWeight, 0) * 100) / 100
-      : (fvResult.fairValuePerShare ?? 0)
+      : (ufcfBlendedFV ?? fvResult.fairValuePerShare ?? 0)
     const triangulatedUpsidePct = currentPrice > 0 && triangulatedFairValue > 0
       ? Math.round((triangulatedFairValue - currentPrice) / currentPrice * 1000) / 1000
       : 0
@@ -854,6 +918,24 @@ export async function GET(req: NextRequest) {
 
     const financialStatements = { incomeStatement, balanceSheet, cashFlow }
 
+    // Historical valuation multiples (P/E, EV/EBITDA, EV/Revenue, P/S) — from FMP key-metrics
+    const clamp = (v: number | null | undefined, lo: number, hi: number): number | null => {
+      if (v == null || !isFinite(v) || v <= 0) return null
+      return v > hi || v < lo ? null : Math.round(v * 100) / 100
+    }
+    const historicalMultiples = fmp.keyMetrics
+      .filter(km => km.fiscalYear)
+      .sort((a, b) => a.fiscalYear.localeCompare(b.fiscalYear))
+      .map(km => ({
+        fiscalYear: km.fiscalYear,
+        date: km.date,
+        pe:        clamp(km.peRatio,                      1,   200),
+        evEbitda:  clamp(km.enterpriseValueOverEBITDA,    1,   100),
+        evRevenue: clamp(km.evToSales,                    0.1,  50),
+        ps:        clamp(km.priceToSalesRatio,            0.1,  50),
+      }))
+      .filter(r => r.pe != null || r.evEbitda != null || r.evRevenue != null)
+
     // Historical FCF for DCF table context (last 3 years)
     const historicalFCF: { year: number; cashFlow: number }[] = cfHistoricalRows
       .filter((r) => r.freeCashFlow != null && !r.isProjected)
@@ -898,6 +980,9 @@ export async function GET(req: NextRequest) {
       holdingReturns,
       valuationMethods,
       financialStatements,
+      historicalMultiples,
+      canComputeDCF,
+      vetoReasons,
       providerStatus: {
         fmp: {
           ok: hasFmp,

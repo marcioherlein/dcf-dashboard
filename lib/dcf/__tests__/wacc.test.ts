@@ -55,6 +55,32 @@ describe('calculateWACC — formula', () => {
     expect(withCrp.costOfEquity).toBeCloseTo(0.2401, 3)
   })
 
+  it('clamps negative debtToEquity to zero (negative book equity guard)', () => {
+    // Companies like MCD/HD have negative book equity; data errors can produce negative D/E.
+    // WACC must never invert weights — result should equal an all-equity WACC.
+    const withNegativeDE = calculateWACC({
+      rfRate: 0.04,
+      beta: 0.75,
+      erp: 0.046,
+      crp: 0.0,
+      costOfDebt: 0.035,
+      taxRate: 0.21,
+      debtToEquity: -0.5,
+    })
+    const allEquity = calculateWACC({
+      rfRate: 0.04,
+      beta: 0.75,
+      erp: 0.046,
+      crp: 0.0,
+      costOfDebt: 0.035,
+      taxRate: 0.21,
+      debtToEquity: 0,
+    })
+    expect(withNegativeDE.wacc).toBeCloseTo(allEquity.wacc, 4)
+    expect(withNegativeDE.weightEquity).toBe(1)
+    expect(withNegativeDE.weightDebt).toBe(0)
+  })
+
   it('rounds to 4 decimal places', () => {
     const result = calculateWACC({
       rfRate: 0.04291,
@@ -192,19 +218,48 @@ describe('extractWACCInputs — tax rate', () => {
   })
 
   it('clamps tax rate at 40% ceiling', () => {
-    // tax = $600M, preTax = $1B → raw rate = 60%, clamped to 40%
+    // tax = $600M, preTax = $1B → raw rate = 60%, excluded by filter → fallback to 21%
     const inputs = extractWACCInputs(financials(600_000_000, 1_000_000_000), 0.04, 1.0, 1.0, 0)
-    expect(inputs.taxRate).toBe(0.40)
+    expect(inputs.taxRate).toBe(0.21)
   })
 
   it('clamps tax rate at 5% floor', () => {
-    // tax = $5M, preTax = $1B → raw rate = 0.5%, floored to 5%
+    // tax = $5M, preTax = $1B → raw rate = 0.5%, excluded by ≤0.05 filter → fallback to 21%
     const inputs = extractWACCInputs(financials(5_000_000, 1_000_000_000), 0.04, 1.0, 1.0, 0)
-    expect(inputs.taxRate).toBe(0.05)
+    expect(inputs.taxRate).toBe(0.21)
   })
 
   it('falls back to 21% when income statement unavailable', () => {
     const inputs = extractWACCInputs(financials(0, 0), 0.04, 1.0, 1.0, 0)
     expect(inputs.taxRate).toBe(0.21)
+  })
+})
+
+describe('extractWACCInputs — negative book equity guard', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mcdLike = (totalDebt: number) => ({
+    financialData: { totalDebt },
+    defaultKeyStatistics: { beta: 0.75, sharesOutstanding: 700_000_000 },
+    summaryDetail: { marketCap: 210_000_000_000 },
+    summaryProfile: { sector: 'Consumer Cyclical', industry: 'Restaurants' },
+    price: 300,
+    incomeStatementHistory: { incomeStatementHistory: [] },
+    balanceSheetHistory: { balanceSheetStatements: [] },
+    earningsTrend: { trend: [] },
+  })
+
+  it('clamps negative totalDebt to zero — negative book equity data anomaly', () => {
+    // Simulate Yahoo returning negative totalDebt for a negative-book-equity company
+    const inputs = extractWACCInputs(mcdLike(-5_000_000_000) as never, 0.04, 0.75, 1.0, 0)
+    expect(inputs.debtToEquity).toBe(0)
+  })
+
+  it('produces valid WACC when totalDebt is negative', () => {
+    const inputs = extractWACCInputs(mcdLike(-5_000_000_000) as never, 0.04, 0.75, 1.0, 0)
+    const result = calculateWACC(inputs)
+    expect(result.wacc).toBeGreaterThan(0)
+    expect(isFinite(result.wacc)).toBe(true)
+    expect(result.weightEquity).toBe(1)
+    expect(result.weightDebt).toBe(0)
   })
 })

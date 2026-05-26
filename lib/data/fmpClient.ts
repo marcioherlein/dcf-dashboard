@@ -84,6 +84,13 @@ export interface FmpKeyMetrics {
   returnOnEquity: number
   investedCapital: number
   freeCashFlowToFirm: number
+  // Valuation multiples (used for historical ratio charts)
+  peRatio: number | null
+  enterpriseValueOverEBITDA: number | null
+  evToSales: number | null
+  priceToSalesRatio: number | null
+  priceToBookRatio: number | null
+  marketCap: number | null
 }
 
 export interface FmpProfile {
@@ -138,7 +145,7 @@ export async function getFmpBalanceSheets(ticker: string, limit = 5): Promise<Fm
   return get<FmpBalanceSheet[]>('/balance-sheet-statement', { symbol: ticker, limit })
 }
 
-export async function getFmpKeyMetrics(ticker: string, limit = 5): Promise<FmpKeyMetrics[]> {
+export async function getFmpKeyMetrics(ticker: string, limit = 10): Promise<FmpKeyMetrics[]> {
   return get<FmpKeyMetrics[]>('/key-metrics', { symbol: ticker, limit })
 }
 

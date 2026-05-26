@@ -28,7 +28,11 @@ export function calculateWACC(inputs: WACCInputs): WACCResult {
   const costOfEquity = rfRate + beta * erp + crp
   const afterTaxCostOfDebt = costOfDebt * (1 - taxRate)
 
-  const debtRatio = debtToEquity / (1 + debtToEquity)
+  // Guard: clamp D/E ≥ 0. Companies with negative book equity (MCD, HD) can produce
+  // data-layer anomalies where totalDebt comes back negative from Yahoo Finance.
+  // A negative D/E inverts the weight sign and collapses WACC to a nonsense value.
+  const safeDE = Math.max(0, debtToEquity)
+  const debtRatio = safeDE / (1 + safeDE)
   const equityRatio = 1 - debtRatio
 
   const wacc = equityRatio * costOfEquity + debtRatio * afterTaxCostOfDebt
@@ -81,7 +85,9 @@ export function extractWACCInputs(financials: any, rfRate: number, betaFromRegre
       totalDebt = marketCap * 1.5
     }
   } else {
-    totalDebt = ((fd.totalDebt ?? 0) as number) * fxRate
+    // Clamp to ≥ 0: Yahoo can return negative totalDebt for negative-book-equity
+    // companies (MCD, HD) due to netting or data misclassification.
+    totalDebt = Math.max(0, ((fd.totalDebt ?? 0) as number) * fxRate)
   }
 
   const debtToEquity = marketCap > 0 ? totalDebt / marketCap : 0.30

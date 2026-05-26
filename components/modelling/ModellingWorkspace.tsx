@@ -17,6 +17,22 @@ import SensitivityTable from '@/components/valuation/SensitivityTable'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type StatementsDataLike = any
 
+// Damodaran four-model DCF weights by company type.
+// Each row = { UFCF+PGM, UFCF+EM, LFCF+PGM, LFCF+EM }.
+// Source: Damodaran "Investment Valuation" §12–15:
+//   – UFCF preferred for non-financial firms (less sensitive to financing assumptions)
+//   – LFCF (FCFE) primary for financial companies (debt integral to operations)
+//   – Exit Multiple preferred for high-growth / EM-heavy companies (less sensitive to terminal g)
+//   – PGM preferred for dividend / stable companies (resembles Gordon Growth DDM)
+const FOUR_MODEL_WEIGHTS: Record<string, { ufcfPGM: number; ufcfEM: number; lfcfPGM: number; lfcfEM: number }> = {
+  standard:  { ufcfPGM: 0.35, ufcfEM: 0.35, lfcfPGM: 0.15, lfcfEM: 0.15 },
+  dividend:  { ufcfPGM: 0.40, ufcfEM: 0.25, lfcfPGM: 0.25, lfcfEM: 0.10 },
+  growth:    { ufcfPGM: 0.30, ufcfEM: 0.40, lfcfPGM: 0.10, lfcfEM: 0.20 },
+  startup:   { ufcfPGM: 0.20, ufcfEM: 0.50, lfcfPGM: 0.10, lfcfEM: 0.20 },
+  financial: { ufcfPGM: 0.05, ufcfEM: 0.05, lfcfPGM: 0.45, lfcfEM: 0.45 },
+  etf:       { ufcfPGM: 0.00, ufcfEM: 0.00, lfcfPGM: 0.00, lfcfEM: 0.00 },
+}
+
 interface ModellingWorkspaceProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   apiData: any
@@ -135,6 +151,9 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
 
   // Terminal method toggle
   const [terminalMethod, setTerminalMethod] = useState<'perpetuity' | 'multiple'>('multiple')
+
+  // Levered/Unlevered toggle (mirrors ForecastTable mode)
+  const [isLfcf, setIsLfcf] = useState(false)
 
   const baseInput: ModellingInput = useMemo(
     () => normalizeModellingInputs(ticker, apiData, statementsData),
@@ -295,6 +314,20 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
   const lastUFCF = projUFCF[projUFCF.length - 1]?.ufcf ?? null
   const lastLFCF = projLFCF[projLFCF.length - 1]?.lfcf ?? null
 
+  // Sensitivity table: live base FCF (last historical) and effective CAGR derived from projections
+  const histUFCF = [...ufcfRows].reverse().find(r => !r.isProjected)?.ufcf ?? null
+  const histLFCF = [...lfcfRows].reverse().find(r => !r.isProjected)?.lfcf ?? null
+  const sensitivityBaseFCF = isLfcf ? (histLFCF ?? baseInput.baseFCF) : (histUFCF ?? baseInput.baseFCF)
+  const sensitivityLastFCF = isLfcf ? lastLFCF : lastUFCF
+  const sensitivityCagr = useMemo(() => {
+    if (sensitivityBaseFCF != null && sensitivityBaseFCF > 0 &&
+        sensitivityLastFCF != null && sensitivityLastFCF > 0 &&
+        numProjectionYears > 0) {
+      return Math.pow(sensitivityLastFCF / sensitivityBaseFCF, 1 / numProjectionYears) - 1
+    }
+    return cagr
+  }, [sensitivityBaseFCF, sensitivityLastFCF, numProjectionYears, cagr])
+
   const tvUFCF = useMemo(
     () => computeTerminalValues(lastUFCF, wacc, terminalG, exitMultiple, numProjectionYears, sumPvUFCF, baseInput.companyType),
     [lastUFCF, wacc, terminalG, exitMultiple, numProjectionYears, sumPvUFCF, baseInput.companyType]
@@ -377,14 +410,42 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
     setRowOverrides(prev => ({ ...prev, [year]: { ...prev[year], [field]: value } }))
   }, [])
 
-  // Fair value derived from terminal data for delta flash feedback
+  // Fair value: Damodaran four-model blend of UFCF and LFCF × both terminal methods.
+  // This replaces the previous single-method snapshot so the Core DCF Result reflects
+  // the average across all four variants, weighted by company type.
   const derivedFV: number | null = useMemo(() => {
-    const tv = terminalMethod === 'perpetuity'
-      ? tvUFCF.perpetuityTVDiscounted
-      : tvUFCF.exitMultipleTVDiscounted
-    if (tv == null || sharesM == null || sharesM <= 0) return null
-    return (sumPvUFCF + tv + (baseInput.cashM ?? 0) - (baseInput.debtM ?? 0)) / sharesM
-  }, [terminalMethod, tvUFCF, sumPvUFCF, sharesM, baseInput.cashM, baseInput.debtM])
+    if (sharesM == null || sharesM <= 0) return null
+    const cash = baseInput.cashM ?? 0
+    const debt = baseInput.debtM ?? 0
+
+    // UFCF variants — EV model: equity = (ΣPV(UFCF) + terminal TV) + cash − debt
+    const ufcfPGM = tvUFCF.perpetuityTVDiscounted != null
+      ? (sumPvUFCF + tvUFCF.perpetuityTVDiscounted + cash - debt) / sharesM
+      : null
+    const ufcfEM = tvUFCF.exitMultipleTVDiscounted != null
+      ? (sumPvUFCF + tvUFCF.exitMultipleTVDiscounted + cash - debt) / sharesM
+      : null
+    // LFCF variants — equity model: no cash/debt bridge (cash flows are already post-financing)
+    const lfcfPGM = tvLFCF.perpetuityTVDiscounted != null
+      ? (sumPvLFCF + tvLFCF.perpetuityTVDiscounted) / sharesM
+      : null
+    const lfcfEM = tvLFCF.exitMultipleTVDiscounted != null
+      ? (sumPvLFCF + tvLFCF.exitMultipleTVDiscounted) / sharesM
+      : null
+
+    const w = FOUR_MODEL_WEIGHTS[baseInput.companyType ?? 'standard'] ?? FOUR_MODEL_WEIGHTS.standard
+    const parts: { w: number; v: number }[] = [
+      ufcfPGM != null ? { w: w.ufcfPGM, v: ufcfPGM } : null,
+      ufcfEM  != null ? { w: w.ufcfEM,  v: ufcfEM  } : null,
+      lfcfPGM != null ? { w: w.lfcfPGM, v: lfcfPGM } : null,
+      lfcfEM  != null ? { w: w.lfcfEM,  v: lfcfEM  } : null,
+    ].filter((x): x is { w: number; v: number } => x != null)
+
+    if (parts.length === 0) return null
+    const totalW = parts.reduce((s, p) => s + p.w, 0)
+    if (totalW === 0) return null
+    return parts.reduce((s, p) => s + p.v * p.w / totalW, 0)
+  }, [tvUFCF, tvLFCF, sumPvUFCF, sumPvLFCF, sharesM, baseInput.cashM, baseInput.debtM, baseInput.companyType])
 
   const prevFV = useRef<number | null>(null)
   const [delta, setDelta] = useState<{ amount: number; pct: number } | null>(null)
@@ -440,23 +501,27 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
         onTerminalGChange={setTerminalGOverride}
         currentWacc={+(wacc * 100).toFixed(1)}
         onWaccChange={(v) => setWaccOverride(v / 100)}
+        onModeChange={setIsLfcf}
         cagrAnalysis={apiData?.cagrAnalysis}
       />
 
       {/* Sensitivity heatmap */}
-      {baseInput.baseFCF != null && baseInput.baseFCF !== 0 && sharesM != null && sharesM > 0 && (
+      {sensitivityBaseFCF != null && sensitivityBaseFCF !== 0 && sharesM != null && sharesM > 0 && (
         <div className="mt-0">
           <SensitivityTable
-            baseFCF={baseInput.baseFCF}
-            baseWacc={wacc}
-            baseCagr={cagr}
+            baseFCF={sensitivityBaseFCF}
+            baseWacc={isLfcf ? baseInput.costOfEquity : wacc}
+            baseCagr={Number.isFinite(sensitivityCagr) ? sensitivityCagr : cagr}
             terminalG={terminalG}
-            cashM={baseInput.cashM ?? 0}
-            debtM={baseInput.debtM ?? 0}
+            cashM={isLfcf ? 0 : (baseInput.cashM ?? 0)}
+            debtM={isLfcf ? 0 : (baseInput.debtM ?? 0)}
             sharesM={sharesM}
             currentPrice={baseInput.currentPrice ?? 0}
             numYears={numProjectionYears}
             currency={baseInput.currency}
+            terminalMethod={terminalMethod}
+            exitMultiple={exitMultiple}
+            isLevered={isLfcf}
           />
         </div>
       )}

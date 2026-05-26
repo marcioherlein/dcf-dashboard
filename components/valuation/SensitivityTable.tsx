@@ -4,16 +4,19 @@ import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 
 interface Props {
-  baseFCF: number       // last historical UFCF in $M
-  baseWacc: number      // base WACC as decimal  (e.g. 0.10)
-  baseCagr: number      // base revenue CAGR as decimal (e.g. 0.22)
+  baseFCF: number       // last historical FCF in $M (UFCF or LFCF)
+  baseWacc: number      // base discount rate (WACC for unlevered, costOfEquity for levered)
+  baseCagr: number      // effective FCF CAGR as decimal (e.g. 0.22)
   terminalG: number     // terminal growth rate as decimal
-  cashM: number         // net cash in $M (positive = cash, negative = net debt)
-  debtM: number         // gross debt in $M
+  cashM: number         // net cash in $M (0 when isLevered — equity bridge already embedded)
+  debtM: number         // gross debt in $M (0 when isLevered)
   sharesM: number       // diluted shares in millions
   currentPrice: number  // current stock price
   numYears: number      // projection horizon
   currency: string
+  terminalMethod?: 'perpetuity' | 'multiple'
+  exitMultiple?: number
+  isLevered?: boolean
 }
 
 // 7 WACC steps centred on base (±3pp in 1pp increments)
@@ -29,8 +32,12 @@ function computeCell(
   baseFCF: number, cagr: number, wacc: number,
   terminalG: number, cashM: number, debtM: number,
   sharesM: number, n: number, currentPrice: number,
+  terminalMethod: 'perpetuity' | 'multiple',
+  exitMultiple: number,
+  isLevered: boolean,
 ): { fv: number; upside: number } | null {
-  if (wacc <= terminalG || wacc <= 0 || sharesM <= 0 || n <= 0) return null
+  if (wacc <= 0 || sharesM <= 0 || n <= 0) return null
+  if (terminalMethod === 'perpetuity' && wacc <= terminalG) return null
 
   // PV of projected FCFs
   let pvFCFs = 0
@@ -38,13 +45,17 @@ function computeCell(
     pvFCFs += (baseFCF * Math.pow(1 + cagr, i)) / Math.pow(1 + wacc, i)
   }
 
-  // Terminal value via Gordon Growth Model on final year FCF
   const lastFCF = baseFCF * Math.pow(1 + cagr, n)
-  const tv      = (lastFCF * (1 + terminalG)) / (wacc - terminalG)
-  const pvTV    = tv / Math.pow(1 + wacc, n)
 
-  const ev     = pvFCFs + pvTV
-  const equity = ev + cashM - debtM
+  // Terminal value
+  const tv = terminalMethod === 'multiple'
+    ? lastFCF * exitMultiple
+    : (lastFCF * (1 + terminalG)) / (wacc - terminalG)
+  const pvTV = tv / Math.pow(1 + wacc, n)
+
+  const totalPV = pvFCFs + pvTV
+  // Levered: LFCF is already an equity measure — no bridge needed
+  const equity = isLevered ? totalPV : totalPV + cashM - debtM
   if (!isFinite(equity)) return null
 
   const fv     = equity / sharesM
@@ -71,6 +82,9 @@ function fmt(v: number, symbol: string): string {
 export default function SensitivityTable({
   baseFCF, baseWacc, baseCagr, terminalG,
   cashM, debtM, sharesM, currentPrice, numYears, currency,
+  terminalMethod = 'perpetuity',
+  exitMultiple = 15,
+  isLevered = false,
 }: Props) {
   const sym = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$' : currency
 
@@ -79,10 +93,10 @@ export default function SensitivityTable({
       const wacc = Math.max(0.02, baseWacc + wd)
       return CAGR_DELTAS.map(cd => {
         const cagr = baseCagr + cd
-        return computeCell(baseFCF, cagr, wacc, terminalG, cashM, debtM, sharesM, numYears, currentPrice)
+        return computeCell(baseFCF, cagr, wacc, terminalG, cashM, debtM, sharesM, numYears, currentPrice, terminalMethod, exitMultiple, isLevered)
       })
     }),
-  [baseFCF, baseWacc, baseCagr, terminalG, cashM, debtM, sharesM, numYears, currentPrice])
+  [baseFCF, baseWacc, baseCagr, terminalG, cashM, debtM, sharesM, numYears, currentPrice, terminalMethod, exitMultiple, isLevered])
 
   const noData = baseFCF === 0 || sharesM === 0
 
@@ -92,11 +106,23 @@ export default function SensitivityTable({
         <div>
           <h3 className="text-[13px] font-bold text-white">Sensitivity Analysis</h3>
           <p className="text-[11px] text-slate-400 mt-0.5">
-            Fair value at each Revenue CAGR × WACC combination — base case highlighted
+            Fair value at each {isLevered ? 'FCF' : 'Revenue'} CAGR × {isLevered ? 'Cost of Equity' : 'WACC'} combination — base case highlighted
           </p>
         </div>
-        <div className="text-[10px] text-slate-400 font-mono">
-          Terminal g = {(terminalG * 100).toFixed(1)}%  ·  {numYears}yr horizon
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={cn(
+            'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
+            isLevered ? 'bg-purple-900/40 border-purple-700 text-purple-300' : 'bg-blue-900/40 border-blue-700 text-blue-300'
+          )}>
+            {isLevered ? 'Levered (LFCF)' : 'Unlevered (UFCF)'}
+          </span>
+          <span className={cn(
+            'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
+            terminalMethod === 'multiple' ? 'bg-amber-900/40 border-amber-700 text-amber-300' : 'bg-slate-700 border-slate-600 text-slate-300'
+          )}>
+            {terminalMethod === 'multiple' ? `Exit ${exitMultiple.toFixed(1)}×` : `g = ${(terminalG * 100).toFixed(1)}%`}
+          </span>
+          <span className="text-[10px] text-slate-400 font-mono">{numYears}yr horizon</span>
         </div>
       </div>
 
@@ -230,7 +256,12 @@ export default function SensitivityTable({
             </div>
 
             <p className="text-[9px] text-slate-400 mt-2">
-              Computed via Gordon Growth Model on projected terminal FCF. Does not account for dilution or changing capex ratios. Base case (⬤) matches current model assumptions.
+              {terminalMethod === 'multiple'
+                ? `Terminal value via FCF × ${exitMultiple.toFixed(1)}× exit multiple on final projected year FCF.`
+                : 'Computed via Gordon Growth Model on projected terminal FCF.'
+              }{' '}
+              {isLevered ? 'Levered: LFCF is an equity measure — no cash/debt bridge applied.' : 'Does not account for dilution or changing capex ratios.'}{' '}
+              Base case (⬤) matches current model assumptions.
             </p>
           </div>
         </div>

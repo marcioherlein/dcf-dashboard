@@ -88,6 +88,7 @@ interface ForecastTableProps {
   onTerminalGChange: (value: number) => void
   currentWacc?: number
   onWaccChange?: (value: number) => void
+  onModeChange?: (isLfcf: boolean) => void
   cagrAnalysis?: {
     analystEstimate1y?: number | null
     analystEstimate2y?: number | null
@@ -273,6 +274,7 @@ export default function ForecastTable({
   onTerminalGChange,
   currentWacc,
   onWaccChange,
+  onModeChange,
   cagrAnalysis,
 }: ForecastTableProps) {
   const [mode, setMode] = useState<'ufcf' | 'lfcf'>('ufcf')
@@ -1067,7 +1069,7 @@ export default function ForecastTable({
             {(['ufcf', 'lfcf'] as const).map(m => (
               <button
                 key={m}
-                onClick={() => setMode(m)}
+                onClick={() => { setMode(m); onModeChange?.(m === 'lfcf') }}
                 className={cn(
                   'px-3 py-1.5 text-xs font-semibold transition-colors',
                   mode === m ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-white/8 bg-transparent'
