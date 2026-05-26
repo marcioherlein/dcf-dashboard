@@ -1,8 +1,6 @@
 'use client'
-import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { fmtLargeCurrency } from '@/lib/formatters'
-import { Globe } from 'lucide-react'
 
 interface Quote {
   price: number
@@ -137,8 +135,6 @@ export default function OverviewSidebar({
 }: Props) {
   const { price, peRatio, fiftyTwoWeekHigh, fiftyTwoWeekLow, analystTargetMean, marketCap, currency } = quote
   const sym = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$ ' : currency + ' '
-  const [descExpanded, setDescExpanded] = useState(false)
-
   // ── Analyst Consensus ─────────────────────────────────────────────────────
   const recNorm  = (analystRecommendation ?? '').toLowerCase()
   const isBuy    = recNorm.includes('buy') || recNorm === 'strong_buy' || recNorm === 'strongbuy'
@@ -303,36 +299,7 @@ export default function OverviewSidebar({
       })()}
 
       {/* ── Card 4: Company Description ──────────────────────────────────── */}
-      {businessProfile?.description && (
-        <Card>
-          <SectionLabel>Company Description</SectionLabel>
-          <p className="text-[12px] text-slate-600 leading-relaxed">
-            {descExpanded
-              ? businessProfile.description
-              : businessProfile.description.slice(0, 200) + (businessProfile.description.length > 200 ? '...' : '')
-            }
-          </p>
-          {businessProfile.description.length > 200 && (
-            <button
-              onClick={() => setDescExpanded(v => !v)}
-              className="mt-1.5 text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-            >
-              {descExpanded ? 'Show less' : 'Read more'}
-            </button>
-          )}
-          {ticker && (
-            <a
-              href={`https://finance.yahoo.com/quote/${ticker}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 flex items-center gap-1.5 text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-            >
-              <Globe size={12} />
-              View company profile →
-            </a>
-          )}
-        </Card>
-      )}
+      {/* Removed — company identity shown in main column summary strip */}
 
     </div>
   )

@@ -35,28 +35,28 @@ interface Verdict {
 function deriveVerdict(upsidePct: number | null, fv: number | null): Verdict {
   const absPct = upsidePct != null ? Math.abs(upsidePct * 100).toFixed(0) : '?'
   if (upsidePct == null || fv == null) return {
-    chip: 'N/A', heading: 'Insufficient Data',
+    chip: '—', heading: 'Insufficient Data',
     description: 'We could not compute an intrinsic value estimate.',
     chipClass: 'bg-slate-100 text-slate-500 border-slate-200',
     headingClass: 'text-slate-500',
   }
   if (upsidePct >= 0.20) return {
-    chip: 'BUY', heading: 'Attractive',
-    description: `Trades ${absPct}% below our fair value estimate — a significant margin of safety.`,
+    chip: 'BUY', heading: 'Undervalued',
+    description: `Trading ${absPct}% below our fair value estimate — a significant margin of safety.`,
     chipClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     headingClass: 'text-emerald-600',
   }
   if (upsidePct >= 0.05) return {
     chip: 'BUY', heading: 'Fairly Valued',
-    description: `Modest ${absPct}% upside to our estimate — reasonable entry with limited downside.`,
+    description: `Trading ${absPct}% below our estimate — reasonable entry with limited downside.`,
     chipClass: 'bg-emerald-50 text-emerald-600 border-emerald-200',
     headingClass: 'text-emerald-500',
   }
   if (upsidePct >= -0.10) return {
-    chip: 'WATCH', heading: 'Near Fair Value',
+    chip: 'WATCH', heading: 'Fairly Valued',
     description: 'Trading close to our intrinsic estimate. Patient investors may wait for a better entry.',
-    chipClass: 'bg-amber-50 text-amber-700 border-amber-200',
-    headingClass: 'text-amber-600',
+    chipClass: 'bg-blue-50 text-blue-700 border-blue-200',
+    headingClass: 'text-blue-600',
   }
   if (upsidePct >= -0.25) return {
     chip: 'AVOID', heading: 'Overvalued',
@@ -65,8 +65,8 @@ function deriveVerdict(upsidePct: number | null, fv: number | null): Verdict {
     headingClass: 'text-red-600',
   }
   return {
-    chip: 'AVOID', heading: 'Significantly Overvalued',
-    description: `Priced ${absPct}% above our estimate. High execution risk embedded in the price.`,
+    chip: 'AVOID', heading: 'Overvalued',
+    description: `Trading ${absPct}% above our estimate. High execution risk embedded in the price.`,
     chipClass: 'bg-red-50 text-red-700 border-red-200',
     headingClass: 'text-red-700',
   }
@@ -89,7 +89,7 @@ function BoxLabel({ children }: { children: React.ReactNode }) {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function StockSummaryCard({
-  ticker, companyName, sector, industry, description,
+  ticker, companyName, sector, industry,
   price, change, changePct, currency,
   high52, low52,
   fairValue, upsidePct, scenarios,
@@ -108,36 +108,19 @@ export default function StockSummaryCard({
     <div className="space-y-3">
 
       {/* ── Company identity strip ── */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center gap-4">
-        {/* Logo circle */}
-        <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center shrink-0 text-white font-black text-[16px]">
+      <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shrink-0 text-white font-black text-[13px]">
           {companyName.charAt(0)}
         </div>
-
-        {/* Name + ticker + sector */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="font-bold text-[15px] text-slate-900 leading-tight">{companyName}</span>
-            <span className="text-[11px] text-slate-400 font-medium">{ticker}</span>
-            {(sector || industry) && (
-              <span className="text-[11px] text-slate-400 hidden sm:inline">
-                · {[sector, industry].filter(Boolean).join(' / ')}
-              </span>
-            )}
-          </div>
-          {description && (
-            <p className="text-[12px] text-slate-500 leading-relaxed mt-0.5 line-clamp-1 hidden sm:block">
-              {description}
-            </p>
+        <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
+          <span className="font-bold text-[14px] text-slate-900 leading-tight">{companyName}</span>
+          <span className="text-[11px] text-slate-400 font-medium">{ticker}</span>
+          {(sector || industry) && (
+            <span className="text-[11px] text-slate-400 hidden sm:inline">
+              · {[sector, industry].filter(Boolean).join(' / ')}
+            </span>
           )}
         </div>
-
-        <button
-          onClick={onViewDetails}
-          className="shrink-0 text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors whitespace-nowrap"
-        >
-          View company profile →
-        </button>
       </div>
 
       {/* ── 4 metric boxes ── */}
@@ -204,7 +187,7 @@ export default function StockSummaryCard({
               )}
             </>
           ) : (
-            <p className="text-sm text-slate-400 mt-1">Not available</p>
+            <p className="text-sm text-slate-400 mt-1">—</p>
           )}
         </MetricBox>
 
