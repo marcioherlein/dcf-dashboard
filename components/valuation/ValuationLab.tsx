@@ -1037,7 +1037,12 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
     const multEstimates: Array<{ multiple: string; actualValue: number }> =
       (apiData as { valuationMethods?: { models?: { multiples?: { estimates?: unknown[] } } } })
         ?.valuationMethods?.models?.multiples?.estimates as Array<{ multiple: string; actualValue: number }> ?? []
-    const actualEvEbitda = multEstimates.find(e => e.multiple === 'EV/EBITDA')?.actualValue ?? null
+    const actualEvEbitdaFromEstimates = multEstimates.find(e => e.multiple === 'EV/EBITDA')?.actualValue ?? null
+    const marketCapRaw = (apiData?.quote?.marketCap as number | null | undefined) ?? null
+    const computedEvEbitda = (actualEvEbitdaFromEstimates == null && marketCapRaw != null && evEbitdaInputs.ttmEbitda != null && evEbitdaInputs.ttmEbitda > 0)
+      ? (marketCapRaw + (evEbitdaInputs.netDebt ?? 0)) / evEbitdaInputs.ttmEbitda
+      : null
+    const actualEvEbitda = actualEvEbitdaFromEstimates ?? computedEvEbitda
     const companyEVEBITDAStr = actualEvEbitda != null && actualEvEbitda > 0 ? `${actualEvEbitda.toFixed(1)}×` : 'N/A'
     const exitMultipleText = `Sector standard: ${multiple.toFixed(0)}× (${sect} sector median); company current EV/EBITDA: ${companyEVEBITDAStr}`
     const financialSectorWarning = /financial|bank|insurance|fintech|payment/i.test(sect)
@@ -1050,7 +1055,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
       companyName: apiData?.companyName ?? ticker, ticker, currency,
       evidence: [
         { label: 'TTM EBITDA',    text: evEbitdaInputs.ttmEbitda != null ? fmtB(evEbitdaInputs.ttmEbitda) + ' (trailing 12 months, Yahoo Finance)' : 'Not available', rowKey: 'EBITDA', statement: 'income' },
-        { label: 'Net Debt',      text: evEbitdaInputs.netDebt   != null ? fmtB(evEbitdaInputs.netDebt)   + ' (total debt − cash)' : 'Assumed 0', rowKey: 'totalDebt', statement: 'balance' },
+        { label: 'Net Debt',      text: evEbitdaInputs.netDebt   != null ? fmtB(evEbitdaInputs.netDebt)   + ' (total debt − cash)' : 'Not available — assumed 0', rowKey: 'totalDebt', statement: 'balance' },
         { label: 'Shares',        text: evEbitdaInputs.shares    != null ? (evEbitdaInputs.shares / 1e9).toFixed(3) + 'B shares outstanding' : 'Not available', rowKey: 'ordinarySharesNumber', statement: 'balance' },
         { label: 'Exit Multiple', text: exitMultipleText },
       ],
@@ -1260,7 +1265,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
               <p className="text-[10px] text-slate-500 mt-2">
                 {fullDcfLiveFV != null
                   ? 'Derived from the modelling table below — updates as you edit projections.'
-                  : 'FCFF, FCFE & DDM triangulated — intrinsic value from projected free cash flows.'}
+                  : 'UFCF & LFCF · Perpetuity Growth & Exit Multiple blend — Damodaran four-model average.'}
               </p>
             </div>
           )}

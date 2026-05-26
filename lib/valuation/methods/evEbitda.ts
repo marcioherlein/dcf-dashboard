@@ -37,17 +37,20 @@ export function computeEVEBITDA(inputs: EVEBITDAInputs): EVEBITDAResult {
   const errors: string[] = []
 
   if (ttmEbitda == null)    errors.push('TTM EBITDA is missing')
-  if (netDebt == null)      errors.push('Net debt data unavailable — equity bridge cannot be computed. Check balance sheet.')
   if (shares == null)       errors.push('Shares outstanding is missing')
   if (exitMultiple <= 0)    errors.push('Exit multiple must be positive')
   if (ttmEbitda != null && ttmEbitda <= 0) errors.push('TTM EBITDA must be positive for this method')
 
-  if (errors.length > 0 || ttmEbitda == null || netDebt == null || shares == null || ttmEbitda <= 0) {
-    return { enterpriseValue: null, equityValue: null, fairValuePerShare: null, upsidePct: null, guardErrors: errors }
+  const warnings: string[] = []
+  if (netDebt == null) warnings.push('Net debt unavailable — assumed 0 (equity value equals enterprise value)')
+
+  if (errors.length > 0 || ttmEbitda == null || shares == null || ttmEbitda <= 0) {
+    return { enterpriseValue: null, equityValue: null, fairValuePerShare: null, upsidePct: null, guardErrors: [...errors, ...warnings] }
   }
 
+  const effectiveNetDebt = netDebt ?? 0
   const enterpriseValue = ttmEbitda * exitMultiple
-  const equityValue     = enterpriseValue - netDebt
+  const equityValue     = enterpriseValue - effectiveNetDebt
   const fairValuePerShare = shares > 0 ? equityValue / shares : null
 
   if (fairValuePerShare == null || fairValuePerShare <= 0) {
@@ -56,5 +59,5 @@ export function computeEVEBITDA(inputs: EVEBITDAInputs): EVEBITDAResult {
 
   const upsidePct = currentPrice > 0 ? (fairValuePerShare - currentPrice) / currentPrice : null
 
-  return { enterpriseValue, equityValue, fairValuePerShare, upsidePct, guardErrors: [] }
+  return { enterpriseValue, equityValue, fairValuePerShare, upsidePct, guardErrors: warnings }
 }
