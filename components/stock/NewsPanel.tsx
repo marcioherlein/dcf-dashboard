@@ -41,8 +41,8 @@ export default function NewsPanel({ ticker }: { ticker: string }) {
   }, [ticker])
 
   return (
-    <div className="rounded-xl card p-6">
-      <div className="flex items-center justify-between mb-5">
+    <div className="rounded-xl card p-4 sm:p-6">
+      <div className="flex items-center justify-between mb-4 sm:mb-5">
         <h2 className="text-base font-semibold text-slate-900">Latest News</h2>
         <span className="text-[11px] text-slate-400 font-mono">{ticker}</span>
       </div>
@@ -75,16 +75,16 @@ export default function NewsPanel({ ticker }: { ticker: string }) {
               target="_blank"
               rel="noreferrer"
               variants={reduced ? {} : stagger.item}
-              className="group block rounded-xl border border-slate-200 bg-white p-4 hover:border-blue-300 hover:bg-slate-50 transition-all"
+              className="group block rounded-xl border border-slate-200 bg-white p-3 sm:p-4 hover:border-blue-300 hover:bg-slate-50 transition-all"
             >
-              <p className="text-[13px] font-medium leading-snug text-slate-800 group-hover:text-blue-600 transition-colors mb-2.5 line-clamp-2">
+              <p className="text-[13px] font-medium leading-snug text-slate-800 group-hover:text-blue-600 transition-colors mb-2 sm:mb-2.5 line-clamp-2">
                 {item.title}
               </p>
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-slate-100 text-slate-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="rounded-full bg-slate-100 text-slate-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide truncate max-w-[120px] sm:max-w-none">
                   {item.publisher}
                 </span>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-slate-400 shrink-0">
                   {relativeTime(item.providerPublishTime)}
                 </span>
                 <svg

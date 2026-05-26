@@ -151,12 +151,12 @@ export default function TopBar() {
 
       {/* Three-column grid: logo | center (intrinsico OR stock nav) | search + auth */}
       <div
-        className="relative h-full px-4"
+        className="relative h-full px-3 sm:px-4"
         style={{
           display: 'grid',
           gridTemplateColumns: stockNav ? 'auto 1fr auto' : 'minmax(0,1fr) auto minmax(0,1fr)',
           alignItems: 'center',
-          gap: '12px',
+          gap: '8px',
           zIndex: 1,
         }}
       >
@@ -175,9 +175,9 @@ export default function TopBar() {
 
         {/* ── Column 2: intrinsico wordmark OR stock identity + tabs ── */}
         {stockNav ? (
-          <div className="flex items-center min-w-0 overflow-x-auto scrollbar-hide gap-0">
-            {/* Identity + price */}
-            <div className="flex items-center gap-2 shrink-0 pr-4 border-r border-slate-100 mr-1">
+          <div className="flex items-center min-w-0 gap-0">
+            {/* Identity + price — fixed left section */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pr-2 sm:pr-4 border-r border-slate-100 mr-1">
               <button
                 onClick={() => router.push('/analyze')}
                 aria-label="Back to Analyze"
@@ -201,7 +201,7 @@ export default function TopBar() {
                   </span>
                   {stockNav.changePct != null && (
                     <span className={cn(
-                      'text-[11px] font-medium tabular-nums',
+                      'text-[11px] font-medium tabular-nums hidden sm:inline',
                       stockNav.changePct >= 0 ? 'text-emerald-600' : 'text-red-500',
                     )}>
                       {stockNav.changePct >= 0 ? '+' : ''}{stockNav.changePct.toFixed(2)}%
@@ -211,8 +211,8 @@ export default function TopBar() {
               )}
             </div>
 
-            {/* Tabs */}
-            <div className="flex items-center overflow-x-auto scrollbar-hide shrink-0" role="tablist">
+            {/* Tabs — horizontally scrollable strip */}
+            <div className="flex overflow-x-auto scrollbar-hide" role="tablist">
               {STOCK_TABS.map(({ id, label, count }) => {
                 const active = stockNav.activeTab === id
                 return (
@@ -222,14 +222,14 @@ export default function TopBar() {
                     aria-selected={active}
                     onClick={() => onTabChangeRef.current?.(id)}
                     className={cn(
-                      'relative flex items-center gap-1.5 px-3.5 text-[12px] font-medium whitespace-nowrap transition-colors shrink-0 h-[52px]',
+                      'relative flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 text-[11px] sm:text-[12px] font-medium whitespace-nowrap transition-colors shrink-0 h-[52px]',
                       active ? 'text-blue-600' : 'text-slate-500 hover:text-slate-800',
                     )}
                   >
                     {label}
                     {count != null && (
                       <span className={cn(
-                        'text-[10px] font-semibold leading-none px-1.5 py-0.5 rounded-full tabular-nums',
+                        'text-[10px] font-semibold leading-none px-1.5 py-0.5 rounded-full tabular-nums hidden sm:inline',
                         active
                           ? 'bg-blue-100 text-blue-600'
                           : 'bg-slate-100 text-slate-400',
@@ -264,10 +264,10 @@ export default function TopBar() {
         )}
 
         {/* ── Column 3: Search + clock + auth (right-aligned) ── */}
-        <div className="flex items-center gap-3 justify-end min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3 justify-end min-w-0">
 
           {/* Search */}
-          <div className="relative" ref={searchRef} style={{ width: '220px' }}>
+          <div className="relative" ref={searchRef} style={{ width: 'clamp(90px, 28vw, 220px)' }}>
             <div
               className="flex items-center gap-2 rounded-xl px-3 py-1.5 transition-all border"
               style={{
@@ -304,7 +304,7 @@ export default function TopBar() {
                   animate="visible"
                   exit="exit"
                   style={{ originY: 0 }}
-                  className="absolute right-0 top-full mt-1 w-[300px] overflow-hidden glass-card-light rounded-xl z-50 max-h-[70vh] overflow-y-auto"
+                  className="absolute right-0 top-full mt-1 w-[min(300px,calc(100vw-32px))] overflow-hidden glass-card-light rounded-xl z-50 max-h-[70vh] overflow-y-auto"
                 >
                   <motion.div
                     variants={reduced ? {} : { visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } } }}
@@ -353,7 +353,7 @@ export default function TopBar() {
               </span>
               <button
                 onClick={() => signOut()}
-                className="text-[12px] text-slate-400 hover:text-slate-700 transition-colors whitespace-nowrap"
+                className="text-[12px] text-slate-400 hover:text-slate-700 transition-colors whitespace-nowrap hidden sm:block"
               >
                 Sign out
               </button>

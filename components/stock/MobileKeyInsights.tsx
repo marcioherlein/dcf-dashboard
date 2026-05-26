@@ -47,7 +47,7 @@ export default function MobileKeyInsights({ data }: Props) {
   ] as const
 
   return (
-    <div className="rounded-xl card overflow-hidden lg:hidden mt-3">
+    <div className="rounded-xl card overflow-hidden lg:hidden mt-3 min-w-0">
       {/* Summary row — always visible */}
       <button
         onClick={() => setOpen(v => !v)}
