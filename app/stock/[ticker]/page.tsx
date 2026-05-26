@@ -6,13 +6,11 @@ import dynamic from 'next/dynamic'
 import NewsPanel from '@/components/stock/NewsPanel'
 import FinancialScores from '@/components/stock/FinancialScores'
 import HealthSection from '@/components/stock/HealthSection'
-import ScenarioComparisonCard from '@/components/stock/ScenarioComparisonCard'
-import MispricingExplainer from '@/components/stock/MispricingExplainer'
 import { type TabId } from '@/components/stock/TabNav'
 import StockContextBar from '@/components/stock/StockContextBar'
 import StockSidebar from '@/components/stock/StockSidebar'
 import { cn } from '@/lib/utils'
-import ValuationLab from '@/components/valuation/ValuationLab'
+import ValuationCockpit from '@/components/valuation/ValuationCockpit'
 import FinancialsHub from '@/components/stock/FinancialsHub'
 import InvestorGradeCard from '@/components/stock/InvestorGradeCard'
 import MobileKeyInsights from '@/components/stock/MobileKeyInsights'
@@ -25,7 +23,6 @@ import { loadPreLoginState, clearPreLoginState } from '@/lib/auth/preLoginState'
 import { useSession } from 'next-auth/react'
 import SaveToWatchlistDialog, { type WatchlistSavePayload } from '@/components/watchlist/SaveToWatchlistDialog'
 import ValuationNotAvailableCard from '@/components/stock/ValuationNotAvailableCard'
-import ValuationOverview from '@/components/valuation/ValuationOverview'
 import OverviewMetricGrid from '@/components/stock/OverviewMetricGrid'
 import FlipCard from '@/components/ui/FlipCard'
 import CardBack from '@/components/ui/CardBack'
@@ -284,6 +281,7 @@ function StockPageBody() {
 
   // Keep saving state for potential future use — suppress unused warning
   void setSaving; void saving
+  void setUserModelFairValue; void setActiveValuationMethod
 
   const currency = data?.quote.currency === 'USD' ? '$' : (data?.quote.currency ?? '$') + ' '
 
@@ -553,89 +551,12 @@ function StockPageBody() {
                   {data.canComputeDCF === false ? (
                     <ValuationNotAvailableCard vetoReasons={data.vetoReasons ?? []} ticker={ticker} />
                   ) : (
-                  <>
-                  {data.scenarios && (
-                    <FlipCard
-                      back={<CardBack
-                        emoji="🐂🐻" title="Bull / Base / Bear Scenarios"
-                        intro="Three versions of the future. Because nobody knows exactly what will happen, the model looks at three possible outcomes."
-                        sections={[
-                          { title: 'Bear (pessimistic)', body: 'What if things go worse than expected? Slower growth, higher costs, tougher competition. This gives you the low end of what the stock might be worth.' },
-                          { title: 'Base (most likely)', body: 'The central estimate — the outcome the model considers most probable based on current data. This is the main fair value number used throughout the analysis.' },
-                          { title: 'Bull (optimistic)', body: 'What if everything goes well? Strong growth, expanding margins, good conditions. This gives you the high end of what the stock could be worth.' },
-                          { title: 'WACC & CAGR', body: 'These are the two main levers. WACC = the "cost" of investing (risk). CAGR = how fast revenue grows. Bull scenarios use lower WACC and higher CAGR; bear scenarios flip that.' },
-                        ]}
-                        warning="The range between bear and bull shows how uncertain the estimate is. A wide range = more uncertainty."
-                      />}
-                    >
-                    <ScenarioComparisonCard
-                      scenarios={data.scenarios}
-                      currentPrice={data.quote.price}
-                      currency={data.quote.currency ?? 'USD'}
-                    />
-                    </FlipCard>
-                  )}
-                  <ValuationOverview
-                    ticker={ticker}
-                    currentPrice={data.quote.price ?? null}
-                    changePct={data.quote.changePct ?? null}
-                    currency={data.quote.currency === 'USD' ? '$' : (data.quote.currency ?? '$') + ' '}
-                    weightedFairValue={userModelFairValue}
-                  />
-                  <ValuationLab apiData={data} ticker={ticker} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} onWeightedFVChange={setUserModelFairValue} onActiveMethodChange={setActiveValuationMethod} />
-                  {data.fairValue?.fairValuePerShare != null && (
-                    <FlipCard
-                      back={<CardBack
-                        emoji="📐" title="Why Is the Price Different from Fair Value?"
-                        intro="This card breaks down the gap between what the stock trades at today and what the model thinks it's worth."
-                        sections={[
-                          { title: 'WACC (discount rate)', body: 'This is how much return investors demand for the risk they\'re taking. Higher WACC = lower fair value, because future earnings are worth less when discounted more aggressively.' },
-                          { title: 'CAGR (growth rate)', body: 'How fast the company\'s revenue is expected to grow per year. Faster growth = higher fair value. This is usually the biggest driver of the estimate.' },
-                          { title: 'Terminal value', body: 'What the business is assumed to be worth far in the future (typically 60–80% of the total fair value). A small change in the long-term growth rate can move the estimate significantly.' },
-                          { title: 'The gap', body: 'If the stock is below fair value: the market may be underestimating the company\'s potential. If it\'s above: the market is already pricing in a lot of optimism — or the model is too conservative.' },
-                        ]}
-                        warning="Two analysts can get very different fair values for the same stock just by using different WACC or growth assumptions. The model is a tool, not a verdict."
-                      />}
-                    >
-                    <MispricingExplainer
+                    <ValuationCockpit
+                      apiData={data}
                       ticker={ticker}
-                      fairValue={data.fairValue.fairValuePerShare}
-                      currentPrice={data.quote.price}
-                      upsidePct={data.fairValue.upsidePct ?? null}
-                      wacc={data.wacc?.wacc ?? null}
-                      cagr={data.cagr ?? null}
-                      sector={data.quote.sector ?? ''}
+                      statementsData={statementsData}
+                      onNavigateToFinancials={handleNavigateToFinancials}
                     />
-                    </FlipCard>
-                  )}
-                  {/* End-of-page CTA */}
-                  <div className="rounded-xl glass-card-light px-5 py-5">
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">What do you want to do next?</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <a
-                        href={`/simplifier/${ticker}`}
-                        className="flex flex-col gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 hover:bg-emerald-100 transition-colors"
-                      >
-                        <span className="text-sm font-bold text-emerald-700">Save valuation →</span>
-                        <span className="text-[11px] text-slate-500">Track when the price hits your fair value estimate</span>
-                      </a>
-                      <button
-                        onClick={() => { const el = document.getElementById('full_dcf'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}
-                        className="flex flex-col gap-1 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 hover:bg-blue-100 transition-colors text-left"
-                      >
-                        <span className="text-sm font-bold text-blue-700">Adjust assumptions →</span>
-                        <span className="text-[11px] text-slate-500">Open the Full DCF and change WACC or growth rate</span>
-                      </button>
-                      <button
-                        onClick={() => handleTabChange('financials')}
-                        className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 hover:bg-slate-100 transition-colors text-left"
-                      >
-                        <span className="text-sm font-bold text-slate-700">Check the financials →</span>
-                        <span className="text-[11px] text-slate-500">Revenue, margins, cash flow and debt history</span>
-                      </button>
-                    </div>
-                  </div>
-                  </>
                   )}
                 </motion.div>
               )}
