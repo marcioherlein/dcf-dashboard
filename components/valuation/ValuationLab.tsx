@@ -889,6 +889,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
   const [overrides,    setOverrides]    = useState<OverridesMap>({})
   const [linkedCAGR,   setLinkedCAGR]   = useState(true)
   const [openMethodId, setOpenMethodId] = useState<string | null>(null)
+  const [sanityChecksOpen, setSanityChecksOpen] = useState(true)
   const methodRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   const currency     = apiData?.quote?.currency ?? 'USD'
@@ -1220,7 +1221,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
             { label: 'Terminal G', value: ((apiData?.terminalG ?? 0.025) * 100).toFixed(1) + '%' },
           ]}
           guide={METHOD_GUIDES.full_dcf}
-          bestFor="Deep custom analysis — adjust year-by-year projections for a precise estimate"
+          bestFor="Advanced: adjust year-by-year projections for a precise, customised estimate"
         >
           {/* Executive DCF summary */}
           {(apiData?.valuationMethods?.triangulatedFairValue != null) && (
@@ -1257,94 +1258,123 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
             </div>
           )}
           <ModellingWorkspace apiData={apiData} ticker={ticker} statementsData={statementsData} />
-        </MethodAccordion>        {/* Multiples — sanity check against peers */}
-        <MethodAccordion
-          id="forward_pe"
-          title={fwdPEConfig.title}
-          confidence="high"
-          verdict={methodVerdict(fwdPEResult.upsidePct)}
-          weight={0.35}
-          isOpen={openMethodId === 'forward_pe'}
-          onToggle={() => setOpenMethodId(p => p === 'forward_pe' ? null : 'forward_pe')}
-          innerRef={el => { methodRefs.current['forward_pe'] = el }}
-          fairValue={fwdPEResult.fairValueToday}
-          upsidePct={fwdPEResult.upsidePct}
-          currency={currency}
-          chips={[
-            { label: 'CAGR', value: fwdPEInputs.revenueCAGR != null ? (fwdPEInputs.revenueCAGR * 100).toFixed(1) + '%' : '—', linked: linkedCAGR, onToggleLink: () => setLinkedCAGR(v => !v) },
-            { label: 'Exit P/E', value: fwdPEInputs.exitPE != null ? (fwdPEInputs.exitPE as number).toFixed(1) + '×' : '—' },
-            { label: 'Margin', value: fwdPEInputs.netMargin != null ? (fwdPEInputs.netMargin * 100).toFixed(1) + '%' : '—' },
-          ]}
-          guide={METHOD_GUIDES.forward_pe}
-          bestFor="Profitable companies with stable, predictable earnings"
-        >
-          <MethodInlinePanel
-            config={fwdPEConfig}
-            overrides={overrides['forward_pe'] ?? {}}
-            currency={currency}
-            onAssumptionChange={(key, val) => handleAssumptionChange('forward_pe', key, val)}
-            onResetOverrides={() => handleResetOverrides('forward_pe')}
-          />
-        </MethodAccordion>
+        </MethodAccordion>        {/* ── Sanity Checks — Multiples ─────────────────────────────────────── */}
+        <div className="glass-accordion-header rounded-xl overflow-hidden">
+          <button
+            onClick={() => setSanityChecksOpen(o => !o)}
+            className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50/60 transition-colors text-left"
+          >
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-slate-800">Sanity Checks — Multiples</p>
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 uppercase tracking-wider">3 models</span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-0.5">Forward P/E · EV/EBITDA · Revenue Multiple — how the market prices peers. Best used as a cross-check against DCF results.</p>
+            </div>
+            <ChevronDown
+              size={14}
+              className={cn('shrink-0 text-slate-400 transition-transform ml-3', sanityChecksOpen ? 'rotate-180' : '')}
+            />
+          </button>
+          <AnimatePresence>
+            {sanityChecksOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                className="overflow-hidden border-t border-slate-100"
+              >
+                <div className="p-3 space-y-3">
+                  <MethodAccordion
+                    id="forward_pe"
+                    title={fwdPEConfig.title}
+                    confidence="high"
+                    verdict={methodVerdict(fwdPEResult.upsidePct)}
+                    weight={0.35}
+                    isOpen={openMethodId === 'forward_pe'}
+                    onToggle={() => setOpenMethodId(p => p === 'forward_pe' ? null : 'forward_pe')}
+                    innerRef={el => { methodRefs.current['forward_pe'] = el }}
+                    fairValue={fwdPEResult.fairValueToday}
+                    upsidePct={fwdPEResult.upsidePct}
+                    currency={currency}
+                    chips={[
+                      { label: 'CAGR', value: fwdPEInputs.revenueCAGR != null ? (fwdPEInputs.revenueCAGR * 100).toFixed(1) + '%' : '—', linked: linkedCAGR, onToggleLink: () => setLinkedCAGR(v => !v) },
+                      { label: 'Exit P/E', value: fwdPEInputs.exitPE != null ? (fwdPEInputs.exitPE as number).toFixed(1) + '×' : '—' },
+                      { label: 'Margin', value: fwdPEInputs.netMargin != null ? (fwdPEInputs.netMargin * 100).toFixed(1) + '%' : '—' },
+                    ]}
+                    guide={METHOD_GUIDES.forward_pe}
+                    bestFor="Profitable companies with stable, predictable earnings"
+                  >
+                    <MethodInlinePanel
+                      config={fwdPEConfig}
+                      overrides={overrides['forward_pe'] ?? {}}
+                      currency={currency}
+                      onAssumptionChange={(key, val) => handleAssumptionChange('forward_pe', key, val)}
+                      onResetOverrides={() => handleResetOverrides('forward_pe')}
+                    />
+                  </MethodAccordion>
 
-        {/* EV/EBITDA */}
-        <MethodAccordion
-          id="ev_ebitda"
-          title={evEbitdaConfig.title}
-          confidence="medium"
-          verdict={methodVerdict(evEbitdaResult.upsidePct)}
-          weight={0.30}
-          isOpen={openMethodId === 'ev_ebitda'}
-          onToggle={() => setOpenMethodId(p => p === 'ev_ebitda' ? null : 'ev_ebitda')}
-          innerRef={el => { methodRefs.current['ev_ebitda'] = el }}
-          fairValue={evEbitdaResult.fairValuePerShare}
-          upsidePct={evEbitdaResult.upsidePct}
-          currency={currency}
-          chips={[
-            { label: 'Multiple', value: evEbitdaInputs.exitMultiple != null ? evEbitdaInputs.exitMultiple.toFixed(1) + '×' : '—' },
-            { label: 'EBITDA', value: evEbitdaInputs.ttmEbitda != null ? fmtLargeCurrency(evEbitdaInputs.ttmEbitda) : '—' },
-          ]}
-          guide={METHOD_GUIDES.ev_ebitda}
-          bestFor="Capital-intensive or mature businesses with stable EBITDA"
-        >
-          <MethodInlinePanel
-            config={evEbitdaConfig}
-            overrides={overrides['ev_ebitda'] ?? {}}
-            currency={currency}
-            onAssumptionChange={(key, val) => handleAssumptionChange('ev_ebitda', key, val)}
-            onResetOverrides={() => handleResetOverrides('ev_ebitda')}
-          />
-        </MethodAccordion>
+                  <MethodAccordion
+                    id="ev_ebitda"
+                    title={evEbitdaConfig.title}
+                    confidence="medium"
+                    verdict={methodVerdict(evEbitdaResult.upsidePct)}
+                    weight={0.30}
+                    isOpen={openMethodId === 'ev_ebitda'}
+                    onToggle={() => setOpenMethodId(p => p === 'ev_ebitda' ? null : 'ev_ebitda')}
+                    innerRef={el => { methodRefs.current['ev_ebitda'] = el }}
+                    fairValue={evEbitdaResult.fairValuePerShare}
+                    upsidePct={evEbitdaResult.upsidePct}
+                    currency={currency}
+                    chips={[
+                      { label: 'Multiple', value: evEbitdaInputs.exitMultiple != null ? evEbitdaInputs.exitMultiple.toFixed(1) + '×' : '—' },
+                      { label: 'EBITDA', value: evEbitdaInputs.ttmEbitda != null ? fmtLargeCurrency(evEbitdaInputs.ttmEbitda) : '—' },
+                    ]}
+                    guide={METHOD_GUIDES.ev_ebitda}
+                    bestFor="Capital-intensive or mature businesses with stable EBITDA"
+                  >
+                    <MethodInlinePanel
+                      config={evEbitdaConfig}
+                      overrides={overrides['ev_ebitda'] ?? {}}
+                      currency={currency}
+                      onAssumptionChange={(key, val) => handleAssumptionChange('ev_ebitda', key, val)}
+                      onResetOverrides={() => handleResetOverrides('ev_ebitda')}
+                    />
+                  </MethodAccordion>
 
-        {/* Revenue Multiple */}
-        <MethodAccordion
-          id="revenue_multiple"
-          title={revMultConfig.title}
-          confidence="medium"
-          verdict={methodVerdict(revMultResult.upsidePct)}
-          weight={0.25}
-          isOpen={openMethodId === 'revenue_multiple'}
-          onToggle={() => setOpenMethodId(p => p === 'revenue_multiple' ? null : 'revenue_multiple')}
-          innerRef={el => { methodRefs.current['revenue_multiple'] = el }}
-          fairValue={revMultResult.fairValueToday}
-          upsidePct={revMultResult.upsidePct}
-          currency={currency}
-          chips={[
-            { label: 'CAGR', value: revMultInputs.revenueCAGR != null ? (revMultInputs.revenueCAGR * 100).toFixed(1) + '%' : '—', linked: linkedCAGR, onToggleLink: () => setLinkedCAGR(v => !v) },
-            { label: 'EV/Rev', value: revMultInputs.exitEVRevenue != null ? (revMultInputs.exitEVRevenue as number).toFixed(1) + '×' : '—' },
-          ]}
-          guide={METHOD_GUIDES.revenue_multiple}
-          bestFor="Pre-profit or high-growth companies where earnings aren't stable yet"
-        >
-          <MethodInlinePanel
-            config={revMultConfig}
-            overrides={overrides['revenue_multiple'] ?? {}}
-            currency={currency}
-            onAssumptionChange={(key, val) => handleAssumptionChange('revenue_multiple', key, val)}
-            onResetOverrides={() => handleResetOverrides('revenue_multiple')}
-          />
-        </MethodAccordion>
-
+                  <MethodAccordion
+                    id="revenue_multiple"
+                    title={revMultConfig.title}
+                    confidence="medium"
+                    verdict={methodVerdict(revMultResult.upsidePct)}
+                    weight={0.25}
+                    isOpen={openMethodId === 'revenue_multiple'}
+                    onToggle={() => setOpenMethodId(p => p === 'revenue_multiple' ? null : 'revenue_multiple')}
+                    innerRef={el => { methodRefs.current['revenue_multiple'] = el }}
+                    fairValue={revMultResult.fairValueToday}
+                    upsidePct={revMultResult.upsidePct}
+                    currency={currency}
+                    chips={[
+                      { label: 'CAGR', value: revMultInputs.revenueCAGR != null ? (revMultInputs.revenueCAGR * 100).toFixed(1) + '%' : '—', linked: linkedCAGR, onToggleLink: () => setLinkedCAGR(v => !v) },
+                      { label: 'EV/Rev', value: revMultInputs.exitEVRevenue != null ? (revMultInputs.exitEVRevenue as number).toFixed(1) + '×' : '—' },
+                    ]}
+                    guide={METHOD_GUIDES.revenue_multiple}
+                    bestFor="Pre-profit or high-growth companies where earnings aren't stable yet"
+                  >
+                    <MethodInlinePanel
+                      config={revMultConfig}
+                      overrides={overrides['revenue_multiple'] ?? {}}
+                      currency={currency}
+                      onAssumptionChange={(key, val) => handleAssumptionChange('revenue_multiple', key, val)}
+                      onResetOverrides={() => handleResetOverrides('revenue_multiple')}
+                    />
+                  </MethodAccordion>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
       </div>
     </div>

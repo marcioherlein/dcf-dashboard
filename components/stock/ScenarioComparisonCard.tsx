@@ -60,8 +60,8 @@ function ScenarioCol({
             {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(1)}%
           </p>
           <p className="text-[10px] text-slate-400 mt-1">
-            {label === 'Bull' ? 'if growth exceeds expectations'
-             : label === 'Bear' ? 'if growth disappoints'
+            {label === 'Bull' ? 'sustained growth + margin expansion'
+             : label === 'Bear' ? 'slowdown or execution miss'
              : 'central estimate'}
           </p>
         </div>
@@ -134,7 +134,9 @@ export default function ScenarioComparisonCard({ scenarios, currentPrice, curren
         <ScenarioCol label="Bull" scenario={scenarios.bull} currentPrice={currentPrice} currency={currency} />
       </div>
       <p className="text-[10px] text-slate-400 mt-3 leading-relaxed">
-        Bear: WACC +1%, CAGR −20%. Bull: WACC −1%, CAGR +20%. Base is the model&apos;s central estimate.
+        <span className="text-red-500 font-medium">Bear:</span> economic slowdown, margin pressure, or execution miss — WACC +1%, CAGR −20%.{' '}
+        <span className="text-blue-500 font-medium">Base:</span> model&apos;s central estimate based on current growth trajectory.{' '}
+        <span className="text-emerald-500 font-medium">Bull:</span> sustained growth and margin expansion — WACC −1%, CAGR +20%.
       </p>
     </div>
   )

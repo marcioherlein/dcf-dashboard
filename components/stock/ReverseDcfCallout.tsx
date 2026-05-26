@@ -174,6 +174,13 @@ export default function ReverseDcfCallout({
             <p className="text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
               {result.interpretationText}
             </p>
+
+            {/* Negative implied growth plain-language callout */}
+            {impliedPct != null && impliedPct < 0 && (
+              <div className="rounded-lg bg-blue-50 border border-blue-200 px-3 py-2.5 text-[12px] text-blue-700 leading-relaxed">
+                <strong>What does a negative implied growth rate mean?</strong> The market is pricing this stock as if revenue will shrink over the next 5 years. This reflects very conservative (bearish) expectations — which can represent an opportunity if you believe the business will return to growth.
+              </div>
+            )}
           </>
         )}
 
