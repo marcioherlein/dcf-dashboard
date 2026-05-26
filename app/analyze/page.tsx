@@ -65,7 +65,27 @@ function cagrBarColor(pct: number, type: 'implied' | 'historical') {
 
 const BAR_SCALE = 2.2  // px per 1% CAGR, max 110px at 50%
 
-// ─── Search Hero ──────────────────────────────────────────────────────────────
+// ─── Static baseline data (mirrors API route; live prices overlay on top) ─────
+
+const STATIC_QUOTES: FeaturedQuote[] = [
+  { ticker: 'AAPL', name: 'Apple Inc.', etfSource: 'SPY', fairValue: 180, impliedCagr: 6.2, historicalCagr3y: 8.0, expectation: 'Moderate', interpretation: 'Growth expectations are fully priced in.', sparkData: [168, 172, 169, 175, 178, 174, 180, 179], price: null, change: null, changePct: null, upsidePct: null },
+  { ticker: 'NVDA', name: 'NVIDIA Corporation', etfSource: 'SPY', fairValue: 125, impliedCagr: 45.4, historicalCagr3y: 60.0, expectation: 'Aggressive', interpretation: 'Market expects extreme AI-driven growth to continue.', sparkData: [78, 85, 92, 88, 105, 115, 108, 118], price: null, change: null, changePct: null, upsidePct: null },
+  { ticker: 'MSFT', name: 'Microsoft Corporation', etfSource: 'SPY', fairValue: 497, impliedCagr: 12.1, historicalCagr3y: 14.0, expectation: 'Moderate', interpretation: 'Expectations are reasonable for a mature compounder.', sparkData: [380, 392, 405, 398, 410, 415, 412, 416], price: null, change: null, changePct: null, upsidePct: null },
+  { ticker: 'AMZN', name: 'Amazon.com, Inc.', etfSource: 'QQQ', fairValue: 156, impliedCagr: 9.8, historicalCagr3y: 11.0, expectation: 'Moderate', interpretation: 'AWS + ads make expectations look achievable.', sparkData: [168, 175, 172, 180, 185, 182, 187, 186], price: null, change: null, changePct: null, upsidePct: null },
+  { ticker: 'META', name: 'Meta Platforms, Inc.', etfSource: 'QQQ', fairValue: 520, impliedCagr: 16.5, historicalCagr3y: 28.0, expectation: 'Moderate', interpretation: 'Market prices in continued ad and AI-driven growth.', sparkData: [420, 440, 462, 448, 490, 515, 538, 552], price: null, change: null, changePct: null, upsidePct: null },
+  { ticker: 'TSLA', name: 'Tesla, Inc.', etfSource: 'QQQ', fairValue: 245, impliedCagr: 25.0, historicalCagr3y: 9.0, expectation: 'Aggressive', interpretation: 'Market expects a strong robotaxi/energy acceleration.', sparkData: [175, 182, 195, 188, 205, 215, 208, 220], price: null, change: null, changePct: null, upsidePct: null },
+  { ticker: 'UNH', name: 'UnitedHealth Group Inc.', etfSource: 'DIA', fairValue: 420, impliedCagr: 5.8, historicalCagr3y: 12.0, expectation: 'Conservative', interpretation: 'Market prices in a significant slowdown from peak growth.', sparkData: [530, 490, 455, 420, 380, 345, 315, 330], price: null, change: null, changePct: null, upsidePct: null },
+  { ticker: 'GS', name: 'Goldman Sachs Group, Inc.', etfSource: 'DIA', fairValue: 530, impliedCagr: 6.2, historicalCagr3y: 9.0, expectation: 'Conservative', interpretation: 'Market prices in steady investment banking earnings.', sparkData: [375, 400, 420, 440, 465, 492, 512, 538], price: null, change: null, changePct: null, upsidePct: null },
+  { ticker: 'HD', name: 'Home Depot, Inc.', etfSource: 'DIA', fairValue: 350, impliedCagr: 5.5, historicalCagr3y: 4.0, expectation: 'Conservative', interpretation: 'Market prices in modest recovery as housing improves.', sparkData: [318, 332, 340, 328, 348, 360, 362, 368], price: null, change: null, changePct: null, upsidePct: null },
+]
+
+const MARKET_SNAPSHOT_FALLBACK: MarketIndex[] = [
+  { symbol: '^GSPC', name: 'S&P 500',      price: 5841.47,   change:  36.18, changePct:  0.0062 },
+  { symbol: '^IXIC', name: 'Nasdaq Comp.', price: 18983.54,  change: 168.0,  changePct:  0.0089 },
+  { symbol: '^VIX',  name: 'VIX',          price: 14.23,     change:  -0.47, changePct: -0.0321 },
+  { symbol: '^TNX',  name: '10Y Treasury', price: 4.28,      change:  -0.02, changePct: -0.0050 },
+]
+
 
 function SearchHero() {
   const router = useRouter()
@@ -289,13 +309,13 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
 // ─── Popular Analyses Section ─────────────────────────────────────────────────
 
 function PopularAnalysesSection() {
-  const [quotes, setQuotes] = useState<FeaturedQuote[] | null>(null)
+  const [quotes, setQuotes] = useState<FeaturedQuote[]>(STATIC_QUOTES)
   const reduced = useReducedMotion()
 
   useEffect(() => {
     fetch('/api/analyze/quotes')
       .then((r) => r.json())
-      .then((d) => setQuotes(d.quotes))
+      .then((d) => { if (Array.isArray(d.quotes)) setQuotes(d.quotes) })
       .catch(() => {})
   }, [])
 
@@ -313,20 +333,11 @@ function PopularAnalysesSection() {
 
       {/* Mobile: horizontal scroll */}
       <div className="sm:hidden flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory">
-        {(quotes ?? Array(6).fill(null)).map((q, i) =>
-          q ? (
-            <div key={q.ticker} className="min-w-[220px] snap-start">
-              <StockAnalysisCard q={q} index={i} />
-            </div>
-          ) : (
-            <div key={i} className="min-w-[220px] snap-start rounded-xl card p-4 animate-pulse">
-              <div className="h-4 bg-slate-100 rounded w-16 mb-2" />
-              <div className="h-3 bg-slate-100 rounded w-32 mb-4" />
-              <div className="h-6 bg-slate-100 rounded w-20 mb-1" />
-              <div className="h-3 bg-slate-100 rounded w-12" />
-            </div>
-          )
-        )}
+        {quotes.map((q, i) => (
+          <div key={q.ticker} className="min-w-[220px] snap-start">
+            <StockAnalysisCard q={q} index={i} />
+          </div>
+        ))}
       </div>
 
       {/* Desktop: grid */}
@@ -336,18 +347,9 @@ function PopularAnalysesSection() {
         initial="hidden"
         animate="visible"
       >
-        {(quotes ?? Array(6).fill(null)).map((q, i) =>
-          q ? (
-            <StockAnalysisCard key={q.ticker} q={q} index={i} />
-          ) : (
-            <div key={i} className="rounded-xl card p-4 animate-pulse">
-              <div className="h-4 bg-slate-100 rounded w-16 mb-2" />
-              <div className="h-3 bg-slate-100 rounded w-32 mb-4" />
-              <div className="h-6 bg-slate-100 rounded w-20 mb-1" />
-              <div className="h-3 bg-slate-100 rounded w-12" />
-            </div>
-          )
-        )}
+        {quotes.map((q, i) => (
+          <StockAnalysisCard key={q.ticker} q={q} index={i} />
+        ))}
       </motion.div>
     </section>
   )
@@ -355,15 +357,7 @@ function PopularAnalysesSection() {
 
 // ─── Market Pricing Leaderboard ───────────────────────────────────────────────
 
-function MarketPricingLeaderboard() {
-  const [quotes, setQuotes] = useState<FeaturedQuote[] | null>(null)
-
-  useEffect(() => {
-    fetch('/api/analyze/quotes')
-      .then((r) => r.json())
-      .then((d) => setQuotes(d.quotes))
-      .catch(() => {})
-  }, [])
+function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
 
   return (
     <section className="rounded-2xl card px-5 py-5">
@@ -387,58 +381,49 @@ function MarketPricingLeaderboard() {
       </div>
 
       <div className="divide-y divide-slate-50">
-        {(quotes ?? Array(6).fill(null)).map((q, i) =>
-          q ? (
-            <Link
-              key={q.ticker}
-              href={`/stock/${q.ticker}`}
-              className="grid grid-cols-[140px_1fr_1fr_100px] sm:grid-cols-[160px_1fr_1fr_100px_minmax(0,180px)] gap-x-3 py-3 items-center hover:bg-slate-50 transition-colors -mx-1 px-1 rounded-lg"
-            >
-              {/* Stock */}
-              <div className="min-w-0">
-                <span className="text-[12px] font-bold text-slate-800 font-mono">{q.ticker}</span>
-                <span className="text-[11px] text-slate-500 ml-1.5 hidden sm:inline truncate">{q.name.split(' ')[0]}</span>
-              </div>
-
-              {/* Implied CAGR bar */}
-              <div className="flex items-center gap-2">
-                <div
-                  className={cn('h-2 rounded-full shrink-0', cagrBarColor(Math.abs(q.impliedCagr), 'implied'))}
-                  style={{ width: `${Math.min(110, Math.abs(q.impliedCagr) * BAR_SCALE)}px` }}
-                />
-                <span className="text-[12px] font-semibold text-slate-700 tabular-nums whitespace-nowrap">
-                  {q.impliedCagr > 0 ? '+' : ''}{q.impliedCagr}%
-                </span>
-              </div>
-
-              {/* Historical CAGR bar */}
-              <div className="flex items-center gap-2">
-                <div
-                  className="h-2 bg-blue-400 rounded-full shrink-0"
-                  style={{ width: `${Math.min(110, Math.abs(q.historicalCagr3y) * BAR_SCALE)}px` }}
-                />
-                <span className="text-[12px] font-semibold text-slate-700 tabular-nums whitespace-nowrap">
-                  {q.historicalCagr3y}%
-                </span>
-              </div>
-
-              {/* Expectation chip */}
-              <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap w-fit', expectationChip(q.expectation))}>
-                {q.expectation}
-              </span>
-
-              {/* Interpretation — desktop only */}
-              <span className="text-[11px] text-slate-500 hidden sm:block truncate">{q.interpretation}</span>
-            </Link>
-          ) : (
-            <div key={i} className="grid grid-cols-[140px_1fr_1fr_100px] gap-x-3 py-3 items-center">
-              <div className="h-3 bg-slate-100 rounded w-12 animate-pulse" />
-              <div className="h-2 bg-slate-100 rounded w-20 animate-pulse" />
-              <div className="h-2 bg-slate-100 rounded w-16 animate-pulse" />
-              <div className="h-4 bg-slate-100 rounded w-20 animate-pulse" />
+        {quotes.map((q) => (
+          <Link
+            key={q.ticker}
+            href={`/stock/${q.ticker}`}
+            className="grid grid-cols-[140px_1fr_1fr_100px] sm:grid-cols-[160px_1fr_1fr_100px_minmax(0,180px)] gap-x-3 py-3 items-center hover:bg-slate-50 transition-colors -mx-1 px-1 rounded-lg"
+          >
+            {/* Stock */}
+            <div className="min-w-0">
+              <span className="text-[12px] font-bold text-slate-800 font-mono">{q.ticker}</span>
+              <span className="text-[11px] text-slate-500 ml-1.5 hidden sm:inline truncate">{q.name.split(' ')[0]}</span>
             </div>
-          )
-        )}
+
+            {/* Implied CAGR bar */}
+            <div className="flex items-center gap-2">
+              <div
+                className={cn('h-2 rounded-full shrink-0', cagrBarColor(Math.abs(q.impliedCagr), 'implied'))}
+                style={{ width: `${Math.min(110, Math.abs(q.impliedCagr) * BAR_SCALE)}px` }}
+              />
+              <span className="text-[12px] font-semibold text-slate-700 tabular-nums whitespace-nowrap">
+                {q.impliedCagr > 0 ? '+' : ''}{q.impliedCagr}%
+              </span>
+            </div>
+
+            {/* Historical CAGR bar */}
+            <div className="flex items-center gap-2">
+              <div
+                className="h-2 bg-blue-400 rounded-full shrink-0"
+                style={{ width: `${Math.min(110, Math.abs(q.historicalCagr3y) * BAR_SCALE)}px` }}
+              />
+              <span className="text-[12px] font-semibold text-slate-700 tabular-nums whitespace-nowrap">
+                {q.historicalCagr3y}%
+              </span>
+            </div>
+
+            {/* Expectation chip */}
+            <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap w-fit', expectationChip(q.expectation))}>
+              {q.expectation}
+            </span>
+
+            {/* Interpretation — desktop only */}
+            <span className="text-[11px] text-slate-500 hidden sm:block truncate">{q.interpretation}</span>
+          </Link>
+        ))}
       </div>
 
       <p className="mt-3 text-[10px] text-slate-400">
@@ -705,7 +690,7 @@ const INDEX_MAP: Record<string, string> = {
 }
 
 function MarketSnapshotWidget() {
-  const [indices, setIndices] = useState<MarketIndex[]>([])
+  const [indices, setIndices] = useState<MarketIndex[]>(MARKET_SNAPSHOT_FALLBACK)
 
   useEffect(() => {
     fetch('/api/markets/data')
@@ -825,7 +810,7 @@ export default function AnalyzePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.28, delay: 0.10, ease: [0.16, 1, 0.3, 1] }}
             >
-              <MarketPricingLeaderboard />
+              <MarketPricingLeaderboard quotes={STATIC_QUOTES} />
             </motion.div>
 
             <motion.div

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import yahooFinance from 'yahoo-finance2'
+import { getQuote } from '@/lib/data/yahooClient'
 
 export const dynamic = 'force-dynamic'
 
@@ -80,8 +80,7 @@ const FEATURED: Omit<FeaturedQuote, 'price' | 'change' | 'changePct' | 'upsidePc
 ]
 
 export async function GET() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const results = await Promise.allSettled(FEATURED.map((f) => (yahooFinance as any).quote(f.ticker)))
+  const results = await Promise.allSettled(FEATURED.map((f) => getQuote(f.ticker)))
 
   const enriched: FeaturedQuote[] = FEATURED.map((f, i) => {
     const r = results[i]
