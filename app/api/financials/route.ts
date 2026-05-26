@@ -1072,6 +1072,14 @@ export async function GET(req: NextRequest) {
         currency: quoteCurrency,
         sector: profile.sector ?? q.sector ?? '',
         industry: profile.industry ?? '',
+        exchange: q.fullExchangeName ?? q.exchange ?? '',
+        analystTargetLow: fin.financialData?.targetLowPrice ?? null,
+        analystTargetHigh: fin.financialData?.targetHighPrice ?? null,
+        pegRatio: ks.pegRatio ?? fin.financialData?.pegRatio ?? null,
+        nextEarningsDate: ks.earningsTimestamp
+          ? new Date((ks.earningsTimestamp as number) * 1000).toISOString().split('T')[0]
+          : null,
+        sharesOutstanding: ks.sharesOutstanding ?? null,
       },
       wacc: { ...waccResult, crp, financialCurrency },
       dcf: dcfResult,

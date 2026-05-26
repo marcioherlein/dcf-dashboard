@@ -39,6 +39,8 @@ interface CAGRAnalysisData {
   drivers: string[]
 }
 
+type RiskColor = 'red' | 'amber' | 'emerald'
+
 interface StatementsData {
   ttm: {
     incomeStatement: AnyRecord | null
@@ -55,6 +57,7 @@ interface Props {
   businessProfile: BusinessProfile
   cagrAnalysis: CAGRAnalysisData | null
   statementsData: StatementsData | null
+  onViewRisks?: () => void
 }
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -303,18 +306,101 @@ function BalanceSheetCard({ scores, statementsData }: {
   )
 }
 
+// ─── Card 6: Risks to Thesis ──────────────────────────────────────────────
+
+function deriveRiskLevel(ratings: StockRatings): { label: string; color: RiskColor; badgeClass: string } {
+  const valuation = ratings.valuation
+  const growth    = ratings.growth
+  const moat      = ratings.moat
+
+  const isElevated =
+    (valuation?.color === 'red' || valuation?.color === 'orange') ||
+    (growth?.score != null && growth.score < 60) ||
+    (moat?.score != null   && moat.score < 60)
+
+  const isModerate =
+    !isElevated && (
+      (growth?.score != null && growth.score < 75) ||
+      (moat?.score  != null && moat.score  < 75) ||
+      valuation?.color === 'amber'
+    )
+
+  if (isElevated) return { label: 'Elevated', color: 'red', badgeClass: 'bg-red-50 text-red-700 border border-red-200' }
+  if (isModerate) return { label: 'Moderate', color: 'amber', badgeClass: 'bg-amber-50 text-amber-700 border border-amber-200' }
+  return { label: 'Low', color: 'emerald', badgeClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200' }
+}
+
+function buildRiskBullets(ratings: StockRatings, cagrAnalysis: CAGRAnalysisData | null): string[] {
+  const bullets: string[] = []
+  if (cagrAnalysis?.drivers) {
+    const neg = cagrAnalysis.drivers.filter(d =>
+      /compet|risk|challeng|declin|uncertain|pressur|headwind|vola|concern|restrict|slow|expos|regulat/i.test(d)
+    )
+    bullets.push(...neg.slice(0, 3))
+  }
+  const weakMap: Record<string, string> = {
+    profitability: 'Profitability is under pressure — margins warrant close monitoring.',
+    growth:        'Growth trajectory is slowing or inconsistent relative to expectations.',
+    moat:          'Competitive advantage is limited, increasing long-term earnings risk.',
+    valuation:     'Current valuation leaves limited margin of safety for new buyers.',
+    liquidity:     'Balance sheet liquidity is stretched — short-term solvency requires attention.',
+  }
+  for (const key of ['profitability', 'liquidity', 'growth', 'moat', 'valuation'] as const) {
+    const cat = ratings[key]
+    if (cat && (cat.color === 'red' || cat.color === 'orange' || cat.color === 'amber') && bullets.length < 4) {
+      if (weakMap[key]) bullets.push(weakMap[key])
+    }
+  }
+  if (bullets.length === 0) bullets.push('No major red flags identified from available financial data.')
+  return bullets.slice(0, 4)
+}
+
+function RisksGridCard({ ratings, cagrAnalysis, onViewRisks }: {
+  ratings: StockRatings
+  cagrAnalysis: CAGRAnalysisData | null
+  onViewRisks?: () => void
+}) {
+  const risk    = deriveRiskLevel(ratings)
+  const bullets = buildRiskBullets(ratings, cagrAnalysis)
+
+  const dotColor = risk.color === 'red' ? 'bg-red-400' : risk.color === 'amber' ? 'bg-amber-400' : 'bg-emerald-400'
+
+  return (
+    <div className="rounded-xl border border-slate-100 bg-white/80 px-4 py-4">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[12px] font-bold text-slate-700 uppercase tracking-wide">Risks to Thesis</p>
+        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${risk.badgeClass}`}>{risk.label}</span>
+      </div>
+      <ul className="space-y-1.5 mb-3">
+        {bullets.map((b, i) => (
+          <li key={i} className="flex items-start gap-2">
+            <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${dotColor}`} />
+            <span className="text-[11px] text-slate-600 leading-snug">{b}</span>
+          </li>
+        ))}
+      </ul>
+      {onViewRisks && (
+        <button onClick={onViewRisks} className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+          View all risks →
+        </button>
+      )}
+    </div>
+  )
+}
+
 // ─── Main component ────────────────────────────────────────────────────────
 
-export default function OverviewMetricGrid({ ratings, scores, businessProfile, cagrAnalysis, statementsData }: Props) {
+export default function OverviewMetricGrid({ ratings, scores, businessProfile, cagrAnalysis, statementsData, onViewRisks }: Props) {
   if (!ratings) return null
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
       <BusinessQualityCard ratings={ratings} scores={scores ?? {}} />
       <GrowthOutlookCard ratings={ratings} cagrAnalysis={cagrAnalysis} />
       <ProfitabilityCard ratings={ratings} businessProfile={businessProfile} statementsData={statementsData} />
       <CashConversionCard businessProfile={businessProfile} statementsData={statementsData} />
       <BalanceSheetCard scores={scores ?? {}} statementsData={statementsData} />
+      <RisksGridCard ratings={ratings} cagrAnalysis={cagrAnalysis} onViewRisks={onViewRisks} />
     </div>
   )
 }

@@ -26,9 +26,8 @@ import ValuationNotAvailableCard from '@/components/stock/ValuationNotAvailableC
 import OverviewMetricGrid from '@/components/stock/OverviewMetricGrid'
 import FlipCard from '@/components/ui/FlipCard'
 import CardBack from '@/components/ui/CardBack'
-import StockHeroCards from '@/components/stock/overview/StockHeroCards'
-import RisksCard from '@/components/stock/overview/RisksCard'
-import CompanyCard from '@/components/stock/overview/CompanyCard'
+import StockSummaryCard from '@/components/stock/overview/StockSummaryCard'
+import FairValueBar from '@/components/stock/overview/FairValueBar'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
@@ -78,7 +77,9 @@ interface FinancialsData {
   quote: {
     price: number; change: number; changePct: number; marketCap: number
     peRatio: number; fiftyTwoWeekHigh: number; fiftyTwoWeekLow: number
-    analystTargetMean: number; currency: string; sector: string; quoteType?: string
+    analystTargetMean: number; currency: string; sector: string; industry?: string; exchange?: string; quoteType?: string
+    analystTargetLow?: number | null; analystTargetHigh?: number | null
+    pegRatio?: number | null; nextEarningsDate?: string | null; sharesOutstanding?: number | null
   }
   wacc: {
     wacc: number; costOfEquity: number; afterTaxCostOfDebt: number
@@ -307,6 +308,9 @@ function StockPageBody() {
         change={data?.quote.change ?? null}
         changePct={data?.quote.changePct ?? null}
         currency={data?.quote.currency === 'USD' ? '$' : (data?.quote.currency ?? '$') + ' '}
+        sector={data?.quote.sector ?? ''}
+        industry={data?.quote.industry ?? ''}
+        exchange={data?.quote.exchange ?? ''}
         activeTab={activeTab}
         onChange={handleTabChange}
       />
@@ -456,8 +460,13 @@ function StockPageBody() {
                   exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
-                  {/* 1. Hero decision cards */}
-                  <StockHeroCards
+                  {/* 1. Unified summary card */}
+                  <StockSummaryCard
+                    ticker={data.ticker}
+                    companyName={data.companyName}
+                    sector={data.quote.sector ?? ''}
+                    industry={data.quote.industry ?? ''}
+                    description={data.businessProfile?.description ?? ''}
                     price={data.quote.price}
                     change={data.quote.change}
                     changePct={data.quote.changePct}
@@ -468,6 +477,15 @@ function StockPageBody() {
                     upsidePct={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null}
                     scenarios={data.scenarios ?? null}
                     onViewDetails={() => handleTabChange('valuation')}
+                  />
+
+                  {/* 1b. Full-width Price vs Fair Value bar */}
+                  <FairValueBar
+                    price={data.quote.price}
+                    fairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? null}
+                    currency={data.quote.currency ?? 'USD'}
+                    bearCase={data.scenarios?.bear?.fairValue ?? null}
+                    bullCase={data.scenarios?.bull?.fairValue ?? null}
                   />
 
                   {/* 2. Reverse DCF — what the market is pricing in */}
@@ -498,7 +516,7 @@ function StockPageBody() {
                   />
                   </FlipCard>
 
-                  {/* 3. 5-card quality row */}
+                  {/* 3. 3x2 quality grid (risks included) */}
                   {data.ratings && (
                     <OverviewMetricGrid
                       ratings={data.ratings}
@@ -506,30 +524,11 @@ function StockPageBody() {
                       businessProfile={data.businessProfile}
                       cagrAnalysis={data.cagrAnalysis ?? null}
                       statementsData={statementsData}
-                    />
-                  )}
-
-                  {/* 4. Standalone risks card */}
-                  {data.ratings && (
-                    <RisksCard
-                      ratings={data.ratings}
-                      cagrAnalysis={data.cagrAnalysis ?? null}
                       onViewRisks={() => handleTabChange('risks')}
                     />
                   )}
 
-                  {/* 5. Company description */}
-                  {data.businessProfile?.description && (
-                    <CompanyCard
-                      description={data.businessProfile.description}
-                      industry={data.businessProfile.industry ?? ''}
-                      country={data.businessProfile.country ?? ''}
-                      employees={data.businessProfile.employees ?? null}
-                      ticker={ticker}
-                    />
-                  )}
-
-                  {/* 6. Price chart */}
+                  {/* 4. Price chart */}
                   <PriceChart
                     ticker={ticker}
                     isDark={false}

@@ -41,6 +41,8 @@ export default function StockSidebar({ activeTab, data, statementsData, activeVa
         wacc={data.wacc ?? null}
         fairValueData={data.fairValue ?? null}
         ownership={data.ownership}
+        businessProfile={data.businessProfile}
+        ticker={data.ticker}
       />
     )
   }

@@ -105,69 +105,80 @@ export default function ReverseDcfCallout({
           </div>
         ) : (
           <>
-            {/* Big number + historical compare */}
-            <div className="flex items-end gap-6">
-              <div>
-                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1">
-                  Implied 5Y Revenue CAGR
-                </p>
-                <p className={cn('text-3xl font-bold tabular-nums font-mono leading-none', styles.text)}>
-                  {impliedPct != null ? `${impliedPct.toFixed(1)}%` : '—'}
-                </p>
-              </div>
-              {historicalPct != null && (
-                <div className="mb-0.5">
-                  <p className="text-[11px] text-slate-400 mb-0.5">3Y Historical</p>
-                  <p className="text-lg font-semibold tabular-nums font-mono text-slate-700 leading-none">
-                    {historicalPct.toFixed(1)}%
-                  </p>
-                </div>
-              )}
-            </div>
+            {/* Two-column layout: numbers left, bars right */}
+            <div className="flex flex-col sm:flex-row gap-5">
 
-            {/* Gap callout */}
-            {historicalPct != null && impliedPct != null && Math.abs(impliedPct - historicalPct) > 1 && (
-              <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-[12px] text-slate-600 leading-relaxed">
-                The market assumes <strong>{impliedPct.toFixed(1)}%</strong> growth — that&apos;s{' '}
-                <strong className={impliedPct < historicalPct ? 'text-amber-700' : 'text-emerald-700'}>
-                  {Math.abs(impliedPct - historicalPct).toFixed(1)}pp {impliedPct < historicalPct ? 'below' : 'above'}
-                </strong>{' '}
-                the 3-year historical track record of <strong>{historicalPct.toFixed(1)}%</strong>.
-              </div>
-            )}
+              {/* Left: CAGR numbers + gap callout */}
+              <div className="flex-1 min-w-0 space-y-3">
+                <div className="flex items-end gap-6">
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1">
+                      Implied 5Y Revenue CAGR
+                    </p>
+                    <p className={cn('text-3xl font-bold tabular-nums font-mono leading-none', styles.text)}>
+                      {impliedPct != null ? `${impliedPct.toFixed(1)}%` : '—'}
+                    </p>
+                  </div>
+                  {historicalPct != null && (
+                    <div className="mb-0.5">
+                      <p className="text-[11px] text-slate-400 mb-0.5">3Y Historical</p>
+                      <p className="text-lg font-semibold tabular-nums font-mono text-slate-700 leading-none">
+                        {historicalPct.toFixed(1)}%
+                      </p>
+                    </div>
+                  )}
+                </div>
 
-            {/* Comparison progress bars */}
-            <div className="space-y-3">
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[11px] text-slate-500">Implied by today&apos;s price</span>
-                  <span className={cn('text-[11px] font-semibold tabular-nums font-mono', styles.text)}>
-                    {impliedPct != null ? `${impliedPct.toFixed(1)}%` : '—'}
-                  </span>
-                </div>
-                <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div
-                    className={cn('h-full rounded-full transition-all duration-700', styles.bar)}
-                    style={{ width: `${impliedW}%` }}
-                  />
-                </div>
+                {/* Gap callout */}
+                {historicalPct != null && impliedPct != null && Math.abs(impliedPct - historicalPct) > 1 && (
+                  <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-[12px] text-slate-600 leading-relaxed">
+                    The market assumes <strong>{impliedPct.toFixed(1)}%</strong> growth — that&apos;s{' '}
+                    <strong className={impliedPct < historicalPct ? 'text-amber-700' : 'text-emerald-700'}>
+                      {Math.abs(impliedPct - historicalPct).toFixed(1)}pp {impliedPct < historicalPct ? 'below' : 'above'}
+                    </strong>{' '}
+                    the 3-year historical track record of <strong>{historicalPct.toFixed(1)}%</strong>.
+                  </div>
+                )}
               </div>
-              {historicalPct != null && (
+
+              {/* Right: horizontal bar comparison */}
+              <div className="flex-1 min-w-0 space-y-3">
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[11px] text-slate-500">3-year historical track record</span>
-                    <span className="text-[11px] font-semibold tabular-nums font-mono text-slate-600">
-                      {historicalPct.toFixed(1)}%
+                    <span className="text-[11px] text-slate-500">Implied 5Y CAGR</span>
+                    <span className={cn('text-[11px] font-semibold tabular-nums font-mono', styles.text)}>
+                      {impliedPct != null ? `${impliedPct.toFixed(1)}%` : '—'}
                     </span>
                   </div>
                   <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-slate-400 transition-all duration-700 delay-100"
-                      style={{ width: `${historicalW}%` }}
+                      className={cn('h-full rounded-full transition-all duration-700', styles.bar)}
+                      style={{ width: `${impliedW}%` }}
                     />
                   </div>
                 </div>
-              )}
+                {historicalPct != null && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[11px] text-slate-500">3Y Historical CAGR</span>
+                      <span className="text-[11px] font-semibold tabular-nums font-mono text-slate-600">
+                        {historicalPct.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-blue-400 transition-all duration-700 delay-100"
+                        style={{ width: `${historicalW}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+                {/* Axis labels */}
+                <div className="flex justify-between">
+                  <span className="text-[10px] text-slate-300">0%</span>
+                  <span className="text-[10px] text-slate-300">{Math.ceil(scale / 10) * 10}%</span>
+                </div>
+              </div>
             </div>
 
             {/* Interpretation text */}
