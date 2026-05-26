@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useMemo } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import NewsPanel from '@/components/stock/NewsPanel'
 import BusinessModel from '@/components/stock/BusinessModel'
@@ -27,6 +27,7 @@ import { track } from '@/lib/analytics/events'
 import { loadPreLoginState, clearPreLoginState } from '@/lib/auth/preLoginState'
 import { useSession } from 'next-auth/react'
 import SaveToWatchlistDialog, { type WatchlistSavePayload } from '@/components/watchlist/SaveToWatchlistDialog'
+import ValuationNotAvailableCard from '@/components/stock/ValuationNotAvailableCard'
 import FlipCard from '@/components/ui/FlipCard'
 import CardBack from '@/components/ui/CardBack'
 
@@ -152,6 +153,8 @@ interface FinancialsData {
       financingCF: number | null; dividendsPaid: number | null; isProjected: boolean
     }>
   }
+  canComputeDCF?: boolean
+  vetoReasons?: string[]
 }
 
 export default function StockPage() {
@@ -164,7 +167,6 @@ export default function StockPage() {
 
 function StockPageBody() {
   const { ticker } = useParams<{ ticker: string }>()
-  const router = useRouter()
   const { requireAuth } = useLoginGate()
   const { data: session } = useSession()
   const [data, setData]             = useState<FinancialsData | null>(null)
@@ -583,6 +585,10 @@ function StockPageBody() {
                   exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
+                  {data.canComputeDCF === false ? (
+                    <ValuationNotAvailableCard vetoReasons={data.vetoReasons ?? []} ticker={ticker} />
+                  ) : (
+                  <>
                   {data.scenarios && (
                     <FlipCard
                       back={<CardBack
@@ -657,6 +663,8 @@ function StockPageBody() {
                       </button>
                     </div>
                   </div>
+                  </>
+                  )}
                 </motion.div>
               )}
 
