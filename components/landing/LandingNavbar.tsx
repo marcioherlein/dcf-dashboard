@@ -41,7 +41,7 @@ export default function LandingNavbar() {
           <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
             <Image
               src="/logos/logo.png"
-              alt="Intrinsico"
+              alt="intrinsico"
               width={36}
               height={36}
               className="transition-transform duration-200 group-hover:scale-105"
@@ -57,7 +57,7 @@ export default function LandingNavbar() {
                 backgroundClip: 'text',
               }}
             >
-              Intrinsico
+              intrinsico
             </span>
           </Link>
 

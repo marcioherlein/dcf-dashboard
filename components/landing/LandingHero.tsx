@@ -57,7 +57,7 @@ export default function LandingHero() {
             <div className="flex items-center gap-3 mb-7">
               <Image
                 src="/logos/logo.png"
-                alt="Intrinsico"
+                alt="intrinsico"
                 width={48}
                 height={48}
                 className="shrink-0"
@@ -74,7 +74,7 @@ export default function LandingHero() {
                     backgroundClip: 'text',
                   }}
                 >
-                  Intrinsico
+                  intrinsico
                 </p>
                 <p className="text-[10px] font-bold text-slate-400 tracking-[0.15em] uppercase mt-0.5">
                   Valuation Intelligence
@@ -120,7 +120,7 @@ export default function LandingHero() {
                 maxWidth: '580px',
               }}
             >
-              Intrinsico shows you what today&apos;s stock price already assumes
+              intrinsico shows you what today&apos;s stock price already assumes
               about growth, margins, and execution — so you can decide with
               confidence, not hope.
             </p>

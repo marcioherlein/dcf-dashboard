@@ -46,7 +46,7 @@ export default function ProductDeepDiveSection() {
               margin: '0 auto',
             }}
           >
-            Intrinsico turns valuation into a structured workflow: price, intrinsic
+            intrinsico turns valuation into a structured workflow: price, intrinsic
             value, reverse DCF, business quality, risks, and assumptions.
           </p>
         </div>

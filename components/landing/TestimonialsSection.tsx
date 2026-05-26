@@ -1,6 +1,6 @@
 const QUOTES = [
   {
-    text: "Intrinsico gives me the clarity I need to invest with discipline. The Reverse DCF is a game changer for understanding risk.",
+    text: "intrinsico gives me the clarity I need to invest with discipline. The Reverse DCF is a game changer for understanding risk.",
     name: 'Michael T.',
     role: 'Self-Directed Investor',
     initial: 'M',

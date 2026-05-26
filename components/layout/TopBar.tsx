@@ -5,7 +5,19 @@ import { useRouter } from 'next/navigation'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import Image from 'next/image'
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
+import { ChevronLeft, Star } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { slideDown } from '@/lib/motion'
+import { useStockNav } from '@/contexts/StockNavContext'
+import type { TabId } from '@/components/stock/TabNav'
+
+const STOCK_TABS: Array<{ id: TabId; label: string }> = [
+  { id: 'overview',   label: 'Overview'   },
+  { id: 'valuation',  label: 'Valuation'  },
+  { id: 'financials', label: 'Financials' },
+  { id: 'risks',      label: 'Risks'      },
+  { id: 'news',       label: 'News'       },
+]
 
 const TOPBAR_TICKER = [
   { sym: 'S&P 500',  val: '5,841.47',  chg: '+0.62%', up: true  },
@@ -64,6 +76,7 @@ function UserAvatar({ image, name }: { image: string | null; name: string | null
 export default function TopBar() {
   const router = useRouter()
   const { data: session } = useSession()
+  const { stockNav, onTabChangeRef } = useStockNav()
 
   const [query, setQuery]     = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
@@ -136,12 +149,12 @@ export default function TopBar() {
           style={{ background: 'linear-gradient(to left, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.70) 60%, transparent 100%)' }} />
       </div>
 
-      {/* Three-column grid: logo | Intrinsico (center) | search + auth */}
+      {/* Three-column grid: logo | center (intrinsico OR stock nav) | search + auth */}
       <div
         className="relative h-full px-4"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'minmax(0,1fr) auto minmax(0,1fr)',
+          gridTemplateColumns: stockNav ? 'auto 1fr auto' : 'minmax(0,1fr) auto minmax(0,1fr)',
           alignItems: 'center',
           gap: '12px',
           zIndex: 1,
@@ -152,7 +165,7 @@ export default function TopBar() {
           <Link href="/" className="flex items-center shrink-0">
             <Image
               src="/logos/logo.png"
-              alt="Intrinsico"
+              alt="intrinsico"
               width={28}
               height={28}
               className="shrink-0"
@@ -160,22 +173,85 @@ export default function TopBar() {
           </Link>
         </div>
 
-        {/* ── Column 2: Brand wordmark (centered) ── */}
-        <Link href="/" className="flex items-center justify-center">
-          <span
-            className="font-black whitespace-nowrap"
-            style={{
-              fontSize: '17px',
-              letterSpacing: '-0.04em',
-              background: 'linear-gradient(135deg, #0F172A 20%, #1E40AF 65%, #2563EB 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
-            Intrinsico
-          </span>
-        </Link>
+        {/* ── Column 2: intrinsico wordmark OR stock identity + tabs ── */}
+        {stockNav ? (
+          <div className="flex items-center min-w-0 overflow-x-auto scrollbar-hide gap-0">
+            {/* Identity + price */}
+            <div className="flex items-center gap-2 shrink-0 pr-4 border-r border-slate-100 mr-1">
+              <button
+                onClick={() => router.push('/')}
+                aria-label="Back to home"
+                className="text-slate-400 hover:text-blue-600 transition-colors shrink-0"
+              >
+                <ChevronLeft size={15} strokeWidth={2.5} />
+              </button>
+              <button aria-label="Add to watchlist" className="text-slate-300 hover:text-amber-400 transition-colors shrink-0">
+                <Star size={14} strokeWidth={1.8} />
+              </button>
+              <span className="font-mono font-black text-[13px] text-slate-900 tracking-tight shrink-0">
+                {stockNav.ticker}
+              </span>
+              <span className="text-[12px] text-slate-400 hidden md:block truncate max-w-[160px]">
+                {stockNav.companyName}
+              </span>
+              {stockNav.price != null && (
+                <div className="flex items-baseline gap-1 shrink-0">
+                  <span className="font-mono font-semibold text-[13px] text-slate-800 tabular-nums">
+                    {stockNav.currency}{stockNav.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  {stockNav.changePct != null && (
+                    <span className={cn(
+                      'text-[11px] font-medium tabular-nums',
+                      stockNav.changePct >= 0 ? 'text-emerald-600' : 'text-red-500',
+                    )}>
+                      {stockNav.changePct >= 0 ? '+' : ''}{stockNav.changePct.toFixed(2)}%
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Tabs */}
+            <div className="flex items-center overflow-x-auto scrollbar-hide shrink-0" role="tablist">
+              {STOCK_TABS.map(({ id, label }) => {
+                const active = stockNav.activeTab === id
+                return (
+                  <button
+                    key={id}
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => onTabChangeRef.current?.(id)}
+                    className={cn(
+                      'relative flex items-center px-3.5 text-[12px] font-medium whitespace-nowrap transition-colors shrink-0 h-[52px]',
+                      active ? 'text-blue-600' : 'text-slate-500 hover:text-slate-800',
+                    )}
+                  >
+                    {label}
+                    {active && (
+                      <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-600 rounded-t" />
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        ) : (
+          <Link href="/" className="flex items-center justify-center">
+            <span
+              className="font-black whitespace-nowrap"
+              style={{
+                fontSize: '17px',
+                letterSpacing: '-0.04em',
+                background: 'linear-gradient(135deg, #0F172A 20%, #1E40AF 65%, #2563EB 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              intrinsico
+            </span>
+          </Link>
+        )}
 
         {/* ── Column 3: Search + clock + auth (right-aligned) ── */}
         <div className="flex items-center gap-3 justify-end min-w-0">

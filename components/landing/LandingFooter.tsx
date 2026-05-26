@@ -12,7 +12,7 @@ export default function LandingFooter() {
             <Link href="/" className="flex items-center gap-2.5 mb-3 group">
               <Image
                 src="/logos/logo.png"
-                alt="Intrinsico"
+                alt="intrinsico"
                 width={30}
                 height={30}
                 className="transition-transform duration-200 group-hover:scale-105"
@@ -27,7 +27,7 @@ export default function LandingFooter() {
                   backgroundClip: 'text',
                 }}
               >
-                Intrinsico
+                intrinsico
               </span>
             </Link>
             <p className="text-[13px] text-slate-500 leading-relaxed">
@@ -94,7 +94,7 @@ export default function LandingFooter() {
           </p>
           <p className="text-[12px] text-slate-400">
             Data sourced from Yahoo Finance, FRED, and Damodaran&apos;s research. &nbsp;
-            © {new Date().getFullYear()} Intrinsico. All rights reserved.
+            © {new Date().getFullYear()} intrinsico. All rights reserved.
           </p>
         </div>
       </div>
