@@ -15,120 +15,6 @@ function phase(start: number, end: number, t: number) {
   return clamp01((t - start) / (end - start))
 }
 
-// Recreates the i-in-crosshair logo as animated SVG layers.
-// Outer ring: dark navy circle with 4 crosshair cuts
-// Inner ring: electric blue circle
-// Stem: white vertical bar
-// Dot: electric blue circle — the element that "decouples" on scroll
-function IntrinsicSVG({ p }: { p: number }) {
-  // Phase breakdowns
-  const riseP   = easeOut3(phase(0,    0.45, p))  // i rises
-  const ringP   = easeOut2(phase(0.30, 0.70, p))  // rings fade+expand
-  const glowP   = easeOut3(phase(0,    0.55, p))  // glow intensifies
-  const dotY     = riseP * -88           // dot rises faster
-  const stemY    = riseP * -44           // stem follows at half speed
-  const dotScale = 1 + riseP * 0.55     // dot grows as it rises
-  const dotGlow  = 2 + glowP * 18       // glow blur radius
-
-  const ringOpacity = 1 - ringP * 0.92
-  const ringScale   = 1 + ringP * 0.18
-
-  return (
-    <svg
-      viewBox="0 0 180 180"
-      width="180"
-      height="180"
-      style={{ overflow: 'visible' }}
-    >
-      <defs>
-        {/* Glow filter for the dot */}
-        <filter id="dot-glow" x="-200%" y="-200%" width="500%" height="500%">
-          <feGaussianBlur stdDeviation={dotGlow} result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-        {/* Soft glow filter for inner ring */}
-        <filter id="ring-glow" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation={3 + glowP * 6} result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-
-      {/* ── Outer ring + crosshair cuts ── */}
-      <g
-        style={{
-          opacity: ringOpacity,
-          transform: `scale(${ringScale})`,
-          transformBox: 'fill-box',
-          transformOrigin: 'center',
-        }}
-      >
-        {/* Main outer ring */}
-        <circle
-          cx="90" cy="90" r="74"
-          stroke="#1A3066"
-          strokeWidth="14"
-          fill="none"
-          strokeDasharray="102 14"
-          strokeDashoffset="109"
-          transform="rotate(-90 90 90)"
-        />
-        {/* Crosshair tick marks (small rectangles at N/S/E/W extending inward) */}
-        <rect x="83" y="3"   width="14" height="13" rx="2" fill="#1A3066" />
-        <rect x="83" y="164" width="14" height="13" rx="2" fill="#1A3066" />
-        <rect x="3"  y="83"  width="13" height="14" rx="2" fill="#1A3066" />
-        <rect x="164" y="83" width="13" height="14" rx="2" fill="#1A3066" />
-      </g>
-
-      {/* ── Inner ring ── */}
-      <g
-        style={{
-          opacity: ringOpacity,
-          transform: `scale(${ringScale})`,
-          transformBox: 'fill-box',
-          transformOrigin: 'center',
-        }}
-      >
-        <circle
-          cx="90" cy="90" r="52"
-          stroke="#3D5AF1"
-          strokeWidth="4"
-          fill="none"
-          filter="url(#ring-glow)"
-        />
-      </g>
-
-      {/* ── i stem — follows at half speed ── */}
-      <g style={{ transform: `translateY(${stemY}px)` }}>
-        <rect
-          x="84" y="78"
-          width="12" height="36"
-          rx="5"
-          fill="white"
-          fillOpacity={0.90}
-        />
-      </g>
-
-      {/* ── i dot — rises fast, glows, decouples ── */}
-      <g
-        style={{
-          transform: `translateY(${dotY}px) scale(${dotScale})`,
-          transformBox: 'fill-box',
-          transformOrigin: '90px 58px',
-        }}
-        filter="url(#dot-glow)"
-      >
-        <circle cx="90" cy="58" r="8.5" fill="#3D5AF1" />
-      </g>
-    </svg>
-  )
-}
-
 // ── The full scroll-driven hero ────────────────────────────────────────────────
 function ScrollHero({ _onSearchReady }: { _onSearchReady?: () => void }) {
   const sectionRef = useRef<HTMLDivElement>(null)
@@ -149,13 +35,8 @@ function ScrollHero({ _onSearchReady }: { _onSearchReady?: () => void }) {
   }, [handleScroll])
 
   // Derived animation values
-  const textP    = easeOut3(phase(0.62, 1.00, p))
-  const searchP  = easeOut3(phase(0.72, 1.00, p))
+  const searchP  = easeOut3(phase(0.45, 0.85, p))
   const glowP    = easeOut3(phase(0,    0.60, p))
-
-  // Background radial that follows the rising dot
-  const dotRiseRaw = easeOut3(phase(0, 0.45, p))
-  const glowCenterY = 52 - dotRiseRaw * 22   // % from top of viewport
 
   return (
     <div ref={sectionRef} style={{ height: '280vh', position: 'relative' }}>
@@ -173,19 +54,18 @@ function ScrollHero({ _onSearchReady }: { _onSearchReady?: () => void }) {
           overflow: 'hidden',
         }}
       >
-        {/* Ambient glow that follows the dot */}
+        {/* Ambient glow — centered */}
         <div
           style={{
             position: 'absolute',
-            top: `${glowCenterY}%`,
+            top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            width: `${400 + glowP * 300}px`,
-            height: `${400 + glowP * 300}px`,
+            width: `${500 + glowP * 300}px`,
+            height: `${500 + glowP * 300}px`,
             borderRadius: '50%',
-            background: `radial-gradient(circle, rgba(61,90,241,${0.08 + glowP * 0.18}) 0%, transparent 65%)`,
+            background: `radial-gradient(circle, rgba(61,90,241,${0.08 + glowP * 0.14}) 0%, transparent 65%)`,
             pointerEvents: 'none',
-            transition: 'none',
           }}
         />
 
@@ -204,27 +84,13 @@ function ScrollHero({ _onSearchReady }: { _onSearchReady?: () => void }) {
           }}
         />
 
-        {/* ── Logo ── */}
-        <div
-          style={{
-            position: 'relative',
-            zIndex: 10,
-            marginBottom: textP > 0 ? `${textP * 32}px` : 0,
-            transition: 'none',
-          }}
-        >
-          <IntrinsicSVG p={p} />
-        </div>
-
-        {/* ── Text content — fades in as scroll progresses ── */}
+        {/* ── Text content ── */}
         <div
           style={{
             position: 'relative',
             zIndex: 10,
             textAlign: 'center',
             padding: '0 24px',
-            opacity: textP,
-            transform: `translateY(${(1 - textP) * 28}px)`,
             maxWidth: '600px',
           }}
         >
