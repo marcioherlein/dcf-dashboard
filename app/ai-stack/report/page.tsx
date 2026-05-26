@@ -209,7 +209,7 @@ export default function AIStackReport() {
             </p>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: '100px', padding: '11px 24px' }}>
               <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#4ade80' }} />
-              <span style={{ fontSize: '14px', color: '#cbd5e1', fontWeight: 500 }}>Live data · Rationale · 2025</span>
+              <span style={{ fontSize: '14px', color: '#cbd5e1', fontWeight: 500 }}>Live data · Intrinsico · 2025</span>
             </div>
             <div style={{ marginTop: '60px', height: '5px', background: `linear-gradient(90deg, ${layerColors.join(', ')})`, borderRadius: '3px' }} />
           </div>
@@ -274,7 +274,7 @@ export default function AIStackReport() {
             </p>
             <div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '10px', padding: '14px 28px', marginBottom: '24px' }}>
               <div style={{ fontSize: '11px', color: '#60a5fa', letterSpacing: '0.15em', fontWeight: 600, marginBottom: '6px' }}>LIVE AT</div>
-              <div style={{ fontSize: '17px', color: 'white', fontWeight: 700, fontFamily: 'monospace' }}>Rationale · /ai-stack</div>
+              <div style={{ fontSize: '17px', color: 'white', fontWeight: 700, fontFamily: 'monospace' }}>Intrinsico · /ai-stack</div>
             </div>
             <p style={{ fontSize: '10px', color: '#475569' }}>Not investment advice. For educational purposes only. Always do your own research.</p>
           </div>

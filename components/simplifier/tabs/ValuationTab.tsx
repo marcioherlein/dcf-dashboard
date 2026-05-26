@@ -310,7 +310,7 @@ export default function ValuationTab({
         </div>
       )}
 
-      {/* ── Card 2: Upside meter + model rationale ───────────────────────────── */}
+      {/* ── Card 2: Upside meter + model intrinsico ───────────────────────────── */}
       <div className="rounded-xl border border-[#E8E6E0] bg-white p-5">
         <p className="text-[11px] font-semibold text-[#6B6A72] uppercase tracking-wider mb-3">Upside / Downside Meter</p>
         <UpsideMeter upsidePct={primaryUpside} />

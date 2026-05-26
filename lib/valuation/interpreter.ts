@@ -36,7 +36,7 @@ export function buildValuationInterpretation(
   // Primary method label
   const primaryMethod = getPrimaryMethodLabel(companyType, input.ddmApplicable)
 
-  // Rationale
+  // Intrinsico
   const rationale = getModelRationale(companyType)
 
   // Scenario range

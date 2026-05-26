@@ -506,6 +506,66 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
   )
 }
 
+// ─── Slider heat helpers ──────────────────────────────────────────────────────
+
+type HeatLevel = 'green' | 'amber' | 'red' | 'neutral'
+
+interface SliderHeat {
+  level: HeatLevel
+  deviationPct: number | null
+  primaryBenchmark: { label: string; value: number } | null
+}
+
+function getSliderHeat(
+  key: string,
+  value: number,
+  benchmarks: Array<{ label: string; value: number }> | undefined,
+): SliderHeat {
+  if (!benchmarks || benchmarks.length === 0) {
+    return { level: 'neutral', deviationPct: null, primaryBenchmark: null }
+  }
+  const primary = benchmarks[0]
+  if (!primary.value || !isFinite(primary.value)) {
+    return { level: 'neutral', deviationPct: null, primaryBenchmark: primary }
+  }
+  const pctDev = (value - primary.value) / Math.abs(primary.value)
+
+  // Higher = more aggressive (bullish/optimistic)
+  const highIsAggressive = ['revenueCAGR', 'exitPE', 'exitMultiple', 'netMargin', 'terminalG']
+  // Higher = more conservative (stricter hurdle)
+  const highIsConservative = ['discountRate', 'wacc']
+
+  let aggressiveness: number
+  if (highIsAggressive.includes(key))    aggressiveness = pctDev
+  else if (highIsConservative.includes(key)) aggressiveness = -pctDev
+  else aggressiveness = Math.abs(pctDev)
+
+  const level: HeatLevel =
+    aggressiveness > 0.50 ? 'red' :
+    aggressiveness > 0.20 ? 'amber' :
+    aggressiveness < -0.20 ? 'green' :
+    'neutral'
+
+  return { level, deviationPct: Math.round(pctDev * 100), primaryBenchmark: primary }
+}
+
+function fmtBenchmarkValue(value: number, unit: string): string {
+  if (unit === '%') return `${(value * 100).toFixed(1)}%`
+  if (unit === 'x') return `${value.toFixed(1)}×`
+  return value.toFixed(1)
+}
+
+function heatDeviationMessage(heat: SliderHeat, unit: string, sourceExplanation?: string): string | null {
+  if (!heat.primaryBenchmark || heat.deviationPct === null) return sourceExplanation ?? null
+  const { label: bLabel, value: bVal } = heat.primaryBenchmark
+  const bFmt = fmtBenchmarkValue(bVal, unit)
+  const absDev = Math.abs(heat.deviationPct)
+  if (heat.level === 'red')    return `⚠ ${absDev}% above ${bLabel} (${bFmt}) — verify this is realistic`
+  if (heat.level === 'amber')  return `↑ ${absDev}% above ${bLabel} (${bFmt}) — somewhat optimistic`
+  if (heat.level === 'green')  return `✓ ${absDev}% below ${bLabel} (${bFmt}) — conservative`
+  return sourceExplanation ?? null
+}
+
 // ─── MethodInlinePanel ────────────────────────────────────────────────────────
 
 interface MethodInlinePanelProps {
@@ -588,10 +648,21 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
             const min  = a.min ?? 0
             const max  = a.max ?? (a.unit === '%' ? 1 : 100)
             const step = a.unit === '%' ? 0.005 : (a.step ?? 0.5)
+
+            const heat = getSliderHeat(a.key, raw, a.benchmarks)
+            const fillPct = max > min ? Math.round(((raw - min) / (max - min)) * 100) : 0
+            const trackColor =
+              heat.level === 'green'  ? '#22c55e' :
+              heat.level === 'amber'  ? '#f59e0b' :
+              heat.level === 'red'    ? '#ef4444' :
+              '#3b82f6'
+            const deviationMsg = heatDeviationMessage(heat, a.unit, a.sourceExplanation)
+
             return (
               <div key={a.key}>
+                {/* Label row */}
                 <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-sm font-semibold text-slate-700">{a.label}</span>
                     {a.description && (
                       <TooltipProvider>
@@ -605,6 +676,7 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                         </Tooltip>
                       </TooltipProvider>
                     )}
+                    {/* Source badge */}
                     <span className={cn(
                       'text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider',
                       isOverridden
@@ -620,10 +692,25 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                       {isOverridden ? 'Override' : sourceLabel(a.source)}
                     </span>
                   </div>
-                  <span className="text-sm font-semibold tabular-nums text-slate-900">
-                    {displayVal}{a.unit === '%' ? '%' : a.unit === 'x' ? '×' : ''}
-                  </span>
+                  {/* Value + heat chip */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {heat.level !== 'neutral' && (
+                      <span className={cn(
+                        'text-[9px] font-semibold px-1.5 py-0.5 rounded-full border',
+                        heat.level === 'green' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
+                        heat.level === 'amber' ? 'bg-amber-50  border-amber-200  text-amber-700'  :
+                                                 'bg-red-50    border-red-200    text-red-700',
+                      )}>
+                        {heat.level === 'red' ? '⚠ Aggressive' : heat.level === 'amber' ? '↑ Elevated' : '✓ Conservative'}
+                      </span>
+                    )}
+                    <span className="text-sm font-semibold tabular-nums text-slate-900">
+                      {displayVal}{a.unit === '%' ? '%' : a.unit === 'x' ? '×' : ''}
+                    </span>
+                  </div>
                 </div>
+
+                {/* Gradient-filled slider track */}
                 <input
                   type="range"
                   min={min}
@@ -631,11 +718,26 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                   step={step}
                   value={raw}
                   onChange={e => onAssumptionChange(a.key, parseFloat(e.target.value))}
-                  className="w-full h-1.5 rounded-full accent-blue-500 cursor-pointer"
+                  className="w-full h-1.5 rounded-full cursor-pointer appearance-none"
+                  style={{
+                    background: `linear-gradient(to right, ${trackColor} ${fillPct}%, #e2e8f0 ${fillPct}%)`,
+                  }}
                 />
-                {a.sourceExplanation && (
-                  <p className="text-[10px] text-slate-400 mt-1 leading-tight">▸ {a.sourceExplanation}</p>
+
+                {/* Deviation message — smarter when benchmarks exist */}
+                {deviationMsg && (
+                  <p className={cn(
+                    'text-[10px] mt-1 leading-tight',
+                    heat.level === 'red'    ? 'text-red-600   font-medium' :
+                    heat.level === 'amber'  ? 'text-amber-600 font-medium' :
+                    heat.level === 'green'  ? 'text-emerald-600 font-medium' :
+                    'text-slate-400',
+                  )}>
+                    {heat.level === 'neutral' ? `▸ ${deviationMsg}` : deviationMsg}
+                  </p>
                 )}
+
+                {/* Benchmark snap chips */}
                 {a.benchmarks && a.benchmarks.length > 0 && (
                   <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                     <span className="text-[10px] text-slate-400 shrink-0">Compare:</span>
@@ -652,7 +754,7 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                               : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700',
                           )}
                         >
-                          {b.label}: {(b.value * 100).toFixed(1)}%
+                          {b.label}: {fmtBenchmarkValue(b.value, a.unit)}
                         </button>
                       )
                     })}

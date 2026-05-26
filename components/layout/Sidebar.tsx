@@ -129,7 +129,7 @@ export default function Sidebar() {
             </svg>
           </div>
           <div>
-            <p className="font-headline text-sm font-extrabold text-on-primary leading-tight tracking-tight">Rationale</p>
+            <p className="font-headline text-sm font-extrabold text-on-primary leading-tight tracking-tight">Intrinsico</p>
             <p className="text-[10px] text-on-primary-container opacity-70 leading-tight">Research · Valuation · Strategy</p>
           </div>
         </Link>

@@ -189,7 +189,7 @@ const t3Data = buildMockFinancialsResponse({
     companyType: 'financial',
     companyTypeLabel: 'Financial',
     primaryModelLabel: 'FCFE (Equity DCF)',
-    rationale: 'Banks and fintechs have operating cash flows distorted by loan book changes. FCFE is the appropriate model.',
+    intrinsico: 'Banks and fintechs have operating cash flows distorted by loan book changes. FCFE is the appropriate model.',
     triangulatedFairValue: 13.5,
     triangulatedUpsidePct: 0.08,
     effectiveWeights: { fcff: 5, fcfe: 65, ddm: 0, multiples: 30 },

@@ -68,10 +68,10 @@ const INTERP_LABEL: Record<string, string> = {
 
 // ── Mac mockup ───────────────────────────────────────────────────────────────
 const MOCK_SCREENS = [
-  { label: 'Search',    url: 'rationale.capital' },
-  { label: 'Analysis',  url: 'rationale.capital/stock/AAPL' },
-  { label: 'DCF Model', url: 'rationale.capital/stock/AAPL#dcf' },
-  { label: 'Watchlist', url: 'rationale.capital/valuations' },
+  { label: 'Search',    url: 'intrinsico.capital' },
+  { label: 'Analysis',  url: 'intrinsico.capital/stock/AAPL' },
+  { label: 'DCF Model', url: 'intrinsico.capital/stock/AAPL#dcf' },
+  { label: 'Watchlist', url: 'intrinsico.capital/valuations' },
 ]
 
 function ScreenSearch() {
@@ -1007,9 +1007,9 @@ export default function LandingPage() {
           <span className="text-slate-300">·</span>
           <a href="/privacy" className="hover:text-slate-600 transition-colors">Privacy Policy</a>
           <span className="text-slate-300">·</span>
-          <a href="mailto:hello@rationale.capital" className="hover:text-slate-600 transition-colors">Contact</a>
+          <a href="mailto:hello@intrinsico.capital" className="hover:text-slate-600 transition-colors">Contact</a>
         </div>
-        <p className="mt-4 text-[11px] text-slate-300">© {new Date().getFullYear()} Rationale. All rights reserved.</p>
+        <p className="mt-4 text-[11px] text-slate-300">© {new Date().getFullYear()} Intrinsico. All rights reserved.</p>
       </footer>
     </div>
   )

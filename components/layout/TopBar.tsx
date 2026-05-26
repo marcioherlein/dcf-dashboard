@@ -102,10 +102,10 @@ export default function TopBar() {
       {/* Logo */}
       <Link href="/" className="flex items-center gap-2 shrink-0">
         <div className="w-7 h-7 rounded-lg flex items-center justify-center overflow-hidden">
-          <Image src="/logos/logo.png" alt="Rationale" width={28} height={28} className="rounded-lg" />
+          <Image src="/logos/logo.png" alt="Intrinsico" width={28} height={28} className="rounded-lg" />
         </div>
         <span className="font-bold text-slate-900 text-sm tracking-tight hidden sm:block" style={{ letterSpacing: '-0.02em' }}>
-          Rationale
+          Intrinsico
         </span>
       </Link>
 

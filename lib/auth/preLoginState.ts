@@ -1,4 +1,4 @@
-const PRE_LOGIN_KEY = 'rationale_prelogin_state'
+const PRE_LOGIN_KEY = 'intrinsico_prelogin_state'
 
 export interface PreLoginState {
   returnUrl: string

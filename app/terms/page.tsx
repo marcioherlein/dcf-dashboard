@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-export const metadata = { title: 'Terms of Service — Rationale' }
+export const metadata = { title: 'Terms of Service — Intrinsico' }
 
 const EFFECTIVE_DATE = 'June 1, 2025'
 
@@ -10,7 +10,7 @@ export default function TermsPage() {
       <div className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
 
         <div className="mb-10">
-          <Link href="/" className="text-sm text-blue-600 hover:underline">← Back to Rationale</Link>
+          <Link href="/" className="text-sm text-blue-600 hover:underline">← Back to Intrinsico</Link>
         </div>
 
         <h1 className="text-3xl font-bold text-slate-900 mb-2">Terms of Service</h1>
@@ -22,7 +22,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-base font-semibold text-slate-800 mb-2">1. Acceptance of Terms</h2>
             <p>
-              By accessing or using Rationale (&quot;the Service&quot;, &quot;we&quot;, &quot;us&quot;), you agree to be bound by
+              By accessing or using Intrinsico (&quot;the Service&quot;, &quot;we&quot;, &quot;us&quot;), you agree to be bound by
               these Terms of Service. If you do not agree, do not use the Service.
               We reserve the right to update these terms at any time; continued use
               after changes constitutes acceptance.
@@ -104,7 +104,7 @@ export default function TermsPage() {
             <h2 className="text-base font-semibold text-slate-800 mb-2">7. Intellectual Property</h2>
             <p>
               All content, design, code, and branding on the Service is the property of
-              Rationale and may not be copied, reproduced, or distributed without written
+              Intrinsico and may not be copied, reproduced, or distributed without written
               permission, except for personal, non-commercial use.
             </p>
           </section>
@@ -113,7 +113,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-base font-semibold text-slate-800 mb-2">8. Limitation of Liability</h2>
             <p>
-              To the fullest extent permitted by law, Rationale and its operators shall
+              To the fullest extent permitted by law, Intrinsico and its operators shall
               not be liable for any direct, indirect, incidental, special, consequential,
               or punitive damages arising from your use of the Service, including but not
               limited to investment losses resulting from reliance on model outputs.
@@ -138,8 +138,8 @@ export default function TermsPage() {
             <h2 className="text-base font-semibold text-slate-800 mb-2">10. Contact</h2>
             <p>
               Questions about these terms? Reach us at{' '}
-              <a href="mailto:hello@rationale.capital" className="text-blue-600 hover:underline">
-                hello@rationale.capital
+              <a href="mailto:hello@intrinsico.capital" className="text-blue-600 hover:underline">
+                hello@intrinsico.capital
               </a>.
             </p>
           </section>

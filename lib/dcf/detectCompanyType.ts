@@ -65,7 +65,7 @@ export function companyTypeLabel(type: CompanyType): string {
   }
 }
 
-export function companyTypeRationale(type: CompanyType): string {
+export function companyTypeIntrinsico(type: CompanyType): string {
   switch (type) {
     case 'etf':
       return 'ETFs and funds are portfolios of assets, not operating companies. Intrinsic valuation models (DCF, DDM) are not applicable. Value is determined by the net asset value of underlying holdings.'

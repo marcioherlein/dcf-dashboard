@@ -7,7 +7,7 @@ import { projectCashFlows, extractFCFInputs } from '@/lib/dcf/projectCashFlows'
 import { calculateFairValue, buildScenarios } from '@/lib/dcf/calculateFairValue'
 import { calculateRatings } from '@/lib/dcf/calculateRatings'
 import { getRfRate } from '@/lib/data/fredClient'
-import { detectCompanyType, primaryModelLabel, companyTypeLabel, companyTypeRationale, getModelWeights } from '@/lib/dcf/detectCompanyType'
+import { detectCompanyType, primaryModelLabel, companyTypeLabel, companyTypeIntrinsico, getModelWeights } from '@/lib/dcf/detectCompanyType'
 import { calculateDDM } from '@/lib/dcf/calculateDDM'
 import { calculateFCFE } from '@/lib/dcf/calculateFCFE'
 import { calculateMultiples, PEER_TICKERS } from '@/lib/dcf/calculateMultiples'
@@ -226,6 +226,24 @@ export async function GET(req: NextRequest) {
             annualFCFLocal = medianFCF
           }
         }
+      }
+    }
+
+    // Revenue-based FCF margin cap by sector (second layer after the market-cap yield cap).
+    // A single-year FCF spike — tax refund, working capital release, deferred capex — can push
+    // FCF margin to 60-80%, exploding the DCF base far beyond what peers ever sustain.
+    // Calibrated to empirical industry ceilings (Damodaran sector data, Jan 2025):
+    //   Tech/SaaS: 45% — Veeva ~38%, Adobe ~45% are genuine; 35% would clip them unfairly
+    //   Standard:  35% — most non-tech businesses top out around 25-30% FCF margin
+    // Only fires if the market-cap yield cap did not already constrain baseFCF.
+    if (!fcfCapApplied && rawRevMLocal > 0) {
+      const _sL = ((profile.sector ?? q.sector ?? '') + ' ' + (profile.industry ?? '')).toLowerCase()
+      const _isTechSaaS = /software|technology|internet content|internet retail|semiconductor|data processing|information tech/i.test(_sL)
+      const _fcfMarginCeiling = _isTechSaaS ? 0.45 : 0.35
+      const _fcfMarginActual = baseFCF / (rawRevMLocal * fxRate)
+      if (_fcfMarginActual > _fcfMarginCeiling) {
+        baseFCF = rawRevMLocal * fxRate * _fcfMarginCeiling
+        fcfCapApplied = true
       }
     }
 
@@ -504,7 +522,7 @@ export async function GET(req: NextRequest) {
       companyType,
       companyTypeLabel: companyTypeLabel(companyType),
       primaryModelLabel: primaryModelLabel(companyType, hasDividend),
-      rationale: companyTypeRationale(companyType),
+      intrinsico: companyTypeIntrinsico(companyType),
       triangulatedFairValue,
       triangulatedUpsidePct,
       effectiveWeights,
