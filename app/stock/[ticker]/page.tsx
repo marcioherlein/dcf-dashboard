@@ -171,7 +171,6 @@ export default function StockPage() {
 
 function StockPageBody() {
   const { ticker } = useParams<{ ticker: string }>()
-  const { requireAuth } = useLoginGate()
   const { data: session } = useSession()
   const [data, setData]             = useState<FinancialsData | null>(null)
   const [statementsData, setStatementsData] = useState<StatementsData | null>(null)
@@ -179,7 +178,7 @@ function StockPageBody() {
   const [error, setError]     = useState('')
   const [saving, setSaving]   = useState(false)
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
-  const [savePayload, setSavePayload] = useState<WatchlistSavePayload | null>(null)
+  const [savePayload, _setSavePayload] = useState<WatchlistSavePayload | null>(null)
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [tabDirection, setTabDirection] = useState(0)
   const reducedMotion = useReducedMotion()
