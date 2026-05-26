@@ -13,7 +13,7 @@ import SummaryCards from './cockpit/SummaryCards'
 import GuidanceStrip from './cockpit/GuidanceStrip'
 import FairValueChart from './cockpit/FairValueChart'
 import ModelBreakdownTable from './cockpit/ModelBreakdownTable'
-import AssumptionsPanel from './cockpit/AssumptionsPanel'
+import AssumptionsPanel, { type SparkPoint } from './cockpit/AssumptionsPanel'
 import RightSidebar from './cockpit/RightSidebar'
 
 const ModellingWorkspace = dynamic(
@@ -109,9 +109,54 @@ function seedAssumptions(apiData: ApiData): ValuationAssumptions {
   }
 }
 
+type HistoricalData = Partial<Record<keyof ValuationAssumptions, SparkPoint[]>>
+
+function buildHistoricalData(apiData: ApiData): HistoricalData {
+  const incomeRows: Array<{
+    year: string; isProjected: boolean
+    revenue: number | null; netIncome: number | null; ebitda: number | null
+  }> = apiData.financialStatements?.incomeStatement ?? []
+  const actuals = incomeRows.filter(r => !r.isProjected).slice(-6)
+
+  // CAGR: year-over-year revenue growth
+  const cagrPoints: SparkPoint[] = []
+  for (let i = 1; i < actuals.length; i++) {
+    const prev = actuals[i - 1].revenue
+    const curr = actuals[i].revenue
+    if (prev && prev > 0 && curr != null) {
+      cagrPoints.push({ label: `'${String(actuals[i].year).slice(-2)}`, value: (curr - prev) / prev })
+    }
+  }
+
+  // Net Margin: netIncome / revenue
+  const netMarginPoints: SparkPoint[] = actuals
+    .filter(r => r.revenue != null && r.revenue > 0 && r.netIncome != null)
+    .map(r => ({ label: `'${String(r.year).slice(-2)}`, value: r.netIncome! / r.revenue! }))
+
+  // Current multiples as single-point reference
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const multEst: Array<{ multiple: string; actualValue: number }> =
+    apiData.valuationMethods?.models?.multiples?.estimates ?? []
+  const evEbitdaCurrent = multEst.find(e => e.multiple === 'EV/EBITDA')?.actualValue ?? null
+  const evRevCurrent    = multEst.find(e => e.multiple === 'EV/Revenue')?.actualValue ?? null
+  const peCurrent       = apiData.quote?.peRatio ?? null
+
+  return {
+    cagr:            cagrPoints.length >= 2 ? cagrPoints.slice(-5) : undefined,
+    netMargin:       netMarginPoints.length >= 2 ? netMarginPoints.slice(-5) : undefined,
+    exitPE:          peCurrent != null && peCurrent > 0 && peCurrent < 300
+                       ? [{ label: 'curr', value: peCurrent }] : undefined,
+    exitMultiple:    evEbitdaCurrent != null && evEbitdaCurrent > 0
+                       ? [{ label: 'curr', value: evEbitdaCurrent }] : undefined,
+    revenueMultiple: evRevCurrent != null && evRevCurrent > 0
+                       ? [{ label: 'curr', value: evRevCurrent }] : undefined,
+  }
+}
+
 export default function ValuationCockpit({ apiData, ticker, statementsData, onNavigateToFinancials }: Props) {
-  const snapshot = useMemo(() => buildSnapshot(apiData), [apiData])
-  const defaults = useMemo(() => seedAssumptions(apiData), [apiData])
+  const snapshot     = useMemo(() => buildSnapshot(apiData), [apiData])
+  const defaults     = useMemo(() => seedAssumptions(apiData), [apiData])
+  const historicalData = useMemo(() => buildHistoricalData(apiData), [apiData])
   const [assumptions, setAssumptions] = useState<ValuationAssumptions>(() => seedAssumptions(apiData))
 
   const output = useMemo(
@@ -166,6 +211,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
             defaults={defaults}
             onChange={setAssumptions}
             onReset={() => setAssumptions(defaults)}
+            historicalData={historicalData}
           />
 
           {/* Advanced: Full DCF Modelling Table */}
