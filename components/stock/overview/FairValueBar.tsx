@@ -31,7 +31,7 @@ export default function FairValueBar({ price, fairValue, currency, bearCase, bul
   const diff     = ((price - fairValue) / fairValue) * 100
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5">
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between mb-4">
@@ -47,13 +47,13 @@ export default function FairValueBar({ price, fairValue, currency, bearCase, bul
       </div>
 
       {/* ── Labels row (no absolute positioning — safe at all range positions) ── */}
-      <div className="flex items-end gap-8 mb-3">
+      <div className="flex items-end gap-4 sm:gap-8 mb-3 flex-wrap">
         <div>
-          <p className="text-[16px] font-bold tabular-nums text-slate-900 leading-none">{fmtPrice(price, currency)}</p>
+          <p className="text-[14px] sm:text-[16px] font-bold tabular-nums text-slate-900 leading-none">{fmtPrice(price, currency)}</p>
           <p className="text-[11px] text-slate-400 mt-0.5">Current Price</p>
         </div>
         <div>
-          <p className="text-[16px] font-bold tabular-nums text-slate-900 leading-none">{fmtPrice(fairValue, currency)}</p>
+          <p className="text-[14px] sm:text-[16px] font-bold tabular-nums text-slate-900 leading-none">{fmtPrice(fairValue, currency)}</p>
           <p className="text-[11px] text-slate-400 mt-0.5">Fair Value</p>
         </div>
       </div>

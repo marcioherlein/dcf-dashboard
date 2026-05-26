@@ -68,7 +68,7 @@ export default function ReverseDcfCallout({
     <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-blue-50/30 overflow-hidden shadow-card">
 
       {/* Header */}
-      <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3">
+      <div className="px-4 sm:px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
             What the Market Is Pricing In
@@ -84,7 +84,7 @@ export default function ReverseDcfCallout({
 
       {/* Scale legend */}
       {result.interpretation !== 'not_meaningful' && (
-        <div className="px-5 pt-3 pb-0 flex items-center gap-1.5 text-[10px] text-slate-400 flex-wrap">
+        <div className="px-4 sm:px-5 pt-3 pb-0 flex items-center gap-1.5 text-[10px] text-slate-400 flex-wrap">
           <span className="font-medium">Expectation scale:</span>
           <span className="px-1.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700">Conservative</span>
           <span className="text-slate-300">→</span>
@@ -97,7 +97,7 @@ export default function ReverseDcfCallout({
       )}
 
       {/* Body */}
-      <div className="px-5 py-4 space-y-4">
+      <div className="px-4 sm:px-5 py-4 space-y-4">
         {result.interpretation === 'not_meaningful' ? (
           <div className="flex items-start gap-3 rounded-xl bg-slate-50 border border-slate-200 px-4 py-3">
             <span className="text-slate-400 text-lg leading-none mt-0.5 shrink-0">—</span>
@@ -110,12 +110,12 @@ export default function ReverseDcfCallout({
 
               {/* Left: CAGR numbers + gap callout */}
               <div className="flex-1 min-w-0 space-y-3">
-                <div className="flex items-end gap-6">
+                <div className="flex items-end gap-4 sm:gap-6 flex-wrap">
                   <div>
                     <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1">
                       Implied 5Y Revenue CAGR
                     </p>
-                    <p className={cn('text-3xl font-bold tabular-nums font-mono leading-none', styles.text)}>
+                    <p className={cn('text-2xl sm:text-3xl font-bold tabular-nums font-mono leading-none', styles.text)}>
                       {impliedPct != null ? `${impliedPct.toFixed(1)}%` : '—'}
                     </p>
                   </div>
@@ -207,7 +207,7 @@ export default function ReverseDcfCallout({
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-3 bg-slate-50 border-t border-slate-100">
+      <div className="px-4 sm:px-5 py-3 bg-slate-50 border-t border-slate-100">
         <p className="text-[10px] text-slate-400">
           Reverse DCF solves for the revenue growth rate already priced in, holding FCF margin and WACC constant. Not a buy/sell signal.
         </p>
