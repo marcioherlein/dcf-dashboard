@@ -187,7 +187,6 @@ function StockPageBody() {
   const reducedMotion = useReducedMotion()
   const [financialsHighlight, setFinancialsHighlight] = useState<{ rowKey: string; statement: 'income' | 'balance' | 'cashflow' } | null>(null)
   const [userModelFairValue, setUserModelFairValue] = useState<number | null>(null)
-  const [activeValuationMethod, setActiveValuationMethod] = useState<string | null>(null)
 
   // After Google OAuth redirect, restore the user's pre-login state (tab, etc.)
   useEffect(() => {
@@ -282,7 +281,7 @@ function StockPageBody() {
 
   // Keep saving state for potential future use — suppress unused warning
   void setSaving; void saving
-  void setUserModelFairValue; void setActiveValuationMethod
+  void setUserModelFairValue
 
   const currency = data?.quote.currency === 'USD' ? '$' : (data?.quote.currency ?? '$') + ' '
 
@@ -375,17 +374,15 @@ function StockPageBody() {
         {data && !loading && (
           <>
             {/* ── Desktop grid: main content + contextual sidebar ── */}
-            {/* Full DCF collapses to single column so the modelling table gets the full width */}
+            {/* Valuation tab uses single column — ValuationCockpit has its own internal sidebar */}
             <div className={cn(
-              activeTab !== 'news'
-                ? (activeTab === 'valuation' && activeValuationMethod === 'full_dcf'
-                    ? 'lg:block'
-                    : 'lg:grid lg:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_400px] lg:gap-6 lg:items-start')
+              activeTab === 'overview' || activeTab === 'financials' || activeTab === 'risks'
+                ? 'lg:grid lg:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_400px] lg:gap-6 lg:items-start'
                 : ''
             )}>
             <div className="min-w-0">
-            {/* ── InvestorGradeCard — compact strip, shown on all tabs EXCEPT overview ── */}
-            {activeTab !== 'overview' && (
+            {/* ── InvestorGradeCard — compact strip, shown on Financials / Risks / News tabs only ── */}
+            {activeTab !== 'overview' && activeTab !== 'valuation' && (
             <motion.div
               className="pt-5"
               initial={{ opacity: 0, y: 16 }}
@@ -598,7 +595,6 @@ function StockPageBody() {
                       financialsData={data}
                     />
                   )}
-                  {data.scores && <FinancialScores scores={computedScores ?? data.scores} />}
                 </motion.div>
               )}
 
@@ -618,11 +614,11 @@ function StockPageBody() {
             </AnimatePresence>
             </div>{/* end main column */}
 
-            {/* Sidebar — desktop only, hidden on news tab and when Full DCF is open */}
-            {activeTab !== 'news' && !(activeTab === 'valuation' && activeValuationMethod === 'full_dcf') && (
+            {/* Sidebar — desktop only, overview / financials / risks tabs */}
+            {(activeTab === 'overview' || activeTab === 'financials' || activeTab === 'risks') && (
               <aside className="hidden lg:block">
                 <div className="sticky top-[68px] self-start space-y-3 pb-4 pt-5">
-                  <StockSidebar activeTab={activeTab} data={data} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} activeValuationMethodId={activeValuationMethod} />
+                  <StockSidebar activeTab={activeTab} data={data} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} />
                 </div>
               </aside>
             )}
@@ -631,7 +627,7 @@ function StockPageBody() {
         )}
 
         {/* ── Investment disclaimer ── */}
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-8 pt-2">
+        <div className="px-4 sm:px-6 lg:px-8 pb-8 pt-2">
           <p className="text-[11px] text-slate-400 leading-relaxed text-center max-w-3xl mx-auto">
             <strong className="font-semibold text-slate-500">Not financial advice.</strong>{' '}
             All outputs — DCF estimates, fair values, health scores, and scenarios — are model results

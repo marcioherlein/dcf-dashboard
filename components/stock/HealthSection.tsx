@@ -166,12 +166,12 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
                 <div className="flex items-center justify-between rounded-lg bg-white border border-slate-200 px-4 py-2.5">
                   <span className="text-xs text-slate-500">
                     Piotroski F-Score
-                    <InfoTip text="9-point checklist of profitability, leverage, and efficiency. Score 7–9 = strong financial health; below 4 = signals weakness." />
+                    <InfoTip text="9-point checklist of profitability, leverage, and efficiency. Score 8–9 = strong financial health; below 4 = signals weakness." />
                   </span>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-slate-900 tabular-nums">{piotroski}/9</span>
-                    <span className={`text-[11px] font-medium rounded-full px-2 py-0.5 ${piotroski >= 7 ? 'bg-emerald-100 text-emerald-700' : piotroski >= 4 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
-                      {piotroski >= 7 ? 'Strong' : piotroski >= 4 ? 'Mixed' : 'Weak'}
+                    <span className={`text-[11px] font-medium rounded-full px-2 py-0.5 ${piotroski >= 8 ? 'bg-emerald-100 text-emerald-700' : piotroski >= 4 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+                      {piotroski >= 8 ? 'Strong' : piotroski >= 4 ? 'Mixed' : 'Weak'}
                     </span>
                   </div>
                 </div>

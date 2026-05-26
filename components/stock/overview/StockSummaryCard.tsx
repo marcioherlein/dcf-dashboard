@@ -40,7 +40,7 @@ function deriveVerdict(upsidePct: number | null, fv: number | null): Verdict {
     chipClass: 'bg-slate-100 text-slate-500 border-slate-200',
     headingClass: 'text-slate-500',
   }
-  if (upsidePct >= 0.25) return {
+  if (upsidePct >= 0.20) return {
     chip: 'BUY', heading: 'Attractive',
     description: `Trades ${absPct}% below our fair value estimate — a significant margin of safety.`,
     chipClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -97,7 +97,6 @@ export default function StockSummaryCard({
 }: StockSummaryCardProps) {
   const isUp = change >= 0
   const verdict = deriveVerdict(upsidePct, fairValue)
-  const marginOfSafety = upsidePct
 
   // 52-week range position
   const rangeSpan = high52 - low52
@@ -142,7 +141,7 @@ export default function StockSummaryCard({
       </div>
 
       {/* ── 4 metric boxes ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 items-start">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 items-start">
 
         {/* Box 1: Current Price */}
         <MetricBox>
@@ -209,35 +208,7 @@ export default function StockSummaryCard({
           )}
         </MetricBox>
 
-        {/* Box 3: Margin of Safety */}
-        <MetricBox>
-          <BoxLabel>Margin of Safety</BoxLabel>
-          {marginOfSafety != null ? (
-            <>
-              <p className={cn(
-                'text-[26px] font-bold tabular-nums leading-none mb-1',
-                marginOfSafety >= 0 ? 'text-emerald-600' : 'text-red-600'
-              )}>
-                {marginOfSafety >= 0 ? '+' : ''}{(marginOfSafety * 100).toFixed(1)}%
-              </p>
-              <p className={cn(
-                'text-[12px] font-semibold mb-1',
-                marginOfSafety >= 0.15 ? 'text-emerald-600'
-                : marginOfSafety >= -0.05 ? 'text-amber-600'
-                : 'text-red-600'
-              )}>
-                {marginOfSafety >= 0.15 ? 'Undervalued'
-                  : marginOfSafety >= -0.05 ? 'Near Fair Value'
-                  : 'Overvalued'}
-              </p>
-              <p className="text-[11px] text-slate-400">vs. Fair Value</p>
-            </>
-          ) : (
-            <p className="text-sm text-slate-400 mt-1">—</p>
-          )}
-        </MetricBox>
-
-        {/* Box 4: Investment Verdict */}
+        {/* Box 3: Investment Verdict */}
         <MetricBox>
           <BoxLabel>Investment Verdict</BoxLabel>
           <span className={cn('inline-flex text-[10px] font-bold px-2.5 py-0.5 rounded-full border mb-2', verdict.chipClass)}>

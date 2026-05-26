@@ -290,7 +290,7 @@ export default function ValuationTab({
         </div>
         <div className="hidden sm:flex flex-col items-end gap-1">
           <p className="text-[10px] text-[#6B6A72] uppercase tracking-wider">
-            {triangulatedFV != null ? 'Triangulated' : 'DCF'} Fair Value
+            {triangulatedFV != null ? 'Blended' : 'DCF'} Fair Value
           </p>
           <p className={`text-2xl font-bold font-mono ${zone.color}`}>
             {primaryFV != null ? money(primaryFV) : <NABadge reason="no-data" size="sm" />}
@@ -328,7 +328,7 @@ export default function ValuationTab({
           <p className="text-[11px] font-semibold text-[#6B6A72] uppercase tracking-wider">Model Comparison</p>
           {triangulatedFV != null && (
             <div className={`rounded-full px-3 py-0.5 text-[11px] font-bold ${zone.bg} ${zone.color} ${zone.border} border`}>
-              Triangulated: {money(triangulatedFV)}
+              Blended: {money(triangulatedFV)}
             </div>
           )}
         </div>
