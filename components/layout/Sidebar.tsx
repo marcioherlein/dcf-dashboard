@@ -9,8 +9,10 @@ import {
   Briefcase,
   Globe,
   Sparkles,
-  Newspaper,
+  Bell,
   Settings,
+  HelpCircle,
+  Star,
 } from 'lucide-react'
 
 const NAV_PRIMARY = [
@@ -48,10 +50,16 @@ const NAV_PRIMARY = [
 
 const NAV_SECONDARY = [
   {
-    href: '/news',
-    label: 'News',
-    icon: Newspaper,
-    match: (p: string) => p.startsWith('/news'),
+    href: '/watchlist',
+    label: 'Watchlist',
+    icon: Star,
+    match: (p: string) => p.startsWith('/watchlist'),
+  },
+  {
+    href: '/alerts',
+    label: 'Alerts',
+    icon: Bell,
+    match: (p: string) => p.startsWith('/alerts'),
   },
   {
     href: '/settings',
@@ -59,88 +67,80 @@ const NAV_SECONDARY = [
     icon: Settings,
     match: (p: string) => p.startsWith('/settings'),
   },
+  {
+    href: '/help',
+    label: 'Help & Support',
+    icon: HelpCircle,
+    match: (p: string) => p.startsWith('/help'),
+  },
 ]
+
+import type { LucideIcon } from 'lucide-react'
+
+function NavItem({ href, label, icon: Icon, active }: { href: string; label: string; icon: LucideIcon; active: boolean }) {
+  return (
+    <Link
+      href={href}
+      className={[
+        'flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors',
+        active
+          ? 'bg-white/15 text-white'
+          : 'text-blue-100/70 hover:bg-white/10 hover:text-white',
+      ].join(' ')}
+    >
+      <Icon size={15} className={active ? 'text-white' : 'text-blue-200/60'} />
+      {label}
+    </Link>
+  )
+}
 
 export default function Sidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
 
   return (
-    <aside className="fixed left-0 top-[52px] bottom-0 w-[220px] bg-white border-r border-slate-100 z-30 hidden lg:flex flex-col">
+    <aside className="fixed left-0 top-[52px] bottom-0 w-[220px] bg-blue-800 z-30 hidden lg:flex flex-col">
       {/* Primary nav */}
       <nav className="flex-1 px-3 pt-4 overflow-y-auto">
-        <p className="px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-400">
-          Navigation
-        </p>
         <div className="space-y-0.5">
-          {NAV_PRIMARY.map(({ href, label, icon: Icon, match }) => {
-            const active = match(pathname)
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={[
-                  'flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors',
-                  active
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
-                ].join(' ')}
-              >
-                <Icon size={15} className={active ? 'text-blue-500' : 'text-slate-400'} />
-                {label}
-              </Link>
-            )
-          })}
+          {NAV_PRIMARY.map(({ href, label, icon, match }) => (
+            <NavItem key={href} href={href} label={label} icon={icon} active={match(pathname)} />
+          ))}
         </div>
 
-        <div className="my-3 border-t border-slate-100" />
+        <div className="my-3 border-t border-white/10" />
 
         <div className="space-y-0.5">
-          {NAV_SECONDARY.map(({ href, label, icon: Icon, match }) => {
-            const active = match(pathname)
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={[
-                  'flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors',
-                  active
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
-                ].join(' ')}
-              >
-                <Icon size={15} className={active ? 'text-blue-500' : 'text-slate-400'} />
-                {label}
-              </Link>
-            )
-          })}
+          {NAV_SECONDARY.map(({ href, label, icon, match }) => (
+            <NavItem key={href} href={href} label={label} icon={icon} active={match(pathname)} />
+          ))}
         </div>
       </nav>
 
-      {/* Auth */}
-      <div className="px-3 py-4 border-t border-slate-100">
+      {/* Auth / user profile */}
+      <div className="px-3 py-4 border-t border-white/10">
         {session ? (
           <div className="flex items-center gap-2.5">
             {session.user?.image ? (
               <Image
                 src={session.user.image}
                 alt={session.user.name ?? ''}
-                width={28}
-                height={28}
-                className="rounded-full ring-2 ring-blue-100 shrink-0"
+                width={30}
+                height={30}
+                className="rounded-full ring-2 ring-white/20 shrink-0"
               />
             ) : (
-              <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
-                <span className="text-[10px] font-bold text-white leading-none">
+              <div className="w-[30px] h-[30px] rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                <span className="text-[11px] font-bold text-white leading-none">
                   {session.user?.name?.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase() ?? '?'}
                 </span>
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-[12px] font-semibold text-slate-800 truncate">{session.user?.name ?? 'User'}</p>
+              <p className="text-[12px] font-semibold text-white truncate">{session.user?.name ?? 'User'}</p>
               <button
                 onClick={() => signOut()}
-                className="text-[10px] text-slate-400 hover:text-slate-700 transition-colors"
+                className="text-[10px] text-blue-200/60 hover:text-white transition-colors"
               >
                 Sign out
               </button>
@@ -149,9 +149,9 @@ export default function Sidebar() {
         ) : (
           <button
             onClick={() => signIn('google')}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-500 px-3 py-2 text-[12px] font-semibold text-white transition-colors"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 px-3 py-2 text-[12px] font-semibold text-white transition-colors"
           >
-            Sign in with Google
+            Sign in
           </button>
         )}
       </div>

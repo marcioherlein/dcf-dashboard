@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import Image from 'next/image'
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
@@ -42,16 +42,7 @@ function UserAvatar({ image, name }: { image: string | null; name: string | null
   )
 }
 
-const NAV_LINKS = [
-  { href: '/',                    label: 'Analyze',       match: (p: string) => p === '/' || p.startsWith('/stock') },
-  { href: '/valuations',          label: 'My Valuations', match: (p: string) => p.startsWith('/valuations') },
-  { href: '/monitor?tab=portfolio', label: 'Portfolio',   match: (p: string) => p.startsWith('/monitor') },
-  { href: '/markets',             label: 'Markets',       match: (p: string) => p.startsWith('/markets') },
-  { href: '/ai-stack',            label: 'AI Stack',      match: (p: string) => p.startsWith('/ai-stack') },
-]
-
 export default function TopBar() {
-  const pathname = usePathname()
   const router   = useRouter()
   const { data: session } = useSession()
 
@@ -108,27 +99,6 @@ export default function TopBar() {
           Intrinsico
         </span>
       </Link>
-
-      {/* Primary nav — desktop only */}
-      <nav className="hidden lg:flex items-center gap-0.5 shrink-0">
-        {NAV_LINKS.map(({ href, label, match }) => {
-          const active = match(pathname)
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={[
-                'h-8 flex items-center px-3 text-[13px] font-medium rounded-lg transition-colors whitespace-nowrap',
-                active
-                  ? 'bg-blue-50 text-blue-600 font-semibold'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-black/5',
-              ].join(' ')}
-            >
-              {label}
-            </Link>
-          )
-        })}
-      </nav>
 
       {/* Search */}
       <div className="relative flex-1 min-w-0 max-w-full lg:max-w-xs" ref={searchRef}>
