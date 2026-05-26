@@ -46,10 +46,9 @@ export async function getFinancials(ticker: string): Promise<any> {
       'recommendationTrend',
       'insiderTransactions',
       'summaryProfile',
-      'summaryDetail',
       'majorHoldersBreakdown',
     ],
-  })
+  }, { validateResult: false })
 }
 
 export type HistoricalPeriod = '1d' | '5d' | '1mo' | '3mo' | '6mo' | 'ytd' | '1y' | '2y' | '3y' | '5y' | '10y' | 'max'
