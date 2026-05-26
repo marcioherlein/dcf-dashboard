@@ -7,6 +7,25 @@ import Image from 'next/image'
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
 import { slideDown } from '@/lib/motion'
 
+const TOPBAR_TICKER = [
+  { sym: 'S&P 500',  val: '5,841.47',  chg: '+0.62%', up: true  },
+  { sym: 'NASDAQ',   val: '18,983.54', chg: '+0.89%', up: true  },
+  { sym: 'DOW',      val: '43,155.12', chg: '+0.47%', up: true  },
+  { sym: 'VIX',      val: '14.23',     chg: '−3.21%', up: false },
+  { sym: 'NVDA',     val: '119.83',    chg: '+2.14%', up: true  },
+  { sym: 'AAPL',     val: '195.64',    chg: '−0.28%', up: false },
+  { sym: 'MSFT',     val: '421.45',    chg: '+0.83%', up: true  },
+  { sym: 'AMZN',     val: '189.22',    chg: '+1.17%', up: true  },
+  { sym: 'META',     val: '561.78',    chg: '+0.54%', up: true  },
+  { sym: 'TSLA',     val: '268.45',    chg: '−0.91%', up: false },
+  { sym: 'GOOGL',    val: '178.33',    chg: '+0.41%', up: true  },
+  { sym: 'JPM',      val: '248.90',    chg: '+0.31%', up: true  },
+  { sym: '10Y UST',  val: '4.28%',     chg: '−2bp',   up: false },
+  { sym: 'GS',       val: '538.12',    chg: '+0.22%', up: true  },
+  { sym: 'AMD',      val: '115.22',    chg: '+1.82%', up: true  },
+  { sym: 'UNH',      val: '329.45',    chg: '−1.14%', up: false },
+]
+
 interface SearchResult {
   symbol: string
   longname?: string
@@ -84,14 +103,48 @@ export default function TopBar() {
       className="fixed top-0 left-0 right-0 z-40 glass-toolbar"
       style={{ height: '52px' }}
     >
+      {/* ── Ambient scrolling market ticker ───────────────────────────────── */}
+      <div
+        className="absolute inset-0 overflow-hidden pointer-events-none select-none"
+        aria-hidden="true"
+        style={{ zIndex: 0 }}
+      >
+        <div className="animate-marquee h-full items-center">
+          {[0, 1].map((copy) =>
+            TOPBAR_TICKER.map((d) => (
+              <span
+                key={`${d.sym}-${copy}`}
+                className="inline-flex items-baseline gap-1 mx-6 opacity-[0.14]"
+              >
+                <span className="text-[9px] font-bold font-mono tracking-widest text-slate-500 uppercase">
+                  {d.sym}
+                </span>
+                <span className={`text-[9px] font-semibold font-mono tabular-nums ${d.up ? 'text-emerald-500' : 'text-rose-500'}`}>
+                  {d.up ? '▲' : '▼'} {d.val}
+                </span>
+                <span className={`text-[8px] font-mono tabular-nums ${d.up ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {d.chg}
+                </span>
+              </span>
+            ))
+          )}
+        </div>
+        {/* Soft fade at edges to blend with glass toolbar */}
+        <div className="absolute inset-y-0 left-0 w-40 pointer-events-none"
+          style={{ background: 'linear-gradient(to right, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.70) 60%, transparent 100%)' }} />
+        <div className="absolute inset-y-0 right-0 w-40 pointer-events-none"
+          style={{ background: 'linear-gradient(to left, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.70) 60%, transparent 100%)' }} />
+      </div>
+
       {/* Three-column grid: logo | Intrinsico (center) | search + auth */}
       <div
-        className="h-full px-4"
+        className="relative h-full px-4"
         style={{
           display: 'grid',
           gridTemplateColumns: 'minmax(0,1fr) auto minmax(0,1fr)',
           alignItems: 'center',
           gap: '12px',
+          zIndex: 1,
         }}
       >
         {/* ── Column 1: Logo icon ── */}
