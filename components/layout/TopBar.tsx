@@ -179,8 +179,8 @@ export default function TopBar() {
             {/* Identity + price */}
             <div className="flex items-center gap-2 shrink-0 pr-4 border-r border-slate-100 mr-1">
               <button
-                onClick={() => router.push('/')}
-                aria-label="Back to home"
+                onClick={() => router.push('/analyze')}
+                aria-label="Back to Analyze"
                 className="text-slate-400 hover:text-blue-600 transition-colors shrink-0"
               >
                 <ChevronLeft size={15} strokeWidth={2.5} />
