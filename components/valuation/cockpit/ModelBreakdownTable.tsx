@@ -15,7 +15,7 @@ const CONFIDENCE_BADGE = {
   low:    'bg-slate-50 text-slate-500 border-slate-200',
 }
 
-export default function ModelBreakdownTable({ methods, currentPrice, currency }: Props) {
+export default function ModelBreakdownTable({ methods, currentPrice: _currentPrice, currency }: Props) {
   return (
     <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-4">
       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Model Breakdown</p>

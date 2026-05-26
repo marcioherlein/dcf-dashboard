@@ -1,13 +1,13 @@
 import { SummaryMockScreen, ValuationMockScreen } from './ProductScreenshots'
 
-const SUMMARY_CALLOUTS = [
+const _SUMMARY_CALLOUTS = [
   { label: 'Current Price', body: 'Live market data', top: '15%', left: '-28%' },
   { label: 'Intrinsic Value', body: 'Blended fair value estimate', top: '15%', right: '-28%' },
   { label: 'Investment Verdict', body: 'Clear action signal', top: '38%', left: '-28%' },
   { label: 'Reverse DCF', body: 'What growth is priced in', top: '58%', right: '-28%' },
 ]
 
-const VALUATION_CALLOUTS = [
+const _VALUATION_CALLOUTS = [
   { label: 'Blended Fair Value', body: 'vs. current price', top: '10%', right: '-30%' },
   { label: 'Scenario Range', body: 'Bear / Base / Bull outcomes', top: '40%', right: '-30%' },
   { label: 'Editable Assumptions', body: 'Growth, margins, WACC, terminal rate', top: '70%', left: '-30%' },
