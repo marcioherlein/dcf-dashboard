@@ -26,6 +26,8 @@ import { track } from '@/lib/analytics/events'
 import { loadPreLoginState, clearPreLoginState } from '@/lib/auth/preLoginState'
 import { useSession } from 'next-auth/react'
 import SaveToWatchlistDialog, { type WatchlistSavePayload } from '@/components/watchlist/SaveToWatchlistDialog'
+import FlipCard from '@/components/ui/FlipCard'
+import CardBack from '@/components/ui/CardBack'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
@@ -431,6 +433,19 @@ function StockPageBody() {
                   exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
+                  <FlipCard
+                    back={<CardBack
+                      emoji="📊" title="Overall Grade & Fair Value"
+                      intro="This card summarizes whether the stock looks cheap or expensive right now, based on the model's calculations."
+                      sections={[
+                        { title: 'The Grade (A → F)', body: 'A or B means the model thinks the stock is undervalued — you might be getting a bargain. C means fairly priced. D or F means it looks overpriced — you may be paying more than it\'s worth.' },
+                        { title: 'Fair Value', body: 'The model\'s estimate of what one share is truly worth, based on the company\'s expected future cash flows. Think of it as the "right price" according to the numbers.' },
+                        { title: 'Upside %', body: 'How much the stock could grow if the market eventually agrees with the model. +20% means the model thinks the stock is 20% cheaper than it should be.' },
+                        { title: 'Confidence', body: 'How reliable the estimate is. High confidence = strong analyst data + solid financials. Low confidence = limited data, so take the estimate with more caution.' },
+                      ]}
+                      warning="This is a model estimate, not a prediction. Models can be wrong. Always do your own research before investing."
+                    />}
+                  >
                   <InvestorVerdictCard
                     upside={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null}
                     fairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? null}
@@ -442,8 +457,22 @@ function StockPageBody() {
                     growthModel={data.growthModel}
                     scores={computedScores ?? data.scores}
                   />
+                  </FlipCard>
 
                   {/* Reverse DCF — signature card */}
+                  <FlipCard
+                    back={<CardBack
+                      emoji="🔄" title="Reverse DCF"
+                      intro="Instead of asking 'what is this stock worth?', Reverse DCF flips the question: 'What growth rate would the company need to justify today's price?'"
+                      sections={[
+                        { title: 'How to read it', body: 'The number shown is the implied annual growth rate baked into the current price. If the stock trades at $200, the market is essentially betting the company will grow revenue at X% per year for the next 5–10 years.' },
+                        { title: 'Low implied growth', body: 'If the number is low (e.g. 5%), the market isn\'t expecting much — so even modest growth could make the stock a good deal.' },
+                        { title: 'High implied growth', body: 'If the number is high (e.g. 30%+), the market is already pricing in a best-case scenario. Any disappointment could cause the price to drop sharply.' },
+                        { title: 'The gut-check', body: 'Ask yourself: "Do I genuinely believe this company can grow that fast?" If yes, the price makes sense. If you\'re unsure, you might be overpaying.' },
+                      ]}
+                      warning="High implied growth isn't automatically bad — some companies (like fast-growing tech) do sustain it. Context matters."
+                    />}
+                  >
                   <ReverseDcfCallout
                     price={data.quote.price}
                     sharesM={data.fairValue?.sharesOutstanding ?? null}
@@ -456,6 +485,7 @@ function StockPageBody() {
                     historicalCAGR={data.cagrAnalysis?.historicalCagr3y ?? null}
                     isEmergingMarket={computedScores?.altman?.isReliable === false}
                   />
+                  </FlipCard>
 
                   <PriceChart
                     ticker={ticker}
@@ -497,6 +527,19 @@ function StockPageBody() {
                             cashFlow={data.financialStatements?.cashFlow}
                             statementsData={statementsData}
                           />
+                          <FlipCard
+                            back={<CardBack
+                              emoji="📋" title="Key Numbers at a Glance"
+                              intro="These are the main numbers investors look at to quickly judge if a stock is cheap, expensive, or fairly priced."
+                              sections={[
+                                { title: 'P/E Ratio (Price-to-Earnings)', body: 'How much you pay for every $1 of profit. A P/E of 20 means you pay $20 for $1 of annual earnings. Lower can mean cheaper — but a very low P/E can also signal problems.' },
+                                { title: 'EV/EBITDA', body: 'A cleaner version of P/E that accounts for debt. It compares the company\'s total value (including debt) to its operating profit. Under 10× is often considered reasonable.' },
+                                { title: 'P/S (Price-to-Sales)', body: 'Compares the price to revenue rather than profit. Useful for companies that aren\'t yet profitable. Lower is generally cheaper.' },
+                                { title: '52-Week Range', body: 'The highest and lowest price the stock traded at over the past year. If today\'s price is near the low, you might be buying at a discount. Near the high might mean it\'s already had a big run.' },
+                                { title: 'Market Cap', body: 'The total market value of the company (price × number of shares). Small companies (<$2B) tend to be riskier but with more growth potential. Large companies (>$10B) tend to be more stable.' },
+                              ]}
+                            />}
+                          >
                           <AtAGlance
                             price={data.quote.price}
                             marketCap={data.quote.marketCap}
@@ -507,6 +550,7 @@ function StockPageBody() {
                             currency={currency}
                             statementsData={statementsData}
                           />
+                          </FlipCard>
                         </div>
                       )}
                     </div>
@@ -545,14 +589,41 @@ function StockPageBody() {
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
                   {data.scenarios && (
+                    <FlipCard
+                      back={<CardBack
+                        emoji="🐂🐻" title="Bull / Base / Bear Scenarios"
+                        intro="Three versions of the future. Because nobody knows exactly what will happen, the model looks at three possible outcomes."
+                        sections={[
+                          { title: 'Bear (pessimistic)', body: 'What if things go worse than expected? Slower growth, higher costs, tougher competition. This gives you the low end of what the stock might be worth.' },
+                          { title: 'Base (most likely)', body: 'The central estimate — the outcome the model considers most probable based on current data. This is the main fair value number used throughout the analysis.' },
+                          { title: 'Bull (optimistic)', body: 'What if everything goes well? Strong growth, expanding margins, good conditions. This gives you the high end of what the stock could be worth.' },
+                          { title: 'WACC & CAGR', body: 'These are the two main levers. WACC = the "cost" of investing (risk). CAGR = how fast revenue grows. Bull scenarios use lower WACC and higher CAGR; bear scenarios flip that.' },
+                        ]}
+                        warning="The range between bear and bull shows how uncertain the estimate is. A wide range = more uncertainty."
+                      />}
+                    >
                     <ScenarioComparisonCard
                       scenarios={data.scenarios}
                       currentPrice={data.quote.price}
                       currency={data.quote.currency ?? 'USD'}
                     />
+                    </FlipCard>
                   )}
                   <ValuationLab apiData={data} ticker={ticker} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} onWeightedFVChange={setUserModelFairValue} onActiveMethodChange={setActiveValuationMethod} />
                   {data.fairValue?.fairValuePerShare != null && (
+                    <FlipCard
+                      back={<CardBack
+                        emoji="📐" title="Why Is the Price Different from Fair Value?"
+                        intro="This card breaks down the gap between what the stock trades at today and what the model thinks it's worth."
+                        sections={[
+                          { title: 'WACC (discount rate)', body: 'This is how much return investors demand for the risk they\'re taking. Higher WACC = lower fair value, because future earnings are worth less when discounted more aggressively.' },
+                          { title: 'CAGR (growth rate)', body: 'How fast the company\'s revenue is expected to grow per year. Faster growth = higher fair value. This is usually the biggest driver of the estimate.' },
+                          { title: 'Terminal value', body: 'What the business is assumed to be worth far in the future (typically 60–80% of the total fair value). A small change in the long-term growth rate can move the estimate significantly.' },
+                          { title: 'The gap', body: 'If the stock is below fair value: the market may be underestimating the company\'s potential. If it\'s above: the market is already pricing in a lot of optimism — or the model is too conservative.' },
+                        ]}
+                        warning="Two analysts can get very different fair values for the same stock just by using different WACC or growth assumptions. The model is a tool, not a verdict."
+                      />}
+                    >
                     <MispricingExplainer
                       ticker={ticker}
                       fairValue={data.fairValue.fairValuePerShare}
@@ -562,6 +633,7 @@ function StockPageBody() {
                       cagr={data.cagr ?? null}
                       sector={data.quote.sector ?? ''}
                     />
+                    </FlipCard>
                   )}
                   {/* End-of-page CTA */}
                   <div className="rounded-xl glass-card-light px-5 py-5">
