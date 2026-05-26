@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
@@ -248,10 +248,9 @@ function StockPageBody() {
     }
   }, [statementsData, data])
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
     setLoading(true)
     setError('')
-    setActiveTab('overview')
     Promise.all([
       fetch(`/api/financials?ticker=${ticker}`).then(r => r.json()),
       fetch(`/api/statements?ticker=${ticker}`).then(r => r.json()).catch(() => null),
@@ -264,6 +263,12 @@ function StockPageBody() {
         track('stock_viewed', { ticker, sector: finJson.quote?.sector ?? '' })
       })
       .catch((e) => { setError(String(e)); setLoading(false) })
+  }, [ticker])
+
+  useEffect(() => {
+    setActiveTab('overview')
+    loadData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticker])
 
   // Keep saving state for potential future use — suppress unused warning
@@ -339,9 +344,17 @@ function StockPageBody() {
                 </p>
               </div>
             ) : (
-              <p className="text-sm text-red-700">
-                <strong>Error:</strong> {error}. Yahoo Finance may be temporarily unavailable — try again in a moment.
-              </p>
+              <div className="flex flex-col gap-3">
+                <p className="text-sm text-red-700">
+                  <strong>Error:</strong> {error}. Yahoo Finance may be temporarily unavailable.
+                </p>
+                <button
+                  onClick={loadData}
+                  className="self-start text-sm font-medium px-4 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors"
+                >
+                  Try again
+                </button>
+              </div>
             )}
           </div>
         )}
