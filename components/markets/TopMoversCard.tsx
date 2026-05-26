@@ -17,10 +17,10 @@ function MoverRow({ mover, rank }: { mover: Mover; rank: number }) {
       className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-indigo-50/40 transition-colors group"
     >
       <span className="text-[10px] font-bold text-slate-300 w-3 shrink-0">{rank}</span>
-      <span className="text-[11px] font-bold font-mono text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded w-12 text-center shrink-0">
+      <span className="text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded w-12 text-center shrink-0">
         {mover.symbol}
       </span>
-      <span className="flex-1 text-[12px] font-medium text-slate-600 truncate group-hover:text-slate-900">
+      <span className="flex-1 text-[11px] font-medium text-slate-600 truncate group-hover:text-slate-900">
         {mover.name}
       </span>
       <div className="flex items-center gap-1 shrink-0">
@@ -29,7 +29,7 @@ function MoverRow({ mover, rank }: { mover: Mover; rank: number }) {
           : <TrendingDown size={11} className="text-red-500" />
         }
         <span className={cn(
-          'text-[12px] font-bold font-mono tabular-nums',
+          'text-[11px] font-semibold tabular-nums',
           up ? 'text-emerald-600' : 'text-red-500'
         )}>
           {pct(mover.changePct)}
@@ -59,8 +59,8 @@ export default function TopMoversCard() {
   return (
     <div className="glass-card-light rounded-2xl overflow-hidden h-full flex flex-col">
       <div className="px-4 py-2.5 border-b border-white/60 flex items-center justify-between">
-        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Top Movers</span>
-        <div className="flex rounded-lg overflow-hidden border border-slate-200 text-[10.5px] font-bold">
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Top Movers</span>
+        <div className="flex rounded-lg overflow-hidden border border-slate-200 text-[10px] font-bold">
           {(['gainers', 'losers'] as Tab[]).map(t => (
             <button
               key={t}

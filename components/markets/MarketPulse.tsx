@@ -89,7 +89,7 @@ export default function MarketPulse({ pulse }: Props) {
   return (
     <div className="rounded-2xl glass-card-light overflow-hidden h-full">
       <div className="px-4 py-2.5 border-b border-white/60 flex items-center justify-between">
-        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Market Pulse</span>
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Market Pulse</span>
         <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full border', sentimentColor(sentimentLabel))}>
           {sentimentLabel}
         </span>
@@ -100,14 +100,14 @@ export default function MarketPulse({ pulse }: Props) {
         <div className="grid grid-cols-1 gap-3">
           <div className="text-center">
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">S&P 500</p>
-            <p className={cn('text-2xl font-extrabold font-mono tabular-nums', spxUp ? 'text-emerald-600' : 'text-red-600')}>
+            <p className={cn('text-[18px] font-bold tabular-nums', spxUp ? 'text-emerald-600' : 'text-red-600')}>
               {spxUp ? '+' : ''}{spxChange1d.toFixed(2)}%
             </p>
             <p className="text-[10px] text-slate-400 mt-0.5">Today</p>
           </div>
           <div className="text-center">
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">VIX</p>
-            <p className={cn('text-2xl font-extrabold font-mono tabular-nums', vixColor(vix))}>
+            <p className={cn('text-[18px] font-bold tabular-nums', vixColor(vix))}>
               {vix.toFixed(1)}
             </p>
             <p className="text-[10px] text-slate-400 mt-0.5">Volatility</p>
@@ -123,7 +123,7 @@ export default function MarketPulse({ pulse }: Props) {
         <div className="grid grid-cols-1 gap-3">
           <div className="text-center">
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">10Y Treasury</p>
-            <p className="text-2xl font-extrabold font-mono tabular-nums text-slate-900">
+            <p className="text-[18px] font-bold tabular-nums text-slate-900">
               {tnxYield.toFixed(2)}%
             </p>
             <p className="text-[10px] text-slate-400 mt-0.5">Yield</p>
@@ -138,7 +138,7 @@ export default function MarketPulse({ pulse }: Props) {
 
       {/* Interpretation text */}
       <div className="mt-4 px-3 py-2.5 rounded-xl bg-slate-50/80 border border-slate-100">
-        <p className="text-[11.5px] text-slate-600 leading-snug">{interpretation}</p>
+        <p className="text-[11px] text-slate-600 leading-snug">{interpretation}</p>
       </div>
       </div>
     </div>

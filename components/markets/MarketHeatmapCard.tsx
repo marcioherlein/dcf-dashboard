@@ -62,7 +62,7 @@ export default function MarketHeatmapCard({ sectors }: Props) {
     <div className="glass-card-light rounded-2xl overflow-hidden h-full">
       <div className="px-4 py-2.5 border-b border-white/60 flex items-center justify-between">
         <div>
-          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Market Heatmap</span>
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Market Heatmap</span>
           <p className="text-[10px] text-slate-400 mt-0.5">S&P 500 sectors · daily performance</p>
         </div>
         <div className="flex items-center gap-2 text-[9px] font-semibold">
@@ -80,8 +80,8 @@ export default function MarketHeatmapCard({ sectors }: Props) {
             const isLarge  = s.symbol === 'XLK'
             const colSpan  = isLarge ? 'col-span-2' : 'col-span-1'
             const minH     = isLarge ? 'min-h-[80px]' : 'min-h-[62px]'
-            const textSize = isLarge ? 'text-[12px]' : 'text-[10px]'
-            const numSize  = isLarge ? 'text-[14px]' : 'text-[12px]'
+            const textSize = isLarge ? 'text-[11px]' : 'text-[10px]'
+            const numSize  = isLarge ? 'text-[13px]' : 'text-[11px]'
             return (
               <div
                 key={s.symbol}

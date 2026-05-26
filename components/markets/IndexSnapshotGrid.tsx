@@ -133,30 +133,26 @@ interface CardProps {
   sparklineValues: number[]
   sparkLoading: boolean
   interpretation: React.ReactNode
-  accent: string         // left-border accent color
-  rateMode?: boolean     // inverts change color logic (for rate instruments)
+  rateMode?: boolean
   href?: string
   note?: string
 }
 
-function IndexCard({ label, value, changePct, sparklineValues, sparkLoading, interpretation, accent, rateMode, href, note }: CardProps) {
+function IndexCard({ label, value, changePct, sparklineValues, sparkLoading, interpretation, rateMode, href, note }: CardProps) {
   const positive = rateMode
-    ? (changePct ?? 0) < 0    // rate falling = "positive" for valuations
+    ? (changePct ?? 0) < 0
     : (changePct ?? 0) >= 0
   const changeCls = rateMode ? rateCls(changePct) : equityCls(changePct)
 
   const inner = (
-    <div
-      className="glass-card-light rounded-2xl px-4 pt-4 pb-3 flex flex-col gap-1 h-full transition-all hover:shadow-md cursor-pointer"
-      style={{ borderLeft: `3px solid ${accent}` }}
-    >
+    <div className="glass-card-light rounded-2xl px-4 pt-4 pb-3 flex flex-col gap-1 h-full transition-all hover:shadow-md cursor-pointer">
       <div className="flex items-start justify-between gap-1">
-        <p className="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider leading-tight">{label}</p>
+        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-tight">{label}</p>
         {interpretation}
       </div>
-      <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none mt-1">{value}</p>
+      <p className="text-[18px] font-bold tabular-nums text-slate-900 leading-none mt-1">{value}</p>
       <div className="flex items-center justify-between mt-0.5">
-        <span className={cn('text-[12px] font-semibold tabular-nums', changeCls)}>
+        <span className={cn('text-[11px] font-semibold tabular-nums', changeCls)}>
           {pct(changePct)}
         </span>
         {note && <span className="text-[10px] text-slate-400">{note}</span>}
@@ -214,7 +210,6 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy }: Prop
       sparklineValues: sparklines?.['^GSPC'] ?? [],
       sparkLoading,
       interpretation: spxChip(spx?.changePct ?? null),
-      accent: '#2563EB',
       href: spx ? `/markets/${encodeURIComponent(spx.symbol)}` : undefined,
     },
     {
@@ -224,7 +219,6 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy }: Prop
       sparklineValues: sparklines?.['^NDX'] ?? [],
       sparkLoading,
       interpretation: spxChip(ndx?.changePct ?? null),
-      accent: '#2563EB',
       href: ndx ? `/markets/${encodeURIComponent(ndx.symbol)}` : undefined,
     },
     {
@@ -234,7 +228,6 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy }: Prop
       sparklineValues: sparklines?.['^DJI'] ?? [],
       sparkLoading,
       interpretation: spxChip(dji?.changePct ?? null),
-      accent: '#2563EB',
       href: dji ? `/markets/${encodeURIComponent(dji.symbol)}` : undefined,
     },
     {
@@ -244,7 +237,6 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy }: Prop
       sparklineValues: sparklines?.['^VIX'] ?? [],
       sparkLoading,
       interpretation: vixChip(vix?.price ?? null),
-      accent: '#7C3AED',
       note: 'Volatility',
     },
     {
@@ -254,7 +246,6 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy }: Prop
       sparklineValues: sparklines?.['^TNX'] ?? [],
       sparkLoading,
       interpretation: tnxChip(tnx?.price ?? null),
-      accent: '#D97706',
       rateMode: true,
       note: 'Discount rate',
     },
@@ -265,7 +256,6 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy }: Prop
       sparklineValues: sparklines?.['DX-Y.NYB'] ?? [],
       sparkLoading,
       interpretation: dxyChip(dxy?.changePct ?? null),
-      accent: '#64748B',
     },
   ]
 

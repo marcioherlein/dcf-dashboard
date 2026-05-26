@@ -41,7 +41,7 @@ export default function MarketBreadthCard({ sectors }: Props) {
   return (
     <div className="glass-card-light rounded-2xl overflow-hidden h-full">
       <div className="px-4 py-2.5 border-b border-white/60">
-        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Market Breadth</span>
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Market Breadth</span>
         <p className="text-[10px] text-slate-400 mt-0.5">Based on S&P 500 sector ETF performance today</p>
       </div>
 
@@ -50,19 +50,19 @@ export default function MarketBreadthCard({ sectors }: Props) {
         {/* Big stats */}
         <div className="grid grid-cols-3 gap-3 text-center">
           <div>
-            <p className="text-3xl font-bold tabular-nums text-emerald-600">{advPct}%</p>
+            <p className="text-[22px] font-bold tabular-nums text-emerald-600">{advPct}%</p>
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Advancing</p>
-            <p className="text-[11px] text-slate-500 mt-0.5">{advancing} of {total}</p>
+            <p className="text-[10px] text-slate-500 mt-0.5">{advancing} of {total}</p>
           </div>
           <div>
-            <p className="text-3xl font-bold tabular-nums text-red-500">{decPct}%</p>
+            <p className="text-[22px] font-bold tabular-nums text-red-500">{decPct}%</p>
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Declining</p>
-            <p className="text-[11px] text-slate-500 mt-0.5">{declining} of {total}</p>
+            <p className="text-[10px] text-slate-500 mt-0.5">{declining} of {total}</p>
           </div>
           <div>
-            <p className="text-3xl font-bold tabular-nums text-slate-400">{unchPct}%</p>
+            <p className="text-[22px] font-bold tabular-nums text-slate-400">{unchPct}%</p>
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Unchanged</p>
-            <p className="text-[11px] text-slate-500 mt-0.5">{unchanged} of {total}</p>
+            <p className="text-[10px] text-slate-500 mt-0.5">{unchanged} of {total}</p>
           </div>
         </div>
 
@@ -75,7 +75,7 @@ export default function MarketBreadthCard({ sectors }: Props) {
 
         {/* Interpretation */}
         <div className={cn('rounded-xl border p-3', interpretBg)}>
-          <p className={cn('text-[11.5px] leading-snug', interpretText)}>{text}</p>
+          <p className={cn('text-[11px] leading-snug', interpretText)}>{text}</p>
           <p className="text-[10px] text-slate-400 mt-1.5">
             Healthy breadth = gains are distributed across sectors, not concentrated in a few mega-caps.
           </p>

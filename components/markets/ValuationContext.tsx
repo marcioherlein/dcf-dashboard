@@ -41,7 +41,7 @@ export default function ValuationContext({ valuation }: Props) {
   return (
     <div className="rounded-xl glass-card-light overflow-hidden">
       <div className="px-4 py-2.5 border-b border-slate-200">
-        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Valuation Context</span>
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Valuation Context</span>
       </div>
       <div className="px-5 py-4 space-y-4">
 
@@ -49,7 +49,7 @@ export default function ValuationContext({ valuation }: Props) {
       <div>
         <div className="flex items-baseline justify-between mb-2">
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">SPY Forward P/E</p>
-          <p className="text-base font-bold font-mono text-slate-900">
+          <p className="text-[14px] font-bold text-slate-900">
             {spyForwardPE != null ? `${spyForwardPE.toFixed(1)}×` : '—'}
           </p>
         </div>
@@ -67,7 +67,7 @@ export default function ValuationContext({ valuation }: Props) {
         <div className="flex items-baseline justify-between mb-2">
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Equity Risk Premium</p>
           <div className="text-right">
-            <span className={cn('text-base font-bold font-mono', erpColor(erp))}>
+            <span className={cn('text-[14px] font-bold tabular-nums', erpColor(erp))}>
               {erp != null ? `${(erp * 100).toFixed(2)}%` : '—'}
             </span>
             {erp != null && (

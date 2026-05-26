@@ -31,14 +31,14 @@ export default function MacroSignals({ signals }: Props) {
   return (
     <div className="rounded-xl glass-card-light overflow-hidden">
       <div className="px-4 py-2.5 border-b border-slate-200">
-        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Macro Signals</span>
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Macro Signals</span>
       </div>
       <div className="px-5 py-4">
       <div className="grid grid-cols-2 gap-2.5">
         {signals.map(sig => (
           <div key={sig.id} className={cn('rounded-xl px-3 py-2.5', toneTileClass(sig.tone))}>
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{sig.label}</p>
-            <p className={cn('text-lg font-bold font-mono tabular-nums mt-0.5', toneValueClass(sig.tone))}>
+            <p className={cn('text-[15px] font-bold tabular-nums mt-0.5', toneValueClass(sig.tone))}>
               {sig.value}
             </p>
             {sig.sub && <p className="text-[9px] text-slate-400 -mt-0.5">{sig.sub}</p>}

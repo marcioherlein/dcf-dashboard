@@ -59,8 +59,8 @@ function getMarketStatus(): { label: string; cls: string } {
 function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="mb-3">
-      <h2 className="text-[15px] font-bold text-slate-800">{title}</h2>
-      {subtitle && <p className="text-[12px] text-slate-400 mt-0.5">{subtitle}</p>}
+      <h2 className="text-[13px] font-bold text-slate-800">{title}</h2>
+      {subtitle && <p className="text-[11px] text-slate-400 mt-0.5">{subtitle}</p>}
     </div>
   )
 }
@@ -140,23 +140,69 @@ export default function MarketsPage() {
   return (
     <div className="min-h-screen lqg-bg pt-[52px]">
 
-      {/* ── Ticker Strip ─────────────────────────────────────────────────────── */}
-      <div className="glass-toolbar border-b border-white/60 sticky top-[52px] z-20">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-10 flex items-center gap-5 overflow-x-auto scrollbar-hide">
+      {/* ── Content ──────────────────────────────────────────────────────────── */}
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-5 space-y-5">
+
+        {/* Error */}
+        {err && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-600 flex items-center justify-between">
+            <span>Market data could not be loaded. Check API keys and try again.</span>
+            <button
+              onClick={() => fetchAll(true)}
+              className="text-red-700 font-semibold text-[11px] hover:underline ml-4"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
+        {/* ── Page Header ─────────────────────────────────────────────────── */}
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-[20px] font-bold text-slate-900 leading-tight">Markets Overview</h1>
+            <p className="text-[12px] text-slate-400 mt-0.5">
+              Market context for valuation decisions · Understand the environment behind your stock analyses.
+            </p>
+          </div>
+          <div className="flex items-center gap-2.5 pt-0.5 shrink-0">
+            <span className="text-[10px] text-slate-400 hidden md:block">
+              {etDate}, {etTime} ET
+            </span>
+            {lastFetch > 0 && (
+              <span className="text-[10px] text-slate-400 font-mono hidden lg:block">
+                · Updated {timeAgo(lastFetch)}
+              </span>
+            )}
+            <button
+              onClick={() => fetchAll(true)}
+              disabled={refreshing}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-white/60 transition-colors disabled:opacity-50"
+              title="Refresh"
+            >
+              <RefreshCw size={11} className={refreshing ? 'animate-spin' : ''} />
+            </button>
+            <button className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors">
+              <Settings2 size={11} />
+              Customize
+            </button>
+          </div>
+        </div>
+
+        {/* ── Inline market strip ──────────────────────────────────────────── */}
+        <div className="flex items-center gap-5 overflow-x-auto scrollbar-hide rounded-xl border border-slate-100/80 bg-white/50 backdrop-blur-sm px-4 py-2.5">
           <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full ${status.cls}`}>
             {status.label}
           </span>
-
+          <div className="w-px h-3.5 bg-slate-200 shrink-0" />
           {STRIP.map(({ label, sym, suffix, rateMode }) => {
             const price = sym?.price ?? null
-            // rates: rising = amber warning, falling = blue (good for DCF valuations)
             const changeCls = rateMode
               ? (sym?.changePct == null ? 'text-slate-400' : sym.changePct > 0 ? 'text-amber-600' : sym.changePct < 0 ? 'text-blue-600' : 'text-slate-400')
               : pctCls(sym?.changePct ?? null)
             const inner = (
               <div className="flex items-center gap-1.5 shrink-0">
-                <span className="text-[11px] text-slate-500 font-medium">{label}</span>
-                <span className="text-[12px] font-semibold text-slate-800 tabular-nums">
+                <span className="text-[10px] text-slate-500 font-medium">{label}</span>
+                <span className="text-[11px] font-semibold text-slate-800 tabular-nums">
                   {price != null
                     ? price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                     : '—'
@@ -164,7 +210,7 @@ export default function MarketsPage() {
                   {suffix ?? ''}
                 </span>
                 {sym?.changePct != null && (
-                  <span className={`text-[11px] font-semibold tabular-nums ${changeCls}`}>
+                  <span className={`text-[10px] font-medium tabular-nums ${changeCls}`}>
                     {pct(sym.changePct)}
                   </span>
                 )}
@@ -182,58 +228,6 @@ export default function MarketsPage() {
               <div key={label}>{inner}</div>
             )
           })}
-
-          <div className="ml-auto flex items-center gap-2.5 shrink-0">
-            {lastFetch > 0 && (
-              <span className="text-[10px] text-slate-400 font-mono hidden md:block">
-                Updated {timeAgo(lastFetch)}
-              </span>
-            )}
-            <button
-              onClick={() => fetchAll(true)}
-              disabled={refreshing}
-              className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-50"
-              title="Refresh"
-            >
-              <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Content ──────────────────────────────────────────────────────────── */}
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-5 space-y-6">
-
-        {/* Error */}
-        {err && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 flex items-center justify-between">
-            <span>Market data could not be loaded. Check API keys and try again.</span>
-            <button
-              onClick={() => fetchAll(true)}
-              className="text-red-700 font-semibold text-xs hover:underline ml-4"
-            >
-              Try again
-            </button>
-          </div>
-        )}
-
-        {/* ── Page Header ─────────────────────────────────────────────────── */}
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-[26px] font-bold text-slate-900 leading-tight">Markets Overview</h1>
-            <p className="text-[13px] text-slate-400 mt-1">
-              Market context for valuation decisions · Understand the environment behind your stock analyses.
-            </p>
-          </div>
-          <div className="flex items-center gap-3 pt-1 shrink-0">
-            <span className="text-[11px] text-slate-400 hidden md:block">
-              Data as of {etDate}, {etTime} ET
-            </span>
-            <button className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors">
-              <Settings2 size={12} />
-              Customize
-            </button>
-          </div>
         </div>
 
         {/* ── Row 1: Index Snapshot Cards ─────────────────────────────────── */}

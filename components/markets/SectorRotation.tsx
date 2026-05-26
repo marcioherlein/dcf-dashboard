@@ -31,7 +31,7 @@ export default function SectorRotation({ sectors }: Props) {
   return (
     <div className="rounded-xl glass-card-light overflow-hidden">
       <div className="px-4 py-2.5 border-b border-slate-200">
-        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Sector Rotation</span>
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Sector Rotation</span>
         <p className="text-[10px] text-slate-400 mt-0.5">RS momentum vs S&P 500 — last 40 trading days</p>
       </div>
       <div className="px-5 py-4">
