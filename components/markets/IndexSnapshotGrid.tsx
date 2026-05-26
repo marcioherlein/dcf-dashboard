@@ -21,16 +21,31 @@ function Sparkline({ values, positive }: { values: number[]; positive: boolean }
   const range = max - min || 0.001
   const W = 80
   const H = 32
-  const pts = values
-    .map((v, i) => `${(i / (values.length - 1)) * W},${H - ((v - min) / range) * (H - 6) - 3}`)
-    .join(' ')
-  const color = positive ? '#16a34a' : '#dc2626'
-  const lastX = W
-  const lastY = H - ((values[values.length - 1] - min) / range) * (H - 6) - 3
+  const coords = values.map((v, i) => ({
+    x: (i / (values.length - 1)) * W,
+    y: H - ((v - min) / range) * (H - 6) - 3,
+  }))
+  const pts = coords.map(p => `${p.x},${p.y}`).join(' ')
+  const fillPath = [
+    `M ${coords[0].x},${H}`,
+    ...coords.map(p => `L ${p.x},${p.y}`),
+    `L ${coords[coords.length - 1].x},${H}`,
+    'Z',
+  ].join(' ')
+  const color    = positive ? '#16a34a' : '#dc2626'
+  const fillId   = `sf-${positive ? 'g' : 'r'}`
+  const last     = coords[coords.length - 1]
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="overflow-visible">
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="overflow-visible w-full">
+      <defs>
+        <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor={color} stopOpacity="0.18" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={fillPath} fill={`url(#${fillId})`} />
       <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={lastX} cy={lastY} r="2.5" fill={color} />
+      <circle cx={last.x} cy={last.y} r="2.5" fill={color} />
     </svg>
   )
 }
@@ -116,9 +131,9 @@ function IndexCard({ label, value, changePct, sparklineValues, interpretation, h
         <p className="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider leading-tight">{label}</p>
         {interpretation}
       </div>
-      <p className="text-2xl font-bold font-mono tabular-nums text-slate-900 leading-none mt-1">{value}</p>
+      <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none mt-1">{value}</p>
       <div className="flex items-center justify-between mt-1">
-        <span className={cn('text-[12px] font-mono font-bold tabular-nums', pctCls(changePct))}>
+        <span className={cn('text-[12px] font-semibold tabular-nums', pctCls(changePct))}>
           {pct(changePct)}
         </span>
         {note && <span className="text-[10px] text-slate-400">{note}</span>}
@@ -143,8 +158,9 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy }: Prop
       const symbols = ['^GSPC', '^NDX', '^DJI', '^VIX', '^TNX', 'DX-Y.NYB'].join(',')
       const res = await fetch(`/api/markets/chart?symbols=${encodeURIComponent(symbols)}&period=5D`)
       if (!res.ok) return
-      const data: ChartPoint[] = await res.json()
-      if (!Array.isArray(data)) return
+      const json = await res.json()
+      const data: ChartPoint[] = json.points ?? []
+      if (!Array.isArray(data) || data.length === 0) return
       const result: Record<string, number[]> = {}
       const syms = ['^GSPC', '^NDX', '^DJI', '^VIX', '^TNX', 'DX-Y.NYB']
       for (const sym of syms) {
@@ -193,10 +209,10 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy }: Prop
     },
     {
       label: '10Y Treasury',
-      value: tnx?.price != null ? fmtPrice(tnx.price / 10, 2) + '%' : '—',
+      value: tnx?.price != null ? fmtPrice(tnx.price, 2) + '%' : '—',
       changePct: tnx?.changePct ?? null,
       sparklineValues: sparklines['^TNX'] ?? [],
-      interpretation: tnxChip(tnx?.price != null ? tnx.price / 10 : null),
+      interpretation: tnxChip(tnx?.price ?? null),
       note: 'Discount rate',
     },
     {

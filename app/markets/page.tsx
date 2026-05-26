@@ -119,7 +119,7 @@ export default function MarketsPage() {
     { label: 'Nasdaq 100', sym: ndx  },
     { label: 'Dow Jones',  sym: dji  },
     { label: 'VIX',        sym: vix  },
-    { label: '10Y Yield',  sym: tnx, scalePrice: 0.1 },
+    { label: '10Y Yield',  sym: tnx, suffix: '%' },
     { label: 'USD Index',  sym: dxy  },
   ]
 
@@ -147,22 +147,20 @@ export default function MarketsPage() {
             {status.label}
           </span>
 
-          {STRIP.map(({ label, sym, scalePrice }) => {
-            const price = sym?.price != null
-              ? (scalePrice ? sym.price * scalePrice : sym.price)
-              : null
+          {STRIP.map(({ label, sym, suffix }) => {
+            const price = sym?.price ?? null
             const inner = (
               <div className="flex items-center gap-1.5 shrink-0">
                 <span className="text-[11px] text-slate-500 font-medium">{label}</span>
-                <span className="text-[12px] font-mono font-bold text-slate-800 tabular-nums">
+                <span className="text-[12px] font-semibold text-slate-800 tabular-nums">
                   {price != null
                     ? price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                     : '—'
                   }
-                  {scalePrice ? '%' : ''}
+                  {suffix ?? ''}
                 </span>
                 {sym?.changePct != null && (
-                  <span className={`text-[11px] font-mono font-bold tabular-nums ${pctCls(sym.changePct)}`}>
+                  <span className={`text-[11px] font-semibold tabular-nums ${pctCls(sym.changePct)}`}>
                     {pct(sym.changePct)}
                   </span>
                 )}
