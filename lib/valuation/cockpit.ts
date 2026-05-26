@@ -144,9 +144,11 @@ function computeBlendedFV(
       })
       if (dcf.ev != null) {
         const equity = dcf.ev + snapshot.cashM - snapshot.debtM
-        const candidate = Math.round((equity / snapshot.sharesM) * 100) / 100
-        if (candidate > 0 && (currentPrice <= 0 || candidate <= currentPrice * 8)) {
-          dcfFV = candidate
+        const raw = Math.round((equity / snapshot.sharesM) * 100) / 100
+        if (raw > 0) {
+          // Cap at 10× price to prevent terminal-value explosion from dominating the blend,
+          // but always include so scenarios (Bull/Bear) stay monotonic vs Base.
+          dcfFV = currentPrice > 0 ? Math.min(raw, currentPrice * 10) : raw
         }
       }
     }
@@ -394,7 +396,7 @@ export function computeCockpitOutput(
 
   // 4. Core DCF (UFCF + PGM)
   // Fix 1: require 200bps minimum spread between WACC and terminal growth
-  // Fix 3: discard DCF output > 8× current price (terminal value explosion guard)
+  // Cap at 10× price to prevent terminal-value explosion from excluding DCF in Bull scenarios
   let dcfFV: number | null = null
   let dcfErrors: string[] = []
   if (snapshot.baseFCF > 0 && snapshot.sharesM > 0) {
@@ -409,13 +411,13 @@ export function computeCockpitOutput(
       })
       if (dcf.ev != null) {
         const equity = dcf.ev + snapshot.cashM - snapshot.debtM
-        const candidate = Math.round((equity / snapshot.sharesM) * 100) / 100
-        if (candidate <= 0) {
+        const raw = Math.round((equity / snapshot.sharesM) * 100) / 100
+        if (raw <= 0) {
           dcfErrors = ['Implied equity value non-positive']
-        } else if (currentPrice > 0 && candidate > currentPrice * 8) {
-          dcfErrors = ['Terminal value explosion — result capped for reliability']
         } else {
-          dcfFV = candidate
+          const cap = currentPrice > 0 ? currentPrice * 10 : Infinity
+          if (raw > cap) dcfErrors = ['Terminal value capped at 10× market price']
+          dcfFV = Math.min(raw, cap)
         }
       } else {
         dcfErrors = ['Terminal growth violation']

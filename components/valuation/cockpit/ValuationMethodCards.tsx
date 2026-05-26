@@ -23,6 +23,10 @@ const KEY_DRIVERS: Record<string, string> = {
 }
 
 export default function ValuationMethodCards({ methods, currentPrice: _currentPrice, currency }: Props) {
+  const validTotal = methods
+    .filter(m => m.fairValue != null && m.fairValue > 0)
+    .reduce((s, m) => s + m.weight, 0)
+
   return (
     <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-4">
       <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Valuation Models</p>
@@ -31,6 +35,11 @@ export default function ValuationMethodCards({ methods, currentPrice: _currentPr
           const conf = CONFIDENCE_STYLE[m.confidence]
           const upColor = m.upsidePct != null ? (m.upsidePct >= 0 ? 'text-emerald-600' : 'text-red-600') : 'text-slate-400'
           const keyDriver = KEY_DRIVERS[m.id]
+          const hasValue = m.fairValue != null && m.fairValue > 0
+          const effectiveWeight = hasValue && validTotal > 0 ? m.weight / validTotal : 0
+          const nominalPct = Math.round(m.weight * 100)
+          const effectivePct = Math.round(effectiveWeight * 100)
+          const weightChanged = hasValue && Math.abs(effectivePct - nominalPct) >= 2
           return (
             <div key={m.id} className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 flex flex-col gap-2">
               {/* Header row: method name + confidence badge */}
@@ -65,10 +74,22 @@ export default function ValuationMethodCards({ methods, currentPrice: _currentPr
                 </p>
               )}
 
-              {/* Blend weight */}
-              <p className="text-[10px] text-slate-400 mt-auto pt-1 border-t border-slate-200">
-                {Math.round(m.weight * 100)}% blend weight
-              </p>
+              {/* Blend weight — show effective weight when redistributed */}
+              <div className="text-[10px] text-slate-400 mt-auto pt-1 border-t border-slate-200">
+                {hasValue ? (
+                  weightChanged ? (
+                    <span>
+                      <span className="font-semibold text-blue-600">{effectivePct}%</span>
+                      {' '}effective weight
+                      <span className="text-slate-300 ml-1">(nominal {nominalPct}%)</span>
+                    </span>
+                  ) : (
+                    <span>{nominalPct}% blend weight</span>
+                  )
+                ) : (
+                  <span className="text-slate-300">excluded from blend</span>
+                )}
+              </div>
             </div>
           )
         })}
