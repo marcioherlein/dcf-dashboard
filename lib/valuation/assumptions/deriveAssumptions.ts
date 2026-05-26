@@ -109,18 +109,51 @@ function deriveNetMargin(
   }
 }
 
+// ─── Exit multiple blending ───────────────────────────────────────────────────
+// Blends current trading multiple (55%) with geo-discounted sector median (35%).
+// Prevents Damodaran sector values from dominating when the company trades at a
+// very different multiple (e.g. PAGS at 6× P/E vs 18× fintech sector median).
+
+export function blendExitMultiple(
+  sectorMedian: number,
+  currentMultiple: number | null,
+  crp: number,
+): { blended: number; geoDiscount: number } {
+  const geoDiscount = Math.max(0.45, 1 - crp * 5)
+  const discountedSector = sectorMedian * geoDiscount
+
+  if (currentMultiple != null && currentMultiple > 0 && currentMultiple < 500) {
+    let blended = currentMultiple * 0.55 + discountedSector * 0.35
+    blended = Math.min(blended, currentMultiple * 2.5) // cap at 2.5× current (stops wild sector pull-up)
+    blended = Math.max(blended, sectorMedian * 0.40)   // floor at 40% of sector (stops collapse)
+    return { blended: Math.round(blended * 2) / 2, geoDiscount }
+  }
+
+  // No current multiple: geo-discounted sector only
+  const blended = Math.max(sectorMedian * 0.40, Math.round(discountedSector * 2) / 2)
+  return { blended, geoDiscount }
+}
+
 // ─── Exit P/E derivation ─────────────────────────────────────────────────────
 
 function deriveExitPE(
   sector: string | null,
   industry: string | null,
   currentPE: number | null,
-): { pe: number; evidence: string; source: AssumptionSource } {
-  const { pe: target, source } = getIndustryMultiples(industry ?? '', sector ?? '')
+  crp: number = 0,
+): { pe: number; sectorPE: number; evidence: string; source: AssumptionSource } {
+  const { pe: sectorPE, source } = getIndustryMultiples(industry ?? '', sector ?? '')
+  const { blended, geoDiscount } = blendExitMultiple(sectorPE, currentPE, crp)
+
   const label = industry || sector || 'unknown'
   const companyPEStr = currentPE != null && currentPE > 0 ? `${currentPE.toFixed(0)}×` : 'N/A'
-  const evidence = `Damodaran median: ${target}× (${label}); company current P/E: ${companyPEStr}`
-  return { pe: target, evidence, source: source === 'industry-median' ? 'historical_3y_median' : 'sector_fallback' }
+  const geoStr = geoDiscount < 0.99 ? ` (geo-discounted ${(geoDiscount * 100).toFixed(0)}%)` : ''
+
+  const evidence = currentPE != null && currentPE > 0
+    ? `Blend: current ${companyPEStr} × 55% + sector ${sectorPE}×${geoStr} × 35% → ${blended.toFixed(1)}× exit P/E`
+    : `No current P/E; sector median ${sectorPE}× (${label})${geoStr} → ${blended.toFixed(1)}×`
+
+  return { pe: blended, sectorPE, evidence, source: source === 'industry-median' ? 'historical_3y_median' : 'sector_fallback' }
 }
 
 // ─── Dilution derivation ─────────────────────────────────────────────────────
@@ -223,7 +256,7 @@ export interface DerivedRevenueMultipleAssumptions {
 
 export function deriveForwardPEAssumptions(data: {
   quote: { price: number; sector?: string | null; industry?: string | null; peRatio?: number | null; currency?: string }
-  wacc: { wacc: number; inputs: WACCInputsLike }
+  wacc: { wacc: number; inputs: WACCInputsLike; crp?: number }
   cagrAnalysis: CAGRAnalysisLike | null
   fairValue: { sharesOutstanding: number | null }
   financialStatements?: { incomeStatement: IncomeRow[] }
@@ -234,6 +267,7 @@ export function deriveForwardPEAssumptions(data: {
   const industry     = data.quote?.industry ?? null
   const currentPrice = data.quote?.price ?? 0
   const wacc         = data.wacc?.wacc ?? 0.10
+  const crp          = data.wacc?.crp  ?? 0
   const shares       = data.fairValue?.sharesOutstanding ?? null
   const incomeRows   = data.financialStatements?.incomeStatement ?? []
 
@@ -241,10 +275,11 @@ export function deriveForwardPEAssumptions(data: {
 
   const cagrDerived     = deriveCagr(data.cagrAnalysis, sectorFallback)
   const marginDerived   = deriveNetMargin(incomeRows)
-  const peDerived       = deriveExitPE(sector, industry, data.quote?.peRatio ?? null)
+  const peDerived       = deriveExitPE(sector, industry, data.quote?.peRatio ?? null, crp)
   const dilutionDerived = deriveDilution(sector, marginDerived.margin)
   const waccEvidence    = deriveWACCEvidence(data.wacc?.inputs ?? {}, wacc)
   const ltmRev          = ltmRevenue(incomeRows)
+  const currentPE       = data.quote?.peRatio ?? null
 
   const assumptions: ValuationAssumption[] = [
     {
@@ -269,6 +304,10 @@ export function deriveForwardPEAssumptions(data: {
       key: 'exitPE', label: 'Exit P/E', description: 'The price-to-earnings ratio you expect the stock to trade at when you\'d sell (year 5). Lower = more conservative. Most mature companies trade at 15–25×.',
       value: peDerived.pe, unit: 'x', min: 1, max: 100, step: 1,
       editable: true, source: peDerived.source, sourceExplanation: peDerived.evidence,
+      benchmarks: [
+        { label: 'Sector', value: peDerived.sectorPE },
+        ...(currentPE != null && currentPE > 0 && currentPE < 200 ? [{ label: 'Current P/E', value: currentPE }] : []),
+      ],
     },
     {
       key: 'dilutionRate', label: 'Annual Dilution', description: 'How much your ownership shrinks each year as the company issues new shares (stock compensation). 1–3% is typical for tech; lower for mature companies.',
@@ -302,7 +341,7 @@ export function deriveForwardPEAssumptions(data: {
 
 export function deriveRevenueMultipleAssumptions(data: {
   quote: { price: number; sector?: string | null; industry?: string | null; currency?: string }
-  wacc: { wacc: number; inputs: WACCInputsLike }
+  wacc: { wacc: number; inputs: WACCInputsLike; crp?: number }
   cagrAnalysis: CAGRAnalysisLike | null
   fairValue: { sharesOutstanding: number | null; cash: number | null; debt: number | null }
   financialStatements?: { incomeStatement: IncomeRow[] }
@@ -313,6 +352,7 @@ export function deriveRevenueMultipleAssumptions(data: {
   const industry     = data.quote?.industry ?? null
   const currentPrice = data.quote?.price ?? 0
   const wacc         = data.wacc?.wacc ?? 0.10
+  const crp          = data.wacc?.crp  ?? 0
   const shares       = data.fairValue?.sharesOutstanding ?? null
   const incomeRows   = data.financialStatements?.incomeStatement ?? []
 
@@ -329,8 +369,14 @@ export function deriveRevenueMultipleAssumptions(data: {
     (data as { valuationMethods?: { models?: { multiples?: { estimates?: unknown[] } } } })
       ?.valuationMethods?.models?.multiples?.estimates as Array<{ multiple: string; actualValue: number }> ?? []
   const actualEvRevenue = multEstimates.find(e => e.multiple === 'EV/Revenue')?.actualValue ?? null
+
+  // Three-signal blend: current EV/Revenue (55%) + geo-discounted sector (35%)
+  const { blended: blendedEvRev, geoDiscount: evRevGeoDiscount } = blendExitMultiple(sectorEVRev, actualEvRevenue, crp)
   const companyEVRevStr = actualEvRevenue != null && actualEvRevenue > 0 ? `${actualEvRevenue.toFixed(1)}×` : 'N/A'
-  const evRevEvidence   = `Damodaran median: ${sectorEVRev}× (${label}); company current EV/Revenue: ${companyEVRevStr}`
+  const geoStr = evRevGeoDiscount < 0.99 ? ` (geo-discounted ${(evRevGeoDiscount * 100).toFixed(0)}%)` : ''
+  const evRevEvidence = actualEvRevenue != null && actualEvRevenue > 0
+    ? `Blend: current ${companyEVRevStr} × 55% + sector ${sectorEVRev}×${geoStr} × 35% → ${blendedEvRev.toFixed(1)}× EV/Revenue`
+    : `No current EV/Revenue; sector median ${sectorEVRev}× (${label})${geoStr} → ${blendedEvRev.toFixed(1)}×`
 
   const cashM    = data.fairValue?.cash ?? null
   const debtM    = data.fairValue?.debt ?? null
@@ -359,8 +405,12 @@ export function deriveRevenueMultipleAssumptions(data: {
     },
     {
       key: 'exitEVRevenue', label: 'Exit EV/Revenue', description: 'How many times annual revenue the entire company is worth at exit. Tech companies typically trade at 3–10×; mature businesses at 1–3×.',
-      value: sectorEVRev, unit: 'x', min: 0.5, max: 50, step: 0.5,
+      value: blendedEvRev, unit: 'x', min: 0.5, max: 50, step: 0.5,
       editable: true, source: evRevSource as AssumptionSource, sourceExplanation: evRevEvidence,
+      benchmarks: [
+        { label: 'Sector', value: sectorEVRev },
+        ...(actualEvRevenue != null && actualEvRevenue > 0 ? [{ label: 'Current EV/Rev', value: actualEvRevenue }] : []),
+      ],
     },
     {
       key: 'netDebt', label: 'Net Debt', description: 'Total debt minus cash (negative = net cash)',
@@ -388,7 +438,7 @@ export function deriveRevenueMultipleAssumptions(data: {
 
   return {
     ltvRevenue: ltmRev, sharesOutstanding: shares,
-    revenueCAGR: cagrDerived.cagr, exitEVRevenue: sectorEVRev,
+    revenueCAGR: cagrDerived.cagr, exitEVRevenue: blendedEvRev,
     netDebt, dilutionRate: dilutionDerived.rate,
     discountRate: wacc, currentPrice,
     dividendYield: null,

@@ -412,6 +412,7 @@ function StockPageBody() {
                   setSaveDialogOpen(true)
                 }}
                 onViewDetails={() => handleTabChange('valuation')}
+                scenarios={data.scenarios}
                 compact={activeTab === 'valuation'}
               />
             </motion.div>

@@ -31,6 +31,12 @@ interface Props {
   analystTarget: number
   // Key drivers (kept for API compat, not rendered)
   drivers?: string[]
+  // Scenario range
+  scenarios?: {
+    bear: { fairValue: number }
+    base: { fairValue: number }
+    bull: { fairValue: number }
+  }
   // Actions
   onSave?: () => void
   onViewDetails?: () => void
@@ -60,7 +66,7 @@ function gradeToValue(grade: string): number {
 export default function InvestorGradeCard({
   ticker, companyName, sector, price, change, changePct, currency,
   grade, gradeLabel, fairValue, upsidePct,
-  onSave, onViewDetails,
+  onSave, onViewDetails, scenarios,
   compact = false,
 }: Props) {
   const up = change >= 0
@@ -301,6 +307,26 @@ export default function InvestorGradeCard({
                 <p className="text-[9px] text-slate-400 mt-1">Blended from multiple models</p>
               </div>
             </div>
+
+            {/* Bear–Base–Bull scenario range */}
+            {scenarios && (
+              <div className="flex items-center justify-between gap-2 px-1">
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className="text-[9px] text-slate-400 uppercase tracking-wide font-medium">Bear</span>
+                  <span className="text-[11px] font-bold text-red-500 tabular-nums">{currSymbol}{scenarios.bear.fairValue.toFixed(2)}</span>
+                </div>
+                <div className="flex-1 h-px bg-gradient-to-r from-red-200 via-slate-200 to-emerald-200" />
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className="text-[9px] text-slate-400 uppercase tracking-wide font-medium">Base</span>
+                  <span className="text-[11px] font-bold text-blue-600 tabular-nums">{currSymbol}{scenarios.base.fairValue.toFixed(2)}</span>
+                </div>
+                <div className="flex-1 h-px bg-gradient-to-r from-slate-200 via-emerald-200 to-emerald-200" />
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className="text-[9px] text-slate-400 uppercase tracking-wide font-medium">Bull</span>
+                  <span className="text-[11px] font-bold text-emerald-600 tabular-nums">{currSymbol}{scenarios.bull.fairValue.toFixed(2)}</span>
+                </div>
+              </div>
+            )}
 
             {/* Progress bar: how far current price is toward fair value */}
             <div>

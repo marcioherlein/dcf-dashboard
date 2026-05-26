@@ -7,9 +7,26 @@
  */
 
 import { getIndustryMultiples } from '@/lib/dcf/calculateMultiples'
+import { blendExitMultiple } from '@/lib/valuation/assumptions/deriveAssumptions'
 
 export function getDefaultEVEBITDAMultiple(sector: string | null, industry?: string | null): number {
   return getIndustryMultiples(industry ?? '', sector ?? '').evEbitda
+}
+
+/**
+ * Blended EV/EBITDA default using current company multiple + geo-discounted sector.
+ * Returns both the blended multiple (to use as default) and the raw sector median
+ * (to show as a benchmark in the slider).
+ */
+export function blendEVEBITDAMultiple(
+  sector: string | null,
+  industry: string | null | undefined,
+  currentEVEBITDA: number | null | undefined,
+  crp: number,
+): { multiple: number; sectorMedian: number } {
+  const sectorMedian = getIndustryMultiples(industry ?? '', sector ?? '').evEbitda
+  const { blended } = blendExitMultiple(sectorMedian, currentEVEBITDA ?? null, crp)
+  return { multiple: blended, sectorMedian }
 }
 
 // ── Input / Output types ─────────────────────────────────────────────────────

@@ -13,7 +13,7 @@ import ModellingWorkspace from '@/components/modelling/ModellingWorkspace'
 import { computeForwardPE } from '@/lib/valuation/methods/forwardPE'
 import { computeRevenueMultiple } from '@/lib/valuation/methods/revenueMultiple'
 import { computeReverseDCF } from '@/lib/valuation/methods/reverseDcf'
-import { computeEVEBITDA, getDefaultEVEBITDAMultiple } from '@/lib/valuation/methods/evEbitda'
+import { computeEVEBITDA, getDefaultEVEBITDAMultiple, blendEVEBITDAMultiple } from '@/lib/valuation/methods/evEbitda'
 import {
   deriveForwardPEAssumptions,
   deriveRevenueMultipleAssumptions,
@@ -1055,8 +1055,22 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
     const debtBS     = annualBS?.longTermDebt != null ? (annualBS.longTermDebt as number) * 1e6 : null
     const netDebt    = netDebtRaw ?? (debtFMP != null && cashFMP != null ? debtFMP - cashFMP : null) ?? (debtBS != null && cashBS != null ? debtBS - cashBS : null)
     const sector     = apiData?.quote?.sector ?? null
-    const multiple   = getDefaultEVEBITDAMultiple(sector)
-    return { ebitda, netDebt, shares, exitMultiple: multiple, sector }
+    const industry   = apiData?.quote?.industry ?? null
+    const crp        = (apiData?.wacc as { crp?: number } | undefined)?.crp ?? 0
+
+    // Resolve current EV/EBITDA from multiples estimates or compute from market cap
+    const multEstimates: Array<{ multiple: string; actualValue: number }> =
+      (apiData as { valuationMethods?: { models?: { multiples?: { estimates?: unknown[] } } } })
+        ?.valuationMethods?.models?.multiples?.estimates as Array<{ multiple: string; actualValue: number }> ?? []
+    const actualEvEbitdaFromEstimates = multEstimates.find(e => e.multiple === 'EV/EBITDA')?.actualValue ?? null
+    const marketCapRaw = (apiData?.quote?.marketCap as number | null | undefined) ?? null
+    const computedEvEbitda = (actualEvEbitdaFromEstimates == null && marketCapRaw != null && ebitda != null && ebitda > 0)
+      ? (marketCapRaw + (netDebt ?? 0)) / ebitda
+      : null
+    const currentEVEBITDA = actualEvEbitdaFromEstimates ?? computedEvEbitda
+
+    const { multiple, sectorMedian } = blendEVEBITDAMultiple(sector, industry, currentEVEBITDA, crp)
+    return { ebitda, netDebt, shares, exitMultiple: multiple, sectorMedian, currentEVEBITDA, sector }
   }, [apiData, ttmEbitda, ttmNetDebt, sharesAbsolute, stmtFxRate])
 
   // ── Forward P/E ──────────────────────────────────────────────────────────
@@ -1134,19 +1148,14 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
   }), [evEbitdaBase, evEbitdaOverrides, currentPrice])
   const evEbitdaResult = useMemo(() => computeEVEBITDA(evEbitdaInputs), [evEbitdaInputs])
   const evEbitdaConfig = useMemo((): ValuationMethodConfig => {
-    const sect     = evEbitdaBase.sector ?? 'Unknown'
-    const multiple = evEbitdaInputs.exitMultiple
-    const multEstimates: Array<{ multiple: string; actualValue: number }> =
-      (apiData as { valuationMethods?: { models?: { multiples?: { estimates?: unknown[] } } } })
-        ?.valuationMethods?.models?.multiples?.estimates as Array<{ multiple: string; actualValue: number }> ?? []
-    const actualEvEbitdaFromEstimates = multEstimates.find(e => e.multiple === 'EV/EBITDA')?.actualValue ?? null
-    const marketCapRaw = (apiData?.quote?.marketCap as number | null | undefined) ?? null
-    const computedEvEbitda = (actualEvEbitdaFromEstimates == null && marketCapRaw != null && evEbitdaInputs.ttmEbitda != null && evEbitdaInputs.ttmEbitda > 0)
-      ? (marketCapRaw + (evEbitdaInputs.netDebt ?? 0)) / evEbitdaInputs.ttmEbitda
-      : null
-    const actualEvEbitda = actualEvEbitdaFromEstimates ?? computedEvEbitda
-    const companyEVEBITDAStr = actualEvEbitda != null && actualEvEbitda > 0 ? `${actualEvEbitda.toFixed(1)}×` : 'N/A'
-    const exitMultipleText = `Sector standard: ${multiple.toFixed(0)}× (${sect} sector median); company current EV/EBITDA: ${companyEVEBITDAStr}`
+    const sect        = evEbitdaBase.sector ?? 'Unknown'
+    const multiple    = evEbitdaInputs.exitMultiple
+    const sectorMed   = evEbitdaBase.sectorMedian
+    const currentEV   = evEbitdaBase.currentEVEBITDA
+    const companyEVEBITDAStr = currentEV != null && currentEV > 0 ? `${currentEV.toFixed(1)}×` : 'N/A'
+    const exitMultipleText = currentEV != null && currentEV > 0
+      ? `Blend: current ${companyEVEBITDAStr} × 55% + sector ${sectorMed?.toFixed(0)}×  × 35% → ${multiple.toFixed(1)}× (${sect})`
+      : `Sector median ${sectorMed?.toFixed(0)}× (${sect}); company current EV/EBITDA: ${companyEVEBITDAStr}`
     const financialSectorWarning = /financial|bank|insurance|fintech|payment/i.test(sect)
       ? 'EV/EBITDA is less reliable for financial-sector companies (banks, fintechs, payment processors) because balance-sheet debt is an operating input, not leverage — consider P/E or P/Book instead.'
       : null
@@ -1164,7 +1173,14 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
       assumptions: [
         { key: 'ttmEbitda',    label: 'TTM EBITDA',         editable: false, value: evEbitdaInputs.ttmEbitda, unit: '$', source: 'historical_3y_median' as const },
         { key: 'netDebt',      label: 'Net Debt',           editable: false, value: evEbitdaInputs.netDebt,   unit: '$', source: 'historical_3y_median' as const },
-        { key: 'exitMultiple', label: 'EV/EBITDA Multiple', editable: true,  value: multiple, unit: 'x', min: 1, max: 50, step: 0.5, source: 'sector_fallback' as const, sourceExplanation: exitMultipleText, description: 'Sector-typical exit multiple' },
+        { key: 'exitMultiple', label: 'EV/EBITDA Multiple', editable: true,  value: multiple, unit: 'x', min: 1, max: 50, step: 0.5,
+          source: (currentEV != null && currentEV > 0 ? 'historical_3y_median' : 'sector_fallback') as 'historical_3y_median' | 'sector_fallback',
+          sourceExplanation: exitMultipleText, description: 'EV/EBITDA multiple at valuation — blends current trading multiple with sector median',
+          benchmarks: [
+            ...(sectorMed != null ? [{ label: 'Sector', value: sectorMed }] : []),
+            ...(currentEV != null && currentEV > 0 ? [{ label: 'Current EV/EBITDA', value: currentEV }] : []),
+          ],
+        },
       ],
       formulaLines: [],
       results:  buildEVEBITDAResults(evEbitdaResult, currentPrice, currency),
