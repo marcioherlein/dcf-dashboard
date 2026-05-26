@@ -17,10 +17,10 @@ import {
 
 const NAV_PRIMARY = [
   {
-    href: '/',
+    href: '/analyze',
     label: 'Analyze',
     icon: TrendingUp,
-    match: (p: string) => p === '/' || p.startsWith('/stock'),
+    match: (p: string) => p === '/analyze' || p.startsWith('/stock'),
   },
   {
     href: '/valuations',

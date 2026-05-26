@@ -4,9 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import NewsPanel from '@/components/stock/NewsPanel'
-import BusinessModel from '@/components/stock/BusinessModel'
 import FinancialScores from '@/components/stock/FinancialScores'
-import AtAGlance from '@/components/stock/AtAGlance'
 import HealthSection from '@/components/stock/HealthSection'
 import ScenarioComparisonCard from '@/components/stock/ScenarioComparisonCard'
 import MispricingExplainer from '@/components/stock/MispricingExplainer'
@@ -31,6 +29,9 @@ import ValuationOverview from '@/components/valuation/ValuationOverview'
 import OverviewMetricGrid from '@/components/stock/OverviewMetricGrid'
 import FlipCard from '@/components/ui/FlipCard'
 import CardBack from '@/components/ui/CardBack'
+import StockHeroCards from '@/components/stock/overview/StockHeroCards'
+import RisksCard from '@/components/stock/overview/RisksCard'
+import CompanyCard from '@/components/stock/overview/CompanyCard'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
@@ -183,7 +184,6 @@ function StockPageBody() {
   const [financialsHighlight, setFinancialsHighlight] = useState<{ rowKey: string; statement: 'income' | 'balance' | 'cashflow' } | null>(null)
   const [userModelFairValue, setUserModelFairValue] = useState<number | null>(null)
   const [activeValuationMethod, setActiveValuationMethod] = useState<string | null>(null)
-  const [companyExpanded, setCompanyExpanded] = useState(true)
 
   // After Google OAuth redirect, restore the user's pre-login state (tab, etc.)
   useEffect(() => {
@@ -261,6 +261,11 @@ function StockPageBody() {
         setStatementsData(stmtJson ?? null)
         setLoading(false)
         track('stock_viewed', { ticker, sector: finJson.quote?.sector ?? '' })
+        try {
+          const item = { ticker: finJson.ticker, name: finJson.companyName, price: finJson.quote?.price ?? null, changePct: finJson.quote?.changePct ?? null }
+          const prev = JSON.parse(localStorage.getItem('intrinsico_recent') ?? '[]') as typeof item[]
+          localStorage.setItem('intrinsico_recent', JSON.stringify([item, ...prev.filter(r => r.ticker !== item.ticker)].slice(0, 8)))
+        } catch {}
       })
       .catch((e) => { setError(String(e)); setLoading(false) })
   }, [ticker])
@@ -371,7 +376,8 @@ function StockPageBody() {
                 : ''
             )}>
             <div className="min-w-0">
-            {/* ── InvestorGradeCard — top of main column, sidebar starts alongside it ── */}
+            {/* ── InvestorGradeCard — compact strip, shown on all tabs EXCEPT overview ── */}
+            {activeTab !== 'overview' && (
             <motion.div
               className="pt-5"
               initial={{ opacity: 0, y: 16 }}
@@ -427,9 +433,10 @@ function StockPageBody() {
                 }}
                 onViewDetails={() => handleTabChange('valuation')}
                 scenarios={data.scenarios}
-                compact={activeTab === 'valuation'}
+                compact={true}
               />
             </motion.div>
+            )}
             {/* Mobile-only collapsible quick insights — hidden on desktop where sidebar shows */}
             <MobileKeyInsights data={data} />
             <AnimatePresence mode="wait">
@@ -439,13 +446,27 @@ function StockPageBody() {
                   key="tab-overview"
                   id="tabpanel-overview"
                   role="tabpanel"
-                  className="space-y-4 pt-5"
+                  className="space-y-5 pt-5"
                   initial={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
-                  {/* Reverse DCF — signature card */}
+                  {/* 1. Hero decision cards */}
+                  <StockHeroCards
+                    price={data.quote.price}
+                    change={data.quote.change}
+                    changePct={data.quote.changePct}
+                    currency={data.quote.currency ?? 'USD'}
+                    high52={data.quote.fiftyTwoWeekHigh}
+                    low52={data.quote.fiftyTwoWeekLow}
+                    fairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? null}
+                    upsidePct={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null}
+                    scenarios={data.scenarios ?? null}
+                    onViewDetails={() => handleTabChange('valuation')}
+                  />
+
+                  {/* 2. Reverse DCF — what the market is pricing in */}
                   <FlipCard
                     back={<CardBack
                       emoji="🔄" title="Reverse DCF"
@@ -473,7 +494,7 @@ function StockPageBody() {
                   />
                   </FlipCard>
 
-                  {/* 6 metric cards: Business Quality, Growth, Profitability, Risks, Cash, Balance Sheet */}
+                  {/* 3. 5-card quality row */}
                   {data.ratings && (
                     <OverviewMetricGrid
                       ratings={data.ratings}
@@ -484,6 +505,27 @@ function StockPageBody() {
                     />
                   )}
 
+                  {/* 4. Standalone risks card */}
+                  {data.ratings && (
+                    <RisksCard
+                      ratings={data.ratings}
+                      cagrAnalysis={data.cagrAnalysis ?? null}
+                      onViewRisks={() => handleTabChange('risks')}
+                    />
+                  )}
+
+                  {/* 5. Company description */}
+                  {data.businessProfile?.description && (
+                    <CompanyCard
+                      description={data.businessProfile.description}
+                      industry={data.businessProfile.industry ?? ''}
+                      country={data.businessProfile.country ?? ''}
+                      employees={data.businessProfile.employees ?? null}
+                      ticker={ticker}
+                    />
+                  )}
+
+                  {/* 6. Price chart */}
                   <PriceChart
                     ticker={ticker}
                     isDark={false}
@@ -491,80 +533,6 @@ function StockPageBody() {
                     analystTarget={data.quote.analystTargetMean}
                     userModelFairValue={userModelFairValue}
                   />
-
-                  {/* Company Overview — collapsible */}
-                  {(data.businessProfile.description || data.historicalRevenues.length >= 2) && (
-                    <div>
-                      <button
-                        onClick={() => setCompanyExpanded(e => !e)}
-                        className="flex items-center gap-2 w-full text-left px-1 mb-2 group"
-                      >
-                        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-slate-500 transition-colors">Company Overview</span>
-                        <svg className={`w-3.5 h-3.5 text-slate-400 ml-auto transition-transform duration-200 ${companyExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                      {companyExpanded && (
-                        <div className="space-y-4">
-                          <BusinessModel
-                            businessProfile={data.businessProfile}
-                            historicalRevenues={data.historicalRevenues}
-                            ticker={ticker}
-                            isDark={false}
-                            incomeStatement={data.financialStatements?.incomeStatement}
-                            cashFlow={data.financialStatements?.cashFlow}
-                            statementsData={statementsData}
-                          />
-                          <FlipCard
-                            back={<CardBack
-                              emoji="📋" title="Key Numbers at a Glance"
-                              intro="These are the main numbers investors look at to quickly judge if a stock is cheap, expensive, or fairly priced."
-                              sections={[
-                                { title: 'P/E Ratio (Price-to-Earnings)', body: 'How much you pay for every $1 of profit. A P/E of 20 means you pay $20 for $1 of annual earnings. Lower can mean cheaper — but a very low P/E can also signal problems.' },
-                                { title: 'EV/EBITDA', body: 'A cleaner version of P/E that accounts for debt. It compares the company\'s total value (including debt) to its operating profit. Under 10× is often considered reasonable.' },
-                                { title: 'P/S (Price-to-Sales)', body: 'Compares the price to revenue rather than profit. Useful for companies that aren\'t yet profitable. Lower is generally cheaper.' },
-                                { title: '52-Week Range', body: 'The highest and lowest price the stock traded at over the past year. If today\'s price is near the low, you might be buying at a discount. Near the high might mean it\'s already had a big run.' },
-                                { title: 'Market Cap', body: 'The total market value of the company (price × number of shares). Small companies (<$2B) tend to be riskier but with more growth potential. Large companies (>$10B) tend to be more stable.' },
-                              ]}
-                            />}
-                          >
-                          <AtAGlance
-                            price={data.quote.price}
-                            marketCap={data.quote.marketCap}
-                            high52={data.quote.fiftyTwoWeekHigh}
-                            low52={data.quote.fiftyTwoWeekLow}
-                            sector={data.quote.sector ?? ''}
-                            country={data.businessProfile.country}
-                            currency={currency}
-                            statementsData={statementsData}
-                          />
-                          </FlipCard>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {/* ── Overview → Valuation CTA ── */}
-                  <div className="rounded-xl glass-card-light px-5 py-5">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <div className="w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                            <svg className="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                            </svg>
-                          </div>
-                          <p className="text-sm font-semibold text-slate-900">Explore the full valuation</p>
-                        </div>
-                        <p className="text-xs text-slate-500 ml-8">Adjust growth assumptions, compare DCF methods, and build your own fair-value estimate.</p>
-                      </div>
-                      <button
-                        onClick={() => handleTabChange('valuation')}
-                        className="w-full sm:w-auto rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-500 transition-colors shadow-sm shadow-blue-200 shrink-0"
-                      >
-                        Go to Valuation →
-                      </button>
-                    </div>
-                  </div>
                 </motion.div>
               )}
               {activeTab === 'valuation' && (
