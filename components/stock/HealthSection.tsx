@@ -25,7 +25,7 @@ function InfoTip({ text }: { text: string }) {
       <svg className="w-3 h-3 text-slate-400 cursor-help" viewBox="0 0 16 16" fill="currentColor">
         <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 11-2 0 1 1 0 012 0z" />
       </svg>
-      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-52 rounded-lg bg-slate-800 px-2.5 py-2 text-[11px] text-white shadow-lg opacity-0 group-hover/tip:opacity-100 transition-opacity z-50 leading-snug text-left normal-case tracking-normal font-normal">
+      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-52 max-w-[min(208px,calc(100vw-2rem))] rounded-lg bg-slate-800 px-2.5 py-2 text-[11px] text-white shadow-lg opacity-0 group-hover/tip:opacity-100 transition-opacity z-50 leading-snug text-left normal-case tracking-normal font-normal">
         {text}
       </span>
     </span>
@@ -67,8 +67,8 @@ function CategoryRow({ catKey, ratings }: { catKey: string; ratings: StockRating
   const cat = ratings[catKey as keyof StockRatings] as StockRatings['profitability'] | undefined
   if (!cat || !('grade' in cat)) return null
   return (
-    <div className="flex items-start gap-4">
-      <div className="w-32 shrink-0">
+    <div className="flex items-start gap-3 sm:gap-4">
+      <div className="w-28 sm:w-32 shrink-0">
         <p className="text-xs font-medium text-slate-600">{CATEGORY_LABELS[catKey]}</p>
         <ScoreBar score={cat.score} color={cat.color} />
       </div>
@@ -103,7 +103,7 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
       {collapsible ? (
         <button
           onClick={() => setOpen(o => !o)}
-          className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50/60 transition-colors"
+          className="w-full flex items-center justify-between px-4 sm:px-6 py-4 hover:bg-slate-50/60 transition-colors"
         >
           <div className="flex items-baseline gap-3 flex-wrap">
             <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Financial Health</h2>
@@ -119,7 +119,7 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
           </svg>
         </button>
       ) : (
-        <div className="flex items-baseline justify-between px-6 pt-5 pb-1 flex-wrap gap-2">
+        <div className="flex items-baseline justify-between px-4 sm:px-6 pt-5 pb-1 flex-wrap gap-2">
           <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Financial Health</h2>
           <p className="text-[10px] text-slate-400">
             <span className="text-emerald-600 font-semibold">A</span> Excellent&nbsp;·&nbsp;
@@ -131,7 +131,7 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
       )}
 
       {(!collapsible || open) && (
-      <div className="px-6 pb-6 pt-4">
+      <div className="px-4 sm:px-6 pb-6 pt-4">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
         {/* Category scores — two labeled groups */}
@@ -163,12 +163,12 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Quality Signals</p>
             <div className="space-y-2">
               {piotroski != null && (
-                <div className="flex items-center justify-between rounded-lg bg-white border border-slate-200 px-4 py-2.5">
-                  <span className="text-xs text-slate-500">
+                <div className="flex items-center justify-between gap-2 flex-wrap rounded-lg bg-white border border-slate-200 px-4 py-2.5">
+                  <span className="text-xs text-slate-500 min-w-0">
                     Piotroski F-Score
                     <InfoTip text="9-point checklist of profitability, leverage, and efficiency. Score 8–9 = strong financial health; below 4 = signals weakness." />
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <span className="text-sm font-bold text-slate-900 tabular-nums">{piotroski}/9</span>
                     <span className={`text-[11px] font-medium rounded-full px-2 py-0.5 ${piotroski >= 8 ? 'bg-emerald-100 text-emerald-700' : piotroski >= 4 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
                       {piotroski >= 8 ? 'Strong' : piotroski >= 4 ? 'Mixed' : 'Weak'}
@@ -177,26 +177,26 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
                 </div>
               )}
               {altmanZone && (
-                <div className="flex items-center justify-between rounded-lg bg-white border border-slate-200 px-4 py-2.5">
-                  <span className="text-xs text-slate-500">
+                <div className="flex items-center justify-between gap-2 flex-wrap rounded-lg bg-white border border-slate-200 px-4 py-2.5">
+                  <span className="text-xs text-slate-500 min-w-0">
                     Altman Z-Score
                     <InfoTip text="Predicts bankruptcy risk using financial ratios. Safe Zone (above 2.99) = low risk; Distress Zone (below 1.81) = elevated risk." />
                     {!altmanReliable && (
                       <span className="ml-1.5 text-[10px] text-amber-600 font-medium">(EM — limited reliability)</span>
                     )}
                   </span>
-                  <span className={`text-[11px] font-semibold rounded-full px-2 py-0.5 ${altmanZone === 'Safe' ? 'bg-emerald-100 text-emerald-700' : altmanZone === 'Grey' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+                  <span className={`text-[11px] font-semibold rounded-full px-2 py-0.5 shrink-0 ${altmanZone === 'Safe' ? 'bg-emerald-100 text-emerald-700' : altmanZone === 'Grey' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
                     {altmanZone} Zone
                   </span>
                 </div>
               )}
               {beneishFlag && (
-                <div className="flex items-center justify-between rounded-lg bg-white border border-slate-200 px-4 py-2.5">
-                  <span className="text-xs text-slate-500">
+                <div className="flex items-center justify-between gap-2 flex-wrap rounded-lg bg-white border border-slate-200 px-4 py-2.5">
+                  <span className="text-xs text-slate-500 min-w-0">
                     Beneish M-Score
                     <InfoTip text="Statistical model detecting potential earnings manipulation. 'Clean' = low manipulation risk; 'Suspect' = elevated risk of misreporting." />
                   </span>
-                  <span className={`text-[11px] font-semibold rounded-full px-2 py-0.5 ${beneishFlag === 'Clean' ? 'bg-emerald-100 text-emerald-700' : beneishFlag === 'Warning' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+                  <span className={`text-[11px] font-semibold rounded-full px-2 py-0.5 shrink-0 ${beneishFlag === 'Clean' ? 'bg-emerald-100 text-emerald-700' : beneishFlag === 'Warning' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
                     {beneishFlag}
                   </span>
                 </div>
