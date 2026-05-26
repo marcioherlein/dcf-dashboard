@@ -11,7 +11,6 @@ import StockSidebar from '@/components/stock/StockSidebar'
 import { cn } from '@/lib/utils'
 import ValuationCockpit from '@/components/valuation/ValuationCockpit'
 import FinancialsHub from '@/components/stock/FinancialsHub'
-import InvestorGradeCard from '@/components/stock/InvestorGradeCard'
 import MobileKeyInsights from '@/components/stock/MobileKeyInsights'
 import ReverseDcfCallout from '@/components/stock/ReverseDcfCallout'
 import { LoginGateProvider, useLoginGate } from '@/components/auth/LoginGateProvider'
@@ -380,67 +379,6 @@ function StockPageBody() {
                 : ''
             )}>
             <div className="min-w-0">
-            {/* ── InvestorGradeCard — compact strip, shown on Financials / Risks / News tabs only ── */}
-            {activeTab !== 'overview' && activeTab !== 'valuation' && (
-            <motion.div
-              className="pt-5"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <InvestorGradeCard
-                ticker={data.ticker}
-                companyName={data.companyName}
-                sector={data.quote.sector ?? ''}
-                price={data.quote.price}
-                change={data.quote.change}
-                changePct={data.quote.changePct}
-                currency={data.quote.currency ?? 'USD'}
-                grade={data.ratings?.overall?.grade ?? 'N/A'}
-                gradeLabel={data.ratings?.overall?.label ?? ''}
-                fairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? null}
-                upsidePct={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null}
-                profitabilitySummary={data.ratings?.profitability?.summary ?? ''}
-                liquiditySummary={data.ratings?.liquidity?.summary ?? ''}
-                growthSummary={data.ratings?.growth?.summary ?? ''}
-                marketCap={data.quote.marketCap}
-                high52={data.quote.fiftyTwoWeekHigh}
-                low52={data.quote.fiftyTwoWeekLow}
-                analystTarget={data.quote.analystTargetMean}
-                drivers={data.cagrAnalysis?.drivers}
-                onSave={() => {
-                  if (!session?.user) { requireAuth({ intent: 'save_watchlist' }); return }
-                  const isETF = (data.quote.quoteType ?? '').toUpperCase() === 'ETF'
-                  setSavePayload({
-                    ticker: data.ticker,
-                    name: data.companyName,
-                    assetType: isETF ? 'etf' : 'stock',
-                    fairValue: data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? null,
-                    upsidePct: data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null,
-                    valuationSnapshot: isETF ? null : {
-                      price_at_save: data.quote.price,
-                      fair_value: data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? 0,
-                      wacc: data.wacc?.wacc ?? 0,
-                      beta: data.wacc?.inputs?.beta ?? 1,
-                      terminal_g: data.scenarios?.base?.terminalG ?? 0.025,
-                      cagr: data.scenarios?.base?.cagr ?? 0,
-                      upside_pct: data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? 0,
-                      inputs: data.wacc?.inputs ?? {},
-                      scenarios: {
-                        bull: data.scenarios?.bull?.fairValue ?? 0,
-                        base: data.scenarios?.base?.fairValue ?? 0,
-                        bear: data.scenarios?.bear?.fairValue ?? 0,
-                      },
-                    },
-                  })
-                  setSaveDialogOpen(true)
-                }}
-                onViewDetails={() => handleTabChange('valuation')}
-                scenarios={data.scenarios}
-                compact={true}
-              />
-            </motion.div>
-            )}
             {/* Mobile-only collapsible quick insights — hidden on desktop where sidebar shows */}
             <MobileKeyInsights data={data} />
             <AnimatePresence mode="wait">
