@@ -10,7 +10,8 @@ import AtAGlance from '@/components/stock/AtAGlance'
 import HealthSection from '@/components/stock/HealthSection'
 import ScenarioComparisonCard from '@/components/stock/ScenarioComparisonCard'
 import MispricingExplainer from '@/components/stock/MispricingExplainer'
-import TabNav, { type TabId } from '@/components/stock/TabNav'
+import { type TabId } from '@/components/stock/TabNav'
+import StockContextBar from '@/components/stock/StockContextBar'
 import StockSidebar from '@/components/stock/StockSidebar'
 import { cn } from '@/lib/utils'
 import ValuationLab from '@/components/valuation/ValuationLab'
@@ -281,23 +282,17 @@ function StockPageBody() {
     <>
     <div className="min-h-dvh bg-slate-50">
 
-      {/* Breadcrumb */}
-      <div className="bg-white border-b border-slate-200 px-6 py-2 flex items-center gap-3">
-        <button
-          onClick={() => router.push('/')}
-          className="flex items-center gap-1.5 text-[12px] text-slate-500 hover:text-blue-600 transition-colors"
-        >
-          ← Home
-        </button>
-        <span className="text-slate-400">·</span>
-        <span className="text-[12px] text-blue-600 font-semibold">{ticker}</span>
-        {data && <span className="text-[12px] text-slate-500 truncate max-w-xs">{data.companyName}</span>}
-      </div>
-
-      {/* Tab navigation */}
-      {data && !loading && (
-        <TabNav activeTab={activeTab} onChange={handleTabChange} />
-      )}
+      {/* Context bar: stock identity + tab navigation */}
+      <StockContextBar
+        ticker={ticker}
+        companyName={data?.companyName ?? ''}
+        price={data?.quote.price ?? null}
+        change={data?.quote.change ?? null}
+        changePct={data?.quote.changePct ?? null}
+        currency={data?.quote.currency === 'USD' ? '$' : (data?.quote.currency ?? '$') + ' '}
+        activeTab={activeTab}
+        onChange={handleTabChange}
+      />
 
       {/* Session-based soft auth nudge (appears on 2nd+ stock page view) */}
       <AuthBanner />
