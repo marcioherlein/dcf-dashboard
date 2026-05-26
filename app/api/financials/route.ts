@@ -7,7 +7,7 @@ import { projectCashFlows, extractFCFInputs } from '@/lib/dcf/projectCashFlows'
 import { calculateFairValue } from '@/lib/dcf/calculateFairValue'
 import { calculateRatings } from '@/lib/dcf/calculateRatings'
 import { getRfRate } from '@/lib/data/fredClient'
-import { detectCompanyType, primaryModelLabel, companyTypeLabel, companyTypeIntrinsico, getModelWeights } from '@/lib/dcf/detectCompanyType'
+import { detectCompanyType, primaryModelLabel, companyTypeLabel, companyTypeIntrinsico, getModelWeights, FOUR_MODEL_DCF_WEIGHTS, getDCFModelRationale } from '@/lib/dcf/detectCompanyType'
 import { calculateDDM } from '@/lib/dcf/calculateDDM'
 import { calculateFCFE } from '@/lib/dcf/calculateFCFE'
 import { calculateMultiples, PEER_TICKERS } from '@/lib/dcf/calculateMultiples'
@@ -507,41 +507,104 @@ export async function GET(req: NextRequest) {
       ? Math.round((triangulatedFairValue - currentPrice) / currentPrice * 1000) / 1000
       : 0
 
-    // Scenarios anchored to the full triangulation.
-    // Base = triangulatedFairValue exactly. Bear/bull re-run all applicable DCF models with
-    // stressed WACC/CAGR/terminalG and re-blend with the same weights. Multiples and DDM
-    // are market/dividend-anchored so they don't shift with DCF stress assumptions.
-    const _buildStressedFV = (waccAdj: number, cagrAdj: number, tgAdj: number) => {
+    // Scenarios anchored to the Damodaran 4-model DCF blend (mirrors the Full DCF Modelling Table).
+    // BASE = weighted blend of UFCF+PGM, UFCF+EM, LFCF+PGM, LFCF+EM using company-type weights.
+    // BULL/BEAR = same blend re-run with stressed WACC / CAGR / terminalG assumptions.
+
+    // Compute LFCF-EM variant (levered DCF with exit multiple terminal value).
+    // LFCF-PGM is already available via fcfeResult (net income × 0.90 discounted at Ke).
+    const _cappedNetIncomeForLFCF = (() => {
+      const baseNI = netIncomeM * 0.90
+      if (baseNI <= 0) return null
+      const impliedEq = currentPrice > 0 && sharesM > 0 ? currentPrice * sharesM : null
+      if (impliedEq && baseNI / impliedEq > 0.20) return impliedEq * 0.15
+      return baseNI
+    })()
+    const _lfcfDcfResult = _cappedNetIncomeForLFCF != null
+      ? projectCashFlows({ baseFCF: _cappedNetIncomeForLFCF, cagr, wacc: waccResult.costOfEquity, terminalG, growthModel })
+      : null
+    const _lfcfEM_FV = (() => {
+      if (_lfcfDcfResult == null || sharesM <= 0) return null
+      const lastCF = _lfcfDcfResult.projections[_lfcfDcfResult.projections.length - 1]?.cashFlow ?? null
+      if (lastCF == null) return null
+      const exitTV = (lastCF * _exitMult) / Math.pow(1 + waccResult.costOfEquity, _lfcfDcfResult.projections.length)
+      const rawFV = (_lfcfDcfResult.sumPV + exitTV) / sharesM
+      return Math.min(rawFV, currentPrice > 0 ? currentPrice * 5 : rawFV)
+    })()
+
+    // Build 4-model blend using Damodaran weights for this company type
+    const _dcmW = FOUR_MODEL_DCF_WEIGHTS[companyType] ?? FOUR_MODEL_DCF_WEIGHTS.standard
+    const _lfcfPGM_FV = fcfeResult.applicable ? fcfeResult.fairValuePerShare : null
+    const _fourModelParts: { w: number; v: number }[] = [
+      fvResult.fairValuePerShare != null ? { w: _dcmW.ufcfPGM, v: fvResult.fairValuePerShare } : null,
+      ufcfEM_FV != null                  ? { w: _dcmW.ufcfEM,  v: ufcfEM_FV }                  : null,
+      _lfcfPGM_FV != null                ? { w: _dcmW.lfcfPGM, v: _lfcfPGM_FV }                : null,
+      _lfcfEM_FV != null                 ? { w: _dcmW.lfcfEM,  v: _lfcfEM_FV }                  : null,
+    ].filter((x): x is { w: number; v: number } => x != null)
+
+    const _fourModelTotalW = _fourModelParts.reduce((s, p) => s + p.w, 0)
+    const modellingTableFV = _fourModelTotalW > 0
+      ? Math.round(_fourModelParts.reduce((s, p) => s + p.v * p.w / _fourModelTotalW, 0) * 100) / 100
+      : (ufcfBlendedFV ?? fvResult.fairValuePerShare ?? triangulatedFairValue)
+
+    // Stressed 4-model blend for bull/bear scenarios
+    const _buildStressedFV4Model = (waccAdj: number, cagrAdj: number, tgAdj: number) => {
       const sw = Math.max(waccResult.wacc + waccAdj, 0.04)
       const sc = Math.max(cagr + cagrAdj, -0.05)
       const sg = Math.min(Math.max(terminalG + tgAdj, 0), sw - 0.005)
+      const ske = Math.max(waccResult.costOfEquity + waccAdj, 0.04)
 
+      // UFCF-PGM
       const sDcf = projectCashFlows({ baseFCF, cagr: sc, wacc: sw, terminalG: sg, growthModel })
-      const sFvPGM = calculateFairValue(sDcf, cashM, debtM, sharesM, currentPrice)
-      const sLastCF = sDcf.projections.length > 0 ? sDcf.projections[sDcf.projections.length - 1].cashFlow : null
+      const sUfcfPGM = calculateFairValue(sDcf, cashM, debtM, sharesM, currentPrice)
+
+      // UFCF-EM
+      const sLastCF = sDcf.projections[sDcf.projections.length - 1]?.cashFlow ?? null
       const sExitTV = sLastCF != null ? (sLastCF * _exitMult) / Math.pow(1 + sw, sDcf.projections.length) : null
       const sUfcfEM = sExitTV != null && sharesM > 0 ? (sDcf.sumPV + sExitTV + cashM - debtM) / sharesM : null
-      const sFcfe = fcfeResult.applicable
-        ? calculateFCFE(netIncomeM, sc, Math.max(waccResult.costOfEquity + waccAdj, 0.04), sg, cashM, debtM, sharesM, currentPrice)
-        : fcfeResult
-      const sUfcfParts = [sFvPGM.fairValuePerShare, sUfcfEM].filter((v): v is number => v != null)
-      const sUfcfBlend = sUfcfParts.length > 0 ? sUfcfParts.reduce((a, b) => a + b, 0) / sUfcfParts.length : null
 
-      const sMV: { weight: number; value: number }[] = []
-      if (sUfcfBlend != null) sMV.push({ weight: weights.fcff, value: sUfcfBlend })
-      if (sFcfe.applicable) sMV.push({ weight: weights.fcfe, value: sFcfe.fairValuePerShare })
-      if (ddmResult.applicable) sMV.push({ weight: weights.ddm, value: ddmResult.fairValuePerShare })
-      if (multiplesResult.blendedFairValue !== null) sMV.push({ weight: weights.multiples, value: multiplesResult.blendedFairValue })
-      const sTotalW = sMV.reduce((s, m) => s + m.weight, 0)
+      // LFCF-PGM (FCFE)
+      const sLfcfDcf = fcfeResult.applicable
+        ? calculateFCFE(netIncomeM, sc, ske, sg, cashM, debtM, sharesM, currentPrice)
+        : fcfeResult
+      const sLfcfPGM = sLfcfDcf.applicable ? sLfcfDcf.fairValuePerShare : null
+
+      // LFCF-EM
+      const sLfcfBaseDcf = _cappedNetIncomeForLFCF != null
+        ? projectCashFlows({ baseFCF: _cappedNetIncomeForLFCF, cagr: sc, wacc: ske, terminalG: sg, growthModel })
+        : null
+      const sLfcfLastCF = sLfcfBaseDcf?.projections[sLfcfBaseDcf.projections.length - 1]?.cashFlow ?? null
+      const sLfcfExitTV = sLfcfLastCF != null && sLfcfBaseDcf != null
+        ? (sLfcfLastCF * _exitMult) / Math.pow(1 + ske, sLfcfBaseDcf.projections.length)
+        : null
+      const sLfcfEM = sLfcfExitTV != null && sLfcfBaseDcf != null && sharesM > 0
+        ? Math.min((sLfcfBaseDcf.sumPV + sLfcfExitTV) / sharesM, currentPrice > 0 ? currentPrice * 5 : Infinity)
+        : null
+
+      const sParts: { w: number; v: number }[] = [
+        sUfcfPGM.fairValuePerShare != null ? { w: _dcmW.ufcfPGM, v: sUfcfPGM.fairValuePerShare } : null,
+        sUfcfEM != null                    ? { w: _dcmW.ufcfEM,  v: sUfcfEM }                    : null,
+        sLfcfPGM != null                   ? { w: _dcmW.lfcfPGM, v: sLfcfPGM }                   : null,
+        sLfcfEM != null                    ? { w: _dcmW.lfcfEM,  v: sLfcfEM }                    : null,
+      ].filter((x): x is { w: number; v: number } => x != null)
+
+      const sTotalW = sParts.reduce((s, p) => s + p.w, 0)
       const sFV = sTotalW > 0
-        ? Math.round(sMV.reduce((s, m) => s + (m.value * m.weight) / sTotalW, 0) * 100) / 100
-        : (sUfcfBlend ?? null)
+        ? Math.round(sParts.reduce((s, p) => s + p.v * p.w / sTotalW, 0) * 100) / 100
+        : null
       return { fairValue: sFV, wacc: sw, cagr: sc, terminalG: sg }
     }
+
     const scenarios = {
-      base: { fairValue: triangulatedFairValue, wacc: waccResult.wacc, cagr, terminalG },
-      bull: _buildStressedFV(-0.01, +0.02, +0.005),
-      bear: _buildStressedFV(+0.01, -0.02, -0.005),
+      base: { fairValue: modellingTableFV, wacc: waccResult.wacc, cagr, terminalG },
+      bull: _buildStressedFV4Model(-0.01, +0.02, +0.005),
+      bear: _buildStressedFV4Model(+0.01, -0.02, -0.005),
+      modelMethodology: {
+        companyType,
+        companyTypeLabel: companyTypeLabel(companyType),
+        rationale: getDCFModelRationale(companyType),
+        weights: _dcmW,
+      },
     }
 
     const effectiveWeights = {

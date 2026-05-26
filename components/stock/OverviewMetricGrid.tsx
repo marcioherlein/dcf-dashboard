@@ -206,50 +206,7 @@ function ProfitabilityCard({ ratings, businessProfile, statementsData }: {
   )
 }
 
-// ─── Card 4: Risks to Thesis ───────────────────────────────────────────────
-
-function RisksCard({ ratings, cagrAnalysis }: { ratings: StockRatings; cagrAnalysis: CAGRAnalysisData | null }) {
-  const valuation = ratings.valuation
-  const riskColor = valuation?.color === 'red' || valuation?.color === 'orange' ? valuation.color
-    : (valuation?.color === 'amber' ? 'amber' : 'blue')
-
-  const riskLabel = valuation?.color === 'red' || valuation?.color === 'orange' ? 'Elevated'
-    : valuation?.color === 'amber' ? 'Moderate'
-    : 'Low'
-
-  // Build risk bullets from driver strings and weak rating categories
-  const bullets: string[] = []
-  if (cagrAnalysis?.drivers) {
-    const negDrivers = cagrAnalysis.drivers.filter(d =>
-      /compet|risk|challeng|declin|uncertain|pressur|headwind|vola|concern|restrict/i.test(d)
-    )
-    bullets.push(...negDrivers.slice(0, 3))
-  }
-  // Add weak rating areas
-  const weakCategories = (['profitability', 'liquidity', 'growth', 'moat'] as const)
-    .filter(k => ratings[k] && (ratings[k]!.color === 'red' || ratings[k]!.color === 'orange'))
-    .map(k => `${k.charAt(0).toUpperCase() + k.slice(1)} rated ${ratings[k]!.label}`)
-  bullets.push(...weakCategories.slice(0, 2))
-
-  const displayBullets = bullets.length > 0 ? bullets.slice(0, 4)
-    : ['No major red flags identified from current data']
-
-  return (
-    <div className="rounded-xl border border-slate-100 bg-white/80 px-4 py-4">
-      <CardHeader title="Risks to Thesis" label={riskLabel} color={riskColor} />
-      <ul className="space-y-1.5">
-        {displayBullets.map((b, i) => (
-          <li key={i} className="flex items-start gap-2 text-[12px] text-slate-600 leading-snug">
-            <span className="text-slate-300 mt-0.5 shrink-0">•</span>
-            <span>{b}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-}
-
-// ─── Card 5: Cash Conversion ───────────────────────────────────────────────
+// ─── Card 4: Cash Conversion ───────────────────────────────────────────────
 
 function CashConversionCard({ businessProfile, statementsData }: {
   businessProfile: BusinessProfile
@@ -287,7 +244,7 @@ function CashConversionCard({ businessProfile, statementsData }: {
   )
 }
 
-// ─── Card 6: Balance Sheet Safety ─────────────────────────────────────────
+// ─── Card 5: Balance Sheet Safety ─────────────────────────────────────────
 
 function BalanceSheetCard({ scores, statementsData }: {
   scores: ScoresData
@@ -352,11 +309,10 @@ export default function OverviewMetricGrid({ ratings, scores, businessProfile, c
   if (!ratings) return null
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
       <BusinessQualityCard ratings={ratings} scores={scores ?? {}} />
       <GrowthOutlookCard ratings={ratings} cagrAnalysis={cagrAnalysis} />
       <ProfitabilityCard ratings={ratings} businessProfile={businessProfile} statementsData={statementsData} />
-      <RisksCard ratings={ratings} cagrAnalysis={cagrAnalysis} />
       <CashConversionCard businessProfile={businessProfile} statementsData={statementsData} />
       <BalanceSheetCard scores={scores ?? {}} statementsData={statementsData} />
     </div>

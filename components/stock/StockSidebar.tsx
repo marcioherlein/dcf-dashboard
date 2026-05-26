@@ -17,7 +17,7 @@ interface Props {
   activeValuationMethodId?: string | null
 }
 
-export default function StockSidebar({ activeTab, data, statementsData, onNavigateToFinancials, activeValuationMethodId }: Props) {
+export default function StockSidebar({ activeTab, data, statementsData, activeValuationMethodId }: Props) {
   const derivedInsights = useMemo(() => {
     if (!data) return null
     return deriveFinancialInsightMetrics({
@@ -38,10 +38,8 @@ export default function StockSidebar({ activeTab, data, statementsData, onNaviga
         quote={data.quote}
         cagrAnalysis={data.cagrAnalysis}
         analystRecommendation={data.analystRecommendation ?? ''}
-        ratings={data.ratings}
-        valuationMethods={data.valuationMethods}
-        derivedInsights={derivedInsights!}
-        onNavigateToFinancials={onNavigateToFinancials}
+        wacc={data.wacc ?? null}
+        fairValueData={data.fairValue ?? null}
         ownership={data.ownership}
       />
     )
