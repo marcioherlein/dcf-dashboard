@@ -92,16 +92,24 @@ export default function TopBar() {
 
       {/* Logo */}
       <Link href="/" className="flex items-center gap-2 shrink-0">
-        <div className="w-[30px] h-[30px] rounded-full overflow-hidden shrink-0">
-          <Image src="/logos/logo.png" alt="Intrinsico" width={30} height={30} className="w-full h-full object-cover" />
-        </div>
-        <span className="font-bold text-slate-900 text-sm tracking-tight hidden sm:block" style={{ letterSpacing: '-0.02em' }}>
+        <Image src="/logos/logo.png" alt="Intrinsico" width={28} height={28} className="shrink-0" />
+        <span
+          className="font-black hidden sm:block"
+          style={{
+            fontSize: '17px',
+            letterSpacing: '-0.04em',
+            background: 'linear-gradient(135deg, #0F172A 20%, #1E40AF 65%, #2563EB 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}
+        >
           Intrinsico
         </span>
       </Link>
 
       {/* Search */}
-      <div className="relative flex-1 min-w-0 max-w-full lg:max-w-xs" ref={searchRef}>
+      <div className="relative flex-1 min-w-0 max-w-sm" ref={searchRef}>
         <div className="flex items-center gap-2 rounded-xl px-3 py-1.5 transition-all border"
           style={{
             background: 'rgba(255,255,255,0.55)',
@@ -123,8 +131,8 @@ export default function TopBar() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="SEARCH TICKERS…"
-            className="flex-1 min-w-0 bg-transparent text-[16px] lg:text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none uppercase font-mono tracking-wide"
+            placeholder="Search tickers…"
+            className="flex-1 min-w-0 bg-transparent text-[14px] text-slate-800 placeholder-slate-400 focus:outline-none"
           />
         </div>
 
