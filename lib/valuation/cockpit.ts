@@ -89,20 +89,97 @@ const WEIGHTS = {
   core_dcf: 0.10,
 } as const
 
-function scenarioDcfFV(
+// Fix 1+2+3: runs all 4 methods at given assumptions and returns weighted blended fair value.
+// Fix 1: terminal growth is capped at wacc−0.02 (200bps minimum spread) to prevent denominator explosion.
+// Fix 3: DCF output is discarded if it exceeds 8× current price (terminal value explosion guard).
+function computeBlendedFV(
+  assumptions: ValuationAssumptions,
+  snapshot: CockpitSnapshot,
+): number | null {
+  const { currentPrice } = snapshot
+
+  const fwdPE = computeForwardPE({
+    ltvRevenue: snapshot.ltvRevenueDollars,
+    sharesOutstanding: snapshot.sharesRaw,
+    revenueCAGR: assumptions.cagr,
+    netMargin: assumptions.netMargin,
+    exitPE: assumptions.exitPE,
+    dilutionRate: assumptions.dilutionRate,
+    discountRate: assumptions.wacc,
+    currentPrice,
+    dividendYield: snapshot.dividendYield,
+  })
+
+  const evEbitda = computeEVEBITDA({
+    ttmEbitda: snapshot.ttmEbitdaDollars,
+    netDebt: snapshot.netDebtDollars,
+    shares: snapshot.sharesRaw,
+    exitMultiple: assumptions.exitMultiple,
+    currentPrice,
+  })
+
+  const revMult = computeRevenueMultiple({
+    ltvRevenue: snapshot.ltvRevenueDollars,
+    revenueCAGR: assumptions.cagr,
+    exitEVRevenue: assumptions.revenueMultiple,
+    netDebt: snapshot.netDebtDollars,
+    sharesOutstanding: snapshot.sharesRaw,
+    dilutionRate: assumptions.dilutionRate,
+    discountRate: assumptions.wacc,
+    currentPrice,
+    dividendYield: snapshot.dividendYield,
+  })
+
+  let dcfFV: number | null = null
+  if (snapshot.baseFCF > 0 && snapshot.sharesM > 0) {
+    const g = Math.min(Math.max(assumptions.terminalG, 0.005), assumptions.wacc - 0.02)
+    if (g > 0 && g < assumptions.wacc) {
+      const dcf = projectCashFlows({
+        baseFCF: snapshot.baseFCF,
+        cagr: assumptions.cagr,
+        wacc: assumptions.wacc,
+        terminalG: g,
+        growthModel: 'two-stage',
+      })
+      if (dcf.ev != null) {
+        const equity = dcf.ev + snapshot.cashM - snapshot.debtM
+        const candidate = Math.round((equity / snapshot.sharesM) * 100) / 100
+        if (candidate > 0 && (currentPrice <= 0 || candidate <= currentPrice * 8)) {
+          dcfFV = candidate
+        }
+      }
+    }
+  }
+
+  const candidates = (
+    [
+      { fv: fwdPE.fairValueToday ?? null, w: WEIGHTS.forward_pe },
+      { fv: evEbitda.fairValuePerShare ?? null, w: WEIGHTS.ev_ebitda },
+      { fv: revMult.fairValueToday ?? null, w: WEIGHTS.revenue_multiple },
+      { fv: dcfFV, w: WEIGHTS.core_dcf },
+    ] as { fv: number | null; w: number }[]
+  ).filter((c): c is { fv: number; w: number } => c.fv != null && c.fv > 0)
+
+  const totalW = candidates.reduce((s, c) => s + c.w, 0)
+  return totalW > 0
+    ? Math.round(candidates.reduce((s, c) => s + c.fv * c.w, 0) / totalW * 100) / 100
+    : null
+}
+
+// Fix 2: scenarios use all 4 methods blended at stressed assumptions (not pure DCF).
+// Fix 5: deltas scale proportionally to the base assumptions (±10% of WACC, ±15% of CAGR).
+function scenarioBlendFV(
   assumptions: ValuationAssumptions,
   snapshot: CockpitSnapshot,
   waccDelta: number,
   cagrDelta: number,
 ): number | null {
-  if (snapshot.baseFCF <= 0 || snapshot.sharesM <= 0) return null
-  const w = Math.max(assumptions.wacc + waccDelta, 0.04)
-  const c = Math.max(assumptions.cagr + cagrDelta, -0.05)
-  const g = Math.min(Math.max(assumptions.terminalG, 0.005), w - 0.005)
-  const dcf = projectCashFlows({ baseFCF: snapshot.baseFCF, cagr: c, wacc: w, terminalG: g, growthModel: 'two-stage' })
-  if (dcf.ev == null) return null
-  const equity = dcf.ev + snapshot.cashM - snapshot.debtM
-  return Math.round((equity / snapshot.sharesM) * 100) / 100
+  const stressed: ValuationAssumptions = {
+    ...assumptions,
+    wacc: Math.max(assumptions.wacc + waccDelta, 0.04),
+    cagr: Math.max(assumptions.cagr + cagrDelta, -0.05),
+  }
+  return computeBlendedFV(stressed, snapshot)
 }
 
 function computeDivergence(
@@ -315,23 +392,35 @@ export function computeCockpitOutput(
   })
 
   // 4. Core DCF (UFCF + PGM)
+  // Fix 1: require 200bps minimum spread between WACC and terminal growth
+  // Fix 3: discard DCF output > 8× current price (terminal value explosion guard)
   let dcfFV: number | null = null
   let dcfErrors: string[] = []
   if (snapshot.baseFCF > 0 && snapshot.sharesM > 0) {
-    const g = Math.min(Math.max(assumptions.terminalG, 0.005), assumptions.wacc - 0.005)
-    const dcf = projectCashFlows({
-      baseFCF: snapshot.baseFCF,
-      cagr: assumptions.cagr,
-      wacc: assumptions.wacc,
-      terminalG: g,
-      growthModel: 'two-stage',
-    })
-    if (dcf.ev != null) {
-      const equity = dcf.ev + snapshot.cashM - snapshot.debtM
-      dcfFV = Math.round((equity / snapshot.sharesM) * 100) / 100
-      if (dcfFV <= 0) { dcfFV = null; dcfErrors = ['Implied equity value non-positive'] }
+    const g = Math.min(Math.max(assumptions.terminalG, 0.005), assumptions.wacc - 0.02)
+    if (g > 0 && g < assumptions.wacc) {
+      const dcf = projectCashFlows({
+        baseFCF: snapshot.baseFCF,
+        cagr: assumptions.cagr,
+        wacc: assumptions.wacc,
+        terminalG: g,
+        growthModel: 'two-stage',
+      })
+      if (dcf.ev != null) {
+        const equity = dcf.ev + snapshot.cashM - snapshot.debtM
+        const candidate = Math.round((equity / snapshot.sharesM) * 100) / 100
+        if (candidate <= 0) {
+          dcfErrors = ['Implied equity value non-positive']
+        } else if (currentPrice > 0 && candidate > currentPrice * 8) {
+          dcfErrors = ['Terminal value explosion — result capped for reliability']
+        } else {
+          dcfFV = candidate
+        }
+      } else {
+        dcfErrors = ['Terminal growth violation']
+      }
     } else {
-      dcfErrors = ['Terminal growth violation']
+      dcfErrors = ['Terminal growth rate too close to WACC — result unreliable']
     }
   } else {
     dcfErrors = ['Insufficient FCF or share data']
@@ -401,7 +490,7 @@ export function computeCockpitOutput(
   }
 
   // Reverse DCF for market-implied growth
-  const safeTG = Math.min(Math.max(assumptions.terminalG, 0.005), assumptions.wacc - 0.005)
+  const safeTG = Math.min(Math.max(assumptions.terminalG, 0.005), assumptions.wacc - 0.02)
   const reverseDcf = computeReverseDCF({
     currentPrice,
     sharesOutstanding: snapshot.sharesRaw,
@@ -416,13 +505,17 @@ export function computeCockpitOutput(
 
   const divergence = computeDivergence(methods, blendedFairValue, assumptions, snapshot)
 
+  // Fix 5: proportional deltas — ±10% of WACC, ±15% of CAGR (minimum 0.5pp / 1pp)
+  const wD = Math.max(assumptions.wacc * 0.10, 0.005)
+  const cD = Math.max(Math.abs(assumptions.cagr) * 0.15, 0.01)
+
   return {
     blendedFairValue,
     methods,
     scenarios: {
-      bull: { fairValue: scenarioDcfFV(assumptions, snapshot, -0.01, +0.02), wacc: assumptions.wacc - 0.01, cagr: assumptions.cagr + 0.02 },
+      bull: { fairValue: scenarioBlendFV(assumptions, snapshot, -wD, +cD), wacc: assumptions.wacc - wD, cagr: assumptions.cagr + cD },
       base: { fairValue: blendedFairValue, wacc: assumptions.wacc, cagr: assumptions.cagr },
-      bear: { fairValue: scenarioDcfFV(assumptions, snapshot, +0.01, -0.02), wacc: assumptions.wacc + 0.01, cagr: assumptions.cagr - 0.02 },
+      bear: { fairValue: scenarioBlendFV(assumptions, snapshot, +wD, -cD), wacc: assumptions.wacc + wD, cagr: assumptions.cagr - cD },
     },
     verdict,
     upsidePct,

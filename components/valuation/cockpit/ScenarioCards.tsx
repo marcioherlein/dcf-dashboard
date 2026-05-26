@@ -24,7 +24,7 @@ function ScenarioCard({
   const isBase = Math.abs(waccDelta) < 0.0001 && Math.abs(cagrDelta) < 0.0001
 
   return (
-    <div className={`rounded-xl border ${bgClass} ${borderClass} px-5 py-4`}>
+    <div className={`rounded-xl border ${bgClass} ${borderClass} px-5 py-4 ${isBase ? 'ring-2 ring-blue-300 shadow-sm' : ''}`}>
       <div className="flex items-center justify-between mb-2">
         <p className={`text-xs font-bold uppercase tracking-wider ${accentText}`}>{label}</p>
         {upside != null && (
@@ -33,7 +33,7 @@ function ScenarioCard({
           </span>
         )}
       </div>
-      <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none mb-3">
+      <p className={`${isBase ? 'text-3xl' : 'text-2xl'} font-bold tabular-nums text-slate-900 leading-none mb-3`}>
         {fv != null ? fmtPrice(fv, currency) : '—'}
       </p>
       <div className="flex gap-4">
@@ -68,7 +68,11 @@ export default function ScenarioCards({ scenarios, currentPrice, currency }: Pro
   const base = scenarios.base
   return (
     <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-4">
-      <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Scenario Range</p>
+      <div className="flex items-center justify-between mb-1">
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Scenario Analysis</p>
+        <span className="text-[10px] text-slate-400">Blended estimate at stressed assumptions</span>
+      </div>
+      <p className="text-[10px] text-slate-400 mb-3">All four methods re-run at each stress — same blend as Base.</p>
       <div className="grid grid-cols-3 gap-3">
         <ScenarioCard
           label="Bear Case" fv={scenarios.bear.fairValue} wacc={scenarios.bear.wacc} cagr={scenarios.bear.cagr}
