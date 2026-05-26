@@ -1,7 +1,8 @@
 'use client'
 
-import { fmtPrice } from '@/lib/formatters'
+import { useState, useEffect } from 'react'
 import { motion } from 'motion/react'
+import { fmtPrice } from '@/lib/formatters'
 import type { CockpitMethodResult } from '@/lib/valuation/cockpit'
 
 interface Props {
@@ -11,139 +12,235 @@ interface Props {
   currency: string
 }
 
-const SHORT: Record<string, string> = {
+const LABEL: Record<string, string> = {
   forward_pe:       'Forward P/E',
   ev_ebitda:        'EV/EBITDA',
   revenue_multiple: 'Rev. Multiple',
   core_dcf:         'Core DCF',
 }
 
+const LABEL_W = 100 // px — left label column
+const VALUE_W = 116 // px — right value column
+
 export default function FairValueChart({ methods, blendedFairValue, currentPrice, currency }: Props) {
-  const valid = methods.filter(m => m.fairValue != null && m.fairValue > 0)
-  if (valid.length === 0) return null
+  const [ready, setReady] = useState(false)
+  useEffect(() => {
+    const t = setTimeout(() => setReady(true), 80)
+    return () => clearTimeout(t)
+  }, [])
 
-  const W       = 540
-  const LEFT_W  = 110
-  const RIGHT_W = 116
-  const CHART_L = LEFT_W
-  const CHART_R = W - RIGHT_W
-  const ROW_H   = 44
-  const HEADER  = 36
-  const FOOTER  = blendedFairValue != null ? 40 : 8
-  const SVG_H   = HEADER + valid.length * ROW_H + FOOTER
+  const validMethods = methods.filter(m => m.fairValue != null && m.fairValue > 0)
+  if (validMethods.length === 0) return null
 
-  const allVals = [currentPrice, ...valid.map(m => m.fairValue!)]
-  if (blendedFairValue != null) allVals.push(blendedFairValue)
-  const minV = Math.min(...allVals)
-  const maxV = Math.max(...allVals)
-  const pad  = Math.max((maxV - minV) * 0.16, maxV * 0.05)
-  const lo   = minV - pad
-  const hi   = maxV + pad
-  const xFor = (v: number) => CHART_L + ((v - lo) / (hi - lo)) * (CHART_R - CHART_L)
-  const xP   = xFor(currentPrice)
+  const all = [currentPrice, ...validMethods.map(m => m.fairValue!)]
+  if (blendedFairValue != null) all.push(blendedFairValue)
+  const minV = Math.min(...all)
+  const maxV = Math.max(...all)
+  const pad = Math.max((maxV - minV) * 0.13, maxV * 0.04)
+  const lo = Math.max(0, minV - pad)
+  const hi = maxV + pad
+  const range = hi - lo
+  const toPct = (v: number) => Math.max(0.5, Math.min(99.5, ((v - lo) / range) * 100))
+  const pricePct = toPct(currentPrice)
+
+  const bUpside =
+    blendedFairValue != null && currentPrice > 0
+      ? (blendedFairValue - currentPrice) / currentPrice
+      : null
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-4">
-      <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Fair Value by Method</p>
-      <svg
-        viewBox={`0 0 ${W} ${SVG_H}`}
-        width="100%"
-        style={{ display: 'block' }}
-        aria-hidden="true"
-      >
-        {/* Current price label */}
-        <text x={xP} y={14} textAnchor="middle" fontSize={11} fontWeight={700} fill="#475569"
-          fontFamily="-apple-system, system-ui, sans-serif">
-          {fmtPrice(currentPrice, currency)}
-        </text>
-        <text x={xP} y={25} textAnchor="middle" fontSize={10} fill="#94a3b8"
-          fontFamily="-apple-system, system-ui, sans-serif">
-          CURRENT
-        </text>
-        {/* Thicker, more visible current price dashed line */}
-        <line
-          x1={xP} y1={HEADER - 2}
-          x2={xP} y2={HEADER + valid.length * ROW_H + (blendedFairValue != null ? 22 : 0)}
-          stroke="#1e293b" strokeWidth={2} strokeDasharray="5 3"
-        />
+    <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-5">
+      {/* Section header */}
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Fair Value by Method</p>
+        <div className="flex items-center gap-4 text-[10px] text-slate-400">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+            Undervalued
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
+            Overvalued
+          </span>
+        </div>
+      </div>
 
-        {valid.map((m, i) => {
-          const y       = HEADER + i * ROW_H + ROW_H / 2
-          const xDot    = xFor(m.fairValue!)
-          const isUnder = m.fairValue! > currentPrice
-          const dotCol  = isUnder ? '#10b981' : '#ef4444'
-          const lineCol = isUnder ? '#d1fae5' : '#fee2e2'
-          const label   = SHORT[m.id] ?? m.method
-          const upSign  = m.upsidePct != null && m.upsidePct >= 0 ? '+' : ''
+      {/* Current price label — floats above the track at the right position */}
+      <div className="flex items-end h-8 mb-1.5">
+        <div style={{ width: LABEL_W }} className="shrink-0" />
+        <div className="flex-1 relative">
+          <div
+            className="absolute bottom-0 flex flex-col items-center gap-px -translate-x-1/2"
+            style={{ left: `${pricePct}%` }}
+          >
+            <span className="text-[11px] font-bold tabular-nums text-slate-800 bg-white px-0.5 leading-tight">
+              {fmtPrice(currentPrice, currency)}
+            </span>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 leading-tight">
+              Current
+            </span>
+          </div>
+        </div>
+        <div style={{ width: VALUE_W }} className="shrink-0" />
+      </div>
+
+      {/* Method rows — no gap so per-row price ticks form one continuous vertical line */}
+      <div className="flex flex-col">
+        {methods.map((m, i) => {
+          const hasVal = m.fairValue != null && m.fairValue > 0
+          const fv = hasVal ? m.fairValue! : null
+          const isUnder = fv != null && fv > currentPrice
+          const fvPct = fv != null ? toPct(fv) : null
+          const barLeft = fv != null ? Math.min(fvPct!, pricePct) : pricePct
+          const barWidth = fv != null ? Math.abs(fvPct! - pricePct) : 0
+
           return (
-            <g key={m.id}>
-              <text x={CHART_L - 8} y={y + 4} textAnchor="end" fontSize={11} fill="#374151"
-                fontWeight={500} fontFamily="-apple-system, system-ui, sans-serif">
-                {label}
-              </text>
-              <motion.line
-                x1={Math.min(xDot, xP)} y1={y} x2={Math.max(xDot, xP)} y2={y}
-                stroke={lineCol} strokeWidth={10}
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                transition={{ duration: 0.25, delay: 0.05 + i * 0.07 }}
-              />
-              <motion.circle
-                cx={xDot} cy={y} r={6} fill={dotCol}
-                initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 22, delay: 0.1 + i * 0.07 }}
-                style={{ transformOrigin: `${xDot}px ${y}px` }}
-              />
-              <text x={CHART_R + 8} y={y - 1} textAnchor="start" fontSize={11} fontWeight={700}
-                fill="#111827" fontFamily="-apple-system, monospace">
-                {fmtPrice(m.fairValue, currency)}
-              </text>
-              {m.upsidePct != null && (
-                <text x={CHART_R + 8} y={y + 13} textAnchor="start" fontSize={10}
-                  fill={isUnder ? '#059669' : '#dc2626'} fontFamily="-apple-system, system-ui, sans-serif">
-                  {upSign}{(m.upsidePct * 100).toFixed(1)}%
-                </text>
-              )}
-            </g>
+            <div key={m.id} className="flex items-center h-10">
+              {/* Label */}
+              <div style={{ width: LABEL_W }} className="shrink-0 text-right pr-3">
+                <span
+                  className={`text-[11px] font-medium leading-none ${
+                    hasVal ? 'text-slate-600' : 'text-slate-300'
+                  }`}
+                >
+                  {LABEL[m.id] ?? m.method}
+                </span>
+              </div>
+
+              {/* Track */}
+              <div className="flex-1 relative flex items-center h-full">
+                {/* Gray baseline */}
+                <div className="w-full h-[5px] bg-slate-100 rounded-full" />
+
+                {hasVal && fv != null && fvPct != null && (
+                  <>
+                    {/* Colored fill — width animates from 0 on mount */}
+                    <div
+                      className={`absolute h-[5px] rounded-full transition-[width,left] duration-500 ease-out ${
+                        isUnder ? 'bg-emerald-200' : 'bg-red-100'
+                      }`}
+                      style={{
+                        left: `${ready ? barLeft : pricePct}%`,
+                        width: `${ready ? barWidth : 0}%`,
+                      }}
+                    />
+                    {/* Fair value dot */}
+                    <motion.div
+                      className={`absolute w-[13px] h-[13px] rounded-full ring-[2.5px] ring-white shadow ${
+                        isUnder ? 'bg-emerald-500' : 'bg-red-500'
+                      }`}
+                      style={{ left: `${fvPct}%`, transform: 'translateX(-50%)' }}
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{
+                        type: 'spring',
+                        stiffness: 480,
+                        damping: 20,
+                        delay: 0.1 + i * 0.07,
+                      }}
+                    />
+                  </>
+                )}
+
+                {/* Current price tick — all rows so they form one continuous line */}
+                <div
+                  className="absolute h-6 w-[1.5px] bg-slate-700/60 rounded-full -translate-x-1/2"
+                  style={{ left: `${pricePct}%` }}
+                />
+              </div>
+
+              {/* Value */}
+              <div style={{ width: VALUE_W }} className="shrink-0 pl-3">
+                {hasVal && fv != null ? (
+                  <div className="flex flex-col gap-[1px]">
+                    <span className="text-xs font-bold tabular-nums text-slate-900 leading-tight">
+                      {fmtPrice(fv, currency)}
+                    </span>
+                    {m.upsidePct != null && (
+                      <span
+                        className={`text-[10px] font-semibold tabular-nums leading-tight ${
+                          isUnder ? 'text-emerald-600' : 'text-red-500'
+                        }`}
+                      >
+                        {m.upsidePct >= 0 ? '+' : ''}
+                        {(m.upsidePct * 100).toFixed(1)}%
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-[10px] text-slate-300">—</span>
+                )}
+              </div>
+            </div>
           )
         })}
 
+        {/* Blended row */}
         {blendedFairValue != null && (() => {
-          const xB     = xFor(blendedFairValue)
-          const y      = HEADER + valid.length * ROW_H + 22
-          const bUp    = currentPrice > 0 ? (blendedFairValue - currentPrice) / currentPrice : null
-          const bColor = bUp != null && bUp >= 0 ? '#059669' : '#dc2626'
-          const bSign  = bUp != null && bUp >= 0 ? '+' : ''
+          const bPct = toPct(blendedFairValue)
+          const bIsUnder = blendedFairValue > currentPrice
           return (
-            <g>
-              <line x1={CHART_L} y1={y - 14} x2={CHART_R} y2={y - 14} stroke="#e2e8f0" strokeWidth={1} />
-              <motion.polygon
-                points={`${xB},${y - 9} ${xB + 7},${y + 1} ${xB},${y + 11} ${xB - 7},${y + 1}`}
-                fill={bColor}
-                initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.1 + valid.length * 0.07 }}
-                style={{ transformOrigin: `${xB}px ${y}px` }}
+            <>
+              <div
+                className="border-t border-slate-100 my-0.5"
+                style={{ marginLeft: LABEL_W }}
               />
-              <text x={CHART_L - 8} y={y + 5} textAnchor="end" fontSize={10} fontWeight={700}
-                fill={bColor} fontFamily="-apple-system, system-ui, sans-serif">
-                BLENDED
-              </text>
-              <text x={CHART_R + 8} y={y - 1} textAnchor="start" fontSize={11} fontWeight={700}
-                fill={bColor} fontFamily="-apple-system, monospace">
-                {fmtPrice(blendedFairValue, currency)}
-              </text>
-              {bUp != null && (
-                <text x={CHART_R + 8} y={y + 13} textAnchor="start" fontSize={10}
-                  fill={bColor} fontFamily="-apple-system, system-ui, sans-serif">
-                  {bSign}{(bUp * 100).toFixed(1)}%
-                </text>
-              )}
-            </g>
+              <div className="flex items-center h-10">
+                <div style={{ width: LABEL_W }} className="shrink-0 text-right pr-3">
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-blue-600">
+                    Blended
+                  </span>
+                </div>
+
+                <div className="flex-1 relative flex items-center h-full">
+                  <div className="w-full h-[5px] bg-slate-100 rounded-full" />
+
+                  {/* Blue diamond */}
+                  <motion.div
+                    className="absolute w-3.5 h-3.5 bg-blue-500 ring-[2.5px] ring-white shadow"
+                    style={{
+                      left: `${bPct}%`,
+                      transform: 'translateX(-50%) rotate(45deg)',
+                    }}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 400,
+                      damping: 20,
+                      delay: 0.1 + methods.length * 0.07,
+                    }}
+                  />
+
+                  {/* Current price tick */}
+                  <div
+                    className="absolute h-6 w-[1.5px] bg-slate-700/60 rounded-full -translate-x-1/2"
+                    style={{ left: `${pricePct}%` }}
+                  />
+                </div>
+
+                <div style={{ width: VALUE_W }} className="shrink-0 pl-3">
+                  <div className="flex flex-col gap-[1px]">
+                    <span className="text-xs font-bold tabular-nums text-blue-600 leading-tight">
+                      {fmtPrice(blendedFairValue, currency)}
+                    </span>
+                    {bUpside != null && (
+                      <span
+                        className={`text-[10px] font-semibold tabular-nums leading-tight ${
+                          bIsUnder ? 'text-emerald-600' : 'text-red-500'
+                        }`}
+                      >
+                        {bUpside >= 0 ? '+' : ''}
+                        {(bUpside * 100).toFixed(1)}%
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
           )
         })()}
-      </svg>
-      <p className="text-xs text-slate-400 mt-2">
-        Dot right of price line = undervalued (emerald) · Dot left = overvalued (red) · ◆ = blended estimate
-      </p>
+      </div>
     </div>
   )
 }
