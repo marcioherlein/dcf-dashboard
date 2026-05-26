@@ -30,6 +30,7 @@ export interface CockpitSnapshot {
   cashM: number
   debtM: number
   sharesM: number
+  growthModel: 'two-stage' | 'three-stage'
   // Reverse DCF inputs
   fcfMargin: number | null
   historicalCAGR: number | null
@@ -139,7 +140,7 @@ function computeBlendedFV(
         cagr: assumptions.cagr,
         wacc: assumptions.wacc,
         terminalG: g,
-        growthModel: 'two-stage',
+        growthModel: snapshot.growthModel,
       })
       if (dcf.ev != null) {
         const equity = dcf.ev + snapshot.cashM - snapshot.debtM
@@ -404,7 +405,7 @@ export function computeCockpitOutput(
         cagr: assumptions.cagr,
         wacc: assumptions.wacc,
         terminalG: g,
-        growthModel: 'two-stage',
+        growthModel: snapshot.growthModel,
       })
       if (dcf.ev != null) {
         const equity = dcf.ev + snapshot.cashM - snapshot.debtM

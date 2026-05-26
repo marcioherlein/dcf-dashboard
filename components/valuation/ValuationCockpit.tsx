@@ -33,7 +33,7 @@ interface Props {
   onNavigateToFinancials?: (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => void
 }
 
-function buildSnapshot(apiData: ApiData): CockpitSnapshot {
+function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null): CockpitSnapshot {
   const sharesM = apiData.fairValue?.sharesOutstanding ?? 0
   const cashM   = apiData.fairValue?.cash ?? 0
   const debtM   = apiData.fairValue?.debt ?? 0
@@ -55,6 +55,15 @@ function buildSnapshot(apiData: ApiData): CockpitSnapshot {
   const analystTargetMean = apiData.quote?.analystTargetMean ?? null
   const analystRating = apiData.analystRecommendation ?? null
 
+  // Prefer TTM FCF from statementsData (matches normalizeInputs behavior in ModellingWorkspace)
+  const ttmFCFRaw = statementsData?.ttm?.cashFlow?.freeCashFlow
+  const baseFCF = (typeof ttmFCFRaw === 'number' && isFinite(ttmFCFRaw) && ttmFCFRaw > 0)
+    ? ttmFCFRaw / 1e6
+    : (apiData.baseFCF ?? 0)
+
+  // Match the growth model used by the financials API (three-stage for high-CAGR / negative FCF companies)
+  const growthModel = (apiData.growthModel as 'two-stage' | 'three-stage') ?? 'two-stage'
+
   return {
     currentPrice: apiData.quote?.price ?? 0,
     currency: apiData.quote?.currency ?? 'USD',
@@ -63,10 +72,11 @@ function buildSnapshot(apiData: ApiData): CockpitSnapshot {
     ttmEbitdaDollars,
     netDebtDollars,
     dividendYield: null,
-    baseFCF: apiData.baseFCF ?? 0,
+    baseFCF,
     cashM,
     debtM,
     sharesM,
+    growthModel,
     fcfMargin,
     historicalCAGR,
     analystTargetMean,
@@ -143,7 +153,7 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
 }
 
 export default function ValuationCockpit({ apiData, ticker, statementsData, onNavigateToFinancials }: Props) {
-  const snapshot       = useMemo(() => buildSnapshot(apiData), [apiData])
+  const snapshot       = useMemo(() => buildSnapshot(apiData, statementsData), [apiData, statementsData])
   const defaults       = useMemo(() => seedAssumptions(apiData), [apiData])
   const historicalData = useMemo(() => buildHistoricalData(apiData), [apiData])
 
