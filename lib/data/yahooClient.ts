@@ -92,7 +92,7 @@ export async function getHistorical(ticker: string, period: HistoricalPeriod = '
     period1: period1.toISOString().split('T')[0],
     period2: period2.toISOString().split('T')[0],
     interval: weekly ? '1wk' : '1d',
-  })
+  }, { validateResult: false })
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -104,7 +104,7 @@ export async function getSPYHistorical(): Promise<any[]> {
     period1: period1.toISOString().split('T')[0],
     period2: period2.toISOString().split('T')[0],
     interval: '1wk',
-  })
+  }, { validateResult: false })
 }
 
 // Returns the spot FX rate to convert fromCurrency → toCurrency (e.g. CNY → USD = 0.138)

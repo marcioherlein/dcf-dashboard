@@ -22,8 +22,8 @@ export async function GET(req: NextRequest) {
     const [financials, quote, stockHistory, spyHistory, rfRate, fmp, annualBSRows] = await Promise.all([
       getFinancials(ticker),
       getQuote(ticker),
-      getHistorical(ticker, '5y'),
-      getSPYHistorical(),
+      getHistorical(ticker, '5y').catch(() => []),
+      getSPYHistorical().catch(() => []),
       getRfRate(),
       getFmpBundle(ticker).catch(() => ({ incomeStatements: [], cashFlowStatements: [], balanceSheets: [], keyMetrics: [], ratios: [] })),
       getAnnualBalanceSheet(ticker).catch(() => []),
