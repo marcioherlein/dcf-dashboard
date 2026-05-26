@@ -121,7 +121,7 @@ export default function FinancialCharts({
   const panel = 'rounded-xl card p-5'
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-4 sm:p-5">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
         {/* Chart 1 — Revenue & Net Income */}
@@ -283,26 +283,29 @@ export default function FinancialCharts({
 
         return (
           <div className={`${panel} col-span-1 sm:col-span-2`}>
-            <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
-              <div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
+              <div className="flex-1">
                 <p className={sectionTitle} style={{ marginBottom: 0 }}>Valuation History — {active.label}</p>
                 <p className="text-[10px] text-slate-400 mt-0.5">{active.description}</p>
               </div>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {TABS.map(t => (
-                  <button
-                    key={t.key}
-                    onClick={() => setMultipleTab(t.key)}
-                    className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-colors ${
-                      multipleTab === t.key
-                        ? 'border-transparent text-white'
-                        : 'border-slate-200 text-slate-500 hover:border-slate-300 bg-transparent'
-                    }`}
-                    style={multipleTab === t.key ? { background: t.color, borderColor: t.color } : {}}
-                  >
-                    {t.label}
-                  </button>
-                ))}
+              {/* Tab bar — scrollable on mobile */}
+              <div className="overflow-x-auto -mx-5 px-5 sm:mx-0 sm:px-0">
+                <div className="flex items-center gap-1.5 min-w-max">
+                  {TABS.map(t => (
+                    <button
+                      key={t.key}
+                      onClick={() => setMultipleTab(t.key)}
+                      className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-colors ${
+                        multipleTab === t.key
+                          ? 'border-transparent text-white'
+                          : 'border-slate-200 text-slate-500 hover:border-slate-300 bg-transparent'
+                      }`}
+                      style={multipleTab === t.key ? { background: t.color, borderColor: t.color } : {}}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
