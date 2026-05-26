@@ -12,8 +12,10 @@ import { blendEVEBITDAMultiple } from '@/lib/valuation/methods/evEbitda'
 import SummaryCards from './cockpit/SummaryCards'
 import GuidanceStrip from './cockpit/GuidanceStrip'
 import FairValueChart from './cockpit/FairValueChart'
-import ModelBreakdownTable from './cockpit/ModelBreakdownTable'
 import AssumptionsPanel, { type SparkPoint } from './cockpit/AssumptionsPanel'
+import KeyAssumptions from './cockpit/KeyAssumptions'
+import ScenarioCards from './cockpit/ScenarioCards'
+import ValuationMethodCards from './cockpit/ValuationMethodCards'
 import RightSidebar from './cockpit/RightSidebar'
 
 const ModellingWorkspace = dynamic(
@@ -37,28 +39,19 @@ function buildSnapshot(apiData: ApiData): CockpitSnapshot {
   const debtM   = apiData.fairValue?.debt ?? 0
   const sharesRaw = sharesM > 0 ? sharesM * 1e6 : null
 
-  // LTM revenue from financial statements (FMP, in millions → raw dollars)
   const incomeRows: Array<{ isProjected: boolean; revenue: number | null; ebitda?: number | null }> =
     apiData.financialStatements?.incomeStatement ?? []
   const actuals = incomeRows.filter(r => !r.isProjected && r.revenue != null && r.revenue > 0)
   const lastRow = actuals[actuals.length - 1] ?? null
   const ltvRevenueDollars = lastRow?.revenue != null ? lastRow.revenue * 1e6 : null
 
-  // TTM EBITDA (last non-projected row, in millions → raw dollars)
   const ebitdaRows = incomeRows.filter(r => !r.isProjected && r.ebitda != null && r.ebitda > 0)
   const lastEbitda = ebitdaRows[ebitdaRows.length - 1]?.ebitda ?? null
   const ttmEbitdaDollars = lastEbitda != null ? lastEbitda * 1e6 : null
 
-  // Net debt (in millions → raw dollars)
   const netDebtDollars = (debtM - cashM) * 1e6
-
-  // FCF margin
   const fcfMargin = apiData.businessProfile?.fcfMargin ?? null
-
-  // Historical CAGR
   const historicalCAGR = apiData.cagrAnalysis?.historicalCagr3y ?? null
-
-  // Analyst
   const analystTargetMean = apiData.quote?.analystTargetMean ?? null
   const analystRating = apiData.analystRecommendation ?? null
 
@@ -87,7 +80,6 @@ function seedAssumptions(apiData: ApiData): ValuationAssumptions {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const revMultBase = deriveRevenueMultipleAssumptions(apiData as any)
 
-  // Seed EV/EBITDA exit multiple
   const sector = apiData.quote?.sector ?? null
   const industry = apiData.quote?.industry ?? null
   const crp = apiData.wacc?.crp ?? 0
@@ -118,7 +110,6 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
   }> = apiData.financialStatements?.incomeStatement ?? []
   const actuals = incomeRows.filter(r => !r.isProjected).slice(-6)
 
-  // CAGR: year-over-year revenue growth
   const cagrPoints: SparkPoint[] = []
   for (let i = 1; i < actuals.length; i++) {
     const prev = actuals[i - 1].revenue
@@ -128,12 +119,10 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
     }
   }
 
-  // Net Margin: netIncome / revenue
   const netMarginPoints: SparkPoint[] = actuals
     .filter(r => r.revenue != null && r.revenue > 0 && r.netIncome != null)
     .map(r => ({ label: `'${String(r.year).slice(-2)}`, value: r.netIncome! / r.revenue! }))
 
-  // Current multiples as single-point reference
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const multEst: Array<{ multiple: string; actualValue: number }> =
     apiData.valuationMethods?.models?.multiples?.estimates ?? []
@@ -154,8 +143,8 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
 }
 
 export default function ValuationCockpit({ apiData, ticker, statementsData, onNavigateToFinancials }: Props) {
-  const snapshot     = useMemo(() => buildSnapshot(apiData), [apiData])
-  const defaults     = useMemo(() => seedAssumptions(apiData), [apiData])
+  const snapshot       = useMemo(() => buildSnapshot(apiData), [apiData])
+  const defaults       = useMemo(() => seedAssumptions(apiData), [apiData])
   const historicalData = useMemo(() => buildHistoricalData(apiData), [apiData])
   const [assumptions, setAssumptions] = useState<ValuationAssumptions>(() => seedAssumptions(apiData))
 
@@ -164,21 +153,25 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
     [assumptions, snapshot]
   )
 
-  const currency = apiData.quote?.currency === 'USD'
-    ? '$'
-    : (apiData.quote?.currency ?? '$') + ' '
+  const currency     = apiData.quote?.currency === 'USD' ? '$' : (apiData.quote?.currency ?? '$') + ' '
   const currentPrice = apiData.quote?.price ?? 0
-  const changePct = apiData.quote?.changePct ?? null
+  const changePct    = apiData.quote?.changePct ?? null
 
-  const fullDcfRef = useRef<HTMLDetailsElement>(null)
+  const fullDcfRef        = useRef<HTMLDetailsElement>(null)
+  const assumptionsPanelRef = useRef<HTMLDivElement>(null)
+
   function scrollToFullDCF() {
     fullDcfRef.current?.setAttribute('open', '')
     fullDcfRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
+  function scrollToAssumptions() {
+    assumptionsPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   return (
     <div className="space-y-4">
-      {/* 5 summary cards */}
+      {/* Unified 4-item summary strip */}
       <SummaryCards
         output={output}
         currentPrice={currentPrice}
@@ -186,33 +179,51 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
         currency={currency}
       />
 
-      {/* Guidance strip */}
-      <GuidanceStrip />
+      {/* Scenario Range — Bear / Base / Bull */}
+      <ScenarioCards
+        scenarios={output.scenarios}
+        currentPrice={currentPrice}
+        currency={currency}
+      />
 
       {/* Main two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_280px] gap-4 items-start">
         {/* Left column */}
         <div className="space-y-4 min-w-0">
-          <FairValueChart
+          {/* Fair Value Chart + Key Assumptions side by side */}
+          <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-4 items-stretch">
+            <FairValueChart
+              methods={output.methods}
+              blendedFairValue={output.blendedFairValue}
+              currentPrice={currentPrice}
+              currency={currency}
+            />
+            <KeyAssumptions
+              assumptions={assumptions}
+              defaults={defaults}
+              onChange={setAssumptions}
+              onReset={() => setAssumptions(defaults)}
+              onViewAll={scrollToAssumptions}
+            />
+          </div>
+
+          {/* Valuation Models — 4 method cards */}
+          <ValuationMethodCards
             methods={output.methods}
-            blendedFairValue={output.blendedFairValue}
             currentPrice={currentPrice}
             currency={currency}
           />
 
-          <ModelBreakdownTable
-            methods={output.methods}
-            currentPrice={currentPrice}
-            currency={currency}
-          />
-
-          <AssumptionsPanel
-            assumptions={assumptions}
-            defaults={defaults}
-            onChange={setAssumptions}
-            onReset={() => setAssumptions(defaults)}
-            historicalData={historicalData}
-          />
+          {/* Full Assumptions Panel */}
+          <div ref={assumptionsPanelRef}>
+            <AssumptionsPanel
+              assumptions={assumptions}
+              defaults={defaults}
+              onChange={setAssumptions}
+              onReset={() => setAssumptions(defaults)}
+              historicalData={historicalData}
+            />
+          </div>
 
           {/* Advanced: Full DCF Modelling Table */}
           <details ref={fullDcfRef} className="group" id="full_dcf">
@@ -261,6 +272,9 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
               )}
             </div>
           </div>
+
+          {/* Guidance Strip — how to read this valuation */}
+          <GuidanceStrip />
         </div>
 
         {/* Right sidebar */}
@@ -270,6 +284,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
           currency={currency}
           ticker={ticker}
           onViewFullDCF={scrollToFullDCF}
+          onViewAllAssumptions={scrollToAssumptions}
         />
       </div>
     </div>
