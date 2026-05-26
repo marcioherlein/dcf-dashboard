@@ -10,11 +10,19 @@ interface ScenarioData {
   terminalG: number
 }
 
+interface ModelMethodology {
+  companyType: string
+  companyTypeLabel: string
+  rationale: string
+  weights: { ufcfPGM: number; ufcfEM: number; lfcfPGM: number; lfcfEM: number }
+}
+
 interface Props {
   scenarios: {
     bull: ScenarioData
     base: ScenarioData
     bear: ScenarioData
+    modelMethodology?: ModelMethodology
   }
   currentPrice: number
   currency?: string
@@ -51,7 +59,6 @@ function ScenarioCol({
         )}
       </div>
 
-      {/* Consequence — primary signal */}
       {upside != null && (
         <div>
           <p className={`text-2xl font-bold tabular-nums leading-none ${
@@ -123,6 +130,8 @@ function ScenarioCol({
 export default function ScenarioComparisonCard({ scenarios, currentPrice, currency = 'USD' }: Props) {
   if (!scenarios?.base?.fairValue) return null
 
+  const m = scenarios.modelMethodology
+
   return (
     <div className="glass-card-light rounded-xl p-5">
       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">
@@ -133,10 +142,45 @@ export default function ScenarioComparisonCard({ scenarios, currentPrice, curren
         <ScenarioCol label="Base" scenario={scenarios.base} currentPrice={currentPrice} currency={currency} isFeatured />
         <ScenarioCol label="Bull" scenario={scenarios.bull} currentPrice={currentPrice} currency={currency} />
       </div>
+
+      {m && (
+        <div className="mt-4 pt-3 border-t border-slate-100">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+            How the Base Was Computed — Full DCF Modelling Table
+          </p>
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {m.weights.ufcfPGM > 0 && (
+              <span className="text-[9px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 font-semibold border border-blue-100">
+                Unlevered + Perpetuity {Math.round(m.weights.ufcfPGM * 100)}%
+              </span>
+            )}
+            {m.weights.ufcfEM > 0 && (
+              <span className="text-[9px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 font-semibold border border-indigo-100">
+                Unlevered + Exit Multiple {Math.round(m.weights.ufcfEM * 100)}%
+              </span>
+            )}
+            {m.weights.lfcfPGM > 0 && (
+              <span className="text-[9px] px-2 py-0.5 rounded-full bg-violet-50 text-violet-600 font-semibold border border-violet-100">
+                Levered + Perpetuity {Math.round(m.weights.lfcfPGM * 100)}%
+              </span>
+            )}
+            {m.weights.lfcfEM > 0 && (
+              <span className="text-[9px] px-2 py-0.5 rounded-full bg-purple-50 text-purple-600 font-semibold border border-purple-100">
+                Levered + Exit Multiple {Math.round(m.weights.lfcfEM * 100)}%
+              </span>
+            )}
+          </div>
+          <p className="text-[10px] text-slate-400 leading-relaxed">
+            <span className="text-slate-600 font-semibold">{m.companyTypeLabel}:</span>{' '}
+            {m.rationale}
+          </p>
+        </div>
+      )}
+
       <p className="text-[10px] text-slate-400 mt-3 leading-relaxed">
-        <span className="text-red-500 font-medium">Bear:</span> economic slowdown, margin pressure, or execution miss — WACC +1%, CAGR −20%.{' '}
-        <span className="text-blue-500 font-medium">Base:</span> model&apos;s central estimate based on current growth trajectory.{' '}
-        <span className="text-emerald-500 font-medium">Bull:</span> sustained growth and margin expansion — WACC −1%, CAGR +20%.
+        <span className="text-red-500 font-medium">Bear:</span> WACC +1%, CAGR −20%, Terminal G −0.5pp from base.{' '}
+        <span className="text-blue-500 font-medium">Base:</span> Full DCF Modelling Table result — Damodaran 4-method blend.{' '}
+        <span className="text-emerald-500 font-medium">Bull:</span> WACC −1%, CAGR +20%, Terminal G +0.5pp from base.
       </p>
     </div>
   )

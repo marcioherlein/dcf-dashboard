@@ -104,6 +104,12 @@ interface FinancialsData {
     bull: { fairValue: number; wacc: number; cagr: number; terminalG: number }
     base: { fairValue: number; wacc: number; cagr: number; terminalG: number }
     bear: { fairValue: number; wacc: number; cagr: number; terminalG: number }
+    modelMethodology?: {
+      companyType: string
+      companyTypeLabel: string
+      rationale: string
+      weights: { ufcfPGM: number; ufcfEM: number; lfcfPGM: number; lfcfEM: number }
+    }
   }
   baseFCF: number
   cagr: number

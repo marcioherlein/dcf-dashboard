@@ -63,10 +63,18 @@ export function calculateFairValue(
   }
 }
 
+export interface ModelMethodology {
+  companyType: string
+  companyTypeLabel: string
+  rationale: string
+  weights: { ufcfPGM: number; ufcfEM: number; lfcfPGM: number; lfcfEM: number }
+}
+
 export interface Scenarios {
   bull: { fairValue: number | null; wacc: number; cagr: number; terminalG: number }
   base: { fairValue: number | null; wacc: number; cagr: number; terminalG: number }
   bear: { fairValue: number | null; wacc: number; cagr: number; terminalG: number }
+  modelMethodology?: ModelMethodology
 }
 
 export function buildScenarios(

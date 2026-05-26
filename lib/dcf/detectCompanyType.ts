@@ -82,6 +82,35 @@ export function companyTypeIntrinsico(type: CompanyType): string {
   }
 }
 
+// Damodaran 4-model DCF weights by company type.
+// Variants: UFCF+PGM, UFCF+EM, LFCF+PGM, LFCF+EM.
+// Source: Damodaran "Investment Valuation" §12–15.
+export const FOUR_MODEL_DCF_WEIGHTS: Record<CompanyType, { ufcfPGM: number; ufcfEM: number; lfcfPGM: number; lfcfEM: number }> = {
+  standard:  { ufcfPGM: 0.35, ufcfEM: 0.35, lfcfPGM: 0.15, lfcfEM: 0.15 },
+  dividend:  { ufcfPGM: 0.40, ufcfEM: 0.25, lfcfPGM: 0.25, lfcfEM: 0.10 },
+  growth:    { ufcfPGM: 0.30, ufcfEM: 0.40, lfcfPGM: 0.10, lfcfEM: 0.20 },
+  startup:   { ufcfPGM: 0.20, ufcfEM: 0.50, lfcfPGM: 0.10, lfcfEM: 0.20 },
+  financial: { ufcfPGM: 0.05, ufcfEM: 0.05, lfcfPGM: 0.45, lfcfEM: 0.45 },
+  etf:       { ufcfPGM: 0.00, ufcfEM: 0.00, lfcfPGM: 0.00, lfcfEM: 0.00 },
+}
+
+export function getDCFModelRationale(type: CompanyType): string {
+  switch (type) {
+    case 'financial':
+      return 'Levered DCF (LFCF/FCFE) dominates (90%) because operating cash flows for banks, insurers, and fintechs are distorted by loan book and fund flows. Unlevered FCF understates true equity value.'
+    case 'dividend':
+      return 'Unlevered perpetuity growth model leads (40%) — stable cash flows closely match Gordon Growth assumptions. Levered DCF adds a 35% cross-check.'
+    case 'growth':
+      return 'Exit multiples weighted more heavily (60%) because perpetuity growth rate assumptions become unreliable when near-term CAGR far exceeds the long-run stable rate.'
+    case 'startup':
+      return 'Predominantly exit multiple (70%) — perpetuity growth models are highly sensitive to terminal assumptions for companies still scaling toward profitability.'
+    case 'standard':
+      return 'Balanced equally between perpetuity growth and exit multiple for unlevered DCF (70%), with a 30% levered DCF cross-check for robustness.'
+    case 'etf':
+      return 'DCF does not apply to ETFs/funds. Value is determined by the net asset value of underlying holdings.'
+  }
+}
+
 // Growth model selection per Damodaran's life-cycle framework:
 // Three-stage (high growth → linear fade → terminal) applies when current growth >> stable growth.
 // Two-stage (constant CAGR → terminal) applies when growth is already near sustainable levels.

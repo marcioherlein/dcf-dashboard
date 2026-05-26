@@ -6,6 +6,7 @@ import { buildAssumptionSet } from '@/lib/valuation/assumptions'
 import { computeUFCFRows, computeUFCFEV, type UFCFRow } from '@/lib/valuation/unleveredDcf'
 import { computeLFCFRows, type LFCFRow } from '@/lib/valuation/leveredDcf'
 import { computeTerminalValues } from '@/lib/valuation/terminalValue'
+import { FOUR_MODEL_DCF_WEIGHTS } from '@/lib/dcf/detectCompanyType'
 import ForecastTable, {
   type DisplayRow,
   type WACCData,
@@ -16,22 +17,6 @@ import SensitivityTable from '@/components/valuation/SensitivityTable'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type StatementsDataLike = any
-
-// Damodaran four-model DCF weights by company type.
-// Each row = { UFCF+PGM, UFCF+EM, LFCF+PGM, LFCF+EM }.
-// Source: Damodaran "Investment Valuation" §12–15:
-//   – UFCF preferred for non-financial firms (less sensitive to financing assumptions)
-//   – LFCF (FCFE) primary for financial companies (debt integral to operations)
-//   – Exit Multiple preferred for high-growth / EM-heavy companies (less sensitive to terminal g)
-//   – PGM preferred for dividend / stable companies (resembles Gordon Growth DDM)
-const FOUR_MODEL_WEIGHTS: Record<string, { ufcfPGM: number; ufcfEM: number; lfcfPGM: number; lfcfEM: number }> = {
-  standard:  { ufcfPGM: 0.35, ufcfEM: 0.35, lfcfPGM: 0.15, lfcfEM: 0.15 },
-  dividend:  { ufcfPGM: 0.40, ufcfEM: 0.25, lfcfPGM: 0.25, lfcfEM: 0.10 },
-  growth:    { ufcfPGM: 0.30, ufcfEM: 0.40, lfcfPGM: 0.10, lfcfEM: 0.20 },
-  startup:   { ufcfPGM: 0.20, ufcfEM: 0.50, lfcfPGM: 0.10, lfcfEM: 0.20 },
-  financial: { ufcfPGM: 0.05, ufcfEM: 0.05, lfcfPGM: 0.45, lfcfEM: 0.45 },
-  etf:       { ufcfPGM: 0.00, ufcfEM: 0.00, lfcfPGM: 0.00, lfcfEM: 0.00 },
-}
 
 interface ModellingWorkspaceProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -433,7 +418,7 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
       ? (sumPvLFCF + tvLFCF.exitMultipleTVDiscounted) / sharesM
       : null
 
-    const w = FOUR_MODEL_WEIGHTS[baseInput.companyType ?? 'standard'] ?? FOUR_MODEL_WEIGHTS.standard
+    const w = FOUR_MODEL_DCF_WEIGHTS[baseInput.companyType ?? 'standard'] ?? FOUR_MODEL_DCF_WEIGHTS.standard
     const parts: { w: number; v: number }[] = [
       ufcfPGM != null ? { w: w.ufcfPGM, v: ufcfPGM } : null,
       ufcfEM  != null ? { w: w.ufcfEM,  v: ufcfEM  } : null,
