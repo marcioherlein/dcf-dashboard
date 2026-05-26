@@ -224,19 +224,19 @@ export default function TopBar() {
             </button>
           </div>
         ) : (
-          <div className="flex flex-col items-end gap-0.5">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => signIn('google')}
-              className="text-[12px] text-white px-3 py-1.5 rounded-lg transition-all font-semibold bg-blue-600 hover:bg-blue-500 shadow-sm"
+              className="text-[12px] text-white px-3 py-1.5 rounded-lg transition-all font-semibold bg-blue-600 hover:bg-blue-500 shadow-sm whitespace-nowrap"
+            >
+              Start free trial
+            </button>
+            <button
+              onClick={() => signIn('google')}
+              className="text-[12px] text-slate-600 hover:text-slate-900 transition-colors whitespace-nowrap hidden sm:block"
             >
               Sign in
             </button>
-            <p className="text-[9px] text-slate-400 hidden sm:block leading-tight">
-              By signing in you agree to our{' '}
-              <a href="/terms" className="underline hover:text-slate-600" onClick={e => e.stopPropagation()}>Terms</a>
-              {' '}&amp;{' '}
-              <a href="/privacy" className="underline hover:text-slate-600" onClick={e => e.stopPropagation()}>Privacy Policy</a>
-            </p>
           </div>
         )}
       </div>

@@ -1,0 +1,364 @@
+'use client'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyRecord = Record<string, any>
+
+interface StockRatingsCategory {
+  score: number
+  grade: string
+  label: string
+  color: 'emerald' | 'green' | 'blue' | 'amber' | 'orange' | 'red'
+  summary: string
+}
+
+interface StockRatings {
+  profitability?: StockRatingsCategory
+  liquidity?: StockRatingsCategory
+  growth?: StockRatingsCategory
+  moat?: StockRatingsCategory
+  valuation?: StockRatingsCategory
+  overall?: { score: number; grade: string; label: string; color: string }
+}
+
+interface ScoresData {
+  altman?: { zScore: number; zone: 'Safe' | 'Grey' | 'Distress'; isReliable?: boolean } | null
+  roic?: { roic: number; spread: number; dataAvailable: boolean } | null
+}
+
+interface BusinessProfile {
+  grossMargin: number | null
+  netMargin: number | null
+  fcfMargin: number | null
+  revenueM: number
+}
+
+interface CAGRAnalysisData {
+  historicalCagr3y: number
+  analystEstimate1y: number
+  blended: number
+  drivers: string[]
+}
+
+interface StatementsData {
+  ttm: {
+    incomeStatement: AnyRecord | null
+    balanceSheet: AnyRecord | null
+    cashFlow: AnyRecord | null
+  }
+}
+
+interface Props {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ratings: StockRatings | any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  scores: ScoresData | any
+  businessProfile: BusinessProfile
+  cagrAnalysis: CAGRAnalysisData | null
+  statementsData: StatementsData | null
+}
+
+// ─── helpers ─────────────────────────────────────────────────────────────────
+
+function fmtPct(n: number | null | undefined, decimals = 1): string {
+  if (n == null) return '—'
+  return `${(n * 100).toFixed(decimals)}%`
+}
+
+function gradeBadge(color: string): string {
+  if (color === 'emerald' || color === 'green')
+    return 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+  if (color === 'blue')
+    return 'bg-blue-50 text-blue-700 border border-blue-100'
+  if (color === 'amber' || color === 'orange')
+    return 'bg-amber-50 text-amber-700 border border-amber-100'
+  return 'bg-red-50 text-red-700 border border-red-100'
+}
+
+function MetricRow({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-[12px] text-slate-500 truncate">{label}</span>
+      <span className={`text-[12px] font-semibold tabular-nums shrink-0 ${valueClass ?? 'text-slate-800'}`}>{value}</span>
+    </div>
+  )
+}
+
+function CardHeader({ title, label, color }: { title: string; label: string; color: string }) {
+  return (
+    <div className="flex items-center justify-between mb-3">
+      <p className="text-[12px] font-bold text-slate-700 uppercase tracking-wide">{title}</p>
+      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${gradeBadge(color)}`}>{label}</span>
+    </div>
+  )
+}
+
+function MiniBar({ value, max, color }: { value: number; max: number; color: string }) {
+  const pct = Math.min(Math.max((value / max) * 100, 0), 100)
+  const barColor = color === 'emerald' ? 'bg-emerald-400'
+    : color === 'blue' ? 'bg-blue-400'
+    : color === 'amber' ? 'bg-amber-400'
+    : 'bg-red-400'
+  return (
+    <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+      <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
+    </div>
+  )
+}
+
+// ─── Card 1: Business Quality ──────────────────────────────────────────────
+
+function BusinessQualityCard({ ratings, scores }: { ratings: StockRatings; scores: ScoresData }) {
+  const moat = ratings.moat
+  const profitability = ratings.profitability
+  const cat = moat ?? profitability
+  const color = cat?.color ?? 'blue'
+  const label = cat?.label ?? 'Analyzing…'
+
+  const roic = scores.roic
+  const spreadPct = roic?.dataAvailable && roic.spread != null
+    ? `${roic.spread >= 0 ? '+' : ''}${(roic.spread * 100).toFixed(1)}pp vs WACC`
+    : '—'
+  const spreadClass = roic?.spread != null && roic.spread >= 0 ? 'text-emerald-600' : 'text-red-500'
+
+  return (
+    <div className="rounded-xl border border-slate-100 bg-white/80 px-4 py-4">
+      <CardHeader title="Business Quality" label={label} color={color} />
+      <div className="space-y-2">
+        <MetricRow label="Economic Moat" value={moat?.label ?? '—'} />
+        <MetricRow label="ROIC vs WACC" value={spreadPct} valueClass={spreadClass} />
+        <MetricRow
+          label="Profitability Grade"
+          value={profitability ? `${profitability.grade} — ${profitability.label}` : '—'}
+        />
+      </div>
+    </div>
+  )
+}
+
+// ─── Card 2: Growth Outlook ────────────────────────────────────────────────
+
+function GrowthOutlookCard({ ratings, cagrAnalysis }: { ratings: StockRatings; cagrAnalysis: CAGRAnalysisData | null }) {
+  const growth = ratings.growth
+  const color = growth?.color ?? 'blue'
+  const label = growth?.label ?? 'Analyzing…'
+
+  const hist = cagrAnalysis?.historicalCagr3y
+  const analyst = cagrAnalysis?.analystEstimate1y
+  const blended = cagrAnalysis?.blended
+  const maxBar = Math.max(Math.abs(hist ?? 0), Math.abs(analyst ?? 0), Math.abs(blended ?? 0), 0.01) * 1.1
+
+  return (
+    <div className="rounded-xl border border-slate-100 bg-white/80 px-4 py-4">
+      <CardHeader title="Growth Outlook" label={label} color={color} />
+      <div className="space-y-2.5">
+        {hist != null && (
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[11px] text-slate-500 w-28 shrink-0">3Y Historical CAGR</span>
+              <MiniBar value={Math.abs(hist)} max={maxBar} color={hist >= 0 ? 'blue' : 'amber'} />
+              <span className="text-[12px] font-semibold tabular-nums text-slate-700 w-12 text-right">{fmtPct(hist)}</span>
+            </div>
+          </div>
+        )}
+        {analyst != null && (
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[11px] text-slate-500 w-28 shrink-0">Analyst Est. (1Y)</span>
+              <MiniBar value={Math.abs(analyst)} max={maxBar} color={analyst >= 0 ? 'emerald' : 'amber'} />
+              <span className="text-[12px] font-semibold tabular-nums text-slate-700 w-12 text-right">{fmtPct(analyst)}</span>
+            </div>
+          </div>
+        )}
+        {!hist && !analyst && (
+          <p className="text-[12px] text-slate-400 italic">Growth data unavailable</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Card 3: Profitability ─────────────────────────────────────────────────
+
+function ProfitabilityCard({ ratings, businessProfile, statementsData }: {
+  ratings: StockRatings
+  businessProfile: BusinessProfile
+  statementsData: StatementsData | null
+}) {
+  const profitability = ratings.profitability
+  const color = profitability?.color ?? 'blue'
+  const label = profitability?.label ?? 'Analyzing…'
+
+  const ttmIS = statementsData?.ttm?.incomeStatement
+  const opIncome = (ttmIS?.operatingIncome ?? ttmIS?.ebit ?? null) as number | null
+  const revenue = (ttmIS?.totalRevenue ?? ttmIS?.revenue ?? null) as number | null
+  const opMargin = opIncome != null && revenue != null && revenue > 0 ? opIncome / revenue : null
+
+  return (
+    <div className="rounded-xl border border-slate-100 bg-white/80 px-4 py-4">
+      <CardHeader title="Profitability" label={label} color={color} />
+      <div className="space-y-2">
+        <MetricRow label="Gross Margin" value={fmtPct(businessProfile.grossMargin)} />
+        <MetricRow label="Operating Margin" value={opMargin != null ? fmtPct(opMargin) : '—'} />
+        <MetricRow label="Net Margin" value={fmtPct(businessProfile.netMargin)} />
+        <MetricRow label="FCF Margin" value={fmtPct(businessProfile.fcfMargin)} />
+      </div>
+    </div>
+  )
+}
+
+// ─── Card 4: Risks to Thesis ───────────────────────────────────────────────
+
+function RisksCard({ ratings, cagrAnalysis }: { ratings: StockRatings; cagrAnalysis: CAGRAnalysisData | null }) {
+  const valuation = ratings.valuation
+  const riskColor = valuation?.color === 'red' || valuation?.color === 'orange' ? valuation.color
+    : (valuation?.color === 'amber' ? 'amber' : 'blue')
+
+  const riskLabel = valuation?.color === 'red' || valuation?.color === 'orange' ? 'Elevated'
+    : valuation?.color === 'amber' ? 'Moderate'
+    : 'Low'
+
+  // Build risk bullets from driver strings and weak rating categories
+  const bullets: string[] = []
+  if (cagrAnalysis?.drivers) {
+    const negDrivers = cagrAnalysis.drivers.filter(d =>
+      /compet|risk|challeng|declin|uncertain|pressur|headwind|vola|concern|restrict/i.test(d)
+    )
+    bullets.push(...negDrivers.slice(0, 3))
+  }
+  // Add weak rating areas
+  const weakCategories = (['profitability', 'liquidity', 'growth', 'moat'] as const)
+    .filter(k => ratings[k] && (ratings[k]!.color === 'red' || ratings[k]!.color === 'orange'))
+    .map(k => `${k.charAt(0).toUpperCase() + k.slice(1)} rated ${ratings[k]!.label}`)
+  bullets.push(...weakCategories.slice(0, 2))
+
+  const displayBullets = bullets.length > 0 ? bullets.slice(0, 4)
+    : ['No major red flags identified from current data']
+
+  return (
+    <div className="rounded-xl border border-slate-100 bg-white/80 px-4 py-4">
+      <CardHeader title="Risks to Thesis" label={riskLabel} color={riskColor} />
+      <ul className="space-y-1.5">
+        {displayBullets.map((b, i) => (
+          <li key={i} className="flex items-start gap-2 text-[12px] text-slate-600 leading-snug">
+            <span className="text-slate-300 mt-0.5 shrink-0">•</span>
+            <span>{b}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+// ─── Card 5: Cash Conversion ───────────────────────────────────────────────
+
+function CashConversionCard({ businessProfile, statementsData }: {
+  businessProfile: BusinessProfile
+  statementsData: StatementsData | null
+}) {
+  const ttmIS = statementsData?.ttm?.incomeStatement
+  const ttmCF = statementsData?.ttm?.cashFlow
+
+  const fcf = (ttmCF?.freeCashFlow ?? null) as number | null
+  const netIncome = (ttmIS?.netIncome ?? ttmIS?.netIncomeFromContinuingOperations ?? null) as number | null
+  const conversionRatio = fcf != null && netIncome != null && netIncome > 0
+    ? fcf / netIncome : null
+
+  const isGood = businessProfile.fcfMargin != null && businessProfile.fcfMargin > 0.10
+  const color = isGood ? 'emerald' : businessProfile.fcfMargin != null && businessProfile.fcfMargin > 0 ? 'blue' : 'amber'
+  const label = isGood ? 'Strong' : businessProfile.fcfMargin != null && businessProfile.fcfMargin > 0 ? 'Moderate' : 'Weak'
+
+  return (
+    <div className="rounded-xl border border-slate-100 bg-white/80 px-4 py-4">
+      <CardHeader title="Cash Conversion" label={label} color={color} />
+      <div className="space-y-2">
+        <MetricRow label="FCF Margin (TTM)" value={fmtPct(businessProfile.fcfMargin)} />
+        <MetricRow
+          label="FCF / Net Income"
+          value={conversionRatio != null ? `${(conversionRatio * 100).toFixed(0)}%` : '—'}
+          valueClass={conversionRatio != null ? (conversionRatio >= 0.8 ? 'text-emerald-600' : conversionRatio >= 0.5 ? 'text-amber-600' : 'text-red-500') : undefined}
+        />
+        <p className="text-[11px] text-slate-400 leading-snug pt-0.5">
+          {conversionRatio != null && conversionRatio >= 0.8 ? 'Earnings convert well to free cash flow'
+            : conversionRatio != null && conversionRatio >= 0.5 ? 'Moderate cash conversion quality'
+            : 'Cash conversion below average — monitor closely'}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ─── Card 6: Balance Sheet Safety ─────────────────────────────────────────
+
+function BalanceSheetCard({ scores, statementsData }: {
+  scores: ScoresData
+  statementsData: StatementsData | null
+}) {
+  const ttmBS = statementsData?.ttm?.balanceSheet
+  const ttmIS = statementsData?.ttm?.incomeStatement
+
+  const totalCurrentAssets = (ttmBS?.totalCurrentAssets ?? null) as number | null
+  const totalCurrentLiabilities = (ttmBS?.totalCurrentLiabilities ?? null) as number | null
+  const currentRatio = totalCurrentAssets != null && totalCurrentLiabilities != null && totalCurrentLiabilities > 0
+    ? totalCurrentAssets / totalCurrentLiabilities : null
+
+  const totalDebt = (ttmBS?.totalDebt ?? ttmBS?.longTermDebtAndCapitalLeaseObligation ?? ttmBS?.longTermDebt ?? null) as number | null
+  const cash = (ttmBS?.cashCashEquivalentsAndShortTermInvestments ?? ttmBS?.cashAndCashEquivalents ?? null) as number | null
+  const ebitdaRaw = (ttmIS?.EBITDA ?? ttmIS?.normalizedEBITDA ?? null) as number | null
+  const netDebt = totalDebt != null && cash != null ? totalDebt - cash : null
+  const ndToEbitda = netDebt != null && ebitdaRaw != null && ebitdaRaw > 0
+    ? netDebt / ebitdaRaw : null
+
+  const altman = scores.altman
+  const zone = altman?.zone ?? null
+  const zoneColor = zone === 'Safe' ? 'text-emerald-600' : zone === 'Grey' ? 'text-amber-600' : zone === 'Distress' ? 'text-red-500' : undefined
+
+  const bsColor = zone === 'Safe' || (currentRatio != null && currentRatio >= 1.5) ? 'emerald'
+    : zone === 'Distress' ? 'red'
+    : 'blue'
+  const bsLabel = zone === 'Safe' ? 'Strong' : zone === 'Grey' ? 'Fair' : zone === 'Distress' ? 'Distressed' : 'Analyzing…'
+
+  return (
+    <div className="rounded-xl border border-slate-100 bg-white/80 px-4 py-4">
+      <CardHeader title="Balance Sheet Safety" label={bsLabel} color={bsColor} />
+      <div className="space-y-2">
+        <MetricRow
+          label="Net Debt / EBITDA"
+          value={ndToEbitda != null ? `${ndToEbitda.toFixed(1)}x` : '—'}
+          valueClass={ndToEbitda != null ? (ndToEbitda <= 2 ? 'text-emerald-600' : ndToEbitda <= 4 ? 'text-amber-600' : 'text-red-500') : undefined}
+        />
+        <MetricRow
+          label="Current Ratio"
+          value={currentRatio != null ? currentRatio.toFixed(1) : '—'}
+          valueClass={currentRatio != null ? (currentRatio >= 1.5 ? 'text-emerald-600' : currentRatio >= 1.0 ? 'text-amber-600' : 'text-red-500') : undefined}
+        />
+        {altman != null && (
+          <MetricRow
+            label={`Altman Z-Score${altman.isReliable === false ? ' *' : ''}`}
+            value={`${altman.zScore.toFixed(1)} (${zone})`}
+            valueClass={zoneColor}
+          />
+        )}
+        {altman?.isReliable === false && (
+          <p className="text-[10px] text-slate-400 leading-snug">* Z-Score may be unreliable for non-US companies</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Main component ────────────────────────────────────────────────────────
+
+export default function OverviewMetricGrid({ ratings, scores, businessProfile, cagrAnalysis, statementsData }: Props) {
+  if (!ratings) return null
+
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+      <BusinessQualityCard ratings={ratings} scores={scores ?? {}} />
+      <GrowthOutlookCard ratings={ratings} cagrAnalysis={cagrAnalysis} />
+      <ProfitabilityCard ratings={ratings} businessProfile={businessProfile} statementsData={statementsData} />
+      <RisksCard ratings={ratings} cagrAnalysis={cagrAnalysis} />
+      <CashConversionCard businessProfile={businessProfile} statementsData={statementsData} />
+      <BalanceSheetCard scores={scores ?? {}} statementsData={statementsData} />
+    </div>
+  )
+}

@@ -42,6 +42,7 @@ export default function StockSidebar({ activeTab, data, statementsData, onNaviga
         valuationMethods={data.valuationMethods}
         derivedInsights={derivedInsights!}
         onNavigateToFinancials={onNavigateToFinancials}
+        ownership={data.ownership}
       />
     )
   }

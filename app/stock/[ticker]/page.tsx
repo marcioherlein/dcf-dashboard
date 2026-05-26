@@ -18,7 +18,6 @@ import ValuationLab from '@/components/valuation/ValuationLab'
 import FinancialsHub from '@/components/stock/FinancialsHub'
 import InvestorGradeCard from '@/components/stock/InvestorGradeCard'
 import MobileKeyInsights from '@/components/stock/MobileKeyInsights'
-import InvestorVerdictCard from '@/components/stock/InvestorVerdictCard'
 import ReverseDcfCallout from '@/components/stock/ReverseDcfCallout'
 import { LoginGateProvider, useLoginGate } from '@/components/auth/LoginGateProvider'
 import AuthBanner from '@/components/auth/AuthBanner'
@@ -28,6 +27,8 @@ import { loadPreLoginState, clearPreLoginState } from '@/lib/auth/preLoginState'
 import { useSession } from 'next-auth/react'
 import SaveToWatchlistDialog, { type WatchlistSavePayload } from '@/components/watchlist/SaveToWatchlistDialog'
 import ValuationNotAvailableCard from '@/components/stock/ValuationNotAvailableCard'
+import ValuationOverview from '@/components/valuation/ValuationOverview'
+import OverviewMetricGrid from '@/components/stock/OverviewMetricGrid'
 import FlipCard from '@/components/ui/FlipCard'
 import CardBack from '@/components/ui/CardBack'
 
@@ -431,32 +432,6 @@ function StockPageBody() {
                   exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
-                  <FlipCard
-                    back={<CardBack
-                      emoji="📊" title="Overall Grade & Fair Value"
-                      intro="This card summarizes whether the stock looks cheap or expensive right now, based on the model's calculations."
-                      sections={[
-                        { title: 'The Grade (A → F)', body: 'A or B means the model thinks the stock is undervalued — you might be getting a bargain. C means fairly priced. D or F means it looks overpriced — you may be paying more than it\'s worth.' },
-                        { title: 'Fair Value', body: 'The model\'s estimate of what one share is truly worth, based on the company\'s expected future cash flows. Think of it as the "right price" according to the numbers.' },
-                        { title: 'Upside %', body: 'How much the stock could grow if the market eventually agrees with the model. +20% means the model thinks the stock is 20% cheaper than it should be.' },
-                        { title: 'Confidence', body: 'How reliable the estimate is. High confidence = strong analyst data + solid financials. Low confidence = limited data, so take the estimate with more caution.' },
-                      ]}
-                      warning="This is a model estimate, not a prediction. Models can be wrong. Always do your own research before investing."
-                    />}
-                  >
-                  <InvestorVerdictCard
-                    upside={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null}
-                    fairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? null}
-                    price={data.quote.price}
-                    currency={currency}
-                    analystRecommendation={data.analystRecommendation ?? ''}
-                    ratings={data.ratings ?? null}
-                    confidence={data.cagrAnalysis?.confidenceLabel}
-                    growthModel={data.growthModel}
-                    scores={computedScores ?? data.scores}
-                  />
-                  </FlipCard>
-
                   {/* Reverse DCF — signature card */}
                   <FlipCard
                     back={<CardBack
@@ -485,6 +460,17 @@ function StockPageBody() {
                   />
                   </FlipCard>
 
+                  {/* 6 metric cards: Business Quality, Growth, Profitability, Risks, Cash, Balance Sheet */}
+                  {data.ratings && (
+                    <OverviewMetricGrid
+                      ratings={data.ratings}
+                      scores={computedScores ?? data.scores}
+                      businessProfile={data.businessProfile}
+                      cagrAnalysis={data.cagrAnalysis ?? null}
+                      statementsData={statementsData}
+                    />
+                  )}
+
                   <PriceChart
                     ticker={ticker}
                     isDark={false}
@@ -492,15 +478,6 @@ function StockPageBody() {
                     analystTarget={data.quote.analystTargetMean}
                     userModelFairValue={userModelFairValue}
                   />
-
-                  {data.ratings && data.scores && (
-                    <HealthSection
-                      ratings={data.ratings}
-                      scores={computedScores ?? data.scores}
-                      financialsData={data}
-                      collapsible
-                    />
-                  )}
 
                   {/* Company Overview — collapsible */}
                   {(data.businessProfile.description || data.historicalRevenues.length >= 2) && (
@@ -611,6 +588,13 @@ function StockPageBody() {
                     />
                     </FlipCard>
                   )}
+                  <ValuationOverview
+                    ticker={ticker}
+                    currentPrice={data.quote.price ?? null}
+                    changePct={data.quote.changePct ?? null}
+                    currency={data.quote.currency === 'USD' ? '$' : (data.quote.currency ?? '$') + ' '}
+                    weightedFairValue={userModelFairValue}
+                  />
                   <ValuationLab apiData={data} ticker={ticker} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} onWeightedFVChange={setUserModelFairValue} onActiveMethodChange={setActiveValuationMethod} />
                   {data.fairValue?.fairValuePerShare != null && (
                     <FlipCard

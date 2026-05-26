@@ -13,7 +13,7 @@ import ModellingWorkspace from '@/components/modelling/ModellingWorkspace'
 import { computeForwardPE } from '@/lib/valuation/methods/forwardPE'
 import { computeRevenueMultiple } from '@/lib/valuation/methods/revenueMultiple'
 import { computeReverseDCF } from '@/lib/valuation/methods/reverseDcf'
-import { computeEVEBITDA, getDefaultEVEBITDAMultiple, blendEVEBITDAMultiple } from '@/lib/valuation/methods/evEbitda'
+import { computeEVEBITDA, blendEVEBITDAMultiple } from '@/lib/valuation/methods/evEbitda'
 import {
   deriveForwardPEAssumptions,
   deriveRevenueMultipleAssumptions,
@@ -1274,14 +1274,64 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
   return (
     <div className="space-y-4">
 
-      {/* ── 1. How to use — above the chart so users see context first ─────── */}
-      <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-400 mb-2">How to use these models</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-[11px] text-slate-600 leading-relaxed">
-          <p><span className="font-semibold text-slate-700">1. Start with Reverse DCF</span> — see what growth rate today&apos;s price already assumes. That&apos;s the bar the company must clear.</p>
-          <p><span className="font-semibold text-slate-700">2. Check the Full DCF</span> — enter your own growth and WACC assumptions to build a fair-value estimate from first principles.</p>
-          <p><span className="font-semibold text-slate-700">3. Validate with multiples</span> — Forward P/E, EV/EBITDA and Revenue Multiple act as sanity checks against how the market prices peers.</p>
-          <p><span className="font-semibold text-slate-700">4. Trust the blended estimate</span> — the chart above weights all methods: Forward P/E 35%, EV/EBITDA 30%, Revenue Multiple 25%, Core DCF 10%.</p>
+      {/* ── 1. Fair Value by Method ──────────────────────────────────────── */}
+      <div className="rounded-xl border border-slate-100 bg-white/70 px-4 py-4">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">Fair Value by Method</p>
+        <div className="space-y-2">
+          {summaryMethods.map(m => {
+            if (m.fairValue == null) return (
+              <div key={m.id} className="flex items-center gap-3 opacity-40">
+                <span className="text-[11px] text-slate-400 w-36 shrink-0 truncate">{m.label}</span>
+                <div className="flex-1 h-4 bg-slate-100 rounded-full" />
+                <span className="text-[11px] text-slate-400 w-16 text-right">N/A</span>
+                <span className="text-[11px] text-slate-400 w-16 text-right">—</span>
+              </div>
+            )
+            const upside = m.upsidePct ?? 0
+            const isUp = upside >= 0
+            const barWidth = Math.min(Math.abs(upside) * 100 / 2, 48)
+            return (
+              <div key={m.id} className="flex items-center gap-3">
+                <span className="text-[11px] text-slate-500 w-36 shrink-0 truncate">{m.label}</span>
+                <div className="flex-1 relative h-4 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className={`absolute top-0 bottom-0 rounded-full ${isUp ? 'bg-emerald-300' : 'bg-red-300'}`}
+                    style={isUp
+                      ? { left: '50%', width: `${barWidth}%` }
+                      : { right: '50%', width: `${barWidth}%` }}
+                  />
+                  <div className="absolute top-0 bottom-0 left-1/2 w-[1.5px] bg-slate-400" />
+                </div>
+                <span className={`text-[12px] font-semibold tabular-nums w-14 text-right ${isUp ? 'text-emerald-600' : 'text-red-500'}`}>
+                  {isUp ? '+' : ''}{(upside * 100).toFixed(1)}%
+                </span>
+                <span className="text-[11px] text-slate-500 w-16 text-right tabular-nums font-mono">{currency}{m.fairValue.toFixed(2)}</span>
+              </div>
+            )
+          })}
+          {weightedFV != null && (() => {
+            const upside = currentPrice > 0 ? (weightedFV - currentPrice) / currentPrice : 0
+            const isUp = upside >= 0
+            const barWidth = Math.min(Math.abs(upside) * 100 / 2, 48)
+            return (
+              <div className="flex items-center gap-3 pt-2 border-t border-slate-100 mt-1">
+                <span className="text-[11px] font-bold text-slate-700 w-36 shrink-0">Blended Estimate</span>
+                <div className="flex-1 relative h-4 bg-blue-50 rounded-full overflow-hidden">
+                  <div
+                    className={`absolute top-0 bottom-0 rounded-full ${isUp ? 'bg-blue-400' : 'bg-orange-400'}`}
+                    style={isUp
+                      ? { left: '50%', width: `${barWidth}%` }
+                      : { right: '50%', width: `${barWidth}%` }}
+                  />
+                  <div className="absolute top-0 bottom-0 left-1/2 w-[1.5px] bg-slate-500" />
+                </div>
+                <span className={`text-[12px] font-bold tabular-nums w-14 text-right ${isUp ? 'text-blue-600' : 'text-orange-600'}`}>
+                  {isUp ? '+' : ''}{(upside * 100).toFixed(1)}%
+                </span>
+                <span className="text-[11px] font-bold text-slate-700 w-16 text-right tabular-nums font-mono">{currency}{weightedFV.toFixed(2)}</span>
+              </div>
+            )
+          })()}
         </div>
       </div>
 
@@ -1505,8 +1555,63 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
             )}
           </AnimatePresence>
         </div>
-
       </div>
+
+      {/* ── How We Value section ─────────────────────────────────────────── */}
+      <div className="rounded-xl border border-slate-100 bg-white/70 px-4 py-5">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-4">How We Value {ticker}</p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { step: 1, title: 'Gather Data', body: 'Pull live financials, analyst estimates, and market data from Yahoo Finance.' },
+            { step: 2, title: 'Run Models', body: 'DCF, multiples, and Reverse DCF reveal intrinsic value from different angles.' },
+            { step: 3, title: 'Weight Results', body: 'Model weights are calibrated to company type and data quality.' },
+            { step: 4, title: 'Stress Test', body: 'Bear / Base / Bull scenarios show the margin of safety across outcomes.' },
+          ].map(({ step, title, body }) => (
+            <div key={step} className="flex flex-col gap-2">
+              <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
+                <span className="text-[11px] font-bold text-white">{step}</span>
+              </div>
+              <p className="text-[13px] font-semibold text-slate-800">{title}</p>
+              <p className="text-[11px] text-slate-500 leading-relaxed">{body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Valuation Models summary cards ───────────────────────────────── */}
+      <div>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">Valuation Models</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {summaryMethods.map(m => {
+            const isUp = m.upsidePct != null && m.upsidePct >= 0
+            return (
+              <button
+                key={m.id}
+                onClick={() => {
+                  const target = m.id === 'core_dcf' ? 'full_dcf' : m.id
+                  setOpenMethodId(p => p === target ? null : target)
+                  setTimeout(() => methodRefs.current[target]?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
+                }}
+                className="text-left rounded-xl border border-slate-100 bg-white/80 hover:bg-white hover:border-blue-200 transition-colors px-4 py-3 space-y-1.5"
+              >
+                <p className="text-[11px] font-bold text-slate-700">{m.label}</p>
+                {m.fairValue != null ? (
+                  <>
+                    <p className="text-[18px] font-bold text-slate-900 tabular-nums leading-none">{currency}{m.fairValue.toFixed(2)}</p>
+                    <p className={`text-[12px] font-semibold ${isUp ? 'text-emerald-600' : 'text-red-500'}`}>
+                      {isUp ? '+' : ''}{((m.upsidePct ?? 0) * 100).toFixed(1)}% upside
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-[12px] text-slate-400 italic">Not applicable</p>
+                )}
+                <p className="text-[10px] text-slate-400">{(m.weight * 100).toFixed(0)}% weight</p>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
     </div>
   )
 }

@@ -1,10 +1,488 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Check, ArrowRight, ShieldCheck } from 'lucide-react'
+import { Check, ArrowRight } from 'lucide-react'
 import TickerStrip from '@/components/home/TickerStrip'
 import StockCardStrip from '@/components/home/StockCardStrip'
+
+// ── Scroll hero helpers ───────────────────────────────────────────────────────
+
+function clamp01(v: number) { return Math.max(0, Math.min(1, v)) }
+function easeOut3(t: number) { return 1 - (1 - t) ** 3 }
+function easeOut2(t: number) { return 1 - (1 - t) ** 2 }
+function phase(start: number, end: number, t: number) {
+  return clamp01((t - start) / (end - start))
+}
+
+// Recreates the i-in-crosshair logo as animated SVG layers.
+// Outer ring: dark navy circle with 4 crosshair cuts
+// Inner ring: electric blue circle
+// Stem: white vertical bar
+// Dot: electric blue circle — the element that "decouples" on scroll
+function IntrinsicSVG({ p }: { p: number }) {
+  // Phase breakdowns
+  const riseP   = easeOut3(phase(0,    0.45, p))  // i rises
+  const ringP   = easeOut2(phase(0.30, 0.70, p))  // rings fade+expand
+  const glowP   = easeOut3(phase(0,    0.55, p))  // glow intensifies
+  const dotY     = riseP * -88           // dot rises faster
+  const stemY    = riseP * -44           // stem follows at half speed
+  const dotScale = 1 + riseP * 0.55     // dot grows as it rises
+  const dotGlow  = 2 + glowP * 18       // glow blur radius
+
+  const ringOpacity = 1 - ringP * 0.92
+  const ringScale   = 1 + ringP * 0.18
+
+  return (
+    <svg
+      viewBox="0 0 180 180"
+      width="180"
+      height="180"
+      style={{ overflow: 'visible' }}
+    >
+      <defs>
+        {/* Glow filter for the dot */}
+        <filter id="dot-glow" x="-200%" y="-200%" width="500%" height="500%">
+          <feGaussianBlur stdDeviation={dotGlow} result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+        {/* Soft glow filter for inner ring */}
+        <filter id="ring-glow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation={3 + glowP * 6} result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      {/* ── Outer ring + crosshair cuts ── */}
+      <g
+        style={{
+          opacity: ringOpacity,
+          transform: `scale(${ringScale})`,
+          transformBox: 'fill-box',
+          transformOrigin: 'center',
+        }}
+      >
+        {/* Main outer ring */}
+        <circle
+          cx="90" cy="90" r="74"
+          stroke="#1A3066"
+          strokeWidth="14"
+          fill="none"
+          strokeDasharray="102 14"
+          strokeDashoffset="109"
+          transform="rotate(-90 90 90)"
+        />
+        {/* Crosshair tick marks (small rectangles at N/S/E/W extending inward) */}
+        <rect x="83" y="3"   width="14" height="13" rx="2" fill="#1A3066" />
+        <rect x="83" y="164" width="14" height="13" rx="2" fill="#1A3066" />
+        <rect x="3"  y="83"  width="13" height="14" rx="2" fill="#1A3066" />
+        <rect x="164" y="83" width="13" height="14" rx="2" fill="#1A3066" />
+      </g>
+
+      {/* ── Inner ring ── */}
+      <g
+        style={{
+          opacity: ringOpacity,
+          transform: `scale(${ringScale})`,
+          transformBox: 'fill-box',
+          transformOrigin: 'center',
+        }}
+      >
+        <circle
+          cx="90" cy="90" r="52"
+          stroke="#3D5AF1"
+          strokeWidth="4"
+          fill="none"
+          filter="url(#ring-glow)"
+        />
+      </g>
+
+      {/* ── i stem — follows at half speed ── */}
+      <g style={{ transform: `translateY(${stemY}px)` }}>
+        <rect
+          x="84" y="78"
+          width="12" height="36"
+          rx="5"
+          fill="white"
+          fillOpacity={0.90}
+        />
+      </g>
+
+      {/* ── i dot — rises fast, glows, decouples ── */}
+      <g
+        style={{
+          transform: `translateY(${dotY}px) scale(${dotScale})`,
+          transformBox: 'fill-box',
+          transformOrigin: '90px 58px',
+        }}
+        filter="url(#dot-glow)"
+      >
+        <circle cx="90" cy="58" r="8.5" fill="#3D5AF1" />
+      </g>
+    </svg>
+  )
+}
+
+// ── The full scroll-driven hero ────────────────────────────────────────────────
+function ScrollHero({ _onSearchReady }: { _onSearchReady?: () => void }) {
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const [p, setP]   = useState(0)   // 0–1 scroll progress within this section
+
+  const handleScroll = useCallback(() => {
+    const el = sectionRef.current
+    if (!el) return
+    const scrolled     = -el.getBoundingClientRect().top
+    const scrollable   = el.offsetHeight - window.innerHeight
+    setP(clamp01(scrolled / scrollable))
+  }, [])
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll()
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [handleScroll])
+
+  // Derived animation values
+  const textP    = easeOut3(phase(0.62, 1.00, p))
+  const searchP  = easeOut3(phase(0.72, 1.00, p))
+  const glowP    = easeOut3(phase(0,    0.60, p))
+
+  // Background radial that follows the rising dot
+  const dotRiseRaw = easeOut3(phase(0, 0.45, p))
+  const glowCenterY = 52 - dotRiseRaw * 22   // % from top of viewport
+
+  return (
+    <div ref={sectionRef} style={{ height: '280vh', position: 'relative' }}>
+      {/* ── Sticky canvas ── */}
+      <div
+        style={{
+          position: 'sticky',
+          top: 0,
+          height: '100vh',
+          background: '#040D1E',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Ambient glow that follows the dot */}
+        <div
+          style={{
+            position: 'absolute',
+            top: `${glowCenterY}%`,
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: `${400 + glowP * 300}px`,
+            height: `${400 + glowP * 300}px`,
+            borderRadius: '50%',
+            background: `radial-gradient(circle, rgba(61,90,241,${0.08 + glowP * 0.18}) 0%, transparent 65%)`,
+            pointerEvents: 'none',
+            transition: 'none',
+          }}
+        />
+
+        {/* Subtle grid lines */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: `
+              linear-gradient(rgba(61,90,241,0.05) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(61,90,241,0.05) 1px, transparent 1px)
+            `,
+            backgroundSize: '60px 60px',
+            pointerEvents: 'none',
+            opacity: 1 - easeOut2(phase(0.5, 0.9, p)) * 0.7,
+          }}
+        />
+
+        {/* ── Logo ── */}
+        <div
+          style={{
+            position: 'relative',
+            zIndex: 10,
+            marginBottom: textP > 0 ? `${textP * 32}px` : 0,
+            transition: 'none',
+          }}
+        >
+          <IntrinsicSVG p={p} />
+        </div>
+
+        {/* ── Text content — fades in as scroll progresses ── */}
+        <div
+          style={{
+            position: 'relative',
+            zIndex: 10,
+            textAlign: 'center',
+            padding: '0 24px',
+            opacity: textP,
+            transform: `translateY(${(1 - textP) * 28}px)`,
+            maxWidth: '600px',
+          }}
+        >
+          {/* Brand wordmark above headline */}
+          <p
+            style={{
+              fontFamily: 'var(--font-mono, monospace)',
+              fontSize: '11px',
+              fontWeight: 600,
+              letterSpacing: '0.22em',
+              color: 'rgba(61,90,241,0.85)',
+              textTransform: 'uppercase',
+              marginBottom: '18px',
+            }}
+          >
+            intrinsico
+          </p>
+
+          <h1
+            style={{
+              fontSize: 'clamp(2rem, 5vw, 3.5rem)',
+              fontWeight: 700,
+              color: '#F1F5F9',
+              lineHeight: 1.06,
+              letterSpacing: '-0.04em',
+              marginBottom: '16px',
+            }}
+          >
+            Invest with a{' '}
+            <span style={{ color: '#4B6CF7' }}>process</span>,<br />
+            not a story.
+          </h1>
+
+          <p
+            style={{
+              fontSize: '1.05rem',
+              color: 'rgba(148,163,184,0.9)',
+              lineHeight: 1.65,
+              marginBottom: '32px',
+              maxWidth: '440px',
+              margin: '0 auto 32px',
+            }}
+          >
+            See what a stock price already assumes — so you can decide
+            with confidence, not hope.
+          </p>
+
+          {/* Search + tickers */}
+          <div
+            style={{
+              opacity: searchP,
+              transform: `translateY(${(1 - searchP) * 20}px)`,
+            }}
+          >
+            <HeroSearchDark />
+            <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '11px', color: 'rgba(148,163,184,0.5)' }}>Try:</span>
+              {EXAMPLE_TICKERS.map(t => (
+                <a
+                  key={t}
+                  href={`/stock/${t}`}
+                  style={{
+                    borderRadius: '8px',
+                    border: '1px solid rgba(61,90,241,0.25)',
+                    background: 'rgba(61,90,241,0.08)',
+                    padding: '4px 12px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    color: 'rgba(148,163,184,0.75)',
+                    fontFamily: 'monospace',
+                    textDecoration: 'none',
+                    transition: 'border-color 0.15s, color 0.15s',
+                  }}
+                >
+                  {t}
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Scroll hint — fades out as you scroll */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '32px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            opacity: 1 - easeOut2(phase(0, 0.15, p)) * 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '6px',
+            pointerEvents: 'none',
+          }}
+        >
+          <span style={{ fontSize: '10px', letterSpacing: '0.15em', color: 'rgba(148,163,184,0.4)', textTransform: 'uppercase', fontWeight: 600 }}>
+            scroll
+          </span>
+          <div style={{ width: '1px', height: '28px', background: 'linear-gradient(to bottom, rgba(61,90,241,0.5), transparent)' }} />
+        </div>
+
+        {/* Bottom fade to dark */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: '120px',
+            background: 'linear-gradient(to bottom, transparent, #040D1E)',
+            pointerEvents: 'none',
+          }}
+        />
+      </div>
+    </div>
+  )
+}
+
+// ── Dark-themed hero search ────────────────────────────────────────────────────
+function HeroSearchDark() {
+  const router   = useRouter()
+  const [query, setQuery]     = useState('')
+  const [results, setResults] = useState<SearchResult[]>([])
+  const [open, setOpen]       = useState(false)
+  const [loading, setLoading] = useState(false)
+  const debounce     = useRef<ReturnType<typeof setTimeout>>()
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (query.length < 1) { setResults([]); setOpen(false); return }
+    clearTimeout(debounce.current)
+    debounce.current = setTimeout(() => {
+      setLoading(true)
+      fetch(`/api/search?q=${encodeURIComponent(query)}`)
+        .then(r => r.json())
+        .then(d => { setResults(d); setOpen(d.length > 0); setLoading(false) })
+        .catch(() => setLoading(false))
+    }, 300)
+  }, [query])
+
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [])
+
+  const select = (symbol: string) => {
+    setOpen(false); setQuery('')
+    router.push(`/stock/${symbol}`)
+  }
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative', width: '100%', maxWidth: '480px', margin: '0 auto' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          borderRadius: '16px',
+          border: '1px solid rgba(61,90,241,0.35)',
+          background: 'rgba(255,255,255,0.05)',
+          backdropFilter: 'blur(12px)',
+          padding: '14px 20px',
+          boxShadow: '0 0 0 1px rgba(61,90,241,0.1) inset, 0 8px 32px rgba(0,0,0,0.3)',
+        }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(148,163,184,0.6)" strokeWidth={2.2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
+        </svg>
+        <input
+          type="text"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter' && query.trim()) select(query.trim().toUpperCase()) }}
+          placeholder="Ticker or company…"
+          style={{
+            flex: 1,
+            background: 'transparent',
+            border: 'none',
+            outline: 'none',
+            fontSize: '15px',
+            fontWeight: 600,
+            letterSpacing: '0.05em',
+            color: '#F1F5F9',
+            fontFamily: 'monospace',
+            textTransform: 'uppercase',
+          }}
+        />
+        {loading
+          ? <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.15)', borderTopColor: '#4B6CF7', animation: 'spin 0.7s linear infinite' }} />
+          : (
+            <button
+              onClick={() => { if (query.trim()) select(query.trim().toUpperCase()) }}
+              style={{
+                background: '#3D5AF1',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                padding: '8px 18px',
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: '0 2px 12px rgba(61,90,241,0.4)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Analyze →
+            </button>
+          )
+        }
+      </div>
+      {open && (
+        <div style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: '100%',
+          marginTop: '8px',
+          background: 'rgba(8,18,40,0.97)',
+          border: '1px solid rgba(61,90,241,0.3)',
+          borderRadius: '14px',
+          overflow: 'hidden',
+          boxShadow: '0 16px 40px rgba(0,0,0,0.5)',
+          zIndex: 100,
+          backdropFilter: 'blur(20px)',
+        }}>
+          {results.map(r => (
+            <button
+              key={r.symbol}
+              onClick={() => select(r.symbol)}
+              style={{
+                display: 'flex',
+                width: '100%',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px 20px',
+                background: 'transparent',
+                border: 'none',
+                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                cursor: 'pointer',
+                textAlign: 'left',
+                color: '#F1F5F9',
+              }}
+            >
+              <span style={{ fontSize: '13px', fontWeight: 700, color: '#4B6CF7', width: '60px', fontFamily: 'monospace' }}>{r.symbol}</span>
+              <span style={{ fontSize: '13px', color: 'rgba(148,163,184,0.8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {r.longname ?? r.shortname}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 interface SearchResult {
   symbol: string
@@ -66,353 +544,6 @@ const INTERP_LABEL: Record<string, string> = {
   aggressive: 'Aggressive', very_aggressive: 'Very Aggressive',
 }
 
-// ── Mac mockup ───────────────────────────────────────────────────────────────
-const MOCK_SCREENS = [
-  { label: 'Search',    url: 'intrinsico.capital' },
-  { label: 'Analysis',  url: 'intrinsico.capital/stock/AAPL' },
-  { label: 'DCF Model', url: 'intrinsico.capital/stock/AAPL#dcf' },
-  { label: 'Watchlist', url: 'intrinsico.capital/valuations' },
-]
-
-function ScreenSearch() {
-  return (
-    <div className="p-5 space-y-3">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Analyze any stock</p>
-      <div className="flex items-center gap-2 rounded-xl bg-[#0A1628] border border-[rgba(59,130,246,0.35)] px-4 py-3">
-        <svg className="h-4 w-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
-        </svg>
-        <span className="text-sm font-mono text-slate-200 flex-1">Apple Inc.</span>
-        <span className="text-[11px] text-slate-500 border-l border-white/10 pl-2">AAPL</span>
-        <span className="text-xs font-bold text-white px-3 py-1.5 rounded-lg bg-[#2563EB]">Analyze →</span>
-      </div>
-      <div className="rounded-xl border border-[rgba(59,130,246,0.18)] overflow-hidden" style={{ background: 'rgba(10,22,40,0.5)' }}>
-        <div className="flex items-center gap-3 px-4 py-2.5 bg-blue-500/10 border-b border-[rgba(59,130,246,0.1)]">
-          <span className="text-[12px] font-bold text-blue-400 font-mono w-12">AAPL</span>
-          <span className="text-[11px] text-slate-300">Apple Inc.</span>
-          <span className="ml-auto text-[11px] font-semibold text-emerald-400">↗ +0.87%</span>
-          <span className="text-[11px] font-mono text-slate-200 ml-2">$211.40</span>
-        </div>
-        <div className="flex items-center gap-3 px-4 py-2 opacity-25">
-          <span className="text-[12px] font-bold text-slate-500 font-mono w-12">AAPU</span>
-          <span className="text-[11px] text-slate-500">Apple Ultra 2× ETF</span>
-        </div>
-      </div>
-      <div className="pt-1">
-        <p className="text-[9px] text-slate-500 mb-2">Popular searches</p>
-        <div className="flex gap-1.5 flex-wrap">
-          {['NVDA','MSFT','AMZN','GOOGL','META'].map(t => (
-            <span key={t} className="rounded-md border border-white/8 bg-white/4 px-2 py-1 text-[10px] font-mono font-semibold text-slate-400">{t}</span>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function ScreenAnalysis() {
-  return (
-    <div className="p-5 space-y-3">
-      <div className="flex items-center gap-3 rounded-xl border border-[rgba(59,130,246,0.18)] px-4 py-3" style={{ background: 'rgba(10,22,40,0.5)' }}>
-        <div className="w-11 h-11 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0">
-          <span className="text-xl font-extrabold text-emerald-400 leading-none" style={{ fontFamily: 'Manrope, system-ui' }}>B+</span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <span className="text-[10px] font-bold bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded text-blue-400 font-mono">AAPL</span>
-            <span className="text-[9px] text-slate-500">Technology · NASDAQ</span>
-          </div>
-          <div className="text-sm font-bold text-slate-100">Apple Inc.</div>
-          <div className="text-[10px] text-slate-500">Good overall</div>
-        </div>
-        <div className="text-right shrink-0">
-          <div className="text-lg font-extrabold text-slate-100 font-mono">$211.40</div>
-          <div className="text-[11px] font-semibold text-emerald-400">▲ +0.87%</div>
-        </div>
-      </div>
-      <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-[11px] text-emerald-300">
-        11% upside · DCF fair value <strong className="text-emerald-200">$236.00</strong> vs current $211.40
-      </div>
-      <div className="space-y-2">
-        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Health scores</p>
-        {[
-          { label: 'Profitability', score: 85, color: '#10B981' },
-          { label: 'Liquidity',     score: 78, color: '#3B82F6' },
-          { label: 'Growth',        score: 72, color: '#60A5FA' },
-        ].map(({ label, score, color }, i) => (
-          <div key={label}>
-            <div className="flex justify-between mb-1">
-              <span className="text-[9px] text-slate-400">{label}</span>
-              <span className="text-[9px] font-mono font-semibold text-slate-300">{score}/100</span>
-            </div>
-            <div className="h-1.5 rounded-full bg-white/5">
-              <div className="h-1.5 rounded-full" style={{ width: `${score}%`, background: color, transition: `width 0.55s cubic-bezier(0.16,1,0.3,1) ${i * 120}ms` }} />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function ScreenDCF() {
-  return (
-    <div className="p-5 space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">DCF Model · AAPL</p>
-        <span className="text-[9px] font-semibold text-blue-400 border border-blue-500/20 bg-blue-500/10 rounded px-2 py-0.5">Interactive</span>
-      </div>
-      <div className="rounded-xl border border-[rgba(59,130,246,0.15)] overflow-hidden" style={{ background: 'rgba(10,22,40,0.4)' }}>
-        <div className="grid grid-cols-4 text-[8px] text-slate-500 bg-white/3 px-3 py-1.5 border-b border-white/5">
-          <span>Year</span><span className="text-right">FCF ($B)</span><span className="text-right">Growth</span><span className="text-right">PV</span>
-        </div>
-        {[
-          { year: 'FY1', fcf: 68,  growth: '—',      pv: 62.0, proj: false },
-          { year: 'FY2', fcf: 76,  growth: '+11.8%',  pv: 64.1, proj: false },
-          { year: 'FY3', fcf: 85,  growth: '+11.8%',  pv: 66.5, proj: true  },
-          { year: 'FY4', fcf: 96,  growth: '+12.9%',  pv: 69.4, proj: true  },
-          { year: 'FY5', fcf: 108, growth: '+12.5%',  pv: 72.7, proj: true  },
-        ].map(row => (
-          <div key={row.year} className={`grid grid-cols-4 px-3 py-1.5 border-b border-white/3 text-[9px] ${row.proj ? 'bg-blue-500/3' : ''}`}>
-            <span className="text-slate-400 font-mono">{row.year}</span>
-            <span className="text-right text-slate-300 font-mono">${row.fcf}B</span>
-            <span className="text-right text-slate-500">{row.growth}</span>
-            <span className="text-right text-slate-300 font-mono">${row.pv}B</span>
-          </div>
-        ))}
-        <div className="px-3 py-2 text-[9px] bg-emerald-500/6 border-t border-emerald-500/15 flex justify-between items-center">
-          <span className="text-slate-400">WACC 8.9% · Terminal growth 3%</span>
-          <span className="text-emerald-300 font-bold font-mono text-[12px]">$236.00</span>
-        </div>
-      </div>
-      <div className="flex gap-2">
-        <div className="flex-1 rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2 text-center">
-          <div className="text-[8px] font-bold uppercase text-red-400 mb-0.5">Bear</div>
-          <div className="text-[13px] font-extrabold font-mono text-red-300">$168</div>
-        </div>
-        <div className="flex-1 rounded-lg bg-blue-500/10 border border-blue-500/20 px-3 py-2 text-center">
-          <div className="text-[8px] font-bold uppercase text-blue-400 mb-0.5">Base</div>
-          <div className="text-[13px] font-extrabold font-mono text-blue-300">$236</div>
-        </div>
-        <div className="flex-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-center">
-          <div className="text-[8px] font-bold uppercase text-emerald-400 mb-0.5">Bull</div>
-          <div className="text-[13px] font-extrabold font-mono text-emerald-300">$278</div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function ScreenWatchlist() {
-  const rows = [
-    { ticker: 'AAPL', name: 'Apple Inc.',     grade: 'B+', price: 211.40, fv: 236.00, upside:  11.7 },
-    { ticker: 'NVDA', name: 'NVIDIA Corp.',    grade: 'A+', price: 118.20, fv: 163.50, upside:  38.3 },
-    { ticker: 'MSFT', name: 'Microsoft',       grade: 'A',  price: 415.10, fv: 506.40, upside:  22.0 },
-    { ticker: 'TSLA', name: 'Tesla Inc.',       grade: 'C',  price: 177.80, fv: 134.50, upside: -24.3 },
-  ]
-  return (
-    <div className="p-5 space-y-2">
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">My Watchlist</p>
-        <span className="text-[9px] font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded px-2 py-0.5">4 stocks</span>
-      </div>
-      {rows.map(r => (
-        <div key={r.ticker} className="flex items-center gap-2.5 rounded-lg border border-white/6 px-3 py-2.5" style={{ background: 'rgba(10,22,40,0.4)' }}>
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-[11px] font-extrabold ${r.upside > 0 ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400' : 'bg-red-500/20 border border-red-500/30 text-red-400'}`} style={{ fontFamily: 'Manrope, system-ui' }}>
-            {r.grade}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-[11px] font-bold text-slate-200 font-mono">{r.ticker}</div>
-            <div className="text-[9px] text-slate-500 truncate">{r.name}</div>
-          </div>
-          <div className="text-right">
-            <div className="text-[11px] font-mono text-slate-200">${r.price.toFixed(2)}</div>
-            <div className={`text-[9px] font-semibold ${r.upside > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-              {r.upside > 0 ? '▲' : '▼'} {Math.abs(r.upside).toFixed(1)}%
-            </div>
-          </div>
-          <div className="text-right border-l border-white/8 pl-2.5">
-            <div className="text-[9px] text-slate-600">FV</div>
-            <div className="text-[11px] font-mono text-blue-300">${r.fv.toFixed(2)}</div>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-const MOCK_SCREEN_COMPONENTS = [
-  <ScreenSearch key="search" />,
-  <ScreenAnalysis key="analysis" />,
-  <ScreenDCF key="dcf" />,
-  <ScreenWatchlist key="watchlist" />,
-]
-
-function MacMockup() {
-  const [screenIdx, setScreenIdx] = useState(0)
-  const [fading, setFading] = useState(false)
-
-  const goTo = (i: number) => {
-    if (i === screenIdx || fading) return
-    setFading(true)
-    setTimeout(() => { setScreenIdx(i); setFading(false) }, 250)
-  }
-
-  useEffect(() => {
-    const t = setInterval(() => {
-      setFading(true)
-      setTimeout(() => {
-        setScreenIdx(prev => (prev + 1) % MOCK_SCREENS.length)
-        setFading(false)
-      }, 250)
-    }, 3800)
-    return () => clearInterval(t)
-  }, [])
-
-  return (
-    <div className="max-w-2xl mx-auto">
-      <div
-        className="rounded-2xl overflow-hidden"
-        style={{
-          border: '1px solid rgba(59,130,246,0.20)',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.22), 0 4px 16px rgba(37,99,235,0.10), 0 0 0 1px rgba(255,255,255,0.04) inset',
-        }}
-      >
-        {/* Mac title bar */}
-        <div className="flex items-center gap-3 px-4 py-2.5" style={{ background: 'linear-gradient(to bottom, #0F1C30, #0A1628)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <div className="flex gap-1.5 shrink-0">
-            <div className="w-3 h-3 rounded-full bg-[#FF5F57]" />
-            <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
-            <div className="w-3 h-3 rounded-full bg-[#28C840]" />
-          </div>
-          <div className="flex-1 flex justify-center">
-            <div className="flex items-center gap-2 rounded-md px-3 py-1 max-w-[300px] w-full" style={{ background: '#050D1F', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <svg className="w-2.5 h-2.5 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <circle cx={11} cy={11} r={7} /><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4-4" />
-              </svg>
-              <span className="text-[10.5px] text-slate-500 font-mono truncate">{MOCK_SCREENS[screenIdx].url}</span>
-            </div>
-          </div>
-          <div className="w-[54px] shrink-0" />
-        </div>
-
-        {/* Content with fade overlay — overlay fades, not content */}
-        <div className="relative overflow-hidden" style={{ background: '#070E1C', minHeight: 300 }}>
-          {MOCK_SCREEN_COMPONENTS[screenIdx]}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: '#070E1C',
-              opacity: fading ? 1 : 0,
-              transition: 'opacity 0.22s ease',
-              zIndex: 10,
-            }}
-          />
-        </div>
-      </div>
-
-      <div className="mt-4 flex items-center justify-center gap-1.5">
-        {MOCK_SCREENS.map((s, i) => (
-          <button
-            key={i}
-            onClick={() => goTo(i)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-semibold transition-all focus:outline-none"
-            style={i === screenIdx
-              ? { background: 'rgba(59,130,246,0.15)', color: '#93C5FD', border: '1px solid rgba(59,130,246,0.35)' }
-              : { color: '#6B7280', background: 'transparent', border: '1px solid transparent' }
-            }
-          >
-            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: i === screenIdx ? '#3B82F6' : '#374151' }} />
-            {s.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ── Hero search ───────────────────────────────────────────────────────────────
-function HeroSearch() {
-  const router = useRouter()
-  const [query, setQuery]     = useState('')
-  const [results, setResults] = useState<SearchResult[]>([])
-  const [open, setOpen]       = useState(false)
-  const [loading, setLoading] = useState(false)
-  const debounce     = useRef<ReturnType<typeof setTimeout>>()
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (query.length < 1) { setResults([]); setOpen(false); return }
-    clearTimeout(debounce.current)
-    debounce.current = setTimeout(() => {
-      setLoading(true)
-      fetch(`/api/search?q=${encodeURIComponent(query)}`)
-        .then(r => r.json())
-        .then(d => { setResults(d); setOpen(d.length > 0); setLoading(false) })
-        .catch(() => setLoading(false))
-    }, 300)
-  }, [query])
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
-
-  const select = (symbol: string) => {
-    setOpen(false); setQuery('')
-    router.push(`/stock/${symbol}`)
-  }
-
-  return (
-    <div className="relative w-full max-w-xl mx-auto" ref={containerRef}>
-      <div
-        className="flex items-center gap-3 rounded-2xl border px-5 py-4 transition-all shadow-sm focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-50"
-        style={{ background: '#FFFFFF', borderColor: '#E2E8F0' }}
-      >
-        <svg className="h-5 w-5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
-        </svg>
-        <input
-          type="text"
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && query.trim()) select(query.trim().toUpperCase()) }}
-          placeholder="Enter ticker or company name…"
-          className="flex-1 bg-transparent text-base text-slate-800 placeholder-slate-400 focus:outline-none uppercase font-mono tracking-wide"
-        />
-        {loading
-          ? <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-blue-500 shrink-0" />
-          : (
-            <button
-              onClick={() => { if (query.trim()) select(query.trim().toUpperCase()) }}
-              className="rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all shrink-0 hover:shadow-lg hover:-translate-y-px active:translate-y-0"
-              style={{ background: '#2563EB', boxShadow: '0 2px 8px rgba(37,99,235,0.4)' }}
-            >
-              Analyze →
-            </button>
-          )
-        }
-      </div>
-      {open && (
-        <div className="absolute left-0 right-0 top-full mt-2 overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-card-md z-50">
-          {results.map(r => (
-            <button
-              key={r.symbol}
-              onClick={() => select(r.symbol)}
-              className="flex w-full items-center gap-3 px-5 py-3 text-left hover:bg-slate-50 border-b border-slate-100 last:border-b-0 transition-colors"
-            >
-              <span className="text-sm font-bold text-blue-600 w-16 shrink-0 font-mono">{r.symbol}</span>
-              <span className="text-sm text-slate-500 truncate">{r.longname ?? r.shortname}</span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
 
 // ── How it works ─────────────────────────────────────────────────────────────
 const HOW_STEPS = [
@@ -577,136 +708,15 @@ export default function LandingPage() {
   const ctaRef      = useScrollReveal()
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen" style={{ background: '#040D1E' }}>
 
-      {/* ── Hero ── */}
-      <section className="relative overflow-hidden bg-white" style={{ paddingTop: '80px', paddingBottom: '0' }}>
-        {/* Subtle radial at top */}
-        <div className="pointer-events-none absolute top-0 left-0 right-0 h-[600px]"
-          style={{ background: 'radial-gradient(ellipse 80% 55% at 50% -5%, rgba(37,99,235,0.07) 0%, transparent 65%)' }} />
-        <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-[0.03]" />
+      {/* ── Scroll-driven hero with i-decoupling logo ── */}
+      <ScrollHero />
 
-        {/* ── Centered top: badge + headline + search ── */}
-        <div className="relative mx-auto max-w-3xl px-4 text-center">
+      {/* Transition stripe: hero dark → section dark */}
+      <div style={{ height: '1px', background: 'rgba(61,90,241,0.15)' }} />
 
-          {/* Badge */}
-          <div
-            className="hero-reveal inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-1.5 text-[11px] font-semibold text-slate-600 mb-8"
-            style={{ animationDelay: '0ms' }}
-          >
-            <ShieldCheck size={12} className="text-blue-600" />
-            Designed for serious, self-directed investors
-          </div>
-
-          {/* Headline */}
-          <h1
-            className="hero-reveal font-display text-5xl sm:text-6xl lg:text-[4.2rem] font-bold text-slate-900 leading-[1.08] mb-5"
-            style={{ letterSpacing: '-0.04em', animationDelay: '80ms' }}
-          >
-            Invest with a{' '}
-            <span className="text-blue-600">process</span>,<br />
-            not a story.
-          </h1>
-
-          {/* Subtitle */}
-          <p
-            className="hero-reveal text-[1.1rem] text-slate-500 max-w-xl mx-auto mb-8 leading-relaxed"
-            style={{ animationDelay: '160ms' }}
-          >
-            See what a stock price already assumes — so you can decide with confidence, not hope.
-          </p>
-
-          {/* Search */}
-          <div className="hero-reveal relative z-10" style={{ animationDelay: '240ms' }}>
-            <HeroSearch />
-          </div>
-
-          {/* Try tickers */}
-          <div className="hero-reveal mt-3 flex items-center justify-center gap-2 flex-wrap" style={{ animationDelay: '300ms' }}>
-            <span className="text-xs text-slate-400">Try:</span>
-            {EXAMPLE_TICKERS.map(t => (
-              <button
-                key={t}
-                onClick={() => router.push(`/stock/${t}`)}
-                className="rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50 bg-white px-3 py-1 text-xs font-semibold text-slate-500 hover:text-blue-600 transition-all font-mono"
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ── 3-column: features | MacMockup | social proof ── */}
-        <div className="relative mx-auto max-w-[1200px] px-4 sm:px-6 mt-12">
-          <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_220px] gap-6 lg:gap-10 items-start">
-
-            {/* Left: feature bullets */}
-            <div className="hidden lg:flex flex-col gap-6 pt-6">
-              {[
-                { icon: '🎯', title: 'Price reality, not narratives', body: 'Our reverse DCF shows what growth is already baked into the price.' },
-                { icon: '✅', title: 'Process over predictions', body: 'A repeatable framework to evaluate any stock, anytime.' },
-                { icon: '🛡️', title: 'Clarity you can act on', body: 'Simple verdicts, fair value ranges, and risk-aware insights.' },
-              ].map(f => (
-                <div key={f.title} className="flex items-start gap-3">
-                  <span className="text-xl shrink-0 mt-0.5">{f.icon}</span>
-                  <div>
-                    <p className="text-[13px] font-semibold text-slate-800 mb-1 leading-snug">{f.title}</p>
-                    <p className="text-[12px] text-slate-500 leading-relaxed">{f.body}</p>
-                  </div>
-                </div>
-              ))}
-              <div className="mt-2 pt-5 border-t border-slate-100 space-y-1.5">
-                {['No login required', 'NYSE & NASDAQ', 'Results in seconds'].map(t => (
-                  <div key={t} className="flex items-center gap-2 text-[11px] text-slate-400">
-                    <Check size={11} className="text-emerald-500 shrink-0" />
-                    {t}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Center: MacMockup */}
-            <div className="hero-reveal" style={{ animationDelay: '380ms' }}>
-              <MacMockup />
-            </div>
-
-            {/* Right: testimonial + trust signals */}
-            <div className="hidden lg:flex flex-col gap-5 pt-6">
-              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                <div className="flex gap-0.5 mb-2.5">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i} className="text-amber-400 text-sm">★</span>
-                  ))}
-                </div>
-                <p className="text-[12px] text-slate-600 leading-relaxed italic mb-3">
-                  &ldquo;The reverse DCF finally made sense of why I kept buying at bad prices. The implied CAGR did what Yahoo Finance never could.&rdquo;
-                </p>
-                <p className="text-[11px] font-semibold text-slate-800">Maria C.</p>
-                <p className="text-[10px] text-slate-400">Self-directed investor, 8 years</p>
-              </div>
-
-              <div className="space-y-2.5">
-                {[
-                  { icon: '🔒', text: 'Your data is private. Always.' },
-                  { icon: '📊', text: 'Real data, transparent models.' },
-                  { icon: '⚙️', text: 'Adjust every assumption yourself.' },
-                ].map(t => (
-                  <div key={t.text} className="flex items-center gap-2.5 text-[12px] text-slate-500">
-                    <span className="text-base shrink-0">{t.icon}</span>
-                    {t.text}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Fade hero into dark sections below */}
-        <div className="mt-14 h-16 w-full" style={{ background: 'linear-gradient(to bottom, #ffffff 0%, #0A1628 100%)' }} />
-      </section>
-
-      {/* ── Reverse DCF band — seamlessly continues dark ── */}
+      {/* ── Reverse DCF band ── */}
       <div style={{ background: '#0A1628', borderBottom: '1px solid rgba(59,130,246,0.12)' }}>
         <div className="mx-auto max-w-4xl px-6 py-12">
           <div className="text-center mb-8">
@@ -767,7 +777,6 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 relative">
-              {/* Connector line (desktop only) */}
               <div className="hidden sm:block absolute top-[22px] left-[calc(16.67%+12px)] right-[calc(16.67%+12px)] h-px bg-slate-200" />
               {HOW_STEPS.map((step, i) => (
                 <div key={i} className="flex flex-col items-center text-center gap-4">
@@ -962,7 +971,6 @@ export default function LandingPage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {/* Free */}
               <div className="rounded-2xl border p-7" style={{ borderColor: '#E2E8F0' }}>
                 <div className="flex items-baseline gap-2 mb-1">
                   <span className="text-2xl font-bold text-slate-900">Free</span>
@@ -984,7 +992,6 @@ export default function LandingPage() {
                 </button>
               </div>
 
-              {/* Pro */}
               <div
                 className="rounded-2xl border p-7 relative"
                 style={{ background: 'linear-gradient(135deg, #EFF6FF 0%, #F0FDF4 100%)', borderColor: '#BFDBFE' }}
@@ -1038,10 +1045,7 @@ export default function LandingPage() {
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <button
-              onClick={() => {
-                const el = document.querySelector('input[type="text"]') as HTMLInputElement
-                if (el) { el.focus(); window.scrollTo({ top: 0, behavior: 'smooth' }) }
-              }}
+              onClick={() => router.push('/stock/AAPL')}
               className="rounded-xl px-8 py-4 text-sm font-bold text-white transition-all hover:shadow-xl hover:-translate-y-0.5"
               style={{ background: '#2563EB', boxShadow: '0 2px 10px rgba(37,99,235,0.45)' }}
             >

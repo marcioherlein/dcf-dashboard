@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import TopBar from './TopBar'
 import BottomNav from './BottomNav'
+import Sidebar from './Sidebar'
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -10,7 +11,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       }>
         <TopBar />
       </Suspense>
-      <div className="pt-[52px] pb-safe-nav lg:pb-0">
+      <Sidebar />
+      <div className="pt-[52px] pb-safe-nav lg:pb-0 lg:pl-[220px]">
         {children}
       </div>
       <BottomNav />

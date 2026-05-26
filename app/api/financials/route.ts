@@ -4,7 +4,7 @@ import { getFinancials, getQuote, getHistorical, getSPYHistorical, getFXRate, ge
 import { calculateBeta } from '@/lib/dcf/calculateBeta'
 import { calculateWACC, extractWACCInputs } from '@/lib/dcf/calculateWACC'
 import { projectCashFlows, extractFCFInputs } from '@/lib/dcf/projectCashFlows'
-import { calculateFairValue, buildScenarios } from '@/lib/dcf/calculateFairValue'
+import { calculateFairValue } from '@/lib/dcf/calculateFairValue'
 import { calculateRatings } from '@/lib/dcf/calculateRatings'
 import { getRfRate } from '@/lib/data/fredClient'
 import { detectCompanyType, primaryModelLabel, companyTypeLabel, companyTypeIntrinsico, getModelWeights } from '@/lib/dcf/detectCompanyType'
@@ -182,9 +182,6 @@ export async function GET(req: NextRequest) {
 
     // Fair value (FCFF — perpetuity growth terminal value)
     const fvResult = calculateFairValue(dcfResult, cashM, debtM, sharesM, currentPrice)
-
-    // Scenarios
-    const scenarios = buildScenarios(waccResult, cagr, terminalG, baseFCF, cashM, debtM, sharesM, 0, growthModel)
 
     // Business profile
     const fd = fin.financialData ?? {}
@@ -509,6 +506,43 @@ export async function GET(req: NextRequest) {
     const triangulatedUpsidePct = currentPrice > 0 && triangulatedFairValue > 0
       ? Math.round((triangulatedFairValue - currentPrice) / currentPrice * 1000) / 1000
       : 0
+
+    // Scenarios anchored to the full triangulation.
+    // Base = triangulatedFairValue exactly. Bear/bull re-run all applicable DCF models with
+    // stressed WACC/CAGR/terminalG and re-blend with the same weights. Multiples and DDM
+    // are market/dividend-anchored so they don't shift with DCF stress assumptions.
+    const _buildStressedFV = (waccAdj: number, cagrAdj: number, tgAdj: number) => {
+      const sw = Math.max(waccResult.wacc + waccAdj, 0.04)
+      const sc = Math.max(cagr + cagrAdj, -0.05)
+      const sg = Math.min(Math.max(terminalG + tgAdj, 0), sw - 0.005)
+
+      const sDcf = projectCashFlows({ baseFCF, cagr: sc, wacc: sw, terminalG: sg, growthModel })
+      const sFvPGM = calculateFairValue(sDcf, cashM, debtM, sharesM, currentPrice)
+      const sLastCF = sDcf.projections.length > 0 ? sDcf.projections[sDcf.projections.length - 1].cashFlow : null
+      const sExitTV = sLastCF != null ? (sLastCF * _exitMult) / Math.pow(1 + sw, sDcf.projections.length) : null
+      const sUfcfEM = sExitTV != null && sharesM > 0 ? (sDcf.sumPV + sExitTV + cashM - debtM) / sharesM : null
+      const sFcfe = fcfeResult.applicable
+        ? calculateFCFE(netIncomeM, sc, Math.max(waccResult.costOfEquity + waccAdj, 0.04), sg, cashM, debtM, sharesM, currentPrice)
+        : fcfeResult
+      const sUfcfParts = [sFvPGM.fairValuePerShare, sUfcfEM].filter((v): v is number => v != null)
+      const sUfcfBlend = sUfcfParts.length > 0 ? sUfcfParts.reduce((a, b) => a + b, 0) / sUfcfParts.length : null
+
+      const sMV: { weight: number; value: number }[] = []
+      if (sUfcfBlend != null) sMV.push({ weight: weights.fcff, value: sUfcfBlend })
+      if (sFcfe.applicable) sMV.push({ weight: weights.fcfe, value: sFcfe.fairValuePerShare })
+      if (ddmResult.applicable) sMV.push({ weight: weights.ddm, value: ddmResult.fairValuePerShare })
+      if (multiplesResult.blendedFairValue !== null) sMV.push({ weight: weights.multiples, value: multiplesResult.blendedFairValue })
+      const sTotalW = sMV.reduce((s, m) => s + m.weight, 0)
+      const sFV = sTotalW > 0
+        ? Math.round(sMV.reduce((s, m) => s + (m.value * m.weight) / sTotalW, 0) * 100) / 100
+        : (sUfcfBlend ?? null)
+      return { fairValue: sFV, wacc: sw, cagr: sc, terminalG: sg }
+    }
+    const scenarios = {
+      base: { fairValue: triangulatedFairValue, wacc: waccResult.wacc, cagr, terminalG },
+      bull: _buildStressedFV(-0.01, +0.02, +0.005),
+      bear: _buildStressedFV(+0.01, -0.02, -0.005),
+    }
 
     const effectiveWeights = {
       fcff: totalWeight > 0 ? Math.round(weights.fcff / totalWeight * 100) : 100,

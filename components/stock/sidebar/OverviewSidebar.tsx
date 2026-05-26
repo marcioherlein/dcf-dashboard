@@ -44,6 +44,7 @@ interface Props {
   valuationMethods?: AnyValuationMethods
   derivedInsights: DerivedFinancialInsights
   onNavigateToFinancials?: (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => void
+  ownership?: { insiderPct: number | null; institutionalPct: number | null } | null
 }
 
 // ── Shared card primitives ────────────────────────────────────────────────────
@@ -266,6 +267,7 @@ export default function OverviewSidebar({
   valuationMethods,
   derivedInsights,
   onNavigateToFinancials,
+  ownership,
 }: Props) {
   const { price, fiftyTwoWeekHigh, fiftyTwoWeekLow, analystTargetMean, marketCap } = quote
   const currency = quote.currency ?? 'USD'
@@ -718,6 +720,36 @@ export default function OverviewSidebar({
           <ViewLink rowKey="totalDebt" statement="balance" onNav={onNavigateToFinancials} />
         </Card>
       )}
+
+      {/* ── Ownership Overview ───────────────────────────────────────────── */}
+      {ownership && (ownership.institutionalPct != null || ownership.insiderPct != null) && (() => {
+        const inst = ownership.institutionalPct ?? 0
+        const insider = ownership.insiderPct ?? 0
+        const retail = Math.max(0, 100 - inst - insider)
+        const rows = [
+          { label: 'Institutions', pct: inst, color: 'bg-blue-400' },
+          { label: 'Insiders', pct: insider, color: 'bg-violet-400' },
+          { label: 'Public / Other', pct: retail, color: 'bg-slate-300' },
+        ]
+        return (
+          <Card>
+            <SectionLabel>Ownership Overview</SectionLabel>
+            <div className="space-y-2">
+              {rows.map(r => (
+                <div key={r.label} className="space-y-0.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-slate-500">{r.label}</span>
+                    <span className="text-[11px] font-semibold text-slate-700 tabular-nums">{r.pct.toFixed(1)}%</span>
+                  </div>
+                  <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full ${r.color}`} style={{ width: `${Math.min(r.pct, 100)}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )
+      })()}
 
       {/* ── Card 8: Financial Health Grades ──────────────────────────────── */}
       {ratings && (

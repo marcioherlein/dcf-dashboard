@@ -357,6 +357,11 @@ h1, h2, h3 {
 
 /* ── Animations ──────────────────────────────────────────────────────────────── */
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 @keyframes marquee {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
