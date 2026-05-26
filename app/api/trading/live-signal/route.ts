@@ -26,6 +26,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { computePairwiseRatios, pairwiseConfidenceModifier } from '@/lib/rv/pairwise-ratio';
 
+export const dynamic = 'force-dynamic'
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const YahooFinance = require('yahoo-finance2').default;
 const yf = new YahooFinance({ suppressNotices: ['ripHistorical', 'yahooSurvey'] });

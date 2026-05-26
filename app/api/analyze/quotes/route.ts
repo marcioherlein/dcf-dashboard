@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import yahooFinance from 'yahoo-finance2'
 
-export const revalidate = 120
+export const dynamic = 'force-dynamic'
 
 export type FeaturedQuote = {
   ticker: string
