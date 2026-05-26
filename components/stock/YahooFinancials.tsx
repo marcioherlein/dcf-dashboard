@@ -330,24 +330,28 @@ export default function YahooFinancials({ statementsData, currency = '$', report
 
   return (
     <div className="overflow-hidden">
-      {/* Controls */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 flex-wrap">
-        <div className="flex gap-0 flex-1">
-          {STATEMENT_TABS.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setStatement(tab.id)}
-              className={`px-4 py-2 text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap ${
-                statement === tab.id
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-slate-400 hover:text-slate-700'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+      {/* Controls — two rows on mobile, one row on sm+ */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 border-b border-slate-100">
+        {/* Statement tabs — scrollable strip on mobile */}
+        <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-1">
+          <div className="flex gap-0 min-w-max">
+            {STATEMENT_TABS.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setStatement(tab.id)}
+                className={`px-3 sm:px-4 py-2 text-[12px] sm:text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  statement === tab.id
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-slate-400 hover:text-slate-700'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        {/* Right controls */}
+        <div className="flex items-center gap-2 flex-wrap">
           <div className="flex rounded-lg overflow-hidden border border-slate-200 text-[12px]">
             <button
               onClick={() => setPeriod('annual')}
@@ -376,20 +380,20 @@ export default function YahooFinancials({ statementsData, currency = '$', report
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-[12px]">
+      <div className="overflow-x-auto -mx-0">
+        <table className="min-w-[480px] w-full text-[12px]">
           <thead>
             <tr className="border-b border-slate-100 bg-slate-50/50">
-              <th className="sticky left-0 z-10 bg-white text-left px-4 py-2 text-[11px] font-semibold text-slate-500 w-64 min-w-[220px]">
+              <th className="sticky left-0 z-10 bg-white text-left px-3 sm:px-4 py-2 text-[11px] font-semibold text-slate-500 w-44 min-w-[160px] sm:w-64 sm:min-w-[220px]">
                 Breakdown
               </th>
               {showTTM && ttmData && (
-                <th className="text-right px-3 py-2 text-[11px] font-semibold text-amber-600 min-w-[100px] whitespace-nowrap">
+                <th className="text-right px-2 sm:px-3 py-2 text-[11px] font-semibold text-amber-600 min-w-[80px] sm:min-w-[100px] whitespace-nowrap">
                   TTM
                 </th>
               )}
               {displayPeriods.map((p, i) => (
-                <th key={i} className="text-right px-3 py-2 text-[11px] font-semibold text-slate-600 min-w-[100px] whitespace-nowrap">
+                <th key={i} className="text-right px-2 sm:px-3 py-2 text-[11px] font-semibold text-slate-600 min-w-[80px] sm:min-w-[100px] whitespace-nowrap">
                   {formatDate(p.endDate)}
                 </th>
               ))}
@@ -411,7 +415,7 @@ export default function YahooFinancials({ statementsData, currency = '$', report
                     className={`border-b border-slate-100 bg-slate-50/60 hover:bg-slate-100/60 cursor-pointer select-none ${flashKey === hdr.key ? 'row-flash' : ''}`}
                     onClick={() => hasChildren && setExpanded(e => ({ ...e, [hdr.key]: !isOpen(hdr.key) }))}
                   >
-                    <td className="sticky left-0 z-10 bg-white px-4 py-2 font-semibold text-slate-900 whitespace-nowrap flex items-center gap-1.5">
+                    <td className="sticky left-0 z-10 bg-white px-3 sm:px-4 py-2 font-semibold text-slate-900 whitespace-nowrap flex items-center gap-1.5">
                       {hasChildren && (
                         <svg
                           className={`w-3 h-3 text-slate-400 shrink-0 transition-transform ${open ? 'rotate-90' : ''}`}
@@ -424,14 +428,14 @@ export default function YahooFinancials({ statementsData, currency = '$', report
                       {hdr.label}
                     </td>
                     {showTTM && ttmData && (
-                      <td className={`text-right px-3 py-2 tabular-nums font-semibold whitespace-nowrap ${
+                      <td className={`text-right px-2 sm:px-3 py-2 tabular-nums font-semibold whitespace-nowrap ${
                         isNegNum(ttmData[hdr.key], vt) ? 'text-red-600' : 'text-slate-900'
                       }`}>
                         {fmtValue(ttmData[hdr.key], vt)}
                       </td>
                     )}
                     {displayPeriods.map((p, j) => (
-                      <td key={j} className={`text-right px-3 py-2 tabular-nums font-semibold whitespace-nowrap ${
+                      <td key={j} className={`text-right px-2 sm:px-3 py-2 tabular-nums font-semibold whitespace-nowrap ${
                         isNegNum(p[hdr.key], vt) ? 'text-red-600' : 'text-slate-700'
                       }`}>
                         {fmtValue(p[hdr.key], vt)}
@@ -444,18 +448,18 @@ export default function YahooFinancials({ statementsData, currency = '$', report
                   const rvt = row.valueType ?? 'money'
                   return (
                     <tr key={`row-${si}-${ri}`} id={`yfrow-${row.key}`} className={`border-b border-slate-50 hover:bg-slate-50/40 ${flashKey === row.key ? 'row-flash' : ''}`}>
-                      <td className="sticky left-0 z-10 bg-white pl-10 pr-4 py-1.5 text-slate-500 whitespace-nowrap">
+                      <td className="sticky left-0 z-10 bg-white pl-7 sm:pl-10 pr-3 sm:pr-4 py-1.5 text-slate-500 whitespace-nowrap">
                         {row.label}
                       </td>
                       {showTTM && ttmData && (
-                        <td className={`text-right px-3 py-1.5 tabular-nums whitespace-nowrap ${
+                        <td className={`text-right px-2 sm:px-3 py-1.5 tabular-nums whitespace-nowrap ${
                           isNegNum(ttmData[row.key], rvt) ? 'text-red-600' : 'text-slate-600'
                         }`}>
                           {fmtValue(ttmData[row.key], rvt)}
                         </td>
                       )}
                       {displayPeriods.map((p, j) => (
-                        <td key={j} className={`text-right px-3 py-1.5 tabular-nums whitespace-nowrap ${
+                        <td key={j} className={`text-right px-2 sm:px-3 py-1.5 tabular-nums whitespace-nowrap ${
                           isNegNum(p[row.key], rvt) ? 'text-red-600' : 'text-slate-600'
                         }`}>
                           {fmtValue(p[row.key], rvt)}

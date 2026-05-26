@@ -145,15 +145,15 @@ function MetricsTable({ columns, rows }: { columns: string[]; rows: MetricRowDef
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-max border-collapse">
+    <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+      <table className="min-w-[480px] w-full border-collapse">
         <thead>
           <tr className="border-b border-slate-100">
-            <th className="sticky left-0 z-10 bg-white px-4 py-2 text-left text-[11px] font-medium text-slate-400 w-56 min-w-[224px]">
+            <th className="sticky left-0 z-10 bg-white px-3 sm:px-4 py-2 text-left text-[11px] font-medium text-slate-400 w-40 min-w-[160px] sm:w-56 sm:min-w-[224px]">
               Metric
             </th>
             {columns.map(col => (
-              <th key={col} className={`px-3 py-2 text-right text-[11px] font-semibold whitespace-nowrap ${
+              <th key={col} className={`px-2 sm:px-3 py-2 text-right text-[11px] font-semibold whitespace-nowrap ${
                 col === 'TTM' ? 'text-amber-600' : 'text-slate-500'
               }`}>
                 {col}
@@ -166,7 +166,7 @@ function MetricsTable({ columns, rows }: { columns: string[]; rows: MetricRowDef
             if (row.isHeader) {
               return (
                 <tr key={i} className="bg-slate-50 border-y border-slate-100">
-                  <td colSpan={columns.length + 1} className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                  <td colSpan={columns.length + 1} className="px-3 sm:px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
                     {row.label}
                   </td>
                 </tr>
@@ -176,14 +176,14 @@ function MetricsTable({ columns, rows }: { columns: string[]; rows: MetricRowDef
             const pig = row.positiveIsGood ?? true
             return (
               <tr key={i} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                <td className={`sticky left-0 z-10 bg-white px-4 py-2 text-xs whitespace-nowrap ${
-                  row.indent ? 'pl-8 text-slate-400' : 'font-medium text-slate-600'
+                <td className={`sticky left-0 z-10 bg-white px-3 sm:px-4 py-2 text-xs whitespace-nowrap ${
+                  row.indent ? 'pl-6 sm:pl-8 text-slate-400' : 'font-medium text-slate-600'
                 }`}>
                   <Sparkline values={row.values} positiveIsGood={pig} />
                   {row.label}
                 </td>
                 {row.values.map((v, j) => (
-                  <td key={j} className={`px-3 py-2 text-right text-xs tabular-nums font-mono whitespace-nowrap ${
+                  <td key={j} className={`px-2 sm:px-3 py-2 text-right text-xs tabular-nums font-mono whitespace-nowrap ${
                     columns[j] === 'TTM' ? 'font-semibold' : ''
                   } ${cellColor(v, row.fmt, pig)}`}>
                     {formatVal(v, row.fmt)}
@@ -205,24 +205,24 @@ interface CAGRRow { label: string; yoy: number | null; y3: number | null; y5: nu
 function CAGRTable({ rows }: { rows: CAGRRow[] }) {
   const horizons = ['YoY', '3Y CAGR', '5Y CAGR']
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-max border-collapse">
+    <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+      <table className="min-w-[360px] w-full border-collapse">
         <thead>
           <tr className="border-b border-slate-100">
-            <th className="sticky left-0 z-10 bg-white px-4 py-2 text-left text-[11px] font-medium text-slate-400 w-56 min-w-[224px]">Metric</th>
+            <th className="sticky left-0 z-10 bg-white px-3 sm:px-4 py-2 text-left text-[11px] font-medium text-slate-400 w-40 min-w-[160px] sm:w-56 sm:min-w-[224px]">Metric</th>
             {horizons.map(h => (
-              <th key={h} className="px-5 py-2 text-right text-[11px] font-semibold text-slate-500 whitespace-nowrap">{h}</th>
+              <th key={h} className="px-3 sm:px-5 py-2 text-right text-[11px] font-semibold text-slate-500 whitespace-nowrap">{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {rows.map((row, i) => (
             <tr key={i} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-              <td className="sticky left-0 z-10 bg-white px-4 py-2.5 text-xs font-medium text-slate-600 whitespace-nowrap">
+              <td className="sticky left-0 z-10 bg-white px-3 sm:px-4 py-2.5 text-xs font-medium text-slate-600 whitespace-nowrap">
                 {row.label}
               </td>
               {[row.yoy, row.y3, row.y5].map((v, j) => (
-                <td key={j} className={`px-5 py-2.5 text-right text-xs tabular-nums font-mono font-semibold whitespace-nowrap ${growthColor(v)}`}>
+                <td key={j} className={`px-3 sm:px-5 py-2.5 text-right text-xs tabular-nums font-mono font-semibold whitespace-nowrap ${growthColor(v)}`}>
                   {fmtGrowth(v)}
                 </td>
               ))}
@@ -583,14 +583,14 @@ export default function FinancialsHub({ statementsData, financialsData, currency
 
   return (
     <div className="rounded-xl card overflow-hidden">
-      {/* Sub-tab nav */}
-      <div className="flex items-center justify-between px-5 pt-4 pb-0 border-b border-slate-100">
-        <div className="flex gap-0">
+      {/* Sub-tab nav — scrollable on mobile */}
+      <div className="flex items-center justify-between px-2 sm:px-5 pt-4 pb-0 border-b border-slate-100 overflow-x-auto">
+        <div className="flex gap-0 min-w-max">
           {SUB_TABS.map(({ id, label }) => (
             <button
               key={id}
               onClick={() => setSubTab(id)}
-              className={`px-4 py-3 text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`px-3 sm:px-4 py-3 text-[12px] sm:text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap ${
                 subTab === id
                   ? 'border-blue-600 text-blue-600'
                   : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -639,14 +639,14 @@ export default function FinancialsHub({ statementsData, financialsData, currency
       {subTab === 'growth' && hasData && (
         <div>
           {/* CAGR Summary */}
-          <div className="px-5 pt-4 pb-2">
+          <div className="px-4 sm:px-5 pt-4 pb-2">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">
               Compound Annual Growth Rates
             </p>
             <CAGRTable rows={cagrRows} />
           </div>
           {/* YoY by period */}
-          <div className="border-t border-slate-100 px-5 pt-4 pb-2">
+          <div className="border-t border-slate-100 px-4 sm:px-5 pt-4 pb-2">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">
               Year-over-Year Growth
             </p>
@@ -657,14 +657,14 @@ export default function FinancialsHub({ statementsData, financialsData, currency
 
       {/* ── Profitability ── */}
       {subTab === 'profitability' && hasData && (
-        <div className="pt-2 pb-2">
+        <div className="px-4 sm:px-5 pt-2 pb-2">
           <MetricsTable columns={cols} rows={profitRows} />
         </div>
       )}
 
       {/* ── Solvency ── */}
       {subTab === 'solvency' && hasData && (
-        <div className="pt-2 pb-2">
+        <div className="px-4 sm:px-5 pt-2 pb-2">
           <MetricsTable columns={cols} rows={solvencyRows} />
         </div>
       )}
