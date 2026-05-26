@@ -72,31 +72,29 @@ export default function MarketHeatmapCard({ sectors }: Props) {
       </div>
 
       <div className="p-3">
-        {/* Main grid — large sectors get 2 cols, small get 1 */}
+        {/* Row 1: Tech(2) + Fin + Health + ConsDisc + Comm = 6 cols
+            Row 2: Industrials + Staples + Energy + Materials + RealEstate + Utilities = 6 cols */}
         <div className="grid grid-cols-6 gap-1.5">
           {sorted.map(s => {
-            const w = SECTOR_WEIGHTS[s.symbol] ?? 2
-            const colSpan = w >= 20 ? 'col-span-2' : w >= 9 ? 'col-span-2' : 'col-span-1'
-            const tallClass = w >= 20 ? 'min-h-[72px]' : w >= 9 ? 'min-h-[64px]' : 'min-h-[56px]'
+            // Only Technology gets a double-wide tile — all others are 1 col
+            const isLarge  = s.symbol === 'XLK'
+            const colSpan  = isLarge ? 'col-span-2' : 'col-span-1'
+            const minH     = isLarge ? 'min-h-[80px]' : 'min-h-[62px]'
+            const textSize = isLarge ? 'text-[12px]' : 'text-[10px]'
+            const numSize  = isLarge ? 'text-[14px]' : 'text-[12px]'
             return (
               <div
                 key={s.symbol}
                 className={cn(
                   'rounded-xl p-2.5 flex flex-col justify-between transition-all hover:scale-[1.02]',
-                  colSpan, tallClass,
+                  colSpan, minH,
                   heatColor(s.changePct)
                 )}
               >
-                <p className={cn(
-                  'font-bold leading-tight',
-                  w >= 9 ? 'text-[11px]' : 'text-[10px]'
-                )}>
+                <p className={cn('font-bold leading-tight', textSize)}>
                   {SHORT_NAMES[s.symbol] ?? s.name}
                 </p>
-                <p className={cn(
-                  'font-bold font-mono tabular-nums mt-auto',
-                  w >= 9 ? 'text-[13px]' : 'text-[11px]'
-                )}>
+                <p className={cn('font-bold tabular-nums mt-auto', numSize)}>
                   {pct(s.changePct)}
                 </p>
               </div>

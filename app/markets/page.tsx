@@ -119,7 +119,7 @@ export default function MarketsPage() {
     { label: 'Nasdaq 100', sym: ndx  },
     { label: 'Dow Jones',  sym: dji  },
     { label: 'VIX',        sym: vix  },
-    { label: '10Y Yield',  sym: tnx, suffix: '%' },
+    { label: '10Y Yield',  sym: tnx, suffix: '%', rateMode: true },
     { label: 'USD Index',  sym: dxy  },
   ]
 
@@ -147,8 +147,12 @@ export default function MarketsPage() {
             {status.label}
           </span>
 
-          {STRIP.map(({ label, sym, suffix }) => {
+          {STRIP.map(({ label, sym, suffix, rateMode }) => {
             const price = sym?.price ?? null
+            // rates: rising = amber warning, falling = blue (good for DCF valuations)
+            const changeCls = rateMode
+              ? (sym?.changePct == null ? 'text-slate-400' : sym.changePct > 0 ? 'text-amber-600' : sym.changePct < 0 ? 'text-blue-600' : 'text-slate-400')
+              : pctCls(sym?.changePct ?? null)
             const inner = (
               <div className="flex items-center gap-1.5 shrink-0">
                 <span className="text-[11px] text-slate-500 font-medium">{label}</span>
@@ -160,7 +164,7 @@ export default function MarketsPage() {
                   {suffix ?? ''}
                 </span>
                 {sym?.changePct != null && (
-                  <span className={`text-[11px] font-semibold tabular-nums ${pctCls(sym.changePct)}`}>
+                  <span className={`text-[11px] font-semibold tabular-nums ${changeCls}`}>
                     {pct(sym.changePct)}
                   </span>
                 )}

@@ -14,8 +14,12 @@ interface Props {
 }
 
 // ── Sparkline ──────────────────────────────────────────────────────────────────
+function SparklineSkeleton() {
+  return <div className="h-8 w-full rounded-lg bg-slate-200/70 animate-pulse" />
+}
+
 function Sparkline({ values, positive }: { values: number[]; positive: boolean }) {
-  if (values.length < 2) return <div className="h-8 w-20" />
+  if (values.length < 2) return null
   const min = Math.min(...values)
   const max = Math.max(...values)
   const range = max - min || 0.001
@@ -25,21 +29,21 @@ function Sparkline({ values, positive }: { values: number[]; positive: boolean }
     x: (i / (values.length - 1)) * W,
     y: H - ((v - min) / range) * (H - 6) - 3,
   }))
-  const pts = coords.map(p => `${p.x},${p.y}`).join(' ')
+  const pts      = coords.map(p => `${p.x},${p.y}`).join(' ')
   const fillPath = [
     `M ${coords[0].x},${H}`,
     ...coords.map(p => `L ${p.x},${p.y}`),
     `L ${coords[coords.length - 1].x},${H}`,
     'Z',
   ].join(' ')
-  const color    = positive ? '#16a34a' : '#dc2626'
-  const fillId   = `sf-${positive ? 'g' : 'r'}`
-  const last     = coords[coords.length - 1]
+  const color  = positive ? '#16a34a' : '#dc2626'
+  const fillId = `sf-${positive ? 'g' : 'r'}`
+  const last   = coords[coords.length - 1]
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="overflow-visible w-full">
       <defs>
         <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stopColor={color} stopOpacity="0.18" />
+          <stop offset="0%"   stopColor={color} stopOpacity="0.20" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
@@ -92,7 +96,7 @@ function tnxChip(price: number | null) {
 
 function dxyChip(changePct: number | null) {
   if (changePct == null) return chip('—', 'gray')
-  if (changePct > 0.5) return chip('Strengthening', 'amber')
+  if (changePct > 0.5)  return chip('Strengthening', 'amber')
   if (changePct < -0.5) return chip('Weakening', 'blue')
   return chip('Stable', 'gray')
 }
@@ -102,9 +106,18 @@ function pct(v: number | null) {
   return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'
 }
 
-function pctCls(v: number | null) {
+// Standard equity color: green up / red down
+function equityCls(v: number | null) {
   if (v == null) return 'text-slate-400'
   return v > 0 ? 'text-emerald-600' : v < 0 ? 'text-red-500' : 'text-slate-500'
+}
+
+// Rate color: rising yield = amber warning, falling yield = blue (good for DCF)
+function rateCls(v: number | null) {
+  if (v == null) return 'text-slate-400'
+  if (v > 0) return 'text-amber-600'
+  if (v < 0) return 'text-blue-600'
+  return 'text-slate-500'
 }
 
 function fmtPrice(v: number | null, decimals = 2) {
@@ -118,57 +131,76 @@ interface CardProps {
   value: string
   changePct: number | null
   sparklineValues: number[]
+  sparkLoading: boolean
   interpretation: React.ReactNode
+  accent: string         // left-border accent color
+  rateMode?: boolean     // inverts change color logic (for rate instruments)
   href?: string
   note?: string
 }
 
-function IndexCard({ label, value, changePct, sparklineValues, interpretation, href, note }: CardProps) {
-  const positive = (changePct ?? 0) >= 0
+function IndexCard({ label, value, changePct, sparklineValues, sparkLoading, interpretation, accent, rateMode, href, note }: CardProps) {
+  const positive = rateMode
+    ? (changePct ?? 0) < 0    // rate falling = "positive" for valuations
+    : (changePct ?? 0) >= 0
+  const changeCls = rateMode ? rateCls(changePct) : equityCls(changePct)
+
   const inner = (
-    <div className="glass-card-light rounded-2xl px-4 pt-4 pb-3 flex flex-col gap-1 h-full transition-all hover:shadow-md cursor-pointer">
-      <div className="flex items-start justify-between">
+    <div
+      className="glass-card-light rounded-2xl px-4 pt-4 pb-3 flex flex-col gap-1 h-full transition-all hover:shadow-md cursor-pointer"
+      style={{ borderLeft: `3px solid ${accent}` }}
+    >
+      <div className="flex items-start justify-between gap-1">
         <p className="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider leading-tight">{label}</p>
         {interpretation}
       </div>
       <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none mt-1">{value}</p>
-      <div className="flex items-center justify-between mt-1">
-        <span className={cn('text-[12px] font-semibold tabular-nums', pctCls(changePct))}>
+      <div className="flex items-center justify-between mt-0.5">
+        <span className={cn('text-[12px] font-semibold tabular-nums', changeCls)}>
           {pct(changePct)}
         </span>
         {note && <span className="text-[10px] text-slate-400">{note}</span>}
       </div>
-      <div className="mt-2">
-        <Sparkline values={sparklineValues} positive={positive} />
+      <div className="mt-2 min-h-[32px] flex items-end">
+        {sparkLoading
+          ? <SparklineSkeleton />
+          : <Sparkline values={sparklineValues} positive={positive} />
+        }
       </div>
     </div>
   )
-  if (href) return <Link href={href} className="block">{inner}</Link>
+  if (href) return <Link href={href} className="block h-full">{inner}</Link>
   return inner
 }
 
-// ── Sparkline data fetch (5D normalized from chart API) ─────────────────────────
+// ── Grid ───────────────────────────────────────────────────────────────────────
 type ChartPoint = Record<string, number | string>
 
+// null = still loading; Record = loaded (may be empty if API failed)
+type SparklinesState = Record<string, number[]> | null
+
 export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy }: Props) {
-  const [sparklines, setSparklines] = useState<Record<string, number[]>>({})
+  const [sparklines, setSparklines] = useState<SparklinesState>(null)
+  const sparkLoading = sparklines === null
 
   const fetchSparklines = useCallback(async () => {
     try {
       const symbols = ['^GSPC', '^NDX', '^DJI', '^VIX', '^TNX', 'DX-Y.NYB'].join(',')
       const res = await fetch(`/api/markets/chart?symbols=${encodeURIComponent(symbols)}&period=5D`)
-      if (!res.ok) return
+      if (!res.ok) { setSparklines({}); return }
       const json = await res.json()
       const data: ChartPoint[] = json.points ?? []
-      if (!Array.isArray(data) || data.length === 0) return
+      if (!Array.isArray(data) || data.length === 0) { setSparklines({}); return }
       const result: Record<string, number[]> = {}
-      const syms = ['^GSPC', '^NDX', '^DJI', '^VIX', '^TNX', 'DX-Y.NYB']
-      for (const sym of syms) {
-        result[sym] = data.map(d => (d[sym] as number) ?? 0).filter(v => typeof v === 'number')
+      for (const sym of ['^GSPC', '^NDX', '^DJI', '^VIX', '^TNX', 'DX-Y.NYB']) {
+        const vals = data
+          .map(d => d[sym])
+          .filter((v): v is number => typeof v === 'number')
+        if (vals.length > 1) result[sym] = vals
       }
       setSparklines(result)
     } catch {
-      // sparklines are optional enhancement; silently ignore errors
+      setSparklines({}) // mark done, no data
     }
   }, [])
 
@@ -179,48 +211,61 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy }: Prop
       label: 'S&P 500',
       value: spx?.price != null ? fmtPrice(spx.price) : '—',
       changePct: spx?.changePct ?? null,
-      sparklineValues: sparklines['^GSPC'] ?? [],
+      sparklineValues: sparklines?.['^GSPC'] ?? [],
+      sparkLoading,
       interpretation: spxChip(spx?.changePct ?? null),
+      accent: '#2563EB',
       href: spx ? `/markets/${encodeURIComponent(spx.symbol)}` : undefined,
     },
     {
       label: 'Nasdaq 100',
       value: ndx?.price != null ? fmtPrice(ndx.price) : '—',
       changePct: ndx?.changePct ?? null,
-      sparklineValues: sparklines['^NDX'] ?? [],
+      sparklineValues: sparklines?.['^NDX'] ?? [],
+      sparkLoading,
       interpretation: spxChip(ndx?.changePct ?? null),
+      accent: '#2563EB',
       href: ndx ? `/markets/${encodeURIComponent(ndx.symbol)}` : undefined,
     },
     {
       label: 'Dow Jones',
       value: dji?.price != null ? fmtPrice(dji.price) : '—',
       changePct: dji?.changePct ?? null,
-      sparklineValues: sparklines['^DJI'] ?? [],
+      sparklineValues: sparklines?.['^DJI'] ?? [],
+      sparkLoading,
       interpretation: spxChip(dji?.changePct ?? null),
+      accent: '#2563EB',
       href: dji ? `/markets/${encodeURIComponent(dji.symbol)}` : undefined,
     },
     {
       label: 'VIX',
       value: vix?.price != null ? fmtPrice(vix.price, 2) : '—',
       changePct: vix?.changePct ?? null,
-      sparklineValues: sparklines['^VIX'] ?? [],
+      sparklineValues: sparklines?.['^VIX'] ?? [],
+      sparkLoading,
       interpretation: vixChip(vix?.price ?? null),
+      accent: '#7C3AED',
       note: 'Volatility',
     },
     {
       label: '10Y Treasury',
       value: tnx?.price != null ? fmtPrice(tnx.price, 2) + '%' : '—',
       changePct: tnx?.changePct ?? null,
-      sparklineValues: sparklines['^TNX'] ?? [],
+      sparklineValues: sparklines?.['^TNX'] ?? [],
+      sparkLoading,
       interpretation: tnxChip(tnx?.price ?? null),
+      accent: '#D97706',
+      rateMode: true,
       note: 'Discount rate',
     },
     {
       label: 'USD Index',
       value: dxy?.price != null ? fmtPrice(dxy.price, 2) : '—',
       changePct: dxy?.changePct ?? null,
-      sparklineValues: sparklines['DX-Y.NYB'] ?? [],
+      sparklineValues: sparklines?.['DX-Y.NYB'] ?? [],
+      sparkLoading,
       interpretation: dxyChip(dxy?.changePct ?? null),
+      accent: '#64748B',
     },
   ]
 
