@@ -32,29 +32,22 @@ function fmtVal(val: number, unit: '%' | 'x'): string {
   return val.toFixed(1) + '×'
 }
 
-// Mini sparkline bar chart
 function SparkBars({ points, unit }: { points: SparkPoint[]; unit: '%' | 'x' }) {
   if (!points.length) return null
-
-  const W = 68
-  const H = 32
+  const W = 56
+  const H = 28
   const LABEL_H = 9
   const BAR_AREA = H - LABEL_H
-
   const vals = points.map(p => p.value)
   const hasNeg = vals.some(v => v < 0)
   const rawMin = hasNeg ? Math.min(...vals) : 0
   const rawMax = Math.max(...vals, 0.0001)
   const range = rawMax - rawMin || 0.0001
-
   const n = points.length
-  const BAR_W = Math.max(5, Math.floor((W - (n - 1) * 2 - 2) / n))
+  const BAR_W = Math.max(4, Math.floor((W - (n - 1) * 2 - 2) / n))
   const totalW = n * BAR_W + (n - 1) * 2
   const offsetX = Math.floor((W - totalW) / 2)
-
-  // Y position of zero line within bar area (from top)
   const zeroY = hasNeg ? (rawMax / range) * BAR_AREA : BAR_AREA
-
   return (
     <svg width={W} height={H} style={{ display: 'block', flexShrink: 0 }}>
       {hasNeg && (
@@ -71,16 +64,12 @@ function SparkBars({ points, unit }: { points: SparkPoint[]; unit: '%' | 'x' }) 
           barH = Math.max(1.5, (p.value / range) * BAR_AREA)
           barTop = zeroY - barH
         }
-
         return (
           <g key={i}>
             <title>{fmtVal(p.value, unit)}</title>
-            <rect x={x} y={barTop} width={BAR_W} height={barH} fill={isNeg ? '#fca5a5' : '#93c5fd'} rx={1.5} />
-            <text
-              x={x + BAR_W / 2} y={H - 1}
-              textAnchor="middle" fontSize={6.5} fill="#94a3b8"
-              fontFamily="-apple-system, system-ui, sans-serif"
-            >
+            <rect x={x} y={barTop} width={BAR_W} height={barH} fill={isNeg ? '#fca5a5' : '#93c5fd'} rx={1} />
+            <text x={x + BAR_W / 2} y={H - 1} textAnchor="middle" fontSize={6} fill="#94a3b8"
+              fontFamily="-apple-system, system-ui, sans-serif">
               {p.label}
             </text>
           </g>
@@ -112,18 +101,18 @@ export default function AssumptionsPanel({ assumptions, defaults, onChange, onRe
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-4">
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Assumptions</p>
+    <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-6 py-5">
+      <div className="flex items-center justify-between mb-5">
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Assumptions</p>
         <button
           onClick={onReset}
-          className="text-[10px] font-semibold text-blue-600 hover:text-blue-700 transition-colors px-2 py-1 rounded-lg hover:bg-blue-50"
+          className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors px-3 py-1.5 rounded-lg hover:bg-blue-50"
         >
           Reset to defaults
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+      <div className="flex flex-col gap-5">
         {FIELDS.map(f => {
           const val = assumptions[f.key] as number
           const isDirty = Math.abs(val - (defaults[f.key] as number)) > 0.00001
@@ -131,39 +120,40 @@ export default function AssumptionsPanel({ assumptions, defaults, onChange, onRe
           const sparkPoints = historicalData?.[f.key]
 
           return (
-            <div key={f.key} className="flex gap-3 items-start">
-              {/* Main control column */}
-              <div className="flex-1 min-w-0">
-                {/* Row 1: label + stepper */}
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className={`text-[11px] font-semibold leading-none ${isDirty ? 'text-blue-700' : 'text-slate-600'}`}>
+            <div key={f.key}>
+              {/* Row 1: label + value + stepper */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm font-semibold ${isDirty ? 'text-blue-700' : 'text-slate-700'}`}>
                     {f.label}
-                    {isDirty && <span className="ml-1 text-[9px] text-blue-500">●</span>}
-                  </label>
-                  <div className="flex items-center gap-0.5">
-                    <button
-                      onClick={() => adjust(f.key, -f.step)}
-                      className="w-5 h-5 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-[14px] font-bold flex items-center justify-center transition-colors leading-none"
-                      aria-label={`Decrease ${f.label}`}
-                    >−</button>
-                    <span className="text-[11px] font-bold tabular-nums text-slate-800 w-11 text-center">
-                      {fmtVal(val, f.unit)}
-                    </span>
-                    <button
-                      onClick={() => adjust(f.key, f.step)}
-                      className="w-5 h-5 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-[14px] font-bold flex items-center justify-center transition-colors leading-none"
-                      aria-label={`Increase ${f.label}`}
-                    >+</button>
-                  </div>
+                  </span>
+                  {isDirty && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />}
                 </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => adjust(f.key, -f.step)}
+                    className="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-base font-bold flex items-center justify-center transition-colors"
+                    aria-label={`Decrease ${f.label}`}
+                  >−</button>
+                  <span className="text-sm font-bold tabular-nums text-slate-900 w-14 text-center">
+                    {fmtVal(val, f.unit)}
+                  </span>
+                  <button
+                    onClick={() => adjust(f.key, f.step)}
+                    className="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-base font-bold flex items-center justify-center transition-colors"
+                    aria-label={`Increase ${f.label}`}
+                  >+</button>
+                </div>
+              </div>
 
-                {/* Row 2: slider with visible fill track */}
-                <div className="relative flex items-center h-4">
+              {/* Row 2: slider + sparkline */}
+              <div className="flex items-center gap-3">
+                <div className="relative flex items-center h-5 flex-1">
                   {/* Track background */}
                   <div className="absolute inset-y-0 flex items-center w-full pointer-events-none">
-                    <div className="w-full h-1.5 rounded-full bg-slate-200" />
+                    <div className="w-full h-2 rounded-full bg-slate-200" />
                     <div
-                      className="absolute left-0 h-1.5 rounded-full bg-blue-500 transition-[width]"
+                      className="absolute left-0 h-2 rounded-full bg-blue-500 transition-[width]"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -175,34 +165,33 @@ export default function AssumptionsPanel({ assumptions, defaults, onChange, onRe
                     value={val}
                     onChange={e => handleSlider(f.key, e.target.value)}
                     className="relative w-full cursor-pointer appearance-none bg-transparent
-                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5
+                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4
                       [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-600
-                      [&::-webkit-slider-thumb]:shadow-[0_1px_3px_rgba(0,0,0,0.25)] [&::-webkit-slider-thumb]:cursor-pointer
-                      [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:rounded-full
+                      [&::-webkit-slider-thumb]:shadow-[0_1px_4px_rgba(0,0,0,0.3)] [&::-webkit-slider-thumb]:cursor-pointer
+                      [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full
                       [&::-moz-range-thumb]:bg-blue-600 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer"
                   />
                 </div>
 
-                {/* Row 3: hint */}
-                <p className="text-[9px] text-slate-400 mt-0.5">{f.hint}</p>
+                {sparkPoints && sparkPoints.length > 0 ? (
+                  <div className="flex flex-col items-center gap-0.5 shrink-0">
+                    <p className="text-[7px] text-slate-400 uppercase tracking-wide leading-none">hist</p>
+                    <SparkBars points={sparkPoints} unit={f.unit} />
+                  </div>
+                ) : (
+                  <div className="w-14 shrink-0" />
+                )}
               </div>
 
-              {/* Sparkline column */}
-              {sparkPoints && sparkPoints.length > 0 ? (
-                <div className="flex flex-col items-center gap-0.5 pt-0.5">
-                  <p className="text-[7px] text-slate-400 uppercase tracking-wide text-center leading-none">hist</p>
-                  <SparkBars points={sparkPoints} unit={f.unit} />
-                </div>
-              ) : (
-                <div style={{ width: 68 }} />
-              )}
+              {/* Row 3: hint */}
+              <p className="text-xs text-slate-400 mt-1">{f.hint}</p>
             </div>
           )
         })}
       </div>
 
-      <p className="text-[10px] text-slate-400 mt-4 pt-3 border-t border-slate-50">
-        Changes apply instantly. Blue dot = modified from default. Grey bars = historical actuals.
+      <p className="text-xs text-slate-400 mt-5 pt-4 border-t border-slate-100">
+        Changes apply instantly · Blue dot = modified from default · Grey bars = historical actuals
       </p>
     </div>
   )
