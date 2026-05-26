@@ -225,6 +225,9 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
               <span className="text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded-md px-2 py-0.5 font-mono">
                 {q.ticker}
               </span>
+              <span className="text-[9px] font-semibold text-slate-400 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 uppercase tracking-wide">
+                {q.etfSource}
+              </span>
             </div>
             <p className="text-[13px] font-medium text-slate-700 truncate mt-1">{q.name}</p>
           </div>
@@ -301,7 +304,7 @@ function PopularAnalysesSection() {
       <div className="flex items-center justify-between gap-3 mb-4">
         <div>
           <h2 className="text-[15px] font-bold text-slate-900">Popular analyses</h2>
-          <p className="text-[12px] text-slate-500 mt-0.5">Stocks other investors are analyzing right now</p>
+          <p className="text-[12px] text-slate-500 mt-0.5">Top holdings from SPY · QQQ · DIA — no duplicates</p>
         </div>
         <Link href="/markets" className="text-[12px] font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 whitespace-nowrap">
           View all <ChevronRight size={13} />
@@ -310,7 +313,7 @@ function PopularAnalysesSection() {
 
       {/* Mobile: horizontal scroll */}
       <div className="sm:hidden flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory">
-        {(quotes ?? Array(4).fill(null)).map((q, i) =>
+        {(quotes ?? Array(6).fill(null)).map((q, i) =>
           q ? (
             <div key={q.ticker} className="min-w-[220px] snap-start">
               <StockAnalysisCard q={q} index={i} />
