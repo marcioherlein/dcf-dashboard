@@ -45,6 +45,7 @@ const INSTRUMENTS: { symbol: string; name: string; group: string }[] = [
   { symbol: '^DJI',    name: 'Dow Jones',         group: 'indices' },
   { symbol: 'IWM',     name: 'Russell 2000',      group: 'indices' },
   { symbol: '^VIX',    name: 'CBOE VIX',          group: 'indices' },
+  { symbol: '^TNX',    name: '10Y Treasury',      group: 'indices' },
   // Sectors
   { symbol: 'XLY',  name: 'Cons. Discretionary', group: 'sectors' },
   { symbol: 'XLP',  name: 'Cons. Staples',        group: 'sectors' },

@@ -1,100 +1,86 @@
 'use client'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
-import { RefreshCw } from 'lucide-react'
-import PriceTable from '@/components/markets/PriceTable'
-import NormalizedPerfChart from '@/components/markets/NormalizedPerfChart'
-import MarketNewsSection from '@/components/markets/MarketNewsSection'
-import BondYieldsCard from '@/components/markets/BondYieldsCard'
-import ModelAlerts from '@/components/markets/ModelAlerts'
-import MacroBrief from '@/components/markets/MacroBrief'
-import MarketPulse from '@/components/markets/MarketPulse'
-import SectorRotation from '@/components/markets/SectorRotation'
-import MacroSignals from '@/components/markets/MacroSignals'
-import ValuationContext from '@/components/markets/ValuationContext'
-import PortfolioExposure from '@/components/markets/PortfolioExposure'
-import EconomicCalendar from '@/components/markets/EconomicCalendar'
-import EarningsCalendar from '@/components/markets/EarningsCalendar'
-import type { MarketsData } from '@/app/api/markets/data/route'
+import { RefreshCw, Settings2 } from 'lucide-react'
+
+import IndexSnapshotGrid    from '@/components/markets/IndexSnapshotGrid'
+import MarketPulse          from '@/components/markets/MarketPulse'
+import NormalizedPerfChart  from '@/components/markets/NormalizedPerfChart'
+import TopMoversCard        from '@/components/markets/TopMoversCard'
+import MarketHeatmapCard    from '@/components/markets/MarketHeatmapCard'
+import SectorRotation       from '@/components/markets/SectorRotation'
+import MacroSignals         from '@/components/markets/MacroSignals'
+import MarketBreadthCard    from '@/components/markets/MarketBreadthCard'
+import EconomicCalendar     from '@/components/markets/EconomicCalendar'
+import EarningsCalendar     from '@/components/markets/EarningsCalendar'
+import ValuationContext     from '@/components/markets/ValuationContext'
+import PortfolioExposure    from '@/components/markets/PortfolioExposure'
+import MarketNewsSection    from '@/components/markets/MarketNewsSection'
+
+import type { MarketsData }        from '@/app/api/markets/data/route'
 import type { MarketContextPayload } from '@/lib/market-context/types'
 
-const REFRESH_INTERVAL_MS = 60_000  // 1 minute
+const REFRESH_INTERVAL_MS = 60_000
 
-function Sk({ h = 'h-32' }: { h?: string }) {
-  return <div className={`animate-pulse rounded-xl bg-slate-200/60 ${h}`} />
+// ── Skeleton ──────────────────────────────────────────────────────────────────
+function Sk({ h = 'h-32', className = '' }: { h?: string; className?: string }) {
+  return <div className={`animate-pulse rounded-2xl bg-slate-200/60 ${h} ${className}`} />
 }
 
+// ── pct helpers ───────────────────────────────────────────────────────────────
 function pct(v: number | null) {
   if (v == null) return ''
   return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'
 }
-
 function pctCls(v: number | null) {
   if (v == null) return 'text-slate-400'
   return v > 0 ? 'text-emerald-600' : v < 0 ? 'text-red-500' : 'text-slate-500'
 }
-
 function timeAgo(ts: number): string {
   const s = Math.floor((Date.now() - ts) / 1000)
-  if (s < 10) return 'just now'
-  if (s < 60) return `${s}s ago`
+  if (s < 10)  return 'just now'
+  if (s < 60)  return `${s}s ago`
   return `${Math.floor(s / 60)}m ago`
 }
-
-// Market status based on ET time (UTC-4 DST / UTC-5 EST)
 function getMarketStatus(): { label: string; cls: string } {
-  const now = new Date()
-  // Use UTC offset to approximate ET (simplistic, ignores DST edge)
+  const now  = new Date()
   const utcH = now.getUTCHours()
   const utcM = now.getUTCMinutes()
-  const day = now.getUTCDay()
-  const totalMinutesUTC = utcH * 60 + utcM
-  // ET = UTC - 4 (EDT) for most of trading year (Mar-Nov)
-  // We approximate as UTC-4
-  const etMinutes = (totalMinutesUTC - 4 * 60 + 1440) % 1440
-
-  if (day === 0 || day === 6) {
-    return { label: 'Market Closed', cls: 'bg-slate-100 text-slate-500' }
-  }
-  // Pre-market: 4:00 AM – 9:30 AM ET
-  if (etMinutes >= 240 && etMinutes < 570) {
-    return { label: 'Pre-Market', cls: 'bg-amber-50 text-amber-700' }
-  }
-  // Regular: 9:30 AM – 4:00 PM ET
-  if (etMinutes >= 570 && etMinutes < 960) {
-    return { label: '● Market Open', cls: 'bg-emerald-50 text-emerald-700 font-bold' }
-  }
-  // After-hours: 4:00 PM – 8:00 PM ET
-  if (etMinutes >= 960 && etMinutes < 1200) {
-    return { label: 'After Hours', cls: 'bg-blue-50 text-blue-700' }
-  }
+  const day  = now.getUTCDay()
+  const et   = (utcH * 60 + utcM - 240 + 1440) % 1440
+  if (day === 0 || day === 6) return { label: 'Market Closed', cls: 'bg-slate-100 text-slate-500' }
+  if (et >= 240  && et < 570)  return { label: 'Pre-Market',   cls: 'bg-amber-50 text-amber-700' }
+  if (et >= 570  && et < 960)  return { label: '● Market Open', cls: 'bg-emerald-50 text-emerald-700 font-bold' }
+  if (et >= 960  && et < 1200) return { label: 'After Hours',  cls: 'bg-blue-50 text-blue-700' }
   return { label: 'Market Closed', cls: 'bg-slate-100 text-slate-500' }
 }
 
-function Section({ title, children, badge }: { title: string; children: React.ReactNode; badge?: React.ReactNode }) {
+// ── Section wrapper ───────────────────────────────────────────────────────────
+function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
-    <div>
-      {badge ? (
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{title}</h2>
-          {badge}
-        </div>
-      ) : (
-        <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">{title}</h2>
-      )}
-      {children}
+    <div className="mb-3">
+      <h2 className="text-[15px] font-bold text-slate-800">{title}</h2>
+      {subtitle && <p className="text-[12px] text-slate-400 mt-0.5">{subtitle}</p>}
     </div>
   )
 }
 
+// ── Page ──────────────────────────────────────────────────────────────────────
 export default function MarketsPage() {
-  const [mkt, setMkt] = useState<MarketsData | null>(null)
-  const [ctx, setCtx] = useState<MarketContextPayload | null>(null)
-  const [err, setErr] = useState(false)
-  const [lastFetch, setLastFetch] = useState<number>(0)
+  const [mkt,        setMkt]        = useState<MarketsData | null>(null)
+  const [ctx,        setCtx]        = useState<MarketContextPayload | null>(null)
+  const [err,        setErr]        = useState(false)
+  const [lastFetch,  setLastFetch]  = useState<number>(0)
   const [refreshing, setRefreshing] = useState(false)
-  const [status] = useState(getMarketStatus)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [status]                    = useState(getMarketStatus)
+  const intervalRef                 = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Live "X ago" ticker
+  const [, setTick] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setTick(n => n + 1), 10_000)
+    return () => clearInterval(t)
+  }, [])
 
   const fetchAll = useCallback(async (isManual = false) => {
     if (isManual) setRefreshing(true)
@@ -119,42 +105,61 @@ export default function MarketsPage() {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
   }, [fetchAll])
 
-  // Live "X ago" counter
-  const [, setTick] = useState(0)
-  useEffect(() => {
-    const t = setInterval(() => setTick(n => n + 1), 10_000)
-    return () => clearInterval(t)
-  }, [])
+  // ── derived instrument refs ─────────────────────────────────────────────────
+  const spx = mkt?.indices.find(i => i.symbol === '^GSPC')   ?? null
+  const ndx = mkt?.indices.find(i => i.symbol === '^NDX')    ?? null
+  const dji = mkt?.indices.find(i => i.symbol === '^DJI')    ?? null
+  const vix = mkt?.indices.find(i => i.symbol === '^VIX')    ?? null
+  const tnx = mkt?.indices.find(i => i.symbol === '^TNX')    ?? null
+  const dxy = mkt?.currencies.find(i => i.symbol === 'DX-Y.NYB') ?? null
 
-  const spx   = mkt?.indices.find(i => i.symbol === '^GSPC')
-  const vix   = mkt?.indices.find(i => i.symbol === '^VIX')
-  const ndx   = mkt?.indices.find(i => i.symbol === '^NDX')
-  const dji   = mkt?.indices.find(i => i.symbol === '^DJI')
-  const dxy   = mkt?.currencies.find(i => i.symbol === 'DX-Y.NYB')
+  // ticker strip items
+  const STRIP = [
+    { label: 'S&P 500',    sym: spx  },
+    { label: 'Nasdaq 100', sym: ndx  },
+    { label: 'Dow Jones',  sym: dji  },
+    { label: 'VIX',        sym: vix  },
+    { label: '10Y Yield',  sym: tnx, scalePrice: 0.1 },
+    { label: 'USD Index',  sym: dxy  },
+  ]
+
+  const now = new Date()
+  const etTime = now.toLocaleTimeString('en-US', {
+    timeZone: 'America/New_York',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  })
+  const etDate = now.toLocaleDateString('en-US', {
+    timeZone: 'America/New_York',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
 
   return (
     <div className="min-h-screen lqg-bg pt-[52px]">
 
-      {/* ── Top ticker bar ─────────────────────────────────────────────────── */}
-      <div className="border-b border-slate-200 glass-toolbar">
-        <div className="max-w-[1400px] mx-auto px-4 py-2 flex items-center gap-5 overflow-x-auto scrollbar-hide">
-          {/* Market status badge */}
+      {/* ── Ticker Strip ─────────────────────────────────────────────────────── */}
+      <div className="glass-toolbar border-b border-white/60 sticky top-[52px] z-20">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-10 flex items-center gap-5 overflow-x-auto scrollbar-hide">
           <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full ${status.cls}`}>
             {status.label}
           </span>
 
-          {[
-            { label: 'S&P 500',    sym: spx  },
-            { label: 'Nasdaq 100', sym: ndx  },
-            { label: 'Dow Jones',  sym: dji  },
-            { label: 'VIX',        sym: vix  },
-            { label: 'USD Index',  sym: dxy  },
-          ].map(({ label, sym }) => {
+          {STRIP.map(({ label, sym, scalePrice }) => {
+            const price = sym?.price != null
+              ? (scalePrice ? sym.price * scalePrice : sym.price)
+              : null
             const inner = (
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <span className="text-[11px] text-slate-500 font-medium">{label}</span>
                 <span className="text-[12px] font-mono font-bold text-slate-800 tabular-nums">
-                  {sym?.price != null ? sym.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}
+                  {price != null
+                    ? price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    : '—'
+                  }
+                  {scalePrice ? '%' : ''}
                 </span>
                 {sym?.changePct != null && (
                   <span className={`text-[11px] font-mono font-bold tabular-nums ${pctCls(sym.changePct)}`}>
@@ -176,10 +181,9 @@ export default function MarketsPage() {
             )
           })}
 
-          {/* Refresh controls */}
-          <div className="ml-auto flex items-center gap-2 shrink-0">
+          <div className="ml-auto flex items-center gap-2.5 shrink-0">
             {lastFetch > 0 && (
-              <span className="text-[10px] text-slate-400 font-mono hidden sm:block">
+              <span className="text-[10px] text-slate-400 font-mono hidden md:block">
                 Updated {timeAgo(lastFetch)}
               </span>
             )}
@@ -187,121 +191,162 @@ export default function MarketsPage() {
               onClick={() => fetchAll(true)}
               disabled={refreshing}
               className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-50"
-              title="Refresh market data"
+              title="Refresh"
             >
-              <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
+              <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
             </button>
           </div>
         </div>
       </div>
 
-      {/* ── Main grid ─────────────────────────────────────────────────────── */}
-      <div className="max-w-[1400px] mx-auto px-4 py-4">
+      {/* ── Content ──────────────────────────────────────────────────────────── */}
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-5 space-y-6">
 
+        {/* Error */}
         {err && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 mb-4">
-            Failed to load market data. Check API keys and try again.
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 flex items-center justify-between">
+            <span>Market data could not be loaded. Check API keys and try again.</span>
+            <button
+              onClick={() => fetchAll(true)}
+              className="text-red-700 font-semibold text-xs hover:underline ml-4"
+            >
+              Try again
+            </button>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(280px,300px)_1fr_minmax(280px,300px)] gap-4">
+        {/* ── Page Header ─────────────────────────────────────────────────── */}
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-[26px] font-bold text-slate-900 leading-tight">Markets Overview</h1>
+            <p className="text-[13px] text-slate-400 mt-1">
+              Market context for valuation decisions · Understand the environment behind your stock analyses.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 pt-1 shrink-0">
+            <span className="text-[11px] text-slate-400 hidden md:block">
+              Data as of {etDate}, {etTime} ET
+            </span>
+            <button className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors">
+              <Settings2 size={12} />
+              Customize
+            </button>
+          </div>
+        </div>
 
-          {/* ── Left column ─────────────────────────────────────────────── */}
-          <div className="space-y-4 order-2 lg:order-1 min-w-0">
+        {/* ── Row 1: Index Snapshot Cards ─────────────────────────────────── */}
+        {mkt ? (
+          <IndexSnapshotGrid spx={spx} ndx={ndx} dji={dji} vix={vix} tnx={tnx} dxy={dxy} />
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {[...Array(6)].map((_, i) => <Sk key={i} h="h-[132px]" />)}
+          </div>
+        )}
+
+        {/* ── Row 2: Market Pulse · Performance Chart · Top Movers ─────────── */}
+        <div>
+          <SectionHeader
+            title="Market Snapshot"
+            subtitle="Risk environment, index performance, and today's key movers."
+          />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* Market Pulse (4 cols) */}
+            <div className="lg:col-span-4">
+              {ctx ? <MarketPulse pulse={ctx.pulse} /> : <Sk h="h-[280px]" />}
+            </div>
+            {/* Performance Chart (5 cols) */}
+            <div className="lg:col-span-5">
+              <NormalizedPerfChart />
+            </div>
+            {/* Top Movers (3 cols) */}
+            <div className="lg:col-span-3">
+              <TopMoversCard />
+            </div>
+          </div>
+        </div>
+
+        {/* ── Row 3: Heatmap · Sector Rotation ────────────────────────────── */}
+        <div>
+          <SectionHeader
+            title="Sector Analysis"
+            subtitle="Where market leadership is concentrated and which sectors lead or lag."
+          />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* Heatmap (7 cols) */}
+            <div className="lg:col-span-7">
+              {mkt ? (
+                <MarketHeatmapCard sectors={mkt.sectors} />
+              ) : (
+                <Sk h="h-[320px]" />
+              )}
+            </div>
+            {/* Sector Rotation (5 cols) */}
+            <div className="lg:col-span-5">
+              {ctx ? <SectorRotation sectors={ctx.sectors} /> : <Sk h="h-[320px]" />}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Row 4: Macro Signals · Market Breadth ───────────────────────── */}
+        <div>
+          <SectionHeader
+            title="Macro Environment"
+            subtitle="Indicators that affect discount rates, risk appetite, and valuation assumptions."
+          />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {ctx ? <MacroSignals signals={ctx.signals} /> : <Sk h="h-64" />}
             {mkt ? (
-              <>
-                <Section title="U.S. Equity Markets">
-                  <PriceTable title="Major Indices & ETFs" items={mkt.indices.filter(i => i.symbol !== '^IXIC')} />
-                </Section>
-                <Section title="U.S. Equity Sectors">
-                  <PriceTable title="S&P Sector ETFs" items={mkt.sectors} />
-                </Section>
-                <Section title="Fixed Income">
-                  <PriceTable title="Govt Credit ETFs" items={mkt.fixedIncome} />
-                </Section>
-              </>
+              <MarketBreadthCard sectors={mkt.sectors} />
             ) : (
-              <>
-                <Sk h="h-40" />
-                <Sk h="h-72" />
-                <Sk h="h-48" />
-              </>
+              <Sk h="h-64" />
             )}
           </div>
+        </div>
 
-          {/* ── Center column ───────────────────────────────────────────── */}
-          <div className="space-y-4 order-1 lg:order-2 min-w-0">
-            {ctx && <MarketPulse pulse={ctx.pulse} />}
-            {ctx && ctx.modelAlerts.length > 0 && <ModelAlerts alerts={ctx.modelAlerts} />}
-            <NormalizedPerfChart />
-            {mkt ? (
-              mkt.news.length > 0 ? <MarketNewsSection news={mkt.news} /> : null
-            ) : (
-              <Sk h="h-36" />
-            )}
-            {ctx && (
-              <MacroBrief
-                macroBrief={ctx.macroBrief}
-                briefCachedAt={ctx.briefCachedAt}
-                signals={ctx.signals}
-                pulse={ctx.pulse}
+        {/* ── Row 5: Calendars ────────────────────────────────────────────── */}
+        <div>
+          <SectionHeader
+            title="Upcoming Events"
+            subtitle="Economic releases and earnings that may affect your valuation assumptions."
+          />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <EconomicCalendar />
+            <EarningsCalendar />
+          </div>
+        </div>
+
+        {/* ── Row 6: Valuation Context · Saved Valuations ─────────────────── */}
+        <div>
+          <SectionHeader
+            title="Valuation Context"
+            subtitle="How current market prices compare to historical ranges — and what it means for your DCF."
+          />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {ctx ? <ValuationContext valuation={ctx.valuation} /> : <Sk h="h-56" />}
+            {ctx ? (
+              <PortfolioExposure
+                portfolioExposure={ctx.portfolioExposure}
+                modelAlerts={ctx.modelAlerts}
               />
-            )}
-          </div>
-
-          {/* ── Right column ────────────────────────────────────────────── */}
-          <div className="space-y-4 order-3 min-w-0">
-            {mkt ? (
-              <>
-                <Section title="Currencies">
-                  <PriceTable title="USD FX Crosses" items={mkt.currencies.filter(i => i.symbol !== 'DX-Y.NYB')} priceDecimals={4} />
-                </Section>
-                <Section title="Global Markets">
-                  <div className="space-y-2">
-                    <PriceTable title="Broad Markets"     items={mkt.globalBroad}    />
-                    <PriceTable title="Developed Markets" items={mkt.globalDeveloped} />
-                    <PriceTable title="Emerging Markets"  items={mkt.globalEmerging}  />
-                  </div>
-                </Section>
-                <Section title="Commodities">
-                  <PriceTable title="Commodities" items={mkt.commodities} />
-                </Section>
-                <BondYieldsCard yieldCurve={mkt.yieldCurve} />
-              </>
             ) : (
-              <>
-                <Sk h="h-40" />
-                <Sk h="h-64" />
-                <Sk h="h-36" />
-                <Sk h="h-52" />
-              </>
+              <Sk h="h-56" />
             )}
           </div>
-
         </div>
 
-        {/* ── Sector Rotation & Macro Signals ─────────────────────────────── */}
-        {ctx && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-            <SectorRotation sectors={ctx.sectors} />
-            <MacroSignals signals={ctx.signals} />
+        {/* ── Row 7: Market News ───────────────────────────────────────────── */}
+        {mkt && mkt.news.length > 0 && (
+          <div>
+            <SectionHeader
+              title="Market News"
+              subtitle="Recent headlines — for context only, not a trading signal."
+            />
+            <MarketNewsSection news={mkt.news} />
           </div>
         )}
 
-        {/* ── Economic & Earnings Calendars ───────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-          <EconomicCalendar />
-          <EarningsCalendar />
-        </div>
-
-        {/* ── Valuation Context & Portfolio Exposure ───────────────────────── */}
-        {ctx && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-            <ValuationContext valuation={ctx.valuation} />
-            <PortfolioExposure portfolioExposure={ctx.portfolioExposure} modelAlerts={ctx.modelAlerts} />
-          </div>
-        )}
-
+        {/* Bottom spacing */}
+        <div className="h-4" />
       </div>
     </div>
   )

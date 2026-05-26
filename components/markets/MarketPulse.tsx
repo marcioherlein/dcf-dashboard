@@ -32,11 +32,11 @@ function gaugeColor(score: number): string {
 }
 
 function gaugeLabel(score: number): string {
-  if (score >= 75) return 'Extreme Greed'
-  if (score >= 60) return 'Greed'
+  if (score >= 80) return 'Risk-On'
+  if (score >= 65) return 'Constructive'
   if (score >= 40) return 'Neutral'
-  if (score >= 25) return 'Fear'
-  return 'Extreme Fear'
+  if (score >= 25) return 'Cautious'
+  return 'Stressed'
 }
 
 function SentimentGauge({ score }: { score: number }) {
@@ -78,9 +78,17 @@ export default function MarketPulse({ pulse }: Props) {
   const { spxChange1d, vix, tnxYield, sentimentLabel, sentimentScore } = pulse
   const spxUp = spxChange1d >= 0
 
+  const interpretation = (() => {
+    if (sentimentScore >= 80) return 'Risk appetite is elevated. Broad participation and low volatility support risk assets.'
+    if (sentimentScore >= 65) return 'Risk appetite is constructive. Market conditions are broadly supportive for long-duration analysis.'
+    if (sentimentScore >= 40) return 'Mixed conditions. Elevated rates or uncertainty may warrant higher margin of safety in valuations.'
+    if (sentimentScore >= 25) return 'Cautious market environment. Consider discount rate sensitivity in DCF assumptions.'
+    return 'Risk-off conditions. Valuations may face elevated discount rates and reduced risk appetite.'
+  })()
+
   return (
-    <div className="rounded-xl glass-card-light overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-slate-200 flex items-center justify-between">
+    <div className="rounded-2xl glass-card-light overflow-hidden h-full">
+      <div className="px-4 py-2.5 border-b border-white/60 flex items-center justify-between">
         <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Market Pulse</span>
         <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full border', sentimentColor(sentimentLabel))}>
           {sentimentLabel}
@@ -121,11 +129,16 @@ export default function MarketPulse({ pulse }: Props) {
             <p className="text-[10px] text-slate-400 mt-0.5">Yield</p>
           </div>
           <div className="text-center">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Sentiment</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Score</p>
             <p className="text-sm font-bold text-slate-700">{sentimentScore}/100</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">Score</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">Risk Appetite</p>
           </div>
         </div>
+      </div>
+
+      {/* Interpretation text */}
+      <div className="mt-4 px-3 py-2.5 rounded-xl bg-slate-50/80 border border-slate-100">
+        <p className="text-[11.5px] text-slate-600 leading-snug">{interpretation}</p>
       </div>
       </div>
     </div>
