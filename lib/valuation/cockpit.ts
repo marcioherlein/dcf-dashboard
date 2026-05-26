@@ -49,6 +49,24 @@ export interface CockpitMethodResult {
   errors: string[]
 }
 
+export interface MethodExplanation {
+  methodId: string
+  methodName: string
+  direction: 'above' | 'below' | 'inline'   // vs blended
+  deviationPct: number                       // how far from blended, 0–1
+  confidence: 'high' | 'medium' | 'low'
+  reason: string                             // single sentence explaining why
+}
+
+export interface DivergenceAnalysis {
+  cv: number                        // coefficient of variation across valid fair values
+  spreadVsPrice: number             // (max - min) / currentPrice
+  level: 'low' | 'moderate' | 'high'
+  overallConfidence: 'high' | 'medium' | 'low'
+  summary: string                   // 1–2 sentence overview
+  methodExplanations: MethodExplanation[]
+}
+
 export interface CockpitOutput {
   blendedFairValue: number | null
   methods: CockpitMethodResult[]
@@ -61,6 +79,7 @@ export interface CockpitOutput {
   upsidePct: number | null
   marketImpliedGrowth: number | null
   marketImpliedText: string
+  divergence: DivergenceAnalysis
 }
 
 const WEIGHTS = {
@@ -84,6 +103,174 @@ function scenarioDcfFV(
   if (dcf.ev == null) return null
   const equity = dcf.ev + snapshot.cashM - snapshot.debtM
   return Math.round((equity / snapshot.sharesM) * 100) / 100
+}
+
+function computeDivergence(
+  methods: CockpitMethodResult[],
+  blended: number | null,
+  assumptions: ValuationAssumptions,
+  snapshot: CockpitSnapshot,
+): DivergenceAnalysis {
+  const valid = methods.filter(m => m.fairValue != null && m.fairValue > 0)
+
+  if (valid.length < 2 || blended == null) {
+    return {
+      cv: 0,
+      spreadVsPrice: 0,
+      level: 'low',
+      overallConfidence: valid.length === 0 ? 'low' : 'medium',
+      summary: valid.length < 2
+        ? 'Only one model produced a result — blended estimate has low reliability.'
+        : 'Insufficient data to assess model agreement.',
+      methodExplanations: valid.map(m => ({
+        methodId: m.id,
+        methodName: m.method,
+        direction: 'inline' as const,
+        deviationPct: 0,
+        confidence: m.confidence,
+        reason: m.errors.length > 0 ? m.errors[0] : 'Single model estimate — no comparison available.',
+      })),
+    }
+  }
+
+  const vals = valid.map(m => m.fairValue!)
+  const mean = vals.reduce((s, v) => s + v, 0) / vals.length
+  const stdDev = Math.sqrt(vals.reduce((s, v) => s + (v - mean) ** 2, 0) / vals.length)
+  const cv = mean > 0 ? stdDev / mean : 0
+  const min = Math.min(...vals)
+  const max = Math.max(...vals)
+  const spreadVsPrice = snapshot.currentPrice > 0 ? (max - min) / snapshot.currentPrice : cv
+
+  let level: DivergenceAnalysis['level'] = 'low'
+  if (cv > 0.30) level = 'high'
+  else if (cv > 0.15) level = 'moderate'
+
+  const overallConfidence: DivergenceAnalysis['overallConfidence'] =
+    level === 'low' ? 'high' : level === 'moderate' ? 'medium' : 'low'
+
+  // Context derived from snapshot & assumptions
+  const netDebtM = (snapshot.debtM - snapshot.cashM)  // in millions
+  const revM = snapshot.ltvRevenueDollars != null ? snapshot.ltvRevenueDollars / 1e6 : null
+  const ebitdaM = snapshot.ttmEbitdaDollars != null ? snapshot.ttmEbitdaDollars / 1e6 : null
+  const currentEbitdaMargin = revM && revM > 0 && ebitdaM != null ? ebitdaM / revM : null
+  const currentFcfMargin = snapshot.fcfMargin ?? null
+  const netDebtToRev = revM && revM > 0 ? netDebtM / revM : null
+
+  // Per-method explanations
+  const methodExplanations: MethodExplanation[] = valid.map(m => {
+    const deviationPct = blended > 0 ? Math.abs(m.fairValue! - blended) / blended : 0
+    const direction: MethodExplanation['direction'] =
+      m.fairValue! > blended * 1.05 ? 'above'
+      : m.fairValue! < blended * 0.95 ? 'below'
+      : 'inline'
+
+    // Confidence: start from data-quality confidence, downgrade if large outlier
+    let confidence = m.confidence
+    if (deviationPct > 0.35 && confidence !== 'low') confidence = 'medium'
+    if (deviationPct > 0.55) confidence = 'low'
+
+    let reason = ''
+
+    if (m.id === 'forward_pe') {
+      if (direction === 'above') {
+        if (assumptions.netMargin > 0.20) {
+          reason = `Assuming a ${(assumptions.netMargin * 100).toFixed(0)}% exit net margin — significantly above current levels — inflates the P/E estimate. Verify this margin is achievable.`
+        } else if (assumptions.exitPE > 25) {
+          reason = `Exit P/E of ${assumptions.exitPE.toFixed(0)}× is high. A lower multiple would reduce this estimate meaningfully.`
+        } else {
+          reason = `Forward P/E is above the blended estimate, driven by projected earnings growth outpacing the other models' assumptions.`
+        }
+      } else if (direction === 'below') {
+        if (assumptions.netMargin < 0.05) {
+          reason = `Thin assumed exit net margin (${(assumptions.netMargin * 100).toFixed(1)}%) limits earnings power at the P/E exit, depressing this estimate.`
+        } else {
+          reason = `Forward P/E is below the blended estimate. Consider whether the exit P/E of ${assumptions.exitPE.toFixed(0)}× reflects the sector norm.`
+        }
+      } else {
+        reason = `Forward P/E aligns closely with the blended estimate, suggesting earnings projections are consistent with the other methods.`
+      }
+    }
+
+    if (m.id === 'ev_ebitda') {
+      if (direction === 'below') {
+        if (netDebtToRev != null && netDebtToRev > 0.5) {
+          reason = `Significant net debt (≈${netDebtToRev.toFixed(1)}× revenue) reduces the equity value after subtracting debt from enterprise value — that's why EV/EBITDA produces a lower per-share estimate.`
+        } else if (currentEbitdaMargin != null && currentEbitdaMargin < 0.10) {
+          reason = `Current EBITDA margin is thin (${(currentEbitdaMargin * 100).toFixed(1)}%), making the EBITDA base small. EV/EBITDA results are sensitive to margin levels.`
+        } else {
+          reason = `EV/EBITDA is below the blended value. Check whether the exit multiple (${assumptions.exitMultiple.toFixed(0)}×) reflects current sector trading levels.`
+        }
+      } else if (direction === 'above') {
+        if (netDebtToRev != null && netDebtToRev < -0.2) {
+          reason = `Net cash position boosts the equity value derived from enterprise value, lifting this estimate above the blend.`
+        } else {
+          reason = `EV/EBITDA is above the blended estimate. The exit multiple of ${assumptions.exitMultiple.toFixed(0)}× may be generous relative to the sector.`
+        }
+      } else {
+        reason = `EV/EBITDA aligns with the blended estimate, suggesting the enterprise multiple is consistent with the assumed debt level and margin profile.`
+      }
+    }
+
+    if (m.id === 'revenue_multiple') {
+      if (direction === 'above') {
+        if (currentEbitdaMargin != null && currentEbitdaMargin < 0.10) {
+          reason = `Revenue Multiple is the highest estimate — it values top-line scale without penalising today's thin margins. This is common for companies growing into profitability.`
+        } else if (assumptions.cagr > 0.20) {
+          reason = `A high projected CAGR (${(assumptions.cagr * 100).toFixed(0)}%) compounds into a large exit revenue base, driving the EV/Revenue estimate above the blend.`
+        } else {
+          reason = `Revenue Multiple is above the blend. The exit EV/Revenue assumption of ${assumptions.revenueMultiple.toFixed(1)}× may be elevated — benchmark against sector peers.`
+        }
+      } else if (direction === 'below') {
+        if (assumptions.revenueMultiple < 2) {
+          reason = `A conservative exit EV/Revenue of ${assumptions.revenueMultiple.toFixed(1)}× produces a below-blend estimate. Verify this reflects the right sector multiple.`
+        } else {
+          reason = `Revenue Multiple is below the blended estimate, possibly because the discount rate offsets the projected revenue growth.`
+        }
+      } else {
+        reason = `Revenue Multiple is in line with the blend, suggesting the growth-adjusted revenue assumption is consistent with the other methods.`
+      }
+    }
+
+    if (m.id === 'core_dcf') {
+      if (direction === 'below') {
+        if (currentFcfMargin != null && currentFcfMargin < 0.03) {
+          reason = `DCF is the most conservative estimate because today's free cash flow margin is very thin (${currentFcfMargin != null ? (currentFcfMargin * 100).toFixed(1) : '~0'}%). When near-term cash flows are small, terminal value dominates and is highly sensitive to assumptions.`
+        } else if (assumptions.wacc > 0.12) {
+          reason = `A high WACC of ${(assumptions.wacc * 100).toFixed(1)}% aggressively discounts future cash flows, pushing the DCF estimate below the multiples-based models.`
+        } else {
+          reason = `Core DCF produces a conservative estimate. Unlike multiples, it doesn't benefit from multiple expansion — value comes purely from discounted free cash flows.`
+        }
+      } else if (direction === 'above') {
+        if (assumptions.wacc < 0.08) {
+          reason = `A low WACC of ${(assumptions.wacc * 100).toFixed(1)}% amplifies the terminal value, pushing DCF above the multiples-based estimates.`
+        } else {
+          reason = `DCF is above the blend, suggesting strong projected cash flows relative to what the multiples-based methods are pricing in.`
+        }
+      } else {
+        reason = `Core DCF aligns with the blended estimate, indicating that the projected cash flows and discount rate are consistent with the multiples applied.`
+      }
+    }
+
+    return { methodId: m.id, methodName: m.method, direction, deviationPct, confidence, reason }
+  })
+
+  // Overall summary
+  let summary = ''
+  if (level === 'low') {
+    summary = `All ${valid.length} models agree within ${(cv * 100).toFixed(0)}% of each other — a strong signal with high confidence in the blended estimate.`
+  } else if (level === 'moderate') {
+    const highExpl = methodExplanations.find(e => e.direction === 'above')
+    const lowExpl = methodExplanations.find(e => e.direction === 'below')
+    if (highExpl && lowExpl) {
+      summary = `Moderate spread across models (${(spreadVsPrice * 100).toFixed(0)}% of price). ${highExpl.methodName} skews high while ${lowExpl.methodName} skews low — see explanations below.`
+    } else {
+      summary = `Models show moderate disagreement (CV ${(cv * 100).toFixed(0)}%). The blended estimate smooths the spread, but individual method assumptions deserve scrutiny.`
+    }
+  } else {
+    summary = `High model divergence — spread of ${(spreadVsPrice * 100).toFixed(0)}% relative to the current price. This often signals a company in transition (e.g., scaling into profitability). Treat any single model with caution and focus on assumption quality.`
+  }
+
+  return { cv, spreadVsPrice, level, overallConfidence, summary, methodExplanations }
 }
 
 export function computeCockpitOutput(
@@ -227,6 +414,8 @@ export function computeCockpitOutput(
     historicalCAGR: snapshot.historicalCAGR,
   })
 
+  const divergence = computeDivergence(methods, blendedFairValue, assumptions, snapshot)
+
   return {
     blendedFairValue,
     methods,
@@ -239,5 +428,6 @@ export function computeCockpitOutput(
     upsidePct,
     marketImpliedGrowth: reverseDcf.impliedCAGR,
     marketImpliedText: reverseDcf.interpretationText,
+    divergence,
   }
 }

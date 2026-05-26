@@ -16,6 +16,7 @@ import AssumptionsPanel, { type SparkPoint } from './cockpit/AssumptionsPanel'
 import KeyAssumptions from './cockpit/KeyAssumptions'
 import ScenarioCards from './cockpit/ScenarioCards'
 import ValuationMethodCards from './cockpit/ValuationMethodCards'
+import ModelDivergencePanel from './cockpit/ModelDivergencePanel'
 import RightSidebar from './cockpit/RightSidebar'
 
 const ModellingWorkspace = dynamic(
@@ -211,6 +212,13 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
           <ValuationMethodCards
             methods={output.methods}
             currentPrice={currentPrice}
+            currency={currency}
+          />
+
+          {/* Model Divergence & Confidence */}
+          <ModelDivergencePanel
+            divergence={output.divergence}
+            blendedFairValue={output.blendedFairValue}
             currency={currency}
           />
 
