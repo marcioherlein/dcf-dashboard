@@ -9,11 +9,24 @@ export default function LandingFooter() {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-8 mb-10">
           {/* Brand */}
           <div className="max-w-xs">
-            <Link href="/" className="flex items-center gap-2.5 mb-3">
-              <div className="w-7 h-7 rounded-full overflow-hidden">
-                <Image src="/logos/logo.png" alt="Intrinsico" width={28} height={28} className="w-full h-full object-cover" />
-              </div>
-              <span className="font-bold text-[#0F172A] text-[16px]" style={{ letterSpacing: '-0.02em' }}>
+            <Link href="/" className="flex items-center gap-2.5 mb-3 group">
+              <Image
+                src="/logos/logo.png"
+                alt="Intrinsico"
+                width={30}
+                height={30}
+                className="transition-transform duration-200 group-hover:scale-105"
+              />
+              <span
+                className="font-black text-[17px]"
+                style={{
+                  letterSpacing: '-0.04em',
+                  background: 'linear-gradient(135deg, #0F172A 20%, #1E40AF 65%, #2563EB 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
                 Intrinsico
               </span>
             </Link>

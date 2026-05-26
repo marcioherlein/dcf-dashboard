@@ -38,13 +38,24 @@ export default function LandingNavbar() {
       >
         <div className="mx-auto max-w-[1280px] px-6 h-full flex items-center gap-8">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <div className="w-8 h-8 rounded-full overflow-hidden">
-              <Image src="/logos/logo.png" alt="Intrinsico" width={32} height={32} className="w-full h-full object-cover" />
-            </div>
+          <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
+            <Image
+              src="/logos/logo.png"
+              alt="Intrinsico"
+              width={36}
+              height={36}
+              className="transition-transform duration-200 group-hover:scale-105"
+            />
             <span
-              className="font-bold text-[#0F172A] hidden sm:block"
-              style={{ fontSize: '18px', letterSpacing: '-0.025em' }}
+              className="font-black hidden sm:block"
+              style={{
+                fontSize: '20px',
+                letterSpacing: '-0.04em',
+                background: 'linear-gradient(135deg, #0F172A 20%, #1E40AF 65%, #2563EB 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
             >
               Intrinsico
             </span>

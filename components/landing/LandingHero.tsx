@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Shield } from 'lucide-react'
 import { signIn } from 'next-auth/react'
 import HeroSearch from './HeroSearch'
@@ -52,6 +53,35 @@ export default function LandingHero() {
         >
           {/* ── Left: Copy ── */}
           <div className="min-w-0">
+            {/* Brand lockup */}
+            <div className="flex items-center gap-3 mb-7">
+              <Image
+                src="/logos/logo.png"
+                alt="Intrinsico"
+                width={48}
+                height={48}
+                className="shrink-0"
+              />
+              <div>
+                <p
+                  className="font-black leading-none"
+                  style={{
+                    fontSize: '26px',
+                    letterSpacing: '-0.04em',
+                    background: 'linear-gradient(135deg, #0F172A 20%, #1E40AF 65%, #2563EB 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}
+                >
+                  Intrinsico
+                </p>
+                <p className="text-[10px] font-bold text-slate-400 tracking-[0.15em] uppercase mt-0.5">
+                  Valuation Intelligence
+                </p>
+              </div>
+            </div>
+
             {/* Badge */}
             <div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 mb-6"
               style={{
