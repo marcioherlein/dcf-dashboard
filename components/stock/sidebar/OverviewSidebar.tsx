@@ -130,8 +130,6 @@ export default function OverviewSidebar({
   wacc,
   fairValueData,
   ownership,
-  businessProfile,
-  ticker,
 }: Props) {
   const { price, peRatio, fiftyTwoWeekHigh, fiftyTwoWeekLow, analystTargetMean, marketCap, currency } = quote
   const sym = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$ ' : currency + ' '

@@ -74,11 +74,11 @@ export function fmtAxisTick(v: number, currency = 'USD'): string {
 }
 
 /** Upside zone label */
-export function upsideZone(pct: number | null): 'Attractive' | 'Fair Value' | 'Expensive' | null {
+export function upsideZone(pct: number | null): 'Undervalued' | 'Fairly Valued' | 'Overvalued' | null {
   if (pct == null) return null
-  if (pct >= 0.20) return 'Attractive'
-  if (pct >= 0.05) return 'Fair Value'
-  return 'Expensive'
+  if (pct >= 0.20) return 'Undervalued'
+  if (pct >= 0.00) return 'Fairly Valued'
+  return 'Overvalued'
 }
 
 /** Color classes for upside pct */
@@ -90,9 +90,9 @@ export function upsideColor(pct: number | null): string {
 }
 
 /** Color classes for zone badge */
-export function zoneBadgeClass(zone: 'Attractive' | 'Fair Value' | 'Expensive' | null): string {
-  if (zone === 'Attractive') return 'bg-emerald-100 text-emerald-700 border-emerald-200'
-  if (zone === 'Fair Value')  return 'bg-blue-100 text-blue-700 border-blue-200'
-  if (zone === 'Expensive')   return 'bg-red-100 text-red-700 border-red-200'
+export function zoneBadgeClass(zone: 'Undervalued' | 'Fairly Valued' | 'Overvalued' | null): string {
+  if (zone === 'Undervalued')   return 'bg-emerald-100 text-emerald-700 border-emerald-200'
+  if (zone === 'Fairly Valued') return 'bg-blue-100 text-blue-700 border-blue-200'
+  if (zone === 'Overvalued')    return 'bg-red-100 text-red-700 border-red-200'
   return 'bg-slate-100 text-slate-500 border-slate-200'
 }

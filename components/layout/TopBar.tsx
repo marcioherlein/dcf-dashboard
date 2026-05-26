@@ -11,11 +11,11 @@ import { slideDown } from '@/lib/motion'
 import { useStockNav } from '@/contexts/StockNavContext'
 import type { TabId } from '@/components/stock/TabNav'
 
-const STOCK_TABS: Array<{ id: TabId; label: string }> = [
+const STOCK_TABS: Array<{ id: TabId; label: string; count?: number }> = [
   { id: 'overview',   label: 'Overview'   },
-  { id: 'valuation',  label: 'Valuation'  },
+  { id: 'valuation',  label: 'Valuation', count: 45 },
   { id: 'financials', label: 'Financials' },
-  { id: 'risks',      label: 'Risks'      },
+  { id: 'risks',      label: 'Risks',     count: 78 },
   { id: 'news',       label: 'News'       },
 ]
 
@@ -188,7 +188,7 @@ export default function TopBar() {
               <button aria-label="Add to watchlist" className="text-slate-300 hover:text-amber-400 transition-colors shrink-0">
                 <Star size={14} strokeWidth={1.8} />
               </button>
-              <span className="font-mono font-black text-[13px] text-slate-900 tracking-tight shrink-0">
+              <span className="font-bold text-[13px] text-slate-900 tracking-tight shrink-0">
                 {stockNav.ticker}
               </span>
               <span className="text-[12px] text-slate-400 hidden md:block truncate max-w-[160px]">
@@ -196,7 +196,7 @@ export default function TopBar() {
               </span>
               {stockNav.price != null && (
                 <div className="flex items-baseline gap-1 shrink-0">
-                  <span className="font-mono font-semibold text-[13px] text-slate-800 tabular-nums">
+                  <span className="font-semibold text-[13px] text-slate-800 tabular-nums">
                     {stockNav.currency}{stockNav.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                   {stockNav.changePct != null && (
@@ -213,7 +213,7 @@ export default function TopBar() {
 
             {/* Tabs */}
             <div className="flex items-center overflow-x-auto scrollbar-hide shrink-0" role="tablist">
-              {STOCK_TABS.map(({ id, label }) => {
+              {STOCK_TABS.map(({ id, label, count }) => {
                 const active = stockNav.activeTab === id
                 return (
                   <button
@@ -222,11 +222,21 @@ export default function TopBar() {
                     aria-selected={active}
                     onClick={() => onTabChangeRef.current?.(id)}
                     className={cn(
-                      'relative flex items-center px-3.5 text-[12px] font-medium whitespace-nowrap transition-colors shrink-0 h-[52px]',
+                      'relative flex items-center gap-1.5 px-3.5 text-[12px] font-medium whitespace-nowrap transition-colors shrink-0 h-[52px]',
                       active ? 'text-blue-600' : 'text-slate-500 hover:text-slate-800',
                     )}
                   >
                     {label}
+                    {count != null && (
+                      <span className={cn(
+                        'text-[10px] font-semibold leading-none px-1.5 py-0.5 rounded-full tabular-nums',
+                        active
+                          ? 'bg-blue-100 text-blue-600'
+                          : 'bg-slate-100 text-slate-400',
+                      )}>
+                        {count}
+                      </span>
+                    )}
                     {active && (
                       <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-600 rounded-t" />
                     )}

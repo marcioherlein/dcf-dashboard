@@ -224,7 +224,7 @@ function DefaultView({
   scenarios?: { bull: Scenario; base: Scenario; bear: Scenario }
   weights?: { fcff: number; fcfe: number; ddm: number; multiples: number }
 }) {
-  const sym = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$' : currency
+  const sym = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$ ' : currency + ' '
 
   const estimates = valuationMethods?.models?.multiples?.estimates ?? []
   const methodFVs: number[] = [

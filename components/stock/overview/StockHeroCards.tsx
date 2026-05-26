@@ -32,28 +32,28 @@ interface Verdict {
 function deriveVerdict(upsidePct: number | null, price: number, fv: number | null): Verdict {
   const absPct = upsidePct != null ? Math.abs(upsidePct * 100).toFixed(0) : '?'
   if (upsidePct == null || fv == null) return {
-    chip: 'N/A', heading: 'Insufficient Data',
+    chip: '—', heading: 'Insufficient Data',
     description: () => 'We could not compute an intrinsic value estimate with the available data.',
     chipClass: 'bg-slate-100 text-slate-500 border-slate-200',
     headingClass: 'text-slate-500',
   }
-  if (upsidePct >= 0.25) return {
-    chip: 'BUY', heading: 'Attractive',
-    description: () => `Trades ${absPct}% below our fair value estimate — a significant margin of safety.`,
+  if (upsidePct >= 0.20) return {
+    chip: 'BUY', heading: 'Undervalued',
+    description: () => `Trading ${absPct}% below our fair value estimate — a significant margin of safety.`,
     chipClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     headingClass: 'text-emerald-600',
   }
   if (upsidePct >= 0.05) return {
     chip: 'BUY', heading: 'Fairly Valued',
-    description: () => `Modest ${absPct}% upside to our estimate — reasonable entry with limited downside.`,
+    description: () => `Trading ${absPct}% below our estimate — reasonable entry with limited downside.`,
     chipClass: 'bg-emerald-50 text-emerald-600 border-emerald-200',
     headingClass: 'text-emerald-500',
   }
   if (upsidePct >= -0.10) return {
-    chip: 'WATCH', heading: 'Near Fair Value',
+    chip: 'WATCH', heading: 'Fairly Valued',
     description: () => 'Trading close to our intrinsic estimate. Patient investors may wait for a better entry.',
-    chipClass: 'bg-amber-50 text-amber-700 border-amber-200',
-    headingClass: 'text-amber-600',
+    chipClass: 'bg-blue-50 text-blue-700 border-blue-200',
+    headingClass: 'text-blue-600',
   }
   if (upsidePct >= -0.25) return {
     chip: 'AVOID', heading: 'Overvalued',
@@ -62,8 +62,8 @@ function deriveVerdict(upsidePct: number | null, price: number, fv: number | nul
     headingClass: 'text-red-600',
   }
   return {
-    chip: 'AVOID', heading: 'Significantly Overvalued',
-    description: () => `Priced ${absPct}% above our estimate. High execution risk embedded in the price.`,
+    chip: 'AVOID', heading: 'Overvalued',
+    description: () => `Trading ${absPct}% above our estimate. High execution risk embedded in the price.`,
     chipClass: 'bg-red-50 text-red-700 border-red-200',
     headingClass: 'text-red-700',
   }

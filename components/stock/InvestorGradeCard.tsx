@@ -52,6 +52,14 @@ function gradeColors(grade: string): { bg: string; text: string; hex: string } {
   return           { bg: 'bg-red-100 border border-red-300',               text: 'text-red-800',    hex: '#DC2626' }
 }
 
+function compactBadgeCls(grade: string): string {
+  const g = grade.replace('+', '').replace('-', '')
+  if (g === 'A') return 'bg-emerald-600 text-white'
+  if (g === 'B') return 'bg-blue-600 text-white'
+  if (g === 'C') return 'bg-amber-500 text-white'
+  return 'bg-red-600 text-white'
+}
+
 function gradeToValue(grade: string): number {
   const map: Record<string, number> = {
     'A+': 97, 'A': 90, 'A-': 83,
@@ -138,9 +146,9 @@ export default function InvestorGradeCard({
 
   const verdict = upsidePct == null || fairValue == null || zone == null
     ? null
-    : zone === 'Attractive'
+    : zone === 'Undervalued'
       ? `Our model estimates ${Math.abs(upsidePct * 100).toFixed(0)}% upside — trading below our fair value estimate. Preliminary · adjust assumptions in Valuation tab.`
-      : zone === 'Fair Value'
+      : zone === 'Fairly Valued'
         ? `Our model estimates this trades near fair value (${upsidePct >= 0 ? '+' : ''}${(upsidePct * 100).toFixed(0)}%). Preliminary · adjust assumptions in Valuation tab.`
         : `Our model estimates this may be overvalued — trading ${Math.abs(upsidePct * 100).toFixed(0)}% above our estimate. Preliminary · adjust assumptions in Valuation tab.`
 
@@ -149,7 +157,7 @@ export default function InvestorGradeCard({
     return (
       <div className="rounded-xl card overflow-hidden">
         <div className="flex items-center gap-3 px-4 py-2.5 flex-wrap">
-          <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center text-xs font-extrabold shrink-0', colors.bg, colors.text)}>
+          <div className={cn('w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0', compactBadgeCls(grade))}>
             {grade.replace('+', '').replace('-', '')}
           </div>
           <span className="font-bold text-sm text-slate-900">{ticker}</span>
@@ -164,12 +172,12 @@ export default function InvestorGradeCard({
             <>
               <span className="text-slate-300 hidden sm:inline">|</span>
               <span className="text-xs text-slate-500 hidden sm:inline">Blended: {currSymbol}{fairValue.toFixed(2)}</span>
-              <span className={cn('text-xs font-bold', upsidePct >= 0 ? 'text-emerald-600' : 'text-amber-700')}>
+              <span className={cn('text-xs font-bold', upsidePct >= 0 ? 'text-emerald-600' : 'text-red-600')}>
                 {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
               </span>
               {zone && (
                 <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap', zoneBadgeClass(zone))}>
-                  {zone}
+                  {zone === 'Undervalued' ? 'Attractive' : zone === 'Fairly Valued' ? 'Fair' : 'Expensive'}
                 </span>
               )}
             </>
@@ -236,11 +244,11 @@ export default function InvestorGradeCard({
                 transition={{ duration: 0.25, delay: 0.2 }}
                 className={cn(
                   'mt-3 text-[12px] leading-relaxed rounded-lg px-3 py-2',
-                  zone === 'Attractive'
+                  zone === 'Undervalued'
                     ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                    : zone === 'Fair Value'
+                    : zone === 'Fairly Valued'
                       ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                      : 'bg-amber-50 text-amber-700 border border-amber-200',
+                      : 'bg-red-50 text-red-700 border border-red-200',
                 )}
               >
                 {verdict}
@@ -301,7 +309,7 @@ export default function InvestorGradeCard({
                     {alertActive ? <BellOff size={11} /> : <Bell size={11} />}
                   </button>
                 </div>
-                <p className={cn('text-2xl font-bold tabular-nums leading-none', isUndervalued ? 'text-emerald-600' : 'text-amber-700')}>
+                <p className={cn('text-2xl font-bold tabular-nums leading-none', isUndervalued ? 'text-emerald-600' : 'text-red-600')}>
                   {currSymbol}{displayFV.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
                 <p className="text-[9px] text-slate-400 mt-1">Blended from multiple models</p>
@@ -332,7 +340,7 @@ export default function InvestorGradeCard({
             <div>
               <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
                 <motion.div
-                  className={cn('h-full rounded-full', isUndervalued ? 'bg-emerald-500' : 'bg-amber-500')}
+                  className={cn('h-full rounded-full', isUndervalued ? 'bg-emerald-500' : 'bg-red-500')}
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min(100, Math.max(4, (price / Math.max(price, fairValue)) * 100))}%` }}
                   transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
@@ -340,7 +348,7 @@ export default function InvestorGradeCard({
               </div>
               <div className="flex justify-between mt-1">
                 <span className="text-[10px] text-slate-400">Today</span>
-                <span className={cn('text-[10px] font-medium', isUndervalued ? 'text-emerald-600' : 'text-amber-700')}>
+                <span className={cn('text-[10px] font-medium', isUndervalued ? 'text-emerald-600' : 'text-red-600')}>
                   Fair Value
                 </span>
               </div>

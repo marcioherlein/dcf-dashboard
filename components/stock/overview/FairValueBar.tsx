@@ -13,9 +13,14 @@ interface FairValueBarProps {
 export default function FairValueBar({ price, fairValue, currency, bearCase, bullCase }: FairValueBarProps) {
   if (fairValue == null) return null
 
-  // Range anchors: use bear/bull if available, else extend ~20% either side of min/max
-  const lo = bearCase ?? Math.min(price, fairValue) * 0.80
-  const hi = bullCase ?? Math.max(price, fairValue) * 1.20
+  // Range ALWAYS includes current price AND fair value, then expands to bear/bull if available.
+  // This prevents the price dot from being clamped to the edge when price << bear case.
+  const allValues = [price, fairValue, bearCase, bullCase].filter((v): v is number => v != null)
+  const dataLo = Math.min(...allValues)
+  const dataHi = Math.max(...allValues)
+  const margin = (dataHi - dataLo) * 0.06
+  const lo = dataLo - margin
+  const hi = dataHi + margin
   const span = hi - lo
 
   const pct = (v: number) => span > 0 ? Math.max(1, Math.min(99, ((v - lo) / span) * 100)) : 50
@@ -27,47 +32,37 @@ export default function FairValueBar({ price, fairValue, currency, bearCase, bul
 
   return (
     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-      {/* Header */}
+
+      {/* ── Header ── */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <span className="text-[13px] font-semibold text-slate-700">Price vs Fair Value</span>
-        </div>
+        <span className="text-[13px] font-semibold text-slate-700">Price vs Fair Value</span>
         <span className={cn(
-          'text-[12px] font-bold tabular-nums px-2 py-0.5 rounded-md',
-          isAbove ? 'text-red-600 bg-red-50' : 'text-emerald-600 bg-emerald-50'
+          'text-[12px] font-bold tabular-nums px-2.5 py-0.5 rounded-full border',
+          isAbove
+            ? 'text-red-600 bg-red-50 border-red-100'
+            : 'text-emerald-600 bg-emerald-50 border-emerald-100'
         )}>
           {isAbove ? '+' : ''}{diff.toFixed(1)}%
         </span>
       </div>
 
-      {/* Fair Value + Current Price labels above bar */}
-      <div className="relative mb-1" style={{ height: '24px' }}>
-        {/* Fair value label */}
-        <div
-          className="absolute text-[10px] text-slate-500 font-medium -translate-x-1/2"
-          style={{ left: `${fvPct}%`, top: 0 }}
-        >
-          <span className="tabular-nums">{fmtPrice(fairValue, currency)}</span>
-          <br />
-          <span className="text-slate-400">Fair Value</span>
+      {/* ── Labels row (no absolute positioning — safe at all range positions) ── */}
+      <div className="flex items-end gap-8 mb-3">
+        <div>
+          <p className="text-[16px] font-bold tabular-nums text-slate-900 leading-none">{fmtPrice(price, currency)}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">Current Price</p>
         </div>
-
-        {/* Current price label */}
-        <div
-          className="absolute text-[10px] font-semibold text-slate-700 -translate-x-1/2"
-          style={{ left: `${pricePct}%`, top: 0 }}
-        >
-          <span className="tabular-nums">{fmtPrice(price, currency)}</span>
-          <br />
-          <span className="text-slate-400">Current Price</span>
+        <div>
+          <p className="text-[16px] font-bold tabular-nums text-slate-900 leading-none">{fmtPrice(fairValue, currency)}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">Fair Value</p>
         </div>
       </div>
 
-      {/* Gradient bar */}
-      <div className="relative h-3 rounded-full overflow-hidden mt-6">
+      {/* ── Gradient bar ── */}
+      <div className="relative h-3 rounded-full overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-amber-400 to-red-500" />
 
-        {/* Fair value white line */}
+        {/* Fair value white line marker */}
         <div
           className="absolute top-0 bottom-0 w-0.5 bg-white/90 z-10"
           style={{ left: `${fvPct}%` }}
@@ -80,7 +75,7 @@ export default function FairValueBar({ price, fairValue, currency, bearCase, bul
         />
       </div>
 
-      {/* Bear / Bull labels below bar */}
+      {/* ── Bear / Bull case labels ── */}
       <div className="flex justify-between mt-2">
         <div>
           {bearCase != null && (
@@ -100,7 +95,7 @@ export default function FairValueBar({ price, fairValue, currency, bearCase, bul
         </div>
       </div>
 
-      {/* Interpretation sentence */}
+      {/* ── Interpretation ── */}
       <p className="text-[12px] text-slate-500 mt-3 leading-relaxed">
         {isAbove
           ? `Current price is ${Math.abs(diff).toFixed(1)}% above our fair value estimate.`
