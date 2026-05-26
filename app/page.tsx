@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Check, ArrowRight } from 'lucide-react'
+import { Check, ArrowRight, ShieldCheck } from 'lucide-react'
 import TickerStrip from '@/components/home/TickerStrip'
 import StockCardStrip from '@/components/home/StockCardStrip'
 
@@ -274,8 +274,8 @@ function MacMockup() {
       <div
         className="rounded-2xl overflow-hidden"
         style={{
-          border: '1px solid rgba(59,130,246,0.22)',
-          boxShadow: '0 28px 72px rgba(0,0,0,0.65), 0 4px 14px rgba(59,130,246,0.1), 0 0 0 1px rgba(255,255,255,0.04) inset',
+          border: '1px solid rgba(59,130,246,0.20)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.22), 0 4px 16px rgba(37,99,235,0.10), 0 0 0 1px rgba(255,255,255,0.04) inset',
         }}
       >
         {/* Mac title bar */}
@@ -369,8 +369,8 @@ function HeroSearch() {
   return (
     <div className="relative w-full max-w-xl mx-auto" ref={containerRef}>
       <div
-        className="flex items-center gap-3 rounded-2xl border px-5 py-4 transition-all shadow-xl focus-within:border-blue-500/50"
-        style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)', borderColor: 'rgba(255,255,255,0.15)' }}
+        className="flex items-center gap-3 rounded-2xl border px-5 py-4 transition-all shadow-sm focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-50"
+        style={{ background: '#FFFFFF', borderColor: '#E2E8F0' }}
       >
         <svg className="h-5 w-5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
@@ -381,14 +381,14 @@ function HeroSearch() {
           onChange={e => setQuery(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && query.trim()) select(query.trim().toUpperCase()) }}
           placeholder="Enter ticker or company name…"
-          className="flex-1 bg-transparent text-base text-slate-100 placeholder-slate-500 focus:outline-none uppercase"
+          className="flex-1 bg-transparent text-base text-slate-800 placeholder-slate-400 focus:outline-none uppercase font-mono tracking-wide"
         />
         {loading
-          ? <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-700 border-t-blue-500 shrink-0" />
+          ? <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-blue-500 shrink-0" />
           : (
             <button
               onClick={() => { if (query.trim()) select(query.trim().toUpperCase()) }}
-              className="rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all shrink-0 hover:shadow-lg hover:-translate-y-px"
+              className="rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all shrink-0 hover:shadow-lg hover:-translate-y-px active:translate-y-0"
               style={{ background: '#2563EB', boxShadow: '0 2px 8px rgba(37,99,235,0.4)' }}
             >
               Analyze →
@@ -397,15 +397,15 @@ function HeroSearch() {
         }
       </div>
       {open && (
-        <div className="absolute left-0 right-0 top-full mt-2 overflow-hidden rounded-2xl glass-card border border-[rgba(59,130,246,0.2)] z-50">
+        <div className="absolute left-0 right-0 top-full mt-2 overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-card-md z-50">
           {results.map(r => (
             <button
               key={r.symbol}
               onClick={() => select(r.symbol)}
-              className="flex w-full items-center gap-3 px-5 py-3 text-left hover:bg-white/5 border-b border-[rgba(59,130,246,0.08)] last:border-b-0 transition-colors"
+              className="flex w-full items-center gap-3 px-5 py-3 text-left hover:bg-slate-50 border-b border-slate-100 last:border-b-0 transition-colors"
             >
-              <span className="text-sm font-bold text-blue-400 w-16 shrink-0 font-mono">{r.symbol}</span>
-              <span className="text-sm text-slate-400 truncate">{r.longname ?? r.shortname}</span>
+              <span className="text-sm font-bold text-blue-600 w-16 shrink-0 font-mono">{r.symbol}</span>
+              <span className="text-sm text-slate-500 truncate">{r.longname ?? r.shortname}</span>
             </button>
           ))}
         </div>
@@ -577,39 +577,43 @@ export default function LandingPage() {
   const ctaRef      = useScrollReveal()
 
   return (
-    <div className="min-h-screen" style={{ background: '#F1F5F9' }}>
+    <div className="min-h-screen bg-white">
 
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden px-6 pt-14 pb-20" style={{ background: 'linear-gradient(135deg, #050D1F 0%, #0A1628 55%, #0B1E38 100%)' }}>
-        <div className="pointer-events-none absolute inset-0 bg-radial-blue opacity-70" />
-        <div className="pointer-events-none absolute top-0 right-0 w-1/2 h-1/2" style={{ background: 'radial-gradient(ellipse 55% 55% at 85% 10%, rgba(59,130,246,0.12) 0%, transparent 65%)' }} />
-        <div className="pointer-events-none absolute bottom-0 left-0 w-1/3 h-1/2" style={{ background: 'radial-gradient(ellipse 50% 60% at 10% 95%, rgba(16,185,129,0.06) 0%, transparent 65%)' }} />
-        <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-25" />
+      <section className="relative overflow-hidden bg-white" style={{ paddingTop: '80px', paddingBottom: '0' }}>
+        {/* Subtle radial at top */}
+        <div className="pointer-events-none absolute top-0 left-0 right-0 h-[600px]"
+          style={{ background: 'radial-gradient(ellipse 80% 55% at 50% -5%, rgba(37,99,235,0.07) 0%, transparent 65%)' }} />
+        <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-[0.03]" />
 
-        <div className="relative mx-auto max-w-4xl text-center">
-          {/* Social proof pill */}
+        {/* ── Centered top: badge + headline + search ── */}
+        <div className="relative mx-auto max-w-3xl px-4 text-center">
+
+          {/* Badge */}
           <div
-            className="hero-reveal inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold text-slate-300 mb-7"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', animationDelay: '0ms' }}
+            className="hero-reveal inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-1.5 text-[11px] font-semibold text-slate-600 mb-8"
+            style={{ animationDelay: '0ms' }}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Free · No account required · 500+ stocks
+            <ShieldCheck size={12} className="text-blue-600" />
+            Designed for serious, self-directed investors
           </div>
 
           {/* Headline */}
           <h1
-            className="hero-reveal font-display text-5xl sm:text-[3.6rem] text-slate-100 leading-[1.1] mb-5"
-            style={{ letterSpacing: '-0.04em', fontWeight: 500, animationDelay: '80ms' }}
+            className="hero-reveal font-display text-5xl sm:text-6xl lg:text-[4.2rem] font-bold text-slate-900 leading-[1.08] mb-5"
+            style={{ letterSpacing: '-0.04em', animationDelay: '80ms' }}
           >
-            Know what growth a stock<br className="hidden sm:block" />
-            <span className="text-blue-400"> is already priced for</span>
-            <br className="hidden sm:block" />
-            <span className="text-slate-300" style={{ fontWeight: 400 }}>— before you buy.</span>
+            Invest with a{' '}
+            <span className="text-blue-600">process</span>,<br />
+            not a story.
           </h1>
 
-          <p className="hero-reveal text-[1.1rem] text-slate-400 mb-9 max-w-2xl mx-auto leading-relaxed" style={{ animationDelay: '160ms' }}>
-            Most stocks fail because expectations were too high, not because the company was bad.
-            See exactly what today&apos;s price assumes — and decide if you believe it.
+          {/* Subtitle */}
+          <p
+            className="hero-reveal text-[1.1rem] text-slate-500 max-w-xl mx-auto mb-8 leading-relaxed"
+            style={{ animationDelay: '160ms' }}
+          >
+            See what a stock price already assumes — so you can decide with confidence, not hope.
           </p>
 
           {/* Search */}
@@ -617,26 +621,89 @@ export default function LandingPage() {
             <HeroSearch />
           </div>
 
-          {/* Example tickers */}
-          <div className="hero-reveal mt-4 flex items-center justify-center gap-2 flex-wrap" style={{ animationDelay: '310ms' }}>
-            <span className="text-xs text-slate-500">Try:</span>
+          {/* Try tickers */}
+          <div className="hero-reveal mt-3 flex items-center justify-center gap-2 flex-wrap" style={{ animationDelay: '300ms' }}>
+            <span className="text-xs text-slate-400">Try:</span>
             {EXAMPLE_TICKERS.map(t => (
               <button
                 key={t}
                 onClick={() => router.push(`/stock/${t}`)}
-                className="rounded-lg border border-white/10 hover:border-blue-500/40 bg-white/5 hover:bg-blue-500/10 px-3 py-1 text-xs font-semibold text-slate-400 hover:text-blue-300 transition-all font-mono"
+                className="rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50 bg-white px-3 py-1 text-xs font-semibold text-slate-500 hover:text-blue-600 transition-all font-mono"
               >
                 {t}
               </button>
             ))}
           </div>
+        </div>
 
-          {/* Mockup */}
-          <div className="hero-reveal mt-12" style={{ animationDelay: '400ms' }}>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-5">See how it works</p>
-            <MacMockup />
+        {/* ── 3-column: features | MacMockup | social proof ── */}
+        <div className="relative mx-auto max-w-[1200px] px-4 sm:px-6 mt-12">
+          <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_220px] gap-6 lg:gap-10 items-start">
+
+            {/* Left: feature bullets */}
+            <div className="hidden lg:flex flex-col gap-6 pt-6">
+              {[
+                { icon: '🎯', title: 'Price reality, not narratives', body: 'Our reverse DCF shows what growth is already baked into the price.' },
+                { icon: '✅', title: 'Process over predictions', body: 'A repeatable framework to evaluate any stock, anytime.' },
+                { icon: '🛡️', title: 'Clarity you can act on', body: 'Simple verdicts, fair value ranges, and risk-aware insights.' },
+              ].map(f => (
+                <div key={f.title} className="flex items-start gap-3">
+                  <span className="text-xl shrink-0 mt-0.5">{f.icon}</span>
+                  <div>
+                    <p className="text-[13px] font-semibold text-slate-800 mb-1 leading-snug">{f.title}</p>
+                    <p className="text-[12px] text-slate-500 leading-relaxed">{f.body}</p>
+                  </div>
+                </div>
+              ))}
+              <div className="mt-2 pt-5 border-t border-slate-100 space-y-1.5">
+                {['No login required', 'NYSE & NASDAQ', 'Results in seconds'].map(t => (
+                  <div key={t} className="flex items-center gap-2 text-[11px] text-slate-400">
+                    <Check size={11} className="text-emerald-500 shrink-0" />
+                    {t}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Center: MacMockup */}
+            <div className="hero-reveal" style={{ animationDelay: '380ms' }}>
+              <MacMockup />
+            </div>
+
+            {/* Right: testimonial + trust signals */}
+            <div className="hidden lg:flex flex-col gap-5 pt-6">
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                <div className="flex gap-0.5 mb-2.5">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="text-amber-400 text-sm">★</span>
+                  ))}
+                </div>
+                <p className="text-[12px] text-slate-600 leading-relaxed italic mb-3">
+                  &ldquo;The reverse DCF finally made sense of why I kept buying at bad prices. The implied CAGR did what Yahoo Finance never could.&rdquo;
+                </p>
+                <p className="text-[11px] font-semibold text-slate-800">Maria C.</p>
+                <p className="text-[10px] text-slate-400">Self-directed investor, 8 years</p>
+              </div>
+
+              <div className="space-y-2.5">
+                {[
+                  { icon: '🔒', text: 'Your data is private. Always.' },
+                  { icon: '📊', text: 'Real data, transparent models.' },
+                  { icon: '⚙️', text: 'Adjust every assumption yourself.' },
+                ].map(t => (
+                  <div key={t.text} className="flex items-center gap-2.5 text-[12px] text-slate-500">
+                    <span className="text-base shrink-0">{t.icon}</span>
+                    {t.text}
+                  </div>
+                ))}
+              </div>
+            </div>
+
           </div>
         </div>
+
+        {/* Fade hero into dark sections below */}
+        <div className="mt-14 h-16 w-full" style={{ background: 'linear-gradient(to bottom, #ffffff 0%, #0A1628 100%)' }} />
       </section>
 
       {/* ── Reverse DCF band — seamlessly continues dark ── */}
