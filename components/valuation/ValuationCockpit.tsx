@@ -304,9 +304,8 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
       {/* Collapsible guidance at top */}
       <GuidanceStrip />
 
-      {/* Two-column layout: left content + tall right sidebar */}
+      {/* Two-column layout: left (scenario+chart) + tall right sidebar */}
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-4 items-start">
-        {/* Left column: scenario cards → chart → method cards */}
         <div className="flex flex-col gap-4 min-w-0">
           <ScenarioCards
             scenarios={output.scenarios}
@@ -319,14 +318,8 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
             currentPrice={currentPrice}
             currency={currency}
           />
-          <ValuationMethodCards
-            methods={output.methods}
-            currentPrice={currentPrice}
-            currency={currency}
-          />
         </div>
 
-        {/* Right sidebar spans all three rows */}
         <RightSidebar
           output={output}
           currentPrice={currentPrice}
@@ -337,8 +330,18 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
         />
       </div>
 
-      {/* Full-width: divergence detail (per-method explanations) */}
+      {/* Full-width: divergence panel */}
       <ModelDivergencePanel divergence={output.divergence} />
+
+      {/* Full-width: method cards */}
+      <ValuationMethodCards
+        methods={output.methods}
+        currentPrice={currentPrice}
+        currency={currency}
+        cagr={assumptions.cagr}
+        fcfMargin={snapshot.fcfMargin}
+        ttmEbitdaDollars={snapshot.ttmEbitdaDollars}
+      />
 
       {/* Full-width: assumptions editor (single instance, no duplicate) */}
       <div ref={assumptionsPanelRef}>

@@ -1,91 +1,124 @@
 'use client'
 
+import { TrendingUp, BarChart2, BarChart, Target } from 'lucide-react'
 import type { DivergenceAnalysis } from '@/lib/valuation/cockpit'
 
 interface Props {
   divergence: DivergenceAnalysis
 }
 
-const LEVEL_STYLE = {
-  low:      { bg: 'bg-emerald-50', border: 'border-emerald-200', badge: 'bg-emerald-100 text-emerald-700', label: 'Models agree',     dot: 'bg-emerald-500' },
-  moderate: { bg: 'bg-amber-50',   border: 'border-amber-200',   badge: 'bg-amber-100 text-amber-700',     label: 'Moderate spread', dot: 'bg-amber-500' },
-  high:     { bg: 'bg-red-50',     border: 'border-red-200',     badge: 'bg-red-100 text-red-700',         label: 'High divergence', dot: 'bg-red-500' },
+const LEVEL_BADGE = {
+  low:      { bg: 'bg-emerald-100 border-emerald-200', text: 'text-emerald-700', label: 'Models agree'     },
+  moderate: { bg: 'bg-amber-100 border-amber-200',     text: 'text-amber-700',   label: 'Moderate spread' },
+  high:     { bg: 'bg-red-100 border-red-200',         text: 'text-red-700',     label: 'High divergence' },
 }
 
-const CONFIDENCE_STYLE = {
-  high:   { badge: 'bg-emerald-100 text-emerald-700 border-emerald-200', label: 'High confidence' },
-  medium: { badge: 'bg-amber-100 text-amber-700 border-amber-200',       label: 'Medium confidence' },
-  low:    { badge: 'bg-red-100 text-red-700 border-red-200',             label: 'Low confidence' },
+function spreadQual(v: number) {
+  if (v > 0.80) return { label: 'Wide',     cls: 'text-red-500'     }
+  if (v > 0.30) return { label: 'Moderate', cls: 'text-amber-500'   }
+  return               { label: 'Narrow',   cls: 'text-emerald-500' }
 }
 
-const DIRECTION_ICON = { above: '↑', below: '↓', inline: '≈' }
-const DIRECTION_COLOR = { above: 'text-blue-600', below: 'text-slate-500', inline: 'text-emerald-600' }
+function cvQual(v: number) {
+  if (v > 0.30) return { label: 'High',     cls: 'text-red-500'     }
+  if (v > 0.15) return { label: 'Moderate', cls: 'text-amber-500'   }
+  return               { label: 'Low',      cls: 'text-emerald-500' }
+}
+
+type IconComp = React.ComponentType<{ size?: number; className?: string }>
+
+const METHOD_ICON: Record<string, { iconBg: string; iconText: string; Icon: IconComp }> = {
+  forward_pe:       { iconBg: 'bg-blue-100',    iconText: 'text-blue-600',    Icon: TrendingUp as IconComp },
+  ev_ebitda:        { iconBg: 'bg-indigo-100',  iconText: 'text-indigo-600',  Icon: BarChart2  as IconComp },
+  revenue_multiple: { iconBg: 'bg-purple-100',  iconText: 'text-purple-600',  Icon: BarChart   as IconComp },
+  core_dcf:         { iconBg: 'bg-emerald-100', iconText: 'text-emerald-600', Icon: Target     as IconComp },
+}
+
+const CONFIDENCE_CHIP = {
+  high:   { bg: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700', label: 'High confidence'   },
+  medium: { bg: 'bg-amber-50 border-amber-200',     text: 'text-amber-700',   label: 'Medium confidence' },
+  low:    { bg: 'bg-slate-100 border-slate-200',    text: 'text-slate-500',   label: 'Low confidence'    },
+}
 
 export default function ModelDivergencePanel({ divergence }: Props) {
-  const s = LEVEL_STYLE[divergence.level]
+  const badge   = LEVEL_BADGE[divergence.level]
+  const spreadS = spreadQual(divergence.spreadVsPrice)
+  const cvS     = cvQual(divergence.cv)
 
   return (
-    <div className={`rounded-xl border ${s.border} ${s.bg} px-5 py-4`}>
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${s.dot}`} />
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-600">Model Divergence</p>
+    <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+
+      {/* ── Header: description (left) + stats (right) ── */}
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_220px] divide-y md:divide-y-0 md:divide-x divide-slate-100">
+
+        {/* Left: title + summary */}
+        <div className="px-5 py-5">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <svg className="w-5 h-5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            <span className="text-sm font-bold text-red-600 uppercase tracking-wide">Model Divergence</span>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${badge.bg} ${badge.text}`}>
+              {badge.label}
+            </span>
+          </div>
+          <p className="text-[13px] text-slate-600 leading-relaxed mb-2">{divergence.summary}</p>
+          <p className="text-[12px] font-semibold text-slate-700">
+            Use the ranges and individual model insights below to form your own view.
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${s.badge}`}>{s.label}</span>
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${CONFIDENCE_STYLE[divergence.overallConfidence].badge}`}>
-            {CONFIDENCE_STYLE[divergence.overallConfidence].label}
-          </span>
+
+        {/* Right: stats */}
+        <div className="px-6 py-5 flex flex-row md:flex-col justify-around md:justify-center gap-4">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Spread vs. Price</p>
+            <p className="text-3xl font-bold tabular-nums text-slate-900 leading-none">
+              {(divergence.spreadVsPrice * 100).toFixed(0)}%
+            </p>
+            <p className={`text-xs font-semibold mt-1 ${spreadS.cls}`}>{spreadS.label}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Coefficient of Variation</p>
+            <p className="text-3xl font-bold tabular-nums text-slate-900 leading-none">
+              {(divergence.cv * 100).toFixed(0)}%
+            </p>
+            <p className={`text-xs font-semibold mt-1 ${cvS.cls}`}>{cvS.label}</p>
+          </div>
         </div>
       </div>
 
-      {/* Summary */}
-      <p className="text-sm text-slate-700 leading-relaxed mb-4">{divergence.summary}</p>
-
-      {/* Stats — spread + CV only, no duplicate blended FV */}
-      <div className="flex gap-6 mb-4 pb-4 border-b border-black/5">
-        <div>
-          <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Spread vs price</p>
-          <p className="text-sm font-bold tabular-nums text-slate-800">
-            {(divergence.spreadVsPrice * 100).toFixed(0)}%
-          </p>
-        </div>
-        <div>
-          <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Coeff. of variation</p>
-          <p className="text-sm font-bold tabular-nums text-slate-800">
-            {(divergence.cv * 100).toFixed(0)}%
-          </p>
-        </div>
-      </div>
-
-      {/* Per-method explanations — full text, no line-clamp */}
-      <div className="flex flex-col gap-4">
-        {divergence.methodExplanations.map(e => {
-          const cs = CONFIDENCE_STYLE[e.confidence]
-          return (
-            <div key={e.methodId} className="flex gap-3 items-start">
-              <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-sm font-bold ${DIRECTION_COLOR[e.direction]} bg-white/70`}>
-                {DIRECTION_ICON[e.direction]}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <span className="text-xs font-bold text-slate-700">{e.methodName}</span>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${cs.badge}`}>
-                    {cs.label}
-                  </span>
-                  {e.deviationPct > 0.05 && e.direction !== 'inline' && (
-                    <span className="text-[10px] text-slate-400 tabular-nums">
-                      {e.direction === 'above' ? '+' : '−'}{(e.deviationPct * 100).toFixed(0)}% vs blend
-                    </span>
+      {/* ── What's Driving the Divergence ── */}
+      {divergence.methodExplanations.length > 0 && (
+        <div className="border-t border-slate-100">
+          <div className="px-5 py-3 bg-slate-50/70">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              What&apos;s Driving the Divergence?
+            </p>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {divergence.methodExplanations.map(e => {
+              const cfg  = METHOD_ICON[e.methodId]
+              const conf = CONFIDENCE_CHIP[e.confidence]
+              return (
+                <div key={e.methodId} className="px-5 py-4 flex items-start gap-4">
+                  {cfg && (
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${cfg.iconBg}`}>
+                      <cfg.Icon size={14} className={cfg.iconText} />
+                    </div>
                   )}
+                  <div className="flex items-center gap-2 shrink-0 w-40">
+                    <span className="text-sm font-bold text-slate-700">{e.methodName}</span>
+                  </div>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 self-start mt-0.5 ${conf.bg} ${conf.text}`}>
+                    {conf.label}
+                  </span>
+                  <p className="text-[12px] text-slate-500 leading-relaxed flex-1 min-w-0">{e.reason}</p>
                 </div>
-                <p className="text-xs text-slate-600 leading-relaxed">{e.reason}</p>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
