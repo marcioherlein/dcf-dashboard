@@ -689,7 +689,6 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         const recBg    = isBuy ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : isSell ? 'bg-red-50 border-red-200 text-red-700' : 'bg-amber-50 border-amber-200 text-amber-700'
         const sym = q.currency === 'BRL' ? 'R$ ' : q.currency === 'USD' ? '$' : (q.currency ?? '$') + ' '
         const targetUpside = q.analystTargetMean > 0 && q.price > 0 ? (q.analystTargetMean - q.price) / q.price : null
-        const upsideColor  = targetUpside == null ? '' : targetUpside >= 0 ? 'text-emerald-600' : 'text-red-600'
         return (
           <div className="px-4 sm:px-5 py-5 space-y-5">
             <div>

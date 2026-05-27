@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useSession, signIn } from 'next-auth/react'
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
 import {
-  Search, Scale, Bookmark, TrendingUp, ChevronRight,
+  Search, Scale, Bookmark, ChevronRight,
   BarChart2, Clock, ExternalLink, Crown, Sparkles,
 } from 'lucide-react'
 import { Sparkline, SparklineSkeleton } from '@/components/ui/Sparkline'
