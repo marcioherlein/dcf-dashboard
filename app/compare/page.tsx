@@ -147,15 +147,15 @@ export default function ComparePage() {
   return (
     <div className="min-h-screen bg-[#F8FAFB]">
       {/* Header */}
-      <div className="px-6 py-5 border-b border-slate-200 bg-white">
-        <h1 className="text-base font-semibold text-slate-900">Multi-Ticker Comparison</h1>
-        <p className="text-[13px] text-slate-500 mt-0.5">
+      <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-200 bg-white">
+        <h1 className="text-sm sm:text-base font-semibold text-slate-900">Multi-Ticker Comparison</h1>
+        <p className="text-[12px] sm:text-[13px] text-slate-500 mt-0.5">
           Add tickers via the search tag · Compare indexed performance · Pairs analysis for first two tickers
         </p>
       </div>
 
       {/* Chart */}
-      <div className="px-6 pt-6">
+      <div className="px-3 sm:px-6 pt-4 sm:pt-6">
         <MultiTickerChart
           initialTickers={['NVDA', 'AMD']}
           height={320}
@@ -167,7 +167,7 @@ export default function ComparePage() {
 
       {/* Pairs analysis — only when exactly 2 tickers */}
       {chartTickers.length >= 2 && stats && points.length > 0 && (
-        <div className="px-6 py-6 space-y-6">
+        <div className="px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
           {/* KPI stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
@@ -215,12 +215,12 @@ export default function ComparePage() {
           {/* Divergence signal banner */}
           {Math.abs(stats.ratioZScore) >= 1.5 && (
             <div className={[
-              'flex items-center gap-3 px-4 py-3 rounded-lg border text-sm',
+              'flex items-start gap-3 px-4 py-3 rounded-lg border text-sm',
               Math.abs(stats.ratioZScore) >= 2
                 ? 'bg-red-50 border-red-200 text-red-700'
                 : 'bg-amber-50 border-amber-200 text-amber-700',
             ].join(' ')}>
-              <span className="text-base">{Math.abs(stats.ratioZScore) >= 2 ? '🔴' : '🟡'}</span>
+              <span className="text-base shrink-0">{Math.abs(stats.ratioZScore) >= 2 ? '🔴' : '🟡'}</span>
               <div>
                 <span className="font-semibold">
                   {Math.abs(stats.ratioZScore) >= 2 ? 'Extreme divergence' : 'Elevated divergence'} detected
@@ -245,7 +245,7 @@ export default function ComparePage() {
               { label: `${tickerA} / ${tickerB} Ratio`, dataKey: 'ratio', color: COLOR_A, mean: ratioMean },
               { label: `${tickerB} / ${tickerA} Ratio`, dataKey: 'ratioInv', color: COLOR_B, mean: 1 / ratioMean },
             ].map(({ label, dataKey, color, mean }) => (
-              <div key={dataKey} className="bg-white rounded-xl border border-slate-200 p-5">
+              <div key={dataKey} className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5">
                 <div className="flex items-center gap-3 mb-4">
                   <span className="text-[12px] font-semibold uppercase tracking-wider" style={{ color }}>{label}</span>
                   <div className="flex-1 h-px bg-slate-100" />
@@ -267,9 +267,9 @@ export default function ComparePage() {
           </div>
 
           {/* Pairs trading explainer */}
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-5">
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 sm:p-5">
             <p className="text-[11px] font-semibold text-blue-700 uppercase tracking-wider mb-3">How to read this</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-[12px] text-slate-600 leading-relaxed">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-[12px] text-slate-600 leading-relaxed">
               <div><span className="text-slate-800 font-semibold">Indexed chart</span><br />Both prices rebased to 100. Widening gap = divergence. Correlated names usually mean-revert.</div>
               <div><span className="text-slate-800 font-semibold">Ratio chart</span><br />A/B rising = A outperforming. A/B above mean = A historically expensive vs B. Mean-reversion: short A, long B.</div>
               <div><span className="text-slate-800 font-semibold">Z-score signal</span><br />|Z| &gt; 2σ = statistically extreme. High correlation + extreme Z = strongest pairs signal. Not investment advice.</div>
@@ -277,12 +277,12 @@ export default function ComparePage() {
           </div>
 
           {/* Quick links */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             {chartTickers.slice(0, 4).map((t, i) => (
               <Link
                 key={t}
                 href={`/stock/${t}`}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white border border-slate-200 text-sm font-medium text-slate-700 hover:border-indigo-300 hover:text-indigo-600 transition-colors"
+                className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg bg-white border border-slate-200 text-sm font-medium text-slate-700 hover:border-indigo-300 hover:text-indigo-600 transition-colors"
               >
                 <span style={{ color: ['#818cf8', '#34d399', '#fb923c', '#f472b6'][i] }}>▶</span>
                 {' '}Full analysis: {t}
@@ -294,7 +294,7 @@ export default function ComparePage() {
 
       {/* Hint when only 1 ticker */}
       {chartTickers.length < 2 && (
-        <div className="flex flex-col items-center justify-center py-16 gap-2">
+        <div className="flex flex-col items-center justify-center py-16 gap-2 px-4 text-center">
           <p className="text-sm text-slate-400">Add a second ticker above to see pairs analysis</p>
         </div>
       )}
