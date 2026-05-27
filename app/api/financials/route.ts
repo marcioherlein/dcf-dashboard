@@ -226,6 +226,18 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Financial sector: Yahoo's OCF is distorted by loan disbursements (client fund flows,
+    // loan book growth). Use normalized net income × haircut as distributable earnings proxy —
+    // consistent with projectCashFlows.ts behavior for the DCF model.
+    if (isBankOrInsurer) {
+      const ttmNetIncome = ((fd.netIncomeToCommon ?? fd.netIncome ?? 0) as number) / 1e6
+      if (ttmNetIncome > 0) {
+        annualFCFLocal = ttmNetIncome * 0.85
+      } else if (annualFCFLocal < 0) {
+        annualFCFLocal = 0
+      }
+    }
+
     // Revenue-based FCF margin cap by sector (second layer after the market-cap yield cap).
     // A single-year FCF spike — tax refund, working capital release, deferred capex — can push
     // FCF margin to 60-80%, exploding the DCF base far beyond what peers ever sustain.
@@ -677,7 +689,7 @@ export async function GET(req: NextRequest) {
     if (fmpLatestCF && fmpLatestIS && fmpLatestIS.revenue > 0) {
       const fmpFcfM = fmpLatestCF.freeCashFlow / 1e6
       const fmpRevM = fmpLatestIS.revenue / 1e6
-      if (fmpFcfM !== 0) businessProfile.fcfMargin = fmpFcfM / fmpRevM
+      businessProfile.fcfMargin = fmpFcfM / fmpRevM
     }
 
     // Override roicResult with FMP data when available
@@ -928,6 +940,24 @@ export async function GET(req: NextRequest) {
             }
           })
         })()
+
+    // Reconcile fcfMargin with the FCF table — same data source, same derivation.
+    // Fires when Yahoo TTM and FMP latest both produce null/negative (e.g. fintechs
+    // with loan-distorted cash flow statements, or companies with a single bad FCF year).
+    if (businessProfile.fcfMargin == null || businessProfile.fcfMargin < 0) {
+      const recentPosCF = cfHistoricalRows
+        .filter(r => !r.isProjected && r.freeCashFlow != null && r.freeCashFlow > 0)
+        .at(-1)
+      if (recentPosCF != null) {
+        const matchIS = isHistoricalRows.find(
+          r => !r.isProjected && String(r.year) === String(recentPosCF.year) && r.revenue != null && r.revenue > 0
+        )
+        const revForYear = matchIS?.revenue ?? (rawRevMLocal * fxRate)
+        if (revForYear > 0) {
+          businessProfile.fcfMargin = recentPosCF.freeCashFlow! / revForYear
+        }
+      }
+    }
 
     // Average D&A as % of revenue — use most recent year's rate for projections
     const avgDnaRateFromCF: number = (() => {
