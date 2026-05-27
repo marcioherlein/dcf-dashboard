@@ -32,7 +32,8 @@ export function GroupTabs({ groups, active, counts, totalCount, onSelect, onNewG
   }
 
   return (
-    <div className="flex items-center gap-1.5 flex-wrap">
+    <div className="overflow-x-auto -webkit-overflow-scrolling-touch pb-1">
+      <div className="flex items-center gap-1.5 min-w-max sm:flex-wrap sm:min-w-0">
       <button
         onClick={() => onSelect(null)}
         className={cn(
@@ -116,6 +117,7 @@ export function GroupTabs({ groups, active, counts, totalCount, onSelect, onNewG
           New group
         </button>
       )}
+      </div>
     </div>
   )
 }

@@ -355,14 +355,14 @@ export default function MultiTickerChart({
       </div>
 
       {/* ── Toolbar: Periods + Metric ── */}
-      <div className="flex flex-wrap items-center gap-1 px-4 pb-3">
-        <div className="flex flex-wrap gap-0.5">
+      <div className="flex items-center gap-1 px-4 pb-3 overflow-x-auto -webkit-overflow-scrolling-touch">
+        <div className="flex gap-0.5 shrink-0">
           {PERIODS.map(p => (
             <button
               key={p.value}
               onClick={() => setPeriod(p.value)}
               className={[
-                'px-2 py-0.5 rounded text-[10px] font-semibold transition-colors',
+                'px-2 py-0.5 rounded text-[10px] font-semibold transition-colors whitespace-nowrap',
                 period === p.value
                   ? 'bg-indigo-500 text-white'
                   : 'text-white/30 hover:text-white/70 hover:bg-white/8',
@@ -375,7 +375,7 @@ export default function MultiTickerChart({
 
         {showMetricSelect && (
           <div
-            className="ml-auto flex rounded-lg overflow-hidden"
+            className="ml-auto flex rounded-lg overflow-hidden shrink-0"
             style={{ border: '1px solid rgba(255,255,255,0.1)' }}
           >
             {(['indexed', 'absolute'] as Metric[]).map(m => (
@@ -383,7 +383,7 @@ export default function MultiTickerChart({
                 key={m}
                 onClick={() => setMetric(m)}
                 className={[
-                  'px-3 py-0.5 text-[10px] font-semibold transition-colors',
+                  'px-3 py-0.5 text-[10px] font-semibold transition-colors whitespace-nowrap',
                   metric === m
                     ? 'bg-white/15 text-white'
                     : 'text-white/30 hover:bg-white/8',
