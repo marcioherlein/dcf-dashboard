@@ -63,7 +63,7 @@ export default function HeroSearch() {
   return (
     <div>
       {/* Search bar */}
-      <div ref={containerRef} className="relative" style={{ maxWidth: '520px' }}>
+      <div ref={containerRef} className="relative w-full" style={{ maxWidth: '520px' }}>
         <div
           className="flex items-center gap-3 rounded-[14px] border bg-white transition-all"
           style={{
@@ -86,17 +86,18 @@ export default function HeroSearch() {
             onChange={e => setQuery(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && query.trim()) select(query.trim().toUpperCase()) }}
             placeholder="Search any ticker — NVDA, AAPL, MELI..."
-            className="flex-1 bg-transparent text-[15px] text-slate-800 placeholder-slate-400 focus:outline-none"
-            style={{ fontWeight: 500 }}
+            className="flex-1 bg-transparent text-base text-slate-800 placeholder-slate-400 focus:outline-none"
+            style={{ fontWeight: 500, fontSize: '16px' }}
             aria-label="Search for a stock ticker"
           />
           <button
             onClick={() => { if (query.trim()) select(query.trim().toUpperCase()) }}
-            className="shrink-0 rounded-[10px] px-4 py-2 text-[13px] font-bold text-white transition-all hover:-translate-y-px active:translate-y-0"
+            className="shrink-0 rounded-[10px] px-4 py-2.5 text-[13px] font-bold text-white transition-all hover:-translate-y-px active:scale-95"
             style={{
               background: '#2563EB',
               boxShadow: '0 3px 10px rgba(37,99,235,0.28)',
               fontWeight: 650,
+              minHeight: '36px',
             }}
             aria-label="Analyze stock"
           >
@@ -115,8 +116,9 @@ export default function HeroSearch() {
               <button
                 key={r.symbol}
                 onClick={() => select(r.symbol)}
-                className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 border-b border-slate-100 last:border-b-0 transition-colors"
+                className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 border-b border-slate-100 last:border-b-0 transition-colors active:scale-95"
                 role="option"
+                style={{ minHeight: '44px' }}
               >
                 <span className="text-[14px] font-bold text-slate-800 font-mono w-14 shrink-0">{r.symbol}</span>
                 <span className="text-[13px] text-slate-500 truncate flex-1">{r.longname ?? r.shortname}</span>
@@ -136,12 +138,13 @@ export default function HeroSearch() {
           <Link
             key={t.symbol}
             href={`/stock/${t.symbol}`}
-            className="inline-flex items-center rounded-full border px-3 py-1 text-[12px] font-bold text-slate-600 transition-all hover:border-blue-300 hover:text-blue-700 hover:bg-blue-50"
+            className="inline-flex items-center rounded-full border px-3 py-2 text-[12px] font-bold text-slate-600 transition-all hover:border-blue-300 hover:text-blue-700 hover:bg-blue-50 active:scale-95"
             style={{
               borderColor: '#E2E8F0',
               background: 'white',
               fontFamily: 'var(--font-mono, monospace)',
               fontVariantNumeric: 'tabular-nums',
+              minHeight: '36px',
             }}
           >
             {t.label}

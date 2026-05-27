@@ -28,15 +28,15 @@ export default function LandingNavbar() {
       <header
         className="fixed top-0 left-0 right-0 z-50 transition-all duration-200"
         style={{
-          height: '72px',
-          background: scrolled ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.86)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
+          height: '60px',
+          background: scrolled ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.92)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           borderBottom: scrolled ? '1px solid rgba(226,232,240,0.9)' : '1px solid rgba(226,232,240,0.5)',
-          boxShadow: scrolled ? '0 1px 12px rgba(15,23,42,0.06)' : 'none',
+          boxShadow: scrolled ? '0 1px 12px rgba(15,23,42,0.08)' : 'none',
         }}
       >
-        <div className="mx-auto max-w-[1280px] px-6 h-full flex items-center gap-8">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 h-full flex items-center gap-8">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
             <Image
@@ -80,12 +80,13 @@ export default function LandingNavbar() {
             {session ? (
               <Link
                 href="/analyze"
-                className="hidden sm:inline-flex items-center rounded-xl px-4 py-2 text-[13px] font-semibold text-white transition-all hover:-translate-y-px"
+                className="hidden sm:inline-flex items-center rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
                 style={{
                   background: '#2563EB',
                   boxShadow: '0 4px 12px rgba(37,99,235,0.25)',
                   fontSize: '13px',
                   fontWeight: 650,
+                  minHeight: '44px',
                 }}
               >
                 Go to app
@@ -94,27 +95,29 @@ export default function LandingNavbar() {
               <>
                 <button
                   onClick={() => signIn('google')}
-                  className="hidden sm:block text-[13px] font-medium text-[#334155] hover:text-[#0F172A] transition-colors"
+                  className="hidden sm:block text-[13px] font-medium text-[#334155] hover:text-[#0F172A] transition-colors min-h-[44px] px-2"
                 >
                   Sign in
                 </button>
                 <Link
                   href="/pricing"
-                  className="hidden sm:inline-flex items-center rounded-xl border px-4 py-2 text-[13px] font-semibold text-[#1D4ED8] transition-all hover:bg-[#EFF6FF]"
+                  className="hidden lg:inline-flex items-center rounded-xl border px-4 py-2.5 text-[13px] font-semibold text-[#1D4ED8] transition-all hover:bg-[#EFF6FF] active:scale-95"
                   style={{
                     borderColor: '#BFDBFE',
                     background: 'white',
+                    minHeight: '44px',
                   }}
                 >
                   Analyze a stock
                 </Link>
                 <button
                   onClick={() => signIn('google')}
-                  className="inline-flex items-center rounded-xl px-4 py-2 text-[13px] font-semibold text-white transition-all hover:-translate-y-px active:translate-y-0"
+                  className="hidden sm:inline-flex items-center rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
                   style={{
                     background: '#2563EB',
                     boxShadow: '0 6px 16px rgba(37,99,235,0.22)',
                     fontSize: '13px',
+                    minHeight: '44px',
                   }}
                 >
                   Start free trial
@@ -122,11 +125,12 @@ export default function LandingNavbar() {
               </>
             )}
 
-            {/* Mobile hamburger */}
+            {/* Mobile hamburger — thumb-reachable, min 44px */}
             <button
               onClick={() => setMobileOpen(v => !v)}
-              className="lg:hidden p-2 rounded-lg text-[#334155] hover:bg-slate-100 transition-colors"
+              className="lg:hidden flex items-center justify-center rounded-lg text-[#334155] hover:bg-slate-100 transition-colors active:scale-95"
               aria-label="Toggle menu"
+              style={{ width: '44px', height: '44px' }}
             >
               {mobileOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -137,8 +141,8 @@ export default function LandingNavbar() {
       {/* Mobile menu */}
       {mobileOpen && (
         <div
-          className="fixed top-[72px] left-0 right-0 z-40 bg-white border-b border-slate-200 shadow-lg lg:hidden"
-          style={{ padding: '16px 24px 20px' }}
+          className="fixed top-[60px] left-0 right-0 z-40 bg-white/96 backdrop-blur-xl border-b border-slate-200 shadow-lg lg:hidden"
+          style={{ padding: '16px 16px 20px' }}
         >
           <nav className="flex flex-col gap-1">
             {NAV_LINKS.map(link => (
@@ -146,19 +150,20 @@ export default function LandingNavbar() {
                 key={link.label}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
-                className="py-3 px-3 rounded-lg text-[15px] font-medium text-[#334155] hover:text-[#2563EB] hover:bg-slate-50 transition-colors"
+                className="py-3 px-4 rounded-xl text-[16px] font-medium text-[#334155] hover:text-[#2563EB] hover:bg-slate-50 transition-colors active:scale-95"
+                style={{ minHeight: '44px', display: 'flex', alignItems: 'center' }}
               >
                 {link.label}
               </Link>
             ))}
           </nav>
-          <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col gap-2">
+          <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col gap-3">
             {session ? (
               <Link
                 href="/analyze"
                 onClick={() => setMobileOpen(false)}
-                className="w-full text-center rounded-xl py-3 text-[14px] font-semibold text-white"
-                style={{ background: '#2563EB' }}
+                className="w-full text-center rounded-xl py-3.5 text-[15px] font-semibold text-white active:scale-95 transition-all"
+                style={{ background: '#2563EB', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 Go to app
               </Link>
@@ -166,14 +171,15 @@ export default function LandingNavbar() {
               <>
                 <button
                   onClick={() => { setMobileOpen(false); signIn('google') }}
-                  className="w-full text-center rounded-xl py-3 text-[14px] font-semibold text-white"
-                  style={{ background: '#2563EB' }}
+                  className="w-full text-center rounded-xl py-3.5 text-[15px] font-semibold text-white active:scale-95 transition-all"
+                  style={{ background: '#2563EB', minHeight: '44px' }}
                 >
                   Start free trial
                 </button>
                 <button
                   onClick={() => { setMobileOpen(false); signIn('google') }}
-                  className="w-full text-center rounded-xl py-3 text-[14px] font-semibold text-[#334155] border border-slate-200 hover:bg-slate-50"
+                  className="w-full text-center rounded-xl py-3.5 text-[15px] font-semibold text-[#334155] border border-slate-200 hover:bg-slate-50 active:scale-95 transition-all"
+                  style={{ minHeight: '44px' }}
                 >
                   Sign in
                 </button>

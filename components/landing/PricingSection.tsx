@@ -27,10 +27,10 @@ export default function PricingSection() {
   const router = useRouter()
 
   return (
-    <section style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-      <div className="mx-auto max-w-[900px] px-6 py-24">
+    <section className="overflow-x-hidden" style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+      <div className="mx-auto max-w-[900px] px-4 sm:px-6 py-16 sm:py-24">
         {/* Heading */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-10 sm:mb-12">
           <p
             className="font-bold uppercase mb-3"
             style={{ fontSize: '11px', letterSpacing: '0.08em', color: '#2563EB' }}
@@ -38,8 +38,8 @@ export default function PricingSection() {
             Simple, transparent pricing
           </p>
           <h2
+            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)]"
             style={{
-              fontSize: 'clamp(30px, 3vw, 42px)',
               fontWeight: 700,
               lineHeight: 1.1,
               letterSpacing: '-0.025em',
@@ -49,16 +49,16 @@ export default function PricingSection() {
           >
             Start free. Upgrade when you&apos;re ready to scale.
           </h2>
-          <p style={{ fontSize: '15px', color: '#64748B' }}>
+          <p className="text-base" style={{ color: '#64748B' }}>
             No credit card required. Cancel anytime.
           </p>
         </div>
 
-        {/* Cards */}
+        {/* Cards — single column on mobile, 2 cols on sm+ */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Free */}
           <div
-            className="rounded-[20px] bg-white border p-8"
+            className="rounded-[20px] bg-white border p-6 sm:p-8"
             style={{
               borderColor: '#E6ECF5',
               boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 6px 20px rgba(15,23,42,0.05)',
@@ -70,14 +70,14 @@ export default function PricingSection() {
                 <span style={{ fontSize: '36px', fontWeight: 700, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>$0</span>
                 <span style={{ fontSize: '14px', color: '#94A3B8' }}>/mo</span>
               </div>
-              <p style={{ fontSize: '14px', color: '#64748B', marginTop: '6px' }}>
+              <p className="text-base" style={{ color: '#64748B', marginTop: '6px' }}>
                 No account needed to start. Always free.
               </p>
             </div>
 
             <ul className="space-y-3 mb-8">
               {FREE_ITEMS.map(item => (
-                <li key={item} className="flex items-start gap-3 text-[14px] text-slate-600">
+                <li key={item} className="flex items-start gap-3 text-base text-slate-600">
                   <Check size={15} className="text-emerald-500 shrink-0 mt-0.5" />
                   {item}
                 </li>
@@ -86,15 +86,16 @@ export default function PricingSection() {
 
             <button
               onClick={() => router.push('/stock/AAPL')}
-              className="w-full rounded-xl py-3 text-[14px] font-semibold text-slate-700 border border-slate-300 hover:border-slate-400 hover:bg-slate-50 transition-all"
+              className="w-full rounded-xl py-3.5 text-base font-semibold text-slate-700 border border-slate-300 hover:border-slate-400 hover:bg-slate-50 transition-all active:scale-95"
+              style={{ minHeight: '44px' }}
             >
               Get started
             </button>
           </div>
 
-          {/* Pro */}
+          {/* Pro — most popular stays highlighted */}
           <div
-            className="relative rounded-[20px] border p-8"
+            className="relative rounded-[20px] border p-6 sm:p-8"
             style={{
               background: 'linear-gradient(160deg, #EFF6FF 0%, #F5F3FF 100%)',
               borderColor: '#BFDBFE',
@@ -115,14 +116,14 @@ export default function PricingSection() {
                 <span style={{ fontSize: '36px', fontWeight: 700, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>$17</span>
                 <span style={{ fontSize: '14px', color: '#94A3B8' }}>/mo</span>
               </div>
-              <p style={{ fontSize: '14px', color: '#64748B', marginTop: '6px' }}>
+              <p className="text-base" style={{ color: '#64748B', marginTop: '6px' }}>
                 For investors who do serious research.
               </p>
             </div>
 
             <ul className="space-y-3 mb-8">
               {PRO_ITEMS.map(item => (
-                <li key={item} className="flex items-start gap-3 text-[14px] text-slate-700">
+                <li key={item} className="flex items-start gap-3 text-base text-slate-700">
                   <Check size={15} className="text-blue-500 shrink-0 mt-0.5" />
                   {item}
                 </li>
@@ -131,10 +132,11 @@ export default function PricingSection() {
 
             <button
               onClick={() => signIn('google')}
-              className="w-full rounded-xl py-3 text-[14px] font-semibold text-white transition-all hover:-translate-y-px active:translate-y-0"
+              className="w-full rounded-xl py-3.5 text-base font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
               style={{
                 background: '#2563EB',
                 boxShadow: '0 6px 16px rgba(37,99,235,0.28)',
+                minHeight: '44px',
               }}
             >
               Start free trial

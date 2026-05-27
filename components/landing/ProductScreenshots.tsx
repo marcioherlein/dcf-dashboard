@@ -3,12 +3,13 @@
 export function SummaryMockScreen() {
   return (
     <div
-      className="rounded-[20px] overflow-hidden bg-white"
+      className="rounded-[20px] overflow-hidden bg-white w-full"
       style={{
         border: '1px solid #E6ECF5',
         boxShadow: '0 24px 70px rgba(15,23,42,0.14), 0 2px 8px rgba(15,23,42,0.05)',
         fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
         minWidth: 0,
+        maxWidth: '100%',
       }}
     >
       {/* Browser chrome */}
@@ -131,12 +132,13 @@ export function SummaryMockScreen() {
 export function ValuationMockScreen() {
   return (
     <div
-      className="rounded-[20px] overflow-hidden bg-white"
+      className="rounded-[20px] overflow-hidden bg-white w-full"
       style={{
         border: '1px solid #E6ECF5',
         boxShadow: '0 16px 48px rgba(15,23,42,0.10), 0 2px 6px rgba(15,23,42,0.04)',
         fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
         minWidth: 0,
+        maxWidth: '100%',
       }}
     >
       {/* Browser chrome */}

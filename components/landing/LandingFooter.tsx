@@ -4,12 +4,12 @@ import Image from 'next/image'
 export default function LandingFooter() {
   return (
     <footer style={{ background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
-      <div className="mx-auto max-w-[1200px] px-6 py-12">
-        {/* Top row */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-8 mb-10">
+      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-8 sm:py-12">
+        {/* Top row — single column on mobile */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-8 mb-8 sm:mb-10">
           {/* Brand */}
           <div className="max-w-xs">
-            <Link href="/" className="flex items-center gap-2.5 mb-3 group">
+            <Link href="/" className="flex items-center gap-2.5 mb-3 group active:scale-95 transition-transform">
               <Image
                 src="/logos/logo.png"
                 alt="intrinsico"
@@ -30,13 +30,13 @@ export default function LandingFooter() {
                 intrinsico
               </span>
             </Link>
-            <p className="text-[13px] text-slate-500 leading-relaxed">
+            <p className="text-sm text-slate-500 leading-relaxed">
               The disciplined valuation process for serious self-directed investors.
             </p>
           </div>
 
-          {/* Links */}
-          <div className="flex flex-wrap gap-x-10 gap-y-4">
+          {/* Links — wrapping row on mobile */}
+          <div className="flex flex-wrap gap-x-8 gap-y-6">
             <div>
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Product</p>
               <div className="flex flex-col gap-2">
@@ -45,7 +45,7 @@ export default function LandingFooter() {
                   { label: 'Analyze', href: '/analyze' },
                   { label: 'Pricing', href: '/pricing' },
                 ].map(l => (
-                  <Link key={l.label} href={l.href} className="text-[13px] text-slate-500 hover:text-slate-800 transition-colors">
+                  <Link key={l.label} href={l.href} className="text-sm text-slate-500 hover:text-slate-800 transition-colors py-1" style={{ minHeight: '36px', display: 'flex', alignItems: 'center' }}>
                     {l.label}
                   </Link>
                 ))}
@@ -59,7 +59,7 @@ export default function LandingFooter() {
                   { label: 'Saved', href: '/valuations' },
                   { label: 'AI', href: '/ai-stack' },
                 ].map(l => (
-                  <Link key={l.label} href={l.href} className="text-[13px] text-slate-500 hover:text-slate-800 transition-colors">
+                  <Link key={l.label} href={l.href} className="text-sm text-slate-500 hover:text-slate-800 transition-colors py-1" style={{ minHeight: '36px', display: 'flex', alignItems: 'center' }}>
                     {l.label}
                   </Link>
                 ))}
@@ -73,7 +73,7 @@ export default function LandingFooter() {
                   { label: 'Privacy', href: '/privacy' },
                   { label: 'Contact', href: 'mailto:hello@intrinsico.capital' },
                 ].map(l => (
-                  <a key={l.label} href={l.href} className="text-[13px] text-slate-500 hover:text-slate-800 transition-colors">
+                  <a key={l.label} href={l.href} className="text-sm text-slate-500 hover:text-slate-800 transition-colors py-1" style={{ minHeight: '36px', display: 'flex', alignItems: 'center' }}>
                     {l.label}
                   </a>
                 ))}
@@ -83,9 +83,9 @@ export default function LandingFooter() {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-slate-200 pt-8">
+        <div className="border-t border-slate-200 pt-6">
           {/* Disclaimer */}
-          <p className="text-[12px] text-slate-400 leading-relaxed max-w-3xl mb-4">
+          <p className="text-[12px] text-slate-400 leading-relaxed max-w-3xl mb-3">
             <strong className="text-slate-500">Not financial advice.</strong>{' '}
             All content — DCF models, fair value estimates, health scores, and scenario analyses — is provided
             for informational and educational purposes only. Model outputs are based on publicly available data
