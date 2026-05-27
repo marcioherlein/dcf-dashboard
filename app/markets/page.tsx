@@ -11,23 +11,22 @@ import MarketHeatmapCard    from '@/components/markets/MarketHeatmapCard'
 import SectorRotation       from '@/components/markets/SectorRotation'
 import MacroSignals         from '@/components/markets/MacroSignals'
 import MarketBreadthCard    from '@/components/markets/MarketBreadthCard'
+import SectorPerformanceCard from '@/components/markets/SectorPerformanceCard'
 import EconomicCalendar     from '@/components/markets/EconomicCalendar'
 import EarningsCalendar     from '@/components/markets/EarningsCalendar'
 import ValuationContext     from '@/components/markets/ValuationContext'
 import PortfolioExposure    from '@/components/markets/PortfolioExposure'
 import MarketNewsSection    from '@/components/markets/MarketNewsSection'
 
-import type { MarketsData }        from '@/app/api/markets/data/route'
+import type { MarketsData }          from '@/app/api/markets/data/route'
 import type { MarketContextPayload } from '@/lib/market-context/types'
 
 const REFRESH_INTERVAL_MS = 60_000
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
 function Sk({ h = 'h-32', className = '' }: { h?: string; className?: string }) {
-  return <div className={`animate-pulse rounded-2xl bg-slate-200/60 ${h} ${className}`} />
+  return <div className={`animate-pulse rounded-2xl bg-white/70 border border-slate-100 ${h} ${className}`} />
 }
 
-// ── pct helpers ───────────────────────────────────────────────────────────────
 function pct(v: number | null) {
   if (v == null) return ''
   return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'
@@ -49,13 +48,12 @@ function getMarketStatus(): { label: string; cls: string } {
   const day  = now.getUTCDay()
   const et   = (utcH * 60 + utcM - 240 + 1440) % 1440
   if (day === 0 || day === 6) return { label: 'Market Closed', cls: 'bg-slate-100 text-slate-500' }
-  if (et >= 240  && et < 570)  return { label: 'Pre-Market',   cls: 'bg-amber-50 text-amber-700' }
+  if (et >= 240  && et < 570)  return { label: 'Pre-Market',    cls: 'bg-amber-50 text-amber-700' }
   if (et >= 570  && et < 960)  return { label: '● Market Open', cls: 'bg-emerald-50 text-emerald-700 font-bold' }
-  if (et >= 960  && et < 1200) return { label: 'After Hours',  cls: 'bg-blue-50 text-blue-700' }
+  if (et >= 960  && et < 1200) return { label: 'After Hours',   cls: 'bg-blue-50 text-blue-700' }
   return { label: 'Market Closed', cls: 'bg-slate-100 text-slate-500' }
 }
 
-// ── Section wrapper ───────────────────────────────────────────────────────────
 function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="mb-3">
@@ -65,7 +63,6 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }
   )
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
 export default function MarketsPage() {
   const [mkt,        setMkt]        = useState<MarketsData | null>(null)
   const [ctx,        setCtx]        = useState<MarketContextPayload | null>(null)
@@ -75,7 +72,6 @@ export default function MarketsPage() {
   const [status]                    = useState(getMarketStatus)
   const intervalRef                 = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Live "X ago" ticker
   const [, setTick] = useState(0)
   useEffect(() => {
     const t = setInterval(() => setTick(n => n + 1), 10_000)
@@ -105,15 +101,13 @@ export default function MarketsPage() {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
   }, [fetchAll])
 
-  // ── derived instrument refs ─────────────────────────────────────────────────
-  const spx = mkt?.indices.find(i => i.symbol === '^GSPC')   ?? null
-  const ndx = mkt?.indices.find(i => i.symbol === '^NDX')    ?? null
-  const dji = mkt?.indices.find(i => i.symbol === '^DJI')    ?? null
-  const vix = mkt?.indices.find(i => i.symbol === '^VIX')    ?? null
-  const tnx = mkt?.indices.find(i => i.symbol === '^TNX')    ?? null
+  const spx = mkt?.indices.find(i => i.symbol === '^GSPC')       ?? null
+  const ndx = mkt?.indices.find(i => i.symbol === '^NDX')        ?? null
+  const dji = mkt?.indices.find(i => i.symbol === '^DJI')        ?? null
+  const vix = mkt?.indices.find(i => i.symbol === '^VIX')        ?? null
+  const tnx = mkt?.indices.find(i => i.symbol === '^TNX')        ?? null
   const dxy = mkt?.currencies.find(i => i.symbol === 'DX-Y.NYB') ?? null
 
-  // ticker strip items
   const STRIP = [
     { label: 'S&P 500',    sym: spx  },
     { label: 'Nasdaq 100', sym: ndx  },
@@ -138,12 +132,10 @@ export default function MarketsPage() {
   })
 
   return (
-    <div className="min-h-screen lqg-bg pt-[52px]">
+    <div className="min-h-screen bg-gradient-to-b from-[#F8FAFF] to-[#F5F7FE] pt-[52px]">
 
-      {/* ── Content ──────────────────────────────────────────────────────────── */}
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-5 space-y-5">
 
-        {/* Error */}
         {err && (
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-600 flex items-center justify-between">
             <span>Market data could not be loaded. Check API keys and try again.</span>
@@ -169,7 +161,7 @@ export default function MarketsPage() {
               {etDate}, {etTime} ET
             </span>
             {lastFetch > 0 && (
-              <span className="text-[10px] text-slate-400 font-mono hidden lg:block">
+              <span className="text-[10px] text-slate-400 hidden lg:block">
                 · Updated {timeAgo(lastFetch)}
               </span>
             )}
@@ -189,7 +181,7 @@ export default function MarketsPage() {
         </div>
 
         {/* ── Inline market strip ──────────────────────────────────────────── */}
-        <div className="flex items-center gap-4 sm:gap-5 overflow-x-auto scrollbar-hide rounded-xl border border-slate-100/80 bg-white/50 backdrop-blur-sm px-4 py-2.5 min-h-[44px]">
+        <div className="flex items-center gap-4 sm:gap-5 overflow-x-auto scrollbar-hide bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-2.5 min-h-[44px]">
           <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full ${status.cls}`}>
             {status.label}
           </span>
@@ -246,15 +238,12 @@ export default function MarketsPage() {
             subtitle="Risk environment, index performance, and today's key movers."
           />
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            {/* Market Pulse (4 cols) */}
             <div className="lg:col-span-4">
               {ctx ? <MarketPulse pulse={ctx.pulse} /> : <Sk h="h-[280px]" />}
             </div>
-            {/* Performance Chart (5 cols) */}
             <div className="lg:col-span-5">
               <NormalizedPerfChart />
             </div>
-            {/* Top Movers (3 cols) */}
             <div className="lg:col-span-3">
               <TopMoversCard />
             </div>
@@ -268,7 +257,6 @@ export default function MarketsPage() {
             subtitle="Where market leadership is concentrated and which sectors lead or lag."
           />
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            {/* Heatmap (7 cols) */}
             <div className="lg:col-span-7">
               {mkt ? (
                 <MarketHeatmapCard sectors={mkt.sectors} />
@@ -276,26 +264,36 @@ export default function MarketsPage() {
                 <Sk h="h-[320px]" />
               )}
             </div>
-            {/* Sector Rotation (5 cols) */}
             <div className="lg:col-span-5">
               {ctx ? <SectorRotation sectors={ctx.sectors} /> : <Sk h="h-[320px]" />}
             </div>
           </div>
         </div>
 
-        {/* ── Row 4: Macro Signals · Market Breadth ───────────────────────── */}
+        {/* ── Row 4: Macro Signals · Market Breadth · Sector Performance ──── */}
         <div>
           <SectionHeader
             title="Macro Environment"
             subtitle="Indicators that affect discount rates, risk appetite, and valuation assumptions."
           />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {ctx ? <MacroSignals signals={ctx.signals} /> : <Sk h="h-64" />}
-            {mkt ? (
-              <MarketBreadthCard sectors={mkt.sectors} />
-            ) : (
-              <Sk h="h-64" />
-            )}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div className="lg:col-span-5">
+              {ctx ? <MacroSignals signals={ctx.signals} /> : <Sk h="h-64" />}
+            </div>
+            <div className="lg:col-span-4">
+              {mkt ? (
+                <MarketBreadthCard sectors={mkt.sectors} />
+              ) : (
+                <Sk h="h-64" />
+              )}
+            </div>
+            <div className="lg:col-span-3">
+              {mkt ? (
+                <SectorPerformanceCard sectors={mkt.sectors} />
+              ) : (
+                <Sk h="h-64" />
+              )}
+            </div>
           </div>
         </div>
 
@@ -341,7 +339,6 @@ export default function MarketsPage() {
           </div>
         )}
 
-        {/* Bottom spacing */}
         <div className="h-4" />
       </div>
     </div>

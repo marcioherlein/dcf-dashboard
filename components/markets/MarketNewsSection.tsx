@@ -31,10 +31,10 @@ export default function MarketNewsSection({ news }: { news: NewsItem[] }) {
   if (!news.length) return null
 
   return (
-    <div className="rounded-xl glass-card-light overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-slate-200 flex items-center justify-between">
-        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Market News</span>
-        <span className="text-[10px] text-slate-400 font-mono">{news.length} articles</span>
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between">
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Market News</span>
+        <span className="text-[10px] text-slate-400">{news.length} articles</span>
       </div>
 
       <div className="overflow-y-auto max-h-[600px] divide-y divide-slate-100">

@@ -1,16 +1,10 @@
 'use client'
 import { cn } from '@/lib/utils'
+import { Activity, Landmark, TrendingDown, BarChart2, AlertTriangle, DollarSign, Percent } from 'lucide-react'
 import type { MacroSignalTile } from '@/lib/market-context/types'
 
 interface Props {
   signals: MacroSignalTile[]
-}
-
-function toneBadgeClass(tone: MacroSignalTile['tone']): string {
-  if (tone === 'positive') return 'bg-emerald-50 text-emerald-700'
-  if (tone === 'negative') return 'bg-red-50 text-red-700'
-  if (tone === 'warning')  return 'bg-amber-50 text-amber-700'
-  return 'bg-slate-100 text-slate-600'
 }
 
 function toneValueClass(tone: MacroSignalTile['tone']): string {
@@ -20,37 +14,59 @@ function toneValueClass(tone: MacroSignalTile['tone']): string {
   return 'text-slate-900'
 }
 
-function toneTileClass(tone: MacroSignalTile['tone']): string {
-  if (tone === 'positive') return 'border-l-4 border-l-emerald-400 bg-emerald-50/60 border border-emerald-100'
-  if (tone === 'negative') return 'border-l-4 border-l-red-400 bg-red-50/60 border border-red-100'
-  if (tone === 'warning')  return 'border-l-4 border-l-amber-400 bg-amber-50/60 border border-amber-100'
-  return 'border-l-4 border-l-slate-300 bg-slate-50/80 border border-slate-100'
+function toneBadgeClass(tone: MacroSignalTile['tone']): string {
+  if (tone === 'positive') return 'bg-emerald-50 text-emerald-700'
+  if (tone === 'negative') return 'bg-red-50 text-red-700'
+  if (tone === 'warning')  return 'bg-amber-50 text-amber-700'
+  return 'bg-slate-100 text-slate-600'
+}
+
+function iconForSignal(label: string): { icon: React.ReactNode; bg: string } {
+  const l = label.toLowerCase()
+  if (l.includes('vix'))
+    return { icon: <Activity size={14} className="text-rose-600" />, bg: 'bg-rose-50' }
+  if (l.includes('10y') || l.includes('10-year') || (l.includes('treasury') && !l.includes('2y')))
+    return { icon: <Landmark size={14} className="text-amber-600" />, bg: 'bg-amber-50' }
+  if (l.includes('2y') || l.includes('2-year'))
+    return { icon: <TrendingDown size={14} className="text-blue-600" />, bg: 'bg-blue-50' }
+  if (l.includes('yield curve'))
+    return { icon: <BarChart2 size={14} className="text-indigo-600" />, bg: 'bg-indigo-50' }
+  if (l.includes('spread') || l.includes('hy') || l.includes('credit'))
+    return { icon: <AlertTriangle size={14} className="text-orange-600" />, bg: 'bg-orange-50' }
+  if (l.includes('usd') || l.includes('dollar') || l.includes('dxy'))
+    return { icon: <DollarSign size={14} className="text-emerald-600" />, bg: 'bg-emerald-50' }
+  return { icon: <Percent size={14} className="text-slate-600" />, bg: 'bg-slate-100' }
 }
 
 export default function MacroSignals({ signals }: Props) {
   return (
-    <div className="rounded-xl glass-card-light overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-slate-200">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-slate-100">
         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Macro Signals</span>
       </div>
-      <div className="px-5 py-4">
-      <div className="grid grid-cols-2 gap-2.5">
-        {signals.map(sig => (
-          <div key={sig.id} className={cn('rounded-xl px-3 py-2.5', toneTileClass(sig.tone))}>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{sig.label}</p>
-            <p className={cn('text-[15px] font-bold tabular-nums mt-0.5', toneValueClass(sig.tone))}>
-              {sig.value}
-            </p>
-            {sig.sub && <p className="text-[9px] text-slate-400 -mt-0.5">{sig.sub}</p>}
-            <span className={cn('inline-block mt-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider', toneBadgeClass(sig.tone))}>
-              {sig.regimeLabel}
-            </span>
-            {sig.equityImplication && (
-              <p className="text-[10px] text-slate-500 mt-1 leading-tight">{sig.equityImplication}</p>
-            )}
-          </div>
-        ))}
-      </div>
+      <div className="p-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {signals.map(sig => {
+            const { icon, bg } = iconForSignal(sig.label)
+            return (
+              <div key={sig.id} className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className={cn('w-6 h-6 rounded-lg flex items-center justify-center shrink-0', bg)}>
+                    {icon}
+                  </div>
+                  <p className="text-[10px] font-bold text-slate-500 leading-tight truncate">{sig.label}</p>
+                </div>
+                <p className={cn('text-[15px] font-bold tabular-nums', toneValueClass(sig.tone))}>
+                  {sig.value}
+                </p>
+                {sig.sub && <p className="text-[9px] text-slate-400 mt-0.5">{sig.sub}</p>}
+                <span className={cn('inline-block mt-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider', toneBadgeClass(sig.tone))}>
+                  {sig.regimeLabel}
+                </span>
+              </div>
+            )
+          })}
+        </div>
       </div>
     </div>
   )

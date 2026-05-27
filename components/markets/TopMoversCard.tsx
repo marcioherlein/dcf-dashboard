@@ -42,9 +42,9 @@ function MoverRow({ mover, rank }: { mover: Mover; rank: number }) {
 type Tab = 'gainers' | 'losers'
 
 export default function TopMoversCard() {
-  const [data, setData]     = useState<MoversData | null>(null)
+  const [data, setData]       = useState<MoversData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab]       = useState<Tab>('gainers')
+  const [tab, setTab]         = useState<Tab>('gainers')
 
   useEffect(() => {
     fetch('/api/markets/movers')
@@ -57,8 +57,8 @@ export default function TopMoversCard() {
   const movers = tab === 'gainers' ? (data?.gainers ?? []) : (data?.losers ?? [])
 
   return (
-    <div className="glass-card-light rounded-2xl overflow-hidden h-full flex flex-col">
-      <div className="px-4 py-2.5 border-b border-white/60 flex items-center justify-between">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-full flex flex-col">
+      <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between">
         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Top Movers</span>
         <div className="flex rounded-lg overflow-hidden border border-slate-200 text-[10px] font-bold">
           {(['gainers', 'losers'] as Tab[]).map(t => (
@@ -92,8 +92,14 @@ export default function TopMoversCard() {
         )}
       </div>
 
-      <div className="px-4 py-2.5 border-t border-white/60">
-        <p className="text-[10px] text-slate-400">Large-cap universe · click ticker to analyze</p>
+      <div className="px-4 py-2.5 border-t border-slate-100 flex items-center justify-between">
+        <p className="text-[10px] text-slate-400">Large-cap · click ticker to analyze</p>
+        <Link
+          href="/markets/movers"
+          className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+        >
+          View all movers →
+        </Link>
       </div>
     </div>
   )

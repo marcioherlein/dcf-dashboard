@@ -6,22 +6,20 @@ interface Props {
   sectors: MarketInstrument[]
 }
 
-// Approximate S&P 500 sector weights for sizing tiles
 const SECTOR_WEIGHTS: Record<string, number> = {
-  XLK:  32,  // Technology
-  XLF:  13,  // Financials
-  XLV:  12,  // Health Care
-  XLY:  10,  // Cons. Discretionary
-  XLC:   9,  // Communications
-  XLI:   9,  // Industrials
-  XLP:   6,  // Cons. Staples
-  XLE:   4,  // Energy
-  XLB:  2.5, // Materials
-  XLRE:  2,  // Real Estate
-  XLU:  2.5, // Utilities
+  XLK:  32,
+  XLF:  13,
+  XLV:  12,
+  XLY:  10,
+  XLC:   9,
+  XLI:   9,
+  XLP:   6,
+  XLE:   4,
+  XLB:  2.5,
+  XLRE:  2,
+  XLU:  2.5,
 }
 
-// Short display names for heatmap tiles
 const SHORT_NAMES: Record<string, string> = {
   XLK:  'Tech',
   XLF:  'Financials',
@@ -48,6 +46,15 @@ function heatColor(changePct: number | null): string {
   return 'bg-red-700 text-white'
 }
 
+function statusTag(changePct: number | null): { label: string; cls: string } {
+  if (changePct == null) return { label: '—', cls: 'opacity-60' }
+  if (changePct >=  2)   return { label: 'Leader',   cls: '' }
+  if (changePct >=  0.5) return { label: 'Strong',   cls: '' }
+  if (changePct >=  0)   return { label: 'Positive', cls: '' }
+  if (changePct >= -0.5) return { label: 'Neutral',  cls: '' }
+  return { label: 'Lagging', cls: '' }
+}
+
 function pct(v: number | null) {
   if (v == null) return '—'
   return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'
@@ -59,34 +66,32 @@ export default function MarketHeatmapCard({ sectors }: Props) {
   )
 
   return (
-    <div className="glass-card-light rounded-2xl overflow-hidden h-full">
-      <div className="px-4 py-2.5 border-b border-white/60 flex items-center justify-between">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-full">
+      <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between">
         <div>
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Market Heatmap</span>
           <p className="text-[10px] text-slate-400 mt-0.5">S&P 500 sectors · daily performance</p>
         </div>
-        <div className="flex items-center gap-2 text-[9px] font-semibold">
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-500 inline-block" /> Advancing</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-500 inline-block" /> Declining</span>
+        <div className="flex items-center gap-2 text-[9px] font-semibold text-slate-500">
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-500 inline-block" /> Adv.</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-500 inline-block" /> Dec.</span>
         </div>
       </div>
 
       <div className="p-3">
-        {/* On mobile: 3-col grid; sm+: 6-col grid
-            Only Technology gets a double-wide tile — all others are 1 col */}
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
           {sorted.map(s => {
-            // Only Technology gets a double-wide tile — all others are 1 col
             const isLarge  = s.symbol === 'XLK'
             const colSpan  = isLarge ? 'col-span-2 sm:col-span-2' : 'col-span-1'
             const minH     = isLarge ? 'min-h-[60px] sm:min-h-[80px]' : 'min-h-[52px] sm:min-h-[62px]'
             const textSize = isLarge ? 'text-[10px] sm:text-[11px]' : 'text-[9px] sm:text-[10px]'
             const numSize  = isLarge ? 'text-[11px] sm:text-[13px]' : 'text-[10px] sm:text-[11px]'
+            const { label } = statusTag(s.changePct)
             return (
               <div
                 key={s.symbol}
                 className={cn(
-                  'rounded-xl p-2.5 flex flex-col justify-between transition-all hover:scale-[1.02]',
+                  'rounded-xl p-2 flex flex-col justify-between transition-all hover:scale-[1.02]',
                   colSpan, minH,
                   heatColor(s.changePct)
                 )}
@@ -94,24 +99,28 @@ export default function MarketHeatmapCard({ sectors }: Props) {
                 <p className={cn('font-bold leading-tight', textSize)}>
                   {SHORT_NAMES[s.symbol] ?? s.name}
                 </p>
-                <p className={cn('font-bold tabular-nums mt-auto', numSize)}>
-                  {pct(s.changePct)}
-                </p>
+                <div>
+                  <p className={cn('font-bold tabular-nums', numSize)}>
+                    {pct(s.changePct)}
+                  </p>
+                  <p className={cn('text-[8px] font-semibold opacity-80 mt-0.5 hidden sm:block', textSize)}>
+                    {label}
+                  </p>
+                </div>
               </div>
             )
           })}
         </div>
 
-        {/* Scale legend */}
         <div className="mt-3 flex items-center gap-1 overflow-x-auto scrollbar-hide pb-0.5">
           <span className="text-[9px] text-slate-400 mr-1">Perf:</span>
           {[
             { label: '–2%+', cls: 'bg-red-700' },
-            { label: '–1%', cls: 'bg-red-400' },
-            { label: '–½%', cls: 'bg-red-100' },
-            { label: '0', cls: 'bg-slate-100' },
-            { label: '+½%', cls: 'bg-emerald-100' },
-            { label: '+1%', cls: 'bg-emerald-400' },
+            { label: '–1%',  cls: 'bg-red-400' },
+            { label: '–½%',  cls: 'bg-red-100' },
+            { label: '0',    cls: 'bg-slate-100' },
+            { label: '+½%',  cls: 'bg-emerald-100' },
+            { label: '+1%',  cls: 'bg-emerald-400' },
             { label: '+2%+', cls: 'bg-emerald-700' },
           ].map(({ label, cls }) => (
             <div key={label} className="flex flex-col items-center">
