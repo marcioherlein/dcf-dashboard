@@ -85,7 +85,7 @@ export default function ScoreTab({
   return (
     <div className="flex flex-col gap-6">
       {/* Overall score card */}
-      <div className="rounded-xl border border-[#DCE6F5] bg-[#EEF4FF] p-6 flex flex-col sm:flex-row items-center gap-6">
+      <div className="rounded-xl border border-[#DCE6F5] bg-[#EEF4FF] p-5 sm:p-6 flex flex-col sm:flex-row items-center gap-5 sm:gap-6">
         <ScoreCircle score={overall1to5} size="lg" />
         <div className="flex-1 text-center sm:text-left">
           <h2 className="text-xl font-bold text-[#2D2C31]">{companyName}</h2>
@@ -98,15 +98,15 @@ export default function ScoreTab({
           </p>
         </div>
         {onSave && (
-          <div className="shrink-0 flex flex-col items-end gap-3">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B6A72] mb-1.5">Add to list</p>
+          <div className="w-full sm:w-auto shrink-0 flex flex-col items-center sm:items-end gap-3">
+            <div className="w-full sm:w-auto">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B6A72] mb-1.5 text-center sm:text-right">Add to list</p>
               <ListTagSelector value={listTag} onChange={setListTag} />
             </div>
             <button
               onClick={() => onSave(listTag)}
               disabled={saving}
-              className="px-5 py-2.5 bg-[#1f6feb] text-white text-sm font-semibold rounded-xl hover:bg-[#1a5fc7] disabled:opacity-60 transition-colors"
+              className="w-full sm:w-auto px-5 py-3 sm:py-2.5 bg-[#1f6feb] text-white text-sm font-semibold rounded-xl hover:bg-[#1a5fc7] disabled:opacity-60 transition-colors min-h-[44px]"
             >
               {saving ? 'Saving…' : saveLabel}
             </button>
@@ -119,10 +119,10 @@ export default function ScoreTab({
         <p className="text-[11px] font-semibold text-[#6B6A72] uppercase tracking-wider mb-4">Score by Dimension</p>
         <div className="flex flex-col gap-4">
           {dimScores.map(d => (
-            <div key={d.label} className="flex items-center gap-3">
-              <div className="w-28 shrink-0">
+            <div key={d.label} className="flex items-center gap-2 sm:gap-3">
+              <div className="w-24 sm:w-28 shrink-0">
                 <p className="text-xs font-semibold text-[#2D2C31]">{d.label}</p>
-                <p className="text-[10px] text-[#6B6A72] leading-tight mt-0.5">{d.description}</p>
+                <p className="text-[10px] text-[#6B6A72] leading-tight mt-0.5 hidden sm:block">{d.description}</p>
               </div>
               <div className="flex-1 h-2 bg-[#F7F6F1] rounded-full overflow-hidden">
                 <div
@@ -130,9 +130,9 @@ export default function ScoreTab({
                   style={{ width: `${((d.score - 1) / 4) * 100}%` }}
                 />
               </div>
-              <div className="w-20 shrink-0 flex items-center justify-end gap-1.5">
+              <div className="w-16 sm:w-20 shrink-0 flex items-center justify-end gap-1 sm:gap-1.5">
                 <span className="text-sm font-bold font-mono text-[#2D2C31]">{d.score.toFixed(1)}</span>
-                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${scoreBadgeClass(d.score)}`}>
+                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border hidden sm:inline ${scoreBadgeClass(d.score)}`}>
                   {scoreLabel(d.score)}
                 </span>
               </div>

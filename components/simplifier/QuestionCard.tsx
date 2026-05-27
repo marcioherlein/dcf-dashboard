@@ -38,13 +38,13 @@ export default function QuestionCard({
         )}
       </div>
 
-      {/* YES / PARTIAL / NO toggle */}
-      <div className="flex gap-2">
+      {/* YES / PARTIAL / NO toggle — full-width stacked on mobile, row on sm */}
+      <div className="flex flex-col sm:flex-row gap-2">
         {OPTIONS.map((opt) => (
           <button
             key={opt.value}
             onClick={() => onChange(questionId, opt.value)}
-            className={`flex-1 py-1.5 text-xs font-semibold tracking-wide rounded border transition-all ${
+            className={`flex-1 py-3 sm:py-1.5 text-xs font-semibold tracking-wide rounded border transition-all min-h-[44px] ${
               answer === opt.value
                 ? opt.activeClass
                 : 'bg-transparent border-[#30363d] text-[#8b949e] hover:border-[#6e7681] hover:text-[#e6edf3]'
@@ -59,7 +59,7 @@ export default function QuestionCard({
       <div>
         <button
           onClick={() => setShowNote((v) => !v)}
-          className="text-[11px] text-[#8b949e] hover:text-[#e6edf3] flex items-center gap-1 transition-colors"
+          className="text-[11px] text-[#8b949e] hover:text-[#e6edf3] flex items-center gap-1 transition-colors min-h-[36px]"
         >
           <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" className={`transition-transform ${showNote ? 'rotate-90' : ''}`}>
             <path d="M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06Z"/>
@@ -72,7 +72,8 @@ export default function QuestionCard({
             onChange={(e) => onNoteChange(questionId, e.target.value)}
             placeholder="Add context or notes…"
             rows={2}
-            className="mt-2 w-full bg-[#0d1117] border border-[#30363d] rounded text-[#e6edf3] text-xs px-3 py-2 placeholder-[#484f58] resize-none focus:outline-none focus:border-[#388bfd] transition-colors"
+            className="mt-2 w-full bg-[#0d1117] border border-[#30363d] rounded text-[#e6edf3] px-3 py-2 placeholder-[#484f58] resize-none focus:outline-none focus:border-[#388bfd] transition-colors"
+            style={{ fontSize: '16px' }}
           />
         )}
       </div>

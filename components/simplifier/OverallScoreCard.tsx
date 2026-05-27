@@ -75,7 +75,7 @@ export default function OverallScoreCard({
       </div>
 
       {/* Phase score breakdown */}
-      <div className="grid grid-cols-5 gap-2 mb-5">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-5">
         {PHASES.map((p) => (
           <div key={p.id} className="flex flex-col items-center gap-1 text-center">
             <span className="text-[10px] text-[#8b949e] leading-tight">{p.name}</span>
@@ -85,10 +85,10 @@ export default function OverallScoreCard({
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         <button
           onClick={onGetFullAnalysis}
-          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded text-sm font-semibold bg-[#1f6feb] border border-[#388bfd] text-white hover:bg-[#388bfd] transition-all"
+          className="flex-1 flex items-center justify-center gap-2 py-3 sm:py-2.5 rounded text-sm font-semibold bg-[#1f6feb] border border-[#388bfd] text-white hover:bg-[#388bfd] transition-all min-h-[44px]"
         >
           <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
             <path d="M0 2.75A2.75 2.75 0 0 1 2.75 0h10.5A2.75 2.75 0 0 1 16 2.75v8.5A2.75 2.75 0 0 1 13.25 14H8.56l-2.35 2.35a1 1 0 0 1-1.7-.71V14H2.75A2.75 2.75 0 0 1 0 11.25Z"/>
@@ -97,7 +97,7 @@ export default function OverallScoreCard({
         </button>
         <button
           onClick={handlePrint}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded text-sm text-[#8b949e] border border-[#30363d] hover:border-[#6e7681] hover:text-[#e6edf3] transition-all"
+          className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2.5 rounded text-sm text-[#8b949e] border border-[#30363d] hover:border-[#6e7681] hover:text-[#e6edf3] transition-all min-h-[44px]"
         >
           <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
             <path d="M3.75 0h8.5c.966 0 1.75.784 1.75 1.75v2h.25c.966 0 1.75.784 1.75 1.75v5.75A1.75 1.75 0 0 1 14.25 13H14v1.25A1.75 1.75 0 0 1 12.25 16h-8.5A1.75 1.75 0 0 1 2 14.25V13H1.75A1.75 1.75 0 0 1 0 11.25V5.5c0-.966.784-1.75 1.75-1.75H2v-2C2 .784 2.784 0 3.75 0Zm0 1.5a.25.25 0 0 0-.25.25v2h9v-2a.25.25 0 0 0-.25-.25Zm8.5 10a.25.25 0 0 0 .25-.25V7.375H3.5v3.875c0 .138.112.25.25.25Z"/>

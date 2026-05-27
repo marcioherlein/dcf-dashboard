@@ -38,7 +38,7 @@ export default function SimplifierTabBar({ activeTab, answers, onTabChange }: Si
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`relative flex flex-col items-center gap-0.5 px-4 py-3 text-[11px] font-semibold tracking-wider whitespace-nowrap transition-colors border-b-2 ${
+              className={`relative flex flex-col items-center gap-0.5 px-3 sm:px-4 py-3 text-[11px] font-semibold tracking-wider whitespace-nowrap transition-colors border-b-2 min-h-[44px] ${
                 isActive
                   ? 'border-[#1f6feb] text-[#1f6feb]'
                   : 'border-transparent text-[#6B6A72] hover:text-[#2D2C31]'
