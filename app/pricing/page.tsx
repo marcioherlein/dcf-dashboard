@@ -92,7 +92,7 @@ export default function PricingPage() {
             <Zap size={12} />
             Institutional-quality valuation tools for individual investors
           </div>
-          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight" style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight" style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>
             Know if a stock is worth buying.<br />
             <span style={{ color: '#0F2A5E' }}>Understand exactly why.</span>
           </h1>
@@ -101,36 +101,38 @@ export default function PricingPage() {
           </p>
 
           {/* Billing toggle */}
-          <div className="mt-8 inline-flex items-center gap-3 rounded-full bg-white border border-slate-200 p-1.5 shadow-sm">
-            <button
-              onClick={() => setAnnual(false)}
-              className={cn(
-                'rounded-full px-5 py-2 text-sm font-semibold transition-colors',
-                !annual ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-800'
-              )}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setAnnual(true)}
-              className={cn(
-                'rounded-full px-5 py-2 text-sm font-semibold transition-colors flex items-center gap-2',
-                annual ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-800'
-              )}
-            >
-              Annual
-              <span className={cn(
-                'text-[10px] font-bold rounded-full px-2 py-0.5',
-                annual ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-700'
-              )}>
-                Save 33%
-              </span>
-            </button>
+          <div className="mt-8 flex justify-center">
+            <div className="inline-flex items-center gap-3 rounded-full bg-white border border-slate-200 p-1.5 shadow-sm">
+              <button
+                onClick={() => setAnnual(false)}
+                className={cn(
+                  'rounded-full px-5 py-2.5 text-sm font-semibold transition-colors min-h-[44px]',
+                  !annual ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-800'
+                )}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setAnnual(true)}
+                className={cn(
+                  'rounded-full px-5 py-2.5 text-sm font-semibold transition-colors flex items-center gap-2 min-h-[44px]',
+                  annual ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-800'
+                )}
+              >
+                Annual
+                <span className={cn(
+                  'text-[10px] font-bold rounded-full px-2 py-0.5',
+                  annual ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-700'
+                )}>
+                  Save 33%
+                </span>
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Pricing cards */}
-        <div className="grid md:grid-cols-2 gap-6 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
 
           {/* Free card */}
           <div className="rounded-2xl bg-white border border-slate-200 p-8 flex flex-col">
@@ -145,12 +147,12 @@ export default function PricingPage() {
 
             <button
               onClick={() => signIn('google')}
-              className="w-full rounded-xl border-2 border-slate-900 py-3 text-sm font-bold text-slate-900 hover:bg-slate-50 transition-colors mb-8"
+              className="w-full rounded-xl border-2 border-slate-900 py-3.5 text-sm font-bold text-slate-900 hover:bg-slate-50 transition-colors mb-8 min-h-[48px]"
             >
               Get started free →
             </button>
 
-            <ul className="space-y-3 flex-1">
+            <ul className="space-y-3.5 flex-1">
               {FREE_FEATURES.map((f, i) => (
                 <li key={i} className="flex items-start gap-3">
                   {f.included
@@ -205,12 +207,12 @@ export default function PricingPage() {
 
             <button
               onClick={() => signIn('google')}
-              className="w-full rounded-xl bg-white py-3 text-sm font-bold text-[#0F2A5E] hover:bg-blue-50 transition-colors mb-8"
+              className="w-full rounded-xl bg-white py-3.5 text-sm font-bold text-[#0F2A5E] hover:bg-blue-50 transition-colors mb-8 min-h-[48px]"
             >
               Start Pro — {annual ? `$${annualTotal}/year` : `$${monthlyPrice}/month`} →
             </button>
 
-            <ul className="space-y-3 flex-1">
+            <ul className="space-y-3.5 flex-1">
               {PRO_FEATURES.map((f, i) => {
                 const Icon = f.icon
                 return (
@@ -225,15 +227,15 @@ export default function PricingPage() {
         </div>
 
         {/* Social proof / trust bar */}
-        <div className="rounded-2xl bg-white border border-slate-200 px-8 py-6 mb-16 text-center">
+        <div className="rounded-2xl bg-white border border-slate-200 px-6 sm:px-8 py-6 mb-16 text-center">
           <p className="text-[12px] font-bold uppercase tracking-widest text-slate-400 mb-4">Powered by</p>
-          <div className="flex flex-wrap items-center justify-center gap-8 text-sm font-semibold text-slate-500">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-semibold text-slate-500">
             <span>Yahoo Finance</span>
-            <span className="text-slate-200">·</span>
+            <span className="hidden sm:inline text-slate-200">·</span>
             <span>Financial Modeling Prep</span>
-            <span className="text-slate-200">·</span>
+            <span className="hidden sm:inline text-slate-200">·</span>
             <span>FRED (Federal Reserve)</span>
-            <span className="text-slate-200">·</span>
+            <span className="hidden sm:inline text-slate-200">·</span>
             <span>Damodaran (NYU Stern)</span>
           </div>
           <p className="mt-4 text-xs text-slate-400 max-w-lg mx-auto">
@@ -243,10 +245,62 @@ export default function PricingPage() {
 
         {/* Feature comparison table */}
         <div className="mb-16">
-          <h2 className="text-2xl font-bold text-slate-900 text-center mb-8" style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 text-center mb-8" style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>
             Full feature comparison
           </h2>
-          <div className="rounded-2xl bg-white border border-slate-200 overflow-hidden">
+
+          {/* Mobile: card-per-tier layout */}
+          <div className="sm:hidden space-y-4">
+            {[
+              { tier: 'Free', color: 'border-slate-200', headerColor: 'text-slate-400', badgeColor: '' },
+              { tier: 'Pro', color: 'border-blue-200', headerColor: 'text-[#0F2A5E]', badgeColor: 'bg-[#0F2A5E] text-white' },
+            ].map(({ tier, color, headerColor, badgeColor }) => (
+              <div key={tier} className={`rounded-2xl bg-white border ${color} overflow-hidden`}>
+                <div className="px-5 py-3 border-b border-slate-100 bg-slate-50">
+                  <span className={`text-xs font-bold uppercase tracking-widest ${headerColor}`}>{tier}</span>
+                </div>
+                <ul className="divide-y divide-slate-50">
+                  {[
+                    { label: 'Analyze NYSE & NASDAQ stocks',                free: true,  pro: true  },
+                    { label: 'Grade badge (A / B / C / D)',                free: true,  pro: true  },
+                    { label: 'Weighted consensus fair value',              free: true,  pro: true  },
+                    { label: 'Bear / Base / Bull fair value range bar',    free: true,  pro: true  },
+                    { label: 'CAGR / WACC / Terminal growth sliders',      free: true,  pro: true  },
+                    { label: 'Piotroski / Altman / Beneish / ROIC scores', free: true,  pro: true  },
+                    { label: 'Full 3-statement financials',                free: true,  pro: true  },
+                    { label: 'News feed',                                  free: true,  pro: true  },
+                    { label: 'Saved analyses to Watchlist',                free: '3',   pro: '∞'   },
+                    { label: 'Sensitivity table (CAGR × WACC heat map)',   free: false, pro: true  },
+                    { label: 'Price vs fair value email alerts',           free: false, pro: true  },
+                    { label: 'Thesis Builder (26-question questionnaire)', free: false, pro: true  },
+                    { label: 'PDF investment brief export',                free: false, pro: true  },
+                    { label: 'Portfolio fair value dashboard',             free: false, pro: true  },
+                    { label: 'Bull / Base / Bear scenario builder',        free: false, pro: true  },
+                    { label: 'Historical fair value tracking',             free: false, pro: true  },
+                    { label: 'Weekly watchlist digest (email)',            free: false, pro: true  },
+                    { label: 'Priority support',                           free: false, pro: true  },
+                  ].map((row, i) => {
+                    const val = tier === 'Free' ? row.free : row.pro
+                    return (
+                      <li key={i} className="flex items-center justify-between px-5 py-3 gap-3">
+                        <span className="text-sm text-slate-700 leading-snug">{row.label}</span>
+                        <span className="shrink-0">
+                          {val === true  && <Check size={16} className="text-emerald-500" />}
+                          {val === false && <X    size={16} className="text-slate-200"   />}
+                          {typeof val === 'string' && (
+                            <span className={`text-xs font-bold rounded-full px-2 py-0.5 ${tier === 'Pro' ? 'text-[#0F2A5E] bg-blue-50' : 'text-slate-600 bg-slate-100'}`}>{val}</span>
+                          )}
+                        </span>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: full comparison table */}
+          <div className="hidden sm:block rounded-2xl bg-white border border-slate-200 overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50">
@@ -301,7 +355,7 @@ export default function PricingPage() {
 
         {/* FAQ */}
         <div className="mb-16">
-          <h2 className="text-2xl font-bold text-slate-900 text-center mb-8" style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 text-center mb-8" style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>
             Frequently asked questions
           </h2>
           <div className="space-y-4 max-w-2xl mx-auto">
@@ -313,10 +367,10 @@ export default function PricingPage() {
 
         {/* CTA footer */}
         <div
-          className="rounded-2xl p-10 text-center"
+          className="rounded-2xl p-6 sm:p-10 text-center"
           style={{ background: '#0F2A5E' }}
         >
-          <h2 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-3" style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>
             Start analyzing. It&apos;s free.
           </h2>
           <p className="text-blue-300 mb-7 text-sm">
@@ -348,7 +402,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
     <div className="rounded-xl bg-white border border-slate-200 overflow-hidden">
       <button
         onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-slate-50 transition-colors"
+        className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-slate-50 transition-colors min-h-[52px]"
       >
         <span className="text-sm font-semibold text-slate-800">{q}</span>
         <span className={cn('text-slate-400 transition-transform shrink-0 ml-4', open && 'rotate-180')}>
