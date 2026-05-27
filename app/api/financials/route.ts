@@ -341,7 +341,25 @@ export async function GET(req: NextRequest) {
       : null
     const roicResult = calculateROIC(pBSStmts[0] ?? {}, pBSStmts[1] ?? {}, pISStmts[0] ?? {}, waccResult.inputs.taxRate, waccResult.wacc, fxRate)
 
-    const scores = { piotroski, altman, beneish, roic: roicResult }
+    // When FMP has no BS data, fall back to fundamentalsTimeSeries annual BS + Yahoo financialData for ROIC
+    let finalRoic = roicResult
+    if (!roicResult.dataAvailable && annualBSRows.length > 0) {
+      const mapYBS = (r: any) => r ? ({
+        totalAssets: r.totalAssets,
+        totalCurrentAssets: r.currentAssets ?? r.totalCurrentAssets,
+        totalCurrentLiabilities: r.currentLiabilities ?? r.totalCurrentLiabilities,
+        cash: r.cashCashEquivalentsAndShortTermInvestments ?? r.cashAndCashEquivalents ?? r.cash,
+        cashAndShortTermInvestments: r.cashCashEquivalentsAndShortTermInvestments,
+        accountsPayable: r.payables ?? r.accountsPayable,
+      }) : {}
+      const yBS0 = mapYBS(annualBSRows[annualBSRows.length - 1])
+      const yBS1 = mapYBS(annualBSRows.length >= 2 ? annualBSRows[annualBSRows.length - 2] : null)
+      const yIS = { ebit: (fin.financialData?.ebit ?? fin.financialData?.ebitda ?? null) as number | null }
+      const fallback = calculateROIC(yBS0, yBS1, yIS, waccResult.inputs.taxRate, waccResult.wacc, 1)
+      if (fallback.dataAvailable) finalRoic = fallback
+    }
+
+    const scores = { piotroski, altman, beneish, roic: finalRoic }
 
     // ─── Ownership & Short Interest ───────────────────────────────────────────
 

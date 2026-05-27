@@ -256,10 +256,15 @@ function BalanceSheetCard({ scores, statementsData }: {
   const ttmBS = statementsData?.ttm?.balanceSheet
   const ttmIS = statementsData?.ttm?.incomeStatement
 
-  const totalCurrentAssets = (ttmBS?.totalCurrentAssets ?? null) as number | null
-  const totalCurrentLiabilities = (ttmBS?.totalCurrentLiabilities ?? null) as number | null
+  // fundamentalsTimeSeries uses currentAssets/currentLiabilities; quoteSummary uses totalCurrentAssets/totalCurrentLiabilities
+  const totalCurrentAssets = (ttmBS?.totalCurrentAssets ?? ttmBS?.currentAssets ?? null) as number | null
+  const totalCurrentLiabilities = (ttmBS?.totalCurrentLiabilities ?? ttmBS?.currentLiabilities ?? null) as number | null
+  const inventories = (ttmBS?.inventory ?? ttmBS?.inventories ?? null) as number | null
   const currentRatio = totalCurrentAssets != null && totalCurrentLiabilities != null && totalCurrentLiabilities > 0
     ? totalCurrentAssets / totalCurrentLiabilities : null
+  const quickRatio = currentRatio != null
+    ? (totalCurrentAssets! - (inventories ?? 0)) / totalCurrentLiabilities!
+    : null
 
   const totalDebt = (ttmBS?.totalDebt ?? ttmBS?.longTermDebtAndCapitalLeaseObligation ?? ttmBS?.longTermDebt ?? null) as number | null
   const cash = (ttmBS?.cashCashEquivalentsAndShortTermInvestments ?? ttmBS?.cashAndCashEquivalents ?? null) as number | null
@@ -290,6 +295,11 @@ function BalanceSheetCard({ scores, statementsData }: {
           label="Current Ratio"
           value={currentRatio != null ? currentRatio.toFixed(1) : '—'}
           valueClass={currentRatio != null ? (currentRatio >= 1.5 ? 'text-emerald-600' : currentRatio >= 1.0 ? 'text-amber-600' : 'text-red-500') : undefined}
+        />
+        <MetricRow
+          label="Quick Ratio"
+          value={quickRatio != null ? quickRatio.toFixed(1) : '—'}
+          valueClass={quickRatio != null ? (quickRatio >= 1.0 ? 'text-emerald-600' : quickRatio >= 0.7 ? 'text-amber-600' : 'text-red-500') : undefined}
         />
         {altman != null && (
           <MetricRow
