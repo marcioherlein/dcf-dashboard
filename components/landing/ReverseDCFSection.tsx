@@ -49,12 +49,13 @@ export default function ReverseDCFSection() {
   return (
     <section
       id="reverse-dcf"
+      className="overflow-x-hidden"
       style={{ background: 'white', borderTop: '1px solid #E2E8F0', borderBottom: '1px solid #E2E8F0' }}
     >
-      <div className="mx-auto max-w-[1200px] px-6 py-24">
+      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
         <div
-          className="grid items-center"
-          style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.6fr)', gap: '64px' }}
+          className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] items-center"
+          style={{ gap: '40px' }}
         >
           {/* Left: explanation */}
           <div>
@@ -65,8 +66,8 @@ export default function ReverseDCFSection() {
               What is today&apos;s price already betting on?
             </p>
             <h2
+              className="text-[28px] sm:text-[38px] lg:text-[clamp(32px,3.2vw,44px)]"
               style={{
-                fontSize: 'clamp(32px, 3.2vw, 44px)',
                 fontWeight: 700,
                 lineHeight: 1.1,
                 letterSpacing: '-0.025em',
@@ -77,8 +78,8 @@ export default function ReverseDCFSection() {
               Reverse DCF in plain English.
             </h2>
             <p
+              className="text-base"
               style={{
-                fontSize: '17px',
                 lineHeight: 1.6,
                 color: '#475569',
                 marginBottom: '24px',
@@ -89,8 +90,8 @@ export default function ReverseDCFSection() {
               and profitability the market must be right about for you to break even.
             </p>
             <p
+              className="text-base"
               style={{
-                fontSize: '15px',
                 lineHeight: 1.6,
                 color: '#64748B',
                 padding: '16px 20px',
@@ -111,7 +112,7 @@ export default function ReverseDCFSection() {
               <Link
                 key={stock.ticker}
                 href={`/stock/${stock.ticker}`}
-                className="group block rounded-[20px] bg-white border p-5 transition-all hover:-translate-y-0.5"
+                className="group block rounded-[20px] bg-white border p-5 transition-all hover:-translate-y-0.5 active:scale-95"
                 style={{
                   borderColor: '#E6ECF5',
                   boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 4px 16px rgba(15,23,42,0.05)',

@@ -15,10 +15,10 @@ const _VALUATION_CALLOUTS = [
 
 export default function ProductDeepDiveSection() {
   return (
-    <section style={{ background: 'white', borderBottom: '1px solid #E2E8F0' }}>
-      <div className="mx-auto max-w-[1200px] px-6 py-24">
+    <section className="overflow-x-hidden" style={{ background: 'white', borderBottom: '1px solid #E2E8F0' }}>
+      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
         {/* Heading */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-10 sm:mb-16">
           <p
             className="font-bold uppercase mb-3"
             style={{ fontSize: '11px', letterSpacing: '0.08em', color: '#2563EB' }}
@@ -26,8 +26,8 @@ export default function ProductDeepDiveSection() {
             See what matters. Ignore the noise.
           </p>
           <h2
+            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)]"
             style={{
-              fontSize: 'clamp(30px, 3vw, 42px)',
               fontWeight: 700,
               lineHeight: 1.1,
               letterSpacing: '-0.025em',
@@ -38,8 +38,8 @@ export default function ProductDeepDiveSection() {
             Everything you need. Nothing you don&apos;t.
           </h2>
           <p
+            className="text-base sm:text-[17px]"
             style={{
-              fontSize: '17px',
               lineHeight: 1.6,
               color: '#64748B',
               maxWidth: '560px',
@@ -51,15 +51,15 @@ export default function ProductDeepDiveSection() {
           </p>
         </div>
 
-        {/* Two-panel layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+        {/* Two-panel layout — stacked on mobile */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
           {/* Panel A: Summary */}
           <div>
             <div className="mb-5">
               <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#0F172A', letterSpacing: '-0.015em', marginBottom: '8px' }}>
                 Summary at a glance
               </h3>
-              <p style={{ fontSize: '15px', color: '#64748B', lineHeight: 1.6 }}>
+              <p className="text-base" style={{ color: '#64748B', lineHeight: 1.6 }}>
                 One screen. Price, verdict, implied growth, and quality scores.
               </p>
             </div>
@@ -77,8 +77,8 @@ export default function ProductDeepDiveSection() {
                     style={{ width: '6px', height: '6px', background: '#2563EB', marginTop: '7px' }}
                   />
                   <div>
-                    <span style={{ fontSize: '14px', fontWeight: 650, color: '#0F172A' }}>{item.label}</span>
-                    <span style={{ fontSize: '14px', color: '#94A3B8', marginLeft: '6px' }}>{item.desc}</span>
+                    <span className="text-sm font-semibold" style={{ color: '#0F172A' }}>{item.label}</span>
+                    <span className="text-sm ml-1.5" style={{ color: '#94A3B8' }}>{item.desc}</span>
                   </div>
                 </div>
               ))}
@@ -94,7 +94,7 @@ export default function ProductDeepDiveSection() {
               <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#0F172A', letterSpacing: '-0.015em', marginBottom: '8px' }}>
                 Valuation Deep Dive
               </h3>
-              <p style={{ fontSize: '15px', color: '#64748B', lineHeight: 1.6 }}>
+              <p className="text-base" style={{ color: '#64748B', lineHeight: 1.6 }}>
                 Bull, base, and bear scenarios. Model weights. Editable assumptions.
               </p>
             </div>
@@ -111,8 +111,8 @@ export default function ProductDeepDiveSection() {
                     style={{ width: '6px', height: '6px', background: '#7C3AED', borderRadius: '50%', marginTop: '7px' }}
                   />
                   <div>
-                    <span style={{ fontSize: '14px', fontWeight: 650, color: '#0F172A' }}>{item.label}</span>
-                    <span style={{ fontSize: '14px', color: '#94A3B8', marginLeft: '6px' }}>{item.desc}</span>
+                    <span className="text-sm font-semibold" style={{ color: '#0F172A' }}>{item.label}</span>
+                    <span className="text-sm ml-1.5" style={{ color: '#94A3B8' }}>{item.desc}</span>
                   </div>
                 </div>
               ))}

@@ -9,10 +9,10 @@ import { SummaryMockScreen, ValuationMockScreen } from './ProductScreenshots'
 export default function LandingHero() {
   return (
     <section
-      className="relative overflow-hidden"
+      className="relative overflow-x-hidden"
       style={{
-        paddingTop: '120px',
-        paddingBottom: '100px',
+        paddingTop: '96px',
+        paddingBottom: '64px',
         background: 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)',
       }}
     >
@@ -41,15 +41,12 @@ export default function LandingHero() {
       />
 
       <div
-        className="relative mx-auto px-6"
+        className="relative mx-auto px-4 sm:px-6"
         style={{ maxWidth: '1280px' }}
       >
         <div
-          className="grid items-center"
-          style={{
-            gridTemplateColumns: 'minmax(0, 0.95fr) minmax(0, 1.25fr)',
-            gap: '64px',
-          }}
+          className="grid items-center grid-cols-1 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.25fr)]"
+          style={{ gap: '40px' }}
         >
           {/* ── Left: Copy ── */}
           <div className="min-w-0">
@@ -96,10 +93,10 @@ export default function LandingHero() {
 
             {/* Headline */}
             <h1
+              className="text-[38px] sm:text-[52px] lg:text-[clamp(44px,5.5vw,68px)]"
               style={{
-                fontSize: 'clamp(44px, 5.5vw, 68px)',
                 fontWeight: 700,
-                lineHeight: 1.02,
+                lineHeight: 1.05,
                 letterSpacing: '-0.04em',
                 color: '#071633',
                 marginBottom: '20px',
@@ -111,12 +108,12 @@ export default function LandingHero() {
 
             {/* Subheadline */}
             <p
+              className="text-base sm:text-lg"
               style={{
-                fontSize: 'clamp(17px, 1.4vw, 20px)',
                 fontWeight: 400,
                 lineHeight: 1.55,
                 color: '#475569',
-                marginBottom: '36px',
+                marginBottom: '32px',
                 maxWidth: '580px',
               }}
             >
@@ -131,25 +128,27 @@ export default function LandingHero() {
             </div>
 
             {/* CTAs */}
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <button
                 onClick={() => signIn('google')}
-                className="inline-flex items-center rounded-xl px-5 py-3 text-[15px] font-semibold text-white transition-all hover:-translate-y-px active:translate-y-0"
+                className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-[15px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
                 style={{
                   background: '#2563EB',
                   boxShadow: '0 8px 20px rgba(37,99,235,0.22)',
                   fontWeight: 650,
+                  minHeight: '44px',
                 }}
               >
                 Start free trial
               </button>
               <Link
                 href="/stock/NVDA"
-                className="inline-flex items-center rounded-xl border px-5 py-3 text-[15px] font-semibold text-[#1D4ED8] transition-all hover:bg-[#EFF6FF] hover:border-[#93C5FD]"
+                className="inline-flex items-center justify-center rounded-xl border px-5 py-3 text-[15px] font-semibold text-[#1D4ED8] transition-all hover:bg-[#EFF6FF] hover:border-[#93C5FD] active:scale-95"
                 style={{
                   background: 'white',
                   borderColor: '#BFDBFE',
                   fontWeight: 650,
+                  minHeight: '44px',
                 }}
               >
                 Explore sample valuation
@@ -194,7 +193,7 @@ export default function LandingHero() {
         </div>
 
         {/* Mobile screenshot (stacked below copy) */}
-        <div className="mt-10 lg:hidden">
+        <div className="mt-8 lg:hidden">
           <SummaryMockScreen />
         </div>
       </div>
