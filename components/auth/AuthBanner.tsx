@@ -31,10 +31,10 @@ export default function AuthBanner() {
       </span>
       <div className="flex items-center gap-3 shrink-0">
         <button
-          onClick={() => requireAuth({ intent: 'save_watchlist' })}
+          onClick={() => requireAuth({ intent: 'save_valuation' })}
           className="rounded-lg bg-white px-3 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-50 transition-colors"
         >
-          Save to watchlist →
+          Save analysis →
         </button>
         <button
           onClick={() => setVisible(false)}

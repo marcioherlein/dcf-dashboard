@@ -12,7 +12,6 @@ import {
   Bell,
   Settings,
   HelpCircle,
-  Star,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -34,12 +33,6 @@ const NAV_ITEMS = [
     label: 'Portfolio',
     icon: Briefcase,
     match: (p: string) => p.startsWith('/monitor'),
-  },
-  {
-    href: '/watchlist',
-    label: 'Watchlist',
-    icon: Star,
-    match: (p: string) => p.startsWith('/watchlist'),
   },
   {
     href: '/markets',

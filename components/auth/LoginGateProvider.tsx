@@ -7,7 +7,6 @@ import { savePreLoginState, type PreLoginState } from '@/lib/auth/preLoginState'
 
 export type LoginIntent =
   | 'save_valuation'
-  | 'save_watchlist'
   | 'export_report'
   | 'portfolio_tracking'
   | 'compare_models'

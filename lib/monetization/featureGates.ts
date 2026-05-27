@@ -35,7 +35,7 @@ export const GATE_CONFIG: Record<FeatureGate, GateConfig> = {
   },
   unlimited_saves: {
     label: 'Unlimited Saves',
-    description: 'Save more than 3 analyses to your watchlist',
+    description: 'Save unlimited analyses to My Valuations',
     tier: 'pro',
   },
   price_alerts: {

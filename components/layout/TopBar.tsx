@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import Image from 'next/image'
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
-import { ChevronLeft, Star } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { slideDown } from '@/lib/motion'
 import { useStockNav } from '@/contexts/StockNavContext'
@@ -184,9 +184,6 @@ export default function TopBar() {
                 className="text-slate-400 hover:text-blue-600 transition-colors shrink-0"
               >
                 <ChevronLeft size={15} strokeWidth={2.5} />
-              </button>
-              <button aria-label="Add to watchlist" className="text-slate-300 hover:text-amber-400 transition-colors shrink-0">
-                <Star size={14} strokeWidth={1.8} />
               </button>
               <span className="font-bold text-[13px] text-slate-900 tracking-tight shrink-0">
                 {stockNav.ticker}

@@ -7,7 +7,6 @@ import type { LoginIntent } from './LoginGateProvider'
 
 const INTENT_COPY: Record<LoginIntent, { headline: string; sub: string }> = {
   save_valuation:     { headline: 'Save your valuation',         sub: 'Keep your DCF model and assumptions in one place.'      },
-  save_watchlist:     { headline: 'Save to your watchlist',      sub: 'Track this stock alongside the rest of your research.'  },
   export_report:      { headline: 'Export your report',          sub: 'Download a PDF of your full analysis.'                  },
   portfolio_tracking: { headline: 'Track in your portfolio',     sub: 'Monitor positions and fair value gaps in one view.'     },
   compare_models:     { headline: 'Save for comparison',         sub: 'Come back to this model any time.'                      },

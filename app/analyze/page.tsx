@@ -24,13 +24,6 @@ interface SearchResult {
   quoteType?: string
 }
 
-interface WatchlistItem {
-  ticker: string
-  name?: string
-  list_tag?: string | null
-  added_at?: string
-}
-
 interface MarketIndex {
   symbol: string
   name: string
@@ -462,9 +455,9 @@ function QuickActions() {
     },
     {
       icon: Bookmark,
-      title: 'Review watchlist',
-      desc: 'Track your saved stocks and see what changed since you last checked.',
-      cta: 'Go to watchlist',
+      title: 'My Valuations',
+      desc: 'Review your saved analyses and track conviction over time.',
+      cta: 'View valuations',
       onClick: () => router.push('/valuations'),
       color: 'text-emerald-600 bg-emerald-50',
     },
@@ -598,89 +591,6 @@ function PlanCard() {
       <Link href="/pricing" className="text-[11px] text-slate-400 hover:text-slate-600 whitespace-nowrap">
         Manage →
       </Link>
-    </div>
-  )
-}
-
-// ─── Watchlist Widget (right rail) ────────────────────────────────────────────
-
-function WatchlistWidget() {
-  const { data: session } = useSession()
-  const [items, setItems]     = useState<WatchlistItem[] | null>(null)
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (!session?.user) return
-    setLoading(true)
-    fetch('/api/watchlist')
-      .then((r) => r.json())
-      .then((d) => setItems(Array.isArray(d) ? d.slice(0, 5) : []))
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false))
-  }, [session])
-
-  const listTagClass = (tag: string | null | undefined) => {
-    if (tag === 'buy')  return 'bg-emerald-100 text-emerald-700 border-emerald-200'
-    if (tag === 'pass') return 'bg-red-100 text-red-700 border-red-200'
-    return 'bg-slate-100 text-slate-500 border-slate-200'
-  }
-
-  return (
-    <div className="rounded-xl card px-4 py-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-[13px] font-bold text-slate-900 flex items-center gap-1.5">
-          <TrendingUp size={13} className="text-blue-500" />
-          Your watchlist
-        </h3>
-        <Link href="/valuations" className="text-[11px] text-blue-600 hover:text-blue-700 font-medium">
-          View all
-        </Link>
-      </div>
-
-      {!session ? (
-        <div className="py-3 text-center">
-          <p className="text-[12px] text-slate-500 mb-3">Save valuations to build your watchlist.</p>
-          <button
-            onClick={() => signIn('google')}
-            className="w-full rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50 py-2 text-[12px] font-semibold text-blue-600 transition-colors"
-          >
-            Sign in
-          </button>
-        </div>
-      ) : loading ? (
-        <div className="space-y-2.5">
-          {Array(4).fill(null).map((_, i) => (
-            <div key={i} className="flex items-center gap-2 animate-pulse">
-              <div className="h-3 bg-slate-100 rounded w-10" />
-              <div className="h-3 bg-slate-100 rounded flex-1" />
-            </div>
-          ))}
-        </div>
-      ) : !items || items.length === 0 ? (
-        <p className="text-[12px] text-slate-400 py-2 text-center">No saved stocks yet.</p>
-      ) : (
-        <div className="space-y-1">
-          {items.map((item) => (
-            <Link
-              key={item.ticker}
-              href={`/stock/${item.ticker}`}
-              className="flex items-center justify-between gap-2 py-2 hover:bg-slate-50 -mx-1 px-1 rounded-lg transition-colors"
-            >
-              <div className="min-w-0">
-                <span className="text-[12px] font-bold text-slate-800 font-mono">{item.ticker}</span>
-                {item.name && (
-                  <span className="text-[11px] text-slate-500 ml-1.5 truncate hidden sm:inline">{item.name.split(' ')[0]}</span>
-                )}
-              </div>
-              {item.list_tag && (
-                <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border capitalize', listTagClass(item.list_tag))}>
-                  {item.list_tag}
-                </span>
-              )}
-            </Link>
-          ))}
-        </div>
-      )}
     </div>
   )
 }
@@ -848,13 +758,6 @@ export default function AnalyzePage() {
               initial={{ opacity: 0, x: 16 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.28, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <WatchlistWidget />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: 16 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.28, delay: 0.20, ease: [0.16, 1, 0.3, 1] }}
             >
               <MarketSnapshotWidget />
             </motion.div>

@@ -12,7 +12,6 @@ export type AnalyticsEvent =
   | 'verdict_card_viewed'
   | 'cta_clicked'
   | 'search_performed'
-  | 'watchlist_viewed'
   | 'portfolio_viewed'
   | 'fair_value_calculated'
   | 'gated_action_clicked'
