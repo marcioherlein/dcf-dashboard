@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { AlertTriangle, Bookmark, CheckCircle2, Loader2 } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
@@ -70,6 +71,8 @@ interface Props {
 }
 
 export default function SaveToWatchlistDialog({ open, payload, onClose, onReviewAssumptions }: Props) {
+  const { data: session } = useSession()
+  const userEmail = session?.user?.email ?? null
   const [status,   setStatus]   = useState<'idle' | 'saving' | 'done' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [listTag,  setListTag]  = useState<ListTag>('watch')
@@ -83,40 +86,6 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
     setStatus('saving')
     setErrorMsg('')
     try {
-      // 1. Save to watchlist
-      const wRes = await fetch('/api/watchlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ticker: payload.ticker,
-          name: payload.name,
-          asset_type: payload.assetType,
-          list_tag: listTag,
-        }),
-      })
-      if (!wRes.ok) {
-        const errBody = await wRes.json().catch(() => ({}))
-        if (wRes.status === 402 && errBody.gate === 'unlimited_saves') {
-          throw new Error('FREE_LIMIT')
-        }
-        throw new Error('Failed to save to watchlist')
-      }
-
-      // 2. Save valuation snapshot for stocks
-      if (!isETF && payload.valuationSnapshot) {
-        await fetch('/api/valuations', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ticker: payload.ticker,
-            company: payload.name,
-            ...payload.valuationSnapshot,
-          }),
-        })
-      }
-
-      setStatus('done')
-      // Mirror into localStorage so the /valuations page shows this stock
       const existing = getWatchlistEntry(payload.ticker)
       const entry: WatchlistEntry = existing
         ? {
@@ -151,11 +120,20 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
               fairValue: payload.fairValue ?? null,
             },
           }
-      saveWatchlistEntry(entry)
-      setTimeout(() => {
-        setStatus('idle')
-        onClose()
-      }, 1200)
+
+      await saveWatchlistEntry(entry, userEmail)
+
+      // Also persist detailed valuation snapshot (non-blocking, best-effort)
+      if (!isETF && payload.valuationSnapshot) {
+        fetch('/api/valuations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ticker: payload.ticker, company: payload.name, ...payload.valuationSnapshot }),
+        }).catch(() => {})
+      }
+
+      setStatus('done')
+      setTimeout(() => { setStatus('idle'); onClose() }, 1200)
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : 'Something went wrong')
       setStatus('error')
@@ -168,14 +146,14 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bookmark size={16} className="text-blue-500" />
-            {isETF ? `Add ${payload.ticker} to Watchlist` : `Save ${payload.ticker} Analysis`}
+            {isETF ? `Save ${payload.ticker} to My Valuations` : `Save ${payload.ticker} Analysis`}
           </DialogTitle>
         </DialogHeader>
 
         {status === 'done' ? (
           <div className="flex flex-col items-center gap-2 py-4 text-center">
             <CheckCircle2 size={32} className="text-emerald-500" />
-            <p className="text-sm font-semibold text-slate-100">Saved to your watchlist</p>
+            <p className="text-sm font-semibold text-slate-100">Saved to My Valuations</p>
           </div>
         ) : (
           <>
@@ -274,10 +252,10 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
             >
               {status === 'saving'
                 ? <><Loader2 size={14} className="animate-spin" /> Saving…</>
-                : isETF ? 'Add to Watchlist'
+                : isETF ? 'Save to My Valuations →'
                 : listTag === 'buy'   ? 'Save as Buy →'
                 : listTag === 'pass'  ? 'Save as Pass →'
-                : 'Save to Watch List →'
+                : 'Save to My Valuations →'
               }
             </button>
           </DialogFooter>
