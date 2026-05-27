@@ -284,7 +284,7 @@ export default function ValuationsPage() {
             <h2 className="text-base font-semibold text-slate-700 mb-1">No saved analyses yet</h2>
             <p className="text-sm text-slate-400 mb-6">Search a stock and save your first analysis</p>
             <Link
-              href="/"
+              href="/analyze"
               className="flex sm:inline-flex items-center justify-center rounded-xl px-5 py-3 sm:py-2.5 text-sm font-bold text-white transition-colors"
               style={{ background: '#0F2A5E' }}
             >
