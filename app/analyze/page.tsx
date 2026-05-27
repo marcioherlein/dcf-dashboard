@@ -695,7 +695,7 @@ function MarketSnapshotWidget() {
 export default function AnalyzePage() {
   return (
     <div className="min-h-screen p-4 lg:p-6">
-      <div className="max-w-[1400px] mx-auto">
+      <div>
 
         {/* Search hero — full width */}
         <motion.div

@@ -167,7 +167,7 @@ export default function TradingPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFB] px-4 py-6">
-      <div className="max-w-4xl mx-auto space-y-5">
+      <div className="space-y-5">
 
         {/* Header */}
         <div className="flex items-start gap-3 flex-wrap border-b border-slate-200 pb-4">

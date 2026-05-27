@@ -541,7 +541,7 @@ export default function StrategiesPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 pt-[52px]">
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="px-4 py-6">
         {/* Header */}
         <div className="mb-5">
           <h1 className="text-xl font-bold text-slate-900">Quantitative Strategies</h1>

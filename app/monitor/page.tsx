@@ -18,7 +18,7 @@ function MonitorContent() {
     <div className="min-h-screen bg-[#F8FAFB]">
       {/* Tab bar */}
       <div className="sticky top-[52px] z-30 bg-white border-b border-slate-200">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="px-4 sm:px-6">
           <div className="flex gap-0 overflow-x-auto">
             {TABS.map((t) => (
               <button
@@ -49,7 +49,7 @@ function MonitorContent() {
       <main>
         {tab === 'monitor'   && <MarketMonitor />}
         {tab === 'portfolio' && (
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+          <div className="px-4 sm:px-6 py-8">
             <div className="mb-6 flex items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 px-5 py-4">
               <svg className="w-5 h-5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
