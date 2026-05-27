@@ -714,7 +714,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
           </div>
           {/* G1: Revenue growth bar chart */}
           {(() => {
-            const revGrowthData = yoyCols.map((col, i) => {
+            const revGrowthData = yoyCols.map((col) => {
               const fullIdx = cols.indexOf(col)
               const val = growthRows[0]?.values[fullIdx] ?? null
               return { col, val }
