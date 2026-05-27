@@ -15,17 +15,19 @@ interface Props {
   exchange?: string
   activeTab: TabId
   onChange: (tab: TabId) => void
+  onSave?: () => void
 }
 
 export default function StockContextBar({
-  ticker, companyName, price, changePct, currency, activeTab, onChange,
+  ticker, companyName, price, changePct, currency, activeTab, onChange, onSave,
 }: Props) {
-  const { setStockNav, onTabChangeRef } = useStockNav()
+  const { setStockNav, onTabChangeRef, onSaveRef } = useStockNav()
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
 
   // Keep onTabChangeRef pointing at the stock page's handler (always current, no re-render)
   onTabChangeRef.current = (tab: TabId) => onChangeRef.current(tab)
+  onSaveRef.current = onSave ?? null
 
   useEffect(() => {
     setStockNav({ ticker, companyName, price, changePct, currency, activeTab })
@@ -35,6 +37,7 @@ export default function StockContextBar({
     return () => {
       setStockNav(null)
       onTabChangeRef.current = null
+      onSaveRef.current = null
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setStockNav])

@@ -316,6 +316,7 @@ function StockPageBody() {
         exchange={data?.quote.exchange ?? ''}
         activeTab={activeTab}
         onChange={handleTabChange}
+        onSave={() => setSaveDialogOpen(true)}
       />
 
       {/* Session-based soft auth nudge (appears on 2nd+ stock page view) */}

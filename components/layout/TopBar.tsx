@@ -19,25 +19,6 @@ const STOCK_TABS: Array<{ id: TabId; label: string; count?: number }> = [
   { id: 'news',       label: 'News'       },
 ]
 
-const TOPBAR_TICKER = [
-  { sym: 'S&P 500',  val: '5,841.47',  chg: '+0.62%', up: true  },
-  { sym: 'NASDAQ',   val: '18,983.54', chg: '+0.89%', up: true  },
-  { sym: 'DOW',      val: '43,155.12', chg: '+0.47%', up: true  },
-  { sym: 'VIX',      val: '14.23',     chg: '−3.21%', up: false },
-  { sym: 'NVDA',     val: '119.83',    chg: '+2.14%', up: true  },
-  { sym: 'AAPL',     val: '195.64',    chg: '−0.28%', up: false },
-  { sym: 'MSFT',     val: '421.45',    chg: '+0.83%', up: true  },
-  { sym: 'AMZN',     val: '189.22',    chg: '+1.17%', up: true  },
-  { sym: 'META',     val: '561.78',    chg: '+0.54%', up: true  },
-  { sym: 'TSLA',     val: '268.45',    chg: '−0.91%', up: false },
-  { sym: 'GOOGL',    val: '178.33',    chg: '+0.41%', up: true  },
-  { sym: 'JPM',      val: '248.90',    chg: '+0.31%', up: true  },
-  { sym: '10Y UST',  val: '4.28%',     chg: '−2bp',   up: false },
-  { sym: 'GS',       val: '538.12',    chg: '+0.22%', up: true  },
-  { sym: 'AMD',      val: '115.22',    chg: '+1.82%', up: true  },
-  { sym: 'UNH',      val: '329.45',    chg: '−1.14%', up: false },
-]
-
 interface SearchResult {
   symbol: string
   longname?: string
@@ -76,7 +57,7 @@ function UserAvatar({ image, name }: { image: string | null; name: string | null
 export default function TopBar() {
   const router = useRouter()
   const { data: session } = useSession()
-  const { stockNav, onTabChangeRef } = useStockNav()
+  const { stockNav, onTabChangeRef, onSaveRef } = useStockNav()
 
   const [query, setQuery]     = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
@@ -116,48 +97,14 @@ export default function TopBar() {
       className="fixed top-0 left-0 right-0 z-40 glass-toolbar"
       style={{ height: '52px' }}
     >
-      {/* ── Ambient scrolling market ticker ───────────────────────────────── */}
-      <div
-        className="absolute inset-0 overflow-hidden pointer-events-none select-none"
-        aria-hidden="true"
-        style={{ zIndex: 0 }}
-      >
-        <div className="animate-marquee h-full items-center">
-          {[0, 1].map((copy) =>
-            TOPBAR_TICKER.map((d) => (
-              <span
-                key={`${d.sym}-${copy}`}
-                className="inline-flex items-baseline gap-1 mx-6 opacity-[0.14]"
-              >
-                <span className="text-[9px] font-bold font-mono tracking-widest text-slate-500 uppercase">
-                  {d.sym}
-                </span>
-                <span className={`text-[9px] font-semibold font-mono tabular-nums ${d.up ? 'text-emerald-500' : 'text-rose-500'}`}>
-                  {d.up ? '▲' : '▼'} {d.val}
-                </span>
-                <span className={`text-[8px] font-mono tabular-nums ${d.up ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {d.chg}
-                </span>
-              </span>
-            ))
-          )}
-        </div>
-        {/* Soft fade at edges to blend with glass toolbar */}
-        <div className="absolute inset-y-0 left-0 w-40 pointer-events-none"
-          style={{ background: 'linear-gradient(to right, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.70) 60%, transparent 100%)' }} />
-        <div className="absolute inset-y-0 right-0 w-40 pointer-events-none"
-          style={{ background: 'linear-gradient(to left, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.70) 60%, transparent 100%)' }} />
-      </div>
-
-      {/* Three-column grid: logo | center (intrinsico OR stock nav) | search + auth */}
+      {/* Three-column grid: logo | center | right */}
       <div
         className="relative h-full px-3 sm:px-4"
         style={{
           display: 'grid',
-          gridTemplateColumns: stockNav ? 'auto 1fr auto' : 'minmax(0,1fr) auto minmax(0,1fr)',
+          gridTemplateColumns: 'auto 1fr auto',
           alignItems: 'center',
           gap: '8px',
-          zIndex: 1,
         }}
       >
         {/* ── Column 1: Logo icon ── */}
@@ -173,10 +120,10 @@ export default function TopBar() {
           </Link>
         </div>
 
-        {/* ── Column 2: intrinsico wordmark OR stock identity + tabs ── */}
+        {/* ── Column 2: centered search OR stock identity + tabs ── */}
         {stockNav ? (
           <div className="flex items-center min-w-0 gap-0">
-            {/* Identity + price — fixed left section */}
+            {/* Identity + price */}
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pr-2 sm:pr-4 border-r border-slate-100 mr-1">
               <button
                 onClick={() => router.push('/analyze')}
@@ -208,7 +155,7 @@ export default function TopBar() {
               )}
             </div>
 
-            {/* Tabs — horizontally scrollable strip */}
+            {/* Tabs */}
             <div className="flex overflow-x-auto scrollbar-hide" role="tablist">
               {STOCK_TABS.map(({ id, label, count }) => {
                 const active = stockNav.activeTab === id
@@ -243,101 +190,175 @@ export default function TopBar() {
             </div>
           </div>
         ) : (
-          <Link href="/" className="flex items-center justify-center">
-            <span
-              className="font-black whitespace-nowrap"
-              style={{
-                fontSize: '17px',
-                letterSpacing: '-0.04em',
-                background: 'linear-gradient(135deg, #0F172A 20%, #1E40AF 65%, #2563EB 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              intrinsico
-            </span>
-          </Link>
-        )}
+          /* Wide centered search for non-stock pages */
+          <div className="flex justify-center">
+            <div className="relative" ref={searchRef} style={{ width: 'clamp(200px, 42vw, 480px)' }}>
+              <div
+                className="flex items-center gap-2 rounded-xl px-3 py-1.5 transition-all border"
+                style={{
+                  background: 'rgba(255,255,255,0.55)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  borderColor: open ? 'rgba(99,102,241,0.35)' : 'rgba(148,163,184,0.35)',
+                  boxShadow: open ? '0 0 0 3px rgba(99,102,241,0.08)' : 'none',
+                }}
+              >
+                {loading ? (
+                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-blue-500 shrink-0" />
+                ) : (
+                  <svg className="h-3.5 w-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
+                  </svg>
+                )}
+                <input
+                  type="text"
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && query.trim()) select(query.trim().toUpperCase()) }}
+                  placeholder="Search tickers…"
+                  className="flex-1 min-w-0 bg-transparent text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none"
+                />
+              </div>
 
-        {/* ── Column 3: Search + clock + auth (right-aligned) ── */}
-        <div className="flex items-center gap-2 sm:gap-3 justify-end min-w-0">
-
-          {/* Search */}
-          <div className="relative" ref={searchRef} style={{ width: 'clamp(90px, 28vw, 220px)' }}>
-            <div
-              className="flex items-center gap-2 rounded-xl px-3 py-1.5 transition-all border"
-              style={{
-                background: 'rgba(255,255,255,0.55)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-                borderColor: open ? 'rgba(99,102,241,0.35)' : 'rgba(148,163,184,0.35)',
-                boxShadow: open ? '0 0 0 3px rgba(99,102,241,0.08)' : 'none',
-              }}
-            >
-              {loading ? (
-                <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-blue-500 shrink-0" />
-              ) : (
-                <svg className="h-3.5 w-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
-                </svg>
-              )}
-              <input
-                type="text"
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && query.trim()) select(query.trim().toUpperCase()) }}
-                placeholder="Search tickers…"
-                className="flex-1 min-w-0 bg-transparent text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none"
-              />
-            </div>
-
-            <AnimatePresence>
-              {open && (
-                <motion.div
-                  key="search-dropdown"
-                  variants={reduced ? {} : slideDown}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  style={{ originY: 0 }}
-                  className="absolute right-0 top-full mt-1 w-[min(300px,calc(100vw-32px))] overflow-hidden glass-card-light rounded-xl z-50 max-h-[70vh] overflow-y-auto"
-                >
+              <AnimatePresence>
+                {open && (
                   <motion.div
-                    variants={reduced ? {} : { visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } } }}
+                    key="search-dropdown"
+                    variants={reduced ? {} : slideDown}
                     initial="hidden"
                     animate="visible"
+                    exit="exit"
+                    style={{ originY: 0 }}
+                    className="absolute left-0 right-0 top-full mt-1 overflow-hidden glass-card-light rounded-xl z-50 max-h-[70vh] overflow-y-auto"
                   >
-                    {results.map(r => (
-                      <motion.button
-                        key={r.symbol}
-                        variants={reduced ? {} : { hidden: { opacity: 0, x: -6 }, visible: { opacity: 1, x: 0, transition: { duration: 0.18 } } }}
-                        onClick={() => select(r.symbol)}
-                        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-50 border-b border-slate-100 last:border-b-0 transition-colors"
-                      >
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-[14px] font-bold text-slate-800 font-mono">{r.symbol}</span>
-                            {r.exchange && (
-                              <span className="text-[10px] text-slate-400 font-medium uppercase">{r.exchange}</span>
-                            )}
+                    <motion.div
+                      variants={reduced ? {} : { visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } } }}
+                      initial="hidden"
+                      animate="visible"
+                    >
+                      {results.map(r => (
+                        <motion.button
+                          key={r.symbol}
+                          variants={reduced ? {} : { hidden: { opacity: 0, x: -6 }, visible: { opacity: 1, x: 0, transition: { duration: 0.18 } } }}
+                          onClick={() => select(r.symbol)}
+                          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-50 border-b border-slate-100 last:border-b-0 transition-colors"
+                        >
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className="text-[14px] font-bold text-slate-800 font-mono">{r.symbol}</span>
+                              {r.exchange && (
+                                <span className="text-[10px] text-slate-400 font-medium uppercase">{r.exchange}</span>
+                              )}
+                            </div>
+                            <span className="text-[12px] text-slate-500 truncate block">{r.longname ?? r.shortname}</span>
                           </div>
-                          <span className="text-[12px] text-slate-500 truncate block">{r.longname ?? r.shortname}</span>
-                        </div>
-                        {r.quoteType && (
-                          <span className="shrink-0 text-[11px] font-medium text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
-                            {r.quoteType === 'EQUITY' ? 'Equity' : r.quoteType === 'ETF' ? 'ETF' : r.quoteType === 'INDEX' ? 'Index' : r.quoteType}
-                          </span>
-                        )}
-                      </motion.button>
-                    ))}
+                          {r.quoteType && (
+                            <span className="shrink-0 text-[11px] font-medium text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
+                              {r.quoteType === 'EQUITY' ? 'Equity' : r.quoteType === 'ETF' ? 'ETF' : r.quoteType === 'INDEX' ? 'Index' : r.quoteType}
+                            </span>
+                          )}
+                        </motion.button>
+                      ))}
+                    </motion.div>
                   </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
+        )}
 
-          <LiveClock />
+        {/* ── Column 3: watchlist button (stock only) + search (stock only) + auth ── */}
+        <div className="flex items-center gap-2 sm:gap-3 justify-end min-w-0">
+
+          {/* "Add to watchlist" — only on stock pages */}
+          {stockNav && (
+            <button
+              onClick={() => onSaveRef.current?.()}
+              className="hidden sm:flex items-center gap-1.5 text-[12px] font-semibold text-white px-3 py-1.5 rounded-lg transition-all whitespace-nowrap"
+              style={{ background: 'linear-gradient(135deg, #1E40AF 0%, #2563EB 100%)', boxShadow: '0 1px 4px rgba(37,99,235,0.25)' }}
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Save analysis
+            </button>
+          )}
+
+          {/* Compact search input for stock pages */}
+          {stockNav && (
+            <div className="relative hidden md:block" ref={searchRef} style={{ width: 'clamp(120px, 18vw, 200px)' }}>
+              <div
+                className="flex items-center gap-2 rounded-xl px-3 py-1.5 transition-all border"
+                style={{
+                  background: 'rgba(255,255,255,0.55)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  borderColor: open ? 'rgba(99,102,241,0.35)' : 'rgba(148,163,184,0.35)',
+                  boxShadow: open ? '0 0 0 3px rgba(99,102,241,0.08)' : 'none',
+                }}
+              >
+                {loading ? (
+                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-blue-500 shrink-0" />
+                ) : (
+                  <svg className="h-3.5 w-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
+                  </svg>
+                )}
+                <input
+                  type="text"
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && query.trim()) select(query.trim().toUpperCase()) }}
+                  placeholder="Search…"
+                  className="flex-1 min-w-0 bg-transparent text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none"
+                />
+              </div>
+
+              <AnimatePresence>
+                {open && (
+                  <motion.div
+                    key="search-dropdown-stock"
+                    variants={reduced ? {} : slideDown}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    style={{ originY: 0 }}
+                    className="absolute right-0 top-full mt-1 w-[min(300px,calc(100vw-32px))] overflow-hidden glass-card-light rounded-xl z-50 max-h-[70vh] overflow-y-auto"
+                  >
+                    <motion.div
+                      variants={reduced ? {} : { visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } } }}
+                      initial="hidden"
+                      animate="visible"
+                    >
+                      {results.map(r => (
+                        <motion.button
+                          key={r.symbol}
+                          variants={reduced ? {} : { hidden: { opacity: 0, x: -6 }, visible: { opacity: 1, x: 0, transition: { duration: 0.18 } } }}
+                          onClick={() => select(r.symbol)}
+                          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-50 border-b border-slate-100 last:border-b-0 transition-colors"
+                        >
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className="text-[14px] font-bold text-slate-800 font-mono">{r.symbol}</span>
+                              {r.exchange && (
+                                <span className="text-[10px] text-slate-400 font-medium uppercase">{r.exchange}</span>
+                              )}
+                            </div>
+                            <span className="text-[12px] text-slate-500 truncate block">{r.longname ?? r.shortname}</span>
+                          </div>
+                          {r.quoteType && (
+                            <span className="shrink-0 text-[11px] font-medium text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
+                              {r.quoteType === 'EQUITY' ? 'Equity' : r.quoteType === 'ETF' ? 'ETF' : r.quoteType === 'INDEX' ? 'Index' : r.quoteType}
+                            </span>
+                          )}
+                        </motion.button>
+                      ))}
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
 
           {session ? (
             <div className="flex items-center gap-2 shrink-0">
@@ -374,18 +395,5 @@ export default function TopBar() {
         </div>
       </div>
     </header>
-  )
-}
-
-function LiveClock() {
-  const [time, setTime] = useState<string>('')
-  useEffect(() => {
-    const tick = () => setTime(new Date().toLocaleTimeString('en-US', { hour12: false }))
-    tick()
-    const id = setInterval(tick, 1000)
-    return () => clearInterval(id)
-  }, [])
-  return (
-    <span className="font-mono text-[11px] text-slate-400 tabular-nums tracking-wider hidden lg:block whitespace-nowrap">{time}</span>
   )
 }
