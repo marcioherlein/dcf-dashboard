@@ -320,7 +320,7 @@ function StockPageBody() {
       {/* Session-based soft auth nudge (appears on 2nd+ stock page view) */}
       <AuthBanner />
 
-      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 pb-16">
+      <div className="px-4 sm:px-6 lg:px-8 pb-16">
 
         {loading && (
           <div className="pt-5 space-y-4 animate-pulse">
