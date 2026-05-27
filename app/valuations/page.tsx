@@ -4,18 +4,12 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { loadWatchlist, saveWatchlistEntry, deleteWatchlistEntry } from '@/lib/simplifier/watchlistStore'
 import type { WatchlistEntry, ListTag } from '@/lib/simplifier/types'
-import { fmtPrice, fmtPct, fmtLargeCurrency } from '@/lib/formatters'
+import { fmtPrice, fmtPct } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import { GroupTabs } from '@/components/valuations/GroupTabs'
 import { ValuationTable } from '@/components/valuations/ValuationTable'
 
 // ── Card view (grid toggle) ───────────────────────────────────────────────────
-
-const TAG_STYLES = {
-  buy:   'bg-emerald-100 text-emerald-700',
-  watch: 'bg-amber-100 text-amber-700',
-  pass:  'bg-red-100 text-red-700',
-}
 
 function ScoreBar({ score }: { score: number | null }) {
   if (score == null) return null
@@ -34,65 +28,72 @@ function ScoreBar({ score }: { score: number | null }) {
 function ValuationCard({ entry }: { entry: WatchlistEntry }) {
   const upsidePct = entry.snapshot.upsidePct
   const price     = entry.snapshot.price
-  const marketCap = entry.snapshot.marketCap
-  const updatedAt = new Date(entry.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+  const fv        = entry.snapshot.fairValue
+  const updatedAt = new Date(entry.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' })
+  const isUp      = upsidePct != null && upsidePct >= 0
+
+  const TAG_BG: Record<NonNullable<ListTag>, string> = {
+    buy:   'bg-emerald-500 text-white',
+    watch: 'bg-amber-400 text-white',
+    pass:  'bg-slate-400 text-white',
+  }
 
   return (
-    <div className="rounded-xl bg-white border border-slate-200 p-5 flex flex-col gap-3 hover:border-blue-200 hover:shadow-sm transition-all">
+    <div className="rounded-xl bg-white border border-slate-200 p-4 flex flex-col gap-3 hover:border-blue-200 hover:shadow-md transition-all group">
+      {/* Top: ticker + tag + upside */}
       <div className="flex items-start justify-between gap-2">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-base font-bold text-slate-900 font-mono">{entry.ticker}</span>
-            {entry.listTag && (
-              <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide', TAG_STYLES[entry.listTag])}>
-                {entry.listTag}
-              </span>
-            )}
-          </div>
-          <p className="text-[12px] text-slate-500 mt-0.5 truncate max-w-[200px]">{entry.companyName}</p>
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-base font-black text-slate-900 font-mono tracking-tight">{entry.ticker}</span>
+          {entry.listTag && (
+            <span className={cn('rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider shrink-0', TAG_BG[entry.listTag])}>
+              {entry.listTag}
+            </span>
+          )}
         </div>
         {upsidePct != null && (
-          <span className={cn('text-sm font-bold font-mono shrink-0', upsidePct >= 0 ? 'text-emerald-600' : 'text-red-600')}>
-            {fmtPct(upsidePct)}
-          </span>
-        )}
-      </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        {price != null && (
-          <div>
-            <p className="text-[10px] text-slate-400 uppercase tracking-wider">Price</p>
-            <p className="text-[13px] font-mono font-semibold text-slate-800">{fmtPrice(price, 'USD')}</p>
-          </div>
-        )}
-        {entry.snapshot.fairValue != null && (
-          <div>
-            <p className="text-[10px] text-slate-400 uppercase tracking-wider">Fair Value</p>
-            <p className="text-[13px] font-mono font-semibold text-slate-800">{fmtPrice(entry.snapshot.fairValue, 'USD')}</p>
-          </div>
-        )}
-        {entry.snapshot.fairValue == null && marketCap != null && (
-          <div>
-            <p className="text-[10px] text-slate-400 uppercase tracking-wider">Market Cap</p>
-            <p className="text-[13px] font-mono font-semibold text-slate-800">{fmtLargeCurrency(marketCap, 'USD')}</p>
+          <div className={cn('flex items-center gap-0.5 shrink-0 text-lg font-black font-mono tabular-nums', isUp ? 'text-emerald-500' : 'text-red-500')}>
+            <span className="text-sm">{isUp ? '▲' : '▼'}</span>
+            {fmtPct(Math.abs(upsidePct))}
           </div>
         )}
       </div>
 
+      {/* Company name */}
+      <p className="text-[11px] text-slate-400 -mt-1 truncate">{entry.companyName}</p>
+
+      {/* Price vs Fair Value */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-slate-50 rounded-lg px-3 py-2">
+          <p className="text-[9px] text-slate-400 uppercase tracking-wider mb-0.5">Price</p>
+          <p className="text-sm font-bold font-mono text-slate-700">{price != null ? fmtPrice(price, 'USD') : '—'}</p>
+        </div>
+        <div className={cn('rounded-lg px-3 py-2', fv != null ? (isUp ? 'bg-emerald-50' : 'bg-red-50') : 'bg-slate-50')}>
+          <p className="text-[9px] text-slate-400 uppercase tracking-wider mb-0.5">Fair Value</p>
+          <p className={cn('text-sm font-bold font-mono', fv != null ? (isUp ? 'text-emerald-600' : 'text-red-600') : 'text-slate-400')}>
+            {fv != null ? fmtPrice(fv, 'USD') : '—'}
+          </p>
+        </div>
+      </div>
+
+      {/* Thesis score */}
       {entry.overallScore != null && (
         <div>
-          <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Thesis score</p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-[9px] text-slate-400 uppercase tracking-wider">Thesis score</p>
+            <span className="text-[10px] font-bold font-mono text-slate-500">{Math.round(entry.overallScore * 100)}%</span>
+          </div>
           <ScoreBar score={entry.overallScore} />
         </div>
       )}
 
-      <div className="flex items-center justify-between pt-1 border-t border-slate-100">
-        <span className="text-[11px] text-slate-400">Updated {updatedAt}</span>
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-1 border-t border-slate-100 mt-auto">
+        <span className="text-[10px] text-slate-300">{updatedAt}</span>
         <Link
           href={`/stock/${entry.ticker}`}
-          className="text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+          className="text-[11px] font-bold text-blue-600 hover:text-blue-700 transition-colors"
         >
-          Reopen analysis →
+          Reopen →
         </Link>
       </div>
     </div>
@@ -155,6 +156,12 @@ export default function ValuationsPage() {
     ? entries.filter((e) => e.groupName === activeGroup)
     : entries
 
+  // Summary bar stats
+  const buys = entries.filter((e) => e.listTag === 'buy')
+  const avgBuyUpside = buys.length > 0
+    ? buys.reduce((s, e) => s + (e.snapshot.upsidePct ?? 0), 0) / buys.length
+    : null
+
   // ── Mutation handlers ──────────────────────────────────────────────────────
   const handleDelete = async (ticker: string) => {
     await deleteWatchlistEntry(ticker, null)
@@ -187,49 +194,66 @@ export default function ValuationsPage() {
     <div className="min-h-screen bg-[#F8FAFB]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
-        {/* Header */}
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <div>
-            <h1
-              className="text-2xl font-extrabold text-slate-900"
-              style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}
-            >
-              My Valuations
-            </h1>
-            <p className="mt-1 text-sm text-slate-500">
-              {entries.length > 0
-                ? `${entries.length} saved ${entries.length === 1 ? 'analysis' : 'analyses'}`
-                : 'Saved analyses from your research'}
-            </p>
+        {/* Premium header banner */}
+        <div className="rounded-2xl bg-gradient-to-br from-slate-900 to-blue-950 px-6 py-5 mb-6 text-white">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-extrabold tracking-tight" style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>
+                My Valuations
+              </h1>
+              <p className="mt-0.5 text-sm text-white/60">
+                {entries.length > 0
+                  ? `${entries.length} saved ${entries.length === 1 ? 'analysis' : 'analyses'}`
+                  : 'Save analyses from any stock page to track conviction'}
+              </p>
+            </div>
+
+            {/* View toggle */}
+            {entries.length > 0 && (
+              <div className="flex items-center gap-1 bg-white/10 rounded-lg p-1 shrink-0">
+                <button
+                  onClick={() => setView('table')}
+                  title="Table view"
+                  className={cn('p-1.5 rounded-md transition-colors', view === 'table' ? 'bg-white text-slate-900' : 'text-white/60 hover:text-white')}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setView('grid')}
+                  title="Grid view"
+                  className={cn('p-1.5 rounded-md transition-colors', view === 'grid' ? 'bg-white text-slate-900' : 'text-white/60 hover:text-white')}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* View toggle */}
+          {/* Stats row */}
           {entries.length > 0 && (
-            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1 shrink-0">
-              <button
-                onClick={() => setView('table')}
-                title="Table view"
-                className={cn(
-                  'p-1.5 rounded-md transition-colors',
-                  view === 'table' ? 'bg-slate-900 text-white' : 'text-slate-400 hover:text-slate-600',
-                )}
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                </svg>
-              </button>
-              <button
-                onClick={() => setView('grid')}
-                title="Grid view"
-                className={cn(
-                  'p-1.5 rounded-md transition-colors',
-                  view === 'grid' ? 'bg-slate-900 text-white' : 'text-slate-400 hover:text-slate-600',
-                )}
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-              </button>
+            <div className="flex flex-wrap gap-6 mt-4 pt-4 border-t border-white/10">
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-white/40 mb-0.5">Tracked</p>
+                <p className="text-xl font-black tabular-nums">{entries.length}</p>
+              </div>
+              {buys.length > 0 && (
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-white/40 mb-0.5">Conviction Buys</p>
+                  <p className="text-xl font-black tabular-nums text-emerald-400">{buys.length}</p>
+                </div>
+              )}
+              {avgBuyUpside != null && (
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-white/40 mb-0.5">Avg Upside (Buys)</p>
+                  <p className={cn('text-xl font-black tabular-nums', avgBuyUpside >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                    {avgBuyUpside >= 0 ? '+' : ''}{(avgBuyUpside * 100).toFixed(0)}%
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

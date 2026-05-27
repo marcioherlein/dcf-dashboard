@@ -9,6 +9,7 @@ interface Props {
   currency: string
   ticker: string
   onViewFullDCF?: () => void
+  onSave?: () => void
 }
 
 const VERDICT_COLORS = {
@@ -112,7 +113,7 @@ function ModelAnalysis({ methods, blendedFairValue, currentPrice, currency }: {
   )
 }
 
-export default function RightSidebar({ output, currentPrice, currency, ticker, onViewFullDCF }: Props) {
+export default function RightSidebar({ output, currentPrice, currency, ticker: _ticker, onViewFullDCF, onSave }: Props) {
   const vc = VERDICT_COLORS[output.verdict]
   const ds = DIVERGENCE_STYLE[output.divergence.level]
 
@@ -139,16 +140,23 @@ export default function RightSidebar({ output, currentPrice, currency, ticker, o
         />
       </div>
 
+      {/* Save Analysis — prominent gradient CTA */}
+      {onSave && (
+        <button
+          onClick={onSave}
+          className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-bold text-sm py-2.5 px-4 transition-all shadow-lg shadow-blue-900/40 flex items-center justify-center gap-2"
+        >
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+          </svg>
+          Save Analysis
+        </button>
+      )}
+
       {/* Quick Actions — minimal, no duplicate of bottom CTA */}
       <div>
         <p className="text-xs font-bold uppercase tracking-wider text-white/60 mb-2">Quick Actions</p>
         <div className="flex flex-col gap-1.5">
-          <a
-            href={`/simplifier/${ticker}`}
-            className="text-xs font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg px-3 py-2 transition-colors"
-          >
-            Save valuation →
-          </a>
           <button
             onClick={() => {
               if (output.blendedFairValue != null) {

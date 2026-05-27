@@ -496,7 +496,7 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
           <SensitivityTable
             baseFCF={sensitivityBaseFCF}
             baseWacc={isLfcf ? baseInput.costOfEquity : wacc}
-            baseCagr={Number.isFinite(sensitivityCagr) ? sensitivityCagr : cagr}
+            baseCagr={cagr}
             terminalG={terminalG}
             cashM={isLfcf ? 0 : (baseInput.cashM ?? 0)}
             debtM={isLfcf ? 0 : (baseInput.debtM ?? 0)}

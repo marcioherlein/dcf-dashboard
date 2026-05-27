@@ -135,19 +135,24 @@ function computeBlendedFV(
   if (snapshot.baseFCF > 0 && snapshot.sharesM > 0) {
     const g = Math.min(Math.max(assumptions.terminalG, 0.005), assumptions.wacc - 0.02)
     if (g > 0 && g < assumptions.wacc) {
+      const years = 10
       const dcf = projectCashFlows({
         baseFCF: snapshot.baseFCF,
         cagr: assumptions.cagr,
         wacc: assumptions.wacc,
         terminalG: g,
+        years,
         growthModel: snapshot.growthModel,
       })
-      if (dcf.ev != null) {
-        const equity = dcf.ev + snapshot.cashM - snapshot.debtM
+      if (dcf.ev != null && dcf.projections.length > 0) {
+        const lastCF = dcf.projections[dcf.projections.length - 1].cashFlow
+        // Exit-multiple terminal value (matches Full DCF Table UFCF×ExitMultiple method)
+        const tvExit = (lastCF * assumptions.exitMultiple) / Math.pow(1 + assumptions.wacc, years)
+        // 50% PGM (Gordon Growth) + 50% Exit Multiple — matches Full DCF Table UFCF blend
+        const evBlended = (dcf.ev + (dcf.sumPV + tvExit)) / 2
+        const equity = evBlended + snapshot.cashM - snapshot.debtM
         const raw = Math.round((equity / snapshot.sharesM) * 100) / 100
         if (raw > 0) {
-          // Cap at 10× price to prevent terminal-value explosion from dominating the blend,
-          // but always include so scenarios (Bull/Bear) stay monotonic vs Base.
           dcfFV = currentPrice > 0 ? Math.min(raw, currentPrice * 10) : raw
         }
       }
@@ -394,23 +399,29 @@ export function computeCockpitOutput(
     dividendYield: snapshot.dividendYield,
   })
 
-  // 4. Core DCF (UFCF + PGM)
-  // Fix 1: require 200bps minimum spread between WACC and terminal growth
-  // Cap at 10× price to prevent terminal-value explosion from excluding DCF in Bull scenarios
+  // 4. Core DCF (UFCF blend: 50% PGM + 50% Exit Multiple terminal value)
+  // Matches the UFCF portion of the Full DCF Table. 200bps minimum WACC-g spread; capped at 10× price.
   let dcfFV: number | null = null
   let dcfErrors: string[] = []
   if (snapshot.baseFCF > 0 && snapshot.sharesM > 0) {
     const g = Math.min(Math.max(assumptions.terminalG, 0.005), assumptions.wacc - 0.02)
     if (g > 0 && g < assumptions.wacc) {
+      const years = 10
       const dcf = projectCashFlows({
         baseFCF: snapshot.baseFCF,
         cagr: assumptions.cagr,
         wacc: assumptions.wacc,
         terminalG: g,
+        years,
         growthModel: snapshot.growthModel,
       })
-      if (dcf.ev != null) {
-        const equity = dcf.ev + snapshot.cashM - snapshot.debtM
+      if (dcf.ev != null && dcf.projections.length > 0) {
+        const lastCF = dcf.projections[dcf.projections.length - 1].cashFlow
+        // Exit-multiple terminal value (matches Full DCF Table UFCF×ExitMultiple method)
+        const tvExit = (lastCF * assumptions.exitMultiple) / Math.pow(1 + assumptions.wacc, years)
+        // 50% PGM (Gordon Growth) + 50% Exit Multiple — same blend as Full DCF Table UFCF section
+        const evBlended = (dcf.ev + (dcf.sumPV + tvExit)) / 2
+        const equity = evBlended + snapshot.cashM - snapshot.debtM
         const raw = Math.round((equity / snapshot.sharesM) * 100) / 100
         if (raw <= 0) {
           dcfErrors = ['Implied equity value non-positive']
@@ -420,7 +431,7 @@ export function computeCockpitOutput(
           dcfFV = Math.min(raw, cap)
         }
       } else {
-        dcfErrors = ['Terminal growth violation']
+        dcfErrors = dcf.terminalGrowthViolation ? ['Terminal growth violation'] : ['No cash flow projections']
       }
     } else {
       dcfErrors = ['Terminal growth rate too close to WACC — result unreliable']
@@ -439,7 +450,7 @@ export function computeCockpitOutput(
       fairValue: fwdPE.fairValueToday ?? null,
       weight: WEIGHTS.forward_pe,
       confidence: fwdPE.guardErrors.length === 0 ? 'high' : 'low',
-      description: 'Discounts 5Y earnings at exit P/E multiple back to present value',
+      description: 'Projects revenue × exit net margin to year 5, applies exit P/E, discounts back at WACC. Assumes margin expands to exit-year level.',
       upsidePct: upside(fwdPE.fairValueToday ?? null),
       errors: fwdPE.guardErrors,
     },
@@ -449,7 +460,7 @@ export function computeCockpitOutput(
       fairValue: evEbitda.fairValuePerShare ?? null,
       weight: WEIGHTS.ev_ebitda,
       confidence: evEbitda.guardErrors.length === 0 ? 'high' : 'low',
-      description: 'Values the enterprise at a multiple of operating cash profit',
+      description: 'Snapshot: TTM EBITDA × exit multiple − net debt. No growth projection — most reliable for stable-margin companies.',
       upsidePct: upside(evEbitda.fairValuePerShare ?? null),
       errors: evEbitda.guardErrors,
     },
@@ -459,7 +470,7 @@ export function computeCockpitOutput(
       fairValue: revMult.fairValueToday ?? null,
       weight: WEIGHTS.revenue_multiple,
       confidence: revMult.guardErrors.length === 0 ? 'medium' : 'low',
-      description: 'Projects revenue to exit year and applies EV/Revenue multiple',
+      description: 'Projects 5Y revenue at CAGR, applies EV/Revenue multiple at exit, discounts equity back. Best suited for pre-profit or high-growth companies.',
       upsidePct: upside(revMult.fairValueToday ?? null),
       errors: revMult.guardErrors,
     },
@@ -469,7 +480,7 @@ export function computeCockpitOutput(
       fairValue: dcfFV,
       weight: WEIGHTS.core_dcf,
       confidence: dcfFV != null ? 'medium' : 'low',
-      description: 'Unlevered free cash flow DCF with perpetuity growth terminal value',
+      description: 'UFCF blend: 50% Gordon Growth (PGM) + 50% Exit Multiple terminal value. Matches the Full DCF Table\'s UFCF methodology — see it below for year-by-year detail.',
       upsidePct: upside(dcfFV),
       errors: dcfErrors,
     },

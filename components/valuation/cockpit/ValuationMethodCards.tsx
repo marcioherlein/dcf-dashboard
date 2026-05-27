@@ -29,7 +29,13 @@ export default function ValuationMethodCards({ methods, currentPrice: _currentPr
 
   return (
     <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-4">
-      <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Valuation Models</p>
+      <div className="flex items-center gap-1.5 mb-4">
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Valuation Models</p>
+        <span
+          title="Weights (35/30/25/10) follow a Damodaran-inspired blend emphasising earnings-based multiples. Weights are redistributed proportionally when a method lacks data."
+          className="w-3.5 h-3.5 rounded-full bg-slate-100 text-slate-400 text-[9px] font-bold flex items-center justify-center cursor-help select-none shrink-0"
+        >?</span>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {methods.map(m => {
           const conf = CONFIDENCE_STYLE[m.confidence]

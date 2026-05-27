@@ -17,6 +17,8 @@ import ScenarioCards from './cockpit/ScenarioCards'
 import ValuationMethodCards from './cockpit/ValuationMethodCards'
 import ModelDivergencePanel from './cockpit/ModelDivergencePanel'
 import RightSidebar from './cockpit/RightSidebar'
+import SaveToWatchlistDialog from '@/components/watchlist/SaveToWatchlistDialog'
+import type { WatchlistSavePayload } from '@/components/watchlist/SaveToWatchlistDialog'
 
 const ModellingWorkspace = dynamic(
   () => import('@/components/modelling/ModellingWorkspace'),
@@ -160,6 +162,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
   const [assumptions, setAssumptions] = useState<ValuationAssumptions>(() => seedAssumptions(apiData))
   const [history, setHistory] = useState<ValuationAssumptions[]>([])
   const [dcfOpened, setDcfOpened] = useState(false)
+  const [saveOpen, setSaveOpen] = useState(false)
 
   const output = useMemo(
     () => computeCockpitOutput(assumptions, snapshot),
@@ -174,6 +177,38 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
   const currency     = apiData.quote?.currency === 'USD' ? '$' : (apiData.quote?.currency ?? '$') + ' '
   const currentPrice = apiData.quote?.price ?? 0
   const changePct    = apiData.quote?.changePct ?? null
+
+  const savePayload: WatchlistSavePayload = useMemo(() => ({
+    ticker,
+    name: apiData.quote?.longName ?? apiData.quote?.shortName ?? ticker,
+    assetType: 'stock',
+    fairValue: output.blendedFairValue,
+    upsidePct: output.upsidePct,
+    valuationSnapshot: output.blendedFairValue != null ? {
+      price_at_save: currentPrice,
+      fair_value: output.blendedFairValue,
+      wacc: assumptions.wacc,
+      beta: apiData.quote?.beta ?? 1,
+      terminal_g: assumptions.terminalG,
+      cagr: assumptions.cagr,
+      upside_pct: output.upsidePct ?? 0,
+      inputs: {
+        wacc: assumptions.wacc,
+        cagr: assumptions.cagr,
+        terminalG: assumptions.terminalG,
+        netMargin: assumptions.netMargin,
+        exitPE: assumptions.exitPE,
+        exitMultiple: assumptions.exitMultiple,
+        revenueMultiple: assumptions.revenueMultiple,
+      },
+      scenarios: {
+        bull: output.scenarios.bull.fairValue ?? 0,
+        base: output.scenarios.base.fairValue ?? 0,
+        bear: output.scenarios.bear.fairValue ?? 0,
+      },
+    } : null,
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [ticker, output, assumptions, currentPrice, apiData.quote])
 
   const fullDcfRef        = useRef<HTMLDetailsElement>(null)
   const assumptionsPanelRef = useRef<HTMLDivElement>(null)
@@ -201,6 +236,15 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
 
   return (
     <div className="space-y-4">
+      <SaveToWatchlistDialog
+        open={saveOpen}
+        payload={savePayload}
+        onClose={() => setSaveOpen(false)}
+        onReviewAssumptions={() => {
+          setSaveOpen(false)
+          assumptionsPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }}
+      />
       {/* 5-item summary strip */}
       <SummaryCards
         output={output}
@@ -233,6 +277,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
           currency={currency}
           ticker={ticker}
           onViewFullDCF={scrollToFullDCF}
+          onSave={() => setSaveOpen(true)}
         />
       </div>
 
@@ -284,14 +329,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
       {/* End-of-page CTA */}
       <div className="rounded-xl bg-white border border-slate-100 shadow-sm px-5 py-5">
         <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">What do you want to do next?</p>
-        <div className={`grid grid-cols-1 gap-3 ${onNavigateToFinancials ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
-          <a
-            href={`/simplifier/${ticker}`}
-            className="flex flex-col gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 hover:bg-emerald-100 transition-colors"
-          >
-            <span className="text-sm font-bold text-emerald-700">Save valuation →</span>
-            <span className="text-xs text-slate-500">Track when the price hits your fair value estimate</span>
-          </a>
+        <div className={`grid grid-cols-1 gap-3 ${onNavigateToFinancials ? 'sm:grid-cols-2' : 'sm:grid-cols-1'}`}>
           <button
             onClick={scrollToFullDCF}
             className="flex flex-col gap-1 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 hover:bg-blue-100 transition-colors text-left"
