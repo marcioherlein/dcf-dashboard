@@ -155,22 +155,32 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
     .filter(r => r.revenue != null && r.revenue > 0 && r.netIncome != null)
     .map(r => ({ label: String(r.year), value: r.netIncome! / r.revenue! }))
 
+  // Year-by-year multiples from FMP key metrics (last 5 fiscal years)
+  const histMult: Array<{ fiscalYear: string; pe: number | null; evEbitda: number | null; evRevenue: number | null }> =
+    apiData.historicalMultiples ?? []
+
+  const peCurrent       = apiData.quote?.peRatio ?? null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const multEst: Array<{ multiple: string; actualValue: number }> =
     apiData.valuationMethods?.models?.multiples?.estimates ?? []
   const evEbitdaCurrent = multEst.find(e => e.multiple === 'EV/EBITDA')?.actualValue ?? null
   const evRevCurrent    = multEst.find(e => e.multiple === 'EV/Revenue')?.actualValue ?? null
-  const peCurrent       = apiData.quote?.peRatio ?? null
+
+  const peSeries     = histMult.filter(h => h.pe != null).slice(-5).map(h => ({ label: String(h.fiscalYear), value: h.pe! }))
+  const ebitdaSeries = histMult.filter(h => h.evEbitda != null).slice(-5).map(h => ({ label: String(h.fiscalYear), value: h.evEbitda! }))
+  const revSeries    = histMult.filter(h => h.evRevenue != null).slice(-5).map(h => ({ label: String(h.fiscalYear), value: h.evRevenue! }))
+
+  // Append current TTM value as 'curr' point (blue dot to the right of the historical line)
+  if (peCurrent != null && peCurrent > 0 && peCurrent < 300) peSeries.push({ label: 'curr', value: peCurrent })
+  if (evEbitdaCurrent != null && evEbitdaCurrent > 0) ebitdaSeries.push({ label: 'curr', value: evEbitdaCurrent })
+  if (evRevCurrent != null && evRevCurrent > 0) revSeries.push({ label: 'curr', value: evRevCurrent })
 
   return {
     cagr:            cagrPoints.length >= 2 ? cagrPoints.slice(-5) : undefined,
     netMargin:       netMarginPoints.length >= 2 ? netMarginPoints.slice(-5) : undefined,
-    exitPE:          peCurrent != null && peCurrent > 0 && peCurrent < 300
-                       ? [{ label: 'curr', value: peCurrent }] : undefined,
-    exitMultiple:    evEbitdaCurrent != null && evEbitdaCurrent > 0
-                       ? [{ label: 'curr', value: evEbitdaCurrent }] : undefined,
-    revenueMultiple: evRevCurrent != null && evRevCurrent > 0
-                       ? [{ label: 'curr', value: evRevCurrent }] : undefined,
+    exitPE:          peSeries.length >= 1 ? peSeries : undefined,
+    exitMultiple:    ebitdaSeries.length >= 1 ? ebitdaSeries : undefined,
+    revenueMultiple: revSeries.length >= 1 ? revSeries : undefined,
   }
 }
 
