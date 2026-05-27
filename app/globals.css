@@ -38,14 +38,24 @@
 
   * {
     border-color: hsl(var(--border));
+    /* Remove iOS tap highlight flash on interactive elements */
+    -webkit-tap-highlight-color: transparent;
   }
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+    /* Prevent pull-to-refresh overscroll in PWA / standalone mode */
+    overscroll-behavior-y: contain;
   }
   html {
     font-family: 'Inter', system-ui, sans-serif;
     scroll-padding-top: 100px;
+    /* Smooth anchor / programmatic scrolling */
+    scroll-behavior: smooth;
+  }
+  /* Prevent iOS from auto-zooming into focused form inputs (requires >= 16px) */
+  input, select, textarea {
+    font-size: max(16px, 1em);
   }
 }
 
@@ -529,6 +539,12 @@ h1, h2, h3 {
   .shadow-card-md  { box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05); }
   .scrollbar-hide  { scrollbar-width: none; -ms-overflow-style: none; }
   .scrollbar-hide::-webkit-scrollbar { display: none; }
+  /* Safe-area padding utilities (iOS home indicator / notch) */
+  .pb-safe         { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .pt-safe         { padding-top: env(safe-area-inset-top, 0px); }
+  .pl-safe         { padding-left: env(safe-area-inset-left, 0px); }
+  .pr-safe         { padding-right: env(safe-area-inset-right, 0px); }
+  .h-safe-bottom   { height: env(safe-area-inset-bottom, 0px); }
   .pb-safe-nav {
     padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
   }
