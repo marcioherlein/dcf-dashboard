@@ -27,6 +27,7 @@ import CardBack from '@/components/ui/CardBack'
 import StockSummaryCard from '@/components/stock/overview/StockSummaryCard'
 import FairValueBar from '@/components/stock/overview/FairValueBar'
 import SignalDivergenceCallout from '@/components/stock/overview/SignalDivergenceCallout'
+import OverviewBottomStrip from '@/components/stock/overview/OverviewBottomStrip'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
@@ -401,7 +402,7 @@ function StockPageBody() {
                   exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
-                  {/* 1. Unified summary card */}
+                  {/* 1. Unified summary card — 4 hero columns */}
                   <StockSummaryCard
                     ticker={data.ticker}
                     companyName={data.companyName}
@@ -416,20 +417,12 @@ function StockPageBody() {
                     low52={data.quote.fiftyTwoWeekLow}
                     fairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? null}
                     upsidePct={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null}
+                    confidenceLabel={data.cagrAnalysis?.confidenceLabel ?? null}
                     scenarios={data.scenarios ?? null}
                     onViewDetails={() => handleTabChange('valuation')}
                   />
 
-                  {/* 1b. Full-width Price vs Fair Value bar */}
-                  <FairValueBar
-                    price={data.quote.price}
-                    fairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? null}
-                    currency={data.quote.currency ?? 'USD'}
-                    bearCase={data.scenarios?.bear?.fairValue ?? null}
-                    bullCase={data.scenarios?.bull?.fairValue ?? null}
-                  />
-
-                  {/* 1c. Signal divergence — only shown when analyst and model disagree */}
+                  {/* 1b. Signal divergence — only shown when analyst and model disagree */}
                   <SignalDivergenceCallout
                     analystRecommendation={data.analystRecommendation ?? ''}
                     analystTargetMean={data.quote.analystTargetMean ?? 0}
@@ -477,10 +470,23 @@ function StockPageBody() {
                       cagrAnalysis={data.cagrAnalysis ?? null}
                       statementsData={statementsData}
                       onViewRisks={() => handleTabChange('risks')}
+                      valuationMethods={data.valuationMethods ?? null}
+                      quote={data.quote}
                     />
                   )}
 
-                  {/* 4. Price chart */}
+                  {/* 4. Bottom decision strip: supports / risks / next step */}
+                  {data.ratings && (
+                    <OverviewBottomStrip
+                      drivers={data.cagrAnalysis?.drivers ?? []}
+                      ratings={data.ratings}
+                      cagrAnalysis={data.cagrAnalysis ?? null}
+                      onViewValuation={() => handleTabChange('valuation')}
+                      onViewRisks={() => handleTabChange('risks')}
+                    />
+                  )}
+
+                  {/* 5. Price chart */}
                   <PriceChart
                     ticker={ticker}
                     isDark={false}

@@ -58,6 +58,10 @@ interface Props {
   cagrAnalysis: CAGRAnalysisData | null
   statementsData: StatementsData | null
   onViewRisks?: () => void
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  valuationMethods?: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  quote?: any
 }
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -398,9 +402,90 @@ function RisksGridCard({ ratings, cagrAnalysis, onViewRisks }: {
   )
 }
 
+// ─── Relative Valuation card ──────────────────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function RelativeValuationCard({ valuationMethods, quote }: { valuationMethods: any; quote: any }) {
+  const estimates: AnyRecord[] = valuationMethods?.multiples?.estimates ?? []
+  const peRatio  = quote?.peRatio  ?? null
+  const pegRatio = quote?.pegRatio ?? null
+
+  const applicable = estimates.filter((e: AnyRecord) => e.applicable && e.actualValue > 0 && e.sectorMedian > 0)
+
+  if (applicable.length === 0 && peRatio == null) return null
+
+  // Derive overall relative valuation signal
+  let expensiveCount = 0, cheapCount = 0
+  applicable.forEach((e: AnyRecord) => {
+    const ratio = e.actualValue / e.sectorMedian
+    if (ratio > 1.25) expensiveCount++
+    else if (ratio < 0.80) cheapCount++
+  })
+
+  let overallLabel: string
+  let overallClass: string
+  if (expensiveCount > applicable.length / 2) {
+    overallLabel = 'Expensive'; overallClass = 'bg-red-50 text-red-700 border-red-200'
+  } else if (cheapCount > applicable.length / 2) {
+    overallLabel = 'Cheap'; overallClass = 'bg-emerald-50 text-emerald-700 border-emerald-200'
+  } else {
+    overallLabel = 'Fair'; overallClass = 'bg-blue-50 text-blue-700 border-blue-200'
+  }
+
+  const LABELS: Record<string, string> = {
+    pe: 'P/E (TTM)', evEbitda: 'EV/EBITDA', evRevenue: 'EV/Revenue', ps: 'P/S'
+  }
+
+  function vsClass(actual: number, median: number): string {
+    const r = actual / median
+    if (r > 1.25) return 'text-red-600'
+    if (r < 0.80) return 'text-emerald-600'
+    return 'text-slate-600'
+  }
+
+  return (
+    <div className="rounded-xl border border-slate-100 bg-white/80 px-4 py-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-[13px]">🏷</span>
+          <span className="text-[11px] font-bold text-slate-700 truncate">Relative Valuation</span>
+        </div>
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap ${overallClass}`}>
+          {overallLabel}
+        </span>
+      </div>
+      <div className="space-y-2">
+        {applicable.slice(0, 3).map((e: AnyRecord) => (
+          <div key={e.multiple} className="flex items-center justify-between">
+            <span className="text-[11px] text-slate-500">{LABELS[e.multiple] ?? e.multiple}</span>
+            <div className="flex items-center gap-2">
+              <span className={`text-[11px] font-semibold tabular-nums ${vsClass(e.actualValue, e.sectorMedian)}`}>
+                {e.actualValue.toFixed(1)}×
+              </span>
+              <span className="text-[9px] text-slate-300">vs</span>
+              <span className="text-[10px] text-slate-400 tabular-nums">{e.sectorMedian.toFixed(1)}×</span>
+            </div>
+          </div>
+        ))}
+        {pegRatio != null && pegRatio > 0 && pegRatio < 100 && (
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-slate-500">PEG (5Y)</span>
+            <span className={`text-[11px] font-semibold tabular-nums ${pegRatio < 1 ? 'text-emerald-600' : pegRatio > 2 ? 'text-red-600' : 'text-slate-600'}`}>
+              {pegRatio.toFixed(2)}×
+            </span>
+          </div>
+        )}
+      </div>
+      {applicable.length > 0 && (
+        <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">vs. sector median</p>
+      )}
+    </div>
+  )
+}
+
 // ─── Main component ────────────────────────────────────────────────────────
 
-export default function OverviewMetricGrid({ ratings, scores, businessProfile, cagrAnalysis, statementsData, onViewRisks }: Props) {
+export default function OverviewMetricGrid({ ratings, scores, businessProfile, cagrAnalysis, statementsData, onViewRisks, valuationMethods, quote }: Props) {
   if (!ratings) return null
 
   return (
@@ -410,7 +495,11 @@ export default function OverviewMetricGrid({ ratings, scores, businessProfile, c
       <ProfitabilityCard ratings={ratings} businessProfile={businessProfile} statementsData={statementsData} />
       <CashConversionCard businessProfile={businessProfile} statementsData={statementsData} />
       <BalanceSheetCard scores={scores ?? {}} statementsData={statementsData} />
-      <RisksGridCard ratings={ratings} cagrAnalysis={cagrAnalysis} onViewRisks={onViewRisks} />
+      {valuationMethods ? (
+        <RelativeValuationCard valuationMethods={valuationMethods} quote={quote} />
+      ) : (
+        <RisksGridCard ratings={ratings} cagrAnalysis={cagrAnalysis} onViewRisks={onViewRisks} />
+      )}
     </div>
   )
 }
