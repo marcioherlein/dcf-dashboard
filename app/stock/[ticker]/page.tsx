@@ -25,7 +25,7 @@ import OverviewMetricGrid from '@/components/stock/OverviewMetricGrid'
 import FlipCard from '@/components/ui/FlipCard'
 import CardBack from '@/components/ui/CardBack'
 import StockSummaryCard from '@/components/stock/overview/StockSummaryCard'
-import FairValueBar from '@/components/stock/overview/FairValueBar'
+
 import SignalDivergenceCallout from '@/components/stock/overview/SignalDivergenceCallout'
 import OverviewBottomStrip from '@/components/stock/overview/OverviewBottomStrip'
 

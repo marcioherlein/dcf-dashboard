@@ -59,14 +59,6 @@ function confidenceDot(label: 'High' | 'Medium' | 'Low') {
   return                         { dot: 'bg-red-400',     text: 'text-red-700',     bg: 'bg-red-50 border-red-200'       }
 }
 
-// Fixed ratio zones — same as FairValueBar
-const RATIO_ZONES = [
-  { label: 'Deep Value',  max: 0.70, barColor: 'bg-emerald-500' },
-  { label: 'Undervalued', max: 0.90, barColor: 'bg-emerald-400' },
-  { label: 'Fair Value',  max: 1.10, barColor: 'bg-blue-400'    },
-  { label: 'Premium',     max: 1.40, barColor: 'bg-amber-400'   },
-  { label: 'Expensive',   max: 2.50, barColor: 'bg-red-400'     },
-]
 
 function zoneLabel(ratio: number): string {
   if (ratio <= 0.70) return 'Deep Value'
