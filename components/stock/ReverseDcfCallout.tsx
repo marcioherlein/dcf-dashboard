@@ -2,6 +2,7 @@
 import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { computeReverseDCF } from '@/lib/valuation/methods/reverseDcf'
+import InfoTooltip from '@/components/ui/InfoTooltip'
 
 interface Props {
   price: number
@@ -73,8 +74,9 @@ export default function ReverseDcfCallout({
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
             What the Market Is Pricing In
           </p>
-          <h3 className="mt-0.5 text-base font-semibold text-slate-900">
+          <h3 className="mt-0.5 text-base font-semibold text-slate-900 flex items-center gap-1">
             Reverse DCF Analysis
+            <InfoTooltip content="Works backward from today's price to estimate the revenue growth rate the market is already pricing in. If the implied growth rate seems unrealistic, the stock may be expensive. Not a buy/sell signal." />
           </h3>
         </div>
         <span className={cn('text-[11px] font-bold px-2.5 py-1 rounded-full border whitespace-nowrap', styles.chip)}>

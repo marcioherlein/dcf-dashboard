@@ -380,9 +380,10 @@ function StockPageBody() {
         {data && !loading && (
           <>
             {/* ── Desktop grid: main content + contextual sidebar ── */}
+            {/* Overview tab is intentionally full-width — decision flow without right-rail clutter */}
             {/* Valuation tab uses single column — ValuationCockpit has its own internal sidebar */}
             <div className={cn(
-              activeTab === 'overview' || activeTab === 'financials' || activeTab === 'risks'
+              activeTab === 'financials'
                 ? 'lg:grid lg:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_400px] lg:gap-6 lg:items-start'
                 : ''
             )}>
@@ -578,8 +579,8 @@ function StockPageBody() {
             </AnimatePresence>
             </div>{/* end main column */}
 
-            {/* Sidebar — desktop only, overview / financials tabs (risks tab: sidebar returns null, no column) */}
-            {(activeTab === 'overview' || activeTab === 'financials') && (
+            {/* Sidebar — desktop only, financials tab only (overview is intentionally full-width) */}
+            {activeTab === 'financials' && (
               <aside className="hidden lg:block">
                 <div className="sticky top-[68px] self-start space-y-3 pb-4 pt-5">
                   <StockSidebar activeTab={activeTab} data={data} statementsData={statementsData} computedScores={computedScores} onNavigateToFinancials={handleNavigateToFinancials} onNavigateToFinancialsSection={handleNavigateToFinancialsSection} />

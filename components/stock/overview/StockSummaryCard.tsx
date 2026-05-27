@@ -1,6 +1,7 @@
 'use client'
 import { cn } from '@/lib/utils'
 import { fmtPrice, fmtPct } from '@/lib/formatters'
+import InfoTooltip from '@/components/ui/InfoTooltip'
 
 interface StockSummaryCardProps {
   ticker: string
@@ -71,14 +72,19 @@ function zoneLabel(ratio: number): string {
 
 function MetricBox({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col', className)}>
+    <div className={cn('bg-white border border-[#E6ECF5] rounded-[18px] p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)] flex flex-col', className)}>
       {children}
     </div>
   )
 }
 
-function BoxLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-2">{children}</p>
+function BoxLabel({ children, tooltip }: { children: React.ReactNode; tooltip?: string }) {
+  return (
+    <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-0.5">
+      {children}
+      {tooltip && <InfoTooltip content={tooltip} />}
+    </p>
+  )
 }
 
 export default function StockSummaryCard({
@@ -141,7 +147,7 @@ export default function StockSummaryCard({
 
       {/* ── Card 2: Intrinsic Value ── */}
       <MetricBox>
-        <BoxLabel>Intrinsic Value (Preliminary)</BoxLabel>
+        <BoxLabel tooltip="An estimate of what the stock may be worth based on our valuation models and assumptions. This is a preliminary figure — use the Valuation tab for the full multi-model analysis.">Intrinsic Value (Preliminary)</BoxLabel>
         {fairValue != null ? (
           <>
             <p className="text-[24px] font-bold tabular-nums text-slate-900 leading-none mb-1">
@@ -187,7 +193,7 @@ export default function StockSummaryCard({
       {/* ── Card 3: Verdict ── */}
       <MetricBox>
         <div className="flex items-start justify-between gap-2 mb-2">
-          <BoxLabel>Verdict (Preliminary)</BoxLabel>
+          <BoxLabel tooltip="The model-based conclusion on whether the stock appears undervalued, fairly valued, or overvalued at today's price, based on intrinsic value estimates.">Verdict (Preliminary)</BoxLabel>
           {conf && confidenceLabel && (
             <span className={cn('flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0', conf.bg, conf.text)}>
               <span className={cn('w-1.5 h-1.5 rounded-full', conf.dot)} />
@@ -207,7 +213,10 @@ export default function StockSummaryCard({
         {upsidePct != null && (
           <div className="flex items-center gap-3 mb-3">
             <div>
-              <p className="text-[9px] text-slate-400 mb-0.5">Margin of Safety</p>
+              <p className="text-[9px] text-slate-400 mb-0.5 flex items-center gap-0.5">
+                Margin of Safety
+                <InfoTooltip content="The gap between the current price and our fair value estimate. A positive margin means the stock trades below fair value. Negative means you're paying a premium." />
+              </p>
               <p className={cn('text-[13px] font-bold tabular-nums', upsidePct >= 0 ? 'text-emerald-600' : 'text-red-600')}>
                 {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
               </p>
@@ -221,7 +230,7 @@ export default function StockSummaryCard({
 
       {/* ── Card 4: Price vs Fair Value ── */}
       <MetricBox>
-        <BoxLabel>Price vs Fair Value</BoxLabel>
+        <BoxLabel tooltip="Compares the current price to our intrinsic value estimate as a ratio. 1.0× = fairly priced. Above 1.0× = trading at a premium. Below 1.0× = potential discount.">Price vs Fair Value</BoxLabel>
         {ratio != null ? (
           <>
             <div className="flex items-baseline gap-2 mb-1">
