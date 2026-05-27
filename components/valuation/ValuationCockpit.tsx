@@ -4,6 +4,7 @@ import { useState, useMemo, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import {
   computeCockpitOutput,
+  computeBlendedFV,
   type ValuationAssumptions,
   type CockpitSnapshot,
 } from '@/lib/valuation/cockpit'
@@ -174,6 +175,24 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
     [defaults, snapshot]
   )
 
+  // Sensitivity: % change in blended FV per 1pp (% fields) or 1× (multiple fields)
+  const sensitivity = useMemo<Partial<Record<keyof ValuationAssumptions, number>>>(() => {
+    const base = output.blendedFairValue
+    if (base == null || base <= 0) return {}
+    const deltas: Array<[keyof ValuationAssumptions, number]> = [
+      ['wacc', 0.01], ['terminalG', 0.01], ['cagr', 0.01], ['netMargin', 0.01],
+      ['exitPE', 1],  ['exitMultiple', 1], ['revenueMultiple', 1],
+    ]
+    const result: Partial<Record<keyof ValuationAssumptions, number>> = {}
+    for (const [key, delta] of deltas) {
+      const val = assumptions[key] as number
+      const fvP = computeBlendedFV({ ...assumptions, [key]: val + delta }, snapshot)
+      const fvM = computeBlendedFV({ ...assumptions, [key]: val - delta }, snapshot)
+      if (fvP != null && fvM != null) result[key] = (fvP - fvM) / (2 * base)
+    }
+    return result
+  }, [assumptions, snapshot, output.blendedFairValue])
+
   const currency     = apiData.quote?.currency === 'USD' ? '$' : (apiData.quote?.currency ?? '$') + ' '
   const currentPrice = apiData.quote?.price ?? 0
   const changePct    = apiData.quote?.changePct ?? null
@@ -303,6 +322,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
           historicalData={historicalData}
           blendedFairValue={output.blendedFairValue}
           defaultBlendedFairValue={defaultOutput.blendedFairValue}
+          sensitivity={sensitivity}
         />
       </div>
 

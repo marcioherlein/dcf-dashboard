@@ -93,7 +93,7 @@ const WEIGHTS = {
 // Fix 1+2+3: runs all 4 methods at given assumptions and returns weighted blended fair value.
 // Fix 1: terminal growth is capped at wacc−0.02 (200bps minimum spread) to prevent denominator explosion.
 // Fix 3: DCF output is discarded if it exceeds 8× current price (terminal value explosion guard).
-function computeBlendedFV(
+export function computeBlendedFV(
   assumptions: ValuationAssumptions,
   snapshot: CockpitSnapshot,
 ): number | null {

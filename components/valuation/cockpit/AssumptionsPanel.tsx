@@ -52,41 +52,8 @@ function fmtDelta(delta: number, unit: '%' | 'x'): string {
   return (delta > 0 ? '+' : '') + delta.toFixed(1) + '×'
 }
 
-function SparkBars({ points, unit }: { points: SparkPoint[]; unit: '%' | 'x' }) {
-  if (!points.length) return null
-  const W = 44, H = 22, LABEL_H = 8, BAR_AREA = H - LABEL_H
-  const vals = points.map(p => p.value)
-  const hasNeg = vals.some(v => v < 0)
-  const rawMax = Math.max(...vals, 0.0001)
-  const rawMin = hasNeg ? Math.min(...vals) : 0
-  const range = rawMax - rawMin || 0.0001
-  const n = points.length
-  const BAR_W = Math.max(3, Math.floor((W - (n - 1) * 2) / n))
-  const totalW = n * BAR_W + (n - 1) * 2
-  const offsetX = Math.floor((W - totalW) / 2)
-  const zeroY = hasNeg ? (rawMax / range) * BAR_AREA : BAR_AREA
-  return (
-    <svg width={W} height={H} aria-hidden="true" style={{ display: 'block' }}>
-      {points.map((p, i) => {
-        const x = offsetX + i * (BAR_W + 2)
-        const isNeg = p.value < 0
-        const barH = Math.max(1.5, (Math.abs(p.value) / range) * BAR_AREA)
-        const barTop = isNeg ? zeroY : zeroY - barH
-        return (
-          <g key={i}>
-            <title>{fmtVal(p.value, unit)}</title>
-            <rect x={x} y={barTop} width={BAR_W} height={barH} fill={isNeg ? '#fca5a5' : '#93c5fd'} rx={1} />
-            <text x={x + BAR_W / 2} y={H} textAnchor="middle" fontSize={5.5} fill="#94a3b8"
-              fontFamily="Inter, system-ui, sans-serif">{p.label}</text>
-          </g>
-        )
-      })}
-    </svg>
-  )
-}
-
 function AssumptionCard({
-  field, value, defaultValue, isDirty, onChange, sparkPoints,
+  field, value, defaultValue, isDirty, onChange, sparkPoints, sensitivityImpact,
 }: {
   field: Field
   value: number
@@ -94,12 +61,34 @@ function AssumptionCard({
   isDirty: boolean
   onChange: (v: number) => void
   sparkPoints?: SparkPoint[]
+  sensitivityImpact?: number
 }) {
   const pct      = Math.max(0, Math.min(100, ((value - field.min) / (field.max - field.min)) * 100))
   const typLeft  = Math.max(0, Math.min(100, ((field.typicalMin - field.min) / (field.max - field.min)) * 100))
   const typWidth = Math.max(0, Math.min(100 - typLeft, ((field.typicalMax - field.typicalMin) / (field.max - field.min)) * 100))
   const primaryCfg = METHOD_CFG[field.methods[0]]
   const delta      = value - defaultValue
+
+  // TTM/current reference value from sparkPoints
+  const currPoint = sparkPoints?.find(p => p.label === 'curr')
+  const ttmPoint  = currPoint ?? sparkPoints?.[sparkPoints.length - 1]
+  const ttmVal    = ttmPoint?.value
+  const ttmLabel  = currPoint != null ? 'Current' : 'Recent'
+  const ttmPct    = ttmVal != null
+    ? Math.max(1, Math.min(99, ((ttmVal - field.min) / (field.max - field.min)) * 100))
+    : null
+
+  // Sensitivity badge
+  const sensBadge = sensitivityImpact != null ? (() => {
+    const pct2 = sensitivityImpact * 100
+    const absPct = Math.abs(pct2)
+    return {
+      text: (pct2 >= 0 ? '+' : '−') + absPct.toFixed(1) + '%',
+      unit: field.unit === '%' ? '1pp' : '1×',
+      isHigh: absPct > 6,
+      isMed:  absPct > 2.5,
+    }
+  })() : null
 
   function clamp(v: number): number {
     return Math.min(field.max, Math.max(field.min, Math.round(v * 100000) / 100000))
@@ -149,44 +138,58 @@ function AssumptionCard({
           >+</button>
         </div>
 
-        {/* Slider track */}
-        <div className="relative flex items-center mb-2" style={{ height: 16 }}>
-          <div className="absolute w-full h-[3px] bg-slate-100 rounded-full" />
-          {/* Typical-range zone */}
-          <div
-            className="absolute h-[3px] bg-slate-200 rounded-full"
-            style={{ left: `${typLeft}%`, width: `${typWidth}%` }}
-          />
-          {/* Value fill */}
-          <div
-            className={`absolute h-[3px] rounded-full transition-[width] duration-150 ${isDirty ? 'bg-blue-400' : 'bg-slate-300'}`}
-            style={{ width: `${pct}%` }}
-          />
-          {/* Thumb */}
-          <div
-            className={`absolute w-[12px] h-[12px] rounded-full ring-[1.5px] ring-white shadow pointer-events-none ${isDirty ? 'bg-blue-500' : 'bg-slate-400'}`}
-            style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}
-          />
-          {/* Invisible range input for drag interaction */}
-          <input
-            type="range"
-            min={field.min} max={field.max} step={field.step} value={value}
-            onChange={e => onChange(parseFloat(e.target.value))}
-            className="absolute inset-0 w-full opacity-0 cursor-pointer"
-            aria-label={field.label}
-          />
-        </div>
+          {/* Slider track */}
+          <div className="relative flex items-center mb-2" style={{ height: 16 }}>
+            <div className="absolute w-full h-[3px] bg-slate-100 rounded-full" />
+            {/* Typical-range zone */}
+            <div
+              className="absolute h-[3px] bg-slate-200 rounded-full"
+              style={{ left: `${typLeft}%`, width: `${typWidth}%` }}
+            />
+            {/* Value fill */}
+            <div
+              className={`absolute h-[3px] rounded-full transition-[width] duration-150 ${isDirty ? 'bg-blue-400' : 'bg-slate-300'}`}
+              style={{ width: `${pct}%` }}
+            />
+            {/* TTM / current value reference tick */}
+            {ttmPct != null && (
+              <div
+                className="absolute w-[2px] h-[9px] bg-amber-400 rounded-full pointer-events-none z-[1]"
+                style={{ left: `${ttmPct}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
+                title={`${ttmLabel}: ${fmtVal(ttmVal!, field.unit)}`}
+              />
+            )}
+            {/* Thumb */}
+            <div
+              className={`absolute w-[12px] h-[12px] rounded-full ring-[1.5px] ring-white shadow pointer-events-none z-[2] ${isDirty ? 'bg-blue-500' : 'bg-slate-400'}`}
+              style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}
+            />
+            {/* Invisible range input for drag interaction */}
+            <input
+              type="range"
+              min={field.min} max={field.max} step={field.step} value={value}
+              onChange={e => onChange(parseFloat(e.target.value))}
+              className="absolute inset-0 w-full opacity-0 cursor-pointer"
+              aria-label={field.label}
+            />
+          </div>
 
-        {/* Hint + sparkline */}
-        <div className="flex items-end justify-between gap-1">
-          <p className="text-[9px] text-slate-400 leading-tight">{field.hint}</p>
-          {sparkPoints && sparkPoints.length > 0 && (
-            <div className="flex flex-col items-end gap-0.5 shrink-0">
-              <span className="text-[7px] uppercase tracking-wide text-slate-300 leading-none">hist</span>
-              <SparkBars points={sparkPoints} unit={field.unit} />
-            </div>
-          )}
-        </div>
+          {/* Hint + TTM + sensitivity */}
+          <div className="flex items-center justify-between gap-1">
+            <p className="text-[9px] text-slate-400 leading-tight truncate">
+              {field.hint}
+              {ttmVal != null && (
+                <span className="text-slate-300"> · {ttmLabel}: {fmtVal(ttmVal, field.unit)}</span>
+              )}
+            </p>
+            {sensBadge && (
+              <span className={`shrink-0 text-[8px] font-bold tabular-nums px-1.5 py-0.5 rounded-md leading-none ${
+                sensBadge.isHigh ? 'bg-amber-50 text-amber-600' : sensBadge.isMed ? 'bg-slate-100 text-slate-500' : 'bg-slate-50 text-slate-400'
+              }`}>
+                {sensBadge.text}<span className="font-normal opacity-60">/{sensBadge.unit}</span>
+              </span>
+            )}
+          </div>
       </div>
     </div>
   )
@@ -263,11 +266,12 @@ interface Props {
   historicalData?: Partial<Record<keyof ValuationAssumptions, SparkPoint[]>>
   blendedFairValue?: number | null
   defaultBlendedFairValue?: number | null
+  sensitivity?: Partial<Record<keyof ValuationAssumptions, number>>
 }
 
 export default function AssumptionsPanel({
   assumptions, defaults, onChange, onReset, onUndo, canUndo,
-  historicalData, blendedFairValue, defaultBlendedFairValue,
+  historicalData, blendedFairValue, defaultBlendedFairValue, sensitivity,
 }: Props) {
   const deltaPct = blendedFairValue != null && defaultBlendedFairValue != null && defaultBlendedFairValue > 0
     ? (blendedFairValue - defaultBlendedFairValue) / defaultBlendedFairValue
@@ -323,6 +327,7 @@ export default function AssumptionsPanel({
               isDirty={isDirty}
               onChange={v => onChange({ ...assumptions, [f.key]: v })}
               sparkPoints={historicalData?.[f.key]}
+              sensitivityImpact={sensitivity?.[f.key]}
             />
           )
         })}
@@ -342,8 +347,8 @@ export default function AssumptionsPanel({
           Modified from default
         </div>
         <div className="flex items-center gap-1.5 text-[9px] text-slate-400">
-          <span className="inline-block w-5 h-[3px] rounded-full bg-slate-200" />
-          Typical range
+          <span className="inline-block w-[2px] h-3 rounded-full bg-amber-400" />
+          TTM / Current value
         </div>
         <div className="flex items-center gap-3 text-[9px] text-slate-400 ml-auto">
           {(['DCF', 'P/E', 'EBITDA', 'Rev'] as MethodKey[]).map(m => (
