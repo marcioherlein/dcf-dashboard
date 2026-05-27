@@ -65,10 +65,10 @@ function MethodDotsChart({ methods, currentPrice, blendedFV, currency }: {
 
   return (
     <svg viewBox={`0 0 ${W} ${SVG_H}`} width="100%" style={{ display: 'block' }} aria-label="Fair value lollipop chart">
-      <text x={xPrice} y={12} textAnchor="middle" fontSize={9} fontWeight={700} fill="#475569" fontFamily="-apple-system, system-ui, sans-serif">
+      <text x={xPrice} y={12} textAnchor="middle" fontSize={9} fontWeight={700} fill="#475569" fontFamily="Inter, system-ui, sans-serif">
         {fmtPrice(currentPrice, currency)}
       </text>
-      <text x={xPrice} y={22} textAnchor="middle" fontSize={8} fill="#94a3b8" fontFamily="-apple-system, system-ui, sans-serif">
+      <text x={xPrice} y={22} textAnchor="middle" fontSize={8} fill="#94a3b8" fontFamily="Inter, system-ui, sans-serif">
         CURRENT
       </text>
       <line
@@ -88,7 +88,7 @@ function MethodDotsChart({ methods, currentPrice, blendedFV, currency }: {
         const upSign     = m.upsidePct != null && m.upsidePct >= 0 ? '+' : ''
         return (
           <g key={m.id}>
-            <text x={CHART_L - 6} y={y + 4} textAnchor="end" fontSize={10.5} fill="#374151" fontWeight={500} fontFamily="-apple-system, system-ui, sans-serif">
+            <text x={CHART_L - 6} y={y + 4} textAnchor="end" fontSize={10.5} fill="#374151" fontWeight={500} fontFamily="Inter, system-ui, sans-serif">
               {shortLabel}
             </text>
             <motion.line
@@ -103,11 +103,11 @@ function MethodDotsChart({ methods, currentPrice, blendedFV, currency }: {
               transition={{ type: 'spring', stiffness: 500, damping: 22, delay: 0.1 + i * 0.07 }}
               style={{ transformOrigin: `${xDot}px ${y}px` }}
             />
-            <text x={CHART_R + 6} y={y - 1} textAnchor="start" fontSize={10} fontWeight={700} fill="#111827" fontFamily="-apple-system, monospace">
+            <text x={CHART_R + 6} y={y - 1} textAnchor="start" fontSize={10} fontWeight={700} fill="#111827" fontFamily="'DM Mono', 'IBM Plex Mono', monospace">
               {fmtPrice(m.fairValue, currency)}
             </text>
             {upPct != null && (
-              <text x={CHART_R + 6} y={y + 11} textAnchor="start" fontSize={9} fill={isUnder ? '#059669' : '#dc2626'} fontFamily="-apple-system, system-ui, sans-serif">
+              <text x={CHART_R + 6} y={y + 11} textAnchor="start" fontSize={9} fill={isUnder ? '#059669' : '#dc2626'} fontFamily="Inter, system-ui, sans-serif">
                 {upSign}{upPct}%
               </text>
             )}
@@ -132,14 +132,14 @@ function MethodDotsChart({ methods, currentPrice, blendedFV, currency }: {
               transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.1 + valid.length * 0.07 }}
               style={{ transformOrigin: `${xBlend}px ${y}px` }}
             />
-            <text x={CHART_L - 6} y={y + 4} textAnchor="end" fontSize={9} fontWeight={700} fill={blendColor} fontFamily="-apple-system, system-ui, sans-serif">
+            <text x={CHART_L - 6} y={y + 4} textAnchor="end" fontSize={9} fontWeight={700} fill={blendColor} fontFamily="Inter, system-ui, sans-serif">
               BLENDED
             </text>
-            <text x={CHART_R + 6} y={y - 1} textAnchor="start" fontSize={10} fontWeight={700} fill={blendColor} fontFamily="-apple-system, monospace">
+            <text x={CHART_R + 6} y={y - 1} textAnchor="start" fontSize={10} fontWeight={700} fill={blendColor} fontFamily="'DM Mono', 'IBM Plex Mono', monospace">
               {fmtPrice(blendedFV, currency)}
             </text>
             {blendUpPct != null && (
-              <text x={CHART_R + 6} y={y + 11} textAnchor="start" fontSize={9} fill={blendColor} fontFamily="-apple-system, system-ui, sans-serif">
+              <text x={CHART_R + 6} y={y + 11} textAnchor="start" fontSize={9} fill={blendColor} fontFamily="Inter, system-ui, sans-serif">
                 {blendSign}{blendUpPct}%
               </text>
             )}

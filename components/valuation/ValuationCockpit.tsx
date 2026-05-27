@@ -159,6 +159,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
 
   const [assumptions, setAssumptions] = useState<ValuationAssumptions>(() => seedAssumptions(apiData))
   const [history, setHistory] = useState<ValuationAssumptions[]>([])
+  const [dcfOpened, setDcfOpened] = useState(false)
 
   const output = useMemo(
     () => computeCockpitOutput(assumptions, snapshot),
@@ -261,27 +262,29 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
       </div>
 
       {/* Full DCF Model — blue header, more visible */}
-      <details ref={fullDcfRef} className="group" id="full_dcf">
-        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-blue-100 shadow-sm px-5 py-3.5 hover:bg-blue-50 transition-colors select-none">
+      <details ref={fullDcfRef} className="group" id="full_dcf" onToggle={() => setDcfOpened(true)}>
+        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-blue-100 shadow-sm px-4 sm:px-5 py-3.5 hover:bg-blue-50 transition-colors select-none">
           <span className="text-blue-400 text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
           <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
             Full DCF Model — Year-by-Year Projections
           </span>
-          <span className="ml-auto text-xs text-slate-400">Damodaran 4-model blend · editable</span>
+          <span className="ml-auto text-xs text-slate-400 hidden sm:inline">Damodaran 4-model blend · editable</span>
         </summary>
         <div className="mt-2">
-          <ModellingWorkspace
-            apiData={apiData}
-            ticker={ticker}
-            statementsData={statementsData}
-          />
+          {dcfOpened && (
+            <ModellingWorkspace
+              apiData={apiData}
+              ticker={ticker}
+              statementsData={statementsData}
+            />
+          )}
         </div>
       </details>
 
       {/* End-of-page CTA */}
       <div className="rounded-xl bg-white border border-slate-100 shadow-sm px-5 py-5">
         <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">What do you want to do next?</p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className={`grid grid-cols-1 gap-3 ${onNavigateToFinancials ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
           <a
             href={`/simplifier/${ticker}`}
             className="flex flex-col gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 hover:bg-emerald-100 transition-colors"

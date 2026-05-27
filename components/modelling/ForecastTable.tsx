@@ -718,7 +718,7 @@ export default function ForecastTable({
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Equity side */}
           <div className="rounded-xl bg-white/5 border border-white/8 p-4">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Equity Side</p>

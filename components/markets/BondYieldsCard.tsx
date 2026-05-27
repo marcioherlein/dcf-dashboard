@@ -24,7 +24,7 @@ export default function BondYieldsCard({ yieldCurve }: { yieldCurve: YieldCurveP
   const spreadColor = spread == null ? 'text-slate-500' : spread >= 0.5 ? 'text-emerald-700' : spread >= 0 ? 'text-amber-700' : 'text-red-600'
 
   return (
-    <div className="rounded-xl glass-card-light overflow-hidden">
+    <div className="rounded-xl glass-card-light">
       <div className="px-3 py-2 border-b border-slate-200 flex items-center justify-between">
         <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Government Bonds</span>
         <div className="flex items-center gap-2">

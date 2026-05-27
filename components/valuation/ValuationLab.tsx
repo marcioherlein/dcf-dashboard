@@ -589,12 +589,12 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
   return (
     <div className="card rounded-xl overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-slate-200 flex items-start justify-between gap-4">
+      <div className="px-5 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>
           <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{config.methodDescription ?? config.subtitle}</p>
         </div>
         {config.fairValueSummary != null && (
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-3 sm:shrink-0">
             <div className="text-right">
               <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Fair Value</p>
               <p className="text-lg font-bold tabular-nums text-slate-900">
@@ -1280,19 +1280,19 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
         <div className="space-y-2">
           {summaryMethods.map(m => {
             if (m.fairValue == null) return (
-              <div key={m.id} className="flex items-center gap-3 opacity-40">
-                <span className="text-[11px] text-slate-400 w-36 shrink-0 truncate">{m.label}</span>
+              <div key={m.id} className="flex items-center gap-2 sm:gap-3 opacity-40">
+                <span className="text-[11px] text-slate-400 w-24 sm:w-36 shrink-0 truncate">{m.label}</span>
                 <div className="flex-1 h-4 bg-slate-100 rounded-full" />
-                <span className="text-[11px] text-slate-400 w-16 text-right">N/A</span>
-                <span className="text-[11px] text-slate-400 w-16 text-right">—</span>
+                <span className="text-[11px] text-slate-400 w-10 sm:w-16 text-right">N/A</span>
+                <span className="text-[11px] text-slate-400 w-10 sm:w-16 text-right">—</span>
               </div>
             )
             const upside = m.upsidePct ?? 0
             const isUp = upside >= 0
             const barWidth = Math.min(Math.abs(upside) * 100 / 2, 48)
             return (
-              <div key={m.id} className="flex items-center gap-3">
-                <span className="text-[11px] text-slate-500 w-36 shrink-0 truncate">{m.label}</span>
+              <div key={m.id} className="flex items-center gap-2 sm:gap-3">
+                <span className="text-[11px] text-slate-500 w-24 sm:w-36 shrink-0 truncate">{m.label}</span>
                 <div className="flex-1 relative h-4 bg-slate-100 rounded-full overflow-hidden">
                   <div
                     className={`absolute top-0 bottom-0 rounded-full ${isUp ? 'bg-emerald-300' : 'bg-red-300'}`}
@@ -1302,10 +1302,10 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
                   />
                   <div className="absolute top-0 bottom-0 left-1/2 w-[1.5px] bg-slate-400" />
                 </div>
-                <span className={`text-[12px] font-semibold tabular-nums w-14 text-right ${isUp ? 'text-emerald-600' : 'text-red-500'}`}>
+                <span className={`text-[12px] font-semibold tabular-nums w-10 sm:w-14 text-right ${isUp ? 'text-emerald-600' : 'text-red-500'}`}>
                   {isUp ? '+' : ''}{(upside * 100).toFixed(1)}%
                 </span>
-                <span className="text-[11px] text-slate-500 w-16 text-right tabular-nums font-mono">{currency}{m.fairValue.toFixed(2)}</span>
+                <span className="text-[11px] text-slate-500 w-12 sm:w-16 text-right tabular-nums font-mono">{currency}{m.fairValue.toFixed(2)}</span>
               </div>
             )
           })}
@@ -1314,8 +1314,8 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
             const isUp = upside >= 0
             const barWidth = Math.min(Math.abs(upside) * 100 / 2, 48)
             return (
-              <div className="flex items-center gap-3 pt-2 border-t border-slate-100 mt-1">
-                <span className="text-[11px] font-bold text-slate-700 w-36 shrink-0">Blended Estimate</span>
+              <div className="flex items-center gap-2 sm:gap-3 pt-2 border-t border-slate-100 mt-1">
+                <span className="text-[11px] font-bold text-slate-700 w-24 sm:w-36 shrink-0">Blended Estimate</span>
                 <div className="flex-1 relative h-4 bg-blue-50 rounded-full overflow-hidden">
                   <div
                     className={`absolute top-0 bottom-0 rounded-full ${isUp ? 'bg-blue-400' : 'bg-orange-400'}`}
@@ -1325,10 +1325,10 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
                   />
                   <div className="absolute top-0 bottom-0 left-1/2 w-[1.5px] bg-slate-500" />
                 </div>
-                <span className={`text-[12px] font-bold tabular-nums w-14 text-right ${isUp ? 'text-blue-600' : 'text-orange-600'}`}>
+                <span className={`text-[12px] font-bold tabular-nums w-10 sm:w-14 text-right ${isUp ? 'text-blue-600' : 'text-orange-600'}`}>
                   {isUp ? '+' : ''}{(upside * 100).toFixed(1)}%
                 </span>
-                <span className="text-[11px] font-bold text-slate-700 w-16 text-right tabular-nums font-mono">{currency}{weightedFV.toFixed(2)}</span>
+                <span className="text-[11px] font-bold text-slate-700 w-12 sm:w-16 text-right tabular-nums font-mono">{currency}{weightedFV.toFixed(2)}</span>
               </div>
             )
           })()}
@@ -1415,7 +1415,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
                 {coreDcfUpside != null && (
                   <TrendBadge value={coreDcfUpside} size="lg" />
                 )}
-                <div className="ml-auto flex gap-4">
+                <div className="ml-auto flex gap-4 flex-wrap">
                   <div>
                     <p className="text-[10px] text-slate-500">WACC</p>
                     <p className="text-sm font-semibold tabular-nums text-slate-800">
@@ -1560,7 +1560,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
       {/* ── How We Value section ─────────────────────────────────────────── */}
       <div className="rounded-xl border border-slate-100 bg-white/70 px-4 py-5">
         <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-4">How We Value {ticker}</p>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { step: 1, title: 'Gather Data', body: 'Pull live financials, analyst estimates, and market data from Yahoo Finance.' },
             { step: 2, title: 'Run Models', body: 'DCF, multiples, and Reverse DCF reveal intrinsic value from different angles.' },

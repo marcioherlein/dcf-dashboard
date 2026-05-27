@@ -155,7 +155,8 @@ export default function RightSidebar({ output, currentPrice, currency, ticker, o
                 navigator.clipboard?.writeText(output.blendedFairValue.toFixed(2)).catch(() => {})
               }
             }}
-            className="text-left text-xs font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg px-3 py-2 transition-colors"
+            disabled={output.blendedFairValue == null}
+            className="text-left text-xs font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg px-3 py-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Copy fair value
           </button>

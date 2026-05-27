@@ -120,7 +120,7 @@ export default function NormalizedPerfChart() {
   const lastPoint = displayData[displayData.length - 1]
 
   return (
-    <div className="rounded-xl glass-card-light overflow-hidden">
+    <div className="rounded-xl glass-card-light">
       {/* Header */}
       <div className="px-4 pt-3 pb-2 border-b border-slate-200">
         <div className="flex items-center justify-between mb-2">

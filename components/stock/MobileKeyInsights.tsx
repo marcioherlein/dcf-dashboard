@@ -103,7 +103,7 @@ export default function MobileKeyInsights({ data }: Props) {
           </div>
 
           {/* Financial health grades */}
-          {ratings && (
+          {ratings && healthCats.some(({ key }) => !!ratings[key]) && (
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Financial Health</p>
               <div className="grid grid-cols-3 gap-2">

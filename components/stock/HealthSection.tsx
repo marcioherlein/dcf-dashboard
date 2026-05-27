@@ -159,6 +159,7 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
 
         {/* Quality signals + summary */}
         <div className="space-y-5">
+          {(piotroski != null || altmanZone || beneishFlag) && (
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Quality Signals</p>
             <div className="space-y-2">
@@ -203,6 +204,7 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
               )}
             </div>
           </div>
+          )}
 
           {/* Plain-English interpretation */}
           <div className="rounded-xl bg-blue-50 border border-blue-200 px-4 py-3">

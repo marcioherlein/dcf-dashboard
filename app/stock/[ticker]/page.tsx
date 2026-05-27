@@ -524,12 +524,14 @@ function StockPageBody() {
                   exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
-                  {data.ratings && data.scores && (
+                  {data.ratings && data.scores ? (
                     <HealthSection
                       ratings={data.ratings}
                       scores={computedScores ?? data.scores}
                       financialsData={data}
                     />
+                  ) : (
+                    <p className="text-sm text-slate-400 text-center py-12">Health data unavailable for this stock.</p>
                   )}
                 </motion.div>
               )}
@@ -550,8 +552,8 @@ function StockPageBody() {
             </AnimatePresence>
             </div>{/* end main column */}
 
-            {/* Sidebar — desktop only, overview / financials / risks tabs */}
-            {(activeTab === 'overview' || activeTab === 'financials' || activeTab === 'risks') && (
+            {/* Sidebar — desktop only, overview / financials tabs (risks tab: sidebar returns null, no column) */}
+            {(activeTab === 'overview' || activeTab === 'financials') && (
               <aside className="hidden lg:block">
                 <div className="sticky top-[68px] self-start space-y-3 pb-4 pt-5">
                   <StockSidebar activeTab={activeTab} data={data} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} />

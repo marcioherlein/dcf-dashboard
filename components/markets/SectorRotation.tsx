@@ -29,7 +29,7 @@ export default function SectorRotation({ sectors }: Props) {
   }))
 
   return (
-    <div className="rounded-xl glass-card-light overflow-hidden">
+    <div className="rounded-xl glass-card-light">
       <div className="px-4 py-2.5 border-b border-slate-200">
         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Sector Rotation</span>
         <p className="text-[10px] text-slate-400 mt-0.5">RS momentum vs S&P 500 — last 40 trading days</p>
@@ -39,7 +39,7 @@ export default function SectorRotation({ sectors }: Props) {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} layout="vertical" margin={{ top: 0, right: 40, left: 4, bottom: 0 }}>
             <XAxis type="number" tick={{ fontSize: 9, fill: '#64748b' }} tickFormatter={v => `${v}%`} axisLine={false} tickLine={false} />
-            <YAxis type="category" dataKey="sector" tick={{ fontSize: 11, fill: '#475569' }} width={90} axisLine={false} tickLine={false} />
+            <YAxis type="category" dataKey="sector" tick={{ fontSize: 11, fill: '#475569' }} width={140} axisLine={false} tickLine={false} />
             <Tooltip
               formatter={(v) => [`${(v as number).toFixed(2)}%`, 'RS Momentum']}
               labelStyle={{ fontSize: 12, fontWeight: 600, color: '#0f172a' }}

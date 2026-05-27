@@ -101,7 +101,7 @@ export default function InstrumentPriceChart({ symbol, currency = 'USD' }: Props
   const lineColor = isUp ? upColor : downColor
 
   return (
-    <div className="rounded-xl card overflow-hidden">
+    <div className="rounded-xl card">
       {/* Header */}
       <div className="px-4 pt-3 pb-2 border-b border-slate-200 flex items-center justify-between">
         <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Price Chart</span>

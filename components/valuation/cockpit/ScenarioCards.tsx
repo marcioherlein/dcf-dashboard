@@ -73,7 +73,7 @@ export default function ScenarioCards({ scenarios, currentPrice, currency }: Pro
         <span className="text-[10px] text-slate-400">Blended estimate at stressed assumptions</span>
       </div>
       <p className="text-[10px] text-slate-400 mb-3">All four methods re-run at each stress — same blend as Base.</p>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <ScenarioCard
           label="Bear Case" fv={scenarios.bear.fairValue} wacc={scenarios.bear.wacc} cagr={scenarios.bear.cagr}
           baseWacc={base.wacc} baseCagr={base.cagr}

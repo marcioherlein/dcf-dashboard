@@ -77,7 +77,7 @@ function SparkBars({ points, unit }: { points: SparkPoint[]; unit: '%' | 'x' }) 
             <title>{fmtVal(p.value, unit)}</title>
             <rect x={x} y={barTop} width={BAR_W} height={barH} fill={isNeg ? '#fca5a5' : '#93c5fd'} rx={1} />
             <text x={x + BAR_W / 2} y={H} textAnchor="middle" fontSize={5.5} fill="#94a3b8"
-              fontFamily="-apple-system,system-ui,sans-serif">{p.label}</text>
+              fontFamily="Inter, system-ui, sans-serif">{p.label}</text>
           </g>
         )
       })}
@@ -277,11 +277,10 @@ export default function AssumptionsPanel({
   const isModified  = numModified > 0
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5">
-      {/* Panel header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2.5">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Model Assumptions</p>
+    <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-6 py-5">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
+        <div className="flex items-center gap-3">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Assumptions</p>
           {deltaPct != null && isModified && Math.abs(deltaPct) > 0.001 && (
             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
               deltaPct >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-50 text-red-600'
