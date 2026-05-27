@@ -209,7 +209,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
     const base = output.blendedFairValue
     if (base == null || base <= 0) return {}
     const deltas: Array<[keyof ValuationAssumptions, number]> = [
-      ['wacc', 0.01], ['terminalG', 0.01], ['cagr', 0.01], ['netMargin', 0.01],
+      ['wacc', 0.01], ['cagr', 0.01], ['netMargin', 0.01],
       ['exitPE', 1],  ['exitMultiple', 1], ['revenueMultiple', 1],
     ]
     const result: Partial<Record<keyof ValuationAssumptions, number>> = {}
@@ -356,6 +356,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
           blendedFairValue={output.blendedFairValue}
           defaultBlendedFairValue={defaultOutput.blendedFairValue}
           sensitivity={sensitivity}
+          currency={currency}
         />
       </div>
 
