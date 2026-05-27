@@ -198,7 +198,7 @@ export default function ValuationsPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFB]">
-      <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10">
+      <div className="px-3 sm:px-6 lg:px-8 py-6 sm:py-10">
 
         {/* Premium header banner */}
         <div className="rounded-2xl bg-gradient-to-br from-slate-900 to-blue-950 px-4 sm:px-6 py-4 sm:py-5 mb-6 text-white">
