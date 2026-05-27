@@ -27,6 +27,31 @@ interface SearchResult {
   quoteType?: string
 }
 
+function CompanyLogo({ ticker }: { ticker: string }) {
+  const [failed, setFailed] = useState(false)
+  const src = `https://financialmodelingprep.com/image-stock/${ticker}.png`
+  const initials = ticker.slice(0, 2).toUpperCase()
+
+  if (failed) {
+    return (
+      <div className="w-6 h-6 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center shrink-0">
+        <span className="text-[9px] font-bold text-blue-700 leading-none">{initials}</span>
+      </div>
+    )
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={ticker}
+      width={24}
+      height={24}
+      className="rounded-full border border-slate-200 shrink-0 object-cover"
+      onError={() => setFailed(true)}
+    />
+  )
+}
+
 function UserAvatar({ image, name }: { image: string | null; name: string | null }) {
   const initials = name
     ? name.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase()
@@ -132,6 +157,8 @@ export default function TopBar() {
               >
                 <ChevronLeft size={15} strokeWidth={2.5} />
               </button>
+              {/* Company logo */}
+              <CompanyLogo ticker={stockNav.ticker} />
               <span className="font-bold text-[13px] text-slate-900 tracking-tight shrink-0">
                 {stockNav.ticker}
               </span>
@@ -149,6 +176,7 @@ export default function TopBar() {
                       stockNav.changePct >= 0 ? 'text-emerald-600' : 'text-red-500',
                     )}>
                       {stockNav.changePct >= 0 ? '+' : ''}{stockNav.changePct.toFixed(2)}%
+                      {stockNav.changePct >= 0 ? ' ↑' : ' ↓'}
                     </span>
                   )}
                 </div>
@@ -274,7 +302,7 @@ export default function TopBar() {
           {stockNav && (
             <button
               onClick={() => onSaveRef.current?.()}
-              className="hidden sm:flex items-center gap-1.5 text-[12px] font-semibold text-white px-3 py-1.5 rounded-lg transition-all whitespace-nowrap"
+              className="flex items-center gap-1.5 text-[12px] font-semibold text-white px-3 py-1.5 rounded-lg transition-all whitespace-nowrap"
               style={{ background: 'linear-gradient(135deg, #1E40AF 0%, #2563EB 100%)', boxShadow: '0 1px 4px rgba(37,99,235,0.25)' }}
             >
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

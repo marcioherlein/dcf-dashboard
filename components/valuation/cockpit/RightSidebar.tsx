@@ -13,126 +13,171 @@ interface Props {
 }
 
 const VERDICT_COLORS = {
-  Undervalued:         { text: 'text-emerald-400', bg: 'bg-emerald-400/10 border-emerald-400/30' },
-  'Fairly Valued':     { text: 'text-blue-400',    bg: 'bg-blue-400/10 border-blue-400/30' },
-  Overvalued:          { text: 'text-red-400',     bg: 'bg-red-400/10 border-red-400/30' },
-  'Insufficient Data': { text: 'text-white/60',    bg: 'bg-white/5 border-white/10' },
+  Undervalued:         { text: 'text-emerald-400', bg: 'bg-emerald-500/15 border-emerald-500/30' },
+  'Fairly Valued':     { text: 'text-blue-400',    bg: 'bg-blue-500/15 border-blue-500/30'       },
+  Overvalued:          { text: 'text-red-400',      bg: 'bg-red-500/15 border-red-500/30'         },
+  'Insufficient Data': { text: 'text-white/50',     bg: 'bg-white/5 border-white/10'              },
 }
 
 const DIVERGENCE_STYLE = {
-  low:      { text: 'text-emerald-400', label: 'Models agree' },
-  moderate: { text: 'text-amber-400',   label: 'Moderate spread' },
-  high:     { text: 'text-red-400',     label: 'High divergence' },
+  low:      { text: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30', label: 'Models agree'     },
+  moderate: { text: 'text-amber-400',   bg: 'bg-amber-500/10 border-amber-500/30',     label: 'Moderate spread' },
+  high:     { text: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/30',         label: 'High divergence' },
 }
 
 const METHOD_COLORS = ['bg-blue-400', 'bg-indigo-400', 'bg-violet-400', 'bg-purple-400']
 
-function ModelAnalysis({ methods, blendedFairValue, currentPrice, currency }: {
+function Divider() {
+  return <div className="border-t border-white/[0.07]" />
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return <p className="text-[10px] font-bold uppercase tracking-widest text-white/35 mb-2.5">{children}</p>
+}
+
+function RangeBar({
+  methods, blendedFairValue, currentPrice, currency,
+}: {
   methods: CockpitMethodResult[]
   blendedFairValue: number | null
   currentPrice: number
   currency: string
 }) {
   const valid = methods.filter(m => m.fairValue != null && m.fairValue > 0)
+  if (valid.length < 2) return null
+
+  const vals  = valid.map(m => m.fairValue!)
+  const min   = Math.min(...vals)
+  const max   = Math.max(...vals)
+  const range = max - min
+
+  const blendedPct = blendedFairValue != null && range > 0
+    ? Math.max(3, Math.min(97, ((blendedFairValue - min) / range) * 100)) : null
+  const currentPct = range > 0
+    ? Math.max(1, Math.min(99, ((currentPrice - min) / range) * 100)) : null
 
   return (
     <div>
-      {/* Range bar — only if 2+ methods computed */}
-      {valid.length >= 2 && (() => {
-        const vals = valid.map(m => m.fairValue!)
-        const min = Math.min(...vals)
-        const max = Math.max(...vals)
-        const range = max - min
-        const blendedPct = blendedFairValue != null && range > 0
-          ? Math.max(3, Math.min(97, ((blendedFairValue - min) / range) * 100))
-          : null
-        const currentPct = range > 0
-          ? Math.max(3, Math.min(97, ((currentPrice - min) / range) * 100))
-          : null
-        return (
-          <div className="mb-4">
-            <div className="flex justify-between text-[10px] text-white/60 mb-1.5">
-              <span>{fmtPrice(min, currency)}</span>
-              <span className="text-white/40">model range</span>
-              <span>{fmtPrice(max, currency)}</span>
-            </div>
-            <div className="relative h-3 bg-white/10 rounded-full">
-              <div className="absolute inset-0 bg-gradient-to-r from-red-500/40 via-amber-400/40 to-emerald-500/40 rounded-full" />
-              {/* Current price — vertical tick with "Now" label */}
-              {currentPct != null && (
-                <div className="absolute top-0 h-full w-0.5 bg-white/70" style={{ left: `${currentPct}%`, transform: 'translateX(-50%)' }} />
-              )}
-              {/* Blended estimate dot */}
-              {blendedPct != null && (
-                <div
-                  className="absolute w-4 h-4 bg-white rounded-full shadow border-2 border-blue-400"
-                  style={{ left: `${blendedPct}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
-                />
-              )}
-            </div>
-            {/* "Now" label under current price tick */}
-            {currentPct != null && (
-              <div className="relative h-4 mt-0.5">
-                <span
-                  className="absolute text-[10px] text-white/50 -translate-x-1/2"
-                  style={{ left: `${currentPct}%` }}
-                >Now</span>
-              </div>
-            )}
-          </div>
-        )
-      })()}
-
-      {/* Weight bars with N/A treatment */}
-      <div className="flex flex-col gap-2.5">
-        {methods.map((m, i) => {
-          const isAvail = m.fairValue != null
-          return (
-            <div key={m.id} className="flex items-center gap-2">
-              <span className={`text-[10px] w-24 shrink-0 truncate ${isAvail ? 'text-white/70' : 'text-white/30 line-through'}`}>
-                {m.method}
-              </span>
-              <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                {isAvail ? (
-                  <div
-                    className={`h-full rounded-full ${METHOD_COLORS[i]} transition-all`}
-                    style={{ width: `${m.weight * 100}%` }}
-                  />
-                ) : (
-                  <div className="h-full w-full bg-white/[0.05] rounded-full" />
-                )}
-              </div>
-              <span className={`text-[10px] w-7 text-right tabular-nums ${isAvail ? 'text-white/60' : 'text-white/30'}`}>
-                {isAvail ? `${Math.round(m.weight * 100)}%` : 'N/A'}
-              </span>
-            </div>
-          )
-        })}
+      <div className="flex justify-between text-[10px] text-white/45 mb-1.5 tabular-nums">
+        <span>{fmtPrice(min, currency)}</span>
+        <span>{fmtPrice(max, currency)}</span>
       </div>
+      <div className="relative h-3 bg-white/10 rounded-full">
+        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-red-500/50 via-amber-400/50 to-emerald-500/50" />
+        {/* White tick = current price */}
+        {currentPct != null && (
+          <div
+            className="absolute top-0 h-full w-[2px] bg-white/60 rounded-full"
+            style={{ left: `${currentPct}%`, transform: 'translateX(-50%)' }}
+          />
+        )}
+        {/* White dot with blue ring = blended estimate */}
+        {blendedPct != null && (
+          <div
+            className="absolute w-4 h-4 bg-white rounded-full shadow-md border-2 border-blue-400"
+            style={{ left: `${blendedPct}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
+          />
+        )}
+      </div>
+      <p className="text-[10px] text-white/35 mt-1 tabular-nums">
+        Current {fmtPrice(currentPrice, currency)}
+      </p>
     </div>
   )
 }
 
-export default function RightSidebar({ output, currentPrice, currency, ticker: _ticker, onViewFullDCF, onSave }: Props) {
-  const vc = VERDICT_COLORS[output.verdict]
-  const ds = DIVERGENCE_STYLE[output.divergence.level]
+function WeightBars({ methods }: { methods: CockpitMethodResult[] }) {
+  return (
+    <div className="flex flex-col gap-2.5">
+      {methods.map((m, i) => {
+        const isAvail = m.fairValue != null && m.fairValue > 0
+        return (
+          <div key={m.id} className="flex items-center gap-2.5">
+            <div className={`w-2 h-2 rounded-full shrink-0 ${METHOD_COLORS[i]} ${!isAvail ? 'opacity-25' : ''}`} />
+            <span className={`text-[11px] flex-1 truncate ${isAvail ? 'text-white/70' : 'text-white/25'}`}>
+              {m.method}
+            </span>
+            <div className="w-20 h-1.5 bg-white/10 rounded-full overflow-hidden shrink-0">
+              {isAvail ? (
+                <div
+                  className={`h-full rounded-full ${METHOD_COLORS[i]} transition-all`}
+                  style={{ width: `${m.weight * 100}%` }}
+                />
+              ) : (
+                <div className="h-full w-full bg-white/[0.04] rounded-full" />
+              )}
+            </div>
+            <span className={`text-[11px] w-7 text-right tabular-nums shrink-0 ${isAvail ? 'text-white/55' : 'text-white/25'}`}>
+              {isAvail ? `${Math.round(m.weight * 100)}%` : '—'}
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+export default function RightSidebar({
+  output, currentPrice, currency, ticker: _ticker, onViewFullDCF, onSave,
+}: Props) {
+  const vc  = VERDICT_COLORS[output.verdict]
+  const ds  = DIVERGENCE_STYLE[output.divergence.level]
+  const validCount = output.methods.filter(m => m.fairValue != null && m.fairValue > 0).length
+  const convictionLabel =
+    output.divergence.overallConfidence === 'high'   ? 'High conviction'   :
+    output.divergence.overallConfidence === 'medium' ? 'Medium conviction' : 'Low conviction'
 
   return (
-    <div className="bg-[#0f1a2e] rounded-xl px-5 py-5 flex flex-col gap-5 h-fit sticky top-4">
-      {/* Verdict + Divergence badges */}
-      <div className="flex flex-wrap gap-2">
-        <span className={`text-xs font-bold px-3 py-1.5 rounded-full border ${vc.bg} ${vc.text}`}>
-          {output.verdict}
+    <div
+      className="rounded-xl flex flex-col gap-4 sticky top-4"
+      style={{ background: '#0d1929' }}
+    >
+      <div className="px-5 pt-5 pb-0">
+        <SectionLabel>Model Summary</SectionLabel>
+
+        {/* Verdict badge */}
+        <span className={`inline-flex text-sm font-bold tracking-wide px-4 py-1.5 rounded-full border mb-2 ${vc.bg} ${vc.text}`}>
+          {output.verdict.toUpperCase()}
         </span>
-        <span className={`text-xs font-semibold px-3 py-1.5 rounded-full bg-white/5 border border-white/10 ${ds.text}`}>
-          {ds.label}
-        </span>
+
+        {/* Conviction + model count */}
+        <p className="text-xs text-white/45 mt-1">
+          {convictionLabel} · {validCount} model{validCount !== 1 ? 's' : ''} agree
+        </p>
       </div>
 
-      {/* Model Analysis — range bar + weight bars merged */}
-      <div>
-        <p className="text-xs font-bold uppercase tracking-wider text-white/60 mb-3">Model Analysis</p>
-        <ModelAnalysis
+      <div className="px-5"><Divider /></div>
+
+      {/* MODEL DIVERGENCE */}
+      <div className="px-5">
+        <div className="flex items-center gap-2 mb-3">
+          <SectionLabel>Model Divergence</SectionLabel>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border -mt-2.5 ${ds.bg} ${ds.text}`}>
+            {ds.label}
+          </span>
+        </div>
+        <div className="flex gap-6">
+          <div>
+            <p className="text-[10px] text-white/35 mb-0.5">Spread vs. price</p>
+            <p className="text-sm font-bold tabular-nums text-white/85">
+              {(output.divergence.spreadVsPrice * 100).toFixed(0)}%
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] text-white/35 mb-0.5">Coeff. of variation</p>
+            <p className="text-sm font-bold tabular-nums text-white/85">
+              {(output.divergence.cv * 100).toFixed(0)}%
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-5"><Divider /></div>
+
+      {/* MODEL RANGE */}
+      <div className="px-5">
+        <SectionLabel>Model Range</SectionLabel>
+        <RangeBar
           methods={output.methods}
           blendedFairValue={output.blendedFairValue}
           currentPrice={currentPrice}
@@ -140,48 +185,51 @@ export default function RightSidebar({ output, currentPrice, currency, ticker: _
         />
       </div>
 
-      {/* Save Analysis — prominent gradient CTA */}
-      {onSave && (
-        <button
-          onClick={onSave}
-          className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-bold text-sm py-2.5 px-4 transition-all shadow-lg shadow-blue-900/40 flex items-center justify-center gap-2"
-        >
-          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-          </svg>
-          Save Analysis
-        </button>
-      )}
+      <div className="px-5"><Divider /></div>
 
-      {/* Quick Actions — minimal, no duplicate of bottom CTA */}
-      <div>
-        <p className="text-xs font-bold uppercase tracking-wider text-white/60 mb-2">Quick Actions</p>
-        <div className="flex flex-col gap-1.5">
-          <button
-            onClick={() => {
-              if (output.blendedFairValue != null) {
-                navigator.clipboard?.writeText(output.blendedFairValue.toFixed(2)).catch(() => {})
-              }
-            }}
-            disabled={output.blendedFairValue == null}
-            className="text-left text-xs font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg px-3 py-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Copy fair value
-          </button>
-          {onViewFullDCF && (
-            <button
-              onClick={onViewFullDCF}
-              className="text-left text-xs font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg px-3 py-2 transition-colors"
-            >
-              Open Full DCF Model ↓
-            </button>
-          )}
-        </div>
+      {/* METHOD WEIGHTS */}
+      <div className="px-5">
+        <SectionLabel>Method Weights (Blend)</SectionLabel>
+        <WeightBars methods={output.methods} />
       </div>
 
-      <p className="text-[10px] text-white/30 leading-relaxed pt-2 border-t border-white/10">
-        Blended estimate from Forward P/E, EV/EBITDA, Revenue Multiple, and Core DCF. Not investment advice.
-      </p>
+      {/* Save Analysis CTA */}
+      <div className="px-5">
+        {onSave && (
+          <button
+            onClick={onSave}
+            className="w-full rounded-xl text-white font-bold text-sm py-2.5 px-4 transition-all flex items-center justify-center gap-2"
+            style={{ background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)', boxShadow: '0 2px 12px rgba(37,99,235,0.35)' }}
+          >
+            <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+            </svg>
+            Save Analysis
+          </button>
+        )}
+      </div>
+
+      {/* Open Full DCF Model */}
+      {onViewFullDCF && (
+        <div className="px-5">
+          <button
+            onClick={onViewFullDCF}
+            className="w-full rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white font-semibold text-xs py-2.5 px-4 transition-colors flex items-center justify-center gap-2"
+          >
+            Open Full DCF Model
+            <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* Disclaimer */}
+      <div className="px-5 pb-5">
+        <p className="text-[10px] text-white/25 leading-relaxed pt-3 border-t border-white/[0.07]">
+          Blended estimate from Forward P/E, EV/EBITDA, Revenue Multiple, and Core DCF. Not investment advice.
+        </p>
+      </div>
     </div>
   )
 }

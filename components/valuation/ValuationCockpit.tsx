@@ -304,21 +304,29 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
       {/* Collapsible guidance at top */}
       <GuidanceStrip />
 
-      {/* Scenario Range */}
-      <ScenarioCards
-        scenarios={output.scenarios}
-        currentPrice={currentPrice}
-        currency={currency}
-      />
+      {/* Two-column layout: left content + tall right sidebar */}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-4 items-start">
+        {/* Left column: scenario cards → chart → method cards */}
+        <div className="flex flex-col gap-4 min-w-0">
+          <ScenarioCards
+            scenarios={output.scenarios}
+            currentPrice={currentPrice}
+            currency={currency}
+          />
+          <FairValueChart
+            methods={output.methods}
+            blendedFairValue={output.blendedFairValue}
+            currentPrice={currentPrice}
+            currency={currency}
+          />
+          <ValuationMethodCards
+            methods={output.methods}
+            currentPrice={currentPrice}
+            currency={currency}
+          />
+        </div>
 
-      {/* Two-column: chart + sidebar */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_280px] gap-4 items-start">
-        <FairValueChart
-          methods={output.methods}
-          blendedFairValue={output.blendedFairValue}
-          currentPrice={currentPrice}
-          currency={currency}
-        />
+        {/* Right sidebar spans all three rows */}
         <RightSidebar
           output={output}
           currentPrice={currentPrice}
@@ -329,15 +337,8 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
         />
       </div>
 
-      {/* Full-width: divergence context before method numbers */}
+      {/* Full-width: divergence detail (per-method explanations) */}
       <ModelDivergencePanel divergence={output.divergence} />
-
-      {/* Full-width: method cards */}
-      <ValuationMethodCards
-        methods={output.methods}
-        currentPrice={currentPrice}
-        currency={currency}
-      />
 
       {/* Full-width: assumptions editor (single instance, no duplicate) */}
       <div ref={assumptionsPanelRef}>
