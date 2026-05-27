@@ -9,7 +9,7 @@ interface BusinessProfile {
 
 interface Scores {
   piotroski?: { score: number }
-  altman?: { score: number; zone: 'Safe' | 'Grey' | 'Distress' } | null
+  altman?: { zScore: number; zone: 'Safe' | 'Grey' | 'Distress' } | null
   beneish?: { flag: 'Clean' | 'Warning' | 'Manipulator' } | null
   roic?: { roic: number | null; spread: number | null } | null
 }
@@ -246,7 +246,7 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
         <SectionLabel>Profit Margins</SectionLabel>
         <div className="space-y-2.5">
           <MarginBar label="Gross Margin"   value={businessProfile.grossMargin} />
-          <MarginBar label="EBIT Margin"    value={ebitMargin ?? businessProfile.netMargin} />
+          <MarginBar label="EBIT Margin"    value={ebitMargin} />
           <MarginBar label="EBITDA Margin"  value={ebitdaMargin} />
           <MarginBar label="Net Margin"     value={businessProfile.netMargin} />
           <MarginBar label="FCF Margin"     value={businessProfile.fcfMargin} />

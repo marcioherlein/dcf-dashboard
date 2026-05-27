@@ -626,7 +626,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
             reportingCurrency={reportingCurrency}
             highlight={highlight ?? undefined}
           />
-          {(finCF.length > 0) && (
+          {(finCF.length > 0 && finIS.filter((r: { isProjected: boolean }) => !r.isProjected).length >= 2) && (
             <div className="border-t border-slate-100">
               <FinancialCharts
                 incomeStatement={finIS}

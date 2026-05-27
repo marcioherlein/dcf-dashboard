@@ -13,12 +13,13 @@ interface Props {
   activeTab: TabId
   data: AnyData
   statementsData: AnyData
+  computedScores?: AnyData
   onNavigateToFinancials?: (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => void
   onNavigateToFinancialsSection?: (section: 'analysts' | 'snapshot' | 'ownership') => void
   activeValuationMethodId?: string | null
 }
 
-export default function StockSidebar({ activeTab, data, statementsData, activeValuationMethodId, onNavigateToFinancialsSection }: Props) {
+export default function StockSidebar({ activeTab, data, statementsData, computedScores, activeValuationMethodId, onNavigateToFinancialsSection }: Props) {
   const derivedInsights = useMemo(() => {
     if (!data) return null
     return deriveFinancialInsightMetrics({
@@ -74,7 +75,7 @@ export default function StockSidebar({ activeTab, data, statementsData, activeVa
     return (
       <FinancialsSidebar
         businessProfile={data.businessProfile}
-        scores={data.scores}
+        scores={computedScores ?? data.scores}
         financialStatements={data.financialStatements}
         ownership={data.ownership}
       />

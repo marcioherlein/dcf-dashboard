@@ -563,7 +563,7 @@ function StockPageBody() {
             {(activeTab === 'overview' || activeTab === 'financials') && (
               <aside className="hidden lg:block">
                 <div className="sticky top-[68px] self-start space-y-3 pb-4 pt-5">
-                  <StockSidebar activeTab={activeTab} data={data} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} onNavigateToFinancialsSection={handleNavigateToFinancialsSection} />
+                  <StockSidebar activeTab={activeTab} data={data} statementsData={statementsData} computedScores={computedScores} onNavigateToFinancials={handleNavigateToFinancials} onNavigateToFinancialsSection={handleNavigateToFinancialsSection} />
                 </div>
               </aside>
             )}

@@ -145,14 +145,14 @@ export default function FinancialCharts({
                 formatter={(v) => v === 'revenue' ? 'Revenue' : 'Net Income'}
                 wrapperStyle={{ fontSize: '10px', color: tickFill }}
               />
-              <Bar dataKey="revenue" name="revenue" fill="#2563EB" radius={[3, 3, 0, 0]} isAnimationActive={false}
+              <Bar dataKey="revenue" name="revenue" fill="#2563EB" radius={[3, 3, 0, 0]} maxBarSize={36} isAnimationActive={false}
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 opacity={undefined}>
                 {revenueData.map((entry, i) => (
                   <Cell key={i} opacity={entry.isProjected ? 0.35 : 1} />
                 ))}
               </Bar>
-              <Bar dataKey="netIncome" name="netIncome" fill="#059669" radius={[3, 3, 0, 0]} isAnimationActive={false}>
+              <Bar dataKey="netIncome" name="netIncome" fill="#059669" radius={[3, 3, 0, 0]} maxBarSize={36} isAnimationActive={false}>
                 {revenueData.map((entry, i) => (
                   <Cell key={i} opacity={entry.isProjected ? 0.35 : 1} />
                 ))}
@@ -175,7 +175,7 @@ export default function FinancialCharts({
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 formatter={(v: any) => [`${currency}${fmtM(Number(v))}`, 'FCF']}
               />
-              <Bar dataKey="fcf" radius={[3, 3, 0, 0]} isAnimationActive={false}>
+              <Bar dataKey="fcf" radius={[3, 3, 0, 0]} maxBarSize={36} isAnimationActive={false}>
                 {fcfData.map((entry, i) => {
                   const positive = (entry.fcf ?? 0) >= 0
                   const base = positive ? '#059669' : '#DC2626'
@@ -239,12 +239,12 @@ export default function FinancialCharts({
                   formatter={(v) => v === 'ebitda' ? 'EBITDA' : 'Operating Income'}
                   wrapperStyle={{ fontSize: '10px', color: tickFill }}
                 />
-                <Bar dataKey="ebitda" name="ebitda" fill="#7C3AED" radius={[3, 3, 0, 0]} isAnimationActive={false}>
+                <Bar dataKey="ebitda" name="ebitda" fill="#7C3AED" radius={[3, 3, 0, 0]} maxBarSize={36} isAnimationActive={false}>
                   {ebitdaData.map((entry, i) => (
                     <Cell key={i} opacity={entry.isProjected ? 0.35 : 1} />
                   ))}
                 </Bar>
-                <Bar dataKey="opIncome" name="opIncome" fill="#D97706" radius={[3, 3, 0, 0]} isAnimationActive={false}>
+                <Bar dataKey="opIncome" name="opIncome" fill="#D97706" radius={[3, 3, 0, 0]} maxBarSize={36} isAnimationActive={false}>
                   {ebitdaData.map((entry, i) => (
                     <Cell key={i} opacity={entry.isProjected ? 0.35 : 1} />
                   ))}
