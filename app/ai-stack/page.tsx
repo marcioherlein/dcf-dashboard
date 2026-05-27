@@ -693,7 +693,7 @@ function LayerBadge({ layer, label }: { layer: number; label: string }) {
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 min-w-[130px]">
+    <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 sm:min-w-[130px]">
       <div className="text-[11px] text-slate-500 font-medium uppercase tracking-wide">{label}</div>
       <div className="text-xl font-bold text-slate-900 mt-0.5">{value}</div>
       {sub && <div className="text-[11px] text-slate-400 mt-0.5">{sub}</div>}
@@ -826,16 +826,16 @@ export default function AIStackPage() {
       )}
 
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-6 py-5">
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 sm:py-5">
         <div className="max-w-screen-2xl mx-auto">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div>
-              <h1 className="text-xl font-bold text-slate-900">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg sm:text-xl font-bold text-slate-900">
                 The AI Stack — Value Investing Dashboard
               </h1>
               <p className="text-sm text-slate-500 mt-1">
                 {data.length} companies across 16 layers of the AI infrastructure supply chain.
-                Live data from Yahoo Finance. Scored by Buffett/Lynch value metrics.
+                <span className="hidden sm:inline"> Live data from Yahoo Finance. Scored by Buffett/Lynch value metrics.</span>
               </p>
               {lastFetch && (
                 <p className="text-xs text-slate-400 mt-0.5">
@@ -861,12 +861,12 @@ export default function AIStackPage() {
 
           {/* Stats strip */}
           {stats && !loading && (
-            <div className="flex gap-3 mt-4 flex-wrap">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 mt-4">
               <StatCard label="Total Tracked" value={stats.total.toString()} sub="public companies" />
               <StatCard label="Avg Score" value={stats.avgScore.toString()} sub="out of 100" />
               <StatCard label="Undervalued" value={stats.undervalued.toString()} sub="score ≥ 70" />
               <div
-                className="bg-white border-2 rounded-xl px-4 py-3 min-w-[130px] cursor-pointer transition-colors"
+                className="col-span-2 sm:col-span-1 bg-white border-2 rounded-xl px-4 py-3 sm:min-w-[130px] cursor-pointer transition-colors"
                 style={{ borderColor: riskAverse ? '#16a34a' : '#e2e8f0', backgroundColor: riskAverse ? '#f0fdf4' : 'white' }}
                 onClick={() => setRiskAverse(v => !v)}
                 title="Click to toggle risk-averse filter"
@@ -886,7 +886,7 @@ export default function AIStackPage() {
                 value={stats.negFcf.toString()}
                 sub="burning cash"
               />
-              <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 min-w-[220px]">
+              <div className="col-span-2 sm:col-span-1 bg-white border border-slate-200 rounded-xl px-4 py-3 sm:min-w-[220px]">
                 <div className="text-[11px] text-slate-500 font-medium uppercase tracking-wide">Top Picks (by score)</div>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {stats.top5.map(r => (
@@ -907,9 +907,9 @@ export default function AIStackPage() {
       </div>
 
       {/* Controls */}
-      <div className="bg-white border-b border-slate-200 px-6 py-3 sticky top-[52px] z-20">
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 sticky top-[52px] z-20">
         <div className="max-w-screen-2xl mx-auto flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 focus-within:border-blue-400 transition-colors">
+          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 focus-within:border-blue-400 transition-colors min-w-0 flex-1 sm:flex-none">
             <svg className="h-3.5 w-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
             </svg>
@@ -918,7 +918,7 @@ export default function AIStackPage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search ticker, company, layer…"
-              className="bg-transparent text-[13px] text-slate-900 placeholder-slate-400 focus:outline-none w-48"
+              className="bg-transparent text-[13px] text-slate-900 placeholder-slate-400 focus:outline-none w-full sm:w-48"
             />
             {search && (
               <button onClick={() => setSearch('')} className="text-slate-400 hover:text-slate-600">✕</button>
@@ -982,7 +982,7 @@ export default function AIStackPage() {
       </div>
 
       {/* Table */}
-      <div className="px-6 py-4 max-w-screen-2xl mx-auto">
+      <div className="px-4 sm:px-6 py-4 max-w-screen-2xl mx-auto">
         {/* Layer insight card — shown when a specific layer is filtered */}
         {layerFilter !== null && <LayerInsightCard layer={layerFilter} />}
 
@@ -1105,7 +1105,7 @@ export default function AIStackPage() {
 
       {/* Score legend */}
       {!loading && data.length > 0 && (
-        <div className="px-6 pb-8 max-w-screen-2xl mx-auto">
+        <div className="px-4 sm:px-6 pb-8 max-w-screen-2xl mx-auto">
           <div className="bg-white border border-slate-200 rounded-xl p-4">
             <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-3">
               How the Value Score Works (0–100)

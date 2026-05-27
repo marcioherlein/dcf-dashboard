@@ -67,7 +67,7 @@ function LayerSection({ layer, rows }: { layer: number; rows: ValuationMetrics[]
       {/* Body */}
       <div style={{ border: `1px solid ${color}40`, borderTop: 'none', borderRadius: '0 0 8px 8px', background: 'white' }}>
         {/* 4 info fields in 2x2 grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: `1px solid #f1f5f9` }}>
+        <div className="report-layer-info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: `1px solid #f1f5f9` }}>
           {[
             { label: 'What They Do', text: info.what },
             { label: 'Revenue Model', text: info.revenue },
@@ -89,6 +89,7 @@ function LayerSection({ layer, rows }: { layer: number; rows: ValuationMetrics[]
         {top.length > 0 && (
           <div style={{ padding: '8px 12px 10px' }}>
             <div style={{ fontSize: '9px', fontWeight: 700, color: '#94a3b8', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '6px' }}>Top Companies by Value Score</div>
+            <div className="report-table-wrap">
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11.5px' }}>
               <thead>
                 <tr style={{ borderBottom: `2px solid ${color}30` }}>
@@ -117,6 +118,7 @@ function LayerSection({ layer, rows }: { layer: number; rows: ValuationMetrics[]
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>
@@ -160,10 +162,25 @@ export default function AIStackReport() {
           body { margin: 0; }
         }
         * { box-sizing: border-box; }
+        @media (max-width: 640px) {
+          #pdf-document { max-width: 100% !important; }
+          .report-cover { padding: 48px 24px !important; }
+          .report-cover h1 { font-size: 36px !important; }
+          .report-section { padding: 20px 16px !important; }
+          .report-layer-sections { padding: 16px !important; }
+          .report-closing { padding: 48px 20px !important; }
+          .report-closing h2 { font-size: 28px !important; }
+          .report-score-grid { grid-template-columns: 1fr !important; }
+          .report-score-bands { grid-template-columns: 1fr 1fr !important; }
+          .report-layer-info-grid { grid-template-columns: 1fr !important; }
+          .report-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+          .report-table-wrap table { min-width: 480px; }
+          .report-topbar { padding: 10px 16px !important; flex-wrap: wrap; gap: 8px; }
+        }
       `}</style>
 
       {/* Top bar */}
-      <div className="report-no-print" style={{
+      <div className="report-no-print report-topbar" style={{
         position: 'sticky', top: 0, zIndex: 50, background: '#0f172a',
         borderBottom: '1px solid #1e293b', padding: '12px 24px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -188,7 +205,7 @@ export default function AIStackReport() {
         <div id="pdf-document" style={{ maxWidth: '794px', margin: '0 auto', padding: '0', background: 'white', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
 
           {/* Cover */}
-          <div style={{
+          <div className="report-cover" style={{
             background: 'linear-gradient(150deg, #060d1a 0%, #0d1f3c 55%, #060d1a 100%)',
             padding: '80px 48px',
             textAlign: 'center',
@@ -215,13 +232,13 @@ export default function AIStackReport() {
           </div>
 
           {/* Scoring key */}
-          <div style={{ padding: '32px 32px 24px', pageBreakAfter: 'always', breakAfter: 'page' }}>
+          <div className="report-section" style={{ padding: '32px 32px 24px', pageBreakAfter: 'always', breakAfter: 'page' }}>
             <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.3em', color: '#64748b', textTransform: 'uppercase', marginBottom: '6px' }}>Methodology</div>
             <h2 style={{ fontSize: '26px', fontWeight: 800, color: '#0f172a', margin: '0 0 12px' }}>How Every Company Is Scored</h2>
             <p style={{ fontSize: '13px', color: '#64748b', lineHeight: 1.55, margin: '0 0 20px' }}>
               Composite 0–100 score from 9 value metrics weighted by their reliability as long-term signals (Buffett, Lynch &amp; Graham).
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '20px' }}>
+            <div className="report-score-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '20px' }}>
               {[
                 { label: 'FCF Yield 18%', desc: 'Free cash flow / market cap. Cash is king.', color: '#0ea5e9' },
                 { label: 'EV/EBITDA 15%', desc: 'Enterprise value vs operating earnings.', color: '#8b5cf6' },
@@ -239,7 +256,7 @@ export default function AIStackReport() {
                 </div>
               ))}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+            <div className="report-score-bands" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
               {[
                 { range: '70–100', label: 'UNDERVALUED', color: '#15803d', bg: '#dcfce7' },
                 { range: '55–69', label: 'FAIR VALUE', color: '#1d4ed8', bg: '#dbeafe' },
@@ -255,14 +272,14 @@ export default function AIStackReport() {
           </div>
 
           {/* Layer sections */}
-          <div style={{ padding: '24px 32px' }}>
+          <div className="report-layer-sections" style={{ padding: '24px 32px' }}>
             {LAYERS.map(layer => (
               <LayerSection key={layer} layer={layer} rows={byLayer[layer] ?? []} />
             ))}
           </div>
 
           {/* Closing */}
-          <div style={{
+          <div className="report-closing" style={{
             background: 'linear-gradient(150deg, #060d1a 0%, #0d1f3c 55%, #060d1a 100%)',
             padding: '72px 48px', textAlign: 'center',
           }}>
