@@ -156,11 +156,11 @@ function SearchHero() {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKey}
             placeholder="Search ticker or company, e.g. NVDA, MercadoLibre, Microsoft…"
-            className="flex-1 min-w-0 bg-transparent text-[15px] text-slate-800 placeholder-slate-400 focus:outline-none"
+            className="flex-1 min-w-0 bg-transparent text-base sm:text-[15px] text-slate-800 placeholder-slate-400 focus:outline-none"
           />
           <button
             onClick={() => query.trim() && select(query.trim().toUpperCase())}
-            className="shrink-0 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all px-4 py-1.5 text-[13px] font-semibold text-white"
+            className="shrink-0 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all px-4 py-2 sm:py-1.5 text-[13px] font-semibold text-white min-h-[36px]"
           >
             Search
           </button>
@@ -204,13 +204,13 @@ function SearchHero() {
       </div>
 
       {/* Popular chips */}
-      <div className="mt-4 flex items-center gap-2 flex-wrap">
-        <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wide">Popular:</span>
+      <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+        <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wide shrink-0">Popular:</span>
         {POPULAR_CHIPS.map((t) => (
           <Link
             key={t}
             href={`/stock/${t}`}
-            className="text-[12px] font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-full px-3 py-0.5 transition-colors"
+            className="text-[12px] font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-full px-3 py-1 transition-colors whitespace-nowrap shrink-0 min-h-[28px] flex items-center"
           >
             {t}
           </Link>
@@ -371,59 +371,64 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
         </Link>
       </div>
 
-      {/* Column headers */}
-      <div className="mt-4 grid grid-cols-[140px_1fr_1fr_100px] sm:grid-cols-[160px_1fr_1fr_100px_minmax(0,180px)] gap-x-3 pb-2 border-b border-slate-100">
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Stock</span>
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Implied 5Y CAGR *</span>
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">3Y Historical *</span>
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Expectation</span>
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide hidden sm:block">Interpretation</span>
-      </div>
+      {/* Scrollable container on mobile */}
+      <div className="overflow-x-auto -mx-5 px-5 scrollbar-hide">
+        <div className="min-w-[480px]">
+          {/* Column headers */}
+          <div className="mt-4 grid grid-cols-[140px_1fr_1fr_100px] sm:grid-cols-[160px_1fr_1fr_100px_minmax(0,180px)] gap-x-3 pb-2 border-b border-slate-100">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Stock</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Implied 5Y CAGR *</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">3Y Historical *</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Expectation</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide hidden sm:block">Interpretation</span>
+          </div>
 
-      <div className="divide-y divide-slate-50">
-        {quotes.map((q) => (
-          <Link
-            key={q.ticker}
-            href={`/stock/${q.ticker}`}
-            className="grid grid-cols-[140px_1fr_1fr_100px] sm:grid-cols-[160px_1fr_1fr_100px_minmax(0,180px)] gap-x-3 py-3 items-center hover:bg-slate-50 transition-colors -mx-1 px-1 rounded-lg"
-          >
-            {/* Stock */}
-            <div className="min-w-0">
-              <span className="text-[12px] font-bold text-slate-800 font-mono">{q.ticker}</span>
-              <span className="text-[11px] text-slate-500 ml-1.5 hidden sm:inline truncate">{q.name.split(' ')[0]}</span>
-            </div>
+          <div className="divide-y divide-slate-50">
+            {quotes.map((q) => (
+              <Link
+                key={q.ticker}
+                href={`/stock/${q.ticker}`}
+                className="grid grid-cols-[140px_1fr_1fr_100px] sm:grid-cols-[160px_1fr_1fr_100px_minmax(0,180px)] gap-x-3 py-3 items-center hover:bg-slate-50 transition-colors -mx-1 px-1 rounded-lg"
+              >
+                {/* Stock */}
+                <div className="min-w-0">
+                  <span className="text-[12px] font-bold text-slate-800 font-mono">{q.ticker}</span>
+                  <span className="text-[11px] text-slate-500 ml-1.5 hidden sm:inline truncate">{q.name.split(' ')[0]}</span>
+                </div>
 
-            {/* Implied CAGR bar */}
-            <div className="flex items-center gap-2">
-              <div
-                className={cn('h-2 rounded-full shrink-0', cagrBarColor(Math.abs(q.impliedCagr), 'implied'))}
-                style={{ width: `${Math.min(110, Math.abs(q.impliedCagr) * BAR_SCALE)}px` }}
-              />
-              <span className="text-[12px] font-semibold text-slate-700 tabular-nums whitespace-nowrap">
-                {q.impliedCagr > 0 ? '+' : ''}{q.impliedCagr}%
-              </span>
-            </div>
+                {/* Implied CAGR bar */}
+                <div className="flex items-center gap-2">
+                  <div
+                    className={cn('h-2 rounded-full shrink-0', cagrBarColor(Math.abs(q.impliedCagr), 'implied'))}
+                    style={{ width: `${Math.min(110, Math.abs(q.impliedCagr) * BAR_SCALE)}px` }}
+                  />
+                  <span className="text-[12px] font-semibold text-slate-700 tabular-nums whitespace-nowrap">
+                    {q.impliedCagr > 0 ? '+' : ''}{q.impliedCagr}%
+                  </span>
+                </div>
 
-            {/* Historical CAGR bar */}
-            <div className="flex items-center gap-2">
-              <div
-                className="h-2 bg-blue-400 rounded-full shrink-0"
-                style={{ width: `${Math.min(110, Math.abs(q.historicalCagr3y) * BAR_SCALE)}px` }}
-              />
-              <span className="text-[12px] font-semibold text-slate-700 tabular-nums whitespace-nowrap">
-                {q.historicalCagr3y}%
-              </span>
-            </div>
+                {/* Historical CAGR bar */}
+                <div className="flex items-center gap-2">
+                  <div
+                    className="h-2 bg-blue-400 rounded-full shrink-0"
+                    style={{ width: `${Math.min(110, Math.abs(q.historicalCagr3y) * BAR_SCALE)}px` }}
+                  />
+                  <span className="text-[12px] font-semibold text-slate-700 tabular-nums whitespace-nowrap">
+                    {q.historicalCagr3y}%
+                  </span>
+                </div>
 
-            {/* Expectation chip */}
-            <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap w-fit', expectationChip(q.expectation))}>
-              {q.expectation}
-            </span>
+                {/* Expectation chip */}
+                <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap w-fit', expectationChip(q.expectation))}>
+                  {q.expectation}
+                </span>
 
-            {/* Interpretation — desktop only */}
-            <span className="text-[11px] text-slate-500 hidden sm:block truncate">{q.interpretation}</span>
-          </Link>
-        ))}
+                {/* Interpretation — desktop only */}
+                <span className="text-[11px] text-slate-500 hidden sm:block truncate">{q.interpretation}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
 
       <p className="mt-3 text-[10px] text-slate-400">
