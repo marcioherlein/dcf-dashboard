@@ -96,15 +96,23 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
           const barWidth = fv != null ? Math.abs(fvPct! - pricePct) : 0
 
           return (
-            <div key={m.id} className="flex items-center h-10">
+            <div key={m.id} className="flex items-center h-12">
               {/* Label */}
-              <div className={`${LABEL_COL} text-right pr-3`}>
+              <div className={`${LABEL_COL} text-right pr-3 flex flex-col items-end gap-0.5`}>
                 <span
                   className={`text-[11px] font-medium leading-none ${
                     hasVal ? 'text-slate-600' : 'text-slate-300'
                   }`}
                 >
                   {LABEL[m.id] ?? m.method}
+                </span>
+                <span className={`text-[9px] font-semibold leading-none ${
+                  !hasVal ? 'text-slate-300'
+                  : m.confidence === 'high'   ? 'text-emerald-500'
+                  : m.confidence === 'medium' ? 'text-amber-500'
+                  :                             'text-red-400'
+                }`}>
+                  {!hasVal ? 'Unavailable' : m.confidence === 'high' ? 'High conf.' : m.confidence === 'medium' ? 'Med. conf.' : 'Low conf.'}
                 </span>
               </div>
 

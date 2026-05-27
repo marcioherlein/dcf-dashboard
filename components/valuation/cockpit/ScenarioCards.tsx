@@ -10,9 +10,9 @@ interface Props {
 }
 
 function ScenarioCard({
-  label, fv, wacc, cagr, baseWacc, baseCagr, currentPrice, currency, accentText, bgClass, borderClass,
+  label, description, fv, wacc, cagr, baseWacc, baseCagr, currentPrice, currency, accentText, bgClass, borderClass,
 }: {
-  label: string; fv: number | null; wacc: number; cagr: number
+  label: string; description: string; fv: number | null; wacc: number; cagr: number
   baseWacc: number; baseCagr: number
   currentPrice: number; currency: string
   accentText: string; bgClass: string; borderClass: string
@@ -25,7 +25,7 @@ function ScenarioCard({
 
   return (
     <div className={`rounded-xl border ${bgClass} ${borderClass} px-5 py-4 ${isBase ? 'ring-2 ring-blue-300 shadow-sm' : ''}`}>
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-0.5">
         <p className={`text-xs font-bold uppercase tracking-wider ${accentText}`}>{label}</p>
         {upside != null && (
           <span className={`text-xs font-bold tabular-nums ${upColor}`}>
@@ -33,6 +33,7 @@ function ScenarioCard({
           </span>
         )}
       </div>
+      <p className="text-[11px] text-slate-500 mb-2 leading-tight">{description}</p>
       <p className={`${isBase ? 'text-3xl' : 'text-2xl'} font-bold tabular-nums text-slate-900 leading-none mb-3`}>
         {fv != null ? fmtPrice(fv, currency) : '—'}
       </p>
@@ -75,19 +76,22 @@ export default function ScenarioCards({ scenarios, currentPrice, currency }: Pro
       <p className="text-[10px] text-slate-400 mb-3">All four methods re-run at each stress — same blend as Base.</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <ScenarioCard
-          label="Bear Case" fv={scenarios.bear.fairValue} wacc={scenarios.bear.wacc} cagr={scenarios.bear.cagr}
+          label="Bear Case" description="If growth slows & margins compress"
+          fv={scenarios.bear.fairValue} wacc={scenarios.bear.wacc} cagr={scenarios.bear.cagr}
           baseWacc={base.wacc} baseCagr={base.cagr}
           currentPrice={currentPrice} currency={currency}
           accentText="text-red-600" bgClass="bg-red-50" borderClass="border-red-200"
         />
         <ScenarioCard
-          label="Base Case" fv={scenarios.base.fairValue} wacc={scenarios.base.wacc} cagr={scenarios.base.cagr}
+          label="Base Case" description="Our best estimate"
+          fv={scenarios.base.fairValue} wacc={scenarios.base.wacc} cagr={scenarios.base.cagr}
           baseWacc={base.wacc} baseCagr={base.cagr}
           currentPrice={currentPrice} currency={currency}
           accentText="text-blue-600" bgClass="bg-blue-50" borderClass="border-blue-200"
         />
         <ScenarioCard
-          label="Bull Case" fv={scenarios.bull.fairValue} wacc={scenarios.bull.wacc} cagr={scenarios.bull.cagr}
+          label="Bull Case" description="If growth accelerates & scale improves"
+          fv={scenarios.bull.fairValue} wacc={scenarios.bull.wacc} cagr={scenarios.bull.cagr}
           baseWacc={base.wacc} baseCagr={base.cagr}
           currentPrice={currentPrice} currency={currency}
           accentText="text-emerald-600" bgClass="bg-emerald-50" borderClass="border-emerald-200"

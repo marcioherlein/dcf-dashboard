@@ -34,6 +34,7 @@ interface Props {
   ticker: string
   statementsData?: ApiData | null
   onNavigateToFinancials?: (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => void
+  onNavigateToRisks?: () => void
 }
 
 function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null): CockpitSnapshot {
@@ -184,7 +185,7 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
   }
 }
 
-export default function ValuationCockpit({ apiData, ticker, statementsData, onNavigateToFinancials }: Props) {
+export default function ValuationCockpit({ apiData, ticker, statementsData, onNavigateToFinancials, onNavigateToRisks }: Props) {
   const snapshot       = useMemo(() => buildSnapshot(apiData, statementsData), [apiData, statementsData])
   const defaults       = useMemo(() => seedAssumptions(apiData), [apiData])
   const historicalData = useMemo(() => buildHistoricalData(apiData), [apiData])
@@ -383,7 +384,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
       {/* End-of-page CTA */}
       <div className="rounded-xl bg-white border border-slate-100 shadow-sm px-5 py-5">
         <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">What do you want to do next?</p>
-        <div className={`grid grid-cols-1 gap-3 ${onNavigateToFinancials ? 'sm:grid-cols-2' : 'sm:grid-cols-1'}`}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             onClick={scrollToFullDCF}
             className="flex flex-col gap-1 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 hover:bg-blue-100 transition-colors text-left"
@@ -400,6 +401,22 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
               <span className="text-xs text-slate-500">Revenue, margins, cash flow and debt history</span>
             </button>
           )}
+          {onNavigateToRisks && (
+            <button
+              onClick={onNavigateToRisks}
+              className="flex flex-col gap-1 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 hover:bg-amber-100 transition-colors text-left"
+            >
+              <span className="text-sm font-bold text-amber-700">Review risks →</span>
+              <span className="text-xs text-slate-500">Key risk factors, signals, and sensitivity analysis</span>
+            </button>
+          )}
+          <button
+            onClick={() => setSaveOpen(true)}
+            className="flex flex-col gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 hover:bg-emerald-100 transition-colors text-left"
+          >
+            <span className="text-sm font-bold text-emerald-700">Save to watchlist →</span>
+            <span className="text-xs text-slate-500">Track this stock and get updates on value and price changes</span>
+          </button>
         </div>
       </div>
     </div>

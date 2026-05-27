@@ -1,10 +1,10 @@
 'use client'
 
 const STEPS = [
-  { num: '1', title: 'Set assumptions', body: 'Adjust WACC, CAGR, and exit multiples below to reflect your view of the company.', color: 'bg-blue-600' },
-  { num: '2', title: 'Check the methods', body: 'Each model values the company differently. The blended result reduces single-model risk.', color: 'bg-indigo-600' },
-  { num: '3', title: 'Read the scenarios', body: 'Bear/Base/Bull show how small assumption changes move the fair value range.', color: 'bg-violet-600' },
-  { num: '4', title: 'Compare to price', body: 'A stock below the bear-case is statistically cheap. Above the bull-case is expensive.', color: 'bg-purple-600' },
+  { num: '1', title: 'Start with the blended fair value', body: 'This combines the available valuation methods using model weights — it is the central estimate.', color: 'bg-blue-600' },
+  { num: '2', title: 'Check the scenarios', body: 'Bear, base, and bull cases show how sensitive value is to key assumptions.', color: 'bg-indigo-600' },
+  { num: '3', title: 'Compare valuation methods', body: 'Different methods can disagree. Wide dispersion means lower confidence in the blended estimate.', color: 'bg-violet-600' },
+  { num: '4', title: 'Review assumptions', body: 'Adjust growth, margins, multiples, and WACC to test your own view of the business.', color: 'bg-purple-600' },
 ]
 
 export default function GuidanceStrip() {

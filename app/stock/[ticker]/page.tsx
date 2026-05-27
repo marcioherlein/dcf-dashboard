@@ -207,6 +207,8 @@ function StockPageBody() {
     setFinancialsHighlight({ rowKey, statement })
   }
 
+  const handleNavigateToRisks = () => setActiveTab('risks')
+
   const handleNavigateToFinancialsSection = (section: 'analysts' | 'snapshot' | 'ownership') => {
     setActiveTab('financials')
     setFinancialsSubTab(section)
@@ -514,6 +516,7 @@ function StockPageBody() {
                       ticker={ticker}
                       statementsData={statementsData}
                       onNavigateToFinancials={handleNavigateToFinancials}
+                      onNavigateToRisks={handleNavigateToRisks}
                     />
                   )}
                 </motion.div>
