@@ -182,6 +182,8 @@ function fmtValue(v: unknown, vt: ValueType = 'money'): string {
     return `${(num * 100).toFixed(1)}%`
   }
   if (vt === 'shares') {
+    // Fix S6: return '—' for zero shares (data error)
+    if (num === 0) return '—'
     const thou = num / 1e3
     if (Math.abs(thou) >= 1000) return `${(thou / 1000).toFixed(1)}B shs`
     return `${thou.toFixed(0)}M shs`
@@ -217,8 +219,8 @@ function groupSections(rows: RowDef[]): Section[] {
       sections.push(current)
     } else {
       if (!current) {
-        // orphan row — create a nameless section
-        current = { header: { key: '__orphan__', label: '', indent: 0 }, children: [] }
+        // Fix S3: give orphan rows an explicit label instead of silent blank
+        current = { header: { key: '__orphan__', label: 'Other', indent: 0 }, children: [] }
         sections.push(current)
       }
       current.children.push(row)
@@ -300,6 +302,8 @@ export default function YahooFinancials({ statementsData, currency = '$', report
   const ttmData   = statement === 'income'  ? statementsData.ttm.incomeStatement
                   : statement === 'cashflow'? statementsData.ttm.cashFlow
                   : null
+  // Fix S1: track when TTM should show but data is absent for this statement
+  const ttmMissing = showTTM && !ttmData
 
   const displayPeriods = [...rawPeriods].reverse().slice(0, 5).reverse()
 
@@ -328,8 +332,21 @@ export default function YahooFinancials({ statementsData, currency = '$', report
     { id: 'cashflow', label: 'Cash Flow'        },
   ]
 
+  // Fix S5: flag when fewer than 4 periods are available
+  const sparseHistory = period === 'annual' && displayPeriods.length < 4
+
   return (
     <div className="overflow-hidden">
+      {/* Fix S2: row-flash keyframe animation */}
+      <style>{`
+        @keyframes row-flash-anim {
+          0%   { background-color: #fef9c3; }
+          70%  { background-color: #fef9c3; }
+          100% { background-color: transparent; }
+        }
+        .row-flash { animation: row-flash-anim 2s ease-out forwards; }
+      `}</style>
+
       {/* Controls — two rows on mobile, one row on sm+ */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 border-b border-slate-100">
         {/* Statement tabs — scrollable strip on mobile */}
@@ -375,8 +392,22 @@ export default function YahooFinancials({ statementsData, currency = '$', report
         </div>
       </div>
 
-      <div className="px-4 pt-2 pb-1 text-[11px] text-slate-400">
-        All figures in thousands ({reportingCurrency ?? currency}) · TTM = trailing twelve months
+      {/* Fix S5: sparse history notice */}
+      {sparseHistory && (
+        <div className="px-4 pt-2 flex items-center gap-1.5 text-[11px] text-amber-600">
+          <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+          </svg>
+          Only {displayPeriods.length} {period} {displayPeriods.length === 1 ? 'period' : 'periods'} available — limited history
+        </div>
+      )}
+
+      <div className="px-4 pt-2 pb-1 text-[11px] text-slate-400 flex items-center gap-3">
+        <span>All figures in thousands ({reportingCurrency ?? currency}) · TTM = trailing twelve months</span>
+        {/* Fix S1: show note when TTM data absent for this statement */}
+        {ttmMissing && (
+          <span className="text-slate-400 italic">TTM not available for this statement</span>
+        )}
       </div>
 
       {/* Table */}
@@ -405,18 +436,19 @@ export default function YahooFinancials({ statementsData, currency = '$', report
               const open = isOpen(section.header.key)
               const hdr = section.header
               const vt = hdr.valueType ?? 'money'
+              const isOrphan = hdr.key === '__orphan__'
 
               return [
                 // Section header row
-                hdr.key !== '__orphan__' && (
+                (
                   <tr
                     key={`hdr-${si}`}
                     id={`yfrow-${hdr.key}`}
-                    className={`border-b border-slate-100 bg-slate-50/60 hover:bg-slate-100/60 cursor-pointer select-none ${flashKey === hdr.key ? 'row-flash' : ''}`}
-                    onClick={() => hasChildren && setExpanded(e => ({ ...e, [hdr.key]: !isOpen(hdr.key) }))}
+                    className={`border-b border-slate-100 ${isOrphan ? 'bg-slate-50/30' : 'bg-slate-50/60 hover:bg-slate-100/60 cursor-pointer select-none'} ${flashKey === hdr.key ? 'row-flash' : ''}`}
+                    onClick={() => !isOrphan && hasChildren && setExpanded(e => ({ ...e, [hdr.key]: !isOpen(hdr.key) }))}
                   >
                     <td className="sticky left-0 z-10 bg-white px-3 sm:px-4 py-2 font-semibold text-slate-900 whitespace-nowrap flex items-center gap-1.5">
-                      {hasChildren && (
+                      {!isOrphan && hasChildren && (
                         <svg
                           className={`w-3 h-3 text-slate-400 shrink-0 transition-transform ${open ? 'rotate-90' : ''}`}
                           fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
@@ -424,21 +456,24 @@ export default function YahooFinancials({ statementsData, currency = '$', report
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                         </svg>
                       )}
-                      {!hasChildren && <span className="w-3 shrink-0" />}
-                      {hdr.label}
+                      {(isOrphan || !hasChildren) && <span className="w-3 shrink-0" />}
+                      {/* Fix S3: orphan rows get a subtle "Other" label instead of blank */}
+                      <span className={isOrphan ? 'text-[11px] font-medium text-slate-400 uppercase tracking-wider' : ''}>
+                        {hdr.label}
+                      </span>
                     </td>
                     {showTTM && ttmData && (
                       <td className={`text-right px-2 sm:px-3 py-2 tabular-nums font-semibold whitespace-nowrap ${
                         isNegNum(ttmData[hdr.key], vt) ? 'text-red-600' : 'text-slate-900'
                       }`}>
-                        {fmtValue(ttmData[hdr.key], vt)}
+                        {isOrphan ? '' : fmtValue(ttmData[hdr.key], vt)}
                       </td>
                     )}
                     {displayPeriods.map((p, j) => (
                       <td key={j} className={`text-right px-2 sm:px-3 py-2 tabular-nums font-semibold whitespace-nowrap ${
                         isNegNum(p[hdr.key], vt) ? 'text-red-600' : 'text-slate-700'
                       }`}>
-                        {fmtValue(p[hdr.key], vt)}
+                        {isOrphan ? '' : fmtValue(p[hdr.key], vt)}
                       </td>
                     ))}
                   </tr>
