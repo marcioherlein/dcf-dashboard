@@ -304,7 +304,10 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
   const histLFCF = [...lfcfRows].reverse().find(r => !r.isProjected)?.lfcf ?? null
   const sensitivityBaseFCF = isLfcf ? (histLFCF ?? baseInput.baseFCF) : (histUFCF ?? baseInput.baseFCF)
   const sensitivityLastFCF = isLfcf ? lastLFCF : lastUFCF
-  const sensitivityCagr = useMemo(() => {
+  // sensitivityCagr derived from FCF projections is intentionally unused —
+  // the matrix always uses the user's input cagr for consistency.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _sensitivityCagr = useMemo(() => {
     if (sensitivityBaseFCF != null && sensitivityBaseFCF > 0 &&
         sensitivityLastFCF != null && sensitivityLastFCF > 0 &&
         numProjectionYears > 0) {
