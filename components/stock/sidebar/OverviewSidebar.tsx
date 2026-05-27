@@ -161,7 +161,7 @@ export default function OverviewSidebar({
 
       {/* ── Card 1: Analyst Consensus ──────────────────────────────────────── */}
       <Card>
-        <SectionLabel>Analyst Consensus</SectionLabel>
+        <SectionLabel>Wall Street Analysts</SectionLabel>
 
         <div className="flex items-center justify-between mb-3">
           <span className={cn('text-sm font-bold px-3 py-1 rounded-full border', recBg, recColor)}>

@@ -26,6 +26,7 @@ import FlipCard from '@/components/ui/FlipCard'
 import CardBack from '@/components/ui/CardBack'
 import StockSummaryCard from '@/components/stock/overview/StockSummaryCard'
 import FairValueBar from '@/components/stock/overview/FairValueBar'
+import SignalDivergenceCallout from '@/components/stock/overview/SignalDivergenceCallout'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
@@ -425,6 +426,17 @@ function StockPageBody() {
                     currency={data.quote.currency ?? 'USD'}
                     bearCase={data.scenarios?.bear?.fairValue ?? null}
                     bullCase={data.scenarios?.bull?.fairValue ?? null}
+                  />
+
+                  {/* 1c. Signal divergence — only shown when analyst and model disagree */}
+                  <SignalDivergenceCallout
+                    analystRecommendation={data.analystRecommendation ?? ''}
+                    analystTargetMean={data.quote.analystTargetMean ?? 0}
+                    numAnalysts={data.cagrAnalysis?.numAnalysts ?? 0}
+                    price={data.quote.price}
+                    currency={data.quote.currency ?? 'USD'}
+                    upsidePct={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null}
+                    fairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? null}
                   />
 
                   {/* 2. Reverse DCF — what the market is pricing in */}
