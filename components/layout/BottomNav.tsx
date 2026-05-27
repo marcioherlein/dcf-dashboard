@@ -33,7 +33,7 @@ const NAV = [
     match: (p: string) => p === '/' || p.startsWith('/stock'),
     icon: (active: boolean) => (
       <div className={cn(
-        'w-10 h-10 rounded-full flex items-center justify-center -mt-4 ring-4 ring-white shadow-lg',
+        'w-10 h-10 rounded-full flex items-center justify-center -mt-4 ring-4 ring-slate-100 shadow-lg',
         active
           ? 'bg-gradient-to-br from-blue-500 to-blue-700'
           : 'bg-blue-600'
@@ -71,7 +71,7 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 lg:hidden glass-bottom-nav"
+      className="fixed bottom-0 left-0 right-0 z-50 lg:hidden glass-bottom-nav"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex items-end justify-around h-14">
@@ -83,14 +83,14 @@ export default function BottomNav() {
               key={href}
               href={href}
               className={cn(
-                'flex flex-col items-center gap-0.5 flex-1 py-1.5 transition-colors',
-                isCenter ? 'pb-3' : ''
+                'flex flex-col items-center gap-0.5 flex-1 py-2.5 transition-colors min-w-[44px]',
+                isCenter ? 'pb-4' : ''
               )}
             >
               {icon(active)}
               {!isCenter && (
                 <span className={cn(
-                  'text-[9px] font-semibold uppercase tracking-wide',
+                  'text-[10px] font-semibold uppercase tracking-wide',
                   active ? 'text-blue-600' : 'text-slate-400'
                 )}>
                   {label}

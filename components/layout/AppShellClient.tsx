@@ -20,7 +20,7 @@ export default function AppShellClient({ children }: { children: React.ReactNode
           <TopBar />
         </Suspense>
         <Sidebar />
-        <div className="pt-[52px] pb-safe-nav lg:pb-0 lg:pl-[220px]">
+        <div className="pt-[52px] pb-safe-nav lg:pb-6 lg:pl-[220px]">
           {children}
         </div>
         <BottomNav />
