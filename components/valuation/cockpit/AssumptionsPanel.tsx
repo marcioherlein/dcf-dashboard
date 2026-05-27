@@ -44,23 +44,32 @@ function fmtVal(val: number, unit: '%' | 'x'): string {
   return unit === '%' ? (val * 100).toFixed(1) + '%' : val.toFixed(1) + '×'
 }
 
+function fmtDelta(delta: number, unit: '%' | 'x'): string {
+  if (unit === '%') return (delta >= 0 ? '+' : '') + (delta * 100).toFixed(1) + 'pp'
+  return (delta >= 0 ? '+' : '') + delta.toFixed(1) + '×'
+}
+
 function medianOf(arr: number[]): number {
   const s = [...arr].sort((a, b) => a - b)
   const m = Math.floor(s.length / 2)
   return s.length % 2 === 0 ? (s[m - 1] + s[m]) / 2 : s[m]
 }
 
-function getStats(field: Field, sparkPoints?: SparkPoint[]): { min: number; med: number; max: number; isReal: boolean } {
+// Uses all sparkPoints (including 'curr') for stats so live multiples count.
+// isReal = true only when 2+ time-series (non-'curr') points exist.
+function getStats(field: Field, sparkPoints?: SparkPoint[]): {
+  min: number; med: number; max: number; isReal: boolean
+} {
   const series = sparkPoints?.filter(p => p.label !== 'curr') ?? []
   if (series.length >= 2) {
     const vals = series.map(p => p.value)
     return { min: Math.min(...vals), med: medianOf(vals), max: Math.max(...vals), isReal: true }
   }
-  const med = (field.typicalMin + field.typicalMax) / 2
-  return { min: field.typicalMin, med, max: field.typicalMax, isReal: false }
+  // Fall back to typical range
+  return { min: field.typicalMin, med: (field.typicalMin + field.typicalMax) / 2, max: field.typicalMax, isReal: false }
 }
 
-// ── Sparkline ─────────────────────────────────────────────────────────────────
+// ── Sparkline (time-series points only — excludes 'curr') ─────────────────────
 
 function Sparkline({ points, width = 80, height = 34 }: { points: SparkPoint[]; width?: number; height?: number }) {
   const series = points.filter(p => p.label !== 'curr')
@@ -88,8 +97,9 @@ function Sparkline({ points, width = 80, height = 34 }: { points: SparkPoint[]; 
   )
 }
 
-// ── Column layout (shared between header and rows) ────────────────────────────
+// ── Shared column layout ──────────────────────────────────────────────────────
 const COL_STYLE = { gridTemplateColumns: '190px 170px 1fr 115px 125px 24px' }
+const MIN_WIDTH  = 700
 
 // ── Assumption row ─────────────────────────────────────────────────────────────
 
@@ -106,11 +116,11 @@ function AssumptionRow({
 }) {
   const stats = getStats(field, sparkPoints)
 
-  const currPoint = sparkPoints?.find(p => p.label === 'curr')
+  const currPoint   = sparkPoints?.find(p => p.label === 'curr')
   const recentPoint = sparkPoints?.filter(p => p.label !== 'curr').at(-1)
-  const ttmPoint = currPoint ?? recentPoint
-  const ttmVal = ttmPoint?.value
-  const ttmLabel = currPoint != null ? 'TTM' : (recentPoint != null ? 'Recent (5Y)' : null)
+  const ttmPoint    = currPoint ?? recentPoint
+  const ttmVal      = ttmPoint?.value
+  const ttmLabel    = currPoint != null ? 'TTM' : (recentPoint != null ? 'Recent (5Y)' : null)
 
   const sensText = sensitivityImpact != null
     ? (sensitivityImpact >= 0 ? '+' : '') + (sensitivityImpact * 100).toFixed(1) + '%'
@@ -118,6 +128,7 @@ function AssumptionRow({
   const sensUnit = field.unit === '%' ? '1pp' : '1×'
 
   const sliderPct = Math.max(0, Math.min(100, ((value - field.min) / (field.max - field.min)) * 100))
+  const delta = value - defaultValue
 
   function clamp(v: number) {
     return Math.min(field.max, Math.max(field.min, Math.round(v * 100000) / 100000))
@@ -145,7 +156,7 @@ function AssumptionRow({
         </div>
       </div>
 
-      {/* Col 2: Stepper + value + slider */}
+      {/* Col 2: Stepper + value (with delta) + slider */}
       <div className="flex flex-col gap-1 pr-4">
         <div className="flex items-center gap-2">
           <button
@@ -153,9 +164,16 @@ function AssumptionRow({
             className="w-6 h-6 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-400 hover:text-slate-700 font-bold flex items-center justify-center text-sm transition-all select-none shrink-0"
             aria-label={`Decrease ${field.label}`}
           >−</button>
-          <span className={`text-[15px] font-bold tabular-nums flex-1 text-center ${isDirty ? 'text-blue-600' : 'text-slate-800'}`}>
-            {fmtVal(value, field.unit)}
-          </span>
+          <div className="flex-1 text-center min-w-0">
+            <div className={`text-[15px] font-bold tabular-nums leading-none ${isDirty ? 'text-blue-600' : 'text-slate-800'}`}>
+              {fmtVal(value, field.unit)}
+            </div>
+            {isDirty && (
+              <div className={`text-[9px] tabular-nums mt-[2px] leading-none ${delta > 0 ? 'text-emerald-500' : 'text-red-400'}`}>
+                {fmtDelta(delta, field.unit)}
+              </div>
+            )}
+          </div>
           <button
             onClick={() => onChange(clamp(value + field.step))}
             className="w-6 h-6 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-400 hover:text-slate-700 font-bold flex items-center justify-center text-sm transition-all select-none shrink-0"
@@ -188,7 +206,7 @@ function AssumptionRow({
         </div>
       </div>
 
-      {/* Col 3: 5Y History — Min/Median/Max + sparkline */}
+      {/* Col 3: History stats + sparkline */}
       <div className="flex items-center gap-3 px-2">
         <div className="flex flex-col gap-[3px] shrink-0">
           <div className="flex items-baseline gap-1.5">
@@ -203,6 +221,10 @@ function AssumptionRow({
             <span className="text-[11px] tabular-nums text-slate-500 w-12">{fmtVal(stats.max, field.unit)}</span>
             <span className="text-[9px] text-slate-400">Max</span>
           </div>
+          {/* Honest label — distinguish real history from typical-range fallback */}
+          {!stats.isReal && (
+            <span className="text-[8px] text-slate-300 italic mt-0.5">typical</span>
+          )}
         </div>
 
         <div className="flex-1 flex items-center">
@@ -274,17 +296,44 @@ export default function AssumptionsPanel({
   const numModified = FIELDS.filter(f => Math.abs((assumptions[f.key] as number) - (defaults[f.key] as number)) > 0.00001).length
   const isModified  = numModified > 0
 
+  function applyPreset(waccMult: number, cagrDelta: number) {
+    onChange({
+      ...defaults,
+      wacc: Math.round(defaults.wacc * waccMult * 100000) / 100000,
+      cagr: Math.round(Math.max(defaults.cagr + cagrDelta, -0.05) * 100000) / 100000,
+    })
+  }
+
   return (
     <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
 
-      {/* Header */}
+      {/* Panel header */}
       <div className="px-5 pt-5 pb-4 border-b border-slate-100">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
             <p className="text-[15px] font-bold text-slate-800">Assumptions</p>
             <p className="text-[12px] text-slate-400 mt-0.5">Edit key inputs that drive your intrinsic value.</p>
           </div>
-          <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Quick scenario presets */}
+            <div className="flex items-center rounded-lg border border-slate-200 overflow-hidden divide-x divide-slate-200 text-[11px] font-semibold">
+              <button
+                onClick={() => applyPreset(1.10, -0.03)}
+                className="px-2.5 py-1.5 hover:bg-red-50 text-red-600 transition-colors"
+                title="Bear: WACC +10%, CAGR −3pp"
+              >Bear</button>
+              <button
+                onClick={onReset}
+                className="px-2.5 py-1.5 hover:bg-blue-50 text-blue-600 transition-colors"
+                title="Base: model defaults"
+              >Base</button>
+              <button
+                onClick={() => applyPreset(0.90, 0.03)}
+                className="px-2.5 py-1.5 hover:bg-emerald-50 text-emerald-600 transition-colors"
+                title="Bull: WACC −10%, CAGR +3pp"
+              >Bull</button>
+            </div>
+
             {deltaPct != null && isModified && Math.abs(deltaPct) > 0.001 && (
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
                 deltaPct >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-50 text-red-600'
@@ -292,6 +341,7 @@ export default function AssumptionsPanel({
                 {deltaPct >= 0 ? '▲' : '▼'} {Math.abs(deltaPct * 100).toFixed(1)}% blended FV
               </span>
             )}
+
             {canUndo && onUndo && (
               <button
                 onClick={onUndo}
@@ -300,6 +350,7 @@ export default function AssumptionsPanel({
                 ↩ Undo
               </button>
             )}
+
             <button
               onClick={onReset}
               disabled={!isModified}
@@ -311,34 +362,36 @@ export default function AssumptionsPanel({
         </div>
       </div>
 
-      {/* Column headers */}
-      <div
-        className="grid px-5 py-2.5 bg-slate-50/80 border-b border-slate-100"
-        style={COL_STYLE}
-      >
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Assumption</span>
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 pr-4">
-          Your Input
-          <span className="block text-[9px] font-normal normal-case tracking-normal text-slate-300">Edit value</span>
-        </span>
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 px-2">
-          5Y History
-          <span className="block text-[9px] font-normal normal-case tracking-normal text-slate-300">Min / Median / Max</span>
-        </span>
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-center px-2">
-          Current / Median
-          <span className="block text-[9px] font-normal normal-case tracking-normal text-slate-300">TTM or Recent</span>
-        </span>
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-right px-2">
-          Fair Value Impact
-          <span className="block text-[9px] font-normal normal-case tracking-normal text-slate-300">vs. Base Case</span>
-        </span>
-        <span />
-      </div>
-
-      {/* Rows — horizontal scroll on small screens */}
+      {/* Column headers + rows share one scroll container so they stay aligned on mobile */}
       <div className="overflow-x-auto">
-        <div style={{ minWidth: 700 }}>
+        <div style={{ minWidth: MIN_WIDTH }}>
+
+          {/* Column headers */}
+          <div
+            className="grid px-5 py-2.5 bg-slate-50/80 border-b border-slate-100"
+            style={COL_STYLE}
+          >
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Assumption</span>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 pr-4">
+              Your Input
+              <span className="block text-[9px] font-normal normal-case tracking-normal text-slate-300">Edit value</span>
+            </span>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 px-2">
+              5Y History
+              <span className="block text-[9px] font-normal normal-case tracking-normal text-slate-300">Min / Median / Max</span>
+            </span>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-center px-2">
+              Current / Median
+              <span className="block text-[9px] font-normal normal-case tracking-normal text-slate-300">TTM or Recent</span>
+            </span>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-right px-2">
+              Fair Value Impact
+              <span className="block text-[9px] font-normal normal-case tracking-normal text-slate-300">vs. Base Case</span>
+            </span>
+            <span />
+          </div>
+
+          {/* Assumption rows */}
           {FIELDS.map(f => {
             const val    = assumptions[f.key] as number
             const defVal = defaults[f.key]  as number
@@ -355,6 +408,7 @@ export default function AssumptionsPanel({
               />
             )
           })}
+
         </div>
       </div>
 
@@ -363,6 +417,10 @@ export default function AssumptionsPanel({
         <div className="flex items-center gap-1.5 text-[9px] text-slate-400">
           <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
           Modified from default
+        </div>
+        <div className="flex items-center gap-1.5 text-[9px] text-slate-400">
+          <span className="text-[8px] italic text-slate-300">typical</span>
+          No historical data — showing industry range
         </div>
         <div className="flex items-center gap-3 text-[9px] text-slate-400 ml-auto">
           {(['DCF', 'P/E', 'EBITDA', 'Rev'] as MethodKey[]).map(m => (
@@ -375,6 +433,7 @@ export default function AssumptionsPanel({
           ))}
         </div>
       </div>
+
     </div>
   )
 }
