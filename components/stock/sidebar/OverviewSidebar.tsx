@@ -46,6 +46,9 @@ interface Props {
   ownership?: { insiderPct: number | null; institutionalPct: number | null } | null
   businessProfile?: BusinessProfile | null
   ticker?: string
+  onViewAnalysts?: () => void
+  onViewSnapshot?: () => void
+  onViewOwnership?: () => void
 }
 
 // ── Primitives ────────────────────────────────────────────────────────────────
@@ -130,6 +133,9 @@ export default function OverviewSidebar({
   wacc,
   fairValueData,
   ownership,
+  onViewAnalysts,
+  onViewSnapshot,
+  onViewOwnership,
 }: Props) {
   const { price, peRatio, fiftyTwoWeekHigh, fiftyTwoWeekLow, analystTargetMean, marketCap, currency } = quote
   const sym = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$ ' : currency + ' '
@@ -192,7 +198,7 @@ export default function OverviewSidebar({
           </div>
         )}
 
-        <button className="mt-3 text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+        <button onClick={onViewAnalysts} className="mt-3 text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
           View analyst estimates →
         </button>
       </Card>
@@ -259,7 +265,7 @@ export default function OverviewSidebar({
           )}
         </div>
 
-        <button className="mt-3 text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+        <button onClick={onViewSnapshot} className="mt-3 text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
           View full snapshot →
         </button>
       </Card>
@@ -289,7 +295,7 @@ export default function OverviewSidebar({
                 ))}
               </div>
             </div>
-            <button className="mt-3 text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+            <button onClick={onViewOwnership} className="mt-3 text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
               View ownership details →
             </button>
           </Card>

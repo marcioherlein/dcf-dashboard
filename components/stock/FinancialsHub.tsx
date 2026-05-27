@@ -20,14 +20,18 @@ interface Props {
   reportingCurrency?: string
   cagr?:           number
   highlight?:      { rowKey: string; statement: 'income' | 'balance' | 'cashflow' } | null
+  initialSubTab?:  SubTab | null
 }
 
-type SubTab = 'statements' | 'growth' | 'profitability' | 'solvency'
+type SubTab = 'statements' | 'growth' | 'profitability' | 'solvency' | 'analysts' | 'snapshot' | 'ownership'
 const SUB_TABS: { id: SubTab; label: string }[] = [
   { id: 'statements',    label: 'Statements'    },
   { id: 'growth',        label: 'Growth'        },
   { id: 'profitability', label: 'Profitability' },
   { id: 'solvency',      label: 'Solvency'      },
+  { id: 'analysts',      label: 'Analysts'      },
+  { id: 'snapshot',      label: 'Snapshot'      },
+  { id: 'ownership',     label: 'Ownership'     },
 ]
 
 // ── Small helpers ──────────────────────────────────────────────────────────────
@@ -389,8 +393,8 @@ function toM(v: unknown): number | null {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export default function FinancialsHub({ statementsData, financialsData, currency = '$', reportingCurrency, highlight }: Props) {
-  const [subTab, setSubTab] = useState<SubTab>('statements')
+export default function FinancialsHub({ statementsData, financialsData, currency = '$', reportingCurrency, highlight, initialSubTab }: Props) {
+  const [subTab, setSubTab] = useState<SubTab>(initialSubTab ?? 'statements')
 
   // When a navigation highlight arrives from Valuation Lab, switch to Statements sub-tab
   const highlightKey = highlight ? `${highlight.rowKey}:${highlight.statement}` : null
@@ -398,6 +402,11 @@ export default function FinancialsHub({ statementsData, financialsData, currency
     if (highlightKey) setSubTab('statements')
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [highlightKey])
+
+  // When initialSubTab changes (sidebar CTA clicked), jump to that sub-tab
+  useEffect(() => {
+    if (initialSubTab) setSubTab(initialSubTab)
+  }, [initialSubTab])
 
   const periods = useMemo(() => buildPeriods(statementsData), [statementsData])
   const cols    = periods.map(p => p.year)
@@ -668,6 +677,179 @@ export default function FinancialsHub({ statementsData, financialsData, currency
           <MetricsTable columns={cols} rows={solvencyRows} />
         </div>
       )}
+
+      {/* ── Analysts ── */}
+      {subTab === 'analysts' && (() => {
+        const q = financialsData?.quote ?? {}
+        const ca = financialsData?.cagrAnalysis ?? {}
+        const rec = (financialsData?.analystRecommendation ?? '').toLowerCase()
+        const isBuy  = rec.includes('buy') || rec === 'strong_buy' || rec === 'strongbuy'
+        const isSell = rec.includes('sell') || rec.includes('underperform') || rec.includes('underweight')
+        const recLabel = isBuy ? 'Buy' : isSell ? 'Sell' : 'Hold'
+        const recBg    = isBuy ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : isSell ? 'bg-red-50 border-red-200 text-red-700' : 'bg-amber-50 border-amber-200 text-amber-700'
+        const sym = q.currency === 'BRL' ? 'R$ ' : q.currency === 'USD' ? '$' : (q.currency ?? '$') + ' '
+        const targetUpside = q.analystTargetMean > 0 && q.price > 0 ? (q.analystTargetMean - q.price) / q.price : null
+        const upsideColor  = targetUpside == null ? '' : targetUpside >= 0 ? 'text-emerald-600' : 'text-red-600'
+        return (
+          <div className="px-4 sm:px-5 py-5 space-y-5">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">Consensus Rating</p>
+              <div className="flex items-center gap-3 mb-4">
+                <span className={`text-sm font-bold px-4 py-1.5 rounded-full border ${recBg}`}>{recLabel}</span>
+                {ca.numAnalysts > 0 && <span className="text-[12px] text-slate-400">{ca.numAnalysts} analysts covering this stock</span>}
+              </div>
+            </div>
+            {q.analystTargetMean > 0 && (
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">Price Targets</p>
+                <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 overflow-hidden">
+                  {[
+                    { label: 'Average Target',  val: q.analystTargetMean,  upside: targetUpside, highlight: true },
+                    { label: 'Low Target',       val: q.analystTargetLow,   upside: q.analystTargetLow  != null && q.price > 0 ? (q.analystTargetLow  - q.price) / q.price : null, highlight: false },
+                    { label: 'High Target',      val: q.analystTargetHigh,  upside: q.analystTargetHigh != null && q.price > 0 ? (q.analystTargetHigh - q.price) / q.price : null, highlight: false },
+                    { label: 'Current Price',    val: q.price,              upside: null, highlight: false },
+                  ].filter(r => r.val != null && r.val > 0).map(r => (
+                    <div key={r.label} className={`flex items-center justify-between px-4 py-3 ${r.highlight ? 'bg-blue-50' : 'bg-white'}`}>
+                      <span className={`text-[13px] ${r.highlight ? 'font-semibold text-slate-700' : 'text-slate-500'}`}>{r.label}</span>
+                      <div className="flex items-center gap-2 tabular-nums">
+                        <span className={`text-[13px] font-bold ${r.highlight ? 'text-slate-900' : 'text-slate-700'}`}>
+                          {sym}{(r.val as number).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                        {r.upside != null && (
+                          <span className={`text-[11px] font-semibold ${r.upside >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                            {r.upside >= 0 ? '+' : ''}{(r.upside * 100).toFixed(1)}%
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {q.analystTargetLow != null && q.analystTargetHigh != null && q.analystTargetMean > 0 && (() => {
+                  const lo = q.analystTargetLow as number
+                  const hi = q.analystTargetHigh as number
+                  const avg = q.analystTargetMean as number
+                  const span = hi - lo
+                  const avgPct = span > 0 ? Math.max(2, Math.min(98, ((avg - lo) / span) * 100)) : 50
+                  const pricePct = span > 0 ? Math.max(2, Math.min(98, ((q.price - lo) / span) * 100)) : 50
+                  return (
+                    <div className="mt-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Target Range</p>
+                      <div className="relative h-2 rounded-full bg-slate-100 overflow-hidden mb-1">
+                        <div className="absolute inset-0 bg-gradient-to-r from-slate-300 to-blue-300" />
+                        <div className="absolute top-1/2 -translate-y-1/2 w-0.5 h-full bg-blue-600 z-10" style={{ left: `${avgPct}%` }} />
+                        <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-slate-800 border-2 border-white shadow z-20" style={{ left: `calc(${pricePct}% - 6px)` }} />
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[10px] text-slate-400 tabular-nums">{sym}{lo.toFixed(2)} Low</span>
+                        <span className="text-[10px] text-blue-500 tabular-nums">Avg {sym}{avg.toFixed(2)}</span>
+                        <span className="text-[10px] text-slate-400 tabular-nums">High {sym}{hi.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  )
+                })()}
+              </div>
+            )}
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Analyst targets represent Wall Street consensus. They may differ from our intrinsic value model, which uses discounted cash flow analysis.
+            </p>
+          </div>
+        )
+      })()}
+
+      {/* ── Snapshot ── */}
+      {subTab === 'snapshot' && (() => {
+        const q = financialsData?.quote ?? {}
+        const fv = financialsData?.fairValue ?? {}
+        const wacc = financialsData?.wacc ?? {}
+        const sym = q.currency === 'BRL' ? 'R$ ' : q.currency === 'USD' ? '$' : (q.currency ?? '$') + ' '
+        function fmtLarge(v: number) {
+          if (v >= 1e12) return `${sym}${(v / 1e12).toFixed(2)}T`
+          if (v >= 1e9)  return `${sym}${(v / 1e9).toFixed(2)}B`
+          if (v >= 1e6)  return `${sym}${(v / 1e6).toFixed(2)}M`
+          return `${sym}${v.toLocaleString()}`
+        }
+        const rows: { label: string; value: string | null }[] = [
+          { label: 'Current Price',       value: q.price > 0 ? `${sym}${q.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : null },
+          { label: 'Market Cap',          value: q.marketCap > 0 ? fmtLarge(q.marketCap) : null },
+          { label: 'Enterprise Value',    value: fv.ev > 0 ? fmtLarge(fv.ev) : null },
+          { label: 'P/E (TTM)',           value: q.peRatio > 0 && q.peRatio < 2000 ? `${q.peRatio.toFixed(1)}×` : null },
+          { label: 'PEG (5Y)',            value: q.pegRatio > 0 && q.pegRatio < 100 ? `${q.pegRatio.toFixed(2)}×` : null },
+          { label: 'Beta',                value: wacc?.inputs?.beta != null ? wacc.inputs.beta.toFixed(2) : null },
+          { label: 'Shares Outstanding',  value: q.sharesOutstanding > 0 ? (q.sharesOutstanding >= 1e9 ? `${(q.sharesOutstanding/1e9).toFixed(1)}B` : q.sharesOutstanding >= 1e6 ? `${(q.sharesOutstanding/1e6).toFixed(1)}M` : q.sharesOutstanding.toLocaleString()) : null },
+          { label: '52W High',            value: q.fiftyTwoWeekHigh > 0 ? `${sym}${q.fiftyTwoWeekHigh.toFixed(2)}` : null },
+          { label: '52W Low',             value: q.fiftyTwoWeekLow  > 0 ? `${sym}${q.fiftyTwoWeekLow.toFixed(2)}`  : null },
+          { label: 'Next Earnings',       value: q.nextEarningsDate ? new Date(q.nextEarningsDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null },
+          { label: 'Sector',              value: q.sector || null },
+          { label: 'Exchange',            value: q.exchange ? (q.exchange as string).replace(/nasdaq.*/i, 'NASDAQ').replace(/nyse.*/i, 'NYSE') : null },
+        ].filter(r => r.value != null)
+        return (
+          <div className="px-4 sm:px-5 py-5">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">Market & Valuation Snapshot</p>
+            <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 overflow-hidden">
+              {rows.map(r => (
+                <div key={r.label} className="flex items-center justify-between px-4 py-3 bg-white">
+                  <span className="text-[13px] text-slate-500">{r.label}</span>
+                  <span className="text-[13px] font-semibold text-slate-800 tabular-nums">{r.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ── Ownership ── */}
+      {subTab === 'ownership' && (() => {
+        const ownership = financialsData?.ownership ?? null
+        if (!ownership || (ownership.institutionalPct == null && ownership.insiderPct == null)) {
+          return (
+            <div className="px-4 sm:px-5 py-8 text-center text-sm text-slate-400">
+              Ownership data unavailable
+            </div>
+          )
+        }
+        const inst    = ownership.institutionalPct ?? 0
+        const insider = ownership.insiderPct ?? 0
+        const retail  = Math.max(0, 100 - inst - insider)
+        const segments = [
+          { label: 'Institutions', pct: inst,    color: 'bg-blue-500',  bar: 'bg-blue-500',  text: 'text-blue-700', bgLight: 'bg-blue-50'   },
+          { label: 'Insiders',     pct: insider,  color: 'bg-amber-500', bar: 'bg-amber-500', text: 'text-amber-700',bgLight: 'bg-amber-50'  },
+          { label: 'Retail / Other', pct: retail, color: 'bg-slate-300', bar: 'bg-slate-300', text: 'text-slate-600',bgLight: 'bg-slate-50'  },
+        ]
+        return (
+          <div className="px-4 sm:px-5 py-5 space-y-5">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">Ownership Breakdown</p>
+              <div className="space-y-3">
+                {segments.map(s => (
+                  <div key={s.label}>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2.5 h-2.5 rounded-full ${s.color}`} />
+                        <span className="text-[13px] text-slate-600">{s.label}</span>
+                      </div>
+                      <span className="text-[13px] font-bold tabular-nums text-slate-800">{s.pct.toFixed(1)}%</span>
+                    </div>
+                    <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className={`h-full rounded-full ${s.bar} transition-all duration-500`} style={{ width: `${s.pct}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-xl border border-slate-200 overflow-hidden">
+              {segments.map(s => (
+                <div key={s.label} className={`flex items-center justify-between px-4 py-3 border-b border-slate-100 last:border-0 ${s.bgLight}`}>
+                  <span className="text-[13px] text-slate-600">{s.label}</span>
+                  <span className={`text-[15px] font-bold tabular-nums ${s.text}`}>{s.pct.toFixed(1)}%</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Institutional ownership reflects 13F filings. Insider ownership based on most recent proxy statement. Data may lag by up to 45 days.
+            </p>
+          </div>
+        )
+      })()}
     </div>
   )
 }

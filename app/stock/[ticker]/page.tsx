@@ -183,6 +183,7 @@ function StockPageBody() {
   const [tabDirection, setTabDirection] = useState(0)
   const reducedMotion = useReducedMotion()
   const [financialsHighlight, setFinancialsHighlight] = useState<{ rowKey: string; statement: 'income' | 'balance' | 'cashflow' } | null>(null)
+  const [financialsSubTab, setFinancialsSubTab] = useState<'statements' | 'growth' | 'profitability' | 'solvency' | 'analysts' | 'snapshot' | 'ownership' | null>(null)
   const [userModelFairValue, setUserModelFairValue] = useState<number | null>(null)
 
   // After Google OAuth redirect, restore the user's pre-login state (tab, etc.)
@@ -202,6 +203,11 @@ function StockPageBody() {
   const handleNavigateToFinancials = (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => {
     setActiveTab('financials')
     setFinancialsHighlight({ rowKey, statement })
+  }
+
+  const handleNavigateToFinancialsSection = (section: 'analysts' | 'snapshot' | 'ownership') => {
+    setActiveTab('financials')
+    setFinancialsSubTab(section)
   }
 
   // Recompute quality scores from Yahoo Finance fundamentalsTimeSeries data when available.
@@ -510,6 +516,7 @@ function StockPageBody() {
                     reportingCurrency={statementsData?.financialCurrency}
                     cagr={data.cagr}
                     highlight={financialsHighlight}
+                    initialSubTab={financialsSubTab}
                   />
                 </motion.div>
               )}
@@ -556,7 +563,7 @@ function StockPageBody() {
             {(activeTab === 'overview' || activeTab === 'financials') && (
               <aside className="hidden lg:block">
                 <div className="sticky top-[68px] self-start space-y-3 pb-4 pt-5">
-                  <StockSidebar activeTab={activeTab} data={data} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} />
+                  <StockSidebar activeTab={activeTab} data={data} statementsData={statementsData} onNavigateToFinancials={handleNavigateToFinancials} onNavigateToFinancialsSection={handleNavigateToFinancialsSection} />
                 </div>
               </aside>
             )}
