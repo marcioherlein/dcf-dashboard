@@ -63,12 +63,17 @@ function getStats(field: Field, sparkPoints?: SparkPoint[]): Stats {
   return { min: field.typicalMin, med: (field.typicalMin + field.typicalMax) / 2, max: field.typicalMax, isReal: false }
 }
 
-function getContextLabel(value: number, stats: Stats, ttmVal?: number): {
+function getContextLabel(value: number, field: Field, stats: Stats, ttmVal?: number): {
   text: string; dot: string
 } {
   const ref   = stats.isReal ? stats.med : ttmVal
   const label = stats.isReal ? 'historical average' : 'recent level'
-  if (ref == null) return { text: 'No reference data', dot: 'bg-slate-300' }
+  if (ref == null) {
+    // No historical or market data — compare against typical range
+    if (value > field.typicalMax) return { text: `Above typical range (>${fmtVal(field.typicalMax, field.unit)})`, dot: 'bg-amber-400' }
+    if (value < field.typicalMin) return { text: `Below typical range (<${fmtVal(field.typicalMin, field.unit)})`, dot: 'bg-emerald-400' }
+    return { text: `Within typical range`, dot: 'bg-slate-400' }
+  }
   const ratio = value / ref
   if (ratio < 0.94)  return { text: `Below ${label}`,          dot: 'bg-emerald-500' }
   if (ratio < 0.97)  return { text: `Slightly below ${label}`, dot: 'bg-emerald-400' }
@@ -81,7 +86,10 @@ function generateBullet(field: Field, value: number, stats: Stats, ttmVal: numbe
   const v   = fmtVal(value, field.unit)
   const ref = stats.isReal ? stats.med : ttmVal
   const refLabel = stats.isReal ? '5Y median' : 'recent level'
-  if (ref == null) return `${field.label} is set to ${v}.`
+  if (ref == null) {
+    const inRange = value >= field.typicalMin && value <= field.typicalMax
+    return `${field.label} is set to ${v}, ${inRange ? 'within' : 'outside'} the typical range (${fmtVal(field.typicalMin, field.unit)}–${fmtVal(field.typicalMax, field.unit)}).`
+  }
 
   const refFmt = fmtVal(ref, field.unit)
   const ratio  = value / ref
@@ -95,13 +103,10 @@ function generateBullet(field: Field, value: number, stats: Stats, ttmVal: numbe
                      : highImpact ? `— this has the largest impact on fair value (${(sensitivityImpact! * 100).toFixed(1)}% per unit)`
                      : ''
 
-  if (adj === 'below') {
-    return `${field.label} (${v}) is below the ${refLabel} (${refFmt}), implying a conservative assumption ${impactPhrase}.`.replace(/\s+/g, ' ').trim()
-  }
-  if (adj === 'near') {
-    return `${field.label} (${v}) is near the ${refLabel} (${refFmt}) ${impactPhrase}.`.replace(/\s+/g, ' ').trim()
-  }
-  return `${field.label} (${v}) is above the ${refLabel} (${refFmt}), implying an optimistic assumption ${impactPhrase}.`.replace(/\s+/g, ' ').trim()
+  const fix = (s: string) => s.replace(/\s+/g, ' ').replace(/\s\./g, '.').trim()
+  if (adj === 'below') return fix(`${field.label} (${v}) is below the ${refLabel} (${refFmt}), implying a conservative assumption ${impactPhrase}.`)
+  if (adj === 'near')  return fix(`${field.label} (${v}) is near the ${refLabel} (${refFmt}) ${impactPhrase}.`)
+  return                      fix(`${field.label} (${v}) is above the ${refLabel} (${refFmt}), implying an optimistic assumption ${impactPhrase}.`)
 }
 
 // ── Area Chart ────────────────────────────────────────────────────────────────
@@ -161,12 +166,12 @@ function AreaChart({
 
   // X-axis labels
   const xLabels: Array<{ x: number; label: string }> = allPts.map(p => ({ x: p.x, label: p.label }))
-  if (ttmVal != null || hasSeries) xLabels.push({ x: ttmX, label: 'TTM' })
+  if (ttmVal != null) xLabels.push({ x: ttmX, label: 'TTM' })
 
-  // Line + area path
+  // Line + area path — only extend to TTM endpoint when TTM value exists
   const lineD = hasSeries
     ? allPts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
-        + ` L${ttmX.toFixed(1)},${ttmY.toFixed(1)}`
+        + (ttmVal != null ? ` L${ttmX.toFixed(1)},${ttmY.toFixed(1)}` : '')
     : ''
   const areaD = lineD
     ? `${lineD} L${ttmX.toFixed(1)},${bottomY} L${MARGIN.l},${bottomY} Z`
@@ -237,10 +242,15 @@ function AreaChart({
         <circle cx={ttmX} cy={ttmY} r="4" fill="#3b82f6" stroke="white" strokeWidth="1.5" />
       )}
 
-      {/* Y-axis labels */}
+      {/* Y-axis labels — skip median if it collides with top/bottom labels */}
       {yLabels.map((v, i) => {
         const y = toY(v)
         if (y < MARGIN.t - 4 || y > bottomY + 4) return null
+        if (i === 1) {
+          const topY = toY(yLabels[0])
+          const botY = toY(yLabels[2])
+          if (Math.abs(y - topY) < 12 || Math.abs(y - botY) < 12) return null
+        }
         return (
           <text key={i} x={MARGIN.l - 4} y={y + 3.5} textAnchor="end"
             fontSize="8.5" fill="#94a3b8" fontFamily="sans-serif">
@@ -281,7 +291,7 @@ function AssumptionCard({
   const currPoint = sparkPoints?.find(p => p.label === 'curr')
   const ttmVal    = currPoint?.value ?? sparkPoints?.filter(p => p.label !== 'curr').at(-1)?.value
 
-  const ctxLabel = getContextLabel(value, stats, ttmVal)
+  const ctxLabel = getContextLabel(value, field, stats, ttmVal)
 
   const sliderPct = Math.max(0, Math.min(100, ((value - field.min) / (field.max - field.min)) * 100))
   const delta = value - defaultValue
@@ -309,8 +319,8 @@ function AssumptionCard({
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex flex-col gap-3">
 
       {/* Header: label + method tag */}
-      <div className="flex items-center justify-between">
-        <span className="text-[12px] font-bold text-slate-600 uppercase tracking-wider">{field.label}</span>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[12px] font-bold text-slate-600 uppercase tracking-wider min-w-0 truncate">{field.label}</span>
         <div className="flex items-center gap-1">
           {field.methods.map(m => (
             <span key={m} className={`text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${METHOD_CFG[m].tagBg} ${METHOD_CFG[m].tagText}`}>
@@ -513,7 +523,7 @@ function PresetsCard({
   ]
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex flex-col gap-3">
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex flex-col gap-3 h-full">
       <div>
         <p className="text-[12px] font-bold text-slate-600 uppercase tracking-wider">Valuation Presets</p>
         <p className="text-[10px] text-slate-400 mt-0.5">Choose a starting point</p>
@@ -563,9 +573,9 @@ function ContextPanel({
     const sp    = historicalData[f.key]
     const stats = getStats(f, sp)
     const ttmVal = sp?.find(p => p.label === 'curr')?.value ?? sp?.filter(p => p.label !== 'curr').at(-1)?.value
-    const ctx    = getContextLabel(value, stats, ttmVal)
+    const ctxLabel = getContextLabel(value, f, stats, ttmVal)
     const text   = generateBullet(f, value, stats, ttmVal, sensitivity[f.key])
-    return { key: f.key, text, dot: ctx.dot }
+    return { key: f.key, text, dot: ctxLabel.dot }
   })
 
   return (

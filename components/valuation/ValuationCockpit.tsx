@@ -147,13 +147,13 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
     const prev = actuals[i - 1].revenue
     const curr = actuals[i].revenue
     if (prev && prev > 0 && curr != null) {
-      cagrPoints.push({ label: `'${String(actuals[i].year).slice(-2)}`, value: (curr - prev) / prev })
+      cagrPoints.push({ label: String(actuals[i].year), value: (curr - prev) / prev })
     }
   }
 
   const netMarginPoints: SparkPoint[] = actuals
     .filter(r => r.revenue != null && r.revenue > 0 && r.netIncome != null)
-    .map(r => ({ label: `'${String(r.year).slice(-2)}`, value: r.netIncome! / r.revenue! }))
+    .map(r => ({ label: String(r.year), value: r.netIncome! / r.revenue! }))
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const multEst: Array<{ multiple: string; actualValue: number }> =
