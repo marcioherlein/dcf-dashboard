@@ -53,7 +53,7 @@ export default function ValuationContext({ valuation }: Props) {
             {spyForwardPE != null ? `${spyForwardPE.toFixed(1)}×` : '—'}
           </p>
         </div>
-        <div className="grid grid-cols-4 gap-1">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
           {forwardPEBands.map((b, i) => (
             <div key={i} className={cn('rounded px-1 py-1.5 text-center text-[9px] leading-tight', bandBarClass(b))}>
               {b.label}
@@ -77,7 +77,7 @@ export default function ValuationContext({ valuation }: Props) {
             )}
           </div>
         </div>
-        <div className="grid grid-cols-4 gap-1">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
           {erpBands.map((b, i) => (
             <div key={i} className={cn('rounded px-1 py-1.5 text-center text-[9px] leading-tight', bandBarClass(b))}>
               {b.label}

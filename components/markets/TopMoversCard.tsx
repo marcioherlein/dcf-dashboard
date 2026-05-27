@@ -14,7 +14,7 @@ function MoverRow({ mover, rank }: { mover: Mover; rank: number }) {
   return (
     <Link
       href={`/stock/${mover.symbol}`}
-      className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-indigo-50/40 transition-colors group"
+      className="flex items-center gap-2.5 px-4 py-2.5 min-h-[44px] hover:bg-indigo-50/40 transition-colors group"
     >
       <span className="text-[10px] font-bold text-slate-300 w-3 shrink-0">{rank}</span>
       <span className="text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded w-12 text-center shrink-0">

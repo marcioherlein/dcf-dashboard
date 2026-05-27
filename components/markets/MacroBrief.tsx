@@ -93,7 +93,7 @@ export default function MacroBrief({ macroBrief, briefCachedAt, signals, pulse }
             <button
               onClick={generate}
               disabled={loading}
-              className="shrink-0 text-xs font-semibold text-white px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 bg-blue-600 hover:bg-blue-500"
+              className="shrink-0 text-xs font-semibold text-white px-3 py-2.5 min-h-[44px] rounded-lg transition-colors disabled:opacity-50 bg-blue-600 hover:bg-blue-500"
             >
               {loading ? 'Generating…' : 'Generate'}
             </button>

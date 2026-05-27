@@ -11,7 +11,7 @@ interface Props {
 export default function PriceTable({ title, items, priceDecimals = 2 }: Props) {
   return (
     <div className="rounded-xl glass-card-light overflow-hidden">
-      <div className="grid grid-cols-[1fr_72px_68px_68px] items-center px-3 py-2 border-b border-slate-200">
+      <div className="grid grid-cols-[1fr_60px_56px_60px] sm:grid-cols-[1fr_72px_68px_68px] items-center px-2 sm:px-3 py-2 border-b border-slate-200">
         <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider truncate pr-2">
           {title}
         </span>

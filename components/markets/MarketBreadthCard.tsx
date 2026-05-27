@@ -121,7 +121,7 @@ export default function MarketBreadthCard({ sectors }: Props) {
         {sorted.length > 6 && (
           <button
             onClick={() => setShowAll(v => !v)}
-            className="w-full flex items-center justify-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 py-1 rounded-lg hover:bg-blue-50/60 transition-colors"
+            className="w-full flex items-center justify-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 min-h-[44px] rounded-lg hover:bg-blue-50/60 transition-colors"
           >
             {showAll
               ? <><ChevronUp size={12} /> Show less</>

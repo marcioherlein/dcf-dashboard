@@ -106,7 +106,7 @@ function StatTile({ label, value }: { label: string; value: string }) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function NewsItem({ item }: { item: any }) {
   const inner = (
-    <div className="px-4 py-3 hover:bg-white/5 transition-colors group">
+    <div className="px-4 py-3 min-h-[44px] hover:bg-white/5 transition-colors group">
       <p className="text-[12.5px] font-medium text-slate-200 leading-snug line-clamp-2 group-hover:text-slate-100">
         {item.title}
       </p>
@@ -200,13 +200,13 @@ export default function InstrumentDetailPage() {
         </Link>
 
         {/* ── Header card ──────────────────────────────────────────────────── */}
-        <div className="rounded-xl bg-white/5 border border-white/10 px-6 py-5">
+        <div className="rounded-xl bg-white/5 border border-white/10 px-4 sm:px-6 py-4 sm:py-5">
           {/* Symbol + name + badges */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
-            <h1 className="text-[22px] font-bold text-slate-100 tracking-tight">
+            <h1 className="text-[20px] sm:text-[22px] font-bold text-slate-100 tracking-tight">
               {symbol.replace(/=X$/, '').replace(/^[\^]/, '').replace(/-USD$/, 'USD').replace(/=F$/, '')}
             </h1>
-            <span className="text-[15px] text-slate-500 font-medium">{detail.name}</span>
+            <span className="text-[14px] sm:text-[15px] text-slate-500 font-medium">{detail.name}</span>
             <span className={cn('px-2 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide', typeBadge.cls)}>
               {typeBadge.label}
             </span>
@@ -221,11 +221,11 @@ export default function InstrumentDetailPage() {
           </div>
 
           {/* Price + change */}
-          <div className="flex flex-wrap items-baseline gap-3 mb-4">
-            <span className="text-[32px] font-bold font-mono tabular-nums text-slate-100 leading-none">
+          <div className="flex flex-wrap items-baseline gap-2 sm:gap-3 mb-4">
+            <span className="text-[28px] sm:text-[32px] font-bold font-mono tabular-nums text-slate-100 leading-none">
               {fmtPrice(detail.price, detail.currency, priceDecimals)}
             </span>
-            <span className={cn('text-[16px] font-semibold font-mono tabular-nums', changeCls(detail.changePct))}>
+            <span className={cn('text-[14px] sm:text-[16px] font-semibold font-mono tabular-nums', changeCls(detail.changePct))}>
               {detail.change != null && isFinite(detail.change)
                 ? (detail.change >= 0 ? '+' : '') + fmtPrice(detail.change, '', priceDecimals)
                 : ''
@@ -233,7 +233,7 @@ export default function InstrumentDetailPage() {
               {' '}
               ({fmtPct(detail.changePct)})
             </span>
-            <span className="text-[11px] text-slate-400 ml-auto self-end">
+            <span className="text-[11px] text-slate-400 sm:ml-auto self-end">
               {new Date(detail.updatedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
