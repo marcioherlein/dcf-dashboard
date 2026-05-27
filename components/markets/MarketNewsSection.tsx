@@ -41,7 +41,7 @@ export default function MarketNewsSection({ news }: { news: NewsItem[] }) {
         {news.map((item, i) => {
           const sourceCls = SOURCE_COLORS[item.source] ?? 'bg-slate-100 text-slate-600'
           const inner = (
-            <div className="px-4 py-3 hover:bg-indigo-50/40 transition-colors group">
+            <div className="px-4 py-3 min-h-[44px] hover:bg-indigo-50/40 transition-colors group">
               <div className="flex items-start justify-between gap-2">
                 <p className="text-[12.5px] font-medium text-slate-700 leading-snug line-clamp-2 flex-1 group-hover:text-slate-900">
                   {item.title}

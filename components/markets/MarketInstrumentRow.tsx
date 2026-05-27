@@ -46,7 +46,7 @@ export default function MarketInstrumentRow({ symbol, name, price, change, chang
       href={href}
       aria-label={`${name} — ${price != null ? fmtNum(price, priceDecimals) : 'N/A'}`}
       className={cn(
-        'grid grid-cols-[1fr_72px_68px_68px] items-center px-3 py-2',
+        'grid grid-cols-[1fr_60px_56px_60px] sm:grid-cols-[1fr_72px_68px_68px] items-center px-2 sm:px-3 py-2.5',
         'hover:bg-indigo-50/60 cursor-pointer transition-colors',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500',
       )}

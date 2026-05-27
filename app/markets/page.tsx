@@ -59,8 +59,8 @@ function getMarketStatus(): { label: string; cls: string } {
 function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="mb-3">
-      <h2 className="text-[13px] font-bold text-slate-800">{title}</h2>
-      {subtitle && <p className="text-[11px] text-slate-400 mt-0.5">{subtitle}</p>}
+      <h2 className="text-[12px] sm:text-[13px] font-bold text-slate-800 uppercase tracking-wide">{title}</h2>
+      {subtitle && <p className="text-[11px] text-slate-400 mt-0.5 hidden sm:block">{subtitle}</p>}
     </div>
   )
 }
@@ -157,14 +157,14 @@ export default function MarketsPage() {
         )}
 
         {/* ── Page Header ─────────────────────────────────────────────────── */}
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-[20px] font-bold text-slate-900 leading-tight">Markets Overview</h1>
-            <p className="text-[12px] text-slate-400 mt-0.5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h1 className="text-[18px] sm:text-[20px] font-bold text-slate-900 leading-tight">Markets Overview</h1>
+            <p className="text-[11px] sm:text-[12px] text-slate-400 mt-0.5 hidden sm:block">
               Market context for valuation decisions · Understand the environment behind your stock analyses.
             </p>
           </div>
-          <div className="flex items-center gap-2.5 pt-0.5 shrink-0">
+          <div className="flex items-center gap-2 pt-0.5 shrink-0">
             <span className="text-[10px] text-slate-400 hidden md:block">
               {etDate}, {etTime} ET
             </span>
@@ -176,12 +176,12 @@ export default function MarketsPage() {
             <button
               onClick={() => fetchAll(true)}
               disabled={refreshing}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-white/60 transition-colors disabled:opacity-50"
+              className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-white/60 transition-colors disabled:opacity-50 min-h-[44px] min-w-[44px] flex items-center justify-center"
               title="Refresh"
             >
-              <RefreshCw size={11} className={refreshing ? 'animate-spin' : ''} />
+              <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
             </button>
-            <button className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors">
+            <button className="hidden sm:flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors">
               <Settings2 size={11} />
               Customize
             </button>
@@ -189,7 +189,7 @@ export default function MarketsPage() {
         </div>
 
         {/* ── Inline market strip ──────────────────────────────────────────── */}
-        <div className="flex items-center gap-5 overflow-x-auto scrollbar-hide rounded-xl border border-slate-100/80 bg-white/50 backdrop-blur-sm px-4 py-2.5">
+        <div className="flex items-center gap-4 sm:gap-5 overflow-x-auto scrollbar-hide rounded-xl border border-slate-100/80 bg-white/50 backdrop-blur-sm px-4 py-2.5 min-h-[44px]">
           <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full ${status.cls}`}>
             {status.label}
           </span>

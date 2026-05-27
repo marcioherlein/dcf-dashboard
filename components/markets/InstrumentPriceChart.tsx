@@ -104,8 +104,8 @@ export default function InstrumentPriceChart({ symbol, currency = 'USD' }: Props
     <div className="rounded-xl card">
       {/* Header */}
       <div className="px-4 pt-3 pb-2 border-b border-slate-200 flex items-center justify-between">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Price Chart</span>
-        <div className="flex flex-wrap gap-1">
+        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400 shrink-0">Price Chart</span>
+        <div className="flex gap-1 overflow-x-auto scrollbar-hide ml-2">
           {PERIODS.map(p => (
             <button
               key={p}
@@ -124,7 +124,7 @@ export default function InstrumentPriceChart({ symbol, currency = 'USD' }: Props
       </div>
 
       {/* Chart body */}
-      <div className="px-4 py-3" style={{ height: 280 }}>
+      <div className="px-4 py-3" style={{ height: 'clamp(200px, 35vw, 280px)' }}>
         {loading ? (
           <div className="h-full flex items-center justify-center">
             <div className="flex gap-1">

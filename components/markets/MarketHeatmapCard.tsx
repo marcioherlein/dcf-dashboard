@@ -72,16 +72,16 @@ export default function MarketHeatmapCard({ sectors }: Props) {
       </div>
 
       <div className="p-3">
-        {/* Row 1: Tech(2) + Fin + Health + ConsDisc + Comm = 6 cols
-            Row 2: Industrials + Staples + Energy + Materials + RealEstate + Utilities = 6 cols */}
-        <div className="grid grid-cols-6 gap-1.5">
+        {/* On mobile: 3-col grid; sm+: 6-col grid
+            Only Technology gets a double-wide tile — all others are 1 col */}
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
           {sorted.map(s => {
             // Only Technology gets a double-wide tile — all others are 1 col
             const isLarge  = s.symbol === 'XLK'
-            const colSpan  = isLarge ? 'col-span-2' : 'col-span-1'
-            const minH     = isLarge ? 'min-h-[80px]' : 'min-h-[62px]'
-            const textSize = isLarge ? 'text-[11px]' : 'text-[10px]'
-            const numSize  = isLarge ? 'text-[13px]' : 'text-[11px]'
+            const colSpan  = isLarge ? 'col-span-2 sm:col-span-2' : 'col-span-1'
+            const minH     = isLarge ? 'min-h-[60px] sm:min-h-[80px]' : 'min-h-[52px] sm:min-h-[62px]'
+            const textSize = isLarge ? 'text-[10px] sm:text-[11px]' : 'text-[9px] sm:text-[10px]'
+            const numSize  = isLarge ? 'text-[11px] sm:text-[13px]' : 'text-[10px] sm:text-[11px]'
             return (
               <div
                 key={s.symbol}
@@ -103,7 +103,7 @@ export default function MarketHeatmapCard({ sectors }: Props) {
         </div>
 
         {/* Scale legend */}
-        <div className="mt-3 flex items-center gap-1">
+        <div className="mt-3 flex items-center gap-1 overflow-x-auto scrollbar-hide pb-0.5">
           <span className="text-[9px] text-slate-400 mr-1">Perf:</span>
           {[
             { label: '–2%+', cls: 'bg-red-700' },

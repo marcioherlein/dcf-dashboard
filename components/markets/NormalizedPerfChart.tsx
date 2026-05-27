@@ -124,8 +124,8 @@ export default function NormalizedPerfChart() {
       {/* Header */}
       <div className="px-4 pt-3 pb-2 border-b border-slate-200">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Normalized Performance</span>
-          <div className="flex flex-wrap gap-1">
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0">Normalized Performance</span>
+          <div className="flex gap-1 overflow-x-auto scrollbar-hide ml-2">
             {PERIODS.map(p => (
               <button
                 key={p}
@@ -204,7 +204,7 @@ export default function NormalizedPerfChart() {
       </div>
 
       {/* Chart */}
-      <div className="px-4 py-3" style={{ height: 280 }}>
+      <div className="px-4 py-3" style={{ height: 'clamp(200px, 30vw, 280px)' }}>
         {loading ? (
           <div className="h-full flex items-center justify-center">
             <div className="flex gap-1">

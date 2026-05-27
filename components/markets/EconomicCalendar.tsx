@@ -63,20 +63,20 @@ export default function EconomicCalendar() {
                 <span className="text-[11px] font-bold text-slate-700">{fmtDate(date)}</span>
               </div>
               {dayEvents.map((e, i) => (
-                <div key={i} className="px-4 py-2.5 flex items-center gap-3 hover:bg-indigo-50/30 transition-colors">
+                <div key={i} className="px-3 sm:px-4 py-2.5 flex items-center gap-2 sm:gap-3 hover:bg-indigo-50/30 transition-colors min-h-[44px]">
                   <div className="flex-1 min-w-0">
-                    <p className="text-[12.5px] font-semibold text-slate-800 leading-tight truncate">{e.event}</p>
+                    <p className="text-[12px] sm:text-[12.5px] font-semibold text-slate-800 leading-tight truncate">{e.event}</p>
                     {e.time && <p className="text-[10px] text-slate-400 mt-0.5">{e.time}</p>}
                   </div>
-                  <div className="flex items-center gap-2 shrink-0 text-right">
+                  <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 text-right">
                     {e.estimate != null && (
-                      <div className="text-right">
+                      <div className="text-right hidden xs:block sm:block">
                         <p className="text-[9px] text-slate-400 uppercase tracking-wide">Est.</p>
                         <p className="text-[11px] font-mono font-semibold text-slate-700">{e.estimate}</p>
                       </div>
                     )}
                     {e.previous != null && (
-                      <div className="text-right">
+                      <div className="text-right hidden sm:block">
                         <p className="text-[9px] text-slate-400 uppercase tracking-wide">Prev.</p>
                         <p className="text-[11px] font-mono text-slate-500">{e.previous}</p>
                       </div>

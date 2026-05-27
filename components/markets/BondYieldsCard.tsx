@@ -46,7 +46,7 @@ export default function BondYieldsCard({ yieldCurve }: { yieldCurve: YieldCurveP
 
       {/* Mini yield curve chart */}
       {hasData && (
-        <div className="px-2 pt-2" style={{ height: 72 }}>
+        <div className="px-2 pt-2 h-[72px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
               <defs>
