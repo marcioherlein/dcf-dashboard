@@ -47,21 +47,41 @@ export default function ValuationMethodCards({ methods, currentPrice: _currentPr
           const effectivePct = Math.round(effectiveWeight * 100)
           const weightChanged = hasValue && Math.abs(effectivePct - nominalPct) >= 2
           return (
-            <div key={m.id} className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 flex flex-col gap-2">
+            <div key={m.id} className={`rounded-xl border px-4 py-4 flex flex-col gap-2 ${hasValue ? 'border-slate-200 bg-slate-50' : 'border-amber-100 bg-amber-50/40'}`}>
               {/* Header row: method name + confidence badge */}
               <div className="flex items-start justify-between gap-2">
                 <p className="text-sm font-bold text-slate-700 leading-tight">{m.method}</p>
-                <span className={`shrink-0 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${conf.bg} ${conf.text}`}>
-                  {conf.label}
-                </span>
+                {hasValue ? (
+                  <span className={`shrink-0 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${conf.bg} ${conf.text}`}>
+                    {conf.label}
+                  </span>
+                ) : (
+                  <span className="shrink-0 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                    N/A
+                  </span>
+                )}
               </div>
 
               {/* Fair value */}
               <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none">
                 {m.fairValue != null ? fmtPrice(m.fairValue, currency) : (
-                  <span className="text-slate-300 text-base">{m.errors[0]?.slice(0, 24) ?? '—'}</span>
+                  <span className="text-slate-300 text-xl">—</span>
                 )}
               </p>
+
+              {/* Error reason — shown when method fails */}
+              {!hasValue && m.errors.length > 0 && (
+                <div className="rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1.5">
+                  <p className="text-[10px] font-semibold text-amber-700 leading-snug">
+                    {m.errors[0]}
+                  </p>
+                  {m.errors.length > 1 && (
+                    <p className="text-[9px] text-amber-500 mt-0.5 leading-snug">
+                      +{m.errors.length - 1} more issue{m.errors.length > 2 ? 's' : ''}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Upside */}
               {m.upsidePct != null && (
@@ -93,7 +113,7 @@ export default function ValuationMethodCards({ methods, currentPrice: _currentPr
                     <span>{nominalPct}% blend weight</span>
                   )
                 ) : (
-                  <span className="text-slate-300">excluded from blend</span>
+                  <span className="text-amber-400">excluded from blend</span>
                 )}
               </div>
             </div>

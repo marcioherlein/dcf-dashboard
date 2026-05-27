@@ -50,7 +50,26 @@ function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null): Cockp
 
   const ebitdaRows = incomeRows.filter(r => !r.isProjected && r.ebitda != null && r.ebitda > 0)
   const lastEbitda = ebitdaRows[ebitdaRows.length - 1]?.ebitda ?? null
-  const ttmEbitdaDollars = lastEbitda != null ? lastEbitda * 1e6 : null
+  let ttmEbitdaDollars: number | null = lastEbitda != null ? lastEbitda * 1e6 : null
+
+  // Fallback: back-compute TTM EBITDA from current EV/EBITDA multiple × enterprise value.
+  // Covers mature companies (e.g. HD) where FMP ebitda field is null or zero in recent rows.
+  // Note: marketCap is raw dollars from Yahoo; fairValue.cash/debt are in millions.
+  if (ttmEbitdaDollars == null) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const multEstimates: Array<{ multiple: string; actualValue: number }> =
+      (apiData.valuationMethods?.models?.multiples?.estimates ?? []) as Array<{ multiple: string; actualValue: number }>
+    const evEbitdaActual = multEstimates.find(e => e.multiple === 'EV/EBITDA')?.actualValue ?? null
+    const marketCapRawDollars: number = apiData.quote?.marketCap ?? 0
+    const netDebtM = (apiData.fairValue?.debt ?? 0) - (apiData.fairValue?.cash ?? 0)  // millions
+    // Only use this fallback when the multiple is in a sensible range (3–80×)
+    // — avoids circular bias from extreme multiples on loss-making or highly-distressed companies.
+    if (evEbitdaActual != null && evEbitdaActual >= 3 && evEbitdaActual <= 80 && marketCapRawDollars > 0) {
+      const evRawDollars = marketCapRawDollars + netDebtM * 1e6
+      const implied = evRawDollars / evEbitdaActual
+      if (implied > 0) ttmEbitdaDollars = implied
+    }
+  }
 
   const netDebtDollars = (debtM - cashM) * 1e6
   const fcfMargin = apiData.businessProfile?.fcfMargin ?? null

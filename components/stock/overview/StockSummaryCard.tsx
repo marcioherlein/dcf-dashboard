@@ -40,35 +40,24 @@ function deriveVerdict(upsidePct: number | null, fv: number | null): Verdict {
     chipClass: 'bg-slate-100 text-slate-500 border-slate-200',
     headingClass: 'text-slate-500',
   }
-  if (upsidePct >= 0.20) return {
+  // Thresholds match the Valuation tab cockpit (±15%) to avoid contradictory verdicts
+  if (upsidePct > 0.15) return {
     chip: 'BUY', heading: 'Undervalued',
-    description: `Trading ${absPct}% below our fair value estimate — a significant margin of safety.`,
+    description: `Preliminary model puts price ${absPct}% below fair value — see Valuation tab for full analysis.`,
     chipClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     headingClass: 'text-emerald-600',
   }
-  if (upsidePct >= 0.05) return {
-    chip: 'BUY', heading: 'Fairly Valued',
-    description: `Trading ${absPct}% below our estimate — reasonable entry with limited downside.`,
-    chipClass: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-    headingClass: 'text-emerald-500',
-  }
-  if (upsidePct >= -0.10) return {
+  if (upsidePct >= -0.15) return {
     chip: 'WATCH', heading: 'Fairly Valued',
-    description: 'Trading close to our intrinsic estimate. Patient investors may wait for a better entry.',
+    description: `Trading ${upsidePct >= 0 ? '+' : ''}${absPct}% vs the preliminary estimate. Within the ±15% fair-value range — see Valuation tab for the full multi-model analysis.`,
     chipClass: 'bg-blue-50 text-blue-700 border-blue-200',
     headingClass: 'text-blue-600',
   }
-  if (upsidePct >= -0.25) return {
-    chip: 'AVOID', heading: 'Overvalued',
-    description: `Trading ${absPct}% above fair value — limited margin of safety at current levels.`,
-    chipClass: 'bg-red-50 text-red-600 border-red-200',
-    headingClass: 'text-red-600',
-  }
   return {
     chip: 'AVOID', heading: 'Overvalued',
-    description: `Trading ${absPct}% above our estimate. High execution risk embedded in the price.`,
-    chipClass: 'bg-red-50 text-red-700 border-red-200',
-    headingClass: 'text-red-700',
+    description: `Preliminary model puts price ${absPct}% above fair value — see Valuation tab for full analysis.`,
+    chipClass: 'bg-red-50 text-red-600 border-red-200',
+    headingClass: 'text-red-600',
   }
 }
 
@@ -153,7 +142,7 @@ export default function StockSummaryCard({
 
         {/* Box 2: Fair Value */}
         <MetricBox>
-          <BoxLabel>Fair Value (Intrinsic)</BoxLabel>
+          <BoxLabel>Fair Value (Preliminary)</BoxLabel>
           {fairValue != null ? (
             <>
               <p className="text-[22px] sm:text-[26px] font-bold tabular-nums text-slate-900 leading-none mb-1">
@@ -164,11 +153,23 @@ export default function StockSummaryCard({
                   {fmtPct(upsidePct)} {upsidePct >= 0 ? 'upside' : 'downside'}
                 </p>
               )}
-              <p className="text-[11px] text-slate-400 mb-3">Based on blended DCF + multiples</p>
+          <p className="text-[11px] text-slate-400 mb-0.5">Blended DCF + multiples</p>
+              <p className="text-[10px] text-amber-600 font-medium mb-2">
+                ⚠ Different model than Valuation tab
+              </p>
+              <button
+                type="button"
+                onClick={onViewDetails}
+                className="text-[10px] font-semibold text-blue-500 hover:text-blue-700 underline transition-colors mb-2"
+                aria-label="View full analysis in Valuation tab"
+              >
+                Full analysis in Valuation tab →
+              </button>
 
               {scenarios && (
                 <>
-                  <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Scenario Range</p>
+                  <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5">DCF Scenario Range</p>
+                  <p className="text-[8px] text-slate-300 mb-1.5">Pure DCF stress cases (not the blended value above)</p>
                   <div className="flex items-center gap-1">
                     <div className="text-center flex-1">
                       <p className="text-[8px] text-slate-400">Bear</p>
@@ -193,7 +194,7 @@ export default function StockSummaryCard({
 
         {/* Box 3: Investment Verdict */}
         <MetricBox>
-          <BoxLabel>Investment Verdict</BoxLabel>
+          <BoxLabel>Quick Verdict (Preliminary)</BoxLabel>
           <span className={cn('inline-flex text-[10px] font-bold px-2.5 py-0.5 rounded-full border mb-2', verdict.chipClass)}>
             {verdict.chip}
           </span>
@@ -204,10 +205,12 @@ export default function StockSummaryCard({
             {verdict.description}
           </p>
           <button
+            type="button"
             onClick={onViewDetails}
             className="text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+            aria-label="View full valuation analysis"
           >
-            Why? →
+            Full analysis →
           </button>
         </MetricBox>
 
