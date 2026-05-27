@@ -38,27 +38,33 @@ export default function LandingNavbar() {
       >
         <div className="mx-auto max-w-[1280px] px-4 sm:px-6 h-full flex items-center gap-8">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
+          <Link href="/" className="flex items-center gap-3 shrink-0 group">
             <Image
               src="/logos/logo.png"
               alt="intrinsico"
-              width={36}
-              height={36}
+              width={40}
+              height={40}
               className="transition-transform duration-200 group-hover:scale-105"
             />
-            <span
-              className="font-black hidden sm:block"
-              style={{
-                fontSize: '20px',
-                letterSpacing: '-0.04em',
-                background: 'linear-gradient(135deg, #0F172A 20%, #1E40AF 65%, #2563EB 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              intrinsico
-            </span>
+            <div className="hidden sm:flex flex-col leading-none">
+              <span
+                className="font-black"
+                style={{
+                  fontSize: '20px',
+                  letterSpacing: '-0.04em',
+                  background: 'linear-gradient(135deg, #0F172A 20%, #1E40AF 65%, #2563EB 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  lineHeight: 1.15,
+                }}
+              >
+                intrinsico
+              </span>
+              <span className="text-[8px] font-bold text-slate-400 tracking-[0.18em] uppercase mt-0.5">
+                Valuation Intelligence
+              </span>
+            </div>
           </Link>
 
           {/* Center nav */}
