@@ -1,4 +1,5 @@
 'use client'
+import InfoTooltip from '@/components/ui/InfoTooltip'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyRecord = Record<string, any>
@@ -81,19 +82,25 @@ function gradeBadge(color: string): string {
   return 'bg-red-50 text-red-700 border border-red-100'
 }
 
-function MetricRow({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
+function MetricRow({ label, value, valueClass, tooltip }: { label: string; value: string; valueClass?: string; tooltip?: string }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-[12px] text-slate-500 truncate">{label}</span>
+      <span className="text-[12px] text-slate-500 truncate flex items-center gap-0.5">
+        {label}
+        {tooltip && <InfoTooltip content={tooltip} />}
+      </span>
       <span className={`text-[12px] font-semibold tabular-nums shrink-0 ${valueClass ?? 'text-slate-800'}`}>{value}</span>
     </div>
   )
 }
 
-function CardHeader({ title, label, color }: { title: string; label: string; color: string }) {
+function CardHeader({ title, label, color, tooltip }: { title: string; label: string; color: string; tooltip?: string }) {
   return (
     <div className="flex items-center justify-between mb-3">
-      <p className="text-[12px] font-bold text-slate-700 uppercase tracking-wide">{title}</p>
+      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-0.5">
+        {title}
+        {tooltip && <InfoTooltip content={tooltip} />}
+      </p>
       <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${gradeBadge(color)}`}>{label}</span>
     </div>
   )
@@ -128,11 +135,16 @@ function BusinessQualityCard({ ratings, scores }: { ratings: StockRatings; score
   const spreadClass = roic?.spread != null && roic.spread >= 0 ? 'text-emerald-600' : 'text-red-500'
 
   return (
-    <div className="rounded-xl border border-slate-100 bg-white/80 px-4 py-4">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <CardHeader title="Business Quality" label={label} color={color} />
       <div className="space-y-2">
         <MetricRow label="Economic Moat" value={moat?.label ?? '—'} />
-        <MetricRow label="ROIC vs WACC" value={spreadPct} valueClass={spreadClass} />
+        <MetricRow
+          label="ROIC vs WACC"
+          value={spreadPct}
+          valueClass={spreadClass}
+          tooltip="Return on Invested Capital minus the cost of capital. A positive spread means the business earns more than it costs to run — the hallmark of a quality compounder."
+        />
         <MetricRow
           label="Profitability Grade"
           value={profitability ? `${profitability.grade} — ${profitability.label}` : '—'}
@@ -155,7 +167,7 @@ function GrowthOutlookCard({ ratings, cagrAnalysis }: { ratings: StockRatings; c
   const maxBar = Math.max(Math.abs(hist ?? 0), Math.abs(analyst ?? 0), Math.abs(blended ?? 0), 0.01) * 1.1
 
   return (
-    <div className="rounded-xl border border-slate-100 bg-white/80 px-4 py-4">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <CardHeader title="Growth Outlook" label={label} color={color} />
       <div className="space-y-2.5">
         {hist != null && (
@@ -201,7 +213,7 @@ function ProfitabilityCard({ ratings, businessProfile, statementsData }: {
   const opMargin = opIncome != null && revenue != null && revenue > 0 ? opIncome / revenue : null
 
   return (
-    <div className="rounded-xl border border-slate-100 bg-white/80 px-4 py-4">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <CardHeader title="Profitability" label={label} color={color} />
       <div className="space-y-2">
         <MetricRow label="Gross Margin" value={fmtPct(businessProfile.grossMargin)} />
@@ -232,7 +244,7 @@ function CashConversionCard({ businessProfile, statementsData }: {
   const label = isGood ? 'Strong' : businessProfile.fcfMargin != null && businessProfile.fcfMargin > 0 ? 'Moderate' : 'Weak'
 
   return (
-    <div className="rounded-xl border border-slate-100 bg-white/80 px-4 py-4">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <CardHeader title="Cash Conversion" label={label} color={color} />
       <div className="space-y-2">
         <MetricRow label="FCF Margin (TTM)" value={fmtPct(businessProfile.fcfMargin)} />
@@ -240,6 +252,7 @@ function CashConversionCard({ businessProfile, statementsData }: {
           label="FCF / Net Income"
           value={conversionRatio != null ? `${(conversionRatio * 100).toFixed(0)}%` : '—'}
           valueClass={conversionRatio != null ? (conversionRatio >= 0.8 ? 'text-emerald-600' : conversionRatio >= 0.5 ? 'text-amber-600' : 'text-red-500') : undefined}
+          tooltip="What share of reported earnings converts to real cash. >80% is a quality signal — it means profits are backed by cash, not just accounting entries."
         />
         <p className="text-[11px] text-slate-400 leading-snug pt-0.5">
           {conversionRatio != null && conversionRatio >= 0.8 ? 'Earnings convert well to free cash flow'
@@ -287,7 +300,7 @@ function BalanceSheetCard({ scores, statementsData }: {
   const bsLabel = zone === 'Safe' ? 'Strong' : zone === 'Grey' ? 'Fair' : zone === 'Distress' ? 'Distressed' : 'Analyzing…'
 
   return (
-    <div className="rounded-xl border border-slate-100 bg-white/80 px-4 py-4">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <CardHeader title="Balance Sheet Safety" label={bsLabel} color={bsColor} />
       <div className="space-y-2">
         <MetricRow
@@ -380,9 +393,9 @@ function RisksGridCard({ ratings, cagrAnalysis, onViewRisks }: {
   const dotColor = risk.color === 'red' ? 'bg-red-400' : risk.color === 'amber' ? 'bg-amber-400' : 'bg-emerald-400'
 
   return (
-    <div className="rounded-xl border border-slate-100 bg-white/80 px-4 py-4">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[12px] font-bold text-slate-700 uppercase tracking-wide">Risks to Thesis</p>
+        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Risks to Thesis</p>
         <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${risk.badgeClass}`}>{risk.label}</span>
       </div>
       <ul className="space-y-1.5 mb-3">
@@ -444,11 +457,11 @@ function RelativeValuationCard({ valuationMethods, quote }: { valuationMethods: 
   }
 
   return (
-    <div className="rounded-xl border border-slate-100 bg-white/80 px-4 py-4">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="text-[13px]">🏷</span>
-          <span className="text-[11px] font-bold text-slate-700 truncate">Relative Valuation</span>
+          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest truncate">Relative Valuation</span>
         </div>
         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap ${overallClass}`}>
           {overallLabel}
@@ -457,7 +470,12 @@ function RelativeValuationCard({ valuationMethods, quote }: { valuationMethods: 
       <div className="space-y-2">
         {applicable.slice(0, 3).map((e: AnyRecord) => (
           <div key={e.multiple} className="flex items-center justify-between">
-            <span className="text-[11px] text-slate-500">{LABELS[e.multiple] ?? e.multiple}</span>
+            <span className="text-[11px] text-slate-500 flex items-center gap-0.5">
+              {LABELS[e.multiple] ?? e.multiple}
+              {e.multiple === 'evEbitda' && (
+                <InfoTooltip content="Enterprise Value divided by EBITDA. Compares total company value (including debt) to operating earnings. Lower than sector median suggests cheaper relative pricing." />
+              )}
+            </span>
             <div className="flex items-center gap-2">
               <span className={`text-[11px] font-semibold tabular-nums ${vsClass(e.actualValue, e.sectorMedian)}`}>
                 {e.actualValue.toFixed(1)}×
@@ -469,7 +487,10 @@ function RelativeValuationCard({ valuationMethods, quote }: { valuationMethods: 
         ))}
         {pegRatio != null && pegRatio > 0 && pegRatio < 100 && (
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-slate-500">PEG (5Y)</span>
+            <span className="text-[11px] text-slate-500 flex items-center gap-0.5">
+              PEG (5Y)
+              <InfoTooltip content="Price/Earnings to Growth. Below 1 suggests growth may be underpriced. Above 2 often signals expensive relative to growth expectations." />
+            </span>
             <span className={`text-[11px] font-semibold tabular-nums ${pegRatio < 1 ? 'text-emerald-600' : pegRatio > 2 ? 'text-red-600' : 'text-slate-600'}`}>
               {pegRatio.toFixed(2)}×
             </span>
