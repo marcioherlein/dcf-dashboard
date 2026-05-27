@@ -170,8 +170,8 @@ export default function TradingPage() {
       <div className="max-w-4xl mx-auto space-y-5">
 
         {/* Header */}
-        <div className="flex items-center gap-3 flex-wrap border-b border-slate-200 pb-4">
-          <div>
+        <div className="flex items-start gap-3 flex-wrap border-b border-slate-200 pb-4">
+          <div className="flex-1 min-w-0">
             <h1 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">
               Trading · NU / PAGS / STNE
             </h1>
@@ -181,12 +181,12 @@ export default function TradingPage() {
             {dataAsOf && (
               <div className="text-[11px] text-slate-400 mt-0.5">
                 Data as of <span className="text-slate-600">{dataAsOf}</span>
-                {fetchedAt && <span className="ml-2">(fetched {new Date(fetchedAt).toLocaleString()})</span>}
+                {fetchedAt && <span className="ml-2 hidden sm:inline">(fetched {new Date(fetchedAt).toLocaleString()})</span>}
               </div>
             )}
           </div>
           <button onClick={loadSignal} disabled={loading}
-            className="ml-auto text-[12px] border border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-1 rounded-lg transition-colors disabled:opacity-40">
+            className="text-[12px] border border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-2 rounded-lg transition-colors disabled:opacity-40 min-h-[44px] shrink-0">
             {loading ? 'Loading…' : 'Refresh'}
           </button>
         </div>
@@ -241,7 +241,7 @@ export default function TradingPage() {
               ))}
               <div className="ml-auto">
                 <button onClick={loadSignal} disabled={loading}
-                  className="text-[12px] bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg transition-colors disabled:opacity-40 font-medium">
+                  className="text-[12px] bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-40 font-medium min-h-[44px]">
                   Recalculate
                 </button>
               </div>
@@ -418,7 +418,7 @@ export default function TradingPage() {
 
         {/* Cost Summary */}
         {costs && signal?.shouldRebalance && (
-          <div className="border border-slate-200 bg-white rounded-xl px-4 py-3 grid grid-cols-3 gap-6">
+          <div className="border border-slate-200 bg-white rounded-xl px-4 py-3 grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
             <div>
               <div className="text-[11px] text-slate-400 uppercase mb-1 font-medium">Total trade value</div>
               <div className="text-sm text-slate-700">{ars(costs.totalTradeValueARS)}</div>
@@ -445,8 +445,8 @@ export default function TradingPage() {
                 </span>
               )}
             </summary>
-            <div className="px-4 pb-4">
-              <table className="w-full text-xs">
+            <div className="px-4 pb-4 overflow-x-auto [-webkit-overflow-scrolling:touch]">
+              <table className="w-full text-xs min-w-[400px]">
                 <thead>
                   <tr className="text-slate-400 border-b border-slate-100">
                     <th className="text-left pb-2 font-medium">Ticker</th>

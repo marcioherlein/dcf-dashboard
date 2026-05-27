@@ -110,22 +110,22 @@ export default function StrategyPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Page header */}
-      <header className="bg-primary px-8 py-6 shrink-0">
-        <div className="flex items-center justify-between">
+      <header className="bg-primary px-4 sm:px-8 py-4 sm:py-6 shrink-0">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
           <div>
-            <h1 className="text-2xl font-extrabold text-on-primary tracking-tight">Strategy Builder</h1>
+            <h1 className="text-xl sm:text-2xl font-extrabold text-on-primary tracking-tight">Strategy Builder</h1>
             <p className="text-sm text-on-primary-container mt-0.5">
-              Multi-factor trading signals — entry, exit, conviction & risk/reward
+              Multi-factor trading signals — entry, exit, conviction &amp; risk/reward
             </p>
           </div>
           <div className="flex items-center gap-3">
             {lastFetch && (
-              <span className="text-[11px] text-on-primary-container">Updated {lastFetch}</span>
+              <span className="text-[11px] text-on-primary-container hidden sm:block">Updated {lastFetch}</span>
             )}
             <button
               onClick={fetchData}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-primary-container text-on-primary rounded-xl text-sm font-bold hover:bg-primary-container/80 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-primary-container text-on-primary rounded-xl text-sm font-bold hover:bg-primary-container/80 transition-colors disabled:opacity-50 min-h-[44px]"
             >
               <span className={`material-symbols-outlined text-sm ${loading ? 'animate-spin' : ''}`}>
                 {loading ? 'progress_activity' : 'refresh'}
@@ -136,12 +136,12 @@ export default function StrategyPage() {
         </div>
 
         {/* Market filter */}
-        <div className="flex gap-2 mt-5">
+        <div className="flex gap-2 mt-4 sm:mt-5 overflow-x-auto [-webkit-overflow-scrolling:touch]">
           {MARKETS.map((m) => (
             <button
               key={m.key}
               onClick={() => setMarket(m.key)}
-              className={`px-4 py-2 rounded-full text-sm font-bold transition-colors ${
+              className={`px-4 py-2 rounded-full text-sm font-bold transition-colors shrink-0 min-h-[44px] ${
                 market === m.key
                   ? 'bg-on-primary text-primary'
                   : 'bg-white/10 text-on-primary-container hover:bg-white/20'
@@ -155,15 +155,15 @@ export default function StrategyPage() {
 
       {/* Stats bar */}
       {!loading && reports.length > 0 && (
-        <div className="bg-surface-container-lowest border-b border-outline-variant/10 px-8 py-3 flex items-center gap-6 flex-wrap shrink-0">
+        <div className="bg-surface-container-lowest border-b border-outline-variant/10 px-4 sm:px-8 py-3 flex items-center gap-4 sm:gap-6 overflow-x-auto [-webkit-overflow-scrolling:touch] shrink-0">
           <StatChip label="Strong Buy" value={stats.strongBuy} color="text-secondary" />
           <StatChip label="Buy"        value={stats.buy}       color="text-on-primary-fixed-variant" />
           <StatChip label="Hold"       value={stats.hold}      color="text-on-surface-variant" />
           <StatChip label="Avoid/Short" value={stats.avoid}    color="text-error" />
-          <div className="h-4 w-px bg-outline-variant/30" />
+          <div className="h-4 w-px bg-outline-variant/30 shrink-0" />
           <StatChip label="High Conviction" value={stats.highConv} color="text-secondary" />
           <StatChip label="Good R/R Buys"   value={stats.goodRR}   color="text-primary" />
-          <div className="ml-auto flex gap-1">
+          <div className="ml-auto flex gap-1 shrink-0">
             <ViewToggle active={view === 'table'} onClick={() => setView('table')} icon="table_rows" label="Table" />
             <ViewToggle active={view === 'cards'} onClick={() => setView('cards')} icon="grid_view"  label="Cards" />
           </div>
@@ -178,9 +178,9 @@ export default function StrategyPage() {
       )}
 
       {/* Main content */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
         {/* Left: table or cards */}
-        <div className={`flex-1 overflow-y-auto ${selected ? 'lg:w-0' : ''}`}>
+        <div className={`flex-1 overflow-y-auto ${selected ? 'hidden lg:block' : ''}`}>
           {loading ? (
             view === 'cards' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-6">
@@ -224,7 +224,7 @@ export default function StrategyPage() {
 
         {/* Right: detail panel */}
         {selected && (
-          <aside className="w-[380px] shrink-0 border-l border-outline-variant/10 overflow-y-auto bg-surface-container-lowest">
+          <aside className="absolute inset-0 lg:static lg:w-[380px] lg:inset-auto lg:shrink-0 border-l border-outline-variant/10 overflow-y-auto bg-surface-container-lowest z-10">
             <div className="sticky top-0 bg-surface-container-lowest z-10 flex items-center justify-between px-5 py-3 border-b border-outline-variant/10">
               <div>
                 <span className="font-extrabold text-primary">{selected.displayTicker}</span>

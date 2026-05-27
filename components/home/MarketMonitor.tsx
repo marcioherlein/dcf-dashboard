@@ -88,7 +88,7 @@ function ChartPanel({ item, onClose }: { item: MarketItem; onClose: () => void }
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-700 transition-colors mt-0.5 text-xl leading-none"
+            className="text-slate-400 hover:text-slate-700 transition-colors mt-0.5 text-xl leading-none min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             ×
           </button>
@@ -140,7 +140,7 @@ function MarketCard({ item, onClick }: { item: MarketItem; onClick: () => void }
   return (
     <button
       onClick={onClick}
-      className="group flex flex-col bg-white border border-slate-200 hover:border-slate-300 hover:shadow-card transition-all rounded-xl p-3 text-left w-full"
+      className="group flex flex-col bg-white border border-slate-200 hover:border-slate-300 hover:shadow-card transition-all rounded-xl p-3 text-left w-full min-h-[80px]"
     >
       <div className="flex items-start justify-between mb-1 gap-1">
         <span className="text-[11px] font-medium text-slate-500 truncate leading-none">{item.label}</span>
@@ -203,12 +203,15 @@ export default function MarketMonitor() {
       <div className="min-h-screen bg-[#F8FAFB]">
 
         {/* Page header */}
-        <div className="px-6 py-4 border-b border-slate-200 bg-white flex items-center justify-between">
-          <div>
+        <div className="px-4 sm:px-6 py-4 border-b border-slate-200 bg-white flex items-center justify-between gap-3">
+          <div className="min-w-0">
             <h1 className="text-base font-semibold text-slate-900 tracking-tight">Market Monitor</h1>
-            <p className="text-[12px] text-slate-500 mt-0.5">
+            <p className="text-[12px] text-slate-500 mt-0.5 hidden sm:block">
               Global markets · Equities · Rates · Commodities · Crypto · FX
               <span className="ml-2 text-slate-400">· delayed ~15 min</span>
+            </p>
+            <p className="text-[12px] text-slate-500 mt-0.5 sm:hidden">
+              Global markets · delayed ~15 min
             </p>
           </div>
           <button
@@ -224,7 +227,7 @@ export default function MarketMonitor() {
 
         {/* KPI summary row */}
         {!loading && allItems.length > 0 && (
-          <div className="grid grid-cols-4 gap-px bg-slate-200 border-b border-slate-200">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-slate-200 border-b border-slate-200">
             <div className="bg-white px-4 py-3">
               <p className="text-[11px] text-slate-400 uppercase tracking-wide font-medium">Tracked</p>
               <p className="text-xl font-bold text-slate-900">{allItems.length}</p>
@@ -248,11 +251,11 @@ export default function MarketMonitor() {
 
         {/* Group filter pills */}
         {!loading && (
-          <div className="px-6 py-3 border-b border-slate-200 bg-white flex flex-wrap gap-1.5">
+          <div className="px-4 sm:px-6 py-3 border-b border-slate-200 bg-white flex overflow-x-auto gap-1.5 [-webkit-overflow-scrolling:touch]">
             <button
               onClick={() => setActiveGroup(null)}
               className={[
-                'px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors',
+                'px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors shrink-0 min-h-[36px]',
                 activeGroup === null
                   ? 'bg-blue-600 text-white'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
@@ -271,7 +274,7 @@ export default function MarketMonitor() {
                   key={g.name}
                   onClick={() => setActiveGroup(activeGroup === g.name ? null : g.name)}
                   className={[
-                    'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors',
+                    'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors shrink-0 min-h-[36px]',
                     activeGroup === g.name
                       ? 'bg-blue-600 text-white'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
@@ -287,7 +290,7 @@ export default function MarketMonitor() {
 
         {/* Top mover banner */}
         {!loading && topMover && (
-          <div className="px-6 py-2 border-b border-slate-200 bg-white flex items-center gap-3">
+          <div className="px-4 sm:px-6 py-2 border-b border-slate-200 bg-white flex items-center gap-3 overflow-x-auto [-webkit-overflow-scrolling:touch]">
             <span className="text-[11px] text-slate-400 uppercase tracking-wider font-medium">Top mover</span>
             <span className="text-[12px] font-semibold text-slate-800">{topMover.label}</span>
             <span className="text-[12px] font-semibold" style={{ color: topMover.changePct >= 0 ? '#059669' : '#DC2626' }}>
@@ -298,7 +301,7 @@ export default function MarketMonitor() {
         )}
 
         {/* Content */}
-        <div className="px-6 py-5 space-y-8">
+        <div className="px-4 sm:px-6 py-5 space-y-8">
           {loading ? (
             <div className="space-y-6">
               {GROUP_ORDER.slice(0, 4).map((g) => (
@@ -335,7 +338,7 @@ export default function MarketMonitor() {
           )}
         </div>
 
-        <div className="px-6 pb-6 text-[11px] text-slate-300">
+        <div className="px-4 sm:px-6 pb-6 text-[11px] text-slate-300">
           Data via Yahoo Finance · ~15 min delay · Click any card for price history
         </div>
       </div>

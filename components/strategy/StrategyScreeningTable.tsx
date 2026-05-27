@@ -129,13 +129,13 @@ export default function StrategyScreeningTable({
   return (
     <div className="flex flex-col">
       {/* Filters */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-outline-variant/10 bg-surface-container-lowest flex-wrap">
-        <div className="flex gap-1">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-outline-variant/10 bg-surface-container-lowest overflow-x-auto [-webkit-overflow-scrolling:touch]">
+        <div className="flex gap-1 shrink-0">
           {(['all', 'STRONG_BUY', 'BUY', 'HOLD', 'AVOID', 'SHORT_CANDIDATE'] as const).map((r) => (
             <button
               key={r}
               onClick={() => setRecFilter(r)}
-              className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide transition-colors ${
+              className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide transition-colors whitespace-nowrap min-h-[32px] ${
                 recFilter === r
                   ? 'bg-primary text-on-primary'
                   : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
@@ -145,13 +145,13 @@ export default function StrategyScreeningTable({
             </button>
           ))}
         </div>
-        <div className="h-4 w-px bg-outline-variant/30" />
-        <div className="flex gap-1">
+        <div className="h-4 w-px bg-outline-variant/30 shrink-0" />
+        <div className="flex gap-1 shrink-0">
           {(['all', 'equity', 'future'] as const).map((a) => (
             <button
               key={a}
               onClick={() => setAssetFilter(a)}
-              className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide transition-colors ${
+              className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide transition-colors min-h-[32px] ${
                 assetFilter === a
                   ? 'bg-primary text-on-primary'
                   : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
@@ -161,7 +161,7 @@ export default function StrategyScreeningTable({
             </button>
           ))}
         </div>
-        <span className="ml-auto text-[10px] text-on-surface-variant font-medium">{sorted.length} instruments</span>
+        <span className="ml-auto text-[10px] text-on-surface-variant font-medium shrink-0">{sorted.length} instruments</span>
       </div>
 
       {/* Table */}
