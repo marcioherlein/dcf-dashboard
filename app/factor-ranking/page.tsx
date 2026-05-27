@@ -117,7 +117,7 @@ export default function FactorRankingPage() {
       <TickerMarquee instruments={results} />
 
       {/* Page title */}
-      <div className="px-6 py-4 border-b border-slate-200 bg-white flex items-center justify-between">
+      <div className="px-4 sm:px-6 py-4 border-b border-slate-200 bg-white flex items-center justify-between gap-3">
         <div>
           <h1 className="text-base font-semibold text-slate-900 tracking-tight">Market Screener</h1>
           <p className="text-[12px] text-slate-500 mt-0.5">
@@ -138,15 +138,15 @@ export default function FactorRankingPage() {
       </div>
 
       {/* Filter Bar */}
-      <div className="px-6 py-3 border-b border-slate-200 bg-white flex flex-wrap items-center gap-3">
+      <div className="px-4 sm:px-6 py-3 border-b border-slate-200 bg-white flex flex-wrap items-center gap-3">
         {/* Market filter pills */}
-        <div className="flex gap-1">
+        <div className="flex gap-1 overflow-x-auto [-webkit-overflow-scrolling:touch]">
           {MARKET_OPTIONS.map((opt) => (
             <button
               key={opt.id}
               onClick={() => setMarket(opt.id)}
               className={[
-                'px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors',
+                'px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors shrink-0 min-h-[36px]',
                 market === opt.id
                   ? 'bg-blue-600 text-white'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
@@ -218,7 +218,7 @@ export default function FactorRankingPage() {
       </div>
 
       {/* KPI Stats Row */}
-      <div className="grid grid-cols-6 gap-px bg-slate-200 border-b border-slate-200">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-px bg-slate-200 border-b border-slate-200">
         {kpiCards.map((kpi) => (
           <div key={kpi.label} className="bg-white px-4 py-3 flex flex-col gap-0.5">
             <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">{kpi.label}</span>

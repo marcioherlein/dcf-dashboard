@@ -157,7 +157,7 @@ function MomentumTable({ rows }: { rows: StrategyRow[] }) {
     [rows]
   )
   return (
-    <table className="w-full text-[13px]">
+    <table className="w-full text-[13px] min-w-[600px]">
       <thead>
         <tr className="border-b border-slate-200">
           <th className="text-left py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Rank</th>
@@ -213,7 +213,7 @@ function LowVolTable({ rows }: { rows: StrategyRow[] }) {
     [rows]
   )
   return (
-    <table className="w-full text-[13px]">
+    <table className="w-full text-[13px] min-w-[500px]">
       <thead>
         <tr className="border-b border-slate-200">
           <th className="text-left py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Rank</th>
@@ -271,7 +271,7 @@ function MaTable({ rows }: { rows: StrategyRow[] }) {
     [rows]
   )
   return (
-    <table className="w-full text-[13px]">
+    <table className="w-full text-[13px] min-w-[520px]">
       <thead>
         <tr className="border-b border-slate-200">
           <th className="text-left py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Ticker</th>
@@ -321,7 +321,7 @@ function MeanRevTable({ rows }: { rows: StrategyRow[] }) {
     [rows]
   )
   return (
-    <table className="w-full text-[13px]">
+    <table className="w-full text-[13px] min-w-[500px]">
       <thead>
         <tr className="border-b border-slate-200">
           <th className="text-left py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Ticker</th>
@@ -372,7 +372,7 @@ function ValueTable({ rows }: { rows: StrategyRow[] }) {
     [rows]
   )
   return (
-    <table className="w-full text-[13px]">
+    <table className="w-full text-[13px] min-w-[640px]">
       <thead>
         <tr className="border-b border-slate-200">
           <th className="text-left py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Rank</th>
@@ -483,9 +483,9 @@ function ConsensusSummary({ rows }: { rows: StrategyRow[] }) {
       </div>
       <div className="divide-y divide-slate-100">
         {consensus.map((c) => (
-          <div key={c.ticker} className="flex items-center gap-3 px-4 py-2.5">
+          <div key={c.ticker} className="flex items-center gap-3 px-4 py-2.5 min-h-[44px]">
             <span className="w-14 font-semibold text-[13px] text-blue-700 shrink-0">{c.ticker}</span>
-            <span className="text-[11px] text-slate-400 w-28 truncate hidden sm:block">{c.name}</span>
+            <span className="text-[11px] text-slate-400 w-24 truncate hidden sm:block">{c.name}</span>
             <div className="flex items-center gap-1.5 flex-1">
               <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden flex">
                 <div
@@ -497,7 +497,7 @@ function ConsensusSummary({ rows }: { rows: StrategyRow[] }) {
                   style={{ width: `${(c.avoids / c.total) * 100}%` }}
                 />
               </div>
-              <span className="text-[11px] text-slate-500 shrink-0 w-28">
+              <span className="text-[11px] text-slate-500 shrink-0 hidden xs:block sm:w-28">
                 {c.buys} buy · {c.avoids} avoid · {c.total - c.buys - c.avoids} neutral
               </span>
             </div>
@@ -551,7 +551,7 @@ export default function StrategiesPage() {
         </div>
 
         {/* Category filter */}
-        <div className="flex gap-2 mb-4 flex-wrap">
+        <div className="flex gap-2 mb-4 overflow-x-auto [-webkit-overflow-scrolling:touch]">
           {(['All', 'AI Stack', 'CEDEAR', 'BYMA'] as const).map(cat => {
             const count = cat === 'All' ? rows.length : rows.filter(r => r.category === cat).length
             return (
@@ -559,7 +559,7 @@ export default function StrategiesPage() {
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
                 className={[
-                  'px-3 py-1 rounded-full text-[12px] font-semibold border transition-colors',
+                  'px-3 py-1 rounded-full text-[12px] font-semibold border transition-colors shrink-0 min-h-[36px]',
                   activeCategory === cat
                     ? cat === 'All'     ? 'bg-slate-800 text-white border-slate-800'
                     : cat === 'AI Stack'? 'bg-blue-600 text-white border-blue-600'
@@ -575,7 +575,7 @@ export default function StrategiesPage() {
         </div>
 
         {/* Strategy tabs */}
-        <div className="flex gap-1 flex-wrap mb-5 bg-white border border-slate-200 rounded-xl p-1">
+        <div className="flex gap-1 overflow-x-auto [-webkit-overflow-scrolling:touch] mb-5 bg-white border border-slate-200 rounded-xl p-1">
           <TabBtn
             active={activeStrategy === 'consensus'}
             onClick={() => setActiveStrategy('consensus')}
@@ -638,7 +638,7 @@ function TabBtn({ active, onClick, label }: { active: boolean; onClick: () => vo
     <button
       onClick={onClick}
       className={[
-        'px-3.5 py-1.5 rounded-lg text-[13px] font-medium transition-colors',
+        'px-3.5 py-1.5 rounded-lg text-[13px] font-medium transition-colors shrink-0 min-h-[36px]',
         active
           ? 'bg-blue-600 text-white'
           : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50',
