@@ -7,20 +7,20 @@ const EFFECTIVE_DATE = 'June 1, 2025'
 export default function TermsPage() {
   return (
     <div className="min-h-dvh bg-slate-50">
-      <div className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+      <div className="mx-auto max-w-2xl px-4 sm:px-6 py-12 sm:py-24">
 
-        <div className="mb-10">
-          <Link href="/" className="text-sm text-blue-600 hover:underline">← Back to intrinsico</Link>
+        <div className="mb-8">
+          <Link href="/" className="inline-flex items-center min-h-[44px] text-sm text-blue-600 hover:underline">← Back to intrinsico</Link>
         </div>
 
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Terms of Service</h1>
-        <p className="text-sm text-slate-400 mb-10">Effective date: {EFFECTIVE_DATE}</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">Terms of Service</h1>
+        <p className="text-sm text-slate-400 mb-8 sm:mb-10">Effective date: {EFFECTIVE_DATE}</p>
 
         <div className="prose prose-slate max-w-none space-y-8 text-sm text-slate-600 leading-relaxed">
 
           {/* ── 1 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">1. Acceptance of Terms</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">1. Acceptance of Terms</h2>
             <p>
               By accessing or using intrinsico (&quot;the Service&quot;, &quot;we&quot;, &quot;us&quot;), you agree to be bound by
               these Terms of Service. If you do not agree, do not use the Service.
@@ -31,7 +31,7 @@ export default function TermsPage() {
 
           {/* ── 2 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">2. Not Financial Advice</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">2. Not Financial Advice</h2>
             <p className="font-medium text-slate-700">
               Nothing on this platform constitutes financial, investment, legal, or tax
               advice of any kind.
@@ -58,7 +58,7 @@ export default function TermsPage() {
 
           {/* ── 3 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">3. Eligibility</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">3. Eligibility</h2>
             <p>
               You must be at least 18 years old to use the Service. By using it, you
               confirm that you meet this requirement.
@@ -67,7 +67,7 @@ export default function TermsPage() {
 
           {/* ── 4 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">4. User Accounts</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">4. User Accounts</h2>
             <p>
               Accounts are created via Google OAuth. You are responsible for all activity
               that occurs under your account. We reserve the right to suspend or terminate
@@ -77,7 +77,7 @@ export default function TermsPage() {
 
           {/* ── 5 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">5. Acceptable Use</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">5. Acceptable Use</h2>
             <p>You agree not to:</p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
               <li>Use the Service for any unlawful purpose</li>
@@ -90,7 +90,7 @@ export default function TermsPage() {
 
           {/* ── 6 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">6. Data Sources and Accuracy</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">6. Data Sources and Accuracy</h2>
             <p>
               Financial data is sourced from third parties including Yahoo Finance, FRED
               (Federal Reserve Economic Data), and Damodaran&apos;s publicly available research.
@@ -101,7 +101,7 @@ export default function TermsPage() {
 
           {/* ── 7 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">7. Intellectual Property</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">7. Intellectual Property</h2>
             <p>
               All content, design, code, and branding on the Service is the property of
               intrinsico and may not be copied, reproduced, or distributed without written
@@ -111,7 +111,7 @@ export default function TermsPage() {
 
           {/* ── 8 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">8. Limitation of Liability</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">8. Limitation of Liability</h2>
             <p>
               To the fullest extent permitted by law, intrinsico and its operators shall
               not be liable for any direct, indirect, incidental, special, consequential,
@@ -126,7 +126,7 @@ export default function TermsPage() {
 
           {/* ── 9 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">9. Governing Law</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">9. Governing Law</h2>
             <p>
               These terms are governed by applicable law. Any disputes shall be resolved
               through good-faith negotiation before pursuing formal legal remedies.
@@ -135,7 +135,7 @@ export default function TermsPage() {
 
           {/* ── 10 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">10. Contact</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">10. Contact</h2>
             <p>
               Questions about these terms? Reach us at{' '}
               <a href="mailto:hello@intrinsico.capital" className="text-blue-600 hover:underline">
@@ -146,7 +146,7 @@ export default function TermsPage() {
 
         </div>
 
-        <div className="mt-12 pt-8 border-t border-slate-200 flex gap-6 text-sm text-slate-400">
+        <div className="mt-12 pt-8 border-t border-slate-200 flex flex-wrap gap-4 text-sm text-slate-400">
           <Link href="/privacy" className="hover:text-slate-600 transition-colors">Privacy Policy</Link>
           <Link href="/" className="hover:text-slate-600 transition-colors">Back to home</Link>
         </div>

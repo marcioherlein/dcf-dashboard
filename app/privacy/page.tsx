@@ -7,20 +7,20 @@ const EFFECTIVE_DATE = 'June 1, 2025'
 export default function PrivacyPage() {
   return (
     <div className="min-h-dvh bg-slate-50">
-      <div className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+      <div className="mx-auto max-w-2xl px-4 sm:px-6 py-12 sm:py-24">
 
-        <div className="mb-10">
-          <Link href="/" className="text-sm text-blue-600 hover:underline">← Back to intrinsico</Link>
+        <div className="mb-8">
+          <Link href="/" className="inline-flex items-center min-h-[44px] text-sm text-blue-600 hover:underline">← Back to intrinsico</Link>
         </div>
 
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Privacy Policy</h1>
-        <p className="text-sm text-slate-400 mb-10">Effective date: {EFFECTIVE_DATE}</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">Privacy Policy</h1>
+        <p className="text-sm text-slate-400 mb-8 sm:mb-10">Effective date: {EFFECTIVE_DATE}</p>
 
         <div className="prose prose-slate max-w-none space-y-8 text-sm text-slate-600 leading-relaxed">
 
           {/* ── 1 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">1. Overview</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">1. Overview</h2>
             <p>
               intrinsico (&quot;we&quot;, &quot;us&quot;) is committed to protecting your privacy. This policy
               explains what data we collect, how we use it, and your rights regarding it.
@@ -30,7 +30,7 @@ export default function PrivacyPage() {
 
           {/* ── 2 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">2. Data We Collect</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">2. Data We Collect</h2>
             <div className="space-y-4">
               <div>
                 <p className="font-medium text-slate-700">When you sign in with Google:</p>
@@ -61,7 +61,7 @@ export default function PrivacyPage() {
 
           {/* ── 3 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">3. How We Use Your Data</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">3. How We Use Your Data</h2>
             <ul className="list-disc pl-5 space-y-1">
               <li>To authenticate you and maintain your account</li>
               <li>To save your watchlist, valuations, and preferences</li>
@@ -78,10 +78,10 @@ export default function PrivacyPage() {
 
           {/* ── 4 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">4. Third-Party Services</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">4. Third-Party Services</h2>
             <p>We use the following services to operate intrinsico. Each has its own privacy policy.</p>
-            <div className="mt-3 rounded-xl border border-slate-200 overflow-hidden">
-              <table className="w-full text-xs">
+            <div className="mt-3 rounded-xl border border-slate-200 overflow-x-auto">
+              <table className="w-full text-xs min-w-[420px]">
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="text-left px-4 py-2 font-semibold text-slate-600">Service</th>
@@ -110,7 +110,7 @@ export default function PrivacyPage() {
 
           {/* ── 5 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">5. Email Communications</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">5. Email Communications</h2>
             <p>
               We send two types of emails:
             </p>
@@ -130,7 +130,7 @@ export default function PrivacyPage() {
 
           {/* ── 6 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">6. Data Retention</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">6. Data Retention</h2>
             <p>
               We retain your account data for as long as your account is active. If you
               request account deletion, we will permanently delete your personal data
@@ -141,7 +141,7 @@ export default function PrivacyPage() {
 
           {/* ── 7 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">7. Your Rights</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">7. Your Rights</h2>
             <p>Depending on your location, you may have the right to:</p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
               <li><strong>Access</strong> — request a copy of the data we hold about you</li>
@@ -161,7 +161,7 @@ export default function PrivacyPage() {
 
           {/* ── 8 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">8. Cookies</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">8. Cookies</h2>
             <p>
               We use only essential cookies required for authentication (session tokens
               via NextAuth). We do not use advertising cookies or third-party tracking
@@ -171,7 +171,7 @@ export default function PrivacyPage() {
 
           {/* ── 9 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">9. Children&apos;s Privacy</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">9. Children&apos;s Privacy</h2>
             <p>
               The Service is not directed at children under 18. We do not knowingly
               collect data from anyone under 18. If you believe a minor has created an
@@ -181,7 +181,7 @@ export default function PrivacyPage() {
 
           {/* ── 10 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">10. Changes to This Policy</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">10. Changes to This Policy</h2>
             <p>
               We may update this policy periodically. We will notify registered users
               by email of material changes. Continued use of the Service after changes
@@ -191,7 +191,7 @@ export default function PrivacyPage() {
 
           {/* ── 11 ── */}
           <section>
-            <h2 className="text-base font-semibold text-slate-800 mb-2">11. Contact</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">11. Contact</h2>
             <p>
               Privacy questions or requests:{' '}
               <a href="mailto:hello@intrinsico.capital" className="text-blue-600 hover:underline">
@@ -202,7 +202,7 @@ export default function PrivacyPage() {
 
         </div>
 
-        <div className="mt-12 pt-8 border-t border-slate-200 flex gap-6 text-sm text-slate-400">
+        <div className="mt-12 pt-8 border-t border-slate-200 flex flex-wrap gap-4 text-sm text-slate-400">
           <Link href="/terms" className="hover:text-slate-600 transition-colors">Terms of Service</Link>
           <Link href="/" className="hover:text-slate-600 transition-colors">Back to home</Link>
         </div>
