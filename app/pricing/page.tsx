@@ -254,7 +254,7 @@ export default function PricingPage() {
             {[
               { tier: 'Free', color: 'border-slate-200', headerColor: 'text-slate-400', badgeColor: '' },
               { tier: 'Pro', color: 'border-blue-200', headerColor: 'text-[#0F2A5E]', badgeColor: 'bg-[#0F2A5E] text-white' },
-            ].map(({ tier, color, headerColor, badgeColor }) => (
+            ].map(({ tier, color, headerColor, badgeColor: _badgeColor }) => (
               <div key={tier} className={`rounded-2xl bg-white border ${color} overflow-hidden`}>
                 <div className="px-5 py-3 border-b border-slate-100 bg-slate-50">
                   <span className={`text-xs font-bold uppercase tracking-widest ${headerColor}`}>{tier}</span>
