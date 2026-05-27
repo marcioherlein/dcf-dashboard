@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 import { loadWatchlist, saveWatchlistEntry, deleteWatchlistEntry } from '@/lib/simplifier/watchlistStore'
 import type { WatchlistEntry, ListTag } from '@/lib/simplifier/types'
 import { fmtPrice, fmtPct } from '@/lib/formatters'
@@ -104,6 +105,9 @@ function ValuationCard({ entry }: { entry: WatchlistEntry }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ValuationsPage() {
+  const { data: session } = useSession()
+  const userEmail = session?.user?.email ?? null
+
   const [entries, setEntries]     = useState<WatchlistEntry[]>([])
   const [loading, setLoading]     = useState(true)
   const [sparklines, setSparklines] = useState<Record<string, number[] | null>>({})
@@ -114,7 +118,8 @@ export default function ValuationsPage() {
 
   // ── Load watchlist + sparklines ────────────────────────────────────────────
   useEffect(() => {
-    loadWatchlist(null).then((data) => {
+    setLoading(true)
+    loadWatchlist(userEmail).then((data) => {
       const sorted = data.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       setEntries(sorted)
       setLoading(false)
@@ -141,7 +146,7 @@ export default function ValuationsPage() {
         setSparklines(map)
       })
     })
-  }, [])
+  }, [userEmail])
 
   // ── Derived state ──────────────────────────────────────────────────────────
   const derivedGroups = Array.from(
@@ -165,14 +170,14 @@ export default function ValuationsPage() {
 
   // ── Mutation handlers ──────────────────────────────────────────────────────
   const handleDelete = async (ticker: string) => {
-    await deleteWatchlistEntry(ticker, null)
+    await deleteWatchlistEntry(ticker, userEmail)
     setEntries((prev) => prev.filter((e) => e.ticker !== ticker))
   }
 
   const handleTagUpdate = async (ticker: string, tag: ListTag) => {
     setEntries((prev) => prev.map((e) => (e.ticker === ticker ? { ...e, listTag: tag } : e)))
     const entry = entries.find((e) => e.ticker === ticker)
-    if (entry) await saveWatchlistEntry({ ...entry, listTag: tag }, null)
+    if (entry) await saveWatchlistEntry({ ...entry, listTag: tag }, userEmail)
   }
 
   const handleGroupUpdate = async (ticker: string, groupName: string | null) => {
@@ -182,7 +187,7 @@ export default function ValuationsPage() {
     // Remove from pending groups if now assigned a stock
     if (groupName) setPendingGroups((prev) => prev.filter((g) => g !== groupName))
     const entry = entries.find((e) => e.ticker === ticker)
-    if (entry) await saveWatchlistEntry({ ...entry, groupName: groupName ?? undefined }, null)
+    if (entry) await saveWatchlistEntry({ ...entry, groupName: groupName ?? undefined }, userEmail)
   }
 
   const handleNewGroup = (name: string) => {

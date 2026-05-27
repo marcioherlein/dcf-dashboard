@@ -30,15 +30,21 @@ export default function PromptDrawer({ prompt, phaseName, onClose }: PromptDrawe
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-stretch justify-end" onClick={onClose}>
       {/* Backdrop */}
-      <div className="flex-1 bg-black/60" />
+      <div className="absolute inset-0 bg-black/60" />
 
-      {/* Drawer */}
+      {/* Drawer — bottom sheet on mobile, side panel on sm+ */}
       <div
-        className="w-full max-w-xl bg-[#161b22] border-l border-[#30363d] flex flex-col h-full"
+        className="relative w-full sm:w-auto sm:max-w-xl bg-[#161b22] border-t sm:border-t-0 sm:border-l border-[#30363d] flex flex-col sm:h-full max-h-[90dvh] sm:max-h-full rounded-t-2xl sm:rounded-none"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Handle bar (mobile) */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div className="w-10 h-1 rounded-full bg-[#30363d]" />
+        </div>
+
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#30363d]">
           <div>
@@ -47,7 +53,7 @@ export default function PromptDrawer({ prompt, phaseName, onClose }: PromptDrawe
           </div>
           <button
             onClick={onClose}
-            className="text-[#8b949e] hover:text-[#e6edf3] transition-colors p-1 rounded hover:bg-[#30363d]"
+            className="text-[#8b949e] hover:text-[#e6edf3] transition-colors p-2 rounded hover:bg-[#30363d] min-w-[36px] min-h-[36px] flex items-center justify-center"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
               <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l3.22 3.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-3.22 3.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"/>
@@ -63,19 +69,20 @@ export default function PromptDrawer({ prompt, phaseName, onClose }: PromptDrawe
         </div>
 
         {/* Prompt textarea */}
-        <div className="flex-1 overflow-y-auto p-5">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5">
           <textarea
             readOnly
             value={prompt}
-            className="w-full h-full min-h-[300px] bg-[#0d1117] border border-[#30363d] rounded text-[#e6edf3] text-xs font-mono px-3 py-3 resize-none focus:outline-none focus:border-[#388bfd] transition-colors leading-relaxed"
+            style={{ fontSize: '16px' }}
+            className="w-full h-full min-h-[200px] sm:min-h-[300px] bg-[#0d1117] border border-[#30363d] rounded text-[#e6edf3] font-mono px-3 py-3 resize-none focus:outline-none focus:border-[#388bfd] transition-colors leading-relaxed"
           />
         </div>
 
         {/* Actions */}
-        <div className="px-5 py-4 border-t border-[#30363d] flex gap-3">
+        <div className="px-4 sm:px-5 py-4 border-t border-[#30363d] flex gap-3">
           <button
             onClick={handleCopy}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded text-sm font-semibold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3 sm:py-2.5 rounded text-sm font-semibold transition-all min-h-[44px] ${
               copied
                 ? 'bg-[#238636] border border-[#2ea043] text-white'
                 : 'bg-[#1f6feb] border border-[#388bfd] text-white hover:bg-[#388bfd]'
@@ -99,7 +106,7 @@ export default function PromptDrawer({ prompt, phaseName, onClose }: PromptDrawe
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-2.5 rounded text-sm text-[#8b949e] border border-[#30363d] hover:border-[#6e7681] hover:text-[#e6edf3] transition-all"
+            className="px-4 py-3 sm:py-2.5 rounded text-sm text-[#8b949e] border border-[#30363d] hover:border-[#6e7681] hover:text-[#e6edf3] transition-all min-h-[44px]"
           >
             Continue
           </button>

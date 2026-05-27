@@ -45,7 +45,7 @@ export default function SimplifierSearch() {
   }
 
   return (
-    <div className="relative w-full max-w-sm">
+    <div className="relative w-full max-w-sm sm:max-w-sm">
       <div className="flex items-center gap-2 bg-white border border-[#E8E6E0] rounded-lg px-3 py-2 focus-within:border-[#1f6feb] transition-colors shadow-sm">
         {loading ? (
           <svg className="animate-spin text-[#6B6A72]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -63,7 +63,8 @@ export default function SimplifierSearch() {
           onFocus={() => results.length > 0 && setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
           placeholder="Search ticker or company…"
-          className="flex-1 bg-transparent text-[#2D2C31] text-sm placeholder-[#6B6A72] outline-none"
+          style={{ fontSize: '16px' }}
+          className="flex-1 bg-transparent text-[#2D2C31] placeholder-[#6B6A72] outline-none min-w-0"
         />
       </div>
 

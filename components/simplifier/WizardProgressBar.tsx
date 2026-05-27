@@ -14,7 +14,7 @@ interface WizardProgressBarProps {
 
 export default function WizardProgressBar({ currentPhase, answers, onPhaseClick }: WizardProgressBarProps) {
   return (
-    <div className="flex items-start gap-1 w-full overflow-x-auto pb-1">
+    <div className="flex items-start gap-1 w-full overflow-x-auto pb-1 scrollbar-hide">
       {PHASES.map((phase, idx) => {
         const isActive    = phase.id === currentPhase
         const answered    = answeredCount(answers, phase)
@@ -27,7 +27,7 @@ export default function WizardProgressBar({ currentPhase, answers, onPhaseClick 
           <button
             key={phase.id}
             onClick={() => onPhaseClick(phase.id)}
-            className={`group flex flex-col items-center gap-1.5 flex-1 min-w-[80px] px-2 py-2 rounded-lg border transition-all text-left ${
+            className={`group flex flex-col items-center gap-1.5 flex-1 min-w-[64px] sm:min-w-[80px] px-2 py-2 rounded-lg border transition-all text-left min-h-[56px] ${
               isActive
                 ? 'border-[#388bfd] bg-[#1f2d3d]'
                 : hasStarted
@@ -50,7 +50,7 @@ export default function WizardProgressBar({ currentPhase, answers, onPhaseClick 
             </div>
 
             {/* Phase name */}
-            <span className={`text-[11px] leading-tight w-full ${isActive ? 'text-[#e6edf3]' : 'text-[#8b949e] group-hover:text-[#c9d1d9]'}`}>
+            <span className={`text-[10px] sm:text-[11px] leading-tight w-full ${isActive ? 'text-[#e6edf3]' : 'text-[#8b949e] group-hover:text-[#c9d1d9]'}`}>
               {phase.name}
             </span>
 

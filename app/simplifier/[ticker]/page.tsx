@@ -133,9 +133,9 @@ export default function SimplifierTickerPage() {
 
   return (
     <div className="min-h-screen bg-[#F7F6F1]">
-      <div className="max-w-3xl mx-auto px-4 py-6">
+      <div className="max-w-3xl mx-auto px-4 py-4 sm:py-6 pb-20 sm:pb-6">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs text-[#6B6A72] mb-5">
+        <div className="flex items-center gap-2 text-xs text-[#6B6A72] mb-4 sm:mb-5">
           <Link href="/simplifier" className="hover:text-[#1f6feb] transition-colors">Simplifier</Link>
           <span>/</span>
           <span className="text-[#2D2C31] font-mono font-semibold">{upperTicker}</span>

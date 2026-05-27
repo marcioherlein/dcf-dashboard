@@ -146,12 +146,14 @@ export default function PhaseWizard({ autoMap, financialsMeta, initialEntry, onS
         />
       </div>
 
-      {/* Navigation */}
-      <div className="flex items-center justify-between">
+      {/* Navigation — sticky bottom bar on mobile */}
+      <div className="fixed bottom-0 left-0 right-0 sm:relative sm:bottom-auto bg-[#0d1117] sm:bg-transparent border-t border-[#21262d] sm:border-0 px-4 py-3 flex items-center justify-between z-30"
+        style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
+      >
         <button
           onClick={() => setCurrentPhase((p) => Math.max(1, p - 1))}
           disabled={currentPhase === 1}
-          className="flex items-center gap-1.5 text-sm text-[#8b949e] disabled:opacity-30 hover:text-[#e6edf3] transition-colors disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 text-sm text-[#8b949e] disabled:opacity-30 hover:text-[#e6edf3] transition-colors disabled:cursor-not-allowed min-h-[44px] px-2"
         >
           <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
             <path d="M9.78 12.78a.75.75 0 0 1-1.06 0L4.47 8.53a.75.75 0 0 1 0-1.06l4.25-4.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042L6.06 8l3.72 3.72a.75.75 0 0 1 0 1.06Z"/>
@@ -164,19 +166,19 @@ export default function PhaseWizard({ autoMap, financialsMeta, initialEntry, onS
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-1.5 text-xs text-[#8b949e] border border-[#30363d] rounded px-3 py-1.5 hover:border-[#6e7681] hover:text-[#e6edf3] transition-all disabled:opacity-50"
+            className="flex items-center gap-1.5 text-xs text-[#8b949e] border border-[#30363d] rounded px-3 py-1.5 hover:border-[#6e7681] hover:text-[#e6edf3] transition-all disabled:opacity-50 min-h-[36px]"
           >
             {saving ? 'Saving…' : 'Save Progress'}
           </button>
           {savedAt && (
-            <span className="text-[11px] text-[#3fb950]">Saved {savedAt}</span>
+            <span className="text-[11px] text-[#3fb950] hidden sm:inline">Saved {savedAt}</span>
           )}
         </div>
 
         {currentPhase < 5 ? (
           <button
             onClick={() => setCurrentPhase((p) => Math.min(5, p + 1))}
-            className="flex items-center gap-1.5 text-sm text-[#79c0ff] hover:text-[#e6edf3] transition-colors"
+            className="flex items-center gap-1.5 text-sm text-[#79c0ff] hover:text-[#e6edf3] transition-colors min-h-[44px] px-2"
           >
             Next
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
@@ -186,7 +188,7 @@ export default function PhaseWizard({ autoMap, financialsMeta, initialEntry, onS
         ) : (
           <button
             onClick={handleSave}
-            className="flex items-center gap-1.5 text-sm text-white bg-[#1f6feb] rounded px-4 py-1.5 hover:bg-[#388bfd] transition-colors"
+            className="flex items-center gap-1.5 text-sm text-white bg-[#1f6feb] rounded px-4 py-1.5 hover:bg-[#388bfd] transition-colors min-h-[44px]"
           >
             Complete
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">

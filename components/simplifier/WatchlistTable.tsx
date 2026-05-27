@@ -203,6 +203,71 @@ function TableRow({ entry, onDelete, onTagUpdate }: {
   )
 }
 
+// ── Mobile card for each watchlist entry ─────────────────────────────────────
+
+function MobileCard({ entry, onDelete, onTagUpdate }: {
+  entry: WatchlistEntry
+  onDelete: (ticker: string) => void
+  onTagUpdate: (ticker: string, tag: ListTag) => void
+}) {
+  const router = useRouter()
+  const [imgErr, setImgErr] = useState(false)
+  const logoUrl = `https://logo.clearbit.com/${entry.ticker.toLowerCase()}.com`
+
+  const updatedLabel = entry.updatedAt
+    ? new Date(entry.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    : '—'
+
+  const overall = overallScore1to5(entry.answers)
+
+  return (
+    <div
+      className="flex items-center gap-3 px-4 py-3 border-b border-[#E8E6E0] hover:bg-[#F9F9F7] cursor-pointer transition-colors"
+      onClick={() => router.push(`/simplifier/${entry.ticker}`)}
+    >
+      {/* Logo */}
+      {!imgErr ? (
+        <Image src={logoUrl} alt={entry.ticker} width={36} height={36}
+          className="rounded-lg object-contain bg-white border border-[#E8E6E0] p-0.5 shrink-0"
+          onError={() => setImgErr(true)} />
+      ) : (
+        <div className="w-9 h-9 rounded-lg bg-[#EEF4FF] border border-[#DCE6F5] flex items-center justify-center text-[10px] font-bold text-[#1f6feb] font-mono shrink-0">
+          {entry.ticker.slice(0, 2)}
+        </div>
+      )}
+
+      {/* Ticker + name + tag */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="text-[13px] font-semibold text-[#2D2C31] font-mono">{entry.ticker}</p>
+          <div onClick={e => e.stopPropagation()}>
+            <ListTagBadge tag={entry.listTag} onClick={() => onTagUpdate(entry.ticker, cycleTag(entry.listTag))} />
+          </div>
+        </div>
+        <p className="text-[11px] text-[#6B6A72] truncate">{entry.snapshot?.price != null ? `$${entry.snapshot.price.toFixed(2)}` : ''} · {updatedLabel}</p>
+      </div>
+
+      {/* Score */}
+      <div className="shrink-0">
+        <MiniScore score={overall} />
+      </div>
+
+      {/* Delete */}
+      <div onClick={e => e.stopPropagation()}>
+        <button
+          onClick={() => onDelete(entry.ticker)}
+          className="p-2 rounded hover:bg-[#FEE2E2] text-[#9CA3AF] hover:text-[#cf222e] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+          title="Delete"
+        >
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M11 1.75V3h2.25a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1 0-1.5H5V1.75C5 .784 5.784 0 6.75 0h2.5C10.216 0 11 .784 11 1.75ZM4.496 6.675l.66 6.6a.25.25 0 0 0 .249.225h5.19a.25.25 0 0 0 .249-.225l.66-6.6a.75.75 0 0 1 1.492.149l-.66 6.6A1.748 1.748 0 0 1 10.595 15h-5.19a1.75 1.75 0 0 1-1.741-1.575l-.66-6.6a.75.75 0 1 1 1.492-.15ZM6.5 1.75V3h3V1.75a.25.25 0 0 0-.25-.25h-2.5a.25.25 0 0 0-.25.25Z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── WatchlistTable ────────────────────────────────────────────────────────────
 
 export default function WatchlistTable({ entries, onDelete, onTagUpdate }: WatchlistTableProps) {
@@ -223,40 +288,55 @@ export default function WatchlistTable({ entries, onDelete, onTagUpdate }: Watch
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[900px] border-collapse">
-        <thead>
-          <tr className="bg-[#1A1917] text-white">
-            {HEADERS.map((h, i) => (
-              <th
-                key={i}
-                className={`px-3 py-2.5 text-left text-[10px] font-semibold tracking-wider uppercase ${
-                  i === 0 ? 'pl-4' : ''
-                } ${i === HEADERS.length - 1 ? 'w-10' : ''}`}
-              >
-                {h === 'DATE' ? (
-                  <span className="flex items-center gap-1">
-                    {h}
-                    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" className="opacity-60">
-                      <path d="M4 6L0 2h8z"/>
-                    </svg>
-                  </span>
-                ) : h}
-              </th>
+    <>
+      {/* Mobile list view (< sm) */}
+      <div className="sm:hidden bg-white">
+        {entries.map(entry => (
+          <MobileCard
+            key={entry.ticker}
+            entry={entry}
+            onDelete={onDelete}
+            onTagUpdate={onTagUpdate}
+          />
+        ))}
+      </div>
+
+      {/* Desktop table view (sm+) */}
+      <div className="hidden sm:block overflow-x-auto">
+        <table className="w-full min-w-[900px] border-collapse">
+          <thead>
+            <tr className="bg-[#1A1917] text-white">
+              {HEADERS.map((h, i) => (
+                <th
+                  key={i}
+                  className={`px-3 py-2.5 text-left text-[10px] font-semibold tracking-wider uppercase ${
+                    i === 0 ? 'pl-4' : ''
+                  } ${i === HEADERS.length - 1 ? 'w-10' : ''}`}
+                >
+                  {h === 'DATE' ? (
+                    <span className="flex items-center gap-1">
+                      {h}
+                      <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" className="opacity-60">
+                        <path d="M4 6L0 2h8z"/>
+                      </svg>
+                    </span>
+                  ) : h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="bg-white">
+            {entries.map(entry => (
+              <TableRow
+                key={entry.ticker}
+                entry={entry}
+                onDelete={onDelete}
+                onTagUpdate={onTagUpdate}
+              />
             ))}
-          </tr>
-        </thead>
-        <tbody className="bg-white">
-          {entries.map(entry => (
-            <TableRow
-              key={entry.ticker}
-              entry={entry}
-              onDelete={onDelete}
-              onTagUpdate={onTagUpdate}
-            />
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </tbody>
+        </table>
+      </div>
+    </>
   )
 }

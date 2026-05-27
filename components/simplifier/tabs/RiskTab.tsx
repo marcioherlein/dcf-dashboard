@@ -53,18 +53,29 @@ export default function RiskTab({
   return (
     <div className="flex flex-col gap-6">
       {/* Section header */}
-      <div className="rounded-xl border border-[#E8E6E0] bg-white p-5 flex items-center gap-5">
-        <ScoreCircle score={score} size="lg" />
-        <div className="flex-1">
-          <p className="text-xs font-semibold text-[#6B6A72] uppercase tracking-wider mb-0.5">Phase 5 · Part A</p>
-          <h2 className="text-lg font-bold text-[#2D2C31]">Risk Assessment</h2>
-          <p className="text-sm text-[#6B6A72] mt-0.5">Assess key risks including balance sheet health, competitive threats and macro sensitivity.</p>
+      <div className="rounded-xl border border-[#E8E6E0] bg-white p-4 sm:p-5">
+        <div className="flex items-center gap-4 sm:gap-5">
+          <ScoreCircle score={score} size="lg" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-[#6B6A72] uppercase tracking-wider mb-0.5">Phase 5 · Part A</p>
+            <h2 className="text-lg font-bold text-[#2D2C31]">Risk Assessment</h2>
+            <p className="text-sm text-[#6B6A72] mt-0.5 hidden sm:block">Assess key risks including balance sheet health, competitive threats and macro sensitivity.</p>
+          </div>
+          <div className="hidden sm:grid grid-cols-3 gap-3">
+            {riskMetrics.map(m => (
+              <div key={m.label} className="text-right">
+                <p className="text-[10px] text-[#6B6A72] uppercase tracking-wider">{m.label}</p>
+                <p className={`text-sm font-semibold font-mono ${m.color}`}>{m.value}</p>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="hidden sm:grid grid-cols-3 gap-3">
+        {/* Mobile metrics strip */}
+        <div className="grid grid-cols-3 gap-2 mt-3 sm:hidden">
           {riskMetrics.map(m => (
-            <div key={m.label} className="text-right">
-              <p className="text-[10px] text-[#6B6A72] uppercase tracking-wider">{m.label}</p>
-              <p className={`text-sm font-semibold font-mono ${m.color}`}>{m.value}</p>
+            <div key={m.label} className="text-center">
+              <p className="text-[9px] text-[#6B6A72] uppercase tracking-wider">{m.label}</p>
+              <p className={`text-xs font-semibold font-mono ${m.color}`}>{m.value}</p>
             </div>
           ))}
         </div>
