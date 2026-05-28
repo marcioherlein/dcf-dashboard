@@ -69,7 +69,7 @@ export default function ModelDivergencePanel({ divergence }: Props) {
         </div>
 
         {/* Right: stats */}
-        <div className="px-6 py-4 flex flex-row md:flex-col justify-around md:justify-center gap-4">
+        <div className="px-5 py-4 flex flex-row md:flex-col justify-around md:justify-center gap-4 flex-wrap min-w-0">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Spread vs. Price</p>
             <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none">
@@ -102,19 +102,21 @@ export default function ModelDivergencePanel({ divergence }: Props) {
               const cfg  = METHOD_ICON[e.methodId]
               const conf = CONFIDENCE_CHIP[e.confidence]
               return (
-                <div key={e.methodId} className="px-5 py-4 flex items-start gap-4">
-                  {cfg && (
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${cfg.iconBg}`}>
-                      <cfg.Icon size={14} className={cfg.iconText} />
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 shrink-0 w-40">
-                    <span className="text-sm font-bold text-slate-700">{e.methodName}</span>
+                <div key={e.methodId} className="px-4 sm:px-5 py-4">
+                  {/* Top row: icon + name + confidence chip */}
+                  <div className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
+                    {cfg && (
+                      <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 ${cfg.iconBg}`}>
+                        <cfg.Icon size={13} className={cfg.iconText} />
+                      </div>
+                    )}
+                    <span className="text-sm font-bold text-slate-700 shrink-0">{e.methodName}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${conf.bg} ${conf.text}`}>
+                      {conf.label}
+                    </span>
                   </div>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 self-start mt-0.5 ${conf.bg} ${conf.text}`}>
-                    {conf.label}
-                  </span>
-                  <p className="text-[12px] text-slate-500 leading-relaxed flex-1 min-w-0">{e.reason}</p>
+                  {/* Reason text: full width below */}
+                  <p className="text-[12px] text-slate-500 leading-relaxed">{e.reason}</p>
                 </div>
               )
             })}

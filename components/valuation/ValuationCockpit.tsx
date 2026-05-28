@@ -277,6 +277,10 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
           <span className="ml-auto text-xs text-slate-400 hidden sm:inline">DCF-only estimate · distinct from top blended value</span>
         </summary>
         <div className="mt-2">
+          {/* Best-viewed-on-desktop note for mobile */}
+          <p className="sm:hidden text-[11px] text-slate-400 text-center py-2 px-4">
+            Best experienced on a wider screen — scroll horizontally to view all columns.
+          </p>
           {dcfOpened && (
             <ModellingWorkspace
               apiData={apiData}

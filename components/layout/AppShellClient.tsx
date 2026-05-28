@@ -4,7 +4,20 @@ import { usePathname } from 'next/navigation'
 import TopBar from './TopBar'
 import BottomNav from './BottomNav'
 import Sidebar from './Sidebar'
-import { StockNavProvider } from '@/contexts/StockNavContext'
+import { StockNavProvider, useStockNav } from '@/contexts/StockNavContext'
+import { cn } from '@/lib/utils'
+
+function AppShellInner({ children }: { children: React.ReactNode }) {
+  const { stockNav } = useStockNav()
+  return (
+    <div className={cn(
+      stockNav ? 'pt-[88px] sm:pt-[52px]' : 'pt-[52px]',
+      'pb-safe-nav lg:pb-6 lg:pl-[220px]'
+    )}>
+      {children}
+    </div>
+  )
+}
 
 export default function AppShellClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -20,9 +33,7 @@ export default function AppShellClient({ children }: { children: React.ReactNode
           <TopBar />
         </Suspense>
         <Sidebar />
-        <div className="pt-[52px] pb-safe-nav lg:pb-6 lg:pl-[220px]">
-          {children}
-        </div>
+        <AppShellInner>{children}</AppShellInner>
         <BottomNav />
       </div>
     </StockNavProvider>

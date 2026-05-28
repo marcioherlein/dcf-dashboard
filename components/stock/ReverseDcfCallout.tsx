@@ -88,9 +88,9 @@ export default function ReverseDcfCallout({
         </span>
       </div>
 
-      {/* Scale legend */}
+      {/* Scale legend — desktop only (too much width on mobile) */}
       {result.interpretation !== 'not_meaningful' && (
-        <div className="px-4 sm:px-5 pt-3 pb-0 flex items-center gap-1.5 text-[10px] text-slate-400 flex-wrap">
+        <div className="hidden sm:flex px-4 sm:px-5 pt-3 pb-0 items-center gap-1.5 text-[10px] text-slate-400 flex-wrap">
           <span className="font-medium">Expectation scale:</span>
           <span className="px-1.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700">Conservative</span>
           <span className="text-slate-300">→</span>

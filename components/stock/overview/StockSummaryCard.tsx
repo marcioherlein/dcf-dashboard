@@ -133,15 +133,15 @@ export default function StockSummaryCard({
     : 'text-emerald-600 bg-emerald-50 border-emerald-200'
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
       {/* ── Card 1: Current Price ── */}
       <MetricBox>
         <BoxLabel>Current Price</BoxLabel>
-        <p className="text-[24px] font-bold tabular-nums text-slate-900 leading-none mb-1">
+        <p className="text-[28px] sm:text-[24px] font-bold tabular-nums text-slate-900 leading-none mb-1">
           {fmtPrice(price, currency)}
         </p>
-        <p className={cn('text-[12px] font-semibold tabular-nums', isUp ? 'text-emerald-600' : 'text-red-600')}>
+        <p className={cn('text-[13px] sm:text-[12px] font-semibold tabular-nums', isUp ? 'text-emerald-600' : 'text-red-600')}>
           {isUp ? '+' : ''}{fmtPrice(change, currency)} ({isUp ? '+' : ''}{changePct.toFixed(2)}%)
         </p>
         <p className="text-[10px] text-slate-400 mb-3">today</p>
@@ -168,7 +168,7 @@ export default function StockSummaryCard({
         <BoxLabel tooltip="An estimate of what the stock may be worth based on our valuation models and assumptions. May differ from the Valuation tab's full analysis if assumptions have been adjusted.">Intrinsic Value</BoxLabel>
         {fairValue != null ? (
           <>
-            <p className="text-[24px] font-bold tabular-nums text-slate-900 leading-none mb-1">
+            <p className="text-[28px] sm:text-[24px] font-bold tabular-nums text-slate-900 leading-none mb-1">
               {fmtPrice(fairValue, currency)}
             </p>
             {upsidePct != null && (
@@ -230,7 +230,7 @@ export default function StockSummaryCard({
         <span className={cn('inline-flex text-[10px] font-bold px-2.5 py-0.5 rounded-full border mb-2', verdict.chipClass)}>
           {verdict.chip}
         </span>
-        <p className={cn('text-[20px] font-bold leading-tight mb-2', verdict.headingClass)}>
+        <p className={cn('text-[22px] sm:text-[20px] font-bold leading-tight mb-2', verdict.headingClass)}>
           {verdict.heading}
         </p>
         {verdict.sentence && (
@@ -262,7 +262,7 @@ export default function StockSummaryCard({
         {ratio != null ? (
           <>
             <div className="flex items-baseline gap-2 mb-1">
-              <span className="text-[28px] font-extrabold tabular-nums text-slate-900 leading-none">{ratio.toFixed(2)}×</span>
+              <span className="text-[30px] sm:text-[28px] font-extrabold tabular-nums text-slate-900 leading-none">{ratio.toFixed(2)}×</span>
               <span className="text-[11px] text-slate-400">Price / Intrinsic</span>
             </div>
             <span className={cn('inline-flex text-[10px] font-bold px-2.5 py-0.5 rounded-full border mb-3', ratioChipClass)}>

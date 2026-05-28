@@ -25,7 +25,7 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
 
   return (
     <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-      <div className="grid grid-cols-2 lg:grid-cols-5 divide-x divide-y lg:divide-y-0 divide-slate-100">
+      <div className="grid grid-cols-2 md:grid-cols-5 divide-x divide-y md:divide-y-0 divide-slate-100">
         {/* Current Price */}
         <div className="px-5 py-4 flex flex-col gap-1">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Current Price</p>
@@ -71,7 +71,7 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
         </div>
 
         {/* Market-Implied CAGR */}
-        <div className="px-5 py-4 flex flex-col gap-1">
+        <div className="px-5 py-4 flex flex-col gap-1 col-span-2 md:col-span-1">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-400" title="The revenue CAGR the market is pricing into the current share price, derived from a reverse DCF.">Market-Implied CAGR</p>
           {output.marketImpliedGrowth != null ? (
             <>

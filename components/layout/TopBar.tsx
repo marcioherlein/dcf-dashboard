@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import Image from 'next/image'
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Bookmark } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { slideDown } from '@/lib/motion'
 import { useStockNav } from '@/contexts/StockNavContext'
@@ -118,15 +118,82 @@ export default function TopBar() {
   }
 
   return (
-    <header
-      className="fixed top-0 left-0 right-0 z-40 glass-toolbar"
-      style={{ height: '52px' }}
-    >
-      {/* Three-column grid: logo | center | right */}
+    <header className="fixed top-0 left-0 right-0 z-40 glass-toolbar">
+
+      {/* ── Mobile two-row stock header (hidden on sm+) ── */}
+      {stockNav && (
+        <div className="sm:hidden flex flex-col" style={{ height: '88px' }}>
+          {/* Row 1: back + identity + save icon */}
+          <div className="h-[52px] flex items-center justify-between px-3 gap-2">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <button
+                onClick={() => router.push('/analyze')}
+                aria-label="Back to Analyze"
+                className="text-slate-400 hover:text-blue-600 transition-colors shrink-0 p-1 -ml-1"
+              >
+                <ChevronLeft size={16} strokeWidth={2.5} />
+              </button>
+              <CompanyLogo ticker={stockNav.ticker} />
+              <span className="font-bold text-[14px] text-slate-900 tracking-tight shrink-0">
+                {stockNav.ticker}
+              </span>
+              {stockNav.price != null && (
+                <div className="flex items-baseline gap-1 min-w-0">
+                  <span className="font-semibold text-[13px] text-slate-800 tabular-nums">
+                    {stockNav.currency}{stockNav.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  {stockNav.changePct != null && (
+                    <span className={cn(
+                      'text-[11px] font-medium tabular-nums',
+                      stockNav.changePct >= 0 ? 'text-emerald-600' : 'text-red-500',
+                    )}>
+                      {stockNav.changePct >= 0 ? '+' : ''}{stockNav.changePct.toFixed(2)}%
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+            {/* Save icon only (no text label on mobile) */}
+            <button
+              onClick={() => onSaveRef.current?.()}
+              className="shrink-0 p-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+              aria-label="Save analysis"
+            >
+              <Bookmark size={18} strokeWidth={2} />
+            </button>
+          </div>
+          {/* Row 2: scrollable tabs */}
+          <div className="h-9 border-t border-slate-100 flex overflow-x-auto scrollbar-hide px-1" role="tablist">
+            {STOCK_TABS.map(({ id, label }) => {
+              const active = stockNav.activeTab === id
+              return (
+                <button
+                  key={id}
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => onTabChangeRef.current?.(id)}
+                  className={cn(
+                    'relative flex items-center px-3 text-[12px] font-medium whitespace-nowrap transition-colors shrink-0 h-full',
+                    active ? 'text-blue-600' : 'text-slate-500',
+                  )}
+                >
+                  {label}
+                  {active && <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-600 rounded-t" />}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Desktop / non-stock: single 52px row ── */}
       <div
-        className="relative h-full px-3 sm:px-4"
+        className={cn(
+          stockNav ? 'hidden sm:grid' : 'grid',
+          'relative px-3 sm:px-4'
+        )}
         style={{
-          display: 'grid',
+          height: '52px',
           gridTemplateColumns: 'auto 1fr auto',
           alignItems: 'center',
           gap: '8px',
