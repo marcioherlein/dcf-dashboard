@@ -134,10 +134,23 @@ function BusinessQualityCard({ ratings, scores }: { ratings: StockRatings; score
     : '—'
   const spreadClass = roic?.spread != null && roic.spread >= 0 ? 'text-emerald-600' : 'text-red-500'
 
+  const roicSpread = roic?.spread ?? null
+  const interpSentence = roicSpread != null
+    ? roicSpread >= 0.08
+      ? 'High capital returns and a strong moat support a premium valuation.'
+      : roicSpread >= 0.02
+        ? 'Business earns above its cost of capital — value-creating fundamentals.'
+        : roicSpread >= 0
+          ? 'Returns marginally above cost of capital — watch for spread compression.'
+          : 'ROIC below WACC suggests the business is currently destroying value.'
+    : moat?.score != null && moat.score >= 75
+      ? 'Strong competitive advantages support durable earnings.'
+      : 'Competitive positioning requires monitoring.'
+
   return (
     <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <CardHeader title="Business Quality" label={label} color={color} />
-      <div className="space-y-2">
+      <div className="space-y-2 mb-3">
         <MetricRow label="Economic Moat" value={moat?.label ?? '—'} />
         <MetricRow
           label="ROIC vs WACC"
@@ -150,6 +163,7 @@ function BusinessQualityCard({ ratings, scores }: { ratings: StockRatings; score
           value={profitability ? `${profitability.grade} — ${profitability.label}` : '—'}
         />
       </div>
+      <p className="text-[11px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{interpSentence}</p>
     </div>
   )
 }
@@ -166,10 +180,24 @@ function GrowthOutlookCard({ ratings, cagrAnalysis }: { ratings: StockRatings; c
   const blended = cagrAnalysis?.blended
   const maxBar = Math.max(Math.abs(hist ?? 0), Math.abs(analyst ?? 0), Math.abs(blended ?? 0), 0.01) * 1.1
 
+  const growthSentence = hist != null && analyst != null
+    ? hist >= 0.15 && analyst >= 0.10
+      ? 'Consistent high-growth trajectory with strong analyst conviction.'
+      : hist >= 0.05 && analyst >= 0
+        ? 'Moderate growth backed by analyst consensus.'
+        : analyst < 0
+          ? 'Analysts project a slowdown — monitor closely.'
+          : 'Growth decelerating — watch for narrative reset.'
+    : hist != null
+      ? hist >= 0.15 ? 'Strong historical growth trajectory.' : 'Historical growth is moderate.'
+      : analyst != null
+        ? analyst >= 0.10 ? 'Analysts expect strong growth ahead.' : 'Analyst growth outlook is cautious.'
+        : 'Insufficient data to assess growth trajectory.'
+
   return (
     <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <CardHeader title="Growth Outlook" label={label} color={color} />
-      <div className="space-y-2.5">
+      <div className="space-y-2.5 mb-3">
         {hist != null && (
           <div>
             <div className="flex items-center gap-2 mb-1 min-w-0">
@@ -192,6 +220,7 @@ function GrowthOutlookCard({ ratings, cagrAnalysis }: { ratings: StockRatings; c
           <p className="text-[12px] text-slate-400 italic">Growth data unavailable</p>
         )}
       </div>
+      <p className="text-[11px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{growthSentence}</p>
     </div>
   )
 }
@@ -212,15 +241,28 @@ function ProfitabilityCard({ ratings, businessProfile, statementsData }: {
   const revenue = (ttmIS?.totalRevenue ?? ttmIS?.revenue ?? null) as number | null
   const opMargin = opIncome != null && revenue != null && revenue > 0 ? opIncome / revenue : null
 
+  const fcf = businessProfile.fcfMargin
+  const profSentence = fcf != null
+    ? fcf >= 0.20 ? 'Best-in-class cash profitability — strong earnings quality.'
+    : fcf >= 0.10 ? 'Solid margins and cash generation support the valuation.'
+    : fcf >= 0    ? 'Margins are positive but below premium-quality threshold.'
+    : 'Negative FCF margin — cash burn requires close monitoring.'
+    : businessProfile.netMargin != null
+      ? businessProfile.netMargin >= 0.15 ? 'High net margin indicates strong pricing power.'
+      : businessProfile.netMargin >= 0 ? 'Positive but thin margins — growth needed to expand.'
+      : 'Net losses present — profitability path must be clear.'
+      : 'Profitability data partially unavailable.'
+
   return (
     <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <CardHeader title="Profitability" label={label} color={color} />
-      <div className="space-y-2">
+      <div className="space-y-2 mb-3">
         <MetricRow label="Gross Margin" value={fmtPct(businessProfile.grossMargin)} />
         <MetricRow label="Operating Margin" value={opMargin != null ? fmtPct(opMargin) : '—'} />
         <MetricRow label="Net Margin" value={fmtPct(businessProfile.netMargin)} />
         <MetricRow label="FCF Margin" value={fmtPct(businessProfile.fcfMargin)} />
       </div>
+      <p className="text-[11px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{profSentence}</p>
     </div>
   )
 }
@@ -243,10 +285,18 @@ function CashConversionCard({ businessProfile, statementsData }: {
   const color = isGood ? 'emerald' : businessProfile.fcfMargin != null && businessProfile.fcfMargin > 0 ? 'blue' : 'amber'
   const label = isGood ? 'Strong' : businessProfile.fcfMargin != null && businessProfile.fcfMargin > 0 ? 'Moderate' : 'Weak'
 
+  const cashSentence = conversionRatio != null
+    ? conversionRatio >= 0.80 ? 'Earnings convert reliably to cash — high earnings quality signal.'
+    : conversionRatio >= 0.50 ? 'Moderate cash conversion — track working capital changes.'
+    : 'Low cash conversion — investigate accruals and earnings quality.'
+    : businessProfile.fcfMargin != null && businessProfile.fcfMargin > 0
+      ? 'Positive FCF generation — business is self-funding.'
+      : 'Insufficient data to assess cash conversion quality.'
+
   return (
     <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <CardHeader title="Cash Conversion" label={label} color={color} />
-      <div className="space-y-2">
+      <div className="space-y-2 mb-3">
         <MetricRow label="FCF Margin (TTM)" value={fmtPct(businessProfile.fcfMargin)} />
         <MetricRow
           label="FCF / Net Income"
@@ -254,12 +304,8 @@ function CashConversionCard({ businessProfile, statementsData }: {
           valueClass={conversionRatio != null ? (conversionRatio >= 0.8 ? 'text-emerald-600' : conversionRatio >= 0.5 ? 'text-amber-600' : 'text-red-500') : undefined}
           tooltip="What share of reported earnings converts to real cash. >80% is a quality signal — it means profits are backed by cash, not just accounting entries."
         />
-        <p className="text-[11px] text-slate-400 leading-snug pt-0.5">
-          {conversionRatio != null && conversionRatio >= 0.8 ? 'Earnings convert well to free cash flow'
-            : conversionRatio != null && conversionRatio >= 0.5 ? 'Moderate cash conversion quality'
-            : 'Cash conversion below average — monitor closely'}
-        </p>
       </div>
+      <p className="text-[11px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{cashSentence}</p>
     </div>
   )
 }
@@ -299,10 +345,22 @@ function BalanceSheetCard({ scores, statementsData }: {
     : 'blue'
   const bsLabel = zone === 'Safe' ? 'Strong' : zone === 'Grey' ? 'Fair' : zone === 'Distress' ? 'Distressed' : 'Analyzing…'
 
+  const bsSentence = ndToEbitda != null
+    ? ndToEbitda <= 0   ? 'Net cash position — exceptional balance sheet strength.'
+    : ndToEbitda <= 1.5 ? 'Minimal debt load — strong financial flexibility.'
+    : ndToEbitda <= 3.0 ? 'Manageable leverage — no immediate refinancing concern.'
+    : ndToEbitda <= 5.0 ? 'Elevated leverage — monitor debt maturity and coverage.'
+    : 'High debt relative to earnings — significant refinancing risk.'
+    : zone === 'Safe'     ? 'Altman Z-Score indicates a financially sound company.'
+    : zone === 'Distress' ? 'Distress signals present — solvency risk elevated.'
+    : currentRatio != null && currentRatio >= 1.5
+      ? 'Healthy liquidity — covers short-term obligations comfortably.'
+      : 'Balance sheet health requires further analysis.'
+
   return (
     <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <CardHeader title="Balance Sheet Safety" label={bsLabel} color={bsColor} />
-      <div className="space-y-2">
+      <div className="space-y-2 mb-3">
         <MetricRow
           label="Net Debt / EBITDA"
           value={ndToEbitda != null ? `${ndToEbitda.toFixed(1)}x` : '—'}
@@ -329,6 +387,7 @@ function BalanceSheetCard({ scores, statementsData }: {
           <p className="text-[10px] text-slate-400 leading-snug">* Z-Score may be unreliable for non-US companies</p>
         )}
       </div>
+      <p className="text-[11px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{bsSentence}</p>
     </div>
   )
 }

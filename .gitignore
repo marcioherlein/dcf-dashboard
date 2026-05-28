@@ -12,3 +12,4 @@ out/
 /data/live/
 .env.cocos
 .vercel
+.claude/worktrees/

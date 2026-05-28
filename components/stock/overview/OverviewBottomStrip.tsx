@@ -9,21 +9,35 @@ interface Props {
   ratings: any
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   cagrAnalysis: any
+  /** Upside % (positive = undervalued, negative = overvalued) */
+  upsidePct?: number | null
   // Callbacks
   onViewValuation: () => void
   onViewRisks: () => void
   onSave?: () => void
 }
 
+// Positive-language keywords that indicate support / strength
+const POSITIVE_RE = /strong|grow|profit|margin|cash\s*gen|moat|leader|dominan|innovat|compet.*advan|pric.*power|market.*share|expand|increas|high.*return|quality|best.in.class|track.record|breadth|diversif|solid|robust|effici|resilient|premium/i
+
+// Risk-language keywords that indicate a genuine concern
+const RISK_RE = /risk|slow|compet.*threat|compet.*pressure|compet.*tion.*increas|decline|margin.*pressur|debt|regul|geopolit|uncertain|challeng|pressur|headwind|restrict|vola|concern|restrict|expos|saturat|disrupt|commoditi/i
+
+function buildSupportBullets(drivers: string[]): string[] {
+  const positive = drivers.filter(d => POSITIVE_RE.test(d) && !RISK_RE.test(d))
+  // Fall back to first 2 drivers if none match (they're usually listed best-first)
+  return (positive.length > 0 ? positive : drivers.slice(0, 2)).slice(0, 4)
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildRiskBullets(ratings: any, cagrAnalysis: any): string[] {
+function buildRiskBullets(ratings: any, cagrAnalysis: any, upsidePct?: number | null): string[] {
   const bullets: string[] = []
+
   if (cagrAnalysis?.drivers) {
-    const riskDrivers = (cagrAnalysis.drivers as string[]).filter(d =>
-      /risk|slow|compet|decline|margin|debt|regul|geopolit|uncertain|challeng|pressur/i.test(d)
-    )
+    const riskDrivers = (cagrAnalysis.drivers as string[]).filter(d => RISK_RE.test(d))
     bullets.push(...riskDrivers.slice(0, 2))
   }
+
   const cats = ['growth', 'profitability', 'moat', 'liquidity', 'valuation'] as const
   for (const key of cats) {
     if (bullets.length >= 4) break
@@ -31,88 +45,108 @@ function buildRiskBullets(ratings: any, cagrAnalysis: any): string[] {
     if (!cat) continue
     if (cat.score < 55 && cat.summary) bullets.push(cat.summary)
   }
-  if (bullets.length === 0 && cagrAnalysis?.drivers?.length) {
-    bullets.push(...(cagrAnalysis.drivers as string[]).slice(0, 2))
+
+  // Valuation-based risk when overvalued and no other risk bullets generated
+  if (bullets.length < 2 && upsidePct != null && upsidePct < -0.15) {
+    const downPct = Math.abs(upsidePct * 100).toFixed(0)
+    bullets.push(`Current price is ${downPct}% above our intrinsic estimate — limited margin of safety.`)
   }
+
+  // Generic fallback — never shows bullish content
+  if (bullets.length === 0) {
+    const valColor = ratings?.valuation?.color
+    if (valColor === 'red' || valColor === 'orange') {
+      bullets.push('Valuation is elevated relative to fundamentals — limited downside protection.')
+    } else if (valColor === 'amber') {
+      bullets.push('Valuation is stretched — limited buffer if growth disappoints.')
+    } else {
+      bullets.push('No significant risk signals from available financial data.')
+    }
+  }
+
   return bullets.slice(0, 4)
 }
 
-export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, onViewValuation, onViewRisks, onSave }: Props) {
-  const riskBullets = buildRiskBullets(ratings, cagrAnalysis)
-  const supportDrivers = (drivers ?? []).slice(0, 4)
+export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, upsidePct, onViewValuation, onViewRisks, onSave }: Props) {
+  const riskBullets    = buildRiskBullets(ratings, cagrAnalysis, upsidePct)
+  const supportBullets = buildSupportBullets(drivers ?? [])
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
       {/* ── Column 1: What supports ── */}
       <div className="bg-white border border-[#E6ECF5] rounded-[18px] p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-emerald-500 text-base leading-none">🛡</span>
-          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">What Supports the Valuation?</p>
+          <div className="w-6 h-6 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
+            <span className="text-emerald-500 text-[11px] leading-none">✓</span>
+          </div>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">What Supports the Valuation?</p>
         </div>
-        {supportDrivers.length > 0 ? (
-          <ul className="space-y-2">
-            {supportDrivers.map((d, i) => (
+        {supportBullets.length > 0 ? (
+          <ul className="space-y-2.5">
+            {supportBullets.map((d, i) => (
               <li key={i} className="flex items-start gap-2">
-                <span className="text-emerald-500 mt-0.5 shrink-0">✓</span>
+                <span className="text-emerald-500 mt-0.5 shrink-0 text-[13px]">✓</span>
                 <span className="text-[13px] text-slate-600 leading-relaxed">{d}</span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-[13px] text-slate-400">No drivers available.</p>
-        )}
-        {ratings?.moat?.summary && (
-          <p className="text-[11px] text-slate-400 mt-3 leading-relaxed border-t border-slate-100 pt-2">
-            {ratings.moat.summary}
-          </p>
+          <p className="text-[13px] text-slate-400">Support factors unavailable.</p>
         )}
       </div>
 
       {/* ── Column 2: What could go wrong ── */}
       <div className="bg-white border border-[#E6ECF5] rounded-[18px] p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-red-500 text-base leading-none">⚠</span>
-          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">What Could Go Wrong?</p>
+          <div className="w-6 h-6 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+            <span className="text-red-500 text-[11px] leading-none">!</span>
+          </div>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">What Could Go Wrong?</p>
         </div>
         {riskBullets.length > 0 ? (
-          <ul className="space-y-2">
+          <ul className="space-y-2.5">
             {riskBullets.map((b, i) => (
               <li key={i} className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-[5px] shrink-0" />
                 <span className="text-[13px] text-slate-600 leading-relaxed">{b}</span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-[13px] text-slate-400">No risk data available.</p>
+          <p className="text-[13px] text-slate-400">No risk signals from available data.</p>
         )}
         <button
           onClick={onViewRisks}
-          className="mt-3 text-[13px] font-medium text-blue-600 hover:text-blue-700 transition-colors"
+          className="mt-3.5 text-[13px] font-medium text-blue-600 hover:text-blue-700 transition-colors"
         >
-          View risks →
+          View full risk analysis →
         </button>
       </div>
 
       {/* ── Column 3: Next step ── */}
-      <div className="bg-white border border-[#E6ECF5] rounded-[18px] p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)] flex flex-col">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-blue-500 text-base leading-none">🚩</span>
-          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Next Step</p>
+      <div className={cn(
+        'bg-white border border-[#E6ECF5] rounded-[18px] p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]',
+        'flex flex-col'
+      )}>
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+            <span className="text-blue-500 text-[11px] leading-none">→</span>
+          </div>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Next Step</p>
         </div>
         <p className="text-[13px] text-slate-500 leading-relaxed mb-4">
-          Dig deeper or track this idea over time.
+          Use the Valuation tab to test whether your assumptions support the current price.
         </p>
         <div className="space-y-2 mt-auto">
           <button
             onClick={onViewValuation}
             className={cn(
               'w-full rounded-[12px] py-2.5 text-[13px] font-semibold text-white transition-all',
-              'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 active:scale-95 shadow-sm'
+              'bg-blue-600 hover:bg-blue-700 active:scale-95 shadow-sm'
             )}
           >
-            View valuation tab →
+            View valuation →
           </button>
           <button
             onClick={onViewValuation}
@@ -123,7 +157,7 @@ export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, on
           {onSave && (
             <button
               onClick={onSave}
-              className="w-full rounded-[12px] py-2.5 text-[13px] font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors"
+              className="w-full rounded-[12px] py-2.5 text-[13px] font-semibold text-slate-600 border border-[#E6ECF5] hover:bg-slate-50 transition-colors"
             >
               Add to watchlist
             </button>

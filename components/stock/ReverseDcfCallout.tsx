@@ -20,6 +20,8 @@ interface Props {
   terminalG: number
   /** 3Y historical revenue CAGR (cagrAnalysis.historicalCagr3y) */
   historicalCAGR?: number | null
+  /** Analyst consensus 1Y revenue growth estimate */
+  analystCAGR?: number | null
   isEmergingMarket?: boolean
 }
 
@@ -41,7 +43,7 @@ const INTERP_LABELS: Record<string, string> = {
 
 export default function ReverseDcfCallout({
   price, sharesM, cashM, debtM, revenueM, fcfMargin,
-  wacc, terminalG, historicalCAGR, isEmergingMarket,
+  wacc, terminalG, historicalCAGR, analystCAGR, isEmergingMarket,
 }: Props) {
   const result = useMemo(() => computeReverseDCF({
     currentPrice:     price,
@@ -60,10 +62,12 @@ export default function ReverseDcfCallout({
 
   const impliedPct    = result.impliedCAGR != null ? result.impliedCAGR * 100 : null
   const historicalPct = historicalCAGR != null ? historicalCAGR * 100 : null
+  const analystPct    = analystCAGR != null ? analystCAGR * 100 : null
 
-  const scale      = Math.max(impliedPct ?? 0, historicalPct ?? 0, 12)
+  const scale = Math.max(impliedPct ?? 0, historicalPct ?? 0, analystPct ?? 0, 12)
   const impliedW   = impliedPct    != null ? Math.min(100, (impliedPct    / scale) * 100) : 0
   const historicalW = historicalPct != null ? Math.min(100, (historicalPct / scale) * 100) : 0
+  const analystW   = analystPct    != null ? Math.min(100, (analystPct    / scale) * 100) : 0
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-blue-50/30 overflow-hidden shadow-card">
@@ -171,6 +175,22 @@ export default function ReverseDcfCallout({
                       <div
                         className="h-full rounded-full bg-blue-400 transition-all duration-700 delay-100"
                         style={{ width: `${historicalW}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+                {analystPct != null && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[11px] text-slate-500">Analyst Est. (1Y)</span>
+                      <span className="text-[11px] font-semibold tabular-nums font-mono text-purple-600">
+                        {analystPct.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-purple-400 transition-all duration-700 delay-200"
+                        style={{ width: `${analystW}%` }}
                       />
                     </div>
                   </div>

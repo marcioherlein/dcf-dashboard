@@ -31,24 +31,42 @@ function deriveVerdict(upsidePct: number | null, fv: number | null) {
   if (upsidePct == null || fv == null) return {
     chip: '—', heading: 'Insufficient Data',
     description: 'We could not compute an intrinsic value estimate.',
+    sentence: '',
     chipClass: 'bg-slate-100 text-slate-500 border-slate-200',
     headingClass: 'text-slate-500',
   }
-  if (upsidePct > 0.15) return {
-    chip: 'BUY', heading: 'Undervalued',
+  if (upsidePct > 0.25) return {
+    chip: 'BUY', heading: 'Attractive',
     description: `Price is ${absPct}% below our fair value estimate.`,
+    sentence: `The stock appears meaningfully undervalued — ${absPct}% upside to our estimate.`,
     chipClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     headingClass: 'text-emerald-600',
   }
-  if (upsidePct >= -0.15) return {
-    chip: 'WATCH', heading: 'Fairly Valued',
-    description: `Trading within ±15% of our estimate — reasonable entry.`,
+  if (upsidePct > 0.05) return {
+    chip: 'BUY', heading: 'Undervalued',
+    description: `Price is ${absPct}% below our fair value estimate.`,
+    sentence: `Modest discount to intrinsic value — ${absPct}% potential upside.`,
+    chipClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    headingClass: 'text-emerald-600',
+  }
+  if (upsidePct >= -0.10) return {
+    chip: 'WATCH', heading: 'Near Fair Value',
+    description: `Trading within ±10% of our estimate — reasonable entry.`,
+    sentence: `Price is close to our intrinsic estimate — limited discount or premium.`,
     chipClass: 'bg-blue-50 text-blue-700 border-blue-200',
     headingClass: 'text-blue-600',
   }
-  return {
+  if (upsidePct >= -0.25) return {
     chip: 'AVOID', heading: 'Overvalued',
     description: `Price is ${absPct}% above our fair value estimate.`,
+    sentence: `The stock trades ${absPct}% above our intrinsic estimate — elevated risk.`,
+    chipClass: 'bg-red-50 text-red-600 border-red-200',
+    headingClass: 'text-red-600',
+  }
+  return {
+    chip: 'AVOID', heading: 'Significantly Overvalued',
+    description: `Price is ${absPct}% above our fair value estimate.`,
+    sentence: `Priced ${absPct}% above intrinsic value — very limited margin of safety.`,
     chipClass: 'bg-red-50 text-red-600 border-red-200',
     headingClass: 'text-red-600',
   }
@@ -115,7 +133,7 @@ export default function StockSummaryCard({
     : 'text-emerald-600 bg-emerald-50 border-emerald-200'
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 items-start">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
 
       {/* ── Card 1: Current Price ── */}
       <MetricBox>
@@ -147,7 +165,7 @@ export default function StockSummaryCard({
 
       {/* ── Card 2: Intrinsic Value ── */}
       <MetricBox>
-        <BoxLabel tooltip="An estimate of what the stock may be worth based on our valuation models and assumptions. This is a preliminary figure — use the Valuation tab for the full multi-model analysis.">Intrinsic Value (Preliminary)</BoxLabel>
+        <BoxLabel tooltip="An estimate of what the stock may be worth based on our valuation models and assumptions. May differ from the Valuation tab's full analysis if assumptions have been adjusted.">Intrinsic Value</BoxLabel>
         {fairValue != null ? (
           <>
             <p className="text-[24px] font-bold tabular-nums text-slate-900 leading-none mb-1">
@@ -155,32 +173,40 @@ export default function StockSummaryCard({
             </p>
             {upsidePct != null && (
               <p className={cn('text-[12px] font-semibold tabular-nums mb-1', upsidePct >= 0 ? 'text-emerald-600' : 'text-red-600')}>
-                {upsidePct >= 0 ? '' : ''}{fmtPct(upsidePct)} {upsidePct >= 0 ? 'upside' : 'downside'}
+                {upsidePct >= 0 ? '+' : ''}{fmtPct(upsidePct)} {upsidePct >= 0 ? 'upside' : 'downside'}
               </p>
             )}
             <p className="text-[10px] text-slate-400 mb-3">Blended DCF + multiples</p>
 
-            {scenarios && (
-              <>
-                <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Fair Value Range</p>
-                <div className="relative h-1.5 rounded-full bg-slate-100 overflow-hidden mb-1">
-                  {(() => {
-                    const lo = scenarios.bear.fairValue
-                    const hi = scenarios.bull.fairValue
-                    const span = hi - lo
-                    const basePct = span > 0 ? Math.max(2, Math.min(98, ((scenarios.base.fairValue - lo) / span) * 100)) : 50
-                    return <>
-                      <div className="absolute inset-0 bg-gradient-to-r from-red-200 via-blue-300 to-emerald-300" />
-                      <div className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-blue-600 border border-white shadow-sm" style={{ left: `calc(${basePct}% - 4px)` }} />
-                    </>
-                  })()}
-                </div>
-                <div className="flex justify-between mb-3">
-                  <span className="text-[9px] text-red-400 tabular-nums">{fmtPrice(scenarios.bear.fairValue, currency)}</span>
-                  <span className="text-[9px] text-emerald-500 tabular-nums">{fmtPrice(scenarios.bull.fairValue, currency)}</span>
-                </div>
-              </>
-            )}
+            {scenarios && (() => {
+              const lo = scenarios.bear.fairValue
+              const hi = scenarios.bull.fairValue
+              const isInRange = fairValue >= lo * 0.9 && fairValue <= hi * 1.1
+              return isInRange ? (
+                <>
+                  <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">DCF Scenario Range</p>
+                  <div className="relative h-1.5 rounded-full bg-slate-100 overflow-hidden mb-1">
+                    {(() => {
+                      const span = hi - lo
+                      const basePct = span > 0 ? Math.max(2, Math.min(98, ((scenarios.base.fairValue - lo) / span) * 100)) : 50
+                      return <>
+                        <div className="absolute inset-0 bg-gradient-to-r from-red-200 via-blue-300 to-emerald-300" />
+                        <div className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-blue-600 border border-white shadow-sm" style={{ left: `calc(${basePct}% - 4px)` }} />
+                      </>
+                    })()}
+                  </div>
+                  <div className="flex justify-between mb-3">
+                    <span className="text-[9px] text-red-400 tabular-nums">{fmtPrice(scenarios.bear.fairValue, currency)}</span>
+                    <span className="text-[9px] text-slate-400">bear → bull</span>
+                    <span className="text-[9px] text-emerald-500 tabular-nums">{fmtPrice(scenarios.bull.fairValue, currency)}</span>
+                  </div>
+                </>
+              ) : (
+                <p className="text-[10px] text-slate-400 mb-3 leading-snug">
+                  Scenario range available in Valuation tab.
+                </p>
+              )
+            })()}
             <button onClick={onViewDetails} className="mt-auto text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
               View valuation →
             </button>
@@ -193,11 +219,11 @@ export default function StockSummaryCard({
       {/* ── Card 3: Verdict ── */}
       <MetricBox>
         <div className="flex items-start justify-between gap-2 mb-2">
-          <BoxLabel tooltip="The model-based conclusion on whether the stock appears undervalued, fairly valued, or overvalued at today's price, based on intrinsic value estimates.">Verdict (Preliminary)</BoxLabel>
+          <BoxLabel tooltip="The model-based conclusion on whether the stock appears undervalued, fairly valued, or overvalued at today's price, based on intrinsic value estimates.">Verdict</BoxLabel>
           {conf && confidenceLabel && (
             <span className={cn('flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0', conf.bg, conf.text)}>
               <span className={cn('w-1.5 h-1.5 rounded-full', conf.dot)} />
-              {confidenceLabel}
+              {confidenceLabel} Confidence
             </span>
           )}
         </div>
@@ -207,9 +233,11 @@ export default function StockSummaryCard({
         <p className={cn('text-[20px] font-bold leading-tight mb-2', verdict.headingClass)}>
           {verdict.heading}
         </p>
-        <p className="text-[11px] text-slate-500 leading-relaxed mb-2">
-          {verdict.description}
-        </p>
+        {verdict.sentence && (
+          <p className="text-[12px] text-slate-500 leading-relaxed mb-3">
+            {verdict.sentence}
+          </p>
+        )}
         {upsidePct != null && (
           <div className="flex items-center gap-3 mb-3">
             <div>
@@ -224,7 +252,7 @@ export default function StockSummaryCard({
           </div>
         )}
         <button onClick={onViewDetails} className="mt-auto text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
-          See why →
+          See full analysis →
         </button>
       </MetricBox>
 

@@ -187,6 +187,7 @@ function StockPageBody() {
   const [financialsHighlight, setFinancialsHighlight] = useState<{ rowKey: string; statement: 'income' | 'balance' | 'cashflow' } | null>(null)
   const [financialsSubTab, setFinancialsSubTab] = useState<'statements' | 'growth' | 'profitability' | 'solvency' | 'analysts' | 'snapshot' | 'ownership' | null>(null)
   const [userModelFairValue, setUserModelFairValue] = useState<number | null>(null)
+  const [chartExpanded, setChartExpanded] = useState(false)
 
   // After Google OAuth redirect, restore the user's pre-login state (tab, etc.)
   useEffect(() => {
@@ -460,6 +461,7 @@ function StockPageBody() {
                     wacc={data.wacc?.wacc ?? 0.09}
                     terminalG={data.terminalG ?? 0.025}
                     historicalCAGR={data.cagrAnalysis?.historicalCagr3y ?? null}
+                    analystCAGR={data.cagrAnalysis?.analystEstimate1y ?? null}
                     isEmergingMarket={computedScores?.altman?.isReliable === false}
                   />
                   </FlipCard>
@@ -484,19 +486,36 @@ function StockPageBody() {
                       drivers={data.cagrAnalysis?.drivers ?? []}
                       ratings={data.ratings}
                       cagrAnalysis={data.cagrAnalysis ?? null}
+                      upsidePct={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null}
                       onViewValuation={() => handleTabChange('valuation')}
                       onViewRisks={() => handleTabChange('risks')}
                     />
                   )}
 
-                  {/* 5. Price chart */}
-                  <PriceChart
-                    ticker={ticker}
-                    isDark={false}
-                    triangulatedFairValue={data.valuationMethods?.triangulatedFairValue}
-                    analystTarget={data.quote.analystTargetMean}
-                    userModelFairValue={userModelFairValue}
-                  />
+                  {/* 5. Price chart — collapsed by default on Summary; shows price + FV + analyst target */}
+                  <div className="rounded-2xl border border-[#E6ECF5] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)] overflow-hidden">
+                    <button
+                      onClick={() => setChartExpanded(v => !v)}
+                      className="w-full flex items-center justify-between px-5 py-3.5 text-left hover:bg-slate-50/60 transition-colors"
+                    >
+                      <span className="text-[13px] font-semibold text-slate-700">Price Chart</span>
+                      <span className="text-[12px] text-slate-400 flex items-center gap-1">
+                        {chartExpanded ? 'Hide' : 'Show chart'}
+                        <span className={`transition-transform duration-200 ${chartExpanded ? 'rotate-180' : ''}`}>▾</span>
+                      </span>
+                    </button>
+                    {chartExpanded && (
+                      <div className="border-t border-[#E6ECF5]">
+                        <PriceChart
+                          ticker={ticker}
+                          isDark={false}
+                          triangulatedFairValue={data.valuationMethods?.triangulatedFairValue}
+                          analystTarget={data.quote.analystTargetMean}
+                          userModelFairValue={userModelFairValue}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </motion.div>
               )}
               {activeTab === 'valuation' && (
