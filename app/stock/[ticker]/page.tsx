@@ -29,6 +29,7 @@ import StockSummaryCard from '@/components/stock/overview/StockSummaryCard'
 
 import SignalDivergenceCallout from '@/components/stock/overview/SignalDivergenceCallout'
 import OverviewBottomStrip from '@/components/stock/overview/OverviewBottomStrip'
+import InvestorVerdictCard from '@/components/stock/InvestorVerdictCard'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
@@ -477,7 +478,25 @@ function StockPageBody() {
                     onViewDetails={() => handleTabChange('valuation')}
                   />
 
-                  {/* 1b. Signal divergence — only shown when analyst and model disagree */}
+                  {/* 1b. Investor verdict — plain-English narrative summary */}
+                  {cockpitOutput?.upsidePct != null && cockpitOutput.blendedFairValue != null && (
+                    <InvestorVerdictCard
+                      upside={cockpitOutput.upsidePct}
+                      fairValue={cockpitOutput.blendedFairValue}
+                      price={data.quote.price}
+                      currency={data.quote.currency ?? 'USD'}
+                      analystRecommendation={data.analystRecommendation ?? ''}
+                      ratings={data.ratings ?? null}
+                      confidence={
+                        cockpitOutput.divergence?.overallConfidence === 'high'   ? 'High'   :
+                        cockpitOutput.divergence?.overallConfidence === 'medium' ? 'Medium' : 'Low'
+                      }
+                      growthModel={data.growthModel ?? 'two-stage'}
+                      scores={computedScores ?? data.scores ?? null}
+                    />
+                  )}
+
+                  {/* 1c. Signal divergence — only shown when analyst and model disagree */}
                   <SignalDivergenceCallout
                     analystRecommendation={data.analystRecommendation ?? ''}
                     analystTargetMean={data.quote.analystTargetMean ?? 0}

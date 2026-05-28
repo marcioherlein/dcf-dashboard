@@ -1,4 +1,5 @@
 'use client'
+import { Award, TrendingUp, CircleDollarSign, RefreshCcw, ShieldCheck, AlertTriangle, Tag, type LucideIcon } from 'lucide-react'
 import InfoTooltip from '@/components/ui/InfoTooltip'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -94,10 +95,18 @@ function MetricRow({ label, value, valueClass, tooltip }: { label: string; value
   )
 }
 
-function CardHeader({ title, label, color, tooltip }: { title: string; label: string; color: string; tooltip?: string }) {
+function iconAccent(color: string): string {
+  if (color === 'emerald' || color === 'green') return 'text-emerald-500'
+  if (color === 'blue')                         return 'text-blue-500'
+  if (color === 'amber' || color === 'orange')  return 'text-amber-500'
+  return 'text-red-500'
+}
+
+function CardHeader({ title, label, color, tooltip, Icon }: { title: string; label: string; color: string; tooltip?: string; Icon?: LucideIcon }) {
   return (
     <div className="flex items-center justify-between mb-3">
-      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-0.5">
+      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+        {Icon && <Icon size={13} className={`shrink-0 ${iconAccent(color)}`} />}
         {title}
         {tooltip && <InfoTooltip content={tooltip} />}
       </p>
@@ -149,7 +158,7 @@ function BusinessQualityCard({ ratings, scores }: { ratings: StockRatings; score
 
   return (
     <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
-      <CardHeader title="Business Quality" label={label} color={color} />
+      <CardHeader title="Business Quality" label={label} color={color} Icon={Award} />
       <div className="space-y-2.5 mb-3">
         <MetricRow label="Economic Moat" value={moat?.label ?? '—'} />
         <MetricRow
@@ -196,7 +205,7 @@ function GrowthOutlookCard({ ratings, cagrAnalysis }: { ratings: StockRatings; c
 
   return (
     <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
-      <CardHeader title="Growth Outlook" label={label} color={color} />
+      <CardHeader title="Growth Outlook" label={label} color={color} Icon={TrendingUp} />
       <div className="space-y-2.5 mb-3">
         {hist != null && (
           <div>
@@ -255,7 +264,7 @@ function ProfitabilityCard({ ratings, businessProfile, statementsData }: {
 
   return (
     <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
-      <CardHeader title="Profitability" label={label} color={color} />
+      <CardHeader title="Profitability" label={label} color={color} Icon={CircleDollarSign} />
       <div className="space-y-2.5 mb-3">
         <MetricRow label="Gross Margin" value={fmtPct(businessProfile.grossMargin)} />
         <MetricRow label="Operating Margin" value={opMargin != null ? fmtPct(opMargin) : '—'} />
@@ -295,7 +304,7 @@ function CashConversionCard({ businessProfile, statementsData }: {
 
   return (
     <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
-      <CardHeader title="Cash Conversion" label={label} color={color} />
+      <CardHeader title="Cash Conversion" label={label} color={color} Icon={RefreshCcw} />
       <div className="space-y-2.5 mb-3">
         <MetricRow label="FCF Margin (TTM)" value={fmtPct(businessProfile.fcfMargin)} />
         <MetricRow
@@ -359,7 +368,7 @@ function BalanceSheetCard({ scores, statementsData }: {
 
   return (
     <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
-      <CardHeader title="Balance Sheet Safety" label={bsLabel} color={bsColor} />
+      <CardHeader title="Balance Sheet Safety" label={bsLabel} color={bsColor} Icon={ShieldCheck} />
       <div className="space-y-2.5 mb-3">
         <MetricRow
           label="Net Debt / EBITDA"
@@ -454,7 +463,10 @@ function RisksGridCard({ ratings, cagrAnalysis, onViewRisks }: {
   return (
     <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Risks to Thesis</p>
+        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+          <AlertTriangle size={13} className={`shrink-0 ${risk.color === 'red' ? 'text-red-500' : risk.color === 'amber' ? 'text-amber-500' : 'text-emerald-500'}`} />
+          Risks to Thesis
+        </p>
         <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${risk.badgeClass}`}>{risk.label}</span>
       </div>
       <ul className="space-y-1.5 mb-3">
@@ -519,7 +531,7 @@ function RelativeValuationCard({ valuationMethods, quote }: { valuationMethods: 
     <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5 min-w-0">
-          <span className="text-[13px]">🏷</span>
+          <Tag size={13} className={`shrink-0 ${overallLabel === 'Cheap' ? 'text-emerald-500' : overallLabel === 'Expensive' ? 'text-red-500' : 'text-blue-500'}`} />
           <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest truncate">Relative Valuation</span>
         </div>
         <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border whitespace-nowrap ${overallClass}`}>
