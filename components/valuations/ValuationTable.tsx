@@ -60,7 +60,7 @@ function StockLogo({ ticker }: { ticker: string }) {
   if (failed) {
     return (
       <div className="w-7 h-7 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0">
-        <span className="text-[9px] font-bold text-slate-400 uppercase">{ticker.slice(0, 2)}</span>
+        <span className="text-[10px] font-bold text-slate-400 uppercase">{ticker.slice(0, 2)}</span>
       </div>
     )
   }

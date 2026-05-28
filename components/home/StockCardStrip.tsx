@@ -101,7 +101,7 @@ function PriceRangeBar({ low, high, current }: { low: number; high: number; curr
           style={{ left: `${pct}%` }}
         />
       </div>
-      <div className="mt-1 flex justify-between text-[9px] font-mono text-slate-400 tabular-nums">
+      <div className="mt-1 flex justify-between text-[10px] font-mono text-slate-400 tabular-nums">
         <span>${low.toFixed(0)}</span>
         <span className="text-slate-500 font-semibold">${current.toFixed(0)}</span>
         <span>${high.toFixed(0)}</span>

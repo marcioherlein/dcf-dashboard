@@ -146,7 +146,7 @@ export default function StockSummaryCard({
         </p>
         <p className="text-[10px] text-slate-400 mb-3">today</p>
 
-        <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">52-Week Range</p>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">52-Week Range</p>
         <div className="relative h-1.5 rounded-full overflow-hidden bg-slate-100">
           <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-amber-400 to-red-500" />
           <div
@@ -155,8 +155,8 @@ export default function StockSummaryCard({
           />
         </div>
         <div className="flex justify-between mt-1 mb-3">
-          <span className="text-[9px] text-slate-400 tabular-nums">{fmtPrice(low52, currency)}</span>
-          <span className="text-[9px] text-slate-400 tabular-nums">{fmtPrice(high52, currency)}</span>
+          <span className="text-[10px] text-slate-400 tabular-nums">{fmtPrice(low52, currency)}</span>
+          <span className="text-[10px] text-slate-400 tabular-nums">{fmtPrice(high52, currency)}</span>
         </div>
         <button onClick={onViewDetails} className="mt-auto text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
           Key Snapshot →
@@ -184,7 +184,7 @@ export default function StockSummaryCard({
               const isInRange = fairValue >= lo * 0.9 && fairValue <= hi * 1.1
               return isInRange ? (
                 <>
-                  <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">DCF Scenario Range</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">DCF Scenario Range</p>
                   <div className="relative h-1.5 rounded-full bg-slate-100 overflow-hidden mb-1">
                     {(() => {
                       const span = hi - lo
@@ -196,9 +196,9 @@ export default function StockSummaryCard({
                     })()}
                   </div>
                   <div className="flex justify-between mb-3">
-                    <span className="text-[9px] text-red-400 tabular-nums">{fmtPrice(scenarios.bear.fairValue, currency)}</span>
-                    <span className="text-[9px] text-slate-400">bear → bull</span>
-                    <span className="text-[9px] text-emerald-500 tabular-nums">{fmtPrice(scenarios.bull.fairValue, currency)}</span>
+                    <span className="text-[10px] text-red-400 tabular-nums">{fmtPrice(scenarios.bear.fairValue, currency)}</span>
+                    <span className="text-[10px] text-slate-400">bear → bull</span>
+                    <span className="text-[10px] text-emerald-500 tabular-nums">{fmtPrice(scenarios.bull.fairValue, currency)}</span>
                   </div>
                 </>
               ) : (
@@ -241,7 +241,7 @@ export default function StockSummaryCard({
         {upsidePct != null && (
           <div className="flex items-center gap-3 mb-3">
             <div>
-              <p className="text-[9px] text-slate-400 mb-0.5 flex items-center gap-0.5">
+              <p className="text-[10px] text-slate-400 mb-0.5 flex items-center gap-0.5">
                 Margin of Safety
                 <InfoTooltip content="The gap between the current price and our fair value estimate. A positive margin means the stock trades below fair value. Negative means you're paying a premium." />
               </p>
@@ -282,9 +282,9 @@ export default function StockSummaryCard({
               <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-slate-900 border-2 border-white shadow z-20" style={{ left: `calc(${dotPct}% - 6px)` }} />
             </div>
             <div className="flex justify-between mb-3">
-              <span className="text-[9px] text-slate-400">0×</span>
-              <span className="text-[9px] text-blue-500">1× FV</span>
-              <span className="text-[9px] text-slate-400">2.5×</span>
+              <span className="text-[10px] text-slate-400">0×</span>
+              <span className="text-[10px] text-blue-500">1× FV</span>
+              <span className="text-[10px] text-slate-400">2.5×</span>
             </div>
 
             {upsidePct != null && (

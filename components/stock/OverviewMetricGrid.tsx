@@ -539,7 +539,7 @@ function RelativeValuationCard({ valuationMethods, quote }: { valuationMethods: 
               <span className={`text-[11px] font-semibold tabular-nums ${vsClass(e.actualValue, e.sectorMedian)}`}>
                 {e.actualValue.toFixed(1)}×
               </span>
-              <span className="text-[9px] text-slate-300">vs</span>
+              <span className="text-[10px] text-slate-300">vs</span>
               <span className="text-[10px] text-slate-400 tabular-nums">{e.sectorMedian.toFixed(1)}×</span>
             </div>
           </div>

@@ -208,7 +208,7 @@ export default function FinancialScores({ scores }: Props) {
                   style={{ left: `${Math.min(Math.max(altmanSafe.zScore / 7.5 * 100, 2), 98)}%` }}
                 />
               </div>
-              <div className="mt-1.5 flex justify-between text-[9px] text-slate-500">
+              <div className="mt-1.5 flex justify-between text-[10px] text-slate-500">
                 <span>Distress &lt;1.8</span>
                 <span>Grey zone</span>
                 <span>Safe ≥3.0</span>

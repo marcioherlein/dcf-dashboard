@@ -170,15 +170,15 @@ export default function StockHeroCards({
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-1.5">Scenario Range</p>
                 <div className="flex items-center justify-between rounded-lg bg-slate-50 border border-slate-100 px-3 py-2">
                   <div className="text-center">
-                    <p className="text-[9px] text-slate-400 mb-0.5">Bear</p>
+                    <p className="text-[10px] text-slate-400 mb-0.5">Bear</p>
                     <p className="text-[11px] font-semibold text-red-500 tabular-nums">{fmtPrice(scenarios.bear.fairValue, currency)}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-[9px] text-slate-400 mb-0.5">Base</p>
+                    <p className="text-[10px] text-slate-400 mb-0.5">Base</p>
                     <p className="text-[12px] font-bold text-slate-700 tabular-nums">{fmtPrice(scenarios.base.fairValue, currency)}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-[9px] text-slate-400 mb-0.5">Bull</p>
+                    <p className="text-[10px] text-slate-400 mb-0.5">Bull</p>
                     <p className="text-[11px] font-semibold text-emerald-600 tabular-nums">{fmtPrice(scenarios.bull.fairValue, currency)}</p>
                   </div>
                 </div>

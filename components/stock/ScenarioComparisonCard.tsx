@@ -55,7 +55,7 @@ function ScenarioCol({
           label === 'Bear' ? 'text-red-600' : 'text-blue-600'
         }`}>{label}</span>
         {isFeatured && (
-          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">Base case</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">Base case</span>
         )}
       </div>
 
@@ -86,7 +86,7 @@ function ScenarioCol({
         <div>
           <Tooltip>
             <TooltipTrigger
-              render={<p className="text-[9px] text-slate-400 uppercase tracking-wider cursor-help underline decoration-dotted" />}
+              render={<p className="text-[10px] text-slate-400 uppercase tracking-wider cursor-help underline decoration-dotted" />}
             >
               WACC
             </TooltipTrigger>
@@ -99,7 +99,7 @@ function ScenarioCol({
         <div>
           <Tooltip>
             <TooltipTrigger
-              render={<p className="text-[9px] text-slate-400 uppercase tracking-wider cursor-help underline decoration-dotted" />}
+              render={<p className="text-[10px] text-slate-400 uppercase tracking-wider cursor-help underline decoration-dotted" />}
             >
               CAGR
             </TooltipTrigger>
@@ -112,7 +112,7 @@ function ScenarioCol({
         <div>
           <Tooltip>
             <TooltipTrigger
-              render={<p className="text-[9px] text-slate-400 uppercase tracking-wider cursor-help underline decoration-dotted" />}
+              render={<p className="text-[10px] text-slate-400 uppercase tracking-wider cursor-help underline decoration-dotted" />}
             >
               Terminal G
             </TooltipTrigger>
@@ -150,22 +150,22 @@ export default function ScenarioComparisonCard({ scenarios, currentPrice, curren
           </p>
           <div className="flex flex-wrap gap-1.5 mb-2">
             {m.weights.ufcfPGM > 0 && (
-              <span className="text-[9px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 font-semibold border border-blue-100">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 font-semibold border border-blue-100">
                 Unlevered + Perpetuity {Math.round(m.weights.ufcfPGM * 100)}%
               </span>
             )}
             {m.weights.ufcfEM > 0 && (
-              <span className="text-[9px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 font-semibold border border-indigo-100">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 font-semibold border border-indigo-100">
                 Unlevered + Exit Multiple {Math.round(m.weights.ufcfEM * 100)}%
               </span>
             )}
             {m.weights.lfcfPGM > 0 && (
-              <span className="text-[9px] px-2 py-0.5 rounded-full bg-violet-50 text-violet-600 font-semibold border border-violet-100">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-50 text-violet-600 font-semibold border border-violet-100">
                 Levered + Perpetuity {Math.round(m.weights.lfcfPGM * 100)}%
               </span>
             )}
             {m.weights.lfcfEM > 0 && (
-              <span className="text-[9px] px-2 py-0.5 rounded-full bg-purple-50 text-purple-600 font-semibold border border-purple-100">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-50 text-purple-600 font-semibold border border-purple-100">
                 Levered + Exit Multiple {Math.round(m.weights.lfcfEM * 100)}%
               </span>
             )}

@@ -732,12 +732,12 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                     return (
                       <div key={col} className="flex-1 flex flex-col items-center justify-end gap-0.5">
                         <div className={`w-full rounded-sm ${isPos ? 'bg-emerald-400/70' : 'bg-red-400/70'}`} style={{ height: barH }} />
-                        <span className="text-[9px] text-slate-500">{col.slice(-2)}</span>
+                        <span className="text-[10px] text-slate-500">{col.slice(-2)}</span>
                       </div>
                     )
                   })}
                 </div>
-                <div className="flex justify-between mt-0.5 text-[9px] text-slate-500 tabular-nums">
+                <div className="flex justify-between mt-0.5 text-[10px] text-slate-500 tabular-nums">
                   {revGrowthData.map(({ col, val }) => (
                     <span key={col} className={val! >= 0 ? 'text-emerald-600' : 'text-red-600'}>
                       {val! >= 0 ? '+' : ''}{((val as number) * 100).toFixed(1)}%
@@ -819,12 +819,12 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                           <div className="bg-amber-300" style={{ width: `${neutral}%` }} />
                           <div className="bg-red-400 rounded-r-full" style={{ width: `${bearish}%` }} />
                         </div>
-                        <div className="flex justify-between mt-1 text-[9px] text-slate-400">
+                        <div className="flex justify-between mt-1 text-[10px] text-slate-400">
                           <span className="text-emerald-600">Buy ~{bullish}%</span>
                           <span>Hold ~{neutral}%</span>
                           <span className="text-red-600">Sell ~{bearish}%</span>
                         </div>
-                        <p className="text-[9px] text-slate-300 mt-0.5">Estimated distribution based on consensus rating</p>
+                        <p className="text-[10px] text-slate-300 mt-0.5">Estimated distribution based on consensus rating</p>
                       </div>
                     )
                   })()}

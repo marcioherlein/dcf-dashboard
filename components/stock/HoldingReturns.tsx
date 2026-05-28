@@ -56,7 +56,7 @@ function ReturnPair({
           <span className="text-[10px] text-slate-600">SPY</span>
           {outperformed != null && (
             <span className={[
-              'text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full',
+              'text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full',
               outperformed
                 ? 'text-emerald-600 bg-emerald-50'
                 : 'text-red-600 bg-red-50',

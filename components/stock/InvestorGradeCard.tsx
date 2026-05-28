@@ -312,7 +312,7 @@ export default function InvestorGradeCard({
                 <p className={cn('text-2xl font-bold tabular-nums leading-none', isUndervalued ? 'text-emerald-600' : 'text-red-600')}>
                   {currSymbol}{displayFV.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
-                <p className="text-[9px] text-slate-400 mt-1">Blended from multiple models</p>
+                <p className="text-[10px] text-slate-400 mt-1">Blended from multiple models</p>
               </div>
             </div>
 
@@ -320,17 +320,17 @@ export default function InvestorGradeCard({
             {scenarios && (
               <div className="flex items-center justify-between gap-2 px-1">
                 <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-[9px] text-slate-400 uppercase tracking-wide font-medium">Bear</span>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wide font-medium">Bear</span>
                   <span className="text-[11px] font-bold text-red-500 tabular-nums">{currSymbol}{scenarios.bear.fairValue.toFixed(2)}</span>
                 </div>
                 <div className="flex-1 h-px bg-gradient-to-r from-red-200 via-slate-200 to-emerald-200" />
                 <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-[9px] text-slate-400 uppercase tracking-wide font-medium">Base</span>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wide font-medium">Base</span>
                   <span className="text-[11px] font-bold text-blue-600 tabular-nums">{currSymbol}{scenarios.base.fairValue.toFixed(2)}</span>
                 </div>
                 <div className="flex-1 h-px bg-gradient-to-r from-slate-200 via-emerald-200 to-emerald-200" />
                 <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-[9px] text-slate-400 uppercase tracking-wide font-medium">Bull</span>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wide font-medium">Bull</span>
                   <span className="text-[11px] font-bold text-emerald-600 tabular-nums">{currSymbol}{scenarios.bull.fairValue.toFixed(2)}</span>
                 </div>
               </div>

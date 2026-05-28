@@ -6,7 +6,6 @@ import {
   computeCockpitOutput,
   computeBlendedFV,
   type ValuationAssumptions,
-  type CockpitSnapshot,
 } from '@/lib/valuation/cockpit'
 import { buildSnapshot, seedAssumptions } from '@/lib/valuation/cockpitBuilders'
 import SummaryCards from './cockpit/SummaryCards'

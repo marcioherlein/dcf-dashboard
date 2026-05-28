@@ -64,13 +64,13 @@ function ValuationCard({ entry }: { entry: WatchlistEntry }) {
       <p className="text-[11px] text-slate-400 -mt-1 truncate">{entry.companyName}</p>
 
       {/* Price vs Fair Value */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-3">
         <div className="bg-slate-50 rounded-lg px-3 py-2">
-          <p className="text-[9px] text-slate-400 uppercase tracking-wider mb-0.5">Price</p>
+          <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Price</p>
           <p className="text-sm font-bold font-mono text-slate-700">{price != null ? fmtPrice(price, 'USD') : '—'}</p>
         </div>
         <div className={cn('rounded-lg px-3 py-2', fv != null ? (isUp ? 'bg-emerald-50' : 'bg-red-50') : 'bg-slate-50')}>
-          <p className="text-[9px] text-slate-400 uppercase tracking-wider mb-0.5">Fair Value</p>
+          <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Fair Value</p>
           <p className={cn('text-sm font-bold font-mono', fv != null ? (isUp ? 'text-emerald-600' : 'text-red-600') : 'text-slate-400')}>
             {fv != null ? fmtPrice(fv, 'USD') : '—'}
           </p>

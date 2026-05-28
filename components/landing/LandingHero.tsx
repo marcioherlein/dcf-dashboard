@@ -10,8 +10,8 @@ export default function LandingHero() {
     <section
       className="relative overflow-x-hidden"
       style={{
-        paddingTop: '96px',
-        paddingBottom: '64px',
+        paddingTop: 'clamp(48px, 8vh, 96px)',
+        paddingBottom: 'clamp(32px, 6vh, 64px)',
         background: 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)',
       }}
     >

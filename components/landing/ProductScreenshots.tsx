@@ -62,7 +62,7 @@ export function SummaryMockScreen() {
           <div className="bg-white rounded-xl p-3 border border-slate-100">
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Intrinsic Value</p>
             <p className="text-[22px] font-extrabold text-slate-900 font-mono leading-none" style={{ fontVariantNumeric: 'tabular-nums' }}>$125.23</p>
-            <span className="inline-flex items-center mt-1 rounded-full px-2 py-0.5 text-[9px] font-bold"
+            <span className="inline-flex items-center mt-1 rounded-full px-2 py-0.5 text-[10px] font-bold"
               style={{ background: '#FEF2F2', color: '#B91C1C', border: '1px solid #FECACA' }}>
               OVERVALUED −41.8%
             </span>
@@ -73,7 +73,7 @@ export function SummaryMockScreen() {
         <div className="bg-white rounded-xl border border-slate-100 p-3">
           <div className="flex items-center justify-between mb-2">
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Reverse DCF Analysis</p>
-            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
               style={{ background: '#FEF2F2', color: '#B91C1C', border: '1px solid #FECACA' }}>
               Very Important
             </span>
@@ -87,7 +87,7 @@ export function SummaryMockScreen() {
               <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
                 <div className="h-full rounded-full" style={{ width: '75%', background: 'linear-gradient(90deg, #EF4444, #DC2626)' }} />
               </div>
-              <p className="text-[9px] text-slate-400 mt-1">Market assumes 45.4% growth vs 60.0% last 3 years</p>
+              <p className="text-[10px] text-slate-400 mt-1">Market assumes 45.4% growth vs 60.0% last 3 years</p>
             </div>
           </div>
         </div>
@@ -101,7 +101,7 @@ export function SummaryMockScreen() {
             { label: 'Cash Flow', grade: 'B+', color: '#D97706', bg: '#FFF7ED', border: '#FED7AA' },
           ].map(card => (
             <div key={card.label} className="bg-white rounded-lg border p-2 text-center" style={{ borderColor: card.border }}>
-              <p className="text-[8px] text-slate-400 font-medium mb-1">{card.label}</p>
+              <p className="text-[10px] text-slate-400 font-medium mb-1">{card.label}</p>
               <p className="text-[14px] font-extrabold leading-none" style={{ color: card.color, fontFamily: 'var(--font-display, system-ui)' }}>
                 {card.grade}
               </p>
@@ -117,7 +117,7 @@ export function SummaryMockScreen() {
             { label: 'Target', val: '$256.34' },
           ].map(stat => (
             <div key={stat.label} className="bg-white rounded-lg border border-slate-100 p-2">
-              <p className="text-[8px] text-slate-400">{stat.label}</p>
+              <p className="text-[10px] text-slate-400">{stat.label}</p>
               <p className="text-[12px] font-bold font-mono" style={{ color: stat.color ?? '#0F172A', fontVariantNumeric: 'tabular-nums' }}>
                 {stat.val}
               </p>
@@ -179,7 +179,7 @@ export function ValuationMockScreen() {
                 background: i === 1 ? '#EFF6FF' : s.bg,
               }}
             >
-              <p className="text-[8px] font-bold uppercase tracking-wider" style={{ color: i === 1 ? '#1D4ED8' : '#94A3B8' }}>
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: i === 1 ? '#1D4ED8' : '#94A3B8' }}>
                 {s.label}
               </p>
               <p className="text-[12px] font-extrabold font-mono mt-0.5" style={{ color: s.color, fontVariantNumeric: 'tabular-nums' }}>
@@ -197,7 +197,7 @@ export function ValuationMockScreen() {
       <div className="px-4 py-2 border-b border-slate-100">
         <table className="w-full text-[10px]">
           <thead>
-            <tr className="text-[9px] text-slate-400 font-semibold uppercase">
+            <tr className="text-[10px] text-slate-400 font-semibold uppercase">
               <td className="py-1">Metric</td>
               <td className="text-center text-red-400">Bear</td>
               <td className="text-center text-blue-500">Base</td>
@@ -224,7 +224,7 @@ export function ValuationMockScreen() {
 
       {/* Model weights */}
       <div className="px-4 py-3">
-        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-2">Model Confidence</p>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Model Confidence</p>
         <div className="space-y-1.5">
           {[
             { label: 'DCF (FCFF)', w: 65, color: '#2563EB' },
@@ -232,11 +232,11 @@ export function ValuationMockScreen() {
             { label: 'Multiples', w: 15, color: '#059669' },
           ].map(m => (
             <div key={m.label} className="flex items-center gap-2">
-              <span className="text-[9px] text-slate-500 w-[52px] shrink-0">{m.label}</span>
+              <span className="text-[10px] text-slate-500 w-[52px] shrink-0">{m.label}</span>
               <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
                 <div className="h-full rounded-full" style={{ width: `${m.w}%`, background: m.color }} />
               </div>
-              <span className="text-[9px] font-mono font-semibold text-slate-600 w-7 text-right" style={{ fontVariantNumeric: 'tabular-nums' }}>
+              <span className="text-[10px] font-mono font-semibold text-slate-600 w-7 text-right" style={{ fontVariantNumeric: 'tabular-nums' }}>
                 {m.w}%
               </span>
             </div>
