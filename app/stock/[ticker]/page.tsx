@@ -2,13 +2,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useParams } from 'next/navigation'
-import dynamic from 'next/dynamic'
 import NewsPanel from '@/components/stock/NewsPanel'
 import HealthSection from '@/components/stock/HealthSection'
 import { type TabId } from '@/components/stock/TabNav'
 import StockContextBar from '@/components/stock/StockContextBar'
 import FinancialsSidebar from '@/components/stock/sidebar/FinancialsSidebar'
-import { cn } from '@/lib/utils'
 import ValuationCockpit, { buildSnapshot, seedAssumptions } from '@/components/valuation/ValuationCockpit'
 import { computeCockpitOutput } from '@/lib/valuation/cockpit'
 import FinancialsHub from '@/components/stock/FinancialsHub'
@@ -199,11 +197,6 @@ function StockPageBody() {
   }
 
   const handleNavigateToRisks = () => setActiveTab('risks')
-
-  const handleNavigateToFinancialsSection = (section: 'analysts' | 'snapshot' | 'ownership') => {
-    setActiveTab('financials')
-    setFinancialsSubTab(section)
-  }
 
   // Recompute quality scores from Yahoo Finance fundamentalsTimeSeries data when available.
   // The API-route scores use quoteSummary.incomeStatementHistory which is absent for many
