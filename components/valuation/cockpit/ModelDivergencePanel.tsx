@@ -48,13 +48,13 @@ export default function ModelDivergencePanel({ divergence }: Props) {
   return (
     <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
 
-      {/* ── Header: description (left) + stats (right) ── */}
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_220px] divide-y md:divide-y-0 md:divide-x divide-slate-100">
+      {/* ── Header: description | Spread vs Price | Coefficient of Variation ── */}
+      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_160px_200px] divide-y md:divide-y-0 md:divide-x divide-slate-100">
 
         {/* Left: title + summary */}
         <div className="px-5 py-5">
           <div className="flex flex-wrap items-center gap-2 mb-3">
-            <svg className="w-5 h-5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-5 h-5 text-red-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
             </svg>
             <span className="text-sm font-bold text-red-600 uppercase tracking-wide">Model Divergence</span>
@@ -68,24 +68,23 @@ export default function ModelDivergencePanel({ divergence }: Props) {
           </p>
         </div>
 
-        {/* Right: stats */}
-        <div className="px-5 py-4 flex flex-row md:flex-col justify-around md:justify-center gap-4 flex-wrap min-w-0">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Spread vs. Price</p>
-            <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none">
-              {(divergence.spreadVsPrice * 100).toFixed(0)}%
-            </p>
-            <p className={`text-xs font-semibold mt-1 ${spreadS.cls}`}>{spreadS.label}</p>
-          </div>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Coefficient of Variation</p>
-            <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none">
-              {(divergence.cv * 100).toFixed(0)}%
-            </p>
-            <p className={`text-xs font-semibold mt-1 ${cvS.cls}`}>{cvS.label}</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">(level threshold: 15% / 30%)</p>
-            <p className="text-[10px] text-slate-400 mt-0.5 leading-tight">Based on coefficient of variation.</p>
-          </div>
+        {/* Center: Spread vs. Price */}
+        <div className="px-6 py-6 flex flex-col justify-center">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Spread vs. Price</p>
+          <p className="text-4xl font-bold tabular-nums text-slate-900 leading-none mb-1">
+            {(divergence.spreadVsPrice * 100).toFixed(0)}%
+          </p>
+          <p className={`text-sm font-semibold ${spreadS.cls}`}>{spreadS.label}</p>
+        </div>
+
+        {/* Right: Coefficient of Variation */}
+        <div className="px-6 py-6 flex flex-col justify-center">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Coefficient of Variation</p>
+          <p className="text-4xl font-bold tabular-nums text-slate-900 leading-none mb-1">
+            {(divergence.cv * 100).toFixed(0)}%
+          </p>
+          <p className={`text-sm font-semibold ${cvS.cls}`}>{cvS.label}</p>
+          <p className="text-[10px] text-slate-400 mt-1">(threshold: 15% / 30%)</p>
         </div>
       </div>
 
@@ -102,21 +101,21 @@ export default function ModelDivergencePanel({ divergence }: Props) {
               const cfg  = METHOD_ICON[e.methodId]
               const conf = CONFIDENCE_CHIP[e.confidence]
               return (
-                <div key={e.methodId} className="px-4 sm:px-5 py-4">
-                  {/* Top row: icon + name + confidence chip */}
-                  <div className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
-                    {cfg && (
-                      <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 ${cfg.iconBg}`}>
-                        <cfg.Icon size={13} className={cfg.iconText} />
-                      </div>
-                    )}
-                    <span className="text-sm font-bold text-slate-700 shrink-0">{e.methodName}</span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${conf.bg} ${conf.text}`}>
-                      {conf.label}
-                    </span>
-                  </div>
-                  {/* Reason text: full width below */}
-                  <p className="text-[12px] text-slate-500 leading-relaxed">{e.reason}</p>
+                <div key={e.methodId} className="px-5 py-4 flex items-center gap-4 flex-wrap sm:flex-nowrap">
+                  {/* Icon */}
+                  {cfg && (
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${cfg.iconBg}`}>
+                      <cfg.Icon size={14} className={cfg.iconText} />
+                    </div>
+                  )}
+                  {/* Method name */}
+                  <span className="text-sm font-bold text-slate-700 shrink-0 w-36">{e.methodName}</span>
+                  {/* Confidence badge */}
+                  <span className={`text-[10px] font-bold px-3 py-1 rounded-full border shrink-0 ${conf.bg} ${conf.text}`}>
+                    {conf.label}
+                  </span>
+                  {/* Reason text — flows to the right */}
+                  <p className="text-[12px] text-slate-500 leading-relaxed flex-1 min-w-0">{e.reason}</p>
                 </div>
               )
             })}
