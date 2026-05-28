@@ -12,6 +12,7 @@ import {
   Bell,
   Settings,
   HelpCircle,
+  PieChart,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -27,6 +28,12 @@ const NAV_ITEMS = [
     label: 'My Valuations',
     icon: Bookmark,
     match: (p: string) => p.startsWith('/valuations'),
+  },
+  {
+    href: '/etf',
+    label: 'ETF Tracker',
+    icon: PieChart,
+    match: (p: string) => p.startsWith('/etf'),
   },
   {
     href: '/monitor?tab=portfolio',

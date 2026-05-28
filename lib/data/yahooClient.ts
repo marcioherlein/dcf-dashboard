@@ -27,6 +27,36 @@ export async function searchTicker(query: string) {
     .slice(0, 8)
 }
 
+// ETF-specific search — returns only ETF quote types
+export async function searchETF(query: string): Promise<Array<{ symbol: string; name: string; exchange: string }>> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result: any = await yf.search(query, { newsCount: 0 })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (result.quotes ?? [])
+    .filter((q: any) => q.quoteType === 'ETF')
+    .slice(0, 8)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((q: any) => ({
+      symbol: q.symbol as string,
+      name: (q.longname ?? q.shortname ?? q.symbol) as string,
+      exchange: (q.exchDisp ?? q.exchange ?? '') as string,
+    }))
+}
+
+// Fetch ETF-specific data: holdings, sector weights, fund profile, valuation metrics
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function getETFData(ticker: string): Promise<any> {
+  return yf.quoteSummary(ticker, {
+    modules: [
+      'topHoldings',
+      'fundProfile',
+      'defaultKeyStatistics',
+      'summaryDetail',
+      'price',
+    ],
+  }, { validateResult: false })
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getQuote(ticker: string): Promise<any> {
   return yf.quote(ticker)
