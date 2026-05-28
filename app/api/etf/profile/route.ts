@@ -63,6 +63,13 @@ function parseSectorWeights(raw: any[]): Array<{ sector: string; weight: number 
   return results.sort((a, b) => b.weight - a.weight)
 }
 
+// Yahoo topHoldings.equityHoldings returns yield-form fractions (e.g. priceToEarnings = earnings yield).
+// Invert values < 1 to get the actual price multiple.
+function toMultiple(v: unknown): number | null {
+  if (typeof v !== 'number' || v <= 0) return null
+  return v < 1 ? Math.round((1 / v) * 10) / 10 : Math.round(v * 10) / 10
+}
+
 export async function GET(req: NextRequest) {
   const ticker = req.nextUrl.searchParams.get('ticker')?.toUpperCase()?.trim()
   if (!ticker) return NextResponse.json({ error: 'ticker required' }, { status: 400 })
@@ -89,13 +96,6 @@ export async function GET(req: NextRequest) {
     const sectorWeights = parseSectorWeights(top.sectorWeightings ?? [])
 
     const eq = top.equityHoldings ?? {}
-
-    // Yahoo returns these as yield-form fractions (earnings yield, not P/E).
-    // Invert values < 1 to get the actual price multiples.
-    function toMultiple(v: unknown): number | null {
-      if (typeof v !== 'number' || v <= 0) return null
-      return v < 1 ? Math.round((1 / v) * 10) / 10 : Math.round(v * 10) / 10
-    }
 
     const peRatio  = toMultiple(eq.priceToEarnings)
     const pbRatio  = toMultiple(eq.priceToBook)
