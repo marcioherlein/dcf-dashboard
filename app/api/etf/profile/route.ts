@@ -89,12 +89,26 @@ export async function GET(req: NextRequest) {
     const sectorWeights = parseSectorWeights(top.sectorWeightings ?? [])
 
     const eq = top.equityHoldings ?? {}
-    const peRatio: number | null = typeof eq.priceToEarnings === 'number' ? eq.priceToEarnings : null
-    const pbRatio: number | null = typeof eq.priceToBook === 'number' ? eq.priceToBook : null
-    const psRatio: number | null = typeof eq.priceToSales === 'number' ? eq.priceToSales : null
-    const pcfRatio: number | null = typeof eq.priceToCashflow === 'number' ? eq.priceToCashflow : null
+
+    // Yahoo returns these as yield-form fractions (earnings yield, not P/E).
+    // Invert values < 1 to get the actual price multiples.
+    function toMultiple(v: unknown): number | null {
+      if (typeof v !== 'number' || v <= 0) return null
+      return v < 1 ? Math.round((1 / v) * 10) / 10 : Math.round(v * 10) / 10
+    }
+
+    const peRatio  = toMultiple(eq.priceToEarnings)
+    const pbRatio  = toMultiple(eq.priceToBook)
+    const psRatio  = toMultiple(eq.priceToSales)
+    const pcfRatio = toMultiple(eq.priceToCashflow)
+
     const yieldVal: number | null = typeof detail.yield === 'number' ? detail.yield : null
-    const expenseRatio: number | null = typeof fund.expenseRatio === 'number' ? fund.expenseRatio : null
+
+    // expense ratio lives under feesExpensesInvestment, not at top-level
+    const fees = fund.feesExpensesInvestment ?? {}
+    const expenseRatio: number | null =
+      typeof fees.annualReportExpenseRatio === 'number' ? fees.annualReportExpenseRatio :
+      typeof fund.expenseRatio === 'number' ? fund.expenseRatio : null
 
     const { score: valueScore, breakdown: scoreBreakdown } = computeValueScore({ peRatio, pbRatio, yieldVal, expenseRatio })
 

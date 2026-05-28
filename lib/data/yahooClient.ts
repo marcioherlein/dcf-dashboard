@@ -29,8 +29,9 @@ export async function searchTicker(query: string) {
 
 // ETF-specific search — returns only ETF quote types
 export async function searchETF(query: string): Promise<Array<{ symbol: string; name: string; exchange: string }>> {
+  // validateResult: false because yahoo-finance2 schema doesn't include ETF quoteType
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result: any = await yf.search(query, { newsCount: 0 })
+  const result: any = await yf.search(query, { newsCount: 0 }, { validateResult: false })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (result.quotes ?? [])
     .filter((q: any) => q.quoteType === 'ETF')
