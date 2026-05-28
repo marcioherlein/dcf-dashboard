@@ -491,6 +491,8 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
         onWaccChange={(v) => setWaccOverride(v / 100)}
         onModeChange={setIsLfcf}
         cagrAnalysis={apiData?.cagrAnalysis}
+        blendedImpliedPrice={derivedFV}
+        companyType={baseInput.companyType}
       />
 
       {/* Sensitivity heatmap */}

@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react'
 import React from 'react'
 import { NABadge } from '@/components/ui/na-badge'
 import { cn } from '@/lib/utils'
+import { FOUR_MODEL_DCF_WEIGHTS } from '@/lib/dcf/detectCompanyType'
+import type { CompanyType } from '@/lib/dcf/detectCompanyType'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -94,6 +96,8 @@ interface ForecastTableProps {
     analystEstimate2y?: number | null
     historicalCagr3y?: number | null
   } | null
+  blendedImpliedPrice?: number | null
+  companyType?: string
 }
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
@@ -276,6 +280,8 @@ export default function ForecastTable({
   onWaccChange,
   onModeChange,
   cagrAnalysis,
+  blendedImpliedPrice,
+  companyType,
 }: ForecastTableProps) {
   const [mode, setMode] = useState<'ufcf' | 'lfcf'>('ufcf')
   const [exitMultipleDraft, setExitMultipleDraft] = useState<string | null>(null)
@@ -293,7 +299,7 @@ export default function ForecastTable({
     return (Math.pow(product, 1 / proj.length) - 1) * 100
   }, [projectedRows])
 
-  // Implied price for header badge
+  // Implied price for header badge (single-toggle fallback, kept for terminal section detail)
   const { titleImpliedPrice, titleUpside } = useMemo(() => {
     const td = terminalData
     const isLfcf = mode === 'lfcf'
@@ -307,6 +313,32 @@ export default function ForecastTable({
     const up = ip != null && td.currentPrice > 0 ? (ip - td.currentPrice) / td.currentPrice : null
     return { titleImpliedPrice: ip, titleUpside: up }
   }, [terminalData, mode])
+
+  // Breakdown of all four variants for the blend tooltip
+  const blendBreakdown = useMemo(() => {
+    const td = terminalData
+    const cash = td.cashM ?? 0
+    const debt = td.debtM ?? 0
+    const shares = td.sharesM ?? 0
+    if (shares <= 0) return null
+    const ufcfPGM = td.perpetuityTVDiscounted != null
+      ? (td.sumPvUfcf + td.perpetuityTVDiscounted + cash - debt) / shares : null
+    const ufcfEM = td.exitMultipleTVDiscounted != null
+      ? (td.sumPvUfcf + td.exitMultipleTVDiscounted + cash - debt) / shares : null
+    const lfcfPGM = (td.lfcfPerpetualTVDiscounted ?? null) != null
+      ? ((td.sumPvLfcf ?? 0) + td.lfcfPerpetualTVDiscounted!) / shares : null
+    const lfcfEM = (td.lfcfExitMultipleTVDiscounted ?? null) != null
+      ? ((td.sumPvLfcf ?? 0) + td.lfcfExitMultipleTVDiscounted!) / shares : null
+    const cType = ((companyType ?? 'standard') as CompanyType)
+    const w = FOUR_MODEL_DCF_WEIGHTS[cType] ?? FOUR_MODEL_DCF_WEIGHTS.standard
+    return { ufcfPGM, ufcfEM, lfcfPGM, lfcfEM, w, cType }
+  }, [terminalData, companyType])
+
+  // Header badge uses blended value; upside computed from blended or fallback
+  const headerPrice = blendedImpliedPrice ?? titleImpliedPrice
+  const headerUpside = headerPrice != null && terminalData.currentPrice > 0
+    ? (headerPrice - terminalData.currentPrice) / terminalData.currentPrice
+    : titleUpside
 
   // ── Column header element ─────────────────────────────────────────────────────
 
@@ -1047,19 +1079,55 @@ export default function ForecastTable({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Implied price badge */}
-          {titleImpliedPrice != null && (
-            <div className="flex items-center gap-2 bg-white/8 border border-white/10 rounded-lg px-3 py-1.5">
-              <span className="text-[10px] text-slate-400 uppercase tracking-wide font-semibold">Implied</span>
-              <span className={cn('text-sm font-bold tabular-nums',
-                titleUpside != null && titleUpside >= 0 ? 'text-emerald-400' : 'text-red-400'
-              )}>
-                {curr}{titleImpliedPrice.toFixed(2)}
-              </span>
-              {titleUpside != null && (
-                <span className={cn('text-[10px] font-semibold', titleUpside >= 0 ? 'text-emerald-400' : 'text-red-400')}>
-                  {titleUpside >= 0 ? '+' : ''}{(titleUpside * 100).toFixed(1)}%
+          {/* Implied price badge — shows 4-model blended value with breakdown tooltip */}
+          {headerPrice != null && (
+            <div className="relative group">
+              <div className="flex items-center gap-2 bg-white/8 border border-white/10 rounded-lg px-3 py-1.5 cursor-help">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wide font-semibold">
+                  {blendedImpliedPrice != null ? 'Implied · 4-model' : 'Implied'}
                 </span>
+                <span className={cn('text-sm font-bold tabular-nums',
+                  headerUpside != null && headerUpside >= 0 ? 'text-emerald-400' : 'text-red-400'
+                )}>
+                  {curr}{headerPrice.toFixed(2)}
+                </span>
+                {headerUpside != null && (
+                  <span className={cn('text-[10px] font-semibold', headerUpside >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                    {headerUpside >= 0 ? '+' : ''}{(headerUpside * 100).toFixed(1)}%
+                  </span>
+                )}
+              </div>
+              {/* Breakdown tooltip on hover */}
+              {blendBreakdown != null && blendedImpliedPrice != null && (
+                <div className="absolute top-full left-0 mt-1.5 z-50 hidden group-hover:block bg-[#0d1929] border border-white/10 rounded-xl p-3.5 shadow-2xl" style={{ minWidth: 280 }}>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                    4-model blend · {blendBreakdown.cType} profile
+                  </p>
+                  {([
+                    { label: 'UFCF + Perpetuity (PGM)', val: blendBreakdown.ufcfPGM, w: blendBreakdown.w.ufcfPGM },
+                    { label: 'UFCF + Exit Multiple',    val: blendBreakdown.ufcfEM,  w: blendBreakdown.w.ufcfEM  },
+                    { label: 'LFCF + Perpetuity (PGM)', val: blendBreakdown.lfcfPGM, w: blendBreakdown.w.lfcfPGM },
+                    { label: 'LFCF + Exit Multiple',    val: blendBreakdown.lfcfEM,  w: blendBreakdown.w.lfcfEM  },
+                  ] as const).map(({ label, val, w }) => (
+                    <div key={label} className="flex items-center justify-between gap-6 py-0.5">
+                      <span className="text-[11px] text-slate-400">
+                        <span className="text-slate-300 font-semibold tabular-nums">{Math.round(w * 100)}%</span>
+                        {' × '}{label}
+                      </span>
+                      <span className="text-[11px] font-semibold text-slate-200 tabular-nums shrink-0">
+                        {val != null ? `${curr}${val.toFixed(2)}` : '—'}
+                      </span>
+                    </div>
+                  ))}
+                  <div className="border-t border-white/10 mt-2 pt-2 flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-slate-300">= Blended implied</span>
+                    <span className={cn('text-[11px] font-bold tabular-nums',
+                      headerUpside != null && headerUpside >= 0 ? 'text-emerald-400' : 'text-red-400'
+                    )}>
+                      {curr}{blendedImpliedPrice.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
               )}
             </div>
           )}
