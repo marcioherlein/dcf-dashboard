@@ -14,7 +14,7 @@ import ValuationCockpit, { buildSnapshot, seedAssumptions } from '@/components/v
 import { computeCockpitOutput } from '@/lib/valuation/cockpit'
 import FinancialsHub from '@/components/stock/FinancialsHub'
 import MobileKeyInsights from '@/components/stock/MobileKeyInsights'
-import ReverseDcfCallout from '@/components/stock/ReverseDcfCallout'
+
 import { LoginGateProvider } from '@/components/auth/LoginGateProvider'
 import AuthBanner from '@/components/auth/AuthBanner'
 import { calculatePiotroski, calculateAltman, calculateBeneish } from '@/lib/dcf/calculateScores'
@@ -23,19 +23,8 @@ import { loadPreLoginState, clearPreLoginState } from '@/lib/auth/preLoginState'
 import { useSession } from 'next-auth/react'
 import SaveToWatchlistDialog, { type WatchlistSavePayload } from '@/components/watchlist/SaveToWatchlistDialog'
 import ValuationNotAvailableCard from '@/components/stock/ValuationNotAvailableCard'
-import OverviewMetricGrid from '@/components/stock/OverviewMetricGrid'
-import FlipCard from '@/components/ui/FlipCard'
-import CardBack from '@/components/ui/CardBack'
-import StockSummaryCard from '@/components/stock/overview/StockSummaryCard'
+import SummaryTab from '@/components/stock/summary/SummaryTab'
 
-import SignalDivergenceCallout from '@/components/stock/overview/SignalDivergenceCallout'
-import OverviewBottomStrip from '@/components/stock/overview/OverviewBottomStrip'
-import InvestorVerdictCard from '@/components/stock/InvestorVerdictCard'
-
-const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
-  ssr: false,
-  loading: () => <div className="h-64 animate-pulse rounded-2xl bg-gray-100" />,
-})
 
 interface CAGRAnalysisData {
   historicalCagr3y: number
@@ -190,7 +179,6 @@ function StockPageBody() {
   const [financialsHighlight, setFinancialsHighlight] = useState<{ rowKey: string; statement: 'income' | 'balance' | 'cashflow' } | null>(null)
   const [financialsSubTab, setFinancialsSubTab] = useState<'statements' | 'growth' | 'profitability' | 'solvency' | 'analysts' | 'snapshot' | 'ownership' | null>(null)
   const [userModelFairValue, setUserModelFairValue] = useState<number | null>(null)
-  const [chartExpanded, setChartExpanded] = useState(false)
 
   // After Google OAuth redirect, restore the user's pre-login state (tab, etc.)
   useEffect(() => {
@@ -451,71 +439,26 @@ function StockPageBody() {
                   exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
-                  {/* 1. Unified summary card — 4 hero columns */}
-                  <StockSummaryCard
+                  {/* Summary tab — 5-card strip, insight tri-column, quality grid, bottom row */}
+                  <SummaryTab
                     ticker={data.ticker}
                     companyName={data.companyName}
-                    sector={data.quote.sector ?? ''}
-                    industry={data.quote.industry ?? ''}
-                    description={data.businessProfile?.description ?? ''}
                     price={data.quote.price}
                     change={data.quote.change}
                     changePct={data.quote.changePct}
-                    currency={data.quote.currency ?? 'USD'}
+                    currency={currency}
                     high52={data.quote.fiftyTwoWeekHigh}
                     low52={data.quote.fiftyTwoWeekLow}
+                    sector={data.quote.sector ?? ''}
                     fairValue={cockpitOutput?.blendedFairValue ?? null}
                     upsidePct={cockpitOutput?.upsidePct ?? null}
-                    confidenceLabel={data.cagrAnalysis?.confidenceLabel ?? null}
-                    scenarios={data.scenarios ?? null}
-                    onViewDetails={() => handleTabChange('valuation')}
-                  />
-
-                  {/* 1b. Investor verdict — plain-English narrative summary */}
-                  {cockpitOutput?.upsidePct != null && cockpitOutput.blendedFairValue != null && (
-                    <InvestorVerdictCard
-                      upside={cockpitOutput.upsidePct}
-                      fairValue={cockpitOutput.blendedFairValue}
-                      price={data.quote.price}
-                      currency={data.quote.currency ?? 'USD'}
-                      analystRecommendation={data.analystRecommendation ?? ''}
-                      ratings={data.ratings ?? null}
-                      confidence={
-                        cockpitOutput.divergence?.overallConfidence === 'high'   ? 'High'   :
-                        cockpitOutput.divergence?.overallConfidence === 'medium' ? 'Medium' : 'Low'
-                      }
-                      growthModel={data.growthModel ?? 'two-stage'}
-                      scores={computedScores ?? data.scores ?? null}
-                    />
-                  )}
-
-                  {/* 1c. Signal divergence — only shown when analyst and model disagree */}
-                  <SignalDivergenceCallout
-                    analystRecommendation={data.analystRecommendation ?? ''}
-                    analystTargetMean={data.quote.analystTargetMean ?? 0}
-                    numAnalysts={data.cagrAnalysis?.numAnalysts ?? 0}
-                    price={data.quote.price}
-                    currency={data.quote.currency ?? 'USD'}
-                    upsidePct={cockpitOutput?.upsidePct ?? null}
-                    fairValue={cockpitOutput?.blendedFairValue ?? null}
-                  />
-
-                  {/* 2. Reverse DCF — what the market is pricing in */}
-                  <FlipCard
-                    back={<CardBack
-                      emoji="🔄" title="Reverse DCF"
-                      intro="Instead of asking 'what is this stock worth?', Reverse DCF flips the question: 'What growth rate would the company need to justify today's price?'"
-                      sections={[
-                        { title: 'How to read it', body: 'The number shown is the implied annual growth rate baked into the current price. If the stock trades at $200, the market is essentially betting the company will grow revenue at X% per year for the next 5–10 years.' },
-                        { title: 'Low implied growth', body: 'If the number is low (e.g. 5%), the market isn\'t expecting much — so even modest growth could make the stock a good deal.' },
-                        { title: 'High implied growth', body: 'If the number is high (e.g. 30%+), the market is already pricing in a best-case scenario. Any disappointment could cause the price to drop sharply.' },
-                        { title: 'The gut-check', body: 'Ask yourself: "Do I genuinely believe this company can grow that fast?" If yes, the price makes sense. If you\'re unsure, you might be overpaying.' },
-                      ]}
-                      warning="High implied growth isn't automatically bad — some companies (like fast-growing tech) do sustain it. Context matters."
-                    />}
-                  >
-                  <ReverseDcfCallout
-                    price={data.quote.price}
+                    confidence={
+                      cockpitOutput?.divergence?.overallConfidence === 'high'   ? 'High'   :
+                      cockpitOutput?.divergence?.overallConfidence === 'medium' ? 'Medium' :
+                      cockpitOutput ? 'Low' : null
+                    }
+                    modelCount={cockpitOutput?.methods?.filter(m => m.fairValue != null && m.fairValue > 0).length ?? 0}
+                    totalModels={cockpitOutput?.methods?.length ?? 4}
                     sharesM={data.fairValue?.sharesOutstanding ?? null}
                     cashM={data.fairValue?.cash ?? null}
                     debtM={data.fairValue?.debt ?? null}
@@ -526,59 +469,20 @@ function StockPageBody() {
                     historicalCAGR={data.cagrAnalysis?.historicalCagr3y ?? null}
                     analystCAGR={data.cagrAnalysis?.analystEstimate1y ?? null}
                     isEmergingMarket={computedScores?.altman?.isReliable === false}
+                    scenarios={data.scenarios ?? null}
+                    ratings={data.ratings}
+                    scores={computedScores ?? data.scores}
+                    businessProfile={data.businessProfile}
+                    cagrAnalysis={data.cagrAnalysis ?? null}
+                    statementsData={statementsData}
+                    valuationMethods={data.valuationMethods ?? null}
+                    quote={data.quote}
+                    analystTargetMean={data.quote.analystTargetMean ?? null}
+                    userModelFairValue={userModelFairValue}
+                    analystRecommendation={data.analystRecommendation ?? ''}
+                    onViewValuation={() => handleTabChange('valuation')}
+                    onViewRisks={() => handleTabChange('risks')}
                   />
-                  </FlipCard>
-
-                  {/* 3. 3x2 quality grid (risks included) */}
-                  {data.ratings && (
-                    <OverviewMetricGrid
-                      ratings={data.ratings}
-                      scores={computedScores ?? data.scores}
-                      businessProfile={data.businessProfile}
-                      cagrAnalysis={data.cagrAnalysis ?? null}
-                      statementsData={statementsData}
-                      onViewRisks={() => handleTabChange('risks')}
-                      valuationMethods={data.valuationMethods ?? null}
-                      quote={data.quote}
-                    />
-                  )}
-
-                  {/* 4. Bottom decision strip: supports / risks / next step */}
-                  {data.ratings && (
-                    <OverviewBottomStrip
-                      drivers={data.cagrAnalysis?.drivers ?? []}
-                      ratings={data.ratings}
-                      cagrAnalysis={data.cagrAnalysis ?? null}
-                      upsidePct={cockpitOutput?.upsidePct ?? null}
-                      onViewValuation={() => handleTabChange('valuation')}
-                      onViewRisks={() => handleTabChange('risks')}
-                    />
-                  )}
-
-                  {/* 5. Price chart — collapsed by default on Summary; shows price + FV + analyst target */}
-                  <div className="rounded-2xl border border-[#E6ECF5] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)] overflow-hidden">
-                    <button
-                      onClick={() => setChartExpanded(v => !v)}
-                      className="w-full flex items-center justify-between px-5 py-3.5 text-left hover:bg-slate-50/60 transition-colors"
-                    >
-                      <span className="text-[13px] font-semibold text-slate-700">Price Chart</span>
-                      <span className="text-[12px] text-slate-400 flex items-center gap-1">
-                        {chartExpanded ? 'Hide' : 'Show chart'}
-                        <span className={`transition-transform duration-200 ${chartExpanded ? 'rotate-180' : ''}`}>▾</span>
-                      </span>
-                    </button>
-                    {chartExpanded && (
-                      <div className="border-t border-[#E6ECF5]">
-                        <PriceChart
-                          ticker={ticker}
-                          isDark={false}
-                          triangulatedFairValue={data.valuationMethods?.triangulatedFairValue}
-                          analystTarget={data.quote.analystTargetMean}
-                          userModelFairValue={userModelFairValue}
-                        />
-                      </div>
-                    )}
-                  </div>
                 </motion.div>
               )}
               {activeTab === 'valuation' && (
