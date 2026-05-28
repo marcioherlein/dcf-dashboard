@@ -132,9 +132,9 @@ export default function TopBar() {
           gap: '8px',
         }}
       >
-        {/* ── Column 1: Logo icon ── */}
+        {/* ── Column 1: Logo + name ── */}
         <div className="flex items-center">
-          <Link href="/" className="flex items-center shrink-0">
+          <Link href="/" className="flex items-center gap-2 shrink-0 group">
             <Image
               src="/logos/logo.png"
               alt="intrinsico"
@@ -142,6 +142,11 @@ export default function TopBar() {
               height={28}
               className="shrink-0"
             />
+            {!stockNav && (
+              <span className="hidden sm:block text-[15px] font-bold tracking-tight text-slate-800 group-hover:text-blue-600 transition-colors select-none">
+                intrinsico
+              </span>
+            )}
           </Link>
         </div>
 
