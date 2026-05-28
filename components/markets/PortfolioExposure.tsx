@@ -38,27 +38,32 @@ export default function PortfolioExposure({ portfolioExposure, modelAlerts }: Pr
           <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-3 flex flex-col">
             <p className="text-[20px] font-bold text-red-700 tabular-nums leading-none">{highCount}</p>
             <p className="text-[10px] text-red-600 font-semibold mt-1 uppercase tracking-wider">High Risk</p>
-            <p className="text-[9px] text-red-400 mt-1 leading-tight">Elevated valuation risk</p>
+            <p className="text-[9px] text-red-400 mt-1 leading-tight">Models with elevated valuation risk</p>
             {highCount > 0 && (
               <Link href="/valuations" className="mt-1.5 text-[10px] font-semibold text-red-600 hover:text-red-700 transition-colors self-start">
-                View →
+                View models →
               </Link>
             )}
           </div>
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 flex flex-col">
             <p className="text-[20px] font-bold text-amber-700 tabular-nums leading-none">{medCount}</p>
             <p className="text-[10px] text-amber-600 font-semibold mt-1 uppercase tracking-wider">Medium</p>
-            <p className="text-[9px] text-amber-400 mt-1 leading-tight">Moderate sensitivity</p>
+            <p className="text-[9px] text-amber-400 mt-1 leading-tight">Models with moderate valuation risk</p>
             {medCount > 0 && (
               <Link href="/valuations" className="mt-1.5 text-[10px] font-semibold text-amber-600 hover:text-amber-700 transition-colors self-start">
-                View →
+                View models →
               </Link>
             )}
           </div>
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 flex flex-col">
             <p className="text-[20px] font-bold text-emerald-700 tabular-nums leading-none">{healthCount}</p>
             <p className="text-[10px] text-emerald-600 font-semibold mt-1 uppercase tracking-wider">Healthy</p>
-            <p className="text-[9px] text-emerald-400 mt-1 leading-tight">Within normal range</p>
+            <p className="text-[9px] text-emerald-400 mt-1 leading-tight">Models with attractive valuation and risk</p>
+            {healthCount > 0 && (
+              <Link href="/valuations" className="mt-1.5 text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 transition-colors self-start">
+                View models →
+              </Link>
+            )}
           </div>
         </div>
 

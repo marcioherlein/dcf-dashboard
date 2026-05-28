@@ -15,10 +15,10 @@ function toneValueClass(tone: MacroSignalTile['tone']): string {
 }
 
 function toneBadgeClass(tone: MacroSignalTile['tone']): string {
-  if (tone === 'positive') return 'bg-emerald-50 text-emerald-700'
-  if (tone === 'negative') return 'bg-red-50 text-red-700'
-  if (tone === 'warning')  return 'bg-amber-50 text-amber-700'
-  return 'bg-slate-100 text-slate-600'
+  if (tone === 'positive') return 'bg-emerald-50 text-emerald-700 border-emerald-200'
+  if (tone === 'negative') return 'bg-red-50 text-red-700 border-red-200'
+  if (tone === 'warning')  return 'bg-amber-50 text-amber-700 border-amber-200'
+  return 'bg-slate-100 text-slate-600 border-slate-200'
 }
 
 function iconForSignal(label: string): { icon: React.ReactNode; bg: string } {
@@ -40,29 +40,37 @@ function iconForSignal(label: string): { icon: React.ReactNode; bg: string } {
 
 export default function MacroSignals({ signals }: Props) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-full flex flex-col">
       <div className="px-4 py-2.5 border-b border-slate-100">
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Macro Signals</span>
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Macro Environment</span>
+        <p className="text-[10px] text-slate-400 mt-0.5">Key signals that influence discount rates, risk appetite, and valuations.</p>
       </div>
-      <div className="p-3">
+
+      <div className="p-3 flex-1">
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {signals.map(sig => {
             const { icon, bg } = iconForSignal(sig.label)
             return (
-              <div key={sig.id} className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5">
+              <div key={sig.id} className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5 flex flex-col">
                 <div className="flex items-center gap-2 mb-1.5">
                   <div className={cn('w-6 h-6 rounded-lg flex items-center justify-center shrink-0', bg)}>
                     {icon}
                   </div>
-                  <p className="text-[10px] font-bold text-slate-500 leading-tight truncate">{sig.label}</p>
+                  <p className="text-[9px] font-bold text-slate-500 leading-tight uppercase tracking-wider truncate">{sig.label}</p>
                 </div>
-                <p className={cn('text-[15px] font-bold tabular-nums', toneValueClass(sig.tone))}>
+                <p className={cn('text-[16px] font-bold tabular-nums leading-none', toneValueClass(sig.tone))}>
                   {sig.value}
                 </p>
                 {sig.sub && <p className="text-[9px] text-slate-400 mt-0.5">{sig.sub}</p>}
-                <span className={cn('inline-block mt-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider', toneBadgeClass(sig.tone))}>
+                <span className={cn(
+                  'inline-flex items-center self-start mt-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full border uppercase tracking-wider',
+                  toneBadgeClass(sig.tone)
+                )}>
                   {sig.regimeLabel}
                 </span>
+                {sig.equityImplication && (
+                  <p className="text-[9.5px] text-slate-500 mt-1.5 leading-snug">{sig.equityImplication}</p>
+                )}
               </div>
             )
           })}

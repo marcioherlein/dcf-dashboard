@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
-import { RefreshCw, Settings2 } from 'lucide-react'
+import { RefreshCw, Settings2, ExternalLink } from 'lucide-react'
 
 import IndexSnapshotGrid    from '@/components/markets/IndexSnapshotGrid'
 import MarketPulse          from '@/components/markets/MarketPulse'
@@ -54,11 +54,14 @@ function getMarketStatus(): { label: string; cls: string } {
   return { label: 'Market Closed', cls: 'bg-slate-100 text-slate-500' }
 }
 
-function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+function SectionHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: React.ReactNode }) {
   return (
-    <div className="mb-3">
-      <h2 className="text-[12px] sm:text-[13px] font-bold text-slate-800 uppercase tracking-wide">{title}</h2>
-      {subtitle && <p className="text-[11px] text-slate-400 mt-0.5 hidden sm:block">{subtitle}</p>}
+    <div className="mb-3 flex items-end justify-between gap-2">
+      <div>
+        <h2 className="text-[13px] font-bold text-slate-800 uppercase tracking-wide">{title}</h2>
+        {subtitle && <p className="text-[11px] text-slate-400 mt-0.5 hidden sm:block">{subtitle}</p>}
+      </div>
+      {right && <div className="shrink-0">{right}</div>}
     </div>
   )
 }
@@ -153,7 +156,7 @@ export default function MarketsPage() {
           <div className="min-w-0">
             <h1 className="text-[18px] sm:text-[20px] font-bold text-slate-900 leading-tight">Markets Overview</h1>
             <p className="text-[11px] sm:text-[12px] text-slate-400 mt-0.5 hidden sm:block">
-              Market context for valuation decisions · Understand the environment behind your stock analyses.
+              Market context and key drivers that influence valuation decisions.
             </p>
           </div>
           <div className="flex items-center gap-2 pt-0.5 shrink-0">
@@ -235,7 +238,10 @@ export default function MarketsPage() {
         <div>
           <SectionHeader
             title="Market Snapshot"
-            subtitle="Risk environment, index performance, and today's key movers."
+            subtitle="A quick read on the current regime, performance, and what's moving markets."
+            right={lastFetch > 0 ? (
+              <span className="text-[11px] text-slate-400">Data as of {etTime} ET</span>
+            ) : undefined}
           />
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div className="lg:col-span-4">
@@ -302,6 +308,20 @@ export default function MarketsPage() {
           <SectionHeader
             title="Upcoming Events"
             subtitle="Economic releases and earnings that may affect your valuation assumptions."
+            right={
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] text-slate-400 hidden sm:block">All times in ET</span>
+                <a
+                  href="https://finance.yahoo.com/calendar"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  View full calendars
+                  <ExternalLink size={11} />
+                </a>
+              </div>
+            }
           />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <EconomicCalendar />
@@ -334,10 +354,28 @@ export default function MarketsPage() {
             <SectionHeader
               title="Market News"
               subtitle="Recent headlines — for context only, not a trading signal."
+              right={
+                <a
+                  href="https://finance.yahoo.com/news"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  View all news
+                  <ExternalLink size={11} />
+                </a>
+              }
             />
             <MarketNewsSection news={mkt.news} />
           </div>
         )}
+
+        {/* ── Disclaimer ───────────────────────────────────────────────────── */}
+        <div className="border-t border-slate-200 pt-4">
+          <p className="text-[10px] text-slate-400 leading-snug">
+            Past performance is not indicative of future results. Data is provided for informational purposes only and does not constitute investment advice.
+          </p>
+        </div>
 
         <div className="h-4" />
       </div>
