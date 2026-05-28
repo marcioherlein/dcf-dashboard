@@ -85,11 +85,11 @@ function gradeBadge(color: string): string {
 function MetricRow({ label, value, valueClass, tooltip }: { label: string; value: string; valueClass?: string; tooltip?: string }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-[12px] text-slate-500 truncate flex items-center gap-0.5">
+      <span className="text-[13px] text-slate-500 truncate flex items-center gap-0.5">
         {label}
         {tooltip && <InfoTooltip content={tooltip} />}
       </span>
-      <span className={`text-[12px] font-semibold tabular-nums shrink-0 ${valueClass ?? 'text-slate-800'}`}>{value}</span>
+      <span className={`text-[13px] font-semibold tabular-nums shrink-0 ${valueClass ?? 'text-slate-800'}`}>{value}</span>
     </div>
   )
 }
@@ -101,7 +101,7 @@ function CardHeader({ title, label, color, tooltip }: { title: string; label: st
         {title}
         {tooltip && <InfoTooltip content={tooltip} />}
       </p>
-      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${gradeBadge(color)}`}>{label}</span>
+      <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${gradeBadge(color)}`}>{label}</span>
     </div>
   )
 }
@@ -148,9 +148,9 @@ function BusinessQualityCard({ ratings, scores }: { ratings: StockRatings; score
       : 'Competitive positioning requires monitoring.'
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <CardHeader title="Business Quality" label={label} color={color} />
-      <div className="space-y-2 mb-3">
+      <div className="space-y-2.5 mb-3">
         <MetricRow label="Economic Moat" value={moat?.label ?? '—'} />
         <MetricRow
           label="ROIC vs WACC"
@@ -163,7 +163,7 @@ function BusinessQualityCard({ ratings, scores }: { ratings: StockRatings; score
           value={profitability ? `${profitability.grade} — ${profitability.label}` : '—'}
         />
       </div>
-      <p className="text-[11px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{interpSentence}</p>
+      <p className="text-[12px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{interpSentence}</p>
     </div>
   )
 }
@@ -195,24 +195,24 @@ function GrowthOutlookCard({ ratings, cagrAnalysis }: { ratings: StockRatings; c
         : 'Insufficient data to assess growth trajectory.'
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <CardHeader title="Growth Outlook" label={label} color={color} />
       <div className="space-y-2.5 mb-3">
         {hist != null && (
           <div>
             <div className="flex items-center gap-2 mb-1 min-w-0">
-              <span className="text-[11px] text-slate-500 w-28 shrink-0">3Y Historical CAGR</span>
+              <span className="text-[12px] text-slate-500 w-28 shrink-0">3Y Historical CAGR</span>
               <MiniBar value={Math.abs(hist)} max={maxBar} color={hist >= 0 ? 'blue' : 'amber'} />
-              <span className="text-[12px] font-semibold tabular-nums text-slate-700 w-12 text-right">{fmtPct(hist)}</span>
+              <span className="text-[13px] font-semibold tabular-nums text-slate-700 w-12 text-right">{fmtPct(hist)}</span>
             </div>
           </div>
         )}
         {analyst != null && (
           <div>
             <div className="flex items-center gap-2 mb-1 min-w-0">
-              <span className="text-[11px] text-slate-500 w-28 shrink-0">Analyst Est. (1Y)</span>
+              <span className="text-[12px] text-slate-500 w-28 shrink-0">Analyst Est. (1Y)</span>
               <MiniBar value={Math.abs(analyst)} max={maxBar} color={analyst >= 0 ? 'emerald' : 'amber'} />
-              <span className="text-[12px] font-semibold tabular-nums text-slate-700 w-12 text-right">{fmtPct(analyst)}</span>
+              <span className="text-[13px] font-semibold tabular-nums text-slate-700 w-12 text-right">{fmtPct(analyst)}</span>
             </div>
           </div>
         )}
@@ -220,7 +220,7 @@ function GrowthOutlookCard({ ratings, cagrAnalysis }: { ratings: StockRatings; c
           <p className="text-[12px] text-slate-400 italic">Growth data unavailable</p>
         )}
       </div>
-      <p className="text-[11px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{growthSentence}</p>
+      <p className="text-[12px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{growthSentence}</p>
     </div>
   )
 }
@@ -254,15 +254,15 @@ function ProfitabilityCard({ ratings, businessProfile, statementsData }: {
       : 'Profitability data partially unavailable.'
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <CardHeader title="Profitability" label={label} color={color} />
-      <div className="space-y-2 mb-3">
+      <div className="space-y-2.5 mb-3">
         <MetricRow label="Gross Margin" value={fmtPct(businessProfile.grossMargin)} />
         <MetricRow label="Operating Margin" value={opMargin != null ? fmtPct(opMargin) : '—'} />
         <MetricRow label="Net Margin" value={fmtPct(businessProfile.netMargin)} />
         <MetricRow label="FCF Margin" value={fmtPct(businessProfile.fcfMargin)} />
       </div>
-      <p className="text-[11px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{profSentence}</p>
+      <p className="text-[12px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{profSentence}</p>
     </div>
   )
 }
@@ -294,9 +294,9 @@ function CashConversionCard({ businessProfile, statementsData }: {
       : 'Insufficient data to assess cash conversion quality.'
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <CardHeader title="Cash Conversion" label={label} color={color} />
-      <div className="space-y-2 mb-3">
+      <div className="space-y-2.5 mb-3">
         <MetricRow label="FCF Margin (TTM)" value={fmtPct(businessProfile.fcfMargin)} />
         <MetricRow
           label="FCF / Net Income"
@@ -305,7 +305,7 @@ function CashConversionCard({ businessProfile, statementsData }: {
           tooltip="What share of reported earnings converts to real cash. >80% is a quality signal — it means profits are backed by cash, not just accounting entries."
         />
       </div>
-      <p className="text-[11px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{cashSentence}</p>
+      <p className="text-[12px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{cashSentence}</p>
     </div>
   )
 }
@@ -358,9 +358,9 @@ function BalanceSheetCard({ scores, statementsData }: {
       : 'Balance sheet health requires further analysis.'
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <CardHeader title="Balance Sheet Safety" label={bsLabel} color={bsColor} />
-      <div className="space-y-2 mb-3">
+      <div className="space-y-2.5 mb-3">
         <MetricRow
           label="Net Debt / EBITDA"
           value={ndToEbitda != null ? `${ndToEbitda.toFixed(1)}x` : '—'}
@@ -387,7 +387,7 @@ function BalanceSheetCard({ scores, statementsData }: {
           <p className="text-[10px] text-slate-400 leading-snug">* Z-Score may be unreliable for non-US companies</p>
         )}
       </div>
-      <p className="text-[11px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{bsSentence}</p>
+      <p className="text-[12px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{bsSentence}</p>
     </div>
   )
 }
@@ -452,21 +452,21 @@ function RisksGridCard({ ratings, cagrAnalysis, onViewRisks }: {
   const dotColor = risk.color === 'red' ? 'bg-red-400' : risk.color === 'amber' ? 'bg-amber-400' : 'bg-emerald-400'
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <div className="flex items-center justify-between mb-3">
         <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Risks to Thesis</p>
-        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${risk.badgeClass}`}>{risk.label}</span>
+        <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${risk.badgeClass}`}>{risk.label}</span>
       </div>
       <ul className="space-y-1.5 mb-3">
         {bullets.map((b, i) => (
           <li key={i} className="flex items-start gap-2">
             <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${dotColor}`} />
-            <span className="text-[11px] text-slate-600 leading-snug">{b}</span>
+            <span className="text-[13px] text-slate-600 leading-snug">{b}</span>
           </li>
         ))}
       </ul>
       {onViewRisks && (
-        <button onClick={onViewRisks} className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+        <button onClick={onViewRisks} className="text-[13px] font-medium text-blue-600 hover:text-blue-700 transition-colors">
           View all risks →
         </button>
       )}
@@ -516,48 +516,48 @@ function RelativeValuationCard({ valuationMethods, quote }: { valuationMethods: 
   }
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="text-[13px]">🏷</span>
           <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest truncate">Relative Valuation</span>
         </div>
-        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap ${overallClass}`}>
+        <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border whitespace-nowrap ${overallClass}`}>
           {overallLabel}
         </span>
       </div>
       <div className="space-y-2">
         {applicable.slice(0, 3).map((e: AnyRecord) => (
           <div key={e.multiple} className="flex items-center justify-between">
-            <span className="text-[11px] text-slate-500 flex items-center gap-0.5">
+            <span className="text-[13px] text-slate-500 flex items-center gap-0.5">
               {LABELS[e.multiple] ?? e.multiple}
               {e.multiple === 'evEbitda' && (
                 <InfoTooltip content="Enterprise Value divided by EBITDA. Compares total company value (including debt) to operating earnings. Lower than sector median suggests cheaper relative pricing." />
               )}
             </span>
             <div className="flex items-center gap-2">
-              <span className={`text-[11px] font-semibold tabular-nums ${vsClass(e.actualValue, e.sectorMedian)}`}>
+              <span className={`text-[13px] font-semibold tabular-nums ${vsClass(e.actualValue, e.sectorMedian)}`}>
                 {e.actualValue.toFixed(1)}×
               </span>
               <span className="text-[10px] text-slate-300">vs</span>
-              <span className="text-[10px] text-slate-400 tabular-nums">{e.sectorMedian.toFixed(1)}×</span>
+              <span className="text-[11px] text-slate-400 tabular-nums">{e.sectorMedian.toFixed(1)}×</span>
             </div>
           </div>
         ))}
         {pegRatio != null && pegRatio > 0 && pegRatio < 100 && (
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-slate-500 flex items-center gap-0.5">
+            <span className="text-[13px] text-slate-500 flex items-center gap-0.5">
               PEG (5Y)
               <InfoTooltip content="Price/Earnings to Growth. Below 1 suggests growth may be underpriced. Above 2 often signals expensive relative to growth expectations." />
             </span>
-            <span className={`text-[11px] font-semibold tabular-nums ${pegRatio < 1 ? 'text-emerald-600' : pegRatio > 2 ? 'text-red-600' : 'text-slate-600'}`}>
+            <span className={`text-[13px] font-semibold tabular-nums ${pegRatio < 1 ? 'text-emerald-600' : pegRatio > 2 ? 'text-red-600' : 'text-slate-600'}`}>
               {pegRatio.toFixed(2)}×
             </span>
           </div>
         )}
       </div>
       {applicable.length > 0 && (
-        <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">vs. sector median</p>
+        <p className="text-[11px] text-slate-400 mt-3 leading-relaxed">vs. sector median</p>
       )}
     </div>
   )
