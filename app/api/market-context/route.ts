@@ -95,7 +95,7 @@ export async function GET() {
     // ── Rate context ──────────────────────────────────────────────────────────
     // getRfRate returns decimal; TNX from Yahoo is in percent (e.g. 4.3 = 4.30%)
     const dgs2      = fredDgs2   // decimal (e.g. 0.044) or null
-    const hySpread  = fredHy     // basis points (e.g. 380) or null
+    const hySpread  = fredHy     // percentage points from FRED BAMLH0A0HYM2 (e.g. 3.23 = 3.23% ≈ 323 bps)
 
     // ── Sentiment ─────────────────────────────────────────────────────────────
     const sentimentScore = computeSentimentScore(vix, spxChange1d, hySpread)
@@ -116,7 +116,7 @@ export async function GET() {
       { id: 'tnx',   label: '10Y Treasury', value: `${tnxYield.toFixed(2)}%`, regimeLabel: tnxR.label,  tone: tnxR.tone,  equityImplication: tnxR.implication  },
       { id: 'dgs2',  label: '2Y Treasury',  value: dgs2 != null ? `${(dgs2 * 100).toFixed(2)}%` : '—', regimeLabel: dgs2R.label, tone: dgs2R.tone, equityImplication: dgs2R.implication },
       { id: 'curve', label: 'Yield Curve',  value: dgs2 != null ? `${(tnxYield - dgs2 * 100).toFixed(2)}%` : '—', sub: '10Y − 2Y', regimeLabel: ycR.label, tone: ycR.tone, equityImplication: ycR.implication },
-      { id: 'hy',    label: 'HY Spread',    value: hySpread != null ? `${hySpread.toFixed(0)} bps` : '—', regimeLabel: hyR.label, tone: hyR.tone, equityImplication: hyR.implication },
+      { id: 'hy',    label: 'HY Spread',    value: hySpread != null ? `${hySpread.toFixed(2)}%` : '—', regimeLabel: hyR.label, tone: hyR.tone, equityImplication: hyR.implication },
       { id: 'dxy',   label: 'USD Index',    value: dxy != null ? dxy.toFixed(1) : '—', regimeLabel: dxyR.label, tone: dxyR.tone, equityImplication: dxyR.implication },
     ]
 

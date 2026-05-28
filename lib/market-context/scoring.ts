@@ -17,10 +17,11 @@ export function computeSentimentScore(
   else if (spxChange < 0)  score -= 3
 
   if (hySpread != null) {
-    if (hySpread < 300)      score += 10
-    else if (hySpread < 400) score += 3
-    else if (hySpread > 600) score -= 15
-    else if (hySpread > 500) score -= 8
+    // hySpread is in percentage points from FRED (e.g. 3.23 = 3.23% ≈ 323 bps)
+    if (hySpread < 3.0)      score += 10
+    else if (hySpread < 4.0) score += 3
+    else if (hySpread > 6.0) score -= 15
+    else if (hySpread > 5.0) score -= 8
   }
   return Math.max(0, Math.min(100, score))
 }
@@ -91,9 +92,10 @@ export function yieldCurveRegime(dgs2: number | null, tnxYield: number): { label
 
 export function hySpreadRegime(spread: number | null): { label: string; tone: MacroSignalTile['tone']; implication: string } {
   if (spread == null) return { label: 'Data Unavailable', tone: 'neutral', implication: '' }
-  if (spread < 300)   return { label: 'Tight Spreads', tone: 'positive', implication: 'Credit markets calm; risk appetite high' }
-  if (spread < 450)   return { label: 'Normal',         tone: 'neutral',  implication: 'Moderate default risk priced in' }
-  if (spread < 600)   return { label: 'Widening',       tone: 'warning',  implication: 'Credit stress building; ERP rising' }
+  // spread is in percentage points from FRED (e.g. 3.23 = 3.23% ≈ 323 bps)
+  if (spread < 3.0)   return { label: 'Tight Spreads', tone: 'positive', implication: 'Credit markets calm; risk appetite high' }
+  if (spread < 4.5)   return { label: 'Normal',         tone: 'neutral',  implication: 'Moderate default risk priced in' }
+  if (spread < 6.0)   return { label: 'Widening',       tone: 'warning',  implication: 'Credit stress building; ERP rising' }
   return { label: 'Credit Stress', tone: 'negative', implication: 'Risk-off; avoid high-leverage names' }
 }
 

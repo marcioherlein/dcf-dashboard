@@ -58,7 +58,13 @@ export default function EconomicCalendar() {
           ))}
         </div>
       ) : events.length === 0 ? (
-        <div className="px-4 py-6 text-center text-sm text-slate-400">No upcoming events</div>
+        <div className="px-6 py-8 flex flex-col items-center gap-2 text-center">
+          <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center">
+            <Calendar size={16} className="text-slate-400" />
+          </div>
+          <p className="text-[12px] font-semibold text-slate-500">No high-impact U.S. events</p>
+          <p className="text-[11px] text-slate-400 max-w-[220px] leading-snug">No scheduled economic releases in the next 14 days, or data is unavailable.</p>
+        </div>
       ) : (
         <div className="max-h-[400px] overflow-y-auto">
           {/* Table header */}

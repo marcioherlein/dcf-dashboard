@@ -29,16 +29,17 @@ const SOURCE_COLORS: Record<string, string> = {
 
 export default function MarketNewsSection({ news }: { news: NewsItem[] }) {
   if (!news.length) return null
+  const visible = news.slice(0, 6)
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between">
         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Market News</span>
-        <span className="text-[10px] text-slate-400">{news.length} articles</span>
+        <span className="text-[10px] text-slate-400">{visible.length} articles</span>
       </div>
 
       <div className="overflow-y-auto max-h-[600px] divide-y divide-slate-100">
-        {news.map((item, i) => {
+        {visible.map((item, i) => {
           const sourceCls = SOURCE_COLORS[item.source] ?? 'bg-slate-100 text-slate-600'
           const inner = (
             <div className="px-4 py-3 min-h-[44px] hover:bg-indigo-50/40 transition-colors group">

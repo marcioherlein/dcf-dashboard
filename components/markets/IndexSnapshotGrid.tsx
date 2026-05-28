@@ -243,6 +243,7 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy }: Prop
       interpretation: vixChip(vix?.price ?? null),
       icon: <Activity size={14} className="text-rose-600" />,
       iconBg: 'bg-rose-50',
+      rateMode: true,
       note: 'Volatility',
     },
     {

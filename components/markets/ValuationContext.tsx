@@ -76,10 +76,17 @@ export default function ValuationContext({ valuation }: Props) {
         <div>
           <div className="flex items-baseline justify-between mb-2">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">SPY Forward P/E</p>
-            <p className="text-[14px] font-bold text-slate-900">
+            <p className={cn('text-[14px] font-bold', spyForwardPE != null ? 'text-slate-900' : 'text-slate-400')}>
               {spyForwardPE != null ? `${spyForwardPE.toFixed(1)}×` : '—'}
             </p>
           </div>
+          {spyForwardPE == null && (
+            <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 mb-2 flex items-start gap-2">
+              <span className="text-[10px] text-slate-400 leading-snug">
+                Live forward P/E data unavailable. Showing historical band thresholds for reference.
+              </span>
+            </div>
+          )}
           <div className="relative mt-4 mb-2">
             {peMarker != null && (
               <div
@@ -89,7 +96,7 @@ export default function ValuationContext({ valuation }: Props) {
                 <div className="w-3 h-3 rounded-full bg-blue-600 border-2 border-white shadow-sm" />
               </div>
             )}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
+            <div className={cn('grid grid-cols-2 sm:grid-cols-4 gap-1', spyForwardPE == null && 'opacity-50')}>
               {forwardPEBands.map((b, i) => (
                 <div key={i} className={cn('rounded px-1 py-1.5 text-center text-[9px] leading-tight', bandBarClass(b))}>
                   {b.label}
@@ -97,9 +104,11 @@ export default function ValuationContext({ valuation }: Props) {
               ))}
             </div>
           </div>
-          <div className="mt-2 rounded-lg bg-slate-50 border border-slate-100 px-3 py-2">
-            <p className="text-[10px] text-slate-600 leading-snug">{peTakeaway(forwardPEBands)}</p>
-          </div>
+          {spyForwardPE != null && (
+            <div className="mt-2 rounded-lg bg-slate-50 border border-slate-100 px-3 py-2">
+              <p className="text-[10px] text-slate-600 leading-snug">{peTakeaway(forwardPEBands)}</p>
+            </div>
+          )}
         </div>
 
         {/* ERP */}
@@ -117,6 +126,13 @@ export default function ValuationContext({ valuation }: Props) {
               )}
             </div>
           </div>
+          {erp == null && (
+            <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 mb-2">
+              <span className="text-[10px] text-slate-400 leading-snug">
+                ERP requires live forward P/E. Showing band thresholds for reference.
+              </span>
+            </div>
+          )}
           <div className="relative mt-4 mb-2">
             {erpMarker != null && (
               <div
@@ -126,7 +142,7 @@ export default function ValuationContext({ valuation }: Props) {
                 <div className="w-3 h-3 rounded-full bg-blue-600 border-2 border-white shadow-sm" />
               </div>
             )}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
+            <div className={cn('grid grid-cols-2 sm:grid-cols-4 gap-1', erp == null && 'opacity-50')}>
               {erpBands.map((b, i) => (
                 <div key={i} className={cn('rounded px-1 py-1.5 text-center text-[9px] leading-tight', bandBarClass(b))}>
                   {b.label}

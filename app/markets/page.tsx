@@ -134,7 +134,7 @@ export default function MarketsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F8FAFF] to-[#F5F7FE] pt-[52px]">
 
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-5 space-y-5">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-5 space-y-6">
 
         {err && (
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-600 flex items-center justify-between">

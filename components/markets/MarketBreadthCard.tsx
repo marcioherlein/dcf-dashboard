@@ -1,6 +1,6 @@
 'use client'
 import { cn } from '@/lib/utils'
-import { CheckCircle, AlertCircle, XCircle } from 'lucide-react'
+import { CheckCircle, AlertCircle, XCircle, Info } from 'lucide-react'
 import type { MarketInstrument } from '@/app/api/markets/data/route'
 
 interface Props {
@@ -18,36 +18,60 @@ export default function MarketBreadthCard({ sectors }: Props) {
   const decPct  = Math.round((declining / total) * 100)
   const unchPct = 100 - advPct - decPct
 
-  function getInterpretation(): { text: string; tone: 'green' | 'amber' | 'red' } {
-    if (advPct >= 70) return { text: 'Broad-based advance — gains are widely distributed across sectors.', tone: 'green' }
-    if (advPct >= 50) return { text: 'Majority of sectors are advancing. Risk appetite appears constructive.', tone: 'green' }
-    if (advPct >= 40) return { text: 'Mixed breadth — market leadership is split. Monitor for narrowing.', tone: 'amber' }
-    return { text: 'Most sectors are declining. Market weakness may be broad rather than isolated.', tone: 'red' }
+  // 4-tier breadth thresholds calibrated to 11 sector ETFs
+  function getHealthTier(): { tone: 'green' | 'blue' | 'amber' | 'red'; badge: string; text: string } {
+    if (advPct > 65) return {
+      tone: 'green',
+      badge: 'Healthy',
+      text: 'Broad-based advance — gains are widely distributed across sectors.',
+    }
+    if (advPct >= 55) return {
+      tone: 'blue',
+      badge: 'Constructive',
+      text: 'Majority of sectors are advancing. Risk appetite appears constructive.',
+    }
+    if (advPct >= 45) return {
+      tone: 'amber',
+      badge: 'Mixed',
+      text: 'Mixed sector breadth — leadership is split. Monitor for narrowing participation.',
+    }
+    return {
+      tone: 'red',
+      badge: 'Weak',
+      text: 'Most sectors are declining. Weakness appears broad rather than isolated.',
+    }
   }
 
-  const { text, tone } = getInterpretation()
-  const interpretBg   = { green: 'bg-emerald-50/80 border-emerald-100', amber: 'bg-amber-50/80 border-amber-100', red: 'bg-red-50/80 border-red-100' }[tone]
-  const interpretText = { green: 'text-emerald-800', amber: 'text-amber-800', red: 'text-red-800' }[tone]
+  const { tone, badge, text } = getHealthTier()
 
-  const HealthIcon = tone === 'green'
-    ? <CheckCircle size={13} className="text-emerald-600 shrink-0" />
+  const interpretBg   = { green: 'bg-emerald-50/80 border-emerald-100', blue: 'bg-blue-50/80 border-blue-100', amber: 'bg-amber-50/80 border-amber-100', red: 'bg-red-50/80 border-red-100' }[tone]
+  const interpretText = { green: 'text-emerald-800', blue: 'text-blue-800', amber: 'text-amber-800', red: 'text-red-800' }[tone]
+
+  const BadgeIcon = tone === 'green'
+    ? <CheckCircle size={12} className="text-emerald-600 shrink-0" />
+    : tone === 'blue'
+    ? <Info size={12} className="text-blue-600 shrink-0" />
     : tone === 'amber'
-    ? <AlertCircle size={13} className="text-amber-600 shrink-0" />
-    : <XCircle size={13} className="text-red-500 shrink-0" />
+    ? <AlertCircle size={12} className="text-amber-600 shrink-0" />
+    : <XCircle size={12} className="text-red-500 shrink-0" />
 
-  const healthLabel = tone === 'green' ? 'Healthy' : tone === 'amber' ? 'Mixed' : 'Weak'
-  const healthCls   = { green: 'text-emerald-700 bg-emerald-50 border-emerald-200', amber: 'text-amber-700 bg-amber-50 border-amber-200', red: 'text-red-700 bg-red-50 border-red-200' }[tone]
+  const badgeCls = {
+    green: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+    blue:  'text-blue-700 bg-blue-50 border-blue-200',
+    amber: 'text-amber-700 bg-amber-50 border-amber-200',
+    red:   'text-red-700 bg-red-50 border-red-200',
+  }[tone]
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-full">
       <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between">
         <div>
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Market Breadth</span>
-          <p className="text-[10px] text-slate-400 mt-0.5">S&P 500 sector ETF performance today</p>
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Sector Breadth</span>
+          <p className="text-[10px] text-slate-400 mt-0.5">Based on 11 S&P 500 sector ETFs today</p>
         </div>
-        <span className={cn('flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border', healthCls)}>
-          {HealthIcon}
-          {healthLabel}
+        <span className={cn('flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border', badgeCls)}>
+          {BadgeIcon}
+          {badge}
         </span>
       </div>
 
@@ -80,7 +104,7 @@ export default function MarketBreadthCard({ sectors }: Props) {
         <div className={cn('rounded-xl border p-3', interpretBg)}>
           <p className={cn('text-[11px] leading-snug', interpretText)}>{text}</p>
           <p className="text-[10px] text-slate-400 mt-1.5">
-            Healthy breadth = gains are distributed across sectors, not concentrated in a few mega-caps.
+            Healthy breadth = gains distributed across sectors, not just concentrated in a few large-caps.
           </p>
         </div>
 
