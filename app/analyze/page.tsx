@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
 import {
-  Search, Scale, Bookmark, ChevronRight,
+  Search, Bookmark, ChevronRight,
   Clock, Info, X, BarChart3,
 } from 'lucide-react'
 import { Sparkline, SparklineSkeleton } from '@/components/ui/Sparkline'
