@@ -181,7 +181,7 @@ function StockPageBody() {
   const [error, setError]     = useState('')
   const [saving, setSaving]   = useState(false)
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
-  const [savePayload, _setSavePayload] = useState<WatchlistSavePayload | null>(null)
+  const [savePayload, setSavePayload] = useState<WatchlistSavePayload | null>(null)
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [tabDirection, setTabDirection] = useState(0)
   const reducedMotion = useReducedMotion()
@@ -338,7 +338,40 @@ function StockPageBody() {
         exchange={data?.quote.exchange ?? ''}
         activeTab={activeTab}
         onChange={handleTabChange}
-        onSave={() => setSaveDialogOpen(true)}
+        onSave={() => {
+            const isETF = (data?.quote?.quoteType ?? '').toUpperCase() === 'ETF'
+            setSavePayload({
+              ticker,
+              name: data?.companyName ?? ticker,
+              assetType: isETF ? 'etf' : 'stock',
+              fairValue: cockpitOutput?.blendedFairValue ?? null,
+              upsidePct: cockpitOutput?.upsidePct ?? null,
+              valuationSnapshot: (!isETF && cockpitOutput?.blendedFairValue != null) ? {
+                price_at_save:  data?.quote?.price ?? 0,
+                fair_value:     cockpitOutput.blendedFairValue,
+                wacc:           cockpitDefaults?.wacc ?? 0.10,
+                beta:           data?.wacc?.inputs?.beta ?? 1,
+                terminal_g:     cockpitDefaults?.terminalG ?? 0.025,
+                cagr:           cockpitDefaults?.cagr ?? 0.10,
+                upside_pct:     cockpitOutput.upsidePct ?? 0,
+                inputs: {
+                  wacc:            cockpitDefaults?.wacc ?? 0.10,
+                  cagr:            cockpitDefaults?.cagr ?? 0.10,
+                  terminalG:       cockpitDefaults?.terminalG ?? 0.025,
+                  netMargin:       cockpitDefaults?.netMargin ?? 0,
+                  exitPE:          cockpitDefaults?.exitPE ?? 0,
+                  exitMultiple:    cockpitDefaults?.exitMultiple ?? 0,
+                  revenueMultiple: cockpitDefaults?.revenueMultiple ?? 0,
+                },
+                scenarios: {
+                  bull: cockpitOutput.scenarios.bull.fairValue ?? 0,
+                  base: cockpitOutput.scenarios.base.fairValue ?? 0,
+                  bear: cockpitOutput.scenarios.bear.fairValue ?? 0,
+                },
+              } : null,
+            })
+            setSaveDialogOpen(true)
+          }}
       />
 
       {/* Session-based soft auth nudge (appears on 2nd+ stock page view) */}
