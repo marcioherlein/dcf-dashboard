@@ -2,18 +2,18 @@
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
 
-const BarChart = dynamic(() => import('recharts').then((m) => m.BarChart), { ssr: false })
-const Bar = dynamic(() => import('recharts').then((m) => m.Bar), { ssr: false })
-const LineChart = dynamic(() => import('recharts').then((m) => m.LineChart), { ssr: false })
-const Line = dynamic(() => import('recharts').then((m) => m.Line), { ssr: false })
-const ReferenceLine = dynamic(() => import('recharts').then((m) => m.ReferenceLine), { ssr: false })
-const XAxis = dynamic(() => import('recharts').then((m) => m.XAxis), { ssr: false })
-const YAxis = dynamic(() => import('recharts').then((m) => m.YAxis), { ssr: false })
-const Tooltip = dynamic(() => import('recharts').then((m) => m.Tooltip), { ssr: false })
-const Legend = dynamic(() => import('recharts').then((m) => m.Legend), { ssr: false })
+const BarChart        = dynamic(() => import('recharts').then((m) => m.BarChart),        { ssr: false })
+const Bar             = dynamic(() => import('recharts').then((m) => m.Bar),             { ssr: false })
+const LineChart       = dynamic(() => import('recharts').then((m) => m.LineChart),       { ssr: false })
+const Line            = dynamic(() => import('recharts').then((m) => m.Line),            { ssr: false })
+const ReferenceLine   = dynamic(() => import('recharts').then((m) => m.ReferenceLine),   { ssr: false })
+const XAxis           = dynamic(() => import('recharts').then((m) => m.XAxis),           { ssr: false })
+const YAxis           = dynamic(() => import('recharts').then((m) => m.YAxis),           { ssr: false })
+const Tooltip         = dynamic(() => import('recharts').then((m) => m.Tooltip),         { ssr: false })
+const Legend          = dynamic(() => import('recharts').then((m) => m.Legend),          { ssr: false })
 const ResponsiveContainer = dynamic(() => import('recharts').then((m) => m.ResponsiveContainer), { ssr: false })
-const Cell = dynamic(() => import('recharts').then((m) => m.Cell), { ssr: false })
-const CartesianGrid = dynamic(() => import('recharts').then((m) => m.CartesianGrid), { ssr: false })
+const Cell            = dynamic(() => import('recharts').then((m) => m.Cell),            { ssr: false })
+const CartesianGrid   = dynamic(() => import('recharts').then((m) => m.CartesianGrid),   { ssr: false })
 
 interface ISRow {
   year: string
@@ -54,13 +54,19 @@ interface Props {
 
 function fmtM(v: number): string {
   const abs = Math.abs(v)
-  if (abs >= 1000) return `${(v / 1000).toFixed(1)}B`
-  return `${v.toFixed(0)}M`
+  if (abs >= 1000) return `${v < 0 ? '−' : ''}${(abs / 1000).toFixed(1)}B`
+  return `${v < 0 ? '−' : ''}${abs.toFixed(0)}M`
 }
 
-function fmtPct(v: number): string {
-  return `${v.toFixed(1)}%`
+function fmtPct(v: number): string { return `${v.toFixed(1)}%` }
+
+function yoy(curr: number | null, prev: number | null): number | null {
+  if (curr == null || prev == null || prev === 0) return null
+  return ((curr - prev) / Math.abs(prev)) * 100
 }
+
+// Recharts custom bar shape to paint individual bars per-datum inside a Bar
+// We use Cell instead and handle color logic via getBarFill helpers.
 
 export default function FinancialCharts({
   incomeStatement, cashFlow, currency = '$', isDark,
@@ -68,185 +74,276 @@ export default function FinancialCharts({
   currentPE, currentEVEbitda, currentEVRevenue, currentPS,
 }: Props) {
   const [multipleTab, setMultipleTab] = useState<'pe' | 'evEbitda' | 'evRevenue' | 'ps'>('pe')
-  const tickFill = isDark ? '#94a3b8' : '#94a3b8'
+
+  const tickFill   = '#94a3b8'
+  const gridStroke = 'rgba(148,163,184,0.08)'
   const tooltipStyle = isDark
     ? { background: 'rgba(10,22,40,0.95)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, fontSize: 11, color: '#F1F5F9', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }
     : { background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 8, fontSize: 11, color: '#0F172A', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }
 
   const historicalIS = incomeStatement.filter((r) => !r.isProjected)
-  const projectedIS = incomeStatement.filter((r) => r.isProjected)
+  const projectedIS  = incomeStatement.filter((r) => r.isProjected)
+  const firstProjYear = projectedIS[0]?.year ?? null
 
-  // Chart 1: Revenue & Net Income — all years, projected dimmed
-  const revenueData = incomeStatement.map((r) => ({
+  if (historicalIS.length < 2) return null
+
+  const CHART_H  = 168
+  const sectionTitle = 'text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3'
+  const panel        = 'rounded-xl card p-4 sm:p-5'
+
+  // ── Chart 1 data: Revenue & Net Income ──────────────────────────────────────
+  const revData = incomeStatement.map((r) => ({
     year: r.year,
-    revenue: r.revenue,
+    revenue:   r.revenue,
     netIncome: r.netIncome,
     isProjected: r.isProjected,
   }))
 
-  // Chart 2: Free Cash Flow — historical + projected
+  // ── Chart 2 data: FCF composition — OpCF + Capex breakdown ──────────────────
   const fcfData = cashFlow.map((r) => ({
     year: r.year,
-    fcf: r.freeCashFlow,
+    opCF:  r.operatingCF,
+    capex: r.capex,       // typically negative from Yahoo
+    fcf:   r.freeCashFlow,
     isProjected: r.isProjected,
   }))
 
-  // Chart 3: Margin Trends — historical only (projected margins are constant averages, not useful as a trend)
-  const marginData = historicalIS
+  // ── Chart 3 data: Margins — historical + projected ───────────────────────────
+  const marginData = incomeStatement
     .filter((r) => r.revenue && r.revenue > 0)
     .map((r) => {
-      const cfRow = cashFlow.find((c) => c.year === r.year && !c.isProjected)
+      const cfRow = cashFlow.find((c) => c.year === r.year)
+      const pct = (num: number | null) => (num != null && r.revenue ? +(num / r.revenue * 100).toFixed(2) : null)
       return {
-        year: r.year,
-        gross: r.grossProfit && r.revenue ? Math.round(r.grossProfit / r.revenue * 1000) / 10 : null,
-        net: r.netIncome && r.revenue ? Math.round(r.netIncome / r.revenue * 1000) / 10 : null,
-        fcfMgn: cfRow?.freeCashFlow != null && r.revenue ? Math.round(cfRow.freeCashFlow / r.revenue * 1000) / 10 : null,
-        opMgn: r.operatingIncome && r.revenue ? Math.round(r.operatingIncome / r.revenue * 1000) / 10 : null,
+        year:    r.year,
+        gross:   pct(r.grossProfit),
+        opMgn:   pct(r.operatingIncome),
+        net:     pct(r.netIncome),
+        fcfMgn:  cfRow?.freeCashFlow != null && r.revenue ? +(cfRow.freeCashFlow / r.revenue * 100).toFixed(2) : null,
+        isProjected: r.isProjected,
       }
     })
 
-  // Chart 4: EBITDA & Operating Income — historical + projected
+  // ── Chart 4 data: EBITDA & Operating Income ──────────────────────────────────
   const ebitdaData = incomeStatement
     .filter((r) => r.ebitda !== null || r.operatingIncome !== null)
     .map((r) => ({
       year: r.year,
-      ebitda: r.ebitda,
+      ebitda:   r.ebitda,
       opIncome: r.operatingIncome,
       isProjected: r.isProjected,
     }))
 
-  if (historicalIS.length < 2) return null
+  // ── Chart 5 data: Revenue YoY Growth ─────────────────────────────────────────
+  const revGrowthData = incomeStatement
+    .map((r, i) => ({
+      year:        r.year,
+      growth:      yoy(r.revenue, incomeStatement[i - 1]?.revenue ?? null),
+      isProjected: r.isProjected,
+    }))
+    .slice(1)
+    .filter((r) => r.growth != null)
 
-  const sectionTitle = 'text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3'
-  const panel = 'rounded-xl card p-5'
+  // ── Chart 6 data: FCF YoY Growth ─────────────────────────────────────────────
+  const fcfGrowthData = cashFlow
+    .map((r, i) => ({
+      year:        r.year,
+      growth:      yoy(r.freeCashFlow, cashFlow[i - 1]?.freeCashFlow ?? null),
+      isProjected: r.isProjected,
+    }))
+    .slice(1)
+    .filter((r) => r.growth != null)
 
   return (
     <div className="space-y-4 p-4 sm:p-5">
+
+      {/* ── Section label ── */}
+      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-300">Financial Charts</p>
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
-        {/* Chart 1 — Revenue & Net Income */}
+        {/* ── Chart 1 — Revenue & Net Income ── */}
         <div className={panel}>
-          <p className={sectionTitle}>Revenue &amp; Net Income ({currency}M)</p>
-          <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={revenueData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barGap={2}>
+          <p className={sectionTitle}>Revenue &amp; Net Income <span className="normal-case font-normal">({currency}M)</span></p>
+          <ResponsiveContainer width="100%" height={CHART_H}>
+            <BarChart data={revData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barGap={2}>
+              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
               <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={fmtM} width={42} />
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" vertical={false} />
+              <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={fmtM} width={44} />
               <Tooltip
-                contentStyle={tooltipStyle}
-                wrapperStyle={{ zIndex: 50 }}
+                contentStyle={tooltipStyle} wrapperStyle={{ zIndex: 50 }}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                formatter={(v: any, name: any) => [`${currency}${fmtM(Number(v))}`, name === 'revenue' ? 'Revenue' : 'Net Income']}
+              />
+              <Legend formatter={(v) => v === 'revenue' ? 'Revenue' : 'Net Income'} wrapperStyle={{ fontSize: '10px', color: tickFill }} />
+              <Bar dataKey="revenue" name="revenue" fill="#2563EB" radius={[3,3,0,0]} maxBarSize={36} isAnimationActive={false}>
+                {revData.map((d, i) => <Cell key={i} opacity={d.isProjected ? 0.3 : 1} />)}
+              </Bar>
+              <Bar dataKey="netIncome" name="netIncome" fill="#059669" radius={[3,3,0,0]} maxBarSize={36} isAnimationActive={false}>
+                {revData.map((d, i) => <Cell key={i} opacity={d.isProjected ? 0.3 : 0.85} fill={(d.netIncome ?? 0) < 0 ? '#DC2626' : '#059669'} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* ── Chart 2 — FCF (OpCF + Capex breakdown) ── */}
+        <div className={panel}>
+          <p className={sectionTitle}>Free Cash Flow <span className="normal-case font-normal">({currency}M)</span></p>
+          <p className="text-[9px] text-slate-400 -mt-2 mb-2">Operating CF + Capex (capex negative) = FCF · Faded = projected</p>
+          <ResponsiveContainer width="100%" height={CHART_H}>
+            <BarChart data={fcfData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barGap={2}>
+              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
+              <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={fmtM} width={44} />
+              <ReferenceLine y={0} stroke="rgba(148,163,184,0.3)" />
+              <Tooltip
+                contentStyle={tooltipStyle} wrapperStyle={{ zIndex: 50 }}
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 formatter={(v: any, name: any) => [
                   `${currency}${fmtM(Number(v))}`,
-                  name === 'revenue' ? 'Revenue' : 'Net Income',
+                  name === 'opCF' ? 'Operating CF' : name === 'capex' ? 'Capex' : 'FCF',
                 ]}
               />
-              <Legend
-                formatter={(v) => v === 'revenue' ? 'Revenue' : 'Net Income'}
-                wrapperStyle={{ fontSize: '10px', color: tickFill }}
-              />
-              <Bar dataKey="revenue" name="revenue" fill="#2563EB" radius={[3, 3, 0, 0]} maxBarSize={36} isAnimationActive={false}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                opacity={undefined}>
-                {revenueData.map((entry, i) => (
-                  <Cell key={i} opacity={entry.isProjected ? 0.35 : 1} />
-                ))}
+              <Legend formatter={(v) => v === 'opCF' ? 'Operating CF' : v === 'capex' ? 'Capex' : 'FCF'} wrapperStyle={{ fontSize: '10px', color: tickFill }} />
+              <Bar dataKey="opCF" name="opCF" fill="#2563EB" radius={[3,3,0,0]} maxBarSize={28} isAnimationActive={false}>
+                {fcfData.map((d, i) => <Cell key={i} fill={(d.opCF ?? 0) >= 0 ? '#2563EB' : '#DC2626'} opacity={d.isProjected ? 0.3 : 0.85} />)}
               </Bar>
-              <Bar dataKey="netIncome" name="netIncome" fill="#059669" radius={[3, 3, 0, 0]} maxBarSize={36} isAnimationActive={false}>
-                {revenueData.map((entry, i) => (
-                  <Cell key={i} opacity={entry.isProjected ? 0.35 : 1} />
-                ))}
+              <Bar dataKey="capex" name="capex" fill="#DC2626" radius={[0,0,3,3]} maxBarSize={28} isAnimationActive={false}>
+                {fcfData.map((d, i) => <Cell key={i} fill="#DC2626" opacity={d.isProjected ? 0.25 : 0.6} />)}
+              </Bar>
+              <Bar dataKey="fcf" name="fcf" fill="#059669" radius={[3,3,0,0]} maxBarSize={16} isAnimationActive={false}>
+                {fcfData.map((d, i) => <Cell key={i} fill={(d.fcf ?? 0) >= 0 ? '#059669' : '#DC2626'} opacity={d.isProjected ? 0.3 : 1} />)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Chart 2 — Free Cash Flow */}
-        <div className={panel}>
-          <p className={sectionTitle}>Free Cash Flow ({currency}M)</p>
-          <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={fcfData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-              <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={fmtM} width={42} />
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" vertical={false} />
-              <Tooltip
-                contentStyle={tooltipStyle}
-                wrapperStyle={{ zIndex: 50 }}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                formatter={(v: any) => [`${currency}${fmtM(Number(v))}`, 'FCF']}
-              />
-              <Bar dataKey="fcf" radius={[3, 3, 0, 0]} maxBarSize={36} isAnimationActive={false}>
-                {fcfData.map((entry, i) => {
-                  const positive = (entry.fcf ?? 0) >= 0
-                  const base = positive ? '#059669' : '#DC2626'
-                  return <Cell key={i} fill={base} opacity={entry.isProjected ? 0.35 : 1} />
-                })}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        {/* ── Chart 3 — Margin Trends (all years, projected as dashed) ── */}
+        {marginData.length >= 2 && (() => {
+          // Split into historical and projected for separate Line segments
+          const histMargins = marginData.map(d => d.isProjected ? { ...d, gross: null, opMgn: null, net: null, fcfMgn: null } : d)
+          const projMargins = marginData.map(d => !d.isProjected ? { ...d, gross: null, opMgn: null, net: null, fcfMgn: null } : d)
+          // Bridge: include the last historical point in projected so lines connect
+          const lastHistIdx = marginData.reduceRight((acc, d, i) => (acc === -1 && !d.isProjected ? i : acc), -1)
+          if (lastHistIdx >= 0 && lastHistIdx < marginData.length - 1) {
+            const bridge = marginData[lastHistIdx]
+            projMargins[lastHistIdx] = bridge
+          }
+          const hasProjected = marginData.some(d => d.isProjected)
+          return (
+            <div className={panel}>
+              <p className={sectionTitle}>Margin Trends <span className="normal-case font-normal">(%){hasProjected && ' · dashed = projected'}</span></p>
+              <ResponsiveContainer width="100%" height={CHART_H}>
+                <LineChart data={marginData} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
+                  <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={fmtPct} />
+                  {firstProjYear && <ReferenceLine x={firstProjYear} stroke="rgba(148,163,184,0.3)" strokeDasharray="4 2" />}
+                  <Tooltip
+                    contentStyle={tooltipStyle} wrapperStyle={{ zIndex: 50 }}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    formatter={(v: any, name: any) => [
+                      typeof v === 'number' ? fmtPct(v) : v,
+                      name === 'gross_h' || name === 'gross_p' ? 'Gross Margin'
+                        : name === 'net_h' || name === 'net_p'   ? 'Net Margin'
+                        : name === 'fcf_h' || name === 'fcf_p'   ? 'FCF Margin'
+                        : 'Op Margin',
+                    ]}
+                  />
+                  <Legend
+                    formatter={(v) => v === 'gross_h' ? 'Gross' : v === 'net_h' ? 'Net' : v === 'fcf_h' ? 'FCF' : v === 'opMgn_h' ? 'Operating' : null}
+                    wrapperStyle={{ fontSize: '10px', color: tickFill }}
+                  />
+                  {/* Historical — solid lines */}
+                  <Line type="monotone" data={histMargins} dataKey="gross"  name="gross_h"  stroke="#2563EB" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
+                  <Line type="monotone" data={histMargins} dataKey="opMgn"  name="opMgn_h"  stroke="#D97706" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} strokeDasharray="5 2" />
+                  <Line type="monotone" data={histMargins} dataKey="net"    name="net_h"    stroke="#059669" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
+                  <Line type="monotone" data={histMargins} dataKey="fcfMgn" name="fcf_h"    stroke="#7C3AED" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} strokeDasharray="2 3" />
+                  {/* Projected — same colors, faded */}
+                  {hasProjected && <>
+                    <Line type="monotone" data={projMargins} dataKey="gross"  name="gross_p"  stroke="#2563EB" strokeWidth={1.5} strokeDasharray="4 3" dot={false} connectNulls isAnimationActive={false} opacity={0.45} />
+                    <Line type="monotone" data={projMargins} dataKey="opMgn"  name="opMgn_p"  stroke="#D97706" strokeWidth={1.5} strokeDasharray="4 3" dot={false} connectNulls isAnimationActive={false} opacity={0.45} />
+                    <Line type="monotone" data={projMargins} dataKey="net"    name="net_p"    stroke="#059669" strokeWidth={1.5} strokeDasharray="4 3" dot={false} connectNulls isAnimationActive={false} opacity={0.45} />
+                    <Line type="monotone" data={projMargins} dataKey="fcfMgn" name="fcf_p"    stroke="#7C3AED" strokeWidth={1.5} strokeDasharray="4 3" dot={false} connectNulls isAnimationActive={false} opacity={0.45} />
+                  </>}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )
+        })()}
 
-        {/* Chart 3 — Margin Trends */}
-        {marginData.length >= 2 && (
+        {/* ── Chart 4 — EBITDA & Operating Income ── */}
+        {ebitdaData.length >= 2 && (
           <div className={panel}>
-            <p className={sectionTitle}>Margin Trends (%) — Historical</p>
-            <ResponsiveContainer width="100%" height={160}>
-              <LineChart data={marginData} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
+            <p className={sectionTitle}>EBITDA &amp; Operating Income <span className="normal-case font-normal">({currency}M)</span></p>
+            <ResponsiveContainer width="100%" height={CHART_H}>
+              <BarChart data={ebitdaData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barGap={2}>
+                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
                 <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={fmtPct} />
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" vertical={false} />
+                <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={fmtM} width={44} />
+                <ReferenceLine y={0} stroke="rgba(148,163,184,0.3)" />
                 <Tooltip
-                  contentStyle={tooltipStyle}
-                  wrapperStyle={{ zIndex: 50 }}
+                  contentStyle={tooltipStyle} wrapperStyle={{ zIndex: 50 }}
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  formatter={(v: any, name: any) => [
-                    typeof v === 'number' ? fmtPct(v) : v,
-                    name === 'gross' ? 'Gross Margin' : name === 'net' ? 'Net Margin' : name === 'fcfMgn' ? 'FCF Margin' : 'Op Margin',
-                  ]}
+                  formatter={(v: any, name: any) => [`${currency}${fmtM(Number(v))}`, name === 'ebitda' ? 'EBITDA' : 'Operating Income']}
                 />
-                <Legend
-                  formatter={(v) => v === 'gross' ? 'Gross' : v === 'net' ? 'Net' : v === 'fcfMgn' ? 'FCF' : 'Operating'}
-                  wrapperStyle={{ fontSize: '10px', color: tickFill }}
-                />
-                <Line type="monotone" dataKey="gross" stroke="#2563EB" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
-                <Line type="monotone" dataKey="opMgn" stroke="#D97706" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} strokeDasharray="4 2" />
-                <Line type="monotone" dataKey="net" stroke="#059669" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
-                <Line type="monotone" dataKey="fcfMgn" stroke="#7C3AED" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} strokeDasharray="2 3" />
-              </LineChart>
+                <Legend formatter={(v) => v === 'ebitda' ? 'EBITDA' : 'Operating Income'} wrapperStyle={{ fontSize: '10px', color: tickFill }} />
+                <Bar dataKey="ebitda" name="ebitda" fill="#7C3AED" radius={[3,3,0,0]} maxBarSize={36} isAnimationActive={false}>
+                  {ebitdaData.map((d, i) => <Cell key={i} opacity={d.isProjected ? 0.3 : 0.85} />)}
+                </Bar>
+                <Bar dataKey="opIncome" name="opIncome" fill="#D97706" radius={[3,3,0,0]} maxBarSize={36} isAnimationActive={false}>
+                  {ebitdaData.map((d, i) => <Cell key={i} opacity={d.isProjected ? 0.3 : 0.85} />)}
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           </div>
         )}
 
-        {/* Chart 4 — EBITDA & Operating Income */}
-        {ebitdaData.length >= 2 && (
+        {/* ── Chart 5 — Revenue YoY Growth ── */}
+        {revGrowthData.length >= 2 && (
           <div className={panel}>
-            <p className={sectionTitle}>EBITDA &amp; Operating Income ({currency}M)</p>
-            <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={ebitdaData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barGap={2}>
+            <p className={sectionTitle}>Revenue YoY Growth <span className="normal-case font-normal">· faded = projected</span></p>
+            <ResponsiveContainer width="100%" height={CHART_H}>
+              <BarChart data={revGrowthData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
                 <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={fmtM} width={42} />
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" vertical={false} />
+                <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false}
+                  tickFormatter={(v) => `${v > 0 ? '+' : ''}${v.toFixed(0)}%`} />
+                <ReferenceLine y={0} stroke="rgba(148,163,184,0.3)" />
                 <Tooltip
-                  contentStyle={tooltipStyle}
-                  wrapperStyle={{ zIndex: 50 }}
+                  contentStyle={tooltipStyle} wrapperStyle={{ zIndex: 50 }}
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  formatter={(v: any, name: any) => [
-                    `${currency}${fmtM(Number(v))}`,
-                    name === 'ebitda' ? 'EBITDA' : 'Operating Income',
-                  ]}
+                  formatter={(v: any) => [`${Number(v) > 0 ? '+' : ''}${Number(v).toFixed(1)}%`, 'Revenue Growth']}
                 />
-                <Legend
-                  formatter={(v) => v === 'ebitda' ? 'EBITDA' : 'Operating Income'}
-                  wrapperStyle={{ fontSize: '10px', color: tickFill }}
-                />
-                <Bar dataKey="ebitda" name="ebitda" fill="#7C3AED" radius={[3, 3, 0, 0]} maxBarSize={36} isAnimationActive={false}>
-                  {ebitdaData.map((entry, i) => (
-                    <Cell key={i} opacity={entry.isProjected ? 0.35 : 1} />
+                <Bar dataKey="growth" radius={[3,3,0,0]} maxBarSize={40} isAnimationActive={false}>
+                  {revGrowthData.map((d, i) => (
+                    <Cell key={i} fill={(d.growth ?? 0) >= 0 ? '#2563EB' : '#DC2626'} opacity={d.isProjected ? 0.35 : 0.85} />
                   ))}
                 </Bar>
-                <Bar dataKey="opIncome" name="opIncome" fill="#D97706" radius={[3, 3, 0, 0]} maxBarSize={36} isAnimationActive={false}>
-                  {ebitdaData.map((entry, i) => (
-                    <Cell key={i} opacity={entry.isProjected ? 0.35 : 1} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* ── Chart 6 — FCF YoY Growth ── */}
+        {fcfGrowthData.length >= 2 && (
+          <div className={panel}>
+            <p className={sectionTitle}>FCF YoY Growth <span className="normal-case font-normal">· faded = projected</span></p>
+            <ResponsiveContainer width="100%" height={CHART_H}>
+              <BarChart data={fcfGrowthData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
+                <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false}
+                  tickFormatter={(v) => `${v > 0 ? '+' : ''}${v.toFixed(0)}%`} width={48} />
+                <ReferenceLine y={0} stroke="rgba(148,163,184,0.3)" />
+                <Tooltip
+                  contentStyle={tooltipStyle} wrapperStyle={{ zIndex: 50 }}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  formatter={(v: any) => [`${Number(v) > 0 ? '+' : ''}${Number(v).toFixed(1)}%`, 'FCF Growth']}
+                />
+                <Bar dataKey="growth" radius={[3,3,0,0]} maxBarSize={40} isAnimationActive={false}>
+                  {fcfGrowthData.map((d, i) => (
+                    <Cell key={i} fill={(d.growth ?? 0) >= 0 ? '#059669' : '#DC2626'} opacity={d.isProjected ? 0.35 : 0.85} />
                   ))}
                 </Bar>
               </BarChart>
@@ -256,30 +353,30 @@ export default function FinancialCharts({
 
       </div>
 
-      {/* Chart 5 — Historical Valuation Multiples */}
+      {/* ── Chart 7 — Historical Valuation Multiples ── */}
       {historicalMultiples.length >= 2 && (() => {
         type TabKey = 'pe' | 'evEbitda' | 'evRevenue' | 'ps'
         const TABS: { key: TabKey; label: string; color: string; currentVal: number | null | undefined; description: string }[] = [
-          { key: 'pe',       label: 'P/E',        color: '#2563EB', currentVal: currentPE,        description: 'Price ÷ Earnings per share' },
-          { key: 'evEbitda', label: 'EV/EBITDA',  color: '#7C3AED', currentVal: currentEVEbitda,  description: 'Enterprise value ÷ EBITDA' },
-          { key: 'evRevenue',label: 'EV/Revenue', color: '#059669', currentVal: currentEVRevenue, description: 'Enterprise value ÷ Revenue' },
-          { key: 'ps',       label: 'P/S',        color: '#D97706', currentVal: currentPS,        description: 'Price ÷ Revenue per share' },
+          { key: 'pe',        label: 'P/E',        color: '#2563EB', currentVal: currentPE,        description: 'Price ÷ Earnings per share' },
+          { key: 'evEbitda',  label: 'EV/EBITDA',  color: '#7C3AED', currentVal: currentEVEbitda,  description: 'Enterprise value ÷ EBITDA' },
+          { key: 'evRevenue', label: 'EV/Revenue', color: '#059669', currentVal: currentEVRevenue, description: 'Enterprise value ÷ Revenue' },
+          { key: 'ps',        label: 'P/S',        color: '#D97706', currentVal: currentPS,        description: 'Price ÷ Revenue per share' },
         ]
-        const active = TABS.find(t => t.key === multipleTab)!
+        const active    = TABS.find(t => t.key === multipleTab)!
         const chartData = historicalMultiples
           .filter(r => r[multipleTab] != null)
           .map(r => ({ year: r.fiscalYear, value: r[multipleTab] }))
 
         if (chartData.length < 2) return null
 
-        const values = chartData.map(r => r.value as number)
-        const avg = values.reduce((s, v) => s + v, 0) / values.length
-        const current = active.currentVal != null && active.currentVal > 0 ? active.currentVal : null
-        const isBelowAvg = current != null && current < avg * 0.9
-        const isAboveAvg = current != null && current > avg * 1.1
-        const allVals = current != null ? [...values, current] : values
-        const yMin = Math.max(0, Math.floor(Math.min(...allVals) * 0.85))
-        const yMax = Math.ceil(Math.max(...allVals) * 1.1)
+        const values      = chartData.map(r => r.value as number)
+        const avg         = values.reduce((s, v) => s + v, 0) / values.length
+        const current     = active.currentVal != null && active.currentVal > 0 ? active.currentVal : null
+        const isBelowAvg  = current != null && current < avg * 0.9
+        const isAboveAvg  = current != null && current > avg * 1.1
+        const allVals     = current != null ? [...values, current] : values
+        const yMin        = Math.max(0, Math.floor(Math.min(...allVals) * 0.85))
+        const yMax        = Math.ceil(Math.max(...allVals) * 1.1)
 
         return (
           <div className={`${panel} col-span-1 sm:col-span-2`}>
@@ -288,7 +385,6 @@ export default function FinancialCharts({
                 <p className={sectionTitle} style={{ marginBottom: 0 }}>Valuation History — {active.label}</p>
                 <p className="text-[10px] text-slate-400 mt-0.5">{active.description}</p>
               </div>
-              {/* Tab bar — scrollable on mobile */}
               <div className="overflow-x-auto -mx-5 px-5 sm:mx-0 sm:px-0">
                 <div className="flex items-center gap-1.5 min-w-max">
                   {TABS.map(t => (
@@ -309,7 +405,6 @@ export default function FinancialCharts({
               </div>
             </div>
 
-            {/* Context chips */}
             <div className="flex items-center gap-2 mb-3 flex-wrap">
               {current != null && (
                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
@@ -330,7 +425,7 @@ export default function FinancialCharts({
 
             <ResponsiveContainer width="100%" height={160}>
               <LineChart data={chartData} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
                 <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
                 <YAxis
                   tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false}
@@ -338,17 +433,14 @@ export default function FinancialCharts({
                   tickFormatter={(v: number) => `${v.toFixed(0)}×`}
                 />
                 <Tooltip
-                  contentStyle={tooltipStyle}
-                  wrapperStyle={{ zIndex: 50 }}
+                  contentStyle={tooltipStyle} wrapperStyle={{ zIndex: 50 }}
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   formatter={(v: any) => [`${Number(v).toFixed(1)}×`, active.label]}
                 />
-                {/* Historical average line */}
                 <ReferenceLine
                   y={avg} stroke="rgba(148,163,184,0.5)" strokeDasharray="4 3"
                   label={{ value: `Avg ${avg.toFixed(1)}×`, position: 'insideTopRight', fontSize: 9, fill: '#94a3b8' }}
                 />
-                {/* Current multiple line */}
                 {current != null && (
                   <ReferenceLine
                     y={current} stroke={active.color} strokeDasharray="3 3" strokeWidth={1.5}
@@ -371,11 +463,12 @@ export default function FinancialCharts({
         )
       })()}
 
-      {/* Legend note */}
+      {/* Footer note */}
       <p className="text-[10px] text-slate-400">
-        Faded bars = model projections · Solid bars = historical actuals
+        Faded bars / dashed lines = DCF model projections &nbsp;·&nbsp; Solid = historical actuals
         {projectedIS.length > 0 && ` · ${historicalIS.length} historical + ${projectedIS.length} projected years`}
       </p>
+
     </div>
   )
 }
