@@ -2,11 +2,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useSession, signIn } from 'next-auth/react'
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
 import {
   Search, Scale, Bookmark, ChevronRight,
-  BarChart2, Clock, ExternalLink, Crown, Sparkles,
+  Clock, ExternalLink,
 } from 'lucide-react'
 import { Sparkline, SparklineSkeleton } from '@/components/ui/Sparkline'
 import { fmtPrice, fmtPct, upsideZone, zoneBadgeClass } from '@/lib/formatters'
@@ -22,14 +21,6 @@ interface SearchResult {
   shortname?: string
   exchange?: string
   quoteType?: string
-}
-
-interface MarketIndex {
-  symbol: string
-  name: string
-  price: number | null
-  change: number | null
-  changePct: number | null
 }
 
 interface RecentItem {
@@ -71,14 +62,6 @@ const STATIC_QUOTES: FeaturedQuote[] = [
   { ticker: 'GS', name: 'Goldman Sachs Group, Inc.', etfSource: 'DIA', fairValue: 530, impliedCagr: 6.2, historicalCagr3y: 9.0, expectation: 'Conservative', interpretation: 'Market prices in steady investment banking earnings.', sparkData: [375, 400, 420, 440, 465, 492, 512, 538], price: null, change: null, changePct: null, upsidePct: null },
   { ticker: 'HD', name: 'Home Depot, Inc.', etfSource: 'DIA', fairValue: 350, impliedCagr: 5.5, historicalCagr3y: 4.0, expectation: 'Conservative', interpretation: 'Market prices in modest recovery as housing improves.', sparkData: [318, 332, 340, 328, 348, 360, 362, 368], price: null, change: null, changePct: null, upsidePct: null },
 ]
-
-const MARKET_SNAPSHOT_FALLBACK: MarketIndex[] = [
-  { symbol: '^GSPC', name: 'S&P 500',      price: 5841.47,   change:  36.18, changePct:  0.0062 },
-  { symbol: '^IXIC', name: 'Nasdaq Comp.', price: 18983.54,  change: 168.0,  changePct:  0.0089 },
-  { symbol: '^VIX',  name: 'VIX',          price: 14.23,     change:  -0.47, changePct: -0.0321 },
-  { symbol: '^TNX',  name: '10Y Treasury', price: 4.28,      change:  -0.02, changePct: -0.0050 },
-]
-
 
 function SearchHero() {
   const router = useRouter()
@@ -530,7 +513,7 @@ function RecentlyViewed() {
   return (
     <section>
       <h2 className="text-[15px] font-bold text-slate-900 mb-4">Recently viewed</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {recent.slice(0, 6).map((r) => {
           const up = r.changePct >= 0
           return (
@@ -556,148 +539,13 @@ function RecentlyViewed() {
   )
 }
 
-// ─── Plan Card (right rail) ───────────────────────────────────────────────────
-
-function PlanCard() {
-  const { data: session } = useSession()
-
-  if (!session) {
-    return (
-      <div className="rounded-xl card px-4 py-4 flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <Sparkles size={14} className="text-slate-400" />
-          <p className="text-[12px] font-semibold text-slate-700">Free access</p>
-        </div>
-        <p className="text-[11px] text-slate-500 leading-relaxed">Analyze 5 stocks before creating an account.</p>
-        <button
-          onClick={() => signIn('google')}
-          className="w-full rounded-lg bg-blue-600 hover:bg-blue-700 py-2 text-[13px] font-semibold text-white transition-colors"
-        >
-          Start free trial
-        </button>
-      </div>
-    )
-  }
-
-  return (
-    <div className="rounded-xl card px-4 py-4 flex items-center justify-between gap-3">
-      <div>
-        <div className="flex items-center gap-1.5">
-          <Crown size={13} className="text-amber-500" />
-          <p className="text-[12px] font-semibold text-slate-700">Your plan</p>
-        </div>
-        <p className="text-[13px] font-bold text-blue-600 mt-0.5">Premium</p>
-      </div>
-      <Link href="/pricing" className="text-[11px] text-slate-400 hover:text-slate-600 whitespace-nowrap">
-        Manage →
-      </Link>
-    </div>
-  )
-}
-
-// ─── Market Snapshot Widget (right rail) ─────────────────────────────────────
-
-const INDEX_MAP: Record<string, string> = {
-  '^GSPC': 'S&P 500',
-  '^IXIC': 'Nasdaq 100',
-  '^TNX':  '10Y Treasury',
-  '^VIX':  'VIX',
-}
-
-function MarketSnapshotWidget() {
-  const [indices, setIndices] = useState<MarketIndex[]>(MARKET_SNAPSHOT_FALLBACK)
-
-  useEffect(() => {
-    fetch('/api/markets/data')
-      .then((r) => r.json())
-      .then((d) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const raw: any[] = d?.indices ?? d?.equities ?? []
-        const mapped: MarketIndex[] = raw
-          .filter((item) => item?.symbol in INDEX_MAP)
-          .map((item) => ({
-            symbol:    item.symbol,
-            name:      INDEX_MAP[item.symbol] ?? item.symbol,
-            price:     item.price ?? item.regularMarketPrice ?? null,
-            change:    item.change ?? item.regularMarketChange ?? null,
-            changePct: item.changePct ?? item.regularMarketChangePercent ?? null,
-          }))
-        if (mapped.length > 0) { setIndices(mapped); return }
-
-        // Try any instruments array that contains these symbols
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const flatten = (obj: any): any[] => {
-          if (!obj || typeof obj !== 'object') return []
-          if (Array.isArray(obj)) return obj
-          return Object.values(obj).flatMap(flatten)
-        }
-        const all = flatten(d)
-        const found: MarketIndex[] = all
-          .filter((x) => x && typeof x.symbol === 'string' && x.symbol in INDEX_MAP)
-          .map((x) => ({
-            symbol:    x.symbol,
-            name:      INDEX_MAP[x.symbol],
-            price:     x.price ?? x.regularMarketPrice ?? null,
-            change:    x.change ?? null,
-            changePct: x.changePct ?? x.regularMarketChangePercent ?? null,
-          }))
-        setIndices(found.slice(0, 4))
-      })
-      .catch(() => {})
-  }, [])
-
-  return (
-    <div className="rounded-xl card px-4 py-4">
-      <h3 className="text-[13px] font-bold text-slate-900 flex items-center gap-1.5 mb-3">
-        <BarChart2 size={13} className="text-slate-400" />
-        Market snapshot
-        <Link href="/markets" className="ml-auto text-[11px] text-blue-600 hover:text-blue-700 font-medium flex items-center gap-0.5">
-          Full <ChevronRight size={11} />
-        </Link>
-      </h3>
-
-      {indices.length === 0 ? (
-        <div className="space-y-2.5">
-          {Array(4).fill(null).map((_, i) => (
-            <div key={i} className="flex items-center gap-2 animate-pulse">
-              <div className="h-3 bg-slate-100 rounded w-20 flex-1" />
-              <div className="h-3 bg-slate-100 rounded w-14" />
-              <div className="h-3 bg-slate-100 rounded w-10" />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="divide-y divide-slate-50">
-          {indices.map((idx) => {
-            const up = (idx.changePct ?? 0) >= 0
-            return (
-              <div key={idx.symbol} className="flex items-center justify-between py-2.5 gap-2">
-                <span className="text-[12px] text-slate-600 font-medium">{idx.name}</span>
-                <div className="text-right">
-                  <p className="text-[13px] font-bold text-slate-900 tabular-nums">
-                    {idx.price != null ? idx.price.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '—'}
-                  </p>
-                  <p className={cn('text-[11px] font-semibold tabular-nums', up ? 'text-emerald-600' : 'text-red-600')}>
-                    {idx.changePct != null ? fmtPct(idx.changePct / 100) : '—'}
-                  </p>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </div>
-  )
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AnalyzePage() {
   return (
     <div className="min-h-screen p-4 lg:p-6">
-      <div>
+      <div className="space-y-6">
 
-        {/* Search hero — full width */}
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
@@ -707,63 +555,38 @@ export default function AnalyzePage() {
           <SearchHero />
         </motion.div>
 
-        {/* Main grid */}
-        <div className="mt-6 grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-6 items-start">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <PopularAnalysesSection />
+        </motion.div>
 
-          {/* Left column */}
-          <div className="space-y-6 min-w-0">
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.28, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <PopularAnalysesSection />
-            </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, delay: 0.10, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <MarketPricingLeaderboard quotes={STATIC_QUOTES} />
+        </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.28, delay: 0.10, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <MarketPricingLeaderboard quotes={STATIC_QUOTES} />
-            </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <QuickActions />
+        </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.28, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <QuickActions />
-            </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <RecentlyViewed />
+        </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.28, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <RecentlyViewed />
-            </motion.div>
-          </div>
-
-          {/* Right column */}
-          <div className="space-y-4">
-            <motion.div
-              initial={{ opacity: 0, x: 16 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.28, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <PlanCard />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: 16 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.28, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <MarketSnapshotWidget />
-            </motion.div>
-          </div>
-
-        </div>
       </div>
     </div>
   )
