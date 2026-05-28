@@ -164,7 +164,7 @@ export default function ValuationMethodCards({
 
               {/* Error or description */}
               {!hasValue && m.errors.length > 0 ? (
-                <p className="text-[11px] text-slate-500 leading-relaxed">{m.errors[0]}</p>
+                <p className="text-[11px] text-slate-400 italic leading-relaxed">{m.errors[0]}</p>
               ) : hasValue ? (
                 <p className="text-[11px] text-slate-500 leading-relaxed">{m.description}</p>
               ) : null}
@@ -211,12 +211,22 @@ export default function ValuationMethodCards({
       </div>
 
       {/* Footer note */}
-      <p className="text-[11px] text-slate-400 mt-4 flex items-center gap-1.5">
-        <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 16v-4M12 8h.01" />
-        </svg>
-        Weights reflect our conviction in each model&apos;s reliability given current data quality and market context.
-      </p>
+      <div className="mt-4 space-y-1.5">
+        {methods.some(m => m.fairValue == null || m.fairValue <= 0) && (
+          <p className="text-[11px] text-slate-400 flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 16v-4M12 8h.01" />
+            </svg>
+            Unavailable models are excluded from the blend. Remaining weights are redistributed proportionally.
+          </p>
+        )}
+        <p className="text-[11px] text-slate-400 flex items-center gap-1.5">
+          <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 16v-4M12 8h.01" />
+          </svg>
+          Weights reflect our conviction in each model&apos;s reliability given current data quality and market context.
+        </p>
+      </div>
     </div>
   )
 }

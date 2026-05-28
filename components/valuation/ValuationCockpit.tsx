@@ -380,7 +380,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
           <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
             Full DCF Model — Year-by-Year Projections
           </span>
-          <span className="ml-auto text-xs text-slate-400 hidden sm:inline">Damodaran 4-model blend · editable</span>
+          <span className="ml-auto text-xs text-slate-400 hidden sm:inline">DCF-only estimate · distinct from top blended value</span>
         </summary>
         <div className="mt-2">
           {dcfOpened && (

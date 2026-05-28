@@ -123,8 +123,16 @@ export default function SensitivityTable({
             {terminalMethod === 'multiple' ? `Exit ${exitMultiple.toFixed(1)}×` : `g = ${(terminalG * 100).toFixed(1)}%`}
           </span>
           <span className="text-[10px] text-slate-400 font-mono">{numYears}yr horizon</span>
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-900/40 border-amber-700 text-amber-300">
+            Full DCF only
+          </span>
         </div>
       </div>
+      {currentPrice > 0 && (
+        <p className="text-[10px] text-slate-400 px-5 pb-3">
+          Sensitivity reflects the Full DCF model. The blended fair value at the top of the page also includes Forward P/E, Revenue Multiple, and other methods.
+        </p>
+      )}
 
       {noData ? (
         <div className="px-5 py-10 text-center text-[12px] text-slate-400">

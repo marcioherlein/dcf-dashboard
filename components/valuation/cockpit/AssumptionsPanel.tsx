@@ -590,7 +590,7 @@ export default function AssumptionsPanel({
           <circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 16v-4M12 8h.01" />
         </svg>
         <p className="text-[11px] text-blue-700 leading-relaxed">
-          <span className="font-bold">A note on assumptions:</span> These inputs drive the blended fair value across all four models. Terminal growth rate is only used in the Full DCF model and can be adjusted there. Historical data reflects FMP fiscal year figures.
+          <span className="font-bold">A note on assumptions:</span> These inputs drive the blended fair value across available models. Terminal growth rate is only used in the Full DCF model. Historical data reflects FMP fiscal year figures.
         </p>
       </div>
 

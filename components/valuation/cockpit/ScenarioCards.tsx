@@ -1,5 +1,6 @@
 'use client'
 
+import { TrendingDown, Target, TrendingUp } from 'lucide-react'
 import { fmtPrice } from '@/lib/formatters'
 import type { CockpitOutput } from '@/lib/valuation/cockpit'
 
@@ -9,13 +10,16 @@ interface Props {
   currency: string
 }
 
+type IconComp = React.ComponentType<{ size?: number; className?: string }>
+
 function ScenarioCard({
-  label, description, fv, wacc, cagr, baseWacc, baseCagr, currentPrice, currency, accentText, bgClass, borderClass,
+  label, description, fv, wacc, cagr, baseWacc, baseCagr, currentPrice, currency, accentText, bgClass, borderClass, Icon,
 }: {
   label: string; description: string; fv: number | null; wacc: number; cagr: number
   baseWacc: number; baseCagr: number
   currentPrice: number; currency: string
   accentText: string; bgClass: string; borderClass: string
+  Icon?: IconComp
 }) {
   const upside = fv != null && currentPrice > 0 ? (fv - currentPrice) / currentPrice : null
   const upColor = upside != null ? (upside >= 0 ? 'text-emerald-600' : 'text-red-600') : 'text-slate-400'
@@ -26,7 +30,10 @@ function ScenarioCard({
   return (
     <div className={`rounded-xl border ${bgClass} ${borderClass} px-5 py-4 ${isBase ? 'ring-2 ring-blue-300 shadow-sm' : ''}`}>
       <div className="flex items-center justify-between mb-0.5">
-        <p className={`text-xs font-bold uppercase tracking-wider ${accentText}`}>{label}</p>
+        <div className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider ${accentText}`}>
+          {Icon && <Icon size={12} className="shrink-0" />}
+          <span>{label}</span>
+        </div>
         {upside != null && (
           <span className={`text-xs font-bold tabular-nums ${upColor}`}>
             {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(1)}%
@@ -81,6 +88,7 @@ export default function ScenarioCards({ scenarios, currentPrice, currency }: Pro
           baseWacc={base.wacc} baseCagr={base.cagr}
           currentPrice={currentPrice} currency={currency}
           accentText="text-red-600" bgClass="bg-red-50" borderClass="border-red-200"
+          Icon={TrendingDown as IconComp}
         />
         <ScenarioCard
           label="Base Case" description="Our best estimate"
@@ -88,6 +96,7 @@ export default function ScenarioCards({ scenarios, currentPrice, currency }: Pro
           baseWacc={base.wacc} baseCagr={base.cagr}
           currentPrice={currentPrice} currency={currency}
           accentText="text-blue-600" bgClass="bg-blue-50" borderClass="border-blue-200"
+          Icon={Target as IconComp}
         />
         <ScenarioCard
           label="Bull Case" description="If growth accelerates & scale improves"
@@ -95,6 +104,7 @@ export default function ScenarioCards({ scenarios, currentPrice, currency }: Pro
           baseWacc={base.wacc} baseCagr={base.cagr}
           currentPrice={currentPrice} currency={currency}
           accentText="text-emerald-600" bgClass="bg-emerald-50" borderClass="border-emerald-200"
+          Icon={TrendingUp as IconComp}
         />
       </div>
     </div>

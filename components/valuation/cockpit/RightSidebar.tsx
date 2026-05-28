@@ -20,9 +20,9 @@ const VERDICT_COLORS = {
 }
 
 const DIVERGENCE_STYLE = {
-  low:      { text: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30', label: 'Models agree'     },
-  moderate: { text: 'text-amber-400',   bg: 'bg-amber-500/10 border-amber-500/30',     label: 'Moderate spread' },
-  high:     { text: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/30',         label: 'High divergence' },
+  low:      { text: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30', label: 'Low divergence'      },
+  moderate: { text: 'text-amber-400',   bg: 'bg-amber-500/10 border-amber-500/30',     label: 'Moderate divergence' },
+  high:     { text: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/30',         label: 'High divergence'     },
 }
 
 const METHOD_COLORS = ['bg-blue-400', 'bg-indigo-400', 'bg-violet-400', 'bg-purple-400']
@@ -87,10 +87,15 @@ function RangeBar({
 }
 
 function WeightBars({ methods }: { methods: CockpitMethodResult[] }) {
+  const validTotal = methods
+    .filter(m => m.fairValue != null && m.fairValue > 0)
+    .reduce((s, m) => s + m.weight, 0)
+
   return (
     <div className="flex flex-col gap-2.5">
       {methods.map((m, i) => {
         const isAvail = m.fairValue != null && m.fairValue > 0
+        const effectivePct = isAvail && validTotal > 0 ? (m.weight / validTotal) * 100 : 0
         return (
           <div key={m.id} className="flex items-center gap-2.5">
             <div className={`w-2 h-2 rounded-full shrink-0 ${METHOD_COLORS[i]} ${!isAvail ? 'opacity-25' : ''}`} />
@@ -101,14 +106,14 @@ function WeightBars({ methods }: { methods: CockpitMethodResult[] }) {
               {isAvail ? (
                 <div
                   className={`h-full rounded-full ${METHOD_COLORS[i]} transition-all`}
-                  style={{ width: `${m.weight * 100}%` }}
+                  style={{ width: `${effectivePct}%` }}
                 />
               ) : (
                 <div className="h-full w-full bg-white/[0.04] rounded-full" />
               )}
             </div>
             <span className={`text-[11px] w-7 text-right tabular-nums shrink-0 ${isAvail ? 'text-white/55' : 'text-white/25'}`}>
-              {isAvail ? `${Math.round(m.weight * 100)}%` : '—'}
+              {isAvail ? `${Math.round(effectivePct)}%` : '—'}
             </span>
           </div>
         )
@@ -142,7 +147,7 @@ export default function RightSidebar({
 
         {/* Conviction + model count */}
         <p className="text-xs text-white/45 mt-1">
-          {convictionLabel} · {validCount} model{validCount !== 1 ? 's' : ''} agree
+          {convictionLabel} · {validCount} of {output.methods.length}
         </p>
       </div>
 
@@ -189,7 +194,7 @@ export default function RightSidebar({
 
       {/* METHOD WEIGHTS */}
       <div className="px-5">
-        <SectionLabel>Method Weights (Blend)</SectionLabel>
+        <SectionLabel>Effective Blend Weights</SectionLabel>
         <WeightBars methods={output.methods} />
       </div>
 
@@ -227,7 +232,7 @@ export default function RightSidebar({
       {/* Disclaimer */}
       <div className="px-5 pb-5">
         <p className="text-[10px] text-white/25 leading-relaxed pt-3 border-t border-white/[0.07]">
-          Blended estimate from Forward P/E, EV/EBITDA, Revenue Multiple, and Core DCF. Not investment advice.
+          Blended estimate from {output.methods.filter(m => m.fairValue != null && m.fairValue > 0).map(m => m.method).join(', ')}. Not investment advice.
         </p>
       </div>
     </div>

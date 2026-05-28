@@ -8,9 +8,9 @@ interface Props {
 }
 
 const LEVEL_BADGE = {
-  low:      { bg: 'bg-emerald-100 border-emerald-200', text: 'text-emerald-700', label: 'Models agree'     },
-  moderate: { bg: 'bg-amber-100 border-amber-200',     text: 'text-amber-700',   label: 'Moderate spread' },
-  high:     { bg: 'bg-red-100 border-red-200',         text: 'text-red-700',     label: 'High divergence' },
+  low:      { bg: 'bg-emerald-100 border-emerald-200', text: 'text-emerald-700', label: 'Low divergence'      },
+  moderate: { bg: 'bg-amber-100 border-amber-200',     text: 'text-amber-700',   label: 'Moderate divergence' },
+  high:     { bg: 'bg-red-100 border-red-200',         text: 'text-red-700',     label: 'High divergence'     },
 }
 
 function spreadQual(v: number) {
@@ -69,20 +69,22 @@ export default function ModelDivergencePanel({ divergence }: Props) {
         </div>
 
         {/* Right: stats */}
-        <div className="px-6 py-5 flex flex-row md:flex-col justify-around md:justify-center gap-4">
+        <div className="px-6 py-4 flex flex-row md:flex-col justify-around md:justify-center gap-4">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Spread vs. Price</p>
-            <p className="text-3xl font-bold tabular-nums text-slate-900 leading-none">
+            <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none">
               {(divergence.spreadVsPrice * 100).toFixed(0)}%
             </p>
             <p className={`text-xs font-semibold mt-1 ${spreadS.cls}`}>{spreadS.label}</p>
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Coefficient of Variation</p>
-            <p className="text-3xl font-bold tabular-nums text-slate-900 leading-none">
+            <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none">
               {(divergence.cv * 100).toFixed(0)}%
             </p>
             <p className={`text-xs font-semibold mt-1 ${cvS.cls}`}>{cvS.label}</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">(level threshold: 15% / 30%)</p>
+            <p className="text-[10px] text-slate-400 mt-0.5 leading-tight">Based on coefficient of variation.</p>
           </div>
         </div>
       </div>

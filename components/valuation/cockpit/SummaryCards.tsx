@@ -40,12 +40,14 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
         </div>
 
         {/* Blended Fair Value */}
-        <div className="px-5 py-4 flex flex-col gap-1">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Blended Fair Value</p>
+        <div className="px-5 py-4 flex flex-col gap-1 border-t-2 border-blue-500">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-400" title="Weighted average of available valuation models. Unavailable models are excluded and weights redistributed.">Blended Fair Value</p>
           <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none">
             {output.blendedFairValue != null ? fmtPrice(output.blendedFairValue, currency) : '—'}
           </p>
-          <p className="text-xs text-slate-400">{methodsComputed} of {output.methods.length} models</p>
+          <p className="text-xs text-slate-400">
+            {methodsComputed} of {output.methods.length} models{methodsComputed < output.methods.length ? ' · weights redistributed' : ''}
+          </p>
         </div>
 
         {/* Upside / Downside */}
@@ -63,14 +65,14 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
           <p className={`text-xl font-bold leading-tight ${vstyle.text}`}>{output.verdict}</p>
           {output.upsidePct != null && (
             <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border self-start ${vstyle.badge}`}>
-              {methodsComputed} models agree
+              {methodsComputed} of {output.methods.length} models
             </span>
           )}
         </div>
 
         {/* Market-Implied CAGR */}
         <div className="px-5 py-4 flex flex-col gap-1">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Market-Implied CAGR</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-400" title="The revenue CAGR the market is pricing into the current share price, derived from a reverse DCF.">Market-Implied CAGR</p>
           {output.marketImpliedGrowth != null ? (
             <>
               <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none">
