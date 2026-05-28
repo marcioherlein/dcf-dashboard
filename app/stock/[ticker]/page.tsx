@@ -9,7 +9,8 @@ import { type TabId } from '@/components/stock/TabNav'
 import StockContextBar from '@/components/stock/StockContextBar'
 import StockSidebar from '@/components/stock/StockSidebar'
 import { cn } from '@/lib/utils'
-import ValuationCockpit from '@/components/valuation/ValuationCockpit'
+import ValuationCockpit, { buildSnapshot, seedAssumptions } from '@/components/valuation/ValuationCockpit'
+import { computeCockpitOutput } from '@/lib/valuation/cockpit'
 import FinancialsHub from '@/components/stock/FinancialsHub'
 import MobileKeyInsights from '@/components/stock/MobileKeyInsights'
 import ReverseDcfCallout from '@/components/stock/ReverseDcfCallout'
@@ -259,6 +260,23 @@ function StockPageBody() {
     }
   }, [statementsData, data])
 
+  // Compute the cockpit blended fair value at default assumptions so Summary and Valuation
+  // tabs always show the same number (previously Summary used a stale API triangulatedFairValue).
+  const cockpitSnapshot = useMemo(
+    () => (data ? buildSnapshot(data, statementsData) : null),
+    [data, statementsData]
+  )
+  const cockpitDefaults = useMemo(
+    () => (data ? seedAssumptions(data) : null),
+    [data]
+  )
+  const cockpitOutput = useMemo(
+    () => (cockpitSnapshot && cockpitDefaults
+      ? computeCockpitOutput(cockpitDefaults, cockpitSnapshot)
+      : null),
+    [cockpitSnapshot, cockpitDefaults]
+  )
+
   const loadData = useCallback(() => {
     setLoading(true)
     setError('')
@@ -419,8 +437,8 @@ function StockPageBody() {
                     currency={data.quote.currency ?? 'USD'}
                     high52={data.quote.fiftyTwoWeekHigh}
                     low52={data.quote.fiftyTwoWeekLow}
-                    fairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? null}
-                    upsidePct={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null}
+                    fairValue={cockpitOutput?.blendedFairValue ?? null}
+                    upsidePct={cockpitOutput?.upsidePct ?? null}
                     confidenceLabel={data.cagrAnalysis?.confidenceLabel ?? null}
                     scenarios={data.scenarios ?? null}
                     onViewDetails={() => handleTabChange('valuation')}
@@ -433,8 +451,8 @@ function StockPageBody() {
                     numAnalysts={data.cagrAnalysis?.numAnalysts ?? 0}
                     price={data.quote.price}
                     currency={data.quote.currency ?? 'USD'}
-                    upsidePct={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null}
-                    fairValue={data.valuationMethods?.triangulatedFairValue ?? data.fairValue?.fairValuePerShare ?? null}
+                    upsidePct={cockpitOutput?.upsidePct ?? null}
+                    fairValue={cockpitOutput?.blendedFairValue ?? null}
                   />
 
                   {/* 2. Reverse DCF — what the market is pricing in */}
@@ -486,7 +504,7 @@ function StockPageBody() {
                       drivers={data.cagrAnalysis?.drivers ?? []}
                       ratings={data.ratings}
                       cagrAnalysis={data.cagrAnalysis ?? null}
-                      upsidePct={data.valuationMethods?.triangulatedUpsidePct ?? data.fairValue?.upsidePct ?? null}
+                      upsidePct={cockpitOutput?.upsidePct ?? null}
                       onViewValuation={() => handleTabChange('valuation')}
                       onViewRisks={() => handleTabChange('risks')}
                     />

@@ -37,10 +37,10 @@ interface Props {
   onNavigateToRisks?: () => void
 }
 
-function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null): CockpitSnapshot {
+export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null): CockpitSnapshot {
   const sharesM = apiData.fairValue?.sharesOutstanding ?? 0
-  const cashM   = apiData.fairValue?.cash ?? 0
-  const debtM   = apiData.fairValue?.debt ?? 0
+  let cashM     = apiData.fairValue?.cash ?? 0
+  let debtM     = apiData.fairValue?.debt ?? 0
   const sharesRaw = sharesM > 0 ? sharesM * 1e6 : null
 
   const incomeRows: Array<{ isProjected: boolean; revenue: number | null; ebitda?: number | null }> =
@@ -84,6 +84,15 @@ function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null): Cockp
     ? ttmFCFRaw / 1e6
     : (apiData.baseFCF ?? 0)
 
+  // Override cash/debt with TTM balance sheet when available (mirrors normalizeInputs.ts:141–148)
+  const ttmBS = statementsData?.ttm?.balanceSheet
+  if (ttmBS) {
+    const stmtCash = (ttmBS as ApiData).cashCashEquivalentsAndShortTermInvestments ?? (ttmBS as ApiData).cash
+    if (typeof stmtCash === 'number' && isFinite(stmtCash)) cashM = stmtCash / 1e6
+    const stmtDebt = (ttmBS as ApiData).totalDebt ?? (ttmBS as ApiData).longTermDebt
+    if (typeof stmtDebt === 'number' && isFinite(stmtDebt)) debtM = stmtDebt / 1e6
+  }
+
   // Match the growth model used by the financials API (three-stage for high-CAGR / negative FCF companies)
   const growthModel = (apiData.growthModel as 'two-stage' | 'three-stage') ?? 'two-stage'
 
@@ -104,10 +113,11 @@ function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null): Cockp
     historicalCAGR,
     analystTargetMean,
     analystRating,
+    companyType: apiData.valuationMethods?.companyType ?? 'standard',
   }
 }
 
-function seedAssumptions(apiData: ApiData): ValuationAssumptions {
+export function seedAssumptions(apiData: ApiData): ValuationAssumptions {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fwdPEBase = deriveForwardPEAssumptions(apiData as any)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -223,7 +233,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
     return result
   }, [assumptions, snapshot, output.blendedFairValue])
 
-  const currency     = apiData.quote?.currency === 'USD' ? '$' : (apiData.quote?.currency ?? '$') + ' '
+  const currency     = apiData.quote?.currency ?? 'USD'
   const currentPrice = apiData.quote?.price ?? 0
   const changePct    = apiData.quote?.changePct ?? null
 
@@ -263,8 +273,10 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
   const assumptionsPanelRef = useRef<HTMLDivElement>(null)
 
   function handleAssumptionChange(next: ValuationAssumptions) {
+    const clampedG = Math.min(next.terminalG, Math.max(0.005, next.wacc - 0.02))
+    const clamped  = clampedG !== next.terminalG ? { ...next, terminalG: clampedG } : next
     setHistory(h => [...h.slice(-9), assumptions])
-    setAssumptions(next)
+    setAssumptions(clamped)
   }
 
   function handleUndo() {

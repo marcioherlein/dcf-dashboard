@@ -37,6 +37,8 @@ export interface CockpitSnapshot {
   // Analyst consensus (display only)
   analystTargetMean: number | null
   analystRating: string | null
+  // Company classification (determines method blend weights)
+  companyType?: string
 }
 
 export interface CockpitMethodResult {
@@ -83,12 +85,16 @@ export interface CockpitOutput {
   divergence: DivergenceAnalysis
 }
 
-const WEIGHTS = {
-  forward_pe: 0.35,
-  ev_ebitda: 0.30,
-  revenue_multiple: 0.25,
-  core_dcf: 0.10,
-} as const
+type MethodWeights = { forward_pe: number; ev_ebitda: number; revenue_multiple: number; core_dcf: number }
+
+const COCKPIT_WEIGHTS: Record<string, MethodWeights> = {
+  standard:  { forward_pe: 0.35, ev_ebitda: 0.30, revenue_multiple: 0.25, core_dcf: 0.10 },
+  growth:    { forward_pe: 0.25, ev_ebitda: 0.25, revenue_multiple: 0.35, core_dcf: 0.15 },
+  startup:   { forward_pe: 0.10, ev_ebitda: 0.15, revenue_multiple: 0.45, core_dcf: 0.30 },
+  financial: { forward_pe: 0.45, ev_ebitda: 0.05, revenue_multiple: 0.15, core_dcf: 0.35 },
+  dividend:  { forward_pe: 0.35, ev_ebitda: 0.25, revenue_multiple: 0.15, core_dcf: 0.25 },
+  etf:       { forward_pe: 0.25, ev_ebitda: 0.25, revenue_multiple: 0.25, core_dcf: 0.25 },
+}
 
 // Fix 1+2+3: runs all 4 methods at given assumptions and returns weighted blended fair value.
 // Fix 1: terminal growth is capped at wacc−0.02 (200bps minimum spread) to prevent denominator explosion.
@@ -98,6 +104,7 @@ export function computeBlendedFV(
   snapshot: CockpitSnapshot,
 ): number | null {
   const { currentPrice } = snapshot
+  const W = COCKPIT_WEIGHTS[snapshot.companyType ?? 'standard'] ?? COCKPIT_WEIGHTS.standard
 
   const fwdPE = computeForwardPE({
     ltvRevenue: snapshot.ltvRevenueDollars,
@@ -161,10 +168,10 @@ export function computeBlendedFV(
 
   const candidates = (
     [
-      { fv: fwdPE.fairValueToday ?? null, w: WEIGHTS.forward_pe },
-      { fv: evEbitda.fairValuePerShare ?? null, w: WEIGHTS.ev_ebitda },
-      { fv: revMult.fairValueToday ?? null, w: WEIGHTS.revenue_multiple },
-      { fv: dcfFV, w: WEIGHTS.core_dcf },
+      { fv: fwdPE.fairValueToday ?? null, w: W.forward_pe },
+      { fv: evEbitda.fairValuePerShare ?? null, w: W.ev_ebitda },
+      { fv: revMult.fairValueToday ?? null, w: W.revenue_multiple },
+      { fv: dcfFV, w: W.core_dcf },
     ] as { fv: number | null; w: number }[]
   ).filter((c): c is { fv: number; w: number } => c.fv != null && c.fv > 0)
 
@@ -363,6 +370,7 @@ export function computeCockpitOutput(
   snapshot: CockpitSnapshot,
 ): CockpitOutput {
   const { currentPrice } = snapshot
+  const W = COCKPIT_WEIGHTS[snapshot.companyType ?? 'standard'] ?? COCKPIT_WEIGHTS.standard
 
   // 1. Forward P/E
   const fwdPE = computeForwardPE({
@@ -448,7 +456,7 @@ export function computeCockpitOutput(
       id: 'forward_pe',
       method: 'Forward P/E',
       fairValue: fwdPE.fairValueToday ?? null,
-      weight: WEIGHTS.forward_pe,
+      weight: W.forward_pe,
       confidence: fwdPE.guardErrors.length === 0 ? 'high' : 'low',
       description: 'Projects revenue × exit net margin to year 5, applies exit P/E, discounts back at WACC. Assumes margin expands to exit-year level.',
       upsidePct: upside(fwdPE.fairValueToday ?? null),
@@ -458,7 +466,7 @@ export function computeCockpitOutput(
       id: 'ev_ebitda',
       method: 'EV/EBITDA',
       fairValue: evEbitda.fairValuePerShare ?? null,
-      weight: WEIGHTS.ev_ebitda,
+      weight: W.ev_ebitda,
       confidence: evEbitda.guardErrors.length === 0 ? 'high' : 'low',
       description: 'Snapshot: TTM EBITDA × exit multiple − net debt. No growth projection — most reliable for stable-margin companies.',
       upsidePct: upside(evEbitda.fairValuePerShare ?? null),
@@ -468,7 +476,7 @@ export function computeCockpitOutput(
       id: 'revenue_multiple',
       method: 'Revenue Multiple',
       fairValue: revMult.fairValueToday ?? null,
-      weight: WEIGHTS.revenue_multiple,
+      weight: W.revenue_multiple,
       confidence: revMult.guardErrors.length === 0 ? 'medium' : 'low',
       description: 'Projects 5Y revenue at CAGR, applies EV/Revenue multiple at exit, discounts equity back. Best suited for pre-profit or high-growth companies.',
       upsidePct: upside(revMult.fairValueToday ?? null),
@@ -478,7 +486,7 @@ export function computeCockpitOutput(
       id: 'core_dcf',
       method: 'Core DCF',
       fairValue: dcfFV,
-      weight: WEIGHTS.core_dcf,
+      weight: W.core_dcf,
       confidence: dcfFV != null ? 'medium' : 'low',
       description: 'UFCF blend: 50% Gordon Growth (PGM) + 50% Exit Multiple terminal value. Matches the Full DCF Table\'s UFCF methodology — see it below for year-by-year detail.',
       upsidePct: upside(dcfFV),

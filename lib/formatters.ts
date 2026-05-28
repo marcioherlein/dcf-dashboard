@@ -6,7 +6,8 @@
 /** $1,234.56 or BRL 234.56 — respects currency prefix */
 export function fmtPrice(v: number | null | undefined, currency = 'USD'): string {
   if (v == null || !isFinite(v)) return '—'
-  const prefix = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$ ' : currency + ' '
+  const code = (currency ?? 'USD').trim()
+  const prefix = code === 'USD' ? '$' : code === 'BRL' ? 'R$ ' : code + ' '
   if (Math.abs(v) >= 1_000) return prefix + v.toLocaleString(undefined, { maximumFractionDigits: 0 })
   return prefix + v.toFixed(2)
 }
@@ -39,7 +40,8 @@ export function fmtLarge(v: number | null | undefined): string {
 /** $1.2B / $456M — currency + large suffix */
 export function fmtLargeCurrency(v: number | null | undefined, currency = 'USD'): string {
   if (v == null || !isFinite(v)) return '—'
-  const prefix = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$ ' : currency + ' '
+  const code = (currency ?? 'USD').trim()
+  const prefix = code === 'USD' ? '$' : code === 'BRL' ? 'R$ ' : code + ' '
   const abs = Math.abs(v)
   const sign = v < 0 ? '-' : ''
   if (abs >= 1e12) return sign + prefix + (abs / 1e12).toFixed(2) + 'T'
@@ -65,7 +67,8 @@ export function fmtMonthYear(dateStr: string | null | undefined): string {
 
 /** Compact number for axis ticks: $12K / $1.2M / $1.2B */
 export function fmtAxisTick(v: number, currency = 'USD'): string {
-  const prefix = currency === 'USD' ? '$' : ''
+  const code = (currency ?? 'USD').trim()
+  const prefix = code === 'USD' ? '$' : ''
   const abs = Math.abs(v)
   if (abs >= 1e9) return prefix + (v / 1e9).toFixed(1) + 'B'
   if (abs >= 1e6) return prefix + (v / 1e6).toFixed(1) + 'M'
