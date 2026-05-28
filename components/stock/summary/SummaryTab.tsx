@@ -11,6 +11,7 @@ import { fmtPrice, fmtPct } from '@/lib/formatters'
 import { computeReverseDCF } from '@/lib/valuation/methods/reverseDcf'
 import InfoTooltip from '@/components/ui/InfoTooltip'
 import OverviewMetricGrid from '@/components/stock/OverviewMetricGrid'
+import CompanyCard from '@/components/stock/overview/CompanyCard'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
@@ -771,7 +772,7 @@ function BottomDecisionRow({
 
 export default function SummaryTab({
   ticker, currency,
-  price, change, changePct, high52, low52,
+  price, change, changePct, high52, low52, sector,
   fairValue, upsidePct, confidence, modelCount, totalModels,
   sharesM, cashM, debtM, revenueM, fcfMargin,
   wacc, terminalG, historicalCAGR, analystCAGR, isEmergingMarket,
@@ -848,6 +849,18 @@ export default function SummaryTab({
         onViewValuation={onViewValuation}
         onViewRisks={onViewRisks}
       />
+
+      {/* 5. Company overview */}
+      {businessProfile?.description && (
+        <CompanyCard
+          description={businessProfile.description}
+          sector={sector}
+          industry={businessProfile.industry ?? ''}
+          country={businessProfile.country ?? ''}
+          employees={businessProfile.employees ?? null}
+          ticker={ticker}
+        />
+      )}
 
     </div>
   )

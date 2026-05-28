@@ -5,6 +5,7 @@ import { Globe } from 'lucide-react'
 
 interface CompanyCardProps {
   description: string
+  sector?: string
   industry: string
   country: string
   employees: number | null
@@ -13,13 +14,14 @@ interface CompanyCardProps {
 
 const CLIP_LENGTH = 220
 
-export default function CompanyCard({ description, industry, country, employees, ticker }: CompanyCardProps) {
+export default function CompanyCard({ description, sector, industry, country, employees, ticker }: CompanyCardProps) {
   const [expanded, setExpanded] = useState(false)
 
   const isLong   = description.length > CLIP_LENGTH
   const displayed = !expanded && isLong ? description.slice(0, CLIP_LENGTH).trimEnd() + '…' : description
 
   const tags = [
+    sector   && sector   !== 'N/A' ? sector   : null,
     industry && industry !== 'N/A' ? industry : null,
     country  && country  !== 'N/A' ? country  : null,
     employees != null ? `${(employees / 1000).toFixed(0)}K employees` : null,
