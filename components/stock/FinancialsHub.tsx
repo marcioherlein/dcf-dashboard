@@ -624,7 +624,12 @@ export default function FinancialsHub({ statementsData, financialsData, currency
 
   const hasData = periods.length > 0
 
+  const showCharts = subTab === 'statements' && hasData
+    && finCF.length > 0
+    && finIS.filter((r: { isProjected: boolean }) => !r.isProjected).length >= 2
+
   return (
+    <>
     <div className="rounded-xl card overflow-hidden">
       {/* Sub-tab nav — scrollable on mobile */}
       <div className="flex items-center justify-between px-2 sm:px-5 pt-4 pb-0 border-b border-slate-100 overflow-x-auto">
@@ -653,29 +658,12 @@ export default function FinancialsHub({ statementsData, financialsData, currency
 
       {/* ── Statements ── */}
       {subTab === 'statements' && hasData && (
-        <div className="space-y-0">
-          <YahooFinancials
-            statementsData={statementsData}
-            currency={currency}
-            reportingCurrency={reportingCurrency}
-            highlight={highlight ?? undefined}
-          />
-          {(finCF.length > 0 && finIS.filter((r: { isProjected: boolean }) => !r.isProjected).length >= 2) && (
-            <div className="border-t border-slate-100">
-              <FinancialCharts
-                incomeStatement={finIS}
-                cashFlow={finCF}
-                currency={currency}
-                isDark={false}
-                historicalMultiples={financialsData?.historicalMultiples ?? []}
-                currentPE={financialsData?.quote?.peRatio ?? null}
-                currentEVEbitda={financialsData?.businessProfile?.evToEbitda ?? null}
-                currentEVRevenue={financialsData?.businessProfile?.evToRevenue ?? null}
-                currentPS={financialsData?.businessProfile?.priceToSales ?? null}
-              />
-            </div>
-          )}
-        </div>
+        <YahooFinancials
+          statementsData={statementsData}
+          currency={currency}
+          reportingCurrency={reportingCurrency}
+          highlight={highlight ?? undefined}
+        />
       )}
 
       {/* ── Growth ── */}
@@ -1070,5 +1058,21 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         )
       })()}
     </div>
+
+    {/* ── Financial Charts — individual boxes below main card ── */}
+    {showCharts && (
+      <FinancialCharts
+        incomeStatement={finIS}
+        cashFlow={finCF}
+        currency={currency}
+        isDark={false}
+        historicalMultiples={financialsData?.historicalMultiples ?? []}
+        currentPE={financialsData?.quote?.peRatio ?? null}
+        currentEVEbitda={financialsData?.businessProfile?.evToEbitda ?? null}
+        currentEVRevenue={financialsData?.businessProfile?.evToRevenue ?? null}
+        currentPS={financialsData?.businessProfile?.priceToSales ?? null}
+      />
+    )}
+    </>
   )
 }

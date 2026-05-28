@@ -155,11 +155,7 @@ export default function FinancialCharts({
     .filter((r) => r.growth != null)
 
   return (
-    <div className="space-y-4 p-4 sm:p-5">
-
-      {/* ── Section label ── */}
-      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-300">Financial Charts</p>
-
+    <>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
         {/* ── Chart 1 — Revenue & Net Income ── */}
@@ -379,7 +375,7 @@ export default function FinancialCharts({
         const yMax        = Math.ceil(Math.max(...allVals) * 1.1)
 
         return (
-          <div className={`${panel} col-span-1 sm:col-span-2`}>
+          <div className={panel}>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
               <div className="flex-1">
                 <p className={sectionTitle} style={{ marginBottom: 0 }}>Valuation History — {active.label}</p>
@@ -469,6 +465,6 @@ export default function FinancialCharts({
         {projectedIS.length > 0 && ` · ${historicalIS.length} historical + ${projectedIS.length} projected years`}
       </p>
 
-    </div>
+    </>
   )
 }

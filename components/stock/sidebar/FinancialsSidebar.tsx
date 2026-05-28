@@ -20,7 +20,7 @@ interface IncomeRow {
   netIncome: number | null
   ebitda: number | null
   operatingIncome: number | null
-  operatingMargin: number | null
+  operatingMargin?: number | null
   isProjected: boolean
 }
 
@@ -239,7 +239,7 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
     .map(r => ({ year: r.year, value: r.freeCashFlow as number, isProjected: r.isProjected }))
 
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
       {/* Profit Margins */}
       <Card>
@@ -289,12 +289,7 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
         </Card>
       )}
 
-      {/* Projected sparkline legend */}
-      {(ebitData.some(d => d.isProjected) || niData.some(d => d.isProjected) || fcfData.some(d => d.isProjected)) && (
-        <p className="text-[9px] text-slate-400 px-1">
-          Faded bars = DCF model projections
-        </p>
-      )}
+      {/* Projected sparkline legend — merged into EBIT card context; skip standalone */}
 
       {/* ROIC */}
       {roic?.roic != null && (

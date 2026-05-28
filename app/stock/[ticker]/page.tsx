@@ -8,6 +8,7 @@ import HealthSection from '@/components/stock/HealthSection'
 import { type TabId } from '@/components/stock/TabNav'
 import StockContextBar from '@/components/stock/StockContextBar'
 import StockSidebar from '@/components/stock/StockSidebar'
+import FinancialsSidebar from '@/components/stock/sidebar/FinancialsSidebar'
 import { cn } from '@/lib/utils'
 import ValuationCockpit, { buildSnapshot, seedAssumptions } from '@/components/valuation/ValuationCockpit'
 import { computeCockpitOutput } from '@/lib/valuation/cockpit'
@@ -434,14 +435,6 @@ function StockPageBody() {
 
         {data && !loading && (
           <>
-            {/* ── Desktop grid: main content + contextual sidebar ── */}
-            {/* Overview tab is intentionally full-width — decision flow without right-rail clutter */}
-            {/* Valuation tab uses single column — ValuationCockpit has its own internal sidebar */}
-            <div className={cn(
-              activeTab === 'financials'
-                ? 'lg:grid lg:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_400px] lg:gap-6 lg:items-start'
-                : ''
-            )}>
             <div className="min-w-0">
             {/* Mobile-only collapsible quick insights — hidden on desktop where sidebar shows */}
             <MobileKeyInsights data={data} />
@@ -630,6 +623,13 @@ function StockPageBody() {
                     highlight={financialsHighlight}
                     initialSubTab={financialsSubTab}
                   />
+                  {/* Sidebar content as grid of boxes below the main card */}
+                  <FinancialsSidebar
+                    businessProfile={data.businessProfile}
+                    scores={computedScores ?? data.scores}
+                    financialStatements={data.financialStatements}
+                    ownership={data.ownership}
+                  />
                 </motion.div>
               )}
 
@@ -670,16 +670,6 @@ function StockPageBody() {
               )}
             </AnimatePresence>
             </div>{/* end main column */}
-
-            {/* Sidebar — desktop only, financials tab only (overview is intentionally full-width) */}
-            {activeTab === 'financials' && (
-              <aside className="hidden lg:block">
-                <div className="sticky top-[68px] self-start space-y-3 pb-4 pt-5">
-                  <StockSidebar activeTab={activeTab} data={data} statementsData={statementsData} computedScores={computedScores} onNavigateToFinancials={handleNavigateToFinancials} onNavigateToFinancialsSection={handleNavigateToFinancialsSection} />
-                </div>
-              </aside>
-            )}
-            </div>{/* end grid */}
           </>
         )}
 
