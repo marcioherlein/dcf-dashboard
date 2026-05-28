@@ -85,9 +85,9 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
         <div className={VALUE_COL} />
       </div>
 
-      {/* Method rows — no gap so per-row price ticks form one continuous vertical line */}
+      {/* Method rows — only show available methods */}
       <div className="flex flex-col">
-        {methods.map((m, i) => {
+        {methods.filter(m => m.fairValue != null && m.fairValue > 0).map((m, i) => {
           const hasVal = m.fairValue != null && m.fairValue > 0
           const fv = hasVal ? m.fairValue! : null
           const isUnder = fv != null && fv > currentPrice
@@ -188,6 +188,7 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
         {blendedFairValue != null && (() => {
           const bPct = toPct(blendedFairValue)
           const bIsUnder = blendedFairValue > currentPrice
+          const visibleCount = methods.filter(m => m.fairValue != null && m.fairValue > 0).length
           return (
             <>
               <div
@@ -216,7 +217,7 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
                       type: 'spring',
                       stiffness: 400,
                       damping: 20,
-                      delay: 0.1 + methods.length * 0.07,
+                      delay: 0.1 + visibleCount * 0.07,
                     }}
                   />
 

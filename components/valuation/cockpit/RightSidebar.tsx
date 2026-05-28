@@ -155,25 +155,11 @@ export default function RightSidebar({
 
       {/* MODEL DIVERGENCE */}
       <div className="px-5">
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2">
           <SectionLabel>Model Divergence</SectionLabel>
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border -mt-2.5 ${ds.bg} ${ds.text}`}>
             {ds.label}
           </span>
-        </div>
-        <div className="flex gap-6">
-          <div>
-            <p className="text-[10px] text-white/35 mb-0.5">Spread vs. price</p>
-            <p className="text-sm font-bold tabular-nums text-white/85">
-              {(output.divergence.spreadVsPrice * 100).toFixed(0)}%
-            </p>
-          </div>
-          <div>
-            <p className="text-[10px] text-white/35 mb-0.5">Coeff. of variation</p>
-            <p className="text-sm font-bold tabular-nums text-white/85">
-              {(output.divergence.cv * 100).toFixed(0)}%
-            </p>
-          </div>
         </div>
       </div>
 
