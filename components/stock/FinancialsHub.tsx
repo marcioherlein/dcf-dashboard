@@ -174,7 +174,7 @@ function MetricsTable({ columns, rows }: { columns: string[]; rows: MetricRowDef
             if (row.isHeader) {
               return (
                 <tr key={i} className="bg-slate-50 border-y border-slate-100">
-                  <td colSpan={columns.length + 1} className="px-3 sm:px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                  <td colSpan={columns.length + 1} className="px-3 sm:px-4 py-1.5 text-[11px] font-semibold text-slate-500 bg-slate-50 border-y border-slate-100">
                     {row.label}
                   </td>
                 </tr>
@@ -671,14 +671,14 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         <div>
           {/* CAGR Summary */}
           <div className="px-4 sm:px-5 pt-4 pb-2">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">
-              Compound Annual Growth Rates
-            </p>
+                <p className="text-[13px] font-semibold text-slate-700 mb-3">
+                  Compound Annual Growth Rates
+                </p>
             <CAGRTable rows={cagrRows} />
             {/* G5: Analyst forward estimates */}
             {(analystEst1y != null || analystEst2y != null) && (
               <div className="mt-4 border-t border-slate-100 pt-3">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Analyst EPS Growth Estimates</p>
+                <p className="text-[12px] font-semibold text-slate-600 mb-2">Analyst EPS Growth Estimates</p>
                 <div className="flex gap-4">
                   {analystEst1y != null && (
                     <div className="flex flex-col">
@@ -711,7 +711,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
             const maxAbs = Math.max(...revGrowthData.map(d => Math.abs(d.val as number)))
             return (
               <div className="border-t border-slate-100 px-4 sm:px-5 pt-4 pb-2">
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">Revenue Growth by Year</p>
+                <p className="text-[13px] font-semibold text-slate-700 mb-3">Revenue Growth by Year</p>
                 <div className="flex items-end gap-1.5" style={{ height: 56 }}>
                   {revGrowthData.map(({ col, val }) => {
                     const v = val as number
@@ -737,7 +737,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
           })()}
           {/* YoY by period — G2: use yoyCols to skip always-null first column */}
           <div className="border-t border-slate-100 px-4 sm:px-5 pt-4 pb-2">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">
+            <p className="text-[13px] font-semibold text-slate-700 mb-3">
               Year-over-Year Growth
             </p>
             <MetricsTable columns={yoyCols} rows={growthRows.map(r => ({ ...r, values: r.values.slice(1) }))} />
@@ -790,7 +790,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
             ) : (
               <>
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">Consensus Rating</p>
+                  <p className="text-[13px] font-semibold text-slate-700 mb-3">Consensus Rating</p>
                   <div className="flex items-center gap-3 mb-2">
                     {rawRec !== '' && <span className={`text-sm font-bold px-4 py-1.5 rounded-full border ${recBg}`}>{recLabel}</span>}
                     {ca.numAnalysts > 0 && <span className="text-[12px] text-slate-400">{ca.numAnalysts} analysts covering this stock</span>}
@@ -819,7 +819,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 </div>
                 {q.analystTargetMean > 0 && (
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">Price Targets</p>
+                    <p className="text-[13px] font-semibold text-slate-700 mb-3">Price Targets</p>
                     <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 overflow-hidden">
                       {[
                         { label: 'Average Target', val: q.analystTargetMean, upside: targetUpside, highlight: true },
@@ -853,7 +853,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                       const pricePct = Math.max(2, Math.min(98, ((q.price - lo) / span) * 100))
                       return (
                         <div className="mt-4">
-                          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Target Range</p>
+                          <p className="text-[12px] font-semibold text-slate-600 mb-2">Target Range</p>
                           <div className="relative h-2 rounded-full bg-slate-100 overflow-hidden mb-1">
                             <div className="absolute inset-0 bg-gradient-to-r from-slate-300 to-blue-300" />
                             <div className="absolute top-1/2 -translate-y-1/2 w-0.5 h-full bg-blue-600 z-10" style={{ left: `${avgPct}%` }} />
@@ -941,7 +941,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         ].filter(r => r.value != null)
         return (
           <div className="px-4 sm:px-5 py-5">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">Market & Valuation Snapshot</p>
+            <p className="text-[13px] font-semibold text-slate-700 mb-3">Market &amp; Valuation Snapshot</p>
             <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 overflow-hidden">
               {rows.map(r => (
                 <div key={r.label} className="flex items-center justify-between px-4 py-3 bg-white">
@@ -988,7 +988,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         return (
           <div className="px-4 sm:px-5 py-5 space-y-5">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">Ownership Breakdown</p>
+              <p className="text-[13px] font-semibold text-slate-700 mb-3">Ownership Breakdown</p>
               {rawSum > 100 && (
                 <p className="text-[10px] text-amber-600 mb-2">Note: Institutional + Insider sums to {rawSum.toFixed(1)}% — normalized to 100% for display.</p>
               )}
@@ -1028,7 +1028,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
             {/* O1: short interest block */}
             {(shortPct != null || shortRatio != null) && (
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Short Interest</p>
+                <p className="text-[12px] font-semibold text-slate-600 mb-2">Short Interest</p>
                 <div className="rounded-xl border border-slate-200 overflow-hidden">
                   {shortPct != null && (
                     <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-100">

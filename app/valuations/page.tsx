@@ -94,9 +94,9 @@ function KpiCard({ icon: Icon, iconCls, label, value, sub }: {
         <Icon size={18} />
       </div>
       <div className="min-w-0">
-        <p className="text-[12px] font-semibold text-[#64748B] mb-0.5">{label}</p>
+        <p className="text-[12px] font-semibold text-slate-600 mb-0.5">{label}</p>
         <p className="text-[26px] font-extrabold text-[#0F172A] leading-none tabular-nums">{value}</p>
-        {sub && <p className="text-[12px] text-[#64748B] mt-1">{sub}</p>}
+        {sub && <p className="text-[12px] text-slate-600 mt-1">{sub}</p>}
       </div>
     </div>
   )
@@ -118,13 +118,19 @@ function SegmentTabs({ active, counts, onSelect }: {
   onSelect: (id: TabId) => void
 }) {
   return (
-    <div className="flex items-center gap-0 overflow-x-auto scrollbar-hide border-b border-[#E6ECF5]">
+    <div
+      role="tablist"
+      aria-label="Valuation lists"
+      className="flex items-center gap-0 overflow-x-auto scrollbar-hide border-b border-[#E6ECF5]"
+    >
       {TABS.map(({ id, label }) => {
         const isActive = active === id
         const count    = counts[id]
         return (
           <button
             key={id}
+            role="tab"
+            aria-selected={isActive}
             onClick={() => onSelect(id)}
             className={cn(
               'flex items-center gap-1.5 px-4 py-3 text-[13px] font-semibold whitespace-nowrap border-b-2 transition-colors',
@@ -196,16 +202,25 @@ function SortDropdown({ current, dir, onSort }: {
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-haspopup="listbox"
         className="flex items-center gap-2 pl-3 pr-2.5 py-2 text-[12px] font-semibold text-[#334155] bg-white border border-[#DDE6F2] rounded-xl hover:border-blue-300 transition-colors min-h-[40px]"
       >
         Sort: {currentLabel}
         <ChevronDown size={12} className="text-slate-400" />
       </button>
       {open && (
-        <div className="absolute right-0 top-9 w-44 bg-white rounded-xl border border-slate-200 shadow-lg z-20 py-1 overflow-hidden">
+        <div
+          role="listbox"
+          aria-label="Sort by"
+          className="absolute right-0 top-9 w-44 bg-white rounded-xl border border-slate-200 shadow-lg z-20 py-1 overflow-hidden"
+          onKeyDown={(e) => { if (e.key === 'Escape') setOpen(false) }}
+        >
           {SORT_OPTIONS.map(({ key, label }) => (
             <button
               key={key}
+              role="option"
+              aria-selected={current === key}
               onClick={() => {
                 onSort(key, key === current && dir === 'desc' ? 'asc' : 'desc')
                 setOpen(false)
@@ -256,13 +271,13 @@ function GridCard({ entry }: { entry: WatchlistEntry }) {
 
       <div className="grid grid-cols-2 gap-2">
         <div className="bg-slate-50 rounded-xl px-3 py-2.5">
-          <p className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold mb-1">Price</p>
+          <p className="text-[11px] text-slate-500 font-semibold mb-1">Price</p>
           <p className="text-[13px] font-bold text-slate-800 tabular-nums">
             {entry.snapshot.price != null ? `$${entry.snapshot.price.toFixed(2)}` : '—'}
           </p>
         </div>
         <div className={cn('rounded-xl px-3 py-2.5', upside != null ? (upside >= 0 ? 'bg-emerald-50' : 'bg-red-50') : 'bg-slate-50')}>
-          <p className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold mb-1">Fair Value</p>
+          <p className="text-[11px] text-slate-500 font-semibold mb-1">Fair Value</p>
           <p className={cn('text-[13px] font-bold tabular-nums', upside != null ? (upside >= 0 ? 'text-emerald-600' : 'text-red-600') : 'text-slate-400')}>
             {entry.snapshot.fairValue != null ? `$${entry.snapshot.fairValue.toFixed(2)}` : '—'}
           </p>
@@ -296,7 +311,7 @@ function EmptyState() {
         <Bookmark size={24} className="text-blue-500" />
       </div>
       <h2 className="text-[18px] font-bold text-[#0F172A] mb-2">No saved valuations yet</h2>
-      <p className="text-[14px] text-[#64748B] max-w-sm leading-relaxed mb-6">
+      <p className="text-[14px] text-slate-600 max-w-sm leading-relaxed mb-6">
         Analyze a stock and save the valuation to track fair value, upside, and confidence over time.
       </p>
       <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
@@ -424,7 +439,8 @@ export default function ValuationsPage() {
   const [currentPage,       setCurrentPage]       = useState(1)
   const [pageSize,          setPageSize]          = useState(10)
   const [pendingGroups,     setPendingGroups]     = useState<string[]>([])
-
+  const [groupInputOpen,    setGroupInputOpen]    = useState(false)
+  const [groupInputValue,   setGroupInputValue]   = useState('')
   // Load data
   useEffect(() => {
     setLoading(true)
@@ -536,68 +552,66 @@ export default function ValuationsPage() {
     <div className="min-h-screen bg-[#F8FAFC] px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 
       {/* Page header */}
-      <div className="bg-white border border-[#E6ECF5] rounded-2xl px-6 py-5 mb-5 shadow-sm">
-        <div className="flex items-start justify-between gap-4 mb-5">
-          <div>
-            <h1 className="text-[28px] sm:text-[32px] font-extrabold text-[#0F172A] tracking-tight leading-none" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-              My Valuations
-            </h1>
-            <p className="mt-1.5 text-[14px] text-[#64748B]">Saved analyses and watchlist ideas</p>
-          </div>
-          <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl shrink-0">
-            <button
-              onClick={() => setView('table')}
-              title="Table view"
-              aria-label="Table view"
-              className={cn('p-2 rounded-lg transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center', view === 'table' ? 'bg-white text-[#2563EB] shadow-sm' : 'text-slate-400 hover:text-slate-600')}
-            >
-              <List size={16} />
-            </button>
-            <button
-              onClick={() => setView('grid')}
-              title="Grid view"
-              aria-label="Grid view"
-              className={cn('p-2 rounded-lg transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center', view === 'grid' ? 'bg-white text-[#2563EB] shadow-sm' : 'text-slate-400 hover:text-slate-600')}
-            >
-              <LayoutGrid size={16} />
-            </button>
-          </div>
+      <div className="flex items-start justify-between gap-4 mb-5">
+        <div>
+          <h1 className="text-[28px] sm:text-[32px] font-extrabold text-[#0F172A] tracking-tight leading-none" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+            My Valuations
+          </h1>
+          <p className="mt-1.5 text-[14px] text-slate-500">Saved analyses and watchlist ideas</p>
         </div>
-
-        {/* KPI cards */}
-        {!loading && entries.length > 0 && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <KpiCard
-              icon={Bookmark}
-              iconCls="bg-blue-50 text-blue-600"
-              label="Tracked"
-              value={kpi.tracked}
-              sub="companies"
-            />
-            <KpiCard
-              icon={TrendingUp}
-              iconCls={kpi.avgUpside != null && kpi.avgUpside >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}
-              label="Avg Upside"
-              value={kpi.avgUpside != null ? fmtPct(kpi.avgUpside) : '—'}
-              sub="across all"
-            />
-            <KpiCard
-              icon={CheckCircle}
-              iconCls="bg-emerald-50 text-emerald-600"
-              label="Undervalued"
-              value={kpi.undervalued}
-              sub="companies"
-            />
-            <KpiCard
-              icon={Clock}
-              iconCls="bg-amber-50 text-amber-600"
-              label="Needs Review"
-              value={kpi.needsReview}
-              sub={kpi.needsReview === 0 ? 'all valuations complete' : 'missing fair value data'}
-            />
-          </div>
-        )}
+        <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl shrink-0">
+          <button
+            onClick={() => setView('table')}
+            title="Table view"
+            aria-label="Table view"
+            className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', view === 'table' ? 'bg-white text-[#2563EB] shadow-sm' : 'text-slate-400 hover:text-slate-600')}
+          >
+            <List size={16} />
+          </button>
+          <button
+            onClick={() => setView('grid')}
+            title="Grid view"
+            aria-label="Grid view"
+            className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', view === 'grid' ? 'bg-white text-[#2563EB] shadow-sm' : 'text-slate-400 hover:text-slate-600')}
+          >
+            <LayoutGrid size={16} />
+          </button>
+        </div>
       </div>
+
+      {/* KPI cards — own row, not nested inside the header */}
+      {!loading && entries.length > 0 && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+          <KpiCard
+            icon={Bookmark}
+            iconCls="bg-blue-50 text-blue-600"
+            label="Tracked"
+            value={kpi.tracked}
+            sub="companies"
+          />
+          <KpiCard
+            icon={TrendingUp}
+            iconCls={kpi.avgUpside != null && kpi.avgUpside >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}
+            label="Avg Upside"
+            value={kpi.avgUpside != null ? fmtPct(kpi.avgUpside) : '—'}
+            sub="across all"
+          />
+          <KpiCard
+            icon={CheckCircle}
+            iconCls="bg-emerald-50 text-emerald-600"
+            label="Undervalued"
+            value={kpi.undervalued}
+            sub="companies"
+          />
+          <KpiCard
+            icon={Clock}
+            iconCls="bg-amber-50 text-amber-600"
+            label="Needs Review"
+            value={kpi.needsReview}
+            sub={kpi.needsReview === 0 ? 'all valuations complete' : 'missing fair value data'}
+          />
+        </div>
+      )}
 
       {/* Loading skeletons */}
       {loading && (
@@ -625,16 +639,40 @@ export default function ValuationsPage() {
               <div className="flex-1 min-w-0 overflow-x-auto scrollbar-hide">
                 <SegmentTabs active={activeTab} counts={tabCounts} onSelect={setActiveTab} />
               </div>
-              <button
-                onClick={() => {
-                  const name = window.prompt('New group name:')?.trim()
-                  if (name && !allGroups.includes(name)) setPendingGroups((prev) => [...prev, name])
-                }}
-                className="shrink-0 flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold text-[#2563EB] border border-dashed border-blue-300 bg-white hover:bg-blue-50 rounded-xl transition-colors whitespace-nowrap min-h-[40px]"
-              >
-                <Plus size={13} />
-                New group
-              </button>
+              <div className="shrink-0 flex items-center gap-1">
+                {groupInputOpen ? (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault()
+                      const name = groupInputValue.trim()
+                      if (name && !allGroups.includes(name)) setPendingGroups((prev) => [...prev, name])
+                      setGroupInputValue('')
+                      setGroupInputOpen(false)
+                    }}
+                    className="flex items-center gap-1.5"
+                  >
+                    <input
+                      autoFocus
+                      type="text"
+                      value={groupInputValue}
+                      onChange={(e) => setGroupInputValue(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Escape') { setGroupInputOpen(false); setGroupInputValue('') } }}
+                      placeholder="Group name"
+                      className="w-32 px-2.5 py-1.5 text-[12px] text-slate-800 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100"
+                    />
+                    <button type="submit" className="text-[12px] font-semibold text-blue-600 hover:text-blue-700 px-2 py-1.5 min-h-[34px]">Add</button>
+                    <button type="button" onClick={() => { setGroupInputOpen(false); setGroupInputValue('') }} className="text-[12px] text-slate-400 hover:text-slate-600 px-1.5 py-1.5 min-h-[34px]">Cancel</button>
+                  </form>
+                ) : (
+                  <button
+                    onClick={() => setGroupInputOpen(true)}
+                    className="shrink-0 flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold text-[#2563EB] border border-dashed border-blue-300 bg-white hover:bg-blue-50 rounded-xl transition-colors whitespace-nowrap min-h-[40px]"
+                  >
+                    <Plus size={13} />
+                    New group
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Search + Sort + Filters */}

@@ -159,20 +159,24 @@ function BusinessQualityCard({ ratings, scores }: { ratings: StockRatings; score
   return (
     <div className="card p-4 sm:p-5">
       <CardHeader title="Business Quality" label={label} color={color} Icon={Award} />
-      <div className="space-y-2.5 mb-3">
-        <MetricRow label="Economic Moat" value={moat?.label ?? '—'} />
-        <MetricRow
-          label="ROIC vs WACC"
-          value={spreadPct}
-          valueClass={spreadClass}
-          tooltip="Return on Invested Capital minus the cost of capital. A positive spread means the business earns more than it costs to run — the hallmark of a quality compounder."
-        />
-        <MetricRow
-          label="Profitability Grade"
-          value={profitability ? `${profitability.grade} — ${profitability.label}` : '—'}
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0 mb-3">
+        <div className="space-y-2.5">
+          <MetricRow label="Economic Moat" value={moat?.label ?? '—'} />
+          <MetricRow
+            label="ROIC vs WACC"
+            value={spreadPct}
+            valueClass={spreadClass}
+            tooltip="Return on Invested Capital minus the cost of capital. A positive spread means the business earns more than it costs to run — the hallmark of a quality compounder."
+          />
+          <MetricRow
+            label="Profitability Grade"
+            value={profitability ? `${profitability.grade} — ${profitability.label}` : '—'}
+          />
+        </div>
+        <p className="text-[12px] text-slate-500 leading-snug sm:border-l sm:border-slate-100 sm:pl-6 pt-2 sm:pt-0 border-t border-slate-100 sm:border-t-0">
+          {interpSentence}
+        </p>
       </div>
-      <p className="text-[12px] text-slate-500 leading-snug border-t border-slate-100 pt-2">{interpSentence}</p>
     </div>
   )
 }
@@ -585,7 +589,9 @@ export default function OverviewMetricGrid({ ratings, scores, businessProfile, c
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 items-start">
-      <BusinessQualityCard ratings={ratings} scores={scores ?? {}} onViewDetails={onViewRisks} />
+      <div className="col-span-2 lg:col-span-2">
+        <BusinessQualityCard ratings={ratings} scores={scores ?? {}} onViewDetails={onViewRisks} />
+      </div>
       <GrowthOutlookCard ratings={ratings} cagrAnalysis={cagrAnalysis} onViewDetails={onViewRisks} />
       <ProfitabilityCard ratings={ratings} businessProfile={businessProfile} statementsData={statementsData} onViewDetails={onViewRisks} />
       <CashConversionCard businessProfile={businessProfile} statementsData={statementsData} onViewDetails={onViewRisks} />

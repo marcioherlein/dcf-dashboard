@@ -109,10 +109,10 @@ export default function SummaryTab({
   const drivers: string[] = cagrAnalysis?.drivers ?? []
 
   return (
-    <div className="space-y-[14px]">
+    <div className="flex flex-col">
 
       {/* ── Row 1: Hero narrative + Price chart ───────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-[14px]">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-4">
         <SummaryHeroCard
           ticker={ticker}
           price={price}
@@ -140,7 +140,7 @@ export default function SummaryTab({
       </div>
 
       {/* ── Row 2: Reverse DCF · Price vs FV · Interpretation ─────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.9fr)_minmax(190px,1fr)_minmax(0,1.5fr)] gap-[14px]">
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-[minmax(0,1.9fr)_minmax(190px,1fr)_minmax(0,1.5fr)] gap-4">
         <ReverseDCFCompactCard
           price={price}
           currency={currency}
@@ -176,20 +176,22 @@ export default function SummaryTab({
 
       {/* ── Row 3: Six compact quality cards ──────────────────────────────── */}
       {ratings && (
-        <OverviewMetricGrid
-          ratings={ratings}
-          scores={scores}
-          businessProfile={businessProfile}
-          cagrAnalysis={cagrAnalysis}
-          statementsData={statementsData}
-          onViewRisks={onViewRisks}
-          valuationMethods={valuationMethods}
-          quote={quote}
-        />
+        <div className="mt-8">
+          <OverviewMetricGrid
+            ratings={ratings}
+            scores={scores}
+            businessProfile={businessProfile}
+            cagrAnalysis={cagrAnalysis}
+            statementsData={statementsData}
+            onViewRisks={onViewRisks}
+            valuationMethods={valuationMethods}
+            quote={quote}
+          />
+        </div>
       )}
 
       {/* ── Row 4: Bull · Bear · Next steps ───────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-[14px]">
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
         <BullCaseCard
           drivers={drivers}
           upsidePct={upsidePct}
@@ -210,14 +212,16 @@ export default function SummaryTab({
 
       {/* ── Company overview ───────────────────────────────────────────────── */}
       {businessProfile?.description && (
-        <CompanyCard
-          description={businessProfile.description}
-          sector={sector}
-          industry={businessProfile.industry ?? ''}
-          country={businessProfile.country ?? ''}
-          employees={businessProfile.employees ?? null}
-          ticker={ticker}
-        />
+        <div className="mt-8">
+          <CompanyCard
+            description={businessProfile.description}
+            sector={sector}
+            industry={businessProfile.industry ?? ''}
+            country={businessProfile.country ?? ''}
+            employees={businessProfile.employees ?? null}
+            ticker={ticker}
+          />
+        </div>
       )}
 
     </div>

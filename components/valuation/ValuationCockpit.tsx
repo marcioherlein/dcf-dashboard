@@ -190,7 +190,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-3">
       <SaveToWatchlistDialog
         open={saveOpen}
         payload={savePayload}
@@ -212,7 +212,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
       <GuidanceStrip />
 
       {/* Two-column layout: left (scenario+chart) + tall right sidebar */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-4 items-start">
+      <div className="mt-2 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-4 items-start">
         <div className="flex flex-col gap-4 min-w-0">
           <ScenarioCards
             scenarios={output.scenarios}

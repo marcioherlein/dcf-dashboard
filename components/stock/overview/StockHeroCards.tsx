@@ -80,7 +80,7 @@ function HeroCard({ children, className }: { children: React.ReactNode; classNam
 }
 
 function CardLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2.5">{children}</p>
+  return <p className="text-[12px] font-semibold text-slate-500 mb-2.5">{children}</p>
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -130,7 +130,7 @@ export default function StockHeroCards({
         </p>
 
         <div className="mt-auto pt-4">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2">52-Week Range</p>
+          <p className="text-[11px] font-semibold text-slate-400 mb-2">52-Week Range</p>
           <div className="relative h-2 rounded-full overflow-hidden bg-slate-100">
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-amber-400 to-red-500 opacity-60" />
             <div
@@ -167,7 +167,7 @@ export default function StockHeroCards({
 
             {scenarios && (
               <div className="mt-auto pt-4">
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-1.5">Scenario Range</p>
+                <p className="text-[11px] font-semibold text-slate-400 mb-1.5">Scenario Range</p>
                 <div className="flex items-center justify-between rounded-lg bg-slate-50 border border-slate-100 px-2 py-2">
                   <div className="text-center">
                     <p className="text-[11px] text-slate-400 mb-0.5">Bear</p>
