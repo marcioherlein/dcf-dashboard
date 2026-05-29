@@ -23,6 +23,10 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
   const upColor = output.upsidePct != null ? (output.upsidePct >= 0 ? 'text-emerald-600' : 'text-red-600') : 'text-slate-400'
   const methodsComputed = output.methods.filter(m => m.fairValue != null).length
 
+  // Displayed strings used as remount keys — flash only fires when displayed value actually changes
+  const fvDisplay = output.blendedFairValue != null ? fmtPrice(output.blendedFairValue, currency) : '—'
+  const upDisplay = output.upsidePct != null ? `${upsideSign}${(output.upsidePct * 100).toFixed(1)}%` : '—'
+
   return (
     <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
       <div className="grid grid-cols-2 md:grid-cols-5 divide-x divide-y md:divide-y-0 divide-slate-100">
@@ -39,30 +43,34 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
           )}
         </div>
 
-        {/* Blended Fair Value */}
+        {/* Blended Fair Value — flashes when value changes */}
         <div className="px-5 py-4 flex flex-col gap-1 border-t-2 border-blue-500">
           <p className="text-xs font-semibold text-slate-500" title="Weighted average of available valuation models. Unavailable models are excluded and weights redistributed.">Blended Fair Value</p>
-          <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none">
-            {output.blendedFairValue != null ? fmtPrice(output.blendedFairValue, currency) : '—'}
-          </p>
+          <div key={`fv-${fvDisplay}`} className="value-flash rounded-[6px] -mx-1 px-1">
+            <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none">
+              {fvDisplay}
+            </p>
+          </div>
           <p className="text-xs text-slate-400">
             {methodsComputed} of {output.methods.length} models{methodsComputed < output.methods.length ? ' · weights redistributed' : ''}
           </p>
         </div>
 
-        {/* Upside / Downside */}
+        {/* Upside / Downside — flashes when value changes */}
         <div className="px-5 py-4 flex flex-col gap-1">
           <p className="text-xs font-semibold text-slate-500">Upside / Downside</p>
-          <p className={`text-2xl font-bold tabular-nums leading-none ${upColor}`}>
-            {output.upsidePct != null ? `${upsideSign}${(output.upsidePct * 100).toFixed(1)}%` : '—'}
-          </p>
+          <div key={`up-${upDisplay}`} className="value-flash rounded-[6px] -mx-1 px-1">
+            <p className={`text-2xl font-bold tabular-nums leading-none ${upColor}`}>
+              {upDisplay}
+            </p>
+          </div>
           <p className="text-xs text-slate-400">vs current price</p>
         </div>
 
         {/* Investment Verdict */}
         <div className="px-5 py-4 flex flex-col gap-1">
           <p className="text-xs font-semibold text-slate-500">Investment Verdict</p>
-          <p className={`text-xl font-bold leading-tight ${vstyle.text}`}>{output.verdict}</p>
+          <p className={`text-xl font-bold leading-tight transition-colors duration-300 ${vstyle.text}`}>{output.verdict}</p>
           {output.upsidePct != null && (
             <p className="text-xs text-slate-400">{methodsComputed} of {output.methods.length} models</p>
           )}

@@ -480,6 +480,17 @@ h3 {
 }
 .row-flash { animation: row-flash 2.2s ease-out forwards; }
 
+/* Value-change flash: brief blue tint on fair value cells when assumptions update */
+@keyframes value-flash {
+  0%   { background-color: rgba(37, 99, 235, 0.10); }
+  100% { background-color: transparent; }
+}
+.value-flash { animation: value-flash 0.55s cubic-bezier(0.25, 1, 0.5, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .value-flash { animation: none; }
+}
+
 /* ── Hero rotating word ──────────────────────────────── */
 @keyframes word-in {
   from { opacity: 0; transform: translateY(14px); filter: blur(6px); }
