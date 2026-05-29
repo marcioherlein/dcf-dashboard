@@ -30,9 +30,9 @@ const NAV = [
     ),
   },
   {
-    href: '/',
+    href: '/analyze',
     label: 'Analyze',
-    match: (p: string) => p === '/' || p.startsWith('/stock'),
+    match: (p: string) => p.startsWith('/analyze') || p.startsWith('/stock'),
     icon: (active: boolean) => (
       <div className={cn(
         'w-10 h-10 rounded-full flex items-center justify-center -mt-4 ring-4 ring-slate-100 shadow-lg',
