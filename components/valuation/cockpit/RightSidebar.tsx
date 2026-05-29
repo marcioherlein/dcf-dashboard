@@ -13,27 +13,26 @@ interface Props {
 }
 
 const VERDICT_COLORS = {
-  Undervalued:         { text: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
-  'Fairly Valued':     { text: 'text-blue-600',    bg: 'bg-blue-50 border-blue-200'       },
-  Overvalued:          { text: 'text-red-600',      bg: 'bg-red-50 border-red-200'         },
-  'Insufficient Data': { text: 'text-slate-500',    bg: 'bg-slate-50 border-slate-200'     },
+  Undervalued:         { text: 'text-emerald-600', bg: 'bg-[#ECFDF3] border-[#BBF7D0]' },
+  'Fairly Valued':     { text: 'text-[#2563EB]',   bg: 'bg-[#EFF6FF] border-[#BFDBFE]' },
+  Overvalued:          { text: 'text-red-600',      bg: 'bg-[#FEF2F2] border-[#FECACA]' },
+  'Insufficient Data': { text: 'text-[#64748B]',   bg: 'bg-[#F8FAFC] border-[#E2E8F0]' },
 }
 
 const DIVERGENCE_STYLE = {
-  low:      { text: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200', label: 'Low divergence'      },
-  moderate: { text: 'text-amber-600',   bg: 'bg-amber-50 border-amber-200',     label: 'Moderate divergence' },
-  high:     { text: 'text-red-600',     bg: 'bg-red-50 border-red-200',         label: 'High divergence'     },
+  low:      { text: 'text-emerald-600', bg: 'bg-[#ECFDF3] border-[#BBF7D0]', label: 'Low divergence'      },
+  moderate: { text: 'text-[#D97706]',   bg: 'bg-[#FFFBEB] border-[#FDE68A]', label: 'Moderate divergence' },
+  high:     { text: 'text-red-600',     bg: 'bg-[#FEF2F2] border-[#FECACA]', label: 'High divergence'     },
 }
 
-const METHOD_COLORS = ['bg-blue-500', 'bg-indigo-500', 'bg-violet-500', 'bg-purple-500']
-const METHOD_FILLS  = ['#3B82F6',    '#6366F1',       '#8B5CF6',       '#A855F7']
+const METHOD_FILLS = ['#3B82F6', '#6366F1', '#8B5CF6', '#A855F7']
 
 function Divider() {
-  return <div className="border-t border-slate-100" />
+  return <div className="border-t border-[#F1F5F9]" />
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-[11px] font-semibold text-slate-500 mb-2.5">{children}</p>
+  return <p className="text-[11px] font-[650] text-[#64748B] mb-2.5">{children}</p>
 }
 
 function RangeBar({
@@ -63,19 +62,17 @@ function RangeBar({
         <span>{fmtPrice(min, currency)}</span>
         <span>{fmtPrice(max, currency)}</span>
       </div>
-      <div className="relative h-3 bg-slate-100 rounded-full">
+      <div className="relative h-3 bg-[#F1F5F9] rounded-full">
         <div className="absolute inset-0 rounded-full bg-gradient-to-r from-red-400/40 via-amber-300/40 to-emerald-400/40" />
-        {/* Slate tick = current price */}
         {currentPct != null && (
           <div
-            className="absolute top-0 h-full w-[2px] bg-slate-400 rounded-full"
+            className="absolute top-0 h-full w-[2px] bg-[#94A3B8] rounded-full"
             style={{ left: `${currentPct}%`, transform: 'translateX(-50%)' }}
           />
         )}
-        {/* White dot with blue ring = blended estimate */}
         {blendedPct != null && (
           <div
-            className="absolute w-4 h-4 bg-white rounded-full shadow-md border-2 border-blue-500"
+            className="absolute w-4 h-4 bg-white rounded-full shadow-md border-2 border-[#2563EB]"
             style={{ left: `${blendedPct}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
           />
         )}
@@ -100,23 +97,21 @@ function WeightBars({ methods }: { methods: CockpitMethodResult[] }) {
         return (
           <div key={m.id} className="flex items-center gap-2.5">
             <div
-              className={`w-2 h-2 rounded-full shrink-0 ${METHOD_COLORS[i]} ${!isAvail ? 'opacity-25' : ''}`}
-              style={{ background: isAvail ? METHOD_FILLS[i] : undefined }}
+              className="w-2 h-2 rounded-full shrink-0"
+              style={{ background: isAvail ? METHOD_FILLS[i] : '#E2E8F0' }}
             />
-            <span className={`text-[11px] flex-1 truncate ${isAvail ? 'text-slate-600' : 'text-slate-300'}`}>
+            <span className={`text-[11px] flex-1 truncate ${isAvail ? 'text-[#475569]' : 'text-[#CBD5E1]'}`}>
               {m.method}
             </span>
-            <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden shrink-0">
-              {isAvail ? (
+            <div className="w-20 h-1.5 bg-[#F1F5F9] rounded-full overflow-hidden shrink-0">
+              {isAvail && (
                 <div
-                  className={`h-full rounded-full transition-all`}
+                  className="h-full rounded-full transition-[width] duration-300"
                   style={{ width: `${effectivePct}%`, background: METHOD_FILLS[i] }}
                 />
-              ) : (
-                <div className="h-full w-full bg-slate-100 rounded-full" />
               )}
             </div>
-            <span className={`text-[11px] w-7 text-right tabular-nums shrink-0 ${isAvail ? 'text-slate-500' : 'text-slate-300'}`}>
+            <span className={`text-[11px] w-7 text-right tabular-nums shrink-0 ${isAvail ? 'text-[#64748B]' : 'text-[#CBD5E1]'}`}>
               {isAvail ? `${Math.round(effectivePct)}%` : '—'}
             </span>
           </div>
@@ -138,26 +133,23 @@ export default function RightSidebar({
 
   return (
     <div
-      className="rounded-xl border border-slate-200 bg-white flex flex-col gap-4 sticky top-4"
-      style={{ boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 4px 16px rgba(15,23,42,0.05)' }}
+      className="rounded-[18px] border border-[#E6ECF5] bg-white flex flex-col gap-4 sticky top-4"
+      style={{ boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.04)' }}
     >
       <div className="px-5 pt-5 pb-0">
         <SectionLabel>Model Summary</SectionLabel>
 
-        {/* Verdict badge */}
-        <span className={`inline-flex text-sm font-bold tracking-wide px-4 py-1.5 rounded-full border mb-2 ${vc.bg} ${vc.text}`}>
+        <span className={`inline-flex text-[13px] font-[700] tracking-wide px-4 py-1.5 rounded-full border mb-2 ${vc.bg} ${vc.text}`}>
           {output.verdict}
         </span>
 
-        {/* Conviction + model count */}
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-[11px] text-[#94A3B8] mt-1">
           {convictionLabel} · {validCount} of {output.methods.length} models
         </p>
       </div>
 
       <div className="px-5"><Divider /></div>
 
-      {/* MODEL DIVERGENCE */}
       <div className="px-5">
         <div className="flex items-center gap-2">
           <SectionLabel>Model Divergence</SectionLabel>
@@ -169,7 +161,6 @@ export default function RightSidebar({
 
       <div className="px-5"><Divider /></div>
 
-      {/* MODEL RANGE */}
       <div className="px-5">
         <SectionLabel>Model Range</SectionLabel>
         <RangeBar
@@ -182,34 +173,31 @@ export default function RightSidebar({
 
       <div className="px-5"><Divider /></div>
 
-      {/* METHOD WEIGHTS */}
       <div className="px-5">
         <SectionLabel>Effective Blend Weights</SectionLabel>
         <WeightBars methods={output.methods} />
       </div>
 
-      {/* Save Analysis CTA */}
-      <div className="px-5">
-        {onSave && (
+      {onSave && (
+        <div className="px-5">
           <button
             onClick={onSave}
-            className="w-full rounded-xl text-white font-bold text-sm py-2.5 px-4 transition-all flex items-center justify-center gap-2"
-            style={{ background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)', boxShadow: '0 2px 12px rgba(37,99,235,0.25)' }}
+            className="w-full rounded-[10px] text-white text-[13px] font-[650] py-2.5 px-4 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+            style={{ background: '#2563EB', boxShadow: '0 2px 12px rgba(37,99,235,0.25)' }}
           >
             <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
             </svg>
             Save to Watchlist
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Open Full DCF Model */}
       {onViewFullDCF && (
         <div className="px-5">
           <button
             onClick={onViewFullDCF}
-            className="w-full rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-800 font-semibold text-xs py-2.5 px-4 transition-colors flex items-center justify-center gap-2"
+            className="w-full rounded-[10px] border border-[#E6ECF5] bg-white hover:bg-[#F8FAFC] text-[#475569] hover:text-[#0F172A] text-[13px] font-[650] py-2.5 px-4 transition-colors flex items-center justify-center gap-2"
           >
             View Year-by-Year DCF
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -219,9 +207,8 @@ export default function RightSidebar({
         </div>
       )}
 
-      {/* Disclaimer */}
       <div className="px-5 pb-5">
-        <p className="text-[11px] text-slate-400 leading-relaxed pt-3 border-t border-slate-100">
+        <p className="text-[11px] text-[#94A3B8] leading-relaxed pt-3 border-t border-[#F1F5F9]">
           Blended estimate from {output.methods.filter(m => m.fairValue != null && m.fairValue > 0).map(m => m.method).join(', ')}. Not investment advice.
         </p>
       </div>
