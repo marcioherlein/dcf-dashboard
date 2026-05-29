@@ -9,6 +9,7 @@ import {
 } from '@/lib/valuation/cockpit'
 import { buildSnapshot, seedAssumptions } from '@/lib/valuation/cockpitBuilders'
 import SummaryCards from './cockpit/SummaryCards'
+import GuidanceStrip from './cockpit/GuidanceStrip'
 import FairValueChart from './cockpit/FairValueChart'
 import AssumptionsPanel, { type SparkPoint } from './cockpit/AssumptionsPanel'
 import ScenarioCards from './cockpit/ScenarioCards'
@@ -95,17 +96,24 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
 
   const [assumptions, setAssumptions] = useState<ValuationAssumptions>(() => seedAssumptions(apiData))
   const [history, setHistory] = useState<ValuationAssumptions[]>([])
-  const [dcfOpened, setDcfOpened] = useState(false)
   const [saveOpen, setSaveOpen] = useState(false)
+  const [liveDcfFV, setLiveDcfFV] = useState<number | null>(null)
+
+  // When ModellingWorkspace computes its derivedFV, override snapshot.fullDcfFairValue so
+  // the Core DCF card always matches the Full DCF Table's 4-model blended result exactly.
+  const effectiveSnapshot = useMemo(
+    () => liveDcfFV != null ? { ...snapshot, fullDcfFairValue: liveDcfFV } : snapshot,
+    [snapshot, liveDcfFV]
+  )
 
   const output = useMemo(
-    () => computeCockpitOutput(assumptions, snapshot),
-    [assumptions, snapshot]
+    () => computeCockpitOutput(assumptions, effectiveSnapshot),
+    [assumptions, effectiveSnapshot]
   )
 
   const defaultOutput = useMemo(
-    () => computeCockpitOutput(defaults, snapshot),
-    [defaults, snapshot]
+    () => computeCockpitOutput(defaults, effectiveSnapshot),
+    [defaults, effectiveSnapshot]
   )
 
   // Sensitivity: % change in blended FV per 1pp (% fields) or 1× (multiple fields)
@@ -207,36 +215,52 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
         currency={currency}
       />
 
-      {/* Two-column layout: left (scenario+chart) + tall right sidebar */}
-      <div className="mt-2 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-4 items-start">
-        <div className="flex flex-col gap-4 min-w-0">
+      {/* Collapsible guidance at top */}
+      <GuidanceStrip />
+
+      {/* Workbench: assumptions (left, cause) + live output (right, effect) */}
+      <div className="mt-2 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 items-start">
+        <div ref={assumptionsPanelRef} className="min-w-0">
+          <AssumptionsPanel
+            assumptions={assumptions}
+            defaults={defaults}
+            onChange={handleAssumptionChange}
+            onReset={handleReset}
+            onUndo={handleUndo}
+            canUndo={history.length > 0}
+            historicalData={historicalData}
+            blendedFairValue={output.blendedFairValue}
+            defaultBlendedFairValue={defaultOutput.blendedFairValue}
+            sensitivity={sensitivity}
+            currency={currency}
+          />
+        </div>
+
+        <div className="flex flex-col gap-4">
           <ScenarioCards
             scenarios={output.scenarios}
             currentPrice={currentPrice}
             currency={currency}
           />
-          <FairValueChart
-            methods={output.methods}
-            blendedFairValue={output.blendedFairValue}
+          <RightSidebar
+            output={output}
             currentPrice={currentPrice}
             currency={currency}
+            ticker={ticker}
+            onViewFullDCF={scrollToFullDCF}
+            onSave={() => setSaveOpen(true)}
           />
         </div>
-
-        <RightSidebar
-          output={output}
-          currentPrice={currentPrice}
-          currency={currency}
-          ticker={ticker}
-          onViewFullDCF={scrollToFullDCF}
-          onSave={() => setSaveOpen(true)}
-        />
       </div>
 
-      {/* Full-width: divergence panel */}
+      {/* Evidence: method chart + divergence + method cards */}
+      <FairValueChart
+        methods={output.methods}
+        blendedFairValue={output.blendedFairValue}
+        currentPrice={currentPrice}
+        currency={currency}
+      />
       <ModelDivergencePanel divergence={output.divergence} />
-
-      {/* Full-width: method cards */}
       <ValuationMethodCards
         methods={output.methods}
         currentPrice={currentPrice}
@@ -246,25 +270,8 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
         ttmEbitdaDollars={snapshot.ttmEbitdaDollars}
       />
 
-      {/* Full-width: assumptions editor (single instance, no duplicate) */}
-      <div ref={assumptionsPanelRef}>
-        <AssumptionsPanel
-          assumptions={assumptions}
-          defaults={defaults}
-          onChange={handleAssumptionChange}
-          onReset={handleReset}
-          onUndo={handleUndo}
-          canUndo={history.length > 0}
-          historicalData={historicalData}
-          blendedFairValue={output.blendedFairValue}
-          defaultBlendedFairValue={defaultOutput.blendedFairValue}
-          sensitivity={sensitivity}
-          currency={currency}
-        />
-      </div>
-
       {/* Full DCF Model — blue header, more visible */}
-      <details ref={fullDcfRef} className="group" id="full_dcf" onToggle={() => setDcfOpened(true)}>
+      <details ref={fullDcfRef} className="group" id="full_dcf">
         <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-blue-100 shadow-sm px-4 sm:px-5 py-3.5 hover:bg-blue-50 transition-colors select-none">
           <span className="text-blue-400 text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
           <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
@@ -277,54 +284,16 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
           <p className="sm:hidden text-[11px] text-slate-400 text-center py-2 px-4">
             Best experienced on a wider screen — scroll horizontally to view all columns.
           </p>
-          {dcfOpened && (
-            <ModellingWorkspace
-              apiData={apiData}
-              ticker={ticker}
-              statementsData={statementsData}
-            />
-          )}
+          <ModellingWorkspace
+            apiData={apiData}
+            ticker={ticker}
+            statementsData={statementsData}
+            onDerivedFVChange={setLiveDcfFV}
+          />
         </div>
       </details>
 
-      {/* End-of-page CTA */}
-      <div className="rounded-xl bg-white border border-slate-100 shadow-sm px-5 py-5">
-        <p className="text-sm font-semibold text-slate-600 mb-3">What do you want to do next?</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button
-            onClick={scrollToFullDCF}
-            className="flex flex-col gap-1 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 min-h-[60px] hover:bg-blue-100 transition-colors text-left"
-          >
-            <span className="text-sm font-bold text-blue-700">Full DCF table →</span>
-            <span className="text-xs text-slate-500">Edit WACC, year-by-year projections, and 4-model blend</span>
-          </button>
-          {onNavigateToFinancials && (
-            <button
-              onClick={() => onNavigateToFinancials('revenue', 'income')}
-              className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 min-h-[60px] hover:bg-slate-100 transition-colors text-left"
-            >
-              <span className="text-sm font-bold text-slate-700">Check the financials →</span>
-              <span className="text-xs text-slate-500">Revenue, margins, cash flow and debt history</span>
-            </button>
-          )}
-          {onNavigateToRisks && (
-            <button
-              onClick={onNavigateToRisks}
-              className="flex flex-col gap-1 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 min-h-[60px] hover:bg-amber-100 transition-colors text-left"
-            >
-              <span className="text-sm font-bold text-amber-700">Review risks →</span>
-              <span className="text-xs text-slate-500">Key risk factors, signals, and sensitivity analysis</span>
-            </button>
-          )}
-          <button
-            onClick={() => setSaveOpen(true)}
-            className="flex flex-col gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 min-h-[60px] hover:bg-emerald-100 transition-colors text-left"
-          >
-            <span className="text-sm font-bold text-emerald-700">Save to watchlist →</span>
-            <span className="text-xs text-slate-500">Track this stock and get updates on value and price changes</span>
-          </button>
-        </div>
-      </div>
+      {/* End-of-page CTA — removed; tab nav handles navigation */}
       {/* Mobile sticky CTA — hidden on desktop where assumptions are always visible */}
       <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 px-4 pb-4 pt-2" style={{ background: 'linear-gradient(to top, rgba(248,250,252,0.98) 0%, rgba(248,250,252,0) 100%)' }}>
         <button
