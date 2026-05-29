@@ -163,7 +163,7 @@ export default function TopBar() {
             </button>
           </div>
           {/* Row 2: scrollable tabs */}
-          <div className="h-9 border-t border-slate-100 flex overflow-x-auto scrollbar-hide px-1" role="tablist">
+          <div className="h-9 border-t border-slate-100 flex overflow-x-auto scrollbar-hide px-1" role="tablist" style={{ overscrollBehaviorX: 'contain' }}>
             {STOCK_TABS.map(({ id, label }) => {
               const active = stockNav.activeTab === id
               return (
@@ -200,7 +200,8 @@ export default function TopBar() {
         }}
       >
         {/* ── Column 1: Logo + name ── */}
-        <div className="flex items-center">
+        {/* On non-stock pages hide logo entirely on mobile to give search bar full width */}
+        <div className={cn('flex items-center', !stockNav && 'hidden sm:flex')}>
           <Link href="/" className="flex items-center gap-2 shrink-0 group">
             <Image
               src="/logos/logo.png"
@@ -291,8 +292,8 @@ export default function TopBar() {
           </div>
         ) : (
           /* Wide centered search for non-stock pages */
-          <div className="flex justify-center">
-            <div className="relative" ref={searchRef} style={{ width: 'clamp(200px, 42vw, 480px)' }}>
+          <div className="flex justify-center w-full mx-3 sm:mx-0">
+            <div className="relative w-full sm:w-auto sm:max-w-[480px]" ref={searchRef}>
               <div
                 className="flex items-center gap-2 rounded-xl px-3 py-1.5 transition-all border"
                 style={{
