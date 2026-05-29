@@ -197,7 +197,7 @@ function GrowthEditCell({ growthPct, prevRevenue, year, isProjected, projectedIn
             }}
             onBlur={commitEdit}
           />
-          <span className="text-[10px] text-blue-400">%</span>
+          <span className="text-[11px] text-blue-400">%</span>
         </div>
       </td>
     )
@@ -218,17 +218,19 @@ function GrowthEditCell({ growthPct, prevRevenue, year, isProjected, projectedIn
         canEdit ? 'bg-blue-500/10 border-b-2 border-blue-500/40 hover:bg-blue-500/20' : cellBg({ isProjected, year }),
       )}
       onClick={startEdit}
+      onKeyDown={canEdit ? e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startEdit() } } : undefined}
+      tabIndex={canEdit ? 0 : undefined}
       title="Click to edit"
     >
       <div className="flex flex-col items-end gap-0.5">
         <div className="flex items-center gap-1 justify-end">
-          {canEdit && <span className="text-[9px] text-blue-400 opacity-60 group-hover:opacity-100 transition-opacity">✎</span>}
+          {canEdit && <span className="text-[11px] text-blue-400 opacity-60 group-hover:opacity-100 transition-opacity">✎</span>}
           <span className={cn('font-semibold', canEdit ? 'text-blue-300' : growthColor)}>
             {fmtPctDisplay(growthPct)}
           </span>
         </div>
         <span className={cn(
-          'text-[8px] px-1 py-px rounded font-semibold',
+          'text-[10px] px-1 py-px rounded font-semibold',
           isAnalyst ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'
         )}>
           {isAnalyst ? 'Analyst' : 'Model'}
@@ -258,7 +260,7 @@ function DataCell({ value, row, bold, color }: { value: string; row: DisplayRow;
 function SectionHeader({ label, colSpan }: { label: string; colSpan: number }) {
   return (
     <tr>
-      <td colSpan={colSpan} className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500 bg-white/4 border-b border-white/8">
+      <td colSpan={colSpan} className="px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-400 bg-white/4 border-b border-white/8">
         {label}
       </td>
     </tr>
@@ -360,7 +362,7 @@ export default function ForecastTable({
           <span>{label}</span>
           {row.isProjected && (
             <span className={cn(
-              'text-[8px] px-1 rounded font-semibold',
+              'text-[10px] px-1 rounded font-semibold',
               isAnalyst ? 'bg-amber-500/20 text-amber-400' : 'bg-white/8 text-slate-500'
             )}>
               {isAnalyst ? 'Analyst' : 'Model'}
@@ -377,14 +379,14 @@ export default function ForecastTable({
     return [
       <tr key="revenue" className="hover:bg-white/4">
         <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap w-52 min-w-[200px] border-r border-white/8">
-          Revenue <span className="text-[10px] text-slate-500 font-normal">$M</span>
+          Revenue <span className="text-[11px] text-slate-500 font-normal">$M</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.revenue)} row={r} />)}
       </tr>,
       <tr key="revenue-growth" className="hover:bg-white/4 border-b border-white/8">
         <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] font-bold text-blue-400 whitespace-nowrap border-r border-white/8">
           Revenue % Growth
-          <span className="ml-1.5 inline-flex items-center gap-0.5 bg-blue-500/15 text-blue-400 text-[8px] font-semibold px-1.5 py-px rounded-full">✎ editable</span>
+          <span className="ml-1.5 inline-flex items-center gap-0.5 bg-blue-500/15 text-blue-400 text-[10px] font-semibold px-1.5 py-px rounded-full">✎ editable</span>
         </td>
         {rows.map((r) => {
           const rIdx = rows.indexOf(r)
@@ -417,7 +419,7 @@ export default function ForecastTable({
       // EBIT
       <tr key="ebit" className="hover:bg-white/4">
         <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap border-r border-white/8">
-          EBIT <span className="text-[10px] text-slate-400 font-normal">$M</span>
+          EBIT <span className="text-[11px] text-slate-400 font-normal">$M</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.ebit)} row={r} />)}
       </tr>,
@@ -447,7 +449,7 @@ export default function ForecastTable({
       // NOPAT
       <tr key="nopat" className="hover:bg-white/4 bg-white/5">
         <td className="sticky left-0 z-10 bg-white/5 px-4 py-1.5 text-xs font-semibold text-slate-200 whitespace-nowrap border-r border-white/8">
-          NOPAT <span className="text-[10px] text-slate-400 font-normal">$M</span>
+          NOPAT <span className="text-[11px] text-slate-400 font-normal">$M</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.nopat)} row={r} bold />)}
       </tr>,
@@ -465,7 +467,7 @@ export default function ForecastTable({
       // D&A
       <tr key="dna" className="hover:bg-white/4">
         <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap border-r border-white/8">
-          D&amp;A <span className="text-[10px] text-slate-400 font-normal">$M</span>
+          D&amp;A <span className="text-[11px] text-slate-400 font-normal">$M</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.dna)} row={r} />)}
       </tr>,
@@ -483,7 +485,7 @@ export default function ForecastTable({
       // Capex
       <tr key="capex" className="hover:bg-white/4">
         <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap border-r border-white/8">
-          Capex <span className="text-[10px] text-slate-400 font-normal">$M</span>
+          Capex <span className="text-[11px] text-slate-400 font-normal">$M</span>
         </td>
         {rows.map(r => (
           <DataCell key={r.year} value={fmtVal(r.capex)} row={r}
@@ -505,7 +507,7 @@ export default function ForecastTable({
       // Chg NWC
       <tr key="nwcdelta" className="hover:bg-white/4">
         <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap border-r border-white/8">
-          Chg. NWC <span className="text-[10px] text-slate-400 font-normal">$M</span>
+          Chg. NWC <span className="text-[11px] text-slate-400 font-normal">$M</span>
         </td>
         {rows.map(r => (
           <DataCell key={r.year} value={fmtVal(r.nwcDelta)} row={r}
@@ -575,7 +577,7 @@ export default function ForecastTable({
       // Net Income
       <tr key="netincome" className="hover:bg-white/4">
         <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap border-r border-white/8">
-          Net Income <span className="text-[10px] text-slate-400 font-normal">$M</span>
+          Net Income <span className="text-[11px] text-slate-400 font-normal">$M</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.netIncome)} row={r} />)}
       </tr>,
@@ -593,7 +595,7 @@ export default function ForecastTable({
       // D&A
       <tr key="dna" className="hover:bg-white/4">
         <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap border-r border-white/8">
-          D&amp;A <span className="text-[10px] text-slate-400 font-normal">$M</span>
+          D&amp;A <span className="text-[11px] text-slate-400 font-normal">$M</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.dna)} row={r} />)}
       </tr>,
@@ -611,7 +613,7 @@ export default function ForecastTable({
       // Capex
       <tr key="capex" className="hover:bg-white/4">
         <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap border-r border-white/8">
-          Capex <span className="text-[10px] text-slate-400 font-normal">$M</span>
+          Capex <span className="text-[11px] text-slate-400 font-normal">$M</span>
         </td>
         {rows.map(r => (
           <DataCell key={r.year} value={fmtVal(r.capex)} row={r}
@@ -633,7 +635,7 @@ export default function ForecastTable({
       // NWC
       <tr key="nwcdelta" className="hover:bg-white/4">
         <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap border-r border-white/8">
-          Chg. NWC <span className="text-[10px] text-slate-400 font-normal">$M</span>
+          Chg. NWC <span className="text-[11px] text-slate-400 font-normal">$M</span>
         </td>
         {rows.map(r => (
           <DataCell key={r.year} value={fmtVal(r.nwcDelta)} row={r}
@@ -655,7 +657,7 @@ export default function ForecastTable({
       // Net Debt Repayment
       <tr key="netdebt" className="hover:bg-white/4">
         <td className="sticky left-0 z-10 bg-[#080F1E] px-4 py-1.5 text-xs font-medium text-slate-300 whitespace-nowrap border-r border-white/8">
-          Net Debt Repayment <span className="text-[10px] text-slate-400 font-normal">$M</span>
+          Net Debt Repayment <span className="text-[11px] text-slate-400 font-normal">$M</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.netDebtRepayment)} row={r} />)}
       </tr>,
@@ -753,7 +755,7 @@ export default function ForecastTable({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Equity side */}
           <div className="rounded-xl bg-white/5 border border-white/8 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Equity Side</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">Equity Side</p>
             <div className="space-y-2.5">
               {([
                 { label: 'Risk-Free Rate', value: (wd.rfRate * 100).toFixed(2) + '%' },
@@ -779,7 +781,7 @@ export default function ForecastTable({
 
           {/* Debt side */}
           <div className="rounded-xl bg-white/5 border border-white/8 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Debt Side</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">Debt Side</p>
             <div className="space-y-2.5">
               {([
                 { label: 'Cost of Debt', value: wd.costOfDebt != null ? (wd.costOfDebt * 100).toFixed(2) + '%' : null },
@@ -800,7 +802,7 @@ export default function ForecastTable({
         </div>
 
         {wd.crp != null && wd.crp > 0 && (
-          <p className="text-[10px] text-slate-400 mt-3 italic">
+          <p className="text-[11px] text-slate-400 mt-3 italic">
             Country risk premium of {(wd.crp * 100).toFixed(1)}% applied{wd.financialCurrency ? ` for ${wd.financialCurrency} reporting currency` : ''}.
           </p>
         )}
@@ -966,7 +968,7 @@ export default function ForecastTable({
             <div className="flex items-center justify-between mb-2">
               <p className="text-[11px] font-semibold text-slate-300">Valuation Composition</p>
               {tvWarning && (
-                <span className="text-[10px] text-amber-400 font-semibold bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
+                <span className="text-[11px] text-amber-400 font-semibold bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
                   TV {tvShare.toFixed(0)}% — high terminal reliance
                 </span>
               )}
@@ -982,7 +984,7 @@ export default function ForecastTable({
                 title={`PV of Terminal Value: ${tvShare.toFixed(1)}%`}
               />
             </div>
-            <div className="flex items-center justify-between mt-2 text-[10px] text-slate-500">
+            <div className="flex items-center justify-between mt-2 text-[11px] text-slate-500">
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-sm bg-[#0F2A5E] inline-block" />
                 <span>PV of FCFs ({fcfShare.toFixed(0)}%)</span>
@@ -998,7 +1000,7 @@ export default function ForecastTable({
         {/* Equity bridge */}
         <div className="rounded-xl border border-white/10 overflow-hidden">
           <div className="px-4 py-2 bg-white/5 border-b border-white/8">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Equity Value Bridge</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Equity Value Bridge</p>
           </div>
           <div className="divide-y divide-white/8">
             {bridgeRows.map(({ label, value, bold, sub }) => (
@@ -1056,9 +1058,9 @@ export default function ForecastTable({
           {/* Computed CAGR badge */}
           {computedCagr != null && (
             <div className="flex items-center gap-1.5 bg-white/8 border border-white/10 rounded-lg px-3 py-1.5">
-              <span className="text-[10px] text-slate-400 uppercase tracking-wide font-semibold">Avg CAGR</span>
+              <span className="text-[11px] text-slate-400 uppercase tracking-wide font-semibold">Avg CAGR</span>
               <span className="text-[13px] font-bold text-blue-300 tabular-nums">{computedCagr.toFixed(1)}%</span>
-              <span className="text-[9px] text-slate-400">(geom.)</span>
+              <span className="text-[11px] text-slate-400">(geom.)</span>
             </div>
           )}
 
@@ -1082,8 +1084,8 @@ export default function ForecastTable({
           {/* Implied price badge — shows 4-model blended value with breakdown tooltip */}
           {headerPrice != null && (
             <div className="relative group">
-              <div className="flex items-center gap-2 bg-white/8 border border-white/10 rounded-lg px-3 py-1.5 cursor-help min-h-[44px]">
-                <span className="text-[10px] text-slate-400 uppercase tracking-wide font-semibold">
+              <div tabIndex={0} className="flex items-center gap-2 bg-white/8 border border-white/10 rounded-lg px-3 py-1.5 cursor-help min-h-[44px]">
+                <span className="text-[11px] text-slate-400 uppercase tracking-wide font-semibold">
                   {blendedImpliedPrice != null ? 'Implied · 4-model' : 'Implied'}
                 </span>
                 <span className={cn('text-[13px] font-bold tabular-nums',
@@ -1099,8 +1101,8 @@ export default function ForecastTable({
               </div>
               {/* Breakdown tooltip on hover */}
               {blendBreakdown != null && blendedImpliedPrice != null && (
-                <div className="absolute top-full left-0 mt-1.5 z-50 hidden group-hover:block bg-[#0d1929] border border-white/10 rounded-xl p-3.5 shadow-2xl" style={{ minWidth: 280 }}>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                <div className="absolute top-full left-0 mt-1.5 z-50 hidden group-hover:block group-focus-within:block bg-[#0d1929] border border-white/10 rounded-xl p-3.5 shadow-2xl" style={{ minWidth: 280 }}>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
                     4-model blend · {blendBreakdown.cType} profile
                   </p>
                   {([
