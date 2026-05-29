@@ -1,4 +1,9 @@
+'use client'
+import { useRef } from 'react'
+import { motion, useInView, useReducedMotion } from 'motion/react'
 import { Database, BarChart3, SlidersHorizontal } from 'lucide-react'
+
+const EASE = [0.16, 1, 0.3, 1] as const
 
 const CARDS = [
   {
@@ -31,11 +36,21 @@ const CARDS = [
 ]
 
 export default function TransparencySection() {
+  const ref = useRef<HTMLElement>(null)
+  const inView = useInView(ref, { once: true, margin: '-80px' })
+  const reduced = useReducedMotion()
+
   return (
-    <section className="overflow-x-hidden" style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+    <section ref={ref} className="overflow-x-hidden" style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
-        {/* Heading */}
-        <div className="text-center mb-10 sm:mb-14">
+
+        {/* Heading — scale zoom */}
+        <motion.div
+          className="text-center mb-10 sm:mb-14"
+          initial={reduced ? {} : { opacity: 0, scale: 0.92, y: 20 }}
+          animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
+          transition={{ duration: 0.65, ease: EASE }}
+        >
           <h2
             className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] text-slate-900 [text-wrap:balance]"
             style={{
@@ -49,23 +64,23 @@ export default function TransparencySection() {
           </h2>
           <p
             className="text-base sm:text-[17px] text-slate-600 mx-auto"
-            style={{
-              lineHeight: 1.6,
-              maxWidth: '540px',
-            }}
+            style={{ lineHeight: 1.6, maxWidth: '540px' }}
           >
             We believe investors deserve the same tools and transparency institutions
             use. Every model, source, and assumption is visible and adjustable.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Cards — horizontal scroll carousel on mobile, grid on sm+ */}
+        {/* Cards — horizontal scroll carousel on mobile, stagger zoom on desktop */}
         <div className="-mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto snap-x snap-mandatory pb-4 sm:pb-0 sm:overflow-visible">
           <div className="flex gap-4 w-max sm:w-auto sm:grid sm:grid-cols-3 sm:gap-6">
-            {CARDS.map(({ Icon, iconColor, iconBg, title, body, chips, chipStyle }) => (
-              <div
+            {CARDS.map(({ Icon, iconColor, iconBg, title, body, chips, chipStyle }, i) => (
+              <motion.div
                 key={title}
-                className="snap-start flex flex-col rounded-[20px] bg-white border p-6 sm:p-7 transition-all hover:-translate-y-0.5 w-[80vw] max-w-[300px] sm:w-auto sm:max-w-none"
+                initial={reduced ? {} : { opacity: 0, scale: 0.92, y: 28 }}
+                animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
+                transition={{ duration: 0.62, ease: EASE, delay: 0.12 + i * 0.10 }}
+                className="snap-start flex flex-col rounded-[20px] bg-white border p-6 sm:p-7 hover:-translate-y-0.5 transition-transform w-[80vw] max-w-[300px] sm:w-auto sm:max-w-none"
                 style={{
                   borderColor: '#E6ECF5',
                   boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 6px 20px rgba(15,23,42,0.05)',
@@ -93,12 +108,7 @@ export default function TransparencySection() {
                 </h3>
                 <p
                   className="text-base"
-                  style={{
-                    lineHeight: 1.6,
-                    color: '#475569',
-                    marginBottom: '20px',
-                    flexGrow: 1,
-                  }}
+                  style={{ lineHeight: 1.6, color: '#475569', marginBottom: '20px', flexGrow: 1 }}
                 >
                   {body}
                 </p>
@@ -115,7 +125,7 @@ export default function TransparencySection() {
                     </span>
                   ))}
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>

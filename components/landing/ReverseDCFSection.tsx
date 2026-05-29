@@ -1,4 +1,9 @@
+'use client'
+import { useRef } from 'react'
+import { motion, useInView, useReducedMotion } from 'motion/react'
 import Link from 'next/link'
+
+const EASE = [0.16, 1, 0.3, 1] as const
 
 const STOCKS = [
   {
@@ -46,8 +51,13 @@ const STOCKS = [
 ]
 
 export default function ReverseDCFSection() {
+  const ref = useRef<HTMLElement>(null)
+  const inView = useInView(ref, { once: true, margin: '-80px' })
+  const reduced = useReducedMotion()
+
   return (
     <section
+      ref={ref}
       id="reverse-dcf"
       className="overflow-x-hidden"
       style={{ background: 'white', borderTop: '1px solid #E2E8F0', borderBottom: '1px solid #E2E8F0' }}
@@ -57,8 +67,12 @@ export default function ReverseDCFSection() {
           className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] items-center"
           style={{ gap: '40px' }}
         >
-          {/* Left: explanation */}
-          <div>
+          {/* Left: explanation — zoom in */}
+          <motion.div
+            initial={reduced ? {} : { opacity: 0, scale: 0.93, x: -24 }}
+            animate={inView ? { opacity: 1, scale: 1, x: 0 } : {}}
+            transition={{ duration: 0.68, ease: EASE }}
+          >
             <p
               className="font-bold uppercase mb-3"
               style={{ fontSize: '11px', letterSpacing: '0.08em', color: '#2563EB' }}
@@ -104,83 +118,89 @@ export default function ReverseDCFSection() {
               Before asking &ldquo;is this stock cheap?&rdquo; — ask what growth rate this
               price requires to make sense.
             </p>
-          </div>
+          </motion.div>
 
-          {/* Right: stock cards */}
+          {/* Right: stock cards — staggered scale zoom */}
           <div className="flex flex-col gap-4">
-            {STOCKS.map(stock => (
-              <Link
+            {STOCKS.map((stock, i) => (
+              <motion.div
                 key={stock.ticker}
-                href={`/stock/${stock.ticker}`}
-                className="group block rounded-[20px] bg-white border p-5 transition-all hover:-translate-y-0.5 active:scale-95"
-                style={{
-                  borderColor: '#E6ECF5',
-                  boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 4px 16px rgba(15,23,42,0.05)',
-                }}
-                aria-label={`Analyze ${stock.ticker} — ${stock.company}`}
+                initial={reduced ? {} : { opacity: 0, scale: 0.93, y: 20 }}
+                animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
+                transition={{ duration: 0.60, ease: EASE, delay: 0.12 + i * 0.10 }}
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-[14px] font-bold text-slate-800 font-mono">{stock.ticker}</span>
-                      <span className="text-[11px] text-slate-400">{stock.company}</span>
+                <Link
+                  href={`/stock/${stock.ticker}`}
+                  className="group block rounded-[20px] bg-white border p-5 transition-all hover:-translate-y-0.5 active:scale-95"
+                  style={{
+                    borderColor: '#E6ECF5',
+                    boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 4px 16px rgba(15,23,42,0.05)',
+                  }}
+                  aria-label={`Analyze ${stock.ticker} — ${stock.company}`}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-[14px] font-bold text-slate-800 font-mono">{stock.ticker}</span>
+                        <span className="text-[11px] text-slate-400">{stock.company}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[16px] font-bold text-slate-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                          {stock.price}
+                        </span>
+                        <span
+                          className="text-[12px] font-semibold"
+                          style={{ color: stock.positive ? '#16A34A' : '#DC2626' }}
+                        >
+                          {stock.change}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[16px] font-bold text-slate-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                        {stock.price}
-                      </span>
-                      <span
-                        className="text-[12px] font-semibold"
-                        style={{ color: stock.positive ? '#16A34A' : '#DC2626' }}
-                      >
-                        {stock.change}
-                      </span>
-                    </div>
-                  </div>
-                  <span
-                    className="shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-full border"
-                    style={stock.badgeColor}
-                  >
-                    {stock.badge}
-                  </span>
-                </div>
-
-                {/* CAGR + sparkline */}
-                <div className="flex items-center gap-4">
-                  <div className="shrink-0">
-                    <p className="text-[10px] text-slate-400 mb-0.5">Implied 5Y Revenue CAGR</p>
-                    <p
-                      className="text-[28px] font-extrabold font-mono leading-none"
-                      style={{ color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}
+                    <span
+                      className="shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-full border"
+                      style={stock.badgeColor}
                     >
-                      {stock.impliedCAGR}%
-                    </p>
+                      {stock.badge}
+                    </span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <svg width="100%" height="36" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
-                      <defs>
-                        <linearGradient id={`grad-${stock.ticker}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={stock.sparkColor} stopOpacity="0.15" />
-                          <stop offset="100%" stopColor={stock.sparkColor} stopOpacity="0" />
-                        </linearGradient>
-                      </defs>
-                      <path
-                        d={stock.sparkPath + ' L 100 40 L 0 40 Z'}
-                        fill={`url(#grad-${stock.ticker})`}
-                      />
-                      <path
-                        d={stock.sparkPath}
-                        stroke={stock.sparkColor}
-                        strokeWidth="1.8"
-                        fill="none"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </div>
-                </div>
 
-                <p className="mt-2 text-[12px] text-slate-500">{stock.note}</p>
-              </Link>
+                  {/* CAGR + sparkline */}
+                  <div className="flex items-center gap-4">
+                    <div className="shrink-0">
+                      <p className="text-[10px] text-slate-400 mb-0.5">Implied 5Y Revenue CAGR</p>
+                      <p
+                        className="text-[28px] font-extrabold font-mono leading-none"
+                        style={{ color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}
+                      >
+                        {stock.impliedCAGR}%
+                      </p>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <svg width="100%" height="36" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+                        <defs>
+                          <linearGradient id={`grad-${stock.ticker}`} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={stock.sparkColor} stopOpacity="0.15" />
+                            <stop offset="100%" stopColor={stock.sparkColor} stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+                        <path
+                          d={stock.sparkPath + ' L 100 40 L 0 40 Z'}
+                          fill={`url(#grad-${stock.ticker})`}
+                        />
+                        <path
+                          d={stock.sparkPath}
+                          stroke={stock.sparkColor}
+                          strokeWidth="1.8"
+                          fill="none"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <p className="mt-2 text-[12px] text-slate-500">{stock.note}</p>
+                </Link>
+              </motion.div>
             ))}
           </div>
         </div>

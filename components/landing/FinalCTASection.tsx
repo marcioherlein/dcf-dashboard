@@ -2,6 +2,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search } from 'lucide-react'
+import { motion, useInView, useReducedMotion } from 'motion/react'
+
+const EASE = [0.16, 1, 0.3, 1] as const
 
 interface SearchResult {
   symbol: string
@@ -17,6 +20,9 @@ export default function FinalCTASection() {
   const [loading, setLoading] = useState(false)
   const debounce = useRef<ReturnType<typeof setTimeout>>()
   const containerRef = useRef<HTMLDivElement>(null)
+  const sectionRef = useRef<HTMLElement>(null)
+  const inView = useInView(sectionRef, { once: true, margin: '-80px' })
+  const reduced = useReducedMotion()
 
   useEffect(() => {
     if (query.length < 1) { setResults([]); setOpen(false); return }
@@ -44,10 +50,13 @@ export default function FinalCTASection() {
   }
 
   return (
-    <section className="overflow-x-hidden" style={{ background: 'white', borderBottom: '1px solid #E2E8F0' }}>
+    <section ref={sectionRef} className="overflow-x-hidden" style={{ background: 'white', borderBottom: '1px solid #E2E8F0' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
-        <div
+        <motion.div
           className="rounded-[24px] text-center px-5 sm:px-8 py-10 sm:py-14"
+          initial={reduced ? {} : { opacity: 0, scale: 0.92, y: 28 }}
+          animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
+          transition={{ duration: 0.70, ease: EASE }}
           style={{
             background: 'linear-gradient(135deg, #EFF6FF 0%, #F5F3FF 50%, #EFF6FF 100%)',
             border: '1px solid #BFDBFE',
@@ -147,7 +156,7 @@ export default function FinalCTASection() {
               </span>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   )

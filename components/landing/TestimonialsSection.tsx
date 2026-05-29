@@ -1,3 +1,9 @@
+'use client'
+import { useRef } from 'react'
+import { motion, useInView, useReducedMotion } from 'motion/react'
+
+const EASE = [0.16, 1, 0.3, 1] as const
+
 const QUOTES = [
   {
     text: "intrinsico gives me the clarity I need to invest with discipline. The Reverse DCF is a game changer for understanding risk.",
@@ -23,11 +29,21 @@ const QUOTES = [
 ]
 
 export default function TestimonialsSection() {
+  const ref = useRef<HTMLElement>(null)
+  const inView = useInView(ref, { once: true, margin: '-80px' })
+  const reduced = useReducedMotion()
+
   return (
-    <section className="overflow-x-hidden" style={{ background: 'white', borderBottom: '1px solid #E2E8F0' }}>
+    <section ref={ref} className="overflow-x-hidden" style={{ background: 'white', borderBottom: '1px solid #E2E8F0' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
-        {/* Heading */}
-        <div className="text-center mb-10 sm:mb-12">
+
+        {/* Heading — scale zoom */}
+        <motion.div
+          className="text-center mb-10 sm:mb-12"
+          initial={reduced ? {} : { opacity: 0, scale: 0.92, y: 20 }}
+          animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
+          transition={{ duration: 0.65, ease: EASE }}
+        >
           <h2
             className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] text-slate-900 [text-wrap:balance]"
             style={{
@@ -38,14 +54,17 @@ export default function TestimonialsSection() {
           >
             Built for people who do their own research.
           </h2>
-        </div>
+        </motion.div>
 
-        {/* Cards — horizontal scroll carousel on mobile, grid on sm+ */}
+        {/* Cards — staggered zoom from below */}
         <div className="-mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto snap-x snap-mandatory pb-4 sm:pb-0 sm:overflow-visible">
           <div className="flex gap-4 w-max sm:w-auto sm:grid sm:grid-cols-3 sm:gap-6">
             {QUOTES.map((q, i) => (
-              <div
+              <motion.div
                 key={i}
+                initial={reduced ? {} : { opacity: 0, scale: 0.90, y: 32 }}
+                animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
+                transition={{ duration: 0.65, ease: EASE, delay: 0.10 + i * 0.12 }}
                 className="snap-start rounded-[20px] bg-white border p-6 sm:p-7 flex flex-col w-[82vw] max-w-[320px] sm:w-auto sm:max-w-none"
                 style={{
                   borderColor: '#E6ECF5',
@@ -62,12 +81,7 @@ export default function TestimonialsSection() {
 
                 <p
                   className="text-base"
-                  style={{
-                    lineHeight: 1.6,
-                    color: '#475569',
-                    flexGrow: 1,
-                    marginBottom: '24px',
-                  }}
+                  style={{ lineHeight: 1.6, color: '#475569', flexGrow: 1, marginBottom: '24px' }}
                 >
                   &ldquo;{q.text}&rdquo;
                 </p>
@@ -75,12 +89,7 @@ export default function TestimonialsSection() {
                 <div className="flex items-center gap-3">
                   <div
                     className="flex items-center justify-center rounded-full text-white font-bold shrink-0"
-                    style={{
-                      width: '38px',
-                      height: '38px',
-                      background: q.color,
-                      fontSize: '14px',
-                    }}
+                    style={{ width: '38px', height: '38px', background: q.color, fontSize: '14px' }}
                     aria-label={q.name}
                   >
                     {q.initial}
@@ -90,14 +99,19 @@ export default function TestimonialsSection() {
                     <p style={{ fontSize: '12px', color: '#94A3B8' }}>{q.role}</p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
 
-        <p className="text-center mt-8 text-[12px] text-slate-400">
+        <motion.p
+          className="text-center mt-8 text-[12px] text-slate-400"
+          initial={reduced ? {} : { opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.5, delay: 0.5 }}
+        >
           Representative testimonials. Individual results vary.
-        </p>
+        </motion.p>
       </div>
     </section>
   )

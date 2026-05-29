@@ -1,3 +1,6 @@
+'use client'
+import { useRef } from 'react'
+import { motion, useInView, useReducedMotion } from 'motion/react'
 import { ArrowRight } from 'lucide-react'
 
 const STEPS = [
@@ -21,16 +24,29 @@ const STEPS = [
   },
 ]
 
+const EASE = [0.16, 1, 0.3, 1] as const
+
 export default function HowItWorksSection() {
+  const ref = useRef<HTMLElement>(null)
+  const inView = useInView(ref, { once: true, margin: '-80px' })
+  const reduced = useReducedMotion()
+
   return (
     <section
+      ref={ref}
       id="how-it-works"
       className="overflow-x-hidden"
       style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}
     >
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
-        {/* Heading */}
-        <div className="text-center mb-10 sm:mb-14">
+
+        {/* Heading — scale zoom in */}
+        <motion.div
+          initial={reduced ? {} : { opacity: 0, scale: 0.92, y: 20 }}
+          animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
+          transition={{ duration: 0.65, ease: EASE }}
+          className="text-center mb-10 sm:mb-14"
+        >
           <h2
             className="text-[28px] sm:text-[38px] lg:text-[clamp(32px,3.2vw,44px)] text-slate-900 [text-wrap:balance]"
             style={{
@@ -45,12 +61,12 @@ export default function HowItWorksSection() {
           <p className="text-base sm:text-[17px] text-slate-600 leading-[1.55]">
             No spreadsheet. No financial degree required.
           </p>
-        </div>
+        </motion.div>
 
         {/* Steps */}
         <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {/* Connector lines */}
-          <div
+          {/* Connector line — draws from left */}
+          <motion.div
             className="hidden sm:block absolute"
             style={{
               top: '32px',
@@ -58,20 +74,31 @@ export default function HowItWorksSection() {
               right: 'calc(16.7% + 20px)',
               height: '1px',
               background: 'linear-gradient(90deg, #BFDBFE 0%, #E2E8F0 50%, #BFDBFE 100%)',
+              transformOrigin: 'left center',
             }}
+            initial={reduced ? {} : { scaleX: 0 }}
+            animate={inView ? { scaleX: 1 } : {}}
+            transition={{ duration: 0.8, ease: EASE, delay: 0.2 }}
             aria-hidden="true"
           />
 
           {STEPS.map((step, i) => (
-            <div
+            <motion.div
               key={i}
+              initial={reduced ? {} : { opacity: 0, scale: 0.93, y: 28 }}
+              animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
+              transition={{ duration: 0.62, ease: EASE, delay: 0.12 + i * 0.10 }}
               className="flex flex-col items-center text-center rounded-[18px] border bg-white p-7"
               style={{
                 borderColor: '#E6ECF5',
                 boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 6px 20px rgba(15,23,42,0.05)',
               }}
             >
-              <div
+              {/* Number badge — pop */}
+              <motion.div
+                initial={reduced ? {} : { opacity: 0, scale: 0.55 }}
+                animate={inView ? { opacity: 1, scale: 1 } : {}}
+                transition={{ duration: 0.38, ease: EASE, delay: 0.28 + i * 0.10 }}
                 className="flex items-center justify-center rounded-full text-white font-bold z-10 mb-5"
                 style={{
                   width: '44px',
@@ -83,7 +110,7 @@ export default function HowItWorksSection() {
                 aria-label={`Step ${step.n}`}
               >
                 {step.n}
-              </div>
+              </motion.div>
               <h3
                 style={{
                   fontSize: '18px',
@@ -98,17 +125,23 @@ export default function HowItWorksSection() {
               <p style={{ fontSize: '15px', lineHeight: 1.6, color: '#475569' }}>
                 {step.body}
               </p>
-            </div>
+            </motion.div>
           ))}
         </div>
 
-        {/* Arrow hint between cards — visible only on desktop via CSS */}
-        <div className="hidden sm:flex justify-center mt-6">
+        {/* Arrow hint */}
+        <motion.div
+          className="hidden sm:flex justify-center mt-6"
+          initial={reduced ? {} : { opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.5, delay: 0.55 }}
+        >
           <div className="flex items-center gap-2 text-[13px] text-slate-400">
             <ArrowRight size={14} />
             <span>Seconds from search to verdict</span>
           </div>
-        </div>
+        </motion.div>
+
       </div>
     </section>
   )
