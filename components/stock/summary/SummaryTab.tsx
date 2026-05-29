@@ -5,7 +5,6 @@ import { computeReverseDCF } from '@/lib/valuation/methods/reverseDcf'
 import SummaryHeroCard from './SummaryHeroCard'
 import SummaryPriceChartCard from './SummaryPriceChartCard'
 import ReverseDCFCompactCard from './ReverseDCFCompactCard'
-import PriceVsFairValueCard from './PriceVsFairValueCard'
 import MarketInterpretationCard from './MarketInterpretationCard'
 import BullCaseCard from './BullCaseCard'
 import BearCaseCard from './BearCaseCard'
@@ -109,9 +108,21 @@ export default function SummaryTab({
   const drivers: string[] = cagrAnalysis?.drivers ?? []
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-4">
 
-      {/* ── Row 1: Hero narrative + Price chart ───────────────────────────── */}
+      {/* ── Row 0: Company identity (first — who is this?) ────────────────── */}
+      {businessProfile?.description && (
+        <CompanyCard
+          description={businessProfile.description}
+          sector={sector}
+          industry={businessProfile.industry ?? ''}
+          country={businessProfile.country ?? ''}
+          employees={businessProfile.employees ?? null}
+          ticker={ticker}
+        />
+      )}
+
+      {/* ── Row 1: Hero verdict + Price chart ─────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-4">
         <SummaryHeroCard
           ticker={ticker}
@@ -139,8 +150,8 @@ export default function SummaryTab({
         />
       </div>
 
-      {/* ── Row 2: Reverse DCF · Price vs FV · Interpretation ─────────────── */}
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-[minmax(0,1.9fr)_minmax(190px,1fr)_minmax(0,1.5fr)] gap-4 items-start">
+      {/* ── Row 2: Reverse DCF · Analyst & Market Interpretation ─────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
         <ReverseDCFCompactCard
           price={price}
           currency={currency}
@@ -155,13 +166,6 @@ export default function SummaryTab({
           analystCAGR={analystCAGR}
           isEmergingMarket={isEmergingMarket}
         />
-        <PriceVsFairValueCard
-          price={price}
-          fairValue={fairValue}
-          upsidePct={upsidePct}
-          currency={currency}
-          analystTargetMean={analystTargetMean ?? null}
-        />
         <MarketInterpretationCard
           upsidePct={upsidePct}
           confidence={confidence}
@@ -170,13 +174,13 @@ export default function SummaryTab({
           analystRecommendation={analystRecommendation ?? ''}
           analystTargetMean={analystTargetMean ?? null}
           currency={currency}
-          drivers={drivers}
         />
       </div>
 
-      {/* ── Row 3: Six compact quality cards ──────────────────────────────── */}
+      {/* ── Row 3: Business quality evidence ──────────────────────────────── */}
       {ratings && (
-        <div className="mt-8">
+        <section>
+          <p className="text-[12px] font-[650] text-[#64748B] mb-3 px-1">Business quality</p>
           <OverviewMetricGrid
             ratings={ratings}
             scores={scores}
@@ -187,11 +191,11 @@ export default function SummaryTab({
             valuationMethods={valuationMethods}
             quote={quote}
           />
-        </div>
+        </section>
       )}
 
       {/* ── Row 4: Bull · Bear · Next steps ───────────────────────────────── */}
-      <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
         <BullCaseCard
           drivers={drivers}
           upsidePct={upsidePct}
@@ -209,20 +213,6 @@ export default function SummaryTab({
           onViewRisks={onViewRisks}
         />
       </div>
-
-      {/* ── Company overview ───────────────────────────────────────────────── */}
-      {businessProfile?.description && (
-        <div className="mt-8">
-          <CompanyCard
-            description={businessProfile.description}
-            sector={sector}
-            industry={businessProfile.industry ?? ''}
-            country={businessProfile.country ?? ''}
-            employees={businessProfile.employees ?? null}
-            ticker={ticker}
-          />
-        </div>
-      )}
 
     </div>
   )
