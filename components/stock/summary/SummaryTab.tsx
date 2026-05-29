@@ -140,7 +140,7 @@ export default function SummaryTab({
       </div>
 
       {/* ── Row 2: Reverse DCF · Price vs FV · Interpretation ─────────────── */}
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-[minmax(0,1.9fr)_minmax(190px,1fr)_minmax(0,1.5fr)] gap-4">
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-[minmax(0,1.9fr)_minmax(190px,1fr)_minmax(0,1.5fr)] gap-4 items-start">
         <ReverseDCFCompactCard
           price={price}
           currency={currency}
@@ -191,7 +191,7 @@ export default function SummaryTab({
       )}
 
       {/* ── Row 4: Bull · Bear · Next steps ───────────────────────────────── */}
-      <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
         <BullCaseCard
           drivers={drivers}
           upsidePct={upsidePct}

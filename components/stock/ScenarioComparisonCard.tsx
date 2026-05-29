@@ -134,9 +134,7 @@ export default function ScenarioComparisonCard({ scenarios, currentPrice, curren
 
   return (
     <div className="glass-card-light rounded-xl p-5">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">
-        Bull / Base / Bear Scenarios
-      </p>
+      <h3 className="text-[13px] font-semibold text-slate-700 mb-3">Scenario analysis</h3>
       <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-1 px-1 sm:grid sm:grid-cols-3 sm:overflow-visible sm:snap-none sm:pb-0 sm:mx-0 sm:px-0">
         <ScenarioCol label="Bear" scenario={scenarios.bear} currentPrice={currentPrice} currency={currency} />
         <ScenarioCol label="Base" scenario={scenarios.base} currentPrice={currentPrice} currency={currency} isFeatured />
@@ -145,9 +143,7 @@ export default function ScenarioComparisonCard({ scenarios, currentPrice, curren
 
       {m && (
         <div className="mt-4 pt-3 border-t border-slate-100">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-            How the Base Was Computed — Full DCF Modelling Table
-          </p>
+          <p className="text-[12px] font-semibold text-slate-600 mb-2">Model weights</p>
           <div className="flex flex-wrap gap-1.5 mb-2">
             {m.weights.ufcfPGM > 0 && (
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 font-semibold border border-blue-100">

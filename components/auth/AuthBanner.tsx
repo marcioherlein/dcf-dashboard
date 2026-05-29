@@ -25,7 +25,7 @@ export default function AuthBanner() {
   if (!visible || session?.user) return null
 
   return (
-    <div className="sticky top-[95px] z-[19] flex items-center justify-between gap-4 bg-blue-600 px-4 py-2.5 text-sm text-white sm:px-6">
+    <div className="fixed top-0 left-0 right-0 z-[200] flex items-center justify-between gap-4 bg-blue-600 px-4 py-2.5 text-sm text-white sm:px-6">
       <span className="leading-snug">
         <strong>Save this analysis</strong> — sign in to keep your research in one place.
       </span>

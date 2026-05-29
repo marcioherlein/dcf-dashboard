@@ -148,8 +148,8 @@ export default function MarketInterpretationCard({
       {/* Key Drivers */}
       {showDrivers && (
         <div>
-          <p className="text-[10px] font-[700] uppercase tracking-widest text-[#94A3B8] mb-1.5">
-            Key Drivers
+          <p className="text-[12px] font-[650] text-[#475569] mb-1.5">
+            Key drivers
           </p>
           <div className="flex flex-wrap gap-1.5">
             {positiveDrivers.map((driver, i) => (
@@ -168,15 +168,15 @@ export default function MarketInterpretationCard({
       {showAnalyst && (
         <div className="flex items-center justify-between gap-2 border-t border-[#E6ECF5] pt-3 mt-1">
           <div>
-            <p className="text-[10px] font-[700] uppercase tracking-widest text-[#94A3B8] mb-0.5">
-              Analyst Consensus
+            <p className="text-[11px] font-[600] text-[#64748B] mb-0.5">
+              Analyst consensus
             </p>
             <p className={cn('text-[13px] font-[700]', recColor)}>{recLabel}</p>
           </div>
           {analystTargetMean != null && analystTargetMean > 0 && (
             <div className="text-right">
-              <p className="text-[10px] font-[700] uppercase tracking-widest text-[#94A3B8] mb-0.5">
-                Target Price
+              <p className="text-[11px] font-[600] text-[#64748B] mb-0.5">
+                Target price
               </p>
               <p className="text-[13px] font-[700] text-[#0F172A] tabular-nums">
                 {fmtPrice(analystTargetMean, currency)}

@@ -171,7 +171,7 @@ export default function SummaryHeroCard({
       className={cn('border rounded-[20px] p-6 overflow-hidden', verdict.borderClass)}
       style={{ background: heroBg }}
     >
-      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.15fr)_minmax(240px,0.85fr)] gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.15fr)_minmax(240px,0.85fr)] gap-5 items-start">
 
         {/* ── Left column ── */}
         <div className="flex flex-col gap-3">
@@ -252,41 +252,43 @@ export default function SummaryHeroCard({
         </div>
 
         {/* ── Right column ── */}
-        <div className="flex flex-col gap-2">
+        {(badgeDrivers.length > 0 || scenarios != null) && (
+          <div className="flex flex-col gap-3">
 
-          {/* Driver badges */}
-          {badgeDrivers.length > 0 && (
-            <div className="flex flex-col gap-1.5">
-              <p className="text-[10px] font-[700] uppercase tracking-widest text-[#94A3B8] mb-0.5">Key Strengths</p>
-              <div className="flex flex-wrap gap-1.5">
-                {badgeDrivers.map((driver, i) => (
-                  <span
-                    key={i}
-                    className="bg-white border border-[#E6ECF5] rounded-full px-[10px] py-[7px] text-[12px] font-[650] text-[#334155] flex items-center gap-1.5"
-                  >
-                    <Star size={12} className="text-[#16A34A] flex-shrink-0" />
-                    {driver}
-                  </span>
-                ))}
+            {/* Driver badges */}
+            {badgeDrivers.length > 0 && (
+              <div className="flex flex-col gap-1.5">
+                <p className="text-[12px] font-[650] text-[#475569]">Key strengths</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {badgeDrivers.map((driver, i) => (
+                    <span
+                      key={i}
+                      className="bg-white border border-[#E6ECF5] rounded-full px-[10px] py-[7px] text-[12px] font-[650] text-[#334155] flex items-center gap-1.5"
+                    >
+                      <Star size={12} className="text-[#16A34A] flex-shrink-0" />
+                      {driver}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Scenario range */}
-          {scenarios && (
-            <div className="mt-auto pt-2">
-              <p className="text-[10px] font-[700] uppercase tracking-widest text-[#94A3B8] mb-1.5">Scenario Range</p>
-              <div className="flex items-center gap-2 text-[12px] font-[650]">
-                <span className="text-[#DC2626]">{fmtPrice(scenarios.bear.fairValue, currency)}</span>
-                <span className="text-[#94A3B8]">—</span>
-                <span className="text-[#334155]">{fmtPrice(scenarios.base.fairValue, currency)}</span>
-                <span className="text-[#94A3B8]">—</span>
-                <span className="text-[#16A34A]">{fmtPrice(scenarios.bull.fairValue, currency)}</span>
+            {/* Scenario range */}
+            {scenarios && (
+              <div className="pt-2 border-t border-[#E6ECF5]">
+                <p className="text-[12px] font-[650] text-[#475569] mb-1.5">Scenario range</p>
+                <div className="flex items-center gap-2 text-[12px] font-[650]">
+                  <span className="text-[#DC2626]">{fmtPrice(scenarios.bear.fairValue, currency)}</span>
+                  <span className="text-[#94A3B8]">—</span>
+                  <span className="text-[#334155]">{fmtPrice(scenarios.base.fairValue, currency)}</span>
+                  <span className="text-[#94A3B8]">—</span>
+                  <span className="text-[#16A34A]">{fmtPrice(scenarios.bull.fairValue, currency)}</span>
+                </div>
+                <p className="text-[10px] text-[#94A3B8] mt-0.5">Bear · Base · Bull</p>
               </div>
-              <p className="text-[10px] text-[#94A3B8] mt-0.5">Bear · Base · Bull</p>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
       </div>
     </div>

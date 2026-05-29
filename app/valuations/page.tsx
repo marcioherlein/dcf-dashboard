@@ -614,7 +614,7 @@ export default function ValuationsPage() {
   const hasFilters = filterUpside !== 'all' || filterConfidence !== 'all' || !!searchQuery.trim()
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <div className="min-h-screen bg-[#F1F5F9] px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 
       {/* Page header */}
       <div className="flex items-start justify-between gap-4 mb-5">
@@ -646,7 +646,7 @@ export default function ValuationsPage() {
 
       {/* KPI cards — own row, not nested inside the header */}
       {!loading && entries.length > 0 && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <KpiCard
             icon={Bookmark}
             iconCls="bg-blue-50 text-blue-600"
@@ -695,7 +695,7 @@ export default function ValuationsPage() {
 
       {/* Content */}
       {!loading && entries.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-5">
 
           {/* Toolbar */}
           <div className="bg-white border border-[#E6ECF5] rounded-2xl overflow-hidden shadow-sm">

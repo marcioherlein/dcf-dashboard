@@ -139,7 +139,7 @@ export default function ReverseDCFCompactCard({
       <div className="flex gap-4">
         {/* Left */}
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-[700] uppercase tracking-widest text-[#94A3B8] mb-1">
+          <p className="text-[11px] font-[650] text-[#64748B] mb-1">
             Implied 5Y Revenue CAGR
           </p>
           {impliedPct != null ? (
@@ -152,7 +152,7 @@ export default function ReverseDCFCompactCard({
 
           {historicalPct != null && (
             <div className="mt-2.5">
-              <p className="text-[10px] font-[700] uppercase tracking-widest text-[#94A3B8] mb-0.5">
+              <p className="text-[11px] font-[650] text-[#64748B] mb-0.5">
                 3Y Historical CAGR
               </p>
               <p className="text-[14px] font-[700] text-[#334155] tabular-nums">

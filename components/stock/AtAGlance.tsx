@@ -92,7 +92,7 @@ export default function AtAGlance({
       {/* TTM Multiples */}
       {showMultiples && (
         <div className="pt-3 border-t border-slate-200">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2.5">TTM Multiples</p>
+          <p className="text-[12px] font-semibold text-slate-600 mb-2">TTM Multiples</p>
           <div className="flex flex-wrap gap-2">
             <MetricChip label="P/E"       value={fmtMultiple(pe)}       tooltip="Price-to-Earnings: how much you're paying for each dollar of profit. Lower = cheaper relative to earnings. Compare to sector peers for context." />
             <MetricChip label="EV/EBITDA" value={fmtMultiple(evEbitda)} tooltip="Enterprise Value to EBITDA: compares the company's total value (including debt) to its operating earnings. Useful for comparing companies with different debt levels." />

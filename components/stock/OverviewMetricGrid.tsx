@@ -588,7 +588,7 @@ export default function OverviewMetricGrid({ ratings, scores, businessProfile, c
   if (!ratings) return null
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 items-start">
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 items-start">
       <div className="col-span-2 lg:col-span-2">
         <BusinessQualityCard ratings={ratings} scores={scores ?? {}} onViewDetails={onViewRisks} />
       </div>

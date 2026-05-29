@@ -75,10 +75,7 @@ export default function ReverseDcfCallout({
       {/* Header */}
       <div className="px-4 sm:px-5 py-4 border-b border-slate-100 flex items-start sm:items-center justify-between gap-3 flex-wrap">
         <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-            What the Market Is Pricing In
-          </p>
-          <h3 className="mt-0.5 text-[15px] font-semibold text-slate-900 flex items-center gap-1 flex-wrap">
+          <h3 className="text-[15px] font-semibold text-slate-900 flex items-center gap-1 flex-wrap">
             Reverse DCF Analysis
             <InfoTooltip content="Works backward from today's price to estimate the revenue growth rate the market is already pricing in. If the implied growth rate seems unrealistic, the stock may be expensive. Not a buy/sell signal." />
           </h3>
