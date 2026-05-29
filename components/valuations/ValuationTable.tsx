@@ -5,7 +5,7 @@ import Link from 'next/link'
 import type { WatchlistEntry, ListTag } from '@/lib/simplifier/types'
 import { Sparkline, SparklineSkeleton } from '@/components/ui/Sparkline'
 import { ConfidenceRing } from './ConfidenceRing'
-import { fmtPrice, fmtPct } from '@/lib/formatters'
+import { fmtPrice } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -383,7 +383,7 @@ function MobileValuationCard({ entry, sparklines, onDelete, onTagUpdate, onGroup
 }) {
   const [expanded, setExpanded] = useState(false)
   const prices   = sparklines[entry.ticker]
-  const up       = prices && prices.length >= 2 ? prices[prices.length - 1] >= prices[0] : true
+  const _up      = prices && prices.length >= 2 ? prices[prices.length - 1] >= prices[0] : true
   const upside   = entry.snapshot.upsidePct
   const verdict  = getVerdict(entry)
   const vtInfo   = verdictInfo(verdict)
