@@ -2,43 +2,93 @@
 import Link from 'next/link'
 import { Shield } from 'lucide-react'
 import { signIn } from 'next-auth/react'
-import { motion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import HeroSearch from './HeroSearch'
 import { SummaryMockScreen, ValuationMockScreen } from './ProductScreenshots'
 
 export default function LandingHero() {
+  const reducedMotion = useReducedMotion()
+
   return (
     <section
       className="relative overflow-x-hidden"
       style={{
-        paddingTop: 'clamp(48px, 8vh, 96px)',
-        paddingBottom: 'clamp(32px, 6vh, 64px)',
-        background: 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)',
+        paddingTop: 'clamp(80px, 10vh, 112px)',
+        paddingBottom: 'clamp(64px, 9vh, 96px)',
+        background: '#050D1F',
       }}
     >
-      {/* Dotted grid pattern */}
+      {/* Subtle dot grid — dark adaptation */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage: 'radial-gradient(circle, #CBD5E1 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px)',
           backgroundSize: '32px 32px',
-          opacity: 0.45,
         }}
         aria-hidden="true"
       />
 
-      {/* Radial blue glow behind screenshots */}
-      <div
+      {/* Breathing Blueprint Blue aurora — animates behind screenshots */}
+      <motion.div
         className="absolute pointer-events-none"
         style={{
           right: '-5%',
-          top: '10%',
-          width: '55%',
-          height: '80%',
-          background: 'radial-gradient(ellipse at 60% 30%, rgba(37,99,235,0.10) 0%, transparent 65%)',
+          top: '5%',
+          width: '58%',
+          height: '88%',
+          background: 'radial-gradient(ellipse at 50% 40%, rgba(37,99,235,0.22) 0%, transparent 65%)',
+          filter: 'blur(52px)',
+        }}
+        animate={
+          reducedMotion
+            ? {}
+            : {
+                x: [0, 32, -22, 0],
+                y: [0, -22, 16, 0],
+                opacity: [0.85, 1, 0.9, 0.85],
+              }
+        }
+        transition={
+          reducedMotion
+            ? {}
+            : {
+                duration: 9,
+                repeat: Infinity,
+                ease: 'easeInOut',
+                repeatType: 'mirror',
+              }
+        }
+        aria-hidden="true"
+      />
+
+      {/* Secondary ambient cyan glow — left side depth */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          left: '-12%',
+          top: '25%',
+          width: '45%',
+          height: '55%',
+          background:
+            'radial-gradient(ellipse at 40% 50%, rgba(6,182,212,0.07) 0%, transparent 70%)',
+          filter: 'blur(64px)',
         }}
         aria-hidden="true"
       />
+
+      {/* Hero-specific styles */}
+      <style>{`
+        .hero-outline-cta {
+          background: rgba(255,255,255,0.05);
+          border-color: rgba(255,255,255,0.15);
+          color: #CBD5E1;
+        }
+        .hero-outline-cta:hover {
+          background: rgba(255,255,255,0.09);
+          border-color: rgba(255,255,255,0.28);
+          color: #F1F5F9;
+        }
+      `}</style>
 
       <div
         className="relative mx-auto px-4 sm:px-6"
@@ -50,6 +100,7 @@ export default function LandingHero() {
         >
           {/* ── Left: Copy ── */}
           <div className="min-w-0 text-center lg:text-left">
+
             {/* Badge */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -57,17 +108,20 @@ export default function LandingHero() {
               transition={{ duration: 0.4, ease: 'easeOut' }}
               className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 mb-6"
               style={{
-                background: '#EFF6FF',
-                border: '1px solid #BFDBFE',
+                background: 'rgba(37,99,235,0.15)',
+                border: '1px solid rgba(37,99,235,0.38)',
               }}
             >
-              <Shield size={12} className="text-blue-600" />
-              <span className="text-[12px] font-bold text-[#1D4ED8]" style={{ letterSpacing: '0.02em' }}>
+              <Shield size={12} className="text-blue-400" />
+              <span
+                className="text-[12px] font-bold text-blue-300"
+                style={{ letterSpacing: '0.02em' }}
+              >
                 Built for self-directed investors
               </span>
             </motion.div>
 
-            {/* Headline — gradient text */}
+            {/* Headline — crisp white, no gradient text */}
             <motion.h1
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
@@ -78,11 +132,9 @@ export default function LandingHero() {
                 lineHeight: 1.05,
                 letterSpacing: '-0.04em',
                 marginBottom: '20px',
-                background: 'linear-gradient(135deg, #0F172A 0%, #1E3A8A 55%, #2563EB 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
+                color: '#F8FAFC',
+                textWrap: 'balance',
+              } as React.CSSProperties}
             >
               Invest with a process,
               <br />not a story.
@@ -97,10 +149,11 @@ export default function LandingHero() {
               style={{
                 fontWeight: 400,
                 lineHeight: 1.55,
-                color: '#475569',
+                color: '#94A3B8',
                 marginBottom: '32px',
                 maxWidth: '540px',
-              }}
+                textWrap: 'pretty',
+              } as React.CSSProperties}
             >
               intrinsico shows you what today&apos;s stock price already assumes
               about growth, margins, and execution — so you can decide with
@@ -114,7 +167,7 @@ export default function LandingHero() {
               transition={{ duration: 0.4, ease: 'easeOut', delay: 0.24 }}
               className="mb-8"
             >
-              <HeroSearch />
+              <HeroSearch dark />
             </motion.div>
 
             {/* CTAs */}
@@ -124,24 +177,46 @@ export default function LandingHero() {
               transition={{ duration: 0.4, ease: 'easeOut', delay: 0.32 }}
               className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3"
             >
-              <button
-                onClick={() => signIn('google')}
-                className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl px-5 py-3 text-[15px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
-                style={{
-                  background: '#2563EB',
-                  boxShadow: '0 8px 20px rgba(37,99,235,0.22)',
-                  fontWeight: 650,
-                  minHeight: '44px',
-                }}
-              >
-                Start free trial
-              </button>
+              {/* Primary CTA — Blueprint Blue with breathing glow */}
+              <div className="relative w-full sm:w-auto">
+                <motion.div
+                  className="absolute inset-0 rounded-xl pointer-events-none"
+                  animate={
+                    reducedMotion
+                      ? {}
+                      : {
+                          boxShadow: [
+                            '0 0 16px rgba(37,99,235,0.32)',
+                            '0 0 36px rgba(37,99,235,0.56)',
+                            '0 0 16px rgba(37,99,235,0.32)',
+                          ],
+                        }
+                  }
+                  transition={
+                    reducedMotion
+                      ? {}
+                      : { duration: 2.8, repeat: Infinity, ease: 'easeInOut' }
+                  }
+                />
+                <button
+                  onClick={() => signIn('google')}
+                  className="relative w-full sm:w-auto inline-flex items-center justify-center rounded-xl px-5 py-3 text-[15px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
+                  style={{
+                    background: '#2563EB',
+                    boxShadow: '0 8px 24px rgba(37,99,235,0.30)',
+                    fontWeight: 650,
+                    minHeight: '44px',
+                  }}
+                >
+                  Start free trial
+                </button>
+              </div>
+
+              {/* Secondary CTA — dark glass */}
               <Link
                 href="/stock/NVDA"
-                className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl border px-5 py-3 text-[15px] font-semibold text-[#1D4ED8] transition-all hover:bg-[#EFF6FF] hover:border-[#93C5FD] active:scale-95"
+                className="hero-outline-cta w-full sm:w-auto inline-flex items-center justify-center rounded-xl border px-5 py-3 text-[15px] font-semibold transition-all active:scale-95"
                 style={{
-                  background: 'white',
-                  borderColor: '#BFDBFE',
                   fontWeight: 650,
                   minHeight: '44px',
                 }}
@@ -156,11 +231,16 @@ export default function LandingHero() {
             className="relative hidden lg:block min-w-0"
             style={{ minHeight: '480px' }}
           >
-            {/* Main screenshot */}
+            {/* Main screenshot — spring physics entrance */}
             <motion.div
-              initial={{ opacity: 0, x: 28 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.65, ease: 'easeOut', delay: 0.18 }}
+              initial={{ opacity: 0, x: 44, y: 10 }}
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              transition={{
+                type: 'spring',
+                stiffness: 55,
+                damping: 22,
+                delay: 0.18,
+              }}
               style={{
                 position: 'absolute',
                 top: 0,
@@ -172,11 +252,16 @@ export default function LandingHero() {
               <SummaryMockScreen />
             </motion.div>
 
-            {/* Secondary screenshot — offset below and right */}
+            {/* Secondary screenshot — heavier spring, lower stiffness */}
             <motion.div
-              initial={{ opacity: 0, x: 28 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.65, ease: 'easeOut', delay: 0.34 }}
+              initial={{ opacity: 0, x: 44, y: 20 }}
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              transition={{
+                type: 'spring',
+                stiffness: 42,
+                damping: 20,
+                delay: 0.36,
+              }}
               style={{
                 position: 'absolute',
                 bottom: '-40px',
@@ -192,7 +277,6 @@ export default function LandingHero() {
             <div style={{ height: '600px' }} />
           </div>
         </div>
-        {/* No mobile screenshot duplicate — ProductDeepDiveSection shows both screens below */}
       </div>
     </section>
   )
