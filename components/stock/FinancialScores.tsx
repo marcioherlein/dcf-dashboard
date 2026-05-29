@@ -70,7 +70,7 @@ export default function FinancialScores({ scores }: Props) {
   if (noData) {
     return (
       <div className="rounded-xl card p-6">
-        <h2 className="mb-4 text-[11px] font-bold text-blue-600 uppercase tracking-widest">Financial Quality Scores</h2>
+        <h2 className="mb-4 text-[14px] font-semibold text-slate-800">Financial Quality Scores</h2>
         <div className="flex flex-col items-center justify-center py-10 gap-3">
           <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
             <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -112,7 +112,7 @@ export default function FinancialScores({ scores }: Props) {
 
   return (
     <div className="rounded-xl card p-6">
-      <h2 className="mb-5 text-[11px] font-bold text-blue-600 uppercase tracking-widest">Financial Quality Scores</h2>
+      <h2 className="mb-5 text-[14px] font-semibold text-slate-800">Financial Quality Scores</h2>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
@@ -120,7 +120,7 @@ export default function FinancialScores({ scores }: Props) {
         <div className={`rounded-xl border p-4 ${BgColor(piotroski.score, [4, 8])}`}>
           <div className="flex items-start justify-between mb-1">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Financial Strength</p>
+              <p className="text-[11px] font-semibold text-slate-500">Financial Strength</p>
               <p className="text-[10px] text-slate-400 mt-0.5">Piotroski F-Score</p>
               <p className={`mt-0.5 text-3xl font-bold tabular-nums ${ScoreColor(piotroski.score, [4, 8])}`}>
                 {piotroski.score}<span className="text-base font-normal text-slate-500"> / 9</span>
@@ -150,7 +150,7 @@ export default function FinancialScores({ scores }: Props) {
                   variants={reduced ? {} : { hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3 } } }}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{group.label}</p>
+                    <p className="text-[10px] font-semibold text-slate-500">{group.label}</p>
                     <p className="text-[10px] font-mono text-slate-500">{groupPass}/{group.indices.length}</p>
                   </div>
                   <div className="divide-y divide-slate-100 rounded-lg bg-white border border-slate-200 px-2">
@@ -168,7 +168,7 @@ export default function FinancialScores({ scores }: Props) {
         <div className={`rounded-xl border p-4 ${altmanBg}`}>
           <div className="flex items-start justify-between mb-1">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+              <p className="text-[11px] font-semibold text-slate-500">
                 Bankruptcy Risk
                 {altmanSafe && !altmanSafe.isReliable && (
                   <span className="ml-1.5 text-[10px] text-amber-600 font-medium">(EM)</span>
@@ -249,7 +249,7 @@ export default function FinancialScores({ scores }: Props) {
         <div className={`rounded-xl border p-4 ${beneish ? beneishBg : 'bg-slate-50 border-slate-200'}`}>
           <div className="flex items-start justify-between mb-1">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Earnings Quality</p>
+              <p className="text-[11px] font-semibold text-slate-500">Earnings Quality</p>
               <p className="text-[10px] text-slate-400 mt-0.5">Beneish M-Score</p>
               {beneish ? (
                 <p className={`mt-0.5 text-3xl font-bold tabular-nums ${beneishColor}`}>
@@ -318,7 +318,7 @@ export default function FinancialScores({ scores }: Props) {
           <div className={`rounded-xl border p-4 ${spreadGood ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
             <div className="flex items-start justify-between mb-1">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Value Creation</p>
+                <p className="text-[11px] font-semibold text-slate-500">Value Creation</p>
                 <p className="text-[10px] text-slate-400 mt-0.5">ROIC vs cost of capital</p>
                 <p className={`mt-0.5 text-3xl font-bold tabular-nums ${spreadGood ? 'text-emerald-600' : 'text-red-600'}`}>
                   {fmtPct(roic.roic)}

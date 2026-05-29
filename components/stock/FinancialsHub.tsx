@@ -33,6 +33,15 @@ const SUB_TABS: { id: SubTab; label: string }[] = [
   { id: 'ownership',     label: 'Ownership'     },
 ]
 
+const TAB_ANCHORS: Record<SubTab, string> = {
+  statements:    'Raw financials: revenue, earnings, and cash flow across reporting periods.',
+  growth:        'How fast the company is growing — revenue, earnings, and cash flow year-over-year.',
+  profitability: 'How much of each revenue dollar becomes profit, and whether margins are expanding or contracting.',
+  solvency:      'Can this company service its debt and survive a downturn? Leverage, coverage, and liquidity.',
+  analysts:      'Wall Street consensus on the stock — price targets, ratings, and forward estimates.',
+  ownership:     'Who holds the stock: institutions, insiders, and retail — and how that\'s changed recently.',
+}
+
 // ── Small helpers ──────────────────────────────────────────────────────────────
 
 function n(v: unknown): number | null {
@@ -188,6 +197,11 @@ function MetricsTable({ columns, rows }: { columns: string[]; rows: MetricRowDef
                 }`}>
                   <Sparkline values={row.values} positiveIsGood={pig} />
                   {row.label}
+                  {row.positiveIsGood != null && !row.indent && (
+                    <span className="ml-1 text-[9px] text-slate-400 font-normal" aria-label={row.positiveIsGood ? 'higher is better' : 'lower is better'}>
+                      {row.positiveIsGood ? '↑' : '↓'}
+                    </span>
+                  )}
                   {/* Fix P4: render tooltip as native title for turnover/days metrics */}
                   {row.tooltip && (
                     <span title={row.tooltip} className="ml-1 text-slate-400 cursor-help select-none" aria-label={row.tooltip}>ⓘ</span>
@@ -647,6 +661,11 @@ export default function FinancialsHub({ statementsData, financialsData, currency
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Per-tab context strip */}
+      <div className="px-4 sm:px-5 py-2 border-b border-slate-100 bg-slate-50/60">
+        <p className="text-[12px] text-slate-500 leading-snug">{TAB_ANCHORS[subTab]}</p>
       </div>
 
       {!hasData && (

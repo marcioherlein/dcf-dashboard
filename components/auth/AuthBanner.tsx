@@ -4,7 +4,8 @@ import { useSession } from 'next-auth/react'
 import { useLoginGate } from './LoginGateProvider'
 import { X } from 'lucide-react'
 
-const SESSION_KEY = 'stock_page_views'
+const SESSION_KEY       = 'stock_page_views'
+const DISMISSED_KEY     = 'stock_page_views_dismissed'
 
 export default function AuthBanner() {
   const { data: session } = useSession()
@@ -14,6 +15,7 @@ export default function AuthBanner() {
   useEffect(() => {
     if (session?.user) return
     try {
+      if (sessionStorage.getItem(DISMISSED_KEY)) return
       const count = parseInt(sessionStorage.getItem(SESSION_KEY) ?? '0', 10) + 1
       sessionStorage.setItem(SESSION_KEY, String(count))
       if (count >= 2) setVisible(true)
@@ -37,7 +39,10 @@ export default function AuthBanner() {
           Save analysis →
         </button>
         <button
-          onClick={() => setVisible(false)}
+          onClick={() => {
+            setVisible(false)
+            try { sessionStorage.setItem(DISMISSED_KEY, '1') } catch {}
+          }}
           className="p-2 text-blue-200 hover:text-white transition-colors"
           aria-label="Dismiss"
         >
