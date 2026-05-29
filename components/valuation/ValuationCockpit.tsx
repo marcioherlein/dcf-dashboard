@@ -89,7 +89,7 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
   }
 }
 
-export default function ValuationCockpit({ apiData, ticker, statementsData, onNavigateToFinancials, onNavigateToRisks }: Props) {
+export default function ValuationCockpit({ apiData, ticker, statementsData, onNavigateToFinancials: _onNavigateToFinancials, onNavigateToRisks: _onNavigateToRisks }: Props) {
   const snapshot       = useMemo(() => buildSnapshot(apiData, statementsData), [apiData, statementsData])
   const defaults       = useMemo(() => seedAssumptions(apiData), [apiData])
   const historicalData = useMemo(() => buildHistoricalData(apiData), [apiData])
