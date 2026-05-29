@@ -118,10 +118,10 @@ function SearchHero() {
     <div className="rounded-2xl bg-white border border-slate-200 shadow-sm px-6 py-5 sm:px-8 sm:py-6">
       {/* Headline + subtitle as a tight unit */}
       <div className="mb-4">
-        <h1 className="text-2xl sm:text-[26px] font-bold text-slate-900 leading-snug tracking-tight">
+        <h1 className="text-[22px] font-black sm:text-[26px] text-slate-900 leading-snug tracking-tight">
           What do you want to analyze today?
         </h1>
-        <p className="mt-1 text-[13px] text-slate-500 leading-relaxed">
+        <p className="mt-1 text-[14px] text-slate-500 leading-relaxed">
           Search any company to see intrinsic value, market-implied growth, business quality, and valuation risk.
         </p>
       </div>
@@ -147,11 +147,11 @@ function SearchHero() {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKey}
             placeholder="Search ticker or company name, e.g. NVDA, MercadoLibre…"
-            className="flex-1 min-w-0 bg-transparent text-[14px] text-slate-800 placeholder-slate-400 focus:outline-none"
+            className="flex-1 min-w-0 bg-transparent text-[16px] text-slate-800 placeholder-slate-400 focus:outline-none"
           />
           <button
             onClick={() => query.trim() && select(query.trim().toUpperCase())}
-            className="shrink-0 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all px-4 py-1.5 text-[13px] font-semibold text-white"
+            className="shrink-0 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all px-4 py-1.5 text-[13px] font-semibold text-white min-h-[44px]"
           >
             Find analysis
           </button>
@@ -170,7 +170,7 @@ function SearchHero() {
                 <button
                   key={r.symbol}
                   onClick={() => select(r.symbol)}
-                  className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-50 border-b border-slate-100 last:border-b-0 transition-colors"
+                  className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-50 border-b border-slate-100 last:border-b-0 transition-colors min-h-[48px]"
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
@@ -192,13 +192,13 @@ function SearchHero() {
       </div>
 
       {/* Popular ticker chips */}
-      <div className="mt-3 flex items-center gap-1.5 flex-wrap">
+      <div className="mt-3 flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-1">
         <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide shrink-0 mr-0.5">Popular:</span>
         {POPULAR_CHIPS.map((t) => (
           <Link
             key={t}
             href={`/stock/${t}`}
-            className="text-[12px] font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 rounded-full px-3 py-0.5 transition-colors whitespace-nowrap"
+            className="text-[12px] font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 rounded-full px-3 py-1 transition-colors whitespace-nowrap shrink-0 min-h-[32px] flex items-center"
           >
             {t}
           </Link>
@@ -212,9 +212,33 @@ function SearchHero() {
 
 function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
   const up     = (q.changePct ?? 0) >= 0
-  const zone   = q.upsidePct != null ? upsideZone(q.upsidePct) : null
-  const badge  = statusBadge(zone)
   const reduced = useReducedMotion()
+
+  // Lazy-load fair value independently per card, staggered to avoid Yahoo Finance rate-limits
+  const [fairValue,  setFairValue]  = useState<number | null>(q.fairValue)
+  const [upsidePct,  setUpsidePct]  = useState<number | null>(q.upsidePct)
+  const [fvLoading,  setFvLoading]  = useState(q.fairValue == null)
+
+  useEffect(() => {
+    if (fairValue != null) { setFvLoading(false); return }
+    const timer = setTimeout(() => {
+      fetch(`/api/financials?ticker=${q.ticker}`)
+        .then((r) => r.json())
+        .then((data) => {
+          const fv    = data?.valuationMethods?.triangulatedFairValue ?? null
+          const price = data?.quote?.price ?? q.price
+          setFairValue(fv)
+          if (fv != null && price && price > 0) setUpsidePct((fv - price) / price)
+        })
+        .catch(() => {})
+        .finally(() => setFvLoading(false))
+    }, index * 200)
+    return () => clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q.ticker])
+
+  const zone  = upsidePct != null ? upsideZone(upsidePct) : null
+  const badge = statusBadge(zone)
 
   return (
     <motion.div
@@ -281,15 +305,19 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
                 <Info size={9} className="text-slate-300" />
               </span>
             </p>
-            <p className={cn('text-[14px] font-bold tabular-nums', (q.upsidePct ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600')}>
-              {q.fairValue != null ? fmtPrice(q.fairValue) : '—'}
-            </p>
+            {fvLoading ? (
+              <div className="h-4 w-14 rounded bg-slate-100 animate-pulse mt-0.5" />
+            ) : (
+              <p className={cn('text-[14px] font-bold tabular-nums', (upsidePct ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600')}>
+                {fairValue != null ? fmtPrice(fairValue) : '—'}
+              </p>
+            )}
           </div>
-          {q.upsidePct != null && (
+          {upsidePct != null && (
             <div className="text-right shrink-0">
               <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Upside</p>
-              <p className={cn('text-[14px] font-bold tabular-nums', q.upsidePct >= 0 ? 'text-emerald-600' : 'text-red-600')}>
-                {q.upsidePct >= 0 ? '+' : ''}{(q.upsidePct * 100).toFixed(1)}%
+              <p className={cn('text-[14px] font-bold tabular-nums', upsidePct >= 0 ? 'text-emerald-600' : 'text-red-600')}>
+                {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
               </p>
             </div>
           )}
@@ -338,7 +366,7 @@ function PopularAnalysesSection() {
       {/* Mobile: horizontal scroll */}
       <div className="sm:hidden flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory">
         {quotes.map((q, i) => (
-          <div key={q.ticker} className="min-w-[230px] snap-start flex-shrink-0">
+          <div key={q.ticker} className="min-w-[280px] snap-start flex-shrink-0">
             <StockAnalysisCard q={q} index={i} />
           </div>
         ))}
@@ -404,10 +432,11 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
 
                 {/* Implied CAGR bar */}
                 <div className="flex items-center gap-2">
-                  <div
-                    className={cn('h-2 rounded-full shrink-0', cagrBarColor(Math.abs(q.impliedCagr), 'implied'))}
-                    style={{ width: `${Math.min(100, Math.abs(q.impliedCagr) * BAR_SCALE)}px` }}
-                  />
+                  <div className="overflow-hidden" style={{ width: `${Math.min(100, Math.abs(q.impliedCagr) * BAR_SCALE)}px` }}>
+                    <div
+                      className={cn('h-2 rounded-full w-full', cagrBarColor(Math.abs(q.impliedCagr), 'implied'))}
+                    />
+                  </div>
                   <span className="text-[12px] font-semibold text-slate-700 tabular-nums whitespace-nowrap">
                     {q.impliedCagr > 0 ? '+' : ''}{q.impliedCagr}%
                   </span>
@@ -415,10 +444,11 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
 
                 {/* Historical CAGR bar */}
                 <div className="flex items-center gap-2">
-                  <div
-                    className="h-2 bg-blue-400 rounded-full shrink-0"
-                    style={{ width: `${Math.min(100, Math.abs(q.historicalCagr3y) * BAR_SCALE)}px` }}
-                  />
+                  <div className="overflow-hidden" style={{ width: `${Math.min(100, Math.abs(q.historicalCagr3y) * BAR_SCALE)}px` }}>
+                    <div
+                      className="h-2 bg-blue-400 rounded-full w-full"
+                    />
+                  </div>
                   <span className="text-[12px] font-semibold text-slate-700 tabular-nums whitespace-nowrap">
                     {q.historicalCagr3y}%
                   </span>
@@ -517,7 +547,7 @@ function QuickActions() {
               </div>
               <button
                 onClick={c.onClick}
-                className="mt-auto w-full rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-[.98] transition-all py-2 text-[13px] font-semibold text-white"
+                className="mt-auto w-full rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-[.98] transition-all py-2 text-[13px] font-semibold text-white min-h-[44px]"
               >
                 {c.cta}
               </button>
@@ -579,7 +609,7 @@ function RecentlyViewed() {
               return (
                 <div
                   key={r.ticker}
-                  className="group flex items-center justify-between gap-3 rounded-xl bg-white border border-slate-200 shadow-sm px-4 py-3"
+                  className="group flex items-center justify-between gap-3 rounded-xl bg-white border border-slate-200 shadow-sm px-4 py-3 min-h-[56px]"
                 >
                   <button
                     onClick={() => router.push(`/stock/${r.ticker}`)}
@@ -599,7 +629,7 @@ function RecentlyViewed() {
                   <button
                     onClick={() => removeItem(r.ticker)}
                     title="Remove from history"
-                    className="shrink-0 p-1 rounded-md text-slate-300 hover:text-slate-500 hover:bg-slate-100 transition-colors"
+                    className="shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md text-slate-300 hover:text-slate-500 hover:bg-slate-100 transition-colors"
                   >
                     <X size={13} />
                   </button>
