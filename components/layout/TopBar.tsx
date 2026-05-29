@@ -11,11 +11,11 @@ import { slideDown } from '@/lib/motion'
 import { useStockNav } from '@/contexts/StockNavContext'
 import type { TabId } from '@/components/stock/TabNav'
 
-const STOCK_TABS: Array<{ id: TabId; label: string; count?: number }> = [
+const STOCK_TABS: Array<{ id: TabId; label: string }> = [
   { id: 'overview',   label: 'Overview'   },
-  { id: 'valuation',  label: 'Valuation', count: 45 },
+  { id: 'valuation',  label: 'Valuation'  },
   { id: 'financials', label: 'Financials' },
-  { id: 'risks',      label: 'Risks',     count: 78 },
+  { id: 'risks',      label: 'Risks'      },
   { id: 'news',       label: 'News'       },
 ]
 
@@ -235,9 +235,6 @@ export default function TopBar() {
               <span className="font-bold text-[13px] text-slate-900 tracking-tight shrink-0">
                 {stockNav.ticker}
               </span>
-              <span className="text-[12px] text-slate-400 hidden md:block truncate max-w-[160px]">
-                {stockNav.companyName}
-              </span>
               {stockNav.price != null && (
                 <div className="flex items-baseline gap-1 shrink-0">
                   <span className="font-semibold text-[13px] text-slate-800 tabular-nums">
@@ -256,9 +253,9 @@ export default function TopBar() {
               )}
             </div>
 
-            {/* Tabs */}
-            <div className="flex overflow-x-auto scrollbar-hide" role="tablist">
-              {STOCK_TABS.map(({ id, label, count }) => {
+            {/* Tabs — flex-1 min-w-0 so overflow-x-auto actually constrains scrolling */}
+            <div className="flex flex-1 min-w-0 overflow-x-auto scrollbar-hide" role="tablist">
+              {STOCK_TABS.map(({ id, label }) => {
                 const active = stockNav.activeTab === id
                 return (
                   <button
@@ -267,21 +264,11 @@ export default function TopBar() {
                     aria-selected={active}
                     onClick={() => onTabChangeRef.current?.(id)}
                     className={cn(
-                      'relative flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 text-[11px] sm:text-[12px] font-medium whitespace-nowrap transition-colors shrink-0 h-[52px]',
+                      'relative flex items-center gap-1.5 px-3 sm:px-3.5 text-[12px] font-medium whitespace-nowrap transition-colors shrink-0 h-[52px]',
                       active ? 'text-blue-600' : 'text-slate-500 hover:text-slate-800',
                     )}
                   >
                     {label}
-                    {count != null && (
-                      <span className={cn(
-                        'text-[10px] font-semibold leading-none px-1.5 py-0.5 rounded-full tabular-nums hidden sm:inline',
-                        active
-                          ? 'bg-blue-100 text-blue-600'
-                          : 'bg-slate-100 text-slate-400',
-                      )}>
-                        {count}
-                      </span>
-                    )}
                     {active && (
                       <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-600 rounded-t" />
                     )}
@@ -371,12 +358,11 @@ export default function TopBar() {
         {/* ── Column 3: watchlist button (stock only) + search (stock only) + auth ── */}
         <div className="flex items-center gap-2 sm:gap-3 justify-end min-w-0">
 
-          {/* "Add to watchlist" — only on stock pages */}
+          {/* "Save analysis" — only on stock pages */}
           {stockNav && (
             <button
               onClick={() => onSaveRef.current?.()}
-              className="flex items-center gap-1.5 text-[12px] font-semibold text-white px-3 py-1.5 rounded-lg transition-all whitespace-nowrap"
-              style={{ background: 'linear-gradient(135deg, #1E40AF 0%, #2563EB 100%)', boxShadow: '0 1px 4px rgba(37,99,235,0.25)' }}
+              className="flex items-center gap-1.5 text-[12px] font-semibold text-white px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-colors whitespace-nowrap shadow-sm"
             >
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -385,91 +371,12 @@ export default function TopBar() {
             </button>
           )}
 
-          {/* Compact search input for stock pages */}
-          {stockNav && (
-            <div className="relative hidden md:block" ref={searchRef} style={{ width: 'clamp(120px, 18vw, 200px)' }}>
-              <div
-                className="flex items-center gap-2 rounded-xl px-3 py-1.5 transition-all border"
-                style={{
-                  background: 'rgba(255,255,255,0.55)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                  borderColor: open ? 'rgba(99,102,241,0.35)' : 'rgba(148,163,184,0.35)',
-                  boxShadow: open ? '0 0 0 3px rgba(99,102,241,0.08)' : 'none',
-                }}
-              >
-                {loading ? (
-                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-blue-500 shrink-0" />
-                ) : (
-                  <svg className="h-3.5 w-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
-                  </svg>
-                )}
-                <input
-                  type="text"
-                  value={query}
-                  onChange={e => setQuery(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && query.trim()) select(query.trim().toUpperCase()) }}
-                  placeholder="Search…"
-                  className="flex-1 min-w-0 bg-transparent text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none"
-                />
-              </div>
-
-              <AnimatePresence>
-                {open && (
-                  <motion.div
-                    key="search-dropdown-stock"
-                    variants={reduced ? {} : slideDown}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    style={{ originY: 0 }}
-                    className="absolute right-0 top-full mt-1 w-[min(300px,calc(100vw-32px))] overflow-hidden glass-card-light rounded-xl z-50 max-h-[70vh] overflow-y-auto"
-                  >
-                    <motion.div
-                      variants={reduced ? {} : { visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } } }}
-                      initial="hidden"
-                      animate="visible"
-                    >
-                      {results.map(r => (
-                        <motion.button
-                          key={r.symbol}
-                          variants={reduced ? {} : { hidden: { opacity: 0, x: -6 }, visible: { opacity: 1, x: 0, transition: { duration: 0.18 } } }}
-                          onClick={() => select(r.symbol)}
-                          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-50 border-b border-slate-100 last:border-b-0 transition-colors"
-                        >
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2 mb-0.5">
-                              <span className="text-[14px] font-bold text-slate-800 font-mono">{r.symbol}</span>
-                              {r.exchange && (
-                                <span className="text-[10px] text-slate-400 font-medium uppercase">{r.exchange}</span>
-                              )}
-                            </div>
-                            <span className="text-[12px] text-slate-500 truncate block">{r.longname ?? r.shortname}</span>
-                          </div>
-                          {r.quoteType && (
-                            <span className="shrink-0 text-[11px] font-medium text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
-                              {r.quoteType === 'EQUITY' ? 'Equity' : r.quoteType === 'ETF' ? 'ETF' : r.quoteType === 'INDEX' ? 'Index' : r.quoteType}
-                            </span>
-                          )}
-                        </motion.button>
-                      ))}
-                    </motion.div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
-
           {session ? (
             <div className="flex items-center gap-2 shrink-0">
               <UserAvatar
                 image={session.user?.image ?? null}
                 name={session.user?.name ?? null}
               />
-              <span className="text-[12px] text-slate-600 hidden md:block whitespace-nowrap">
-                Hi {session.user?.name?.split(' ')[0]}
-              </span>
               <button
                 onClick={() => signOut()}
                 className="text-[12px] text-slate-400 hover:text-slate-700 transition-colors whitespace-nowrap hidden sm:block"

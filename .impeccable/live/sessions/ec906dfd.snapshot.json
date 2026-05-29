@@ -1,0 +1,20 @@
+{
+  "id": "ec906dfd",
+  "phase": "steer_done",
+  "pageUrl": "http://localhost:3002/pricing",
+  "sourceFile": null,
+  "expectedVariants": 0,
+  "arrivedVariants": 0,
+  "visibleVariant": null,
+  "paramValues": {},
+  "pendingEventSeq": null,
+  "pendingEvent": null,
+  "deliveryLease": null,
+  "checkpointRevision": 0,
+  "activeOwner": null,
+  "sourceMarkers": {},
+  "fallbackMode": null,
+  "annotationArtifacts": [],
+  "diagnostics": [],
+  "updatedAt": "2026-05-29T14:03:36.570Z"
+}

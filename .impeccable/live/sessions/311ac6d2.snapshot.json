@@ -1,0 +1,28 @@
+{
+  "id": "311ac6d2",
+  "phase": "completed",
+  "pageUrl": "/stock/MSFT",
+  "sourceFile": "components/auth/AuthBanner.tsx",
+  "expectedVariants": 2,
+  "arrivedVariants": 2,
+  "visibleVariant": 1,
+  "paramValues": {
+    "top": 0
+  },
+  "pendingEventSeq": null,
+  "pendingEvent": null,
+  "deliveryLease": null,
+  "checkpointRevision": 4,
+  "activeOwner": "b774eb74",
+  "sourceMarkers": {},
+  "fallbackMode": null,
+  "annotationArtifacts": [],
+  "diagnostics": [
+    {
+      "error": "carbonize_cleanup_required",
+      "file": "components/auth/AuthBanner.tsx",
+      "message": "Accepted variant still has carbonize markers that must be folded into source CSS."
+    }
+  ],
+  "updatedAt": "2026-05-29T14:09:15.058Z"
+}

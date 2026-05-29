@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-28T00:00:00Z",
+  "title": "Design System: Intrinsico",
+  "extensions": {
+    "colorMeta": {
+      "blueprint-blue":       { "role": "primary",   "displayName": "Blueprint Blue",      "canonical": "#2563EB", "tonalRamp": ["#0A1628","#1E3A8A","#1D4ED8","#2563EB","#3B82F6","#60A5FA","#93C5FD","#BFDBFE"] },
+      "deep-frame":           { "role": "neutral",   "displayName": "Deep Frame",           "canonical": "#050D1F", "tonalRamp": ["#020408","#050D1F","#0A1628","#0E1F36","#1E293B","#334155","#475569","#64748B"] },
+      "page-ground":          { "role": "neutral",   "displayName": "Page Ground",          "canonical": "#F1F5F9", "tonalRamp": ["#94A3B8","#CBD5E1","#E2E8F0","#F1F5F9","#F8FAFC","#FFFFFF","#FFFFFF","#FFFFFF"] },
+      "ink-primary":          { "role": "neutral",   "displayName": "Ink Primary",          "canonical": "#0F172A", "tonalRamp": ["#020617","#0F172A","#1E293B","#334155","#475569","#64748B","#94A3B8","#CBD5E1"] },
+      "semantic-up":          { "role": "tertiary",  "displayName": "Semantic Up",          "canonical": "#059669", "tonalRamp": ["#022c22","#065f46","#059669","#10b981","#34d399","#6ee7b7","#a7f3d0","#d1fae5"] },
+      "semantic-down":        { "role": "tertiary",  "displayName": "Semantic Down",        "canonical": "#DC2626", "tonalRamp": ["#450a0a","#991b1b","#dc2626","#ef4444","#f87171","#fca5a5","#fecaca","#fee2e2"] },
+      "semantic-warn":        { "role": "tertiary",  "displayName": "Semantic Warn",        "canonical": "#D97706", "tonalRamp": ["#451a03","#92400e","#d97706","#f59e0b","#fbbf24","#fcd34d","#fde68a","#fef3c7"] },
+      "neon-cyan":            { "role": "secondary", "displayName": "Neon Cyan",            "canonical": "#06B6D4", "tonalRamp": ["#083344","#164e63","#0e7490","#0891b2","#06b6d4","#22d3ee","#67e8f9","#cffafe"] }
+    },
+    "typographyMeta": {
+      "display":  { "displayName": "Display",  "purpose": "Landing hero headline. One per page. Space Grotesk for geometric authority." },
+      "headline": { "displayName": "Headline", "purpose": "Stock page primary title, major section anchors." },
+      "title":    { "displayName": "Title",    "purpose": "Section headers, modal titles, prominent card titles." },
+      "body":     { "displayName": "Body",     "purpose": "Analysis copy, descriptions. Max 65–75ch." },
+      "label":    { "displayName": "Label",    "purpose": "Metric labels, table column headers, status badges. Uppercase ≤4 words only." },
+      "mono":     { "displayName": "Mono",     "purpose": "DCF projections, price series, financial ratios. tabular-nums always." }
+    },
+    "shadows": [
+      { "name": "glass-card-light", "value": "0 1px 0 rgba(255,255,255,0.95) inset, 0 4px 24px rgba(99,102,241,0.08), 0 2px 8px rgba(0,0,0,0.05)", "purpose": "Primary card surface on light zone. White inset seam is the tactile signature." },
+      { "name": "glass-card-dark",  "value": "0 0 30px rgba(59,130,246,0.06), inset 0 1px 0 rgba(255,255,255,0.07)", "purpose": "Cards within the deep frame zone." },
+      { "name": "glass-toolbar",    "value": "0 1px 0 rgba(255,255,255,0.92) inset, 0 2px 16px rgba(99,102,241,0.06), 0 1px 4px rgba(0,0,0,0.04)", "purpose": "Fixed navigation bars." },
+      { "name": "card",             "value": "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)", "purpose": "Fallback when backdrop-filter is unsupported. Not a design default." },
+      { "name": "card-md",          "value": "0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)", "purpose": "Hover lift fallback." },
+      { "name": "glow-sm",          "value": "0 0 12px rgba(37,99,235,0.2), 0 0 4px rgba(37,99,235,0.1)", "purpose": "Blueprint Blue focus halo. Primary buttons and active nav items." }
+    ],
+    "motion": [
+      { "name": "ease-out-standard", "value": "cubic-bezier(0.0, 0.0, 0.2, 1)", "purpose": "Default easing for state transitions and reveals." },
+      { "name": "ease-out-quart",    "value": "cubic-bezier(0.25, 1, 0.5, 1)",  "purpose": "Entrance animations — fast in, slow settle." },
+      { "name": "duration-fast",     "value": "150ms",  "purpose": "Micro-interactions: button press, chip select." },
+      { "name": "duration-standard", "value": "250ms",  "purpose": "Default transition duration for state changes." },
+      { "name": "duration-entrance", "value": "400ms",  "purpose": "Component entrance animations." }
+    ],
+    "breakpoints": [
+      { "name": "sm",  "value": "640px"  },
+      { "name": "md",  "value": "768px"  },
+      { "name": "lg",  "value": "1024px" },
+      { "name": "xl",  "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The only button that leads with color. Used once per action group.",
+      "html": "<button class=\"ds-btn-primary\">Analyze Stock</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 10px; gap: 6px; background: #2563EB; color: #ffffff; font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; line-height: 1; white-space: nowrap; border: 1px solid transparent; border-radius: 8px; box-shadow: 0 0 12px rgba(37,99,235,0.2), 0 0 4px rgba(37,99,235,0.1); cursor: pointer; transition: background 150ms ease, box-shadow 150ms ease; user-select: none; } .ds-btn-primary:hover { background: #60A5FA; box-shadow: 0 0 24px rgba(37,99,235,0.3), 0 0 8px rgba(37,99,235,0.12); } .ds-btn-primary:focus-visible { outline: none; border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,0.5); } .ds-btn-primary:active { transform: translateY(1px); }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary action in the dark frame. Transparent background with blue-tinted border.",
+      "html": "<button class=\"ds-btn-outline\">View Details</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 10px; gap: 6px; background: transparent; color: #CBD5E1; font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; line-height: 1; white-space: nowrap; border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; cursor: pointer; transition: background 150ms ease, border-color 150ms ease, color 150ms ease; user-select: none; } .ds-btn-outline:hover { background: rgba(255,255,255,0.05); border-color: rgba(59,130,246,0.5); color: #ffffff; } .ds-btn-outline:focus-visible { outline: none; border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,0.4); }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Tertiary action. No background, no border. Used for icon triggers and low-priority actions.",
+      "html": "<button class=\"ds-btn-ghost\">Cancel</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 10px; gap: 6px; background: transparent; color: #94A3B8; font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; line-height: 1; white-space: nowrap; border: 1px solid transparent; border-radius: 8px; cursor: pointer; transition: background 150ms ease, color 150ms ease; user-select: none; } .ds-btn-ghost:hover { background: rgba(255,255,255,0.05); color: #ffffff; } .ds-btn-ghost:focus-visible { outline: none; border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,0.4); }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Transparent ground, stroke-defined. 8px radius. Shifts to blue ring on focus.",
+      "html": "<div class=\"ds-input-wrapper\"><input class=\"ds-input\" type=\"text\" placeholder=\"Search ticker or company...\" /></div>",
+      "css": ".ds-input-wrapper { display: flex; align-items: center; width: 100%; } .ds-input { height: 32px; width: 100%; padding: 0 10px; background: transparent; color: #0F172A; font-family: Inter, system-ui, sans-serif; font-size: 14px; line-height: 1; border: 1px solid #E2E8F0; border-radius: 8px; outline: none; transition: border-color 150ms ease, box-shadow 150ms ease; } .ds-input::placeholder { color: #94A3B8; } .ds-input:focus { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,0.25); } .ds-input:disabled { pointer-events: none; opacity: 0.5; background: rgba(226,232,240,0.5); }"
+    },
+    {
+      "name": "Glass Card (Light)",
+      "kind": "card",
+      "refersTo": "card-glass-light",
+      "description": "Primary card on the light page surface. Frosted white with white hairline seam — the tactile signature.",
+      "html": "<div class=\"ds-card-light\"><div class=\"ds-card-header\"><div class=\"ds-card-title\">Fair Value Estimate</div><div class=\"ds-card-description\">Based on 10-year DCF model</div></div><div class=\"ds-card-body\"><span class=\"ds-card-metric\">$142.50</span></div></div>",
+      "css": ".ds-card-light { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 16px; background: rgba(255,255,255,0.62); backdrop-filter: blur(28px) saturate(200%) brightness(1.05); -webkit-backdrop-filter: blur(28px) saturate(200%) brightness(1.05); border: 1px solid rgba(255,255,255,0.72); border-top-color: rgba(255,255,255,0.90); border-radius: 12px; box-shadow: 0 1px 0 rgba(255,255,255,0.95) inset, 0 4px 24px rgba(99,102,241,0.08), 0 2px 8px rgba(0,0,0,0.05); transition: box-shadow 200ms ease, transform 200ms ease; overflow: hidden; } .ds-card-light::before { content: ''; position: absolute; top: 0; left: 6%; right: 6%; height: 1px; background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.65) 20%, rgba(255,255,255,0.90) 50%, rgba(255,255,255,0.65) 80%, transparent 100%); z-index: 1; pointer-events: none; } .ds-card-light:hover { box-shadow: 0 1px 0 rgba(255,255,255,0.95) inset, 0 8px 32px rgba(99,102,241,0.12), 0 4px 12px rgba(0,0,0,0.07); transform: translateY(-1px); } .ds-card-header { display: flex; flex-direction: column; gap: 2px; } .ds-card-title { font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 600; line-height: 1.3; color: #0F172A; } .ds-card-description { font-family: Inter, system-ui, sans-serif; font-size: 12px; font-weight: 400; color: #64748B; } .ds-card-body { display: flex; flex-direction: column; gap: 8px; } .ds-card-metric { font-family: 'DM Mono', 'IBM Plex Mono', monospace; font-size: 1.5rem; font-weight: 500; color: #0F172A; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Glass Card (Dark Frame)",
+      "kind": "card",
+      "refersTo": "card-glass-dark",
+      "description": "Card within the deep frame zone. Deep navy glass treatment.",
+      "html": "<div class=\"ds-card-dark\"><div class=\"ds-card-dark-title\">NVDA</div><div class=\"ds-card-dark-sub\">NVIDIA Corporation</div></div>",
+      "css": ".ds-card-dark { display: flex; flex-direction: column; gap: 8px; padding: 16px; background: rgba(10,22,40,0.50); backdrop-filter: blur(28px) saturate(200%); -webkit-backdrop-filter: blur(28px) saturate(200%); border: 1px solid rgba(255,255,255,0.10); border-radius: 12px; box-shadow: 0 0 30px rgba(59,130,246,0.06), inset 0 1px 0 rgba(255,255,255,0.07); color: #F8FAFC; } .ds-card-dark-title { font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 1rem; font-weight: 700; color: #F8FAFC; } .ds-card-dark-sub { font-family: Inter, system-ui, sans-serif; font-size: 12px; color: #94A3B8; }"
+    },
+    {
+      "name": "Status Chip (Positive)",
+      "kind": "chip",
+      "refersTo": null,
+      "description": "Semantic badge for undervalued / positive signals. Always paired with a directional label — never color alone.",
+      "html": "<span class=\"ds-chip-positive\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"18 15 12 9 6 15\"></polyline></svg>Undervalued</span>",
+      "css": ".ds-chip-positive { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; border-radius: 9999px; font-family: Inter, system-ui, sans-serif; font-size: 11px; font-weight: 700; line-height: 1.4; letter-spacing: 0.02em; white-space: nowrap; }"
+    },
+    {
+      "name": "Status Chip (Negative)",
+      "kind": "chip",
+      "refersTo": null,
+      "description": "Semantic badge for overvalued / negative signals. Always paired with a directional label.",
+      "html": "<span class=\"ds-chip-negative\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"6 9 12 15 18 9\"></polyline></svg>Overvalued</span>",
+      "css": ".ds-chip-negative { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; border-radius: 9999px; font-family: Inter, system-ui, sans-serif; font-size: 11px; font-weight: 700; line-height: 1.4; letter-spacing: 0.02em; white-space: nowrap; }"
+    },
+    {
+      "name": "Status Chip (Warning)",
+      "kind": "chip",
+      "refersTo": null,
+      "description": "Semantic badge for fair-value / caution signals.",
+      "html": "<span class=\"ds-chip-warn\">Fair Value</span>",
+      "css": ".ds-chip-warn { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background: #FFFBEB; color: #92400E; border: 1px solid #FDE68A; border-radius: 9999px; font-family: Inter, system-ui, sans-serif; font-size: 11px; font-weight: 700; line-height: 1.4; letter-spacing: 0.02em; white-space: nowrap; }"
+    },
+    {
+      "name": "Bottom Navigation",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "iOS Liquid Glass bottom tab bar. Five items, active state in Blueprint Blue. Mobile only.",
+      "html": "<nav class=\"ds-bottom-nav\"><a class=\"ds-nav-item ds-nav-active\" href=\"#\"><svg class=\"ds-nav-icon\" width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"></path></svg><span class=\"ds-nav-label\">Home</span></a><a class=\"ds-nav-item\" href=\"#\"><svg class=\"ds-nav-icon\" width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line></svg><span class=\"ds-nav-label\">Analyze</span></a><a class=\"ds-nav-item\" href=\"#\"><svg class=\"ds-nav-icon\" width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"22 12 18 12 15 21 9 3 6 12 2 12\"></polyline></svg><span class=\"ds-nav-label\">Markets</span></a><a class=\"ds-nav-item\" href=\"#\"><svg class=\"ds-nav-icon\" width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z\"></path></svg><span class=\"ds-nav-label\">Watchlist</span></a><a class=\"ds-nav-item\" href=\"#\"><svg class=\"ds-nav-icon\" width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\"></path><circle cx=\"12\" cy=\"7\" r=\"4\"></circle></svg><span class=\"ds-nav-label\">Account</span></a></nav>",
+      "css": ".ds-bottom-nav { position: relative; display: flex; align-items: center; justify-content: space-around; padding: 8px 0 max(8px, env(safe-area-inset-bottom)); background: rgba(255,255,255,0.82); backdrop-filter: blur(40px) saturate(210%) brightness(1.05); -webkit-backdrop-filter: blur(40px) saturate(210%) brightness(1.05); border-top: 1px solid rgba(255,255,255,0.80); box-shadow: 0 -1px 0 rgba(255,255,255,0.95) inset, 0 -4px 24px rgba(99,102,241,0.06), 0 -1px 6px rgba(0,0,0,0.04); } .ds-bottom-nav::before { content: ''; position: absolute; top: 0; left: 4%; right: 4%; height: 1px; background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.65) 20%, rgba(255,255,255,0.95) 50%, rgba(255,255,255,0.65) 80%, transparent 100%); pointer-events: none; z-index: 1; } .ds-nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 44px; min-height: 44px; padding: 4px 8px; color: #94A3B8; text-decoration: none; transition: color 150ms ease; } .ds-nav-item:hover { color: #64748B; } .ds-nav-active { color: #2563EB; } .ds-nav-icon { flex-shrink: 0; } .ds-nav-label { font-family: Inter, system-ui, sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; line-height: 1; text-transform: uppercase; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Research Brief",
+    "overview": "Intrinsico's visual system is built around a single premise: every screen is a deliverable. Not a dashboard to glance at — a research brief to read, trust, and act on. The design translates institutional-quality valuation analysis into a structured, direct artifact: hierarchical, confident, with nothing decorative standing between the investor and the signal.\n\nThe UI operates in two physical zones. The light content zone — white cards on cool slate (#F1F5F9) — is where analysis lives: DCF tables, fair value estimates, company overviews. The deep frame zone — navigation and chrome in near-black navy (#050D1F) — holds the UI together without competing. The two zones are unified by a single accent: Blueprint Blue (#2563EB), used sparingly and with intent. Elevation is expressed through iOS Liquid Glass — frosted planes, blur, white hairline highlights — giving surfaces physical presence without adding decorative mass.\n\nThis system explicitly rejects four fintech aesthetic families: Bloomberg Terminal density, Robinhood gamification, generic SaaS dashboard conventions, and traditional broker portal fatigue.",
+    "keyCharacteristics": [
+      "Two-zone system (light content / deep frame) unified by a single accent blue",
+      "Glass layering as the primary elevation system: blur depth, opacity, and white highlight seams",
+      "Space Grotesk display + Inter body: geometric confidence paired with analytical precision",
+      "Financial semantics (up/down/warn) always carry a non-color indicator",
+      "Motion is purposeful — state feedback, scroll reveals, and entrances only",
+      "Mono numbers in tabular financial data; Inter everywhere else"
+    ],
+    "rules": [
+      { "name": "The One Accent Rule",      "body": "Blueprint Blue is the only color with UI authority. Cyan, green, red, and amber are semantic data colors — they describe what the numbers mean. They never carry navigation, CTA, or branding roles.", "section": "colors" },
+      { "name": "The Cool Ground Rule",     "body": "The page background stays at #F1F5F9. The warm-neutral band is the AI default of 2026. Intrinsico runs on cool slate.", "section": "colors" },
+      { "name": "The Mono Number Rule",     "body": "Tabular numerical data renders in DM Mono with tabular-nums. Body copy and labels stay in Inter. Never mixed.", "section": "typography" },
+      { "name": "The Scale Rule",           "body": "Hero/display ceiling is clamp(2rem, 5.5vw, 4.25rem). Financial users are not here to admire typography — they are reading to decide.", "section": "typography" },
+      { "name": "The Glass-First Rule",     "body": "New components on the light surface use glass-card-light. New components in the dark frame use glass-card. Legacy flat card shadow is a fallback, not a design choice.", "section": "elevation" },
+      { "name": "The Purposeful Glass Rule","body": "Glass is structural, not decorative. Applied to elements that do not need elevation separation, it is glassmorphism — prohibited.", "section": "elevation" }
+    ],
+    "dos": [
+      "Use Blueprint Blue (#2563EB) as the sole navigation and CTA accent color.",
+      "Pair all color-coded financial values with a directional icon or explicit text label.",
+      "Render tabular financial data in DM Mono with font-variant-numeric: tabular-nums.",
+      "Use glass-card-light for new cards on the page-ground surface, glass-card in the dark frame.",
+      "Keep body copy within 65–75ch.",
+      "Keep the page background at #F1F5F9.",
+      "Express elevation through blur depth and glass opacity.",
+      "Include @media (prefers-reduced-motion: reduce) alternatives for every animation.",
+      "Use text-wrap: balance on h1–h3 and text-wrap: pretty on analysis prose."
+    ],
+    "donts": [
+      "Don't design toward Bloomberg Terminal density: hierarchy-free data walls with no primary call to attention.",
+      "Don't use Robinhood-style gamification: animated tickers, green confetti, casino energy.",
+      "Don't use generic SaaS dashboard conventions: hero-metric templates, identical card grids, tiny tracked uppercase eyebrows above every section.",
+      "Don't echo traditional broker portal aesthetics: heavy legacy tables, bureaucratic shells, zero visual rhythm.",
+      "Don't use gradient text (background-clip: text). Blueprint Blue doesn't need to glow.",
+      "Don't use border-left greater than 1px as a colored stripe on cards, list items, or callouts.",
+      "Don't warm the page background. Intrinsico runs on #F1F5F9.",
+      "Don't promote semantic colors (green, red, amber) to navigation or CTA roles.",
+      "Don't apply glass treatment to decorative elements that do not need elevation separation.",
+      "Don't use glow-md or glow-lg on interactive components."
+    ]
+  }
+}

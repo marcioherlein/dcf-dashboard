@@ -1,0 +1,2 @@
+{"seq":1,"id":"ec906dfd","type":"steer","ts":"2026-05-29T14:02:46.249Z","event":{"type":"steer","id":"ec906dfd","message":"dellll","pageUrl":"http://localhost:3002/pricing","token":"34ac0c5c-83ba-40d7-9b03-da2dd3979c3b"}}
+{"seq":2,"id":"ec906dfd","type":"steer_done","ts":"2026-05-29T14:03:36.570Z","event":{"type":"steer_done","id":"ec906dfd","message":"Couldn't parse intent — what did you want to do?","carbonize":false}}
