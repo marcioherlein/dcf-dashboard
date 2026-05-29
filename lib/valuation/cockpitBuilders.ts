@@ -77,6 +77,7 @@ export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null)
     analystTargetMean,
     analystRating,
     companyType: apiData.valuationMethods?.companyType ?? 'standard',
+    fullDcfFairValue: apiData.scenarios?.base?.fairValue ?? null,
   }
 }
 

@@ -39,6 +39,9 @@ export interface CockpitSnapshot {
   analystRating: string | null
   // Company classification (determines method blend weights)
   companyType?: string
+  // Pre-computed 4-model DCF blend from Full DCF Table (scenarios.base.fairValue).
+  // When present, Core DCF uses this directly instead of re-running the UFCF-only blend.
+  fullDcfFairValue?: number | null
 }
 
 export interface CockpitMethodResult {
@@ -407,11 +410,16 @@ export function computeCockpitOutput(
     dividendYield: snapshot.dividendYield,
   })
 
-  // 4. Core DCF (UFCF blend: 50% PGM + 50% Exit Multiple terminal value)
-  // Matches the UFCF portion of the Full DCF Table. 200bps minimum WACC-g spread; capped at 10× price.
+  // 4. Core DCF — use the Full DCF Table's 4-model Damodaran blend when available
+  // (scenarios.base.fairValue from the API). Fall back to internal UFCF 50/50 blend
+  // only when that pre-computed value is absent, so both panels always agree.
   let dcfFV: number | null = null
   let dcfErrors: string[] = []
-  if (snapshot.baseFCF > 0 && snapshot.sharesM > 0) {
+
+  if (snapshot.fullDcfFairValue != null && snapshot.fullDcfFairValue > 0) {
+    // Use the Full DCF Table result directly — keeps Core DCF card and Full DCF Table in sync
+    dcfFV = snapshot.fullDcfFairValue
+  } else if (snapshot.baseFCF > 0 && snapshot.sharesM > 0) {
     const g = Math.min(Math.max(assumptions.terminalG, 0.005), assumptions.wacc - 0.02)
     if (g > 0 && g < assumptions.wacc) {
       const years = 10
@@ -425,9 +433,7 @@ export function computeCockpitOutput(
       })
       if (dcf.ev != null && dcf.projections.length > 0) {
         const lastCF = dcf.projections[dcf.projections.length - 1].cashFlow
-        // Exit-multiple terminal value (matches Full DCF Table UFCF×ExitMultiple method)
         const tvExit = (lastCF * assumptions.exitMultiple) / Math.pow(1 + assumptions.wacc, years)
-        // 50% PGM (Gordon Growth) + 50% Exit Multiple — same blend as Full DCF Table UFCF section
         const evBlended = (dcf.ev + (dcf.sumPV + tvExit)) / 2
         const equity = evBlended + snapshot.cashM - snapshot.debtM
         const raw = Math.round((equity / snapshot.sharesM) * 100) / 100
@@ -488,7 +494,9 @@ export function computeCockpitOutput(
       fairValue: dcfFV,
       weight: W.core_dcf,
       confidence: dcfFV != null ? 'medium' : 'low',
-      description: 'UFCF blend: 50% Gordon Growth (PGM) + 50% Exit Multiple terminal value. Matches the Full DCF Table\'s UFCF methodology — see it below for year-by-year detail.',
+      description: snapshot.fullDcfFairValue != null && snapshot.fullDcfFairValue > 0
+        ? 'Full DCF Table 4-model Damodaran blend (UFCF+PGM, UFCF+EM, LFCF+PGM, LFCF+EM) using company-type-specific weights — see the Full DCF Table below for year-by-year detail.'
+        : 'UFCF blend: 50% Gordon Growth (PGM) + 50% Exit Multiple terminal value. Full DCF Table result not available.',
       upsidePct: upside(dcfFV),
       errors: dcfErrors,
     },
