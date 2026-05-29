@@ -28,7 +28,7 @@ export default function CompanyCard({ description, sector, industry, country, em
   ].filter(Boolean) as string[]
 
   return (
-    <div className="bg-white border border-[#E6ECF5] rounded-[18px] p-4 sm:p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="bg-[#F8FAFC] border border-[#E6ECF5] rounded-[18px] p-4 sm:p-5">
       {/* Description — clamp to 3 lines on mobile when collapsed */}
       <p className={cn(
         'text-[13px] text-[#475569] leading-relaxed mb-1',

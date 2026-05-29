@@ -1,6 +1,5 @@
 'use client'
 
-import { TrendingUp, Target, BarChart2, ShieldCheck, Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { fmtPrice, fmtPct } from '@/lib/formatters'
 
@@ -31,108 +30,149 @@ interface SummaryHeroCardProps {
   onViewValuation: () => void
 }
 
-// ─── Verdict logic ────────────────────────────────────────────────────────────
+// ─── Verdict config ───────────────────────────────────────────────────────────
 
 interface VerdictConfig {
   word: string
-  chipLabel: string
-  chipClass: string
   wordClass: string
   descVerb: string
-  bgGradient: string
+  bgStyle: string
   borderClass: string
+  upsideClass: string
 }
 
 function deriveVerdict(upsidePct: number | null): VerdictConfig {
   if (upsidePct == null) return {
-    word: 'Uncertain', chipLabel: '—',
-    chipClass: 'bg-slate-100 text-slate-500 border-slate-200',
-    wordClass: 'text-slate-600', descVerb: 'insufficient data',
-    bgGradient: 'bg-[#F8FAFC]', borderClass: 'border-[#E6ECF5]',
+    word: 'Uncertain',
+    wordClass: 'text-slate-500',
+    descVerb: 'insufficient data for a conviction',
+    bgStyle: '#F8FAFC',
+    borderClass: 'border-[#E6ECF5]',
+    upsideClass: 'text-slate-400',
   }
   if (upsidePct > 0.25) return {
-    word: 'Attractive', chipLabel: 'Deep Value',
-    chipClass: 'bg-[#ECFDF3] text-[#047857] border-[#BBF7D0]',
-    wordClass: 'text-[#16A34A]', descVerb: 'meaningfully undervalued',
-    bgGradient: 'bg-gradient-to-br from-[#ECFDF3] via-[#F8FAFC] to-white', borderClass: 'border-[#BBF7D0]',
+    word: 'Attractive',
+    wordClass: 'text-[#16A34A]',
+    descVerb: 'meaningfully undervalued',
+    bgStyle: 'radial-gradient(ellipse at 90% 0%, rgba(22,163,74,0.12) 0%, transparent 55%), #FAFFFE',
+    borderClass: 'border-[#BBF7D0]',
+    upsideClass: 'text-[#16A34A]',
   }
   if (upsidePct > 0.05) return {
-    word: 'Undervalued', chipLabel: 'Undervalued',
-    chipClass: 'bg-[#ECFDF3] text-[#047857] border-[#BBF7D0]',
-    wordClass: 'text-[#16A34A]', descVerb: 'modestly undervalued',
-    bgGradient: 'bg-gradient-to-br from-[#ECFDF3] via-[#F8FAFC] to-white', borderClass: 'border-[#BBF7D0]',
+    word: 'Undervalued',
+    wordClass: 'text-[#16A34A]',
+    descVerb: 'modestly undervalued',
+    bgStyle: 'radial-gradient(ellipse at 90% 0%, rgba(22,163,74,0.09) 0%, transparent 55%), #FAFFFE',
+    borderClass: 'border-[#BBF7D0]',
+    upsideClass: 'text-[#16A34A]',
   }
   if (upsidePct >= -0.10) return {
-    word: 'Fairly Valued', chipLabel: 'Near Fair Value',
-    chipClass: 'bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]',
-    wordClass: 'text-[#2563EB]', descVerb: 'near fair value',
-    bgGradient: 'bg-gradient-to-br from-[#EFF6FF] via-[#F8FAFC] to-white', borderClass: 'border-[#BFDBFE]',
+    word: 'Fairly Valued',
+    wordClass: 'text-[#2563EB]',
+    descVerb: 'near fair value',
+    bgStyle: 'radial-gradient(ellipse at 90% 0%, rgba(37,99,235,0.08) 0%, transparent 55%), #FAFCFF',
+    borderClass: 'border-[#BFDBFE]',
+    upsideClass: 'text-[#2563EB]',
   }
   if (upsidePct >= -0.25) return {
-    word: 'Overvalued', chipLabel: 'Overvalued',
-    chipClass: 'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]',
-    wordClass: 'text-[#DC2626]', descVerb: 'overvalued',
-    bgGradient: 'bg-gradient-to-br from-[#FEF2F2] via-[#F8FAFC] to-white', borderClass: 'border-[#FECACA]',
+    word: 'Overvalued',
+    wordClass: 'text-[#DC2626]',
+    descVerb: 'overvalued',
+    bgStyle: 'radial-gradient(ellipse at 90% 0%, rgba(220,38,38,0.08) 0%, transparent 55%), #FFFAFA',
+    borderClass: 'border-[#FECACA]',
+    upsideClass: 'text-[#DC2626]',
   }
   return {
-    word: 'Expensive', chipLabel: 'Expensive',
-    chipClass: 'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]',
-    wordClass: 'text-[#DC2626]', descVerb: 'significantly overvalued',
-    bgGradient: 'bg-gradient-to-br from-[#FEF2F2] via-[#F8FAFC] to-white', borderClass: 'border-[#FECACA]',
+    word: 'Expensive',
+    wordClass: 'text-[#DC2626]',
+    descVerb: 'significantly overvalued',
+    bgStyle: 'radial-gradient(ellipse at 90% 0%, rgba(220,38,38,0.10) 0%, transparent 55%), #FFFAFA',
+    borderClass: 'border-[#FECACA]',
+    upsideClass: 'text-[#DC2626]',
   }
 }
 
-// ─── Hero background ──────────────────────────────────────────────────────────
-
-function deriveHeroBg(upsidePct: number | null): string {
-  if (upsidePct == null) return '#F8FAFC'
-  if (upsidePct > 0.05) return 'radial-gradient(circle at 82% 38%, rgba(22,163,74,0.10), transparent 32%), linear-gradient(135deg,#ECFDF3 0%,#F8FAFC 58%,#FFFFFF 100%)'
-  if (upsidePct >= -0.10) return 'radial-gradient(circle at 82% 38%, rgba(37,99,235,0.08), transparent 32%), linear-gradient(135deg,#EFF6FF 0%,#F8FAFC 58%,#FFFFFF 100%)'
-  return 'radial-gradient(circle at 82% 38%, rgba(220,38,38,0.08), transparent 32%), linear-gradient(135deg,#FEF2F2 0%,#F8FAFC 58%,#FFFFFF 100%)'
+function confidenceChip(confidence: 'High' | 'Medium' | 'Low'): string {
+  if (confidence === 'High')   return 'bg-[#ECFDF3] text-[#047857] border-[#BBF7D0]'
+  if (confidence === 'Medium') return 'bg-[#FFFBEB] text-[#92400E] border-[#FDE68A]'
+  return 'bg-slate-100 text-slate-500 border-slate-200'
 }
-
-// ─── Confidence chip style ────────────────────────────────────────────────────
-
-function confidenceStyle(confidence: 'High' | 'Medium' | 'Low'): { chip: string } {
-  if (confidence === 'High') return { chip: 'bg-[#ECFDF3] text-[#047857] border-[#BBF7D0]' }
-  if (confidence === 'Medium') return { chip: 'bg-[#FFFBEB] text-[#92400E] border-[#FDE68A]' }
-  return { chip: 'bg-slate-100 text-slate-500 border-slate-200' }
-}
-
-// ─── Description paragraph ────────────────────────────────────────────────────
 
 function buildDescription(upsidePct: number | null, descVerb: string): string {
-  if (upsidePct == null) return 'We do not have enough model data to form a conviction on this stock.'
+  if (upsidePct == null) return 'Not enough model data to form a conviction on this stock.'
   const absPct = Math.abs(upsidePct * 100).toFixed(0)
-  if (upsidePct > 0.10) return `The stock is ${descVerb} with ${absPct}% upside to our fair value estimate.`
-  if (upsidePct > 0.05) return `The stock is ${descVerb}. Our models suggest ${absPct}% potential upside.`
-  if (upsidePct >= -0.10) return 'The stock appears fairly priced. The model finds limited upside or downside.'
-  return `At current price, the stock trades ${absPct}% above our intrinsic estimate.`
+  if (upsidePct > 0.10)  return `The stock is ${descVerb} with ${absPct}% upside to our fair value estimate.`
+  if (upsidePct > 0.05)  return `The stock is ${descVerb}. Our models suggest ${absPct}% potential upside.`
+  if (upsidePct >= -0.10) return 'The stock appears fairly priced — limited upside or downside from current levels.'
+  return `At current price, the stock trades ${absPct}% above our intrinsic value estimate.`
 }
 
-// ─── Positive driver filter ───────────────────────────────────────────────────
+// ─── Driver distillation ──────────────────────────────────────────────────────
 
 const POSITIVE_RE = /strong|grow|profit|margin|cash\s*gen|moat|leader|dominan|innovat|compet.*advan|pric.*power|market.*share|expand|increas|high.*return|quality|best.in.class|track.record|breadth|diversif|solid|robust|effici|resilient|premium/i
 
-// ─── Mini KPI card ────────────────────────────────────────────────────────────
-
-interface KpiCardProps {
-  icon: React.ReactNode
-  label: string
-  value: string
-  valueClass?: string
+function distillDriver(full: string): string {
+  // Take the first clause before any em-dash, long dash, or semicolon
+  const clause = full.split(/\s+[—–;]\s+/)[0].trim()
+  // Drop parenthetical detail
+  const core = clause.split('(')[0].trim()
+  if (core.length <= 32) return core
+  // Word-boundary truncation
+  return core.slice(0, 30).replace(/\s+\S*$/, '') + '…'
 }
 
-function KpiCard({ icon, label, value, valueClass }: KpiCardProps) {
+// ─── Scenario range bar ───────────────────────────────────────────────────────
+
+function ScenarioRangeBar({
+  bear, base, bull, currentPrice, currency,
+}: {
+  bear: number; base: number; bull: number; currentPrice: number; currency: string
+}) {
+  const minV = Math.min(bear, currentPrice) * 0.96
+  const maxV = Math.max(bull, currentPrice) * 1.04
+  const span = maxV - minV
+
+  const pct = (v: number) => Math.max(1, Math.min(99, ((v - minV) / span) * 100))
+
+  const bearP  = pct(bear)
+  const baseP  = pct(base)
+  const bullP  = pct(bull)
+  const priceP = pct(currentPrice)
+
   return (
-    <div className="bg-white/88 border border-[#E6ECF5] rounded-[12px] px-[14px] py-[12px] flex flex-col gap-1.5">
-      <div className="flex items-center gap-1.5">
-        {icon}
-        <span className="text-[11px] font-[650] text-[#64748B] uppercase tracking-wide leading-none">{label}</span>
+    <div>
+      <p className="text-[11px] text-[#64748B] mb-2.5">Scenario range</p>
+
+      {/* Bar */}
+      <div className="relative h-2 rounded-full bg-slate-100 mb-3">
+        {/* Color fill between bear and bull */}
+        <div
+          className="absolute h-full rounded-full bg-gradient-to-r from-red-400 via-amber-300 to-emerald-400"
+          style={{ left: `${bearP}%`, right: `${100 - bullP}%` }}
+        />
+        {/* Base dot */}
+        <div
+          className="absolute w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-sm"
+          style={{ left: `${baseP}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
+        />
+        {/* Current price tick */}
+        <div
+          className="absolute w-0.5 h-4 bg-slate-500 rounded-full"
+          style={{ left: `${priceP}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
+        />
       </div>
-      <span className={cn('text-[20px] font-[750] leading-tight tabular-nums', valueClass ?? 'text-[#0F172A]')}>
-        {value}
-      </span>
+
+      {/* Values */}
+      <div className="grid grid-cols-3 text-[11px] tabular-nums">
+        <span className="text-red-600 font-[650]">{fmtPrice(bear, currency)}</span>
+        <span className="text-blue-600 font-[650] text-center">{fmtPrice(base, currency)}</span>
+        <span className="text-emerald-600 font-[650] text-right">{fmtPrice(bull, currency)}</span>
+      </div>
+      <div className="grid grid-cols-3 text-[10px] text-slate-400 mt-0.5">
+        <span>Bear</span>
+        <span className="text-center">Base</span>
+        <span className="text-right">Bull</span>
+      </div>
     </div>
   )
 }
@@ -146,147 +186,106 @@ export default function SummaryHeroCard({
   fairValue,
   upsidePct,
   confidence,
+  modelCount,
+  totalModels,
   scenarios,
   drivers,
 }: SummaryHeroCardProps) {
-  const verdict = deriveVerdict(upsidePct)
-  const heroBg = deriveHeroBg(upsidePct)
+  const verdict     = deriveVerdict(upsidePct)
   const description = buildDescription(upsidePct, verdict.descVerb)
+  const ratio       = fairValue != null && fairValue > 0 ? price / fairValue : null
 
-  const ratio = fairValue != null && fairValue > 0 ? price / fairValue : null
+  const badgeDrivers = drivers
+    .filter(d => POSITIVE_RE.test(d))
+    .slice(0, 5)
+    .map(distillDriver)
 
-  const badgeDrivers = drivers.filter(d => POSITIVE_RE.test(d)).slice(0, 4)
-
-  // KPI values
-  const upsideValue = upsidePct != null ? fmtPct(upsidePct) : '—'
-  const upsideClass = upsidePct == null ? 'text-slate-400' : upsidePct >= 0 ? 'text-[#16A34A]' : 'text-[#DC2626]'
-
-  const fairValueDisplay = fairValue != null ? fmtPrice(fairValue, currency) : '—'
-
-  const ratioDisplay = ratio != null ? `${ratio.toFixed(2)}×` : '—'
-  const ratioClass = ratio == null ? 'text-slate-400' : ratio < 1 ? 'text-[#16A34A]' : ratio > 1 ? 'text-[#DC2626]' : 'text-[#2563EB]'
+  const upsideDisplay = upsidePct != null ? fmtPct(upsidePct) : '—'
 
   return (
     <div
       className={cn('border rounded-[20px] p-6 overflow-hidden', verdict.borderClass)}
-      style={{ background: heroBg }}
+      style={{ background: verdict.bgStyle }}
     >
-      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.15fr)_minmax(240px,0.85fr)] gap-5 items-start">
+      <div className="flex flex-col gap-4">
 
-        {/* ── Left column ── */}
-        <div className="flex flex-col gap-3">
-
-          {/* Headline */}
-          <h1 className="text-[28px] font-[750] text-[#0F172A] leading-tight flex flex-wrap items-center gap-2">
+        {/* ── Headline block ── */}
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-[26px] sm:text-[30px] font-[800] text-[#0F172A] leading-tight tracking-tight [text-wrap:balance]">
             {ticker} looks{' '}
             <span className={verdict.wordClass}>{verdict.word}</span>
-            {confidence && (
-              <span className={cn('text-[12px] font-[650] px-[9px] py-[4px] rounded-full border', confidenceStyle(confidence).chip)}>
-                {confidence} Confidence
-              </span>
-            )}
           </h1>
+          {confidence && (
+            <span className={cn(
+              'self-start text-[12px] font-[650] px-[10px] py-[4px] rounded-full border',
+              confidenceChip(confidence),
+            )}>
+              {confidence} Confidence · {modelCount}/{totalModels} models
+            </span>
+          )}
+        </div>
 
-          {/* Description */}
-          <p className="text-[15px] text-[#475569] leading-relaxed">
-            {description}
-          </p>
+        {/* ── Description ── */}
+        <p className="text-[14px] text-[#475569] leading-relaxed">
+          {description}
+        </p>
 
-          {/* Value sentence */}
-          <div className={cn(
-            'rounded-[12px] border px-[14px] py-[10px] text-[15px] font-[750]',
-            ratio != null && ratio < 1
-              ? 'bg-[#ECFDF3]/85 border-[#BBF7D0] text-[#047857]'
-              : ratio != null && ratio > 1
-              ? 'bg-[#FEF2F2]/85 border-[#FECACA] text-[#DC2626]'
-              : 'bg-slate-50 border-slate-200 text-slate-600',
-          )}>
-            {ratio != null
-              ? `You're paying $${ratio.toFixed(2)} for every $1.00 of estimated value.`
-              : 'Fair value estimate unavailable.'}
+        {/* ── Primary metrics ── */}
+        <div className="flex flex-wrap items-end gap-6">
+          {/* Dominant: Upside */}
+          <div>
+            <p className="text-[11px] text-[#64748B] mb-0.5">Upside</p>
+            <p className={cn('text-[36px] sm:text-[42px] font-[800] leading-none tabular-nums', verdict.upsideClass)}>
+              {upsideDisplay}
+            </p>
           </div>
 
-          {/* 4 KPI chips */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-1">
-            <KpiCard
-              icon={
-                <span className={cn('w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0', upsidePct == null ? 'bg-slate-50' : upsidePct >= 0 ? 'bg-emerald-50' : 'bg-red-50')}>
-                  <TrendingUp size={14} className={upsidePct == null ? 'text-slate-400' : upsidePct >= 0 ? 'text-[#16A34A]' : 'text-[#DC2626]'} />
+          {/* Secondary: Fair value + ratio */}
+          <div className="flex flex-col gap-2 pb-1">
+            <div>
+              <p className="text-[11px] text-[#64748B] mb-0.5">Fair value</p>
+              <p className="text-[22px] font-[750] text-[#0F172A] tabular-nums leading-none">
+                {fairValue != null ? fmtPrice(fairValue, currency) : '—'}
+              </p>
+            </div>
+            {ratio != null && (
+              <p className="text-[12px] font-[650] text-[#64748B]">
+                You pay{' '}
+                <span className={cn('font-[750]', ratio < 1 ? 'text-[#16A34A]' : 'text-[#DC2626]')}>
+                  ${ratio.toFixed(2)}
                 </span>
-              }
-              label="Upside"
-              value={upsideValue}
-              valueClass={upsideClass}
-            />
-            <KpiCard
-              icon={
-                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-indigo-50">
-                  <Target size={14} className="text-indigo-600" />
-                </span>
-              }
-              label="Fair Value"
-              value={fairValueDisplay}
-              valueClass="text-[#0F172A]"
-            />
-            <KpiCard
-              icon={
-                <span className={cn('w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0', ratio == null ? 'bg-slate-50' : ratio < 1 ? 'bg-emerald-50' : ratio > 1 ? 'bg-red-50' : 'bg-blue-50')}>
-                  <BarChart2 size={14} className={ratio == null ? 'text-slate-400' : ratio < 1 ? 'text-[#16A34A]' : ratio > 1 ? 'text-[#DC2626]' : 'text-[#2563EB]'} />
-                </span>
-              }
-              label="Price/FV"
-              value={ratioDisplay}
-              valueClass={ratioClass}
-            />
-            <KpiCard
-              icon={
-                <span className={cn('w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0', upsidePct == null ? 'bg-slate-50' : upsidePct >= 0 ? 'bg-emerald-50' : 'bg-amber-50')}>
-                  <ShieldCheck size={14} className={upsidePct == null ? 'text-slate-400' : upsidePct >= 0 ? 'text-[#16A34A]' : 'text-[#B45309]'} />
-                </span>
-              }
-              label="Margin of Safety"
-              value={upsideValue}
-              valueClass={upsidePct == null ? 'text-slate-400' : upsidePct >= 0 ? 'text-[#16A34A]' : 'text-[#B45309]'}
-            />
+                {' '}per $1 of estimated value
+              </p>
+            )}
           </div>
         </div>
 
-        {/* ── Right column ── */}
-        {(badgeDrivers.length > 0 || scenarios != null) && (
-          <div className="flex flex-col gap-3">
+        {/* ── Scenario range bar ── */}
+        {scenarios && (
+          <ScenarioRangeBar
+            bear={scenarios.bear.fairValue}
+            base={scenarios.base.fairValue}
+            bull={scenarios.bull.fairValue}
+            currentPrice={price}
+            currency={currency}
+          />
+        )}
 
-            {/* Driver badges */}
-            {badgeDrivers.length > 0 && (
-              <div className="flex flex-col gap-1.5">
-                <p className="text-[12px] font-[650] text-[#475569]">Key strengths</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {badgeDrivers.map((driver, i) => (
-                    <span
-                      key={i}
-                      className="bg-white border border-[#E6ECF5] rounded-full px-[10px] py-[7px] text-[12px] font-[650] text-[#334155] flex items-center gap-1.5"
-                    >
-                      <Star size={12} className="text-[#16A34A] flex-shrink-0" />
-                      {driver}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Scenario range */}
-            {scenarios && (
-              <div className="pt-2 border-t border-[#E6ECF5]">
-                <p className="text-[12px] font-[650] text-[#475569] mb-1.5">Scenario range</p>
-                <div className="flex items-center gap-2 text-[12px] font-[650]">
-                  <span className="text-[#DC2626]">{fmtPrice(scenarios.bear.fairValue, currency)}</span>
-                  <span className="text-[#94A3B8]">—</span>
-                  <span className="text-[#334155]">{fmtPrice(scenarios.base.fairValue, currency)}</span>
-                  <span className="text-[#94A3B8]">—</span>
-                  <span className="text-[#16A34A]">{fmtPrice(scenarios.bull.fairValue, currency)}</span>
-                </div>
-                <p className="text-[10px] text-[#94A3B8] mt-0.5">Bear · Base · Bull</p>
-              </div>
-            )}
+        {/* ── Key strengths ── */}
+        {badgeDrivers.length > 0 && (
+          <div>
+            <p className="text-[11px] text-[#64748B] mb-2">Key strengths</p>
+            <div className="flex flex-wrap gap-1.5">
+              {badgeDrivers.map((label, i) => (
+                <span
+                  key={i}
+                  title={drivers.filter(d => POSITIVE_RE.test(d))[i]}
+                  className="text-[12px] font-[600] text-[#334155] bg-white border border-[#E6ECF5] rounded-full px-3 py-1 leading-tight"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
           </div>
         )}
 

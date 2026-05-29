@@ -419,8 +419,11 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
         <div className="flex items-center gap-3 flex-wrap">
           <h2 className="text-sm font-semibold text-slate-900">Price Chart</h2>
           {changePct != null && (
-            <span className={`text-xs font-semibold tabular-nums ${changePct >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-              {changePct >= 0 ? '+' : ''}{changePct.toFixed(2)}%
+            <span className="flex items-center gap-1">
+              <span className="text-[11px] text-slate-400">{period}</span>
+              <span className={`text-xs font-semibold tabular-nums ${changePct >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                {changePct >= 0 ? '+' : ''}{changePct.toFixed(2)}%
+              </span>
             </span>
           )}
           {hasAnyLevel && !isCompare && (

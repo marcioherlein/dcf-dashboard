@@ -48,7 +48,7 @@ function LegendItem({ color, label, dashed }: { color: string; label: string; da
 function FooterMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="px-3 py-2.5 text-center">
-      <p className="text-[11px] font-[600] uppercase tracking-wider text-[#64748B] mb-0.5">{label}</p>
+      <p className="text-[11px] font-[600] text-[#64748B] mb-0.5">{label}</p>
       <p className="text-[13px] font-[700] text-[#0F172A] tabular-nums">{value}</p>
     </div>
   )

@@ -180,7 +180,11 @@ export default function SummaryTab({
       {/* ── Row 3: Business quality evidence ──────────────────────────────── */}
       {ratings && (
         <section>
-          <p className="text-[12px] font-[650] text-[#64748B] mb-3 px-1">Business quality</p>
+          <div className="flex items-center gap-3 mb-3 px-1">
+            <div className="h-px flex-1 bg-[#E6ECF5]" />
+            <p className="text-[11px] font-[650] text-[#94A3B8] tracking-wide uppercase shrink-0">Business quality</p>
+            <div className="h-px flex-1 bg-[#E6ECF5]" />
+          </div>
           <OverviewMetricGrid
             ratings={ratings}
             scores={scores}
