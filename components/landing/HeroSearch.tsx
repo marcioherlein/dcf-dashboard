@@ -142,6 +142,7 @@ export default function HeroSearch({ dark = false }: Props) {
                     : 'border-slate-100 hover:bg-slate-50'
                 }`}
                 role="option"
+                aria-selected={false}
                 style={{ minHeight: '44px' }}
               >
                 <span className={`text-[14px] font-bold font-mono w-14 shrink-0 ${dark ? 'text-slate-100' : 'text-slate-800'}`}>
