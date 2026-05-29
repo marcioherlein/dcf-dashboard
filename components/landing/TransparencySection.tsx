@@ -36,31 +36,22 @@ export default function TransparencySection() {
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
         {/* Heading */}
         <div className="text-center mb-10 sm:mb-14">
-          <p
-            className="font-bold uppercase mb-3"
-            style={{ fontSize: '11px', letterSpacing: '0.08em', color: '#2563EB' }}
-          >
-            Built on transparency
-          </p>
           <h2
-            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)]"
+            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] text-slate-900 [text-wrap:balance]"
             style={{
               fontWeight: 700,
               lineHeight: 1.1,
               letterSpacing: '-0.025em',
-              color: '#0F172A',
               marginBottom: '16px',
             }}
           >
             No black boxes. Every assumption is yours.
           </h2>
           <p
-            className="text-base sm:text-[17px]"
+            className="text-base sm:text-[17px] text-slate-600 mx-auto"
             style={{
               lineHeight: 1.6,
-              color: '#64748B',
               maxWidth: '540px',
-              margin: '0 auto',
             }}
           >
             We believe investors deserve the same tools and transparency institutions
@@ -104,7 +95,7 @@ export default function TransparencySection() {
                   className="text-base"
                   style={{
                     lineHeight: 1.6,
-                    color: '#64748B',
+                    color: '#475569',
                     marginBottom: '20px',
                     flexGrow: 1,
                   }}

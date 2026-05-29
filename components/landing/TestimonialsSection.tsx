@@ -28,19 +28,12 @@ export default function TestimonialsSection() {
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
         {/* Heading */}
         <div className="text-center mb-10 sm:mb-12">
-          <p
-            className="font-bold uppercase mb-3"
-            style={{ fontSize: '11px', letterSpacing: '0.08em', color: '#2563EB' }}
-          >
-            Trusted by investors like you
-          </p>
           <h2
-            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)]"
+            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] text-slate-900 [text-wrap:balance]"
             style={{
               fontWeight: 700,
               lineHeight: 1.1,
               letterSpacing: '-0.025em',
-              color: '#0F172A',
             }}
           >
             Built for people who do their own research.

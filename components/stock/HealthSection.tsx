@@ -22,10 +22,16 @@ interface Props {
 function InfoTip({ text }: { text: string }) {
   return (
     <span className="relative group/tip inline-flex items-center ml-1 align-middle">
-      <svg className="w-3 h-3 text-slate-400 cursor-help" viewBox="0 0 16 16" fill="currentColor">
-        <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 11-2 0 1 1 0 012 0z" />
-      </svg>
-      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-52 max-w-[min(208px,calc(100vw-2rem))] rounded-lg bg-slate-800 px-2.5 py-2 text-[11px] text-white shadow-lg opacity-0 group-hover/tip:opacity-100 transition-opacity z-50 leading-snug text-left normal-case tracking-normal font-normal">
+      <button
+        type="button"
+        aria-label="More information"
+        className="rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+      >
+        <svg className="w-3 h-3 text-slate-400 cursor-help" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 11-2 0 1 1 0 012 0z" />
+        </svg>
+      </button>
+      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-52 max-w-[min(208px,calc(100vw-2rem))] rounded-lg bg-slate-800 px-2.5 py-2 text-[11px] text-white shadow-lg opacity-0 group-hover/tip:opacity-100 group-focus-within/tip:opacity-100 transition-opacity z-50 leading-snug text-left normal-case tracking-normal font-normal">
         {text}
       </span>
     </span>
@@ -52,7 +58,7 @@ function ScoreBar({ score, color }: { score: number; color: string }) {
     'bg-red-500'
 
   return (
-    <div className="flex items-center gap-1.5 mt-1 w-full max-w-[240px] mx-auto">
+    <div className="flex items-center gap-1.5 mt-1 w-full max-w-[160px]">
       {[1, 2, 3, 4, 5].map((i) => (
         <div
           key={i}
@@ -68,7 +74,7 @@ function CategoryRow({ catKey, ratings }: { catKey: string; ratings: StockRating
   if (!cat || !('grade' in cat)) return null
   return (
     <div className="flex items-start gap-3 sm:gap-4 py-3 min-h-[44px]">
-      <div className="w-32 sm:w-36 shrink-0">
+      <div className="min-w-[6rem] max-w-[9rem] shrink-0">
         <p className="text-[13px] font-medium text-slate-600">{CATEGORY_LABELS[catKey]}</p>
         <ScoreBar score={cat.score} color={cat.color} />
       </div>
@@ -143,7 +149,7 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
         <div className="space-y-5">
           {/* Business Quality */}
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Business Quality</p>
+            <p className="text-[11px] font-semibold text-slate-500 mb-3">Business Quality</p>
             <div className="space-y-4">
               {BUSINESS_QUALITY_KEYS.map((key) => (
                 <CategoryRow key={key} catKey={key} ratings={ratings} />
@@ -153,7 +159,7 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
 
           {/* Price vs. Value */}
           <div className="pt-1 border-t border-slate-200">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3 mt-3">Price vs. Value</p>
+            <p className="text-[11px] font-semibold text-slate-500 mb-3 mt-3">Price vs. Value</p>
             <div className="space-y-4">
               {VALUATION_KEYS.map((key) => (
                 <CategoryRow key={key} catKey={key} ratings={ratings} />
@@ -166,7 +172,7 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
         <div className="space-y-5">
           {(piotroski != null || altmanZone || beneishFlag) && (
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Quality Signals</p>
+            <p className="text-[11px] font-semibold text-slate-500 mb-3">Quality Signals</p>
             <div className="space-y-2">
               {piotroski != null && (
                 <div className="flex items-center justify-between gap-2 flex-wrap rounded-lg bg-white border border-slate-200 px-4 py-3 min-h-[44px]">
@@ -197,14 +203,21 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
                 </div>
               )}
               {beneishFlag && (
-                <div className="flex items-center justify-between gap-2 flex-wrap rounded-lg bg-white border border-slate-200 px-4 py-3 min-h-[44px]">
+                <div className="flex items-start justify-between gap-2 flex-wrap rounded-lg bg-white border border-slate-200 px-4 py-3 min-h-[44px]">
                   <span className="text-[13px] text-slate-500 min-w-0">
                     Beneish M-Score
-                    <InfoTip text="Statistical model detecting potential earnings manipulation. 'Clean' = low manipulation risk; 'Suspect' = elevated risk of misreporting." />
+                    <InfoTip text="Statistical model detecting potential earnings manipulation. 'Clean' = low manipulation risk; 'Warning' = borderline; 'Elevated Risk' = above the threshold, though large-caps commonly trigger this without actual manipulation." />
                   </span>
-                  <span className={`text-[12px] font-semibold rounded-full px-2.5 py-1 shrink-0 ${beneishFlag === 'Clean' ? 'bg-emerald-100 text-emerald-700' : beneishFlag === 'Warning' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
-                    {beneishFlag}
-                  </span>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className={`text-[12px] font-semibold rounded-full px-2.5 py-1 shrink-0 ${beneishFlag === 'Clean' ? 'bg-emerald-100 text-emerald-700' : beneishFlag === 'Warning' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+                      {beneishFlag === 'Manipulator' ? 'Elevated Risk' : beneishFlag}
+                    </span>
+                    {beneishFlag === 'Manipulator' && (
+                      <span className="text-[10px] text-slate-400 text-right leading-snug max-w-[160px]">
+                        Large-caps often trigger this threshold. Verify with other signals.
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

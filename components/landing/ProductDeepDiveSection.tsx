@@ -19,31 +19,22 @@ export default function ProductDeepDiveSection() {
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
         {/* Heading */}
         <div className="text-center mb-10 sm:mb-16">
-          <p
-            className="font-bold uppercase mb-3"
-            style={{ fontSize: '11px', letterSpacing: '0.08em', color: '#2563EB' }}
-          >
-            See what matters. Ignore the noise.
-          </p>
           <h2
-            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)]"
+            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] text-slate-900 [text-wrap:balance]"
             style={{
               fontWeight: 700,
               lineHeight: 1.1,
               letterSpacing: '-0.025em',
-              color: '#0F172A',
               marginBottom: '16px',
             }}
           >
             Everything you need. Nothing you don&apos;t.
           </h2>
           <p
-            className="text-base sm:text-[17px]"
+            className="text-base sm:text-[17px] text-slate-600 mx-auto"
             style={{
               lineHeight: 1.6,
-              color: '#64748B',
               maxWidth: '560px',
-              margin: '0 auto',
             }}
           >
             intrinsico turns valuation into a structured workflow: price, intrinsic
@@ -78,7 +69,7 @@ export default function ProductDeepDiveSection() {
                   />
                   <div>
                     <span className="text-sm font-semibold" style={{ color: '#0F172A' }}>{item.label}</span>
-                    <span className="text-sm ml-1.5" style={{ color: '#94A3B8' }}>{item.desc}</span>
+                    <span className="text-sm ml-1.5" style={{ color: '#64748B' }}>{item.desc}</span>
                   </div>
                 </div>
               ))}
@@ -112,7 +103,7 @@ export default function ProductDeepDiveSection() {
                   />
                   <div>
                     <span className="text-sm font-semibold" style={{ color: '#0F172A' }}>{item.label}</span>
-                    <span className="text-sm ml-1.5" style={{ color: '#94A3B8' }}>{item.desc}</span>
+                    <span className="text-sm ml-1.5" style={{ color: '#64748B' }}>{item.desc}</span>
                   </div>
                 </div>
               ))}

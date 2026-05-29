@@ -143,7 +143,7 @@ function SegmentTabs({ active, counts, onSelect }: {
             {count > 0 && (
               <span className={cn(
                 'text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center',
-                isActive ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500',
+                isActive ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600',
               )}>
                 {count}
               </span>
@@ -232,7 +232,7 @@ function SortDropdown({ current, dir, onSort }: {
             >
               {label}
               {current === key && (
-                <span className="text-[11px] text-blue-400">{dir === 'desc' ? '↓' : '↑'}</span>
+                <span className="text-[11px] text-blue-600">{dir === 'desc' ? '↓' : '↑'}</span>
               )}
             </button>
           ))}
@@ -304,29 +304,94 @@ function GridCard({ entry }: { entry: WatchlistEntry }) {
 
 // ── Empty State ────────────────────────────────────────────────────────────────
 
+const GHOST_ENTRIES = [
+  { ticker: 'AAPL', company: 'Apple Inc.', price: '$189', fair: '$204', upside: '+7.8%', verdict: 'Undervalued', upCls: 'text-emerald-600', verdictCls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  { ticker: 'NVDA', company: 'NVIDIA Corp.', price: '$875', fair: '$652', upside: '−25.4%', verdict: 'Overvalued', upCls: 'text-red-500', verdictCls: 'bg-red-50 text-red-600 border-red-200' },
+  { ticker: 'MSFT', company: 'Microsoft Corp.', price: '$412', fair: '$440', upside: '+6.8%', verdict: 'Undervalued', upCls: 'text-emerald-600', verdictCls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+]
+
 function EmptyState() {
   return (
-    <div className="bg-white border border-[#E6ECF5] rounded-2xl p-8 sm:p-12 lg:p-16 text-center flex flex-col items-center">
-      <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-5">
-        <Bookmark size={24} className="text-blue-500" />
+    <div className="rounded-2xl bg-white border border-[#E6ECF5] overflow-hidden">
+      {/* Ghost preview */}
+      <div className="px-5 pt-6 pb-4 border-b border-[#F1F5F9]">
+        <p className="text-[11px] font-semibold text-slate-400 mb-3">
+          Your list will look like this
+        </p>
+        <div className="space-y-2 opacity-40 pointer-events-none select-none">
+          {GHOST_ENTRIES.map((g) => (
+            <div
+              key={g.ticker}
+              className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5 font-mono shrink-0">
+                  {g.ticker}
+                </span>
+                <span className="text-[13px] text-slate-700 truncate">{g.company}</span>
+              </div>
+              <div className="flex items-center gap-4 shrink-0">
+                <span className="text-[12px] text-slate-500 tabular-nums hidden sm:block">{g.price}</span>
+                <span className="text-[13px] font-bold tabular-nums text-slate-800 hidden sm:block">{g.fair}</span>
+                <span className={`text-[12px] font-bold tabular-nums ${g.upCls}`}>{g.upside}</span>
+                <span className={`text-[10px] font-semibold rounded-full px-2 py-0.5 border hidden sm:inline ${g.verdictCls}`}>
+                  {g.verdict}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-      <h2 className="text-[18px] font-bold text-[#0F172A] mb-2">No saved valuations yet</h2>
-      <p className="text-[14px] text-slate-600 max-w-sm leading-relaxed mb-6">
-        Analyze a stock and save the valuation to track fair value, upside, and confidence over time.
-      </p>
-      <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-        <Link
-          href="/analyze"
-          className="w-full sm:w-auto rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-6 py-3 text-[14px] font-semibold transition-colors min-h-[48px] flex items-center justify-center"
-        >
-          Analyze a stock
-        </Link>
-        <Link
-          href="/markets"
-          className="w-full sm:w-auto rounded-xl border border-[#DDE6F2] text-[#334155] hover:bg-slate-50 px-6 py-3 text-[14px] font-semibold transition-colors min-h-[48px] flex items-center justify-center"
-        >
-          Explore popular analyses
-        </Link>
+
+      {/* Activation steps + CTAs */}
+      <div className="px-5 py-6 sm:px-8 sm:py-8 flex flex-col items-center text-center gap-5">
+        <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center">
+          <Bookmark size={20} className="text-blue-500" />
+        </div>
+
+        <div>
+          <h2 className="text-[17px] font-bold text-[#0F172A]">No saved valuations yet</h2>
+          <p className="text-[13px] text-slate-500 mt-1 max-w-xs leading-relaxed">
+            Analyze a stock, then save the result to track fair value and upside over time.
+          </p>
+        </div>
+
+        {/* 3-step activation path */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-0 sm:gap-0 w-full max-w-sm">
+          {[
+            { n: '1', label: 'Search a stock', sub: 'any ticker on NYSE or NASDAQ' },
+            { n: '2', label: 'Review the model', sub: 'fair value, scenarios, quality' },
+            { n: '3', label: 'Save to this list', sub: 'tracks over time as prices move' },
+          ].map((step, i) => (
+            <div key={step.n} className="flex sm:flex-col items-center sm:items-center gap-3 sm:gap-1.5 flex-1 relative py-2 sm:py-0">
+              {i < 2 && (
+                <div className="hidden sm:block absolute top-4 left-[calc(50%+12px)] right-0 h-px bg-slate-200" />
+              )}
+              <div className="w-7 h-7 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center shrink-0 z-10">
+                <span className="text-[11px] font-bold text-blue-600">{step.n}</span>
+              </div>
+              <div className="sm:text-center">
+                <p className="text-[12px] font-semibold text-slate-800 leading-tight">{step.label}</p>
+                <p className="text-[11px] text-slate-400 leading-snug mt-0.5">{step.sub}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+          <Link
+            href="/analyze"
+            className="w-full sm:w-auto rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-6 py-3 text-[14px] font-semibold transition-colors min-h-[48px] flex items-center justify-center"
+          >
+            Analyze a stock
+          </Link>
+          <Link
+            href="/markets"
+            className="w-full sm:w-auto rounded-xl border border-[#DDE6F2] text-[#334155] hover:bg-slate-50 px-6 py-3 text-[14px] font-semibold transition-colors min-h-[48px] flex items-center justify-center"
+          >
+            Explore popular analyses
+          </Link>
+        </div>
       </div>
     </div>
   )

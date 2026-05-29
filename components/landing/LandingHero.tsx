@@ -18,15 +18,82 @@ export default function LandingHero() {
         background: '#050D1F',
       }}
     >
-      {/* Subtle dot grid — dark adaptation */}
+      {/* Subtle dot grid — dark adaptation + scroll-driven parallax */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="hero-dot-grid absolute inset-0 pointer-events-none"
         style={{
           backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px)',
           backgroundSize: '32px 32px',
         }}
         aria-hidden="true"
       />
+
+      {/* DCF scenario fan — abstract projection tree at low opacity */}
+      <svg
+        className="absolute pointer-events-none"
+        style={{
+          right: 0,
+          top: 0,
+          width: '62%',
+          height: '100%',
+          opacity: 0.10,
+          zIndex: 1,
+        }}
+        viewBox="0 0 700 500"
+        fill="none"
+        preserveAspectRatio="xMidYMid meet"
+        aria-hidden="true"
+      >
+        {/* Bull scenario — curves upward */}
+        <path
+          d="M 60,250 C 220,248 380,110 640,72"
+          stroke="#2563EB" strokeWidth="1" fill="none"
+        />
+        {/* Base scenario — straight across */}
+        <path
+          d="M 60,250 L 640,250"
+          stroke="#2563EB" strokeWidth="1.25" fill="none"
+        />
+        {/* Bear scenario — curves downward */}
+        <path
+          d="M 60,250 C 220,252 380,390 640,428"
+          stroke="#2563EB" strokeWidth="1" fill="none"
+        />
+
+        {/* Root node */}
+        <circle cx="60"  cy="250" r="4"   fill="#2563EB" />
+
+        {/* Year 1 measurement nodes */}
+        <circle cx="190" cy="234" r="2.5" fill="#2563EB" />
+        <circle cx="190" cy="250" r="2.5" fill="#2563EB" />
+        <circle cx="190" cy="266" r="2.5" fill="#2563EB" />
+
+        {/* Year 2 vertical tick */}
+        <line x1="320" y1="162" x2="320" y2="338" stroke="#2563EB" strokeWidth="0.6" strokeDasharray="3 6" />
+        <circle cx="320" cy="175" r="2.5" fill="#2563EB" />
+        <circle cx="320" cy="250" r="2.5" fill="#2563EB" />
+        <circle cx="320" cy="325" r="2.5" fill="#2563EB" />
+
+        {/* Year 4 vertical tick */}
+        <line x1="510" y1="110" x2="510" y2="390" stroke="#2563EB" strokeWidth="0.6" strokeDasharray="3 6" />
+        <circle cx="510" cy="123" r="2.5" fill="#2563EB" />
+        <circle cx="510" cy="250" r="2.5" fill="#2563EB" />
+        <circle cx="510" cy="377" r="2.5" fill="#2563EB" />
+
+        {/* Terminal value bracket */}
+        <line x1="640" y1="72"  x2="640" y2="428" stroke="#2563EB" strokeWidth="0.8" />
+        <line x1="630" y1="72"  x2="650" y2="72"  stroke="#2563EB" strokeWidth="0.8" />
+        <line x1="630" y1="250" x2="650" y2="250" stroke="#2563EB" strokeWidth="0.8" />
+        <line x1="630" y1="428" x2="650" y2="428" stroke="#2563EB" strokeWidth="0.8" />
+        <circle cx="640" cy="72"  r="3.5" fill="#2563EB" />
+        <circle cx="640" cy="250" r="4"   fill="#2563EB" />
+        <circle cx="640" cy="428" r="3.5" fill="#2563EB" />
+
+        {/* Horizontal dotted "fair value" range lines extending from terminal */}
+        <line x1="644" y1="72"  x2="690" y2="72"  stroke="#2563EB" strokeWidth="0.6" strokeDasharray="3 4" />
+        <line x1="644" y1="250" x2="690" y2="250" stroke="#2563EB" strokeWidth="0.6" strokeDasharray="3 4" />
+        <line x1="644" y1="428" x2="690" y2="428" stroke="#2563EB" strokeWidth="0.6" strokeDasharray="3 4" />
+      </svg>
 
       {/* Breathing Blueprint Blue aurora — animates behind screenshots */}
       <motion.div

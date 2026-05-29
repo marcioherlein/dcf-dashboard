@@ -21,6 +21,7 @@ import { useSession } from 'next-auth/react'
 import SaveToWatchlistDialog, { type WatchlistSavePayload } from '@/components/watchlist/SaveToWatchlistDialog'
 import ValuationNotAvailableCard from '@/components/stock/ValuationNotAvailableCard'
 import SummaryTab from '@/components/stock/summary/SummaryTab'
+import StockOrientationStrip from '@/components/onboarding/StockOrientationStrip'
 
 
 interface CAGRAnalysisData {
@@ -360,6 +361,10 @@ function StockPageBody() {
       <AuthBanner />
 
       <div className="px-4 sm:px-6 lg:px-8 pb-[calc(120px+env(safe-area-inset-bottom,0px))] lg:pb-16">
+        {/* First-visit orientation — shown once, then dismissed to localStorage */}
+        <div className="pt-4">
+          <StockOrientationStrip />
+        </div>
 
         {loading && (
           <div className="pt-5 space-y-4 animate-pulse">
@@ -571,8 +576,8 @@ function StockPageBody() {
 
         {/* ── Investment disclaimer ── */}
         <div className="px-4 sm:px-6 lg:px-8 pb-8 pt-2">
-          <p className="text-[11px] text-slate-400 leading-relaxed text-center max-w-3xl mx-auto">
-            <strong className="font-semibold text-slate-500">Not financial advice.</strong>{' '}
+          <p className="text-[11px] text-slate-500 leading-relaxed text-center max-w-3xl mx-auto">
+            <strong className="font-semibold text-slate-600">Not financial advice.</strong>{' '}
             All outputs — DCF estimates, fair values, health scores, and scenarios — are model results
             based on publicly available data and mathematical assumptions. They are for informational
             purposes only and are not recommendations to buy, sell, or hold any security.

@@ -40,6 +40,24 @@ const FIELDS: Field[] = [
   { key: 'revenueMultiple', label: 'EV/Revenue (NTM)', unit: 'x', min: 0.5,   max: 20,    step: 0.25,   typicalMin: 2,    typicalMax: 8,    methods: ['Rev'],        description: 'Enterprise value to revenue multiple.' },
 ]
 
+const FIELD_GROUPS: Array<{ label: string; description: string; keys: Array<keyof ValuationAssumptions> }> = [
+  {
+    label: 'Discount Rate',
+    description: 'How risk is priced into the valuation',
+    keys: ['wacc'],
+  },
+  {
+    label: 'Growth',
+    description: 'Revenue trajectory and exit profitability',
+    keys: ['cagr', 'netMargin'],
+  },
+  {
+    label: 'Exit Multiples',
+    description: 'What the market will pay at the terminal year',
+    keys: ['exitPE', 'exitMultiple', 'revenueMultiple'],
+  },
+]
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function fmtVal(v: number, unit: '%' | 'x'): string {
@@ -559,22 +577,35 @@ export default function AssumptionsPanel({
         </div>
       </div>
 
-      {/* 2-column card grid — 2 cols on all screen sizes, reduced padding on mobile */}
-      <div className="grid grid-cols-2 gap-2 sm:gap-4">
-        {FIELDS.map(f => (
-          <AssumptionCard
-            key={f.key}
-            field={f}
-            value={assumptions[f.key] as number}
-            defaultValue={defaults[f.key] as number}
-            isDirty={Math.abs((assumptions[f.key] as number) - (defaults[f.key] as number)) > 0.00001}
-            onChange={v => onChange({ ...assumptions, [f.key]: v })}
-            sparkPoints={historicalData[f.key]}
-            sensitivityImpact={sensitivity[f.key]}
-            blendedFairValue={blendedFairValue}
-            currency={currency}
-          />
-        ))}
+      {/* Grouped assumption cards */}
+      <div className="space-y-6">
+        {FIELD_GROUPS.map(group => {
+          const groupFields = group.keys.map(k => FIELDS.find(f => f.key === k)!).filter(Boolean)
+          return (
+            <div key={group.label}>
+              <div className="flex items-baseline gap-2 mb-3">
+                <span className="text-[12px] font-semibold text-slate-700">{group.label}</span>
+                <span className="text-[11px] text-slate-400">{group.description}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                {groupFields.map(f => (
+                  <AssumptionCard
+                    key={f.key}
+                    field={f}
+                    value={assumptions[f.key] as number}
+                    defaultValue={defaults[f.key] as number}
+                    isDirty={Math.abs((assumptions[f.key] as number) - (defaults[f.key] as number)) > 0.00001}
+                    onChange={v => onChange({ ...assumptions, [f.key]: v })}
+                    sparkPoints={historicalData[f.key]}
+                    sensitivityImpact={sensitivity[f.key]}
+                    blendedFairValue={blendedFairValue}
+                    currency={currency}
+                  />
+                ))}
+              </div>
+            </div>
+          )
+        })}
       </div>
 
       {/* Largest changes bar */}

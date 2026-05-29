@@ -31,25 +31,18 @@ export default function HowItWorksSection() {
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
         {/* Heading */}
         <div className="text-center mb-10 sm:mb-14">
-          <p
-            className="font-bold uppercase mb-3"
-            style={{ fontSize: '11px', letterSpacing: '0.08em', color: '#2563EB' }}
-          >
-            How it works
-          </p>
           <h2
-            className="text-[28px] sm:text-[38px] lg:text-[clamp(32px,3.2vw,44px)]"
+            className="text-[28px] sm:text-[38px] lg:text-[clamp(32px,3.2vw,44px)] text-slate-900 [text-wrap:balance]"
             style={{
               fontWeight: 700,
               lineHeight: 1.1,
               letterSpacing: '-0.025em',
-              color: '#0F172A',
               marginBottom: '12px',
             }}
           >
             A verdict in under 30 seconds.
           </h2>
-          <p className="text-base sm:text-[17px]" style={{ color: '#64748B', lineHeight: 1.55 }}>
+          <p className="text-base sm:text-[17px] text-slate-600 leading-[1.55]">
             No spreadsheet. No financial degree required.
           </p>
         </div>
@@ -102,7 +95,7 @@ export default function HowItWorksSection() {
               >
                 {step.title}
               </h3>
-              <p style={{ fontSize: '15px', lineHeight: 1.6, color: '#64748B' }}>
+              <p style={{ fontSize: '15px', lineHeight: 1.6, color: '#475569' }}>
                 {step.body}
               </p>
             </div>

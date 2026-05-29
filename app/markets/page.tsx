@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { RefreshCw, Settings2, ExternalLink } from 'lucide-react'
+import { useInView, useReducedMotion } from 'motion/react'
 
 import IndexSnapshotGrid    from '@/components/markets/IndexSnapshotGrid'
 import MarketPulse          from '@/components/markets/MarketPulse'
@@ -55,11 +56,20 @@ function getMarketStatus(): { label: string; cls: string } {
 }
 
 function SectionHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { once: true, margin: '-40px' })
+  const reduced = useReducedMotion()
+
   return (
-    <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-2">
-      <div>
-        <h2 className="text-[13px] font-bold text-slate-800 uppercase tracking-wide">{title}</h2>
-        {subtitle && <p className="text-[11px] text-slate-400 mt-0.5 hidden sm:block">{subtitle}</p>}
+    <div ref={ref} className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-2">
+      <div
+        style={{
+          clipPath: reduced ? 'none' : inView ? 'inset(0 0% 0 0)' : 'inset(0 100% 0 0)',
+          transition: reduced ? 'none' : 'clip-path 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+      >
+        <h2 className="text-[15px] font-bold text-slate-900">{title}</h2>
+        {subtitle && <p className="text-[12px] text-slate-600 mt-0.5">{subtitle}</p>}
       </div>
       {right && <div className="shrink-0">{right}</div>}
     </div>
@@ -135,7 +145,7 @@ export default function MarketsPage() {
   })
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F8FAFF] to-[#F5F7FE] pt-[52px]">
+    <div className="min-h-screen bg-[#F1F5F9] pt-[52px]">
 
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-4 sm:py-5 space-y-6">
 
@@ -154,8 +164,8 @@ export default function MarketsPage() {
         {/* ── Page Header ─────────────────────────────────────────────────── */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
           <div className="min-w-0">
-            <h1 className="text-[18px] sm:text-[20px] font-bold text-slate-900 leading-tight">Markets Overview</h1>
-            <p className="text-[11px] sm:text-[12px] text-slate-400 mt-0.5 hidden sm:block">
+            <h1 className="text-[22px] sm:text-[24px] font-extrabold text-slate-900 leading-tight [text-wrap:balance]">Markets Overview</h1>
+            <p className="text-[12px] text-slate-600 mt-0.5 hidden sm:block">
               Market context and key drivers that influence valuation decisions.
             </p>
           </div>
@@ -184,7 +194,7 @@ export default function MarketsPage() {
         </div>
 
         {/* ── Inline market strip ──────────────────────────────────────────── */}
-        <div className="flex items-center gap-4 sm:gap-5 overflow-x-auto scrollbar-hide bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-2.5 min-h-[44px]">
+        <div className="flex items-center gap-4 sm:gap-5 overflow-x-auto scrollbar-hide glass-card-light rounded-xl px-4 py-2.5 min-h-[44px]">
           <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full ${status.cls}`}>
             {status.label}
           </span>

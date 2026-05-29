@@ -31,26 +31,19 @@ export default function PricingSection() {
       <div className="mx-auto max-w-[900px] px-4 sm:px-6 py-16 sm:py-24">
         {/* Heading */}
         <div className="text-center mb-10 sm:mb-12">
-          <p
-            className="font-bold uppercase mb-3"
-            style={{ fontSize: '11px', letterSpacing: '0.08em', color: '#2563EB' }}
-          >
-            Simple, transparent pricing
-          </p>
           <h2
-            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)]"
+            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] text-slate-900 [text-wrap:balance]"
             style={{
               fontWeight: 700,
               lineHeight: 1.1,
               letterSpacing: '-0.025em',
-              color: '#0F172A',
               marginBottom: '12px',
             }}
           >
             Start free. Upgrade when you&apos;re ready to scale.
           </h2>
-          <p className="text-base" style={{ color: '#64748B' }}>
-            No credit card required. Cancel anytime.
+          <p className="text-base text-slate-600">
+            Simple, transparent pricing. No credit card required.
           </p>
         </div>
 

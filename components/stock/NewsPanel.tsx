@@ -43,7 +43,7 @@ export default function NewsPanel({ ticker }: { ticker: string }) {
   return (
     <div className="rounded-xl card px-4 py-4 sm:p-6">
       <div className="flex items-center justify-between mb-4 sm:mb-5">
-        <h2 className="text-[15px] font-semibold text-slate-900">Latest News</h2>
+        <h2 className="text-[15px] font-bold text-slate-900">Latest News</h2>
         <span className="text-[12px] text-slate-400 font-mono">{ticker}</span>
       </div>
 

@@ -163,7 +163,7 @@ export default function HeroSearch({ dark = false }: Props) {
 
       {/* Ticker chips */}
       <div className="mt-4 flex items-center gap-2 flex-wrap">
-        <span className={`text-[12px] font-medium ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Try:</span>
+        <span className={`text-[12px] font-medium ${dark ? 'text-slate-400' : 'text-slate-400'}`}>Try:</span>
         {TICKER_CHIPS.map(t => (
           <Link
             key={t.symbol}
