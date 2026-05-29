@@ -142,14 +142,14 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
   ]
 
   return (
-    <div className="rounded-xl card p-6">
+    <div className="rounded-xl card px-4 py-4 sm:p-6">
       <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-4">The Business</h2>
 
       {/* Context pills */}
       {pills.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
           {pills.map((p) => (
-            <span key={p.label} className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+            <span key={p.label} className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[12px] font-medium text-slate-600">
               {p.label}
             </span>
           ))}
@@ -159,27 +159,27 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
       {/* Full description */}
       {description ? (
         <div className="mb-6">
-          <p className="text-sm text-slate-600 leading-relaxed">{displayDesc}</p>
+          <p className="text-[14px] text-slate-600 leading-relaxed">{displayDesc}</p>
           {isLongDesc && (
             <button
               onClick={() => setDescExpanded(e => !e)}
-              className="mt-1.5 text-xs font-medium text-blue-600 hover:text-blue-500 transition-colors"
+              className="mt-2 text-[13px] font-medium text-blue-600 hover:text-blue-500 transition-colors min-h-[44px] flex items-center"
             >
               {descExpanded ? 'Show less' : 'Read more'}
             </button>
           )}
         </div>
       ) : (
-        <p className="text-sm text-slate-500 mb-6">No business description available for {ticker}.</p>
+        <p className="text-[14px] text-slate-500 mb-6">No business description available for {ticker}.</p>
       )}
 
       {/* Plain-English stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
         {statCards.map((card) => (
-          <div key={card.label} className={`rounded-xl border px-4 py-3 ${card.color}`}>
-            <p className="text-xs text-slate-500 mb-1">{card.label}</p>
+          <div key={card.label} className={`rounded-xl border px-4 py-4 ${card.color}`}>
+            <p className="text-[12px] text-slate-500 mb-1">{card.label}</p>
             <p className="text-lg font-bold text-slate-900">{card.value}</p>
-            <p className="text-[11px] text-slate-500 mt-0.5">{card.sub}</p>
+            <p className="text-[12px] text-slate-500 mt-0.5">{card.sub}</p>
           </div>
         ))}
       </div>
@@ -187,7 +187,7 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
       {/* Summary callout */}
       {summaryCallout && summaryCallout !== 'Insufficient data to generate a business quality summary.' && (
         <div className="rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 mb-5">
-          <p className="text-xs text-blue-700 leading-relaxed">{summaryCallout}</p>
+          <p className="text-[13px] text-blue-700 leading-relaxed">{summaryCallout}</p>
         </div>
       )}
 

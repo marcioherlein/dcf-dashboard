@@ -383,10 +383,10 @@ export default function YahooFinancials({ statementsData, currency = '$', report
               Quarterly
             </button>
           </div>
-          <button onClick={() => toggleAll(false)} className="text-[12px] text-slate-400 hover:text-slate-700 whitespace-nowrap">
+          <button onClick={() => toggleAll(false)} className="text-[12px] text-slate-400 hover:text-slate-700 whitespace-nowrap min-h-[44px] px-2">
             Collapse all
           </button>
-          <button onClick={() => toggleAll(true)} className="text-[12px] text-blue-600 hover:text-blue-700 whitespace-nowrap">
+          <button onClick={() => toggleAll(true)} className="text-[12px] text-blue-600 hover:text-blue-700 whitespace-nowrap min-h-[44px] px-2">
             Expand all
           </button>
         </div>
@@ -411,7 +411,7 @@ export default function YahooFinancials({ statementsData, currency = '$', report
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto -mx-0">
+      <div className="overflow-x-auto">
         <table className="min-w-[480px] w-full text-[12px]">
           <thead>
             <tr className="border-b border-slate-100 bg-slate-50/50">
@@ -447,7 +447,7 @@ export default function YahooFinancials({ statementsData, currency = '$', report
                     className={`border-b border-slate-100 ${isOrphan ? 'bg-slate-50/30' : 'bg-slate-50/60 hover:bg-slate-100/60 cursor-pointer select-none'} ${flashKey === hdr.key ? 'row-flash' : ''}`}
                     onClick={() => !isOrphan && hasChildren && setExpanded(e => ({ ...e, [hdr.key]: !isOpen(hdr.key) }))}
                   >
-                    <td className="sticky left-0 z-10 bg-white px-3 sm:px-4 py-2 font-semibold text-slate-900 whitespace-nowrap flex items-center gap-1.5">
+                    <td className="sticky left-0 z-10 bg-slate-50 px-3 sm:px-4 py-2 font-semibold text-slate-900 whitespace-nowrap flex items-center gap-1.5">
                       {!isOrphan && hasChildren && (
                         <svg
                           className={`w-3 h-3 text-slate-400 shrink-0 transition-transform ${open ? 'rotate-90' : ''}`}

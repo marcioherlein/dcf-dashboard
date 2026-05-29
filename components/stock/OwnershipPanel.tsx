@@ -19,10 +19,10 @@ function pct(v: number | null, decimals = 1): string {
 
 function Stat({ label, value, highlight }: { label: string; value: string; highlight?: 'red' | 'green' }) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{label}</span>
+    <div className="flex flex-col gap-1 py-3 min-h-[44px]">
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 leading-tight">{label}</span>
       <span className={[
-        'text-[13px] font-semibold tabular-nums',
+        'text-[15px] font-semibold tabular-nums',
         highlight === 'red'   ? 'text-red-600'   :
         highlight === 'green' ? 'text-emerald-600' :
         'text-slate-900',
@@ -41,9 +41,9 @@ export default function OwnershipPanel({ ownership }: Props) {
     : undefined
 
   return (
-    <div className="rounded-xl card px-5 py-4">
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-3">Ownership &amp; Short Interest</div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
+    <div className="rounded-xl card px-4 py-3 sm:px-5 sm:py-4">
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">Ownership &amp; Short Interest</div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-0 divide-y divide-slate-100 sm:divide-y-0">
         <Stat label="Insider Ownership"       value={pct(insiderPct)} />
         <Stat label="Institutional Ownership" value={pct(institutionalPct)} />
         <Stat

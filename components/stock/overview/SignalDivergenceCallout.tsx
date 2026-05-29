@@ -47,7 +47,7 @@ export default function SignalDivergenceCallout({
     : 'Our DCF finds significant margin of safety at today\'s price. Analysts may reflect near-term caution. Review the model assumptions before acting.'
 
   return (
-    <div className="rounded-2xl border border-amber-200 bg-amber-50/60 px-5 py-4">
+    <div className="rounded-2xl border border-amber-200 bg-amber-50/60 px-4 sm:px-5 py-4">
 
       {/* Compact header row */}
       <div className="flex items-center gap-2 mb-3">
@@ -58,14 +58,14 @@ export default function SignalDivergenceCallout({
       </div>
 
       {/* Two mini-panels side by side */}
-      <div className="grid grid-cols-2 gap-2.5 mb-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-2.5 mb-3">
 
-        <div className="rounded-xl border border-amber-200 bg-white px-3.5 py-2.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 mb-1.5">
+        <div className="rounded-xl border border-amber-200 bg-white px-3 py-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-1.5">
             Wall Street{numAnalysts > 0 ? ` · ${numAnalysts} analysts` : ''}
           </p>
           <span className={cn(
-            'inline-flex text-[11px] font-bold px-2.5 py-0.5 rounded-full border mb-1.5',
+            'inline-flex text-[12px] font-bold px-2.5 py-1 rounded-full border mb-1.5',
             analystBullish
               ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
               : 'bg-red-50 border-red-200 text-red-700'
@@ -73,23 +73,23 @@ export default function SignalDivergenceCallout({
             {analystBullish ? 'BUY' : 'SELL'}
           </span>
           {analystTargetMean > 0 && (
-            <p className="text-[12px] font-semibold text-slate-700 tabular-nums leading-tight">
+            <p className="text-[13px] font-semibold text-slate-700 tabular-nums leading-tight">
               {sym}{analystTargetMean.toFixed(2)}
             </p>
           )}
           {analystUpside != null && (
-            <p className={cn('text-[11px] tabular-nums', analystUpside >= 0 ? 'text-emerald-600' : 'text-red-600')}>
+            <p className={cn('text-[12px] tabular-nums', analystUpside >= 0 ? 'text-emerald-600' : 'text-red-600')}>
               {analystUpside >= 0 ? '+' : ''}{analystUpside.toFixed(1)}% from price
             </p>
           )}
         </div>
 
-        <div className="rounded-xl border border-amber-200 bg-white px-3.5 py-2.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 mb-1.5">
+        <div className="rounded-xl border border-amber-200 bg-white px-3 py-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-1.5">
             Intrinsico Model
           </p>
           <span className={cn(
-            'inline-flex text-[11px] font-bold px-2.5 py-0.5 rounded-full border mb-1.5',
+            'inline-flex text-[12px] font-bold px-2.5 py-1 rounded-full border mb-1.5',
             model === 'buy'
               ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
               : 'bg-red-50 border-red-200 text-red-700'
@@ -97,12 +97,12 @@ export default function SignalDivergenceCallout({
             {model === 'buy' ? 'BUY' : 'AVOID'}
           </span>
           {fairValue != null && (
-            <p className="text-[12px] font-semibold text-slate-700 tabular-nums leading-tight">
+            <p className="text-[13px] font-semibold text-slate-700 tabular-nums leading-tight">
               {sym}{fairValue.toFixed(2)}
             </p>
           )}
           {upsidePct != null && (
-            <p className={cn('text-[11px] tabular-nums', upsidePct >= 0 ? 'text-emerald-600' : 'text-red-600')}>
+            <p className={cn('text-[12px] tabular-nums', upsidePct >= 0 ? 'text-emerald-600' : 'text-red-600')}>
               {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}% vs price
             </p>
           )}

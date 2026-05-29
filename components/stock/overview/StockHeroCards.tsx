@@ -73,14 +73,14 @@ function deriveVerdict(upsidePct: number | null, price: number, fv: number | nul
 
 function HeroCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col', className)}>
+    <div className={cn('bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col', className)}>
       {children}
     </div>
   )
 }
 
 function CardLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">{children}</p>
+  return <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2.5">{children}</p>
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -117,20 +117,20 @@ export default function StockHeroCards({
   const discountPct = upsidePct != null ? -upsidePct * 100 : null  // positive = price above FV
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
 
       {/* ── Card 1: Current Price ── */}
       <HeroCard>
         <CardLabel>Current Price</CardLabel>
-        <p className="text-3xl font-bold tabular-nums text-slate-900 leading-none">
+        <p className="text-[22px] sm:text-3xl font-bold tabular-nums text-slate-900 leading-none">
           {fmtPrice(price, currency)}
         </p>
-        <p className={cn('text-sm font-semibold mt-1.5 tabular-nums', isUp ? 'text-emerald-600' : 'text-red-600')}>
+        <p className={cn('text-[12px] sm:text-sm font-semibold mt-1.5 tabular-nums', isUp ? 'text-emerald-600' : 'text-red-600')}>
           {isUp ? '+' : ''}{fmtPrice(change, currency)} ({isUp ? '+' : ''}{changePct.toFixed(2)}%) today
         </p>
 
         <div className="mt-auto pt-4">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-2">52-Week Range</p>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2">52-Week Range</p>
           <div className="relative h-2 rounded-full overflow-hidden bg-slate-100">
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-amber-400 to-red-500 opacity-60" />
             <div
@@ -139,8 +139,8 @@ export default function StockHeroCards({
             />
           </div>
           <div className="flex justify-between mt-1.5">
-            <span className="text-[10px] text-slate-400 tabular-nums">{fmtPrice(low52, currency)}</span>
-            <span className="text-[10px] text-slate-400 tabular-nums">{fmtPrice(high52, currency)}</span>
+            <span className="text-[11px] text-slate-400 tabular-nums">{fmtPrice(low52, currency)}</span>
+            <span className="text-[11px] text-slate-400 tabular-nums">{fmtPrice(high52, currency)}</span>
           </div>
         </div>
       </HeroCard>
@@ -150,12 +150,12 @@ export default function StockHeroCards({
         <CardLabel>Intrinsic Value</CardLabel>
         {fairValue != null ? (
           <>
-            <p className="text-3xl font-bold tabular-nums text-slate-900 leading-none">
+            <p className="text-[22px] sm:text-3xl font-bold tabular-nums text-slate-900 leading-none">
               {fmtPrice(fairValue, currency)}
             </p>
             {upsidePct != null && (
               <span className={cn(
-                'inline-flex items-center mt-1.5 text-sm font-bold tabular-nums',
+                'inline-flex items-center mt-1.5 text-[12px] sm:text-sm font-bold tabular-nums',
                 upsidePct >= 0 ? 'text-emerald-600' : 'text-red-600'
               )}>
                 {fmtPct(upsidePct)} {upsidePct >= 0 ? 'upside' : 'downside'}
@@ -167,26 +167,26 @@ export default function StockHeroCards({
 
             {scenarios && (
               <div className="mt-auto pt-4">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-1.5">Scenario Range</p>
-                <div className="flex items-center justify-between rounded-lg bg-slate-50 border border-slate-100 px-3 py-2">
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-1.5">Scenario Range</p>
+                <div className="flex items-center justify-between rounded-lg bg-slate-50 border border-slate-100 px-2 py-2">
                   <div className="text-center">
-                    <p className="text-[10px] text-slate-400 mb-0.5">Bear</p>
-                    <p className="text-[11px] font-semibold text-red-500 tabular-nums">{fmtPrice(scenarios.bear.fairValue, currency)}</p>
+                    <p className="text-[11px] text-slate-400 mb-0.5">Bear</p>
+                    <p className="text-[12px] font-semibold text-red-500 tabular-nums">{fmtPrice(scenarios.bear.fairValue, currency)}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-[10px] text-slate-400 mb-0.5">Base</p>
+                    <p className="text-[11px] text-slate-400 mb-0.5">Base</p>
                     <p className="text-[12px] font-bold text-slate-700 tabular-nums">{fmtPrice(scenarios.base.fairValue, currency)}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-[10px] text-slate-400 mb-0.5">Bull</p>
-                    <p className="text-[11px] font-semibold text-emerald-600 tabular-nums">{fmtPrice(scenarios.bull.fairValue, currency)}</p>
+                    <p className="text-[11px] text-slate-400 mb-0.5">Bull</p>
+                    <p className="text-[12px] font-semibold text-emerald-600 tabular-nums">{fmtPrice(scenarios.bull.fairValue, currency)}</p>
                   </div>
                 </div>
               </div>
             )}
           </>
         ) : (
-          <p className="text-sm text-slate-400 mt-2">Valuation not available for this instrument.</p>
+          <p className="text-[13px] text-slate-400 mt-2">Valuation not available for this instrument.</p>
         )}
       </HeroCard>
 
@@ -196,7 +196,7 @@ export default function StockHeroCards({
         <span className={cn('self-start text-[11px] font-bold px-3 py-1 rounded-full border', verdict.chipClass)}>
           {verdict.chip}
         </span>
-        <p className={cn('text-2xl font-bold mt-3 leading-tight', verdict.headingClass)}>
+        <p className={cn('text-[20px] sm:text-2xl font-bold mt-3 leading-tight', verdict.headingClass)}>
           {verdict.heading}
         </p>
         <p className="text-[13px] text-slate-500 leading-relaxed mt-2">
@@ -204,7 +204,7 @@ export default function StockHeroCards({
         </p>
         <button
           onClick={onViewDetails}
-          className="mt-auto pt-4 text-[13px] font-semibold text-blue-600 hover:text-blue-700 text-left transition-colors"
+          className="mt-auto pt-3 min-h-[44px] flex items-end text-[13px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
         >
           See full valuation →
         </button>
@@ -216,7 +216,7 @@ export default function StockHeroCards({
         {fairValue != null && discountPct != null ? (
           <>
             <span className={cn(
-              'self-start text-xl font-bold tabular-nums px-3 py-1 rounded-full border',
+              'self-start text-[18px] sm:text-xl font-bold tabular-nums px-3 py-1 rounded-full border',
               discountPct > 0
                 ? 'text-red-600 bg-red-50 border-red-200'
                 : 'text-emerald-600 bg-emerald-50 border-emerald-200'
@@ -240,23 +240,23 @@ export default function StockHeroCards({
 
             <div className="flex justify-between mt-2.5">
               <div>
-                <p className="text-[10px] text-slate-400">Fair Value</p>
-                <p className="text-[12px] font-semibold text-slate-700 tabular-nums mt-0.5">{fmtPrice(fairValue, currency)}</p>
+                <p className="text-[11px] text-slate-400">Fair Value</p>
+                <p className="text-[13px] font-semibold text-slate-700 tabular-nums mt-0.5">{fmtPrice(fairValue, currency)}</p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] text-slate-400">Current Price</p>
-                <p className="text-[12px] font-semibold text-slate-700 tabular-nums mt-0.5">{fmtPrice(price, currency)}</p>
+                <p className="text-[11px] text-slate-400">Current Price</p>
+                <p className="text-[13px] font-semibold text-slate-700 tabular-nums mt-0.5">{fmtPrice(price, currency)}</p>
               </div>
             </div>
 
-            <p className="text-[11px] text-slate-500 mt-3 leading-snug">
+            <p className="text-[12px] text-slate-500 mt-3 leading-snug">
               {discountPct > 0
                 ? `Current price is ${discountPct.toFixed(1)}% above our fair value estimate.`
                 : `Current price is ${Math.abs(discountPct).toFixed(1)}% below our fair value estimate.`}
             </p>
           </>
         ) : (
-          <p className="text-sm text-slate-400 mt-2">Fair value estimate not available.</p>
+          <p className="text-[13px] text-slate-400 mt-2">Fair value estimate not available.</p>
         )}
       </HeroCard>
 

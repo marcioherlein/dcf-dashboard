@@ -52,11 +52,11 @@ function ScoreBar({ score, color }: { score: number; color: string }) {
     'bg-red-500'
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1.5 mt-1">
       {[1, 2, 3, 4, 5].map((i) => (
         <div
           key={i}
-          className={`h-1.5 w-6 rounded-full transition-colors ${i <= filled ? barColor : 'bg-slate-200'}`}
+          className={`h-2 w-7 sm:w-6 rounded-full transition-colors ${i <= filled ? barColor : 'bg-slate-200'}`}
         />
       ))}
     </div>
@@ -67,20 +67,20 @@ function CategoryRow({ catKey, ratings }: { catKey: string; ratings: StockRating
   const cat = ratings[catKey as keyof StockRatings] as StockRatings['profitability'] | undefined
   if (!cat || !('grade' in cat)) return null
   return (
-    <div className="flex items-start gap-3 sm:gap-4">
-      <div className="w-28 sm:w-32 shrink-0">
-        <p className="text-xs font-medium text-slate-600">{CATEGORY_LABELS[catKey]}</p>
+    <div className="flex items-start gap-3 sm:gap-4 py-1">
+      <div className="w-32 sm:w-36 shrink-0">
+        <p className="text-[13px] font-medium text-slate-600">{CATEGORY_LABELS[catKey]}</p>
         <ScoreBar score={cat.score} color={cat.color} />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
+        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
           <span className={`text-sm font-bold ${cat.color === 'emerald' || cat.color === 'green' ? 'text-emerald-600' : cat.color === 'blue' ? 'text-blue-600' : cat.color === 'amber' || cat.color === 'orange' ? 'text-amber-600' : 'text-red-600'}`}>
             {cat.grade}
           </span>
-          <span className="text-xs text-slate-500">{cat.label}</span>
+          <span className="text-[12px] text-slate-500">{cat.label}</span>
         </div>
         {cat.summary && (
-          <p className="text-[11px] text-slate-500 leading-relaxed">{cat.summary}</p>
+          <p className="text-[12px] text-slate-500 leading-relaxed">{cat.summary}</p>
         )}
       </div>
     </div>
@@ -103,7 +103,7 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
       {collapsible ? (
         <button
           onClick={() => setOpen(o => !o)}
-          className="w-full flex items-center justify-between px-4 sm:px-6 py-4 hover:bg-slate-50/60 transition-colors"
+          className="w-full flex items-center justify-between px-4 sm:px-6 py-4 hover:bg-slate-50/60 transition-colors min-h-[44px]"
         >
           <div className="flex items-baseline gap-3 flex-wrap">
             <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Financial Health</h2>
@@ -164,40 +164,40 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Quality Signals</p>
             <div className="space-y-2">
               {piotroski != null && (
-                <div className="flex items-center justify-between gap-2 flex-wrap rounded-lg bg-white border border-slate-200 px-4 py-2.5">
-                  <span className="text-xs text-slate-500 min-w-0">
+                <div className="flex items-center justify-between gap-2 flex-wrap rounded-lg bg-white border border-slate-200 px-4 py-3 min-h-[44px]">
+                  <span className="text-[13px] text-slate-500 min-w-0">
                     Piotroski F-Score
                     <InfoTip text="9-point checklist of profitability, leverage, and efficiency. Score 8–9 = strong financial health; below 4 = signals weakness." />
                   </span>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-sm font-bold text-slate-900 tabular-nums">{piotroski}/9</span>
-                    <span className={`text-[11px] font-medium rounded-full px-2 py-0.5 ${piotroski >= 8 ? 'bg-emerald-100 text-emerald-700' : piotroski >= 4 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+                    <span className="text-[15px] font-bold text-slate-900 tabular-nums">{piotroski}/9</span>
+                    <span className={`text-[12px] font-medium rounded-full px-2.5 py-1 ${piotroski >= 8 ? 'bg-emerald-100 text-emerald-700' : piotroski >= 4 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
                       {piotroski >= 8 ? 'Strong' : piotroski >= 4 ? 'Mixed' : 'Weak'}
                     </span>
                   </div>
                 </div>
               )}
               {altmanZone && (
-                <div className="flex items-center justify-between gap-2 flex-wrap rounded-lg bg-white border border-slate-200 px-4 py-2.5">
-                  <span className="text-xs text-slate-500 min-w-0">
+                <div className="flex items-center justify-between gap-2 flex-wrap rounded-lg bg-white border border-slate-200 px-4 py-3 min-h-[44px]">
+                  <span className="text-[13px] text-slate-500 min-w-0">
                     Altman Z-Score
                     <InfoTip text="Predicts bankruptcy risk using financial ratios. Safe Zone (above 2.99) = low risk; Distress Zone (below 1.81) = elevated risk." />
                     {!altmanReliable && (
-                      <span className="ml-1.5 text-[10px] text-amber-600 font-medium">(EM — limited reliability)</span>
+                      <span className="ml-1.5 text-[11px] text-amber-600 font-medium">(EM — limited reliability)</span>
                     )}
                   </span>
-                  <span className={`text-[11px] font-semibold rounded-full px-2 py-0.5 shrink-0 ${altmanZone === 'Safe' ? 'bg-emerald-100 text-emerald-700' : altmanZone === 'Grey' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+                  <span className={`text-[12px] font-semibold rounded-full px-2.5 py-1 shrink-0 ${altmanZone === 'Safe' ? 'bg-emerald-100 text-emerald-700' : altmanZone === 'Grey' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
                     {altmanZone} Zone
                   </span>
                 </div>
               )}
               {beneishFlag && (
-                <div className="flex items-center justify-between gap-2 flex-wrap rounded-lg bg-white border border-slate-200 px-4 py-2.5">
-                  <span className="text-xs text-slate-500 min-w-0">
+                <div className="flex items-center justify-between gap-2 flex-wrap rounded-lg bg-white border border-slate-200 px-4 py-3 min-h-[44px]">
+                  <span className="text-[13px] text-slate-500 min-w-0">
                     Beneish M-Score
                     <InfoTip text="Statistical model detecting potential earnings manipulation. 'Clean' = low manipulation risk; 'Suspect' = elevated risk of misreporting." />
                   </span>
-                  <span className={`text-[11px] font-semibold rounded-full px-2 py-0.5 shrink-0 ${beneishFlag === 'Clean' ? 'bg-emerald-100 text-emerald-700' : beneishFlag === 'Warning' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+                  <span className={`text-[12px] font-semibold rounded-full px-2.5 py-1 shrink-0 ${beneishFlag === 'Clean' ? 'bg-emerald-100 text-emerald-700' : beneishFlag === 'Warning' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
                     {beneishFlag}
                   </span>
                 </div>
@@ -208,9 +208,9 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
 
           {/* Plain-English interpretation */}
           <div className="rounded-xl bg-blue-50 border border-blue-200 px-4 py-3">
-            <p className="text-xs text-blue-700 leading-relaxed">{healthInterp}</p>
+            <p className="text-[13px] text-blue-700 leading-relaxed">{healthInterp}</p>
             {riskSummary && (
-              <p className="text-xs text-blue-600 leading-relaxed mt-1">{riskSummary}</p>
+              <p className="text-[13px] text-blue-600 leading-relaxed mt-1">{riskSummary}</p>
             )}
           </div>
         </div>

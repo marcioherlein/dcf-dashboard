@@ -162,7 +162,7 @@ function FilterSelect({ label, value, options, onChange }: {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="appearance-none pl-3 pr-7 py-1.5 text-[12px] font-semibold text-[#334155] bg-white border border-[#DDE6F2] rounded-xl cursor-pointer hover:border-blue-300 focus:outline-none focus:border-blue-400 transition-colors"
+        className="appearance-none pl-3 pr-7 py-2 text-[12px] font-semibold text-[#334155] bg-white border border-[#DDE6F2] rounded-xl cursor-pointer hover:border-blue-300 focus:outline-none focus:border-blue-400 transition-colors min-h-[40px]"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>{label}: {o.label}</option>
@@ -196,7 +196,7 @@ function SortDropdown({ current, dir, onSort }: {
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 pl-3 pr-2.5 py-1.5 text-[12px] font-semibold text-[#334155] bg-white border border-[#DDE6F2] rounded-xl hover:border-blue-300 transition-colors"
+        className="flex items-center gap-2 pl-3 pr-2.5 py-2 text-[12px] font-semibold text-[#334155] bg-white border border-[#DDE6F2] rounded-xl hover:border-blue-300 transition-colors min-h-[40px]"
       >
         Sort: {currentLabel}
         <ChevronDown size={12} className="text-slate-400" />
@@ -291,7 +291,7 @@ function GridCard({ entry }: { entry: WatchlistEntry }) {
 
 function EmptyState() {
   return (
-    <div className="bg-white border border-[#E6ECF5] rounded-2xl p-12 sm:p-16 text-center flex flex-col items-center">
+    <div className="bg-white border border-[#E6ECF5] rounded-2xl p-8 sm:p-12 lg:p-16 text-center flex flex-col items-center">
       <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-5">
         <Bookmark size={24} className="text-blue-500" />
       </div>
@@ -299,16 +299,16 @@ function EmptyState() {
       <p className="text-[14px] text-[#64748B] max-w-sm leading-relaxed mb-6">
         Analyze a stock and save the valuation to track fair value, upside, and confidence over time.
       </p>
-      <div className="flex flex-col sm:flex-row items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
         <Link
           href="/analyze"
-          className="rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-6 py-2.5 text-[14px] font-semibold transition-colors"
+          className="w-full sm:w-auto rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-6 py-3 text-[14px] font-semibold transition-colors min-h-[48px] flex items-center justify-center"
         >
           Analyze a stock
         </Link>
         <Link
           href="/markets"
-          className="rounded-xl border border-[#DDE6F2] text-[#334155] hover:bg-slate-50 px-6 py-2.5 text-[14px] font-semibold transition-colors"
+          className="w-full sm:w-auto rounded-xl border border-[#DDE6F2] text-[#334155] hover:bg-slate-50 px-6 py-3 text-[14px] font-semibold transition-colors min-h-[48px] flex items-center justify-center"
         >
           Explore popular analyses
         </Link>
@@ -549,7 +549,7 @@ export default function ValuationsPage() {
               onClick={() => setView('table')}
               title="Table view"
               aria-label="Table view"
-              className={cn('p-2 rounded-lg transition-colors', view === 'table' ? 'bg-white text-[#2563EB] shadow-sm' : 'text-slate-400 hover:text-slate-600')}
+              className={cn('p-2 rounded-lg transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center', view === 'table' ? 'bg-white text-[#2563EB] shadow-sm' : 'text-slate-400 hover:text-slate-600')}
             >
               <List size={16} />
             </button>
@@ -557,7 +557,7 @@ export default function ValuationsPage() {
               onClick={() => setView('grid')}
               title="Grid view"
               aria-label="Grid view"
-              className={cn('p-2 rounded-lg transition-colors', view === 'grid' ? 'bg-white text-[#2563EB] shadow-sm' : 'text-slate-400 hover:text-slate-600')}
+              className={cn('p-2 rounded-lg transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center', view === 'grid' ? 'bg-white text-[#2563EB] shadow-sm' : 'text-slate-400 hover:text-slate-600')}
             >
               <LayoutGrid size={16} />
             </button>
@@ -630,7 +630,7 @@ export default function ValuationsPage() {
                   const name = window.prompt('New group name:')?.trim()
                   if (name && !allGroups.includes(name)) setPendingGroups((prev) => [...prev, name])
                 }}
-                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold text-[#2563EB] border border-dashed border-blue-300 bg-white hover:bg-blue-50 rounded-xl transition-colors whitespace-nowrap"
+                className="shrink-0 flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold text-[#2563EB] border border-dashed border-blue-300 bg-white hover:bg-blue-50 rounded-xl transition-colors whitespace-nowrap min-h-[40px]"
               >
                 <Plus size={13} />
                 New group
@@ -638,18 +638,18 @@ export default function ValuationsPage() {
             </div>
 
             {/* Search + Sort + Filters */}
-            <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-t border-[#EDF2F7]">
-              <div className="relative flex-1 min-w-[180px] max-w-xs">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 px-4 py-3 border-t border-[#EDF2F7]">
+              <div className="relative flex-1 min-w-0 sm:min-w-[180px] sm:max-w-xs">
                 <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search valuations…"
-                  className="w-full pl-8 pr-3 py-1.5 text-[13px] text-slate-800 bg-white border border-[#DDE6F2] rounded-xl focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
+                  className="w-full pl-8 pr-3 py-1.5 text-[16px] text-slate-800 bg-white border border-[#DDE6F2] rounded-xl focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
                 />
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap overflow-x-auto scrollbar-hide pb-0.5">
                 <SortDropdown current={sortKey} dir={sortDir} onSort={handleSort} />
                 <FilterSelect
                   label="Upside"
@@ -675,7 +675,7 @@ export default function ValuationsPage() {
                 />
                 <button
                   className={cn(
-                    'flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold border rounded-xl transition-colors',
+                    'flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold border rounded-xl transition-colors min-h-[40px]',
                     hasFilters
                       ? 'bg-blue-50 border-blue-300 text-blue-700'
                       : 'bg-white border-[#DDE6F2] text-[#334155] hover:border-blue-300',

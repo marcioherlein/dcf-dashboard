@@ -105,7 +105,7 @@ export default function RisksCard({ ratings, cagrAnalysis, onViewRisks }: RisksC
   const bullets = buildBullets(ratings, cagrAnalysis)
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+    <div className="bg-white border border-slate-200 rounded-2xl px-4 py-4 sm:p-5 shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -114,19 +114,19 @@ export default function RisksCard({ ratings, cagrAnalysis, onViewRisks }: RisksC
             risk.color === 'amber'  ? 'text-amber-500' :
             'text-emerald-500'
           )} />
-          <p className="text-[13px] font-semibold text-slate-800">Risks to Thesis</p>
+          <p className="text-[14px] font-semibold text-slate-800">Risks to Thesis</p>
         </div>
-        <span className={cn('text-[11px] font-semibold px-2.5 py-1 rounded-full', risk.badgeClass)}>
+        <span className={cn('text-[12px] font-semibold px-2.5 py-1 rounded-full', risk.badgeClass)}>
           {risk.label}
         </span>
       </div>
 
       {/* Bullet list */}
-      <ul className="space-y-2 mb-4">
+      <ul className="space-y-2.5 mb-4">
         {bullets.map((b, i) => (
-          <li key={i} className="flex items-start gap-2.5">
+          <li key={i} className="flex items-start gap-2.5 py-0.5">
             <span className={cn(
-              'mt-1.5 w-1.5 h-1.5 rounded-full shrink-0',
+              'mt-[7px] w-1.5 h-1.5 rounded-full shrink-0',
               risk.color === 'red'   ? 'bg-red-400'   :
               risk.color === 'amber' ? 'bg-amber-400' :
               'bg-emerald-400'
@@ -139,7 +139,7 @@ export default function RisksCard({ ratings, cagrAnalysis, onViewRisks }: RisksC
       {/* CTA */}
       <button
         onClick={onViewRisks}
-        className="text-[13px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+        className="text-[13px] font-semibold text-blue-600 hover:text-blue-700 transition-colors min-h-[44px] flex items-center"
       >
         View all risks →
       </button>

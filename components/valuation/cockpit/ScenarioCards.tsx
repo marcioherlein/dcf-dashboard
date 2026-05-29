@@ -28,7 +28,7 @@ function ScenarioCard({
   const isBase = Math.abs(waccDelta) < 0.0001 && Math.abs(cagrDelta) < 0.0001
 
   return (
-    <div className={`rounded-xl border ${bgClass} ${borderClass} px-5 py-4 ${isBase ? 'ring-2 ring-blue-300 shadow-sm' : ''}`}>
+    <div className={`rounded-xl border ${bgClass} ${borderClass} px-4 py-4 min-w-[220px] sm:min-w-0 snap-start flex-shrink-0 sm:flex-shrink ${isBase ? 'ring-2 ring-blue-300 shadow-sm' : ''}`}>
       <div className="flex items-center justify-between mb-0.5">
         <div className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider ${accentText}`}>
           {Icon && <Icon size={12} className="shrink-0" />}
@@ -81,7 +81,7 @@ export default function ScenarioCards({ scenarios, currentPrice, currency }: Pro
         <span className="text-[10px] text-slate-400">Blended estimate at stressed assumptions</span>
       </div>
       <p className="text-[10px] text-slate-400 mb-3">All four methods re-run at each stress — same blend as Base.</p>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-1 px-1 sm:grid sm:grid-cols-3 sm:overflow-visible sm:snap-none sm:pb-0 sm:mx-0 sm:px-0">
         <ScenarioCard
           label="Bear Case" description="If growth slows & margins compress"
           fv={scenarios.bear.fairValue} wacc={scenarios.bear.wacc} cagr={scenarios.bear.cagr}

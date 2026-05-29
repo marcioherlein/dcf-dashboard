@@ -298,7 +298,7 @@ export default function FCFBuildUp({
   const isFinancialLike = histRows.every(r => r.ebit == null || r.ebit === 0)
 
   // ── Cell helpers ────────────────────────────────────────────────────────────
-  const cellBase = 'px-3 py-2.5 text-center text-xs tabular-nums'
+  const cellBase = 'px-3 py-3 text-center text-xs tabular-nums'
   const divider = <td className="px-1 py-2.5 text-center text-xs text-slate-200">│</td>
   const inputCls = 'w-16 bg-transparent border-b border-slate-300 text-sm font-semibold text-slate-900 outline-none tabular-nums focus:border-indigo-400'
 
@@ -317,7 +317,7 @@ export default function FCFBuildUp({
     return <td className="px-3 py-1 text-center text-[10px] text-slate-400 tabular-nums">{v}</td>
   }
   function labelCell(label: string, muted = false) {
-    return <td className={`px-4 py-2.5 text-xs whitespace-nowrap min-w-[164px] ${muted ? 'text-slate-400' : 'text-slate-500'}`}>{label}</td>
+    return <td className={`px-4 py-3 text-xs whitespace-nowrap min-w-[164px] ${muted ? 'text-slate-400' : 'text-slate-500'}`}>{label}</td>
   }
   function subLabelCell(label: string) {
     return <td className="px-4 py-1 text-[10px] text-slate-400 pl-7">{label}</td>
@@ -341,7 +341,7 @@ export default function FCFBuildUp({
     <div className="rounded-xl card">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="px-6 pt-5 pb-3 flex flex-wrap items-center justify-between gap-3">
+      <div className="px-4 sm:px-6 pt-5 pb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <h2 className="text-sm font-headline font-semibold text-slate-900">FCF Build-Up</h2>
           <div className="flex rounded-lg border border-slate-200 overflow-hidden">
@@ -579,7 +579,7 @@ export default function FCFBuildUp({
       </div>
 
       {/* ── Terminal Value Panel ────────────────────────────────────────────── */}
-      <div className="border-t border-slate-100 px-6 py-5">
+      <div className="border-t border-slate-100 px-4 sm:px-6 py-5">
         <div className="flex items-center gap-3 mb-4">
           <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Terminal Value</span>
           <span className="text-xs text-slate-400">Both methods shown simultaneously</span>

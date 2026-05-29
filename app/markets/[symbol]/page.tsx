@@ -93,7 +93,7 @@ function PageSkeleton() {
 // ── Stat tile ───────────────────────────────────────────────────────────────
 function StatTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-white/5 border border-white/10 px-4 py-3">
+    <div className="rounded-xl bg-white/5 border border-white/10 px-4 py-3 min-h-0">
       <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{label}</div>
       <div className="text-[14px] font-semibold text-slate-100 font-mono tabular-nums truncate" title={value}>
         {value}
@@ -106,7 +106,7 @@ function StatTile({ label, value }: { label: string; value: string }) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function NewsItem({ item }: { item: any }) {
   const inner = (
-    <div className="px-4 py-3 min-h-[44px] hover:bg-white/5 transition-colors group">
+    <div className="px-4 py-4 min-h-[44px] hover:bg-white/5 transition-colors group">
       <p className="text-[12.5px] font-medium text-slate-200 leading-snug line-clamp-2 group-hover:text-slate-100">
         {item.title}
       </p>
@@ -171,7 +171,7 @@ export default function InstrumentDetailPage() {
     return (
       <div className="min-h-screen bg-[#050D1F] pt-[52px]">
         <div className="max-w-[900px] mx-auto px-4 py-6">
-          <Link href="/markets" className="inline-flex items-center gap-1.5 text-[13px] text-slate-400 hover:text-slate-100 transition-colors mb-4">
+          <Link href="/markets" className="inline-flex items-center gap-1.5 text-[13px] text-slate-400 hover:text-slate-100 transition-colors mb-4 min-h-[44px]">
             <ArrowLeft className="w-4 h-4" /> Back to Markets
           </Link>
           <div className="rounded-xl bg-red-500/10 border border-red-500/30 px-6 py-5">
@@ -188,12 +188,12 @@ export default function InstrumentDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#050D1F] pt-[52px]">
-      <div className="max-w-[900px] mx-auto px-4 py-6 space-y-4">
+      <div className="max-w-[900px] mx-auto px-4 py-4 sm:py-6 space-y-4">
 
         {/* Back link */}
         <Link
           href="/markets"
-          className="inline-flex items-center gap-1.5 text-[13px] text-slate-400 hover:text-slate-100 transition-colors"
+          className="inline-flex items-center gap-1.5 text-[13px] text-slate-400 hover:text-slate-100 transition-colors min-h-[44px]"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Markets

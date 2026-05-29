@@ -171,17 +171,17 @@ export default function FinancialStatements({ incomeStatement, balanceSheet, cas
   return (
     <div className="rounded-xl card">
       {/* Header + Tabs */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 sm:px-6 py-4">
         <div>
           <h2 className="text-sm font-headline font-semibold text-slate-900">Financial Statements</h2>
           <p className="mt-0.5 text-xs text-slate-400">Historical actuals · Model projections</p>
         </div>
-        <div className="flex rounded-xl bg-slate-100 p-1 gap-1">
+        <div className="flex rounded-xl bg-slate-100 p-1 gap-1 overflow-x-auto flex-shrink-0">
           {TABS.map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+              className={`rounded-lg px-3 py-2 min-h-[44px] text-xs font-medium transition-all whitespace-nowrap ${
                 tab === t
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-500 hover:text-slate-700'

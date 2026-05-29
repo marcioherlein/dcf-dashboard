@@ -56,7 +56,7 @@ function getMarketStatus(): { label: string; cls: string } {
 
 function SectionHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: React.ReactNode }) {
   return (
-    <div className="mb-3 flex items-end justify-between gap-2">
+    <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-2">
       <div>
         <h2 className="text-[13px] font-bold text-slate-800 uppercase tracking-wide">{title}</h2>
         {subtitle && <p className="text-[11px] text-slate-400 mt-0.5 hidden sm:block">{subtitle}</p>}
@@ -137,7 +137,7 @@ export default function MarketsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F8FAFF] to-[#F5F7FE] pt-[52px]">
 
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-5 space-y-6">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-4 sm:py-5 space-y-6">
 
         {err && (
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-600 flex items-center justify-between">
@@ -152,14 +152,14 @@ export default function MarketsPage() {
         )}
 
         {/* ── Page Header ─────────────────────────────────────────────────── */}
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
           <div className="min-w-0">
             <h1 className="text-[18px] sm:text-[20px] font-bold text-slate-900 leading-tight">Markets Overview</h1>
             <p className="text-[11px] sm:text-[12px] text-slate-400 mt-0.5 hidden sm:block">
               Market context and key drivers that influence valuation decisions.
             </p>
           </div>
-          <div className="flex items-center gap-2 pt-0.5 shrink-0">
+          <div className="flex items-center gap-2 sm:pt-0.5 shrink-0">
             <span className="text-[10px] text-slate-400 hidden md:block">
               {etDate}, {etTime} ET
             </span>
@@ -263,7 +263,7 @@ export default function MarketsPage() {
             subtitle="Where market leadership is concentrated and which sectors lead or lag."
           />
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            <div className="lg:col-span-7">
+            <div className="lg:col-span-7 overflow-x-auto">
               {mkt ? (
                 <MarketHeatmapCard sectors={mkt.sectors} />
               ) : (

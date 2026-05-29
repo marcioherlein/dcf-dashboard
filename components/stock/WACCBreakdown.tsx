@@ -34,8 +34,9 @@ export default function WACCBreakdown({ wacc, onWACCChange }: Props) {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-100">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto -mx-2 px-2">
+        <div className="overflow-hidden rounded-xl border border-slate-100 min-w-[480px]">
+          <table className="w-full text-sm">
           <thead className="bg-slate-50">
             <tr>
               {['Variable', 'Formula', 'Value', 'Source'].map((h, i) => (
@@ -64,6 +65,7 @@ export default function WACCBreakdown({ wacc, onWACCChange }: Props) {
             </tr>
           </tfoot>
         </table>
+        </div>
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -77,7 +79,7 @@ export default function WACCBreakdown({ wacc, onWACCChange }: Props) {
         <button
           onClick={() => onWACCChange?.(parseFloat(overrideWACC) / 100)}
           disabled={!overrideWACC}
-          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-blue-500 disabled:opacity-40"
+          className="rounded-lg bg-blue-600 px-3 py-1.5 min-h-[44px] text-xs font-medium text-white transition hover:bg-blue-500 disabled:opacity-40"
         >
           Apply
         </button>

@@ -38,25 +38,25 @@ export default function PriceHeader({
   const currSymbol = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$ ' : currency + ' '
 
   return (
-    <div className="rounded-xl card p-5">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
+    <div className="rounded-xl card p-4 sm:p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="rounded-lg bg-blue-50 border border-blue-200 px-2.5 py-1 text-xs font-bold text-blue-700 tracking-wide">
+            <span className="rounded-lg bg-blue-50 border border-blue-200 px-2.5 py-1 text-xs font-bold text-blue-700 tracking-wide shrink-0">
               {ticker}
             </span>
             {sector && (
-              <span className="text-micro text-slate-500">{sector}</span>
+              <span className="text-micro text-slate-500 truncate">{sector}</span>
             )}
           </div>
-          <h1 className="mt-2 text-xl font-bold text-slate-900 tracking-tight truncate">
+          <h1 className="mt-2 text-lg sm:text-xl font-bold text-slate-900 tracking-tight truncate max-w-[200px] sm:max-w-none">
             {companyName}
           </h1>
         </div>
 
-        <div className="flex items-start gap-3 shrink-0">
+        <div className="flex items-start gap-2 sm:gap-3 shrink-0">
           <div className="text-right">
-            <div className="text-3xl font-extrabold text-slate-900 font-mono tabular-nums tracking-tight">
+            <div className="text-[22px] sm:text-3xl font-extrabold text-slate-900 font-mono tabular-nums tracking-tight leading-none">
               {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <div className={cn('mt-1 flex items-center justify-end gap-1.5 text-sm font-semibold', up ? 'text-emerald-600' : 'text-red-600')}>
@@ -69,7 +69,7 @@ export default function PriceHeader({
             <button
               onClick={onSave}
               title="Save to Watchlist"
-              className="mt-1 rounded-lg border border-slate-200 p-2 text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+              className="mt-1 rounded-lg border border-slate-200 p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
             >
               <Bookmark size={16} />
             </button>

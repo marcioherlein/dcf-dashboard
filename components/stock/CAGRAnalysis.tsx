@@ -113,8 +113,8 @@ export default function CAGRAnalysis({ cagrAnalysis: ca, isNegativeFCF, growthMo
       })()}
 
       {/* Sources table */}
-      <div className="mb-4 overflow-x-auto">
-        <table className="w-full text-sm">
+      <div className="mb-4 overflow-x-auto -mx-2 px-2">
+        <table className="w-full min-w-[300px] text-sm">
           <thead>
             <tr className="border-b border-slate-200">
               <th className="pb-2 text-left text-xs font-medium text-slate-400">Source</th>

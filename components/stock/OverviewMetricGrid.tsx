@@ -130,7 +130,7 @@ function MiniBar({ value, max, color }: { value: number; max: number; color: str
 
 // ─── Card 1: Business Quality ──────────────────────────────────────────────
 
-function BusinessQualityCard({ ratings, scores }: { ratings: StockRatings; scores: ScoresData }) {
+function BusinessQualityCard({ ratings, scores, onViewDetails }: { ratings: StockRatings; scores: ScoresData; onViewDetails?: () => void }) {
   const moat = ratings.moat
   const profitability = ratings.profitability
   const cat = moat ?? profitability
@@ -173,13 +173,16 @@ function BusinessQualityCard({ ratings, scores }: { ratings: StockRatings; score
         />
       </div>
       <p className="text-[12px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{interpSentence}</p>
+      {onViewDetails && (
+        <button onClick={onViewDetails} className="mt-1.5 text-[12px] font-[650] text-[#2563EB] hover:text-[#1D4ED8] transition-colors">Details →</button>
+      )}
     </div>
   )
 }
 
 // ─── Card 2: Growth Outlook ────────────────────────────────────────────────
 
-function GrowthOutlookCard({ ratings, cagrAnalysis }: { ratings: StockRatings; cagrAnalysis: CAGRAnalysisData | null }) {
+function GrowthOutlookCard({ ratings, cagrAnalysis, onViewDetails }: { ratings: StockRatings; cagrAnalysis: CAGRAnalysisData | null; onViewDetails?: () => void }) {
   const growth = ratings.growth
   const color = growth?.color ?? 'blue'
   const label = growth?.label ?? 'Analyzing…'
@@ -230,16 +233,20 @@ function GrowthOutlookCard({ ratings, cagrAnalysis }: { ratings: StockRatings; c
         )}
       </div>
       <p className="text-[12px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{growthSentence}</p>
+      {onViewDetails && (
+        <button onClick={onViewDetails} className="mt-1.5 text-[12px] font-[650] text-[#2563EB] hover:text-[#1D4ED8] transition-colors">Details →</button>
+      )}
     </div>
   )
 }
 
 // ─── Card 3: Profitability ─────────────────────────────────────────────────
 
-function ProfitabilityCard({ ratings, businessProfile, statementsData }: {
+function ProfitabilityCard({ ratings, businessProfile, statementsData, onViewDetails }: {
   ratings: StockRatings
   businessProfile: BusinessProfile
   statementsData: StatementsData | null
+  onViewDetails?: () => void
 }) {
   const profitability = ratings.profitability
   const color = profitability?.color ?? 'blue'
@@ -272,15 +279,19 @@ function ProfitabilityCard({ ratings, businessProfile, statementsData }: {
         <MetricRow label="FCF Margin" value={fmtPct(businessProfile.fcfMargin)} />
       </div>
       <p className="text-[12px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{profSentence}</p>
+      {onViewDetails && (
+        <button onClick={onViewDetails} className="mt-1.5 text-[12px] font-[650] text-[#2563EB] hover:text-[#1D4ED8] transition-colors">Details →</button>
+      )}
     </div>
   )
 }
 
 // ─── Card 4: Cash Conversion ───────────────────────────────────────────────
 
-function CashConversionCard({ businessProfile, statementsData }: {
+function CashConversionCard({ businessProfile, statementsData, onViewDetails }: {
   businessProfile: BusinessProfile
   statementsData: StatementsData | null
+  onViewDetails?: () => void
 }) {
   const ttmIS = statementsData?.ttm?.incomeStatement
   const ttmCF = statementsData?.ttm?.cashFlow
@@ -315,15 +326,19 @@ function CashConversionCard({ businessProfile, statementsData }: {
         />
       </div>
       <p className="text-[12px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{cashSentence}</p>
+      {onViewDetails && (
+        <button onClick={onViewDetails} className="mt-1.5 text-[12px] font-[650] text-[#2563EB] hover:text-[#1D4ED8] transition-colors">Details →</button>
+      )}
     </div>
   )
 }
 
 // ─── Card 5: Balance Sheet Safety ─────────────────────────────────────────
 
-function BalanceSheetCard({ scores, statementsData }: {
+function BalanceSheetCard({ scores, statementsData, onViewDetails }: {
   scores: ScoresData
   statementsData: StatementsData | null
+  onViewDetails?: () => void
 }) {
   const ttmBS = statementsData?.ttm?.balanceSheet
   const ttmIS = statementsData?.ttm?.incomeStatement
@@ -397,6 +412,9 @@ function BalanceSheetCard({ scores, statementsData }: {
         )}
       </div>
       <p className="text-[12px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{bsSentence}</p>
+      {onViewDetails && (
+        <button onClick={onViewDetails} className="mt-1.5 text-[12px] font-[650] text-[#2563EB] hover:text-[#1D4ED8] transition-colors">Details →</button>
+      )}
     </div>
   )
 }
@@ -489,7 +507,7 @@ function RisksGridCard({ ratings, cagrAnalysis, onViewRisks }: {
 // ─── Relative Valuation card ──────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function RelativeValuationCard({ valuationMethods, quote }: { valuationMethods: any; quote: any }) {
+function RelativeValuationCard({ valuationMethods, quote, onViewDetails }: { valuationMethods: any; quote: any; onViewDetails?: () => void }) {
   const estimates: AnyRecord[] = valuationMethods?.multiples?.estimates ?? []
   const peRatio  = quote?.peRatio  ?? null
   const pegRatio = quote?.pegRatio ?? null
@@ -569,7 +587,10 @@ function RelativeValuationCard({ valuationMethods, quote }: { valuationMethods: 
         )}
       </div>
       {applicable.length > 0 && (
-        <p className="text-[11px] text-slate-400 mt-3 leading-relaxed">vs. sector median</p>
+        <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">vs. sector median</p>
+      )}
+      {onViewDetails && (
+        <button onClick={onViewDetails} className="mt-1.5 text-[12px] font-[650] text-[#2563EB] hover:text-[#1D4ED8] transition-colors">Details →</button>
       )}
     </div>
   )
@@ -581,14 +602,14 @@ export default function OverviewMetricGrid({ ratings, scores, businessProfile, c
   if (!ratings) return null
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      <BusinessQualityCard ratings={ratings} scores={scores ?? {}} />
-      <GrowthOutlookCard ratings={ratings} cagrAnalysis={cagrAnalysis} />
-      <ProfitabilityCard ratings={ratings} businessProfile={businessProfile} statementsData={statementsData} />
-      <CashConversionCard businessProfile={businessProfile} statementsData={statementsData} />
-      <BalanceSheetCard scores={scores ?? {}} statementsData={statementsData} />
+    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 items-start">
+      <BusinessQualityCard ratings={ratings} scores={scores ?? {}} onViewDetails={onViewRisks} />
+      <GrowthOutlookCard ratings={ratings} cagrAnalysis={cagrAnalysis} onViewDetails={onViewRisks} />
+      <ProfitabilityCard ratings={ratings} businessProfile={businessProfile} statementsData={statementsData} onViewDetails={onViewRisks} />
+      <CashConversionCard businessProfile={businessProfile} statementsData={statementsData} onViewDetails={onViewRisks} />
+      <BalanceSheetCard scores={scores ?? {}} statementsData={statementsData} onViewDetails={onViewRisks} />
       {valuationMethods ? (
-        <RelativeValuationCard valuationMethods={valuationMethods} quote={quote} />
+        <RelativeValuationCard valuationMethods={valuationMethods} quote={quote} onViewDetails={onViewRisks} />
       ) : (
         <RisksGridCard ratings={ratings} cagrAnalysis={cagrAnalysis} onViewRisks={onViewRisks} />
       )}

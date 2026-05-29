@@ -717,17 +717,17 @@ export default function ForecastTable({
     const displayWacc = currentWacc ?? wd.wacc * 100
 
     return (
-      <div className="bg-[#080F1E] px-6 py-5 border-t border-white/10">
+      <div className="bg-[#080F1E] px-4 sm:px-6 py-5 border-t border-white/10">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Discount Rate (WACC)</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">
+            <p className="text-[11px] text-slate-400 mt-0.5">
               Weighted average cost of capital applied to discount projected free cash flows
             </p>
           </div>
           <div className="text-right">
             <span className="text-2xl font-extrabold text-blue-300 tabular-nums">{displayWacc.toFixed(1)}%</span>
-            {onWaccChange && <p className="text-[10px] text-slate-400 mt-0.5">drag slider to adjust</p>}
+            {onWaccChange && <p className="text-[11px] text-slate-400 mt-0.5">drag slider to adjust</p>}
           </div>
         </div>
 
@@ -740,9 +740,9 @@ export default function ForecastTable({
               step={0.1}
               value={displayWacc}
               onChange={e => onWaccChange(parseFloat(e.target.value))}
-              className="w-full h-2 accent-blue-500 rounded-lg cursor-pointer"
+              className="w-full h-3 accent-blue-500 rounded-lg cursor-pointer"
             />
-            <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+            <div className="flex justify-between text-[11px] text-slate-400 mt-1">
               <span>5%</span>
               <span className="text-blue-400 font-bold">{displayWacc.toFixed(1)}% current</span>
               <span>25%</span>
@@ -854,9 +854,9 @@ export default function ForecastTable({
     ]
 
     return (
-      <div className="bg-[#080F1E] px-6 py-5 border-t border-white/10">
+      <div className="bg-[#080F1E] px-4 sm:px-6 py-5 border-t border-white/10">
         {/* Method toggle */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Terminal Value</p>
           <div className="flex rounded-lg border border-white/10 overflow-hidden">
             {(['perpetuity', 'multiple'] as const).map(m => (
@@ -864,7 +864,7 @@ export default function ForecastTable({
                 key={m}
                 onClick={() => onTerminalMethodChange(m)}
                 className={cn(
-                  'px-4 py-1.5 text-xs font-semibold transition-colors',
+                  'px-4 py-2 text-[12px] font-semibold transition-colors min-h-[44px]',
                   td.method === m ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-white/8'
                 )}
               >
@@ -885,17 +885,17 @@ export default function ForecastTable({
         <div className="mb-5">
           {isMultiple ? (
             <div className="flex items-center gap-3 rounded-xl bg-white/5 border border-white/8 px-4 py-3">
-              <div className="flex-1">
-                <p className="text-[11px] font-semibold text-slate-200">Exit Multiple (EV / FCF)</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">Applied to final-year FCF to compute terminal enterprise value</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-semibold text-slate-200">Exit Multiple (EV / FCF)</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Applied to final-year FCF to compute terminal enterprise value</p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => onExitMultipleChange(Math.round(Math.max(1, td.exitMultiple - 1) * 10) / 10)}
-                  className="w-7 h-7 rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 font-bold text-sm flex items-center justify-center"
+                  className="w-9 h-9 rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 font-bold text-sm flex items-center justify-center min-h-[44px] min-w-[44px]"
                 >−</button>
                 <input
-                  className="w-16 border border-white/10 bg-[#0A1628] px-2 py-1 text-center text-sm font-bold text-slate-100 rounded-lg focus:border-blue-400 focus:outline-none"
+                  className="w-16 border border-white/10 bg-[#0A1628] px-2 py-2 text-center text-[14px] font-bold text-slate-100 rounded-lg focus:border-blue-400 focus:outline-none min-h-[44px]"
                   value={exitMultipleDraft ?? Math.max(1, td.exitMultiple).toFixed(1)}
                   onChange={e => setExitMultipleDraft(e.target.value)}
                   onBlur={() => {
@@ -913,26 +913,26 @@ export default function ForecastTable({
                     }
                   }}
                 />
-                <span className="text-xs text-slate-400">×</span>
+                <span className="text-[12px] text-slate-400">×</span>
                 <button
                   onClick={() => onExitMultipleChange(Math.round((td.exitMultiple + 1) * 10) / 10)}
-                  className="w-7 h-7 rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 font-bold text-sm flex items-center justify-center"
+                  className="w-9 h-9 rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 font-bold text-sm flex items-center justify-center min-h-[44px] min-w-[44px]"
                 >+</button>
               </div>
             </div>
           ) : (
             <div className="flex items-center gap-3 rounded-xl bg-white/5 border border-white/8 px-4 py-3">
-              <div className="flex-1">
-                <p className="text-[11px] font-semibold text-slate-200">Terminal Growth Rate</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">Long-run FCF growth rate beyond projection period (typically 2–3%)</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-semibold text-slate-200">Terminal Growth Rate</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Long-run FCF growth rate beyond projection period (typically 2–3%)</p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => onTerminalGChange(Math.round(Math.max(0, td.terminalG - 0.005) * 1000) / 1000)}
-                  className="w-7 h-7 rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 font-bold text-sm flex items-center justify-center"
+                  className="w-9 h-9 rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 font-bold text-sm flex items-center justify-center min-h-[44px] min-w-[44px]"
                 >−</button>
                 <input
-                  className="w-16 border border-white/10 bg-[#0A1628] px-2 py-1 text-center text-sm font-bold text-slate-100 rounded-lg focus:border-blue-400 focus:outline-none"
+                  className="w-16 border border-white/10 bg-[#0A1628] px-2 py-2 text-center text-[14px] font-bold text-slate-100 rounded-lg focus:border-blue-400 focus:outline-none min-h-[44px]"
                   value={terminalGDraft ?? (td.terminalG * 100).toFixed(1)}
                   onChange={e => setTerminalGDraft(e.target.value)}
                   onBlur={() => {
@@ -950,10 +950,10 @@ export default function ForecastTable({
                     }
                   }}
                 />
-                <span className="text-xs text-slate-400">%</span>
+                <span className="text-[12px] text-slate-400">%</span>
                 <button
                   onClick={() => onTerminalGChange(Math.round(Math.min(0.14, td.terminalG + 0.005) * 1000) / 1000)}
-                  className="w-7 h-7 rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 font-bold text-sm flex items-center justify-center"
+                  className="w-9 h-9 rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 font-bold text-sm flex items-center justify-center min-h-[44px] min-w-[44px]"
                 >+</button>
               </div>
             </div>
@@ -1044,11 +1044,11 @@ export default function ForecastTable({
   return (
     <div className="bg-[#080F1E] rounded-xl overflow-hidden">
       {/* Header bar */}
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/10 bg-white/5 flex-wrap gap-3">
+      <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-white/10 bg-white/5 flex-wrap gap-3">
         <div className="flex items-center gap-3 flex-wrap">
           <div>
-            <h3 className="text-sm font-bold text-slate-100">Full DCF Model</h3>
-            <p className="text-[10px] text-slate-400 mt-0.5">
+            <h3 className="text-[14px] font-bold text-slate-100">Full DCF Model</h3>
+            <p className="text-[11px] text-slate-400 mt-0.5">
               {mode === 'ufcf' ? 'Unlevered Free Cash Flow · discounted at WACC' : 'Levered Free Cash Flow · discounted at Cost of Equity'}
             </p>
           </div>
@@ -1057,14 +1057,14 @@ export default function ForecastTable({
           {computedCagr != null && (
             <div className="flex items-center gap-1.5 bg-white/8 border border-white/10 rounded-lg px-3 py-1.5">
               <span className="text-[10px] text-slate-400 uppercase tracking-wide font-semibold">Avg CAGR</span>
-              <span className="text-sm font-bold text-blue-300 tabular-nums">{computedCagr.toFixed(1)}%</span>
+              <span className="text-[13px] font-bold text-blue-300 tabular-nums">{computedCagr.toFixed(1)}%</span>
               <span className="text-[9px] text-slate-400">(geom.)</span>
             </div>
           )}
 
           {/* Analyst context chips */}
           {cagrAnalysis?.analystEstimate1y != null && (
-            <div className="flex items-center gap-1.5 text-[10px]">
+            <div className="flex items-center gap-1.5 text-[11px]">
               <span className="text-slate-400">Analyst est:</span>
               <span className="font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">
                   FY+1 {(cagrAnalysis.analystEstimate1y * 100).toFixed(1)}%
@@ -1082,17 +1082,17 @@ export default function ForecastTable({
           {/* Implied price badge — shows 4-model blended value with breakdown tooltip */}
           {headerPrice != null && (
             <div className="relative group">
-              <div className="flex items-center gap-2 bg-white/8 border border-white/10 rounded-lg px-3 py-1.5 cursor-help">
+              <div className="flex items-center gap-2 bg-white/8 border border-white/10 rounded-lg px-3 py-1.5 cursor-help min-h-[44px]">
                 <span className="text-[10px] text-slate-400 uppercase tracking-wide font-semibold">
                   {blendedImpliedPrice != null ? 'Implied · 4-model' : 'Implied'}
                 </span>
-                <span className={cn('text-sm font-bold tabular-nums',
+                <span className={cn('text-[13px] font-bold tabular-nums',
                   headerUpside != null && headerUpside >= 0 ? 'text-emerald-400' : 'text-red-400'
                 )}>
                   {curr}{headerPrice.toFixed(2)}
                 </span>
                 {headerUpside != null && (
-                  <span className={cn('text-[10px] font-semibold', headerUpside >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                  <span className={cn('text-[11px] font-semibold', headerUpside >= 0 ? 'text-emerald-400' : 'text-red-400')}>
                     {headerUpside >= 0 ? '+' : ''}{(headerUpside * 100).toFixed(1)}%
                   </span>
                 )}
@@ -1139,7 +1139,7 @@ export default function ForecastTable({
                 key={m}
                 onClick={() => { setMode(m); onModeChange?.(m === 'lfcf') }}
                 className={cn(
-                  'px-3 py-1.5 text-xs font-semibold transition-colors',
+                  'px-3 py-2 text-[12px] font-semibold transition-colors min-h-[44px]',
                   mode === m ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-white/8 bg-transparent'
                 )}
               >
@@ -1151,9 +1151,9 @@ export default function ForecastTable({
       </div>
 
       {/* Edit hint bar */}
-      <div className="px-5 py-2 bg-blue-500/10 border-b border-blue-500/20 flex items-center gap-2">
+      <div className="px-4 sm:px-5 py-2.5 bg-blue-500/10 border-b border-blue-500/20 flex items-center gap-2">
         <span className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" />
-        <p className="text-[11px] text-blue-300">
+        <p className="text-[12px] text-blue-300">
           Click any <span className="font-bold">Revenue % Growth</span> cell in a projected column to adjust that year&apos;s growth assumption.
           All other values are computed automatically.
         </p>

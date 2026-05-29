@@ -632,13 +632,13 @@ export default function FinancialsHub({ statementsData, financialsData, currency
     <>
     <div className="rounded-xl card overflow-hidden">
       {/* Sub-tab nav — scrollable on mobile */}
-      <div className="flex items-center justify-between px-2 sm:px-5 pt-4 pb-0 border-b border-slate-100 overflow-x-auto">
+      <div className="flex items-center justify-between px-2 sm:px-5 pt-4 pb-0 border-b border-slate-100 overflow-x-auto scrollbar-none -webkit-overflow-scrolling-touch">
         <div className="flex gap-0 min-w-max">
           {SUB_TABS.map(({ id, label }) => (
             <button
               key={id}
               onClick={() => setSubTab(id)}
-              className={`px-3 sm:px-4 py-3 text-[12px] sm:text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`px-3 sm:px-4 py-3 min-h-[44px] text-[12px] sm:text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap ${
                 subTab === id
                   ? 'border-blue-600 text-blue-600'
                   : 'border-transparent text-slate-500 hover:text-slate-800'

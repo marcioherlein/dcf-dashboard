@@ -101,7 +101,7 @@ export default function ModelDivergencePanel({ divergence }: Props) {
               const cfg  = METHOD_ICON[e.methodId]
               const conf = CONFIDENCE_CHIP[e.confidence]
               return (
-                <div key={e.methodId} className="px-5 py-4 flex items-center gap-4 flex-wrap sm:flex-nowrap">
+                <div key={e.methodId} className="px-4 py-4 flex items-start gap-3 flex-wrap sm:flex-nowrap min-w-0">
                   {/* Icon */}
                   {cfg && (
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${cfg.iconBg}`}>
@@ -109,7 +109,7 @@ export default function ModelDivergencePanel({ divergence }: Props) {
                     </div>
                   )}
                   {/* Method name */}
-                  <span className="text-sm font-bold text-slate-700 shrink-0 w-36">{e.methodName}</span>
+                  <span className="text-sm font-bold text-slate-700 shrink-0 w-auto sm:w-36">{e.methodName}</span>
                   {/* Confidence badge */}
                   <span className={`text-[10px] font-bold px-3 py-1 rounded-full border shrink-0 ${conf.bg} ${conf.text}`}>
                     {conf.label}

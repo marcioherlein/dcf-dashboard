@@ -32,15 +32,15 @@ export default function ETFTrackerPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFB]">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-4 sm:px-8 py-8">
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-8 py-4 sm:py-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shrink-0">
               <PieChart size={16} className="text-white" />
             </div>
             <h1 className="text-xl font-bold text-slate-900">ETF Tracker</h1>
           </div>
-          <p className="text-sm text-slate-500 mb-6 ml-11">
+          <p className="text-[14px] text-slate-500 mb-5 ml-11">
             Track ETFs with a value-oriented lens — basket P/E, P/B, expense ratios, and a Value Score.
           </p>
           <ETFSearchBar />
@@ -48,7 +48,7 @@ export default function ETFTrackerPage() {
       </div>
 
       {/* Watchlist */}
-      <div className="px-4 sm:px-8 py-8 max-w-7xl mx-auto">
+      <div className="px-4 sm:px-8 py-6 sm:py-8 max-w-7xl mx-auto">
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -58,7 +58,7 @@ export default function ETFTrackerPage() {
         ) : watchlist.length > 0 ? (
           <>
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-slate-500">
+              <p className="text-[14px] text-slate-500">
                 <span className="font-semibold text-slate-700">{watchlist.length}</span> tracked ETF{watchlist.length !== 1 ? 's' : ''}
               </p>
             </div>
@@ -69,12 +69,12 @@ export default function ETFTrackerPage() {
             </div>
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
               <PieChart size={24} className="text-slate-400" />
             </div>
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">No ETFs tracked yet</h3>
-            <p className="text-xs text-slate-400 max-w-xs">
+            <h3 className="text-[14px] font-semibold text-slate-700 mb-1">No ETFs tracked yet</h3>
+            <p className="text-[13px] text-slate-400 max-w-xs">
               Search for an ETF above to view its value metrics and add it to your watchlist.
             </p>
           </div>

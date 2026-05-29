@@ -44,7 +44,7 @@ function ScenarioCol({
   const upside = currentPrice > 0 ? (scenario.fairValue - currentPrice) / currentPrice : null
 
   return (
-    <div className={`flex flex-col gap-3 px-4 py-4 rounded-xl border ${
+    <div className={`flex flex-col gap-3 px-4 py-4 rounded-xl border min-w-[200px] sm:min-w-0 snap-start flex-shrink-0 sm:flex-shrink ${
       isFeatured
         ? 'border-blue-200 bg-blue-50/50'
         : 'border-slate-200 bg-white'
@@ -137,7 +137,7 @@ export default function ScenarioComparisonCard({ scenarios, currentPrice, curren
       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">
         Bull / Base / Bear Scenarios
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-1 px-1 sm:grid sm:grid-cols-3 sm:overflow-visible sm:snap-none sm:pb-0 sm:mx-0 sm:px-0">
         <ScenarioCol label="Bear" scenario={scenarios.bear} currentPrice={currentPrice} currency={currency} />
         <ScenarioCol label="Base" scenario={scenarios.base} currentPrice={currentPrice} currency={currency} isFeatured />
         <ScenarioCol label="Bull" scenario={scenarios.bull} currentPrice={currentPrice} currency={currency} />

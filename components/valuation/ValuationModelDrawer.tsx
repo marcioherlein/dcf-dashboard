@@ -284,11 +284,11 @@ export default function ValuationModelDrawer({
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 z-50 flex justify-end"
+      className="fixed inset-0 bg-black/60 z-50 flex justify-end items-end sm:items-stretch"
       onClick={onClose}
     >
       <div
-        className="bg-[#111111] w-full max-w-lg h-full overflow-y-auto shadow-2xl border-l border-[#222]"
+        className="bg-[#111111] w-full sm:max-w-lg h-[90vh] sm:h-full overflow-y-auto shadow-2xl border-t sm:border-t-0 sm:border-l border-[#222] rounded-t-2xl sm:rounded-none pb-safe"
         onClick={e => e.stopPropagation()}
       >
         {/* Sticky header */}
@@ -311,7 +311,7 @@ export default function ValuationModelDrawer({
           </div>
         </div>
 
-        <div className="px-5 py-4 space-y-5 text-[13px]">
+        <div className="px-5 py-4 space-y-5 text-[13px] pb-8">
 
           {/* Currency note */}
           {config.currency !== 'USD' && (

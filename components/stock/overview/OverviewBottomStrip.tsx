@@ -72,20 +72,20 @@ export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, up
   const supportBullets = buildSupportBullets(drivers ?? [])
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
 
       {/* ── Column 1: What supports ── */}
-      <div className="bg-white border border-[#E6ECF5] rounded-[18px] p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+      <div className="bg-white border border-[#E6ECF5] rounded-[18px] p-4 sm:p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-6 h-6 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
-            <span className="text-emerald-500 text-[11px] leading-none">✓</span>
+          <div className="w-7 h-7 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
+            <span className="text-emerald-500 text-[12px] leading-none">✓</span>
           </div>
           <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">What Supports the Valuation?</p>
         </div>
         {supportBullets.length > 0 ? (
           <ul className="space-y-2.5">
             {supportBullets.map((d, i) => (
-              <li key={i} className="flex items-start gap-2">
+              <li key={i} className="flex items-start gap-2 py-0.5">
                 <span className="text-emerald-500 mt-0.5 shrink-0 text-[13px]">✓</span>
                 <span className="text-[13px] text-slate-600 leading-relaxed">{d}</span>
               </li>
@@ -97,18 +97,18 @@ export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, up
       </div>
 
       {/* ── Column 2: What could go wrong ── */}
-      <div className="bg-white border border-[#E6ECF5] rounded-[18px] p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+      <div className="bg-white border border-[#E6ECF5] rounded-[18px] p-4 sm:p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-6 h-6 rounded-full bg-red-50 flex items-center justify-center shrink-0">
-            <span className="text-red-500 text-[11px] leading-none">!</span>
+          <div className="w-7 h-7 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+            <span className="text-red-500 text-[12px] leading-none">!</span>
           </div>
           <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">What Could Go Wrong?</p>
         </div>
         {riskBullets.length > 0 ? (
           <ul className="space-y-2.5">
             {riskBullets.map((b, i) => (
-              <li key={i} className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-[5px] shrink-0" />
+              <li key={i} className="flex items-start gap-2 py-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-[7px] shrink-0" />
                 <span className="text-[13px] text-slate-600 leading-relaxed">{b}</span>
               </li>
             ))}
@@ -118,7 +118,7 @@ export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, up
         )}
         <button
           onClick={onViewRisks}
-          className="mt-3.5 text-[13px] font-medium text-blue-600 hover:text-blue-700 transition-colors"
+          className="mt-3.5 min-h-[44px] flex items-center text-[13px] font-medium text-blue-600 hover:text-blue-700 transition-colors"
         >
           View full risk analysis →
         </button>
@@ -126,12 +126,12 @@ export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, up
 
       {/* ── Column 3: Next step ── */}
       <div className={cn(
-        'bg-white border border-[#E6ECF5] rounded-[18px] p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]',
+        'bg-white border border-[#E6ECF5] rounded-[18px] p-4 sm:p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]',
         'flex flex-col'
       )}>
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-            <span className="text-blue-500 text-[11px] leading-none">→</span>
+          <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+            <span className="text-blue-500 text-[12px] leading-none">→</span>
           </div>
           <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Next Step</p>
         </div>
@@ -142,7 +142,7 @@ export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, up
           <button
             onClick={onViewValuation}
             className={cn(
-              'w-full rounded-[12px] py-2.5 text-[13px] font-semibold text-white transition-all',
+              'w-full rounded-[12px] py-3 min-h-[44px] text-[14px] font-semibold text-white transition-all',
               'bg-blue-600 hover:bg-blue-700 active:scale-95 shadow-sm'
             )}
           >
@@ -150,14 +150,14 @@ export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, up
           </button>
           <button
             onClick={onViewValuation}
-            className="w-full rounded-[12px] py-2.5 text-[13px] font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 transition-colors"
+            className="w-full rounded-[12px] py-3 min-h-[44px] text-[14px] font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 transition-colors"
           >
             Review assumptions
           </button>
           {onSave && (
             <button
               onClick={onSave}
-              className="w-full rounded-[12px] py-2.5 text-[13px] font-semibold text-slate-600 border border-[#E6ECF5] hover:bg-slate-50 transition-colors"
+              className="w-full rounded-[12px] py-3 min-h-[44px] text-[14px] font-semibold text-slate-600 border border-[#E6ECF5] hover:bg-slate-50 transition-colors"
             >
               Add to watchlist
             </button>

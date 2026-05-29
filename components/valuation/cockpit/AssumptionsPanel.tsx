@@ -265,8 +265,8 @@ function AssumptionCard({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
-      <div className="flex gap-4">
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-2 sm:p-4 overflow-hidden">
+      <div className="flex gap-2 sm:gap-4">
 
         {/* Left: controls */}
         <div className="flex-1 flex flex-col gap-3 min-w-0">
@@ -291,7 +291,7 @@ function AssumptionCard({
               aria-label={`Decrease ${field.label}`}
             >−</button>
             <div className="flex-1 text-center">
-              <div className="text-[28px] font-black tabular-nums leading-none tracking-tight text-slate-900">
+              <div className="text-[20px] sm:text-[28px] font-black tabular-nums leading-none tracking-tight text-slate-900">
                 {fmtVal(value, field.unit)}
               </div>
               {isDirty && (
@@ -351,8 +351,8 @@ function AssumptionCard({
         {/* Divider */}
         <div className="w-px bg-slate-100 self-stretch shrink-0" />
 
-        {/* Right: chart */}
-        <div className="flex flex-col gap-1 shrink-0" style={{ width: 'clamp(120px, 32%, 190px)' }}>
+        {/* Right: chart — hidden on very small screens to prevent overflow */}
+        <div className="hidden xs:flex flex-col gap-1 shrink-0" style={{ width: 'clamp(100px, 28%, 190px)' }}>
           <span className="text-[9px] font-semibold uppercase tracking-wider text-slate-400">
             {hasSeries ? '5Y history' : 'Range'} ({field.unit})
           </span>
@@ -510,7 +510,7 @@ export default function AssumptionsPanel({
     <div className="space-y-4">
 
       {/* Panel header */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <p className="text-[18px] font-bold text-slate-900">Assumptions</p>
           <p className="text-[12px] text-slate-400 mt-0.5">Adjust key drivers and see how fair value responds</p>
@@ -559,8 +559,8 @@ export default function AssumptionsPanel({
         </div>
       </div>
 
-      {/* 2-column card grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* 2-column card grid — 2 cols on all screen sizes, reduced padding on mobile */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-4">
         {FIELDS.map(f => (
           <AssumptionCard
             key={f.key}

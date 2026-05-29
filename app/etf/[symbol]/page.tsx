@@ -95,7 +95,7 @@ export default function ETFDetailPage() {
     return (
       <div className="min-h-screen bg-[#F8FAFB] px-4 sm:px-8 py-8">
         <div className="max-w-6xl mx-auto">
-          <Link href="/etf" className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-6">
+          <Link href="/etf" className="inline-flex items-center gap-1.5 text-[14px] text-slate-500 hover:text-slate-700 mb-6 min-h-[44px]">
             <ArrowLeft size={14} /> ETF Tracker
           </Link>
           <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
@@ -108,8 +108,8 @@ export default function ETFDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFB]">
-      <div className="px-4 sm:px-8 py-8 max-w-6xl mx-auto space-y-5">
-        <Link href="/etf" className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700">
+      <div className="px-4 sm:px-8 py-6 sm:py-8 max-w-6xl mx-auto space-y-5">
+        <Link href="/etf" className="inline-flex items-center gap-1.5 text-[14px] text-slate-500 hover:text-slate-700 min-h-[44px]">
           <ArrowLeft size={14} /> ETF Tracker
         </Link>
 
@@ -137,7 +137,9 @@ export default function ETFDetailPage() {
         <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
           <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-3">Price History</p>
           <p className="text-[11px] text-slate-400 mb-3">Tip: use the comparison input in the chart to overlay SPY, QQQ, or any ticker.</p>
-          <PriceChart ticker={symbol} />
+          <div className="min-h-[200px] w-full">
+            <PriceChart ticker={symbol} />
+          </div>
         </div>
       </div>
     </div>

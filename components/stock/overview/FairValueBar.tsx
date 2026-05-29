@@ -59,8 +59,8 @@ export default function FairValueBar({ price, fairValue, currency, bearCase, bul
           <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-0.5">
             Price vs Fair Value
           </p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-[32px] font-extrabold tabular-nums text-slate-900 leading-none">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span className="text-[28px] sm:text-[32px] font-extrabold tabular-nums text-slate-900 leading-none">
               {ratio.toFixed(2)}×
             </span>
             <span className="text-[13px] font-semibold text-slate-400">Price / Intrinsic</span>
@@ -70,7 +70,7 @@ export default function FairValueBar({ price, fairValue, currency, bearCase, bul
           <span className={cn('text-[11px] font-bold px-2.5 py-1 rounded-full border block mb-1', chipClass)}>
             {ratioLabel(ratio)}
           </span>
-          <span className={cn('text-[12px] font-semibold tabular-nums', isAbove ? 'text-red-600' : 'text-emerald-600')}>
+          <span className={cn('text-[20px] font-black tabular-nums block', isAbove ? 'text-red-600' : 'text-emerald-600')}>
             {isAbove ? '+' : ''}{diff.toFixed(1)}%
           </span>
         </div>
@@ -109,18 +109,18 @@ export default function FairValueBar({ price, fairValue, currency, bearCase, bul
 
       {/* ── Axis labels ── */}
       <div className="flex justify-between mt-1.5 mb-3">
-        <span className="text-[10px] text-slate-400">0×</span>
-        <span className="text-[10px] text-slate-400 font-medium" style={{ marginLeft: `${fvPct - 4}%` }}>1× FV</span>
-        <span className="text-[10px] text-slate-400">2.5×</span>
+        <span className="text-[11px] text-slate-400">0×</span>
+        <span className="text-[11px] text-blue-500 font-medium">1× FV</span>
+        <span className="text-[11px] text-slate-400">2.5×</span>
       </div>
 
       {/* ── Zone legend ── */}
-      <div className="flex items-center gap-3 flex-wrap mb-3">
+      <div className="flex items-center gap-2 flex-wrap mb-3">
         {ZONES.map(z => (
           <div key={z.label} className="flex items-center gap-1">
             <span className={cn('w-2 h-2 rounded-full shrink-0', z.color)} />
             <span className={cn(
-              'text-[10px]',
+              'text-[11px]',
               zone.label === z.label ? 'font-bold text-slate-700' : 'text-slate-400'
             )}>{z.label}</span>
           </div>
@@ -128,25 +128,25 @@ export default function FairValueBar({ price, fairValue, currency, bearCase, bul
       </div>
 
       {/* ── Price / FV numbers ── */}
-      <div className="flex items-end gap-6 border-t border-slate-100 pt-3">
+      <div className="flex items-end gap-4 flex-wrap border-t border-slate-100 pt-3">
         <div>
           <p className="text-[15px] font-bold tabular-nums text-slate-900 leading-none">{fmtPrice(price, currency)}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">Current Price</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">Current Price</p>
         </div>
         <div>
           <p className="text-[15px] font-bold tabular-nums text-slate-900 leading-none">{fmtPrice(fairValue, currency)}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">Fair Value (Base)</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">Fair Value (Base)</p>
         </div>
         {bearCase != null && (
           <div>
             <p className="text-[13px] font-semibold tabular-nums text-red-500 leading-none">{fmtPrice(bearCase, currency)}</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">Bear</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">Bear</p>
           </div>
         )}
         {bullCase != null && (
           <div>
             <p className="text-[13px] font-semibold tabular-nums text-emerald-600 leading-none">{fmtPrice(bullCase, currency)}</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">Bull</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">Bull</p>
           </div>
         )}
       </div>

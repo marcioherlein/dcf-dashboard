@@ -90,7 +90,7 @@ function zoneLabel(ratio: number): string {
 
 function MetricBox({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('bg-white border border-[#E6ECF5] rounded-[18px] p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)] flex flex-col', className)}>
+    <div className={cn('bg-white border border-[#E6ECF5] rounded-[18px] p-4 sm:p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)] flex flex-col', className)}>
       {children}
     </div>
   )
@@ -98,7 +98,7 @@ function MetricBox({ children, className }: { children: React.ReactNode; classNa
 
 function BoxLabel({ children, tooltip }: { children: React.ReactNode; tooltip?: string }) {
   return (
-    <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-0.5">
+    <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-0.5">
       {children}
       {tooltip && <InfoTooltip content={tooltip} />}
     </p>
@@ -133,7 +133,7 @@ export default function StockSummaryCard({
     : 'text-emerald-600 bg-emerald-50 border-emerald-200'
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
 
       {/* ── Card 1: Current Price ── */}
       <MetricBox>
@@ -146,7 +146,7 @@ export default function StockSummaryCard({
         </p>
         <p className="text-[10px] text-slate-400 mb-3">today</p>
 
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">52-Week Range</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">52-Week Range</p>
         <div className="relative h-1.5 rounded-full overflow-hidden bg-slate-100">
           <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-amber-400 to-red-500" />
           <div
@@ -155,10 +155,10 @@ export default function StockSummaryCard({
           />
         </div>
         <div className="flex justify-between mt-1 mb-3">
-          <span className="text-[10px] text-slate-400 tabular-nums">{fmtPrice(low52, currency)}</span>
-          <span className="text-[10px] text-slate-400 tabular-nums">{fmtPrice(high52, currency)}</span>
+          <span className="text-[11px] text-slate-400 tabular-nums">{fmtPrice(low52, currency)}</span>
+          <span className="text-[11px] text-slate-400 tabular-nums">{fmtPrice(high52, currency)}</span>
         </div>
-        <button onClick={onViewDetails} className="mt-auto text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+        <button onClick={onViewDetails} className="mt-auto min-h-[44px] flex items-end pb-0.5 text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
           Key Snapshot →
         </button>
       </MetricBox>
@@ -184,7 +184,7 @@ export default function StockSummaryCard({
               const isInRange = fairValue >= lo * 0.9 && fairValue <= hi * 1.1
               return isInRange ? (
                 <>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">DCF Scenario Range</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">DCF Scenario Range</p>
                   <div className="relative h-1.5 rounded-full bg-slate-100 overflow-hidden mb-1">
                     {(() => {
                       const span = hi - lo
@@ -196,18 +196,18 @@ export default function StockSummaryCard({
                     })()}
                   </div>
                   <div className="flex justify-between mb-3">
-                    <span className="text-[10px] text-red-400 tabular-nums">{fmtPrice(scenarios.bear.fairValue, currency)}</span>
-                    <span className="text-[10px] text-slate-400">bear → bull</span>
-                    <span className="text-[10px] text-emerald-500 tabular-nums">{fmtPrice(scenarios.bull.fairValue, currency)}</span>
+                    <span className="text-[11px] text-red-400 tabular-nums">{fmtPrice(scenarios.bear.fairValue, currency)}</span>
+                    <span className="text-[11px] text-slate-400">bear → bull</span>
+                    <span className="text-[11px] text-emerald-500 tabular-nums">{fmtPrice(scenarios.bull.fairValue, currency)}</span>
                   </div>
                 </>
               ) : (
-                <p className="text-[10px] text-slate-400 mb-3 leading-snug">
+                <p className="text-[11px] text-slate-400 mb-3 leading-snug">
                   Scenario range available in Valuation tab.
                 </p>
               )
             })()}
-            <button onClick={onViewDetails} className="mt-auto text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+            <button onClick={onViewDetails} className="mt-auto min-h-[44px] flex items-end pb-0.5 text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
               View valuation →
             </button>
           </>
@@ -251,7 +251,7 @@ export default function StockSummaryCard({
             </div>
           </div>
         )}
-        <button onClick={onViewDetails} className="mt-auto text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+        <button onClick={onViewDetails} className="mt-auto min-h-[44px] flex items-end pb-0.5 text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
           See full analysis →
         </button>
       </MetricBox>
@@ -294,7 +294,7 @@ export default function StockSummaryCard({
                   : `At ${ratio.toFixed(2)}×, price is ${Math.abs(upsidePct * 100).toFixed(0)}% below our estimate.`}
               </p>
             )}
-            <button onClick={onViewDetails} className="mt-auto text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+            <button onClick={onViewDetails} className="mt-auto min-h-[44px] flex items-end pb-0.5 text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
               Detailed view →
             </button>
           </>

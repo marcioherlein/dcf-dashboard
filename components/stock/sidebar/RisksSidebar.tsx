@@ -136,13 +136,13 @@ export default function RisksSidebar({ ratings, scores, ownership }: Props) {
       {/* Ratings by Category */}
       <Card>
         <SectionLabel>Category Grades</SectionLabel>
-        <div className="space-y-1.5">
+        <div className="space-y-0 divide-y divide-slate-100">
           {ratingCategories.map(({ label, key }) => {
             const cat = ratings[key]
             return (
-              <div key={key} className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-400">{label}</span>
-                <span className={cn('text-[11px] font-bold px-1.5 py-0 rounded border leading-5', gradeColor(cat.grade))}>
+              <div key={key} className="flex items-center justify-between py-2.5 min-h-[44px]">
+                <span className="text-[12px] text-slate-500">{label}</span>
+                <span className={cn('text-[12px] font-bold px-2 py-0.5 rounded border leading-5', gradeColor(cat.grade))}>
                   {cat.grade}
                 </span>
               </div>
@@ -155,12 +155,12 @@ export default function RisksSidebar({ ratings, scores, ownership }: Props) {
       {ownership && (ownership.shortPct != null || ownership.shortRatio != null) && (
         <Card>
           <SectionLabel>Short Interest</SectionLabel>
-          <div className="space-y-1.5">
+          <div className="space-y-0 divide-y divide-slate-100">
             {ownership.shortPct != null && (
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-400">Short Float</span>
+              <div className="flex items-center justify-between py-2.5 min-h-[44px]">
+                <span className="text-[12px] text-slate-400">Short Float</span>
                 <span className={cn(
-                  'text-[11px] font-semibold tabular-nums',
+                  'text-[12px] font-semibold tabular-nums',
                   ownership.shortPct > 0.1 ? 'text-amber-600' : 'text-slate-700'
                 )}>
                   {(ownership.shortPct * 100).toFixed(1)}%
@@ -168,17 +168,17 @@ export default function RisksSidebar({ ratings, scores, ownership }: Props) {
               </div>
             )}
             {ownership.shortRatio != null && (
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-400">Short Ratio (days)</span>
-                <span className="text-[11px] font-semibold text-slate-700 tabular-nums">
+              <div className="flex items-center justify-between py-2.5 min-h-[44px]">
+                <span className="text-[12px] text-slate-400">Short Ratio (days)</span>
+                <span className="text-[12px] font-semibold text-slate-700 tabular-nums">
                   {ownership.shortRatio.toFixed(1)}
                 </span>
               </div>
             )}
             {ownership.insiderPct != null && (
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-400">Insider Ownership</span>
-                <span className="text-[11px] font-semibold text-slate-700 tabular-nums">
+              <div className="flex items-center justify-between py-2.5 min-h-[44px]">
+                <span className="text-[12px] text-slate-400">Insider Ownership</span>
+                <span className="text-[12px] font-semibold text-slate-700 tabular-nums">
                   {(ownership.insiderPct * 100).toFixed(1)}%
                 </span>
               </div>

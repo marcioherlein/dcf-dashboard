@@ -50,9 +50,8 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
       : null
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-5">
-      {/* Section header */}
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-3 sm:px-5 py-4 sm:py-5 w-full min-h-[200px]">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Fair Value by Method</p>
         <div className="flex items-center gap-4 text-[10px] text-slate-400">
           <span className="flex items-center gap-1.5">

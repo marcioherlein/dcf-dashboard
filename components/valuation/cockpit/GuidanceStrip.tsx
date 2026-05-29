@@ -10,13 +10,13 @@ const STEPS = [
 export default function GuidanceStrip() {
   return (
     <details className="group">
-      <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-3 hover:bg-slate-50 transition-colors select-none">
+      <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-slate-100 shadow-sm px-4 py-3 hover:bg-slate-50 transition-colors select-none flex-wrap">
         <span className="text-slate-400 text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
         <span className="text-xs font-bold uppercase tracking-wider text-slate-500">How to read this valuation</span>
         <span className="ml-auto text-xs text-slate-400 group-open:hidden">4-step guide ↓</span>
       </summary>
       <div className="mt-2 bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 flex-wrap">
           {STEPS.map(s => (
             <div key={s.num} className="flex gap-3">
               <div className={`${s.color} text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5`}>

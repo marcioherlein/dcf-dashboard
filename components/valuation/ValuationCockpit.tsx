@@ -297,7 +297,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             onClick={scrollToFullDCF}
-            className="flex flex-col gap-1 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 hover:bg-blue-100 transition-colors text-left"
+            className="flex flex-col gap-1 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 min-h-[60px] hover:bg-blue-100 transition-colors text-left"
           >
             <span className="text-sm font-bold text-blue-700">Full DCF table →</span>
             <span className="text-xs text-slate-500">Edit WACC, year-by-year projections, and 4-model blend</span>
@@ -305,7 +305,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
           {onNavigateToFinancials && (
             <button
               onClick={() => onNavigateToFinancials('revenue', 'income')}
-              className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 hover:bg-slate-100 transition-colors text-left"
+              className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 min-h-[60px] hover:bg-slate-100 transition-colors text-left"
             >
               <span className="text-sm font-bold text-slate-700">Check the financials →</span>
               <span className="text-xs text-slate-500">Revenue, margins, cash flow and debt history</span>
@@ -314,7 +314,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
           {onNavigateToRisks && (
             <button
               onClick={onNavigateToRisks}
-              className="flex flex-col gap-1 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 hover:bg-amber-100 transition-colors text-left"
+              className="flex flex-col gap-1 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 min-h-[60px] hover:bg-amber-100 transition-colors text-left"
             >
               <span className="text-sm font-bold text-amber-700">Review risks →</span>
               <span className="text-xs text-slate-500">Key risk factors, signals, and sensitivity analysis</span>
@@ -322,7 +322,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
           )}
           <button
             onClick={() => setSaveOpen(true)}
-            className="flex flex-col gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 hover:bg-emerald-100 transition-colors text-left"
+            className="flex flex-col gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 min-h-[60px] hover:bg-emerald-100 transition-colors text-left"
           >
             <span className="text-sm font-bold text-emerald-700">Save to watchlist →</span>
             <span className="text-xs text-slate-500">Track this stock and get updates on value and price changes</span>

@@ -100,8 +100,8 @@ export default function ValuationMethodCards({
         </span>
       </div>
 
-      {/* Cards grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
+      {/* Cards grid — horizontal scroll on mobile, grid on sm+ */}
+      <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-1 px-1 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible sm:snap-none sm:pb-0 sm:mx-0 sm:px-0 items-start">
         {methods.map(m => {
           const cfg      = METHOD_CFG[m.id]
           const hasValue = m.fairValue != null && m.fairValue > 0
@@ -116,7 +116,7 @@ export default function ValuationMethodCards({
           return (
             <div
               key={m.id}
-              className={`rounded-xl border flex flex-col p-4 gap-3 ${
+              className={`rounded-xl border flex flex-col p-4 gap-3 min-w-[200px] sm:min-w-0 snap-start flex-shrink-0 sm:flex-shrink ${
                 hasValue ? 'border-slate-200 bg-white' : 'border-slate-100 bg-slate-50/50'
               }`}
             >
