@@ -204,7 +204,7 @@ export default function TradingPage() {
           <div className="text-[11px] text-slate-400 uppercase tracking-wider mb-3 font-medium">
             Current Holdings · Cocos Capital
           </div>
-          <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
             {(['NU', 'PAGS', 'STNE'] as const).map((t) => (
               <div key={t}>
                 <div className="flex items-center gap-2 mb-1">

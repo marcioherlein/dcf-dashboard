@@ -92,12 +92,14 @@ export default function SummaryPriceChartCard({
       </div>
 
       {/* Footer metrics */}
-      <div className="grid grid-cols-5 gap-0 border-t border-[#E6ECF5] divide-x divide-[#E6ECF5] mt-2">
-        <FooterMetric label="52W Low"       value={fmtPrice(low52, currency)} />
-        <FooterMetric label="52W High"      value={fmtPrice(high52, currency)} />
-        <FooterMetric label="Market Cap"    value={fmtLargeCurrency(marketCap, currency)} />
-        <FooterMetric label="Beta (1Y)"     value={beta != null ? beta.toFixed(2) : '—'} />
-        <FooterMetric label="Avg. Vol (3M)" value="—" />
+      <div className="overflow-x-auto scrollbar-hide border-t border-[#E6ECF5] mt-2">
+        <div className="grid grid-cols-5 gap-0 divide-x divide-[#E6ECF5] min-w-[380px]">
+          <FooterMetric label="52W Low"       value={fmtPrice(low52, currency)} />
+          <FooterMetric label="52W High"      value={fmtPrice(high52, currency)} />
+          <FooterMetric label="Market Cap"    value={fmtLargeCurrency(marketCap, currency)} />
+          <FooterMetric label="Beta (1Y)"     value={beta != null ? beta.toFixed(2) : '—'} />
+          <FooterMetric label="Avg. Vol (3M)" value="—" />
+        </div>
       </div>
 
     </div>
