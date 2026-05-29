@@ -174,7 +174,7 @@ function StockPageBody() {
   const [tabDirection, setTabDirection] = useState(0)
   const reducedMotion = useReducedMotion()
   const [financialsHighlight, setFinancialsHighlight] = useState<{ rowKey: string; statement: 'income' | 'balance' | 'cashflow' } | null>(null)
-  const [financialsSubTab, setFinancialsSubTab] = useState<'statements' | 'growth' | 'profitability' | 'solvency' | 'analysts' | 'snapshot' | 'ownership' | null>(null)
+  const [financialsSubTab, _setFinancialsSubTab] = useState<'statements' | 'growth' | 'profitability' | 'solvency' | 'analysts' | 'snapshot' | 'ownership' | null>(null)
   const [userModelFairValue, setUserModelFairValue] = useState<number | null>(null)
 
   // After Google OAuth redirect, restore the user's pre-login state (tab, etc.)
