@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
+import { motion, AnimatePresence, useReducedMotion, useInView } from 'motion/react'
 import {
   Search, Bookmark, ChevronRight,
   Clock, Info, X, BarChart3,
@@ -12,6 +12,7 @@ import { fmtPrice, fmtPct, upsideZone } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import { slideDown, fadeUp } from '@/lib/motion'
 import type { FeaturedQuote } from '@/app/api/analyze/quotes/route'
+import ConceptBanner from '@/components/onboarding/ConceptBanner'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -152,13 +153,13 @@ function SearchHero() {
   }
 
   return (
-    <div className="rounded-2xl bg-white border border-slate-200 shadow-sm px-6 py-5 sm:px-8 sm:py-6">
+    <div className="glass-card-light rounded-2xl px-6 py-5 sm:px-8 sm:py-6">
       {/* Headline + subtitle as a tight unit */}
       <div className="mb-4">
         <h1 className="text-[22px] font-black sm:text-[26px] text-slate-900 leading-snug tracking-tight">
           What do you want to analyze today?
         </h1>
-        <p className="mt-1 text-[14px] text-slate-500 leading-relaxed">
+        <p className="mt-1 text-[14px] text-slate-600 leading-relaxed">
           Search any company to see intrinsic value, market-implied growth, business quality, and valuation risk.
         </p>
       </div>
@@ -251,7 +252,7 @@ function SearchHero() {
           <Link
             key={t}
             href={`/stock/${t}`}
-            className="text-[12px] font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 rounded-full px-3 py-1 transition-colors whitespace-nowrap shrink-0 min-h-[32px] flex items-center"
+            className="text-[12px] font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 hover:scale-105 active:scale-95 border border-blue-200 rounded-full px-3 py-1 transition-all whitespace-nowrap shrink-0 min-h-[32px] flex items-center"
           >
             {t}
           </Link>
@@ -301,11 +302,12 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
       variants={reduced ? {} : fadeUp}
       custom={index}
       transition={{ delay: index * 0.06 }}
+      whileTap={reduced ? {} : { scale: 0.985 }}
       className="h-full"
     >
       <Link
         href={`/stock/${q.ticker}`}
-        className="group flex flex-col h-full rounded-xl bg-white border border-slate-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all duration-150 overflow-hidden"
+        className="group flex flex-col h-full rounded-xl glass-card-light glass-interactive overflow-hidden"
       >
         {/* Row 1: ticker + ETF badge | status badge */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2 gap-2">
@@ -413,6 +415,9 @@ function PopularAnalysesSection() {
       .catch(() => {})
   }, [])
 
+  const featured = quotes.slice(0, 3)
+  const compact  = quotes.slice(3)
+
   return (
     <section>
       <div className="flex items-center justify-between gap-3 mb-4">
@@ -434,17 +439,73 @@ function PopularAnalysesSection() {
         ))}
       </div>
 
-      {/* Desktop: equal-height grid */}
-      <motion.div
-        className="hidden sm:grid grid-cols-2 lg:grid-cols-3 gap-4 items-stretch"
-        variants={reduced ? {} : { visible: { transition: { staggerChildren: 0.06 } } }}
-        initial="hidden"
-        animate="visible"
-      >
-        {quotes.map((q, i) => (
-          <StockAnalysisCard key={q.ticker} q={q} index={i} />
-        ))}
-      </motion.div>
+      {/* Desktop: 3 featured cards + compact secondary list */}
+      <div className="hidden sm:block space-y-4">
+        <motion.div
+          className="grid grid-cols-3 gap-4 items-stretch"
+          variants={reduced ? {} : { visible: { transition: { staggerChildren: 0.06 } } }}
+          initial="hidden"
+          animate="visible"
+        >
+          {featured.map((q, i) => (
+            <StockAnalysisCard key={q.ticker} q={q} index={i} />
+          ))}
+        </motion.div>
+
+        {compact.length > 0 && (
+          <div className="glass-card-light rounded-xl overflow-hidden">
+            <div className="px-4 py-2.5 border-b border-slate-100/60">
+              <p className="text-[11px] font-semibold text-slate-500">More analyses</p>
+            </div>
+            <motion.div
+              className="divide-y divide-slate-50"
+              variants={reduced ? {} : { visible: { transition: { staggerChildren: 0.04 } } }}
+              initial="hidden"
+              animate="visible"
+            >
+              {compact.map((q, _i) => {
+                const up = (q.changePct ?? 0) >= 0
+                const zone = q.upsidePct != null ? upsideZone(q.upsidePct) : null
+                const badge = statusBadge(zone)
+                return (
+                  <motion.div
+                    key={q.ticker}
+                    variants={reduced ? {} : {
+                      hidden: { opacity: 0, x: -6 },
+                      visible: { opacity: 1, x: 0, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } },
+                    }}
+                  >
+                  <Link
+                    href={`/stock/${q.ticker}`}
+                    className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-50 transition-colors min-h-[48px]"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5 font-mono shrink-0">
+                        {q.ticker}
+                      </span>
+                      <span className="text-[13px] text-slate-700 truncate">{q.name}</span>
+                    </div>
+                    <div className="flex items-center gap-4 shrink-0">
+                      <span className="text-[13px] font-semibold text-slate-900 tabular-nums">
+                        {q.price != null ? fmtPrice(q.price) : '—'}
+                      </span>
+                      <span className={cn('text-[12px] font-semibold tabular-nums w-14 text-right', up ? 'text-emerald-600' : 'text-red-600')}>
+                        {q.changePct != null ? fmtPct(q.changePct / 100) : '—'}
+                      </span>
+                      {badge && (
+                        <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap hidden lg:inline', badge.cls)}>
+                          {badge.label}
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                  </motion.div>
+                )
+              })}
+            </motion.div>
+          </div>
+        )}
+      </div>
     </section>
   )
 }
@@ -453,9 +514,12 @@ function PopularAnalysesSection() {
 
 function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
   const [showInfo, setShowInfo] = useState(false)
+  const reduced   = useReducedMotion()
+  const tableRef  = useRef<HTMLDivElement>(null)
+  const inView    = useInView(tableRef, { once: true, margin: '-60px' })
 
   return (
-    <section className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+    <section className="glass-card-light rounded-2xl overflow-hidden">
       {/* Card header */}
       <div className="flex items-center justify-between gap-3 px-5 pt-5 pb-4 border-b border-slate-100">
         <div>
@@ -479,8 +543,8 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide hidden sm:block">Interpretation</span>
           </div>
 
-          <div className="divide-y divide-slate-50">
-            {quotes.map((q) => (
+          <div ref={tableRef} className="divide-y divide-slate-50">
+            {quotes.map((q, rowIndex) => (
               <Link
                 key={q.ticker}
                 href={`/stock/${q.ticker}`}
@@ -495,8 +559,12 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
                 {/* Implied CAGR bar */}
                 <div className="flex items-center gap-2">
                   <div className="overflow-hidden" style={{ width: `${Math.min(100, Math.abs(q.impliedCagr) * BAR_SCALE)}px` }}>
-                    <div
+                    <motion.div
                       className={cn('h-2 rounded-full w-full', cagrBarColor(Math.abs(q.impliedCagr), 'implied'))}
+                      style={{ transformOrigin: 'left' }}
+                      initial={reduced ? {} : { scaleX: 0 }}
+                      animate={reduced ? {} : { scaleX: inView ? 1 : 0 }}
+                      transition={{ duration: 0.5, delay: rowIndex * 0.038, ease: [0.16, 1, 0.3, 1] }}
                     />
                   </div>
                   <span className="text-[12px] font-semibold text-slate-700 tabular-nums whitespace-nowrap">
@@ -507,8 +575,12 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
                 {/* Historical CAGR bar */}
                 <div className="flex items-center gap-2">
                   <div className="overflow-hidden" style={{ width: `${Math.min(100, Math.abs(q.historicalCagr3y) * BAR_SCALE)}px` }}>
-                    <div
+                    <motion.div
                       className="h-2 bg-blue-400 rounded-full w-full"
+                      style={{ transformOrigin: 'left' }}
+                      initial={reduced ? {} : { scaleX: 0 }}
+                      animate={reduced ? {} : { scaleX: inView ? 1 : 0 }}
+                      transition={{ duration: 0.5, delay: rowIndex * 0.038 + 0.08, ease: [0.16, 1, 0.3, 1] }}
                     />
                   </div>
                   <span className="text-[12px] font-semibold text-slate-700 tabular-nums whitespace-nowrap">
@@ -543,13 +615,22 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
           <Info size={12} />
           How is this calculated?
         </button>
-        {showInfo && (
-          <div className="absolute left-5 bottom-full mb-2 z-20 w-72 rounded-xl bg-slate-900 text-white text-[11px] leading-relaxed px-3.5 py-3 shadow-lg">
-            <p className="font-semibold mb-1">Reverse DCF method</p>
-            <p className="text-slate-300">Implied CAGR is the 5-year revenue growth rate that would justify the current stock price, computed via a reverse discounted cash flow model at the company&apos;s estimated WACC.</p>
-            <p className="text-slate-400 mt-1.5">Historical CAGR is from annual revenue filings. Model estimates only — not financial advice.</p>
-          </div>
-        )}
+        <AnimatePresence>
+          {showInfo && (
+            <motion.div
+              key="leaderboard-info"
+              initial={{ opacity: 0, y: 4, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 4, scale: 0.97 }}
+              transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute left-5 bottom-full mb-2 z-20 w-72 rounded-xl bg-slate-900 text-white text-[11px] leading-relaxed px-3.5 py-3 shadow-lg"
+            >
+              <p className="font-semibold mb-1">Reverse DCF method</p>
+              <p className="text-slate-300">Implied CAGR is the 5-year revenue growth rate that would justify the current stock price, computed via a reverse discounted cash flow model at the company&apos;s estimated WACC.</p>
+              <p className="text-slate-400 mt-1.5">Historical CAGR is from annual revenue filings. Model estimates only — not financial advice.</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <span className="text-slate-200 mx-1">·</span>
         <span className="text-[11px] text-slate-400">Click any row to open the full analysis</span>
       </div>
@@ -582,7 +663,7 @@ function QuickActions() {
   return (
     <section>
       <h2 className="text-[15px] font-bold text-slate-900 mb-3">More tools</h2>
-      <div className="rounded-xl bg-white border border-slate-200 shadow-sm divide-y divide-slate-100 overflow-hidden">
+      <div className="glass-card-light rounded-xl divide-y divide-slate-100/60 overflow-hidden">
         {actions.map((a) => {
           const Icon = a.icon
           return (
@@ -596,9 +677,9 @@ function QuickActions() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[14px] font-semibold text-slate-900">{a.title}</p>
-                <p className="text-[12px] text-slate-500 mt-0.5">{a.desc}</p>
+                <p className="text-[12px] text-slate-600 mt-0.5">{a.desc}</p>
               </div>
-              <ChevronRight size={16} className="shrink-0 text-slate-300 group-hover:text-slate-500 transition-colors" />
+              <ChevronRight size={16} className="shrink-0 text-slate-300 group-hover:text-slate-500 group-hover:translate-x-1 transition-all duration-150" />
             </button>
           )
         })}
@@ -652,11 +733,17 @@ function RecentlyViewed() {
         <>
           {/* Mobile: vertical list */}
           <div className="sm:hidden flex flex-col gap-2">
+            <AnimatePresence initial={false}>
             {recent.slice(0, 6).map((r) => {
               const up = r.changePct >= 0
               return (
-                <div
+                <motion.div
                   key={r.ticker}
+                  layout="position"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10, scale: 0.96 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
                   className="group flex items-center justify-between gap-3 rounded-xl bg-white border border-slate-200 shadow-sm px-4 py-3 min-h-[56px]"
                 >
                   <button
@@ -681,18 +768,25 @@ function RecentlyViewed() {
                   >
                     <X size={13} />
                   </button>
-                </div>
+                </motion.div>
               )
             })}
+            </AnimatePresence>
           </div>
 
           {/* Desktop: horizontal scroll */}
           <div className="hidden sm:flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+            <AnimatePresence initial={false}>
             {recent.slice(0, 8).map((r) => {
               const up = r.changePct >= 0
               return (
-                <div
+                <motion.div
                   key={r.ticker}
+                  layout="position"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.85 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
                   className="group relative flex-shrink-0 w-[160px] rounded-xl bg-white border border-slate-200 shadow-sm hover:border-blue-200 hover:shadow-md transition-all"
                 >
                   <button
@@ -713,9 +807,10 @@ function RecentlyViewed() {
                   >
                     <X size={12} />
                   </button>
-                </div>
+                </motion.div>
               )
             })}
+            </AnimatePresence>
           </div>
         </>
       )}
@@ -731,44 +826,18 @@ export default function AnalyzePage() {
       <div className="space-y-6">
 
         <motion.div
-          initial={{ opacity: 0, y: 14 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
         >
           <SearchHero />
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.28, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <QuickActions />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.28, delay: 0.10, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <PopularAnalysesSection />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.28, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <MarketPricingLeaderboard quotes={STATIC_QUOTES} />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.28, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <RecentlyViewed />
-        </motion.div>
+        <ConceptBanner />
+        <QuickActions />
+        <PopularAnalysesSection />
+        <MarketPricingLeaderboard quotes={STATIC_QUOTES} />
+        <RecentlyViewed />
 
       </div>
     </div>

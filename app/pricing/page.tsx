@@ -92,7 +92,7 @@ export default function PricingPage() {
             <Zap size={12} />
             Institutional-quality valuation tools for individual investors
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight" style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight" style={{ fontFamily: 'var(--font-display, Space Grotesk), system-ui, sans-serif' }}>
             Know if a stock is worth buying.<br />
             <span style={{ color: '#0F2A5E' }}>Understand exactly why.</span>
           </h1>
@@ -139,7 +139,7 @@ export default function PricingPage() {
             <div className="mb-6">
               <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Free</div>
               <div className="flex items-baseline gap-1">
-                <span className="text-5xl font-extrabold text-slate-900" style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>$0</span>
+                <span className="text-5xl font-extrabold text-slate-900" style={{ fontFamily: 'var(--font-display, Space Grotesk), system-ui, sans-serif' }}>$0</span>
                 <span className="text-slate-400 text-sm font-medium">/ month</span>
               </div>
               <p className="text-sm text-slate-500 mt-2">No credit card. No time limit. Just analysis.</p>
@@ -185,7 +185,7 @@ export default function PricingPage() {
               {annual ? (
                 <div>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-5xl font-extrabold text-white" style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>
+                    <span className="text-5xl font-extrabold text-white" style={{ fontFamily: 'var(--font-display, Space Grotesk), system-ui, sans-serif' }}>
                       ${annualMonthly.toFixed(2)}
                     </span>
                     <span className="text-blue-300 text-sm font-medium">/ month</span>
@@ -196,7 +196,7 @@ export default function PricingPage() {
                 </div>
               ) : (
                 <div className="flex items-baseline gap-1">
-                  <span className="text-5xl font-extrabold text-white" style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>
+                  <span className="text-5xl font-extrabold text-white" style={{ fontFamily: 'var(--font-display, Space Grotesk), system-ui, sans-serif' }}>
                     ${monthlyPrice}
                   </span>
                   <span className="text-blue-300 text-sm font-medium">/ month</span>
@@ -245,7 +245,7 @@ export default function PricingPage() {
 
         {/* Feature comparison table */}
         <div className="mb-16">
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 text-center mb-8" style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 text-center mb-8" style={{ fontFamily: 'var(--font-display, Space Grotesk), system-ui, sans-serif' }}>
             Full feature comparison
           </h2>
 
@@ -355,7 +355,7 @@ export default function PricingPage() {
 
         {/* FAQ */}
         <div className="mb-16">
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 text-center mb-8" style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 text-center mb-8" style={{ fontFamily: 'var(--font-display, Space Grotesk), system-ui, sans-serif' }}>
             Frequently asked questions
           </h2>
           <div className="space-y-4 max-w-2xl mx-auto">
@@ -370,7 +370,7 @@ export default function PricingPage() {
           className="rounded-2xl p-6 sm:p-10 text-center"
           style={{ background: '#0F2A5E' }}
         >
-          <h2 className="text-xl sm:text-2xl font-bold text-white mb-3" style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-display, Space Grotesk), system-ui, sans-serif' }}>
             Start analyzing. It&apos;s free.
           </h2>
           <p className="text-blue-300 mb-7 text-sm">

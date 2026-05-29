@@ -91,7 +91,7 @@ function MiniScore({ score }: { score: number | null }) {
       <path d={trackPath} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round"
         strokeDasharray={`${arc}`} strokeDashoffset={offset} />
       <text x={16} y={20} textAnchor="middle" fontSize={10} fontWeight="700"
-        fontFamily="'IBM Plex Mono', monospace" fill={color}>
+        fontFamily="'DM Mono', monospace" fill={color}>
         {score.toFixed(1)}
       </text>
     </svg>

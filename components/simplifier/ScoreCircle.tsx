@@ -86,7 +86,7 @@ export default function ScoreCircle({ score, size = 'md', label }: ScoreCirclePr
           textAnchor="middle"
           fontSize={fontSize}
           fontWeight="700"
-          fontFamily="'IBM Plex Mono', monospace"
+          fontFamily="'DM Mono', monospace"
           fill={score != null ? color : '#6B6A72'}
         >
           {displayScore}

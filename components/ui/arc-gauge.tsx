@@ -98,7 +98,7 @@ export default function ArcGauge({
         fill="#1E293B"
         fontSize={size * 0.22}
         fontWeight="700"
-        fontFamily="'IBM Plex Mono', monospace"
+        fontFamily="'DM Mono', monospace"
       >
         {displayValue ?? `${Math.round(clampedValue)}`}
       </text>

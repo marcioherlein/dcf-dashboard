@@ -165,7 +165,7 @@ function HealthScoreChart({ animate }: { animate: boolean }) {
       <div className="mt-6 rounded-xl bg-[#1a1a1a] border border-[#222] px-4 py-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center shrink-0">
-            <span className="text-lg font-extrabold text-white leading-none" style={{ fontFamily: 'Manrope, system-ui' }}>A</span>
+            <span className="text-lg font-extrabold text-white leading-none" style={{ fontFamily: 'var(--font-display, Space Grotesk), system-ui' }}>A</span>
           </div>
           <div>
             <p className="text-xs font-semibold text-white">NVDA · Overall Grade</p>

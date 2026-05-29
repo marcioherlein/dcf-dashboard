@@ -152,7 +152,7 @@ function StockCard({ card, index, visible }: { card: typeof CARDS[0]; index: num
               colors.bg, colors.text,
             )}
           >
-            <span className="text-base font-extrabold leading-none" style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>
+            <span className="text-base font-extrabold leading-none" style={{ fontFamily: 'var(--font-display, Space Grotesk), system-ui, sans-serif' }}>
               {card.grade}
             </span>
           </div>

@@ -88,7 +88,7 @@ export default function BarChart({
               textAnchor="end"
               fontSize="9"
               fill="#6B6A72"
-              fontFamily="'IBM Plex Mono', monospace"
+              fontFamily="'DM Mono', monospace"
             >
               {g.label}
             </text>
@@ -152,7 +152,7 @@ export default function BarChart({
                   textAnchor="middle"
                   fontSize="8"
                   fill={growthColor}
-                  fontFamily="'IBM Plex Mono', monospace"
+                  fontFamily="'DM Mono', monospace"
                   fontWeight="600"
                 >
                   {growthLabel}
@@ -179,7 +179,7 @@ export default function BarChart({
                   textAnchor="middle"
                   fontSize="7"
                   fill="#6B6A72"
-                  fontFamily="'IBM Plex Mono', monospace"
+                  fontFamily="'DM Mono', monospace"
                 >
                   {formatVal(v, unit)}
                 </text>

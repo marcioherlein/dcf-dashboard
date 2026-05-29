@@ -2,14 +2,13 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "./providers";
 import AppShell from "@/components/layout/AppShell";
-import { Inter, Space_Grotesk, DM_Mono, Manrope } from "next/font/google";
+import { Inter, Space_Grotesk, DM_Mono } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip"
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-display', weight: ['400', '500', '600', '700'] });
 const dmMono = DM_Mono({ subsets: ['latin'], variable: '--font-mono', weight: ['400', '500'] });
-const manrope = Manrope({ subsets: ['latin'], variable: '--font-headline', weight: ['400', '500', '600', '700', '800'] });
 
 export const metadata: Metadata = {
   title: "intrinsico — Know if a stock is worth buying",
@@ -28,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn("font-sans", inter.variable, spaceGrotesk.variable, dmMono.variable, manrope.variable)}>
+    <html lang="en" className={cn("font-sans", inter.variable, spaceGrotesk.variable, dmMono.variable)}>
       <head>
         <meta name="theme-color" content="#F1F5F9" />
       </head>
