@@ -170,11 +170,11 @@ export default function MarketsPage() {
             </p>
           </div>
           <div className="flex items-center gap-2 sm:pt-0.5 shrink-0">
-            <span className="text-[10px] text-slate-400 hidden md:block">
+            <span className="text-[11px] text-slate-400 hidden md:block">
               {etDate}, {etTime} ET
             </span>
             {lastFetch > 0 && (
-              <span className="text-[10px] text-slate-400 hidden lg:block">
+              <span className="text-[11px] text-slate-400 hidden lg:block">
                 · Updated {timeAgo(lastFetch)}
               </span>
             )}
@@ -384,7 +384,7 @@ export default function MarketsPage() {
 
         {/* ── Disclaimer ───────────────────────────────────────────────────── */}
         <div className="border-t border-slate-200 pt-4">
-          <p className="text-[10px] text-slate-400 leading-snug">
+          <p className="text-[11px] text-slate-500 leading-snug">
             Past performance is not indicative of future results. Data is provided for informational purposes only and does not constitute investment advice.
           </p>
         </div>

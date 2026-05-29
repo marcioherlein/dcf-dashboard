@@ -229,7 +229,7 @@ function SearchHero() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-[13px] font-bold text-slate-800 font-mono">{r.symbol}</span>
-                      {r.exchange && <span className="text-[10px] text-slate-400 uppercase">{r.exchange}</span>}
+                      {r.exchange && <span className="text-[11px] text-slate-500 uppercase">{r.exchange}</span>}
                     </div>
                     <span className="text-[12px] text-slate-500 truncate block">{r.longname ?? r.shortname}</span>
                   </div>
@@ -247,7 +247,7 @@ function SearchHero() {
 
       {/* Popular ticker chips */}
       <div className="mt-3 flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-1">
-        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide shrink-0 mr-0.5">Popular:</span>
+        <span className="text-[11px] font-semibold text-slate-500 shrink-0 mr-0.5">Popular:</span>
         {POPULAR_CHIPS.map((t) => (
           <Link
             key={t}
@@ -316,13 +316,13 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
               {q.ticker}
             </span>
             {q.etfSource && ETF_LABEL[q.etfSource] && (
-              <span className="text-[11px] font-medium text-slate-400 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 leading-tight">
+              <span className="text-[11px] font-medium text-slate-500 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 leading-tight">
                 {ETF_LABEL[q.etfSource]}
               </span>
             )}
           </div>
           {badge && (
-            <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap shrink-0', badge.cls)}>
+            <span className={cn('text-[11px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap shrink-0', badge.cls)}>
               {badge.label}
             </span>
           )}
@@ -356,7 +356,7 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
         {/* Row 4: intrinsic value + upside (pushes to bottom) */}
         <div className="flex items-end justify-between px-4 py-3 mt-auto gap-3">
           <div>
-            <p className="flex items-center gap-1 text-[11px] font-medium text-slate-400 mb-0.5">
+            <p className="flex items-center gap-1 text-[11px] font-medium text-slate-500 mb-0.5">
               Intrinsic value
               <span
                 title="DCF-based fair value estimate using market-implied growth and WACC inputs"
@@ -379,7 +379,7 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
           </div>
           {upsidePct != null && (
             <div className="text-right shrink-0">
-              <p className="text-[11px] font-medium text-slate-400 mb-0.5">Upside</p>
+              <p className="text-[11px] font-medium text-slate-500 mb-0.5">Upside</p>
               <p className={cn('text-[14px] font-bold tabular-nums', upsidePct >= 0 ? 'text-emerald-600' : 'text-red-600')}>
                 {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
               </p>
@@ -389,7 +389,7 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
 
         {/* Row 5: market implies footer */}
         <div className="px-4 pb-3 -mt-1">
-          <p className="text-[11px] text-slate-400">
+          <p className="text-[11px] text-slate-500">
             Market implies{' '}
             <span className="font-semibold text-slate-600">
               {q.impliedCagr > 0 ? '+' : ''}{q.impliedCagr}%
@@ -493,7 +493,7 @@ function PopularAnalysesSection() {
                         {q.changePct != null ? fmtPct(q.changePct / 100) : '—'}
                       </span>
                       {badge && (
-                        <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap hidden lg:inline', badge.cls)}>
+                        <span className={cn('text-[11px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap hidden lg:inline', badge.cls)}>
                           {badge.label}
                         </span>
                       )}
@@ -536,11 +536,11 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
         <div className="min-w-[520px]">
           {/* Sticky column headers */}
           <div className="sticky top-0 z-10 bg-white grid grid-cols-[150px_1fr_1fr_110px] sm:grid-cols-[170px_1fr_1fr_110px_minmax(0,200px)] gap-x-4 px-5 py-2.5 border-b border-slate-100">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Stock</span>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Implied 5Y CAGR</span>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">3Y Historical</span>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Expectation</span>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide hidden sm:block">Interpretation</span>
+            <span className="text-[11px] font-semibold text-slate-500">Stock</span>
+            <span className="text-[11px] font-semibold text-slate-500">Implied 5Y CAGR</span>
+            <span className="text-[11px] font-semibold text-slate-500">3Y Historical</span>
+            <span className="text-[11px] font-semibold text-slate-500">Expectation</span>
+            <span className="text-[11px] font-semibold text-slate-500 hidden sm:block">Interpretation</span>
           </div>
 
           <div ref={tableRef} className="divide-y divide-slate-50">
@@ -589,7 +589,7 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
                 </div>
 
                 {/* Expectation badge */}
-                <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap w-fit', expectationCls(q.expectation))}>
+                <span className={cn('text-[11px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap w-fit', expectationCls(q.expectation))}>
                   {q.expectation}
                 </span>
 
@@ -610,7 +610,7 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
       <div className="flex items-center gap-1.5 px-5 py-3 border-t border-slate-100 relative">
         <button
           onClick={() => setShowInfo((v) => !v)}
-          className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-600 transition-colors"
+          className="flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-700 transition-colors"
         >
           <Info size={12} />
           How is this calculated?
@@ -632,7 +632,7 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
           )}
         </AnimatePresence>
         <span className="text-slate-200 mx-1">·</span>
-        <span className="text-[11px] text-slate-400">Click any row to open the full analysis</span>
+        <span className="text-[11px] text-slate-500">Click any row to open the full analysis</span>
       </div>
     </section>
   )
