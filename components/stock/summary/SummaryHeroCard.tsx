@@ -144,16 +144,26 @@ function ScenarioRangeBar({
       <p className="text-[11px] text-[#64748B] mb-2.5">Scenario range</p>
 
       {/* Bar */}
-      <div className="relative h-2 rounded-full bg-slate-100 mb-3">
-        {/* Color fill between bear and bull */}
+      <div className="relative h-2 rounded-full bg-slate-200 mb-3">
+        {/* Filled range between bear and bull */}
         <div
-          className="absolute h-full rounded-full bg-gradient-to-r from-red-400 via-amber-300 to-emerald-400"
+          className="absolute h-full rounded-full bg-slate-300"
           style={{ left: `${bearP}%`, right: `${100 - bullP}%` }}
+        />
+        {/* Bear dot */}
+        <div
+          className="absolute w-3 h-3 rounded-full bg-red-400 border-2 border-white shadow-sm"
+          style={{ left: `${bearP}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
         />
         {/* Base dot */}
         <div
           className="absolute w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-sm"
           style={{ left: `${baseP}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
+        />
+        {/* Bull dot */}
+        <div
+          className="absolute w-3 h-3 rounded-full bg-emerald-400 border-2 border-white shadow-sm"
+          style={{ left: `${bullP}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
         />
         {/* Current price tick */}
         <div
@@ -231,34 +241,30 @@ export default function SummaryHeroCard({
         </p>
 
         {/* ── Primary metrics ── */}
-        <div className="flex flex-wrap items-end gap-6">
-          {/* Dominant: Upside */}
+        <div className="flex flex-wrap items-end gap-5">
           <div>
-            <p className="text-[11px] text-[#64748B] mb-0.5">Upside</p>
-            <p className={cn('text-[36px] sm:text-[42px] font-[800] leading-none tabular-nums', verdict.upsideClass)}>
+            <p className="text-[11px] text-[#64748B] mb-0.5">Fair value</p>
+            <p className="text-[26px] font-[750] text-[#0F172A] tabular-nums leading-none">
+              {fairValue != null ? fmtPrice(fairValue, currency) : '—'}
+            </p>
+          </div>
+          <div className="w-px h-7 bg-slate-200 self-end mb-0.5 shrink-0" />
+          <div>
+            <p className="text-[11px] text-[#64748B] mb-0.5">vs current price</p>
+            <p className={cn('text-[26px] font-[750] leading-none tabular-nums', verdict.upsideClass)}>
               {upsideDisplay}
             </p>
           </div>
-
-          {/* Secondary: Fair value + ratio */}
-          <div className="flex flex-col gap-2 pb-1">
-            <div>
-              <p className="text-[11px] text-[#64748B] mb-0.5">Fair value</p>
-              <p className="text-[22px] font-[750] text-[#0F172A] tabular-nums leading-none">
-                {fairValue != null ? fmtPrice(fairValue, currency) : '—'}
-              </p>
-            </div>
-            {ratio != null && (
-              <p className="text-[12px] font-[650] text-[#64748B]">
-                You pay{' '}
-                <span className={cn('font-[750]', ratio < 1 ? 'text-[#16A34A]' : 'text-[#DC2626]')}>
-                  ${ratio.toFixed(2)}
-                </span>
-                {' '}per $1 of estimated value
-              </p>
-            )}
-          </div>
         </div>
+        {ratio != null && (
+          <p className="text-[12px] text-[#64748B]">
+            You pay{' '}
+            <span className={cn('font-[700]', ratio < 1 ? 'text-[#16A34A]' : 'text-[#DC2626]')}>
+              ${ratio.toFixed(2)}
+            </span>
+            {' '}per $1 of estimated value
+          </p>
+        )}
 
         {/* ── Scenario range bar ── */}
         {scenarios && (

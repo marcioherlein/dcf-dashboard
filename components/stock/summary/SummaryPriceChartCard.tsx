@@ -49,7 +49,7 @@ function FooterMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="px-3 py-2.5 text-center">
       <p className="text-[11px] font-[600] text-[#64748B] mb-0.5">{label}</p>
-      <p className="text-[13px] font-[700] text-[#0F172A] tabular-nums">{value}</p>
+      <p className="text-[13px] font-[700] text-[#0F172A] tabular-nums whitespace-nowrap">{value}</p>
     </div>
   )
 }
@@ -92,13 +92,12 @@ export default function SummaryPriceChartCard({
       </div>
 
       {/* Footer metrics */}
-      <div className="overflow-x-auto scrollbar-hide border-t border-[#E6ECF5] mt-2">
-        <div className="grid grid-cols-5 gap-0 divide-x divide-[#E6ECF5] min-w-[380px]">
-          <FooterMetric label="52W Low"       value={fmtPrice(low52, currency)} />
-          <FooterMetric label="52W High"      value={fmtPrice(high52, currency)} />
-          <FooterMetric label="Market Cap"    value={fmtLargeCurrency(marketCap, currency)} />
-          <FooterMetric label="Beta (1Y)"     value={beta != null ? beta.toFixed(2) : '—'} />
-          <FooterMetric label="Avg. Vol (3M)" value="—" />
+      <div className="border-t border-[#E6ECF5] mt-2">
+        <div className="grid grid-cols-4 divide-x divide-[#E6ECF5]">
+          <FooterMetric label="52W Low"    value={fmtPrice(low52, currency)} />
+          <FooterMetric label="52W High"   value={fmtPrice(high52, currency)} />
+          <FooterMetric label="Market Cap" value={fmtLargeCurrency(marketCap, currency)} />
+          <FooterMetric label="Beta (1Y)"  value={beta != null ? beta.toFixed(2) : '—'} />
         </div>
       </div>
 

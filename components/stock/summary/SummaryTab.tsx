@@ -92,7 +92,6 @@ export default function SummaryTab({
   onViewValuation, onViewRisks, analystRecommendation,
 }: SummaryTabProps) {
 
-  // Compute reverse DCF once here; pass result to both ReverseDCFCompactCard and MarketInterpretationCard
   const rdcfResult = useMemo(() => computeReverseDCF({
     currentPrice: price,
     sharesOutstanding: sharesM != null ? sharesM * 1e6 : null,
@@ -108,9 +107,9 @@ export default function SummaryTab({
   const drivers: string[] = cagrAnalysis?.drivers ?? []
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
 
-      {/* ── Row 0: Company identity (first — who is this?) ────────────────── */}
+      {/* ── Row 0: Company identity ───────────────────────────────────────── */}
       {businessProfile?.description && (
         <CompanyCard
           description={businessProfile.description}
@@ -122,8 +121,8 @@ export default function SummaryTab({
         />
       )}
 
-      {/* ── Row 1: Hero verdict + Price chart ─────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-4 items-start">
+      {/* ── Zone 1: Verdict — hero + price chart, equal height ───────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-4 items-stretch">
         <SummaryHeroCard
           ticker={ticker}
           price={price}
@@ -150,40 +149,41 @@ export default function SummaryTab({
         />
       </div>
 
-      {/* ── Row 2: Reverse DCF · Analyst & Market Interpretation ─────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-        <ReverseDCFCompactCard
-          price={price}
-          currency={currency}
-          sharesM={sharesM}
-          cashM={cashM}
-          debtM={debtM}
-          revenueM={revenueM}
-          fcfMargin={fcfMargin}
-          wacc={wacc}
-          terminalG={terminalG}
-          historicalCAGR={historicalCAGR}
-          analystCAGR={analystCAGR}
-          isEmergingMarket={isEmergingMarket}
-        />
-        <MarketInterpretationCard
-          upsidePct={upsidePct}
-          confidence={confidence}
-          reverseDCFInterpretation={rdcfResult.interpretation}
-          reverseDCFText={rdcfResult.interpretationText}
-          analystRecommendation={analystRecommendation ?? ''}
-          analystTargetMean={analystTargetMean ?? null}
-          currency={currency}
-        />
+      {/* ── Zone 2: What the price assumes ───────────────────────────────── */}
+      <div className="rounded-[20px] bg-[#F8FAFC] border border-[#E6ECF5] p-4 sm:p-5">
+        <p className="text-[12px] font-[650] text-slate-500 mb-3">What the price assumes</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+          <ReverseDCFCompactCard
+            price={price}
+            currency={currency}
+            sharesM={sharesM}
+            cashM={cashM}
+            debtM={debtM}
+            revenueM={revenueM}
+            fcfMargin={fcfMargin}
+            wacc={wacc}
+            terminalG={terminalG}
+            historicalCAGR={historicalCAGR}
+            analystCAGR={analystCAGR}
+            isEmergingMarket={isEmergingMarket}
+          />
+          <MarketInterpretationCard
+            upsidePct={upsidePct}
+            confidence={confidence}
+            reverseDCFInterpretation={rdcfResult.interpretation}
+            reverseDCFText={rdcfResult.interpretationText}
+            analystRecommendation={analystRecommendation ?? ''}
+            analystTargetMean={analystTargetMean ?? null}
+            currency={currency}
+          />
+        </div>
       </div>
 
-      {/* ── Row 3: Business quality evidence ──────────────────────────────── */}
+      {/* ── Zone 3: Business fundamentals panel ──────────────────────────── */}
       {ratings && (
-        <section>
-          <div className="flex items-center gap-3 mb-3 px-1">
-            <div className="h-px flex-1 bg-[#E6ECF5]" />
-            <p className="text-[11px] font-[650] text-[#94A3B8] tracking-wide uppercase shrink-0">Business quality</p>
-            <div className="h-px flex-1 bg-[#E6ECF5]" />
+        <div className="rounded-[20px] overflow-hidden border border-slate-100 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
+          <div className="px-4 sm:px-5 py-3 bg-white border-b border-slate-100">
+            <p className="text-[12px] font-[650] text-slate-500">Business fundamentals</p>
           </div>
           <OverviewMetricGrid
             ratings={ratings}
@@ -194,12 +194,13 @@ export default function SummaryTab({
             onViewRisks={onViewRisks}
             valuationMethods={valuationMethods}
             quote={quote}
+            panel
           />
-        </section>
+        </div>
       )}
 
-      {/* ── Row 4: Bull · Bear · Next steps ───────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
+      {/* ── Zone 4: Bull · Bear · Next steps ─────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-stretch">
         <BullCaseCard
           drivers={drivers}
           upsidePct={upsidePct}

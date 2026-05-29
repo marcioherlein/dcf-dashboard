@@ -64,6 +64,7 @@ interface Props {
   valuationMethods?: any
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   quote?: any
+  panel?: boolean
 }
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -86,7 +87,7 @@ function gradeBadge(color: string): string {
 function MetricRow({ label, value, valueClass, tooltip }: { label: string; value: string; valueClass?: string; tooltip?: string }) {
   return (
     <div className="flex items-center justify-between gap-2 py-1">
-      <span className="text-[13px] text-slate-500 truncate flex items-center gap-0.5">
+      <span className="text-[13px] text-slate-600 truncate flex items-center gap-0.5">
         {label}
         {tooltip && <InfoTooltip content={tooltip} />}
       </span>
@@ -104,13 +105,13 @@ function iconAccent(color: string): string {
 
 function CardHeader({ title, label, color, tooltip, Icon }: { title: string; label: string; color: string; tooltip?: string; Icon?: LucideIcon }) {
   return (
-    <div className="flex items-center justify-between mb-3">
+    <div className="flex items-center justify-between mb-2">
       <p className="text-[12px] font-medium text-slate-500 flex items-center gap-1.5">
         {Icon && <Icon size={13} className={`shrink-0 ${iconAccent(color)}`} />}
         {title}
         {tooltip && <InfoTooltip content={tooltip} />}
       </p>
-      <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${gradeBadge(color)}`}>{label}</span>
+      <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${gradeBadge(color)}`}>{label}</span>
     </div>
   )
 }
@@ -130,7 +131,7 @@ function MiniBar({ value, max, color }: { value: number; max: number; color: str
 
 // ─── Card 1: Business Quality ──────────────────────────────────────────────
 
-function BusinessQualityCard({ ratings, scores }: { ratings: StockRatings; scores: ScoresData; onViewDetails?: () => void }) {
+function BusinessQualityCard({ ratings, scores, panel }: { ratings: StockRatings; scores: ScoresData; panel?: boolean }) {
   const moat = ratings.moat
   const profitability = ratings.profitability
   const cat = moat ?? profitability
@@ -156,11 +157,11 @@ function BusinessQualityCard({ ratings, scores }: { ratings: StockRatings; score
       ? 'Strong competitive advantages support durable earnings.'
       : 'Competitive positioning requires monitoring.'
 
-  return (
-    <div className="card p-4 sm:p-5">
+  const inner = (
+    <>
       <CardHeader title="Business Quality" label={label} color={color} Icon={Award} />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0 mb-3">
-        <div className="space-y-2.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0 mb-2">
+        <div className="space-y-0.5">
           <MetricRow label="Economic Moat" value={moat?.label ?? '—'} />
           <MetricRow
             label="ROIC vs WACC"
@@ -173,17 +174,20 @@ function BusinessQualityCard({ ratings, scores }: { ratings: StockRatings; score
             value={profitability ? `${profitability.grade} — ${profitability.label}` : '—'}
           />
         </div>
-        <p className="text-[12px] text-slate-500 leading-snug sm:border-l sm:border-slate-100 sm:pl-6 pt-2 sm:pt-0 border-t border-slate-100 sm:border-t-0">
+        <p className="text-[12px] text-slate-600 leading-snug sm:pl-4 pt-2 sm:pt-0">
           {interpSentence}
         </p>
       </div>
-    </div>
+    </>
   )
+
+  if (panel) return inner
+  return <div className="card p-4 sm:p-5">{inner}</div>
 }
 
 // ─── Card 2: Growth Outlook ────────────────────────────────────────────────
 
-function GrowthOutlookCard({ ratings, cagrAnalysis }: { ratings: StockRatings; cagrAnalysis: CAGRAnalysisData | null; onViewDetails?: () => void }) {
+function GrowthOutlookCard({ ratings, cagrAnalysis, panel }: { ratings: StockRatings; cagrAnalysis: CAGRAnalysisData | null; panel?: boolean }) {
   const growth = ratings.growth
   const color = growth?.color ?? 'blue'
   const label = growth?.label ?? 'Analyzing…'
@@ -207,14 +211,14 @@ function GrowthOutlookCard({ ratings, cagrAnalysis }: { ratings: StockRatings; c
         ? analyst >= 0.10 ? 'Analysts expect strong growth ahead.' : 'Analyst growth outlook is cautious.'
         : 'Insufficient data to assess growth trajectory.'
 
-  return (
-    <div className="card p-4 sm:p-5">
+  const inner = (
+    <>
       <CardHeader title="Growth Outlook" label={label} color={color} Icon={TrendingUp} />
-      <div className="space-y-2.5 mb-3">
+      <div className="space-y-2.5 mb-2">
         {hist != null && (
           <div>
             <div className="flex items-center gap-2 mb-1 min-w-0">
-              <span className="text-[12px] text-slate-500 w-20 sm:w-28 shrink-0">3Y Historical CAGR</span>
+              <span className="text-[12px] text-slate-600 w-20 sm:w-28 shrink-0">3Y Historical CAGR</span>
               <MiniBar value={Math.abs(hist)} max={maxBar} color={hist >= 0 ? 'blue' : 'amber'} />
               <span className="text-[13px] font-semibold tabular-nums text-slate-700 w-12 text-right">{fmtPct(hist)}</span>
             </div>
@@ -223,7 +227,7 @@ function GrowthOutlookCard({ ratings, cagrAnalysis }: { ratings: StockRatings; c
         {analyst != null && (
           <div>
             <div className="flex items-center gap-2 mb-1 min-w-0">
-              <span className="text-[12px] text-slate-500 w-20 sm:w-28 shrink-0">Analyst Est. (1Y)</span>
+              <span className="text-[12px] text-slate-600 w-20 sm:w-28 shrink-0">Analyst Est. (1Y)</span>
               <MiniBar value={Math.abs(analyst)} max={maxBar} color={analyst >= 0 ? 'emerald' : 'amber'} />
               <span className="text-[13px] font-semibold tabular-nums text-slate-700 w-12 text-right">{fmtPct(analyst)}</span>
             </div>
@@ -233,18 +237,21 @@ function GrowthOutlookCard({ ratings, cagrAnalysis }: { ratings: StockRatings; c
           <p className="text-[12px] text-slate-400 italic">Growth data unavailable</p>
         )}
       </div>
-      <p className="text-[12px] text-slate-500 leading-snug border-t border-slate-100 pt-2">{growthSentence}</p>
-    </div>
+      <p className="text-[12px] text-slate-600 leading-snug mt-2">{growthSentence}</p>
+    </>
   )
+
+  if (panel) return inner
+  return <div className="card p-4 sm:p-5">{inner}</div>
 }
 
 // ─── Card 3: Profitability ─────────────────────────────────────────────────
 
-function ProfitabilityCard({ ratings, businessProfile, statementsData }: {
+function ProfitabilityCard({ ratings, businessProfile, statementsData, panel }: {
   ratings: StockRatings
   businessProfile: BusinessProfile
   statementsData: StatementsData | null
-  onViewDetails?: () => void
+  panel?: boolean
 }) {
   const profitability = ratings.profitability
   const color = profitability?.color ?? 'blue'
@@ -267,26 +274,29 @@ function ProfitabilityCard({ ratings, businessProfile, statementsData }: {
       : 'Net losses present — profitability path must be clear.'
       : 'Profitability data partially unavailable.'
 
-  return (
-    <div className="card p-4 sm:p-5">
+  const inner = (
+    <>
       <CardHeader title="Profitability" label={label} color={color} Icon={CircleDollarSign} />
-      <div className="space-y-2.5 mb-3">
+      <div className="space-y-0.5 mb-2">
         <MetricRow label="Gross Margin" value={fmtPct(businessProfile.grossMargin)} />
         <MetricRow label="Operating Margin" value={opMargin != null ? fmtPct(opMargin) : '—'} />
         <MetricRow label="Net Margin" value={fmtPct(businessProfile.netMargin)} />
         <MetricRow label="FCF Margin" value={fmtPct(businessProfile.fcfMargin)} />
       </div>
-      <p className="text-[12px] text-slate-500 leading-snug border-t border-slate-100 pt-2">{profSentence}</p>
-    </div>
+      <p className="text-[12px] text-slate-600 leading-snug mt-2">{profSentence}</p>
+    </>
   )
+
+  if (panel) return inner
+  return <div className="card p-4 sm:p-5">{inner}</div>
 }
 
 // ─── Card 4: Cash Conversion ───────────────────────────────────────────────
 
-function CashConversionCard({ businessProfile, statementsData }: {
+function CashConversionCard({ businessProfile, statementsData, panel }: {
   businessProfile: BusinessProfile
   statementsData: StatementsData | null
-  onViewDetails?: () => void
+  panel?: boolean
 }) {
   const ttmIS = statementsData?.ttm?.incomeStatement
   const ttmCF = statementsData?.ttm?.cashFlow
@@ -308,10 +318,10 @@ function CashConversionCard({ businessProfile, statementsData }: {
       ? 'Positive FCF generation — business is self-funding.'
       : 'Insufficient data to assess cash conversion quality.'
 
-  return (
-    <div className="card p-4 sm:p-5">
+  const inner = (
+    <>
       <CardHeader title="Cash Conversion" label={label} color={color} Icon={RefreshCcw} />
-      <div className="space-y-2.5 mb-3">
+      <div className="space-y-0.5 mb-2">
         <MetricRow label="FCF Margin (TTM)" value={fmtPct(businessProfile.fcfMargin)} />
         <MetricRow
           label="FCF / Net Income"
@@ -320,22 +330,24 @@ function CashConversionCard({ businessProfile, statementsData }: {
           tooltip="What share of reported earnings converts to real cash. >80% is a quality signal — it means profits are backed by cash, not just accounting entries."
         />
       </div>
-      <p className="text-[12px] text-slate-500 leading-snug border-t border-slate-100 pt-2">{cashSentence}</p>
-    </div>
+      <p className="text-[12px] text-slate-600 leading-snug mt-2">{cashSentence}</p>
+    </>
   )
+
+  if (panel) return inner
+  return <div className="card p-4 sm:p-5">{inner}</div>
 }
 
 // ─── Card 5: Balance Sheet Safety ─────────────────────────────────────────
 
-function BalanceSheetCard({ scores, statementsData }: {
+function BalanceSheetCard({ scores, statementsData, panel }: {
   scores: ScoresData
   statementsData: StatementsData | null
-  onViewDetails?: () => void
+  panel?: boolean
 }) {
   const ttmBS = statementsData?.ttm?.balanceSheet
   const ttmIS = statementsData?.ttm?.incomeStatement
 
-  // fundamentalsTimeSeries uses currentAssets/currentLiabilities; quoteSummary uses totalCurrentAssets/totalCurrentLiabilities
   const totalCurrentAssets = (ttmBS?.totalCurrentAssets ?? ttmBS?.currentAssets ?? null) as number | null
   const totalCurrentLiabilities = (ttmBS?.totalCurrentLiabilities ?? ttmBS?.currentLiabilities ?? null) as number | null
   const inventories = (ttmBS?.inventory ?? ttmBS?.inventories ?? null) as number | null
@@ -373,10 +385,10 @@ function BalanceSheetCard({ scores, statementsData }: {
       ? 'Healthy liquidity — covers short-term obligations comfortably.'
       : 'Balance sheet health requires further analysis.'
 
-  return (
-    <div className="card p-4 sm:p-5">
+  const inner = (
+    <>
       <CardHeader title="Balance Sheet Safety" label={bsLabel} color={bsColor} Icon={ShieldCheck} />
-      <div className="space-y-2.5 mb-3">
+      <div className="space-y-0.5 mb-2">
         <MetricRow
           label="Net Debt / EBITDA"
           value={ndToEbitda != null ? `${ndToEbitda.toFixed(1)}x` : '—'}
@@ -403,9 +415,12 @@ function BalanceSheetCard({ scores, statementsData }: {
           <p className="text-[10px] text-slate-400 leading-snug">* Z-Score may be unreliable for non-US companies</p>
         )}
       </div>
-      <p className="text-[12px] text-slate-500 leading-snug border-t border-slate-100 pt-2">{bsSentence}</p>
-    </div>
+      <p className="text-[12px] text-slate-600 leading-snug mt-2">{bsSentence}</p>
+    </>
   )
+
+  if (panel) return inner
+  return <div className="card p-4 sm:p-5">{inner}</div>
 }
 
 // ─── Card 6: Risks to Thesis ──────────────────────────────────────────────
@@ -457,26 +472,27 @@ function buildRiskBullets(ratings: StockRatings, cagrAnalysis: CAGRAnalysisData 
   return bullets.slice(0, 4)
 }
 
-function RisksGridCard({ ratings, cagrAnalysis, onViewRisks }: {
+function RisksGridCard({ ratings, cagrAnalysis, onViewRisks, panel }: {
   ratings: StockRatings
   cagrAnalysis: CAGRAnalysisData | null
   onViewRisks?: () => void
+  panel?: boolean
 }) {
   const risk    = deriveRiskLevel(ratings)
   const bullets = buildRiskBullets(ratings, cagrAnalysis)
 
   const dotColor = risk.color === 'red' ? 'bg-red-400' : risk.color === 'amber' ? 'bg-amber-400' : 'bg-emerald-400'
 
-  return (
-    <div className="card p-4 sm:p-5">
-      <div className="flex items-center justify-between mb-3">
+  const inner = (
+    <>
+      <div className="flex items-center justify-between mb-2">
         <p className="text-[12px] font-medium text-slate-500 flex items-center gap-1.5">
           <AlertTriangle size={13} className={`shrink-0 ${risk.color === 'red' ? 'text-red-500' : risk.color === 'amber' ? 'text-amber-500' : 'text-emerald-500'}`} />
           Risks to Thesis
         </p>
         <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${risk.badgeClass}`}>{risk.label}</span>
       </div>
-      <ul className="space-y-1.5 mb-3">
+      <ul className="space-y-1.5 mb-2">
         {bullets.map((b, i) => (
           <li key={i} className="flex items-start gap-2">
             <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${dotColor}`} />
@@ -489,14 +505,17 @@ function RisksGridCard({ ratings, cagrAnalysis, onViewRisks }: {
           View all risks →
         </button>
       )}
-    </div>
+    </>
   )
+
+  if (panel) return inner
+  return <div className="card p-4 sm:p-5">{inner}</div>
 }
 
 // ─── Relative Valuation card ──────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function RelativeValuationCard({ valuationMethods, quote }: { valuationMethods: any; quote: any; onViewDetails?: () => void }) {
+function RelativeValuationCard({ valuationMethods, quote, panel }: { valuationMethods: any; quote: any; panel?: boolean }) {
   const estimates: AnyRecord[] = valuationMethods?.multiples?.estimates ?? []
   const peRatio  = quote?.peRatio  ?? null
   const pegRatio = quote?.pegRatio ?? null
@@ -505,7 +524,6 @@ function RelativeValuationCard({ valuationMethods, quote }: { valuationMethods: 
 
   if (applicable.length === 0 && peRatio == null) return null
 
-  // Derive overall relative valuation signal
   let expensiveCount = 0, cheapCount = 0
   applicable.forEach((e: AnyRecord) => {
     const ratio = e.actualValue / e.sectorMedian
@@ -534,9 +552,9 @@ function RelativeValuationCard({ valuationMethods, quote }: { valuationMethods: 
     return 'text-slate-600'
   }
 
-  return (
-    <div className="card p-4 sm:p-5">
-      <div className="flex items-center justify-between mb-3">
+  const inner = (
+    <>
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5 min-w-0">
           <Tag size={13} className={`shrink-0 ${overallLabel === 'Cheap' ? 'text-emerald-500' : overallLabel === 'Expensive' ? 'text-red-500' : 'text-blue-500'}`} />
           <span className="text-[12px] font-medium text-slate-500 truncate">Relative Valuation</span>
@@ -545,10 +563,10 @@ function RelativeValuationCard({ valuationMethods, quote }: { valuationMethods: 
           {overallLabel}
         </span>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {applicable.slice(0, 3).map((e: AnyRecord) => (
           <div key={e.multiple} className="flex items-center justify-between">
-            <span className="text-[13px] text-slate-500 flex items-center gap-0.5">
+            <span className="text-[13px] text-slate-600 flex items-center gap-0.5">
               {LABELS[e.multiple] ?? e.multiple}
               {e.multiple === 'evEbitda' && (
                 <InfoTooltip content="Enterprise Value divided by EBITDA. Compares total company value (including debt) to operating earnings. Lower than sector median suggests cheaper relative pricing." />
@@ -565,7 +583,7 @@ function RelativeValuationCard({ valuationMethods, quote }: { valuationMethods: 
         ))}
         {pegRatio != null && pegRatio > 0 && pegRatio < 100 && (
           <div className="flex items-center justify-between">
-            <span className="text-[13px] text-slate-500 flex items-center gap-0.5">
+            <span className="text-[13px] text-slate-600 flex items-center gap-0.5">
               PEG (5Y)
               <InfoTooltip content="Price/Earnings to Growth. Below 1 suggests growth may be underpriced. Above 2 often signals expensive relative to growth expectations." />
             </span>
@@ -578,26 +596,60 @@ function RelativeValuationCard({ valuationMethods, quote }: { valuationMethods: 
       {applicable.length > 0 && (
         <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">vs. sector median</p>
       )}
-    </div>
+    </>
   )
+
+  if (panel) return inner
+  return <div className="card p-4 sm:p-5">{inner}</div>
 }
 
 // ─── Main component ────────────────────────────────────────────────────────
 
-export default function OverviewMetricGrid({ ratings, scores, businessProfile, cagrAnalysis, statementsData, onViewRisks, valuationMethods, quote }: Props) {
+export default function OverviewMetricGrid({ ratings, scores, businessProfile, cagrAnalysis, statementsData, onViewRisks, valuationMethods, quote, panel }: Props) {
   if (!ratings) return null
+
+  const lastCard = valuationMethods ? (
+    <RelativeValuationCard valuationMethods={valuationMethods} quote={quote} panel={panel} />
+  ) : (
+    <RisksGridCard ratings={ratings} cagrAnalysis={cagrAnalysis} onViewRisks={onViewRisks} panel={panel} />
+  )
+
+  if (panel) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-px bg-slate-100">
+        <div className="sm:col-span-2 bg-white p-4 sm:p-5">
+          <BusinessQualityCard ratings={ratings} scores={scores ?? {}} panel />
+        </div>
+        <div className="bg-white p-4 sm:p-5">
+          <GrowthOutlookCard ratings={ratings} cagrAnalysis={cagrAnalysis} panel />
+        </div>
+        <div className="bg-white p-4 sm:p-5">
+          <ProfitabilityCard ratings={ratings} businessProfile={businessProfile} statementsData={statementsData} panel />
+        </div>
+        <div className="bg-white p-4 sm:p-5">
+          <CashConversionCard businessProfile={businessProfile} statementsData={statementsData} panel />
+        </div>
+        <div className="bg-white p-4 sm:p-5">
+          <BalanceSheetCard scores={scores ?? {}} statementsData={statementsData} panel />
+        </div>
+        <div className="sm:col-span-2 md:col-span-3 bg-white p-4 sm:p-5">
+          {lastCard}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 items-start">
       <div className="col-span-2 lg:col-span-2">
-        <BusinessQualityCard ratings={ratings} scores={scores ?? {}} onViewDetails={onViewRisks} />
+        <BusinessQualityCard ratings={ratings} scores={scores ?? {}} />
       </div>
-      <GrowthOutlookCard ratings={ratings} cagrAnalysis={cagrAnalysis} onViewDetails={onViewRisks} />
-      <ProfitabilityCard ratings={ratings} businessProfile={businessProfile} statementsData={statementsData} onViewDetails={onViewRisks} />
-      <CashConversionCard businessProfile={businessProfile} statementsData={statementsData} onViewDetails={onViewRisks} />
-      <BalanceSheetCard scores={scores ?? {}} statementsData={statementsData} onViewDetails={onViewRisks} />
+      <GrowthOutlookCard ratings={ratings} cagrAnalysis={cagrAnalysis} />
+      <ProfitabilityCard ratings={ratings} businessProfile={businessProfile} statementsData={statementsData} />
+      <CashConversionCard businessProfile={businessProfile} statementsData={statementsData} />
+      <BalanceSheetCard scores={scores ?? {}} statementsData={statementsData} />
       {valuationMethods ? (
-        <RelativeValuationCard valuationMethods={valuationMethods} quote={quote} onViewDetails={onViewRisks} />
+        <RelativeValuationCard valuationMethods={valuationMethods} quote={quote} />
       ) : (
         <RisksGridCard ratings={ratings} cagrAnalysis={cagrAnalysis} onViewRisks={onViewRisks} />
       )}
