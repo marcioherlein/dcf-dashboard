@@ -1,100 +1,285 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
+import {
+  Bookmark, TrendingUp, CheckCircle, Clock,
+  List, LayoutGrid, Search, ChevronDown, SlidersHorizontal,
+  Plus, ChevronLeft, ChevronRight,
+} from 'lucide-react'
 import { loadWatchlist, saveWatchlistEntry, deleteWatchlistEntry } from '@/lib/simplifier/watchlistStore'
 import type { WatchlistEntry, ListTag } from '@/lib/simplifier/types'
-import { fmtPrice, fmtPct } from '@/lib/formatters'
+import { fmtPct } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
-import { GroupTabs } from '@/components/valuations/GroupTabs'
-import { ValuationTable } from '@/components/valuations/ValuationTable'
+import { ValuationTable, type SortKey } from '@/components/valuations/ValuationTable'
 
-// ── Card view (grid toggle) ───────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────────────────────
 
-function ScoreBar({ score }: { score: number | null }) {
-  if (score == null) return null
-  const pct = Math.round(score * 100)
-  const color = pct >= 65 ? 'bg-emerald-500' : pct >= 40 ? 'bg-amber-400' : 'bg-red-400'
+type TabId    = 'all' | 'watch' | 'buy' | 'pass' | 'recent'
+type ViewMode = 'table' | 'grid'
+type FilterUpside     = 'all' | 'undervalued' | 'fair' | 'overvalued'
+type FilterConfidence = 'all' | 'high' | 'medium' | 'low'
+
+// ── Derivation helpers ─────────────────────────────────────────────────────────
+
+function getVerdict(e: WatchlistEntry): 'Undervalued' | 'Fair Value' | 'Overvalued' | 'Needs Review' {
+  if (e.snapshot.fairValue == null || e.snapshot.upsidePct == null) return 'Needs Review'
+  if (e.snapshot.upsidePct > 0.15)  return 'Undervalued'
+  if (e.snapshot.upsidePct > -0.15) return 'Fair Value'
+  return 'Overvalued'
+}
+
+function daysSince(iso: string): number {
+  return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)
+}
+
+function tabFilter(entries: WatchlistEntry[], tab: TabId): WatchlistEntry[] {
+  if (tab === 'watch')  return entries.filter((e) => e.listTag === 'watch')
+  if (tab === 'buy')    return entries.filter((e) => e.listTag === 'buy')
+  if (tab === 'pass')   return entries.filter((e) => e.listTag === 'pass')
+  if (tab === 'recent') return entries.filter((e) => daysSince(e.updatedAt) <= 7)
+  return entries
+}
+
+function applyFilters(
+  entries: WatchlistEntry[],
+  query: string,
+  upside: FilterUpside,
+  confidence: FilterConfidence,
+): WatchlistEntry[] {
+  let res = entries
+  if (query.trim()) {
+    const q = query.toLowerCase()
+    res = res.filter((e) => e.ticker.toLowerCase().includes(q) || e.companyName.toLowerCase().includes(q))
+  }
+  if (upside === 'undervalued')  res = res.filter((e) => (e.snapshot.upsidePct ?? 0) > 0.15)
+  if (upside === 'fair')         res = res.filter((e) => { const u = e.snapshot.upsidePct ?? null; return u != null && u >= -0.15 && u <= 0.15 })
+  if (upside === 'overvalued')   res = res.filter((e) => (e.snapshot.upsidePct ?? 0) < -0.15)
+  if (confidence === 'high')     res = res.filter((e) => e.overallScore != null && e.overallScore >= 0.7)
+  if (confidence === 'medium')   res = res.filter((e) => e.overallScore != null && e.overallScore >= 0.4 && e.overallScore < 0.7)
+  if (confidence === 'low')      res = res.filter((e) => e.overallScore != null && e.overallScore < 0.4)
+  return res
+}
+
+function sortEntries(entries: WatchlistEntry[], key: SortKey, dir: 'asc' | 'desc'): WatchlistEntry[] {
+  return [...entries].sort((a, b) => {
+    let va: string | number, vb: string | number
+    switch (key) {
+      case 'ticker':       va = a.ticker;                           vb = b.ticker;                           break
+      case 'upsidePct':    va = a.snapshot.upsidePct ?? -Infinity;  vb = b.snapshot.upsidePct ?? -Infinity;  break
+      case 'overallScore': va = a.overallScore ?? -Infinity;        vb = b.overallScore ?? -Infinity;        break
+      case 'price':        va = a.snapshot.price ?? -Infinity;      vb = b.snapshot.price ?? -Infinity;      break
+      case 'fairValue':    va = a.snapshot.fairValue ?? -Infinity;  vb = b.snapshot.fairValue ?? -Infinity;  break
+      case 'updatedAt':    va = a.updatedAt;                        vb = b.updatedAt;                        break
+    }
+    if (va < vb) return dir === 'asc' ? -1 : 1
+    if (va > vb) return dir === 'asc' ?  1 : -1
+    return 0
+  })
+}
+
+// ── KPI Card ───────────────────────────────────────────────────────────────────
+
+function KpiCard({ icon: Icon, iconCls, label, value, sub }: {
+  icon:    React.ElementType
+  iconCls: string
+  label:   string
+  value:   string | number
+  sub?:    string
+}) {
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-        <div className={cn('h-full rounded-full', color)} style={{ width: `${pct}%` }} />
+    <div className="bg-white border border-[#E6ECF5] rounded-2xl p-5 flex items-start gap-4">
+      <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', iconCls)}>
+        <Icon size={18} />
       </div>
-      <span className="text-[11px] font-mono text-slate-500 w-8 text-right">{pct}%</span>
+      <div className="min-w-0">
+        <p className="text-[12px] font-semibold text-[#64748B] mb-0.5">{label}</p>
+        <p className="text-[26px] font-extrabold text-[#0F172A] leading-none tabular-nums">{value}</p>
+        {sub && <p className="text-[12px] text-[#64748B] mt-1">{sub}</p>}
+      </div>
     </div>
   )
 }
 
-function ValuationCard({ entry }: { entry: WatchlistEntry }) {
-  const upsidePct = entry.snapshot.upsidePct
-  const price     = entry.snapshot.price
-  const fv        = entry.snapshot.fairValue
-  // Short format for mobile (MMM D), same compact format everywhere
-  const updatedAt = new Date(entry.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-  const isUp      = upsidePct != null && upsidePct >= 0
+// ── Segment Tabs ───────────────────────────────────────────────────────────────
 
-  const TAG_BG: Record<NonNullable<ListTag>, string> = {
-    buy:   'bg-emerald-500 text-white',
-    watch: 'bg-amber-400 text-white',
-    pass:  'bg-slate-400 text-white',
-  }
+const TABS: Array<{ id: TabId; label: string }> = [
+  { id: 'all',    label: 'All' },
+  { id: 'watch',  label: 'Watch' },
+  { id: 'buy',    label: 'High Conviction' },
+  { id: 'pass',   label: 'Avoid' },
+  { id: 'recent', label: 'Recently Updated' },
+]
+
+function SegmentTabs({ active, counts, onSelect }: {
+  active:   TabId
+  counts:   Record<TabId, number>
+  onSelect: (id: TabId) => void
+}) {
+  return (
+    <div className="flex items-center gap-0 overflow-x-auto scrollbar-hide border-b border-[#E6ECF5]">
+      {TABS.map(({ id, label }) => {
+        const isActive = active === id
+        const count    = counts[id]
+        return (
+          <button
+            key={id}
+            onClick={() => onSelect(id)}
+            className={cn(
+              'flex items-center gap-1.5 px-4 py-3 text-[13px] font-semibold whitespace-nowrap border-b-2 transition-colors',
+              isActive
+                ? 'text-[#2563EB] border-[#2563EB]'
+                : 'text-[#475569] border-transparent hover:text-slate-800 hover:border-slate-300',
+            )}
+          >
+            {label}
+            {count > 0 && (
+              <span className={cn(
+                'text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center',
+                isActive ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500',
+              )}>
+                {count}
+              </span>
+            )}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+// ── Filter Select ──────────────────────────────────────────────────────────────
+
+function FilterSelect({ label, value, options, onChange }: {
+  label:    string
+  value:    string
+  options:  Array<{ value: string; label: string }>
+  onChange: (v: string) => void
+}) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="appearance-none pl-3 pr-7 py-1.5 text-[12px] font-semibold text-[#334155] bg-white border border-[#DDE6F2] rounded-xl cursor-pointer hover:border-blue-300 focus:outline-none focus:border-blue-400 transition-colors"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>{label}: {o.label}</option>
+        ))}
+      </select>
+      <ChevronDown size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+    </div>
+  )
+}
+
+// ── Sort Dropdown ──────────────────────────────────────────────────────────────
+
+const SORT_OPTIONS: Array<{ key: SortKey; label: string }> = [
+  { key: 'updatedAt',    label: 'Updated' },
+  { key: 'upsidePct',    label: 'Upside' },
+  { key: 'fairValue',    label: 'Fair value' },
+  { key: 'overallScore', label: 'Confidence' },
+  { key: 'ticker',       label: 'Ticker' },
+  { key: 'price',        label: 'Price' },
+]
+
+function SortDropdown({ current, dir, onSort }: {
+  current: SortKey
+  dir:     'asc' | 'desc'
+  onSort:  (key: SortKey, dir: 'asc' | 'desc') => void
+}) {
+  const [open, setOpen] = useState(false)
+  const currentLabel = SORT_OPTIONS.find((o) => o.key === current)?.label ?? 'Updated'
 
   return (
-    <div className="rounded-xl bg-white border border-slate-200 p-4 flex flex-col gap-3 hover:border-blue-200 hover:shadow-md transition-all group">
-      {/* Top: ticker + tag + upside */}
-      <div className="flex items-start justify-between gap-2 min-w-0">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-base font-black text-slate-900 font-mono tracking-tight shrink-0">{entry.ticker}</span>
-          {entry.listTag && (
-            <span className={cn('rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider shrink-0', TAG_BG[entry.listTag])}>
-              {entry.listTag}
-            </span>
-          )}
+    <div className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-2 pl-3 pr-2.5 py-1.5 text-[12px] font-semibold text-[#334155] bg-white border border-[#DDE6F2] rounded-xl hover:border-blue-300 transition-colors"
+      >
+        Sort: {currentLabel}
+        <ChevronDown size={12} className="text-slate-400" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-9 w-44 bg-white rounded-xl border border-slate-200 shadow-lg z-20 py-1 overflow-hidden">
+          {SORT_OPTIONS.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => {
+                onSort(key, key === current && dir === 'desc' ? 'asc' : 'desc')
+                setOpen(false)
+              }}
+              className={cn(
+                'w-full flex items-center justify-between px-3.5 py-2 text-[13px] transition-colors',
+                current === key ? 'text-blue-600 bg-blue-50 font-semibold' : 'text-slate-700 hover:bg-slate-50',
+              )}
+            >
+              {label}
+              {current === key && (
+                <span className="text-[11px] text-blue-400">{dir === 'desc' ? '↓' : '↑'}</span>
+              )}
+            </button>
+          ))}
         </div>
-        {upsidePct != null && (
-          <div className={cn('flex items-center gap-0.5 shrink-0 text-lg font-black font-mono tabular-nums whitespace-nowrap overflow-hidden', isUp ? 'text-emerald-500' : 'text-red-500')}>
-            <span className="text-sm">{isUp ? '▲' : '▼'}</span>
-            {fmtPct(Math.abs(upsidePct))}
-          </div>
-        )}
+      )}
+    </div>
+  )
+}
+
+// ── Grid Card ──────────────────────────────────────────────────────────────────
+
+function GridCard({ entry }: { entry: WatchlistEntry }) {
+  const verdict     = getVerdict(entry)
+  const upside      = entry.snapshot.upsidePct
+  const verdictCls  = verdict === 'Undervalued'
+    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+    : verdict === 'Overvalued'
+    ? 'bg-red-50 text-red-600 border-red-200'
+    : verdict === 'Needs Review'
+    ? 'bg-amber-50 text-amber-700 border-amber-200'
+    : 'bg-slate-100 text-slate-600 border-slate-200'
+
+  return (
+    <div className="bg-white border border-[#E6ECF5] rounded-2xl p-5 flex flex-col gap-3 hover:border-blue-200 hover:shadow-md transition-all">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <Link href={`/stock/${entry.ticker}`} className="text-[15px] font-black text-slate-900 font-mono hover:text-blue-600 transition-colors">
+            {entry.ticker}
+          </Link>
+          <p className="text-[11px] text-slate-500 mt-0.5 truncate">{entry.companyName}</p>
+        </div>
+        <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border shrink-0', verdictCls)}>
+          {verdict}
+        </span>
       </div>
 
-      {/* Company name */}
-      <p className="text-[11px] text-slate-400 -mt-1 truncate">{entry.companyName}</p>
-
-      {/* Price vs Fair Value */}
-      <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-3">
-        <div className="bg-slate-50 rounded-lg px-3 py-2">
-          <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Price</p>
-          <p className="text-sm font-bold font-mono text-slate-700">{price != null ? fmtPrice(price, 'USD') : '—'}</p>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="bg-slate-50 rounded-xl px-3 py-2.5">
+          <p className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold mb-1">Price</p>
+          <p className="text-[13px] font-bold text-slate-800 tabular-nums">
+            {entry.snapshot.price != null ? `$${entry.snapshot.price.toFixed(2)}` : '—'}
+          </p>
         </div>
-        <div className={cn('rounded-lg px-3 py-2', fv != null ? (isUp ? 'bg-emerald-50' : 'bg-red-50') : 'bg-slate-50')}>
-          <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Fair Value</p>
-          <p className={cn('text-sm font-bold font-mono', fv != null ? (isUp ? 'text-emerald-600' : 'text-red-600') : 'text-slate-400')}>
-            {fv != null ? fmtPrice(fv, 'USD') : '—'}
+        <div className={cn('rounded-xl px-3 py-2.5', upside != null ? (upside >= 0 ? 'bg-emerald-50' : 'bg-red-50') : 'bg-slate-50')}>
+          <p className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold mb-1">Fair Value</p>
+          <p className={cn('text-[13px] font-bold tabular-nums', upside != null ? (upside >= 0 ? 'text-emerald-600' : 'text-red-600') : 'text-slate-400')}>
+            {entry.snapshot.fairValue != null ? `$${entry.snapshot.fairValue.toFixed(2)}` : '—'}
           </p>
         </div>
       </div>
 
-      {/* Thesis score */}
-      {entry.overallScore != null && (
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-[9px] text-slate-400 uppercase tracking-wider">Thesis score</p>
-            <span className="text-[10px] font-bold font-mono text-slate-500">{Math.round(entry.overallScore * 100)}%</span>
-          </div>
-          <ScoreBar score={entry.overallScore} />
-        </div>
+      {upside != null && (
+        <p className={cn('text-[13px] font-bold tabular-nums', upside >= 0 ? 'text-emerald-600' : 'text-red-500')}>
+          {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(1)}% {upside >= 0 ? '↗' : '↘'}
+        </p>
       )}
 
-      {/* Footer */}
-      <div className="flex items-center justify-between pt-1 border-t border-slate-100 mt-auto">
-        <span className="text-[10px] text-slate-300">{updatedAt}</span>
-        <Link
-          href={`/stock/${entry.ticker}`}
-          className="text-[11px] font-bold text-blue-600 hover:text-blue-700 transition-colors"
-        >
+      <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-auto">
+        <span className="text-[10px] text-slate-400">
+          {new Date(entry.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+        </span>
+        <Link href={`/stock/${entry.ticker}`} className="text-[11px] font-bold text-blue-600 hover:text-blue-700 transition-colors">
           Reopen →
         </Link>
       </div>
@@ -102,30 +287,152 @@ function ValuationCard({ entry }: { entry: WatchlistEntry }) {
   )
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// ── Empty State ────────────────────────────────────────────────────────────────
+
+function EmptyState() {
+  return (
+    <div className="bg-white border border-[#E6ECF5] rounded-2xl p-12 sm:p-16 text-center flex flex-col items-center">
+      <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-5">
+        <Bookmark size={24} className="text-blue-500" />
+      </div>
+      <h2 className="text-[18px] font-bold text-[#0F172A] mb-2">No saved valuations yet</h2>
+      <p className="text-[14px] text-[#64748B] max-w-sm leading-relaxed mb-6">
+        Analyze a stock and save the valuation to track fair value, upside, and confidence over time.
+      </p>
+      <div className="flex flex-col sm:flex-row items-center gap-3">
+        <Link
+          href="/analyze"
+          className="rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-6 py-2.5 text-[14px] font-semibold transition-colors"
+        >
+          Analyze a stock
+        </Link>
+        <Link
+          href="/markets"
+          className="rounded-xl border border-[#DDE6F2] text-[#334155] hover:bg-slate-50 px-6 py-2.5 text-[14px] font-semibold transition-colors"
+        >
+          Explore popular analyses
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+// ── Pagination ─────────────────────────────────────────────────────────────────
+
+const PAGE_SIZE_OPTIONS = [10, 25, 50]
+
+function Pagination({ total, page, pageSize, onPage, onPageSize }: {
+  total:      number
+  page:       number
+  pageSize:   number
+  onPage:     (p: number) => void
+  onPageSize: (s: number) => void
+}) {
+  const totalPages = Math.ceil(total / pageSize)
+  const start      = total === 0 ? 0 : (page - 1) * pageSize + 1
+  const end        = Math.min(page * pageSize, total)
+
+  if (total === 0) return null
+
+  const pages: number[] = []
+  if (totalPages <= 5) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i)
+  } else if (page <= 3) {
+    for (let i = 1; i <= 5; i++) pages.push(i)
+  } else if (page >= totalPages - 2) {
+    for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i)
+  } else {
+    for (let i = page - 2; i <= page + 2; i++) pages.push(i)
+  }
+
+  return (
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1 py-1">
+      <p className="text-[12px] text-[#64748B]">
+        Showing {start} to {end} of {total} results
+      </p>
+
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => onPage(page - 1)}
+          disabled={page === 1}
+          aria-label="Previous page"
+          className="p-1.5 rounded-lg border border-[#DDE6F2] text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
+          <ChevronLeft size={14} />
+        </button>
+        {pages.map((p) => (
+          <button
+            key={p}
+            onClick={() => onPage(p)}
+            className={cn(
+              'min-w-[32px] h-8 rounded-lg text-[12px] font-semibold border transition-colors',
+              p === page
+                ? 'bg-[#2563EB] border-[#2563EB] text-white'
+                : 'border-[#DDE6F2] text-[#334155] hover:bg-slate-50',
+            )}
+          >
+            {p}
+          </button>
+        ))}
+        <button
+          onClick={() => onPage(page + 1)}
+          disabled={page === totalPages}
+          aria-label="Next page"
+          className="p-1.5 rounded-lg border border-[#DDE6F2] text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
+          <ChevronRight size={14} />
+        </button>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-[12px] text-slate-500">Rows:</span>
+        <div className="relative">
+          <select
+            value={pageSize}
+            onChange={(e) => { onPageSize(Number(e.target.value)); onPage(1) }}
+            className="appearance-none pl-2.5 pr-6 py-1 text-[12px] font-semibold text-[#334155] bg-white border border-[#DDE6F2] rounded-lg cursor-pointer focus:outline-none"
+          >
+            {PAGE_SIZE_OPTIONS.map((s) => (
+              <option key={s} value={s}>{s} / page</option>
+            ))}
+          </select>
+          <ChevronDown size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function ValuationsPage() {
   const { data: session } = useSession()
   const userEmail = session?.user?.email ?? null
 
-  const [entries, setEntries]     = useState<WatchlistEntry[]>([])
-  const [loading, setLoading]     = useState(true)
+  const [entries,    setEntries]    = useState<WatchlistEntry[]>([])
+  const [loading,    setLoading]    = useState(true)
   const [sparklines, setSparklines] = useState<Record<string, number[] | null>>({})
-  const [view, setView]           = useState<'table' | 'grid'>('table')
-  const [activeGroup, setActiveGroup] = useState<string | null>(null)
-  // Tracks groups the user created but hasn't assigned stocks to yet
-  const [pendingGroups, setPendingGroups] = useState<string[]>([])
 
-  // ── Load watchlist + sparklines ────────────────────────────────────────────
+  // UI state
+  const [activeTab,         setActiveTab]         = useState<TabId>('all')
+  const [view,              setView]              = useState<ViewMode>('table')
+  const [searchQuery,       setSearch]            = useState('')
+  const [sortKey,           setSortKey]           = useState<SortKey>('updatedAt')
+  const [sortDir,           setSortDir]           = useState<'asc' | 'desc'>('desc')
+  const [filterUpside,      setFilterUpside]      = useState<FilterUpside>('all')
+  const [filterConfidence,  setFilterConfidence]  = useState<FilterConfidence>('all')
+  const [currentPage,       setCurrentPage]       = useState(1)
+  const [pageSize,          setPageSize]          = useState(10)
+  const [pendingGroups,     setPendingGroups]     = useState<string[]>([])
+
+  // Load data
   useEffect(() => {
     setLoading(true)
     loadWatchlist(userEmail).then((data) => {
       const sorted = data.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       setEntries(sorted)
       setLoading(false)
-
       if (sorted.length === 0) return
-
       Promise.allSettled(
         sorted.map((e) =>
           fetch(`/api/historical?ticker=${encodeURIComponent(e.ticker)}&period=1mo`)
@@ -148,188 +455,278 @@ export default function ValuationsPage() {
     })
   }, [userEmail])
 
-  // ── Derived state ──────────────────────────────────────────────────────────
-  const derivedGroups = Array.from(
-    new Set(entries.map((e) => e.groupName).filter((g): g is string => !!g)),
-  )
-  const allGroups = Array.from(new Set([...derivedGroups, ...pendingGroups]))
+  // KPI calculations
+  const kpi = useMemo(() => {
+    const tracked    = entries.length
+    const withUpside = entries.filter((e) => e.snapshot.upsidePct != null)
+    const avgUpside  = withUpside.length > 0
+      ? withUpside.reduce((s, e) => s + (e.snapshot.upsidePct ?? 0), 0) / withUpside.length
+      : null
+    const undervalued = entries.filter((e) => (e.snapshot.upsidePct ?? 0) > 0.15).length
+    const needsReview = entries.filter((e) => e.snapshot.fairValue == null || e.snapshot.upsidePct == null).length
+    return { tracked, avgUpside, undervalued, needsReview }
+  }, [entries])
 
-  const groupCounts = Object.fromEntries(
-    allGroups.map((g) => [g, entries.filter((e) => e.groupName === g).length]),
-  )
+  // Tab counts
+  const tabCounts: Record<TabId, number> = useMemo(() => ({
+    all:    entries.length,
+    watch:  entries.filter((e) => e.listTag === 'watch').length,
+    buy:    entries.filter((e) => e.listTag === 'buy').length,
+    pass:   entries.filter((e) => e.listTag === 'pass').length,
+    recent: entries.filter((e) => daysSince(e.updatedAt) <= 7).length,
+  }), [entries])
 
-  const filtered = activeGroup
-    ? entries.filter((e) => e.groupName === activeGroup)
-    : entries
+  // Filter pipeline
+  const displayEntries = useMemo(() => {
+    const tabbed   = tabFilter(entries, activeTab)
+    const filtered = applyFilters(tabbed, searchQuery, filterUpside, filterConfidence)
+    return sortEntries(filtered, sortKey, sortDir)
+  }, [entries, activeTab, searchQuery, filterUpside, filterConfidence, sortKey, sortDir])
 
-  // Summary bar stats
-  const buys = entries.filter((e) => e.listTag === 'buy')
-  const avgBuyUpside = buys.length > 0
-    ? buys.reduce((s, e) => s + (e.snapshot.upsidePct ?? 0), 0) / buys.length
-    : null
+  const paginatedEntries = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return displayEntries.slice(start, start + pageSize)
+  }, [displayEntries, currentPage, pageSize])
 
-  // ── Mutation handlers ──────────────────────────────────────────────────────
+  // Reset page when filters change
+  useEffect(() => { setCurrentPage(1) }, [activeTab, searchQuery, filterUpside, filterConfidence, sortKey, sortDir])
+
+  // Derived groups
+  const derivedGroups = Array.from(new Set(entries.map((e) => e.groupName).filter((g): g is string => !!g)))
+  const allGroups     = Array.from(new Set([...derivedGroups, ...pendingGroups]))
+
+  // Handlers
   const handleDelete = async (ticker: string) => {
     await deleteWatchlistEntry(ticker, userEmail)
     setEntries((prev) => prev.filter((e) => e.ticker !== ticker))
   }
 
   const handleTagUpdate = async (ticker: string, tag: ListTag) => {
-    setEntries((prev) => prev.map((e) => (e.ticker === ticker ? { ...e, listTag: tag } : e)))
+    setEntries((prev) => prev.map((e) => e.ticker === ticker ? { ...e, listTag: tag } : e))
     const entry = entries.find((e) => e.ticker === ticker)
     if (entry) await saveWatchlistEntry({ ...entry, listTag: tag }, userEmail)
   }
 
   const handleGroupUpdate = async (ticker: string, groupName: string | null) => {
-    setEntries((prev) =>
-      prev.map((e) => (e.ticker === ticker ? { ...e, groupName: groupName ?? undefined } : e)),
-    )
-    // Remove from pending groups if now assigned a stock
+    setEntries((prev) => prev.map((e) => e.ticker === ticker ? { ...e, groupName: groupName ?? undefined } : e))
     if (groupName) setPendingGroups((prev) => prev.filter((g) => g !== groupName))
     const entry = entries.find((e) => e.ticker === ticker)
     if (entry) await saveWatchlistEntry({ ...entry, groupName: groupName ?? undefined }, userEmail)
   }
 
-  const handleNewGroup = (name: string) => {
-    if (!allGroups.includes(name)) {
-      setPendingGroups((prev) => [...prev, name])
+  const handleNoteSave = useCallback(async (ticker: string, note: string) => {
+    const entry = entries.find((e) => e.ticker === ticker)
+    if (!entry) return
+    const updated = { ...entry, notes: { ...entry.notes, '__thesis__': note } }
+    setEntries((prev) => prev.map((e) => e.ticker === ticker ? updated : e))
+    await saveWatchlistEntry(updated, userEmail)
+  }, [entries, userEmail])
+
+  const handleSort = (key: SortKey, dir?: 'asc' | 'desc') => {
+    if (dir) { setSortKey(key); setSortDir(dir) }
+    else {
+      if (key === sortKey) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+      else { setSortKey(key); setSortDir('desc') }
     }
   }
 
-  return (
-    <div className="min-h-screen bg-[#F8FAFB]">
-      <div className="px-3 sm:px-6 lg:px-8 py-6 sm:py-10">
+  const hasFilters = filterUpside !== 'all' || filterConfidence !== 'all' || !!searchQuery.trim()
 
-        {/* Premium header banner */}
-        <div className="rounded-2xl bg-gradient-to-br from-slate-900 to-blue-950 px-4 sm:px-6 py-4 sm:py-5 mb-6 text-white">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight" style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>
-                My Valuations
-              </h1>
-              <p className="mt-0.5 text-sm text-white/60">
-                {entries.length > 0
-                  ? `${entries.length} saved ${entries.length === 1 ? 'analysis' : 'analyses'}`
-                  : 'Save analyses from any stock page to track conviction'}
-              </p>
+  return (
+    <div className="min-h-screen bg-[#F8FAFC] px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+      {/* Page header */}
+      <div className="bg-white border border-[#E6ECF5] rounded-2xl px-6 py-5 mb-5 shadow-sm">
+        <div className="flex items-start justify-between gap-4 mb-5">
+          <div>
+            <h1 className="text-[28px] sm:text-[32px] font-extrabold text-[#0F172A] tracking-tight leading-none" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+              My Valuations
+            </h1>
+            <p className="mt-1.5 text-[14px] text-[#64748B]">Saved analyses and watchlist ideas</p>
+          </div>
+          <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl shrink-0">
+            <button
+              onClick={() => setView('table')}
+              title="Table view"
+              aria-label="Table view"
+              className={cn('p-2 rounded-lg transition-colors', view === 'table' ? 'bg-white text-[#2563EB] shadow-sm' : 'text-slate-400 hover:text-slate-600')}
+            >
+              <List size={16} />
+            </button>
+            <button
+              onClick={() => setView('grid')}
+              title="Grid view"
+              aria-label="Grid view"
+              className={cn('p-2 rounded-lg transition-colors', view === 'grid' ? 'bg-white text-[#2563EB] shadow-sm' : 'text-slate-400 hover:text-slate-600')}
+            >
+              <LayoutGrid size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* KPI cards */}
+        {!loading && entries.length > 0 && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <KpiCard
+              icon={Bookmark}
+              iconCls="bg-blue-50 text-blue-600"
+              label="Tracked"
+              value={kpi.tracked}
+              sub="companies"
+            />
+            <KpiCard
+              icon={TrendingUp}
+              iconCls={kpi.avgUpside != null && kpi.avgUpside >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}
+              label="Avg Upside"
+              value={kpi.avgUpside != null ? fmtPct(kpi.avgUpside) : '—'}
+              sub="across all"
+            />
+            <KpiCard
+              icon={CheckCircle}
+              iconCls="bg-emerald-50 text-emerald-600"
+              label="Undervalued"
+              value={kpi.undervalued}
+              sub="companies"
+            />
+            <KpiCard
+              icon={Clock}
+              iconCls="bg-amber-50 text-amber-600"
+              label="Needs Review"
+              value={kpi.needsReview}
+              sub={kpi.needsReview === 0 ? 'all valuations complete' : 'missing fair value data'}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Loading skeletons */}
+      {loading && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-24 bg-white border border-[#E6ECF5] rounded-2xl animate-pulse" />
+            ))}
+          </div>
+          <div className="h-96 bg-white border border-[#E6ECF5] rounded-2xl animate-pulse" />
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && entries.length === 0 && <EmptyState />}
+
+      {/* Content */}
+      {!loading && entries.length > 0 && (
+        <div className="space-y-4">
+
+          {/* Toolbar */}
+          <div className="bg-white border border-[#E6ECF5] rounded-2xl overflow-hidden shadow-sm">
+            {/* Segment tabs */}
+            <div className="flex items-center justify-between gap-2 px-4 pt-1">
+              <div className="flex-1 min-w-0 overflow-x-auto scrollbar-hide">
+                <SegmentTabs active={activeTab} counts={tabCounts} onSelect={setActiveTab} />
+              </div>
+              <button
+                onClick={() => {
+                  const name = window.prompt('New group name:')?.trim()
+                  if (name && !allGroups.includes(name)) setPendingGroups((prev) => [...prev, name])
+                }}
+                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold text-[#2563EB] border border-dashed border-blue-300 bg-white hover:bg-blue-50 rounded-xl transition-colors whitespace-nowrap"
+              >
+                <Plus size={13} />
+                New group
+              </button>
             </div>
 
-            {/* View toggle */}
-            {entries.length > 0 && (
-              <div className="flex items-center gap-1 bg-white/10 rounded-lg p-1 shrink-0">
+            {/* Search + Sort + Filters */}
+            <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-t border-[#EDF2F7]">
+              <div className="relative flex-1 min-w-[180px] max-w-xs">
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search valuations…"
+                  className="w-full pl-8 pr-3 py-1.5 text-[13px] text-slate-800 bg-white border border-[#DDE6F2] rounded-xl focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
+                />
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <SortDropdown current={sortKey} dir={sortDir} onSort={handleSort} />
+                <FilterSelect
+                  label="Upside"
+                  value={filterUpside}
+                  options={[
+                    { value: 'all',         label: 'Any' },
+                    { value: 'undervalued', label: 'Undervalued (>15%)' },
+                    { value: 'fair',        label: 'Fair Value (±15%)' },
+                    { value: 'overvalued',  label: 'Overvalued (<−15%)' },
+                  ]}
+                  onChange={(v) => setFilterUpside(v as FilterUpside)}
+                />
+                <FilterSelect
+                  label="Confidence"
+                  value={filterConfidence}
+                  options={[
+                    { value: 'all',    label: 'Any' },
+                    { value: 'high',   label: 'High (≥70%)' },
+                    { value: 'medium', label: 'Medium (40–70%)' },
+                    { value: 'low',    label: 'Low (<40%)' },
+                  ]}
+                  onChange={(v) => setFilterConfidence(v as FilterConfidence)}
+                />
                 <button
-                  onClick={() => setView('table')}
-                  title="Table view"
-                  className={cn('p-1.5 rounded-md transition-colors', view === 'table' ? 'bg-white text-slate-900' : 'text-white/60 hover:text-white')}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold border rounded-xl transition-colors',
+                    hasFilters
+                      ? 'bg-blue-50 border-blue-300 text-blue-700'
+                      : 'bg-white border-[#DDE6F2] text-[#334155] hover:border-blue-300',
+                  )}
+                  onClick={() => { setFilterUpside('all'); setFilterConfidence('all'); setSearch('') }}
+                  title={hasFilters ? 'Clear all filters' : 'Filters'}
                 >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => setView('grid')}
-                  title="Grid view"
-                  className={cn('p-1.5 rounded-md transition-colors', view === 'grid' ? 'bg-white text-slate-900' : 'text-white/60 hover:text-white')}
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
+                  <SlidersHorizontal size={13} />
+                  {hasFilters ? 'Clear filters' : 'Filters'}
                 </button>
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Stats row */}
-          {entries.length > 0 && (
-            <div className="flex flex-wrap gap-6 mt-4 pt-4 border-t border-white/10">
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-white/40 mb-0.5">Tracked</p>
-                <p className="text-xl font-black tabular-nums">{entries.length}</p>
-              </div>
-              {buys.length > 0 && (
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider text-white/40 mb-0.5">Conviction Buys</p>
-                  <p className="text-xl font-black tabular-nums text-emerald-400">{buys.length}</p>
-                </div>
-              )}
-              {avgBuyUpside != null && (
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider text-white/40 mb-0.5">Avg Upside (Buys)</p>
-                  <p className={cn('text-xl font-black tabular-nums', avgBuyUpside >= 0 ? 'text-emerald-400' : 'text-red-400')}>
-                    {avgBuyUpside >= 0 ? '+' : ''}{(avgBuyUpside * 100).toFixed(0)}%
-                  </p>
+          {/* Table or Grid */}
+          {view === 'table' ? (
+            <ValuationTable
+              entries={paginatedEntries}
+              sparklines={sparklines}
+              groups={allGroups}
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSort={handleSort}
+              onDelete={handleDelete}
+              onTagUpdate={handleTagUpdate}
+              onGroupUpdate={handleGroupUpdate}
+              onNoteSave={handleNoteSave}
+            />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {paginatedEntries.map((entry) => (
+                <GridCard key={entry.ticker} entry={entry} />
+              ))}
+              {paginatedEntries.length === 0 && (
+                <div className="col-span-full bg-white border border-[#E6ECF5] rounded-2xl p-10 text-center">
+                  <p className="text-[14px] text-slate-500">No valuations match your filters.</p>
                 </div>
               )}
             </div>
           )}
+
+          {/* Pagination */}
+          <Pagination
+            total={displayEntries.length}
+            page={currentPage}
+            pageSize={pageSize}
+            onPage={setCurrentPage}
+            onPageSize={setPageSize}
+          />
         </div>
-
-        {/* Loading skeletons */}
-        {loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="rounded-xl bg-white border border-slate-200 p-5 h-48 animate-pulse" />
-            ))}
-          </div>
-        )}
-
-        {/* Empty state */}
-        {!loading && entries.length === 0 && (
-          <div className="rounded-2xl bg-white border border-slate-200 p-8 sm:p-12 text-center">
-            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-            </div>
-            <h2 className="text-base font-semibold text-slate-700 mb-1">No saved analyses yet</h2>
-            <p className="text-sm text-slate-400 mb-6">Search a stock and save your first analysis</p>
-            <Link
-              href="/analyze"
-              className="flex sm:inline-flex items-center justify-center rounded-xl px-5 py-3 sm:py-2.5 text-sm font-bold text-white transition-colors"
-              style={{ background: '#0F2A5E' }}
-            >
-              Analyze a stock →
-            </Link>
-          </div>
-        )}
-
-        {/* Content */}
-        {!loading && entries.length > 0 && (
-          <div className="space-y-5">
-            <GroupTabs
-              groups={allGroups}
-              active={activeGroup}
-              counts={groupCounts}
-              totalCount={entries.length}
-              onSelect={setActiveGroup}
-              onNewGroup={handleNewGroup}
-            />
-
-            {view === 'table' ? (
-              <ValuationTable
-                entries={filtered}
-                sparklines={sparklines}
-                groups={allGroups}
-                onDelete={handleDelete}
-                onTagUpdate={handleTagUpdate}
-                onGroupUpdate={handleGroupUpdate}
-              />
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filtered.map((entry) => (
-                  <ValuationCard key={entry.ticker} entry={entry} />
-                ))}
-                {filtered.length === 0 && activeGroup && (
-                  <div className="col-span-1 sm:col-span-2 lg:col-span-3 rounded-xl bg-white border border-slate-200 p-10 text-center">
-                    <p className="text-sm text-slate-400">No stocks in &quot;{activeGroup}&quot; yet.</p>
-                    <p className="text-xs text-slate-300 mt-1">Use the ··· menu on any row in Table view to assign stocks here.</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   )
 }

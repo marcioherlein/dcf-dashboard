@@ -4,62 +4,82 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import type { WatchlistEntry, ListTag } from '@/lib/simplifier/types'
 import { Sparkline, SparklineSkeleton } from '@/components/ui/Sparkline'
-import { ListTagBadge, cycleTag } from '@/components/simplifier/ListTagSelector'
+import { ConfidenceRing } from './ConfidenceRing'
 import { fmtPrice, fmtPct } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type SortKey = 'ticker' | 'upsidePct' | 'overallScore' | 'updatedAt' | 'price'
+export type SortKey = 'ticker' | 'upsidePct' | 'overallScore' | 'updatedAt' | 'price' | 'fairValue'
 
-interface ValuationTableProps {
-  entries: WatchlistEntry[]
-  sparklines: Record<string, number[] | null>
-  groups: string[]
-  onDelete: (ticker: string) => void
-  onTagUpdate: (ticker: string, tag: ListTag) => void
-  onGroupUpdate: (ticker: string, groupName: string | null) => void
+export interface ValuationTableProps {
+  entries:        WatchlistEntry[]
+  sparklines:     Record<string, number[] | null>
+  groups:         string[]
+  sortKey:        SortKey
+  sortDir:        'asc' | 'desc'
+  onSort:         (key: SortKey) => void
+  onDelete:       (ticker: string) => void
+  onTagUpdate:    (ticker: string, tag: ListTag) => void
+  onGroupUpdate:  (ticker: string, groupName: string | null) => void
+  onNoteSave:     (ticker: string, note: string) => Promise<void>
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function relativeDate(iso: string): string {
+export function relativeDate(iso: string): string {
   const ms = Date.now() - new Date(iso).getTime()
-  const d = Math.floor(ms / 86400000)
+  const d  = Math.floor(ms / 86400000)
   if (d === 0) return 'Today'
-  if (d === 1) return '1d ago'
-  if (d < 30) return `${d}d ago`
+  if (d === 1) return 'Yesterday'
+  if (d < 7)   return `${d}d ago`
+  if (d < 30)  return `${Math.floor(d / 7)}w ago`
   const m = Math.floor(d / 30)
   if (m === 1) return '1mo ago'
-  if (m < 12) return `${m}mo ago`
+  if (m < 12)  return `${m}mo ago`
   return `${Math.floor(m / 12)}y ago`
 }
 
-function sortEntries(entries: WatchlistEntry[], key: SortKey, dir: 'asc' | 'desc'): WatchlistEntry[] {
-  return [...entries].sort((a, b) => {
-    let va: string | number
-    let vb: string | number
-    switch (key) {
-      case 'ticker':       va = a.ticker; vb = b.ticker; break
-      case 'upsidePct':    va = a.snapshot.upsidePct ?? -Infinity; vb = b.snapshot.upsidePct ?? -Infinity; break
-      case 'overallScore': va = a.overallScore ?? -Infinity; vb = b.overallScore ?? -Infinity; break
-      case 'price':        va = a.snapshot.price ?? -Infinity; vb = b.snapshot.price ?? -Infinity; break
-      case 'updatedAt':    va = a.updatedAt; vb = b.updatedAt; break
-    }
-    if (va < vb) return dir === 'asc' ? -1 : 1
-    if (va > vb) return dir === 'asc' ? 1 : -1
-    return 0
-  })
+export function daysSince(iso: string): number {
+  return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)
 }
 
-// ── Stock Logo ────────────────────────────────────────────────────────────────
+function getVerdict(entry: WatchlistEntry): 'Undervalued' | 'Fair Value' | 'Overvalued' | 'Needs Review' {
+  if (entry.snapshot.fairValue == null || entry.snapshot.upsidePct == null) return 'Needs Review'
+  if (entry.snapshot.upsidePct > 0.15)  return 'Undervalued'
+  if (entry.snapshot.upsidePct > -0.15) return 'Fair Value'
+  return 'Overvalued'
+}
+
+function tagInfo(tag: ListTag): { label: string; cls: string; dot: string } | null {
+  if (!tag) return null
+  if (tag === 'buy')   return { label: 'High Conviction', cls: 'bg-blue-50 text-blue-700 border-blue-200',   dot: 'bg-blue-500' }
+  if (tag === 'watch') return { label: 'Watch',            cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' }
+  if (tag === 'pass')  return { label: 'Avoid',            cls: 'bg-red-50 text-red-600 border-red-200',       dot: 'bg-red-400' }
+  return null
+}
+
+function verdictInfo(verdict: ReturnType<typeof getVerdict>): { cls: string } {
+  if (verdict === 'Undervalued')  return { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
+  if (verdict === 'Fair Value')   return { cls: 'bg-slate-100 text-slate-600 border-slate-200' }
+  if (verdict === 'Overvalued')   return { cls: 'bg-red-50 text-red-600 border-red-200' }
+  return { cls: 'bg-amber-50 text-amber-700 border-amber-200' }
+}
+
+function nextTag(tag: ListTag): ListTag {
+  if (tag === 'watch') return 'buy'
+  if (tag === 'buy')   return 'pass'
+  return 'watch'
+}
+
+// ── Stock Logo ─────────────────────────────────────────────────────────────────
 
 function StockLogo({ ticker }: { ticker: string }) {
   const [failed, setFailed] = useState(false)
   const domain = ticker.toLowerCase().replace(/[^a-z0-9]/g, '') + '.com'
   if (failed) {
     return (
-      <div className="w-7 h-7 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0">
+      <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0">
         <span className="text-[10px] font-bold text-slate-400 uppercase">{ticker.slice(0, 2)}</span>
       </div>
     )
@@ -69,83 +89,164 @@ function StockLogo({ ticker }: { ticker: string }) {
     <img
       src={`https://logo.clearbit.com/${domain}`}
       alt={ticker}
-      width={28}
-      height={28}
-      className="rounded-md w-7 h-7 object-cover flex-shrink-0"
+      width={36}
+      height={36}
+      className="rounded-xl w-9 h-9 object-cover flex-shrink-0 border border-slate-100"
       onError={() => setFailed(true)}
     />
   )
 }
 
-// ── Score cell ────────────────────────────────────────────────────────────────
+// ── Expanded Note Panel ────────────────────────────────────────────────────────
 
-function ScoreCell({ score }: { score: number | null }) {
-  if (score == null) return <span className="text-slate-300 font-mono text-[13px]">—</span>
-  const pct = Math.round(score * 100)
-  const color = pct >= 65 ? '#059669' : pct >= 40 ? '#d97706' : '#dc2626'
-  return <span className="font-mono text-[13px] font-semibold" style={{ color }}>{pct}%</span>
+function ExpandedNotePanel({ entry, onNoteSave, onClose }: {
+  entry:       WatchlistEntry
+  onNoteSave:  (ticker: string, note: string) => Promise<void>
+  onClose:     () => void
+}) {
+  const thesis  = entry.notes?.['__thesis__'] ?? ''
+  const [text,  setText]   = useState(thesis)
+  const [saving, setSaving] = useState(false)
+  const [edited, setEdited] = useState(false)
+
+  const handleSave = async () => {
+    setSaving(true)
+    await onNoteSave(entry.ticker, text)
+    setSaving(false)
+    setEdited(false)
+  }
+
+  return (
+    <tr>
+      <td colSpan={11} className="px-0 py-0 border-b border-blue-100">
+        <div className="bg-[#F0F7FF] border-t border-blue-100 px-5 py-4 flex gap-4 items-start">
+          {/* Icon */}
+          <div className="shrink-0 w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center mt-0.5">
+            <svg className="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h6m-6 4h10M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" />
+            </svg>
+          </div>
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-bold text-blue-700 uppercase tracking-wider mb-1.5">Analyst note</p>
+            {text.trim() ? (
+              <p className="text-[13px] text-slate-700 leading-relaxed mb-2">{text}</p>
+            ) : (
+              <p className="text-[13px] text-slate-400 italic mb-2">
+                No note yet. Add one to remember your thesis.
+              </p>
+            )}
+            <textarea
+              value={text}
+              onChange={(e) => { setText(e.target.value); setEdited(true) }}
+              rows={2}
+              placeholder="Write your thesis, key reasons, or what to watch for…"
+              className="w-full text-[13px] text-slate-700 bg-white border border-blue-200 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 resize-none placeholder-slate-300"
+            />
+            <div className="flex items-center gap-3 mt-2">
+              {edited && (
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="text-[12px] font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
+                >
+                  {saving ? 'Saving…' : 'Save note'}
+                </button>
+              )}
+              <Link
+                href={`/stock/${entry.ticker}`}
+                className="text-[12px] font-semibold text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1"
+              >
+                View full analysis
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+              <button
+                onClick={onClose}
+                className="ml-auto text-[12px] text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+  )
 }
 
-// ── Actions dropdown ──────────────────────────────────────────────────────────
+// ── Actions Menu ───────────────────────────────────────────────────────────────
 
 function ActionsMenu({ entry, groups, onDelete, onTagUpdate, onGroupUpdate }: {
-  entry: WatchlistEntry
-  groups: string[]
-  onDelete: () => void
-  onTagUpdate: (tag: ListTag) => void
+  entry:         WatchlistEntry
+  groups:        string[]
+  onDelete:      () => void
+  onTagUpdate:   (tag: ListTag) => void
   onGroupUpdate: (groupName: string | null) => void
 }) {
-  const [open, setOpen] = useState(false)
+  const [open,     setOpen]     = useState(false)
   const [moveOpen, setMoveOpen] = useState(false)
   const [newGroup, setNewGroup] = useState('')
+  const [confirm,  setConfirm]  = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!open) return
-    const handler = (e: MouseEvent) => {
+    const h = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false)
-        setMoveOpen(false)
+        setOpen(false); setMoveOpen(false); setConfirm(false)
       }
     }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
   }, [open])
 
-  const close = () => { setOpen(false); setMoveOpen(false); setNewGroup('') }
+  const close = () => { setOpen(false); setMoveOpen(false); setNewGroup(''); setConfirm(false) }
 
   return (
     <div ref={ref} className="relative">
       <button
         onClick={() => { setOpen((v) => !v); setMoveOpen(false) }}
-        className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors sm:p-1.5 sm:min-h-0 sm:min-w-0 sm:opacity-0 sm:group-hover:opacity-100"
+        aria-label="Row actions"
+        className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors sm:opacity-0 sm:group-hover:opacity-100"
       >
         <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
-          <circle cx="8" cy="3" r="1.3" />
-          <circle cx="8" cy="8" r="1.3" />
+          <circle cx="8" cy="3"  r="1.3" />
+          <circle cx="8" cy="8"  r="1.3" />
           <circle cx="8" cy="13" r="1.3" />
         </svg>
       </button>
 
       {open && (
-        <div className="absolute right-0 top-9 w-48 bg-white rounded-xl shadow-xl border border-slate-200 z-30 py-1 overflow-hidden">
+        <div className="absolute right-0 top-10 w-52 bg-white rounded-xl shadow-xl border border-slate-200 z-40 py-1 overflow-hidden">
           <Link
             href={`/stock/${entry.ticker}`}
-            className="flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-slate-700 hover:bg-slate-50 transition-colors"
+            className="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-700 hover:bg-slate-50"
             onClick={close}
           >
-            <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
-            Reopen analysis
+            Open analysis
           </Link>
 
           <button
-            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-slate-700 hover:bg-slate-50 transition-colors"
+            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-700 hover:bg-slate-50"
+            onClick={() => { onTagUpdate(nextTag(entry.listTag)); close() }}
+          >
+            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+            Change tag
+          </button>
+
+          <button
+            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-700 hover:bg-slate-50"
             onClick={() => setMoveOpen((v) => !v)}
           >
-            <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H7m0 0l4-4m-4 4l4 4" />
+            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 12h18M3 17h18" />
             </svg>
             Move to group
             <svg className="w-3 h-3 ml-auto text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -154,7 +255,7 @@ function ActionsMenu({ entry, groups, onDelete, onTagUpdate, onGroupUpdate }: {
           </button>
 
           {moveOpen && (
-            <div className="border-t border-slate-100 bg-slate-50/60">
+            <div className="border-t border-slate-100 bg-slate-50/60 py-1">
               {groups.filter((g) => g !== entry.groupName).map((g) => (
                 <button
                   key={g}
@@ -188,7 +289,7 @@ function ActionsMenu({ entry, groups, onDelete, onTagUpdate, onGroupUpdate }: {
                 {newGroup.trim() && (
                   <button
                     onClick={() => { onGroupUpdate(newGroup.trim()); close() }}
-                    className="text-[11px] text-blue-600 font-semibold hover:text-blue-700 shrink-0"
+                    className="text-[11px] text-blue-600 font-semibold hover:text-blue-700"
                   >
                     Add
                   </button>
@@ -197,26 +298,36 @@ function ActionsMenu({ entry, groups, onDelete, onTagUpdate, onGroupUpdate }: {
             </div>
           )}
 
-          <button
-            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-slate-700 hover:bg-slate-50 transition-colors"
-            onClick={() => { onTagUpdate(cycleTag(entry.listTag)); close() }}
-          >
-            <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
-            </svg>
-            Change tag
-          </button>
-
           <div className="border-t border-slate-100 mt-1 pt-1">
-            <button
-              onClick={() => { onDelete(); close() }}
-              className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-red-600 hover:bg-red-50 transition-colors"
-            >
-              <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              Delete
-            </button>
+            {confirm ? (
+              <div className="px-3.5 py-2">
+                <p className="text-[12px] text-slate-600 mb-2">Remove this analysis?</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { onDelete(); close() }}
+                    className="flex-1 py-1.5 rounded-lg bg-red-600 text-white text-[12px] font-semibold hover:bg-red-700 transition-colors"
+                  >
+                    Remove
+                  </button>
+                  <button
+                    onClick={() => setConfirm(false)}
+                    className="flex-1 py-1.5 rounded-lg border border-slate-200 text-[12px] text-slate-600 hover:bg-slate-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirm(true)}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-red-600 hover:bg-red-50"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Remove analysis
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -224,32 +335,28 @@ function ActionsMenu({ entry, groups, onDelete, onTagUpdate, onGroupUpdate }: {
   )
 }
 
-// ── Sortable column header ────────────────────────────────────────────────────
+// ── Sortable Header Cell ───────────────────────────────────────────────────────
 
 function Th({ label, sortKey, current, dir, onSort, align = 'right' }: {
-  label: string
-  sortKey: SortKey
-  current: SortKey
-  dir: 'asc' | 'desc'
-  onSort: (k: SortKey) => void
-  align?: 'left' | 'right'
+  label:    string
+  sortKey:  SortKey
+  current:  SortKey
+  dir:      'asc' | 'desc'
+  onSort:   (k: SortKey) => void
+  align?:   'left' | 'right'
 }) {
   const active = current === sortKey
   return (
     <th
       onClick={() => onSort(sortKey)}
       className={cn(
-        'px-3 py-2.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wide cursor-pointer select-none hover:text-slate-600 transition-colors whitespace-nowrap',
+        'px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-[0.05em] cursor-pointer select-none hover:text-slate-600 transition-colors whitespace-nowrap',
         align === 'right' ? 'text-right' : 'text-left',
       )}
     >
       <span className={cn('inline-flex items-center gap-1', align === 'right' ? 'justify-end' : 'justify-start')}>
         {label}
-        <svg
-          className={cn('w-3 h-3 transition-colors', active ? 'text-slate-600' : 'opacity-25')}
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
+        <svg className={cn('w-3 h-3 transition-opacity', active ? 'opacity-100 text-blue-500' : 'opacity-20')} fill="currentColor" viewBox="0 0 20 20">
           {active && dir === 'asc' ? (
             <path d="M10 6l-4 4h8l-4-4z" />
           ) : active && dir === 'desc' ? (
@@ -263,177 +370,416 @@ function Th({ label, sortKey, current, dir, onSort, align = 'right' }: {
   )
 }
 
-// ── Main Table ────────────────────────────────────────────────────────────────
+// ── Mobile Valuation Card ──────────────────────────────────────────────────────
 
-export function ValuationTable({ entries, sparklines, groups, onDelete, onTagUpdate, onGroupUpdate }: ValuationTableProps) {
-  const [sortKey, setSortKey] = useState<SortKey>('updatedAt')
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+function MobileValuationCard({ entry, sparklines, onDelete, onTagUpdate, onGroupUpdate, onNoteSave, groups }: {
+  entry:         WatchlistEntry
+  sparklines:    Record<string, number[] | null>
+  groups:        string[]
+  onDelete:      () => void
+  onTagUpdate:   (tag: ListTag) => void
+  onGroupUpdate: (groupName: string | null) => void
+  onNoteSave:    (ticker: string, note: string) => Promise<void>
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const prices   = sparklines[entry.ticker]
+  const up       = prices && prices.length >= 2 ? prices[prices.length - 1] >= prices[0] : true
+  const upside   = entry.snapshot.upsidePct
+  const verdict  = getVerdict(entry)
+  const vtInfo   = verdictInfo(verdict)
+  const tInfo    = tagInfo(entry.listTag)
 
-  const handleSort = (key: SortKey) => {
-    if (key === sortKey) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
-    else { setSortKey(key); setSortDir('desc') }
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <div className="px-4 py-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <StockLogo ticker={entry.ticker} />
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Link href={`/stock/${entry.ticker}`} className="text-[15px] font-bold text-slate-900 font-mono hover:text-blue-600 transition-colors">
+                  {entry.ticker}
+                </Link>
+                {tInfo && (
+                  <span className={cn('inline-flex items-center gap-1 text-[10px] font-bold rounded-full px-2 py-0.5 border', tInfo.cls)}>
+                    <span className={cn('w-1.5 h-1.5 rounded-full', tInfo.dot)} />
+                    {tInfo.label}
+                  </span>
+                )}
+              </div>
+              <p className="text-[12px] text-slate-500 mt-0.5 truncate">{entry.companyName}</p>
+            </div>
+          </div>
+          <ActionsMenu
+            entry={entry}
+            groups={groups}
+            onDelete={onDelete}
+            onTagUpdate={onTagUpdate}
+            onGroupUpdate={onGroupUpdate}
+          />
+        </div>
+
+        <div className="grid grid-cols-3 gap-3 mt-4">
+          <div>
+            <p className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold mb-0.5">Price</p>
+            <p className="text-[14px] font-bold text-slate-900 tabular-nums">{fmtPrice(entry.snapshot.price, 'USD')}</p>
+          </div>
+          <div>
+            <p className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold mb-0.5">Fair Value</p>
+            <p className="text-[14px] font-bold text-slate-600 tabular-nums">{fmtPrice(entry.snapshot.fairValue, 'USD')}</p>
+          </div>
+          <div>
+            <p className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold mb-0.5">Upside</p>
+            <p className={cn('text-[14px] font-bold tabular-nums', upside == null ? 'text-slate-300' : upside >= 0 ? 'text-emerald-600' : 'text-red-600')}>
+              {upside != null ? `${upside >= 0 ? '+' : ''}${(upside * 100).toFixed(1)}%` : '—'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+          <span className={cn('text-[11px] font-semibold rounded-full px-2.5 py-1 border', vtInfo.cls)}>
+            {verdict}
+          </span>
+          <span className="text-[11px] text-slate-400">{relativeDate(entry.updatedAt)}</span>
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            {expanded ? 'Hide note' : 'Show note'}
+          </button>
+        </div>
+      </div>
+
+      {expanded && (
+        <div className="bg-[#F0F7FF] border-t border-blue-100 px-4 py-3">
+          <NoteEditorMobile entry={entry} onNoteSave={onNoteSave} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+function NoteEditorMobile({ entry, onNoteSave }: {
+  entry: WatchlistEntry
+  onNoteSave: (ticker: string, note: string) => Promise<void>
+}) {
+  const thesis = entry.notes?.['__thesis__'] ?? ''
+  const [text, setText]    = useState(thesis)
+  const [saving, setSaving] = useState(false)
+  const [edited, setEdited] = useState(false)
+
+  const handleSave = async () => {
+    setSaving(true)
+    await onNoteSave(entry.ticker, text)
+    setSaving(false)
+    setEdited(false)
   }
 
-  const sorted = sortEntries(entries, sortKey, sortDir)
+  return (
+    <div>
+      <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider mb-2">Analyst note</p>
+      <textarea
+        value={text}
+        onChange={(e) => { setText(e.target.value); setEdited(true) }}
+        rows={3}
+        placeholder="Write your thesis…"
+        className="w-full text-[13px] text-slate-700 bg-white border border-blue-200 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-400 resize-none placeholder-slate-300"
+      />
+      <div className="flex items-center gap-3 mt-1.5">
+        {edited && (
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="text-[12px] font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
+          >
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        )}
+        <Link href={`/stock/${entry.ticker}`} className="text-[12px] font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+          View full analysis →
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+// ── Main Table ─────────────────────────────────────────────────────────────────
+
+export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, onSort, onDelete, onTagUpdate, onGroupUpdate, onNoteSave }: ValuationTableProps) {
+  const [expandedTicker, setExpandedTicker] = useState<string | null>(null)
+
+  const handleSort = (key: SortKey) => { onSort(key) }
+
+  const sorted = [...entries].sort((a, b) => {
+    let va: string | number, vb: string | number
+    switch (sortKey) {
+      case 'ticker':       va = a.ticker;                            vb = b.ticker;                            break
+      case 'upsidePct':    va = a.snapshot.upsidePct ?? -Infinity;   vb = b.snapshot.upsidePct ?? -Infinity;   break
+      case 'overallScore': va = a.overallScore ?? -Infinity;         vb = b.overallScore ?? -Infinity;         break
+      case 'price':        va = a.snapshot.price ?? -Infinity;       vb = b.snapshot.price ?? -Infinity;       break
+      case 'fairValue':    va = a.snapshot.fairValue ?? -Infinity;   vb = b.snapshot.fairValue ?? -Infinity;   break
+      case 'updatedAt':    va = a.updatedAt;                         vb = b.updatedAt;                         break
+    }
+    if (va < vb) return sortDir === 'asc' ? -1 : 1
+    if (va > vb) return sortDir === 'asc' ?  1 : -1
+    return 0
+  })
+
+  const toggleExpand = (ticker: string) => {
+    setExpandedTicker((prev) => (prev === ticker ? null : ticker))
+  }
 
   if (entries.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-12 text-center">
-        <p className="text-sm text-slate-400">No stocks in this group yet.</p>
-        <p className="text-xs text-slate-300 mt-1">Use the ··· menu on any row to move stocks here.</p>
+      <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center">
+        <p className="text-[14px] text-slate-500 font-medium">No valuations match your filters.</p>
+        <p className="text-[12px] text-slate-400 mt-1">Try clearing filters or switching tabs.</p>
       </div>
     )
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-      <div className="overflow-x-auto -webkit-overflow-scrolling-touch">
-        <table className="w-full min-w-[680px]">
-          <thead>
-            <tr className="border-b border-slate-200 bg-slate-50/80">
-              <Th label="Ticker" sortKey="ticker" current={sortKey} dir={sortDir} onSort={handleSort} align="left" />
-              <th className="px-3 py-2.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wide text-left whitespace-nowrap">
-                Tag
-              </th>
-              <th className="hidden sm:table-cell px-3 py-2.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wide text-center whitespace-nowrap">
-                1M
-              </th>
-              <Th label="Price" sortKey="price" current={sortKey} dir={sortDir} onSort={handleSort} />
-              <th className="px-3 py-2.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wide text-right whitespace-nowrap">
-                Fair Value
-              </th>
-              <Th label="Upside" sortKey="upsidePct" current={sortKey} dir={sortDir} onSort={handleSort} />
-              <th className="hidden md:table-cell px-3 py-2.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wide text-right whitespace-nowrap">
-                Since Save
-              </th>
-              <Th label="Score" sortKey="overallScore" current={sortKey} dir={sortDir} onSort={handleSort} />
-              <Th label="Updated" sortKey="updatedAt" current={sortKey} dir={sortDir} onSort={handleSort} />
-              <th className="px-3 py-2.5 w-10" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {sorted.map((entry) => {
-              const prices = sparklines[entry.ticker]
-              const sparkLoading = !(entry.ticker in sparklines)
-              const up = prices && prices.length >= 2 ? prices[prices.length - 1] >= prices[0] : true
+    <>
+      {/* Desktop table */}
+      <div className="hidden sm:block bg-white border border-[#E6ECF5] rounded-2xl overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[920px]">
+            <thead>
+              <tr className="bg-[#F8FAFC] border-b border-[#E6ECF5]">
+                {/* Expand column */}
+                <th className="w-10 px-3 py-3" />
+                <Th label="Ticker & Company" sortKey="ticker"       current={sortKey} dir={sortDir} onSort={handleSort} align="left" />
+                <th className="px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-[0.05em] text-left whitespace-nowrap">Tag</th>
+                <th className="px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-[0.05em] text-center whitespace-nowrap">1M</th>
+                <Th label="Price"      sortKey="price"        current={sortKey} dir={sortDir} onSort={handleSort} />
+                <Th label="Fair Value" sortKey="fairValue"    current={sortKey} dir={sortDir} onSort={handleSort} />
+                <Th label="Upside"     sortKey="upsidePct"    current={sortKey} dir={sortDir} onSort={handleSort} />
+                <th className="px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-[0.05em] text-right whitespace-nowrap">Verdict</th>
+                <Th label="Confidence" sortKey="overallScore" current={sortKey} dir={sortDir} onSort={handleSort} />
+                <th className="hidden lg:table-cell px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-[0.05em] text-right whitespace-nowrap">Since Save</th>
+                <Th label="Updated"    sortKey="updatedAt"    current={sortKey} dir={sortDir} onSort={handleSort} />
+                <th className="px-3 py-3 w-12" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#EDF2F7]">
+              {sorted.map((entry) => {
+                const prices      = sparklines[entry.ticker]
+                const sparkLoading= !(entry.ticker in sparklines)
+                const up          = prices && prices.length >= 2 ? prices[prices.length - 1] >= prices[0] : true
+                const verdict     = getVerdict(entry)
+                const vtInfo      = verdictInfo(verdict)
+                const tInfo       = tagInfo(entry.listTag)
+                const upside      = entry.snapshot.upsidePct
+                const isExpanded  = expandedTicker === entry.ticker
 
-              return (
-                <tr key={entry.ticker} className="hover:bg-slate-50/60 transition-colors group">
-                  {/* Ticker + Company */}
-                  <td className="px-3 py-3 min-w-[140px]">
-                    <div className="flex items-center gap-2.5">
-                      <StockLogo ticker={entry.ticker} />
-                      <div className="min-w-0">
-                        <div className="text-[13px] font-bold font-mono text-slate-900 leading-none">{entry.ticker}</div>
-                        <div className="text-[11px] text-slate-400 mt-0.5 truncate max-w-[110px]">{entry.companyName}</div>
-                      </div>
-                    </div>
-                  </td>
+                // Since Save: current sparkline price vs saved price
+                const currentPrice = prices?.[prices.length - 1] ?? null
+                const savedPrice   = entry.snapshot.price
+                const priceDelta   = currentPrice != null && savedPrice != null && savedPrice > 0 && !sparkLoading
+                  ? (currentPrice - savedPrice) / savedPrice
+                  : null
+                const towardFV = priceDelta != null && upside != null
+                  ? (upside > 0 && priceDelta > 0) || (upside <= 0 && priceDelta < 0)
+                  : null
 
-                  {/* Tag */}
-                  <td className="px-3 py-3 whitespace-nowrap">
-                    <ListTagBadge
-                      tag={entry.listTag}
-                      onClick={() => onTagUpdate(entry.ticker, cycleTag(entry.listTag))}
-                    />
-                  </td>
-
-                  {/* 1M Sparkline — hidden on mobile */}
-                  <td className="hidden sm:table-cell px-3 py-3">
-                    <div className="flex items-center justify-center" style={{ minWidth: 88 }}>
-                      {sparkLoading ? (
-                        <SparklineSkeleton width={88} height={32} />
-                      ) : prices && prices.length >= 2 ? (
-                        <Sparkline prices={prices} up={up} width={88} height={32} />
-                      ) : (
-                        <div className="flex items-center justify-center text-slate-200 text-[11px]" style={{ width: 88, height: 32 }}>—</div>
-                      )}
-                    </div>
-                  </td>
-
-                  {/* Price */}
-                  <td className="px-3 py-3 text-right whitespace-nowrap">
-                    <span className="text-[13px] font-mono text-slate-700">
-                      {fmtPrice(entry.snapshot.price, 'USD')}
-                    </span>
-                  </td>
-
-                  {/* Fair Value */}
-                  <td className="px-3 py-3 text-right whitespace-nowrap">
-                    <span className="text-[13px] font-mono text-slate-500">
-                      {fmtPrice(entry.snapshot.fairValue, 'USD')}
-                    </span>
-                  </td>
-
-                  {/* Upside */}
-                  <td className="px-3 py-3 text-right whitespace-nowrap">
-                    <span
+                return (
+                  <>
+                    <tr
+                      key={entry.ticker}
                       className={cn(
-                        'text-[13px] font-mono font-semibold',
-                        entry.snapshot.upsidePct == null
-                          ? 'text-slate-300'
-                          : entry.snapshot.upsidePct >= 0
-                          ? 'text-emerald-600'
-                          : 'text-red-500',
+                        'group transition-colors cursor-default',
+                        isExpanded ? 'bg-[#F8FBFF]' : 'hover:bg-[#F8FAFC]',
                       )}
                     >
-                      {fmtPct(entry.snapshot.upsidePct)}
-                    </span>
-                  </td>
+                      {/* Expand chevron */}
+                      <td className="px-3 py-4 w-10">
+                        <button
+                          onClick={() => toggleExpand(entry.ticker)}
+                          aria-label={isExpanded ? 'Collapse row' : 'Expand row'}
+                          className="text-slate-300 hover:text-blue-500 transition-colors"
+                        >
+                          <svg
+                            className={cn('w-4 h-4 transition-transform', isExpanded && 'rotate-90')}
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </td>
 
-                  {/* Since Save — hidden on mobile */}
-                  <td className="hidden md:table-cell px-3 py-3 text-right whitespace-nowrap">
-                    {(() => {
-                      const currentPrice = prices?.[prices.length - 1] ?? null
-                      const savedPrice = entry.snapshot.price
-                      if (currentPrice == null || savedPrice == null || savedPrice === 0 || sparkLoading) {
-                        return <span className="text-slate-300 font-mono text-[12px]">—</span>
-                      }
-                      const delta = (currentPrice - savedPrice) / savedPrice
-                      const priceRose = delta > 0
-                      const isUndervalued = (entry.snapshot.upsidePct ?? 0) > 0
-                      const towardFV = (isUndervalued && priceRose) || (!isUndervalued && !priceRose)
-                      return (
-                        <div className="text-right">
-                          <span className={cn('text-[13px] font-mono font-semibold', priceRose ? 'text-emerald-600' : 'text-red-500')}>
-                            {priceRose ? '+' : ''}{(delta * 100).toFixed(1)}% {priceRose ? '↗' : '↘'}
+                      {/* Ticker & Company */}
+                      <td className="px-4 py-4 min-w-[170px]">
+                        <div className="flex items-center gap-3">
+                          <StockLogo ticker={entry.ticker} />
+                          <div className="min-w-0">
+                            <Link
+                              href={`/stock/${entry.ticker}`}
+                              className="text-[14px] font-bold font-mono text-[#0F172A] hover:text-blue-600 transition-colors leading-tight block"
+                            >
+                              {entry.ticker}
+                            </Link>
+                            <p className="text-[12px] text-slate-500 mt-0.5 truncate max-w-[130px]">{entry.companyName}</p>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Tag */}
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        {tInfo ? (
+                          <span className={cn('inline-flex items-center gap-1.5 text-[11px] font-bold rounded-full px-2.5 py-1 border', tInfo.cls)}>
+                            <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', tInfo.dot)} />
+                            {tInfo.label}
                           </span>
-                          {entry.snapshot.upsidePct != null && (
-                            <div className={cn('text-[10px] mt-0.5', towardFV ? 'text-emerald-500' : 'text-slate-400')}>
-                              {towardFV ? '↑ Toward FV' : '↓ Away from FV'}
-                            </div>
+                        ) : (
+                          <span className="text-slate-300 text-[12px]">—</span>
+                        )}
+                      </td>
+
+                      {/* 1M Sparkline */}
+                      <td className="px-4 py-4">
+                        <div className="flex items-center justify-center" style={{ minWidth: 100 }}>
+                          {sparkLoading ? (
+                            <SparklineSkeleton width={100} height={36} />
+                          ) : prices && prices.length >= 2 ? (
+                            <Sparkline prices={prices} up={up} width={100} height={36} />
+                          ) : (
+                            <span className="text-slate-200 text-[11px]">—</span>
                           )}
                         </div>
-                      )
-                    })()}
-                  </td>
+                      </td>
 
-                  {/* Score */}
-                  <td className="px-3 py-3 text-right whitespace-nowrap">
-                    <ScoreCell score={entry.overallScore} />
-                  </td>
+                      {/* Price */}
+                      <td className="px-4 py-4 text-right whitespace-nowrap">
+                        <div>
+                          <p className="text-[14px] font-semibold text-[#0F172A] tabular-nums">
+                            {fmtPrice(entry.snapshot.price, 'USD')}
+                          </p>
+                          {(() => {
+                            const livePrice = prices?.[prices.length - 1] ?? null
+                            const prevPrice  = prices?.[prices.length - 2] ?? null
+                            if (livePrice != null && prevPrice != null && prevPrice > 0) {
+                              const d = (livePrice - prevPrice) / prevPrice
+                              return (
+                                <p className={cn('text-[11px] tabular-nums font-semibold', d >= 0 ? 'text-emerald-600' : 'text-red-500')}>
+                                  {d >= 0 ? '+' : ''}{(d * 100).toFixed(2)}%
+                                </p>
+                              )
+                            }
+                            return null
+                          })()}
+                        </div>
+                      </td>
 
-                  {/* Updated */}
-                  <td className="px-3 py-3 text-right whitespace-nowrap">
-                    <span className="text-[12px] text-slate-400">{relativeDate(entry.updatedAt)}</span>
-                  </td>
+                      {/* Fair Value */}
+                      <td className="px-4 py-4 text-right whitespace-nowrap">
+                        <p className="text-[14px] font-semibold text-slate-700 tabular-nums">
+                          {fmtPrice(entry.snapshot.fairValue, 'USD')}
+                        </p>
+                      </td>
 
-                  {/* Actions — always visible on touch */}
-                  <td className="px-2 py-3">
-                    <ActionsMenu
-                      entry={entry}
-                      groups={groups}
-                      onDelete={() => onDelete(entry.ticker)}
-                      onTagUpdate={(tag) => onTagUpdate(entry.ticker, tag)}
-                      onGroupUpdate={(groupName) => onGroupUpdate(entry.ticker, groupName)}
-                    />
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+                      {/* Upside */}
+                      <td className="px-4 py-4 text-right whitespace-nowrap">
+                        {upside != null ? (
+                          <div>
+                            <p className={cn('text-[14px] font-bold tabular-nums flex items-center justify-end gap-1', upside >= 0 ? 'text-emerald-600' : 'text-red-500')}>
+                              {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(1)}%
+                              <span className="text-[12px]">{upside >= 0 ? '↗' : '↘'}</span>
+                            </p>
+                            <p className="text-[10px] text-slate-400 font-medium text-right mt-0.5">
+                              {upside >= 0 ? 'Upside' : 'Downside'}
+                            </p>
+                          </div>
+                        ) : (
+                          <span className="text-slate-300 text-[13px]">—</span>
+                        )}
+                      </td>
+
+                      {/* Verdict */}
+                      <td className="px-4 py-4 text-right whitespace-nowrap">
+                        <span className={cn('text-[11px] font-semibold rounded-full px-2.5 py-1 border whitespace-nowrap', vtInfo.cls)}>
+                          {verdict}
+                        </span>
+                      </td>
+
+                      {/* Confidence */}
+                      <td className="px-4 py-4">
+                        <div className="flex justify-center">
+                          <ConfidenceRing score={entry.overallScore} size={40} />
+                        </div>
+                      </td>
+
+                      {/* Since Save */}
+                      <td className="hidden lg:table-cell px-4 py-4 text-right whitespace-nowrap">
+                        {priceDelta != null ? (
+                          <div>
+                            <p className={cn('text-[13px] font-semibold tabular-nums', priceDelta >= 0 ? 'text-emerald-600' : 'text-red-500')}>
+                              {priceDelta >= 0 ? '+' : ''}{(priceDelta * 100).toFixed(1)}% {priceDelta >= 0 ? '↗' : '↘'}
+                            </p>
+                            {towardFV != null && (
+                              <p className={cn('text-[10px] font-medium mt-0.5', towardFV ? 'text-emerald-500' : 'text-slate-400')}>
+                                {towardFV ? '↑ Toward FV' : '↓ Away from FV'}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-slate-300 text-[12px]">—</span>
+                        )}
+                      </td>
+
+                      {/* Updated */}
+                      <td className="px-4 py-4 text-right whitespace-nowrap">
+                        <span
+                          className="text-[12px] text-slate-500"
+                          title={new Date(entry.updatedAt).toLocaleString()}
+                        >
+                          {relativeDate(entry.updatedAt)}
+                        </span>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-3 py-4">
+                        <ActionsMenu
+                          entry={entry}
+                          groups={groups}
+                          onDelete={() => onDelete(entry.ticker)}
+                          onTagUpdate={(tag) => onTagUpdate(entry.ticker, tag)}
+                          onGroupUpdate={(g) => onGroupUpdate(entry.ticker, g)}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Expanded note panel */}
+                    {isExpanded && (
+                      <ExpandedNotePanel
+                        key={`${entry.ticker}-note`}
+                        entry={entry}
+                        onNoteSave={onNoteSave}
+                        onClose={() => setExpandedTicker(null)}
+                      />
+                    )}
+                  </>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+
+      {/* Mobile card list */}
+      <div className="sm:hidden space-y-3">
+        {sorted.map((entry) => (
+          <MobileValuationCard
+            key={entry.ticker}
+            entry={entry}
+            sparklines={sparklines}
+            groups={groups}
+            onDelete={() => onDelete(entry.ticker)}
+            onTagUpdate={(tag) => onTagUpdate(entry.ticker, tag)}
+            onGroupUpdate={(g) => onGroupUpdate(entry.ticker, g)}
+            onNoteSave={onNoteSave}
+          />
+        ))}
+      </div>
+    </>
   )
 }
