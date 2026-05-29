@@ -20,7 +20,6 @@ interface MarketInterpretationCardProps {
   analystRecommendation: string
   analystTargetMean: number | null
   currency: string
-  drivers: string[]
 }
 
 interface InterpBox {
@@ -94,9 +93,6 @@ function normalizeRec(raw: string): { label: string; color: string } {
   return { label: raw, color: 'text-[#64748B]' }
 }
 
-const POSITIVE_RE =
-  /strong|grow|profit|margin|cash\s*gen|moat|leader|dominan|innovat|compet.*advan|pric.*power|market.*share|expand|increas|high.*return|quality|best.in.class|track.record|breadth|diversif|solid|robust|effici|resilient|premium/i
-
 export default function MarketInterpretationCard({
   upsidePct,
   confidence,
@@ -105,12 +101,8 @@ export default function MarketInterpretationCard({
   analystRecommendation,
   analystTargetMean,
   currency,
-  drivers,
 }: MarketInterpretationCardProps) {
   const interp = buildInterpretation(upsidePct, confidence, reverseDCFInterpretation)
-
-  const positiveDrivers = drivers.filter((d) => POSITIVE_RE.test(d)).slice(0, 5)
-  const showDrivers = positiveDrivers.length >= 2
 
   const { label: recLabel, color: recColor } = normalizeRec(analystRecommendation)
   const showAnalyst = analystRecommendation.trim().length > 0
@@ -134,7 +126,7 @@ export default function MarketInterpretationCard({
           border: `1px solid ${interp.borderColor}`,
         }}
       >
-        <p className="text-[12.5px] font-[700] text-[#0F172A] leading-snug">
+        <p className="text-[13px] font-[700] text-[#0F172A] leading-snug">
           The stock {interp.title}
         </p>
         <p className="text-[12px] text-[#334155] leading-relaxed">{interp.body}</p>
@@ -144,25 +136,6 @@ export default function MarketInterpretationCard({
           </p>
         )}
       </div>
-
-      {/* Key Drivers */}
-      {showDrivers && (
-        <div>
-          <p className="text-[12px] font-[650] text-[#475569] mb-1.5">
-            Key drivers
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {positiveDrivers.map((driver, i) => (
-              <span
-                key={i}
-                className="bg-[#F1F5F9] border border-[#E2E8F0] rounded-full px-[9px] py-[6px] text-[11px] font-[600] text-[#334155]"
-              >
-                {driver}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Analyst consensus */}
       {showAnalyst && (

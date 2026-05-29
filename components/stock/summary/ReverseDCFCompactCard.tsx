@@ -234,7 +234,7 @@ export default function ReverseDCFCompactCard({
 
       {/* Emerging market note */}
       {isEmergingMarket && (
-        <p className="text-[10px] text-[#D97706] mt-1">
+        <p className="text-[11px] text-[#D97706] mt-1">
           ⚠ Emerging market — interpret CAGR benchmark with caution.
         </p>
       )}
@@ -254,8 +254,8 @@ function BarRow({ label, value, barColor, widthPct, zeroLineLeft }: BarRowProps)
   return (
     <div>
       <div className="flex items-center justify-between mb-0.5">
-        <span className="text-[10px] text-[#64748B] truncate">{label}</span>
-        <span className="text-[10px] font-[700] text-[#334155] tabular-nums ml-1 shrink-0">
+        <span className="text-[11px] text-[#64748B] truncate">{label}</span>
+        <span className="text-[11px] font-[700] text-[#334155] tabular-nums ml-1 shrink-0">
           {value != null ? `${value.toFixed(1)}%` : '—'}
         </span>
       </div>

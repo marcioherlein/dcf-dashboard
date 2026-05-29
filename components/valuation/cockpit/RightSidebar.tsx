@@ -59,7 +59,7 @@ function RangeBar({
 
   return (
     <div>
-      <div className="flex justify-between text-[10px] text-slate-400 mb-1.5 tabular-nums">
+      <div className="flex justify-between text-[11px] text-[#64748B] mb-1.5 tabular-nums">
         <span>{fmtPrice(min, currency)}</span>
         <span>{fmtPrice(max, currency)}</span>
       </div>
@@ -80,7 +80,7 @@ function RangeBar({
           />
         )}
       </div>
-      <p className="text-[10px] text-slate-400 mt-1 tabular-nums">
+      <p className="text-[11px] text-[#64748B] mt-1 tabular-nums">
         Current {fmtPrice(currentPrice, currency)}
       </p>
     </div>
@@ -161,7 +161,7 @@ export default function RightSidebar({
       <div className="px-5">
         <div className="flex items-center gap-2">
           <SectionLabel>Model Divergence</SectionLabel>
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border -mt-2.5 ${ds.bg} ${ds.text}`}>
+          <span className={`text-[11px] font-[650] px-2 py-0.5 rounded-full border -mt-2.5 ${ds.bg} ${ds.text}`}>
             {ds.label}
           </span>
         </div>
@@ -199,7 +199,7 @@ export default function RightSidebar({
             <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
             </svg>
-            Save Analysis
+            Save to Watchlist
           </button>
         )}
       </div>
@@ -211,7 +211,7 @@ export default function RightSidebar({
             onClick={onViewFullDCF}
             className="w-full rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-800 font-semibold text-xs py-2.5 px-4 transition-colors flex items-center justify-center gap-2"
           >
-            Open Full DCF Model
+            View Year-by-Year DCF
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
@@ -221,7 +221,7 @@ export default function RightSidebar({
 
       {/* Disclaimer */}
       <div className="px-5 pb-5">
-        <p className="text-[10px] text-slate-400 leading-relaxed pt-3 border-t border-slate-100">
+        <p className="text-[11px] text-slate-400 leading-relaxed pt-3 border-t border-slate-100">
           Blended estimate from {output.methods.filter(m => m.fairValue != null && m.fairValue > 0).map(m => m.method).join(', ')}. Not investment advice.
         </p>
       </div>

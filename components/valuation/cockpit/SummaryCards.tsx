@@ -64,9 +64,7 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
           <p className="text-xs font-semibold text-slate-500">Investment Verdict</p>
           <p className={`text-xl font-bold leading-tight ${vstyle.text}`}>{output.verdict}</p>
           {output.upsidePct != null && (
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border self-start ${vstyle.badge}`}>
-              {methodsComputed} of {output.methods.length} models
-            </span>
+            <p className="text-xs text-slate-400">{methodsComputed} of {output.methods.length} models</p>
           )}
         </div>
 
