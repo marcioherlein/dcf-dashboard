@@ -106,6 +106,17 @@ function SearchHero() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+        e.preventDefault()
+        inputRef.current?.focus()
+      }
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [])
+
   const select = useCallback((symbol: string) => {
     setOpen(false); setQuery(''); router.push(`/stock/${symbol}`)
   }, [router])
@@ -151,9 +162,10 @@ function SearchHero() {
           />
           <button
             onClick={() => query.trim() && select(query.trim().toUpperCase())}
-            className="shrink-0 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all px-4 py-1.5 text-[13px] font-semibold text-white min-h-[44px]"
+            disabled={!query.trim()}
+            className="shrink-0 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 transition-all px-4 py-1.5 text-[13px] font-semibold text-white min-h-[44px]"
           >
-            Find analysis
+            Analyze
           </button>
         </div>
 
@@ -210,6 +222,8 @@ function SearchHero() {
 
 // ─── Stock Analysis Card ──────────────────────────────────────────────────────
 
+const ETF_LABEL: Record<string, string> = { SPY: 'S&P 500', QQQ: 'Nasdaq 100', DIA: 'Dow 30' }
+
 function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
   const up     = (q.changePct ?? 0) >= 0
   const reduced = useReducedMotion()
@@ -257,9 +271,11 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
             <span className="text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded-md px-2 py-0.5 font-mono leading-tight">
               {q.ticker}
             </span>
-            <span className="text-[9px] font-semibold text-slate-400 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 uppercase tracking-wide leading-tight">
-              {q.etfSource}
-            </span>
+            {q.etfSource && ETF_LABEL[q.etfSource] && (
+              <span className="text-[11px] font-medium text-slate-400 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 leading-tight">
+                {ETF_LABEL[q.etfSource]}
+              </span>
+            )}
           </div>
           {badge && (
             <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap shrink-0', badge.cls)}>
@@ -296,13 +312,13 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
         {/* Row 4: intrinsic value + upside (pushes to bottom) */}
         <div className="flex items-end justify-between px-4 py-3 mt-auto gap-3">
           <div>
-            <p className="flex items-center gap-1 text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">
+            <p className="flex items-center gap-1 text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-0.5">
               Intrinsic value
               <span
                 title="DCF-based fair value estimate using market-implied growth and WACC inputs"
                 className="cursor-help"
               >
-                <Info size={9} className="text-slate-300" />
+                <Info size={11} className="text-slate-300" />
               </span>
             </p>
             {fvLoading ? (
@@ -315,7 +331,7 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
           </div>
           {upsidePct != null && (
             <div className="text-right shrink-0">
-              <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Upside</p>
+              <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-0.5">Upside</p>
               <p className={cn('text-[14px] font-bold tabular-nums', upsidePct >= 0 ? 'text-emerald-600' : 'text-red-600')}>
                 {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
               </p>
@@ -661,7 +677,7 @@ function RecentlyViewed() {
                   <button
                     onClick={() => removeItem(r.ticker)}
                     title="Remove from history"
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 rounded-md text-slate-300 hover:text-slate-600 hover:bg-slate-100 transition-all"
+                    className="absolute top-2 right-2 p-1 rounded-md text-slate-300 hover:text-slate-600 hover:bg-slate-100 transition-all"
                   >
                     <X size={12} />
                   </button>
@@ -695,7 +711,7 @@ export default function AnalyzePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.28, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
         >
-          <PopularAnalysesSection />
+          <QuickActions />
         </motion.div>
 
         <motion.div
@@ -703,7 +719,7 @@ export default function AnalyzePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.28, delay: 0.10, ease: [0.16, 1, 0.3, 1] }}
         >
-          <MarketPricingLeaderboard quotes={STATIC_QUOTES} />
+          <PopularAnalysesSection />
         </motion.div>
 
         <motion.div
@@ -711,7 +727,7 @@ export default function AnalyzePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.28, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
         >
-          <QuickActions />
+          <MarketPricingLeaderboard quotes={STATIC_QUOTES} />
         </motion.div>
 
         <motion.div

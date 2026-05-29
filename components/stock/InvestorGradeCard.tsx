@@ -147,10 +147,10 @@ export default function InvestorGradeCard({
   const verdict = upsidePct == null || fairValue == null || zone == null
     ? null
     : zone === 'Undervalued'
-      ? `Our model estimates ${Math.abs(upsidePct * 100).toFixed(0)}% upside — trading below our fair value estimate. Preliminary · adjust assumptions in Valuation tab.`
+      ? `Our model estimates ${Math.abs(upsidePct * 100).toFixed(0)}% upside — trading below our fair value estimate.`
       : zone === 'Fairly Valued'
-        ? `Our model estimates this trades near fair value (${upsidePct >= 0 ? '+' : ''}${(upsidePct * 100).toFixed(0)}%). Preliminary · adjust assumptions in Valuation tab.`
-        : `Our model estimates this may be overvalued — trading ${Math.abs(upsidePct * 100).toFixed(0)}% above our estimate. Preliminary · adjust assumptions in Valuation tab.`
+        ? `Our model estimates this trades near fair value (${upsidePct >= 0 ? '+' : ''}${(upsidePct * 100).toFixed(0)}%).`
+        : `Our model estimates this may be overvalued — trading ${Math.abs(upsidePct * 100).toFixed(0)}% above our estimate.`
 
   // ── Compact 1-line strip (valuation tab) ──────────────────────────────────
   if (compact) {
@@ -238,21 +238,27 @@ export default function InvestorGradeCard({
 
             {/* One-sentence verdict */}
             {verdict && (
-              <motion.p
+              <motion.div
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25, delay: 0.2 }}
-                className={cn(
-                  'mt-3 text-[12px] leading-relaxed rounded-lg px-3 py-2',
-                  zone === 'Undervalued'
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                    : zone === 'Fairly Valued'
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                      : 'bg-red-50 text-red-700 border border-red-200',
-                )}
               >
-                {verdict}
-              </motion.p>
+                <p
+                  className={cn(
+                    'mt-3 text-[12px] leading-relaxed rounded-lg px-3 py-2',
+                    zone === 'Undervalued'
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : zone === 'Fairly Valued'
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                        : 'bg-red-50 text-red-700 border border-red-200',
+                  )}
+                >
+                  {verdict}
+                </p>
+                <p className="mt-1.5 text-[11px] text-slate-400 px-1">
+                  Preliminary estimate — adjust assumptions in the Valuation tab.
+                </p>
+              </motion.div>
             )}
           </div>
         </div>
@@ -277,7 +283,7 @@ export default function InvestorGradeCard({
             {/* Price vs Fair Value numbers */}
             <div className="flex items-end justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Current Price</p>
+                <p className="text-[11px] font-medium text-slate-500 mb-1">Current Price</p>
                 <p className="text-2xl font-bold text-slate-900 tabular-nums leading-none">
                   {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
@@ -295,7 +301,7 @@ export default function InvestorGradeCard({
 
               <div className="text-right min-w-0">
                 <div className="flex items-center justify-end gap-1.5 mb-1">
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Fair Value Est.</p>
+                  <p className="text-[11px] font-medium text-slate-500">Fair Value Est.</p>
                   <button
                     onClick={toggleAlert}
                     title={alertActive ? 'Remove fair value alert' : 'Alert me when price nears fair value'}
@@ -312,7 +318,7 @@ export default function InvestorGradeCard({
                 <p className={cn('text-2xl font-bold tabular-nums leading-none', isUndervalued ? 'text-emerald-600' : 'text-red-600')}>
                   {currSymbol}{displayFV.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
-                <p className="text-[11px] text-slate-400 mt-1">Blended from multiple models</p>
+                <p className="text-[11px] text-slate-500 mt-1">Blended from multiple models</p>
               </div>
             </div>
 
@@ -361,7 +367,7 @@ export default function InvestorGradeCard({
           {onViewDetails && (
             <button
               onClick={onViewDetails}
-              className="flex-1 rounded-xl py-3 min-h-[44px] text-[14px] font-semibold text-white transition-all bg-gradient-to-r from-blue-600 to-blue-500 shadow-sm hover:from-blue-700 hover:to-blue-600 active:scale-95"
+              className="flex-1 rounded-xl py-3 min-h-[44px] text-[14px] font-semibold text-white transition-all bg-blue-600 shadow-sm hover:bg-blue-700 active:scale-95"
             >
               Explore full valuation →
             </button>

@@ -209,7 +209,7 @@ export default function NormalizedPerfChart() {
           <div className="h-full flex items-center justify-center">
             <div className="flex gap-1">
               {[0, 1, 2].map(i => (
-                <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: `${i * 150}ms` }} />
+                <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-pulse" style={{ animationDelay: `${i * 150}ms` }} />
               ))}
             </div>
           </div>

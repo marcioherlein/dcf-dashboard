@@ -39,7 +39,7 @@ export default function ModelAlerts({ alerts }: Props) {
       </div>
       <div className="divide-y divide-slate-100">
         {alerts.map((a, i) => (
-          <div key={i} className={cn('flex items-start gap-3 px-4 py-3 border-l-4', a.severity === 'high' ? 'border-l-red-400' : 'border-l-amber-400', alertBorderClass(a.severity))}>
+          <div key={i} className={cn('flex items-start gap-3 px-4 py-3 rounded-lg mx-2 my-1', a.severity === 'high' ? 'bg-red-50/60' : 'bg-amber-50/60', alertBorderClass(a.severity))}>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs font-bold font-mono text-slate-700 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">{a.ticker}</span>

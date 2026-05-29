@@ -250,8 +250,8 @@ export default function AIStackReport() {
                 { label: 'Rev Growth 8%', desc: 'Top-line momentum. Business must grow.', color: '#84cc16' },
                 { label: 'Price/Book 5%', desc: 'Asset floor — Graham margin of safety.', color: '#78716c' },
               ].map(f => (
-                <div key={f.label} style={{ background: '#f8fafc', borderRadius: '8px', padding: '10px 12px', borderLeft: `4px solid ${f.color}` }}>
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', marginBottom: '2px' }}>{f.label}</div>
+                <div key={f.label} style={{ background: '#f8fafc', borderRadius: '8px', padding: '10px 12px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 700, color: f.color, marginBottom: '2px' }}>{f.label}</div>
                   <div style={{ fontSize: '11px', color: '#64748b' }}>{f.desc}</div>
                 </div>
               ))}

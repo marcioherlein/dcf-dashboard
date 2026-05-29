@@ -131,7 +131,7 @@ export default function InstrumentPriceChart({ symbol, currency = 'USD' }: Props
               {[0, 1, 2].map(i => (
                 <div
                   key={i}
-                  className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-bounce"
+                  className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-pulse"
                   style={{ animationDelay: `${i * 150}ms` }}
                 />
               ))}

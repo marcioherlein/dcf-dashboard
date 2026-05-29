@@ -105,7 +105,7 @@ function iconAccent(color: string): string {
 function CardHeader({ title, label, color, tooltip, Icon }: { title: string; label: string; color: string; tooltip?: string; Icon?: LucideIcon }) {
   return (
     <div className="flex items-center justify-between mb-3">
-      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+      <p className="text-[12px] font-medium text-slate-500 flex items-center gap-1.5">
         {Icon && <Icon size={13} className={`shrink-0 ${iconAccent(color)}`} />}
         {title}
         {tooltip && <InfoTooltip content={tooltip} />}
@@ -157,7 +157,7 @@ function BusinessQualityCard({ ratings, scores, onViewDetails }: { ratings: Stoc
       : 'Competitive positioning requires monitoring.'
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-3 py-3 sm:px-5 sm:py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="card p-4 sm:p-5">
       <CardHeader title="Business Quality" label={label} color={color} Icon={Award} />
       <div className="space-y-2.5 mb-3">
         <MetricRow label="Economic Moat" value={moat?.label ?? '—'} />
@@ -172,10 +172,7 @@ function BusinessQualityCard({ ratings, scores, onViewDetails }: { ratings: Stoc
           value={profitability ? `${profitability.grade} — ${profitability.label}` : '—'}
         />
       </div>
-      <p className="text-[12px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{interpSentence}</p>
-      {onViewDetails && (
-        <button onClick={onViewDetails} className="mt-1.5 text-[12px] font-[650] text-[#2563EB] hover:text-[#1D4ED8] transition-colors">Details →</button>
-      )}
+      <p className="text-[12px] text-slate-500 leading-snug border-t border-slate-100 pt-2">{interpSentence}</p>
     </div>
   )
 }
@@ -207,7 +204,7 @@ function GrowthOutlookCard({ ratings, cagrAnalysis, onViewDetails }: { ratings: 
         : 'Insufficient data to assess growth trajectory.'
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-3 py-3 sm:px-5 sm:py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="card p-4 sm:p-5">
       <CardHeader title="Growth Outlook" label={label} color={color} Icon={TrendingUp} />
       <div className="space-y-2.5 mb-3">
         {hist != null && (
@@ -232,10 +229,7 @@ function GrowthOutlookCard({ ratings, cagrAnalysis, onViewDetails }: { ratings: 
           <p className="text-[12px] text-slate-400 italic">Growth data unavailable</p>
         )}
       </div>
-      <p className="text-[12px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{growthSentence}</p>
-      {onViewDetails && (
-        <button onClick={onViewDetails} className="mt-1.5 text-[12px] font-[650] text-[#2563EB] hover:text-[#1D4ED8] transition-colors">Details →</button>
-      )}
+      <p className="text-[12px] text-slate-500 leading-snug border-t border-slate-100 pt-2">{growthSentence}</p>
     </div>
   )
 }
@@ -270,7 +264,7 @@ function ProfitabilityCard({ ratings, businessProfile, statementsData, onViewDet
       : 'Profitability data partially unavailable.'
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-3 py-3 sm:px-5 sm:py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="card p-4 sm:p-5">
       <CardHeader title="Profitability" label={label} color={color} Icon={CircleDollarSign} />
       <div className="space-y-2.5 mb-3">
         <MetricRow label="Gross Margin" value={fmtPct(businessProfile.grossMargin)} />
@@ -278,10 +272,7 @@ function ProfitabilityCard({ ratings, businessProfile, statementsData, onViewDet
         <MetricRow label="Net Margin" value={fmtPct(businessProfile.netMargin)} />
         <MetricRow label="FCF Margin" value={fmtPct(businessProfile.fcfMargin)} />
       </div>
-      <p className="text-[12px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{profSentence}</p>
-      {onViewDetails && (
-        <button onClick={onViewDetails} className="mt-1.5 text-[12px] font-[650] text-[#2563EB] hover:text-[#1D4ED8] transition-colors">Details →</button>
-      )}
+      <p className="text-[12px] text-slate-500 leading-snug border-t border-slate-100 pt-2">{profSentence}</p>
     </div>
   )
 }
@@ -314,7 +305,7 @@ function CashConversionCard({ businessProfile, statementsData, onViewDetails }: 
       : 'Insufficient data to assess cash conversion quality.'
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-3 py-3 sm:px-5 sm:py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="card p-4 sm:p-5">
       <CardHeader title="Cash Conversion" label={label} color={color} Icon={RefreshCcw} />
       <div className="space-y-2.5 mb-3">
         <MetricRow label="FCF Margin (TTM)" value={fmtPct(businessProfile.fcfMargin)} />
@@ -325,10 +316,7 @@ function CashConversionCard({ businessProfile, statementsData, onViewDetails }: 
           tooltip="What share of reported earnings converts to real cash. >80% is a quality signal — it means profits are backed by cash, not just accounting entries."
         />
       </div>
-      <p className="text-[12px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{cashSentence}</p>
-      {onViewDetails && (
-        <button onClick={onViewDetails} className="mt-1.5 text-[12px] font-[650] text-[#2563EB] hover:text-[#1D4ED8] transition-colors">Details →</button>
-      )}
+      <p className="text-[12px] text-slate-500 leading-snug border-t border-slate-100 pt-2">{cashSentence}</p>
     </div>
   )
 }
@@ -382,7 +370,7 @@ function BalanceSheetCard({ scores, statementsData, onViewDetails }: {
       : 'Balance sheet health requires further analysis.'
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-3 py-3 sm:px-5 sm:py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="card p-4 sm:p-5">
       <CardHeader title="Balance Sheet Safety" label={bsLabel} color={bsColor} Icon={ShieldCheck} />
       <div className="space-y-2.5 mb-3">
         <MetricRow
@@ -411,10 +399,7 @@ function BalanceSheetCard({ scores, statementsData, onViewDetails }: {
           <p className="text-[10px] text-slate-400 leading-snug">* Z-Score may be unreliable for non-US companies</p>
         )}
       </div>
-      <p className="text-[12px] text-slate-400 leading-snug border-t border-slate-100 pt-2">{bsSentence}</p>
-      {onViewDetails && (
-        <button onClick={onViewDetails} className="mt-1.5 text-[12px] font-[650] text-[#2563EB] hover:text-[#1D4ED8] transition-colors">Details →</button>
-      )}
+      <p className="text-[12px] text-slate-500 leading-snug border-t border-slate-100 pt-2">{bsSentence}</p>
     </div>
   )
 }
@@ -479,9 +464,9 @@ function RisksGridCard({ ratings, cagrAnalysis, onViewRisks }: {
   const dotColor = risk.color === 'red' ? 'bg-red-400' : risk.color === 'amber' ? 'bg-amber-400' : 'bg-emerald-400'
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-3 py-3 sm:px-5 sm:py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="card p-4 sm:p-5">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+        <p className="text-[12px] font-medium text-slate-500 flex items-center gap-1.5">
           <AlertTriangle size={13} className={`shrink-0 ${risk.color === 'red' ? 'text-red-500' : risk.color === 'amber' ? 'text-amber-500' : 'text-emerald-500'}`} />
           Risks to Thesis
         </p>
@@ -546,11 +531,11 @@ function RelativeValuationCard({ valuationMethods, quote, onViewDetails }: { val
   }
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-3 py-3 sm:px-5 sm:py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="card p-4 sm:p-5">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5 min-w-0">
           <Tag size={13} className={`shrink-0 ${overallLabel === 'Cheap' ? 'text-emerald-500' : overallLabel === 'Expensive' ? 'text-red-500' : 'text-blue-500'}`} />
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest truncate">Relative Valuation</span>
+          <span className="text-[12px] font-medium text-slate-500 truncate">Relative Valuation</span>
         </div>
         <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border whitespace-nowrap ${overallClass}`}>
           {overallLabel}
@@ -589,9 +574,6 @@ function RelativeValuationCard({ valuationMethods, quote, onViewDetails }: { val
       {applicable.length > 0 && (
         <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">vs. sector median</p>
       )}
-      {onViewDetails && (
-        <button onClick={onViewDetails} className="mt-1.5 text-[12px] font-[650] text-[#2563EB] hover:text-[#1D4ED8] transition-colors">Details →</button>
-      )}
     </div>
   )
 }
@@ -602,7 +584,7 @@ export default function OverviewMetricGrid({ ratings, scores, businessProfile, c
   if (!ratings) return null
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 items-start">
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 items-start">
       <BusinessQualityCard ratings={ratings} scores={scores ?? {}} onViewDetails={onViewRisks} />
       <GrowthOutlookCard ratings={ratings} cagrAnalysis={cagrAnalysis} onViewDetails={onViewRisks} />
       <ProfitabilityCard ratings={ratings} businessProfile={businessProfile} statementsData={statementsData} onViewDetails={onViewRisks} />
