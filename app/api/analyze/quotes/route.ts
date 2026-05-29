@@ -39,7 +39,7 @@ const yf = new YahooFinance({ suppressNotices: ['ripHistorical', 'yahooSurvey'] 
 export async function GET() {
   const tickers = FEATURED.map((f) => f.ticker)
 
-  let quoteMap: Record<string, { price: number | null; change: number | null; changePct: number | null }> = {}
+  const quoteMap: Record<string, { price: number | null; change: number | null; changePct: number | null }> = {}
   try {
     // Single batch call — much faster than 9 individual calls
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

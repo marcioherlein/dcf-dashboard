@@ -46,11 +46,10 @@ export default function LandingNavbar() {
               height={40}
               className="transition-transform duration-200 group-hover:scale-105"
             />
-            <div className="hidden sm:flex flex-col leading-none">
+            <div className="flex flex-col leading-none">
               <span
-                className="font-black"
+                className="font-black text-[17px] sm:text-[20px]"
                 style={{
-                  fontSize: '20px',
                   letterSpacing: '-0.04em',
                   background: 'linear-gradient(135deg, #0F172A 20%, #1E40AF 65%, #2563EB 100%)',
                   WebkitBackgroundClip: 'text',
@@ -61,7 +60,7 @@ export default function LandingNavbar() {
               >
                 intrinsico
               </span>
-              <span className="text-[8px] font-bold text-slate-400 tracking-[0.18em] uppercase mt-0.5">
+              <span className="hidden sm:block text-[8px] font-bold text-slate-400 tracking-[0.18em] uppercase mt-0.5">
                 Valuation Intelligence
               </span>
             </div>

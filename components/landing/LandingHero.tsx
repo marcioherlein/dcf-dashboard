@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { Shield } from 'lucide-react'
 import { signIn } from 'next-auth/react'
+import { motion } from 'motion/react'
 import HeroSearch from './HeroSearch'
 import { SummaryMockScreen, ValuationMockScreen } from './ProductScreenshots'
 
@@ -48,60 +49,84 @@ export default function LandingHero() {
           style={{ gap: '40px' }}
         >
           {/* ── Left: Copy ── */}
-          <div className="min-w-0">
+          <div className="min-w-0 text-center lg:text-left">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 mb-6"
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+              className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 mb-6"
               style={{
                 background: '#EFF6FF',
                 border: '1px solid #BFDBFE',
-              }}>
+              }}
+            >
               <Shield size={12} className="text-blue-600" />
               <span className="text-[12px] font-bold text-[#1D4ED8]" style={{ letterSpacing: '0.02em' }}>
                 Built for self-directed investors
               </span>
-            </div>
+            </motion.div>
 
-            {/* Headline */}
-            <h1
-              className="text-[38px] sm:text-[52px] lg:text-[clamp(44px,5.5vw,68px)]"
+            {/* Headline — gradient text */}
+            <motion.h1
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, ease: 'easeOut', delay: 0.08 }}
+              className="text-[36px] sm:text-[52px] lg:text-[clamp(44px,5.5vw,68px)]"
               style={{
                 fontWeight: 700,
                 lineHeight: 1.05,
                 letterSpacing: '-0.04em',
-                color: '#071633',
                 marginBottom: '20px',
+                background: 'linear-gradient(135deg, #0F172A 0%, #1E3A8A 55%, #2563EB 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
               }}
             >
               Invest with a process,
               <br />not a story.
-            </h1>
+            </motion.h1>
 
             {/* Subheadline */}
-            <p
-              className="text-base sm:text-lg"
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: 'easeOut', delay: 0.16 }}
+              className="text-base sm:text-lg mx-auto lg:mx-0"
               style={{
                 fontWeight: 400,
                 lineHeight: 1.55,
                 color: '#475569',
                 marginBottom: '32px',
-                maxWidth: '580px',
+                maxWidth: '540px',
               }}
             >
               intrinsico shows you what today&apos;s stock price already assumes
               about growth, margins, and execution — so you can decide with
               confidence, not hope.
-            </p>
+            </motion.p>
 
             {/* Search */}
-            <div className="mb-8">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: 'easeOut', delay: 0.24 }}
+              className="mb-8"
+            >
               <HeroSearch />
-            </div>
+            </motion.div>
 
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: 'easeOut', delay: 0.32 }}
+              className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3"
+            >
               <button
                 onClick={() => signIn('google')}
-                className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-[15px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
+                className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl px-5 py-3 text-[15px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
                 style={{
                   background: '#2563EB',
                   boxShadow: '0 8px 20px rgba(37,99,235,0.22)',
@@ -113,7 +138,7 @@ export default function LandingHero() {
               </button>
               <Link
                 href="/stock/NVDA"
-                className="inline-flex items-center justify-center rounded-xl border px-5 py-3 text-[15px] font-semibold text-[#1D4ED8] transition-all hover:bg-[#EFF6FF] hover:border-[#93C5FD] active:scale-95"
+                className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl border px-5 py-3 text-[15px] font-semibold text-[#1D4ED8] transition-all hover:bg-[#EFF6FF] hover:border-[#93C5FD] active:scale-95"
                 style={{
                   background: 'white',
                   borderColor: '#BFDBFE',
@@ -123,16 +148,19 @@ export default function LandingHero() {
               >
                 Explore sample valuation
               </Link>
-            </div>
+            </motion.div>
           </div>
 
-          {/* ── Right: Screenshots ── */}
+          {/* ── Right: Screenshots (desktop only) ── */}
           <div
             className="relative hidden lg:block min-w-0"
             style={{ minHeight: '480px' }}
           >
             {/* Main screenshot */}
-            <div
+            <motion.div
+              initial={{ opacity: 0, x: 28 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.65, ease: 'easeOut', delay: 0.18 }}
               style={{
                 position: 'absolute',
                 top: 0,
@@ -142,10 +170,13 @@ export default function LandingHero() {
               }}
             >
               <SummaryMockScreen />
-            </div>
+            </motion.div>
 
             {/* Secondary screenshot — offset below and right */}
-            <div
+            <motion.div
+              initial={{ opacity: 0, x: 28 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.65, ease: 'easeOut', delay: 0.34 }}
               style={{
                 position: 'absolute',
                 bottom: '-40px',
@@ -155,17 +186,13 @@ export default function LandingHero() {
               }}
             >
               <ValuationMockScreen />
-            </div>
+            </motion.div>
 
             {/* Invisible spacer to set container height */}
             <div style={{ height: '600px' }} />
           </div>
         </div>
-
-        {/* Mobile screenshot (stacked below copy) */}
-        <div className="mt-8 lg:hidden">
-          <SummaryMockScreen />
-        </div>
+        {/* No mobile screenshot duplicate — ProductDeepDiveSection shows both screens below */}
       </div>
     </section>
   )
