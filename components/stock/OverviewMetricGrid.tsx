@@ -130,7 +130,7 @@ function MiniBar({ value, max, color }: { value: number; max: number; color: str
 
 // ─── Card 1: Business Quality ──────────────────────────────────────────────
 
-function BusinessQualityCard({ ratings, scores, onViewDetails }: { ratings: StockRatings; scores: ScoresData; onViewDetails?: () => void }) {
+function BusinessQualityCard({ ratings, scores }: { ratings: StockRatings; scores: ScoresData; onViewDetails?: () => void }) {
   const moat = ratings.moat
   const profitability = ratings.profitability
   const cat = moat ?? profitability
@@ -179,7 +179,7 @@ function BusinessQualityCard({ ratings, scores, onViewDetails }: { ratings: Stoc
 
 // ─── Card 2: Growth Outlook ────────────────────────────────────────────────
 
-function GrowthOutlookCard({ ratings, cagrAnalysis, onViewDetails }: { ratings: StockRatings; cagrAnalysis: CAGRAnalysisData | null; onViewDetails?: () => void }) {
+function GrowthOutlookCard({ ratings, cagrAnalysis }: { ratings: StockRatings; cagrAnalysis: CAGRAnalysisData | null; onViewDetails?: () => void }) {
   const growth = ratings.growth
   const color = growth?.color ?? 'blue'
   const label = growth?.label ?? 'Analyzing…'
@@ -236,7 +236,7 @@ function GrowthOutlookCard({ ratings, cagrAnalysis, onViewDetails }: { ratings: 
 
 // ─── Card 3: Profitability ─────────────────────────────────────────────────
 
-function ProfitabilityCard({ ratings, businessProfile, statementsData, onViewDetails }: {
+function ProfitabilityCard({ ratings, businessProfile, statementsData }: {
   ratings: StockRatings
   businessProfile: BusinessProfile
   statementsData: StatementsData | null
@@ -279,7 +279,7 @@ function ProfitabilityCard({ ratings, businessProfile, statementsData, onViewDet
 
 // ─── Card 4: Cash Conversion ───────────────────────────────────────────────
 
-function CashConversionCard({ businessProfile, statementsData, onViewDetails }: {
+function CashConversionCard({ businessProfile, statementsData }: {
   businessProfile: BusinessProfile
   statementsData: StatementsData | null
   onViewDetails?: () => void
@@ -323,7 +323,7 @@ function CashConversionCard({ businessProfile, statementsData, onViewDetails }: 
 
 // ─── Card 5: Balance Sheet Safety ─────────────────────────────────────────
 
-function BalanceSheetCard({ scores, statementsData, onViewDetails }: {
+function BalanceSheetCard({ scores, statementsData }: {
   scores: ScoresData
   statementsData: StatementsData | null
   onViewDetails?: () => void
@@ -492,7 +492,7 @@ function RisksGridCard({ ratings, cagrAnalysis, onViewRisks }: {
 // ─── Relative Valuation card ──────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function RelativeValuationCard({ valuationMethods, quote, onViewDetails }: { valuationMethods: any; quote: any; onViewDetails?: () => void }) {
+function RelativeValuationCard({ valuationMethods, quote }: { valuationMethods: any; quote: any; onViewDetails?: () => void }) {
   const estimates: AnyRecord[] = valuationMethods?.multiples?.estimates ?? []
   const peRatio  = quote?.peRatio  ?? null
   const pegRatio = quote?.pegRatio ?? null
