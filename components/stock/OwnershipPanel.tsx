@@ -22,7 +22,7 @@ function Stat({ label, value, highlight }: { label: string; value: string; highl
     <div className="flex flex-col gap-1 py-3 min-h-[44px]">
       <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 leading-tight">{label}</span>
       <span className={[
-        'text-[15px] font-semibold tabular-nums',
+        'text-[13px] font-semibold tabular-nums',
         highlight === 'red'   ? 'text-red-600'   :
         highlight === 'green' ? 'text-emerald-600' :
         'text-slate-900',
@@ -43,7 +43,7 @@ export default function OwnershipPanel({ ownership }: Props) {
   return (
     <div className="rounded-xl card px-4 py-3 sm:px-5 sm:py-4">
       <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">Ownership &amp; Short Interest</div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-0 divide-y divide-slate-100 sm:divide-y-0">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-0 divide-y sm:divide-y-0 divide-slate-100">
         <Stat label="Insider Ownership"       value={pct(insiderPct)} />
         <Stat label="Institutional Ownership" value={pct(institutionalPct)} />
         <Stat
