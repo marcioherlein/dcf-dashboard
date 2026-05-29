@@ -33,7 +33,7 @@ function ReturnPair({
 }) {
   const outperformed = stock != null && spy != null ? stock > spy : null
   return (
-    <div className="flex flex-col gap-1.5 py-1">
+    <div className="flex flex-col gap-1.5 py-3 min-h-[44px]">
       <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{period}</div>
       <div className="flex items-baseline gap-1.5">
         <span className={[
@@ -48,7 +48,7 @@ function ReturnPair({
       {spy != null && (
         <div className="flex items-center gap-1 flex-wrap">
           <span className={[
-            'text-[12px] tabular-nums',
+            'text-[12px] tabular-nums font-semibold',
             spy >= 0 ? 'text-slate-400' : 'text-slate-500',
           ].join(' ')}>
             {pctStr(spy)}
@@ -80,7 +80,7 @@ export default function HoldingReturns({ returns, ticker }: Props) {
         If You Had Held…
       </div>
       <div className="overflow-x-auto -mx-4 sm:mx-0">
-        <div className="grid grid-cols-3 gap-x-4 gap-y-1 px-4 sm:px-0 min-w-[280px]">
+        <div className="grid grid-cols-3 gap-x-4 gap-y-1 px-4 sm:px-0 min-w-[300px]">
           <ReturnPair period="1 Year" stock={stock1y} spy={spy1y} ticker={ticker} />
           <ReturnPair period="3 Years" stock={stock3y} spy={spy3y} ticker={ticker} />
           <ReturnPair period="5 Years" stock={stock5y} spy={spy5y} ticker={ticker} />

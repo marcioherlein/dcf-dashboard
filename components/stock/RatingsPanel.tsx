@@ -53,7 +53,7 @@ const colorMap: Record<string, {
 function ScoreBar({ score }: { score: number }) {
   const pct = ((score - 1) / 4) * 100
   return (
-    <div className="h-1.5 w-full rounded-full bg-slate-100">
+    <div className="h-1.5 w-full rounded-full bg-slate-100 flex-1">
       <div
         className="h-1.5 rounded-full bg-slate-700 transition-all"
         style={{ width: `${pct}%` }}
@@ -66,10 +66,10 @@ function MetricRow({ name, value, score }: { name: string; value: string; score:
   const dots = Math.round(score)
   return (
     <div className="flex items-center justify-between py-2.5 border-b border-slate-100 last:border-0 min-h-[44px] gap-2">
-      <span className="text-[13px] text-slate-500 min-w-0">{name}</span>
+      <span className="text-[13px] text-slate-500 min-w-0 flex-1">{name}</span>
       <div className="flex items-center gap-2 shrink-0">
-        <span className="text-[13px] font-medium text-slate-700 tabular-nums">{value}</span>
-        <div className="flex gap-0.5">
+        <span className="text-[13px] font-medium text-slate-700 tabular-nums shrink-0">{value}</span>
+        <div className="flex gap-0.5 shrink-0">
           {[1,2,3,4,5].map((i) => (
             <div
               key={i}
@@ -87,11 +87,11 @@ function CategoryCard({ title, rating }: { title: string; rating: CategoryRating
   return (
     <div className={`rounded-2xl border ${c.border} ${c.bg} px-4 py-4 sm:p-5`}>
       <div className="flex items-start justify-between mb-3 gap-2">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">{title}</p>
           <p className={`mt-0.5 text-[14px] font-semibold leading-snug ${c.text}`}>{rating.label}</p>
         </div>
-        <div className={`rounded-xl px-3 py-1.5 text-xl font-bold shrink-0 ${c.badge}`}>
+        <div className={`rounded-xl px-3 py-1.5 text-[32px] font-black shrink-0 ${c.badge}`}>
           {rating.grade}
         </div>
       </div>
@@ -124,7 +124,7 @@ export default function RatingsPanel({ ratings }: Props) {
             <p className="text-[11px] font-medium text-slate-500">Overall</p>
             <p className={`text-[13px] font-bold ${oc.text}`}>{ratings.overall.label}</p>
           </div>
-          <span className={`text-3xl font-bold ${oc.text}`}>{ratings.overall.grade}</span>
+          <span className={`text-[32px] font-black ${oc.text}`}>{ratings.overall.grade}</span>
         </div>
       </div>
 

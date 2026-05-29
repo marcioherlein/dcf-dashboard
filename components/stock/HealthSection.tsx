@@ -52,7 +52,7 @@ function ScoreBar({ score, color }: { score: number; color: string }) {
     'bg-red-500'
 
   return (
-    <div className="flex items-center gap-1.5 mt-1">
+    <div className="flex items-center gap-1.5 mt-1 w-full max-w-[240px] mx-auto">
       {[1, 2, 3, 4, 5].map((i) => (
         <div
           key={i}
@@ -67,7 +67,7 @@ function CategoryRow({ catKey, ratings }: { catKey: string; ratings: StockRating
   const cat = ratings[catKey as keyof StockRatings] as StockRatings['profitability'] | undefined
   if (!cat || !('grade' in cat)) return null
   return (
-    <div className="flex items-start gap-3 sm:gap-4 py-1">
+    <div className="flex items-start gap-3 sm:gap-4 py-3 min-h-[44px]">
       <div className="w-32 sm:w-36 shrink-0">
         <p className="text-[13px] font-medium text-slate-600">{CATEGORY_LABELS[catKey]}</p>
         <ScoreBar score={cat.score} color={cat.color} />
@@ -119,14 +119,19 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
           </svg>
         </button>
       ) : (
-        <div className="flex items-baseline justify-between px-4 sm:px-6 pt-5 pb-1 flex-wrap gap-2">
+        <div className="flex items-start sm:items-center justify-between px-4 sm:px-6 pt-5 pb-1 flex-wrap gap-2">
           <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Financial Health</h2>
-          <p className="text-[10px] text-slate-400">
-            <span className="text-emerald-600 font-semibold">A</span> Excellent&nbsp;·&nbsp;
-            <span className="text-blue-500 font-semibold">B</span> Good&nbsp;·&nbsp;
-            <span className="text-amber-600 font-semibold">C</span> Average&nbsp;·&nbsp;
-            <span className="text-red-500 font-semibold">D/F</span> Weak
-          </p>
+          <div className="flex items-center gap-3 flex-wrap">
+            <p className="text-[10px] text-slate-400">
+              <span className="text-emerald-600 font-semibold">A</span> Excellent&nbsp;·&nbsp;
+              <span className="text-blue-500 font-semibold">B</span> Good&nbsp;·&nbsp;
+              <span className="text-amber-600 font-semibold">C</span> Average&nbsp;·&nbsp;
+              <span className="text-red-500 font-semibold">D/F</span> Weak
+            </p>
+            {overallGrade && overallGrade !== 'N/A' && (
+              <span className="text-[32px] font-black text-slate-800 leading-none">{overallGrade}</span>
+            )}
+          </div>
         </div>
       )}
 
@@ -170,7 +175,7 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
                     <InfoTip text="9-point checklist of profitability, leverage, and efficiency. Score 8–9 = strong financial health; below 4 = signals weakness." />
                   </span>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[15px] font-bold text-slate-900 tabular-nums">{piotroski}/9</span>
+                    <span className="text-[32px] font-black text-slate-900 tabular-nums">{piotroski}/9</span>
                     <span className={`text-[12px] font-medium rounded-full px-2.5 py-1 ${piotroski >= 8 ? 'bg-emerald-100 text-emerald-700' : piotroski >= 4 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
                       {piotroski >= 8 ? 'Strong' : piotroski >= 4 ? 'Mixed' : 'Weak'}
                     </span>

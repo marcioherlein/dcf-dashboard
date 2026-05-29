@@ -265,7 +265,9 @@ export default function MarketsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div className="lg:col-span-7 overflow-x-auto">
               {mkt ? (
-                <MarketHeatmapCard sectors={mkt.sectors} />
+                <div className="overflow-x-auto">
+                  <MarketHeatmapCard sectors={mkt.sectors} />
+                </div>
               ) : (
                 <Sk h="h-[320px]" />
               )}

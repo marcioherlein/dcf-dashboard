@@ -63,7 +63,7 @@ export default function NewsPanel({ ticker }: { ticker: string }) {
         </div>
       ) : (
         <motion.div
-          className="space-y-2"
+          className="space-y-3"
           initial="hidden"
           animate="visible"
           variants={reduced ? {} : { visible: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } } }}
@@ -75,7 +75,7 @@ export default function NewsPanel({ ticker }: { ticker: string }) {
               target="_blank"
               rel="noreferrer"
               variants={reduced ? {} : stagger.item}
-              className="group block rounded-xl border border-slate-200 bg-white px-4 py-4 min-h-[44px] hover:border-blue-300 hover:bg-slate-50 transition-all"
+              className="group block rounded-xl border border-slate-200 bg-white px-4 py-4 min-h-[80px] hover:border-blue-300 hover:bg-slate-50 transition-all"
             >
               <p className="text-[14px] font-semibold leading-snug text-slate-800 group-hover:text-blue-600 transition-colors mb-2.5 line-clamp-2">
                 {item.title}

@@ -149,7 +149,7 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
       {pills.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
           {pills.map((p) => (
-            <span key={p.label} className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[12px] font-medium text-slate-600">
+            <span key={p.label} className="rounded-full border border-slate-200 bg-slate-100 px-3 py-2 text-[12px] font-medium text-slate-600 min-h-[44px] flex items-center">
               {p.label}
             </span>
           ))}
@@ -178,8 +178,8 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
         {statCards.map((card) => (
           <div key={card.label} className={`rounded-xl border px-4 py-4 ${card.color}`}>
             <p className="text-[12px] text-slate-500 mb-1">{card.label}</p>
-            <p className="text-lg font-bold text-slate-900">{card.value}</p>
-            <p className="text-[12px] text-slate-500 mt-0.5">{card.sub}</p>
+            <p className="text-[18px] font-bold text-slate-900 tabular-nums">{card.value}</p>
+            <p className="text-[12px] text-slate-500 mt-0.5 leading-relaxed">{card.sub}</p>
           </div>
         ))}
       </div>

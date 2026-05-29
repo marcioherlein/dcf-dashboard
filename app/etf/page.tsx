@@ -74,9 +74,15 @@ export default function ETFTrackerPage() {
               <PieChart size={24} className="text-slate-400" />
             </div>
             <h3 className="text-[14px] font-semibold text-slate-700 mb-1">No ETFs tracked yet</h3>
-            <p className="text-[13px] text-slate-400 max-w-xs">
+            <p className="text-[13px] text-slate-400 max-w-xs mb-4">
               Search for an ETF above to view its value metrics and add it to your watchlist.
             </p>
+            <button
+              onClick={() => document.querySelector<HTMLInputElement>('input[type="text"]')?.focus()}
+              className="min-h-[48px] py-3 px-6 w-full sm:w-auto rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[14px] font-semibold transition-colors"
+            >
+              Search an ETF
+            </button>
           </div>
         )}
       </div>
