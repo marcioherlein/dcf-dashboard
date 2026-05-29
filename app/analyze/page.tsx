@@ -78,13 +78,15 @@ function SearchHero() {
   const router = useRouter()
   const reduced = useReducedMotion()
 
-  const [query, setQuery]     = useState('')
-  const [results, setResults] = useState<SearchResult[]>([])
-  const [open, setOpen]       = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [query, setQuery]       = useState('')
+  const [results, setResults]   = useState<SearchResult[]>([])
+  const [open, setOpen]         = useState(false)
+  const [loading, setLoading]   = useState(false)
+  const [activeIdx, setActiveIdx] = useState(-1)
   const debounce  = useRef<ReturnType<typeof setTimeout>>()
   const searchRef = useRef<HTMLDivElement>(null)
   const inputRef  = useRef<HTMLInputElement>(null)
+  const listboxId = 'analyze-search-listbox'
 
   useEffect(() => {
     if (query.length < 1) { setResults([]); setOpen(false); return }
@@ -97,6 +99,8 @@ function SearchHero() {
         .catch(() => setLoading(false))
     }, 300)
   }, [query])
+
+  useEffect(() => { setActiveIdx(-1) }, [results])
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -122,7 +126,29 @@ function SearchHero() {
   }, [router])
 
   const handleKey = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && query.trim()) select(query.trim().toUpperCase())
+    if (e.key === 'Escape') {
+      setOpen(false)
+      setActiveIdx(-1)
+      return
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      if (!open && results.length > 0) setOpen(true)
+      setActiveIdx(prev => Math.min(prev + 1, results.length - 1))
+      return
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setActiveIdx(prev => Math.max(prev - 1, -1))
+      return
+    }
+    if (e.key === 'Enter') {
+      if (activeIdx >= 0 && results[activeIdx]) {
+        select(results[activeIdx].symbol)
+      } else if (query.trim()) {
+        select(query.trim().toUpperCase())
+      }
+    }
   }
 
   return (
@@ -153,6 +179,12 @@ function SearchHero() {
           <input
             ref={inputRef}
             id="analyze-search-input"
+            role="combobox"
+            aria-expanded={open}
+            aria-haspopup="listbox"
+            aria-autocomplete="list"
+            aria-controls={open ? listboxId : undefined}
+            aria-activedescendant={activeIdx >= 0 ? `analyze-result-${activeIdx}` : undefined}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -173,16 +205,25 @@ function SearchHero() {
           {open && (
             <motion.div
               key="analyze-search-drop"
+              id={listboxId}
+              role="listbox"
+              aria-label="Search suggestions"
               variants={reduced ? {} : slideDown}
               initial="hidden" animate="visible" exit="exit"
               style={{ originY: 0 }}
               className="absolute left-0 right-0 top-full mt-1 z-50 rounded-xl bg-white border border-slate-200 shadow-lg overflow-hidden max-h-72 overflow-y-auto"
             >
-              {results.map((r) => (
+              {results.map((r, idx) => (
                 <button
+                  id={`analyze-result-${idx}`}
+                  role="option"
+                  aria-selected={idx === activeIdx}
                   key={r.symbol}
                   onClick={() => select(r.symbol)}
-                  className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-50 border-b border-slate-100 last:border-b-0 transition-colors min-h-[48px]"
+                  className={cn(
+                    'flex w-full items-center justify-between gap-3 px-4 py-3 text-left border-b border-slate-100 last:border-b-0 transition-colors min-h-[48px]',
+                    idx === activeIdx ? 'bg-slate-50' : 'hover:bg-slate-50',
+                  )}
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
@@ -232,6 +273,7 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
   const [fairValue,  setFairValue]  = useState<number | null>(q.fairValue)
   const [upsidePct,  setUpsidePct]  = useState<number | null>(q.upsidePct)
   const [fvLoading,  setFvLoading]  = useState(q.fairValue == null)
+  const [fvError,    setFvError]    = useState(false)
 
   useEffect(() => {
     if (fairValue != null) { setFvLoading(false); return }
@@ -244,7 +286,7 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
           setFairValue(fv)
           if (fv != null && price && price > 0) setUpsidePct((fv - price) / price)
         })
-        .catch(() => {})
+        .catch(() => { setFvError(true) })
         .finally(() => setFvLoading(false))
     }, index * 200)
     return () => clearTimeout(timer)
@@ -312,7 +354,7 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
         {/* Row 4: intrinsic value + upside (pushes to bottom) */}
         <div className="flex items-end justify-between px-4 py-3 mt-auto gap-3">
           <div>
-            <p className="flex items-center gap-1 text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-0.5">
+            <p className="flex items-center gap-1 text-[11px] font-medium text-slate-400 mb-0.5">
               Intrinsic value
               <span
                 title="DCF-based fair value estimate using market-implied growth and WACC inputs"
@@ -323,15 +365,19 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
             </p>
             {fvLoading ? (
               <div className="h-4 w-14 rounded bg-slate-100 animate-pulse mt-0.5" />
-            ) : (
+            ) : fvError ? (
+              <p className="text-[12px] text-slate-400">Unavailable</p>
+            ) : fairValue != null ? (
               <p className={cn('text-[14px] font-bold tabular-nums', (upsidePct ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600')}>
-                {fairValue != null ? fmtPrice(fairValue) : '—'}
+                {fmtPrice(fairValue)}
               </p>
+            ) : (
+              <p className="text-[12px] text-slate-400">No model yet</p>
             )}
           </div>
           {upsidePct != null && (
             <div className="text-right shrink-0">
-              <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-0.5">Upside</p>
+              <p className="text-[11px] font-medium text-slate-400 mb-0.5">Upside</p>
               <p className={cn('text-[14px] font-bold tabular-nums', upsidePct >= 0 ? 'text-emerald-600' : 'text-red-600')}>
                 {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
               </p>
@@ -414,7 +460,7 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
       <div className="flex items-center justify-between gap-3 px-5 pt-5 pb-4 border-b border-slate-100">
         <div>
           <h2 className="text-[15px] font-bold text-slate-900">What the market is pricing in</h2>
-          <p className="text-[12px] text-slate-500 mt-0.5">Market-implied 5Y revenue growth vs. historical 3Y growth</p>
+          <p className="text-[12px] text-slate-500 mt-0.5">Market-implied 5Y revenue growth vs. historical 3Y growth · model estimates</p>
         </div>
         <Link href="/markets" className="text-[12px] font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 whitespace-nowrap">
           View full <ChevronRight size={13} />
@@ -516,28 +562,18 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
 function QuickActions() {
   const router = useRouter()
 
-  const cards = [
-    {
-      icon: Search,
-      title: 'Analyze one stock',
-      desc: 'Deep dive into intrinsic value, growth expectations, business quality, and risks.',
-      cta: 'Analyze',
-      onClick: () => document.getElementById('analyze-search-input')?.focus(),
-      iconCls: 'text-blue-600 bg-blue-50',
-    },
+  const actions = [
     {
       icon: BarChart3,
       title: 'Compare stocks',
-      desc: 'Compare valuation, quality, and growth expectations across multiple companies.',
-      cta: 'Compare',
+      desc: 'Side-by-side valuation, quality, and growth expectations.',
       onClick: () => router.push('/compare'),
       iconCls: 'text-violet-600 bg-violet-50',
     },
     {
       icon: Bookmark,
       title: 'My Valuations',
-      desc: 'Review your saved analyses and track conviction over time.',
-      cta: 'My valuations',
+      desc: 'Review saved analyses and track conviction over time.',
       onClick: () => router.push('/valuations'),
       iconCls: 'text-emerald-600 bg-emerald-50',
     },
@@ -545,29 +581,25 @@ function QuickActions() {
 
   return (
     <section>
-      <div className="mb-4">
-        <h2 className="text-[15px] font-bold text-slate-900">More ways to research</h2>
-        <p className="text-[12px] text-slate-500 mt-0.5">Explore what the price assumes, compare opportunities, and build conviction.</p>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {cards.map((c) => {
-          const Icon = c.icon
+      <h2 className="text-[15px] font-bold text-slate-900 mb-3">More tools</h2>
+      <div className="rounded-xl bg-white border border-slate-200 shadow-sm divide-y divide-slate-100 overflow-hidden">
+        {actions.map((a) => {
+          const Icon = a.icon
           return (
-            <div key={c.title} className="rounded-xl bg-white border border-slate-200 shadow-sm p-5 flex flex-col gap-3">
-              <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0', c.iconCls)}>
+            <button
+              key={a.title}
+              onClick={a.onClick}
+              className="flex w-full items-center gap-4 px-5 py-4 text-left hover:bg-slate-50 active:bg-slate-100 transition-colors min-h-[64px] group"
+            >
+              <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0', a.iconCls)}>
                 <Icon size={18} />
               </div>
-              <div className="flex-1">
-                <p className="text-[14px] font-bold text-slate-900">{c.title}</p>
-                <p className="text-[12px] text-slate-500 mt-1 leading-relaxed">{c.desc}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-semibold text-slate-900">{a.title}</p>
+                <p className="text-[12px] text-slate-500 mt-0.5">{a.desc}</p>
               </div>
-              <button
-                onClick={c.onClick}
-                className="mt-auto w-full rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-[.98] transition-all py-2 text-[13px] font-semibold text-white min-h-[44px]"
-              >
-                {c.cta}
-              </button>
-            </div>
+              <ChevronRight size={16} className="shrink-0 text-slate-300 group-hover:text-slate-500 transition-colors" />
+            </button>
           )
         })}
       </div>
