@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { motion, AnimatePresence, useReducedMotion, useInView } from 'motion/react'
 import {
   Search, Bookmark, ChevronRight,
@@ -12,7 +13,8 @@ import { fmtPrice, fmtPct, upsideZone } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import { slideDown, fadeUp } from '@/lib/motion'
 import type { FeaturedQuote } from '@/app/api/analyze/quotes/route'
-import ConceptBanner from '@/components/onboarding/ConceptBanner'
+
+const ConceptBanner = dynamic(() => import('@/components/onboarding/ConceptBanner'), { ssr: false })
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -823,7 +825,13 @@ function RecentlyViewed() {
 export default function AnalyzePage() {
   return (
     <div className="min-h-screen p-4 lg:p-6">
-      <div className="space-y-6">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-lg focus:text-sm focus:font-semibold focus:outline-none focus:shadow-lg"
+      >
+        Skip to content
+      </a>
+      <div id="main-content" className="space-y-6" tabIndex={-1}>
 
         <motion.div
           initial={{ opacity: 0, y: 10 }}

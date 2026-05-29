@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
-import { RefreshCw, Settings2, ExternalLink } from 'lucide-react'
+import { RefreshCw, ExternalLink } from 'lucide-react'
 import { useInView, useReducedMotion } from 'motion/react'
 
 import IndexSnapshotGrid    from '@/components/markets/IndexSnapshotGrid'
@@ -145,9 +145,14 @@ export default function MarketsPage() {
   })
 
   return (
-    <div className="min-h-screen bg-[#F1F5F9] pt-[52px]">
-
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-5 sm:py-7 space-y-8">
+    <div className="min-h-screen bg-slate-100 pt-[52px]">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-lg focus:text-sm focus:font-semibold focus:outline-none focus:shadow-lg"
+      >
+        Skip to content
+      </a>
+      <div id="main-content" className="max-w-[1440px] mx-auto px-4 sm:px-6 py-5 sm:py-7 space-y-8" tabIndex={-1}>
 
         {err && (
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-600 flex items-center justify-between">
@@ -185,10 +190,6 @@ export default function MarketsPage() {
               title="Refresh"
             >
               <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
-            </button>
-            <button className="hidden sm:flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors">
-              <Settings2 size={11} />
-              Customize
             </button>
           </div>
         </div>
