@@ -23,14 +23,13 @@ interface Props {
   initialSubTab?:  SubTab | null
 }
 
-type SubTab = 'statements' | 'growth' | 'profitability' | 'solvency' | 'analysts' | 'snapshot' | 'ownership'
+type SubTab = 'statements' | 'growth' | 'profitability' | 'solvency' | 'analysts' | 'ownership'
 const SUB_TABS: { id: SubTab; label: string }[] = [
   { id: 'statements',    label: 'Statements'    },
   { id: 'growth',        label: 'Growth'        },
   { id: 'profitability', label: 'Profitability' },
   { id: 'solvency',      label: 'Solvency'      },
   { id: 'analysts',      label: 'Analysts'      },
-  { id: 'snapshot',      label: 'Snapshot'      },
   { id: 'ownership',     label: 'Ownership'     },
 ]
 
@@ -108,7 +107,7 @@ function Sparkline({ values, positiveIsGood = true }: { values: (number | null)[
   const barW = 5, gap = 2
   const totalW = pts.length * (barW + gap) - gap
   return (
-    <svg width={totalW} height={16} className="shrink-0 inline-block align-middle mr-1.5">
+    <svg width={totalW} height={16} className="shrink-0 inline-block align-middle mr-1.5" aria-hidden="true">
       {pts.map((v, i) => {
         const h = Math.max(2, (Math.abs(v) / mx) * 14)
         const isPos = v >= 0
@@ -568,30 +567,12 @@ export default function FinancialsHub({ statementsData, financialsData, currency
       { label: 'Net Margin',             fmt: 'pct', positiveIsGood: true,  values: v(m => m.netMargin)    },
       { label: 'SG&A / Revenue',         fmt: 'pct', positiveIsGood: false, values: v(m => m.sgaMargin)    },
       { label: 'R&D / Revenue',          fmt: 'pct', positiveIsGood: true,  values: v(m => m.rndMargin)    },
-      // Fix P1: label accurately reflects Operating CF ÷ Revenue, not FCF
       { label: 'Op. CF Margin',          fmt: 'pct', positiveIsGood: true,  values: v(m => m.ocfToRev), tooltip: 'Operating Cash Flow ÷ Revenue. Measures cash generation before investing/financing activities.'  },
 
       { label: 'Returns', isHeader: true, fmt: 'pct', values: [] },
       { label: 'Return on Assets (ROA)',   fmt: 'pct', positiveIsGood: true, values: v(m => m.roa)  },
       { label: 'Return on Equity (ROE)',   fmt: 'pct', positiveIsGood: true, values: v(m => m.roe)  },
       { label: 'Return on Inv. Capital',   fmt: 'pct', positiveIsGood: true, values: v(m => m.roic) },
-
-      { label: 'Asset Efficiency', isHeader: true, fmt: 'x', values: [] },
-      // Fix P4: add tooltips explaining each turnover multiple
-      { label: 'Asset Turnover',        fmt: 'x', positiveIsGood: true, values: v(m => m.assetTO), tooltip: 'Revenue ÷ Total Assets. How many dollars of revenue generated per dollar of assets.' },
-      { label: 'Receivables Turnover',  fmt: 'x', positiveIsGood: true, values: v(m => m.recTO),   tooltip: 'Revenue ÷ Receivables. Higher = faster collection of customer payments.' },
-      { label: 'Inventory Turnover',    fmt: 'x', positiveIsGood: true, values: v(m => m.invTO),   tooltip: 'COGS ÷ Inventory. Higher = inventory sells faster (less capital tied up).' },
-      { label: 'Fixed Asset Turnover',  fmt: 'x', positiveIsGood: true, values: v(m => m.ppeTO),   tooltip: 'Revenue ÷ Net PP&E. Measures efficiency of physical asset usage.' },
-
-      { label: 'Liquidity', isHeader: true, fmt: 'x', values: [] },
-      { label: 'Current Ratio',         fmt: 'x',    positiveIsGood: true,  values: v(m => m.currRatio),  tooltip: 'Current Assets ÷ Current Liabilities. >1 means short-term assets cover short-term debts.' },
-      // Fix P3: note when Quick Ratio data would match Current (no inventory)
-      { label: 'Quick Ratio',           fmt: 'x',    positiveIsGood: true,  values: v(m => m.quickRatio), tooltip: '(Current Assets − Inventory) ÷ Current Liabilities. Stricter liquidity test. Shows "—" when inventory data is unavailable.' },
-      { label: 'Days Sales Outstanding',fmt: 'days', positiveIsGood: false, values: v(m => m.dso),        tooltip: '365 ÷ Receivables Turnover. Average days to collect a customer payment.' },
-      { label: 'Days Inventory Outstanding', fmt: 'days', positiveIsGood: false, values: v(m => m.dio),   tooltip: '365 ÷ Inventory Turnover. Average days to sell through inventory.' },
-      { label: 'Days Payable Outstanding',   fmt: 'days', positiveIsGood: true,  values: v(m => m.dpo),   tooltip: '365 ÷ (COGS ÷ Payables). Average days to pay suppliers. Higher = better use of supplier credit.' },
-      { label: 'Cash Conversion Cycle', fmt: 'days', positiveIsGood: false, values: v(m => m.ccc),        tooltip: 'DSO + DIO − DPO. Days of working capital tied up in operations. Lower or negative = healthier cash cycle.' },
-      { label: 'Op. CF / Current Liab.',fmt: 'x',    positiveIsGood: true,  values: v(m => m.ocfToCurrL), tooltip: 'Operating Cash Flow ÷ Current Liabilities. Ability to service near-term obligations from operations.' },
     ]
   }, [mets])
 
@@ -617,6 +598,21 @@ export default function FinancialsHub({ statementsData, financialsData, currency
       { label: 'Total Debt / EBITDA',     fmt: 'x', positiveIsGood: false, values: v(m => m.debtToEbitda),    tooltip: 'Total Debt ÷ EBITDA. Years of EBITDA needed to repay debt. Shown "—" when EBITDA ≤ 0.' },
       { label: 'Net Debt / EBITDA',       fmt: 'x', positiveIsGood: false, values: v(m => m.netDebtToEbitda), tooltip: 'Net Debt (Total Debt − Cash) ÷ EBITDA. Negative = net cash position. Shown "—" when EBITDA ≤ 0.' },
       { label: 'Cash Runway (months)',    fmt: 'x', positiveIsGood: true,  values: v(m => m.cashRunwayMonths), tooltip: 'Cash ÷ |Monthly Cash Burn|. Only shown when Operating Cash Flow is negative — indicates months of runway before cash runs out.' },
+
+      { label: 'Asset Efficiency', isHeader: true, fmt: 'x', values: [] },
+      { label: 'Asset Turnover',        fmt: 'x', positiveIsGood: true, values: v(m => m.assetTO), tooltip: 'Revenue ÷ Total Assets. How many dollars of revenue generated per dollar of assets.' },
+      { label: 'Receivables Turnover',  fmt: 'x', positiveIsGood: true, values: v(m => m.recTO),   tooltip: 'Revenue ÷ Receivables. Higher = faster collection of customer payments.' },
+      { label: 'Inventory Turnover',    fmt: 'x', positiveIsGood: true, values: v(m => m.invTO),   tooltip: 'COGS ÷ Inventory. Higher = inventory sells faster (less capital tied up).' },
+      { label: 'Fixed Asset Turnover',  fmt: 'x', positiveIsGood: true, values: v(m => m.ppeTO),   tooltip: 'Revenue ÷ Net PP&E. Measures efficiency of physical asset usage.' },
+
+      { label: 'Liquidity', isHeader: true, fmt: 'x', values: [] },
+      { label: 'Current Ratio',         fmt: 'x',    positiveIsGood: true,  values: v(m => m.currRatio),  tooltip: 'Current Assets ÷ Current Liabilities. >1 means short-term assets cover short-term debts.' },
+      { label: 'Quick Ratio',           fmt: 'x',    positiveIsGood: true,  values: v(m => m.quickRatio), tooltip: '(Current Assets − Inventory) ÷ Current Liabilities. Stricter liquidity test. Shows "—" when inventory data is unavailable.' },
+      { label: 'Days Sales Outstanding',fmt: 'days', positiveIsGood: false, values: v(m => m.dso),        tooltip: '365 ÷ Receivables Turnover. Average days to collect a customer payment.' },
+      { label: 'Days Inventory Outstanding', fmt: 'days', positiveIsGood: false, values: v(m => m.dio),   tooltip: '365 ÷ Inventory Turnover. Average days to sell through inventory.' },
+      { label: 'Days Payable Outstanding',   fmt: 'days', positiveIsGood: true,  values: v(m => m.dpo),   tooltip: '365 ÷ (COGS ÷ Payables). Average days to pay suppliers. Higher = better use of supplier credit.' },
+      { label: 'Cash Conversion Cycle', fmt: 'days', positiveIsGood: false, values: v(m => m.ccc),        tooltip: 'DSO + DIO − DPO. Days of working capital tied up in operations. Lower or negative = healthier cash cycle.' },
+      { label: 'Op. CF / Current Liab.',fmt: 'x',    positiveIsGood: true,  values: v(m => m.ocfToCurrL), tooltip: 'Operating Cash Flow ÷ Current Liabilities. Ability to service near-term obligations from operations.' },
     ]
   }, [mets])
 
@@ -624,7 +620,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
 
   const hasData = periods.length > 0
 
-  const showCharts = subTab === 'statements' && hasData
+  const showCharts = (subTab === 'statements' || subTab === 'growth' || subTab === 'profitability') && hasData
     && finCF.length > 0
     && finIS.filter((r: { isProjected: boolean }) => !r.isProjected).length >= 2
 
@@ -633,10 +629,13 @@ export default function FinancialsHub({ statementsData, financialsData, currency
     <div className="rounded-xl card overflow-hidden">
       {/* Sub-tab nav — scrollable on mobile */}
       <div className="flex items-center justify-between px-2 sm:px-5 pt-4 pb-0 border-b border-slate-100 overflow-x-auto scrollbar-none -webkit-overflow-scrolling-touch">
-        <div className="flex gap-0 min-w-max">
+        <div role="tablist" className="flex gap-0 min-w-max">
           {SUB_TABS.map(({ id, label }) => (
             <button
               key={id}
+              role="tab"
+              aria-selected={subTab === id}
+              aria-controls={`panel-${id}`}
               onClick={() => setSubTab(id)}
               className={`px-3 sm:px-4 py-3 min-h-[44px] text-[12px] sm:text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap ${
                 subTab === id
@@ -795,27 +794,6 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                     {rawRec !== '' && <span className={`text-sm font-bold px-4 py-1.5 rounded-full border ${recBg}`}>{recLabel}</span>}
                     {ca.numAnalysts > 0 && <span className="text-[12px] text-slate-400">{ca.numAnalysts} analysts covering this stock</span>}
                   </div>
-                  {/* A5: sentiment bar — rough proxy from rec string */}
-                  {rawRec !== '' && (() => {
-                    const bullish = isBuy ? 70 : isSell ? 20 : 45
-                    const bearish = isSell ? 60 : isBuy ? 10 : 30
-                    const neutral = 100 - bullish - bearish
-                    return (
-                      <div className="mt-3">
-                        <div className="flex h-2 rounded-full overflow-hidden gap-0.5">
-                          <div className="bg-emerald-400 rounded-l-full" style={{ width: `${bullish}%` }} />
-                          <div className="bg-amber-300" style={{ width: `${neutral}%` }} />
-                          <div className="bg-red-400 rounded-r-full" style={{ width: `${bearish}%` }} />
-                        </div>
-                        <div className="flex justify-between mt-1 text-[10px] text-slate-400">
-                          <span className="text-emerald-600">Buy ~{bullish}%</span>
-                          <span>Hold ~{neutral}%</span>
-                          <span className="text-red-600">Sell ~{bearish}%</span>
-                        </div>
-                        <p className="text-[10px] text-slate-300 mt-0.5">Estimated distribution based on consensus rating</p>
-                      </div>
-                    )
-                  })()}
                 </div>
                 {q.analystTargetMean > 0 && (
                   <div>
@@ -875,81 +853,6 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 </p>
               </>
             )}
-          </div>
-        )
-      })()}
-
-      {/* ── Snapshot ── */}
-      {subTab === 'snapshot' && (() => {
-        const q = financialsData?.quote ?? {}
-        const fv = financialsData?.fairValue ?? {}
-        const wacc = financialsData?.wacc ?? {}
-        const bp = financialsData?.businessProfile ?? {}
-        // Sn5: normalize exchange names
-        const exMap: Record<string, string> = { NMS: 'NASDAQ', NGM: 'NASDAQ', NCM: 'NASDAQ', NYQ: 'NYSE', PCX: 'NYSE Arca', BTS: 'BATS', SNP: 'S&P', SAO: 'B3 (Brazil)' }
-        const exchRaw = (q.exchange ?? '') as string
-        const exchange = (exMap[exchRaw] ?? exchRaw.replace(/nasdaq.*/i, 'NASDAQ').replace(/nyse.*/i, 'NYSE')) || null
-        const currCode = q.currency ?? 'USD'
-        const sym = currCode === 'BRL' ? 'R$ ' : currCode === 'USD' ? '$' : currCode + ' '
-        function fmtLarge(v: number) {
-          if (v >= 1e12) return `${sym}${(v / 1e12).toFixed(2)}T`
-          if (v >= 1e9)  return `${sym}${(v / 1e9).toFixed(2)}B`
-          if (v >= 1e6)  return `${sym}${(v / 1e6).toFixed(2)}M`
-          return `${sym}${v.toLocaleString()}`
-        }
-        // Sn2: 52W % from current price
-        const hi52 = q.fiftyTwoWeekHigh > 0 ? q.fiftyTwoWeekHigh : null
-        const lo52 = q.fiftyTwoWeekLow  > 0 ? q.fiftyTwoWeekLow  : null
-        const pctFromHigh = hi52 && q.price > 0 ? (q.price - hi52) / hi52 : null
-        const pctFromLow  = lo52 && q.price > 0 ? (q.price - lo52) / lo52 : null
-        // Sn1: P/E label — "Very High" for astronomical values, not blank
-        const pe = q.peRatio
-        const peLabel = pe > 0 && pe < 2000 ? `${pe.toFixed(1)}×` : pe >= 2000 ? 'Very High' : null
-        // Sn3: beta fallback chain
-        const betaVal = wacc?.inputs?.beta ?? q.beta ?? null
-        // Sn4: earnings date — timezone-safe (just use the string as-is if it's yyyy-mm-dd)
-        const earningsDate = q.nextEarningsDate
-          ? (() => {
-              const d = q.nextEarningsDate as string
-              if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
-                const [y, m, day] = d.split('-').map(Number)
-                return new Date(y, m - 1, day).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-              }
-              return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-            })()
-          : null
-        // Sn6: EV multiples
-        const evEbitda  = bp.evToEbitda  > 0 && bp.evToEbitda  < 500 ? `${(bp.evToEbitda  as number).toFixed(1)}×` : null
-        const evRevenue = bp.evToRevenue > 0 && bp.evToRevenue < 200 ? `${(bp.evToRevenue as number).toFixed(1)}×` : null
-        const ps        = bp.priceToSales > 0 && bp.priceToSales < 200 ? `${(bp.priceToSales as number).toFixed(1)}×` : null
-        const rows: { label: string; value: string | null; note?: string }[] = [
-          { label: 'Current Price',       value: q.price > 0 ? `${sym}${q.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : null },
-          { label: 'Market Cap',          value: q.marketCap > 0 ? fmtLarge(q.marketCap) : null },
-          { label: 'Enterprise Value',    value: fv.ev > 0 ? fmtLarge(fv.ev) : null },
-          { label: 'P/E (TTM)',           value: peLabel },
-          { label: 'EV / EBITDA',         value: evEbitda },
-          { label: 'EV / Revenue',        value: evRevenue },
-          { label: 'P/S',                 value: ps },
-          { label: 'PEG (5Y)',            value: q.pegRatio > 0 && q.pegRatio < 100 ? `${q.pegRatio.toFixed(2)}×` : null },
-          { label: 'Beta',                value: betaVal != null ? (betaVal as number).toFixed(2) : null },
-          { label: 'Shares Outstanding',  value: q.sharesOutstanding > 0 ? (q.sharesOutstanding >= 1e9 ? `${(q.sharesOutstanding/1e9).toFixed(1)}B` : q.sharesOutstanding >= 1e6 ? `${(q.sharesOutstanding/1e6).toFixed(1)}M` : q.sharesOutstanding.toLocaleString()) : null },
-          { label: '52W High',            value: hi52 != null ? `${sym}${hi52.toFixed(2)}${pctFromHigh != null ? ` (${pctFromHigh >= 0 ? '+' : ''}${(pctFromHigh * 100).toFixed(1)}%)` : ''}` : null },
-          { label: '52W Low',             value: lo52 != null ? `${sym}${lo52.toFixed(2)}${pctFromLow  != null ? ` (+${(pctFromLow  * 100).toFixed(1)}%)` : ''}` : null },
-          { label: 'Next Earnings',       value: earningsDate },
-          { label: 'Sector',              value: q.sector || null },
-          { label: 'Exchange',            value: exchange || null },
-        ].filter(r => r.value != null)
-        return (
-          <div className="px-4 sm:px-5 py-5">
-            <p className="text-[13px] font-semibold text-slate-700 mb-3">Market &amp; Valuation Snapshot</p>
-            <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 overflow-hidden">
-              {rows.map(r => (
-                <div key={r.label} className="flex items-center justify-between px-4 py-3 bg-white">
-                  <span className="text-[13px] text-slate-500">{r.label}</span>
-                  <span className="text-[13px] font-semibold text-slate-800 tabular-nums">{r.value}</span>
-                </div>
-              ))}
-            </div>
           </div>
         )
       })()}
@@ -1066,11 +969,16 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         cashFlow={finCF}
         currency={currency}
         isDark={false}
-        historicalMultiples={financialsData?.historicalMultiples ?? []}
+        historicalMultiples={subTab === 'statements' ? (financialsData?.historicalMultiples ?? []) : []}
         currentPE={financialsData?.quote?.peRatio ?? null}
         currentEVEbitda={financialsData?.businessProfile?.evToEbitda ?? null}
         currentEVRevenue={financialsData?.businessProfile?.evToRevenue ?? null}
         currentPS={financialsData?.businessProfile?.priceToSales ?? null}
+        chartsToShow={
+          subTab === 'growth'        ? ['revGrowth', 'fcfGrowth'] :
+          subTab === 'profitability' ? ['margins', 'ebitda']      :
+          undefined
+        }
       />
     )}
     </>

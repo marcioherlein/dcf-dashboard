@@ -40,6 +40,8 @@ interface HistoricalMultiple {
   ps: number | null
 }
 
+type ChartKey = 'revNI' | 'fcf' | 'margins' | 'ebitda' | 'revGrowth' | 'fcfGrowth' | 'multiples'
+
 interface Props {
   incomeStatement: ISRow[]
   cashFlow: CFRow[]
@@ -50,6 +52,7 @@ interface Props {
   currentEVEbitda?: number | null
   currentEVRevenue?: number | null
   currentPS?: number | null
+  chartsToShow?: ChartKey[]
 }
 
 function fmtM(v: number): string {
@@ -72,6 +75,7 @@ export default function FinancialCharts({
   incomeStatement, cashFlow, currency = '$', isDark,
   historicalMultiples = [],
   currentPE, currentEVEbitda, currentEVRevenue, currentPS,
+  chartsToShow,
 }: Props) {
   const [multipleTab, setMultipleTab] = useState<'pe' | 'evEbitda' | 'evRevenue' | 'ps'>('pe')
 
@@ -88,7 +92,9 @@ export default function FinancialCharts({
   if (historicalIS.length < 2) return null
 
   const CHART_H  = 168
-  const sectionTitle = 'text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3'
+  const show = chartsToShow ?? (['revNI', 'fcf', 'margins', 'ebitda', 'revGrowth', 'fcfGrowth', 'multiples'] as ChartKey[])
+  const isSingle = show.length === 1
+  const sectionTitle = 'text-sm font-semibold text-slate-700 mb-3'
   const panel        = 'rounded-xl card p-4 sm:p-5'
 
   // ── Chart 1 data: Revenue & Net Income ──────────────────────────────────────
@@ -156,9 +162,10 @@ export default function FinancialCharts({
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className={`grid grid-cols-1 gap-4 ${isSingle ? '' : 'sm:grid-cols-2'}`}>
 
         {/* ── Chart 1 — Revenue & Net Income ── */}
+        {show.includes('revNI') && (
         <div className={panel}>
           <p className={sectionTitle}>Revenue &amp; Net Income <span className="normal-case font-normal">({currency}M)</span></p>
           <ResponsiveContainer width="100%" height={CHART_H}>
@@ -181,11 +188,13 @@ export default function FinancialCharts({
             </BarChart>
           </ResponsiveContainer>
         </div>
+        )}
 
         {/* ── Chart 2 — FCF (OpCF + Capex breakdown) ── */}
+        {show.includes('fcf') && (
         <div className={panel}>
           <p className={sectionTitle}>Free Cash Flow <span className="normal-case font-normal">({currency}M)</span></p>
-          <p className="text-[9px] text-slate-400 -mt-2 mb-2">Operating CF + Capex (capex negative) = FCF · Faded = projected</p>
+          <p className="text-[11px] text-slate-500 -mt-2 mb-2">Operating CF + Capex (capex negative) = FCF · Faded = projected</p>
           <ResponsiveContainer width="100%" height={CHART_H}>
             <BarChart data={fcfData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barGap={2}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
@@ -213,9 +222,10 @@ export default function FinancialCharts({
             </BarChart>
           </ResponsiveContainer>
         </div>
+        )}
 
         {/* ── Chart 3 — Margin Trends (all years, projected as dashed) ── */}
-        {marginData.length >= 2 && (() => {
+        {show.includes('margins') && marginData.length >= 2 && (() => {
           // Split into historical and projected for separate Line segments
           const histMargins = marginData.map(d => d.isProjected ? { ...d, gross: null, opMgn: null, net: null, fcfMgn: null } : d)
           const projMargins = marginData.map(d => !d.isProjected ? { ...d, gross: null, opMgn: null, net: null, fcfMgn: null } : d)
@@ -269,7 +279,7 @@ export default function FinancialCharts({
         })()}
 
         {/* ── Chart 4 — EBITDA & Operating Income ── */}
-        {ebitdaData.length >= 2 && (
+        {show.includes('ebitda') && ebitdaData.length >= 2 && (
           <div className={panel}>
             <p className={sectionTitle}>EBITDA &amp; Operating Income <span className="normal-case font-normal">({currency}M)</span></p>
             <ResponsiveContainer width="100%" height={CHART_H}>
@@ -296,7 +306,7 @@ export default function FinancialCharts({
         )}
 
         {/* ── Chart 5 — Revenue YoY Growth ── */}
-        {revGrowthData.length >= 2 && (
+        {show.includes('revGrowth') && revGrowthData.length >= 2 && (
           <div className={panel}>
             <p className={sectionTitle}>Revenue YoY Growth <span className="normal-case font-normal">· faded = projected</span></p>
             <ResponsiveContainer width="100%" height={CHART_H}>
@@ -322,7 +332,7 @@ export default function FinancialCharts({
         )}
 
         {/* ── Chart 6 — FCF YoY Growth ── */}
-        {fcfGrowthData.length >= 2 && (
+        {show.includes('fcfGrowth') && fcfGrowthData.length >= 2 && (
           <div className={panel}>
             <p className={sectionTitle}>FCF YoY Growth <span className="normal-case font-normal">· faded = projected</span></p>
             <ResponsiveContainer width="100%" height={CHART_H}>
@@ -350,7 +360,7 @@ export default function FinancialCharts({
       </div>
 
       {/* ── Chart 7 — Historical Valuation Multiples ── */}
-      {historicalMultiples.length >= 2 && (() => {
+      {show.includes('multiples') && historicalMultiples.length >= 2 && (() => {
         type TabKey = 'pe' | 'evEbitda' | 'evRevenue' | 'ps'
         const TABS: { key: TabKey; label: string; color: string; currentVal: number | null | undefined; description: string }[] = [
           { key: 'pe',        label: 'P/E',        color: '#2563EB', currentVal: currentPE,        description: 'Price ÷ Earnings per share' },
@@ -451,7 +461,7 @@ export default function FinancialCharts({
                 />
               </LineChart>
             </ResponsiveContainer>
-            <p className="text-[9px] text-slate-400 mt-2">
+          <p className="text-[11px] text-slate-500 mt-2">
               Historical ratios from annual filings. Dashed lines: historical average and today&apos;s current multiple.
               A low current multiple relative to history may indicate the stock is cheaper than usual.
             </p>
@@ -460,10 +470,12 @@ export default function FinancialCharts({
       })()}
 
       {/* Footer note */}
-      <p className="text-[10px] text-slate-400">
-        Faded bars / dashed lines = DCF model projections &nbsp;·&nbsp; Solid = historical actuals
-        {projectedIS.length > 0 && ` · ${historicalIS.length} historical + ${projectedIS.length} projected years`}
-      </p>
+      {!chartsToShow && (
+        <p className="text-[11px] text-slate-500">
+          Faded bars / dashed lines = DCF model projections &nbsp;·&nbsp; Solid = historical actuals
+          {projectedIS.length > 0 && ` · ${historicalIS.length} historical + ${projectedIS.length} projected years`}
+        </p>
+      )}
 
     </>
   )

@@ -28,7 +28,7 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
       <div className="grid grid-cols-2 md:grid-cols-5 divide-x divide-y md:divide-y-0 divide-slate-100">
         {/* Current Price */}
         <div className="px-5 py-4 flex flex-col gap-1">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Current Price</p>
+          <p className="text-xs font-semibold text-slate-500">Current Price</p>
           <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none">
             {fmtPrice(currentPrice, currency)}
           </p>
@@ -41,7 +41,7 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
 
         {/* Blended Fair Value */}
         <div className="px-5 py-4 flex flex-col gap-1 border-t-2 border-blue-500">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400" title="Weighted average of available valuation models. Unavailable models are excluded and weights redistributed.">Blended Fair Value</p>
+          <p className="text-xs font-semibold text-slate-500" title="Weighted average of available valuation models. Unavailable models are excluded and weights redistributed.">Blended Fair Value</p>
           <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none">
             {output.blendedFairValue != null ? fmtPrice(output.blendedFairValue, currency) : '—'}
           </p>
@@ -52,7 +52,7 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
 
         {/* Upside / Downside */}
         <div className="px-5 py-4 flex flex-col gap-1">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Upside / Downside</p>
+          <p className="text-xs font-semibold text-slate-500">Upside / Downside</p>
           <p className={`text-2xl font-bold tabular-nums leading-none ${upColor}`}>
             {output.upsidePct != null ? `${upsideSign}${(output.upsidePct * 100).toFixed(1)}%` : '—'}
           </p>
@@ -61,7 +61,7 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
 
         {/* Investment Verdict */}
         <div className="px-5 py-4 flex flex-col gap-1">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Investment Verdict</p>
+          <p className="text-xs font-semibold text-slate-500">Investment Verdict</p>
           <p className={`text-xl font-bold leading-tight ${vstyle.text}`}>{output.verdict}</p>
           {output.upsidePct != null && (
             <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border self-start ${vstyle.badge}`}>
@@ -72,7 +72,7 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
 
         {/* Market-Implied CAGR */}
         <div className="px-5 py-4 flex flex-col gap-1 col-span-2 md:col-span-1">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400" title="The revenue CAGR the market is pricing into the current share price, derived from a reverse DCF.">Market-Implied CAGR</p>
+          <p className="text-xs font-semibold text-slate-500" title="The revenue CAGR the market is pricing into the current share price, derived from a reverse DCF.">Market-Implied CAGR</p>
           {output.marketImpliedGrowth != null ? (
             <>
               <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none">

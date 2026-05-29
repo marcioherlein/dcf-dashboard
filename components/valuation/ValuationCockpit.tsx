@@ -9,7 +9,6 @@ import {
 } from '@/lib/valuation/cockpit'
 import { buildSnapshot, seedAssumptions } from '@/lib/valuation/cockpitBuilders'
 import SummaryCards from './cockpit/SummaryCards'
-import GuidanceStrip from './cockpit/GuidanceStrip'
 import FairValueChart from './cockpit/FairValueChart'
 import AssumptionsPanel, { type SparkPoint } from './cockpit/AssumptionsPanel'
 import ScenarioCards from './cockpit/ScenarioCards'
@@ -208,9 +207,6 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
         currency={currency}
       />
 
-      {/* Collapsible guidance at top */}
-      <GuidanceStrip />
-
       {/* Two-column layout: left (scenario+chart) + tall right sidebar */}
       <div className="mt-2 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-4 items-start">
         <div className="flex flex-col gap-4 min-w-0">
@@ -293,7 +289,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
 
       {/* End-of-page CTA */}
       <div className="rounded-xl bg-white border border-slate-100 shadow-sm px-5 py-5">
-        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">What do you want to do next?</p>
+        <p className="text-sm font-semibold text-slate-600 mb-3">What do you want to do next?</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             onClick={scrollToFullDCF}
@@ -328,6 +324,16 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
             <span className="text-xs text-slate-500">Track this stock and get updates on value and price changes</span>
           </button>
         </div>
+      </div>
+      {/* Mobile sticky CTA — hidden on desktop where assumptions are always visible */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 px-4 pb-4 pt-2" style={{ background: 'linear-gradient(to top, rgba(248,250,252,0.98) 0%, rgba(248,250,252,0) 100%)' }}>
+        <button
+          onClick={() => assumptionsPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          className="w-full rounded-2xl py-3.5 text-sm font-bold text-white transition-all active:scale-95"
+          style={{ background: '#2563EB', boxShadow: '0 4px 16px rgba(37,99,235,0.35)' }}
+        >
+          Edit assumptions
+        </button>
       </div>
     </div>
   )

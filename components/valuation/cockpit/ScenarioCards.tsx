@@ -46,7 +46,7 @@ function ScenarioCard({
       </p>
       <div className="flex gap-4">
         <div>
-          <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">WACC</p>
+          <p className="text-[10px] text-slate-500 mb-0.5">WACC</p>
           <p className="text-xs font-semibold text-slate-700 tabular-nums">
             {(wacc * 100).toFixed(1)}%
             {!isBase && Math.abs(waccDelta) > 0.0001 && (
@@ -57,7 +57,7 @@ function ScenarioCard({
           </p>
         </div>
         <div>
-          <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">5Y CAGR</p>
+          <p className="text-[10px] text-slate-500 mb-0.5">5Y CAGR</p>
           <p className="text-xs font-semibold text-slate-700 tabular-nums">
             {(cagr * 100).toFixed(1)}%
             {!isBase && Math.abs(cagrDelta) > 0.0001 && (
@@ -77,7 +77,7 @@ export default function ScenarioCards({ scenarios, currentPrice, currency }: Pro
   return (
     <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-4">
       <div className="flex items-center justify-between mb-1">
-        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Scenario Analysis</p>
+        <p className="text-xs font-semibold text-slate-600">Scenario Analysis</p>
         <span className="text-[10px] text-slate-400">Blended estimate at stressed assumptions</span>
       </div>
       <p className="text-[10px] text-slate-400 mb-3">All four methods re-run at each stress — same blend as Base.</p>
