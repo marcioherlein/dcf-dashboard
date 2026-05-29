@@ -43,19 +43,19 @@ export default function MispricingExplainer({ ticker, fairValue, currentPrice, u
   if (!text && !loading) return null
 
   return (
-    <div className="glass-card-light rounded-xl px-4 py-3.5 flex items-start gap-3">
-      <div className="shrink-0 mt-0.5 w-6 h-6 rounded-full bg-violet-100 flex items-center justify-center">
-        <Sparkles size={12} className="text-violet-600" />
+    <div className="glass-card-light rounded-xl px-4 py-4 flex items-start gap-3">
+      <div className="shrink-0 mt-0.5 w-7 h-7 rounded-full bg-violet-100 flex items-center justify-center">
+        <Sparkles size={13} className="text-violet-600" />
       </div>
-      <div className="min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">AI Insight</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">AI Insight</p>
         {loading ? (
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
-            <span className="text-xs text-slate-400">Analysing…</span>
+            <span className="text-[13px] text-slate-400">Analysing…</span>
           </div>
         ) : (
-          <p className="text-sm text-slate-700 leading-relaxed">{text}</p>
+          <p className="text-[13px] text-slate-700 leading-relaxed">{text}</p>
         )}
       </div>
     </div>

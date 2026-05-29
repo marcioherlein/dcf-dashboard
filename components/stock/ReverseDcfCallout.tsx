@@ -70,20 +70,20 @@ export default function ReverseDcfCallout({
   const analystW   = analystPct    != null ? Math.min(100, (analystPct    / scale) * 100) : 0
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-blue-50/30 overflow-hidden shadow-card">
+    <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-blue-50/30 overflow-hidden shadow-card w-full">
 
       {/* Header */}
-      <div className="px-4 sm:px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
-        <div>
+      <div className="px-4 sm:px-5 py-4 border-b border-slate-100 flex items-start sm:items-center justify-between gap-3 flex-wrap">
+        <div className="min-w-0">
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
             What the Market Is Pricing In
           </p>
-          <h3 className="mt-0.5 text-base font-semibold text-slate-900 flex items-center gap-1">
+          <h3 className="mt-0.5 text-[15px] font-semibold text-slate-900 flex items-center gap-1 flex-wrap">
             Reverse DCF Analysis
             <InfoTooltip content="Works backward from today's price to estimate the revenue growth rate the market is already pricing in. If the implied growth rate seems unrealistic, the stock may be expensive. Not a buy/sell signal." />
           </h3>
         </div>
-        <span className={cn('text-[11px] font-bold px-2.5 py-1 rounded-full border whitespace-nowrap', styles.chip)}>
+        <span className={cn('text-[12px] font-bold px-3 py-1.5 rounded-full border whitespace-nowrap shrink-0', styles.chip)}>
           {label}
         </span>
       </div>
@@ -107,7 +107,7 @@ export default function ReverseDcfCallout({
         {result.interpretation === 'not_meaningful' ? (
           <div className="flex items-start gap-3 rounded-xl bg-slate-50 border border-slate-200 px-4 py-3">
             <span className="text-slate-400 text-lg leading-none mt-0.5 shrink-0">—</span>
-            <p className="text-sm text-slate-500 leading-relaxed">{result.interpretationText}</p>
+            <p className="text-[13px] text-slate-500 leading-relaxed">{result.interpretationText}</p>
           </div>
         ) : (
           <>
@@ -121,14 +121,14 @@ export default function ReverseDcfCallout({
                     <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1">
                       Implied 5Y Revenue CAGR
                     </p>
-                    <p className={cn('text-2xl sm:text-3xl font-bold tabular-nums font-mono leading-none', styles.text)}>
+                    <p className={cn('text-[32px] font-black tabular-nums font-mono leading-none', styles.text)}>
                       {impliedPct != null ? `${impliedPct.toFixed(1)}%` : '—'}
                     </p>
                   </div>
                   {historicalPct != null && (
                     <div className="mb-0.5">
                       <p className="text-[11px] text-slate-400 mb-0.5">3Y Historical</p>
-                      <p className="text-lg font-semibold tabular-nums font-mono text-slate-700 leading-none">
+                      <p className="text-[20px] font-semibold tabular-nums font-mono text-slate-700 leading-none">
                         {historicalPct.toFixed(1)}%
                       </p>
                     </div>
@@ -137,7 +137,7 @@ export default function ReverseDcfCallout({
 
                 {/* Gap callout */}
                 {historicalPct != null && impliedPct != null && Math.abs(impliedPct - historicalPct) > 1 && (
-                  <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-[12px] text-slate-600 leading-relaxed">
+                  <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-[13px] text-slate-600 leading-relaxed">
                     The market assumes <strong>{impliedPct.toFixed(1)}%</strong> growth — that&apos;s{' '}
                     <strong className={impliedPct < historicalPct ? 'text-amber-700' : 'text-emerald-700'}>
                       {Math.abs(impliedPct - historicalPct).toFixed(1)}pp {impliedPct < historicalPct ? 'below' : 'above'}
@@ -151,8 +151,8 @@ export default function ReverseDcfCallout({
               <div className="flex-1 min-w-0 space-y-3">
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[11px] text-slate-500">Implied 5Y CAGR</span>
-                    <span className={cn('text-[11px] font-semibold tabular-nums font-mono', styles.text)}>
+                    <span className="text-[12px] text-slate-500">Implied 5Y CAGR</span>
+                    <span className={cn('text-[12px] font-semibold tabular-nums font-mono', styles.text)}>
                       {impliedPct != null ? `${impliedPct.toFixed(1)}%` : '—'}
                     </span>
                   </div>
@@ -166,8 +166,8 @@ export default function ReverseDcfCallout({
                 {historicalPct != null && (
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[11px] text-slate-500">3Y Historical CAGR</span>
-                      <span className="text-[11px] font-semibold tabular-nums font-mono text-slate-600">
+                      <span className="text-[12px] text-slate-500">3Y Historical CAGR</span>
+                      <span className="text-[12px] font-semibold tabular-nums font-mono text-slate-600">
                         {historicalPct.toFixed(1)}%
                       </span>
                     </div>
@@ -182,8 +182,8 @@ export default function ReverseDcfCallout({
                 {analystPct != null && (
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[11px] text-slate-500">Analyst Est. (1Y)</span>
-                      <span className="text-[11px] font-semibold tabular-nums font-mono text-purple-600">
+                      <span className="text-[12px] text-slate-500">Analyst Est. (1Y)</span>
+                      <span className="text-[12px] font-semibold tabular-nums font-mono text-purple-600">
                         {analystPct.toFixed(1)}%
                       </span>
                     </div>
@@ -197,20 +197,20 @@ export default function ReverseDcfCallout({
                 )}
                 {/* Axis labels */}
                 <div className="flex justify-between">
-                  <span className="text-[10px] text-slate-300">0%</span>
-                  <span className="text-[10px] text-slate-300">{Math.ceil(scale / 10) * 10}%</span>
+                  <span className="text-[11px] text-slate-300">0%</span>
+                  <span className="text-[11px] text-slate-300">{Math.ceil(scale / 10) * 10}%</span>
                 </div>
               </div>
             </div>
 
             {/* Interpretation text */}
-            <p className="text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
+            <p className="text-[13px] text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
               {result.interpretationText}
             </p>
 
             {/* Negative implied growth plain-language callout */}
             {impliedPct != null && impliedPct < 0 && (
-              <div className="rounded-lg bg-blue-50 border border-blue-200 px-3 py-2.5 text-[12px] text-blue-700 leading-relaxed">
+              <div className="rounded-lg bg-blue-50 border border-blue-200 px-3 py-2.5 text-[13px] text-blue-700 leading-relaxed">
                 <strong>What does a negative implied growth rate mean?</strong> The market is pricing this stock as if revenue will shrink over the next 5 years. This reflects very conservative (bearish) expectations — which can represent an opportunity if you believe the business will return to growth.
               </div>
             )}
@@ -221,7 +221,7 @@ export default function ReverseDcfCallout({
         {isEmergingMarket && result.interpretation !== 'not_meaningful' && (
           <div className="flex items-start gap-2.5 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2.5">
             <span className="text-amber-600 text-base leading-none mt-0.5 shrink-0">⚠</span>
-            <p className="text-[11px] text-amber-700 leading-relaxed">
+            <p className="text-[12px] text-amber-700 leading-relaxed">
               <strong>Emerging market:</strong> historical CAGR benchmark may be distorted by currency effects. Interpret with caution.
             </p>
           </div>
@@ -230,7 +230,7 @@ export default function ReverseDcfCallout({
 
       {/* Footer */}
       <div className="px-4 sm:px-5 py-3 bg-slate-50 border-t border-slate-100">
-        <p className="text-[10px] text-slate-400">
+        <p className="text-[11px] text-slate-400">
           Reverse DCF solves for the revenue growth rate already priced in, holding FCF margin and WACC constant. Not a buy/sell signal.
         </p>
       </div>

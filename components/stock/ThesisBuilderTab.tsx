@@ -66,25 +66,27 @@ export default function ThesisBuilderTab({ ticker, data }: Props) {
   }
 
   return (
-    <SimplifierTabs
-      ticker={ticker}
-      companyName={data?.companyName ?? ticker}
-      sector={data?.quote?.sector ?? ''}
-      industry={data?.businessProfile?.industry ?? ''}
-      country={data?.businessProfile?.country ?? ''}
-      price={data?.quote?.price ?? null}
-      upsidePct={data?.valuationMethods?.triangulatedUpsidePct ?? data?.fairValue?.upsidePct ?? null}
-      peRatio={data?.quote?.peRatio ?? null}
-      marketCap={data?.quote?.marketCap ?? null}
-      beta={data?.wacc?.inputs?.beta ?? null}
-      grossMargin={data?.businessProfile?.grossMargin ?? null}
-      fcfMargin={data?.businessProfile?.fcfMargin ?? null}
-      description={data?.businessProfile?.description ?? ''}
-      wikiBio={null}
-      data={data}
-      autoMap={autoMap}
-      initialEntry={initialEntry}
-      onSave={handleSave}
-    />
+    <div className="w-full min-w-0">
+      <SimplifierTabs
+        ticker={ticker}
+        companyName={data?.companyName ?? ticker}
+        sector={data?.quote?.sector ?? ''}
+        industry={data?.businessProfile?.industry ?? ''}
+        country={data?.businessProfile?.country ?? ''}
+        price={data?.quote?.price ?? null}
+        upsidePct={data?.valuationMethods?.triangulatedUpsidePct ?? data?.fairValue?.upsidePct ?? null}
+        peRatio={data?.quote?.peRatio ?? null}
+        marketCap={data?.quote?.marketCap ?? null}
+        beta={data?.wacc?.inputs?.beta ?? null}
+        grossMargin={data?.businessProfile?.grossMargin ?? null}
+        fcfMargin={data?.businessProfile?.fcfMargin ?? null}
+        description={data?.businessProfile?.description ?? ''}
+        wikiBio={null}
+        data={data}
+        autoMap={autoMap}
+        initialEntry={initialEntry}
+        onSave={handleSave}
+      />
+    </div>
   )
 }

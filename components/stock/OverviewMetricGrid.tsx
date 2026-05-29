@@ -85,7 +85,7 @@ function gradeBadge(color: string): string {
 
 function MetricRow({ label, value, valueClass, tooltip }: { label: string; value: string; valueClass?: string; tooltip?: string }) {
   return (
-    <div className="flex items-center justify-between gap-2">
+    <div className="flex items-center justify-between gap-2 py-1">
       <span className="text-[13px] text-slate-500 truncate flex items-center gap-0.5">
         {label}
         {tooltip && <InfoTooltip content={tooltip} />}
@@ -110,7 +110,7 @@ function CardHeader({ title, label, color, tooltip, Icon }: { title: string; lab
         {title}
         {tooltip && <InfoTooltip content={tooltip} />}
       </p>
-      <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${gradeBadge(color)}`}>{label}</span>
+      <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${gradeBadge(color)}`}>{label}</span>
     </div>
   )
 }
@@ -157,7 +157,7 @@ function BusinessQualityCard({ ratings, scores, onViewDetails }: { ratings: Stoc
       : 'Competitive positioning requires monitoring.'
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-3 py-3 sm:px-5 sm:py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <CardHeader title="Business Quality" label={label} color={color} Icon={Award} />
       <div className="space-y-2.5 mb-3">
         <MetricRow label="Economic Moat" value={moat?.label ?? '—'} />
@@ -207,13 +207,13 @@ function GrowthOutlookCard({ ratings, cagrAnalysis, onViewDetails }: { ratings: 
         : 'Insufficient data to assess growth trajectory.'
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-3 py-3 sm:px-5 sm:py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <CardHeader title="Growth Outlook" label={label} color={color} Icon={TrendingUp} />
       <div className="space-y-2.5 mb-3">
         {hist != null && (
           <div>
             <div className="flex items-center gap-2 mb-1 min-w-0">
-              <span className="text-[12px] text-slate-500 w-28 shrink-0">3Y Historical CAGR</span>
+              <span className="text-[12px] text-slate-500 w-20 sm:w-28 shrink-0">3Y Historical CAGR</span>
               <MiniBar value={Math.abs(hist)} max={maxBar} color={hist >= 0 ? 'blue' : 'amber'} />
               <span className="text-[13px] font-semibold tabular-nums text-slate-700 w-12 text-right">{fmtPct(hist)}</span>
             </div>
@@ -222,7 +222,7 @@ function GrowthOutlookCard({ ratings, cagrAnalysis, onViewDetails }: { ratings: 
         {analyst != null && (
           <div>
             <div className="flex items-center gap-2 mb-1 min-w-0">
-              <span className="text-[12px] text-slate-500 w-28 shrink-0">Analyst Est. (1Y)</span>
+              <span className="text-[12px] text-slate-500 w-20 sm:w-28 shrink-0">Analyst Est. (1Y)</span>
               <MiniBar value={Math.abs(analyst)} max={maxBar} color={analyst >= 0 ? 'emerald' : 'amber'} />
               <span className="text-[13px] font-semibold tabular-nums text-slate-700 w-12 text-right">{fmtPct(analyst)}</span>
             </div>
@@ -270,7 +270,7 @@ function ProfitabilityCard({ ratings, businessProfile, statementsData, onViewDet
       : 'Profitability data partially unavailable.'
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-3 py-3 sm:px-5 sm:py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <CardHeader title="Profitability" label={label} color={color} Icon={CircleDollarSign} />
       <div className="space-y-2.5 mb-3">
         <MetricRow label="Gross Margin" value={fmtPct(businessProfile.grossMargin)} />
@@ -314,7 +314,7 @@ function CashConversionCard({ businessProfile, statementsData, onViewDetails }: 
       : 'Insufficient data to assess cash conversion quality.'
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-3 py-3 sm:px-5 sm:py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <CardHeader title="Cash Conversion" label={label} color={color} Icon={RefreshCcw} />
       <div className="space-y-2.5 mb-3">
         <MetricRow label="FCF Margin (TTM)" value={fmtPct(businessProfile.fcfMargin)} />
@@ -382,7 +382,7 @@ function BalanceSheetCard({ scores, statementsData, onViewDetails }: {
       : 'Balance sheet health requires further analysis.'
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-3 py-3 sm:px-5 sm:py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <CardHeader title="Balance Sheet Safety" label={bsLabel} color={bsColor} Icon={ShieldCheck} />
       <div className="space-y-2.5 mb-3">
         <MetricRow
@@ -479,7 +479,7 @@ function RisksGridCard({ ratings, cagrAnalysis, onViewRisks }: {
   const dotColor = risk.color === 'red' ? 'bg-red-400' : risk.color === 'amber' ? 'bg-amber-400' : 'bg-emerald-400'
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-3 py-3 sm:px-5 sm:py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <div className="flex items-center justify-between mb-3">
         <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
           <AlertTriangle size={13} className={`shrink-0 ${risk.color === 'red' ? 'text-red-500' : risk.color === 'amber' ? 'text-amber-500' : 'text-emerald-500'}`} />
@@ -546,7 +546,7 @@ function RelativeValuationCard({ valuationMethods, quote, onViewDetails }: { val
   }
 
   return (
-    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="rounded-[18px] border border-[#E6ECF5] bg-white px-3 py-3 sm:px-5 sm:py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5 min-w-0">
           <Tag size={13} className={`shrink-0 ${overallLabel === 'Cheap' ? 'text-emerald-500' : overallLabel === 'Expensive' ? 'text-red-500' : 'text-blue-500'}`} />

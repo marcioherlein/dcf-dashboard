@@ -51,20 +51,20 @@ export default function MobileKeyInsights({ data }: Props) {
       {/* Summary row — always visible */}
       <button
         onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center justify-between px-4 py-2.5 gap-2 text-left"
+        className="w-full flex items-center justify-between px-4 py-3 min-h-[44px] gap-2 text-left"
       >
         <div className="flex items-center gap-2 flex-wrap min-w-0">
-          <span className="text-[11px] font-semibold text-slate-500 shrink-0">Quick insights</span>
-          <span className={cn('text-[11px] font-bold px-2 py-0.5 rounded-full border shrink-0', recBg)}>
+          <span className="text-[12px] font-semibold text-slate-500 shrink-0">Quick insights</span>
+          <span className={cn('text-[12px] font-bold px-2.5 py-1 rounded-full border shrink-0', recBg)}>
             {recLabel}
           </span>
           {analystTargetMean > 0 && (
-            <span className="text-[11px] text-slate-600 tabular-nums shrink-0">
+            <span className="text-[12px] text-slate-600 tabular-nums shrink-0">
               Target: <span className="font-semibold">{sym}{analystTargetMean.toFixed(2)}</span>
             </span>
           )}
           {blendedFV != null && (
-            <span className="text-[11px] text-slate-600 tabular-nums shrink-0">
+            <span className="text-[12px] text-slate-600 tabular-nums shrink-0">
               FV: <span className={cn('font-semibold', blendedUpside != null && blendedUpside >= 0 ? 'text-emerald-600' : 'text-amber-600')}>
                 {sym}{blendedFV.toFixed(2)}
               </span>
@@ -77,7 +77,7 @@ export default function MobileKeyInsights({ data }: Props) {
           )}
         </div>
         <ChevronDown
-          size={14}
+          size={16}
           className={cn('shrink-0 text-slate-400 transition-transform duration-200', open ? 'rotate-180' : '')}
         />
       </button>
@@ -87,15 +87,15 @@ export default function MobileKeyInsights({ data }: Props) {
         <div className="border-t border-slate-100 px-4 pb-4 pt-3 space-y-4">
           {/* 52-week range */}
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">52-Week Range</p>
-            <div className="relative h-1.5 rounded-full bg-slate-200">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">52-Week Range</p>
+            <div className="relative h-2 rounded-full bg-slate-200">
               <div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-red-400/60 via-amber-400/60 to-emerald-400/60 w-full" />
               <div
-                className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white border-2 border-slate-500 shadow-sm"
-                style={{ left: `calc(${pricePct * 100}% - 5px)` }}
+                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-slate-500 shadow-sm"
+                style={{ left: `calc(${pricePct * 100}% - 6px)` }}
               />
             </div>
-            <div className="flex justify-between mt-1.5 text-[10px] tabular-nums">
+            <div className="flex justify-between mt-1.5 text-[11px] tabular-nums">
               <span className="text-slate-400">{sym}{fiftyTwoWeekLow.toFixed(2)}</span>
               <span className="font-semibold text-slate-700">{sym}{price.toFixed(2)}</span>
               <span className="text-slate-400">{sym}{fiftyTwoWeekHigh.toFixed(2)}</span>
@@ -105,15 +105,15 @@ export default function MobileKeyInsights({ data }: Props) {
           {/* Financial health grades */}
           {ratings && healthCats.some(({ key }) => !!ratings[key]) && (
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Financial Health</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Financial Health</p>
               <div className="grid grid-cols-3 gap-2">
                 {healthCats.map(({ label, key }) => {
                   const cat = ratings[key]
                   if (!cat) return null
                   return (
-                    <div key={key} className="rounded-lg bg-slate-50 border border-slate-200 px-2 py-2 text-center">
-                      <p className="text-[10px] text-slate-500 mb-1">{label}</p>
-                      <span className={cn('text-xs font-bold px-1.5 py-0 rounded border leading-5', gradeChipClass(cat.grade))}>
+                    <div key={key} className="rounded-lg bg-slate-50 border border-slate-200 px-2 py-3 text-center min-h-[60px] flex flex-col items-center justify-center">
+                      <p className="text-[11px] text-slate-500 mb-1">{label}</p>
+                      <span className={cn('text-[13px] font-bold px-1.5 py-0.5 rounded border leading-5', gradeChipClass(cat.grade))}>
                         {cat.grade}
                       </span>
                     </div>
@@ -125,7 +125,7 @@ export default function MobileKeyInsights({ data }: Props) {
 
           {/* Analyst count */}
           {cagrAnalysis?.numAnalysts > 0 && (
-            <p className="text-[10px] text-slate-400 text-center">
+            <p className="text-[11px] text-slate-400 text-center">
               Based on {cagrAnalysis.numAnalysts} analyst estimate{cagrAnalysis.numAnalysts !== 1 ? 's' : ''}
             </p>
           )}

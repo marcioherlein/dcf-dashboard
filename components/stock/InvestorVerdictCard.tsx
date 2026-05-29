@@ -198,31 +198,31 @@ export default function InvestorVerdictCard({
   const { decision, note } = decisionFromUpside(upside)
 
   return (
-    <div className={cn('rounded-xl border px-5 py-4 space-y-3', config.bg)}>
+    <div className={cn('rounded-xl border px-4 sm:px-5 py-4 space-y-3', config.bg)}>
       {/* Header row */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div className="flex items-center gap-2 flex-wrap">
           <span className={cn('w-2 h-2 rounded-full shrink-0', config.dot)} />
           <span className={cn('text-sm font-bold tracking-wide', config.text)}>
             {config.label}
           </span>
-          <span className={cn('text-[11px] font-bold px-2 py-0.5 rounded-full border', DECISION_COLORS[decision])}>
+          <span className={cn('text-[12px] font-bold px-3 py-1 rounded-full border min-h-[32px] flex items-center', DECISION_COLORS[decision])}>
             {decision}
           </span>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className={cn('text-xs font-semibold px-2 py-0.5 rounded-full border tabular-nums', config.badge)}>
+          <span className={cn('text-[12px] font-semibold px-2.5 py-1 rounded-full border tabular-nums', config.badge)}>
             {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(1)}% vs fair value
           </span>
-          <span className="text-xs text-slate-500 tabular-nums">
+          <span className="text-[12px] text-slate-500 tabular-nums">
             FV {sym}{fairValue.toFixed(2)}
           </span>
         </div>
       </div>
 
       {/* Plain English summary + margin of safety */}
-      <p className="text-[12px] text-slate-600 leading-relaxed">{summary}</p>
-      <p className={cn('text-[12px] font-medium leading-tight', decision === 'BUY' ? 'text-emerald-700' : decision === 'WATCH' ? 'text-amber-700' : 'text-red-700')}>
+      <p className="text-[13px] text-slate-600 leading-relaxed">{summary}</p>
+      <p className={cn('text-[13px] font-medium leading-tight', decision === 'BUY' ? 'text-emerald-700' : decision === 'WATCH' ? 'text-amber-700' : 'text-red-700')}>
         {note}.
       </p>
 
@@ -231,7 +231,7 @@ export default function InvestorVerdictCard({
         {quality && (
           <Tooltip>
             <TooltipTrigger
-              render={<span className={cn('text-[11px] font-semibold px-2.5 py-0.5 rounded-full border cursor-help', QUALITY_COLOR[quality])} />}
+              render={<span className={cn('text-[12px] font-semibold px-2.5 py-1 rounded-full border cursor-help min-h-[32px] flex items-center', QUALITY_COLOR[quality])} />}
             >
               Business Quality: {quality}
             </TooltipTrigger>
@@ -240,13 +240,13 @@ export default function InvestorVerdictCard({
             </TooltipContent>
           </Tooltip>
         )}
-        <span className={cn('text-[11px] font-semibold px-2.5 py-0.5 rounded-full border', analystColor)}>
+        <span className={cn('text-[12px] font-semibold px-2.5 py-1 rounded-full border min-h-[32px] flex items-center', analystColor)}>
           {analystLabel}
         </span>
         {confidence && (
           <Tooltip>
             <TooltipTrigger
-              render={<span className={cn('text-[11px] font-semibold px-2.5 py-0.5 rounded-full border cursor-help', CONFIDENCE_COLOR[confidence])} />}
+              render={<span className={cn('text-[12px] font-semibold px-2.5 py-1 rounded-full border cursor-help min-h-[32px] flex items-center', CONFIDENCE_COLOR[confidence])} />}
             >
               Model confidence: {confidence}
             </TooltipTrigger>
@@ -256,7 +256,7 @@ export default function InvestorVerdictCard({
           </Tooltip>
         )}
         {growthModel && (
-          <span className="text-[11px] text-slate-500 px-2.5 py-0.5 rounded-full border border-slate-200 bg-white">
+          <span className="text-[12px] text-slate-500 px-2.5 py-1 rounded-full border border-slate-200 bg-white min-h-[32px] flex items-center">
             {growthModel === 'three-stage' ? '3-stage DCF' : '2-stage DCF'}
           </span>
         )}
@@ -266,7 +266,7 @@ export default function InvestorVerdictCard({
       {flags !== null && (
         <div className={cn('flex flex-wrap gap-1.5 pt-0.5 border-t', config.divider)}>
           {flags.length === 0 ? (
-            <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700">
+            <span className="text-[12px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 min-h-[32px] flex items-center">
               ✓ No major red flags
             </span>
           ) : (
@@ -274,7 +274,7 @@ export default function InvestorVerdictCard({
               <span
                 key={i}
                 className={cn(
-                  'text-[11px] font-semibold px-2.5 py-1 rounded-full border',
+                  'text-[12px] font-semibold px-2.5 py-1 rounded-full border min-h-[32px] flex items-center',
                   flag.level === 'danger'
                     ? 'bg-red-50 border-red-200 text-red-700'
                     : 'bg-amber-50 border-amber-200 text-amber-700',
@@ -288,7 +288,7 @@ export default function InvestorVerdictCard({
       )}
 
       {/* Disclaimer */}
-      <p className="text-[10px] text-slate-400 leading-tight border-t border-slate-200/70 pt-2">
+      <p className="text-[11px] text-slate-400 leading-tight border-t border-slate-200/70 pt-2">
         Model-based estimate, not financial advice. Treat as one input alongside your own research.
       </p>
     </div>

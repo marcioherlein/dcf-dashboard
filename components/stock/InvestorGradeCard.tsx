@@ -191,8 +191,8 @@ export default function InvestorGradeCard({
   return (
     <div className="rounded-xl card overflow-hidden">
       {/* Identity + price */}
-      <div className="p-5">
-        <div className="flex items-start gap-4">
+      <div className="p-4 sm:p-5">
+        <div className="flex items-start gap-3 sm:gap-4">
 
           {/* Grade arc gauge */}
           <motion.div
@@ -213,19 +213,19 @@ export default function InvestorGradeCard({
 
           {/* Company + price */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start justify-between gap-2 sm:gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="rounded-md bg-blue-50 border border-blue-200 px-2 py-0.5 text-xs font-bold text-blue-700 tracking-wide">
                     {ticker}
                   </span>
-                  {sector && <span className="text-[11px] text-slate-500">{sector}</span>}
+                  {sector && <span className="text-[11px] text-slate-500 truncate">{sector}</span>}
                 </div>
-                <h1 className="mt-1.5 text-lg font-bold text-slate-900 leading-tight truncate">{companyName}</h1>
-                <p className="mt-0.5 text-[11px] text-slate-500">{gradeLabel} overall</p>
+                <h1 className="mt-1.5 text-[16px] sm:text-lg font-bold text-slate-900 leading-tight truncate max-w-[160px] sm:max-w-none">{companyName}</h1>
+                <p className="mt-0.5 text-[12px] text-slate-500">{gradeLabel} overall</p>
               </div>
               <div className="text-right shrink-0">
-                <div className="text-2xl font-extrabold text-slate-900 tabular-nums leading-none">
+                <div className="text-[20px] sm:text-2xl font-extrabold text-slate-900 tabular-nums leading-none">
                   {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
                 <div className={cn('mt-1 flex items-center justify-end gap-1 text-sm font-semibold', up ? 'text-emerald-600' : 'text-red-600')}>
@@ -259,7 +259,7 @@ export default function InvestorGradeCard({
       </div>
 
       {/* Fair value visual + actions */}
-      <div className="border-t border-slate-200 px-5 pb-5 pt-4 space-y-4 bg-slate-50">
+      <div className="border-t border-slate-200 px-4 sm:px-5 pb-4 sm:pb-5 pt-4 space-y-4 bg-slate-50">
 
         {/* Alert triggered banner */}
         {alertTriggered && fairValue != null && (
@@ -277,7 +277,7 @@ export default function InvestorGradeCard({
             {/* Price vs Fair Value numbers */}
             <div className="flex items-end justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Current Price</p>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Current Price</p>
                 <p className="text-2xl font-bold text-slate-900 tabular-nums leading-none">
                   {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
@@ -295,7 +295,7 @@ export default function InvestorGradeCard({
 
               <div className="text-right min-w-0">
                 <div className="flex items-center justify-end gap-1.5 mb-1">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Fair Value Est.</p>
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Fair Value Est.</p>
                   <button
                     onClick={toggleAlert}
                     title={alertActive ? 'Remove fair value alert' : 'Alert me when price nears fair value'}
@@ -306,13 +306,13 @@ export default function InvestorGradeCard({
                         : 'bg-white border-slate-200 text-slate-300 hover:border-blue-300 hover:text-blue-600',
                     )}
                   >
-                    {alertActive ? <BellOff size={11} /> : <Bell size={11} />}
+                    {alertActive ? <BellOff size={13} /> : <Bell size={13} />}
                   </button>
                 </div>
                 <p className={cn('text-2xl font-bold tabular-nums leading-none', isUndervalued ? 'text-emerald-600' : 'text-red-600')}>
                   {currSymbol}{displayFV.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
-                <p className="text-[10px] text-slate-400 mt-1">Blended from multiple models</p>
+                <p className="text-[11px] text-slate-400 mt-1">Blended from multiple models</p>
               </div>
             </div>
 
@@ -320,18 +320,18 @@ export default function InvestorGradeCard({
             {scenarios && (
               <div className="flex items-center justify-between gap-2 px-1">
                 <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wide font-medium">Bear</span>
-                  <span className="text-[11px] font-bold text-red-500 tabular-nums">{currSymbol}{scenarios.bear.fairValue.toFixed(2)}</span>
+                  <span className="text-[11px] text-slate-400 uppercase tracking-wide font-medium">Bear</span>
+                  <span className="text-[12px] font-bold text-red-500 tabular-nums">{currSymbol}{scenarios.bear.fairValue.toFixed(2)}</span>
                 </div>
                 <div className="flex-1 h-px bg-gradient-to-r from-red-200 via-slate-200 to-emerald-200" />
                 <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wide font-medium">Base</span>
-                  <span className="text-[11px] font-bold text-blue-600 tabular-nums">{currSymbol}{scenarios.base.fairValue.toFixed(2)}</span>
+                  <span className="text-[11px] text-slate-400 uppercase tracking-wide font-medium">Base</span>
+                  <span className="text-[12px] font-bold text-blue-600 tabular-nums">{currSymbol}{scenarios.base.fairValue.toFixed(2)}</span>
                 </div>
                 <div className="flex-1 h-px bg-gradient-to-r from-slate-200 via-emerald-200 to-emerald-200" />
                 <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wide font-medium">Bull</span>
-                  <span className="text-[11px] font-bold text-emerald-600 tabular-nums">{currSymbol}{scenarios.bull.fairValue.toFixed(2)}</span>
+                  <span className="text-[11px] text-slate-400 uppercase tracking-wide font-medium">Bull</span>
+                  <span className="text-[12px] font-bold text-emerald-600 tabular-nums">{currSymbol}{scenarios.bull.fairValue.toFixed(2)}</span>
                 </div>
               </div>
             )}
@@ -347,8 +347,8 @@ export default function InvestorGradeCard({
                 />
               </div>
               <div className="flex justify-between mt-1">
-                <span className="text-[10px] text-slate-400">Today</span>
-                <span className={cn('text-[10px] font-medium', isUndervalued ? 'text-emerald-600' : 'text-red-600')}>
+                <span className="text-[11px] text-slate-400">Today</span>
+                <span className={cn('text-[11px] font-medium', isUndervalued ? 'text-emerald-600' : 'text-red-600')}>
                   Fair Value
                 </span>
               </div>
@@ -361,7 +361,7 @@ export default function InvestorGradeCard({
           {onViewDetails && (
             <button
               onClick={onViewDetails}
-              className="flex-1 rounded-xl py-2.5 text-[13px] font-semibold text-white transition-all bg-gradient-to-r from-blue-600 to-blue-500 shadow-sm hover:from-blue-700 hover:to-blue-600 active:scale-95"
+              className="flex-1 rounded-xl py-3 min-h-[44px] text-[14px] font-semibold text-white transition-all bg-gradient-to-r from-blue-600 to-blue-500 shadow-sm hover:from-blue-700 hover:to-blue-600 active:scale-95"
             >
               Explore full valuation →
             </button>
@@ -370,7 +370,7 @@ export default function InvestorGradeCard({
             <button
               onClick={onSave}
               title="Save to Watchlist"
-              className="rounded-xl border border-slate-200 p-2.5 text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+              className="rounded-xl border border-slate-200 p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
             >
               <Bookmark size={16} />
             </button>
@@ -378,7 +378,7 @@ export default function InvestorGradeCard({
           <button
             onClick={handleShare}
             title="Copy share link"
-            className="rounded-xl border border-slate-200 p-2.5 text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+            className="rounded-xl border border-slate-200 p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
           >
             {copied ? <Check size={16} className="text-emerald-600" /> : <Share2 size={16} />}
           </button>
