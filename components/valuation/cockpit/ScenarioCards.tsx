@@ -40,28 +40,28 @@ function ScenarioCard({
           </span>
         )}
       </div>
-      <p className="text-[11px] text-slate-500 mb-2 leading-tight">{description}</p>
+      <p className="text-[11px] text-[#64748B] mb-2 leading-tight">{description}</p>
       <p className={`${isBase ? 'text-3xl' : 'text-2xl'} font-bold tabular-nums text-slate-900 leading-none mb-3`}>
         {fv != null ? fmtPrice(fv, currency) : '—'}
       </p>
       <div className="flex gap-4">
         <div>
-          <p className="text-[10px] text-slate-500 mb-0.5">WACC</p>
-          <p className="text-xs font-semibold text-slate-700 tabular-nums">
+          <p className="text-[11px] text-[#64748B] mb-0.5">WACC</p>
+          <p className="text-[12px] font-[650] text-[#334155] tabular-nums">
             {(wacc * 100).toFixed(1)}%
             {!isBase && Math.abs(waccDelta) > 0.0001 && (
-              <span className={`ml-1 text-[10px] font-medium ${waccDelta > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+              <span className={`ml-1 text-[11px] font-[500] ${waccDelta > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
                 ({waccDelta > 0 ? '+' : ''}{(waccDelta * 100).toFixed(1)}%)
               </span>
             )}
           </p>
         </div>
         <div>
-          <p className="text-[10px] text-slate-500 mb-0.5">5Y CAGR</p>
-          <p className="text-xs font-semibold text-slate-700 tabular-nums">
+          <p className="text-[11px] text-[#64748B] mb-0.5">5Y CAGR</p>
+          <p className="text-[12px] font-[650] text-[#334155] tabular-nums">
             {(cagr * 100).toFixed(1)}%
             {!isBase && Math.abs(cagrDelta) > 0.0001 && (
-              <span className={`ml-1 text-[10px] font-medium ${cagrDelta > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+              <span className={`ml-1 text-[11px] font-[500] ${cagrDelta > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                 ({cagrDelta > 0 ? '+' : ''}{(cagrDelta * 100).toFixed(1)}%)
               </span>
             )}
@@ -78,9 +78,9 @@ export default function ScenarioCards({ scenarios, currentPrice, currency }: Pro
     <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-4">
       <div className="flex items-center justify-between mb-1">
         <p className="text-xs font-semibold text-slate-600">Scenario Analysis</p>
-        <span className="text-[10px] text-slate-400">Blended estimate at stressed assumptions</span>
+        <span className="text-[11px] text-[#94A3B8]">Blended estimate at stressed assumptions</span>
       </div>
-      <p className="text-[10px] text-slate-400 mb-3">All four methods re-run at each stress — same blend as Base.</p>
+      <p className="text-[11px] text-[#94A3B8] mb-3">All four methods re-run at each stress — same blend as Base.</p>
       <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-1 px-1 sm:grid sm:grid-cols-3 sm:overflow-visible sm:snap-none sm:pb-0 sm:mx-0 sm:px-0">
         <ScenarioCard
           label="Bear Case" description="If growth slows & margins compress"
