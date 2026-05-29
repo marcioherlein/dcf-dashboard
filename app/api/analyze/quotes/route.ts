@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server'
-import { buildSnapshot, seedAssumptions } from '@/lib/valuation/cockpitBuilders'
-import { computeCockpitOutput } from '@/lib/valuation/cockpit'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,53 +32,34 @@ const FEATURED: Omit<FeaturedQuote, 'fairValue' | 'price' | 'change' | 'changePc
   { ticker: 'HD',   name: 'Home Depot, Inc.',       etfSource: 'DIA', impliedCagr: 5.5,  historicalCagr3y: 4.0,  expectation: 'Conservative', interpretation: 'Market prices in modest recovery as housing improves.',      sparkData: [318, 332, 340, 328, 348, 360, 362, 368] },
 ]
 
-function getBaseUrl(): string {
-  // Vercel sets VERCEL_URL (no protocol); NEXTAUTH_URL has full URL in .env
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
-  if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL.replace(/\/$/, '')
-  return 'http://localhost:3000'
-}
-
-async function fetchBlendedFairValue(ticker: string, baseUrl: string): Promise<{ fairValue: number | null; price: number | null; change: number | null; changePct: number | null }> {
-  try {
-    // Reuse the already-computed financials API response (cached at edge for 1h)
-    const res = await fetch(`${baseUrl}/api/financials?ticker=${ticker}`, {
-      next: { revalidate: 3600 },
-    })
-    if (!res.ok) return { fairValue: null, price: null, change: null, changePct: null }
-
-    const apiData = await res.json()
-    if (apiData.error) return { fairValue: null, price: null, change: null, changePct: null }
-
-    // Compute the same cockpit blended fair value the stock page uses
-    const snapshot    = buildSnapshot(apiData)
-    const assumptions = seedAssumptions(apiData)
-    const output      = computeCockpitOutput(assumptions, snapshot)
-
-    const price     = (apiData.quote?.price     as number | null) ?? null
-    const change    = (apiData.quote?.change    as number | null) ?? null
-    const changePct = (apiData.quote?.changePct as number | null) ?? null
-
-    return { fairValue: output.blendedFairValue ?? null, price, change, changePct }
-  } catch {
-    return { fairValue: null, price: null, change: null, changePct: null }
-  }
-}
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const YahooFinance = require('yahoo-finance2').default
+const yf = new YahooFinance({ suppressNotices: ['ripHistorical', 'yahooSurvey'] })
 
 export async function GET() {
-  const baseUrl = getBaseUrl()
+  const tickers = FEATURED.map((f) => f.ticker)
 
-  const results = await Promise.allSettled(
-    FEATURED.map((f) => fetchBlendedFairValue(f.ticker, baseUrl))
-  )
+  let quoteMap: Record<string, { price: number | null; change: number | null; changePct: number | null }> = {}
+  try {
+    // Single batch call — much faster than 9 individual calls
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const results: any[] = await yf.quote(tickers, {}, { validateResult: false })
+    const arr = Array.isArray(results) ? results : [results]
+    for (const q of arr) {
+      if (!q?.symbol) continue
+      quoteMap[q.symbol] = {
+        price:     q.regularMarketPrice     ?? null,
+        change:    q.regularMarketChange    ?? null,
+        changePct: q.regularMarketChangePercent ?? null,
+      }
+    }
+  } catch {
+    // If batch fails, quotes stay null — cards show `—` gracefully
+  }
 
-  const enriched: FeaturedQuote[] = FEATURED.map((f, i) => {
-    const r = results[i]
-    const live = r.status === 'fulfilled' ? r.value : { fairValue: null, price: null, change: null, changePct: null }
-    const upsidePct = live.fairValue != null && live.price != null && live.price > 0
-      ? (live.fairValue - live.price) / live.price
-      : null
-    return { ...f, fairValue: live.fairValue, price: live.price, change: live.change, changePct: live.changePct, upsidePct }
+  const enriched: FeaturedQuote[] = FEATURED.map((f) => {
+    const live = quoteMap[f.ticker] ?? { price: null, change: null, changePct: null }
+    return { ...f, fairValue: null, upsidePct: null, ...live }
   })
 
   return NextResponse.json({ quotes: enriched, updatedAt: new Date().toISOString() })
