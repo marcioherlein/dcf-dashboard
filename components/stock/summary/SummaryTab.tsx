@@ -123,7 +123,7 @@ export default function SummaryTab({
       )}
 
       {/* ── Row 1: Hero verdict + Price chart ─────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-4 items-start">
         <SummaryHeroCard
           ticker={ticker}
           price={price}
