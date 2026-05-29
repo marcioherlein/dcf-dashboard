@@ -28,10 +28,10 @@ export default function CompanyCard({ description, sector, industry, country, em
   ].filter(Boolean) as string[]
 
   return (
-    <div className="bg-[#F8FAFC] border border-[#E6ECF5] rounded-[18px] p-4 sm:p-5">
+    <div className="bg-[#F8FAFC] border border-[#E6ECF5] rounded-[18px] p-3 sm:p-4">
       {/* Description — clamp to 3 lines on mobile when collapsed */}
       <p className={cn(
-        'text-[13px] text-[#475569] leading-relaxed mb-1',
+        'text-[13px] text-[#475569] leading-relaxed mb-0.5',
         !expanded && isLong ? 'line-clamp-3 sm:line-clamp-none' : ''
       )}>
         {displayed}
@@ -39,36 +39,32 @@ export default function CompanyCard({ description, sector, industry, country, em
       {isLong && (
         <button
           onClick={() => setExpanded(e => !e)}
-          className="text-[13px] font-[650] text-[#2563EB] hover:text-[#1D4ED8] transition-colors mb-3 min-h-[44px] flex items-center"
+          className="text-[13px] font-[650] text-[#2563EB] hover:text-[#1D4ED8] transition-colors py-1.5 mb-1"
         >
           {expanded ? 'Show less' : 'Read more'}
         </button>
       )}
 
-      {/* Tags */}
-      {tags.length > 0 && (
-        <div className={cn('flex flex-wrap gap-1.5', !isLong ? 'mt-3' : 'mt-1')}>
-          {tags.map(tag => (
-            <span
-              key={tag}
-              className="text-[11px] font-[600] text-[#475569] bg-[#F8FAFC] border border-[#E6ECF5] rounded-[6px] px-2.5 py-1"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Website link */}
-      <a
-        href={`https://finance.yahoo.com/quote/${ticker}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 mt-3 min-h-[44px] text-[13px] font-[650] text-[#2563EB] hover:text-[#1D4ED8] transition-colors"
-      >
-        <Globe size={14} />
-        View on Yahoo Finance →
-      </a>
+      {/* Tags + link row */}
+      <div className={cn('flex flex-wrap items-center gap-x-3 gap-y-1.5', !isLong ? 'mt-2' : 'mt-1')}>
+        {tags.map(tag => (
+          <span
+            key={tag}
+            className="text-[11px] font-[600] text-[#475569] bg-[#F8FAFC] border border-[#E6ECF5] rounded-[6px] px-2.5 py-0.5"
+          >
+            {tag}
+          </span>
+        ))}
+        <a
+          href={`https://finance.yahoo.com/quote/${ticker}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-[12px] font-[650] text-[#2563EB] hover:text-[#1D4ED8] transition-colors py-0.5"
+        >
+          <Globe size={12} />
+          Yahoo Finance →
+        </a>
+      </div>
     </div>
   )
 }

@@ -108,7 +108,7 @@ export default function SummaryTab({
   const drivers: string[] = cagrAnalysis?.drivers ?? []
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
 
       {/* ── Row 0: Company identity (first — who is this?) ────────────────── */}
       {businessProfile?.description && (
