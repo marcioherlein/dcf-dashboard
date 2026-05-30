@@ -288,7 +288,7 @@ export async function GET(req: NextRequest) {
       // earningsGrowthDisplay preserves the raw value so the UI still shows the actual number.
       earningsGrowth: (() => {
         const eg = (fd.earningsGrowth ?? null) as number | null
-        if (eg !== null && eg < 0 && cagrAnalysis.historicalCagr3y > 0.15) return null
+        if (eg !== null && eg < 0 && (cagrAnalysis.historicalCagr3y ?? 0) > 0.15) return null
         return eg
       })(),
       earningsGrowthDisplay: (fd.earningsGrowth ?? null) as number | null,

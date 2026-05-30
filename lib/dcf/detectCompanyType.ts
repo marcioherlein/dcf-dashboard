@@ -5,7 +5,7 @@ export function detectCompanyType(input: {
   industry: string
   dividendYield: number | null
   payoutRatio: number | null
-  historicalCagr3y: number
+  historicalCagr3y: number | null
   analystEstimate1y: number
   isNegativeFCF: boolean
   revenueM: number
@@ -35,7 +35,7 @@ export function detectCompanyType(input: {
   }
 
   // 4. Growth: high-growth — FCFF + EV multiples
-  if (historicalCagr3y > 0.20 || analystEstimate1y > 0.20) {
+  if ((historicalCagr3y ?? 0) > 0.20 || analystEstimate1y > 0.20) {
     return 'growth'
   }
 

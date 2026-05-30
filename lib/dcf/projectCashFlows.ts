@@ -28,7 +28,7 @@ export interface DCFResult {
 }
 
 export interface CAGRAnalysis {
-  historicalCagr3y: number
+  historicalCagr3y: number | null
   analystEstimate1y: number         // clamped to [-0.50, 1.50] for display/comparison
   analystEstimate1yRaw: number      // raw value from Yahoo (may be >150% due to base effects)
   analystBaseEffect: boolean        // true when raw analyst 1Y > 150% (base-effect distortion)
@@ -228,9 +228,9 @@ export function extractFCFInputs(financials: any, foreignCurrency = false): {
   // ── Source 2: Historical CAGR ────────────────────────────────────────────────
   // For foreign-currency companies this is in local currency (inflation-distorted)
   // and is zeroed out below. For others, cap at 60% to filter data outliers.
-  let historicalCagr3y: number
+  let historicalCagr3y: number | null
   if (foreignCurrency) {
-    historicalCagr3y = analyst1y  // placeholder — will be zeroed in weights
+    historicalCagr3y = null  // ARS revenues are inflation-distorted; not used in blend (wHistorical = 0)
   } else if (isFinancialSector && netIncomeHistory.length >= 2) {
     const n = Math.min(netIncomeHistory.length - 1, 3)
     historicalCagr3y = Math.pow(netIncomeHistory[0] / netIncomeHistory[n], 1 / n) - 1
@@ -330,7 +330,7 @@ export function extractFCFInputs(financials: any, foreignCurrency = false): {
     ? ((fd.revenueGrowth as number | null) ?? 0.07)
     : (wAnalyst     * analyst1y +
        wFundamental * (fundamentalGrowth ?? 0) +
-       wHistorical  * historicalCagr3y +
+       wHistorical  * (historicalCagr3y ?? 0) +
        wTTM         * (ttmEarnings ?? 0))
 
   // ── Convergence discount (Damodaran mean-reversion) ─────────────────────────
@@ -366,7 +366,9 @@ export function extractFCFInputs(financials: any, foreignCurrency = false): {
   //   - Analyst coverage  (0–1): higher coverage = more reliable estimates
   //   - Consistency       (0–1): historical and analyst agree = more reliable
   //   - Source breadth    (0–1): more sources available = less uncertainty
-  const consistencyScore = Math.exp(-Math.abs(historicalCagr3y - analyst1y) * 3)
+  const consistencyScore = historicalCagr3y != null
+    ? Math.exp(-Math.abs(historicalCagr3y - analyst1y) * 3)
+    : 0.5  // neutral when historical not available (foreign-currency companies)
   const sourceBreadth = [analystRaw1y != null, fundamentalGrowth != null, ttmEarnings != null].filter(Boolean).length / 3
   const confidence =
     analystCoverageScore * 0.50 +
@@ -398,7 +400,7 @@ export function extractFCFInputs(financials: any, foreignCurrency = false): {
   } else if (roe != null && roe <= 0) {
     drivers.push(`ROE negative — fundamental growth model not applicable`)
   }
-  if (!foreignCurrency) {
+  if (!foreignCurrency && historicalCagr3y != null) {
     if (historicalCagr3y > 0.30) {
       drivers.push(`Historical 3Y CAGR ${(historicalCagr3y * 100).toFixed(0)}% — high growth; convergence discount applied`)
     } else if (historicalCagr3y > 0.10) {
@@ -424,7 +426,7 @@ export function extractFCFInputs(financials: any, foreignCurrency = false): {
   }
 
   const cagrAnalysis: CAGRAnalysis = {
-    historicalCagr3y:    Math.round(historicalCagr3y * 1000) / 1000,
+    historicalCagr3y:    historicalCagr3y != null ? Math.round(historicalCagr3y * 1000) / 1000 : null,
     analystEstimate1y:   Math.round(Math.min(Math.max(analyst1y, -0.50), 1.50) * 1000) / 1000,
     analystEstimate1yRaw: Math.round(analyst1y * 1000) / 1000,
     analystBaseEffect:   analyst1y > 1.50,

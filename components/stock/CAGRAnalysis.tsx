@@ -2,7 +2,7 @@
 import { fmtPct } from '@/lib/utils'
 
 interface CAGRAnalysis {
-  historicalCagr3y: number
+  historicalCagr3y: number | null
   analystEstimate1y: number
   analystEstimate2y: number
   fundamentalGrowth: number | null

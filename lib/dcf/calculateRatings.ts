@@ -169,7 +169,7 @@ export function calculateRatings(input: {
   quickRatio: number | null
   cashM: number
   debtM: number
-  historicalCagr3y: number
+  historicalCagr3y: number | null
   analystGrowth1y: number
   earningsGrowth: number | null          // used for scoring (may be null to suppress distorted TTM)
   earningsGrowthDisplay?: number | null  // raw value shown in UI; falls back to earningsGrowth
@@ -243,7 +243,7 @@ export function calculateRatings(input: {
 
   // ── Growth ──
   const growScores = [
-    scoreGrowthRate(historicalCagr3y),
+    historicalCagr3y !== null ? scoreGrowthRate(historicalCagr3y) : 2.5,
     scoreGrowthRate(analystGrowth1y),
     earningsGrowth !== null ? scoreGrowthRate(earningsGrowth) : 2.5,
   ]
@@ -254,7 +254,7 @@ export function calculateRatings(input: {
     label: scoreToLabel(growScore),
     color: scoreToColor(growScore),
     metrics: [
-      { name: '3Y Revenue CAGR', value: pct(historicalCagr3y), score: clamp(scoreGrowthRate(historicalCagr3y)) },
+      { name: '3Y Revenue CAGR', value: pct(historicalCagr3y), score: historicalCagr3y !== null ? clamp(scoreGrowthRate(historicalCagr3y)) : 2.5 },
       { name: 'Analyst Revenue +1Y', value: pct(analystGrowth1y), score: clamp(scoreGrowthRate(analystGrowth1y)) },
       { name: 'Earnings Growth (TTM)', value: egDisplay !== null ? pct(egDisplay) : 'N/A', score: earningsGrowth !== null ? clamp(scoreGrowthRate(earningsGrowth)) : 2.5 },
     ],

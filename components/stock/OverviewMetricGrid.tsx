@@ -35,7 +35,7 @@ interface BusinessProfile {
 }
 
 interface CAGRAnalysisData {
-  historicalCagr3y: number
+  historicalCagr3y: number | null
   analystEstimate1y: number
   blended: number
   drivers: string[]
