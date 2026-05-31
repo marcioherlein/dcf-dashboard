@@ -30,7 +30,7 @@ function ScenarioCard({
   return (
     <div className={`rounded-xl border ${bgClass} ${borderClass} px-4 py-4 min-w-[220px] sm:min-w-0 snap-start flex-shrink-0 sm:flex-shrink ${isBase ? 'ring-2 ring-blue-300 shadow-sm' : ''}`}>
       <div className="flex items-center justify-between mb-0.5">
-        <div className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider ${accentText}`}>
+        <div className={`flex items-center gap-1.5 text-xs font-bold ${accentText}`}>
           {Icon && <Icon size={12} className="shrink-0" />}
           <span>{label}</span>
         </div>

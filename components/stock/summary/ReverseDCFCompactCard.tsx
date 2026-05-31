@@ -167,6 +167,7 @@ export default function ReverseDCFCompactCard({
           {/* Implied */}
           <BarRow
             label="Implied 5Y CAGR"
+            dotHex="#10B981"
             value={impliedPct}
             barColor="bg-[#10B981]"
             widthPct={impliedPct != null ? barWidth(impliedPct) : 0}
@@ -175,6 +176,7 @@ export default function ReverseDCFCompactCard({
           {/* Historical */}
           <BarRow
             label="3Y Historical"
+            dotHex="#3B82F6"
             value={historicalPct}
             barColor="bg-[#3B82F6]"
             widthPct={historicalPct != null ? barWidth(historicalPct) : 0}
@@ -183,6 +185,7 @@ export default function ReverseDCFCompactCard({
           {/* Analyst */}
           <BarRow
             label="Analyst Est. (1Y)"
+            dotHex="#7C3AED"
             value={analystPct}
             barColor="bg-[#7C3AED]"
             widthPct={analystPct != null ? barWidth(analystPct) : 0}
@@ -244,17 +247,21 @@ export default function ReverseDCFCompactCard({
 
 interface BarRowProps {
   label: string
+  dotHex: string
   value: number | null
   barColor: string
   widthPct: number
   zeroLineLeft: number | null
 }
 
-function BarRow({ label, value, barColor, widthPct, zeroLineLeft }: BarRowProps) {
+function BarRow({ label, dotHex, value, barColor, widthPct, zeroLineLeft }: BarRowProps) {
   return (
     <div>
       <div className="flex items-center justify-between mb-0.5">
-        <span className="text-[11px] text-[#64748B] truncate">{label}</span>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-full shrink-0" style={{ background: dotHex }} />
+          <span className="text-[11px] text-[#64748B] truncate">{label}</span>
+        </div>
         <span className="text-[11px] font-[700] text-[#334155] tabular-nums ml-1 shrink-0">
           {value != null ? `${value.toFixed(1)}%` : '—'}
         </span>

@@ -118,7 +118,7 @@ export default function SensitivityTable({
           </span>
           <span className={cn(
             'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
-            terminalMethod === 'multiple' ? 'bg-amber-900/40 border-amber-700 text-amber-300' : 'bg-slate-700 border-slate-600 text-slate-300'
+            terminalMethod === 'multiple' ? 'bg-amber-900/40 border-amber-700 text-amber-300' : 'bg-slate-700 border-slate-600 text-slate-200'
           )}>
             {terminalMethod === 'multiple' ? `Exit ${exitMultiple.toFixed(1)}×` : `g = ${(terminalG * 100).toFixed(1)}%`}
           </span>

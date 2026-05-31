@@ -3,6 +3,13 @@
 import { fmtPrice } from '@/lib/formatters'
 import type { CockpitOutput, CockpitMethodResult } from '@/lib/valuation/cockpit'
 
+interface LastChange {
+  label: string
+  delta: number
+  unit: '%' | 'x'
+  fvImpact: number | null
+}
+
 interface Props {
   output: CockpitOutput
   currentPrice: number
@@ -10,6 +17,7 @@ interface Props {
   ticker: string
   onViewFullDCF?: () => void
   onSave?: () => void
+  lastChange?: LastChange | null
 }
 
 const VERDICT_COLORS = {
@@ -122,7 +130,7 @@ function WeightBars({ methods }: { methods: CockpitMethodResult[] }) {
 }
 
 export default function RightSidebar({
-  output, currentPrice, currency, ticker: _ticker, onViewFullDCF, onSave,
+  output, currentPrice, currency, ticker: _ticker, onViewFullDCF, onSave, lastChange,
 }: Props) {
   const vc  = VERDICT_COLORS[output.verdict]
   const ds  = DIVERGENCE_STYLE[output.divergence.level]
@@ -130,6 +138,11 @@ export default function RightSidebar({
   const convictionLabel =
     output.divergence.overallConfidence === 'high'   ? 'High conviction'   :
     output.divergence.overallConfidence === 'medium' ? 'Medium conviction' : 'Low conviction'
+
+  const fmtDelta = (delta: number, unit: '%' | 'x') => {
+    const sign = delta >= 0 ? '+' : ''
+    return unit === '%' ? sign + (delta * 100).toFixed(1) + '%' : sign + delta.toFixed(1) + '×'
+  }
 
   return (
     <div
@@ -147,6 +160,25 @@ export default function RightSidebar({
           {convictionLabel} · {validCount} of {output.methods.length} models
         </p>
       </div>
+
+      {lastChange && (
+        <>
+          <div className="px-5"><Divider /></div>
+          <div className="px-5">
+            <SectionLabel>Last change</SectionLabel>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[12px] font-[650] text-[#334155]">
+                {lastChange.label} {fmtDelta(lastChange.delta, lastChange.unit)}
+              </span>
+              {lastChange.fvImpact != null && (
+                <span className={`text-[12px] font-[650] ${lastChange.fvImpact >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                  → FV {lastChange.fvImpact >= 0 ? '+' : ''}{fmtPrice(lastChange.fvImpact, currency)}
+                </span>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="px-5"><Divider /></div>
 

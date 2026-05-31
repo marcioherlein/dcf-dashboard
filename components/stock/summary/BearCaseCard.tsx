@@ -95,7 +95,7 @@ export default function BearCaseCard({
       {/* CTA */}
       <button
         onClick={onViewDetails}
-        className="mt-auto text-[13px] font-[650] text-[#2563EB] hover:text-[#1D4ED8] transition-colors flex items-center gap-1"
+        className="mt-auto text-[13px] font-[650] text-[#2563EB] hover:text-[#1D4ED8] hover:underline underline-offset-2 transition-colors flex items-center gap-1 min-h-[36px]"
       >
         View full risk analysis <span aria-hidden>→</span>
       </button>

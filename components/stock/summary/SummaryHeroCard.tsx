@@ -54,7 +54,7 @@ function deriveVerdict(upsidePct: number | null): VerdictConfig {
     word: 'Attractive',
     wordClass: 'text-[#16A34A]',
     descVerb: 'meaningfully undervalued',
-    bgStyle: 'radial-gradient(ellipse at 90% 0%, rgba(22,163,74,0.12) 0%, transparent 55%), #FAFFFE',
+    bgStyle: '#F0FDF4',
     borderClass: 'border-[#BBF7D0]',
     upsideClass: 'text-[#16A34A]',
   }
@@ -62,7 +62,7 @@ function deriveVerdict(upsidePct: number | null): VerdictConfig {
     word: 'Undervalued',
     wordClass: 'text-[#16A34A]',
     descVerb: 'modestly undervalued',
-    bgStyle: 'radial-gradient(ellipse at 90% 0%, rgba(22,163,74,0.09) 0%, transparent 55%), #FAFFFE',
+    bgStyle: '#F0FDF4',
     borderClass: 'border-[#BBF7D0]',
     upsideClass: 'text-[#16A34A]',
   }
@@ -70,7 +70,7 @@ function deriveVerdict(upsidePct: number | null): VerdictConfig {
     word: 'Fairly Valued',
     wordClass: 'text-[#2563EB]',
     descVerb: 'near fair value',
-    bgStyle: 'radial-gradient(ellipse at 90% 0%, rgba(37,99,235,0.08) 0%, transparent 55%), #FAFCFF',
+    bgStyle: '#EFF6FF',
     borderClass: 'border-[#BFDBFE]',
     upsideClass: 'text-[#2563EB]',
   }
@@ -78,7 +78,7 @@ function deriveVerdict(upsidePct: number | null): VerdictConfig {
     word: 'Overvalued',
     wordClass: 'text-[#DC2626]',
     descVerb: 'overvalued',
-    bgStyle: 'radial-gradient(ellipse at 90% 0%, rgba(220,38,38,0.08) 0%, transparent 55%), #FFFAFA',
+    bgStyle: '#FEF2F2',
     borderClass: 'border-[#FECACA]',
     upsideClass: 'text-[#DC2626]',
   }
@@ -86,7 +86,7 @@ function deriveVerdict(upsidePct: number | null): VerdictConfig {
     word: 'Expensive',
     wordClass: 'text-[#DC2626]',
     descVerb: 'significantly overvalued',
-    bgStyle: 'radial-gradient(ellipse at 90% 0%, rgba(220,38,38,0.10) 0%, transparent 55%), #FFFAFA',
+    bgStyle: '#FEF2F2',
     borderClass: 'border-[#FECACA]',
     upsideClass: 'text-[#DC2626]',
   }
@@ -112,13 +112,16 @@ function buildDescription(upsidePct: number | null, descVerb: string): string {
 const POSITIVE_RE = /strong|grow|profit|margin|cash\s*gen|moat|leader|dominan|innovat|compet.*advan|pric.*power|market.*share|expand|increas|high.*return|quality|best.in.class|track.record|breadth|diversif|solid|robust|effici|resilient|premium/i
 
 function distillDriver(full: string): string {
-  // Take the first clause before any em-dash, long dash, or semicolon
   const clause = full.split(/\s+[—–;]\s+/)[0].trim()
-  // Drop parenthetical detail
   const core = clause.split('(')[0].trim()
-  if (core.length <= 32) return core
-  // Word-boundary truncation
-  return core.slice(0, 30).replace(/\s+\S*$/, '') + '…'
+  if (core.length <= 35) return core
+  const words = core.split(' ')
+  let out = ''
+  for (const w of words) {
+    if (out.length + (out ? 1 : 0) + w.length > 35) break
+    out += (out ? ' ' : '') + w
+  }
+  return out + '…'
 }
 
 // ─── Scenario range bar ───────────────────────────────────────────────────────

@@ -98,6 +98,10 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
   const [history, setHistory] = useState<ValuationAssumptions[]>([])
   const [saveOpen, setSaveOpen] = useState(false)
   const [liveDcfFV, setLiveDcfFV] = useState<number | null>(null)
+  const [lastChange, setLastChange] = useState<{
+    label: string; delta: number; unit: '%' | 'x'; fvImpact: number | null
+  } | null>(null)
+  const [clampNote, setClampNote] = useState<string | null>(null)
 
   // When ModellingWorkspace computes its derivedFV, override snapshot.fullDcfFairValue so
   // the Core DCF card always matches the Full DCF Table's 4-model blended result exactly.
@@ -176,6 +180,31 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
   function handleAssumptionChange(next: ValuationAssumptions) {
     const clampedG = Math.min(next.terminalG, Math.max(0.005, next.wacc - 0.02))
     const clamped  = clampedG !== next.terminalG ? { ...next, terminalG: clampedG } : next
+
+    if (clampedG !== next.terminalG) {
+      setClampNote(`Terminal G clamped to WACC − 200bps (${(clampedG * 100).toFixed(1)}%)`)
+    } else {
+      setClampNote(null)
+    }
+
+    const PCT_KEYS: (keyof ValuationAssumptions)[] = ['wacc', 'cagr', 'netMargin', 'terminalG']
+    const LABELS: Partial<Record<keyof ValuationAssumptions, string>> = {
+      wacc: 'WACC', cagr: 'CAGR', netMargin: 'Net margin',
+      terminalG: 'Terminal G', exitPE: 'Exit P/E',
+      exitMultiple: 'EV/EBITDA', revenueMultiple: 'EV/Revenue',
+    }
+    for (const k of Object.keys(clamped) as (keyof ValuationAssumptions)[]) {
+      const delta = (clamped[k] as number) - (assumptions[k] as number)
+      if (Math.abs(delta) > 0.00001) {
+        const sens = sensitivity[k]
+        const fvImpact = sens != null && output.blendedFairValue != null
+          ? sens * delta * output.blendedFairValue
+          : null
+        setLastChange({ label: LABELS[k] ?? String(k), delta, unit: PCT_KEYS.includes(k) ? '%' : 'x', fvImpact })
+        break
+      }
+    }
+
     setHistory(h => [...h.slice(-9), assumptions])
     setAssumptions(clamped)
   }
@@ -184,11 +213,15 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
     if (history.length === 0) return
     setAssumptions(history[history.length - 1])
     setHistory(h => h.slice(0, -1))
+    setLastChange(null)
+    setClampNote(null)
   }
 
   function handleReset() {
     setHistory([])
     setAssumptions(defaults)
+    setLastChange(null)
+    setClampNote(null)
   }
 
   function scrollToFullDCF() {
@@ -221,6 +254,11 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
       {/* Workbench: assumptions (left, cause) + live output (right, effect) */}
       <div className="mt-2 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 items-start">
         <div ref={assumptionsPanelRef} className="min-w-0">
+          {clampNote && (
+            <p className="mb-2 text-[11px] text-[#D97706] bg-[#FFFBEB] border border-[#FDE68A] rounded-lg px-3 py-2">
+              ⚠ {clampNote}
+            </p>
+          )}
           <AssumptionsPanel
             assumptions={assumptions}
             defaults={defaults}
@@ -249,6 +287,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
             ticker={ticker}
             onViewFullDCF={scrollToFullDCF}
             onSave={() => setSaveOpen(true)}
+            lastChange={lastChange}
           />
         </div>
       </div>
@@ -274,7 +313,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
       <details ref={fullDcfRef} className="group" id="full_dcf">
         <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-blue-100 shadow-sm px-4 sm:px-5 py-3.5 hover:bg-blue-50 transition-colors select-none">
           <span className="text-blue-400 text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
-          <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
+          <span className="text-sm font-[650] text-blue-600">
             Full DCF Model — Year-by-Year Projections
           </span>
           <span className="ml-auto text-xs text-slate-400 hidden sm:inline">DCF-only estimate · distinct from top blended value</span>
