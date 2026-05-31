@@ -243,7 +243,7 @@ function buildFromStatements(
     if (year.length !== 4) continue
     byYear.set(year, {
       year, isTTM: false, isProjected: false,
-      revenue:     toM(row.totalRevenue),
+      revenue:     toM(row.totalRevenue ?? row.operatingRevenue),
       grossProfit: toM(row.grossProfit),
       ebit:        toM(row.operatingIncome ?? row.EBIT),
       ebitda:      toM(row.EBITDA),
@@ -287,7 +287,7 @@ function buildFromStatements(
     const bs = ttm.balanceSheet ?? {}
     byYear.set('TTM', {
       year: 'TTM', isTTM: true, isProjected: false,
-      revenue:     toM(is.totalRevenue),
+      revenue:     toM(is.totalRevenue ?? is.operatingRevenue),
       grossProfit: toM(is.grossProfit),
       ebit:        toM(is.operatingIncome ?? is.EBIT),
       ebitda:      toM(is.EBITDA),

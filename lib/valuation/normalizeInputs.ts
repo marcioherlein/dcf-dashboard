@@ -424,7 +424,7 @@ function buildRowsFromStatements(
 
 function deriveCAGRFromStatements(annualIS: AnyRow[]): number | null {
   const revenues = annualIS
-    .map(r => ({ year: String(r.endDate ?? '').slice(0, 4), rev: r.totalRevenue as number | null }))
+    .map(r => ({ year: String(r.endDate ?? '').slice(0, 4), rev: (r.totalRevenue ?? r.operatingRevenue) as number | null }))
     .filter(r => r.year.length === 4 && typeof r.rev === 'number' && r.rev > 0)
     .sort((a, b) => a.year.localeCompare(b.year))
 

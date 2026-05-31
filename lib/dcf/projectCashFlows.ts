@@ -121,7 +121,7 @@ export function extractFCFInputs(financials: any, foreignCurrency = false): {
   // --- BASE FIGURES ---
   const rawFCF = ((fd.freeCashflow ?? 0) as number) / 1e6
   const rawOCF = ((fd.operatingCashflow ?? 0) as number) / 1e6
-  const rawRevM = ((fd.totalRevenue ?? 0) as number) / 1e6
+  const rawRevM = ((fd.totalRevenue ?? fd.operatingRevenue ?? 0) as number) / 1e6
   const rawNetIncomeM = ((fd.netIncomeToCommon ?? 0) as number) / 1e6
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -131,7 +131,7 @@ export function extractFCFInputs(financials: any, foreignCurrency = false): {
   // Revenue history (Yahoo sorts most-recent first)
   const historicalRevenues = incStmts
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .map((s: any) => ((s.totalRevenue ?? 0) as number) / 1e6)
+    .map((s: any) => ((s.totalRevenue ?? s.operatingRevenue ?? 0) as number) / 1e6)
     .filter((r) => r > 0)
 
   // Net income history (from income statement — more reliable than financialData for banks)

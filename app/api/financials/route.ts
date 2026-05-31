@@ -729,11 +729,11 @@ export async function GET(req: NextRequest) {
       // Yahoo fallback
       const rawISHistory: any[] = fin.incomeStatementHistory?.incomeStatementHistory ?? []
       const isHistorical = rawISHistory.slice(-4).reverse()
-      avgGrossMarginRatio = isHistorical.length > 0 ? isHistorical.reduce((s: number, s2: any) => { const rev = (s2.totalRevenue ?? 0) as number; const gp = (s2.grossProfit ?? 0) as number; return s + (rev > 0 ? gp / rev : 0) }, 0) / isHistorical.length : 0.4
-      avgOpMarginRatio    = isHistorical.length > 0 ? isHistorical.reduce((s: number, s2: any) => { const rev = (s2.totalRevenue ?? 0) as number; const op = (s2.ebit ?? 0) as number; return s + (rev > 0 ? op / rev : 0) }, 0) / isHistorical.length : 0.15
-      avgEbitdaMarginRatio = isHistorical.length > 0 ? isHistorical.reduce((s: number, s2: any) => { const rev = (s2.totalRevenue ?? 0) as number; const eb = (s2.ebitda ?? 0) as number; return s + (rev > 0 ? eb / rev : 0) }, 0) / isHistorical.length : 0.2
-      avgNetMarginRatio   = isHistorical.length > 0 ? isHistorical.reduce((s: number, s2: any) => { const rev = (s2.totalRevenue ?? 0) as number; const ni = (s2.netIncome ?? 0) as number; return s + (rev > 0 ? ni / rev : 0) }, 0) / isHistorical.length : 0.1
-      latestRevM = isHistorical.length > 0 ? ((isHistorical[isHistorical.length - 1].totalRevenue ?? 0) as number) / 1e6 * fxRate : historicalRevenues[0] ?? 0
+      avgGrossMarginRatio = isHistorical.length > 0 ? isHistorical.reduce((s: number, s2: any) => { const rev = (s2.totalRevenue ?? s2.operatingRevenue ?? 0) as number; const gp = (s2.grossProfit ?? 0) as number; return s + (rev > 0 ? gp / rev : 0) }, 0) / isHistorical.length : 0.4
+      avgOpMarginRatio    = isHistorical.length > 0 ? isHistorical.reduce((s: number, s2: any) => { const rev = (s2.totalRevenue ?? s2.operatingRevenue ?? 0) as number; const op = (s2.ebit ?? 0) as number; return s + (rev > 0 ? op / rev : 0) }, 0) / isHistorical.length : 0.15
+      avgEbitdaMarginRatio = isHistorical.length > 0 ? isHistorical.reduce((s: number, s2: any) => { const rev = (s2.totalRevenue ?? s2.operatingRevenue ?? 0) as number; const eb = (s2.ebitda ?? 0) as number; return s + (rev > 0 ? eb / rev : 0) }, 0) / isHistorical.length : 0.2
+      avgNetMarginRatio   = isHistorical.length > 0 ? isHistorical.reduce((s: number, s2: any) => { const rev = (s2.totalRevenue ?? s2.operatingRevenue ?? 0) as number; const ni = (s2.netIncome ?? 0) as number; return s + (rev > 0 ? ni / rev : 0) }, 0) / isHistorical.length : 0.1
+      latestRevM = isHistorical.length > 0 ? ((isHistorical[isHistorical.length - 1].totalRevenue ?? isHistorical[isHistorical.length - 1].operatingRevenue ?? 0) as number) / 1e6 * fxRate : historicalRevenues[0] ?? 0
       baseYear   = isHistorical.length > 0 ? new Date(isHistorical[isHistorical.length - 1].endDate).getFullYear() : new Date().getFullYear()
     }
 
@@ -770,9 +770,9 @@ export async function GET(req: NextRequest) {
           const nonzero = (v: number | null | undefined) => (v != null && v !== 0) ? v : null
           return isHistorical.map((s: any) => {
             const yr = String(new Date(s.endDate).getFullYear())
-            const revRaw = nonzero(s.totalRevenue)
+            const revRaw = nonzero(s.totalRevenue ?? s.operatingRevenue)
             const gpDirect = nonzero(s.grossProfit)
-            const gpComputed = (s.totalRevenue != null && (s.costOfRevenue ?? s.costOfGoodsSold) != null) ? s.totalRevenue - (s.costOfRevenue ?? s.costOfGoodsSold ?? 0) : null
+            const gpComputed = (revRaw != null && (s.costOfRevenue ?? s.costOfGoodsSold) != null) ? revRaw - (s.costOfRevenue ?? s.costOfGoodsSold ?? 0) : null
             const gpRaw = gpDirect ?? nonzero(gpComputed)
             const ebitRaw = nonzero(s.ebit ?? s.operatingIncome)
             const ebitdaRaw = nonzero(s.ebitda) ?? nonzero(s.normalizedEbitda) ?? (ebitRaw != null && depreciationByYear[yr] ? ebitRaw + depreciationByYear[yr] * 1e6 : null)
