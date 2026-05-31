@@ -99,144 +99,140 @@ function getContextLabel(value: number, field: Field, stats: Stats, ttmVal?: num
   return               { text: `Above ${label}`,               dot: 'bg-red-400'     }
 }
 
-// ── Area Chart ────────────────────────────────────────────────────────────────
+// ── Bar Chart ─────────────────────────────────────────────────────────────────
 
-const VB_W = 260
-const VB_H = 105
-const MARGIN = { l: 30, r: 6, t: 8, b: 18 }
-const CW = VB_W - MARGIN.l - MARGIN.r
-const CH = VB_H - MARGIN.t - MARGIN.b
+const BC_W  = 280
+const BC_H  = 90
+const BC_ML = 26
+const BC_MR = 6
+const BC_MT = 8
+const BC_MB = 18
+const BC_CW = BC_W - BC_ML - BC_MR
+const BC_CH = BC_H - BC_MT - BC_MB
 
-function AreaChart({
-  sparkPoints, ttmVal, stats, inputVal, color, gradId, unit,
+function BarChart({
+  sparkPoints, inputVal, color, unit, typicalMin, typicalMax,
 }: {
   sparkPoints: SparkPoint[]
-  ttmVal: number | undefined
-  stats: Stats
   inputVal: number
   color: string
-  gradId: string
   unit: '%' | 'x'
+  typicalMin: number
+  typicalMax: number
 }) {
-  const series = sparkPoints.filter(p => p.label !== 'curr')
-  const hasSeries = series.length >= 2
+  const historical = sparkPoints.filter(p => p.label !== 'curr')
+  const currPoint  = sparkPoints.find(p => p.label === 'curr')
+  const hasSeries  = historical.length >= 2
 
-  const dataVals = hasSeries
-    ? [...series.map(p => p.value), ...(ttmVal != null ? [ttmVal] : []), stats.med]
-    : [stats.min, stats.med, stats.max, ...(ttmVal != null ? [ttmVal] : [])]
-  const rawMin = Math.min(...dataVals)
-  const rawMax = Math.max(...dataVals)
-  const pad    = (rawMax - rawMin) * 0.15 || 0.005
-  const yMin   = rawMin - pad
-  const yMax   = rawMax + pad
+  const displayBars = hasSeries
+    ? [
+        ...historical.map(p => ({ label: p.label, value: p.value, isCurr: false })),
+        ...(currPoint ? [{ label: 'Now', value: currPoint.value, isCurr: true }] : []),
+      ]
+    : []
 
-  const toX = (i: number, total: number) =>
-    MARGIN.l + (i / Math.max(total - 1, 1)) * CW
-  const toY = (v: number) =>
-    MARGIN.t + CH - ((v - yMin) / (yMax - yMin)) * CH
+  const allVals = [
+    ...displayBars.map(b => b.value),
+    inputVal,
+    ...(hasSeries ? [] : [typicalMin, typicalMax]),
+  ]
+  const rawMin = Math.min(...allVals)
+  const rawMax = Math.max(...allVals)
+  const vPad   = Math.max((rawMax - rawMin) * 0.15, rawMax === rawMin ? 0.01 : 0)
+  const yMin   = rawMin - vPad
+  const yMax   = rawMax + vPad
+  const ySpan  = yMax - yMin
 
-  const points = hasSeries ? series : []
-  const allPts: Array<{ x: number; y: number; label: string }> = points.map((p, i) => ({
-    x: toX(i, points.length + (ttmVal != null ? 1 : 0)),
-    y: toY(p.value),
-    label: p.label,
-  }))
-  const ttmX = hasSeries
-    ? toX(points.length, points.length + 1)
-    : MARGIN.l + CW
-  const ttmY = ttmVal != null ? toY(ttmVal) : MARGIN.t + CH / 2
+  const toY    = (v: number) => BC_MT + BC_CH - ((v - yMin) / ySpan) * BC_CH
+  const zeroY  = toY(Math.max(yMin, Math.min(yMax, 0)))
+  const inputY = Math.max(BC_MT, Math.min(BC_MT + BC_CH, toY(inputVal)))
 
-  const bottomY = MARGIN.t + CH
-  const medianY = toY(stats.med)
-
-  const yLabels = [yMax, stats.med, yMin]
-  const xLabels: Array<{ x: number; label: string }> = allPts.map(p => ({ x: p.x, label: p.label }))
-  if (ttmVal != null) xLabels.push({ x: ttmX, label: 'TTM' })
-
-  const lineD = hasSeries
-    ? allPts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
-        + (ttmVal != null ? ` L${ttmX.toFixed(1)},${ttmY.toFixed(1)}` : '')
-    : ''
-  const areaD = lineD
-    ? `${lineD} L${ttmX.toFixed(1)},${bottomY} L${MARGIN.l},${bottomY} Z`
-    : ''
-
-  const inputY = toY(inputVal)
+  const n     = displayBars.length
+  const slotW = n > 0 ? BC_CW / n : BC_CW
+  const barW  = n > 0 ? Math.max(6, Math.min(26, slotW * 0.6)) : 0
 
   return (
     <svg
-      viewBox={`0 0 ${VB_W} ${VB_H}`}
+      viewBox={`0 0 ${BC_W} ${BC_H}`}
       width="100%"
       style={{ display: 'block', overflow: 'visible' }}
       aria-hidden="true"
     >
-      <defs>
-        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stopColor={color} stopOpacity="0.25" />
-          <stop offset="100%" stopColor={color} stopOpacity="0.02" />
-        </linearGradient>
-        <clipPath id={`clip-${gradId}`}>
-          <rect x={MARGIN.l} y={MARGIN.t} width={CW} height={CH} />
-        </clipPath>
-      </defs>
-
+      {/* Typical range band — no historical data */}
       {!hasSeries && (
-        <rect
-          x={MARGIN.l} y={toY(stats.max)}
-          width={CW} height={Math.max(0, toY(stats.min) - toY(stats.max))}
-          fill={color} fillOpacity="0.07"
-          clipPath={`url(#clip-${gradId})`}
-        />
-      )}
-
-      {areaD && (
-        <path d={areaD} fill={`url(#${gradId})`} clipPath={`url(#clip-${gradId})`} />
-      )}
-
-      {lineD && (
-        <path d={lineD} fill="none" stroke={color} strokeWidth="1.5"
-          strokeLinecap="round" strokeLinejoin="round"
-          clipPath={`url(#clip-${gradId})`} />
-      )}
-
-      <line
-        x1={MARGIN.l} y1={medianY} x2={MARGIN.l + CW} y2={medianY}
-        stroke="#94a3b8" strokeWidth="1" strokeDasharray="4 3"
-      />
-
-      <line
-        x1={ttmX} y1={MARGIN.t} x2={ttmX} y2={bottomY}
-        stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="4 3"
-      />
-
-      <circle cx={ttmX} cy={inputY} r="3.5" fill="#f59e0b" stroke="white" strokeWidth="1.5" />
-
-      {ttmVal != null && (
-        <circle cx={ttmX} cy={ttmY} r="4" fill="#3b82f6" stroke="white" strokeWidth="1.5" />
-      )}
-
-      {yLabels.map((v, i) => {
-        const y = toY(v)
-        if (y < MARGIN.t - 4 || y > bottomY + 4) return null
-        if (i === 1) {
-          const topY = toY(yLabels[0])
-          const botY = toY(yLabels[2])
-          if (Math.abs(y - topY) < 12 || Math.abs(y - botY) < 12) return null
-        }
-        return (
-          <text key={i} x={MARGIN.l - 4} y={y + 3.5} textAnchor="end"
-            fontSize="8" fill="#94a3b8" fontFamily="sans-serif">
-            {fmtVal(v, unit)}
+        <>
+          <rect
+            x={BC_ML} y={toY(typicalMax)}
+            width={BC_CW}
+            height={Math.max(2, toY(typicalMin) - toY(typicalMax))}
+            fill={color} fillOpacity="0.12" rx="3"
+          />
+          <text x={BC_ML - 3} y={toY(typicalMax) + 3.5} textAnchor="end" fontSize="7" fill={color} fillOpacity="0.75" fontFamily="sans-serif">
+            {fmtVal(typicalMax, unit)}
           </text>
+          <text x={BC_ML - 3} y={toY(typicalMin) + 3.5} textAnchor="end" fontSize="7" fill={color} fillOpacity="0.75" fontFamily="sans-serif">
+            {fmtVal(typicalMin, unit)}
+          </text>
+          <text
+            x={BC_ML + BC_CW / 2} y={BC_MT + BC_CH / 2 + 4}
+            textAnchor="middle" fontSize="8" fill="#94a3b8" fontFamily="sans-serif"
+          >
+            Typical range
+          </text>
+        </>
+      )}
+
+      {/* Historical bars */}
+      {displayBars.map((bar, i) => {
+        const cx   = BC_ML + slotW * i + slotW / 2
+        const barX = cx - barW / 2
+        const barTopY = toY(bar.value)
+        const barY    = Math.min(barTopY, zeroY)
+        const barH    = Math.max(2, Math.abs(zeroY - barTopY))
+
+        return (
+          <g key={i}>
+            <rect
+              x={barX} y={barY}
+              width={barW} height={barH}
+              fill={color} rx="2"
+              fillOpacity={bar.isCurr ? 1 : 0.55}
+            />
+            <text
+              x={cx} y={BC_H - 3}
+              textAnchor="middle" fontSize="7" fill="#94a3b8" fontFamily="sans-serif"
+            >
+              {bar.label}
+            </text>
+          </g>
         )
       })}
 
-      {xLabels.map((lbl, i) => (
-        <text key={i} x={lbl.x} y={VB_H - 3} textAnchor="middle"
-          fontSize="7.5" fill="#94a3b8" fontFamily="sans-serif">
-          {lbl.label}
-        </text>
-      ))}
+      {/* Input reference line */}
+      <line
+        x1={BC_ML} y1={inputY}
+        x2={BC_ML + BC_CW} y2={inputY}
+        stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="4 3"
+      />
+      <text
+        x={BC_ML + BC_CW - 2} y={inputY - 2.5}
+        textAnchor="end" fontSize="7.5" fill="#f59e0b"
+        fontWeight="600" fontFamily="sans-serif"
+      >
+        {fmtVal(inputVal, unit)}
+      </text>
+
+      {/* Y-axis range labels */}
+      {hasSeries && rawMax !== rawMin && (
+        <>
+          <text x={BC_ML - 3} y={toY(rawMax) + 3.5} textAnchor="end" fontSize="7" fill="#cbd5e1" fontFamily="sans-serif">
+            {fmtVal(rawMax, unit)}
+          </text>
+          <text x={BC_ML - 3} y={toY(rawMin) + 3.5} textAnchor="end" fontSize="7" fill="#cbd5e1" fontFamily="sans-serif">
+            {fmtVal(rawMin, unit)}
+          </text>
+        </>
+      )}
     </svg>
   )
 }
@@ -257,9 +253,8 @@ function AssumptionCard({
   currency: string
 }) {
   const primaryMethod = field.methods[0]
-  const color  = METHOD_CFG[primaryMethod].hex
-  const gradId = `grad-${field.key}`
-  const stats  = getStats(field, sparkPoints)
+  const color    = METHOD_CFG[primaryMethod].hex
+  const stats    = getStats(field, sparkPoints)
 
   const currPoint = sparkPoints?.find(p => p.label === 'curr')
   const ttmVal    = currPoint?.value ?? sparkPoints?.filter(p => p.label !== 'curr').at(-1)?.value
@@ -277,120 +272,142 @@ function AssumptionCard({
     : null
 
   const hasSeries = (sparkPoints?.filter(p => p.label !== 'curr').length ?? 0) >= 2
+  const showChart = field.key !== 'wacc'
 
   function clamp(v: number) {
     return Math.min(field.max, Math.max(field.min, Math.round(v * 100000) / 100000))
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-2 sm:p-4 overflow-hidden">
-      <div className="flex gap-2 sm:gap-4">
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+      <div className="flex flex-col gap-3">
 
-        {/* Left: controls */}
-        <div className="flex-1 flex flex-col gap-3 min-w-0">
-
-          {/* Label + method chips */}
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider truncate">{field.label}</span>
-            <div className="flex items-center gap-1 shrink-0">
-              {field.methods.map(m => (
-                <span key={m} className={`text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${METHOD_CFG[m].tagBg} ${METHOD_CFG[m].tagText}`}>
-                  {m}
-                </span>
-              ))}
-            </div>
+        {/* Header: label + method chips */}
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[12px] font-[650] text-slate-700">{field.label}</span>
+          <div className="flex items-center gap-1 shrink-0">
+            {field.methods.map(m => (
+              <span key={m} className={`text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${METHOD_CFG[m].tagBg} ${METHOD_CFG[m].tagText}`}>
+                {m}
+              </span>
+            ))}
           </div>
+        </div>
 
-          {/* Stepper + large value */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => onChange(clamp(value - field.step))}
-              className="w-7 h-7 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-400 hover:text-slate-700 font-bold flex items-center justify-center text-sm transition-all select-none shrink-0"
-              aria-label={`Decrease ${field.label}`}
-            >−</button>
-            <div className="flex-1 text-center">
-              <div className="text-[20px] sm:text-[28px] font-black tabular-nums leading-none tracking-tight text-slate-900">
-                {fmtVal(value, field.unit)}
+        {/* Value + stepper */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onChange(clamp(value - field.step))}
+            className="w-7 h-7 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-400 hover:text-slate-700 font-bold flex items-center justify-center text-sm transition-all select-none shrink-0"
+            aria-label={`Decrease ${field.label}`}
+          >−</button>
+          <div className="flex-1 text-center">
+            <div className="text-[28px] font-[800] tabular-nums leading-none tracking-tight text-slate-900">
+              {fmtVal(value, field.unit)}
+            </div>
+            {isDirty && (
+              <div className={`text-[10px] font-[600] tabular-nums mt-0.5 ${delta > 0 ? 'text-emerald-500' : 'text-red-400'}`}>
+                {deltaDisplay} vs default
               </div>
-              {isDirty && (
-                <div className={`text-[10px] font-semibold tabular-nums mt-0.5 ${delta > 0 ? 'text-emerald-500' : 'text-red-400'}`}>
-                  {deltaDisplay} vs default
+            )}
+          </div>
+          <button
+            onClick={() => onChange(clamp(value + field.step))}
+            className="w-7 h-7 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-400 hover:text-slate-700 font-bold flex items-center justify-center text-sm transition-all select-none shrink-0"
+            aria-label={`Increase ${field.label}`}
+          >+</button>
+        </div>
+
+        {/* Slider */}
+        <div className="flex flex-col gap-1">
+          <div className="relative flex items-center" style={{ height: 16 }}>
+            <div className="absolute w-full h-[3px] bg-slate-100 rounded-full" />
+            <div
+              className="absolute h-[3px] rounded-full"
+              style={{ width: `${sliderPct}%`, background: color, opacity: 0.7 }}
+            />
+            <div
+              className="absolute w-[13px] h-[13px] rounded-full ring-2 ring-white shadow-md pointer-events-none z-[2]"
+              style={{ left: `${sliderPct}%`, transform: 'translateX(-50%)', background: color }}
+            />
+            <input
+              type="range" min={field.min} max={field.max} step={field.step} value={value}
+              onChange={e => onChange(parseFloat(e.target.value))}
+              className="absolute inset-0 w-full opacity-0 cursor-pointer"
+              aria-label={field.label}
+            />
+          </div>
+          <div className="flex justify-between px-0.5">
+            <span className="text-[9px] text-slate-400 tabular-nums">{fmtVal(field.min, field.unit)}</span>
+            <span className="text-[9px] text-slate-400 tabular-nums">{fmtVal(field.max, field.unit)}</span>
+          </div>
+        </div>
+
+        {/* WACC: typical range note instead of chart */}
+        {field.key === 'wacc' && (
+          <p className="text-[10px] text-slate-400">
+            Typical range: {fmtVal(field.typicalMin, '%')}–{fmtVal(field.typicalMax, '%')}
+          </p>
+        )}
+
+        {/* Historical chart — all fields except WACC */}
+        {showChart && (
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-slate-400">
+                {hasSeries ? '5-year history' : 'Typical range'}
+              </span>
+              {hasSeries && (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <div className="w-2.5 h-2 rounded-sm" style={{ background: color, opacity: 0.55 }} />
+                    <span className="text-[9px] text-slate-400">Historical</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-2.5 h-2 rounded-sm" style={{ background: color }} />
+                    <span className="text-[9px] text-slate-400">Now</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <svg width="14" height="4"><line x1="0" y1="2" x2="14" y2="2" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3 2" /></svg>
+                    <span className="text-[9px] text-slate-400">Your input</span>
+                  </div>
                 </div>
               )}
             </div>
-            <button
-              onClick={() => onChange(clamp(value + field.step))}
-              className="w-7 h-7 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-400 hover:text-slate-700 font-bold flex items-center justify-center text-sm transition-all select-none shrink-0"
-              aria-label={`Increase ${field.label}`}
-            >+</button>
-          </div>
-
-          {/* Slider */}
-          <div className="flex flex-col gap-1">
-            <div className="relative flex items-center" style={{ height: 16 }}>
-              <div className="absolute w-full h-[3px] bg-slate-100 rounded-full" />
-              <div
-                className="absolute h-[3px] rounded-full"
-                style={{ width: `${sliderPct}%`, background: color, opacity: 0.7 }}
-              />
-              <div
-                className="absolute w-[13px] h-[13px] rounded-full ring-2 ring-white shadow-md pointer-events-none z-[2]"
-                style={{ left: `${sliderPct}%`, transform: 'translateX(-50%)', background: color }}
-              />
-              <input
-                type="range" min={field.min} max={field.max} step={field.step} value={value}
-                onChange={e => onChange(parseFloat(e.target.value))}
-                className="absolute inset-0 w-full opacity-0 cursor-pointer"
-                aria-label={field.label}
+            <div className="rounded-lg bg-slate-50/60" style={{ height: 90 }}>
+              <BarChart
+                sparkPoints={sparkPoints ?? []}
+                inputVal={value}
+                color={color}
+                unit={field.unit}
+                typicalMin={field.typicalMin}
+                typicalMax={field.typicalMax}
               />
             </div>
-            <div className="flex justify-between px-0.5">
-              <span className="text-[9px] text-slate-400 tabular-nums">{fmtVal(field.min, field.unit)}</span>
-              <span className="text-[9px] text-slate-400 tabular-nums">{fmtVal(field.max, field.unit)}</span>
-            </div>
           </div>
+        )}
 
-          {/* Description */}
-          <p className="text-[10px] text-slate-400 leading-relaxed">{field.description}</p>
-
-          {/* FV impact footer */}
-          <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-auto">
-            <span className="text-[9px] font-semibold uppercase tracking-wider text-slate-400">FV impact</span>
-            {dollarImpact != null ? (
-              <span className="text-[11px] font-bold tabular-nums text-slate-700">
-                ±{currency}{dollarImpact < 10 ? dollarImpact.toFixed(2) : dollarImpact.toFixed(1)} per {field.unit === '%' ? '1pp' : '1×'}
-              </span>
-            ) : (
-              <span className="text-[11px] text-slate-300">—</span>
-            )}
-          </div>
+        {/* Context label */}
+        <div className="flex items-center gap-1.5">
+          <span className={`w-2 h-2 rounded-full shrink-0 ${ctxLabel.dot}`} />
+          <span className="text-[10px] text-slate-500 leading-tight">{ctxLabel.text}</span>
         </div>
 
-        {/* Divider */}
-        <div className="w-px bg-slate-100 self-stretch shrink-0" />
+        {/* Description */}
+        <p className="text-[11px] text-slate-400 leading-relaxed">{field.description}</p>
 
-        {/* Right: chart — hidden on very small screens to prevent overflow */}
-        <div className="hidden xs:flex flex-col gap-1 shrink-0" style={{ width: 'clamp(100px, 28%, 190px)' }}>
-          <span className="text-[9px] font-semibold uppercase tracking-wider text-slate-400">
-            {hasSeries ? '5Y history' : 'Range'} ({field.unit})
-          </span>
-          <div className="rounded-lg bg-slate-50/80 overflow-hidden" style={{ height: 105 }}>
-            <AreaChart
-              sparkPoints={sparkPoints ?? []}
-              ttmVal={ttmVal}
-              stats={stats}
-              inputVal={value}
-              color={color}
-              gradId={gradId}
-              unit={field.unit}
-            />
-          </div>
-          {/* Context label below chart */}
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <span className={`w-2 h-2 rounded-full shrink-0 ${ctxLabel.dot}`} />
-            <span className="text-[9px] text-slate-500 leading-tight">{ctxLabel.text}</span>
-          </div>
+        {/* FV impact footer */}
+        <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-auto">
+          <span className="text-[10px] font-[600] text-slate-400">FV impact per step</span>
+          {dollarImpact != null ? (
+            <span className="text-[11px] font-[700] tabular-nums text-slate-700">
+              ±{currency}{dollarImpact < 10 ? dollarImpact.toFixed(2) : dollarImpact.toFixed(1)} per {field.unit === '%' ? '1pp' : '1×'}
+            </span>
+          ) : (
+            <span className="text-[11px] text-slate-300">—</span>
+          )}
         </div>
+
       </div>
     </div>
   )
@@ -431,7 +448,7 @@ function LargestChangesBar({
 
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm px-5 py-4">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-3">
+      <p className="text-[11px] font-[600] text-slate-500 mb-3">
         Largest assumption changes vs. defaults
       </p>
       <div className="flex flex-wrap gap-2">
@@ -449,27 +466,6 @@ function LargestChangesBar({
             </div>
           )
         })}
-      </div>
-    </div>
-  )
-}
-
-// ── Chart Legend ──────────────────────────────────────────────────────────────
-
-function ChartLegend() {
-  return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 px-1">
-      <div className="flex items-center gap-1.5 text-[9px] text-slate-400">
-        <svg width="20" height="8"><line x1="0" y1="4" x2="20" y2="4" stroke="#94a3b8" strokeWidth="1" strokeDasharray="4 3" /></svg>
-        5Y median
-      </div>
-      <div className="flex items-center gap-1.5 text-[9px] text-slate-400">
-        <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
-        TTM (current)
-      </div>
-      <div className="flex items-center gap-1.5 text-[9px] text-slate-400">
-        <svg width="12" height="12"><line x1="6" y1="0" x2="6" y2="12" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3 2" /></svg>
-        Your input
       </div>
     </div>
   )
@@ -501,7 +497,6 @@ export default function AssumptionsPanel({
 
   const isModified = FIELDS.some(f => Math.abs((assumptions[f.key] as number) - (defaults[f.key] as number)) > 0.00001)
 
-  // Preset detection
   const isBase = FIELDS.every(f => Math.abs((assumptions[f.key] as number) - (defaults[f.key] as number)) < 0.00001)
   const isBear = !isBase
     && Math.abs(assumptions.wacc - defaults.wacc * 1.10) < 0.0005
@@ -535,7 +530,7 @@ export default function AssumptionsPanel({
         </div>
         <div className="flex items-center gap-2 flex-wrap">
 
-          {/* Inline preset toggle */}
+          {/* Preset toggle */}
           <div className="flex items-center gap-0.5 rounded-lg border border-slate-200 p-0.5 bg-white">
             {presets.map(p => (
               <button
@@ -584,10 +579,10 @@ export default function AssumptionsPanel({
           return (
             <div key={group.label}>
               <div className="flex items-baseline gap-2 mb-3">
-                <span className="text-[12px] font-semibold text-slate-700">{group.label}</span>
+                <span className="text-[12px] font-[600] text-slate-700">{group.label}</span>
                 <span className="text-[11px] text-slate-400">{group.description}</span>
               </div>
-              <div className="grid grid-cols-2 gap-2 sm:gap-4">
+              <div className="flex flex-col gap-3">
                 {groupFields.map(f => (
                   <AssumptionCard
                     key={f.key}
@@ -625,8 +620,6 @@ export default function AssumptionsPanel({
         </p>
       </div>
 
-      {/* Legend */}
-      <ChartLegend />
     </div>
   )
 }
