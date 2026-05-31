@@ -142,7 +142,16 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
   if (ttmBS) {
     const stmtCash = ttmBS.cashCashEquivalentsAndShortTermInvestments ?? ttmBS.cash
     if (typeof stmtCash === 'number' && isFinite(stmtCash)) cashM = stmtCash / 1e6 * fxRate
-    const stmtDebt = ttmBS.totalDebt ?? ttmBS.longTermDebt
+    // Mirror the debt-source logic from the API route: auto OEMs and companies where
+    // Yahoo's totalDebt > 2× market cap have captive finance arms that inflate totalDebt.
+    const qIndustry = apiData?.quote?.industry ?? ''
+    const isAutoOEM = /Auto Manufacturers|Motor Vehicle/i.test(qIndustry)
+    const mcapM = (apiData?.quote?.marketCap ?? 0) / 1e6
+    const rawTtmTotalDebt = (ttmBS.totalDebt ?? 0) as number
+    const useLTDOnly = isAutoOEM || (mcapM > 0 && rawTtmTotalDebt / 1e6 > mcapM * 2.0)
+    const stmtDebt = useLTDOnly
+      ? (ttmBS.longTermDebt ?? (ttmBS as any).longTermDebtAndCapitalLeaseObligation ?? ttmBS.totalDebt)
+      : (ttmBS.totalDebt ?? ttmBS.longTermDebt)
     if (typeof stmtDebt === 'number' && isFinite(stmtDebt)) debtM = stmtDebt / 1e6 * fxRate
     const stmtShares = ttmBS.commonStockSharesOutstanding ?? ttmBS.sharesOutstanding
     if (typeof stmtShares === 'number' && isFinite(stmtShares) && stmtShares > 0) sharesOutstanding = stmtShares

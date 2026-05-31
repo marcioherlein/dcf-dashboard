@@ -33,7 +33,7 @@ function ratioLabel(ratio: number): string {
 }
 
 export default function FairValueBar({ price, fairValue, currency, bearCase, bullCase }: FairValueBarProps) {
-  if (fairValue == null) return null
+  if (fairValue == null || fairValue <= 0) return null
 
   const ratio   = price / fairValue
   const isAbove = price > fairValue

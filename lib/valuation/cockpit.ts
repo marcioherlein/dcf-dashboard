@@ -205,6 +205,7 @@ function computeDivergence(
   blended: number | null,
   assumptions: ValuationAssumptions,
   snapshot: CockpitSnapshot,
+  debtOverhangDropped = false,
 ): DivergenceAnalysis {
   const valid = methods.filter(m => m.fairValue != null && m.fairValue > 0)
 
@@ -212,11 +213,13 @@ function computeDivergence(
     return {
       cv: 0,
       spreadVsPrice: 0,
-      level: 'low',
-      overallConfidence: valid.length === 0 ? 'low' : 'medium',
-      summary: valid.length < 2
-        ? 'Only one model produced a result — blended estimate has low reliability.'
-        : 'Insufficient data to assess model agreement.',
+      level: debtOverhangDropped ? 'high' : 'low',
+      overallConfidence: valid.length === 0 ? 'low' : debtOverhangDropped ? 'low' : 'medium',
+      summary: debtOverhangDropped
+        ? 'DCF excluded: net debt exceeded the estimated enterprise value. Structural debt overhang — blended estimate excludes DCF. Other multiples shown but treat with caution.'
+        : valid.length < 2
+          ? 'Only one model produced a result — blended estimate has low reliability.'
+          : 'Insufficient data to assess model agreement.',
       methodExplanations: valid.map(m => ({
         methodId: m.id,
         methodName: m.method,
@@ -239,9 +242,12 @@ function computeDivergence(
   let level: DivergenceAnalysis['level'] = 'low'
   if (cv > 0.30) level = 'high'
   else if (cv > 0.15) level = 'moderate'
+  // Debt overhang forces high divergence regardless of how well remaining models agree —
+  // DCF was structurally excluded, so the blended estimate lacks a key method.
+  if (debtOverhangDropped) level = 'high'
 
   const overallConfidence: DivergenceAnalysis['overallConfidence'] =
-    level === 'low' ? 'high' : level === 'moderate' ? 'medium' : 'low'
+    debtOverhangDropped ? 'low' : level === 'low' ? 'high' : level === 'moderate' ? 'medium' : 'low'
 
   // Context derived from snapshot & assumptions
   const netDebtM = (snapshot.debtM - snapshot.cashM)  // in millions
@@ -351,7 +357,9 @@ function computeDivergence(
 
   // Overall summary
   let summary = ''
-  if (level === 'low') {
+  if (debtOverhangDropped) {
+    summary = `DCF excluded: net debt exceeded the estimated enterprise value. The blended estimate uses multiples-based methods only — treat with caution and verify debt figures.`
+  } else if (level === 'low') {
     summary = `All ${valid.length} models agree within ${(cv * 100).toFixed(0)}% of each other — a strong signal with high confidence in the blended estimate.`
   } else if (level === 'moderate') {
     const highExpl = methodExplanations.find(e => e.direction === 'above')
@@ -415,6 +423,7 @@ export function computeCockpitOutput(
   // only when that pre-computed value is absent, so both panels always agree.
   let dcfFV: number | null = null
   let dcfErrors: string[] = []
+  let debtOverhangDropped = false
 
   if (snapshot.fullDcfFairValue != null && snapshot.fullDcfFairValue > 0) {
     // Use the Full DCF Table result directly — keeps Core DCF card and Full DCF Table in sync
@@ -438,7 +447,8 @@ export function computeCockpitOutput(
         const equity = evBlended + snapshot.cashM - snapshot.debtM
         const raw = Math.round((equity / snapshot.sharesM) * 100) / 100
         if (raw <= 0) {
-          dcfErrors = ['Implied equity value non-positive']
+          debtOverhangDropped = true
+          dcfErrors = ['Net debt exceeds estimated enterprise value — DCF excluded']
         } else {
           const cap = currentPrice > 0 ? currentPrice * 10 : Infinity
           if (raw > cap) dcfErrors = ['Terminal value capped at 10× market price']
@@ -533,7 +543,7 @@ export function computeCockpitOutput(
     historicalCAGR: snapshot.historicalCAGR,
   })
 
-  const divergence = computeDivergence(methods, blendedFairValue, assumptions, snapshot)
+  const divergence = computeDivergence(methods, blendedFairValue, assumptions, snapshot, debtOverhangDropped)
 
   // Fix 5: proportional deltas — ±10% of WACC, ±15% of CAGR (minimum 0.5pp / 1pp)
   const wD = Math.max(assumptions.wacc * 0.10, 0.005)

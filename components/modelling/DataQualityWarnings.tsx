@@ -15,6 +15,8 @@ interface DataQualityWarningsProps {
   crp?: number
   financialCurrency?: string
   fcfCapApplied?: boolean
+  debtOverhang?: boolean
+  netDebtM?: number
 }
 
 export default function DataQualityWarnings({
@@ -27,6 +29,8 @@ export default function DataQualityWarnings({
   crp,
   financialCurrency,
   fcfCapApplied,
+  debtOverhang,
+  netDebtM,
 }: DataQualityWarningsProps) {
   const warnings: Warning[] = []
 
@@ -53,6 +57,11 @@ export default function DataQualityWarnings({
   }
   if (fcfCapApplied) {
     warnings.push({ type: 'info', message: 'FCF was capped at 15% of market cap — raw FCF yield exceeded 30%, which may reflect a cyclical peak. Terminal value may dominate the valuation.' })
+  }
+  if (debtOverhang) {
+    const netDebtB = netDebtM != null ? (netDebtM / 1000).toFixed(1) : null
+    const debtLabel = netDebtB != null ? ` Net debt of $${netDebtB}b` : ' Net debt'
+    warnings.push({ type: 'warning', message: `${debtLabel} exceeds the estimated enterprise value — intrinsic value is floored at $0. This usually means debt figures include a captive finance subsidiary (e.g. GM Financial, Ford Motor Credit). If so, verify that only long-term issued bonds are being used as the debt input.` })
   }
 
   if (warnings.length === 0) return null

@@ -13,6 +13,7 @@ export interface FairValueResult {
   upsidePct: number | null
   irr: number | null
   terminalGrowthViolation?: boolean
+  debtOverhang?: boolean
 }
 
 export function calculateFairValue(
@@ -43,7 +44,8 @@ export function calculateFairValue(
   }
 
   const equityValue = dcf.ev + cash - debt
-  const fairValuePerShare = equityValue / shares
+  const debtOverhang = equityValue < 0
+  const fairValuePerShare = debtOverhang ? 0 : equityValue / shares
   const upsidePct = currentPrice > 0 ? (fairValuePerShare - currentPrice) / currentPrice : null
   const irr = (currentPrice > 0 && fairValuePerShare > 0)
     ? Math.pow(fairValuePerShare / currentPrice, 1 / 5) - 1
@@ -60,6 +62,7 @@ export function calculateFairValue(
     currentPrice,
     upsidePct: upsidePct != null ? Math.round(upsidePct * 1000) / 1000 : null,
     irr: irr != null ? Math.round(irr * 1000) / 1000 : null,
+    debtOverhang,
   }
 }
 
@@ -102,7 +105,7 @@ export function buildScenarios(
     const g = Math.min(Math.max(baseTerminalG + s.tgAdj, 0), w - 0.005)
     const dcf = projectCashFlows({ baseFCF, cagr: c, wacc: w, terminalG: g, growthModel })
     const fv = (dcf.ev != null && shares > 0)
-      ? Math.round(((dcf.ev + cash - debt) / shares) * 100) / 100
+      ? Math.max(0, Math.round(((dcf.ev + cash - debt) / shares) * 100) / 100)
       : null
     result[s.label] = { fairValue: fv, wacc: w, cagr: c, terminalG: g }
   }

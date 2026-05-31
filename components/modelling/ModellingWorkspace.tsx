@@ -407,11 +407,12 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
     const debt = baseInput.debtM ?? 0
 
     // UFCF variants — EV model: equity = (ΣPV(UFCF) + terminal TV) + cash − debt
+    // Floor at $0: if net debt > enterprise value the equity value is $0, not negative.
     const ufcfPGM = tvUFCF.perpetuityTVDiscounted != null
-      ? (sumPvUFCF + tvUFCF.perpetuityTVDiscounted + cash - debt) / sharesM
+      ? Math.max(0, (sumPvUFCF + tvUFCF.perpetuityTVDiscounted + cash - debt) / sharesM)
       : null
     const ufcfEM = tvUFCF.exitMultipleTVDiscounted != null
-      ? (sumPvUFCF + tvUFCF.exitMultipleTVDiscounted + cash - debt) / sharesM
+      ? Math.max(0, (sumPvUFCF + tvUFCF.exitMultipleTVDiscounted + cash - debt) / sharesM)
       : null
     // LFCF variants — equity model: no cash/debt bridge (cash flows are already post-financing)
     const lfcfPGM = tvLFCF.perpetuityTVDiscounted != null
@@ -434,6 +435,18 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
     if (totalW === 0) return null
     return parts.reduce((s, p) => s + p.v * p.w / totalW, 0)
   }, [tvUFCF, tvLFCF, sumPvUFCF, sumPvLFCF, sharesM, baseInput.cashM, baseInput.debtM, baseInput.companyType])
+
+  // Track whether net debt exceeded the UFCF-derived EV (debt overhang) so the
+  // DataQualityWarnings component can show a captive-finance explanation.
+  const hasDebtOverhang = useMemo(() => {
+    const cash = baseInput.cashM ?? 0
+    const debt = baseInput.debtM ?? 0
+    if (debt - cash <= 0) return false
+    const netDebt = debt - cash
+    const pvPGM = tvUFCF.perpetuityTVDiscounted != null ? sumPvUFCF + tvUFCF.perpetuityTVDiscounted : null
+    const pvEM  = tvUFCF.exitMultipleTVDiscounted != null ? sumPvUFCF + tvUFCF.exitMultipleTVDiscounted : null
+    return (pvPGM != null && pvPGM < netDebt) || (pvEM != null && pvEM < netDebt)
+  }, [tvUFCF, sumPvUFCF, baseInput.cashM, baseInput.debtM])
 
   const prevFV = useRef<number | null>(null)
   const [delta, setDelta] = useState<{ amount: number; pct: number } | null>(null)
@@ -465,6 +478,8 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
         crp={waccRaw.crp ?? 0}
         financialCurrency={waccRaw.financialCurrency ?? undefined}
         fcfCapApplied={baseInput.fcfCapApplied ?? false}
+        debtOverhang={hasDebtOverhang}
+        netDebtM={(baseInput.debtM ?? 0) - (baseInput.cashM ?? 0)}
       />
 
       {/* Assumption-change delta badge */}

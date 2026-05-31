@@ -148,13 +148,27 @@ export async function GET(req: NextRequest) {
     const isBankOrInsurer = /bank|insurance|financ|fintech|payment|credit|lending|capital market|asset management|brokerage/i.test(
       ((fin.summaryProfile?.sector ?? '') as string) + ' ' + ((fin.summaryProfile?.industry ?? '') as string)
     )
+    // Auto OEMs (GM, Ford, Toyota, Honda, Stellantis) have captive finance subsidiaries
+    // (e.g. GM Financial) whose entire loan book flows into Yahoo's totalDebt, inflating it
+    // 3–5× beyond operational leverage and collapsing the equity bridge to a large negative.
+    const isAutoOEM = /Auto Manufacturers|Motor Vehicle/i.test(
+      (fin.summaryProfile?.industry ?? '') as string
+    )
+    // Heuristic: non-financial company where Yahoo totalDebt > 2× market cap almost always
+    // signals a captive finance arm (auto, machinery leasing, industrial conglomerates).
+    const rawTotalDebtForHeuristic = ((bs.totalDebt ?? 0) as number) / 1e6 * fxRate
+    const captiveFinanceHeuristic = !isBankOrInsurer && marketCapM > 0
+      && rawTotalDebtForHeuristic / marketCapM > 2.0
+    // For any of these cases, use only long-term issued bonds/notes to reflect
+    // operational leverage only — this matches how sell-side analysts treat these companies.
+    const useOnlyLongTermDebt = isBankOrInsurer || isAutoOEM || captiveFinanceHeuristic
     // For financial companies: use only long-term issued debt (bonds/notes).
     // fd.totalDebt and bs.totalDebt for banks can include deposit liabilities or
     // interbank borrowings that inflate D/V, collapse WACC, and produce a gigantic
     // EV that is then wiped out by subtracting that same "debt" → negative equity.
     // Yahoo Finance uses inconsistent field names across company types and regions.
     // Extend fallback chains to catch all known variants.
-    const rawDebtM = isBankOrInsurer
+    const rawDebtM = useOnlyLongTermDebt
       ? ((bs.longTermDebt ?? bs.longTermDebtNoncurrent ?? bs.longTermDebtAndCapitalLeaseObligation ?? bs.longTermDebtAndFinanceLeaseLiability ?? bs.totalDebt ?? 0) as number) / 1e6 * fxRate
       : ((
           bs.totalDebt
