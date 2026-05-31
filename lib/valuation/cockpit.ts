@@ -539,14 +539,27 @@ export function computeCockpitOutput(
   const wD = Math.max(assumptions.wacc * 0.10, 0.005)
   const cD = Math.max(Math.abs(assumptions.cagr) * 0.15, 0.01)
 
+  const rawScenarios = {
+    bull: { fairValue: scenarioBlendFV(assumptions, snapshot, -wD, +cD), wacc: assumptions.wacc - wD, cagr: assumptions.cagr + cD },
+    base: { fairValue: blendedFairValue, wacc: assumptions.wacc, cagr: assumptions.cagr },
+    bear: { fairValue: scenarioBlendFV(assumptions, snapshot, +wD, -cD), wacc: assumptions.wacc + wD, cagr: assumptions.cagr - cD },
+  }
+
+  // Ensure Bear ≤ Base ≤ Bull: non-linear multi-method blend can violate this in edge cases
+  const fvBear = rawScenarios.bear.fairValue ?? 0
+  const fvBase = rawScenarios.base.fairValue ?? 0
+  const fvBull = rawScenarios.bull.fairValue ?? 0
+  const [sortedBear, sortedBase, sortedBull] = [fvBear, fvBase, fvBull].sort((a, b) => a - b)
+  const scenarios = {
+    bear: { ...rawScenarios.bear, fairValue: sortedBear },
+    base: { ...rawScenarios.base, fairValue: sortedBase },
+    bull: { ...rawScenarios.bull, fairValue: sortedBull },
+  }
+
   return {
     blendedFairValue,
     methods,
-    scenarios: {
-      bull: { fairValue: scenarioBlendFV(assumptions, snapshot, -wD, +cD), wacc: assumptions.wacc - wD, cagr: assumptions.cagr + cD },
-      base: { fairValue: blendedFairValue, wacc: assumptions.wacc, cagr: assumptions.cagr },
-      bear: { fairValue: scenarioBlendFV(assumptions, snapshot, +wD, -cD), wacc: assumptions.wacc + wD, cagr: assumptions.cagr - cD },
-    },
+    scenarios,
     verdict,
     upsidePct,
     marketImpliedGrowth: reverseDcf.impliedCAGR,

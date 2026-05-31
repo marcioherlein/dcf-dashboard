@@ -466,7 +466,11 @@ function StockPageBody() {
                     historicalCAGR={data.cagrAnalysis?.historicalCagr3y ?? null}
                     analystCAGR={data.cagrAnalysis?.analystEstimate1y ?? null}
                     isEmergingMarket={computedScores?.altman?.isReliable === false}
-                    scenarios={data.scenarios ?? null}
+                    scenarios={cockpitOutput ? {
+                      bull: { fairValue: cockpitOutput.scenarios.bull.fairValue ?? 0, wacc: cockpitOutput.scenarios.bull.wacc, cagr: cockpitOutput.scenarios.bull.cagr, terminalG: data.terminalG ?? 0.025 },
+                      base: { fairValue: cockpitOutput.scenarios.base.fairValue ?? 0, wacc: cockpitOutput.scenarios.base.wacc, cagr: cockpitOutput.scenarios.base.cagr, terminalG: data.terminalG ?? 0.025 },
+                      bear: { fairValue: cockpitOutput.scenarios.bear.fairValue ?? 0, wacc: cockpitOutput.scenarios.bear.wacc, cagr: cockpitOutput.scenarios.bear.cagr, terminalG: data.terminalG ?? 0.025 },
+                    } : null}
                     ratings={data.ratings}
                     scores={computedScores ?? data.scores}
                     businessProfile={data.businessProfile}

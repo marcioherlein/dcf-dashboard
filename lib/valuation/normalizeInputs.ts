@@ -321,7 +321,7 @@ function buildRowsFromStatements(
     byYear.set(year, {
       year,
       isProjected: false,
-      revenue:    toM(row.totalRevenue),
+      revenue:    toM(row.totalRevenue ?? row.operatingRevenue),
       ebit:       toM(row.operatingIncome ?? row.EBIT),
       ebitda:     toM(row.EBITDA),
       netIncome:  toM(row.netIncome),
@@ -369,7 +369,7 @@ function buildRowsFromStatements(
     byYear.set('TTM', {
       year: 'TTM',
       isProjected: false,
-      revenue:    toM(is.totalRevenue),
+      revenue:    toM(is.totalRevenue ?? is.operatingRevenue),
       ebit:       toM(is.operatingIncome ?? is.EBIT),
       ebitda:     toM(is.EBITDA),
       netIncome:  toM(is.netIncome),
