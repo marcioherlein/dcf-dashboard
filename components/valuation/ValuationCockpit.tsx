@@ -76,7 +76,7 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
   const revSeries    = histMult.filter(h => h.evRevenue != null).slice(-5).map(h => ({ label: String(h.fiscalYear), value: h.evRevenue! }))
 
   // Append current TTM value as 'curr' point (blue dot to the right of the historical line)
-  if (peCurrent != null && peCurrent > 0 && peCurrent < 300) peSeries.push({ label: 'curr', value: peCurrent })
+  if (peCurrent != null && peCurrent > 0 && peCurrent < 1000) peSeries.push({ label: 'curr', value: peCurrent })
   if (evEbitdaCurrent != null && evEbitdaCurrent > 0) ebitdaSeries.push({ label: 'curr', value: evEbitdaCurrent })
   if (evRevCurrent != null && evRevCurrent > 0) revSeries.push({ label: 'curr', value: evRevCurrent })
 

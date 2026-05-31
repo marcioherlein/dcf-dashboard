@@ -1095,22 +1095,41 @@ export async function GET(req: NextRequest) {
 
     const financialStatements = { incomeStatement, balanceSheet, cashFlow }
 
-    // Historical valuation multiples (P/E, EV/EBITDA, EV/Revenue, P/S) — from FMP key-metrics
+    // Historical valuation multiples — computed from income statement + balance sheet + key-metrics market cap.
+    // Computing from raw financials gives better coverage than relying on FMP key-metrics ratios alone:
+    // those ratios omit loss years, cap high-multiple growth stocks, and are missing for many tickers.
     const clamp = (v: number | null | undefined, lo: number, hi: number): number | null => {
       if (v == null || !isFinite(v) || v <= 0) return null
       return v > hi || v < lo ? null : Math.round(v * 100) / 100
     }
-    const historicalMultiples = fmp.keyMetrics
-      .filter(km => km.fiscalYear)
+
+    const kmByFY = new Map(fmp.keyMetrics.filter(km => km.fiscalYear).map(km => [km.fiscalYear, km]))
+    const bsByFY = new Map(fmp.balanceSheets.filter(bs => bs.fiscalYear).map(bs => [bs.fiscalYear, bs]))
+
+    const historicalMultiples = fmp.incomeStatements
+      .filter(is => is.fiscalYear && isFinite(is.revenue) && is.revenue > 0)
       .sort((a, b) => a.fiscalYear.localeCompare(b.fiscalYear))
-      .map(km => ({
-        fiscalYear: km.fiscalYear,
-        date: km.date,
-        pe:        clamp(km.peRatio,                      1,   200),
-        evEbitda:  clamp(km.enterpriseValueOverEBITDA,    1,   100),
-        evRevenue: clamp(km.evToSales,                    0.1,  50),
-        ps:        clamp(km.priceToSalesRatio,            0.1,  50),
-      }))
+      .map(is => {
+        const km     = kmByFY.get(is.fiscalYear)
+        const bs     = bsByFY.get(is.fiscalYear)
+        const mktCap = km?.marketCap ?? null
+        const cash   = bs?.cashAndShortTermInvestments ?? 0
+        const debt   = bs?.longTermDebt ?? 0
+        const ev     = mktCap != null && mktCap > 0 ? mktCap + debt - cash : null
+
+        // Compute from raw financials; fall back to FMP key-metrics pre-computed ratio if unavailable
+        const peComputed    = mktCap != null && mktCap > 0 && is.netIncome > 0 ? mktCap / is.netIncome : null
+        const evEbComputed  = ev != null && ev > 0 && is.ebitda > 0 ? ev / is.ebitda : null
+        const evRevComputed = ev != null && ev > 0 && is.revenue > 0 ? ev / is.revenue : null
+
+        // Wider clamp bounds: preserve valid high-multiple years (e.g. P/E 300 on a cyclical recovery)
+        const pe        = clamp(peComputed    ?? km?.peRatio,                   1, 500)
+        const evEbitda  = clamp(evEbComputed  ?? km?.enterpriseValueOverEBITDA, 1, 150)
+        const evRevenue = clamp(evRevComputed ?? km?.evToSales,                 0.1, 100)
+        const ps        = clamp(km?.priceToSalesRatio, 0.1, 50)
+
+        return { fiscalYear: is.fiscalYear, date: is.date, pe, evEbitda, evRevenue, ps }
+      })
       .filter(r => r.pe != null || r.evEbitda != null || r.evRevenue != null)
 
     // Historical FCF for DCF table context (last 3 years)
