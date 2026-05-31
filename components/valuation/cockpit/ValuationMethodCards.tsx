@@ -89,7 +89,7 @@ export default function ValuationMethodCards({
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-5">
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-slate-800 mb-1">Valuation Models</p>
+          <p className="text-sm font-semibold text-slate-700 mb-1">Valuation Models</p>
           <p className="text-xs text-slate-400">Detailed breakdown of each model and its contribution to blended fair value</p>
         </div>
         <span className="flex items-center gap-1.5 text-[11px] text-slate-400 shrink-0">

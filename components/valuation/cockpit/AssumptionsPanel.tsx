@@ -7,6 +7,21 @@ export interface SparkPoint {
   value: number
 }
 
+// Typical 5Y revenue CAGR ranges by sector (used as a calibration hint, not a hard constraint)
+const SECTOR_CAGR_HINT: Record<string, string> = {
+  'Consumer Cyclical':     '1–6%',
+  'Consumer Defensive':   '2–5%',
+  'Industrials':          '2–6%',
+  'Basic Materials':      '2–6%',
+  'Energy':               '1–5%',
+  'Utilities':            '0–3%',
+  'Real Estate':          '2–5%',
+  'Financial Services':   '2–7%',
+  'Healthcare':           '5–10%',
+  'Technology':           '10–25%',
+  'Communication Services': '4–10%',
+}
+
 // ── Config ────────────────────────────────────────────────────────────────────
 
 const METHOD_CFG = {
@@ -252,7 +267,7 @@ function BarChart({
 // ── Assumption Card ───────────────────────────────────────────────────────────
 
 function AssumptionCard({
-  field, value, defaultValue, isDirty, onChange, sparkPoints, sensitivityImpact, blendedFairValue, currency,
+  field, value, defaultValue, isDirty, onChange, sparkPoints, sensitivityImpact, blendedFairValue, currency, sector,
 }: {
   field: Field
   value: number
@@ -263,6 +278,7 @@ function AssumptionCard({
   sensitivityImpact?: number
   blendedFairValue?: number | null
   currency: string
+  sector?: string | null
 }) {
   const primaryMethod = field.methods[0]
   const color    = METHOD_CFG[primaryMethod].hex
@@ -378,6 +394,16 @@ function AssumptionCard({
             <span className="text-[10px] text-slate-400">·</span>
             <span className="text-[10px] text-slate-500">
               typical {fmtVal(field.typicalMin, '%')}–{fmtVal(field.typicalMax, '%')}
+            </span>
+          </div>
+        )}
+
+        {/* CAGR: sector benchmark hint */}
+        {field.key === 'cagr' && sector && SECTOR_CAGR_HINT[sector] && (
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full shrink-0 bg-slate-300" />
+            <span className="text-[10px] text-slate-500">
+              Typical {sector} CAGR: {SECTOR_CAGR_HINT[sector]}
             </span>
           </div>
         )}
@@ -515,11 +541,12 @@ interface Props {
   defaultBlendedFairValue?: number | null
   sensitivity?: Partial<Record<keyof ValuationAssumptions, number>>
   currency?: string
+  sector?: string | null
 }
 
 export default function AssumptionsPanel({
   assumptions, defaults, onChange, onReset, onUndo, canUndo,
-  historicalData = {}, blendedFairValue, defaultBlendedFairValue, sensitivity = {}, currency = '$',
+  historicalData = {}, blendedFairValue, defaultBlendedFairValue, sensitivity = {}, currency = '$', sector,
 }: Props) {
   const deltaPct = blendedFairValue != null && defaultBlendedFairValue != null && defaultBlendedFairValue > 0
     ? (blendedFairValue - defaultBlendedFairValue) / defaultBlendedFairValue
@@ -625,6 +652,7 @@ export default function AssumptionsPanel({
                     sensitivityImpact={sensitivity[f.key]}
                     blendedFairValue={blendedFairValue}
                     currency={currency}
+                    sector={sector}
                   />
                 ))}
               </div>

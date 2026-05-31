@@ -141,6 +141,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
   const currency     = apiData.quote?.currency ?? 'USD'
   const currentPrice = apiData.quote?.price ?? 0
   const changePct    = apiData.quote?.changePct ?? null
+  const sector       = apiData.quote?.sector ?? null
 
   const savePayload: WatchlistSavePayload = useMemo(() => ({
     ticker,
@@ -271,6 +272,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
             defaultBlendedFairValue={defaultOutput.blendedFairValue}
             sensitivity={sensitivity}
             currency={currency}
+            sector={sector}
           />
         </div>
 
@@ -292,22 +294,31 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
         </div>
       </div>
 
-      {/* Evidence: method chart + divergence + method cards */}
-      <FairValueChart
-        methods={output.methods}
-        blendedFairValue={output.blendedFairValue}
-        currentPrice={currentPrice}
-        currency={currency}
-      />
-      <ModelDivergencePanel divergence={output.divergence} />
-      <ValuationMethodCards
-        methods={output.methods}
-        currentPrice={currentPrice}
-        currency={currency}
-        cagr={assumptions.cagr}
-        fcfMargin={snapshot.fcfMargin}
-        ttmEbitdaDollars={snapshot.ttmEbitdaDollars}
-      />
+      {/* Evidence tier — collapsed by default; decision surface above this fold */}
+      <details className="group" id="model_evidence">
+        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E6ECF5] shadow-sm px-4 sm:px-5 py-3.5 hover:bg-[#F8FAFC] transition-colors select-none">
+          <span className="text-slate-400 text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
+          <span className="text-sm font-[650] text-slate-700">Model Evidence</span>
+          <span className="ml-auto text-xs text-slate-400 hidden sm:inline">Fair value chart · method cards · divergence analysis</span>
+        </summary>
+        <div className="mt-2 flex flex-col gap-3">
+          <FairValueChart
+            methods={output.methods}
+            blendedFairValue={output.blendedFairValue}
+            currentPrice={currentPrice}
+            currency={currency}
+          />
+          <ModelDivergencePanel divergence={output.divergence} />
+          <ValuationMethodCards
+            methods={output.methods}
+            currentPrice={currentPrice}
+            currency={currency}
+            cagr={assumptions.cagr}
+            fcfMargin={snapshot.fcfMargin}
+            ttmEbitdaDollars={snapshot.ttmEbitdaDollars}
+          />
+        </div>
+      </details>
 
       {/* Full DCF Model — blue header, more visible */}
       <details ref={fullDcfRef} className="group" id="full_dcf">

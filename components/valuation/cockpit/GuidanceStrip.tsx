@@ -1,9 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
-
-const DISMISS_KEY = 'valuation-guidance-dismissed'
 
 const STEPS = [
   {
@@ -30,19 +28,6 @@ const STEPS = [
 
 export default function GuidanceStrip() {
   const [open, setOpen] = useState(false)
-  const [dismissed, setDismissed] = useState(false)
-
-  useEffect(() => {
-    setDismissed(localStorage.getItem(DISMISS_KEY) === '1')
-  }, [])
-
-  function dismiss(e: React.MouseEvent) {
-    e.stopPropagation()
-    localStorage.setItem(DISMISS_KEY, '1')
-    setDismissed(true)
-  }
-
-  if (dismissed) return null
 
   return (
     <div>
@@ -62,14 +47,6 @@ export default function GuidanceStrip() {
         <span className={cn('text-[11px] text-[#94A3B8] transition-opacity duration-150', open ? 'opacity-0' : 'opacity-100')}>
           4-step guide ↓
         </span>
-        <button
-          type="button"
-          aria-label="Dismiss guide"
-          onClick={dismiss}
-          className="ml-auto text-[#CBD5E1] hover:text-[#94A3B8] transition-colors text-sm leading-none px-1"
-        >
-          ×
-        </button>
       </button>
 
       {/* Smooth expand using grid-template-rows trick */}

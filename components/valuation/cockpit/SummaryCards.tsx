@@ -3,6 +3,24 @@
 import { fmtPrice } from '@/lib/formatters'
 import type { CockpitOutput } from '@/lib/valuation/cockpit'
 
+function buildSynthesis(output: CockpitOutput, currency: string): string | null {
+  const { verdict, upsidePct, blendedFairValue, divergence, marketImpliedGrowth } = output
+  if (blendedFairValue == null || upsidePct == null) return null
+
+  const sign = upsidePct >= 0 ? '+' : ''
+  const pct  = `${sign}${(upsidePct * 100).toFixed(0)}%`
+  const fv   = fmtPrice(blendedFairValue, currency)
+  const validCount = output.methods.filter(m => m.fairValue != null && m.fairValue > 0).length
+  const confMap = { high: 'High', medium: 'Moderate', low: 'Low' } as const
+  const conf = confMap[divergence.overallConfidence]
+
+  const impliedPart = marketImpliedGrowth != null
+    ? ` Market pricing in ${(marketImpliedGrowth * 100).toFixed(0)}% 5Y CAGR.`
+    : ''
+
+  return `Blended fair value ${fv} — ${pct} vs current price. ${conf} conviction across ${validCount} of ${output.methods.length} models.${impliedPart}`
+}
+
 interface Props {
   output: CockpitOutput
   currentPrice: number
@@ -33,6 +51,7 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
 
   const fvDisplay = output.blendedFairValue != null ? fmtPrice(output.blendedFairValue, currency) : '—'
   const upDisplay = output.upsidePct != null ? `${upsideSign}${(output.upsidePct * 100).toFixed(1)}%` : '—'
+  const synthesis = buildSynthesis(output, currency)
 
   return (
     <div className="bg-white rounded-[14px] border border-[#E6ECF5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden">
@@ -106,6 +125,15 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
         </div>
 
       </div>
+
+      {/* Synthesis strip — assembled verdict from existing data */}
+      {synthesis && (
+        <div className="border-t border-[#F1F5F9] px-5 py-2.5 flex items-center gap-2.5">
+          <span className={`text-[11px] font-[700] shrink-0 ${vstyle.text}`}>{output.verdict}</span>
+          <span className="text-[#CBD5E1] text-[10px] shrink-0">·</span>
+          <p className="text-[11px] text-[#64748B] leading-snug">{synthesis}</p>
+        </div>
+      )}
     </div>
   )
 }
