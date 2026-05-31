@@ -121,8 +121,8 @@ export default function SummaryTab({
         />
       )}
 
-      {/* ── Zone 1: Verdict — hero + price chart, equal height ───────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-4 items-stretch">
+      {/* ── Zone 1: Verdict — hero + price chart, equal columns ──────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
         <SummaryHeroCard
           ticker={ticker}
           price={price}
@@ -151,7 +151,7 @@ export default function SummaryTab({
 
       {/* ── Zone 2: What the price assumes ───────────────────────────────── */}
       <div className="rounded-[20px] bg-[#F8FAFC] border border-[#E6ECF5] p-4 sm:p-5">
-        <p className="text-[12px] font-[650] text-slate-500 mb-3">What the price assumes</p>
+        <p className="text-[12px] font-[650] text-slate-500 mb-3">What the market is pricing in</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
           <ReverseDCFCompactCard
             price={price}
