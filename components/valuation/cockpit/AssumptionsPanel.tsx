@@ -70,6 +70,13 @@ function medianOf(arr: number[]): number {
   return s.length % 2 === 0 ? (s[m - 1] + s[m]) / 2 : s[m]
 }
 
+// Shorten year labels for SVG x-axis: "FY2021" | "2021" → "21"
+function shortYear(label: string): string {
+  if (label === 'Now' || label === 'curr') return 'Now'
+  const m = label.match(/\d{4}/)
+  return m ? m[0].slice(2) : label.slice(0, 4)
+}
+
 interface Stats { min: number; med: number; max: number; isReal: boolean }
 
 function getStats(field: Field, sparkPoints?: SparkPoint[]): Stats {
@@ -122,7 +129,9 @@ function BarChart({
 }) {
   const historical = sparkPoints.filter(p => p.label !== 'curr')
   const currPoint  = sparkPoints.find(p => p.label === 'curr')
-  const hasSeries  = historical.length >= 2
+  // Show bars with even 1 historical point — falling back to typical-range on single-year data
+  // is too aggressive; one bar + current bar is still useful calibration.
+  const hasSeries  = historical.length >= 1
 
   const displayBars = hasSeries
     ? [
@@ -167,15 +176,15 @@ function BarChart({
             height={Math.max(2, toY(typicalMin) - toY(typicalMax))}
             fill={color} fillOpacity="0.12" rx="3"
           />
-          <text x={BC_ML - 3} y={toY(typicalMax) + 3.5} textAnchor="end" fontSize="7" fill={color} fillOpacity="0.75" fontFamily="sans-serif">
+          <text x={BC_ML - 3} y={toY(typicalMax) + 3.5} textAnchor="end" fontSize="8" fill="#64748b" fontFamily="sans-serif">
             {fmtVal(typicalMax, unit)}
           </text>
-          <text x={BC_ML - 3} y={toY(typicalMin) + 3.5} textAnchor="end" fontSize="7" fill={color} fillOpacity="0.75" fontFamily="sans-serif">
+          <text x={BC_ML - 3} y={toY(typicalMin) + 3.5} textAnchor="end" fontSize="8" fill="#64748b" fontFamily="sans-serif">
             {fmtVal(typicalMin, unit)}
           </text>
           <text
             x={BC_ML + BC_CW / 2} y={BC_MT + BC_CH / 2 + 4}
-            textAnchor="middle" fontSize="8" fill="#94a3b8" fontFamily="sans-serif"
+            textAnchor="middle" fontSize="8" fill="#64748b" fontFamily="sans-serif"
           >
             Typical range
           </text>
@@ -197,12 +206,14 @@ function BarChart({
               width={barW} height={barH}
               fill={color} rx="2"
               fillOpacity={bar.isCurr ? 1 : 0.55}
-            />
+            >
+              <title>{shortYear(bar.label)}: {fmtVal(bar.value, unit)}</title>
+            </rect>
             <text
               x={cx} y={BC_H - 3}
-              textAnchor="middle" fontSize="7" fill="#94a3b8" fontFamily="sans-serif"
+              textAnchor="middle" fontSize="8" fill="#64748b" fontFamily="sans-serif"
             >
-              {bar.label}
+              {shortYear(bar.label)}
             </text>
           </g>
         )
@@ -214,9 +225,10 @@ function BarChart({
         x2={BC_ML + BC_CW} y2={inputY}
         stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="4 3"
       />
+      {/* amber-700 (#b45309) gives 5.05:1 contrast on white — passes WCAG AA */}
       <text
         x={BC_ML + BC_CW - 2} y={inputY - 2.5}
-        textAnchor="end" fontSize="7.5" fill="#f59e0b"
+        textAnchor="end" fontSize="9" fill="#b45309"
         fontWeight="600" fontFamily="sans-serif"
       >
         {fmtVal(inputVal, unit)}
@@ -225,10 +237,10 @@ function BarChart({
       {/* Y-axis range labels */}
       {hasSeries && rawMax !== rawMin && (
         <>
-          <text x={BC_ML - 3} y={toY(rawMax) + 3.5} textAnchor="end" fontSize="7" fill="#cbd5e1" fontFamily="sans-serif">
+          <text x={BC_ML - 3} y={toY(rawMax) + 3.5} textAnchor="end" fontSize="8" fill="#94a3b8" fontFamily="sans-serif">
             {fmtVal(rawMax, unit)}
           </text>
-          <text x={BC_ML - 3} y={toY(rawMin) + 3.5} textAnchor="end" fontSize="7" fill="#cbd5e1" fontFamily="sans-serif">
+          <text x={BC_ML - 3} y={toY(rawMin) + 3.5} textAnchor="end" fontSize="8" fill="#94a3b8" fontFamily="sans-serif">
             {fmtVal(rawMin, unit)}
           </text>
         </>
@@ -271,8 +283,16 @@ function AssumptionCard({
     ? Math.abs(sensitivityImpact * blendedFairValue)
     : null
 
-  const hasSeries = (sparkPoints?.filter(p => p.label !== 'curr').length ?? 0) >= 2
+  const hasSeries = (sparkPoints?.filter(p => p.label !== 'curr').length ?? 0) >= 1
   const showChart = field.key !== 'wacc'
+
+  // WACC signal color based on position within typical range
+  const waccSignal = (() => {
+    if (field.key !== 'wacc') return null
+    if (value > field.typicalMax) return { text: 'Above typical', cls: 'text-amber-600' }
+    if (value < field.typicalMin) return { text: 'Below typical', cls: 'text-emerald-600' }
+    return { text: 'Within typical', cls: 'text-slate-500' }
+  })()
 
   function clamp(v: number) {
     return Math.min(field.max, Math.max(field.min, Math.round(v * 100000) / 100000))
@@ -294,13 +314,17 @@ function AssumptionCard({
           </div>
         </div>
 
-        {/* Value + stepper */}
-        <div className="flex items-center gap-2">
+        {/* Value + stepper — buttons are 44px touch targets with a 28px visual circle inside */}
+        <div className="flex items-center gap-1">
           <button
             onClick={() => onChange(clamp(value - field.step))}
-            className="w-7 h-7 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-400 hover:text-slate-700 font-bold flex items-center justify-center text-sm transition-all select-none shrink-0"
+            className="w-11 h-11 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all select-none shrink-0"
             aria-label={`Decrease ${field.label}`}
-          >−</button>
+          >
+            <span className="w-7 h-7 flex items-center justify-center rounded-full border border-slate-200 bg-white font-bold text-sm pointer-events-none">
+              −
+            </span>
+          </button>
           <div className="flex-1 text-center">
             <div className="text-[28px] font-[800] tabular-nums leading-none tracking-tight text-slate-900">
               {fmtVal(value, field.unit)}
@@ -313,9 +337,13 @@ function AssumptionCard({
           </div>
           <button
             onClick={() => onChange(clamp(value + field.step))}
-            className="w-7 h-7 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-400 hover:text-slate-700 font-bold flex items-center justify-center text-sm transition-all select-none shrink-0"
+            className="w-11 h-11 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all select-none shrink-0"
             aria-label={`Increase ${field.label}`}
-          >+</button>
+          >
+            <span className="w-7 h-7 flex items-center justify-center rounded-full border border-slate-200 bg-white font-bold text-sm pointer-events-none">
+              +
+            </span>
+          </button>
         </div>
 
         {/* Slider */}
@@ -338,38 +366,40 @@ function AssumptionCard({
             />
           </div>
           <div className="flex justify-between px-0.5">
-            <span className="text-[9px] text-slate-400 tabular-nums">{fmtVal(field.min, field.unit)}</span>
-            <span className="text-[9px] text-slate-400 tabular-nums">{fmtVal(field.max, field.unit)}</span>
+            <span className="text-[9px] text-slate-500 tabular-nums">{fmtVal(field.min, field.unit)}</span>
+            <span className="text-[9px] text-slate-500 tabular-nums">{fmtVal(field.max, field.unit)}</span>
           </div>
         </div>
 
-        {/* WACC: typical range note instead of chart */}
-        {field.key === 'wacc' && (
-          <p className="text-[10px] text-slate-400">
-            Typical range: {fmtVal(field.typicalMin, '%')}–{fmtVal(field.typicalMax, '%')}
-          </p>
+        {/* WACC: signal + typical range */}
+        {field.key === 'wacc' && waccSignal && (
+          <div className="flex items-center gap-1.5">
+            <span className={`text-[10px] font-[600] ${waccSignal.cls}`}>{waccSignal.text}</span>
+            <span className="text-[10px] text-slate-400">·</span>
+            <span className="text-[10px] text-slate-500">
+              typical {fmtVal(field.typicalMin, '%')}–{fmtVal(field.typicalMax, '%')}
+            </span>
+          </div>
         )}
 
         {/* Historical chart — all fields except WACC */}
         {showChart && (
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-slate-400">
+              <span className="text-[10px] text-slate-500">
                 {hasSeries ? '5-year history' : 'Typical range'}
               </span>
               {hasSeries && (
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
                     <div className="w-2.5 h-2 rounded-sm" style={{ background: color, opacity: 0.55 }} />
-                    <span className="text-[9px] text-slate-400">Historical</span>
+                    <span className="text-[9px] text-slate-500">Historical</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="w-2.5 h-2 rounded-sm" style={{ background: color }} />
-                    <span className="text-[9px] text-slate-400">Now</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <svg width="14" height="4"><line x1="0" y1="2" x2="14" y2="2" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3 2" /></svg>
-                    <span className="text-[9px] text-slate-400">Your input</span>
+                    <svg width="14" height="4" aria-hidden="true">
+                      <line x1="0" y1="2" x2="14" y2="2" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3 2" />
+                    </svg>
+                    <span className="text-[9px] text-slate-500">Your input</span>
                   </div>
                 </div>
               )}
@@ -394,17 +424,17 @@ function AssumptionCard({
         </div>
 
         {/* Description */}
-        <p className="text-[11px] text-slate-400 leading-relaxed">{field.description}</p>
+        <p className="text-[11px] text-slate-500 leading-relaxed">{field.description}</p>
 
         {/* FV impact footer */}
         <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-auto">
-          <span className="text-[10px] font-[600] text-slate-400">FV impact per step</span>
+          <span className="text-[10px] font-[600] text-slate-500">FV impact per step</span>
           {dollarImpact != null ? (
             <span className="text-[11px] font-[700] tabular-nums text-slate-700">
               ±{currency}{dollarImpact < 10 ? dollarImpact.toFixed(2) : dollarImpact.toFixed(1)} per {field.unit === '%' ? '1pp' : '1×'}
             </span>
           ) : (
-            <span className="text-[11px] text-slate-300">—</span>
+            <span className="text-[11px] text-slate-400">—</span>
           )}
         </div>
 
@@ -462,7 +492,7 @@ function LargestChangesBar({
                   {c.impactFmt}
                 </span>
               )}
-              <span className="text-[9px] text-slate-400 tabular-nums">{c.deltaFmt}</span>
+              <span className="text-[9px] text-slate-500 tabular-nums">{c.deltaFmt}</span>
             </div>
           )
         })}
@@ -526,7 +556,7 @@ export default function AssumptionsPanel({
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <p className="text-[18px] font-bold text-slate-900">Assumptions</p>
-          <p className="text-[12px] text-slate-400 mt-0.5">Adjust key drivers and see how fair value responds</p>
+          <p className="text-[12px] text-slate-500 mt-0.5">Adjust key drivers and see how fair value responds</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
 
@@ -580,7 +610,7 @@ export default function AssumptionsPanel({
             <div key={group.label}>
               <div className="flex items-baseline gap-2 mb-3">
                 <span className="text-[12px] font-[600] text-slate-700">{group.label}</span>
-                <span className="text-[11px] text-slate-400">{group.description}</span>
+                <span className="text-[11px] text-slate-500">{group.description}</span>
               </div>
               <div className="flex flex-col gap-3">
                 {groupFields.map(f => (
