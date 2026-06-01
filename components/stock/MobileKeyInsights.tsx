@@ -8,6 +8,7 @@ type AnyData = any
 
 interface Props {
   data: AnyData
+  hideBlendedFV?: boolean
 }
 
 function gradeChipClass(grade: string): string {
@@ -18,7 +19,7 @@ function gradeChipClass(grade: string): string {
   return 'text-red-700 bg-red-50 border-red-200'
 }
 
-export default function MobileKeyInsights({ data }: Props) {
+export default function MobileKeyInsights({ data, hideBlendedFV = false }: Props) {
   const [open, setOpen] = useState(true)
   if (!data) return null
 
@@ -63,7 +64,7 @@ export default function MobileKeyInsights({ data }: Props) {
               Target: <span className="font-semibold">{sym}{analystTargetMean.toFixed(2)}</span>
             </span>
           )}
-          {blendedFV != null && (
+          {blendedFV != null && !hideBlendedFV && (
             <span className="text-[12px] text-slate-600 tabular-nums shrink-0">
               FV: <span className={cn('font-semibold', blendedUpside != null && blendedUpside >= 0 ? 'text-emerald-600' : 'text-amber-600')}>
                 {sym}{blendedFV.toFixed(2)}
@@ -87,7 +88,7 @@ export default function MobileKeyInsights({ data }: Props) {
         <div className="border-t border-slate-100 px-4 pb-4 pt-3 space-y-4">
           {/* 52-week range */}
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">52-Week Range</p>
+            <p className="text-[11px] font-[650] text-slate-500 mb-2">52-Week Range</p>
             <div className="relative h-2 rounded-full bg-slate-200">
               <div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-red-400/60 via-amber-400/60 to-emerald-400/60 w-full" />
               <div
@@ -105,7 +106,7 @@ export default function MobileKeyInsights({ data }: Props) {
           {/* Financial health grades */}
           {ratings && healthCats.some(({ key }) => !!ratings[key]) && (
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Financial Health</p>
+              <p className="text-[11px] font-[650] text-slate-500 mb-2">Financial Health</p>
               <div className="grid grid-cols-3 gap-2">
                 {healthCats.map(({ label, key }) => {
                   const cat = ratings[key]

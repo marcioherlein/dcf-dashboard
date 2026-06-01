@@ -79,7 +79,7 @@ function medianOf(arr: number[]): number {
 }
 
 function shortYear(label: string): string {
-  if (label === 'Now' || label === 'curr') return 'Now'
+  if (label === 'curr') return String(new Date().getFullYear()).slice(2)
   const m = label.match(/\d{4}/)
   return m ? m[0].slice(2) : label.slice(0, 4)
 }
@@ -153,7 +153,7 @@ function BarChart({
   const displayBars = hasSeries
     ? [
         ...historical.map(p => ({ label: p.label, value: p.value, isCurr: false })),
-        ...(currPoint ? [{ label: 'Now', value: currPoint.value, isCurr: true }] : []),
+        ...(currPoint ? [{ label: String(new Date().getFullYear()), value: currPoint.value, isCurr: true }] : []),
       ]
     : []
 
@@ -176,12 +176,28 @@ function BarChart({
   const zeroY  = toY(Math.max(yMin, Math.min(yMax, 0)))
   const inputY = Math.max(BC_MT, Math.min(BC_MT + BC_CH, toY(inputVal)))
 
-  // Offset the input label down if it would collide with a reference line label
-  const inputLabelCollides = referenceLines.some(rl => {
-    const ry = Math.max(BC_MT, Math.min(BC_MT + BC_CH, toY(rl.value)))
-    return Math.abs((ry - 2) - (inputY - 2.5)) < 10
-  })
-  const inputTextY = inputLabelCollides ? inputY + 10 : inputY - 2.5
+  // Cascade ALL right-edge labels so none overlap (sort by natural Y, push down if too close)
+  const MIN_LABEL_GAP = 11
+  type LabelEntry = { naturalY: number; finalY: number; isInput: boolean; rlIdx: number }
+  const rightLabels: LabelEntry[] = [
+    ...referenceLines.map((rl, i) => {
+      const ry = Math.max(BC_MT, Math.min(BC_MT + BC_CH, toY(rl.value)))
+      return { naturalY: ry - 2, finalY: ry - 2, isInput: false, rlIdx: i }
+    }),
+    { naturalY: inputY - 2.5, finalY: inputY - 2.5, isInput: true, rlIdx: -1 },
+  ]
+  rightLabels.sort((a, b) => a.naturalY - b.naturalY)
+  for (let i = 1; i < rightLabels.length; i++) {
+    if (rightLabels[i].finalY - rightLabels[i - 1].finalY < MIN_LABEL_GAP) {
+      rightLabels[i].finalY = rightLabels[i - 1].finalY + MIN_LABEL_GAP
+    }
+  }
+  const rlFinalY = new Map<number, number>()
+  let inputFinalY = inputY - 2.5
+  for (const l of rightLabels) {
+    if (l.isInput) inputFinalY = l.finalY
+    else rlFinalY.set(l.rlIdx, l.finalY)
+  }
 
   const n     = displayBars.length
   const slotW = n > 0 ? BC_CW / n : BC_CW
@@ -247,7 +263,7 @@ function BarChart({
               stroke={rl.color} strokeWidth="1" strokeDasharray={rl.dash}
             />
             <text
-              x={BC_ML + BC_CW - 2} y={refY - 2}
+              x={BC_ML + BC_CW - 2} y={rlFinalY.get(i) ?? refY - 2}
               textAnchor="end" fontSize="7.5" fill={rl.color}
               fontWeight="600" fontFamily="sans-serif"
             >
@@ -264,7 +280,7 @@ function BarChart({
         stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="4 3"
       />
       <text
-        x={BC_ML + BC_CW - 2} y={inputTextY}
+        x={BC_ML + BC_CW - 2} y={inputFinalY}
         textAnchor="end" fontSize="9" fill="#b45309"
         fontWeight="600" fontFamily="sans-serif"
       >

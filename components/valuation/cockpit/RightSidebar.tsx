@@ -59,6 +59,9 @@ function RangeBar({
   const max   = Math.max(...vals)
   const range = max - min
 
+  const priceAbove = currentPrice > max
+  const priceBelow = currentPrice < min
+
   const blendedPct = blendedFairValue != null && range > 0
     ? Math.max(3, Math.min(97, ((blendedFairValue - min) / range) * 100)) : null
   const currentPct = range > 0
@@ -71,7 +74,7 @@ function RangeBar({
         <span>{fmtPrice(max, currency)}</span>
       </div>
       <div className="relative h-3 bg-[#F1F5F9] rounded-full" aria-hidden="true">
-        {currentPct != null && (
+        {currentPct != null && !priceAbove && !priceBelow && (
           <div
             className="absolute top-0 h-full w-[2px] bg-[#94A3B8] rounded-full"
             style={{ left: `${currentPct}%`, transform: 'translateX(-50%)' }}
@@ -83,9 +86,21 @@ function RangeBar({
             style={{ left: `${blendedPct}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
           />
         )}
+        {priceAbove && (
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full pl-1.5 flex items-center gap-0.5">
+            <span className="text-[10px] text-[#94A3B8]">▶</span>
+          </div>
+        )}
+        {priceBelow && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full pr-1.5 flex items-center gap-0.5">
+            <span className="text-[10px] text-[#94A3B8]">◀</span>
+          </div>
+        )}
       </div>
       <p className="text-[11px] text-[#64748B] mt-1 tabular-nums">
         Current {fmtPrice(currentPrice, currency)}
+        {priceAbove && <span className="text-[10px] text-[#94A3B8] ml-1">· above model range</span>}
+        {priceBelow && <span className="text-[10px] text-[#94A3B8] ml-1">· below model range</span>}
       </p>
     </div>
   )

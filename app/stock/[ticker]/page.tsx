@@ -422,7 +422,7 @@ function StockPageBody() {
           <>
             <div className="min-w-0">
             {/* Mobile-only collapsible quick insights — hidden on desktop where sidebar shows */}
-            <MobileKeyInsights data={data} />
+            <MobileKeyInsights data={data} hideBlendedFV={activeTab === 'valuation'} />
             <AnimatePresence mode="wait">
               {/* ── Overview tab ── */}
               {activeTab === 'overview' && (
