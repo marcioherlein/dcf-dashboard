@@ -24,6 +24,7 @@ interface ModellingWorkspaceProps {
   ticker: string
   statementsData?: StatementsDataLike | null
   onDerivedFVChange?: (fv: number | null) => void
+  cockpitWacc?: number
 }
 
 // Derive ΔNWC from balance sheet: NWC = (currentAssets - cash) - currentLiabilities
@@ -135,7 +136,192 @@ function buildDisplayRows(
   })
 }
 
-export default function ModellingWorkspace({ apiData, ticker, statementsData, onDerivedFVChange }: ModellingWorkspaceProps) {
+// ── Modelling Approach panel ──────────────────────────────────────────────────
+
+interface ApproachProps {
+  isLfcf: boolean
+  onModeChange: (v: boolean) => void
+  terminalMethod: 'perpetuity' | 'multiple'
+  onTerminalMethodChange: (v: 'perpetuity' | 'multiple') => void
+  wacc: number
+  waccOverride: number | null
+  cockpitWacc: number | undefined
+  onWaccChange: (pct: number) => void
+  growthMode: 'analyst' | 'cagr' | 'manual'
+  onGrowthModeChange: (v: 'analyst' | 'cagr' | 'manual') => void
+  flatCagrPct: number | null
+  baseCagrPct: number
+  onFlatCagrChange: (v: number) => void
+  hasOverrides: boolean
+  onResetAll: () => void
+}
+
+function ModellingApproach({
+  isLfcf, onModeChange,
+  terminalMethod, onTerminalMethodChange,
+  wacc, cockpitWacc, onWaccChange,
+  growthMode, onGrowthModeChange,
+  flatCagrPct, baseCagrPct, onFlatCagrChange,
+  hasOverrides, onResetAll,
+}: ApproachProps) {
+  const waccPct = wacc * 100
+  const cockpitDiverged = cockpitWacc != null && Math.abs(wacc - cockpitWacc) > 0.001
+  const displayCagrPct = flatCagrPct ?? baseCagrPct
+
+  const selectCls = "bg-[#0d1829] text-[12px] font-[600] text-white/80 rounded-lg px-2.5 py-1.5 border border-white/[0.12] focus:outline-none focus:border-blue-500/50 cursor-pointer w-full appearance-none"
+
+  return (
+    <div className="px-5 pt-5 pb-4 border-b border-white/[0.08]">
+      <div className="flex items-start justify-between mb-4 gap-3">
+        <div>
+          <p className="text-[11px] font-[700] text-white/50 uppercase tracking-widest">Modelling Approach</p>
+          <p className="text-[10px] text-white/25 mt-0.5">
+            Projection engine controls — independent from the valuation cockpit assumptions above.
+          </p>
+        </div>
+        {hasOverrides && (
+          <button
+            onClick={onResetAll}
+            className="shrink-0 text-[10px] text-white/30 hover:text-red-400 transition-colors px-2.5 py-1 rounded-md border border-white/[0.1] hover:border-red-400/30"
+          >
+            Reset all
+          </button>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+
+        {/* Cash Flow Mode */}
+        <div className="bg-white/[0.04] rounded-xl p-3 flex flex-col gap-2">
+          <p className="text-[9px] font-[700] text-white/40 uppercase tracking-widest">Cash Flow</p>
+          <select
+            value={isLfcf ? 'lfcf' : 'ufcf'}
+            onChange={e => onModeChange(e.target.value === 'lfcf')}
+            className={selectCls}
+          >
+            <option value="ufcf">UFCF — Enterprise</option>
+            <option value="lfcf">LFCF — Equity</option>
+          </select>
+          <p className="text-[9px] text-white/30 leading-relaxed">
+            {isLfcf
+              ? 'Cash after debt payments. Discounted by cost of equity — no bridge needed.'
+              : 'Cash before interest. Discounted by WACC. Cash added, debt subtracted at end.'}
+          </p>
+        </div>
+
+        {/* Terminal Value */}
+        <div className="bg-white/[0.04] rounded-xl p-3 flex flex-col gap-2">
+          <p className="text-[9px] font-[700] text-white/40 uppercase tracking-widest">Terminal Value</p>
+          <select
+            value={terminalMethod}
+            onChange={e => onTerminalMethodChange(e.target.value as 'perpetuity' | 'multiple')}
+            className={selectCls}
+          >
+            <option value="multiple">Exit Multiple</option>
+            <option value="perpetuity">Perpetuity Growth</option>
+          </select>
+          <p className="text-[9px] text-white/30 leading-relaxed">
+            {terminalMethod === 'multiple'
+              ? 'Company is sold at an EV/EBITDA multiple after the projection period.'
+              : 'Business generates cash at the terminal growth rate indefinitely.'}
+          </p>
+        </div>
+
+        {/* Discount Rate */}
+        <div className="bg-white/[0.04] rounded-xl p-3 flex flex-col gap-2">
+          <p className="text-[9px] font-[700] text-white/40 uppercase tracking-widest">
+            {isLfcf ? 'Cost of Equity' : 'Discount Rate (WACC)'}
+          </p>
+          {!isLfcf ? (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => onWaccChange(Math.max(1, waccPct - 0.25))}
+                className="w-7 h-7 rounded-lg bg-white/[0.06] text-white/50 hover:bg-white/[0.12] hover:text-white/80 transition-colors text-base font-bold flex items-center justify-center"
+              >−</button>
+              <span className="flex-1 text-center text-[15px] font-[750] tabular-nums text-white/90">
+                {waccPct.toFixed(1)}%
+              </span>
+              <button
+                onClick={() => onWaccChange(Math.min(30, waccPct + 0.25))}
+                className="w-7 h-7 rounded-lg bg-white/[0.06] text-white/50 hover:bg-white/[0.12] hover:text-white/80 transition-colors text-base font-bold flex items-center justify-center"
+              >+</button>
+            </div>
+          ) : (
+            <p className="text-[15px] font-[750] tabular-nums text-white/70 px-1">
+              {waccPct.toFixed(1)}%
+              <span className="text-[10px] text-white/30 ml-1 font-[500]">CAPM</span>
+            </p>
+          )}
+          <div className="text-[9px] leading-relaxed">
+            {!cockpitDiverged ? (
+              <span className="text-emerald-400/80">● Linked to cockpit</span>
+            ) : (
+              <span className="text-amber-400/90">
+                ⚠ Cockpit uses {(cockpitWacc! * 100).toFixed(1)}%
+                <button
+                  onClick={() => onWaccChange(cockpitWacc! * 100)}
+                  className="ml-1.5 underline hover:no-underline"
+                >
+                  Sync
+                </button>
+              </span>
+            )}
+          </div>
+          <p className="text-[9px] text-white/25 leading-relaxed">
+            Required return for investors. Higher rate → lower valuation.
+          </p>
+        </div>
+
+        {/* Revenue Growth */}
+        <div className="bg-white/[0.04] rounded-xl p-3 flex flex-col gap-2">
+          <p className="text-[9px] font-[700] text-white/40 uppercase tracking-widest">Revenue Growth</p>
+          <select
+            value={growthMode}
+            onChange={e => onGrowthModeChange(e.target.value as typeof growthMode)}
+            className={selectCls}
+          >
+            <option value="analyst">Analyst blend</option>
+            <option value="cagr">Flat CAGR</option>
+            <option value="manual">Manual (per-year)</option>
+          </select>
+          {growthMode === 'cagr' && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] text-white/40 shrink-0">CAGR</span>
+              <input
+                type="number"
+                step={0.5}
+                min={-20}
+                max={100}
+                value={displayCagrPct.toFixed(1)}
+                onChange={e => {
+                  const v = parseFloat(e.target.value)
+                  if (!isNaN(v)) onFlatCagrChange(v)
+                }}
+                className="flex-1 min-w-0 bg-[#0d1829] text-[12px] font-[600] text-white/80 rounded-lg px-2 py-1 border border-white/[0.12] focus:outline-none focus:border-blue-500/50 tabular-nums"
+              />
+              <span className="text-[9px] text-white/40 shrink-0">%/yr</span>
+            </div>
+          )}
+          <p className="text-[9px] text-white/30 leading-relaxed">
+            {growthMode === 'analyst'
+              ? 'Blends analyst consensus with historical CAGR weighted by company type.'
+              : growthMode === 'cagr'
+                ? 'Applies the same growth rate every projection year from last historical base.'
+                : 'Click any revenue cell in the table to override it for that year.'}
+          </p>
+        </div>
+      </div>
+
+      {growthMode === 'manual' && (
+        <p className="mt-3 text-[10px] text-blue-400/70 bg-blue-500/[0.1] rounded-lg px-3 py-2 border border-blue-500/20">
+          Edit mode active — click any revenue cell in the forecast table to set that year&apos;s value directly.
+        </p>
+      )}
+    </div>
+  )
+}
+
+export default function ModellingWorkspace({ apiData, ticker, statementsData, onDerivedFVChange, cockpitWacc }: ModellingWorkspaceProps) {
   // Overridable assumptions
   const [waccOverride, setWaccOverride] = useState<number | null>(null)
   const [terminalGOverride, setTerminalGOverride] = useState<number | null>(null)
@@ -146,6 +332,10 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
 
   // Levered/Unlevered toggle (mirrors ForecastTable mode)
   const [isLfcf, setIsLfcf] = useState(false)
+
+  // Modelling approach controls
+  const [growthMode, setGrowthMode] = useState<'analyst' | 'cagr' | 'manual'>('analyst')
+  const [flatCagrPct, setFlatCagrPct] = useState<number | null>(null)
 
   const baseInput: ModellingInput = useMemo(
     () => normalizeModellingInputs(ticker, apiData, statementsData),
@@ -214,12 +404,18 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
       ebit: number | null; ebitda: number | null; capex: number | null
       nwc: number | null; dnaFromCF: number | null; freeCashFlow: number | null
     }> = []
+    const lastHistRev = baseInput.rows.filter(r => !r.isProjected).at(-1)?.revenue ?? null
+    let projCount = 0
     for (let i = 0; i < baseInput.rows.length; i++) {
       const r  = baseInput.rows[i]
       const ov = rowOverrides[r.year] ?? {}
+      if (r.isProjected) projCount++
       let revenue: number | null
       if (!r.isProjected || ov.revenue != null) {
         revenue = ov.revenue ?? r.revenue
+      } else if (growthMode === 'cagr' && lastHistRev != null) {
+        const effectiveCagr = (flatCagrPct ?? (baseInput.cagr * 100)) / 100
+        revenue = lastHistRev * Math.pow(1 + effectiveCagr, projCount)
       } else {
         const prevBuilt   = result[i - 1]?.revenue ?? null
         const prevBase    = baseInput.rows[i - 1]?.revenue ?? null
@@ -242,7 +438,7 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
       })
     }
     return result
-  }, [baseInput, rowOverrides])
+  }, [baseInput, rowOverrides, growthMode, flatCagrPct])
 
   const ufcfRows = useMemo(
     () => computeUFCFRows(ufcfInputRows, taxRate, wacc),
@@ -257,10 +453,13 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
       capex: number | null; nwc: number | null; netDebtRepayment: number | null
       dnaFromCF: number | null
     }> = []
+    const lastHistRev = baseInput.rows.filter(r => !r.isProjected).at(-1)?.revenue ?? null
+    let projCount = 0
     for (let i = 0; i < baseInput.rows.length; i++) {
       const r  = baseInput.rows[i]
       const ov = rowOverrides[r.year] ?? {}
       const prevR = i > 0 ? baseInput.rows[i - 1] : null
+      if (r.isProjected) projCount++
       // Use long-term debt change as net debt repayment to avoid buyback contamination.
       const baseNetDebtRepayment = (r.longTermDebt != null && prevR?.longTermDebt != null)
         ? prevR.longTermDebt - r.longTermDebt
@@ -268,6 +467,9 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
       let revenue: number | null
       if (!r.isProjected || ov.revenue != null) {
         revenue = ov.revenue ?? r.revenue
+      } else if (growthMode === 'cagr' && lastHistRev != null) {
+        const effectiveCagr = (flatCagrPct ?? (baseInput.cagr * 100)) / 100
+        revenue = lastHistRev * Math.pow(1 + effectiveCagr, projCount)
       } else {
         const prevBuilt   = result[i - 1]?.revenue ?? null
         const prevBase    = baseInput.rows[i - 1]?.revenue ?? null
@@ -291,7 +493,7 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
       })
     }
     return result
-  }, [baseInput, rowOverrides])
+  }, [baseInput, rowOverrides, growthMode, flatCagrPct])
 
   const lfcfRows = useMemo(
     () => computeLFCFRows(lfcfInputRows, baseInput.costOfEquity),
@@ -406,6 +608,17 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
     setRowOverrides(prev => ({ ...prev, [year]: { ...prev[year], [field]: value } }))
   }, [])
 
+  function handleResetAll() {
+    setWaccOverride(null)
+    setTerminalGOverride(null)
+    setExitMultipleOverride(null)
+    setTerminalMethod('multiple')
+    setIsLfcf(false)
+    setRowOverrides({})
+    setGrowthMode('analyst')
+    setFlatCagrPct(null)
+  }
+
   // Fair value: Damodaran four-model blend of UFCF and LFCF × both terminal methods.
   // This replaces the previous single-method snapshot so the Core DCF Result reflects
   // the average across all four variants, weighted by company type.
@@ -501,6 +714,26 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
           <span className="opacity-60">({delta.amount >= 0 ? '+' : ''}{(delta.pct * 100).toFixed(1)}%)</span>
         </div>
       )}
+      <ModellingApproach
+        isLfcf={isLfcf}
+        onModeChange={setIsLfcf}
+        terminalMethod={terminalMethod}
+        onTerminalMethodChange={setTerminalMethod}
+        wacc={wacc}
+        waccOverride={waccOverride}
+        cockpitWacc={cockpitWacc}
+        onWaccChange={(pct) => setWaccOverride(pct / 100)}
+        growthMode={growthMode}
+        onGrowthModeChange={setGrowthMode}
+        flatCagrPct={flatCagrPct}
+        baseCagrPct={baseInput.cagr * 100}
+        onFlatCagrChange={setFlatCagrPct}
+        hasOverrides={
+          waccOverride !== null || terminalMethod !== 'multiple' || isLfcf ||
+          growthMode !== 'analyst' || flatCagrPct !== null || Object.keys(rowOverrides).length > 0
+        }
+        onResetAll={handleResetAll}
+      />
       <ForecastTable
         rows={displayRows}
         waccData={waccData}

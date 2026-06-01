@@ -13,6 +13,7 @@ import { getIndustryMultiples } from '@/lib/dcf/calculateMultiples'
 import SummaryCards from './cockpit/SummaryCards'
 import GuidanceStrip from './cockpit/GuidanceStrip'
 import QualityPanel from './cockpit/QualityPanel'
+import CrossCheckStrip from './cockpit/CrossCheckStrip'
 import ValueInvestingPanel from './cockpit/ValueInvestingPanel'
 import FairValueChart from './cockpit/FairValueChart'
 import AssumptionsPanel, { type SparkPoint } from './cockpit/AssumptionsPanel'
@@ -21,8 +22,10 @@ import ValuationMethodCards from './cockpit/ValuationMethodCards'
 import ModelDivergencePanel from './cockpit/ModelDivergencePanel'
 import RightSidebar from './cockpit/RightSidebar'
 import HistoricalMultiplesChart from './cockpit/HistoricalMultiplesChart'
+import SensitivityMatrix from './SensitivityMatrix'
 import SaveToWatchlistDialog from '@/components/watchlist/SaveToWatchlistDialog'
 import type { WatchlistSavePayload } from '@/components/watchlist/SaveToWatchlistDialog'
+import { fmtPrice } from '@/lib/formatters'
 
 const ModellingWorkspace = dynamic(
   () => import('@/components/modelling/ModellingWorkspace'),
@@ -143,6 +146,15 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
     return result
   }, [assumptions, snapshot, output.blendedFairValue])
 
+  // Auto-select top-2 sensitivity drivers for SensitivityMatrix default axes
+  const [defaultAxisY, defaultAxisX] = useMemo(() => {
+    const AXIS_KEYS = ['cagr', 'wacc', 'netMargin', 'exitPE', 'exitMultiple', 'revenueMultiple'] as const
+    const ranked = AXIS_KEYS
+      .map(k => ({ k, abs: Math.abs(sensitivity[k] ?? 0) }))
+      .sort((a, b) => b.abs - a.abs)
+    return [ranked[0]?.k ?? 'cagr', ranked[1]?.k ?? 'wacc'] as [keyof ValuationAssumptions, keyof ValuationAssumptions]
+  }, [sensitivity])
+
   const currency     = apiData.quote?.currency ?? 'USD'
   const currentPrice = apiData.quote?.price ?? 0
   const changePct    = apiData.quote?.changePct ?? null
@@ -172,6 +184,17 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
       output.blendedFairValue
     )
   }, [output.methods, output.blendedFairValue])
+
+  // CrossCheckStrip data
+  const fcfYield = useMemo(() => {
+    const marketCapRaw: number = apiData.quote?.marketCap ?? 0
+    if (marketCapRaw <= 0 || snapshot.baseFCF == null) return null
+    // baseFCF is in $M; marketCap is in raw $
+    return (snapshot.baseFCF * 1e6) / marketCapRaw
+  }, [apiData.quote?.marketCap, snapshot.baseFCF])
+
+  const rfRate: number = apiData.wacc?.inputs?.rfRate ?? 0.045
+  const capitalIntensityLabel: string | null = valueInvestingData.ownerEarnings.capitalIntensityLabel ?? null
 
   const savePayload: WatchlistSavePayload = useMemo(() => ({
     ticker,
@@ -283,6 +306,17 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
       {/* Collapsible guidance at top */}
       <GuidanceStrip />
 
+      {/* Cross-check strip: EPV floor, FCF yield, capital intensity */}
+      <CrossCheckStrip
+        epvPerShare={valueInvestingData.epv.epvPerShare}
+        growthPremiumPct={valueInvestingData.epv.growthPremiumPct}
+        fcfYield={fcfYield}
+        rfRate={rfRate}
+        capitalIntensityLabel={capitalIntensityLabel}
+        currency={currency}
+        currentPrice={currentPrice}
+      />
+
       {/* Quality overview: moat gauge, star rating, fair value range */}
       <QualityPanel
         roic={valueInvestingData.roic}
@@ -297,6 +331,18 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
         currency={currency}
         structuralRisk={valueInvestingData.structuralRiskDisclaimer}
         countryRisk={valueInvestingData.countryRiskDisclaimer}
+      />
+
+      {/* Sensitivity matrix — always visible, updates live with assumption changes */}
+      <SensitivityMatrix
+        assumptions={assumptions}
+        snapshot={effectiveSnapshot}
+        currentPrice={currentPrice}
+        currency={currency}
+        epvPerShare={valueInvestingData.epv.epvPerShare}
+        historicalData={historicalData}
+        defaultAxisY={defaultAxisY}
+        defaultAxisX={defaultAxisX}
       />
 
       {/* Workbench: assumptions (left, cause) + live output (right, effect) */}
@@ -400,6 +446,11 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
           <span className="text-sm font-[650] text-blue-600">
             Full DCF Model — Year-by-Year Projections
           </span>
+          {liveDcfFV != null && (
+            <span className="ml-1 text-[12px] font-[700] tabular-nums text-blue-500">
+              {fmtPrice(liveDcfFV, currency)}
+            </span>
+          )}
           <span className="ml-auto text-xs text-slate-400 hidden sm:inline">DCF-only estimate · distinct from top blended value</span>
         </summary>
         <div className="mt-2">
@@ -412,6 +463,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
             ticker={ticker}
             statementsData={statementsData}
             onDerivedFVChange={setLiveDcfFV}
+            cockpitWacc={assumptions.wacc}
           />
         </div>
       </details>
