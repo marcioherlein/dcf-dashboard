@@ -36,6 +36,7 @@ function buildDisplayRows(
   ufcfRows: UFCFRow[],
   lfcfRows: LFCFRow[],
   baseRows: ModellingRow[],
+  priorTtmRevenueM?: number | null,
 ): DisplayRow[] {
   let sumPvUfcf = 0
   let sumPvLfcf = 0
@@ -50,7 +51,12 @@ function buildDisplayRows(
     if (lfcf?.pvLfcf != null) sumPvLfcf += lfcf.pvLfcf
 
     const rev = ufcf.revenue
-    const prevRev = prevUfcf?.revenue ?? null
+    // For the TTM row, use the prior-TTM revenue as the comparison base so the
+    // displayed growth rate is a true rolling YoY (TTM vs TTM-1Y) rather than
+    // the short-period step from the last annual period (e.g. FY2025 → Q1 TTM).
+    const prevRev = (ufcf.year === 'TTM' && priorTtmRevenueM != null)
+      ? priorTtmRevenueM
+      : (prevUfcf?.revenue ?? null)
 
     const nwcDelta = ufcf.nwcDelta ?? null
 
@@ -335,8 +341,8 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
 
   // Build display rows
   const displayRows: DisplayRow[] = useMemo(
-    () => buildDisplayRows(ufcfRows, lfcfRows, baseInput.rows),
-    [ufcfRows, lfcfRows, baseInput.rows]
+    () => buildDisplayRows(ufcfRows, lfcfRows, baseInput.rows, baseInput.priorTtmRevenueM),
+    [ufcfRows, lfcfRows, baseInput.rows, baseInput.priorTtmRevenueM]
   )
 
   // WACC data

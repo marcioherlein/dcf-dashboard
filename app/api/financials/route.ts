@@ -733,10 +733,38 @@ export async function GET(req: NextRequest) {
     let baseYear: number
 
     if (useFmpForProjections) {
-      avgGrossMarginRatio = fmpIsSorted.reduce((s, r) => s + (r.revenue > 0 ? r.grossProfit / r.revenue : 0), 0) / fmpIsSorted.length
-      avgOpMarginRatio    = fmpIsSorted.reduce((s, r) => s + (r.revenue > 0 ? r.operatingIncome / r.revenue : 0), 0) / fmpIsSorted.length
-      avgEbitdaMarginRatio = fmpIsSorted.reduce((s, r) => s + (r.revenue > 0 ? r.ebitda / r.revenue : 0), 0) / fmpIsSorted.length
-      avgNetMarginRatio   = fmpIsSorted.reduce((s, r) => s + (r.revenue > 0 ? r.netIncome / r.revenue : 0), 0) / fmpIsSorted.length
+      // Recency-weighted margins: last 2 FMP annual years (20%/40%) + TTM from Yahoo financialData (40%).
+      // This anchors projections to current operating reality rather than the full 4-5 year avg,
+      // which can compress margins below TTM when earlier years had lower margins.
+      const fdRevTtm  = typeof fd.totalRevenue === 'number' && fd.totalRevenue > 0 ? fd.totalRevenue : null
+      const fdOpTtm   = typeof fd.ebit         === 'number' ? fd.ebit          : null
+      const fdGpTtm   = typeof fd.grossProfits === 'number' ? fd.grossProfits  : null
+      const fdNiTtm   = typeof fd.netIncomeToCommon === 'number' ? fd.netIncomeToCommon
+                        : (typeof fd.netIncome === 'number' ? fd.netIncome : null)
+      const fdEbTtm   = typeof fd.ebitda === 'number' ? fd.ebitda : null
+
+      const blendMargin = (
+        fmpFn: (r: typeof fmpIsSorted[0]) => number | null,
+        ttmVal: number | null,
+        fallbackFull = true,
+      ): number => {
+        const recent2 = fmpIsSorted.slice(-2)
+        const m0 = recent2[0] && recent2[0].revenue > 0 ? fmpFn(recent2[0]) : null
+        const m1 = recent2[1] && recent2[1].revenue > 0 ? fmpFn(recent2[1]) : null
+        const ttmM = fdRevTtm != null && ttmVal != null ? ttmVal / fdRevTtm : null
+
+        if (ttmM != null && m1 != null && m0 != null) return m0 * 0.20 + m1 * 0.40 + ttmM * 0.40
+        if (ttmM != null && (m1 ?? m0) != null)       return (m1 ?? m0)! * 0.60 + ttmM * 0.40
+        if (ttmM != null)                             return ttmM
+        if (!fallbackFull) return 0
+        // No TTM available: fall back to full historical average
+        return fmpIsSorted.reduce((s, r) => s + (r.revenue > 0 ? (fmpFn(r) ?? 0) : 0), 0) / fmpIsSorted.length
+      }
+
+      avgGrossMarginRatio  = blendMargin(r => r.revenue > 0 ? r.grossProfit  / r.revenue : null, fdGpTtm)
+      avgOpMarginRatio     = blendMargin(r => r.revenue > 0 ? r.operatingIncome / r.revenue : null, fdOpTtm)
+      avgEbitdaMarginRatio = blendMargin(r => r.revenue > 0 ? r.ebitda        / r.revenue : null, fdEbTtm)
+      avgNetMarginRatio    = blendMargin(r => r.revenue > 0 ? r.netIncome     / r.revenue : null, fdNiTtm)
       latestRevM = fmpIsSorted[fmpIsSorted.length - 1].revenue / 1e6 * fxRate
       baseYear   = parseInt(fmpIsSorted[fmpIsSorted.length - 1].fiscalYear)
     } else {

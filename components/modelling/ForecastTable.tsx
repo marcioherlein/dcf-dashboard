@@ -156,12 +156,14 @@ interface GrowthEditCellProps {
   onEdit: (year: string, field: string, value: number) => void
 }
 
-function GrowthEditCell({ growthPct, prevRevenue, year, isProjected, projectedIndex, onEdit }: GrowthEditCellProps) {
+function GrowthEditCell({ growthPct, prevRevenue, year, isProjected, onEdit }: GrowthEditCellProps) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
 
+  // All projected years show "Model" — the growth rate reflects the blended CAGR
+  // (historical + analyst + fundamental), not the raw analyst consensus alone.
+  // Actual analyst FY+1/FY+2 estimates are shown in the header chip section.
   const canEdit = isProjected && prevRevenue != null
-  const isAnalyst = projectedIndex <= 1
 
   const startEdit = () => {
     if (!canEdit) return
@@ -231,9 +233,9 @@ function GrowthEditCell({ growthPct, prevRevenue, year, isProjected, projectedIn
         </div>
         <span className={cn(
           'text-[10px] px-1 py-px rounded font-semibold',
-          isAnalyst ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'
+          'bg-blue-500/20 text-blue-400'
         )}>
-          {isAnalyst ? 'Analyst' : 'Model'}
+          Model
         </span>
       </div>
     </td>
@@ -346,8 +348,6 @@ export default function ForecastTable({
 
   function colHeaderEl(row: DisplayRow) {
     const label = colHeader(row)
-    const projIdx = row.isProjected ? projectedRows.indexOf(row) : -1
-    const isAnalyst = row.isProjected && projIdx <= 1
 
     return (
       <th key={row.year} className={cn(
@@ -361,11 +361,8 @@ export default function ForecastTable({
         <div className="flex flex-col items-end gap-0.5">
           <span>{label}</span>
           {row.isProjected && (
-            <span className={cn(
-              'text-[10px] px-1 rounded font-semibold',
-              isAnalyst ? 'bg-amber-500/20 text-amber-400' : 'bg-white/8 text-slate-500'
-            )}>
-              {isAnalyst ? 'Analyst' : 'Model'}
+            <span className="text-[10px] px-1 rounded font-semibold bg-white/8 text-slate-500">
+              Model
             </span>
           )}
         </div>

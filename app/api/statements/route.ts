@@ -96,11 +96,31 @@ export async function GET(req: NextRequest) {
     const quarterlyCFRows = rowsToTable(quarterlyCF)
 
     // TTM = sum of last 4 quarterly flow periods; balance sheet = most recent quarter
-    const last4IS = [...quarterlyISRows].reverse().slice(0, 4)
-    const last4CF = [...quarterlyCFRows].reverse().slice(0, 4)
+    const reversedIS = [...quarterlyISRows].reverse()
+    const reversedCF = [...quarterlyCFRows].reverse()
+    const last4IS = reversedIS.slice(0, 4)
+    const last4CF = reversedCF.slice(0, 4)
     const ttmIS = last4IS.length > 0 ? { ...sumQuarters(last4IS, INCOME_FLOW_KEYS, INCOME_AVG_KEYS), endDate: 'TTM' } : null
     const ttmCF = last4CF.length > 0 ? { ...sumQuarters(last4CF, CF_FLOW_KEYS, []), endDate: 'TTM' } : null
     const ttmBS = quarterlyBSRows.length > 0 ? { ...quarterlyBSRows[quarterlyBSRows.length - 1] } : null
+
+    // Prior TTM = quarters 5-8 (the 4 quarters ending ~1 year before current TTM).
+    // Enables true rolling YoY growth: (currentTTM / priorTTM) - 1, regardless of
+    // where a stock is in its reporting cycle (FY-only, FY+Q1, FY+Q2, etc.).
+    const prior4IS = reversedIS.slice(4, 8)
+    const prior4CF = reversedCF.slice(4, 8)
+    const priorTtmIS = prior4IS.length >= 2
+      ? { ...sumQuarters(prior4IS, INCOME_FLOW_KEYS, INCOME_AVG_KEYS), endDate: 'PRIOR_TTM' }
+      : null
+    const priorTtmCF = prior4CF.length >= 2
+      ? { ...sumQuarters(prior4CF, CF_FLOW_KEYS, []), endDate: 'PRIOR_TTM' }
+      : null
+
+    const ttmMeta = {
+      latestQuarterEndDate: last4IS[0]?.endDate ?? null,
+      quarterCount: last4IS.length,
+      hasPriorTtm: prior4IS.length >= 2,
+    }
 
     // Detect reporting currency (may differ from trading currency for ADRs)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -114,6 +134,8 @@ export async function GET(req: NextRequest) {
       annual:    { incomeStatement: annualISRows,    balanceSheet: annualBSRows,    cashFlow: annualCFRows    },
       quarterly: { incomeStatement: quarterlyISRows, balanceSheet: quarterlyBSRows, cashFlow: quarterlyCFRows },
       ttm:       { incomeStatement: ttmIS,           balanceSheet: ttmBS,           cashFlow: ttmCF           },
+      priorTtm:  { incomeStatement: priorTtmIS,      cashFlow: priorTtmCF          },
+      ttmMeta,
     })
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 })

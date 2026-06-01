@@ -63,6 +63,9 @@ export interface ModellingInput {
   baseFCF: number | null
   // Financial statements (rows)
   rows: ModellingRow[]
+  // Prior TTM revenue for true rolling YoY growth (avoids the short-period artifact
+  // when TTM extends only 1-3 months beyond the last annual period)
+  priorTtmRevenueM: number | null
   // Context for warnings
   altmanZone: string | null
   beneishFlag: string | null
@@ -78,6 +81,8 @@ interface StatementsDataLike {
   annual:    { incomeStatement: AnyRow[]; balanceSheet: AnyRow[]; cashFlow: AnyRow[] }
   quarterly: { incomeStatement: AnyRow[]; balanceSheet: AnyRow[]; cashFlow: AnyRow[] }
   ttm:       { incomeStatement: AnyRow | null; balanceSheet: AnyRow | null; cashFlow: AnyRow | null }
+  priorTtm?: { incomeStatement: AnyRow | null; cashFlow: AnyRow | null }
+  ttmMeta?:  { latestQuarterEndDate: string | null; quarterCount: number; hasPriorTtm: boolean }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -202,6 +207,12 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
     currentPrice: apiData?.quote?.price ?? 0,
     baseFCF,
     rows,
+    priorTtmRevenueM: (() => {
+      const pis = statementsData?.priorTtm?.incomeStatement
+      if (!pis) return null
+      const raw = pis.totalRevenue ?? pis.operatingRevenue
+      return typeof raw === 'number' && isFinite(raw) ? raw / 1e6 * fxRate : null
+    })(),
     altmanZone: nullable(scores.altman?.zone),
     beneishFlag: nullable(scores.beneish?.flag),
     isFinancialSector,
@@ -224,21 +235,48 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
   const recent = annualRows.slice(-3)
   if (recent.length === 0) return []
 
+  const ttmRow = historicalRows.find(r => r.year === 'TTM')
+
+  // Helper: blend historical median (last 3 annual years) with TTM value.
+  // TTM gets 40% weight so projections don't drift far from current operating reality.
+  function blendWithTtm(
+    medianFn: () => number | null,
+    ttmFn: () => number | null,
+  ): number | null {
+    const hist = medianFn()
+    const ttm  = ttmFn()
+    if (hist != null && ttm != null) return hist * 0.60 + ttm * 0.40
+    return ttm ?? hist
+  }
+
   // D&A: prefer direct field; fall back to ebitda − ebit
-  const medianDnaPct = computeMedian(recent.map(r => {
+  const medianDnaPctHist = computeMedian(recent.map(r => {
     if (r.dna != null && r.revenue != null && r.revenue > 0) return r.dna / r.revenue
     if (r.ebitda != null && r.ebit != null && r.revenue != null && r.revenue > 0)
       return Math.max(0, r.ebitda - r.ebit) / r.revenue
     return null
   }))
+  const ttmDnaPct = ttmRow?.revenue && ttmRow.revenue > 0
+    ? (ttmRow.dna != null ? ttmRow.dna / ttmRow.revenue
+      : (ttmRow.ebitda != null && ttmRow.ebit != null
+          ? Math.max(0, ttmRow.ebitda - ttmRow.ebit) / ttmRow.revenue
+          : null))
+    : null
+  const medianDnaPct = blendWithTtm(() => medianDnaPctHist, () => ttmDnaPct)
 
   // EBITDA margin: separate median so we can set ebitda even when dna is unavailable
-  const medianEbitdaMargin = computeMedian(recent.map(r =>
+  const medianEbitdaMarginHist = computeMedian(recent.map(r =>
     r.ebitda != null && r.revenue != null && r.revenue > 0 ? r.ebitda / r.revenue : null))
+  const ttmEbitdaMargin = ttmRow?.revenue && ttmRow.revenue > 0 && ttmRow.ebitda != null
+    ? ttmRow.ebitda / ttmRow.revenue : null
+  const medianEbitdaMargin = blendWithTtm(() => medianEbitdaMarginHist, () => ttmEbitdaMargin)
 
   // EBIT margin: prefer direct ebit; fall back to ebitda − dna medians (avoids null NOPAT)
-  const medianEbitMarginDirect = computeMedian(recent.map(r =>
+  const medianEbitMarginDirectHist = computeMedian(recent.map(r =>
     r.ebit != null && r.revenue != null && r.revenue > 0 ? r.ebit / r.revenue : null))
+  const ttmEbitMargin = ttmRow?.revenue && ttmRow.revenue > 0 && ttmRow.ebit != null
+    ? ttmRow.ebit / ttmRow.revenue : null
+  const medianEbitMarginDirect = blendWithTtm(() => medianEbitMarginDirectHist, () => ttmEbitMargin)
   const medianEbitMargin: number | null =
     medianEbitMarginDirect ??
     (medianEbitdaMargin != null && medianDnaPct != null
@@ -246,16 +284,24 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
       : medianEbitdaMargin)
 
   // CapEx: default to 0 when historical data is absent (user can edit; 0 = conservative/asset-light)
-  const medianCapexPct = computeMedian(recent.map(r =>
+  const medianCapexPctHist = computeMedian(recent.map(r =>
     r.capex != null && r.revenue != null && r.revenue > 0 ? Math.abs(r.capex) / r.revenue : null)) ?? 0
+  const ttmCapexPct = ttmRow?.revenue && ttmRow.revenue > 0 && ttmRow.capex != null
+    ? Math.abs(ttmRow.capex) / ttmRow.revenue : null
+  const medianCapexPct = ttmCapexPct != null
+    ? medianCapexPctHist * 0.60 + ttmCapexPct * 0.40
+    : medianCapexPctHist
 
-  const medianNetMargin = computeMedian(recent.map(r =>
+  const medianNetMarginHist = computeMedian(recent.map(r =>
     r.netIncome != null && r.revenue != null && r.revenue > 0 ? r.netIncome / r.revenue : null))
+  const ttmNetMargin = ttmRow?.revenue && ttmRow.revenue > 0 && ttmRow.netIncome != null
+    ? ttmRow.netIncome / ttmRow.revenue : null
+  const medianNetMargin = blendWithTtm(() => medianNetMarginHist, () => ttmNetMargin)
+
   const medianTaxRate = computeMedian(recent.map(r => r.taxRate ?? null))
   const medianFcfMargin = computeMedian(recent.map(r =>
     r.freeCashFlow != null && r.revenue != null && r.revenue > 0 ? r.freeCashFlow / r.revenue : null))
 
-  const ttmRow = historicalRows.find(r => r.year === 'TTM')
   const lastAnnualRow = annualRows[annualRows.length - 1]
   const baseRevenue = ttmRow?.revenue ?? lastAnnualRow?.revenue ?? null
   if (baseRevenue == null || baseRevenue <= 0) return []
