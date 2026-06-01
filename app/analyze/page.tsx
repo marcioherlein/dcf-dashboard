@@ -309,8 +309,6 @@ function SearchHero() {
 
 // ─── Stock Analysis Card ──────────────────────────────────────────────────────
 
-const ETF_LABEL: Record<string, string> = { SPY: 'S&P 500', QQQ: 'Nasdaq 100', DIA: 'Dow 30' }
-
 function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
   const up     = (q.changePct ?? 0) >= 0
   const reduced = useReducedMotion()
