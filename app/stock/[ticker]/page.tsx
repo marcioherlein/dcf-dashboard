@@ -10,7 +10,6 @@ import FinancialsSidebar from '@/components/stock/sidebar/FinancialsSidebar'
 import ValuationCockpit, { buildSnapshot, seedAssumptions } from '@/components/valuation/ValuationCockpit'
 import { computeCockpitOutput } from '@/lib/valuation/cockpit'
 import FinancialsHub from '@/components/stock/FinancialsHub'
-import MobileKeyInsights from '@/components/stock/MobileKeyInsights'
 
 import { LoginGateProvider } from '@/components/auth/LoginGateProvider'
 import AuthBanner from '@/components/auth/AuthBanner'
@@ -430,8 +429,6 @@ function StockPageBody() {
         {data && !loading && (
           <>
             <div className="min-w-0">
-            {/* Mobile-only collapsible quick insights — hidden on desktop where sidebar shows */}
-            <MobileKeyInsights data={data} hideBlendedFV={activeTab === 'valuation'} />
             <AnimatePresence mode="wait">
               {/* ── Overview tab ── */}
               {activeTab === 'overview' && (

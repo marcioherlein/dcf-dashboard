@@ -587,7 +587,7 @@ export default function AssumptionsPanel({
     <div className="bg-white rounded-[14px] border border-[#E6ECF5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden">
 
       {/* Header strip */}
-      <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-100">
+      <div className="flex items-center justify-between flex-wrap gap-2 px-4 py-3 border-b border-slate-100">
         <div className="flex items-center gap-2">
           <span className="text-[13px] font-bold text-slate-800">Assumptions</span>
           {dirtyCount > 0 && (
@@ -596,7 +596,7 @@ export default function AssumptionsPanel({
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Presets */}
           <div className="flex items-center gap-0.5 rounded-lg border border-slate-200 p-0.5 bg-white">
             {presets.map(p => (
