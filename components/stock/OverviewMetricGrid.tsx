@@ -218,7 +218,10 @@ function GrowthOutlookCard({ ratings, cagrAnalysis, panel }: { ratings: StockRat
         {hist != null && (
           <div>
             <div className="flex items-center gap-2 mb-1 min-w-0">
-              <span className="text-[12px] text-slate-600 w-20 sm:w-28 shrink-0">3Y Historical CAGR</span>
+              <span className="text-[12px] text-slate-600 w-20 sm:w-28 shrink-0 flex items-center gap-0.5">
+                3Y Historical CAGR
+                <InfoTooltip content="Raw 3-year revenue CAGR from reported financials. The valuation model uses a blended rate that applies a convergence discount toward long-run growth and a size cap for large-cap companies, so the model input may differ from this figure." />
+              </span>
               <MiniBar value={Math.abs(hist)} max={maxBar} color={hist >= 0 ? 'blue' : 'amber'} />
               <span className="text-[13px] font-semibold tabular-nums text-slate-700 w-12 text-right">{fmtPct(hist)}</span>
             </div>
@@ -311,9 +314,13 @@ function CashConversionCard({ businessProfile, statementsData, panel }: {
   const label = isGood ? 'Strong' : businessProfile.fcfMargin != null && businessProfile.fcfMargin > 0 ? 'Moderate' : 'Weak'
 
   const cashSentence = conversionRatio != null
-    ? conversionRatio >= 0.80 ? 'Earnings convert reliably to cash — high earnings quality signal.'
-    : conversionRatio >= 0.50 ? 'Moderate cash conversion — track working capital changes.'
-    : 'Low cash conversion — investigate accruals and earnings quality.'
+    ? conversionRatio > 2.0
+      ? 'FCF significantly exceeds net income — driven by non-cash charges (stock-based comp, D&A) and working-capital release. Normal for asset-light software and services businesses.'
+      : conversionRatio > 1.5
+        ? 'FCF exceeds net income — typically driven by non-cash charges and favorable working capital. Common in asset-light businesses.'
+        : conversionRatio >= 0.80 ? 'Earnings convert reliably to cash — high earnings quality signal.'
+        : conversionRatio >= 0.50 ? 'Moderate cash conversion — track working capital changes.'
+        : 'Low cash conversion — investigate accruals and earnings quality.'
     : businessProfile.fcfMargin != null && businessProfile.fcfMargin > 0
       ? 'Positive FCF generation — business is self-funding.'
       : 'Insufficient data to assess cash conversion quality.'
@@ -325,9 +332,9 @@ function CashConversionCard({ businessProfile, statementsData, panel }: {
         <MetricRow label="FCF Margin (TTM)" value={fmtPct(businessProfile.fcfMargin)} />
         <MetricRow
           label="FCF / Net Income"
-          value={conversionRatio != null ? `${(conversionRatio * 100).toFixed(0)}%` : '—'}
+          value={conversionRatio != null ? (conversionRatio > 3 ? '>300%' : `${(conversionRatio * 100).toFixed(0)}%`) : '—'}
           valueClass={conversionRatio != null ? (conversionRatio >= 0.8 ? 'text-emerald-600' : conversionRatio >= 0.5 ? 'text-amber-600' : 'text-red-500') : undefined}
-          tooltip="What share of reported earnings converts to real cash. >80% is a quality signal — it means profits are backed by cash, not just accounting entries."
+          tooltip="What share of reported earnings converts to real cash. >80% is a quality signal. Values above 100% are normal for asset-light businesses where non-cash charges (stock-based comp, D&A) and working-capital release push FCF above net income."
         />
       </div>
       <p className="text-[12px] text-slate-600 leading-snug mt-2">{cashSentence}</p>

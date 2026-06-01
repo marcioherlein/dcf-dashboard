@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { ValuationAssumptions } from '@/lib/valuation/cockpit'
+import { InfoTooltip } from '@/components/ui/info-tooltip'
 
 export interface SparkPoint {
   label: string
@@ -53,7 +54,7 @@ interface Field {
 
 const FIELDS: Field[] = [
   { key: 'wacc',            label: 'WACC',             unit: '%', min: 0.04,  max: 0.25,  step: 0.0025, typicalMin: 0.06, typicalMax: 0.15, methods: ['DCF'],        description: 'Discount rate reflecting business risk and cost of capital.' },
-  { key: 'cagr',            label: '5Y Revenue CAGR',  unit: '%', min: -0.05, max: 0.60,  step: 0.005,  typicalMin: 0.05, typicalMax: 0.25, methods: ['P/E', 'Rev'], description: 'Expected compounded revenue growth over next 5 years.' },
+  { key: 'cagr',            label: '5Y Revenue CAGR',  unit: '%', min: -0.05, max: 0.60,  step: 0.005,  typicalMin: 0.05, typicalMax: 0.25, methods: ['P/E', 'Rev'], description: 'Expected compounded revenue growth over next 5 years. Seeded from a blended rate that discounts the raw 3Y historical CAGR toward long-run growth and applies a size cap for large-cap companies — so it may be lower than the historical chart figure.' },
   { key: 'netMargin',       label: 'Exit Net Margin',  unit: '%', min: -0.20, max: 0.60,  step: 0.005,  typicalMin: 0.10, typicalMax: 0.30, methods: ['P/E'],        description: 'Net margin in steady-state year (terminal year).' },
   { key: 'exitPE',          label: 'Exit P/E (NTM)',   unit: 'x', min: 5,     max: 80,    step: 0.5,    typicalMin: 15,   typicalMax: 25,   methods: ['P/E'],        description: 'Price-to-earnings multiple applied in terminal year.', isExitMultiple: true },
   { key: 'exitMultiple',    label: 'EV/EBITDA (NTM)',  unit: 'x', min: 4,     max: 35,    step: 0.5,    typicalMin: 10,   typicalMax: 20,   methods: ['EBITDA'],     description: 'Enterprise value to EBITDA multiple.', isExitMultiple: true },
@@ -246,9 +247,11 @@ function BarChart({
             <rect x={barX} y={barY} width={barW} height={barH} fill={color} rx="2" fillOpacity={bar.isCurr ? 1 : 0.55}>
               <title>{shortYear(bar.label)}: {fmtVal(bar.value, unit)}</title>
             </rect>
-            <text x={cx} y={BC_H - 3} textAnchor="middle" fontSize="8" fill="#64748b" fontFamily="sans-serif">
-              {shortYear(bar.label)}
-            </text>
+            {slotW >= 18 && (
+              <text x={cx} y={BC_H - 3} textAnchor="middle" fontSize="8" fill="#64748b" fontFamily="sans-serif">
+                {shortYear(bar.label)}
+              </text>
+            )}
           </g>
         )
       })}
@@ -436,7 +439,10 @@ function AssumptionCard({
 
         {/* Header */}
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[12px] font-[650] text-slate-700">{field.label}</span>
+          <span className="text-[12px] font-[650] text-slate-700 flex items-center gap-1">
+            {field.label}
+            <InfoTooltip text={field.description} />
+          </span>
           <div className="flex items-center gap-1 shrink-0">
             {field.methods.map(m => (
               <span key={m} className={`text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${METHOD_CFG[m].tagBg} ${METHOD_CFG[m].tagText}`}>

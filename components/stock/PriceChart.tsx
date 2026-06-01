@@ -86,7 +86,7 @@ const MA_INDICATORS = [
 type MAKey = typeof MA_INDICATORS[number]['key']
 
 const VAL_LINES = [
-  { key: 'triangulatedFairValue' as const, label: 'Blended Estimate', color: '#8b5cf6' },
+  { key: 'triangulatedFairValue' as const, label: 'Cockpit Estimate', color: '#8b5cf6' },
   { key: 'analystTarget'         as const, label: 'Analyst Target',   color: '#f59e0b' },
   { key: 'userModelFairValue'    as const, label: 'Your Model',       color: '#10b981' },
 ]
@@ -343,10 +343,30 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
     for (const pl of priceLinesRef.current) { try { series.removePriceLine(pl) } catch { /* ignore */ } }
     priceLinesRef.current = []
     const levels: Record<string, number | null | undefined> = { triangulatedFairValue, analystTarget, userModelFairValue }
-    for (const vl of VAL_LINES) {
-      const v = levels[vl.key]
-      if (!v || v <= 0) continue
-      priceLinesRef.current.push(series.createPriceLine({ price: v, color: vl.color, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: vl.label }))
+
+    // Build active lines, sort by value descending (highest = highest priority for axis label)
+    const activeLines = VAL_LINES
+      .map(vl => ({ ...vl, value: levels[vl.key] }))
+      .filter((l): l is typeof l & { value: number } => !!(l.value && l.value > 0))
+    activeLines.sort((a, b) => b.value - a.value)
+
+    // Suppress axis label on lower-priority lines within 3% of a higher-priority line
+    const suppressed = new Set<number>()
+    for (let i = 0; i < activeLines.length; i++) {
+      if (suppressed.has(i)) continue
+      for (let j = i + 1; j < activeLines.length; j++) {
+        if (Math.abs(activeLines[i].value - activeLines[j].value) / activeLines[i].value < 0.03) {
+          suppressed.add(j)
+        }
+      }
+    }
+
+    for (let i = 0; i < activeLines.length; i++) {
+      const l = activeLines[i]
+      priceLinesRef.current.push(series.createPriceLine({
+        price: l.value, color: l.color, lineWidth: 1, lineStyle: LineStyle.Dashed,
+        axisLabelVisible: !suppressed.has(i), title: l.label,
+      }))
     }
   }, [triangulatedFairValue, analystTarget, userModelFairValue])
 

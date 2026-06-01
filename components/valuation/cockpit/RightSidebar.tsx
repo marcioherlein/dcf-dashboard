@@ -2,6 +2,7 @@
 
 import { fmtPrice } from '@/lib/formatters'
 import type { CockpitOutput, CockpitMethodResult } from '@/lib/valuation/cockpit'
+import { InfoTooltip } from '@/components/ui/info-tooltip'
 
 interface LastChange {
   label: string
@@ -15,9 +16,26 @@ interface Props {
   currentPrice: number
   currency: string
   ticker: string
+  companyType?: string
   onViewFullDCF?: () => void
   onSave?: () => void
   lastChange?: LastChange | null
+}
+
+const WEIGHT_LABELS: Record<string, string> = {
+  standard:  'Forward P/E 35% · EV/EBITDA 30% · Revenue 25% · Core DCF 10%',
+  growth:    'Forward P/E 25% · EV/EBITDA 25% · Revenue 35% · Core DCF 15%',
+  startup:   'Forward P/E 10% · EV/EBITDA 15% · Revenue 45% · Core DCF 30%',
+  financial: 'Forward P/E 45% · EV/EBITDA 5% · Revenue 15% · Core DCF 35%',
+  dividend:  'Forward P/E 35% · EV/EBITDA 25% · Revenue 15% · Core DCF 25%',
+  etf:       'Forward P/E 25% · EV/EBITDA 25% · Revenue 25% · Core DCF 25%',
+}
+
+function buildWeightExplanation(companyType?: string): string {
+  const type = companyType ?? 'standard'
+  const weights = WEIGHT_LABELS[type] ?? WEIGHT_LABELS.standard
+  const label = type.charAt(0).toUpperCase() + type.slice(1)
+  return `${label} profile: ${weights}. Unavailable methods are excluded and remaining weights are redistributed proportionally.`
 }
 
 const VERDICT_COLORS = {
@@ -144,7 +162,7 @@ function WeightBars({ methods }: { methods: CockpitMethodResult[] }) {
 }
 
 export default function RightSidebar({
-  output, currentPrice, currency, ticker: _ticker, onViewFullDCF, onSave, lastChange,
+  output, currentPrice, currency, ticker: _ticker, companyType, onViewFullDCF, onSave, lastChange,
 }: Props) {
   const vc  = VERDICT_COLORS[output.verdict]
   const ds  = DIVERGENCE_STYLE[output.divergence.level]
@@ -170,8 +188,9 @@ export default function RightSidebar({
           {output.verdict}
         </span>
 
-        <p className="text-[11px] text-[#64748B] mt-1">
+        <p className="text-[11px] text-[#64748B] mt-1 flex items-center gap-1">
           {convictionLabel} · {validCount} of {output.methods.length} models
+          <InfoTooltip text={buildWeightExplanation(companyType)} />
         </p>
       </div>
 

@@ -3,6 +3,7 @@
 import { TrendingUp, BarChart2, BarChart, Target } from 'lucide-react'
 import { fmtPrice } from '@/lib/formatters'
 import type { CockpitMethodResult } from '@/lib/valuation/cockpit'
+import InfoTooltip from '@/components/ui/InfoTooltip'
 
 interface Props {
   methods: CockpitMethodResult[]
@@ -137,8 +138,9 @@ export default function ValuationMethodCards({
                     {conf.label}
                   </span>
                 ) : (
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 bg-slate-100 border-slate-200 text-slate-400">
+                  <span className="flex items-center gap-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 bg-slate-100 border-slate-200 text-slate-400">
                     Unavailable
+                    <InfoTooltip content={m.errors[0] ?? 'Insufficient data to compute this model.'} />
                   </span>
                 )}
               </div>

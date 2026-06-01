@@ -335,6 +335,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
             currentPrice={currentPrice}
             currency={currency}
             ticker={ticker}
+            companyType={snapshot.companyType}
             onViewFullDCF={scrollToFullDCF}
             onSave={() => setSaveOpen(true)}
             lastChange={lastChange}

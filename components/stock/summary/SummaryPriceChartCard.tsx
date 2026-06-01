@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic'
 import { fmtPrice, fmtLargeCurrency } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
+import InfoTooltip from '@/components/ui/InfoTooltip'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -75,7 +76,10 @@ export default function SummaryPriceChartCard({
         <p className="text-[14px] font-[750] text-[#0F172A]">Price Chart</p>
         <div className="flex items-center gap-3 flex-wrap">
           <LegendItem color="#10b981" label="Price" />
-          <LegendItem color="#8b5cf6" dashed label="Fair Value" />
+          <div className="flex items-center gap-1.5">
+            <LegendItem color="#8b5cf6" dashed label="Cockpit Estimate" />
+            <InfoTooltip content="Blended fair value from four methods: Forward P/E, EV/EBITDA, Revenue Multiple, and Core DCF. Weights vary by company type." />
+          </div>
           <LegendItem color="#F59E0B" dashed label="Analyst Target" />
         </div>
       </div>
