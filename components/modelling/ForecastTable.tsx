@@ -421,7 +421,7 @@ export default function ForecastTable({
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.ebit)} row={r} />)}
       </tr>,
       <tr key="ebit-margin" className="hover:bg-white/4 border-b border-white/8">
-        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-8 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           EBIT Margin
         </td>
         {rows.map(r => (
@@ -451,7 +451,7 @@ export default function ForecastTable({
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.nopat)} row={r} bold />)}
       </tr>,
       <tr key="nopat-margin" className="hover:bg-white/4 border-b border-white/8">
-        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-8 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           NOPAT Margin
         </td>
         {rows.map(r => (
@@ -469,7 +469,7 @@ export default function ForecastTable({
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.dna)} row={r} />)}
       </tr>,
       <tr key="dna-pct" className="hover:bg-white/4">
-        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-8 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           D&amp;A / Revenue
         </td>
         {rows.map(r => (
@@ -490,7 +490,7 @@ export default function ForecastTable({
         ))}
       </tr>,
       <tr key="capex-pct" className="hover:bg-white/4">
-        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-8 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           Capex / Revenue
         </td>
         {rows.map(r => (
@@ -512,7 +512,7 @@ export default function ForecastTable({
         ))}
       </tr>,
       <tr key="nwcdelta-pct" className="hover:bg-white/4 border-b border-white/8">
-        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-8 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           Chg. NWC / Revenue
         </td>
         {rows.map(r => (
@@ -539,7 +539,7 @@ export default function ForecastTable({
         ))}
       </tr>,
       <tr key="ufcf-growth" className="hover:bg-white/4">
-        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-8 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           UFCF % Chg
         </td>
         {rows.map(r => (
@@ -579,7 +579,7 @@ export default function ForecastTable({
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.netIncome)} row={r} />)}
       </tr>,
       <tr key="net-margin" className="hover:bg-white/4 border-b border-white/8">
-        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-8 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           Net Margin
         </td>
         {rows.map(r => (
@@ -597,7 +597,7 @@ export default function ForecastTable({
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.dna)} row={r} />)}
       </tr>,
       <tr key="dna-pct" className="hover:bg-white/4">
-        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-8 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           D&amp;A / Revenue
         </td>
         {rows.map(r => (
@@ -618,7 +618,7 @@ export default function ForecastTable({
         ))}
       </tr>,
       <tr key="capex-pct" className="hover:bg-white/4">
-        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-8 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           Capex / Revenue
         </td>
         {rows.map(r => (
@@ -640,7 +640,7 @@ export default function ForecastTable({
         ))}
       </tr>,
       <tr key="nwcdelta-pct" className="hover:bg-white/4">
-        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-8 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           Chg. NWC / Revenue
         </td>
         {rows.map(r => (
@@ -659,7 +659,7 @@ export default function ForecastTable({
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.netDebtRepayment)} row={r} />)}
       </tr>,
       <tr key="netdebt-pct" className="hover:bg-white/4 border-b border-white/8">
-        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-8 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           Net Debt Repayment / Rev
         </td>
         {rows.map(r => (
@@ -685,7 +685,7 @@ export default function ForecastTable({
         ))}
       </tr>,
       <tr key="lfcf-growth" className="hover:bg-white/4">
-        <td className="sticky left-0 z-10 bg-[#080F1E] pl-6 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
+        <td className="sticky left-0 z-10 bg-[#080F1E] pl-8 pr-4 py-0.5 text-[11px] text-slate-500 whitespace-nowrap border-r border-white/8">
           LFCF % Chg
         </td>
         {rows.map(r => (
@@ -864,7 +864,7 @@ export default function ForecastTable({
                 onClick={() => onTerminalMethodChange(m)}
                 className={cn(
                   'px-4 py-2 text-[12px] font-semibold transition-colors min-h-[44px]',
-                  td.method === m ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-white/8'
+                  td.method === m ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-white/10'
                 )}
               >
                 {m === 'perpetuity' ? 'Perpetuity Growth' : 'Exit Multiple'}
@@ -1139,7 +1139,7 @@ export default function ForecastTable({
                 onClick={() => { setMode(m); onModeChange?.(m === 'lfcf') }}
                 className={cn(
                   'px-3 py-2 text-[12px] font-semibold transition-colors min-h-[44px]',
-                  mode === m ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-white/8 bg-transparent'
+                  mode === m ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-white/10 bg-transparent'
                 )}
               >
                 {m === 'ufcf' ? 'Unlevered' : 'Levered'}
