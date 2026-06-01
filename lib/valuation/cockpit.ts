@@ -536,17 +536,6 @@ export function computeCockpitOutput(
     ? Math.round(valid.reduce((s, m) => s + m.fairValue! * m.weight, 0) / totalWeight * 100) / 100
     : null
 
-  const upsidePct = blendedFairValue != null && currentPrice > 0
-    ? (blendedFairValue - currentPrice) / currentPrice
-    : null
-
-  let verdict: CockpitOutput['verdict'] = 'Insufficient Data'
-  if (upsidePct != null) {
-    if (upsidePct > 0.15) verdict = 'Undervalued'
-    else if (upsidePct < -0.15) verdict = 'Overvalued'
-    else verdict = 'Fairly Valued'
-  }
-
   // Reverse DCF for market-implied growth
   const safeTG = Math.min(Math.max(assumptions.terminalG, 0.005), assumptions.wacc - 0.02)
   const reverseDcf = computeReverseDCF({
@@ -584,12 +573,26 @@ export function computeCockpitOutput(
     bull: { ...rawScenarios.bull, fairValue: sortedBull },
   }
 
+  // After sort, the canonical fair value must align with the sorted base scenario.
+  // Without this, the "Blended Fair Value" card and the "Base Case" scenario card
+  // can show different numbers when the sort reorders the raw values.
+  const canonicalFV = sortedBase > 0 ? sortedBase : blendedFairValue
+  const canonicalUpside = canonicalFV != null && currentPrice > 0
+    ? (canonicalFV - currentPrice) / currentPrice
+    : null
+  let canonicalVerdict: CockpitOutput['verdict'] = 'Insufficient Data'
+  if (canonicalUpside != null) {
+    if (canonicalUpside > 0.15) canonicalVerdict = 'Undervalued'
+    else if (canonicalUpside < -0.15) canonicalVerdict = 'Overvalued'
+    else canonicalVerdict = 'Fairly Valued'
+  }
+
   return {
-    blendedFairValue,
+    blendedFairValue: canonicalFV,
     methods,
     scenarios,
-    verdict,
-    upsidePct,
+    verdict: canonicalVerdict,
+    upsidePct: canonicalUpside,
     marketImpliedGrowth: reverseDcf.impliedCAGR,
     marketImpliedText: reverseDcf.interpretationText,
     divergence,

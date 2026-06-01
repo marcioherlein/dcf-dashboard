@@ -111,12 +111,10 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
   } | null>(null)
   const [clampNote, setClampNote] = useState<string | null>(null)
 
-  // When ModellingWorkspace computes its derivedFV, override snapshot.fullDcfFairValue so
-  // the Core DCF card always matches the Full DCF Table's 4-model blended result exactly.
-  const effectiveSnapshot = useMemo(
-    () => liveDcfFV != null ? { ...snapshot, fullDcfFairValue: liveDcfFV } : snapshot,
-    [snapshot, liveDcfFV]
-  )
+  // Note: liveDcfFV is shown in the DCF section header but does NOT feed back into
+  // the cockpit blend. The blend uses the API pre-computed fullDcfFairValue so that
+  // the Overview and Valuation tabs always agree on the same base.
+  const effectiveSnapshot = snapshot
 
   const output = useMemo(
     () => computeCockpitOutput(assumptions, effectiveSnapshot),
