@@ -1,6 +1,7 @@
 'use client'
 
 import type { UncertaintyLevel, StarRatingResult } from '@/lib/valuation/valueInvestingAnalysis'
+import ScenarioRangeBar from '@/components/ui/ScenarioRangeBar'
 
 interface Props {
   roic: number | null
@@ -134,66 +135,6 @@ function MoatGauge({ roic, roicSpread, wacc }: { roic: number | null; roicSpread
   )
 }
 
-// ── Range Bar ─────────────────────────────────────────────────────────────────
-
-function RangeBar({
-  bear, blended, bull, currentPrice, currency,
-}: { bear: number | null; blended: number | null; bull: number | null; currentPrice: number; currency: string }) {
-  if (bear == null || blended == null || bull == null) return null
-
-  const lo = Math.min(bear, currentPrice, blended) * 0.85
-  const hi = Math.max(bull, currentPrice, blended) * 1.05
-  const span = hi - lo || 1
-
-  const toPos = (v: number) => Math.max(0, Math.min(100, ((v - lo) / span) * 100))
-
-  const bearPos    = toPos(bear)
-  const blendedPos = toPos(blended)
-  const bullPos    = toPos(bull)
-  const pricePos   = toPos(currentPrice)
-
-  const fmtShort = (v: number) => {
-    const sym = currency === 'USD' ? '$' : currency
-    return v >= 1000 ? `${sym}${(v / 1000).toFixed(1)}k` : `${sym}${v.toFixed(0)}`
-  }
-
-  return (
-    <div className="flex flex-col gap-2">
-      <p className="text-[10px] font-[600] text-slate-500">Fair Value Range</p>
-      <div className="relative h-2 bg-slate-100 rounded-full mx-1">
-        {/* Range fill */}
-        <div
-          className="absolute top-0 h-full bg-blue-100 rounded-full"
-          style={{ left: `${bearPos}%`, width: `${bullPos - bearPos}%` }}
-        />
-        {/* Bear */}
-        <div className="absolute w-1.5 h-1.5 rounded-full bg-red-400 top-1/2 -translate-y-1/2 -translate-x-1/2"
-          style={{ left: `${bearPos}%` }} />
-        {/* Blended */}
-        <div className="absolute w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-sm top-1/2 -translate-y-1/2 -translate-x-1/2"
-          style={{ left: `${blendedPos}%` }} />
-        {/* Bull */}
-        <div className="absolute w-1.5 h-1.5 rounded-full bg-emerald-400 top-1/2 -translate-y-1/2 -translate-x-1/2"
-          style={{ left: `${bullPos}%` }} />
-        {/* Current price tick */}
-        <div className="absolute w-0.5 h-4 bg-slate-500 top-1/2 -translate-y-1/2 -translate-x-1/2"
-          style={{ left: `${pricePos}%` }} />
-      </div>
-      <div className="flex items-center justify-between text-[9px] text-slate-500 px-1">
-        <span className="text-red-400 font-[600]">{fmtShort(bear)}</span>
-        <span className="text-blue-600 font-[700]">{fmtShort(blended)}</span>
-        <span className="text-emerald-500 font-[600]">{fmtShort(bull)}</span>
-      </div>
-      <div className="flex items-center gap-3 text-[9px] text-slate-500 px-1">
-        <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-red-400" /><span>Bear</span></div>
-        <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-500" /><span>Blended FV</span></div>
-        <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400" /><span>Bull</span></div>
-        <div className="flex items-center gap-1"><div className="w-0.5 h-3 bg-slate-500" /><span>Price</span></div>
-      </div>
-    </div>
-  )
-}
-
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function QualityPanel({
@@ -259,9 +200,10 @@ export default function QualityPanel({
 
         {/* Right: Range bar */}
         <div className="sm:pl-5">
-          <RangeBar
-            bear={bearFV} blended={blendedFV} bull={bullFV}
+          <ScenarioRangeBar
+            bear={bearFV} base={blendedFV} bull={bullFV}
             currentPrice={currentPrice} currency={currency}
+            label="Fair Value Range"
           />
         </div>
 

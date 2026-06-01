@@ -38,13 +38,14 @@ export default function GuidanceStrip() {
         className="w-full flex items-center gap-2 bg-white rounded-[14px] border border-[#E6ECF5] shadow-sm px-4 py-3 hover:bg-[#F8FAFC] transition-colors select-none flex-wrap text-left"
       >
         <span
+          aria-hidden="true"
           className={cn(
-            'text-[#94A3B8] text-xs transition-transform duration-200',
+            'text-[#64748B] text-xs transition-transform duration-200',
             open ? 'rotate-90' : ''
           )}
         >▶</span>
         <span className="text-[12px] font-[650] text-[#475569]">How to read this valuation</span>
-        <span className={cn('text-[11px] text-[#94A3B8] transition-opacity duration-150', open ? 'opacity-0' : 'opacity-100')}>
+        <span className={cn('text-[11px] text-[#64748B] transition-opacity duration-150', open ? 'opacity-0' : 'opacity-100')}>
           4-step guide ↓
         </span>
       </button>

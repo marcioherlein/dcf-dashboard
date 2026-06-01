@@ -52,8 +52,10 @@
     scroll-behavior: smooth;
   }
   /* Prevent iOS from auto-zooming into focused form inputs (requires >= 16px) */
-  input, select, textarea {
-    font-size: max(16px, 1em);
+  @media (max-width: 767px) {
+    input, select, textarea {
+      font-size: max(16px, 1em);
+    }
   }
 }
 

@@ -76,6 +76,7 @@ interface SummaryTabProps {
   // callbacks
   onViewValuation: () => void
   onViewRisks: () => void
+  onViewAssumptions: () => void
   analystRecommendation?: string
 }
 
@@ -89,7 +90,7 @@ export default function SummaryTab({
   wacc, terminalG, historicalCAGR, analystCAGR, isEmergingMarket,
   scenarios, ratings, scores, businessProfile, cagrAnalysis, statementsData,
   valuationMethods, quote, analystTargetMean, userModelFairValue,
-  onViewValuation, onViewRisks, analystRecommendation,
+  onViewValuation, onViewRisks, onViewAssumptions, analystRecommendation,
 }: SummaryTabProps) {
 
   const rdcfResult = useMemo(() => computeReverseDCF({
@@ -214,7 +215,7 @@ export default function SummaryTab({
         />
         <NextStepsCard
           onViewValuation={onViewValuation}
-          onViewAssumptions={onViewValuation}
+          onViewAssumptions={onViewAssumptions}
           onViewRisks={onViewRisks}
         />
       </div>

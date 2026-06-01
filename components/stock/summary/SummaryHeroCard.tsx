@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import { fmtPrice, fmtPct } from '@/lib/formatters'
+import ScenarioRangeBar from '@/components/ui/ScenarioRangeBar'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -124,72 +125,6 @@ function distillDriver(full: string): string {
   return out + '…'
 }
 
-// ─── Scenario range bar ───────────────────────────────────────────────────────
-
-function ScenarioRangeBar({
-  bear, base, bull, currentPrice, currency,
-}: {
-  bear: number; base: number; bull: number; currentPrice: number; currency: string
-}) {
-  const minV = Math.min(bear, currentPrice) * 0.96
-  const maxV = Math.max(bull, currentPrice) * 1.04
-  const span = maxV - minV
-
-  const pct = (v: number) => Math.max(1, Math.min(99, ((v - minV) / span) * 100))
-
-  const bearP  = pct(bear)
-  const baseP  = pct(base)
-  const bullP  = pct(bull)
-  const priceP = pct(currentPrice)
-
-  return (
-    <div>
-      <p className="text-[11px] text-[#64748B] mb-2.5">Scenario range</p>
-
-      {/* Bar */}
-      <div className="relative h-2 rounded-full bg-slate-200 mb-3">
-        {/* Filled range between bear and bull */}
-        <div
-          className="absolute h-full rounded-full bg-slate-300"
-          style={{ left: `${bearP}%`, right: `${100 - bullP}%` }}
-        />
-        {/* Bear dot */}
-        <div
-          className="absolute w-3 h-3 rounded-full bg-red-400 border-2 border-white shadow-sm"
-          style={{ left: `${bearP}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
-        />
-        {/* Base dot */}
-        <div
-          className="absolute w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-sm"
-          style={{ left: `${baseP}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
-        />
-        {/* Bull dot */}
-        <div
-          className="absolute w-3 h-3 rounded-full bg-emerald-400 border-2 border-white shadow-sm"
-          style={{ left: `${bullP}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
-        />
-        {/* Current price tick */}
-        <div
-          className="absolute w-0.5 h-4 bg-slate-500 rounded-full"
-          style={{ left: `${priceP}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
-        />
-      </div>
-
-      {/* Values */}
-      <div className="grid grid-cols-3 text-[11px] tabular-nums">
-        <span className="text-red-600 font-[650]">{fmtPrice(bear, currency)}</span>
-        <span className="text-blue-600 font-[650] text-center">{fmtPrice(base, currency)}</span>
-        <span className="text-emerald-600 font-[650] text-right">{fmtPrice(bull, currency)}</span>
-      </div>
-      <div className="grid grid-cols-3 text-[10px] text-slate-400 mt-0.5">
-        <span>Bear</span>
-        <span className="text-center">Base</span>
-        <span className="text-right">Bull</span>
-      </div>
-    </div>
-  )
-}
-
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function SummaryHeroCard({
@@ -224,10 +159,10 @@ export default function SummaryHeroCard({
 
         {/* ── Headline block ── */}
         <div className="flex flex-col gap-1.5">
-          <h1 className="text-[26px] sm:text-[30px] font-[800] text-[#0F172A] leading-tight tracking-tight [text-wrap:balance]">
+          <p className="text-[26px] sm:text-[30px] font-[800] text-[#0F172A] leading-tight tracking-tight [text-wrap:balance]">
             {ticker} looks{' '}
             <span className={verdict.wordClass}>{verdict.word}</span>
-          </h1>
+          </p>
           {confidence && (
             <span className={cn(
               'self-start text-[12px] font-[650] px-[10px] py-[4px] rounded-full border',
@@ -277,6 +212,7 @@ export default function SummaryHeroCard({
             bull={scenarios.bull.fairValue}
             currentPrice={price}
             currency={currency}
+            label="Scenario range"
           />
         )}
 

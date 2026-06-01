@@ -22,12 +22,27 @@ interface Props {
 
 export default function TabNav({ activeTab, onChange }: Props) {
   const reduced = useReducedMotion()
+  const tabIds = TABS.map(t => t.id)
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    const idx = tabIds.indexOf(activeTab)
+    let next = idx
+    if      (e.key === 'ArrowRight') { e.preventDefault(); next = (idx + 1) % tabIds.length }
+    else if (e.key === 'ArrowLeft')  { e.preventDefault(); next = (idx - 1 + tabIds.length) % tabIds.length }
+    else if (e.key === 'Home')       { e.preventDefault(); next = 0 }
+    else if (e.key === 'End')        { e.preventDefault(); next = tabIds.length - 1 }
+    else return
+    const nextId = tabIds[next]
+    onChange(nextId)
+    document.getElementById(`tab-${nextId}`)?.focus()
+  }
 
   return (
     <div
       role="tablist"
       aria-label="Stock sections"
       className="sticky top-[52px] z-20 glass-toolbar"
+      onKeyDown={handleKeyDown}
     >
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <div className="flex gap-0 overflow-x-auto scrollbar-hide -mb-px">
@@ -37,9 +52,11 @@ export default function TabNav({ activeTab, onChange }: Props) {
             return (
               <button
                 key={id}
+                id={`tab-${id}`}
                 role="tab"
                 aria-selected={active}
                 aria-controls={`tabpanel-${id}`}
+                tabIndex={active ? 0 : -1}
                 onClick={() => onChange(id)}
                 className={cn(
                   'relative flex items-center gap-1.5 px-4 py-3.5 whitespace-nowrap transition-colors border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',

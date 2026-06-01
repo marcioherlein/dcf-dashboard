@@ -27,7 +27,7 @@ const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
 
 // ─── Card shell ───────────────────────────────────────────────────────────────
 
-const CARD = 'bg-white border border-[#E6ECF5] rounded-[18px] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]'
+const CARD = 'bg-white border border-[#E6ECF5] rounded-[20px] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]'
 
 // ─── Legend item ──────────────────────────────────────────────────────────────
 

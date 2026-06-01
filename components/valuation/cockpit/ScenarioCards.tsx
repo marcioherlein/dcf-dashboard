@@ -78,9 +78,9 @@ export default function ScenarioCards({ scenarios, currentPrice, currency }: Pro
     <div className="bg-white rounded-[18px] border border-[#E6ECF5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] px-5 py-4">
       <div className="flex items-center justify-between mb-1">
         <p className="text-[12px] font-[650] text-[#475569]">Scenario Analysis</p>
-        <span className="text-[11px] text-[#94A3B8]">Blended estimate at stressed assumptions</span>
+        <span className="text-[11px] text-[#64748B]">Blended estimate at stressed assumptions</span>
       </div>
-      <p className="text-[11px] text-[#94A3B8] mb-3">All four methods re-run at each stress — same blend as Base.</p>
+      <p className="text-[11px] text-[#64748B] mb-3">All four methods re-run at each stress, same blend as Base.</p>
       <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-1 px-1 sm:grid sm:grid-cols-3 sm:overflow-visible sm:snap-none sm:pb-0 sm:mx-0 sm:px-0">
         <ScenarioCard
           label="Bear Case" description="If growth slows & margins compress"

@@ -301,7 +301,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
 
       {/* Workbench: assumptions (left, cause) + live output (right, effect) */}
       <div className="mt-2 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 items-start">
-        <div ref={assumptionsPanelRef} className="min-w-0">
+        <div ref={assumptionsPanelRef} id="assumptions-panel" className="min-w-0">
           {clampNote && (
             <p className="mb-2 text-[11px] text-[#D97706] bg-[#FFFBEB] border border-[#FDE68A] rounded-lg px-3 py-2">
               ⚠ {clampNote}

@@ -430,6 +430,7 @@ function StockPageBody() {
                   key="tab-overview"
                   id="tabpanel-overview"
                   role="tabpanel"
+                  aria-labelledby="tab-overview"
                   className="space-y-5 pt-5"
                   initial={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * 20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -483,12 +484,21 @@ function StockPageBody() {
                     analystRecommendation={data.analystRecommendation ?? ''}
                     onViewValuation={() => handleTabChange('valuation')}
                     onViewRisks={() => handleTabChange('risks')}
+                    onViewAssumptions={() => {
+                      handleTabChange('valuation')
+                      setTimeout(() => {
+                        document.getElementById('assumptions-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      }, 400)
+                    }}
                   />
                 </motion.div>
               )}
               {activeTab === 'valuation' && (
                 <motion.div
                   key="tab-valuation"
+                  id="tabpanel-valuation"
+                  role="tabpanel"
+                  aria-labelledby="tab-valuation"
                   className="space-y-4 pt-5"
                   initial={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * 20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -513,6 +523,9 @@ function StockPageBody() {
               {activeTab === 'financials' && (
                 <motion.div
                   key="tab-financials"
+                  id="tabpanel-financials"
+                  role="tabpanel"
+                  aria-labelledby="tab-financials"
                   className="space-y-4 pt-5"
                   initial={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * 20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -542,6 +555,9 @@ function StockPageBody() {
               {activeTab === 'risks' && (
                 <motion.div
                   key="tab-risks"
+                  id="tabpanel-risks"
+                  role="tabpanel"
+                  aria-labelledby="tab-risks"
                   className="space-y-4 pt-5"
                   initial={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * 20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -564,6 +580,9 @@ function StockPageBody() {
               {activeTab === 'news' && (
                 <motion.div
                   key="tab-news"
+                  id="tabpanel-news"
+                  role="tabpanel"
+                  aria-labelledby="tab-news"
                   className="space-y-4 pt-5"
                   initial={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * 20 }}
                   animate={{ opacity: 1, x: 0 }}

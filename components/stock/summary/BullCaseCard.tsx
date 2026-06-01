@@ -51,7 +51,7 @@ export default function BullCaseCard({
           <CheckCircle size={15} className="text-[#16A34A]" />
         </div>
         <p className="text-[14px] font-[750] text-[#0F172A]">
-          What Supports the Valuation
+          Supporting the Thesis
         </p>
       </div>
 
@@ -68,7 +68,7 @@ export default function BullCaseCard({
           ))}
         </ul>
       ) : (
-        <p className="text-[13px] text-[#94A3B8] italic">
+        <p className="text-[13px] text-[#64748B] italic">
           Support factors unavailable for this stock.
         </p>
       )}

@@ -39,43 +39,52 @@ function buildInterpretation(
   let bgColor: string
   let borderColor: string
 
-  if (upsidePct != null && upsidePct > 0.15 && confidence === 'High') {
-    title = 'appears meaningfully undervalued with high confidence.'
-    body =
-      'The market is pricing in pessimism despite the underlying fundamentals. Our models show strong upside.'
+  // Lead with reverse DCF when available — it's more informative than echoing the verdict
+  if (rdcfInterp === 'very_aggressive') {
+    title = 'Market pricing in exceptional growth'
+    body = 'The current price implies growth that few companies sustain over the long run. Even modest execution shortfalls could prompt significant repricing.'
+    bgColor = '#FEF2F2'
+    borderColor = '#FECACA'
+  } else if (rdcfInterp === 'aggressive') {
+    title = 'Market pricing in strong growth'
+    body = 'Implied growth expectations are elevated. The price leaves limited room for error — misses on revenue or margin could weigh heavily.'
+    bgColor = '#FFFBEB'
+    borderColor = '#FDE68A'
+  } else if (rdcfInterp === 'reasonable') {
+    title = 'Market expectations appear reasonable'
+    body = 'Implied growth is consistent with historical trends. The price does not demand heroic assumptions, which supports a more stable risk profile.'
+    bgColor = '#EFF6FF'
+    borderColor = '#BFDBFE'
+  } else if (rdcfInterp === 'conservative') {
+    title = 'Market pricing in subdued growth'
+    body = 'Implied growth expectations are modest or contractionary — the bar for positive surprise is low. If fundamentals hold, the market may be underestimating the business.'
+    bgColor = '#ECFDF3'
+    borderColor = '#BBF7D0'
+  } else if (upsidePct != null && upsidePct > 0.15 && confidence === 'High') {
+    title = 'Models suggest market is underweighting cash flow'
+    body = 'Our models show significant upside with high confidence. Current assumptions may not reflect the business\'s earning power relative to its price.'
     bgColor = '#ECFDF3'
     borderColor = '#BBF7D0'
   } else if (upsidePct != null && upsidePct > 0.05) {
-    title = 'appears modestly undervalued.'
-    body = 'The models suggest moderate upside. Confidence is affected by model spread.'
+    title = 'Models suggest moderate underpricing'
+    body = 'Estimated intrinsic value exceeds the current price. Model spread is moderate, so treat this as a range rather than a point estimate.'
     bgColor = '#ECFDF3'
     borderColor = '#BBF7D0'
   } else if (upsidePct != null && upsidePct >= -0.10) {
-    title = 'appears fairly priced.'
-    body = 'Current price is near our intrinsic estimate. Limited margin of safety at these levels.'
+    title = 'Price and intrinsic value are aligned'
+    body = 'The market appears to be pricing in a reasonable long-term path. Limited upside or downside from here based on current model inputs.'
     bgColor = '#EFF6FF'
     borderColor = '#BFDBFE'
   } else if (upsidePct != null && upsidePct < -0.10) {
-    title = 'appears overvalued.'
-    body =
-      'Current price exceeds our intrinsic estimate. The risk/reward is unfavorable at today\'s price.'
+    title = 'Models suggest market is pricing in strong fundamentals'
+    body = 'The current price exceeds our intrinsic estimate. Either the business is improving faster than models reflect, or valuation risk is elevated.'
     bgColor = '#FEF2F2'
     borderColor = '#FECACA'
   } else {
-    title = 'Insufficient data.'
-    body =
-      'Fair value estimate is unavailable. Check back when more financial data is accessible.'
+    title = 'Insufficient model data'
+    body = 'Fair value estimate is unavailable. Check back when more financial data is accessible.'
     bgColor = '#F1F5F9'
     borderColor = '#E2E8F0'
-  }
-
-  // Enhance body based on reverse DCF
-  if (rdcfInterp === 'aggressive' || rdcfInterp === 'very_aggressive') {
-    body += ' The market is pricing in aggressive growth expectations.'
-  } else if (rdcfInterp === 'conservative') {
-    body += ' The market is pricing in contraction despite positive fundamentals.'
-  } else if (rdcfInterp === 'reasonable') {
-    body += ' Market growth expectations appear reasonable.'
   }
 
   return { title, body, bgColor, borderColor }
@@ -127,7 +136,7 @@ export default function MarketInterpretationCard({
         }}
       >
         <p className="text-[13px] font-[700] text-[#0F172A] leading-snug">
-          The stock {interp.title}
+          {interp.title}
         </p>
         <p className="text-[12px] text-[#334155] leading-relaxed">{interp.body}</p>
         {showRdcfNote && (

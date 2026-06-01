@@ -2,10 +2,6 @@
 
 import {
   Compass,
-  SlidersHorizontal,
-  BarChart2,
-  Users,
-  Bell,
   ArrowRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -18,13 +14,6 @@ interface NextStepsCardProps {
   onViewAssumptions: () => void
   onViewRisks: () => void
 }
-
-const ACTIONS = [
-  { icon: SlidersHorizontal, label: 'Review key assumptions' },
-  { icon: BarChart2, label: 'Run sensitivity analysis' },
-  { icon: Users, label: 'Compare to peers' },
-  { icon: Bell, label: 'Set price alert' },
-] as const
 
 export default function NextStepsCard({
   onViewValuation,
@@ -40,15 +29,9 @@ export default function NextStepsCard({
         <p className="text-[14px] font-[750] text-[#0F172A]">Next Steps</p>
       </div>
 
-      {/* Actions list */}
-      <div className="flex flex-col gap-2">
-        {ACTIONS.map(({ icon: Icon, label }) => (
-          <div key={label} className="flex items-center gap-2">
-            <Icon size={14} className="text-[#64748B] shrink-0" />
-            <span className="text-[13px] text-[#334155]">{label}</span>
-          </div>
-        ))}
-      </div>
+      <p className="text-[13px] text-[#475569] leading-relaxed">
+        Adjust assumptions, explore scenarios, and stress-test the model to build or challenge your conviction.
+      </p>
 
       {/* CTAs */}
       <div className="flex flex-col gap-2 mt-auto">

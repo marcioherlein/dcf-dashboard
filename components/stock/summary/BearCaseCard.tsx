@@ -76,7 +76,7 @@ export default function BearCaseCard({
           <AlertCircle size={15} className="text-[#DC2626]" />
         </div>
         <p className="text-[14px] font-[750] text-[#0F172A]">
-          What Could Go Wrong
+          Risks to Watch
         </p>
       </div>
 

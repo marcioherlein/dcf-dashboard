@@ -70,7 +70,7 @@ function RangeBar({
         <span>{fmtPrice(min, currency)}</span>
         <span>{fmtPrice(max, currency)}</span>
       </div>
-      <div className="relative h-3 bg-[#F1F5F9] rounded-full">
+      <div className="relative h-3 bg-[#F1F5F9] rounded-full" aria-hidden="true">
         <div className="absolute inset-0 rounded-full bg-gradient-to-r from-red-400/40 via-amber-300/40 to-emerald-400/40" />
         {currentPct != null && (
           <div
@@ -156,7 +156,7 @@ export default function RightSidebar({
           {output.verdict}
         </span>
 
-        <p className="text-[11px] text-[#94A3B8] mt-1">
+        <p className="text-[11px] text-[#64748B] mt-1">
           {convictionLabel} · {validCount} of {output.methods.length} models
         </p>
       </div>
@@ -240,7 +240,7 @@ export default function RightSidebar({
       )}
 
       <div className="px-5 pb-5">
-        <p className="text-[11px] text-[#94A3B8] leading-relaxed pt-3 border-t border-[#F1F5F9]">
+        <p className="text-[11px] text-[#64748B] leading-relaxed pt-3 border-t border-[#F1F5F9]">
           Blended estimate from {output.methods.filter(m => m.fairValue != null && m.fairValue > 0).map(m => m.method).join(', ')}. Not investment advice.
         </p>
       </div>
