@@ -12,8 +12,7 @@ import { buildValueInvestingData, computeStarRating, computeUncertainty } from '
 import { getIndustryMultiples } from '@/lib/dcf/calculateMultiples'
 import SummaryCards from './cockpit/SummaryCards'
 import GuidanceStrip from './cockpit/GuidanceStrip'
-import QualityPanel from './cockpit/QualityPanel'
-import CrossCheckStrip from './cockpit/CrossCheckStrip'
+import BusinessChecks from './cockpit/BusinessChecks'
 import ValueInvestingPanel from './cockpit/ValueInvestingPanel'
 import FairValueChart from './cockpit/FairValueChart'
 import AssumptionsPanel, { type SparkPoint } from './cockpit/AssumptionsPanel'
@@ -188,16 +187,13 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
     )
   }, [output.methods, output.blendedFairValue])
 
-  // CrossCheckStrip data
   const fcfYield = useMemo(() => {
     const marketCapRaw: number = apiData.quote?.marketCap ?? 0
     if (marketCapRaw <= 0 || snapshot.baseFCF == null) return null
-    // baseFCF is in $M; marketCap is in raw $
     return (snapshot.baseFCF * 1e6) / marketCapRaw
   }, [apiData.quote?.marketCap, snapshot.baseFCF])
 
   const rfRate: number = apiData.wacc?.inputs?.rfRate ?? 0.045
-  const capitalIntensityLabel: string | null = valueInvestingData.ownerEarnings.capitalIntensityLabel ?? null
 
   const savePayload: WatchlistSavePayload = useMemo(() => ({
     ticker,
@@ -309,29 +305,30 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
       {/* Collapsible guidance at top */}
       <GuidanceStrip />
 
-      {/* Cross-check strip: EPV floor, FCF yield, capital intensity */}
-      <CrossCheckStrip
-        epvPerShare={valueInvestingData.epv.epvPerShare}
-        growthPremiumPct={valueInvestingData.epv.growthPremiumPct}
-        fcfYield={fcfYield}
-        rfRate={rfRate}
-        capitalIntensityLabel={capitalIntensityLabel}
-        currency={currency}
-        currentPrice={currentPrice}
-      />
-
-      {/* Quality overview: moat gauge, star rating, fair value range */}
-      <QualityPanel
+      {/* Independent checks: business quality, growth premium, bonds, reverse DCF, P/B */}
+      <BusinessChecks
         roic={valueInvestingData.roic}
         roicSpread={valueInvestingData.roicSpread}
         wacc={valueInvestingData.wacc}
-        starRating={starRating}
-        uncertainty={uncertainty}
-        bearFV={output.scenarios.bear.fairValue}
-        bullFV={output.scenarios.bull.fairValue}
-        blendedFV={output.blendedFairValue}
+        epvGrowthPremiumPct={valueInvestingData.epv.growthPremiumPct}
+        epvPerShare={valueInvestingData.epv.epvPerShare}
         currentPrice={currentPrice}
         currency={currency}
+        fcfYield={fcfYield}
+        rfRate={rfRate}
+        marketImpliedGrowth={output.marketImpliedGrowth}
+        marketImpliedText={output.marketImpliedText}
+        priceToBook={
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (apiData.valuationMethods?.models?.multiples?.estimates ?? []).find((e: any) => e.multiple === 'P/Book')?.actualValue ?? null
+        }
+        pbSectorMedian={
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (apiData.valuationMethods?.models?.multiples?.estimates ?? []).find((e: any) => e.multiple === 'P/Book')?.sectorMedian ?? null
+        }
+        sector={sector}
+        starRating={starRating}
+        uncertainty={uncertainty}
         structuralRisk={valueInvestingData.structuralRiskDisclaimer}
         countryRisk={valueInvestingData.countryRiskDisclaimer}
       />
