@@ -143,6 +143,11 @@ export function computeReverseDCF(inputs: ReverseDCFInputs): ReverseDCFResult {
     }
   }
 
+  // Defensive ceiling: FCF margins above 45% are distortion artifacts (fintechs with
+  // loan-origination-distorted OCF, one-off working-capital releases, etc.) that make
+  // the model over-produce EV at zero growth and force a spuriously negative implied CAGR.
+  const effectiveFcfMargin = Math.min(lastFCFMargin, 0.45)
+
   // Binary search for CAGR
   let lo = -0.10
   let hi = 2.00
@@ -152,7 +157,7 @@ export function computeReverseDCF(inputs: ReverseDCFInputs): ReverseDCFResult {
 
   for (let i = 0; i < 100; i++) {
     mid = (lo + hi) / 2
-    const ev = calcEV(lastRevenue, lastFCFMargin, mid, wacc, terminalG, N)
+    const ev = calcEV(lastRevenue, effectiveFcfMargin, mid, wacc, terminalG, N)
     if (Math.abs(ev - target) < tolerance) break
     if (ev < target) lo = mid
     else hi = mid

@@ -1205,12 +1205,20 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
   }, [incomeRows, ttmRevenue, stmtFxRate])
 
   const lastFCFMargin = useMemo(() => {
-    if (ttmRevenue != null && ttmFCF != null && ttmRevenue > 0) return ttmFCF / ttmRevenue
+    // Cap at 45% — same ceiling as route.ts. Prevents fintech/payment companies
+    // (e.g. MELI Mercado Crédito) with loan-distorted OCF from producing inflated margins.
+    const CAP = 0.45
+    if (ttmRevenue != null && ttmFCF != null && ttmRevenue > 0) {
+      const m = ttmFCF / ttmRevenue
+      return m > 0 ? Math.min(m, CAP) : m
+    }
     const actRev = incomeRows.filter(r => !r.isProjected && r.revenue != null && r.revenue > 0)
     const actFCF = cashFlowRows.filter(r => !r.isProjected && r.freeCashFlow != null)
     const revM = actRev.slice(-1)[0]?.revenue ?? null
     const fcfM = actFCF.slice(-1)[0]?.freeCashFlow ?? null
-    return revM != null && revM > 0 && fcfM != null ? fcfM / revM : null
+    if (revM == null || revM <= 0 || fcfM == null) return null
+    const m = fcfM / revM
+    return m > 0 ? Math.min(m, CAP) : m
   }, [cashFlowRows, incomeRows, ttmRevenue, ttmFCF])
 
   const reverseDCFResult = useMemo(() => computeReverseDCF({
