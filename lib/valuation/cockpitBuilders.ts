@@ -49,7 +49,7 @@ export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null)
         ttmEbitdaDollars = rawEbitda
       } else {
         const ebit = ttmIS['EBIT'] ?? ttmIS['ebit'] ?? null
-        const dna = ttmCF?.['depreciationAndAmortization'] ?? ttmCF?.['depreciationAmortizationDepletion'] ?? null
+        const dna = ttmCF?.['depreciationAndAmortization'] ?? ttmCF?.['depreciationAmortizationDepletion'] ?? ttmIS['reconciledDepreciation'] ?? null
         if (typeof ebit === 'number' && isFinite(ebit) && typeof dna === 'number' && isFinite(dna)) {
           const computed = ebit + Math.abs(dna)
           if (computed > 0) ttmEbitdaDollars = computed
