@@ -204,7 +204,7 @@ export default function TopBar() {
         <div className={cn('flex items-center', !stockNav && 'hidden sm:flex')}>
           <Link href="/" className="flex items-center gap-2 shrink-0 group">
             <Image
-              src="/logos/logo.png"
+              src="/logos/logo-transparent.png"
               alt="intrinsico"
               width={28}
               height={28}

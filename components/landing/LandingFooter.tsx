@@ -11,7 +11,7 @@ export default function LandingFooter() {
           <div className="max-w-xs">
             <Link href="/" className="flex items-center gap-2.5 mb-3 group active:scale-95 transition-transform">
               <Image
-                src="/logos/logo.png"
+                src="/logos/logo-transparent.png"
                 alt="intrinsico"
                 width={30}
                 height={30}

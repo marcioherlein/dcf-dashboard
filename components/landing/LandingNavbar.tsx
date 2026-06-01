@@ -42,7 +42,7 @@ export default function LandingNavbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 shrink-0 group">
             <Image
-              src="/logos/logo.png"
+              src="/logos/logo-transparent.png"
               alt="intrinsico"
               width={40}
               height={40}
