@@ -8,8 +8,12 @@ import {
   type ValuationAssumptions,
 } from '@/lib/valuation/cockpit'
 import { buildSnapshot, seedAssumptions } from '@/lib/valuation/cockpitBuilders'
+import { buildValueInvestingData, computeStarRating, computeUncertainty } from '@/lib/valuation/valueInvestingAnalysis'
+import { getIndustryMultiples } from '@/lib/dcf/calculateMultiples'
 import SummaryCards from './cockpit/SummaryCards'
 import GuidanceStrip from './cockpit/GuidanceStrip'
+import QualityPanel from './cockpit/QualityPanel'
+import ValueInvestingPanel from './cockpit/ValueInvestingPanel'
 import FairValueChart from './cockpit/FairValueChart'
 import AssumptionsPanel, { type SparkPoint } from './cockpit/AssumptionsPanel'
 import ScenarioCards from './cockpit/ScenarioCards'
@@ -142,6 +146,31 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
   const currentPrice = apiData.quote?.price ?? 0
   const changePct    = apiData.quote?.changePct ?? null
   const sector       = apiData.quote?.sector ?? null
+  const industry     = apiData.quote?.industry ?? null
+
+  const sectorBenchmarks = useMemo(() => {
+    if (!industry && !sector) return null
+    const m = getIndustryMultiples(industry ?? '', sector ?? '')
+    return { exitPE: m.pe, exitMultiple: m.evEbitda, revenueMultiple: m.evRevenue }
+  }, [industry, sector])
+
+  const valueInvestingData = useMemo(
+    () => buildValueInvestingData(apiData, assumptions.wacc, assumptions.terminalG),
+    [apiData, assumptions.wacc, assumptions.terminalG]
+  )
+
+  const starRating = useMemo(
+    () => computeStarRating(currentPrice, output.blendedFairValue),
+    [currentPrice, output.blendedFairValue]
+  )
+
+  const uncertainty = useMemo(() => {
+    if (output.blendedFairValue == null || output.blendedFairValue <= 0) return null
+    return computeUncertainty(
+      output.methods.map(m => m.fairValue),
+      output.blendedFairValue
+    )
+  }, [output.methods, output.blendedFairValue])
 
   const savePayload: WatchlistSavePayload = useMemo(() => ({
     ticker,
@@ -247,10 +276,25 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
         currentPrice={currentPrice}
         changePct={changePct}
         currency={currency}
+        starRating={starRating}
       />
 
       {/* Collapsible guidance at top */}
       <GuidanceStrip />
+
+      {/* Quality overview: moat gauge, star rating, fair value range */}
+      <QualityPanel
+        roic={valueInvestingData.roic}
+        roicSpread={valueInvestingData.roicSpread}
+        wacc={valueInvestingData.wacc}
+        starRating={starRating}
+        uncertainty={uncertainty}
+        bearFV={output.scenarios.bear.fairValue}
+        bullFV={output.scenarios.bull.fairValue}
+        blendedFV={output.blendedFairValue}
+        currentPrice={currentPrice}
+        currency={currency}
+      />
 
       {/* Workbench: assumptions (left, cause) + live output (right, effect) */}
       <div className="mt-2 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 items-start">
@@ -273,6 +317,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
             sensitivity={sensitivity}
             currency={currency}
             sector={sector}
+            sectorBenchmarks={sectorBenchmarks}
           />
         </div>
 
@@ -302,6 +347,11 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
           <span className="ml-auto text-xs text-slate-400 hidden sm:inline">Fair value chart · method cards · divergence analysis</span>
         </summary>
         <div className="mt-2 flex flex-col gap-3">
+          <ValueInvestingPanel
+            data={valueInvestingData}
+            currency={currency}
+            currentPrice={currentPrice}
+          />
           <FairValueChart
             methods={output.methods}
             blendedFairValue={output.blendedFairValue}
