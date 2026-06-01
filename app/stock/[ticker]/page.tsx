@@ -17,7 +17,7 @@ import AuthBanner from '@/components/auth/AuthBanner'
 import { calculatePiotroski, calculateAltman, calculateBeneish } from '@/lib/dcf/calculateScores'
 import { track } from '@/lib/analytics/events'
 import { loadPreLoginState, clearPreLoginState } from '@/lib/auth/preLoginState'
-import { useSession } from 'next-auth/react'
+import { useSession, signIn } from 'next-auth/react'
 import SaveToWatchlistDialog, { type WatchlistSavePayload } from '@/components/watchlist/SaveToWatchlistDialog'
 import ValuationNotAvailableCard from '@/components/stock/ValuationNotAvailableCard'
 import SummaryTab from '@/components/stock/summary/SummaryTab'
@@ -322,6 +322,7 @@ function StockPageBody() {
         activeTab={activeTab}
         onChange={handleTabChange}
         onSave={() => {
+            if (!session?.user) { signIn('google'); return }
             const isETF = (data?.quote?.quoteType ?? '').toUpperCase() === 'ETF'
             setSavePayload({
               ticker,
