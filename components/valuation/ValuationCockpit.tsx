@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import {
   computeCockpitOutput,
@@ -41,6 +41,7 @@ interface Props {
   statementsData?: ApiData | null
   onNavigateToFinancials?: (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => void
   onNavigateToRisks?: () => void
+  onLiveDcfFVChange?: (fv: number | null) => void
 }
 
 // Re-export so callers that import from this file continue to work
@@ -97,7 +98,7 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
   }
 }
 
-export default function ValuationCockpit({ apiData, ticker, statementsData, onNavigateToFinancials: _onNavigateToFinancials, onNavigateToRisks: _onNavigateToRisks }: Props) {
+export default function ValuationCockpit({ apiData, ticker, statementsData, onNavigateToFinancials: _onNavigateToFinancials, onNavigateToRisks: _onNavigateToRisks, onLiveDcfFVChange }: Props) {
   const snapshot       = useMemo(() => buildSnapshot(apiData, statementsData), [apiData, statementsData])
   const defaults       = useMemo(() => seedAssumptions(apiData), [apiData])
   const historicalData = useMemo(() => buildHistoricalData(apiData), [apiData])
@@ -111,10 +112,14 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
   } | null>(null)
   const [clampNote, setClampNote] = useState<string | null>(null)
 
-  // Note: liveDcfFV is shown in the DCF section header but does NOT feed back into
-  // the cockpit blend. The blend uses the API pre-computed fullDcfFairValue so that
-  // the Overview and Valuation tabs always agree on the same base.
-  const effectiveSnapshot = snapshot
+  // When ModellingWorkspace computes its derivedFV, override snapshot.fullDcfFairValue so
+  // the Core DCF card always matches the Full DCF Table's 4-model blended result exactly.
+  // Also bubble the value up via onLiveDcfFVChange so the Overview tab stays in sync.
+  const effectiveSnapshot = useMemo(
+    () => liveDcfFV != null ? { ...snapshot, fullDcfFairValue: liveDcfFV } : snapshot,
+    [snapshot, liveDcfFV]
+  )
+  useEffect(() => { onLiveDcfFVChange?.(liveDcfFV) }, [liveDcfFV, onLiveDcfFVChange])
 
   const output = useMemo(
     () => computeCockpitOutput(assumptions, effectiveSnapshot),
@@ -338,6 +343,16 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
         currency={currency}
       />
 
+      {/* Valuation Models — detailed breakdown of each model and its blend contribution */}
+      <ValuationMethodCards
+        methods={output.methods}
+        currentPrice={currentPrice}
+        currency={currency}
+        cagr={assumptions.cagr}
+        fcfMargin={snapshot.fcfMargin}
+        ttmEbitdaDollars={snapshot.ttmEbitdaDollars}
+      />
+
       {/* Sensitivity matrix — always visible, updates live with assumption changes */}
       <SensitivityMatrix
         assumptions={assumptions}
@@ -413,7 +428,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
         <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E6ECF5] shadow-sm px-4 sm:px-5 py-3.5 hover:bg-[#F8FAFC] transition-colors select-none">
           <span className="text-slate-400 text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
           <span className="text-sm font-[650] text-slate-700">Model Evidence</span>
-          <span className="ml-auto text-xs text-slate-400 hidden sm:inline">Fair value chart · method cards · divergence analysis</span>
+          <span className="ml-auto text-xs text-slate-400 hidden sm:inline">Fair value chart · divergence analysis · value investing metrics</span>
         </summary>
         <div className="mt-2 flex flex-col gap-3">
           <ValueInvestingPanel
@@ -428,14 +443,6 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
             currency={currency}
           />
           <ModelDivergencePanel divergence={output.divergence} />
-          <ValuationMethodCards
-            methods={output.methods}
-            currentPrice={currentPrice}
-            currency={currency}
-            cagr={assumptions.cagr}
-            fcfMargin={snapshot.fcfMargin}
-            ttmEbitdaDollars={snapshot.ttmEbitdaDollars}
-          />
         </div>
       </details>
 
