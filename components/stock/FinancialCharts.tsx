@@ -114,8 +114,8 @@ export default function FinancialCharts({
     isProjected: r.isProjected,
   }))
 
-  // ── Chart 3 data: Margins — historical + projected ───────────────────────────
-  const marginData = incomeStatement
+  // ── Chart 3 data: Margins — historical actuals only ─────────────────────────
+  const marginData = historicalIS
     .filter((r) => r.revenue && r.revenue > 0)
     .map((r) => {
       const cfRow = cashFlow.find((c) => c.year === r.year)
@@ -126,7 +126,6 @@ export default function FinancialCharts({
         opMgn:   pct(r.operatingIncome),
         net:     pct(r.netIncome),
         fcfMgn:  cfRow?.freeCashFlow != null && r.revenue ? +(cfRow.freeCashFlow / r.revenue * 100).toFixed(2) : null,
-        isProjected: r.isProjected,
       }
     })
 
@@ -224,59 +223,35 @@ export default function FinancialCharts({
         </div>
         )}
 
-        {/* ── Chart 3 — Margin Trends (all years, projected as dashed) ── */}
-        {show.includes('margins') && marginData.length >= 2 && (() => {
-          // Split into historical and projected for separate Line segments
-          const histMargins = marginData.map(d => d.isProjected ? { ...d, gross: null, opMgn: null, net: null, fcfMgn: null } : d)
-          const projMargins = marginData.map(d => !d.isProjected ? { ...d, gross: null, opMgn: null, net: null, fcfMgn: null } : d)
-          // Bridge: include the last historical point in projected so lines connect
-          const lastHistIdx = marginData.reduceRight((acc, d, i) => (acc === -1 && !d.isProjected ? i : acc), -1)
-          if (lastHistIdx >= 0 && lastHistIdx < marginData.length - 1) {
-            const bridge = marginData[lastHistIdx]
-            projMargins[lastHistIdx] = bridge
-          }
-          const hasProjected = marginData.some(d => d.isProjected)
-          return (
-            <div className={panel}>
-              <p className={sectionTitle}>Margin Trends <span className="normal-case font-normal">(%){hasProjected && ' · dashed = projected'}</span></p>
-              <ResponsiveContainer width="100%" height={CHART_H}>
-                <LineChart data={marginData} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
-                  <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={fmtPct} />
-                  {firstProjYear && <ReferenceLine x={firstProjYear} stroke="rgba(148,163,184,0.3)" strokeDasharray="4 2" />}
-                  <Tooltip
-                    contentStyle={tooltipStyle} wrapperStyle={{ zIndex: 50 }}
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    formatter={(v: any, name: any) => [
-                      typeof v === 'number' ? fmtPct(v) : v,
-                      name === 'gross_h' || name === 'gross_p' ? 'Gross Margin'
-                        : name === 'net_h' || name === 'net_p'   ? 'Net Margin'
-                        : name === 'fcf_h' || name === 'fcf_p'   ? 'FCF Margin'
-                        : 'Op Margin',
-                    ]}
-                  />
-                  <Legend
-                    formatter={(v) => v === 'gross_h' ? 'Gross' : v === 'net_h' ? 'Net' : v === 'fcf_h' ? 'FCF' : v === 'opMgn_h' ? 'Operating' : null}
-                    wrapperStyle={{ fontSize: '10px', color: tickFill }}
-                  />
-                  {/* Historical — solid lines */}
-                  <Line type="monotone" data={histMargins} dataKey="gross"  name="gross_h"  stroke="#2563EB" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
-                  <Line type="monotone" data={histMargins} dataKey="opMgn"  name="opMgn_h"  stroke="#D97706" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} strokeDasharray="5 2" />
-                  <Line type="monotone" data={histMargins} dataKey="net"    name="net_h"    stroke="#059669" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
-                  <Line type="monotone" data={histMargins} dataKey="fcfMgn" name="fcf_h"    stroke="#7C3AED" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} strokeDasharray="2 3" />
-                  {/* Projected — same colors, faded */}
-                  {hasProjected && <>
-                    <Line type="monotone" data={projMargins} dataKey="gross"  name="gross_p"  stroke="#2563EB" strokeWidth={1.5} strokeDasharray="4 3" dot={false} connectNulls isAnimationActive={false} opacity={0.45} />
-                    <Line type="monotone" data={projMargins} dataKey="opMgn"  name="opMgn_p"  stroke="#D97706" strokeWidth={1.5} strokeDasharray="4 3" dot={false} connectNulls isAnimationActive={false} opacity={0.45} />
-                    <Line type="monotone" data={projMargins} dataKey="net"    name="net_p"    stroke="#059669" strokeWidth={1.5} strokeDasharray="4 3" dot={false} connectNulls isAnimationActive={false} opacity={0.45} />
-                    <Line type="monotone" data={projMargins} dataKey="fcfMgn" name="fcf_p"    stroke="#7C3AED" strokeWidth={1.5} strokeDasharray="4 3" dot={false} connectNulls isAnimationActive={false} opacity={0.45} />
-                  </>}
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )
-        })()}
+        {/* ── Chart 3 — Margin Trends (historical actuals only) ── */}
+        {show.includes('margins') && marginData.length >= 2 && (
+          <div className={panel}>
+            <p className={sectionTitle}>Margin Trends <span className="normal-case font-normal">(%)</span></p>
+            <ResponsiveContainer width="100%" height={CHART_H}>
+              <LineChart data={marginData} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
+                <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={fmtPct} />
+                <Tooltip
+                  contentStyle={tooltipStyle} wrapperStyle={{ zIndex: 50 }}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  formatter={(v: any, name: any) => [
+                    typeof v === 'number' ? fmtPct(v) : v,
+                    name === 'gross' ? 'Gross Margin' : name === 'net' ? 'Net Margin' : name === 'fcfMgn' ? 'FCF Margin' : 'Op Margin',
+                  ]}
+                />
+                <Legend
+                  formatter={(v) => v === 'gross' ? 'Gross' : v === 'net' ? 'Net' : v === 'fcfMgn' ? 'FCF' : v === 'opMgn' ? 'Operating' : null}
+                  wrapperStyle={{ fontSize: '10px', color: tickFill }}
+                />
+                <Line type="monotone" dataKey="gross"  stroke="#2563EB" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
+                <Line type="monotone" dataKey="opMgn"  stroke="#D97706" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} strokeDasharray="5 2" />
+                <Line type="monotone" dataKey="net"    stroke="#059669" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
+                <Line type="monotone" dataKey="fcfMgn" stroke="#7C3AED" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} strokeDasharray="2 3" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
 
         {/* ── Chart 4 — EBITDA & Operating Income ── */}
         {show.includes('ebitda') && ebitdaData.length >= 2 && (

@@ -141,7 +141,7 @@ interface MetricRowDef {
   tooltip?:        string
 }
 
-function MetricsTable({ columns, rows }: { columns: string[]; rows: MetricRowDef[] }) {
+function MetricsTable({ columns, rows, hideSparks }: { columns: string[]; rows: MetricRowDef[]; hideSparks?: boolean }) {
   const formatVal = (v: number | null, fmt: string) => {
     switch (fmt) {
       case 'pct':    return fmtPct(v)
@@ -195,7 +195,7 @@ function MetricsTable({ columns, rows }: { columns: string[]; rows: MetricRowDef
                 <td className={`sticky left-0 z-10 bg-white px-3 sm:px-4 py-2 text-xs whitespace-nowrap ${
                   row.indent ? 'pl-6 sm:pl-8 text-slate-400' : 'font-medium text-slate-600'
                 }`}>
-                  <Sparkline values={row.values} positiveIsGood={pig} />
+                  {!hideSparks && <Sparkline values={row.values} positiveIsGood={pig} />}
                   {row.label}
                   {row.positiveIsGood != null && !row.indent && (
                     <span className="ml-1 text-[9px] text-slate-400 font-normal" aria-label={row.positiveIsGood ? 'higher is better' : 'lower is better'}>
@@ -223,38 +223,53 @@ function MetricsTable({ columns, rows }: { columns: string[]; rows: MetricRowDef
   )
 }
 
-// ── CAGR summary table ─────────────────────────────────────────────────────────
+// ── Trend bar chart (compact, inline) ─────────────────────────────────────────
 
-interface CAGRRow { label: string; yoy: number | null; y3: number | null; y5: number | null }
+function TrendBars({
+  years, values, positiveIsGood, threshold, label2, values2,
+}: {
+  years: string[]
+  values: (number | null)[]
+  positiveIsGood: boolean
+  threshold?: number
+  label2?: string
+  values2?: (number | null)[]
+}) {
+  const allVals = [...values, ...(values2 ?? [])].filter((v): v is number => v != null)
+  if (allVals.length < 1) return <p className="text-[10px] text-slate-400 py-3 text-center">No data</p>
+  const maxAbs = Math.max(...allVals.map(Math.abs), 0.0001)
+  const barH = 56
 
-function CAGRTable({ rows }: { rows: CAGRRow[] }) {
-  const horizons = ['YoY', '3Y CAGR', '5Y CAGR']
+  const barColor = (v: number) => {
+    if (threshold != null) return positiveIsGood ? (v >= threshold ? '#10b981' : '#ef4444') : (v <= threshold ? '#10b981' : '#ef4444')
+    return (v >= 0) === positiveIsGood ? '#10b981' : '#ef4444'
+  }
+
   return (
-    <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-      <table className="min-w-[360px] w-full border-collapse">
-        <thead>
-          <tr className="border-b border-slate-100">
-            <th className="sticky left-0 z-10 bg-white px-3 sm:px-4 py-2 text-left text-[11px] font-medium text-slate-400 w-40 min-w-[160px] sm:w-56 sm:min-w-[224px]">Metric</th>
-            {horizons.map(h => (
-              <th key={h} className="px-3 sm:px-5 py-2 text-right text-[11px] font-semibold text-slate-500 whitespace-nowrap">{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={i} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-              <td className="sticky left-0 z-10 bg-white px-3 sm:px-4 py-2.5 text-xs font-medium text-slate-600 whitespace-nowrap">
-                {row.label}
-              </td>
-              {[row.yoy, row.y3, row.y5].map((v, j) => (
-                <td key={j} className={`px-3 sm:px-5 py-2.5 text-right text-xs tabular-nums font-mono font-semibold whitespace-nowrap ${growthColor(v)}`}>
-                  {fmtGrowth(v)}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="flex items-end gap-1" style={{ height: barH + 28 }}>
+      {years.map((year, i) => {
+        const v = values[i]
+        const v2 = values2?.[i]
+        return (
+          <div key={year} className="flex-1 flex flex-col items-center justify-end gap-0.5">
+            <div className="flex items-end gap-0.5 w-full justify-center">
+              {v != null ? (
+                <div
+                  className="rounded-sm flex-1"
+                  style={{ height: Math.max(3, (Math.abs(v) / maxAbs) * barH), backgroundColor: barColor(v), opacity: 0.8 }}
+                />
+              ) : <div className="flex-1" style={{ height: 3 }} />}
+              {v2 != null && (
+                <div
+                  className="rounded-sm flex-1"
+                  style={{ height: Math.max(3, (Math.abs(v2) / maxAbs) * barH), backgroundColor: '#94a3b8', opacity: 0.6 }}
+                />
+              )}
+            </div>
+            <span className="text-[8px] text-slate-500">{year.slice(-2)}</span>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -543,28 +558,6 @@ export default function FinancialsHub({ statementsData, financialsData, currency
   // Fix G2: YoY table columns skip the oldest period (always "—"); use slice(1).
   const yoyCols  = cols.length > 1 ? cols.slice(1)  : cols
 
-  const cagrRows = useMemo((): CAGRRow[] => {
-    const annualOnly = mets.filter(m => periods[mets.indexOf(m)]?.year !== 'TTM')
-    const arr = (fn: (m: ReturnType<typeof metrics>) => number | null) => annualOnly.map(fn)
-
-    const makeRow = (label: string, vals: (number | null)[]): CAGRRow => ({
-      label,
-      yoy: vals.length >= 2 ? yoy(vals[vals.length - 1], vals[vals.length - 2]) : null,
-      y3:  cagrN(vals, 3),
-      y5:  cagrN(vals, 5),
-    })
-
-    return [
-      makeRow('Revenue',        arr(m => m.rev)),
-      makeRow('Gross Profit',   arr(m => m.gp)),
-      ...(!isFinancialSector ? [makeRow('EBITDA', arr(m => m.ebitda))] : []),
-      makeRow('EBIT',           arr(m => m.ebit)),
-      makeRow('Net Income',     arr(m => m.ni)),
-      makeRow('EPS (Diluted)',  arr(m => m.eps)),
-      makeRow('Free Cash Flow', arr(m => m.fcf)),
-    ]
-  }, [mets, periods, isFinancialSector])
-
   // Fix G5: analyst consensus EPS growth estimates from cagrAnalysis
   const analystEst1y = (financialsData?.cagrAnalysis?.analystEstimate1y ?? null) as number | null
   const analystEst2y = (financialsData?.cagrAnalysis?.analystEstimate2y ?? null) as number | null
@@ -634,7 +627,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
 
   const hasData = periods.length > 0
 
-  const showCharts = (subTab === 'statements' || subTab === 'growth' || subTab === 'profitability') && hasData
+  const showCharts = (subTab === 'growth' || subTab === 'profitability') && hasData
     && finCF.length > 0
     && finIS.filter((r: { isProjected: boolean }) => !r.isProjected).length >= 2
 
@@ -685,102 +678,224 @@ export default function FinancialsHub({ statementsData, financialsData, currency
       )}
 
       {/* ── Growth ── */}
-      {subTab === 'growth' && hasData && (
-        <div>
-          {/* CAGR Summary */}
-          <div className="px-4 sm:px-5 pt-4 pb-2">
-                <p className="text-[13px] font-semibold text-slate-700 mb-3">
-                  Compound Annual Growth Rates
-                </p>
-            <CAGRTable rows={cagrRows} />
-            {/* G5: Analyst forward estimates */}
-            {(analystEst1y != null || analystEst2y != null) && (
-              <div className="mt-4 border-t border-slate-100 pt-3">
-                <p className="text-[12px] font-semibold text-slate-600 mb-2">Analyst EPS Growth Estimates</p>
-                <div className="flex gap-4">
-                  {analystEst1y != null && (
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-400">Next Year</span>
-                      <span className={`text-sm font-bold tabular-nums ${analystEst1y >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                        {analystEst1y >= 0 ? '+' : ''}{(analystEst1y * 100).toFixed(1)}%
-                      </span>
-                    </div>
-                  )}
-                  {analystEst2y != null && (
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-400">2-Year</span>
-                      <span className={`text-sm font-bold tabular-nums ${analystEst2y >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                        {analystEst2y >= 0 ? '+' : ''}{(analystEst2y * 100).toFixed(1)}%
-                      </span>
-                    </div>
-                  )}
-                </div>
+      {subTab === 'growth' && hasData && (() => {
+        const annualMets = mets.filter((_, i) => periods[i]?.year !== 'TTM')
+        const annualPeriods = periods.filter(p => p.year !== 'TTM')
+        const revVals = annualMets.map(m => m.rev)
+
+        // Growth rating
+        const recentCAGR = cagrN(revVals, 3)
+        const priorCAGR = revVals.length >= 6 ? cagrN(revVals.slice(0, revVals.length - 3), 3) : null
+        let ratingLabel = ''
+        let ratingColor = ''
+        if (recentCAGR != null) {
+          if (recentCAGR > 0.20)      { ratingLabel = 'Strong Growth';   ratingColor = 'bg-emerald-50 border-emerald-200 text-emerald-700' }
+          else if (recentCAGR > 0.10) { ratingLabel = 'Solid Growth';    ratingColor = 'bg-blue-50 border-blue-200 text-blue-700' }
+          else if (recentCAGR > 0.05) { ratingLabel = 'Moderate Growth'; ratingColor = 'bg-amber-50 border-amber-200 text-amber-700' }
+          else if (recentCAGR > 0)    { ratingLabel = 'Slow Growth';     ratingColor = 'bg-slate-100 border-slate-200 text-slate-600' }
+          else                         { ratingLabel = 'Declining';       ratingColor = 'bg-red-50 border-red-200 text-red-600' }
+          if (priorCAGR != null && Math.abs(recentCAGR - priorCAGR) > 0.05) {
+            ratingLabel += recentCAGR > priorCAGR ? ' · Accelerating' : ' · Decelerating'
+          }
+        }
+
+        // Revenue trend chart data (actuals, no TTM)
+        const revTrend = annualPeriods.map((p, i) => {
+          const rev = annualMets[i]?.rev ?? null
+          const prevRev = i > 0 ? (annualMets[i - 1]?.rev ?? null) : null
+          const yoyPct = rev != null && prevRev != null && prevRev > 0 ? (rev - prevRev) / prevRev : null
+          return { year: p.year, rev, yoyPct }
+        }).filter(d => d.rev != null)
+
+        const fmtRev = (v: number) =>
+          v >= 1e12 ? `$${(v / 1e12).toFixed(1)}T`
+          : v >= 1e9 ? `$${(v / 1e9).toFixed(1)}B`
+          : `$${(v / 1e6).toFixed(0)}M`
+
+        const maxRev = revTrend.length ? Math.max(...revTrend.map(d => d.rev as number)) : 1
+
+        return (
+          <div>
+            {/* Rating chip */}
+            {ratingLabel && (
+              <div className="px-4 sm:px-5 pt-4 pb-0 flex items-center gap-2 flex-wrap">
+                <span className={`text-[12px] font-semibold px-3 py-1 rounded-full border ${ratingColor}`}>
+                  {ratingLabel}
+                </span>
+                {recentCAGR != null && (
+                  <span className="text-[11px] text-slate-400">
+                    3-year revenue CAGR: {recentCAGR >= 0 ? '+' : ''}{(recentCAGR * 100).toFixed(1)}%
+                  </span>
+                )}
               </div>
             )}
-          </div>
-          {/* G1: Revenue growth bar chart */}
-          {(() => {
-            const revGrowthData = yoyCols.map((col) => {
-              const fullIdx = cols.indexOf(col)
-              const val = growthRows[0]?.values[fullIdx] ?? null
-              return { col, val }
-            }).filter(d => d.val != null)
-            if (revGrowthData.length < 2) return null
-            const maxAbs = Math.max(...revGrowthData.map(d => Math.abs(d.val as number)))
-            return (
+
+            {/* Revenue Trend — absolute bars with YoY% labels */}
+            {revTrend.length >= 2 && (
               <div className="border-t border-slate-100 px-4 sm:px-5 pt-4 pb-2">
-                <p className="text-[13px] font-semibold text-slate-700 mb-3">Revenue Growth by Year</p>
-                <div className="flex items-end gap-1.5" style={{ height: 56 }}>
-                  {revGrowthData.map(({ col, val }) => {
-                    const v = val as number
-                    const barH = Math.max(3, (Math.abs(v) / (maxAbs || 1)) * 44)
-                    const isPos = v >= 0
+                <p className="text-[13px] font-semibold text-slate-700 mb-4">Revenue Trend</p>
+                <div className="flex items-end gap-1.5" style={{ height: 90 }}>
+                  {revTrend.map(({ year, rev, yoyPct }) => {
+                    const barH = Math.max(4, ((rev as number) / maxRev) * 70)
                     return (
-                      <div key={col} className="flex-1 flex flex-col items-center justify-end gap-0.5">
-                        <div className={`w-full rounded-sm ${isPos ? 'bg-emerald-400/70' : 'bg-red-400/70'}`} style={{ height: barH }} />
-                        <span className="text-[10px] text-slate-500">{col.slice(-2)}</span>
+                      <div key={year} className="flex-1 flex flex-col items-center justify-end gap-0.5">
+                        {yoyPct != null && (
+                          <span className={`text-[9px] font-semibold tabular-nums leading-none mb-0.5 ${yoyPct >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                            {yoyPct >= 0 ? '+' : ''}{(yoyPct * 100).toFixed(1)}%
+                          </span>
+                        )}
+                        <div className="w-full rounded-sm bg-blue-500/70" style={{ height: barH }} />
+                        <span className="text-[9px] text-slate-500">{year.slice(-2)}</span>
                       </div>
                     )
                   })}
                 </div>
-                <div className="flex justify-between mt-0.5 text-[10px] text-slate-500 tabular-nums">
-                  {revGrowthData.map(({ col, val }) => (
-                    <span key={col} className={val! >= 0 ? 'text-emerald-600' : 'text-red-600'}>
-                      {val! >= 0 ? '+' : ''}{((val as number) * 100).toFixed(1)}%
-                    </span>
+                <div className="flex justify-between mt-1 text-[10px] text-slate-400 tabular-nums">
+                  {revTrend.map(({ year, rev }) => (
+                    <span key={year}>{fmtRev(rev as number)}</span>
                   ))}
                 </div>
               </div>
-            )
-          })()}
-          {/* YoY by period — G2: use yoyCols to skip always-null first column */}
-          <div className="border-t border-slate-100 px-4 sm:px-5 pt-4 pb-2">
-            <p className="text-[13px] font-semibold text-slate-700 mb-3">
-              Year-over-Year Growth
-            </p>
-            <MetricsTable columns={yoyCols} rows={growthRows.map(r => ({ ...r, values: r.values.slice(1) }))} />
+            )}
+
+            {/* Year-over-Year Growth Rates table */}
+            <div className="border-t border-slate-100 px-4 sm:px-5 pt-4 pb-4">
+              <p className="text-[13px] font-semibold text-slate-700 mb-3">Year-over-Year Growth Rates</p>
+              <MetricsTable
+                columns={yoyCols}
+                rows={growthRows.map(r => ({ ...r, values: r.values.slice(1) }))}
+                hideSparks
+              />
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* ── Profitability ── */}
-      {subTab === 'profitability' && hasData && (
-        <div className="px-4 sm:px-5 pt-2 pb-2">
-          <MetricsTable columns={cols} rows={profitRows} />
-        </div>
-      )}
+      {subTab === 'profitability' && hasData && (() => {
+        const annualMets = mets.filter((_, i) => periods[i]?.year !== 'TTM')
+        const latestIdx = annualMets.length - 1
+        const latestNetMargin = latestIdx >= 0 ? annualMets[latestIdx].netMargin : null
+        const margin3YAgo = latestIdx >= 3 ? annualMets[latestIdx - 3].netMargin : null
+        const marginDelta3Y = latestNetMargin != null && margin3YAgo != null ? latestNetMargin - margin3YAgo : null
+
+        let ratingLabel = ''
+        let ratingColor = ''
+        if (latestNetMargin != null) {
+          if (latestNetMargin > 0.20)      { ratingLabel = 'Highly Profitable'; ratingColor = 'bg-emerald-50 border-emerald-200 text-emerald-700' }
+          else if (latestNetMargin > 0.10) { ratingLabel = 'Profitable';        ratingColor = 'bg-blue-50 border-blue-200 text-blue-700' }
+          else if (latestNetMargin > 0.03) { ratingLabel = 'Thin Margins';      ratingColor = 'bg-amber-50 border-amber-200 text-amber-700' }
+          else if (latestNetMargin > 0)    { ratingLabel = 'Marginal';          ratingColor = 'bg-amber-50 border-amber-200 text-amber-700' }
+          else                              { ratingLabel = 'Unprofitable';      ratingColor = 'bg-red-50 border-red-200 text-red-600' }
+          if (marginDelta3Y != null) {
+            ratingLabel += marginDelta3Y > 0.03 ? ' · Expanding' : marginDelta3Y < -0.03 ? ' · Compressing' : ' · Stable'
+          }
+        }
+
+        return (
+          <div>
+            {ratingLabel && (
+              <div className="px-4 sm:px-5 pt-4 pb-0 flex items-center gap-2 flex-wrap">
+                <span className={`text-[12px] font-semibold px-3 py-1 rounded-full border ${ratingColor}`}>
+                  {ratingLabel}
+                </span>
+                {latestNetMargin != null && (
+                  <span className="text-[11px] text-slate-400">
+                    Latest net margin: {(latestNetMargin * 100).toFixed(1)}%
+                  </span>
+                )}
+              </div>
+            )}
+            <div className="px-4 sm:px-5 pt-4 pb-4">
+              <MetricsTable columns={cols} rows={profitRows} />
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ── Solvency ── */}
-      {subTab === 'solvency' && hasData && (
-        <div className="px-4 sm:px-5 pt-2 pb-2">
-          <MetricsTable columns={cols} rows={solvencyRows} />
-          <p className="text-[10px] text-slate-400 mt-2 px-1">
-            Net Debt = Total Debt − Cash & Equivalents. Negative Net Debt means net cash position.
-            Total Liab./Assets includes operating liabilities (deferred revenue, lease obligations) — not purely financial debt.
-            Cash Runway only shown when operating cash flow is negative.
-          </p>
-        </div>
-      )}
+      {subTab === 'solvency' && hasData && (() => {
+        // Use most recent period (TTM if available, else latest annual)
+        const latestMet = mets[mets.length - 1]
+        const nd = latestMet?.netDebtToEbitda ?? null
+        const cov = latestMet?.ebitCov ?? null
+
+        // Solvency rating
+        let ratingLabel = ''
+        let ratingColor = ''
+        if (nd != null || cov != null) {
+          const ndVal = nd ?? Infinity
+          const covVal = cov ?? 0
+          if (ndVal < 0)                            { ratingLabel = 'Fortress Balance Sheet'; ratingColor = 'bg-emerald-50 border-emerald-200 text-emerald-700' }
+          else if (ndVal < 1 && covVal > 8)         { ratingLabel = 'Very Strong';            ratingColor = 'bg-emerald-50 border-emerald-200 text-emerald-700' }
+          else if (ndVal < 2 && covVal > 5)         { ratingLabel = 'Strong';                 ratingColor = 'bg-emerald-50 border-emerald-200 text-emerald-700' }
+          else if (ndVal < 3 && covVal > 3)         { ratingLabel = 'Investment Grade';       ratingColor = 'bg-blue-50 border-blue-200 text-blue-700' }
+          else if (ndVal <= 5 && covVal >= 1.5)     { ratingLabel = 'Moderate Leverage';      ratingColor = 'bg-amber-50 border-amber-200 text-amber-700' }
+          else if (ndVal > 7 || covVal < 1)         { ratingLabel = 'Distressed';             ratingColor = 'bg-red-50 border-red-200 text-red-700' }
+          else                                       { ratingLabel = 'High Leverage';          ratingColor = 'bg-red-50 border-red-200 text-red-600' }
+        }
+
+        // Chart data (actuals only, no TTM)
+        const annualCols = cols.filter(y => y !== 'TTM')
+        const annualMets = mets.filter((_, i) => periods[i]?.year !== 'TTM')
+        const ndData    = annualMets.map(m => m.netDebtToEbitda ?? null)
+        const covData   = annualMets.map(m => m.ebitCov ?? null)
+        const currData  = annualMets.map(m => m.currRatio ?? null)
+        const quickData = annualMets.map(m => m.quickRatio ?? null)
+        const hasChartData = annualCols.length >= 2
+
+        return (
+          <div>
+            {/* Rating chip */}
+            {ratingLabel && (
+              <div className="px-4 sm:px-5 pt-4 pb-0 flex items-center gap-2 flex-wrap">
+                <span className={`text-[12px] font-semibold px-3 py-1 rounded-full border ${ratingColor}`}>
+                  {ratingLabel}
+                </span>
+                {nd != null && <span className="text-[11px] text-slate-400">Net Debt/EBITDA: {nd.toFixed(1)}×</span>}
+              </div>
+            )}
+
+            {/* 3 compact trend charts */}
+            {hasChartData && (
+              <div className="border-t border-slate-100 px-4 sm:px-5 pt-4 pb-2">
+                <p className="text-[12px] font-semibold text-slate-600 mb-3">Key Solvency Trends</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Net Debt / EBITDA */}
+                  <div className="bg-slate-50/60 rounded-xl p-3">
+                    <p className="text-[10px] font-semibold text-slate-500 mb-2">Net Debt / EBITDA</p>
+                    <TrendBars years={annualCols} values={ndData} positiveIsGood={false} threshold={3} />
+                    <p className="text-[9px] text-slate-400 mt-1.5">Red above 3× threshold</p>
+                  </div>
+                  {/* EBIT / Interest Coverage */}
+                  <div className="bg-slate-50/60 rounded-xl p-3">
+                    <p className="text-[10px] font-semibold text-slate-500 mb-2">Interest Coverage (EBIT)</p>
+                    <TrendBars years={annualCols} values={covData} positiveIsGood={true} threshold={1.5} />
+                    <p className="text-[9px] text-slate-400 mt-1.5">Red below 1.5× threshold</p>
+                  </div>
+                  {/* Current vs Quick Ratio */}
+                  <div className="bg-slate-50/60 rounded-xl p-3">
+                    <p className="text-[10px] font-semibold text-slate-500 mb-2">
+                      Current <span className="text-blue-500">■</span> &amp; Quick <span className="text-slate-400">■</span> Ratio
+                    </p>
+                    <TrendBars years={annualCols} values={currData} values2={quickData} positiveIsGood={true} threshold={1} />
+                    <p className="text-[9px] text-slate-400 mt-1.5">Blue = current · Gray = quick</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="border-t border-slate-100 px-4 sm:px-5 pt-4 pb-4">
+              <MetricsTable columns={cols} rows={solvencyRows} />
+              <p className="text-[10px] text-slate-400 mt-2 px-1">
+                Net Debt = Total Debt − Cash &amp; Equivalents. Negative Net Debt means net cash position.
+                Total Liab./Assets includes operating liabilities (deferred revenue, lease obligations).
+                Cash Runway only shown when operating cash flow is negative.
+              </p>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ── Analysts ── */}
       {subTab === 'analysts' && (() => {
@@ -814,6 +929,30 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                     {ca.numAnalysts > 0 && <span className="text-[12px] text-slate-400">{ca.numAnalysts} analysts covering this stock</span>}
                   </div>
                 </div>
+                {/* EPS Growth Estimates */}
+                {(analystEst1y != null || analystEst2y != null) && (
+                  <div>
+                    <p className="text-[13px] font-semibold text-slate-700 mb-3">EPS Growth Estimates</p>
+                    <div className="rounded-xl border border-slate-200 overflow-hidden">
+                      {analystEst1y != null && (
+                        <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-100">
+                          <span className="text-[13px] text-slate-500">Next Year</span>
+                          <span className={`text-[15px] font-bold tabular-nums ${analystEst1y >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                            {analystEst1y >= 0 ? '+' : ''}{(analystEst1y * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                      )}
+                      {analystEst2y != null && (
+                        <div className="flex items-center justify-between px-4 py-3 bg-white">
+                          <span className="text-[13px] text-slate-500">2-Year Forward</span>
+                          <span className={`text-[15px] font-bold tabular-nums ${analystEst2y >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                            {analystEst2y >= 0 ? '+' : ''}{(analystEst2y * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
                 {q.analystTargetMean > 0 && (
                   <div>
                     <p className="text-[13px] font-semibold text-slate-700 mb-3">Price Targets</p>
@@ -924,9 +1063,8 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                       </div>
                       <span className="text-[13px] font-bold tabular-nums text-slate-800">{s.pct.toFixed(1)}%</span>
                     </div>
-                    {/* O6: animate width on mount via CSS transition (bar starts at 0 via inline, then CSS transition runs) */}
                     <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full ${s.bar} transition-all duration-700 ease-out`} style={{ width: `${s.pct}%` }} />
+                      <div className={`h-full rounded-full ${s.bar}`} style={{ width: `${s.pct}%` }} />
                     </div>
                   </div>
                 ))}
@@ -968,6 +1106,12 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                       <span className="text-[13px] font-semibold text-slate-700 tabular-nums">{(shortRatio as number).toFixed(1)} days</span>
                     </div>
                   )}
+                  {shortPct != null && shortPct > 15 && shortRatio != null && (shortRatio as number) > 5 && (
+                    <div className="flex items-center justify-between px-4 py-3 bg-red-50 border-t border-red-100">
+                      <span className="text-[12px] font-semibold text-red-700">Squeeze Risk</span>
+                      <span className="text-[11px] text-red-600">High short interest + slow coverage</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -988,14 +1132,14 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         cashFlow={finCF}
         currency={currency}
         isDark={false}
-        historicalMultiples={subTab === 'statements' ? (financialsData?.historicalMultiples ?? []) : []}
+        historicalMultiples={[]}
         currentPE={financialsData?.quote?.peRatio ?? null}
         currentEVEbitda={financialsData?.businessProfile?.evToEbitda ?? null}
         currentEVRevenue={financialsData?.businessProfile?.evToRevenue ?? null}
         currentPS={financialsData?.businessProfile?.priceToSales ?? null}
         chartsToShow={
-          subTab === 'growth'        ? ['revGrowth', 'fcfGrowth'] :
-          subTab === 'profitability' ? ['margins', 'ebitda']      :
+          subTab === 'growth'        ? ['fcfGrowth']  :
+          subTab === 'profitability' ? ['margins']    :
           undefined
         }
       />
