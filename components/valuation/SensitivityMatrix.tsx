@@ -16,15 +16,16 @@ interface AxisField {
   unit: '%' | 'x'
   step: number
   format: (v: number) => string
+  description: string
 }
 
 const AXIS_FIELDS: AxisField[] = [
-  { key: 'cagr',            label: 'Revenue Growth Rate (CAGR)', shortLabel: 'Rev. Growth',   unit: '%', step: 0.025, format: v => (v * 100).toFixed(0) + '%' },
-  { key: 'wacc',            label: 'Discount Rate (WACC)',        shortLabel: 'WACC',          unit: '%', step: 0.010, format: v => (v * 100).toFixed(1) + '%' },
-  { key: 'netMargin',       label: 'Long-run Profit Margin',      shortLabel: 'Net Margin',    unit: '%', step: 0.025, format: v => (v * 100).toFixed(0) + '%' },
-  { key: 'exitPE',          label: 'Exit P/E Multiple',           shortLabel: 'Exit P/E',      unit: 'x', step: 3,     format: v => v.toFixed(0) + '×' },
-  { key: 'exitMultiple',    label: 'EV/EBITDA Multiple',          shortLabel: 'EV/EBITDA',     unit: 'x', step: 2,     format: v => v.toFixed(0) + '×' },
-  { key: 'revenueMultiple', label: 'EV/Revenue Multiple',         shortLabel: 'EV/Revenue',    unit: 'x', step: 1,     format: v => v.toFixed(1) + '×' },
+  { key: 'cagr',            label: 'Revenue Growth Rate', shortLabel: 'Rev. Growth',  unit: '%', step: 0.025, format: v => (v * 100).toFixed(0) + '%',  description: 'Avg annual revenue growth over 5 years' },
+  { key: 'wacc',            label: 'Discount Rate (WACC)', shortLabel: 'WACC',         unit: '%', step: 0.010, format: v => (v * 100).toFixed(1) + '%',  description: 'Required annual return (risk-adjusted)' },
+  { key: 'netMargin',       label: 'Long-run Net Margin',  shortLabel: 'Net Margin',   unit: '%', step: 0.025, format: v => (v * 100).toFixed(0) + '%',  description: 'Terminal profit margin at exit' },
+  { key: 'exitPE',          label: 'Exit P/E Multiple',    shortLabel: 'Exit P/E',     unit: 'x', step: 3,     format: v => v.toFixed(0) + '×',           description: 'Price-to-earnings at terminal year' },
+  { key: 'exitMultiple',    label: 'EV/EBITDA Multiple',   shortLabel: 'EV/EBITDA',    unit: 'x', step: 2,     format: v => v.toFixed(0) + '×',           description: 'Enterprise value to EBITDA at exit' },
+  { key: 'revenueMultiple', label: 'EV/Revenue Multiple',  shortLabel: 'EV/Revenue',   unit: 'x', step: 1,     format: v => v.toFixed(1) + '×',           description: 'Enterprise value to revenue at exit' },
 ]
 
 const FIELD_BOUNDS: Partial<Record<keyof ValuationAssumptions, [number, number]>> = {
@@ -61,11 +62,170 @@ interface Props {
   currentPrice: number
   currency: string
   epvPerShare: number | null
-  // Historical avg per assumption (for axis annotation)
   historicalData?: Partial<Record<keyof ValuationAssumptions, SparkPoint[]>>
-  // Auto-selected axes (top-2 by sensitivity)
   defaultAxisY: keyof ValuationAssumptions
   defaultAxisX: keyof ValuationAssumptions
+}
+
+// ── Axis pill selector ────────────────────────────────────────────────────────
+
+function AxisPills({
+  label, role, selected, blocked, onSelect,
+}: {
+  label: string
+  role: 'row' | 'col'
+  selected: keyof ValuationAssumptions
+  blocked: keyof ValuationAssumptions
+  onSelect: (k: keyof ValuationAssumptions) => void
+}) {
+  const activeClass = role === 'row'
+    ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
+    : 'bg-violet-600 border-violet-600 text-white shadow-sm'
+  const hoverClass = role === 'row'
+    ? 'bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600'
+    : 'bg-white border-slate-200 text-slate-600 hover:border-violet-300 hover:text-violet-600'
+
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      <span className="text-[10px] font-[700] text-slate-400 uppercase tracking-wide w-[44px] shrink-0 leading-tight">
+        {label}
+      </span>
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {AXIS_FIELDS.map(f => {
+          const isSelected = f.key === selected
+          const isBlocked = f.key === blocked
+          return (
+            <button
+              key={f.key}
+              disabled={isBlocked}
+              onClick={() => onSelect(f.key)}
+              title={isBlocked ? 'Already used on the other axis' : f.description}
+              className={cn(
+                'px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all border',
+                isSelected ? activeClass
+                  : isBlocked ? 'border-transparent text-slate-300 cursor-not-allowed select-none'
+                  : hoverClass,
+              )}
+            >
+              {f.shortLabel}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ── Cell detail panel ─────────────────────────────────────────────────────────
+
+function CellDetail({
+  yi, xi, yVals, xVals, fieldY, fieldX, assumptions, grid, currency, currentPrice,
+  baseYIdx, baseXIdx, onClose,
+}: {
+  yi: number; xi: number
+  yVals: number[]; xVals: number[]
+  fieldY: AxisField; fieldX: AxisField
+  assumptions: ValuationAssumptions
+  grid: Array<Array<{ fv: number | null; upside: number | null }>>
+  currency: string; currentPrice: number
+  baseYIdx: number; baseXIdx: number
+  onClose: () => void
+}) {
+  const yv = yVals[yi], xv = xVals[xi]
+  const { fv, upside } = grid[yi][xi]
+  const isBase = yi === baseYIdx && xi === baseXIdx
+  const scenarioAssumptions: ValuationAssumptions = { ...assumptions, [fieldY.key]: yv, [fieldX.key]: xv }
+
+  return (
+    <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4 animate-in fade-in slide-in-from-top-1 duration-150">
+
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[13px] font-bold text-slate-800">
+            {fieldY.shortLabel} {fieldY.format(yv)}
+            <span className="text-slate-300 mx-1.5">×</span>
+            {fieldX.shortLabel} {fieldX.format(xv)}
+          </span>
+          {isBase && (
+            <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[9px] font-bold rounded-full tracking-wide uppercase">
+              Base
+            </span>
+          )}
+        </div>
+        <button
+          onClick={onClose}
+          aria-label="Close scenario detail"
+          className="w-6 h-6 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors text-[16px] leading-none shrink-0"
+        >
+          ×
+        </button>
+      </div>
+
+      {/* Key metrics */}
+      <div className="flex items-end gap-5 mb-4 pb-3 border-b border-slate-200">
+        <div>
+          <p className="text-[10px] text-slate-400 mb-0.5">Fair Value</p>
+          <p className="text-[22px] font-[800] tabular-nums leading-none text-slate-900">
+            {fv != null ? fmtPrice(fv, currency) : '—'}
+          </p>
+        </div>
+        {upside != null && (
+          <div>
+            <p className="text-[10px] text-slate-400 mb-0.5">vs Current Price</p>
+            <p className={cn('text-[22px] font-[800] tabular-nums leading-none', upside >= 0 ? 'text-emerald-600' : 'text-red-500')}>
+              {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(1)}%
+            </p>
+          </div>
+        )}
+        {upside != null && currentPrice > 0 && (
+          <div>
+            <p className="text-[10px] text-slate-400 mb-0.5">Implied Price</p>
+            <p className="text-[14px] font-[700] tabular-nums text-slate-500 leading-none">
+              {fmtPrice(currentPrice, currency)} current
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* All assumptions grid */}
+      <p className="text-[10px] font-[700] uppercase tracking-wide text-slate-400 mb-2">Scenario assumptions</p>
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        {AXIS_FIELDS.map(f => {
+          const val = scenarioAssumptions[f.key] as number
+          const baseVal = assumptions[f.key] as number
+          const isVaried = f.key === fieldY.key || f.key === fieldX.key
+          const delta = val - baseVal
+          const hasDelta = Math.abs(delta) > 0.0001
+
+          return (
+            <div
+              key={f.key}
+              className={cn(
+                'rounded-lg p-2.5 flex flex-col gap-0.5',
+                isVaried
+                  ? 'bg-blue-50 border border-blue-200'
+                  : 'bg-white border border-slate-100',
+              )}
+            >
+              <p className="text-[9px] text-slate-400 leading-tight">{f.shortLabel}</p>
+              <p className={cn('text-[13px] font-[750] tabular-nums leading-snug', isVaried ? 'text-blue-700' : 'text-slate-700')}>
+                {f.format(val)}
+              </p>
+              {isVaried && hasDelta && (
+                <p className={cn('text-[9px] tabular-nums font-[600]', delta > 0 ? 'text-emerald-600' : 'text-red-500')}>
+                  {delta > 0 ? '+' : ''}{f.unit === '%' ? (delta * 100).toFixed(1) + 'pp' : delta.toFixed(1) + '×'} vs base
+                </p>
+              )}
+              {(!isVaried || !hasDelta) && (
+                <p className="text-[9px] text-slate-300 tabular-nums">base</p>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 // ── Main Component ─────────────────────────────────────────────────────────────
@@ -77,6 +237,7 @@ export default function SensitivityMatrix({
   const [axisY, setAxisY] = useState<keyof ValuationAssumptions>(defaultAxisY)
   const [axisX, setAxisX] = useState<keyof ValuationAssumptions>(defaultAxisX)
   const [displayMode, setDisplayMode] = useState<'upside' | 'fv'>('upside')
+  const [selectedCell, setSelectedCell] = useState<{ yi: number; xi: number } | null>(null)
 
   const fieldY = AXIS_FIELDS.find(f => f.key === axisY) ?? AXIS_FIELDS[0]
   const fieldX = AXIS_FIELDS.find(f => f.key === axisX) ?? AXIS_FIELDS[1]
@@ -84,7 +245,6 @@ export default function SensitivityMatrix({
   const yVals = useMemo(() => stepsAround(axisY, assumptions[axisY] as number, fieldY.step), [axisY, assumptions, fieldY.step])
   const xVals = useMemo(() => stepsAround(axisX, assumptions[axisX] as number, fieldX.step), [axisX, assumptions, fieldX.step])
 
-  // Compute 5×5 grid — synchronous, no API
   const grid = useMemo(() =>
     yVals.map(y =>
       xVals.map(x => {
@@ -97,7 +257,6 @@ export default function SensitivityMatrix({
     [yVals, xVals, assumptions, snapshot, axisY, axisX, currentPrice]
   )
 
-  // Historical avg for axis annotations
   function historicalAvg(key: keyof ValuationAssumptions): number | null {
     const pts = (historicalData[key] ?? []).filter(p => p.label !== 'curr')
     if (pts.length < 2) return null
@@ -107,17 +266,29 @@ export default function SensitivityMatrix({
   const histY = historicalAvg(axisY)
   const histX = historicalAvg(axisX)
 
-  // Find the base-case cell (closest to current assumptions)
-  const baseYIdx = yVals.indexOf(yVals.reduce((prev, cur) => Math.abs(cur - (assumptions[axisY] as number)) < Math.abs(prev - (assumptions[axisY] as number)) ? cur : prev))
-  const baseXIdx = xVals.indexOf(xVals.reduce((prev, cur) => Math.abs(cur - (assumptions[axisX] as number)) < Math.abs(prev - (assumptions[axisX] as number)) ? cur : prev))
+  const baseYIdx = yVals.indexOf(yVals.reduce((prev, cur) =>
+    Math.abs(cur - (assumptions[axisY] as number)) < Math.abs(prev - (assumptions[axisY] as number)) ? cur : prev))
+  const baseXIdx = xVals.indexOf(xVals.reduce((prev, cur) =>
+    Math.abs(cur - (assumptions[axisX] as number)) < Math.abs(prev - (assumptions[axisX] as number)) ? cur : prev))
 
-  // Mark which axis values are closest to historical avg
   function isNearHist(vals: number[], histVal: number | null): number {
     if (histVal == null) return -1
-    return vals.indexOf(vals.reduce((prev, cur) => Math.abs(cur - histVal) < Math.abs(prev - histVal) ? cur : prev))
+    return vals.indexOf(vals.reduce((prev, cur) =>
+      Math.abs(cur - histVal) < Math.abs(prev - histVal) ? cur : prev))
   }
   const histYIdx = isNearHist(yVals, histY)
   const histXIdx = isNearHist(xVals, histX)
+
+  function pickY(key: keyof ValuationAssumptions) {
+    if (key === axisX) setAxisX(axisY)
+    setAxisY(key)
+    setSelectedCell(null)
+  }
+  function pickX(key: keyof ValuationAssumptions) {
+    if (key === axisY) setAxisY(axisX)
+    setAxisX(key)
+    setSelectedCell(null)
+  }
 
   return (
     <div className="bg-white rounded-[14px] border border-[#E6ECF5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-5">
@@ -127,59 +298,36 @@ export default function SensitivityMatrix({
         <div>
           <div className="flex items-center gap-2">
             <p className="text-[13px] font-bold text-slate-800">Sensitivity Analysis</p>
-            <InfoTooltip text="How fair value changes when you vary two assumptions simultaneously. Every other assumption stays at its base value. The highlighted cell is your current scenario." />
+            <InfoTooltip text="How fair value changes when you vary two assumptions simultaneously. Click any cell to see the full scenario assumptions. Every other assumption stays at its base value." />
           </div>
           <p className="text-[11px] text-slate-400 mt-0.5">
-            Move any two assumptions — all others stay fixed at base values
+            Click a cell to inspect the scenario — all other assumptions stay at base
           </p>
         </div>
 
         {/* Display mode toggle */}
         <div className="flex items-center gap-1 rounded-lg border border-slate-200 p-0.5 bg-slate-50 shrink-0">
-          <button onClick={() => setDisplayMode('upside')} className={cn('text-[11px] font-semibold px-3 py-1 rounded-md transition-all', displayMode === 'upside' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600')}>% Upside</button>
-          <button onClick={() => setDisplayMode('fv')} className={cn('text-[11px] font-semibold px-3 py-1 rounded-md transition-all', displayMode === 'fv' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600')}>Fair Value</button>
+          <button
+            onClick={() => setDisplayMode('upside')}
+            className={cn('text-[11px] font-semibold px-3 py-1 rounded-md transition-all',
+              displayMode === 'upside' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600')}
+          >
+            % Upside
+          </button>
+          <button
+            onClick={() => setDisplayMode('fv')}
+            className={cn('text-[11px] font-semibold px-3 py-1 rounded-md transition-all',
+              displayMode === 'fv' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600')}
+          >
+            Fair Value
+          </button>
         </div>
       </div>
 
-      {/* Axis selectors */}
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <div className="flex items-center gap-2">
-          <label htmlFor="sensitivity-axis-rows" className="text-[10px] font-[700] uppercase tracking-wide text-slate-400">Rows</label>
-          <select
-            id="sensitivity-axis-rows"
-            aria-label="Row axis variable"
-            value={axisY}
-            onChange={e => {
-              const v = e.target.value as keyof ValuationAssumptions
-              if (v === axisX) setAxisX(axisY)
-              setAxisY(v)
-            }}
-            className="text-[12px] font-semibold text-slate-700 border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 focus:border-blue-400 cursor-pointer"
-          >
-            {AXIS_FIELDS.map(f => (
-              <option key={f.key} value={f.key}>{f.label}</option>
-            ))}
-          </select>
-        </div>
-        <span className="text-slate-200 text-sm" aria-hidden="true">×</span>
-        <div className="flex items-center gap-2">
-          <label htmlFor="sensitivity-axis-cols" className="text-[10px] font-[700] uppercase tracking-wide text-slate-400">Columns</label>
-          <select
-            id="sensitivity-axis-cols"
-            aria-label="Column axis variable"
-            value={axisX}
-            onChange={e => {
-              const v = e.target.value as keyof ValuationAssumptions
-              if (v === axisY) setAxisY(axisX)
-              setAxisX(v)
-            }}
-            className="text-[12px] font-semibold text-slate-700 border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 focus:border-blue-400 cursor-pointer"
-          >
-            {AXIS_FIELDS.map(f => (
-              <option key={f.key} value={f.key}>{f.label}</option>
-            ))}
-          </select>
-        </div>
+      {/* Axis pills */}
+      <div className="flex flex-col gap-2 mb-5 p-3 bg-slate-50/60 rounded-xl border border-slate-100">
+        <AxisPills label="Rows" role="row" selected={axisY} blocked={axisX} onSelect={pickY} />
+        <AxisPills label="Cols" role="col" selected={axisX} blocked={axisY} onSelect={pickX} />
       </div>
 
       {/* Grid */}
@@ -187,20 +335,19 @@ export default function SensitivityMatrix({
         <table className="w-full border-collapse" style={{ minWidth: 360 }}>
           <thead>
             <tr>
-              {/* Corner cell with axis labels */}
-              <th className="text-right pr-2 pb-2 w-[96px]">
+              <th className="text-right pr-2 pb-2 w-[90px]">
                 <div className="flex flex-col items-end gap-0.5">
-                  <span className="text-[9px] font-[700] text-slate-400 uppercase tracking-wide">{fieldY.shortLabel} ↓</span>
-                  <span className="text-[9px] font-[700] text-slate-400 uppercase tracking-wide">{fieldX.shortLabel} →</span>
+                  <span className="text-[9px] font-[700] text-blue-400 uppercase tracking-wide">{fieldY.shortLabel} ↓</span>
+                  <span className="text-[9px] font-[700] text-violet-400 uppercase tracking-wide">{fieldX.shortLabel} →</span>
                 </div>
               </th>
               {xVals.map((xv, xi) => (
                 <th key={xi} className="pb-2 text-center">
-                  <div className={cn('text-[11px] font-[700] tabular-nums', xi === baseXIdx ? 'text-blue-600' : 'text-slate-500')}>
+                  <div className={cn('text-[11px] font-[700] tabular-nums', xi === baseXIdx ? 'text-violet-600' : 'text-slate-500')}>
                     {fieldX.format(xv)}
                   </div>
                   {xi === histXIdx && histX != null && (
-                    <div className="text-[9px] text-slate-400 leading-none mt-0.5">← hist</div>
+                    <div className="text-[9px] text-slate-400 leading-none mt-0.5">hist</div>
                   )}
                 </th>
               ))}
@@ -209,29 +356,34 @@ export default function SensitivityMatrix({
           <tbody>
             {yVals.map((yv, yi) => (
               <tr key={yi}>
-                {/* Y-axis label */}
                 <td className="pr-2 text-right py-0.5">
                   <div className={cn('text-[11px] font-[700] tabular-nums', yi === baseYIdx ? 'text-blue-600' : 'text-slate-500')}>
                     {fieldY.format(yv)}
                   </div>
                   {yi === histYIdx && histY != null && (
-                    <div className="text-[9px] text-slate-400 leading-none">← hist</div>
+                    <div className="text-[9px] text-slate-400 leading-none">hist</div>
                   )}
                 </td>
 
-                {/* Cells */}
                 {xVals.map((_, xi) => {
                   const { fv, upside } = grid[yi][xi]
                   const isBase = yi === baseYIdx && xi === baseXIdx
+                  const isSelected = selectedCell?.yi === yi && selectedCell?.xi === xi
                   const colors = cellColor(upside)
 
                   return (
                     <td key={xi} className="py-0.5 px-0.5">
-                      <div className={cn(
-                        'flex flex-col items-center justify-center rounded-lg h-[44px] transition-all',
-                        colors.bg,
-                        isBase && 'ring-2 ring-blue-500 ring-offset-1',
-                      )}>
+                      <button
+                        onClick={() => setSelectedCell(isSelected ? null : { yi, xi })}
+                        aria-pressed={isSelected}
+                        aria-label={`Scenario: ${fieldY.shortLabel} ${fieldY.format(yv)}, ${fieldX.shortLabel} ${fieldX.format(xVals[xi])}`}
+                        className={cn(
+                          'w-full flex flex-col items-center justify-center rounded-lg h-[44px] transition-all cursor-pointer group',
+                          colors.bg,
+                          isBase && !isSelected && 'ring-2 ring-blue-500 ring-offset-1',
+                          isSelected ? 'ring-2 ring-slate-900 ring-offset-2 scale-105 z-10 relative shadow-md' : 'hover:brightness-95 hover:scale-[1.03]',
+                        )}
+                      >
                         {displayMode === 'upside' ? (
                           <>
                             <span className={cn('text-[12px] font-[800] tabular-nums leading-tight', colors.text)}>
@@ -247,7 +399,7 @@ export default function SensitivityMatrix({
                             {isBase && <span className={cn('text-[8px] font-[600] leading-none mt-0.5', colors.text)}>base</span>}
                           </>
                         )}
-                      </div>
+                      </button>
                     </td>
                   )
                 })}
@@ -257,14 +409,32 @@ export default function SensitivityMatrix({
         </table>
       </div>
 
-      {/* Legend + EPV reference */}
+      {/* Cell detail panel */}
+      {selectedCell != null && (
+        <CellDetail
+          yi={selectedCell.yi}
+          xi={selectedCell.xi}
+          yVals={yVals}
+          xVals={xVals}
+          fieldY={fieldY}
+          fieldX={fieldX}
+          assumptions={assumptions}
+          grid={grid}
+          currency={currency}
+          currentPrice={currentPrice}
+          baseYIdx={baseYIdx}
+          baseXIdx={baseXIdx}
+          onClose={() => setSelectedCell(null)}
+        />
+      )}
+
+      {/* Legend + EPV */}
       <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
-        {/* Legend */}
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[10px] text-slate-400 font-[600]">Upside vs price:</span>
           {[
             { bg: 'bg-emerald-600', label: '≥40%' },
-            { bg: 'bg-emerald-100', label: '5–40%' },
+            { bg: 'bg-emerald-100 border border-emerald-200', label: '5–40%' },
             { bg: 'bg-amber-50 border border-amber-200', label: '±5%' },
             { bg: 'bg-red-100', label: '−5 to −20%' },
             { bg: 'bg-red-600', label: '≤−20%' },
@@ -275,17 +445,20 @@ export default function SensitivityMatrix({
             </div>
           ))}
           <div className="flex items-center gap-1 ml-1">
-            <div className="w-3 h-3 rounded-sm border-2 border-blue-500" />
-            <span className="text-[9px] text-slate-500">base case</span>
+            <div className="w-3 h-3 rounded-sm ring-2 ring-blue-500" />
+            <span className="text-[9px] text-slate-500">base</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-sm ring-2 ring-slate-900" />
+            <span className="text-[9px] text-slate-500">selected</span>
           </div>
         </div>
 
-        {/* EPV reference */}
         {epvPerShare != null && epvPerShare > 0 && (
           <div className="text-[10px] text-slate-500 bg-slate-50 rounded-lg px-3 py-1.5 border border-slate-200">
             <span className="font-[600]">No-growth floor (EPV):</span>{' '}
             <span className="font-[750] tabular-nums text-slate-700">{fmtPrice(epvPerShare, currency)}</span>
-            <span className="text-slate-400 ml-1">— what the company earns if growth stops</span>
+            <span className="text-slate-400 ml-1">— value if growth stops</span>
           </div>
         )}
       </div>
