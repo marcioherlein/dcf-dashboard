@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getFmpBundle, type FmpIncomeStatement, type FmpBalanceSheet, type FmpCashFlowStatement } from '@/lib/data/fmpClient'
-import { getFinancials, getQuote, getHistorical, getSPYHistorical, getFXRate, getPeerQuotes, getAnnualBalanceSheet } from '@/lib/data/yahooClient'
+import { getFinancials, getQuote, getHistorical, getSPYHistorical, getFXRate, getPeerQuotes, getAnnualBalanceSheet, getAnnualCashFlow } from '@/lib/data/yahooClient'
 import { calculateBeta } from '@/lib/dcf/calculateBeta'
 import { calculateWACC, extractWACCInputs } from '@/lib/dcf/calculateWACC'
 import { projectCashFlows, extractFCFInputs } from '@/lib/dcf/projectCashFlows'
@@ -28,6 +28,8 @@ export async function GET(req: NextRequest) {
       getFmpBundle(ticker).catch(() => ({ incomeStatements: [], cashFlowStatements: [], balanceSheets: [], keyMetrics: [], ratios: [] })),
       getAnnualBalanceSheet(ticker).catch(() => []),
     ])
+    // Sequential after main batch — avoids Yahoo rate-limiting from too many simultaneous calls
+    const annualCFRows = await getAnnualCashFlow(ticker).catch(() => [])
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const fin = financials as any
@@ -905,9 +907,33 @@ export async function GET(req: NextRequest) {
     }
 
     // Build Yahoo cashflow lookup by year for CapEx/D&A fallback when FMP lacks them
-    const yahooCfByYear: Record<string, { capex: number | null; dna: number | null; opCF: number | null; fcf: number | null }> = {}
+    // Priority 1: fundamentalsTimeSeries annual cash-flow (most complete)
+    // Priority 2: quoteSummary cashflowStatementHistory (older, sometimes missing OCF)
+    const yahooCfByYear: Record<string, { capex: number | null; dna: number | null; opCF: number | null; fcf: number | null; fcfDirect: number | null }> = {}
+
+    // Load fundamentalsTimeSeries cash-flow (annualCFRows from API call above)
+    for (const s of (annualCFRows as any[])) {
+      const d = s.date instanceof Date ? s.date : new Date(String(s.date))
+      if (isNaN(d.getTime())) continue
+      const yr = String(d.getFullYear())
+      const rawCapex = s.capitalExpenditure ?? s.purchaseOfPPE
+      const rawDna   = s.depreciationAmortizationDepletion ?? s.reconciledDepreciation
+      const rawOpCF  = s.operatingCashFlow ?? s.cashFlowFromContinuingOperatingActivities
+      const rawFcf   = s.freeCashFlow
+      const capexY = rawCapex != null ? (rawCapex as number) / 1e6 * fxRate : null
+      const dnaY   = rawDna   != null ? (rawDna   as number) / 1e6 * fxRate : null
+      const opCFY  = rawOpCF  != null ? (rawOpCF  as number) / 1e6 * fxRate : null
+      const fcfY   = capexY != null && opCFY != null ? Math.round(opCFY + capexY) : null
+      // Also store Yahoo's direct FCF as an independent fallback (doesn't require both OCF & Capex)
+      const fcfDirectY = rawFcf != null ? Math.round((rawFcf as number) / 1e6 * fxRate) : null
+      console.log(`[financials] yahooCF ${yr}: opCF=${opCFY}, capex=${capexY}, fcf=${fcfY}, fcfDirect=${fcfDirectY}`)
+      yahooCfByYear[yr] = { capex: capexY, dna: dnaY, opCF: opCFY, fcf: fcfY, fcfDirect: fcfDirectY }
+    }
+
+    // Overlay quoteSummary cashflowStatementHistory only where fundamentalsTimeSeries is missing
     for (const s of (fin.cashflowStatementHistory?.cashflowStatements ?? []) as any[]) {
       const yr = String(new Date(s.endDate).getFullYear())
+      if (yahooCfByYear[yr]?.opCF != null) continue  // already have reliable data
       const rawCapex = s.capitalExpenditures ?? s.capitalExpenditure ?? s.purchaseOfPlantPropertyEquipment
       const rawDna = s.depreciation ?? s.depreciationAndAmortization
       const rawOpCF = s.operatingCashflow ?? s.totalCashFromOperatingActivities
@@ -915,10 +941,10 @@ export async function GET(req: NextRequest) {
       const dnaY   = rawDna   != null ? (rawDna   as number) / 1e6 * fxRate : null
       const opCFY  = rawOpCF  != null ? (rawOpCF  as number) / 1e6 * fxRate : null
       const fcfY   = capexY != null && opCFY != null ? Math.round(opCFY + capexY) : null
-      yahooCfByYear[yr] = { capex: capexY, dna: dnaY, opCF: opCFY, fcf: fcfY }
+      yahooCfByYear[yr] = { capex: capexY, dna: dnaY, opCF: opCFY, fcf: fcfY, fcfDirect: null }
     }
 
-    const cfHistoricalRows = hasFmp
+    const cfHistoricalRows = hasFmp && fmpCfSorted.length > 0
       ? fmpCfSorted.map(s => {
           const yr = s.fiscalYear
           const yhoo = yahooCfByYear[yr] ?? {}
@@ -928,12 +954,13 @@ export async function GET(req: NextRequest) {
           const capex = fmpCapex ?? yhoo.capex ?? null
           const dna   = fmpDna   ?? yhoo.dna   ?? null
           const opCF  = fmpOpCF  ?? yhoo.opCF  ?? null
-          // Recompute FCF when FMP has it but CapEx was missing (FCF = Net Income proxy bug)
-          // If we now have real capex, derive FCF = operatingCF + capex; else use FMP value
+          // FCF fallback priority: computed (OCF+Capex) → Yahoo FTS direct FCF → FMP FCF
+          // yhoo.fcfDirect = Yahoo's own freeCashFlow from fundamentalsTimeSeries (reliable)
+          // fmpFcf may equal Net Income for companies where FMP lacks OCF data (data quality bug)
           const fmpFcf = s.freeCashFlow != null ? Math.round(s.freeCashFlow / 1e6 * fxRate) : null
           const freeCashFlow = opCF != null && capex != null
             ? Math.round(opCF + capex)
-            : fmpCapex != null ? fmpFcf : (yhoo.fcf ?? fmpFcf)
+            : (yhoo.fcfDirect ?? yhoo.fcf ?? (fmpCapex != null ? fmpFcf : fmpFcf))
           return {
             year: yr,
             operatingCF: opCF,
@@ -950,6 +977,33 @@ export async function GET(req: NextRequest) {
           }
         })
       : (() => {
+          // Primary: fundamentalsTimeSeries (annualCFRows) — reliable post-Nov 2024
+          // cashflowStatementHistory is deprecated and returns no financial fields since Nov 2024
+          if (Object.keys(yahooCfByYear).length > 0) {
+            const rawISStmts: any[] = fin.incomeStatementHistory?.incomeStatementHistory ?? []
+            return Object.entries(yahooCfByYear)
+              .sort((a, b) => a[0].localeCompare(b[0]))
+              .map(([yr, cf]) => {
+                const matchingIS = rawISStmts.find((r: any) => String(new Date(r.endDate).getFullYear()) === yr)
+                const fallbackNI = (matchingIS?.netIncome ?? null) as number | null
+                const freeCashFlow = cf.fcf ?? cf.fcfDirect
+                  ?? (cf.opCF == null && cf.capex == null && fallbackNI != null ? Math.round(fallbackNI / 1e6 * fxRate) : null)
+                return {
+                  year: yr,
+                  operatingCF: cf.opCF,
+                  capex: cf.capex,
+                  freeCashFlow,
+                  investingCF: null as number | null,
+                  financingCF: null as number | null,
+                  dividendsPaid: null as number | null,
+                  buybacks: null as number | null,
+                  dna: cf.dna,
+                  fiscalDate: `${yr}-12-31`,
+                  isProjected: false as const,
+                }
+              })
+          }
+          // Fallback: cashflowStatementHistory (deprecated, may lack financial fields)
           const rawCFHistoryEarly: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
           const rawISStmts: any[] = fin.incomeStatementHistory?.incomeStatementHistory ?? []
           const cfHistorical = rawCFHistoryEarly.slice(-4).reverse()

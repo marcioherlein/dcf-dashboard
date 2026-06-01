@@ -60,11 +60,12 @@ function buildDisplayRows(
 
     const nwcDelta = ufcf.nwcDelta ?? null
 
-    // Net debt repayment for LFCF display
-    const netDebtRepayment =
-      base?.financingCF != null && base?.dividendsPaid != null
-        ? -base.financingCF - Math.abs(base.dividendsPaid ?? 0)
-        : null
+    // Net debt repayment for LFCF: use long-term debt change (avoids buyback contamination
+    // from total financingCF). Positive = net paydown, negative = net new borrowing.
+    const prevBase = i > 0 ? baseRows[i - 1] : null
+    const netDebtRepayment = (base?.longTermDebt != null && prevBase?.longTermDebt != null)
+      ? prevBase.longTermDebt - base.longTermDebt
+      : null
 
     // Tax rate: prefer row-level if available, else ModellingInput default
     const taxRatePct = (ufcf as unknown as { taxRateActual?: number }).taxRateActual
@@ -259,10 +260,11 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
     for (let i = 0; i < baseInput.rows.length; i++) {
       const r  = baseInput.rows[i]
       const ov = rowOverrides[r.year] ?? {}
-      const baseNetDebtRepayment =
-        r.financingCF != null && r.dividendsPaid != null
-          ? -r.financingCF - Math.abs(r.dividendsPaid ?? 0)
-          : null
+      const prevR = i > 0 ? baseInput.rows[i - 1] : null
+      // Use long-term debt change as net debt repayment to avoid buyback contamination.
+      const baseNetDebtRepayment = (r.longTermDebt != null && prevR?.longTermDebt != null)
+        ? prevR.longTermDebt - r.longTermDebt
+        : null
       let revenue: number | null
       if (!r.isProjected || ov.revenue != null) {
         revenue = ov.revenue ?? r.revenue

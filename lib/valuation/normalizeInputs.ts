@@ -302,6 +302,31 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
   const medianFcfMargin = computeMedian(recent.map(r =>
     r.freeCashFlow != null && r.revenue != null && r.revenue > 0 ? r.freeCashFlow / r.revenue : null))
 
+  // NWC delta as % of revenue change — used to project NWC for each forecast year
+  // so UFCF gets a non-zero ΔNWC instead of defaulting to 0.
+  const deriveNwc = (r: ModellingRow): number | null => {
+    if (r.totalCurrentAssets == null || r.cash == null || r.totalCurrentLiabilities == null) return null
+    return (r.totalCurrentAssets - r.cash) - r.totalCurrentLiabilities
+  }
+  const nwcDeltaRevRatios = recent.map((r, i) => {
+    if (i === 0) return null
+    const prev = recent[i - 1]
+    const nwcCurr = deriveNwc(r)
+    const nwcPrev = deriveNwc(prev)
+    const revDelta = r.revenue != null && prev.revenue != null ? r.revenue - prev.revenue : null
+    if (nwcCurr == null || nwcPrev == null || revDelta == null || revDelta === 0) return null
+    return (nwcCurr - nwcPrev) / Math.abs(revDelta)
+  }).filter((v): v is number => v != null)
+  const avgNwcDeltaRevRatio = nwcDeltaRevRatios.length > 0
+    ? nwcDeltaRevRatios.reduce((a, b) => a + b, 0) / nwcDeltaRevRatios.length
+    : null
+
+  // Starting NWC level for projection chain (TTM preferred, else last annual row)
+  const lastNwc = (() => {
+    const anchor = ttmRow ?? annualRows[annualRows.length - 1]
+    return anchor ? deriveNwc(anchor) : null
+  })()
+
   const lastAnnualRow = annualRows[annualRows.length - 1]
   const baseRevenue = ttmRow?.revenue ?? lastAnnualRow?.revenue ?? null
   if (baseRevenue == null || baseRevenue <= 0) return []
@@ -319,6 +344,8 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
   }
 
   const rows: ModellingRow[] = []
+  let prevRevenue = baseRevenue
+  let prevNwc = lastNwc
   for (let i = 0; i < nYears; i++) {
     const revenue = baseRevenue * Math.pow(1 + cagr, i + 1)
     const ebit = medianEbitMargin != null ? revenue * medianEbitMargin : null
@@ -327,6 +354,22 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
     const ebitda = (ebit != null && dna != null)
       ? ebit + dna
       : (medianEbitdaMargin != null ? revenue * medianEbitdaMargin : null)
+
+    // Project NWC level for this year; encode as BS fields so deriveNWC() picks it up.
+    // totalCurrentAssets = nwc, cash = 0, totalCurrentLiabilities = 0 → deriveNWC = nwc.
+    let projTotalCurrentAssets: number | null = null
+    let projCash: number | null = null
+    let projTotalCurrentLiabilities: number | null = null
+    if (avgNwcDeltaRevRatio != null && prevNwc != null) {
+      const revDelta = revenue - prevRevenue
+      const projNwc = prevNwc + avgNwcDeltaRevRatio * revDelta
+      projTotalCurrentAssets = projNwc
+      projCash = 0
+      projTotalCurrentLiabilities = 0
+      prevNwc = projNwc
+    }
+    prevRevenue = revenue
+
     rows.push({
       year: String(startYear + i) + 'E',
       isProjected: true,
@@ -340,9 +383,9 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
       freeCashFlow: medianFcfMargin != null && medianCapexPct === 0 ? revenue * medianFcfMargin : null,
       dividendsPaid: null,
       financingCF: null,
-      cash: null,
-      totalCurrentAssets: null,
-      totalCurrentLiabilities: null,
+      cash: projCash,
+      totalCurrentAssets: projTotalCurrentAssets,
+      totalCurrentLiabilities: projTotalCurrentLiabilities,
       longTermDebt: null,
       totalEquity: null,
       dna,

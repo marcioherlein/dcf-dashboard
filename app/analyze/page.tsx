@@ -81,11 +81,12 @@ function SearchHero() {
   const router = useRouter()
   const reduced = useReducedMotion()
 
-  const [query, setQuery]       = useState('')
-  const [results, setResults]   = useState<SearchResult[]>([])
-  const [open, setOpen]         = useState(false)
-  const [loading, setLoading]   = useState(false)
-  const [activeIdx, setActiveIdx] = useState(-1)
+  const [query, setQuery]           = useState('')
+  const [results, setResults]       = useState<SearchResult[]>([])
+  const [open, setOpen]             = useState(false)
+  const [loading, setLoading]       = useState(false)
+  const [activeIdx, setActiveIdx]   = useState(-1)
+  const [showExplainer, setShowExplainer] = useState(false)
   const debounce  = useRef<ReturnType<typeof setTimeout>>()
   const searchRef = useRef<HTMLDivElement>(null)
   const inputRef  = useRef<HTMLInputElement>(null)
@@ -155,15 +156,57 @@ function SearchHero() {
   }
 
   return (
-    <div className="glass-card-light rounded-2xl px-6 py-5 sm:px-8 sm:py-6">
-      {/* Headline + subtitle as a tight unit */}
-      <div className="mb-4">
-        <h1 className="text-[22px] font-black sm:text-[26px] text-slate-900 leading-snug tracking-tight">
+    <div className="glass-card-light rounded-2xl px-6 py-6 sm:px-8 sm:py-7">
+      {/* Headline + subtitle */}
+      <div className="mb-5">
+        <h1 className="text-[28px] font-black sm:text-[32px] text-slate-900 leading-tight tracking-tight" style={{ textWrap: 'balance' }}>
           What do you want to analyze today?
         </h1>
-        <p className="mt-1 text-[14px] text-slate-600 leading-relaxed">
-          Search any company to see intrinsic value, market-implied growth, business quality, and valuation risk.
+        <p className="mt-2 text-[14px] text-slate-600 leading-relaxed">
+          Search any company to see intrinsic value, market-implied growth, business quality, and valuation risk.{' '}
+          <button
+            type="button"
+            onClick={() => setShowExplainer(v => !v)}
+            aria-expanded={showExplainer}
+            className="text-blue-600 hover:text-blue-700 font-medium transition-colors hover:underline underline-offset-2"
+          >
+            How to read this
+          </button>
         </p>
+
+        <AnimatePresence>
+          {showExplainer && (
+            <motion.div
+              key="concept-explainer"
+              initial={reduced ? {} : { opacity: 0, height: 0 }}
+              animate={reduced ? {} : { opacity: 1, height: 'auto' }}
+              exit={reduced ? {} : { opacity: 0, height: 0 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="overflow-hidden"
+            >
+              <div className="mt-3 rounded-xl bg-slate-50 border border-slate-200 p-4 text-[12px] leading-relaxed text-slate-700">
+                <p className="font-semibold text-[13px] text-slate-800 mb-2">What Intrinsico measures</p>
+                <p>Every stock price implies a 5-year revenue growth rate the market is betting on. Intrinsico calls this the <strong>implied CAGR</strong> and compares it to the company&apos;s 3-year historical growth rate. The gap is where the signal lives.</p>
+                <div className="mt-3 space-y-2">
+                  <p className="font-semibold text-slate-700 mb-1">Expectation labels:</p>
+                  <div className="flex items-start gap-2.5">
+                    <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-emerald-50 text-emerald-700 border-emerald-200">Conservative</span>
+                    <span className="text-slate-600">Implied growth is well below historical. Market is pricing in a slowdown or headwinds.</span>
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-amber-50 text-amber-700 border-amber-200">Moderate</span>
+                    <span className="text-slate-600">Implied growth roughly matches historical. Expectations are broadly in line with the past.</span>
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-red-50 text-red-600 border-red-200">Aggressive</span>
+                    <span className="text-slate-600">Implied growth significantly exceeds historical. Market is betting on a major acceleration.</span>
+                  </div>
+                </div>
+                <p className="mt-3 text-slate-400 text-[11px]">Intrinsic value is a DCF-based model estimate. All outputs are not financial advice.</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Search input */}
@@ -272,7 +315,6 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
   const up     = (q.changePct ?? 0) >= 0
   const reduced = useReducedMotion()
 
-  // Lazy-load fair value independently per card, staggered to avoid Yahoo Finance rate-limits
   const [fairValue,  setFairValue]  = useState<number | null>(q.fairValue)
   const [upsidePct,  setUpsidePct]  = useState<number | null>(q.upsidePct)
   const [fvLoading,  setFvLoading]  = useState(q.fairValue == null)
@@ -317,11 +359,6 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
             <span className="text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded-md px-2 py-0.5 font-mono leading-tight">
               {q.ticker}
             </span>
-            {q.etfSource && ETF_LABEL[q.etfSource] && (
-              <span className="text-[11px] font-medium text-slate-500 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 leading-tight">
-                {ETF_LABEL[q.etfSource]}
-              </span>
-            )}
           </div>
           {badge && (
             <span className={cn('text-[11px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap shrink-0', badge.cls)}>
@@ -335,7 +372,7 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
           {q.name}
         </p>
 
-        {/* Row 3: price + sparkline (baseline-aligned price & change) */}
+        {/* Row 3: price + sparkline */}
         <div className="flex items-center justify-between px-4 mt-3 gap-3">
           <div className="flex items-baseline gap-1.5">
             <span className="text-[19px] font-bold text-slate-900 tabular-nums leading-none">
@@ -355,17 +392,18 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
         {/* Divider */}
         <div className="mx-4 mt-3 border-t border-slate-100" />
 
-        {/* Row 4: intrinsic value + upside (pushes to bottom) */}
+        {/* Row 4: intrinsic value + upside */}
         <div className="flex items-end justify-between px-4 py-3 mt-auto gap-3">
           <div>
             <p className="flex items-center gap-1 text-[11px] font-medium text-slate-500 mb-0.5">
               Intrinsic value
-              <span
-                title="DCF-based fair value estimate using market-implied growth and WACC inputs"
-                className="cursor-help"
+              <button
+                type="button"
+                aria-label="DCF-based fair value estimate using market-implied growth and WACC inputs"
+                className="cursor-help inline-flex items-center"
               >
                 <Info size={11} className="text-slate-300" />
-              </span>
+              </button>
             </p>
             {fvLoading ? (
               <div className="h-4 w-14 rounded bg-slate-100 animate-pulse mt-0.5" />
@@ -406,19 +444,15 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
 
 // ─── Popular Analyses Section ─────────────────────────────────────────────────
 
-function PopularAnalysesSection() {
-  const [quotes, setQuotes] = useState<FeaturedQuote[]>(STATIC_QUOTES)
-  const reduced = useReducedMotion()
-
-  useEffect(() => {
-    fetch('/api/analyze/quotes')
-      .then((r) => r.json())
-      .then((d) => { if (Array.isArray(d.quotes)) setQuotes(d.quotes) })
-      .catch(() => {})
-  }, [])
-
+function PopularAnalysesSection({
+  quotes,
+  dataStale,
+}: {
+  quotes: FeaturedQuote[]
+  dataStale: boolean
+}) {
+  const reduced  = useReducedMotion()
   const featured = quotes.slice(0, 3)
-  const compact  = quotes.slice(3)
 
   return (
     <section>
@@ -427,12 +461,19 @@ function PopularAnalysesSection() {
           <h2 className="text-[15px] font-bold text-slate-900">Popular analyses</h2>
           <p className="text-[12px] text-slate-500 mt-0.5">Top holdings from SPY · QQQ · DIA — no duplicates</p>
         </div>
-        <Link href="/markets" className="text-[12px] font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 whitespace-nowrap">
-          View all <ChevronRight size={13} />
-        </Link>
+        <div className="flex items-center gap-3">
+          {dataStale && (
+            <span className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-0.5 whitespace-nowrap">
+              Cached · live prices unavailable
+            </span>
+          )}
+          <Link href="/markets" className="text-[12px] font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 whitespace-nowrap">
+            View all <ChevronRight size={13} />
+          </Link>
+        </div>
       </div>
 
-      {/* Mobile: horizontal scroll */}
+      {/* Mobile: horizontal scroll — all 9 */}
       <div className="sm:hidden flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory">
         {quotes.map((q, i) => (
           <div key={q.ticker} className="min-w-[280px] snap-start flex-shrink-0">
@@ -441,73 +482,17 @@ function PopularAnalysesSection() {
         ))}
       </div>
 
-      {/* Desktop: 3 featured cards + compact secondary list */}
-      <div className="hidden sm:block space-y-4">
-        <motion.div
-          className="grid grid-cols-3 gap-4 items-stretch"
-          variants={reduced ? {} : { visible: { transition: { staggerChildren: 0.06 } } }}
-          initial="hidden"
-          animate="visible"
-        >
-          {featured.map((q, i) => (
-            <StockAnalysisCard key={q.ticker} q={q} index={i} />
-          ))}
-        </motion.div>
-
-        {compact.length > 0 && (
-          <div className="glass-card-light rounded-xl overflow-hidden">
-            <div className="px-4 py-2.5 border-b border-slate-100/60">
-              <p className="text-[11px] font-semibold text-slate-500">More analyses</p>
-            </div>
-            <motion.div
-              className="divide-y divide-slate-50"
-              variants={reduced ? {} : { visible: { transition: { staggerChildren: 0.04 } } }}
-              initial="hidden"
-              animate="visible"
-            >
-              {compact.map((q, _i) => {
-                const up = (q.changePct ?? 0) >= 0
-                const zone = q.upsidePct != null ? upsideZone(q.upsidePct) : null
-                const badge = statusBadge(zone)
-                return (
-                  <motion.div
-                    key={q.ticker}
-                    variants={reduced ? {} : {
-                      hidden: { opacity: 0, x: -6 },
-                      visible: { opacity: 1, x: 0, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } },
-                    }}
-                  >
-                  <Link
-                    href={`/stock/${q.ticker}`}
-                    className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-50 transition-colors min-h-[48px]"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5 font-mono shrink-0">
-                        {q.ticker}
-                      </span>
-                      <span className="text-[13px] text-slate-700 truncate">{q.name}</span>
-                    </div>
-                    <div className="flex items-center gap-4 shrink-0">
-                      <span className="text-[13px] font-semibold text-slate-900 tabular-nums">
-                        {q.price != null ? fmtPrice(q.price) : '—'}
-                      </span>
-                      <span className={cn('text-[12px] font-semibold tabular-nums w-14 text-right', up ? 'text-emerald-600' : 'text-red-600')}>
-                        {q.changePct != null ? fmtPct(q.changePct / 100) : '—'}
-                      </span>
-                      {badge && (
-                        <span className={cn('text-[11px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap hidden lg:inline', badge.cls)}>
-                          {badge.label}
-                        </span>
-                      )}
-                    </div>
-                  </Link>
-                  </motion.div>
-                )
-              })}
-            </motion.div>
-          </div>
-        )}
-      </div>
+      {/* Desktop: 3 featured cards only — leaderboard below shows the full picture */}
+      <motion.div
+        className="hidden sm:grid grid-cols-3 gap-4 items-stretch"
+        variants={reduced ? {} : { visible: { transition: { staggerChildren: 0.06 } } }}
+        initial="hidden"
+        animate="visible"
+      >
+        {featured.map((q, i) => (
+          <StockAnalysisCard key={q.ticker} q={q} index={i} />
+        ))}
+      </motion.div>
     </section>
   )
 }
@@ -541,7 +526,16 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
             <span className="text-[11px] font-semibold text-slate-500">Stock</span>
             <span className="text-[11px] font-semibold text-slate-500">Implied 5Y CAGR</span>
             <span className="text-[11px] font-semibold text-slate-500">3Y Historical</span>
-            <span className="text-[11px] font-semibold text-slate-500">Expectation</span>
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-500">
+              Expectation
+              <button
+                type="button"
+                aria-label="Conservative = implied well below historical (slowdown priced in); Moderate = roughly in line with history; Aggressive = implied significantly above historical (acceleration priced in)"
+                className="cursor-help text-slate-300 hover:text-slate-500 transition-colors"
+              >
+                <Info size={10} />
+              </button>
+            </span>
             <span className="text-[11px] font-semibold text-slate-500 hidden sm:block">Interpretation</span>
           </div>
 
@@ -595,7 +589,7 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
                   {q.expectation}
                 </span>
 
-                {/* Interpretation — desktop, 2-line wrap with full text in title */}
+                {/* Interpretation — desktop only */}
                 <span
                   className="text-[11px] text-slate-500 hidden sm:block leading-relaxed line-clamp-2"
                   title={q.interpretation}
@@ -643,35 +637,33 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
 // ─── Quick Actions ────────────────────────────────────────────────────────────
 
 function QuickActions() {
-  const router = useRouter()
-
   const actions = [
     {
       icon: BarChart3,
       title: 'Compare stocks',
       desc: 'Side-by-side valuation, quality, and growth expectations.',
-      onClick: () => router.push('/compare'),
+      href: '/compare',
       iconCls: 'text-violet-600 bg-violet-50',
     },
     {
       icon: Bookmark,
       title: 'My Valuations',
       desc: 'Review saved analyses and track conviction over time.',
-      onClick: () => router.push('/valuations'),
+      href: '/valuations',
       iconCls: 'text-emerald-600 bg-emerald-50',
     },
   ]
 
   return (
     <section>
-      <h2 className="text-[15px] font-bold text-slate-900 mb-3">More tools</h2>
+      <h2 className="text-[15px] font-bold text-slate-900 mb-3">Go further</h2>
       <div className="glass-card-light rounded-xl divide-y divide-slate-100/60 overflow-hidden">
         {actions.map((a) => {
           const Icon = a.icon
           return (
-            <button
+            <Link
               key={a.title}
-              onClick={a.onClick}
+              href={a.href}
               className="flex w-full items-center gap-4 px-5 py-4 text-left hover:bg-slate-50 active:bg-slate-100 transition-colors min-h-[64px] group"
             >
               <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0', a.iconCls)}>
@@ -682,7 +674,7 @@ function QuickActions() {
                 <p className="text-[12px] text-slate-600 mt-0.5">{a.desc}</p>
               </div>
               <ChevronRight size={16} className="shrink-0 text-slate-300 group-hover:text-slate-500 group-hover:translate-x-1 transition-all duration-150" />
-            </button>
+            </Link>
           )
         })}
       </div>
@@ -765,7 +757,7 @@ function RecentlyViewed() {
                   </button>
                   <button
                     onClick={() => removeItem(r.ticker)}
-                    title="Remove from history"
+                    aria-label={`Remove ${r.ticker} from history`}
                     className="shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md text-slate-300 hover:text-slate-500 hover:bg-slate-100 transition-colors"
                   >
                     <X size={13} />
@@ -804,8 +796,8 @@ function RecentlyViewed() {
                   </button>
                   <button
                     onClick={() => removeItem(r.ticker)}
-                    title="Remove from history"
-                    className="absolute top-2 right-2 p-1 rounded-md text-slate-300 hover:text-slate-600 hover:bg-slate-100 transition-all"
+                    aria-label={`Remove ${r.ticker} from history`}
+                    className="absolute top-1 right-1 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-md text-slate-300 hover:text-slate-600 hover:bg-slate-100 transition-all"
                   >
                     <X size={12} />
                   </button>
@@ -823,6 +815,16 @@ function RecentlyViewed() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AnalyzePage() {
+  const [quotes, setQuotes]     = useState<FeaturedQuote[]>(STATIC_QUOTES)
+  const [dataStale, setDataStale] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/analyze/quotes')
+      .then((r) => r.json())
+      .then((d) => { if (Array.isArray(d.quotes)) setQuotes(d.quotes) })
+      .catch(() => { setDataStale(true) })
+  }, [])
+
   return (
     <div className="min-h-screen p-4 lg:p-6">
       <a
@@ -831,7 +833,7 @@ export default function AnalyzePage() {
       >
         Skip to content
       </a>
-      <div id="main-content" className="space-y-6" tabIndex={-1}>
+      <div id="main-content" className="space-y-8" tabIndex={-1}>
 
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -842,9 +844,9 @@ export default function AnalyzePage() {
         </motion.div>
 
         <ConceptBanner />
+        <PopularAnalysesSection quotes={quotes} dataStale={dataStale} />
+        <MarketPricingLeaderboard quotes={quotes} />
         <QuickActions />
-        <PopularAnalysesSection />
-        <MarketPricingLeaderboard quotes={STATIC_QUOTES} />
         <RecentlyViewed />
 
       </div>

@@ -52,9 +52,7 @@ export default function ConceptBanner() {
           exit={reduced ? {} : { opacity: 0, y: -6 }}
           transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div className="rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-            {/* Top accent line */}
-            <div className="h-px bg-blue-500 w-full" />
+          <div className="rounded-xl bg-blue-50/40 border border-blue-200 overflow-hidden">
 
             <div className="flex gap-3.5 px-5 py-4">
               {/* Icon */}
