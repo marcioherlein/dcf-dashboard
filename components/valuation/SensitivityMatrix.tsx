@@ -21,11 +21,11 @@ interface AxisField {
 
 const AXIS_FIELDS: AxisField[] = [
   { key: 'cagr',            label: 'Revenue Growth Rate', shortLabel: 'Rev. Growth',  unit: '%', step: 0.025, format: v => (v * 100).toFixed(0) + '%',  description: 'Avg annual revenue growth over 5 years' },
-  { key: 'wacc',            label: 'Discount Rate (WACC)', shortLabel: 'WACC',         unit: '%', step: 0.010, format: v => (v * 100).toFixed(1) + '%',  description: 'Required annual return (risk-adjusted)' },
+  { key: 'wacc',            label: 'Discount Rate (WACC)', shortLabel: 'WACC',         unit: '%', step: 0.015, format: v => (v * 100).toFixed(1) + '%',  description: 'Required annual return (risk-adjusted)' },
   { key: 'netMargin',       label: 'Long-run Net Margin',  shortLabel: 'Net Margin',   unit: '%', step: 0.025, format: v => (v * 100).toFixed(0) + '%',  description: 'Terminal profit margin at exit' },
-  { key: 'exitPE',          label: 'Exit P/E Multiple',    shortLabel: 'Exit P/E',     unit: 'x', step: 3,     format: v => v.toFixed(0) + '×',           description: 'Price-to-earnings at terminal year' },
-  { key: 'exitMultiple',    label: 'EV/EBITDA Multiple',   shortLabel: 'EV/EBITDA',    unit: 'x', step: 2,     format: v => v.toFixed(0) + '×',           description: 'Enterprise value to EBITDA at exit' },
-  { key: 'revenueMultiple', label: 'EV/Revenue Multiple',  shortLabel: 'EV/Revenue',   unit: 'x', step: 1,     format: v => v.toFixed(1) + '×',           description: 'Enterprise value to revenue at exit' },
+  { key: 'exitPE',          label: 'Exit P/E Multiple',    shortLabel: 'Exit P/E',     unit: 'x', step: 5,     format: v => v.toFixed(0) + '×',           description: 'Price-to-earnings at terminal year' },
+  { key: 'exitMultiple',    label: 'EV/EBITDA Multiple',   shortLabel: 'EV/EBITDA',    unit: 'x', step: 5,     format: v => v.toFixed(0) + '×',           description: 'Enterprise value to EBITDA at exit' },
+  { key: 'revenueMultiple', label: 'EV/Revenue Multiple',  shortLabel: 'EV/Revenue',   unit: 'x', step: 2,     format: v => v.toFixed(1) + '×',           description: 'Enterprise value to revenue at exit' },
 ]
 
 const FIELD_BOUNDS: Partial<Record<keyof ValuationAssumptions, [number, number]>> = {
