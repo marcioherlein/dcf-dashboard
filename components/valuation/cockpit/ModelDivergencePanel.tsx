@@ -57,7 +57,7 @@ export default function ModelDivergencePanel({ divergence }: Props) {
             <svg className="w-5 h-5 text-red-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
             </svg>
-            <span className="text-sm font-bold text-red-600 uppercase tracking-wide">Model Divergence</span>
+            <span className="text-sm font-bold text-red-600">Model Divergence</span>
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${badge.bg} ${badge.text}`}>
               {badge.label}
             </span>
@@ -70,7 +70,7 @@ export default function ModelDivergencePanel({ divergence }: Props) {
 
         {/* Center: Spread vs. Price */}
         <div className="px-6 py-6 flex flex-col justify-center">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Spread vs. Price</p>
+          <p className="text-[10px] font-bold text-slate-500 mb-2">Spread vs. Price</p>
           <p className="text-4xl font-bold tabular-nums text-slate-900 leading-none mb-1">
             {(divergence.spreadVsPrice * 100).toFixed(0)}%
           </p>
@@ -79,7 +79,7 @@ export default function ModelDivergencePanel({ divergence }: Props) {
 
         {/* Right: Coefficient of Variation */}
         <div className="px-6 py-6 flex flex-col justify-center">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Coefficient of Variation</p>
+          <p className="text-[10px] font-bold text-slate-500 mb-2">Coefficient of Variation</p>
           <p className="text-4xl font-bold tabular-nums text-slate-900 leading-none mb-1">
             {(divergence.cv * 100).toFixed(0)}%
           </p>
@@ -92,7 +92,7 @@ export default function ModelDivergencePanel({ divergence }: Props) {
       {divergence.methodExplanations.length > 0 && (
         <div className="border-t border-slate-100">
           <div className="px-5 py-3 bg-slate-50/70">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            <p className="text-[10px] font-bold text-slate-500">
               What&apos;s Driving the Divergence?
             </p>
           </div>

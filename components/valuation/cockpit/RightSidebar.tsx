@@ -71,7 +71,6 @@ function RangeBar({
         <span>{fmtPrice(max, currency)}</span>
       </div>
       <div className="relative h-3 bg-[#F1F5F9] rounded-full" aria-hidden="true">
-        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-red-400/40 via-amber-300/40 to-emerald-400/40" />
         {currentPct != null && (
           <div
             className="absolute top-0 h-full w-[2px] bg-[#94A3B8] rounded-full"
@@ -108,7 +107,7 @@ function WeightBars({ methods }: { methods: CockpitMethodResult[] }) {
               className="w-2 h-2 rounded-full shrink-0"
               style={{ background: isAvail ? METHOD_FILLS[i] : '#E2E8F0' }}
             />
-            <span className={`text-[11px] flex-1 truncate ${isAvail ? 'text-[#475569]' : 'text-[#CBD5E1]'}`}>
+            <span className={`text-[11px] flex-1 min-w-0 ${isAvail ? 'text-[#475569]' : 'text-[#CBD5E1]'}`}>
               {m.method}
             </span>
             <div className="w-20 h-1.5 bg-[#F1F5F9] rounded-full overflow-hidden shrink-0">

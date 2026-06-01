@@ -128,7 +128,7 @@ export default function ValuationMethodCards({
                       <cfg.Icon size={13} className={cfg.iconText} />
                     </div>
                   )}
-                  <span className={`text-sm font-bold truncate ${hasValue ? 'text-slate-800' : 'text-slate-400'}`}>
+                  <span className={`text-sm font-bold ${hasValue ? 'text-slate-800' : 'text-slate-400'}`}>
                     {m.method}
                   </span>
                 </div>
@@ -145,7 +145,7 @@ export default function ValuationMethodCards({
 
               {/* Fair value */}
               <div>
-                <p className="text-[10px] text-slate-400 mb-0.5">Fair Value</p>
+                <p className="text-[10px] text-slate-500 mb-0.5">Fair Value</p>
                 <div className="flex items-baseline gap-2 flex-wrap">
                   <span className="text-2xl font-bold tabular-nums text-slate-900 leading-none">
                     {m.fairValue != null ? fmtPrice(m.fairValue, currency) : '—'}

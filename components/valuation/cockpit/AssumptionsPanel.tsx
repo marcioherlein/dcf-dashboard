@@ -176,6 +176,13 @@ function BarChart({
   const zeroY  = toY(Math.max(yMin, Math.min(yMax, 0)))
   const inputY = Math.max(BC_MT, Math.min(BC_MT + BC_CH, toY(inputVal)))
 
+  // Offset the input label down if it would collide with a reference line label
+  const inputLabelCollides = referenceLines.some(rl => {
+    const ry = Math.max(BC_MT, Math.min(BC_MT + BC_CH, toY(rl.value)))
+    return Math.abs((ry - 2) - (inputY - 2.5)) < 10
+  })
+  const inputTextY = inputLabelCollides ? inputY + 10 : inputY - 2.5
+
   const n     = displayBars.length
   const slotW = n > 0 ? BC_CW / n : BC_CW
   const barW  = n > 0 ? Math.max(6, Math.min(26, slotW * 0.6)) : 0
@@ -257,7 +264,7 @@ function BarChart({
         stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="4 3"
       />
       <text
-        x={BC_ML + BC_CW - 2} y={inputY - 2.5}
+        x={BC_ML + BC_CW - 2} y={inputTextY}
         textAnchor="end" fontSize="9" fill="#b45309"
         fontWeight="600" fontFamily="sans-serif"
       >
