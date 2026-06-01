@@ -44,7 +44,7 @@ function AnimatedPanel({
       {/* Copy block */}
       <motion.div
         className="mb-5"
-        initial={reduced ? {} : { opacity: 0, y: 20 }}
+        initial={reduced !== false ? {} : { opacity: 0, y: 20 }}
         animate={inView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.55, ease: EASE, delay }}
       >
@@ -61,7 +61,7 @@ function AnimatedPanel({
         {bullets.map((item, i) => (
           <motion.div
             key={item.label}
-            initial={reduced ? {} : { opacity: 0, x: -18 }}
+            initial={reduced !== false ? {} : { opacity: 0, x: -18 }}
             animate={inView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.45, ease: EASE, delay: delay + 0.08 + i * 0.055 }}
             className="flex items-start gap-3"
@@ -81,7 +81,7 @@ function AnimatedPanel({
       {/* Screenshot — Apple-style zoom in from below */}
       <motion.div
         className="relative"
-        initial={reduced ? {} : { opacity: 0, scale: 0.88, y: 40 }}
+        initial={reduced !== false ? {} : { opacity: 0, scale: 0.88, y: 40 }}
         animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
         transition={{ duration: 0.78, ease: EASE, delay: delay + 0.18 }}
       >
@@ -103,7 +103,7 @@ export default function ProductDeepDiveSection() {
         {/* Heading — scale zoom */}
         <motion.div
           className="text-center mb-10 sm:mb-16"
-          initial={reduced ? {} : { opacity: 0, scale: 0.92, y: 20 }}
+          initial={reduced !== false ? {} : { opacity: 0, scale: 0.92, y: 20 }}
           animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
           transition={{ duration: 0.65, ease: EASE }}
         >

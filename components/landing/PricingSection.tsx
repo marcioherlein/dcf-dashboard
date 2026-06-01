@@ -63,7 +63,7 @@ export default function PricingSection() {
                 <span style={{ fontSize: '36px', fontWeight: 700, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>$0</span>
                 <span style={{ fontSize: '14px', color: '#94A3B8' }}>/mo</span>
               </div>
-              <p className="text-base" style={{ color: '#64748B', marginTop: '6px' }}>
+              <p className="text-base" style={{ color: '#475569', marginTop: '6px' }}>
                 No account needed to start. Always free.
               </p>
             </div>
@@ -109,7 +109,7 @@ export default function PricingSection() {
                 <span style={{ fontSize: '36px', fontWeight: 700, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>$17</span>
                 <span style={{ fontSize: '14px', color: '#94A3B8' }}>/mo</span>
               </div>
-              <p className="text-base" style={{ color: '#64748B', marginTop: '6px' }}>
+              <p className="text-base" style={{ color: '#475569', marginTop: '6px' }}>
                 For investors who do serious research.
               </p>
             </div>

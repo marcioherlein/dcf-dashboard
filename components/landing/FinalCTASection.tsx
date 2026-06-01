@@ -54,7 +54,7 @@ export default function FinalCTASection() {
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
         <motion.div
           className="rounded-[24px] text-center px-5 sm:px-8 py-10 sm:py-14"
-          initial={reduced ? {} : { opacity: 0, scale: 0.92, y: 28 }}
+          initial={reduced !== false ? {} : { opacity: 0, scale: 0.92, y: 28 }}
           animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
           transition={{ duration: 0.70, ease: EASE }}
           style={{
@@ -75,7 +75,7 @@ export default function FinalCTASection() {
           >
             Ready to know what a stock is really worth?
           </h2>
-          <p className="text-base sm:text-[17px]" style={{ color: '#64748B', lineHeight: 1.55, marginBottom: '28px' }}>
+          <p className="text-base sm:text-[17px]" style={{ color: '#475569', lineHeight: 1.55, marginBottom: '28px' }}>
             Type any ticker. See fair value, implied growth, and a verdict — in seconds.
           </p>
 

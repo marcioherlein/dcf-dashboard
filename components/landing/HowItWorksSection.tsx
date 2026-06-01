@@ -36,13 +36,13 @@ export default function HowItWorksSection() {
       ref={ref}
       id="how-it-works"
       className="overflow-x-hidden"
-      style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}
+      style={{ background: '#EFF6FF', borderBottom: '1px solid #BFDBFE' }}
     >
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
 
         {/* Heading — scale zoom in */}
         <motion.div
-          initial={reduced ? {} : { opacity: 0, scale: 0.92, y: 20 }}
+          initial={reduced !== false ? {} : { opacity: 0, scale: 0.92, y: 20 }}
           animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
           transition={{ duration: 0.65, ease: EASE }}
           className="text-center mb-10 sm:mb-14"
@@ -76,7 +76,7 @@ export default function HowItWorksSection() {
               background: 'linear-gradient(90deg, #BFDBFE 0%, #E2E8F0 50%, #BFDBFE 100%)',
               transformOrigin: 'left center',
             }}
-            initial={reduced ? {} : { scaleX: 0 }}
+            initial={reduced !== false ? {} : { scaleX: 0 }}
             animate={inView ? { scaleX: 1 } : {}}
             transition={{ duration: 0.8, ease: EASE, delay: 0.2 }}
             aria-hidden="true"
@@ -85,7 +85,7 @@ export default function HowItWorksSection() {
           {STEPS.map((step, i) => (
             <motion.div
               key={i}
-              initial={reduced ? {} : { opacity: 0, scale: 0.93, y: 28 }}
+              initial={reduced !== false ? {} : { opacity: 0, scale: 0.93, y: 28 }}
               animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
               transition={{ duration: 0.62, ease: EASE, delay: 0.12 + i * 0.10 }}
               className="flex flex-col items-center text-center rounded-[18px] border bg-white p-7"
@@ -96,7 +96,7 @@ export default function HowItWorksSection() {
             >
               {/* Number badge — pop */}
               <motion.div
-                initial={reduced ? {} : { opacity: 0, scale: 0.55 }}
+                initial={reduced !== false ? {} : { opacity: 0, scale: 0.55 }}
                 animate={inView ? { opacity: 1, scale: 1 } : {}}
                 transition={{ duration: 0.38, ease: EASE, delay: 0.28 + i * 0.10 }}
                 className="flex items-center justify-center rounded-full text-white font-bold z-10 mb-5"
@@ -132,7 +132,7 @@ export default function HowItWorksSection() {
         {/* Arrow hint */}
         <motion.div
           className="hidden sm:flex justify-center mt-6"
-          initial={reduced ? {} : { opacity: 0 }}
+          initial={reduced !== false ? {} : { opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ duration: 0.5, delay: 0.55 }}
         >

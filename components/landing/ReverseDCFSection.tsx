@@ -69,13 +69,13 @@ export default function ReverseDCFSection() {
         >
           {/* Left: explanation — zoom in */}
           <motion.div
-            initial={reduced ? {} : { opacity: 0, scale: 0.93, x: -24 }}
+            initial={reduced !== false ? {} : { opacity: 0, scale: 0.93, x: -24 }}
             animate={inView ? { opacity: 1, scale: 1, x: 0 } : {}}
             transition={{ duration: 0.68, ease: EASE }}
           >
             <p
-              className="font-bold uppercase mb-3"
-              style={{ fontSize: '11px', letterSpacing: '0.08em', color: '#2563EB' }}
+              className="font-semibold mb-3"
+              style={{ fontSize: '13px', color: '#2563EB' }}
             >
               What is today&apos;s price already betting on?
             </p>
@@ -125,7 +125,7 @@ export default function ReverseDCFSection() {
             {STOCKS.map((stock, i) => (
               <motion.div
                 key={stock.ticker}
-                initial={reduced ? {} : { opacity: 0, scale: 0.93, y: 20 }}
+                initial={reduced !== false ? {} : { opacity: 0, scale: 0.93, y: 20 }}
                 animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
                 transition={{ duration: 0.60, ease: EASE, delay: 0.12 + i * 0.10 }}
               >

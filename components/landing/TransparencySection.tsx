@@ -47,7 +47,7 @@ export default function TransparencySection() {
         {/* Heading — scale zoom */}
         <motion.div
           className="text-center mb-10 sm:mb-14"
-          initial={reduced ? {} : { opacity: 0, scale: 0.92, y: 20 }}
+          initial={reduced !== false ? {} : { opacity: 0, scale: 0.92, y: 20 }}
           animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
           transition={{ duration: 0.65, ease: EASE }}
         >
@@ -77,7 +77,7 @@ export default function TransparencySection() {
             {CARDS.map(({ Icon, iconColor, iconBg, title, body, chips, chipStyle }, i) => (
               <motion.div
                 key={title}
-                initial={reduced ? {} : { opacity: 0, scale: 0.92, y: 28 }}
+                initial={reduced !== false ? {} : { opacity: 0, scale: 0.92, y: 28 }}
                 animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
                 transition={{ duration: 0.62, ease: EASE, delay: 0.12 + i * 0.10 }}
                 className="snap-start flex flex-col rounded-[20px] bg-white border p-6 sm:p-7 hover:-translate-y-0.5 transition-transform w-[80vw] max-w-[300px] sm:w-auto sm:max-w-none"

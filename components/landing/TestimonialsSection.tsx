@@ -6,7 +6,7 @@ const EASE = [0.16, 1, 0.3, 1] as const
 
 const QUOTES = [
   {
-    text: "intrinsico gives me the clarity I need to invest with discipline. The Reverse DCF is a game changer for understanding risk.",
+    text: "The Reverse DCF gave me a framework to see exactly what growth rate any stock is pricing in — before I decide whether to buy.",
     name: 'Michael T.',
     role: 'Self-Directed Investor',
     initial: 'M',
@@ -34,22 +34,27 @@ export default function TestimonialsSection() {
   const reduced = useReducedMotion()
 
   return (
-    <section ref={ref} className="overflow-x-hidden" style={{ background: 'white', borderBottom: '1px solid #E2E8F0' }}>
+    <section
+      ref={ref}
+      className="overflow-x-hidden"
+      style={{ background: '#050D1F', borderBottom: '1px solid rgba(255,255,255,0.07)' }}
+    >
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
 
-        {/* Heading — scale zoom */}
+        {/* Heading */}
         <motion.div
           className="text-center mb-10 sm:mb-12"
-          initial={reduced ? {} : { opacity: 0, scale: 0.92, y: 20 }}
+          initial={reduced !== false ? {} : { opacity: 0, scale: 0.92, y: 20 }}
           animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
           transition={{ duration: 0.65, ease: EASE }}
         >
           <h2
-            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] text-slate-900 [text-wrap:balance]"
+            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] [text-wrap:balance]"
             style={{
               fontWeight: 700,
               lineHeight: 1.1,
               letterSpacing: '-0.025em',
+              color: '#F8FAFC',
             }}
           >
             Built for people who do their own research.
@@ -62,26 +67,27 @@ export default function TestimonialsSection() {
             {QUOTES.map((q, i) => (
               <motion.div
                 key={i}
-                initial={reduced ? {} : { opacity: 0, scale: 0.90, y: 32 }}
+                initial={reduced !== false ? {} : { opacity: 0, scale: 0.90, y: 32 }}
                 animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
                 transition={{ duration: 0.65, ease: EASE, delay: 0.10 + i * 0.12 }}
-                className="snap-start rounded-[20px] bg-white border p-6 sm:p-7 flex flex-col w-[82vw] max-w-[320px] sm:w-auto sm:max-w-none"
+                className="snap-start rounded-[20px] border p-6 sm:p-7 flex flex-col w-[82vw] max-w-[320px] sm:w-auto sm:max-w-none"
                 style={{
-                  borderColor: '#E6ECF5',
-                  boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 6px 20px rgba(15,23,42,0.05)',
+                  background: 'rgba(255,255,255,0.05)',
+                  borderColor: 'rgba(255,255,255,0.10)',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.2), 0 6px 20px rgba(0,0,0,0.18)',
                 }}
               >
                 {/* Quote mark */}
                 <svg width="24" height="18" viewBox="0 0 24 18" fill="none" className="mb-5 shrink-0" aria-hidden="true">
                   <path
                     d="M0 18V10.5C0 4.7 3.8 1.2 11.3 0l1 2C8.2 3 6.3 5 6 8h4.5V18H0zm13.5 0V10.5C13.5 4.7 17.3 1.2 24.8 0l1 2c-4.1 1-6 3-6.3 6H24V18H13.5z"
-                    fill="#BFDBFE"
+                    fill="rgba(191,219,254,0.35)"
                   />
                 </svg>
 
                 <p
                   className="text-base"
-                  style={{ lineHeight: 1.6, color: '#475569', flexGrow: 1, marginBottom: '24px' }}
+                  style={{ lineHeight: 1.6, color: '#CBD5E1', flexGrow: 1, marginBottom: '24px' }}
                 >
                   &ldquo;{q.text}&rdquo;
                 </p>
@@ -95,8 +101,8 @@ export default function TestimonialsSection() {
                     {q.initial}
                   </div>
                   <div>
-                    <p style={{ fontSize: '14px', fontWeight: 650, color: '#0F172A' }}>{q.name}</p>
-                    <p style={{ fontSize: '12px', color: '#94A3B8' }}>{q.role}</p>
+                    <p style={{ fontSize: '14px', fontWeight: 650, color: '#F1F5F9' }}>{q.name}</p>
+                    <p style={{ fontSize: '12px', color: '#64748B' }}>{q.role}</p>
                   </div>
                 </div>
               </motion.div>
@@ -105,8 +111,9 @@ export default function TestimonialsSection() {
         </div>
 
         <motion.p
-          className="text-center mt-8 text-[12px] text-slate-400"
-          initial={reduced ? {} : { opacity: 0 }}
+          className="text-center mt-8 text-[12px]"
+          style={{ color: '#334155' }}
+          initial={reduced !== false ? {} : { opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ duration: 0.5, delay: 0.5 }}
         >
