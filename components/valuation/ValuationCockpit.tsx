@@ -333,6 +333,13 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
         countryRisk={valueInvestingData.countryRiskDisclaimer}
       />
 
+      {/* Scenario analysis — three stress cases, full width, above the matrix */}
+      <ScenarioCards
+        scenarios={output.scenarios}
+        currentPrice={currentPrice}
+        currency={currency}
+      />
+
       {/* Sensitivity matrix — always visible, updates live with assumption changes */}
       <SensitivityMatrix
         assumptions={assumptions}
@@ -371,11 +378,6 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
         </div>
 
         <div className="flex flex-col gap-4">
-          <ScenarioCards
-            scenarios={output.scenarios}
-            currentPrice={currentPrice}
-            currency={currency}
-          />
           <RightSidebar
             output={output}
             currentPrice={currentPrice}
