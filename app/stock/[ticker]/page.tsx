@@ -177,6 +177,7 @@ function StockPageBody() {
   const [financialsHighlight, setFinancialsHighlight] = useState<{ rowKey: string; statement: 'income' | 'balance' | 'cashflow' } | null>(null)
   const [financialsSubTab, _setFinancialsSubTab] = useState<'statements' | 'growth' | 'profitability' | 'solvency' | 'analysts' | 'ownership' | null>(null)
   const [userModelFairValue, setUserModelFairValue] = useState<number | null>(null)
+  const [pageLiveDcfFV, setPageLiveDcfFV] = useState<number | null>(null)
 
   // After Google OAuth redirect, restore the user's pre-login state (tab, etc.)
   useEffect(() => {
@@ -244,20 +245,27 @@ function StockPageBody() {
   }, [statementsData, data])
 
   // Compute the cockpit blended fair value at default assumptions so Summary and Valuation
-  // tabs always show the same number (previously Summary used a stale API triangulatedFairValue).
+  // tabs always show the same number. pageLiveDcfFV is set when the ModellingWorkspace
+  // (inside ValuationCockpit) computes, keeping both tabs in sync with the Full DCF Table.
   const cockpitSnapshot = useMemo(
     () => (data ? buildSnapshot(data, statementsData) : null),
     [data, statementsData]
+  )
+  const effectiveCockpitSnapshot = useMemo(
+    () => pageLiveDcfFV != null && cockpitSnapshot
+      ? { ...cockpitSnapshot, fullDcfFairValue: pageLiveDcfFV }
+      : cockpitSnapshot,
+    [cockpitSnapshot, pageLiveDcfFV]
   )
   const cockpitDefaults = useMemo(
     () => (data ? seedAssumptions(data) : null),
     [data]
   )
   const cockpitOutput = useMemo(
-    () => (cockpitSnapshot && cockpitDefaults
-      ? computeCockpitOutput(cockpitDefaults, cockpitSnapshot)
+    () => (effectiveCockpitSnapshot && cockpitDefaults
+      ? computeCockpitOutput(cockpitDefaults, effectiveCockpitSnapshot)
       : null),
-    [cockpitSnapshot, cockpitDefaults]
+    [effectiveCockpitSnapshot, cockpitDefaults]
   )
 
   const loadData = useCallback(() => {
@@ -515,6 +523,7 @@ function StockPageBody() {
                       statementsData={statementsData}
                       onNavigateToFinancials={handleNavigateToFinancials}
                       onNavigateToRisks={handleNavigateToRisks}
+                      onLiveDcfFVChange={setPageLiveDcfFV}
                     />
                   )}
                 </motion.div>
