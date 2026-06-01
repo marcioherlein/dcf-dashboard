@@ -168,7 +168,13 @@ function ModellingApproach({
   const cockpitDiverged = cockpitWacc != null && Math.abs(wacc - cockpitWacc) > 0.001
   const displayCagrPct = flatCagrPct ?? baseCagrPct
 
-  const selectCls = "bg-[#0d1829] text-[12px] font-[600] text-white/80 rounded-lg px-2.5 py-1.5 border border-white/[0.12] focus:outline-none focus:border-blue-500/50 cursor-pointer w-full appearance-none"
+  const selectCls = "bg-[#0d1829] text-[12px] font-[600] text-white/80 rounded-lg pl-2.5 pr-7 py-1.5 border border-white/[0.12] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus:border-blue-500/50 cursor-pointer w-full appearance-none"
+
+  const SelectCaret = () => (
+    <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-white/35" width="10" height="6" viewBox="0 0 10 6" aria-hidden="true">
+      <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
 
   return (
     <div className="px-5 pt-5 pb-4 border-b border-white/[0.08]">
@@ -194,14 +200,18 @@ function ModellingApproach({
         {/* Cash Flow Mode */}
         <div className="bg-white/[0.04] rounded-xl p-3 flex flex-col gap-2">
           <p className="text-[9px] font-[700] text-white/40 uppercase tracking-widest">Cash Flow</p>
-          <select
-            value={isLfcf ? 'lfcf' : 'ufcf'}
-            onChange={e => onModeChange(e.target.value === 'lfcf')}
-            className={selectCls}
-          >
-            <option value="ufcf">UFCF — Enterprise</option>
-            <option value="lfcf">LFCF — Equity</option>
-          </select>
+          <div className="relative">
+            <select
+              aria-label="Cash flow mode"
+              value={isLfcf ? 'lfcf' : 'ufcf'}
+              onChange={e => onModeChange(e.target.value === 'lfcf')}
+              className={selectCls}
+            >
+              <option value="ufcf">UFCF — Enterprise</option>
+              <option value="lfcf">LFCF — Equity</option>
+            </select>
+            <SelectCaret />
+          </div>
           <p className="text-[9px] text-white/30 leading-relaxed">
             {isLfcf
               ? 'Cash after debt payments. Discounted by cost of equity — no bridge needed.'
@@ -212,14 +222,18 @@ function ModellingApproach({
         {/* Terminal Value */}
         <div className="bg-white/[0.04] rounded-xl p-3 flex flex-col gap-2">
           <p className="text-[9px] font-[700] text-white/40 uppercase tracking-widest">Terminal Value</p>
-          <select
-            value={terminalMethod}
-            onChange={e => onTerminalMethodChange(e.target.value as 'perpetuity' | 'multiple')}
-            className={selectCls}
-          >
-            <option value="multiple">Exit Multiple</option>
-            <option value="perpetuity">Perpetuity Growth</option>
-          </select>
+          <div className="relative">
+            <select
+              aria-label="Terminal value method"
+              value={terminalMethod}
+              onChange={e => onTerminalMethodChange(e.target.value as 'perpetuity' | 'multiple')}
+              className={selectCls}
+            >
+              <option value="multiple">Exit Multiple</option>
+              <option value="perpetuity">Perpetuity Growth</option>
+            </select>
+            <SelectCaret />
+          </div>
           <p className="text-[9px] text-white/30 leading-relaxed">
             {terminalMethod === 'multiple'
               ? 'Company is sold at an EV/EBITDA multiple after the projection period.'
@@ -275,15 +289,19 @@ function ModellingApproach({
         {/* Revenue Growth */}
         <div className="bg-white/[0.04] rounded-xl p-3 flex flex-col gap-2">
           <p className="text-[9px] font-[700] text-white/40 uppercase tracking-widest">Revenue Growth</p>
-          <select
-            value={growthMode}
-            onChange={e => onGrowthModeChange(e.target.value as typeof growthMode)}
-            className={selectCls}
-          >
-            <option value="analyst">Analyst blend</option>
-            <option value="cagr">Flat CAGR</option>
-            <option value="manual">Manual (per-year)</option>
-          </select>
+          <div className="relative">
+            <select
+              aria-label="Revenue growth mode"
+              value={growthMode}
+              onChange={e => onGrowthModeChange(e.target.value as typeof growthMode)}
+              className={selectCls}
+            >
+              <option value="analyst">Analyst blend</option>
+              <option value="cagr">Flat CAGR</option>
+              <option value="manual">Manual (per-year)</option>
+            </select>
+            <SelectCaret />
+          </div>
           {growthMode === 'cagr' && (
             <div className="flex items-center gap-1.5">
               <span className="text-[9px] text-white/40 shrink-0">CAGR</span>
@@ -297,7 +315,7 @@ function ModellingApproach({
                   const v = parseFloat(e.target.value)
                   if (!isNaN(v)) onFlatCagrChange(v)
                 }}
-                className="flex-1 min-w-0 bg-[#0d1829] text-[12px] font-[600] text-white/80 rounded-lg px-2 py-1 border border-white/[0.12] focus:outline-none focus:border-blue-500/50 tabular-nums"
+                className="flex-1 min-w-0 bg-[#0d1829] text-[12px] font-[600] text-white/80 rounded-lg px-2 py-1 border border-white/[0.12] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus:border-blue-500/50 tabular-nums"
               />
               <span className="text-[9px] text-white/40 shrink-0">%/yr</span>
             </div>

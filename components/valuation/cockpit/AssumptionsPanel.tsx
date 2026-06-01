@@ -477,7 +477,7 @@ function AssumptionRowCollapsed({
       <span className={cn('w-2 h-2 rounded-full shrink-0', ctxLabel.dot)} title={ctxLabel.text} />
 
       {/* Chevron */}
-      <ChevronRight size={14} className={cn('text-slate-300 shrink-0 transition-transform duration-200', isExpanded && 'rotate-90')} />
+      <ChevronRight size={14} className={cn('text-slate-300 shrink-0 transition-transform duration-200 motion-reduce:transition-none', isExpanded && 'rotate-90')} />
     </button>
   )
 }
@@ -599,7 +599,7 @@ export default function AssumptionsPanel({
           {/* Presets */}
           <div className="flex items-center gap-0.5 rounded-lg border border-slate-200 p-0.5 bg-white">
             {presets.map(p => (
-              <button key={p.id} onClick={p.onClick} className={cn('text-[11px] font-semibold px-3 py-1 rounded-md transition-all', p.active ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50')}>
+              <button key={p.id} onClick={p.onClick} className={cn('text-[11px] font-semibold px-3 py-1.5 rounded-md motion-safe:transition-all', p.active ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50')}>
                 {p.label}
               </button>
             ))}
@@ -614,11 +614,11 @@ export default function AssumptionsPanel({
 
           {/* Undo */}
           {canUndo && onUndo && (
-            <button onClick={onUndo} className="text-[11px] font-semibold text-slate-500 hover:text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all">↩</button>
+            <button onClick={onUndo} className="text-[11px] font-semibold text-slate-600 hover:text-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 motion-safe:transition-all">↩</button>
           )}
 
           {/* Reset */}
-          <button onClick={onReset} disabled={!isModified} className="text-[11px] font-semibold text-slate-500 hover:text-slate-700 disabled:text-slate-300 px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:border-slate-100 transition-all">↺ Reset</button>
+          <button onClick={onReset} disabled={!isModified} className="text-[11px] font-semibold text-slate-600 hover:text-slate-700 disabled:text-slate-300 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:border-slate-100 motion-safe:transition-all">↺ Reset</button>
         </div>
       </div>
 

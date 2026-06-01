@@ -144,32 +144,36 @@ export default function SensitivityMatrix({
       {/* Axis selectors */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-[700] uppercase tracking-wide text-slate-400">Rows</span>
+          <label htmlFor="sensitivity-axis-rows" className="text-[10px] font-[700] uppercase tracking-wide text-slate-400">Rows</label>
           <select
+            id="sensitivity-axis-rows"
+            aria-label="Row axis variable"
             value={axisY}
             onChange={e => {
               const v = e.target.value as keyof ValuationAssumptions
               if (v === axisX) setAxisX(axisY)
               setAxisY(v)
             }}
-            className="text-[12px] font-semibold text-slate-700 border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:border-blue-400 cursor-pointer"
+            className="text-[12px] font-semibold text-slate-700 border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 focus:border-blue-400 cursor-pointer"
           >
             {AXIS_FIELDS.map(f => (
               <option key={f.key} value={f.key}>{f.label}</option>
             ))}
           </select>
         </div>
-        <span className="text-slate-200 text-sm">×</span>
+        <span className="text-slate-200 text-sm" aria-hidden="true">×</span>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-[700] uppercase tracking-wide text-slate-400">Columns</span>
+          <label htmlFor="sensitivity-axis-cols" className="text-[10px] font-[700] uppercase tracking-wide text-slate-400">Columns</label>
           <select
+            id="sensitivity-axis-cols"
+            aria-label="Column axis variable"
             value={axisX}
             onChange={e => {
               const v = e.target.value as keyof ValuationAssumptions
               if (v === axisY) setAxisY(axisX)
               setAxisX(v)
             }}
-            className="text-[12px] font-semibold text-slate-700 border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:border-blue-400 cursor-pointer"
+            className="text-[12px] font-semibold text-slate-700 border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 focus:border-blue-400 cursor-pointer"
           >
             {AXIS_FIELDS.map(f => (
               <option key={f.key} value={f.key}>{f.label}</option>
