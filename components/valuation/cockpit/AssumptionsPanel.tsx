@@ -4,6 +4,10 @@ import { useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ValuationAssumptions } from '@/lib/valuation/cockpit'
+import {
+  BarChart as RBarChart, Bar, XAxis, YAxis, Cell,
+  ReferenceLine as RReferenceLine, LabelList, ResponsiveContainer,
+} from 'recharts'
 
 // ── Re-export SparkPoint so callers that import it from here still work ────────
 export interface SparkPoint {
@@ -123,32 +127,26 @@ function getContextLabel(value: number, field: Field, stats: Stats, ttmVal?: num
 
 // ── Bar Chart ─────────────────────────────────────────────────────────────────
 
-const CW = 228  // chart bar area width
-const CH = 72   // chart bar area height
-const MT = 20   // top margin (space for value labels above bars)
-const MB = 14   // bottom margin (space for year labels)
-const ML = 0    // no left Y-axis
-const CHART_W = CW + ML + 52  // extra 52px for right-side line labels
-const CHART_H = CH + MT + MB
-
-interface ReferenceLine { value: number; label: string; color: string; dash: string }
+interface RefLine { value: number; label: string; color: string; dash: string }
 
 function BarChart({ sparkPoints, inputVal, color, unit, referenceLines = [] }: {
   sparkPoints: SparkPoint[]; inputVal: number; color: string; unit: '%' | 'x'
-  typicalMin: number; typicalMax: number; referenceLines?: ReferenceLine[]
+  typicalMin: number; typicalMax: number; referenceLines?: RefLine[]
 }) {
   const historical = sparkPoints.filter(p => p.label !== 'curr')
   const currPoint  = sparkPoints.find(p => p.label === 'curr')
   const bars = historical.length >= 1
-    ? [...historical.map(p => ({ label: p.label, value: p.value, isCurr: false })),
-       ...(currPoint ? [{ label: 'curr', value: currPoint.value, isCurr: true }] : [])]
+    ? [
+        ...historical.map(p => ({ label: shortYear(p.label), value: p.value, isCurr: false })),
+        ...(currPoint ? [{ label: "'" + String(new Date().getFullYear()).slice(2), value: currPoint.value, isCurr: true }] : []),
+      ]
     : []
 
   if (bars.length === 0) {
     return (
-      <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} width="100%" style={{ display: 'block' }} aria-hidden="true">
-        <text x={CW / 2} y={CHART_H / 2 + 4} textAnchor="middle" fontSize="9" fill="#cbd5e1" fontFamily="sans-serif">No historical data</text>
-      </svg>
+      <div className="flex items-center justify-center h-[86px]">
+        <span className="text-[9px] text-slate-300">No historical data</span>
+      </div>
     )
   }
 
@@ -156,72 +154,66 @@ function BarChart({ sparkPoints, inputVal, color, unit, referenceLines = [] }: {
   const allVals = [...bars.map(b => b.value), inputVal, ...refVals]
   const rawMin = Math.min(...allVals), rawMax = Math.max(...allVals)
   const pad = Math.max((rawMax - rawMin) * 0.18, rawMax === rawMin ? Math.abs(rawMax) * 0.2 || 1 : 0)
-  const yMin = Math.max(0, rawMin - pad), yMax = rawMax + pad
-  const ySpan = yMax - yMin || 1
-  const toY = (v: number) => MT + CH - ((v - yMin) / ySpan) * CH
-  const inputY = Math.max(MT + 1, Math.min(MT + CH - 1, toY(inputVal)))
-
-  const n = bars.length
-  const slotW = CW / n
-  const barW  = Math.max(8, Math.min(26, slotW * 0.55))
+  const yMin = Math.max(0, rawMin - pad)
+  const yMax = rawMax + pad
 
   return (
-    <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} width="100%" style={{ display: 'block', overflow: 'visible' }} aria-hidden="true">
+    <ResponsiveContainer width="100%" height={86}>
+      <RBarChart data={bars} margin={{ top: 18, right: 50, bottom: 0, left: 0 }} barCategoryGap="28%">
+        <YAxis domain={[yMin, yMax]} hide />
+        <XAxis
+          dataKey="label"
+          tick={{ fontSize: 8, fill: '#94a3b8' }}
+          axisLine={false}
+          tickLine={false}
+          interval={0}
+          height={14}
+        />
 
-      {/* Subtle grid line at zero / baseline */}
-      <line x1={ML} y1={MT + CH} x2={ML + CW} y2={MT + CH} stroke="#f1f5f9" strokeWidth="1" />
+        {referenceLines.map((rl, i) => (
+          <RReferenceLine
+            key={`rl-${i}`}
+            y={rl.value}
+            stroke={rl.color}
+            strokeDasharray={rl.dash}
+            strokeWidth={1}
+            label={{ value: rl.label, position: i % 2 === 0 ? 'insideTopRight' : 'insideBottomRight', fontSize: 7, fill: rl.color }}
+          />
+        ))}
 
-      {/* Bars */}
-      {bars.map((bar, i) => {
-        const cx   = ML + slotW * i + slotW / 2
-        const barX = cx - barW / 2
-        const barTopY = toY(bar.value)
-        const barH    = Math.max(2, MT + CH - barTopY)
-        return (
-          <g key={i}>
-            <rect x={barX} y={barTopY} width={barW} height={barH} fill={color} fillOpacity={bar.isCurr ? 1 : 0.45} rx="3">
-              <title>{shortYear(bar.label)}: {fmtVal(bar.value, unit)}</title>
-            </rect>
-            {/* Value above bar */}
-            <text x={cx} y={Math.max(MT - 2, barTopY - 3)} textAnchor="middle" fontSize="8"
-              fill={bar.isCurr ? color : '#94a3b8'}
-              fontWeight={bar.isCurr ? '700' : '500'}
-              fontFamily="sans-serif">
-              {fmtVal(bar.value, unit)}
-            </text>
-            {/* Year below */}
-            <text x={cx} y={CHART_H - 1} textAnchor="middle" fontSize="8"
-              fill={bar.isCurr ? '#475569' : '#94a3b8'}
-              fontWeight={bar.isCurr ? '600' : '400'}
-              fontFamily="sans-serif">
-              {bar.isCurr ? "'" + String(new Date().getFullYear()).slice(2) : shortYear(bar.label)}
-            </text>
-          </g>
-        )
-      })}
+        <RReferenceLine
+          y={inputVal}
+          stroke="#f59e0b"
+          strokeDasharray="4 3"
+          strokeWidth={1.5}
+          label={{ value: fmtVal(inputVal, unit), position: 'insideTopLeft', fontSize: 8, fill: '#b45309' }}
+        />
 
-      {/* Reference lines */}
-      {referenceLines.map((rl, i) => {
-        const ry = Math.max(MT + 1, Math.min(MT + CH - 1, toY(rl.value)))
-        const labelY = i % 2 === 0 ? ry - 2 : ry + 8  // simple stagger to avoid overlap
-        return (
-          <g key={`rl-${i}`}>
-            <line x1={ML} y1={ry} x2={ML + CW} y2={ry} stroke={rl.color} strokeWidth="1" strokeDasharray={rl.dash} />
-            <text x={ML + CW + 4} y={labelY} textAnchor="start" fontSize="7.5"
-              fill={rl.color} fontWeight="600" fontFamily="sans-serif">
-              {rl.label}
-            </text>
-          </g>
-        )
-      })}
-
-      {/* Current input line (amber) */}
-      <line x1={ML} y1={inputY} x2={ML + CW} y2={inputY} stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="4 3" />
-      <text x={ML + CW + 4} y={inputY - 2} textAnchor="start" fontSize="8"
-        fill="#b45309" fontWeight="700" fontFamily="sans-serif">
-        {fmtVal(inputVal, unit)}
-      </text>
-    </svg>
+        <Bar dataKey="value" radius={[3, 3, 0, 0]} isAnimationActive={false}>
+          {bars.map((bar, i) => (
+            <Cell key={i} fill={color} fillOpacity={bar.isCurr ? 1 : 0.4} />
+          ))}
+          <LabelList
+            dataKey="value"
+            position="top"
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            content={(props: any) => {
+              const { x, y, width, value, index } = props
+              const bar = bars[index]
+              if (value == null) return null
+              return (
+                <text x={(x ?? 0) + (width ?? 0) / 2} y={(y ?? 0) - 3}
+                  textAnchor="middle" fontSize={8} fontFamily="sans-serif"
+                  fill={bar?.isCurr ? color : '#94a3b8'}
+                  fontWeight={bar?.isCurr ? 700 : 500}>
+                  {fmtVal(value as number, unit)}
+                </text>
+              )
+            }}
+          />
+        </Bar>
+      </RBarChart>
+    </ResponsiveContainer>
   )
 }
 
@@ -285,9 +277,9 @@ function AssumptionRowExpanded({
   const showPEG = pegRatio != null && cagr != null && cagr > 0.10
   const showGordonPE = field.key === 'exitPE' && intrinsicPE != null && intrinsicPE > 0 && !showPEG
 
-  const referenceLines: ReferenceLine[] = (() => {
+  const referenceLines: RefLine[] = (() => {
     if (!field.isExitMultiple) return []
-    const lines: ReferenceLine[] = []
+    const lines: RefLine[] = []
     const grahamFloor = GRAHAM_FLOORS[field.key]
     if (grahamFloor != null) lines.push({ value: grahamFloor, label: `Graham: ${field.unit === 'x' ? grahamFloor + '×' : grahamFloor}`, color: '#94a3b8', dash: '3 2' })
     if (sectorBenchmark != null && sectorBenchmark > 0) lines.push({ value: sectorBenchmark, label: `Sector: ${sectorBenchmark.toFixed(0)}×`, color: '#0d9488', dash: '4 2' })
