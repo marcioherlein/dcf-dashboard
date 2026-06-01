@@ -62,6 +62,7 @@ function deriveCagr(
 
 function deriveNetMargin(
   incomeStatement: IncomeRow[],
+  cagr: number = 0,
 ): { margin: number; evidence: string; source: AssumptionSource } {
   const actuals = incomeStatement.filter(r => !r.isProjected)
   const withBoth = actuals.filter(r => r.netIncome != null && r.revenue != null && r.revenue > 0)
@@ -81,6 +82,11 @@ function deriveNetMargin(
   const grossMargins = actuals.filter(r => r.grossProfit != null && r.revenue != null && r.revenue > 0)
   const lastGM = grossMargins.length > 0 ? (grossMargins[grossMargins.length - 1].grossProfit! / grossMargins[grossMargins.length - 1].revenue!) : null
 
+  // Convergence model for high-growth, high-gross-margin, thin-net-margin companies.
+  // Additive bumps systematically undershoot for DUOL-type SaaS: 6% + 3% = 9% when the
+  // realistic 5-year steady state is 15–20%. Use a 70/30 blend toward a sector target instead.
+  const isHighGrowthSaaS = cagr > 0.15 && lastGM != null && lastGM > 0.60 && last > 0 && last < 0.10
+
   const isHighGrowth = margins.length >= 2 && (last - margins[0]) / Math.abs(margins[0] || 1) > 0.02
   const hasMoat      = lastGM != null && lastGM > 0.40
   const improvement  = (isHighGrowth && hasMoat) ? 0.03 : (isHighGrowth || hasMoat) ? 0.015 : 0.005
@@ -93,6 +99,13 @@ function deriveNetMargin(
                     : lastGM != null && lastGM >= 0.30 ? 0.05
                     : 0.03
     reason = `Pre-profit (${pct(last)}) → path to ${pct(projectedMargin)} via gross margin`
+  } else if (isHighGrowthSaaS) {
+    // 70% pull toward 18% SaaS steady-state target + 30% anchor on today's margin.
+    // This reflects that high-GM software companies reliably expand margins as scale grows,
+    // but landing exactly at target in 5 years is not guaranteed.
+    const targetMargin = 0.18
+    projectedMargin = Math.max(0.01, last * 0.30 + targetMargin * 0.70)
+    reason = `high-growth SaaS convergence: ${pct(last)} trailing × 30% + ${pct(targetMargin)} target × 70% → ${pct(projectedMargin)}`
   } else {
     projectedMargin = Math.max(0.01, Math.min(0.50, last + improvement))
     reason = isHighGrowth && hasMoat ? `high growth + moat (+3%)`
@@ -141,16 +154,31 @@ function deriveExitPE(
   industry: string | null,
   currentPE: number | null,
   crp: number = 0,
+  trailingMargin: number | null = null,
 ): { pe: number; sectorPE: number; evidence: string; source: AssumptionSource } {
   const { pe: sectorPE, source } = getIndustryMultiples(industry ?? '', sector ?? '')
-  const { blended, geoDiscount } = blendExitMultiple(sectorPE, currentPE, crp)
+
+  // Cap the current P/E anchor when it is inflated by thin margins.
+  // A tiny earnings denominator pushes P/E to 100×+ even at a "fair" price.
+  // Dual condition: current P/E > 2× sector median AND trailing net margin < 10%.
+  // Skip for auto-industry stocks (e.g. TSLA is Consumer Cyclical + Auto Manufacturers
+  // but uses a fundamentally different P/E structure than software).
+  const isAutoIndustry = /Auto Manufacturers|Motor Vehicle/i.test(industry ?? '')
+  const isThinMargin   = trailingMargin != null && trailingMargin < 0.10
+  const isPEElevated   = currentPE != null && currentPE > 0 && currentPE > sectorPE * 2
+  const shouldCapPE    = isThinMargin && isPEElevated && !isAutoIndustry
+
+  const effectivePE = shouldCapPE ? Math.min(currentPE!, sectorPE * 1.5) : currentPE
+  const { blended, geoDiscount } = blendExitMultiple(sectorPE, effectivePE, crp)
 
   const label = industry || sector || 'unknown'
-  const companyPEStr = currentPE != null && currentPE > 0 ? `${currentPE.toFixed(0)}×` : 'N/A'
+  const companyPEStr  = currentPE != null && currentPE > 0 ? `${currentPE.toFixed(0)}×` : 'N/A'
+  const effectivePEStr = effectivePE != null && effectivePE > 0 ? `${effectivePE.toFixed(0)}×` : 'N/A'
   const geoStr = geoDiscount < 0.99 ? ` (geo-discounted ${(geoDiscount * 100).toFixed(0)}%)` : ''
+  const capNote = shouldCapPE ? ` [capped from ${companyPEStr} — thin margin inflates current P/E]` : ''
 
   const evidence = currentPE != null && currentPE > 0
-    ? `Blend: current ${companyPEStr} × 55% + sector ${sectorPE}×${geoStr} × 35% → ${blended.toFixed(1)}× exit P/E`
+    ? `Blend: anchor ${effectivePEStr}${capNote} × 55% + sector ${sectorPE}×${geoStr} × 35% → ${blended.toFixed(1)}× exit P/E`
     : `No current P/E; sector median ${sectorPE}× (${label})${geoStr} → ${blended.toFixed(1)}×`
 
   return { pe: blended, sectorPE, evidence, source: source === 'industry-median' ? 'historical_3y_median' : 'sector_fallback' }
@@ -274,8 +302,11 @@ export function deriveForwardPEAssumptions(data: {
   const sectorFallback = SECTOR_CAGR[sector ?? ''] ?? 0.07
 
   const cagrDerived     = deriveCagr(data.cagrAnalysis, sectorFallback)
-  const marginDerived   = deriveNetMargin(incomeRows)
-  const peDerived       = deriveExitPE(sector, industry, data.quote?.peRatio ?? null, crp)
+  const marginDerived   = deriveNetMargin(incomeRows, cagrDerived.cagr)
+  const trailingMargin  = incomeRows
+    .filter(r => !r.isProjected && r.netIncome != null && r.revenue != null && r.revenue! > 0)
+    .map(r => r.netIncome! / r.revenue!).slice(-1)[0] ?? null
+  const peDerived       = deriveExitPE(sector, industry, data.quote?.peRatio ?? null, crp, trailingMargin)
   const dilutionDerived = deriveDilution(sector, marginDerived.margin)
   const waccEvidence    = deriveWACCEvidence(data.wacc?.inputs ?? {}, wacc)
   const ltmRev          = ltmRevenue(incomeRows)
@@ -357,7 +388,7 @@ export function deriveRevenueMultipleAssumptions(data: {
   const incomeRows   = data.financialStatements?.incomeStatement ?? []
 
   const cagrDerived     = deriveCagr(data.cagrAnalysis, SECTOR_CAGR[sector ?? ''] ?? 0.07)
-  const marginDerived   = deriveNetMargin(incomeRows)
+  const marginDerived   = deriveNetMargin(incomeRows, cagrDerived.cagr)
   const dilutionDerived = deriveDilution(sector, marginDerived.margin)
   const waccEvidence    = deriveWACCEvidence(data.wacc?.inputs ?? {}, wacc)
   const ltmRev          = ltmRevenue(incomeRows)

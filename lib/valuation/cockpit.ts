@@ -99,6 +99,24 @@ const COCKPIT_WEIGHTS: Record<string, MethodWeights> = {
   etf:       { forward_pe: 0.25, ev_ebitda: 0.25, revenue_multiple: 0.25, core_dcf: 0.25 },
 }
 
+// For growth/startup companies with thin EBITDA margins, the TTM EBITDA is a noisy anchor —
+// a company spending heavily on growth will show near-zero EBITDA while its revenue trajectory
+// is the real signal. Reduce EV/EBITDA weight to 8% and redistribute to revenue_multiple.
+function getEffectiveWeights(snapshot: CockpitSnapshot): MethodWeights {
+  const base = COCKPIT_WEIGHTS[snapshot.companyType ?? 'standard'] ?? COCKPIT_WEIGHTS.standard
+  const isGrowthType = snapshot.companyType === 'growth' || snapshot.companyType === 'startup'
+  if (!isGrowthType) return base
+  const revDollars    = snapshot.ltvRevenueDollars
+  const ebitdaDollars = snapshot.ttmEbitdaDollars
+  const ebitdaMargin  = revDollars && revDollars > 0 && ebitdaDollars != null
+    ? ebitdaDollars / revDollars : null
+  if (ebitdaMargin != null && ebitdaMargin < 0.08) {
+    const reduction = base.ev_ebitda - 0.08
+    return { ...base, ev_ebitda: 0.08, revenue_multiple: base.revenue_multiple + reduction }
+  }
+  return base
+}
+
 // Fix 1+2+3: runs all 4 methods at given assumptions and returns weighted blended fair value.
 // Fix 1: terminal growth is capped at wacc−0.02 (200bps minimum spread) to prevent denominator explosion.
 // Fix 3: DCF output is discarded if it exceeds 8× current price (terminal value explosion guard).
@@ -107,7 +125,7 @@ export function computeBlendedFV(
   snapshot: CockpitSnapshot,
 ): number | null {
   const { currentPrice } = snapshot
-  const W = COCKPIT_WEIGHTS[snapshot.companyType ?? 'standard'] ?? COCKPIT_WEIGHTS.standard
+  const W = getEffectiveWeights(snapshot)
 
   const fwdPE = computeForwardPE({
     ltvRevenue: snapshot.ltvRevenueDollars,
@@ -381,7 +399,7 @@ export function computeCockpitOutput(
   snapshot: CockpitSnapshot,
 ): CockpitOutput {
   const { currentPrice } = snapshot
-  const W = COCKPIT_WEIGHTS[snapshot.companyType ?? 'standard'] ?? COCKPIT_WEIGHTS.standard
+  const W = getEffectiveWeights(snapshot)
 
   // 1. Forward P/E
   const fwdPE = computeForwardPE({
