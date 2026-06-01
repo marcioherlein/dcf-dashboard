@@ -261,13 +261,13 @@ export async function GET(req: NextRequest) {
     //   Tech/SaaS: 45% — Veeva ~38%, Adobe ~45% are genuine; 35% would clip them unfairly
     //   Standard:  35% — most non-tech businesses top out around 25-30% FCF margin
     // Only fires if the market-cap yield cap did not already constrain baseFCF.
+    const _sL = ((profile.sector ?? q.sector ?? '') + ' ' + (profile.industry ?? '')).toLowerCase()
+    const isTechSaaS = /software|technology|internet content|internet retail|semiconductor|data processing|information tech/i.test(_sL)
+    const fcfMarginCeiling = isTechSaaS ? 0.45 : 0.35
     if (!fcfCapApplied && rawRevMLocal > 0) {
-      const _sL = ((profile.sector ?? q.sector ?? '') + ' ' + (profile.industry ?? '')).toLowerCase()
-      const _isTechSaaS = /software|technology|internet content|internet retail|semiconductor|data processing|information tech/i.test(_sL)
-      const _fcfMarginCeiling = _isTechSaaS ? 0.45 : 0.35
       const _fcfMarginActual = baseFCF / (rawRevMLocal * fxRate)
-      if (_fcfMarginActual > _fcfMarginCeiling) {
-        baseFCF = rawRevMLocal * fxRate * _fcfMarginCeiling
+      if (_fcfMarginActual > fcfMarginCeiling) {
+        baseFCF = rawRevMLocal * fxRate * fcfMarginCeiling
         fcfCapApplied = true
       }
     }
@@ -280,7 +280,9 @@ export async function GET(req: NextRequest) {
       // Treat 0 as null — Yahoo returns 0 for banks/fintechs that don't have COGS
       grossMargin: (fd.grossMargins != null && fd.grossMargins !== 0) ? (fd.grossMargins as number) : null,
       netMargin: (fd.profitMargins ?? null) as number | null,
-      fcfMargin: rawRevMLocal > 0 && annualFCFLocal !== 0 ? annualFCFLocal / rawRevMLocal : null,
+      fcfMargin: rawRevMLocal > 0 && annualFCFLocal !== 0
+        ? Math.min(annualFCFLocal / rawRevMLocal, fcfMarginCeiling)
+        : null,
       revenueM: rawRevMLocal * fxRate,
     }
 
@@ -699,13 +701,17 @@ export async function GET(req: NextRequest) {
     if (fmpGrossMargin != null) businessProfile.grossMargin = fmpGrossMargin
     if (fmpNetMargin   != null) businessProfile.netMargin   = fmpNetMargin
 
-    // FCF margin from FMP cash flows
+    // FCF margin from FMP cash flows — capped at same ceiling as baseFCF to prevent
+    // loan-distorted OCF (e.g. MELI Mercado Crédito) from inflating the reverse DCF model.
     const fmpLatestCF = fmp.cashFlowStatements[0]
     const fmpLatestIS = fmp.incomeStatements[0]
     if (fmpLatestCF && fmpLatestIS && fmpLatestIS.revenue > 0) {
       const fmpFcfM = fmpLatestCF.freeCashFlow / 1e6
       const fmpRevM = fmpLatestIS.revenue / 1e6
-      businessProfile.fcfMargin = fmpFcfM / fmpRevM
+      const rawFmpMargin = fmpFcfM / fmpRevM
+      if (rawFmpMargin > 0) {
+        businessProfile.fcfMargin = Math.min(rawFmpMargin, fcfMarginCeiling)
+      }
     }
 
     // Override roicResult with FMP data when available
@@ -1050,7 +1056,7 @@ export async function GET(req: NextRequest) {
         )
         const revForYear = matchIS?.revenue ?? (rawRevMLocal * fxRate)
         if (revForYear > 0) {
-          businessProfile.fcfMargin = recentPosCF.freeCashFlow! / revForYear
+          businessProfile.fcfMargin = Math.min(recentPosCF.freeCashFlow! / revForYear, fcfMarginCeiling)
         }
       }
     }
