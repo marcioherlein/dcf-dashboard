@@ -121,91 +121,106 @@ function getContextLabel(value: number, field: Field, stats: Stats, ttmVal?: num
   return               { text: `Above ${label}`,               dot: 'bg-red-400'     }
 }
 
-// ── Bar Chart (unchanged from original) ──────────────────────────────────────
+// ── Bar Chart ─────────────────────────────────────────────────────────────────
 
-const BC_W = 280, BC_H = 90, BC_ML = 26, BC_MR = 6, BC_MT = 8, BC_MB = 18
-const BC_CW = BC_W - BC_ML - BC_MR, BC_CH = BC_H - BC_MT - BC_MB
+const CW = 228  // chart bar area width
+const CH = 72   // chart bar area height
+const MT = 20   // top margin (space for value labels above bars)
+const MB = 14   // bottom margin (space for year labels)
+const ML = 0    // no left Y-axis
+const CHART_W = CW + ML + 52  // extra 52px for right-side line labels
+const CHART_H = CH + MT + MB
 
 interface ReferenceLine { value: number; label: string; color: string; dash: string }
 
-function BarChart({ sparkPoints, inputVal, color, unit, typicalMin, typicalMax, referenceLines = [] }: {
+function BarChart({ sparkPoints, inputVal, color, unit, referenceLines = [] }: {
   sparkPoints: SparkPoint[]; inputVal: number; color: string; unit: '%' | 'x'
   typicalMin: number; typicalMax: number; referenceLines?: ReferenceLine[]
 }) {
   const historical = sparkPoints.filter(p => p.label !== 'curr')
   const currPoint  = sparkPoints.find(p => p.label === 'curr')
-  const hasSeries  = historical.length >= 1
-
-  const displayBars = hasSeries
+  const bars = historical.length >= 1
     ? [...historical.map(p => ({ label: p.label, value: p.value, isCurr: false })),
-       ...(currPoint ? [{ label: String(new Date().getFullYear()), value: currPoint.value, isCurr: true }] : [])]
+       ...(currPoint ? [{ label: 'curr', value: currPoint.value, isCurr: true }] : [])]
     : []
 
-  const refVals = referenceLines.map(r => r.value).filter(v => v > 0)
-  const allVals = [...displayBars.map(b => b.value), inputVal, ...refVals, ...(hasSeries ? [] : [typicalMin, typicalMax])]
-  const rawMin = Math.min(...allVals), rawMax = Math.max(...allVals)
-  const vPad = Math.max((rawMax - rawMin) * 0.15, rawMax === rawMin ? 0.01 : 0)
-  const yMin = rawMin - vPad, yMax = rawMax + vPad, ySpan = yMax - yMin
-
-  const toY   = (v: number) => BC_MT + BC_CH - ((v - yMin) / ySpan) * BC_CH
-  const zeroY = toY(Math.max(yMin, Math.min(yMax, 0)))
-  const inputY = Math.max(BC_MT, Math.min(BC_MT + BC_CH, toY(inputVal)))
-
-  const MIN_LABEL_GAP = 11
-  type LabelEntry = { naturalY: number; finalY: number; isInput: boolean; rlIdx: number }
-  const rightLabels: LabelEntry[] = [
-    ...referenceLines.map((rl, i) => { const ry = Math.max(BC_MT, Math.min(BC_MT + BC_CH, toY(rl.value))); return { naturalY: ry - 2, finalY: ry - 2, isInput: false, rlIdx: i } }),
-    { naturalY: inputY - 2.5, finalY: inputY - 2.5, isInput: true, rlIdx: -1 },
-  ]
-  rightLabels.sort((a, b) => a.naturalY - b.naturalY)
-  for (let i = 1; i < rightLabels.length; i++) {
-    if (rightLabels[i].finalY - rightLabels[i - 1].finalY < MIN_LABEL_GAP) rightLabels[i].finalY = rightLabels[i - 1].finalY + MIN_LABEL_GAP
+  if (bars.length === 0) {
+    return (
+      <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} width="100%" style={{ display: 'block' }} aria-hidden="true">
+        <text x={CW / 2} y={CHART_H / 2 + 4} textAnchor="middle" fontSize="9" fill="#cbd5e1" fontFamily="sans-serif">No historical data</text>
+      </svg>
+    )
   }
-  const rlFinalY = new Map<number, number>()
-  let inputFinalY = inputY - 2.5
-  for (const l of rightLabels) { if (l.isInput) inputFinalY = l.finalY; else rlFinalY.set(l.rlIdx, l.finalY) }
 
-  const n = displayBars.length, slotW = n > 0 ? BC_CW / n : BC_CW, barW = n > 0 ? Math.max(6, Math.min(26, slotW * 0.6)) : 0
+  const refVals = referenceLines.map(r => r.value).filter(v => v > 0)
+  const allVals = [...bars.map(b => b.value), inputVal, ...refVals]
+  const rawMin = Math.min(...allVals), rawMax = Math.max(...allVals)
+  const pad = Math.max((rawMax - rawMin) * 0.18, rawMax === rawMin ? Math.abs(rawMax) * 0.2 || 1 : 0)
+  const yMin = Math.max(0, rawMin - pad), yMax = rawMax + pad
+  const ySpan = yMax - yMin || 1
+  const toY = (v: number) => MT + CH - ((v - yMin) / ySpan) * CH
+  const inputY = Math.max(MT + 1, Math.min(MT + CH - 1, toY(inputVal)))
+
+  const n = bars.length
+  const slotW = CW / n
+  const barW  = Math.max(8, Math.min(26, slotW * 0.55))
 
   return (
-    <svg viewBox={`0 0 ${BC_W} ${BC_H}`} width="100%" style={{ display: 'block', overflow: 'visible' }} aria-hidden="true">
-      {!hasSeries && (
-        <>
-          <rect x={BC_ML} y={toY(typicalMax)} width={BC_CW} height={Math.max(2, toY(typicalMin) - toY(typicalMax))} fill={color} fillOpacity="0.12" rx="3" />
-          <text x={BC_ML - 3} y={toY(typicalMax) + 3.5} textAnchor="end" fontSize="8" fill="#64748b" fontFamily="sans-serif">{fmtVal(typicalMax, unit)}</text>
-          <text x={BC_ML - 3} y={toY(typicalMin) + 3.5} textAnchor="end" fontSize="8" fill="#64748b" fontFamily="sans-serif">{fmtVal(typicalMin, unit)}</text>
-          <text x={BC_ML + BC_CW / 2} y={BC_MT + BC_CH / 2 + 4} textAnchor="middle" fontSize="8" fill="#64748b" fontFamily="sans-serif">Typical range</text>
-        </>
-      )}
-      {displayBars.map((bar, i) => {
-        const cx = BC_ML + slotW * i + slotW / 2, barX = cx - barW / 2
-        const barTopY = toY(bar.value), barY = Math.min(barTopY, zeroY), barH = Math.max(2, Math.abs(zeroY - barTopY))
+    <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} width="100%" style={{ display: 'block', overflow: 'visible' }} aria-hidden="true">
+
+      {/* Subtle grid line at zero / baseline */}
+      <line x1={ML} y1={MT + CH} x2={ML + CW} y2={MT + CH} stroke="#f1f5f9" strokeWidth="1" />
+
+      {/* Bars */}
+      {bars.map((bar, i) => {
+        const cx   = ML + slotW * i + slotW / 2
+        const barX = cx - barW / 2
+        const barTopY = toY(bar.value)
+        const barH    = Math.max(2, MT + CH - barTopY)
         return (
           <g key={i}>
-            <rect x={barX} y={barY} width={barW} height={barH} fill={color} rx="2" fillOpacity={bar.isCurr ? 1 : 0.55}>
+            <rect x={barX} y={barTopY} width={barW} height={barH} fill={color} fillOpacity={bar.isCurr ? 1 : 0.45} rx="3">
               <title>{shortYear(bar.label)}: {fmtVal(bar.value, unit)}</title>
             </rect>
-            {slotW >= 18 && <text x={cx} y={BC_H - 3} textAnchor="middle" fontSize="8" fill="#64748b" fontFamily="sans-serif">{shortYear(bar.label)}</text>}
+            {/* Value above bar */}
+            <text x={cx} y={Math.max(MT - 2, barTopY - 3)} textAnchor="middle" fontSize="8"
+              fill={bar.isCurr ? color : '#94a3b8'}
+              fontWeight={bar.isCurr ? '700' : '500'}
+              fontFamily="sans-serif">
+              {fmtVal(bar.value, unit)}
+            </text>
+            {/* Year below */}
+            <text x={cx} y={CHART_H - 1} textAnchor="middle" fontSize="8"
+              fill={bar.isCurr ? '#475569' : '#94a3b8'}
+              fontWeight={bar.isCurr ? '600' : '400'}
+              fontFamily="sans-serif">
+              {bar.isCurr ? "'" + String(new Date().getFullYear()).slice(2) : shortYear(bar.label)}
+            </text>
           </g>
         )
       })}
+
+      {/* Reference lines */}
       {referenceLines.map((rl, i) => {
-        const refY = Math.max(BC_MT, Math.min(BC_MT + BC_CH, toY(rl.value)))
+        const ry = Math.max(MT + 1, Math.min(MT + CH - 1, toY(rl.value)))
+        const labelY = i % 2 === 0 ? ry - 2 : ry + 8  // simple stagger to avoid overlap
         return (
           <g key={`rl-${i}`}>
-            <line x1={BC_ML} y1={refY} x2={BC_ML + BC_CW} y2={refY} stroke={rl.color} strokeWidth="1" strokeDasharray={rl.dash} />
-            <text x={BC_ML + BC_CW - 2} y={rlFinalY.get(i) ?? refY - 2} textAnchor="end" fontSize="7.5" fill={rl.color} fontWeight="600" fontFamily="sans-serif">{rl.label}</text>
+            <line x1={ML} y1={ry} x2={ML + CW} y2={ry} stroke={rl.color} strokeWidth="1" strokeDasharray={rl.dash} />
+            <text x={ML + CW + 4} y={labelY} textAnchor="start" fontSize="7.5"
+              fill={rl.color} fontWeight="600" fontFamily="sans-serif">
+              {rl.label}
+            </text>
           </g>
         )
       })}
-      <line x1={BC_ML} y1={inputY} x2={BC_ML + BC_CW} y2={inputY} stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="4 3" />
-      <text x={BC_ML + BC_CW - 2} y={inputFinalY} textAnchor="end" fontSize="9" fill="#b45309" fontWeight="600" fontFamily="sans-serif">{fmtVal(inputVal, unit)}</text>
-      {hasSeries && rawMax !== rawMin && (
-        <>
-          <text x={BC_ML - 3} y={toY(rawMax) + 3.5} textAnchor="end" fontSize="8" fill="#94a3b8" fontFamily="sans-serif">{fmtVal(rawMax, unit)}</text>
-          <text x={BC_ML - 3} y={toY(rawMin) + 3.5} textAnchor="end" fontSize="8" fill="#94a3b8" fontFamily="sans-serif">{fmtVal(rawMin, unit)}</text>
-        </>
-      )}
+
+      {/* Current input line (amber) */}
+      <line x1={ML} y1={inputY} x2={ML + CW} y2={inputY} stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="4 3" />
+      <text x={ML + CW + 4} y={inputY - 2} textAnchor="start" fontSize="8"
+        fill="#b45309" fontWeight="700" fontFamily="sans-serif">
+        {fmtVal(inputVal, unit)}
+      </text>
     </svg>
   )
 }
@@ -368,30 +383,28 @@ function AssumptionRowExpanded({
 
       {/* Bar chart */}
       {showChart && (
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] text-slate-400">{hasSeries ? '5-year history' : 'Typical range'}</span>
+            <span className="text-[10px] text-slate-400">{hasSeries ? '5-year history' : 'No historical data'}</span>
             {hasSeries && (
-              <div className="flex items-center gap-3 flex-wrap justify-end">
+              <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1">
-                  <div className="w-2.5 h-2 rounded-sm" style={{ background: color, opacity: 0.55 }} />
+                  <div className="w-2.5 h-2 rounded-sm" style={{ background: color, opacity: 0.45 }} />
                   <span className="text-[9px] text-slate-400">Historical</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <svg width="14" height="4" aria-hidden="true"><line x1="0" y1="2" x2="14" y2="2" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3 2" /></svg>
                   <span className="text-[9px] text-slate-400">Your input</span>
                 </div>
-                {referenceLines.map(rl => (
-                  <div key={rl.label} className="flex items-center gap-1">
-                    <svg width="14" height="4" aria-hidden="true"><line x1="0" y1="2" x2="14" y2="2" stroke={rl.color} strokeWidth="1" strokeDasharray={rl.dash} /></svg>
-                    <span className="text-[9px] text-slate-400">{rl.label.split(':')[0]}</span>
-                  </div>
-                ))}
               </div>
             )}
           </div>
-          <div className="rounded-lg bg-slate-50/60" style={{ height: 90 }}>
-            <BarChart sparkPoints={sparkPoints ?? []} inputVal={value} color={color} unit={field.unit} typicalMin={effectiveTypicals.min} typicalMax={effectiveTypicals.max} referenceLines={referenceLines} />
+          <div className="rounded-xl bg-slate-50/60 px-1 pt-1">
+            <BarChart
+              sparkPoints={sparkPoints ?? []} inputVal={value} color={color} unit={field.unit}
+              typicalMin={effectiveTypicals.min} typicalMax={effectiveTypicals.max}
+              referenceLines={referenceLines}
+            />
           </div>
         </div>
       )}
