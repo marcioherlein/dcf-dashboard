@@ -23,28 +23,19 @@ export default function LandingNavbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Dark (transparent) when over hero; white glass when scrolled into content
-  const dark = !scrolled
-
   return (
     <>
       <header
         className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
         style={{
           height: '60px',
-          background: dark
-            ? 'transparent'
-            : scrolled
-            ? 'rgba(255,255,255,0.96)'
-            : 'rgba(255,255,255,0.92)',
-          backdropFilter: dark ? 'none' : 'blur(20px)',
-          WebkitBackdropFilter: dark ? 'none' : 'blur(20px)',
-          borderBottom: dark
-            ? '1px solid rgba(255,255,255,0.07)'
-            : scrolled
+          background: 'rgba(255,255,255,0.97)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: scrolled
             ? '1px solid rgba(226,232,240,0.9)'
             : '1px solid rgba(226,232,240,0.5)',
-          boxShadow: dark ? 'none' : scrolled ? '0 1px 12px rgba(15,23,42,0.08)' : 'none',
+          boxShadow: scrolled ? '0 1px 12px rgba(15,23,42,0.08)' : 'none',
         }}
       >
         <div className="mx-auto max-w-[1280px] px-4 sm:px-6 h-full flex items-center gap-8">
@@ -59,18 +50,18 @@ export default function LandingNavbar() {
             />
             <div className="flex flex-col leading-none">
               <span
-                className="font-black text-[17px] sm:text-[20px] transition-colors duration-300"
+                className="font-black text-[17px] sm:text-[20px]"
                 style={{
                   letterSpacing: '-0.04em',
                   lineHeight: 1.15,
-                  color: dark ? '#F8FAFC' : '#0F172A',
+                  color: '#0F172A',
                 }}
               >
                 intrinsico
               </span>
               <span
-                className="hidden sm:block text-[8px] font-bold tracking-[0.18em] uppercase mt-0.5 transition-colors duration-300"
-                style={{ color: dark ? '#475569' : '#94A3B8' }}
+                className="hidden sm:block text-[8px] font-bold tracking-[0.18em] uppercase mt-0.5"
+                style={{ color: '#94A3B8' }}
               >
                 Valuation Intelligence
               </span>
@@ -86,13 +77,13 @@ export default function LandingNavbar() {
                 className="text-[14px] font-medium transition-colors duration-150"
                 style={{
                   fontWeight: 500,
-                  color: dark ? '#94A3B8' : '#334155',
+                  color: '#334155',
                 }}
                 onMouseEnter={e => {
-                  ;(e.currentTarget as HTMLAnchorElement).style.color = dark ? '#F1F5F9' : '#2563EB'
+                  ;(e.currentTarget as HTMLAnchorElement).style.color = '#2563EB'
                 }}
                 onMouseLeave={e => {
-                  ;(e.currentTarget as HTMLAnchorElement).style.color = dark ? '#94A3B8' : '#334155'
+                  ;(e.currentTarget as HTMLAnchorElement).style.color = '#334155'
                 }}
               >
                 {link.label}
@@ -121,12 +112,12 @@ export default function LandingNavbar() {
                 <button
                   onClick={() => signIn('google')}
                   className="hidden sm:block text-[13px] font-medium transition-colors min-h-[44px] px-2"
-                  style={{ color: dark ? '#94A3B8' : '#334155' }}
+                  style={{ color: '#334155' }}
                   onMouseEnter={e => {
-                    ;(e.currentTarget as HTMLButtonElement).style.color = dark ? '#F1F5F9' : '#0F172A'
+                    ;(e.currentTarget as HTMLButtonElement).style.color = '#0F172A'
                   }}
                   onMouseLeave={e => {
-                    ;(e.currentTarget as HTMLButtonElement).style.color = dark ? '#94A3B8' : '#334155'
+                    ;(e.currentTarget as HTMLButtonElement).style.color = '#334155'
                   }}
                 >
                   Sign in
@@ -135,22 +126,20 @@ export default function LandingNavbar() {
                   href="/pricing"
                   className="hidden lg:inline-flex items-center rounded-xl border px-4 py-2.5 text-[13px] font-semibold transition-all active:scale-95"
                   style={{
-                    borderColor: dark ? 'rgba(255,255,255,0.16)' : '#BFDBFE',
-                    background: dark ? 'rgba(255,255,255,0.06)' : 'white',
-                    color: dark ? '#CBD5E1' : '#1D4ED8',
+                    borderColor: '#BFDBFE',
+                    background: 'white',
+                    color: '#1D4ED8',
                     minHeight: '44px',
                   }}
                   onMouseEnter={e => {
                     const el = e.currentTarget as HTMLAnchorElement
-                    el.style.background = dark ? 'rgba(255,255,255,0.10)' : '#EFF6FF'
-                    el.style.borderColor = dark ? 'rgba(255,255,255,0.28)' : '#93C5FD'
-                    el.style.color = dark ? '#F1F5F9' : '#1D4ED8'
+                    el.style.background = '#EFF6FF'
+                    el.style.borderColor = '#93C5FD'
                   }}
                   onMouseLeave={e => {
                     const el = e.currentTarget as HTMLAnchorElement
-                    el.style.background = dark ? 'rgba(255,255,255,0.06)' : 'white'
-                    el.style.borderColor = dark ? 'rgba(255,255,255,0.16)' : '#BFDBFE'
-                    el.style.color = dark ? '#CBD5E1' : '#1D4ED8'
+                    el.style.background = 'white'
+                    el.style.borderColor = '#BFDBFE'
                   }}
                 >
                   Analyze a stock
@@ -178,12 +167,10 @@ export default function LandingNavbar() {
               style={{
                 width: '44px',
                 height: '44px',
-                color: dark ? '#94A3B8' : '#334155',
+                color: '#334155',
               }}
               onMouseEnter={e => {
-                ;(e.currentTarget as HTMLButtonElement).style.background = dark
-                  ? 'rgba(255,255,255,0.08)'
-                  : '#F1F5F9'
+                ;(e.currentTarget as HTMLButtonElement).style.background = '#F1F5F9'
               }}
               onMouseLeave={e => {
                 ;(e.currentTarget as HTMLButtonElement).style.background = 'transparent'
@@ -201,8 +188,8 @@ export default function LandingNavbar() {
           className="fixed top-[60px] left-0 right-0 z-40 backdrop-blur-xl border-b shadow-lg lg:hidden"
           style={{
             padding: '16px 16px 20px',
-            background: dark ? 'rgba(5,13,31,0.97)' : 'rgba(255,255,255,0.97)',
-            borderColor: dark ? 'rgba(255,255,255,0.09)' : '#E2E8F0',
+            background: 'rgba(255,255,255,0.97)',
+            borderColor: '#E2E8F0',
           }}
         >
           <nav className="flex flex-col gap-1">
@@ -216,16 +203,16 @@ export default function LandingNavbar() {
                   minHeight: '44px',
                   display: 'flex',
                   alignItems: 'center',
-                  color: dark ? '#94A3B8' : '#334155',
+                  color: '#334155',
                 }}
                 onMouseEnter={e => {
                   const el = e.currentTarget as HTMLAnchorElement
-                  el.style.color = dark ? '#F1F5F9' : '#2563EB'
-                  el.style.background = dark ? 'rgba(255,255,255,0.06)' : '#F8FAFC'
+                  el.style.color = '#2563EB'
+                  el.style.background = '#F8FAFC'
                 }}
                 onMouseLeave={e => {
                   const el = e.currentTarget as HTMLAnchorElement
-                  el.style.color = dark ? '#94A3B8' : '#334155'
+                  el.style.color = '#334155'
                   el.style.background = 'transparent'
                 }}
               >
@@ -235,7 +222,7 @@ export default function LandingNavbar() {
           </nav>
           <div
             className="mt-4 pt-4 border-t flex flex-col gap-3"
-            style={{ borderColor: dark ? 'rgba(255,255,255,0.08)' : '#F1F5F9' }}
+            style={{ borderColor: '#F1F5F9' }}
           >
             {session ? (
               <Link
@@ -266,9 +253,9 @@ export default function LandingNavbar() {
                   className="w-full text-center rounded-xl py-3.5 text-[15px] font-semibold active:scale-95 transition-all"
                   style={{
                     minHeight: '44px',
-                    color: dark ? '#94A3B8' : '#334155',
-                    border: `1px solid ${dark ? 'rgba(255,255,255,0.12)' : '#E2E8F0'}`,
-                    background: dark ? 'rgba(255,255,255,0.05)' : 'transparent',
+                    color: '#334155',
+                    border: '1px solid #E2E8F0',
+                    background: 'transparent',
                   }}
                 >
                   Sign in

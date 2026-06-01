@@ -188,7 +188,7 @@ export default function LandingHero() {
               </span>
             </motion.div>
 
-            {/* Headline — crisp white, no gradient text */}
+            {/* Headline — blueprint-to-sky gradient */}
             <motion.h1
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
@@ -199,7 +199,10 @@ export default function LandingHero() {
                 lineHeight: 1.05,
                 letterSpacing: '-0.04em',
                 marginBottom: '20px',
-                color: '#F8FAFC',
+                background: 'linear-gradient(135deg, #F8FAFC 0%, #BFDBFE 55%, #93C5FD 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
                 textWrap: 'balance',
               } as React.CSSProperties}
             >
