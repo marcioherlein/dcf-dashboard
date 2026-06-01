@@ -157,63 +157,72 @@ function BarChart({ sparkPoints, inputVal, color, unit, referenceLines = [] }: {
   const yMin = Math.max(0, rawMin - pad)
   const yMax = rawMax + pad
 
+  const allLines = [
+    ...referenceLines,
+    { value: inputVal, label: `Input: ${fmtVal(inputVal, unit)}`, color: '#b45309', dash: '4 3', isInput: true },
+  ]
+
   return (
-    <ResponsiveContainer width="100%" height={86}>
-      <RBarChart data={bars} margin={{ top: 18, right: 50, bottom: 0, left: 0 }} barCategoryGap="28%">
-        <YAxis domain={[yMin, yMax]} hide />
-        <XAxis
-          dataKey="label"
-          tick={{ fontSize: 8, fill: '#94a3b8' }}
-          axisLine={false}
-          tickLine={false}
-          interval={0}
-          height={14}
-        />
+    <>
+      {/* Fixed-height cage — overflow:hidden prevents SVG from bleeding */}
+      <div style={{ width: '100%', height: 82, overflow: 'hidden' }}>
+        <ResponsiveContainer width="100%" height={82}>
+          <RBarChart data={bars} margin={{ top: 16, right: 4, bottom: 0, left: 0 }} barCategoryGap="30%">
+            <YAxis domain={[yMin, yMax]} hide />
+            <XAxis
+              dataKey="label"
+              tick={{ fontSize: 8, fill: '#94a3b8' }}
+              axisLine={false}
+              tickLine={false}
+              interval={0}
+              height={14}
+            />
 
-        {referenceLines.map((rl, i) => (
-          <RReferenceLine
-            key={`rl-${i}`}
-            y={rl.value}
-            stroke={rl.color}
-            strokeDasharray={rl.dash}
-            strokeWidth={1}
-            label={{ value: rl.label, position: i % 2 === 0 ? 'insideTopRight' : 'insideBottomRight', fontSize: 7, fill: rl.color }}
-          />
+            {referenceLines.map((rl, i) => (
+              <RReferenceLine key={`rl-${i}`} y={rl.value} stroke={rl.color} strokeDasharray={rl.dash} strokeWidth={1} />
+            ))}
+
+            <RReferenceLine y={inputVal} stroke="#f59e0b" strokeDasharray="4 3" strokeWidth={1.5} />
+
+            <Bar dataKey="value" radius={[3, 3, 0, 0]} isAnimationActive={false}>
+              {bars.map((bar, i) => (
+                <Cell key={i} fill={color} fillOpacity={bar.isCurr ? 1 : 0.4} />
+              ))}
+              <LabelList
+                dataKey="value"
+                position="top"
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                content={(props: any) => {
+                  const { x, y, width, value, index } = props
+                  const bar = bars[index]
+                  if (value == null) return null
+                  return (
+                    <text x={(x ?? 0) + (width ?? 0) / 2} y={(y ?? 0) - 2}
+                      textAnchor="middle" fontSize={8} fontFamily="sans-serif"
+                      fill={bar?.isCurr ? color : '#94a3b8'}
+                      fontWeight={bar?.isCurr ? 700 : 500}>
+                      {fmtVal(value as number, unit)}
+                    </text>
+                  )
+                }}
+              />
+            </Bar>
+          </RBarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Legend row — outside the cage, no overflow risk */}
+      <div className="flex items-center gap-3 flex-wrap mt-1 px-0.5">
+        {allLines.map((l, i) => (
+          <span key={i} className="flex items-center gap-1 text-[9px]" style={{ color: l.color }}>
+            <svg width="12" height="4" aria-hidden="true">
+              <line x1="0" y1="2" x2="12" y2="2" stroke={l.color} strokeWidth={'isInput' in l ? 1.5 : 1} strokeDasharray={l.dash} />
+            </svg>
+            {l.label}
+          </span>
         ))}
-
-        <RReferenceLine
-          y={inputVal}
-          stroke="#f59e0b"
-          strokeDasharray="4 3"
-          strokeWidth={1.5}
-          label={{ value: fmtVal(inputVal, unit), position: 'insideTopLeft', fontSize: 8, fill: '#b45309' }}
-        />
-
-        <Bar dataKey="value" radius={[3, 3, 0, 0]} isAnimationActive={false}>
-          {bars.map((bar, i) => (
-            <Cell key={i} fill={color} fillOpacity={bar.isCurr ? 1 : 0.4} />
-          ))}
-          <LabelList
-            dataKey="value"
-            position="top"
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            content={(props: any) => {
-              const { x, y, width, value, index } = props
-              const bar = bars[index]
-              if (value == null) return null
-              return (
-                <text x={(x ?? 0) + (width ?? 0) / 2} y={(y ?? 0) - 3}
-                  textAnchor="middle" fontSize={8} fontFamily="sans-serif"
-                  fill={bar?.isCurr ? color : '#94a3b8'}
-                  fontWeight={bar?.isCurr ? 700 : 500}>
-                  {fmtVal(value as number, unit)}
-                </text>
-              )
-            }}
-          />
-        </Bar>
-      </RBarChart>
-    </ResponsiveContainer>
+      </div>
+    </>
   )
 }
 
@@ -378,20 +387,8 @@ function AssumptionRowExpanded({
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
             <span className="text-[10px] text-slate-400">{hasSeries ? '5-year history' : 'No historical data'}</span>
-            {hasSeries && (
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1">
-                  <div className="w-2.5 h-2 rounded-sm" style={{ background: color, opacity: 0.45 }} />
-                  <span className="text-[9px] text-slate-400">Historical</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <svg width="14" height="4" aria-hidden="true"><line x1="0" y1="2" x2="14" y2="2" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3 2" /></svg>
-                  <span className="text-[9px] text-slate-400">Your input</span>
-                </div>
-              </div>
-            )}
           </div>
-          <div className="rounded-xl bg-slate-50/60 px-1 pt-1">
+          <div className="rounded-xl bg-slate-50/60 p-2">
             <BarChart
               sparkPoints={sparkPoints ?? []} inputVal={value} color={color} unit={field.unit}
               typicalMin={effectiveTypicals.min} typicalMax={effectiveTypicals.max}
