@@ -226,7 +226,7 @@ function MetricsTable({ columns, rows, hideSparks }: { columns: string[]; rows: 
 // ── Trend bar chart (compact, inline) ─────────────────────────────────────────
 
 function TrendBars({
-  years, values, positiveIsGood, threshold, label2, values2,
+  years, values, positiveIsGood, threshold, label2: _label2, values2,
 }: {
   years: string[]
   values: (number | null)[]

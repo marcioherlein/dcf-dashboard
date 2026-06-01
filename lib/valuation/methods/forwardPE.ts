@@ -17,6 +17,7 @@ export interface ForwardPEInputs {
   currentPrice: number             // current market price
   dividendYield: number | null     // annual dividend yield decimal
   yearsToTarget?: number           // default 5
+  terminalCAGR?: number            // long-run growth rate to fade toward (default 0.04)
 }
 
 export interface ForwardPEResult {
@@ -68,7 +69,20 @@ export function computeForwardPE(inputs: ForwardPEInputs): ForwardPEResult {
     }
   }
 
-  const futureRevenue     = ltvRevenue * Math.pow(1 + revenueCAGR, N)
+  // Fade growth linearly from revenueCAGR → terminalCAGR over N years.
+  // Prevents high initial CAGR from compounding at full speed for all 5 years.
+  const terminalGrowth = inputs.terminalCAGR ?? 0.04
+  let futureRevenue: number
+  if (revenueCAGR > terminalGrowth && N > 1) {
+    futureRevenue = ltvRevenue
+    for (let yr = 1; yr <= N; yr++) {
+      const t = (yr - 1) / (N - 1)
+      const yearGrowth = revenueCAGR * (1 - t) + terminalGrowth * t
+      futureRevenue *= (1 + yearGrowth)
+    }
+  } else {
+    futureRevenue = ltvRevenue * Math.pow(1 + revenueCAGR, N)
+  }
   const futureNetIncome   = futureRevenue * netMargin
   const futureShares      = sharesOutstanding * Math.pow(1 + dilutionRate, N)
   const futureMarketCap   = futureNetIncome * exitPE

@@ -401,10 +401,10 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
         </div>
       </div>
 
-      {/* Historical multiples chart — visible, not collapsed */}
-      {(apiData.historicalMultiples?.length ?? 0) > 0 && (
+      {/* Historical multiples chart — show when history exists OR current metrics available */}
+      {((apiData.historicalMultiples?.length ?? 0) > 0 || apiData.quote?.peRatio != null) && (
         <HistoricalMultiplesChart
-          historicalMultiples={apiData.historicalMultiples}
+          historicalMultiples={apiData.historicalMultiples ?? []}
           currentPE={apiData.quote?.peRatio ?? null}
           currentEVEbitda={
             (apiData.valuationMethods?.models?.multiples?.estimates ?? [])

@@ -87,8 +87,6 @@ export default function FinancialCharts({
 
   const historicalIS = incomeStatement.filter((r) => !r.isProjected)
   const projectedIS  = incomeStatement.filter((r) => r.isProjected)
-  const firstProjYear = projectedIS[0]?.year ?? null
-
   if (historicalIS.length < 2) return null
 
   const CHART_H  = 168

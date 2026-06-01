@@ -137,6 +137,7 @@ export function computeBlendedFV(
     discountRate: assumptions.wacc,
     currentPrice,
     dividendYield: snapshot.dividendYield,
+    terminalCAGR: assumptions.terminalG,
   })
 
   const evEbitda = computeEVEBITDA({
@@ -412,6 +413,7 @@ export function computeCockpitOutput(
     discountRate: assumptions.wacc,
     currentPrice,
     dividendYield: snapshot.dividendYield,
+    terminalCAGR: assumptions.terminalG,
   })
 
   // 2. EV/EBITDA
