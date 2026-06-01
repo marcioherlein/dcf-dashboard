@@ -13,3 +13,12 @@ out/
 .env.cocos
 .vercel
 .claude/worktrees/
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo
+
+# Impeccable skill tooling and audit snapshots
+.claude/skills/
+.github/skills/
+.impeccable/
+.audit-screenshots/
