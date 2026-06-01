@@ -19,7 +19,7 @@ function buildSynthesis(output: CockpitOutput, currency: string): string | null 
     ? ` Market pricing in ${(marketImpliedGrowth * 100).toFixed(0)}% 5Y CAGR.`
     : ''
 
-  return `Blended fair value ${fv} — ${pct} vs current price. ${conf} conviction across ${validCount} of ${output.methods.length} models.${impliedPart}`
+  return `Blended fair value ${fv}, ${pct} vs current price. ${conf} conviction across ${validCount} of ${output.methods.length} models.${impliedPart}`
 }
 
 interface Props {
@@ -90,10 +90,9 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
               {fvDisplay}
             </p>
           </div>
-          <p className="text-[11px] text-[#94A3B8]">
+          <p className="text-[11px] text-[#64748B]">
             {methodsComputed} of {output.methods.length} models{methodsComputed < output.methods.length ? ' · weights redistributed' : ''}
-          </p>
-        </div>
+          </p>        </div>
 
         {/* Upside / Downside */}
         <div className="px-5 py-4 flex flex-col gap-1">
@@ -103,7 +102,7 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
               {upDisplay}
             </p>
           </div>
-          <p className="text-[11px] text-[#94A3B8]">vs current price</p>
+          <p className="text-[11px] text-[#64748B]">vs current price</p>
         </div>
 
         {/* Investment Verdict */}
@@ -113,8 +112,12 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
             {output.verdict}
           </p>
           {starRating && (
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <div className="flex items-center gap-0.5">
+            <div
+              className="flex items-center gap-1.5 mt-0.5"
+              role="img"
+              aria-label={`${starRating.stars} out of 5 stars — ${starRating.label}`}
+            >
+              <div className="flex items-center gap-0.5" aria-hidden="true">
                 {Array.from({ length: 5 }, (_, i) => (
                   <svg
                     key={i}
@@ -129,7 +132,7 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
             </div>
           )}
           {!starRating && output.upsidePct != null && (
-            <p className="text-[11px] text-[#94A3B8]">{methodsComputed} of {output.methods.length} models</p>
+            <p className="text-[11px] text-[#64748B]">{methodsComputed} of {output.methods.length} models</p>
           )}
         </div>
 
@@ -143,7 +146,7 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
               <p className="text-[20px] font-[750] tabular-nums text-[#0F172A] leading-none">
                 {(output.marketImpliedGrowth * 100).toFixed(1)}%
               </p>
-              <p className="text-[11px] text-[#94A3B8]">5Y CAGR priced in by market</p>
+              <p className="text-[11px] text-[#64748B]">5Y CAGR priced in by market</p>
             </>
           ) : (
             <p className="text-[13px] text-[#94A3B8]">—</p>

@@ -37,13 +37,13 @@ function ModelCard({
     : 'text-slate-400'
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex flex-col gap-3 min-w-[190px] sm:min-w-0">
+    <div className="bg-white rounded-[14px] border border-[#E6ECF5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 flex flex-col gap-3 min-w-[190px] sm:min-w-0">
 
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-[12px] font-[700] text-slate-800">{title}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5 leading-tight">{subtitle}</p>
+          <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">{subtitle}</p>
         </div>
         {(isCyclical || isNormalized) && (
           <span className="text-[9px] font-[600] px-1.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 shrink-0 whitespace-nowrap">
@@ -66,9 +66,9 @@ function ModelCard({
         </div>
       ) : (
         <div>
-          <p className="text-[13px] font-[600] text-slate-400">N/A</p>
+          <p className="text-[13px] font-[600] text-slate-500">N/A</p>
           {inapplicabilityReason && (
-            <p className="text-[10px] text-slate-400 leading-relaxed mt-0.5">{inapplicabilityReason}</p>
+            <p className="text-[10px] text-slate-500 leading-relaxed mt-0.5">{inapplicabilityReason}</p>
           )}
         </div>
       )}
@@ -110,10 +110,10 @@ function MagicFormulaCard({
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex flex-col gap-3 min-w-[190px] sm:min-w-0">
+    <div className="bg-white rounded-[14px] border border-[#E6ECF5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 flex flex-col gap-3 min-w-[190px] sm:min-w-0">
       <div>
         <p className="text-[12px] font-[700] text-slate-800">Magic Formula</p>
-        <p className="text-[10px] text-slate-400 mt-0.5 leading-tight">Greenblatt — earnings yield + ROIC</p>
+        <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">Greenblatt — earnings yield + ROIC</p>
       </div>
 
       {mf.earningsYield != null ? (
@@ -136,7 +136,7 @@ function MagicFormulaCard({
                 {mf.roic != null ? `${(mf.roic * 100).toFixed(0)}%` : '—'}
               </p>
               {mf.impliedMaxPE != null && (
-                <p className="text-[9px] text-slate-400 mt-0.5">Implied max P/E: {mf.impliedMaxPE.toFixed(0)}×</p>
+                <p className="text-[9px] text-slate-500 mt-0.5">Implied max P/E: {mf.impliedMaxPE.toFixed(0)}×</p>
               )}
             </div>
           </div>
@@ -148,7 +148,7 @@ function MagicFormulaCard({
           )}
         </>
       ) : (
-        <p className="text-[12px] text-slate-400">{mf.guardErrors[0] ?? 'Data unavailable'}</p>
+        <p className="text-[12px] text-slate-500">{mf.guardErrors[0] ?? 'Data unavailable'}</p>
       )}
     </div>
   )
@@ -177,11 +177,11 @@ function OwnerEarningsCard({
     : null
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex flex-col gap-3 min-w-[190px] sm:min-w-0">
+    <div className="bg-white rounded-[14px] border border-[#E6ECF5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 flex flex-col gap-3 min-w-[190px] sm:min-w-0">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-[12px] font-[700] text-slate-800">Owner Earnings</p>
-          <p className="text-[10px] text-slate-400 mt-0.5 leading-tight">Buffett — net income + D&amp;A − maint. CapEx</p>
+          <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">Buffett — net income + D&amp;A − maint. CapEx</p>
         </div>
         {(oe.isCyclical || oe.isNormalized) && (
           <span className="text-[9px] font-[600] px-1.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 shrink-0">
@@ -241,6 +241,10 @@ function OwnerEarningsCard({
             {oe.capitalIntensityLabel}
           </span>
 
+          <p className="text-[10px] text-slate-500">
+            Maintenance CapEx assumed at 70% of total CapEx (Buffett convention).
+          </p>
+
           {oe.ownerEarningsYield != null && currentPrice > 0 && (
             <p className="text-[10px] text-slate-500">
               Owner earnings yield: <span className="font-[700] tabular-nums text-slate-700">{(oe.ownerEarningsYield * 100).toFixed(1)}%</span>
@@ -248,7 +252,7 @@ function OwnerEarningsCard({
           )}
         </>
       ) : (
-        <p className="text-[12px] text-slate-400 leading-relaxed">{oe.guardErrors[0] ?? 'Data unavailable'}</p>
+        <p className="text-[12px] text-slate-500 leading-relaxed">{oe.guardErrors[0] ?? 'Data unavailable'}</p>
       )}
     </div>
   )
@@ -260,7 +264,7 @@ export default function ValueInvestingPanel({ data, currency, currentPrice }: Pr
   const { epv, grahamNumber, ddm, countryRiskDisclaimer, structuralRiskDisclaimer, normalizedEarningsWarning } = data
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-5">
+    <div className="bg-white rounded-[14px] border border-[#E6ECF5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] px-5 py-5">
 
       {/* Header */}
       <div className="mb-4">

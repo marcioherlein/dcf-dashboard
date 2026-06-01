@@ -13,6 +13,8 @@ interface Props {
   blendedFV: number | null
   currentPrice: number
   currency: string
+  structuralRisk?: string | null
+  countryRisk?: string | null
 }
 
 const UNCERTAINTY_STYLE: Record<UncertaintyLevel, { label: string; dot: string; text: string }> = {
@@ -115,7 +117,7 @@ function MoatGauge({ roic, roicSpread, wacc }: { roic: number | null; roicSpread
       </div>
 
       {/* Labels */}
-      <div className="flex items-center justify-between text-[9px] text-slate-400">
+      <div className="flex items-center justify-between text-[9px] text-slate-500">
         <span>0%</span>
         <div className="flex items-center gap-3">
           <span>WACC {(wacc * 100).toFixed(1)}%</span>
@@ -137,7 +139,7 @@ function MoatGauge({ roic, roicSpread, wacc }: { roic: number | null; roicSpread
 function RangeBar({
   bear, blended, bull, currentPrice, currency,
 }: { bear: number | null; blended: number | null; bull: number | null; currentPrice: number; currency: string }) {
-  if (!bear || !blended || !bull) return null
+  if (bear == null || blended == null || bull == null) return null
 
   const lo = Math.min(bear, currentPrice, blended) * 0.85
   const hi = Math.max(bull, currentPrice, blended) * 1.05
@@ -177,12 +179,12 @@ function RangeBar({
         <div className="absolute w-0.5 h-4 bg-slate-500 top-1/2 -translate-y-1/2 -translate-x-1/2"
           style={{ left: `${pricePos}%` }} />
       </div>
-      <div className="flex items-center justify-between text-[9px] text-slate-400 px-1">
+      <div className="flex items-center justify-between text-[9px] text-slate-500 px-1">
         <span className="text-red-400 font-[600]">{fmtShort(bear)}</span>
         <span className="text-blue-600 font-[700]">{fmtShort(blended)}</span>
         <span className="text-emerald-500 font-[600]">{fmtShort(bull)}</span>
       </div>
-      <div className="flex items-center gap-3 text-[9px] text-slate-400 px-1">
+      <div className="flex items-center gap-3 text-[9px] text-slate-500 px-1">
         <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-red-400" /><span>Bear</span></div>
         <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-500" /><span>Blended FV</span></div>
         <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400" /><span>Bull</span></div>
@@ -197,11 +199,37 @@ function RangeBar({
 export default function QualityPanel({
   roic, roicSpread, wacc, starRating, uncertainty,
   bearFV, bullFV, blendedFV, currentPrice, currency,
+  structuralRisk, countryRisk,
 }: Props) {
   const unc = uncertainty ? UNCERTAINTY_STYLE[uncertainty] : null
 
   return (
     <div className="bg-white rounded-[14px] border border-[#E6ECF5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] px-5 py-4">
+      {/* Risk badges — shown when VIE or high country risk is detected */}
+      {(structuralRisk || countryRisk) && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          {structuralRisk && (
+            <a
+              href="#model_evidence"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 border border-red-200 text-[10px] font-[700] text-red-600 hover:bg-red-100 transition-colors"
+              title={structuralRisk}
+            >
+              <span>⚑</span>
+              <span>Structural risk — see model evidence</span>
+            </a>
+          )}
+          {countryRisk && (
+            <a
+              href="#model_evidence"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-[10px] font-[700] text-amber-700 hover:bg-amber-100 transition-colors"
+              title={countryRisk}
+            >
+              <span>⚠</span>
+              <span>High country risk — see model evidence</span>
+            </a>
+          )}
+        </div>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:divide-x sm:divide-[#F1F5F9]">
 
         {/* Left: ROIC / WACC moat gauge */}

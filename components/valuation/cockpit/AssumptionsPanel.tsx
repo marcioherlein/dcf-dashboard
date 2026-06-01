@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import type { ValuationAssumptions } from '@/lib/valuation/cockpit'
 
 export interface SparkPoint {
@@ -363,6 +364,11 @@ function AssumptionCard({
     ? value / (cagr * 100)
     : null
 
+  // For exit P/E: show PEG for high-growth companies (CAGR >10%), Gordon PE otherwise
+  // This prevents 3 competing frameworks appearing simultaneously
+  const showPEG = pegRatio != null && cagr != null && cagr > 0.10
+  const showGordonPE = field.key === 'exitPE' && intrinsicPE != null && intrinsicPE > 0 && !showPEG
+
   // Reference lines for exit multiple bar chart
   const referenceLines: ReferenceLine[] = (() => {
     if (!field.isExitMultiple) return []
@@ -382,6 +388,23 @@ function AssumptionCard({
 
   function clamp(v: number) {
     return Math.min(field.max, Math.max(field.min, Math.round(v * 100000) / 100000))
+  }
+
+  const [isEditing, setIsEditing] = useState(false)
+  const [editRaw, setEditRaw] = useState('')
+
+  function startEdit() {
+    setEditRaw(field.unit === '%' ? (value * 100).toFixed(2) : value.toFixed(2))
+    setIsEditing(true)
+  }
+
+  function commitEdit() {
+    const parsed = parseFloat(editRaw)
+    if (!isNaN(parsed)) {
+      const converted = field.unit === '%' ? parsed / 100 : parsed
+      onChange(clamp(converted))
+    }
+    setIsEditing(false)
   }
 
   return (
@@ -410,10 +433,31 @@ function AssumptionCard({
             <span className="w-7 h-7 flex items-center justify-center rounded-full border border-slate-200 bg-white font-bold text-sm pointer-events-none">−</span>
           </button>
           <div className="flex-1 text-center">
-            <div className="text-[28px] font-[800] tabular-nums leading-none tracking-tight text-slate-900">
-              {fmtVal(value, field.unit)}
-            </div>
-            {isDirty && (
+            {isEditing ? (
+              <input
+                type="number"
+                value={editRaw}
+                onChange={e => setEditRaw(e.target.value)}
+                onBlur={commitEdit}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') commitEdit()
+                  if (e.key === 'Escape') setIsEditing(false)
+                }}
+                autoFocus
+                className="text-[24px] font-[800] tabular-nums text-center w-full border-b-2 border-blue-400 outline-none bg-transparent text-slate-900 leading-none"
+                aria-label={`Enter ${field.label} value`}
+              />
+            ) : (
+              <button
+                onClick={startEdit}
+                className="text-[28px] font-[800] tabular-nums leading-none tracking-tight text-slate-900 w-full cursor-text hover:text-slate-600 transition-colors"
+                aria-label={`${field.label}: ${fmtVal(value, field.unit)}. Click to type a value.`}
+                title="Click to type a value directly"
+              >
+                {fmtVal(value, field.unit)}
+              </button>
+            )}
+            {!isEditing && isDirty && (
               <div className={`text-[10px] font-[600] tabular-nums mt-0.5 ${delta > 0 ? 'text-emerald-500' : 'text-red-400'}`}>
                 {deltaDisplay} vs default
               </div>
@@ -430,7 +474,10 @@ function AssumptionCard({
 
         {/* Slider */}
         <div className="flex flex-col gap-1">
-          <div className="relative flex items-center" style={{ height: 16 }}>
+          <div
+            className="relative flex items-center rounded-full focus-within:ring-2 focus-within:ring-offset-2"
+            style={{ height: 16, '--tw-ring-color': color } as React.CSSProperties}
+          >
             <div className="absolute w-full h-[3px] bg-slate-100 rounded-full" />
             <div className="absolute h-[3px] rounded-full" style={{ width: `${sliderPct}%`, background: color, opacity: 0.7 }} />
             <div
@@ -469,28 +516,31 @@ function AssumptionCard({
 
         {/* Exit multiple: expansion/contraction signal */}
         {expansionSignal && (
-          <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-[600] ${expansionSignal.cls}`}>
+          <div
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-[600] ${expansionSignal.cls}`}
+            aria-label={expansionSignal.text.replace('▲▲', 'Aggressive expansion:').replace('▲', 'Expansion:').replace('▼', 'Compression:')}
+          >
             {expansionSignal.text}
           </div>
         )}
 
-        {/* Exit P/E: intrinsic PE hint */}
-        {field.key === 'exitPE' && intrinsicPE != null && intrinsicPE > 0 && (
+        {/* Exit P/E: intrinsic PE hint (stable/mature companies, CAGR ≤10%) */}
+        {showGordonPE && (
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full shrink-0 bg-indigo-300" />
             <span className="text-[10px] text-slate-500">
-              Intrinsic P/E (Gordon model): <span className="font-[700] text-indigo-600">{intrinsicPE.toFixed(1)}×</span>
+              Intrinsic P/E (Gordon model): <span className="font-[700] text-indigo-600">{intrinsicPE!.toFixed(1)}×</span>
             </span>
           </div>
         )}
 
-        {/* Exit P/E: PEG ratio */}
-        {pegRatio != null && (
+        {/* Exit P/E: PEG ratio (high-growth companies, CAGR >10%) */}
+        {showPEG && pegRatio != null && (
           <div className="flex items-center gap-1.5">
             <span className={`w-2 h-2 rounded-full shrink-0 ${pegRatio < 1 ? 'bg-emerald-400' : pegRatio < 2 ? 'bg-amber-400' : 'bg-red-400'}`} />
             <span className="text-[10px] text-slate-500">
               PEG: <span className={`font-[700] tabular-nums ${pegRatio < 1 ? 'text-emerald-600' : pegRatio < 2 ? 'text-amber-600' : 'text-red-500'}`}>{pegRatio.toFixed(1)}×</span>
-              <span className="text-slate-400"> · Lynch: &lt;1 = attractive, &gt;2 = expensive</span>
+              <span className="text-slate-500"> · Lynch: &lt;1 = attractive, &gt;2 = expensive</span>
             </span>
           </div>
         )}
@@ -544,7 +594,7 @@ function AssumptionCard({
           <span className={`w-2 h-2 rounded-full shrink-0 ${ctxLabel.dot}`} />
           <span className="text-[10px] text-slate-500 leading-tight">{ctxLabel.text}</span>
           {field.isExitMultiple && sectorBenchmark != null && (
-            <span className="text-[10px] text-slate-400">· sector: {sectorBenchmark.toFixed(0)}×</span>
+            <span className="text-[10px] text-slate-500">· sector: {sectorBenchmark.toFixed(0)}×</span>
           )}
         </div>
 
@@ -599,7 +649,12 @@ function LargestChangesBar({
     .sort((a, b) => Math.abs(b.netImpact) - Math.abs(a.netImpact))
     .slice(0, 5)
 
-  if (changes.length === 0) return null
+  if (changes.length === 0) return (
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm px-5 py-4">
+      <p className="text-[11px] font-[600] text-slate-500">Largest assumption changes vs. defaults</p>
+      <p className="text-[11px] text-slate-400 mt-1">All assumptions at default values</p>
+    </div>
+  )
 
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm px-5 py-4">
@@ -743,7 +798,7 @@ export default function AssumptionsPanel({
                 <span className="text-[11px] text-slate-500">{group.description}</span>
               </div>
               {group.label === 'Exit Multiples' && (
-                <p className="text-[10px] text-slate-400 mb-3 leading-relaxed">
+                <p className="text-[10px] text-slate-500 mb-3 leading-relaxed">
                   Reference lines: <span className="text-slate-500">Graham</span> (conservative floor) · <span className="text-teal-600">Sector</span> (Damodaran median) · <span className="text-indigo-500">Gordon</span> (intrinsic P/E only)
                 </p>
               )}

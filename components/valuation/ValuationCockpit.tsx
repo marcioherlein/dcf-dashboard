@@ -20,6 +20,7 @@ import ScenarioCards from './cockpit/ScenarioCards'
 import ValuationMethodCards from './cockpit/ValuationMethodCards'
 import ModelDivergencePanel from './cockpit/ModelDivergencePanel'
 import RightSidebar from './cockpit/RightSidebar'
+import HistoricalMultiplesChart from './cockpit/HistoricalMultiplesChart'
 import SaveToWatchlistDialog from '@/components/watchlist/SaveToWatchlistDialog'
 import type { WatchlistSavePayload } from '@/components/watchlist/SaveToWatchlistDialog'
 
@@ -294,6 +295,8 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
         blendedFV={output.blendedFairValue}
         currentPrice={currentPrice}
         currency={currency}
+        structuralRisk={valueInvestingData.structuralRiskDisclaimer}
+        countryRisk={valueInvestingData.countryRiskDisclaimer}
       />
 
       {/* Workbench: assumptions (left, cause) + live output (right, effect) */}
@@ -338,6 +341,25 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
           />
         </div>
       </div>
+
+      {/* Historical multiples chart — visible, not collapsed */}
+      {(apiData.historicalMultiples?.length ?? 0) > 0 && (
+        <HistoricalMultiplesChart
+          historicalMultiples={apiData.historicalMultiples}
+          currentPE={apiData.quote?.peRatio ?? null}
+          currentEVEbitda={
+            (apiData.valuationMethods?.models?.multiples?.estimates ?? [])
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              .find((e: any) => e.multiple === 'EV/EBITDA')?.actualValue ?? null
+          }
+          currentEVRevenue={
+            (apiData.valuationMethods?.models?.multiples?.estimates ?? [])
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              .find((e: any) => e.multiple === 'EV/Revenue')?.actualValue ?? null
+          }
+          sectorBenchmarks={sectorBenchmarks}
+        />
+      )}
 
       {/* Evidence tier — collapsed by default; decision surface above this fold */}
       <details className="group" id="model_evidence">
