@@ -232,8 +232,8 @@ function GrowthEditCell({ growthPct, prevRevenue, year, isProjected, onEdit }: G
           </span>
         </div>
         <span className={cn(
-          'text-[10px] px-1 py-px rounded font-semibold',
-          'bg-blue-500/20 text-blue-400'
+          'text-[10px] px-1 py-px rounded font-semibold transition-opacity',
+          'bg-blue-500/20 text-blue-400 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100'
         )}>
           Model
         </span>
@@ -262,7 +262,7 @@ function DataCell({ value, row, bold, color }: { value: string; row: DisplayRow;
 function SectionHeader({ label, colSpan }: { label: string; colSpan: number }) {
   return (
     <tr>
-      <td colSpan={colSpan} className="px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-400 bg-white/4 border-b border-white/8">
+      <td colSpan={colSpan} className="px-4 py-1.5 text-[11px] font-semibold text-slate-400 bg-white/4 border-b border-white/8">
         {label}
       </td>
     </tr>
@@ -719,7 +719,7 @@ export default function ForecastTable({
       <div className="bg-[#080F1E] px-4 sm:px-6 py-5 border-t border-white/10">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Discount Rate (WACC)</p>
+            <p className="text-[11px] font-semibold text-slate-300">Discount Rate (WACC)</p>
             <p className="text-[11px] text-slate-400 mt-0.5">
               Weighted average cost of capital applied to discount projected free cash flows
             </p>
@@ -752,7 +752,7 @@ export default function ForecastTable({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Equity side */}
           <div className="rounded-xl bg-white/5 border border-white/8 p-4">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">Equity Side</p>
+            <p className="text-[11px] font-semibold text-slate-300 mb-3">Equity side</p>
             <div className="space-y-2.5">
               {([
                 { label: 'Risk-Free Rate', value: (wd.rfRate * 100).toFixed(2) + '%' },
@@ -778,7 +778,7 @@ export default function ForecastTable({
 
           {/* Debt side */}
           <div className="rounded-xl bg-white/5 border border-white/8 p-4">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">Debt Side</p>
+            <p className="text-[11px] font-semibold text-slate-300 mb-3">Debt side</p>
             <div className="space-y-2.5">
               {([
                 { label: 'Cost of Debt', value: wd.costOfDebt != null ? (wd.costOfDebt * 100).toFixed(2) + '%' : null },
@@ -856,7 +856,7 @@ export default function ForecastTable({
       <div className="bg-[#080F1E] px-4 sm:px-6 py-5 border-t border-white/10">
         {/* Method toggle */}
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Terminal Value</p>
+          <p className="text-[11px] font-semibold text-slate-300">Terminal value</p>
           <div className="flex rounded-lg border border-white/10 overflow-hidden">
             {(['perpetuity', 'multiple'] as const).map(m => (
               <button
@@ -972,7 +972,7 @@ export default function ForecastTable({
             </div>
             <div className="h-3 flex rounded-full overflow-hidden">
               <div
-                className="bg-[#0F2A5E] transition-all duration-500"
+                className="bg-blue-800 transition-all duration-500"
                 style={{ width: `${Math.max(2, fcfShare)}%` }}
                 title={`PV of FCFs: ${fcfShare.toFixed(1)}%`}
               />
@@ -983,7 +983,7 @@ export default function ForecastTable({
             </div>
             <div className="flex items-center justify-between mt-2 text-[11px] text-slate-500">
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-sm bg-[#0F2A5E] inline-block" />
+                <span className="w-2 h-2 rounded-sm bg-blue-800 inline-block" />
                 <span>PV of FCFs ({fcfShare.toFixed(0)}%)</span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -997,7 +997,7 @@ export default function ForecastTable({
         {/* Equity bridge */}
         <div className="rounded-xl border border-white/10 overflow-hidden">
           <div className="px-4 py-2 bg-white/5 border-b border-white/8">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Equity Value Bridge</p>
+            <p className="text-[11px] font-semibold text-slate-300">Equity value bridge</p>
           </div>
           <div className="divide-y divide-white/8">
             {bridgeRows.map(({ label, value, bold, sub }) => (
@@ -1055,7 +1055,7 @@ export default function ForecastTable({
           {/* Computed CAGR badge */}
           {computedCagr != null && (
             <div className="flex items-center gap-1.5 bg-white/8 border border-white/10 rounded-lg px-3 py-1.5">
-              <span className="text-[11px] text-slate-400 uppercase tracking-wide font-semibold">Avg CAGR</span>
+              <span className="text-[11px] text-slate-400 font-semibold">Avg CAGR</span>
               <span className="text-[13px] font-bold text-blue-300 tabular-nums">{computedCagr.toFixed(1)}%</span>
               <span className="text-[11px] text-slate-400">(geom.)</span>
             </div>
@@ -1082,7 +1082,7 @@ export default function ForecastTable({
           {headerPrice != null && (
             <div className="relative group">
               <div tabIndex={0} className="flex items-center gap-2 bg-white/8 border border-white/10 rounded-lg px-3 py-1.5 cursor-help min-h-[44px]">
-                <span className="text-[11px] text-slate-400 uppercase tracking-wide font-semibold">
+                <span className="text-[11px] text-slate-400 font-semibold">
                   {blendedImpliedPrice != null ? 'Implied · 4-model' : 'Implied'}
                 </span>
                 <span className={cn('text-[13px] font-bold tabular-nums',
@@ -1099,7 +1099,7 @@ export default function ForecastTable({
               {/* Breakdown tooltip on hover */}
               {blendBreakdown != null && blendedImpliedPrice != null && (
                 <div className="absolute top-full left-0 mt-1.5 z-50 hidden group-hover:block group-focus-within:block bg-[#0d1929] border border-white/10 rounded-xl p-3.5 shadow-2xl" style={{ minWidth: 280 }}>
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  <p className="text-[11px] font-semibold text-slate-400 mb-2">
                     4-model blend · {blendBreakdown.cType} profile
                   </p>
                   {([
