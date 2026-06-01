@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ValuationAssumptions } from '@/lib/valuation/cockpit'
-import { InfoTooltip } from '@/components/ui/info-tooltip'
 
 // ── Re-export SparkPoint so callers that import it from here still work ────────
 export interface SparkPoint {

@@ -159,7 +159,7 @@ function OwnerEarningsCard({ data, currency, currentPrice }: Props) {
 
 // ── DDM: Dividend value model ─────────────────────────────────────────────────
 
-function DDMCard({ data, currency, currentPrice }: Props) {
+function DDMCard({ data, currency }: Props) {
   const { ddm } = data
 
   return (
