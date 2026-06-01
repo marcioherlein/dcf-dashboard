@@ -39,6 +39,25 @@ export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null)
     }
   }
 
+  // Fallback 3: TTM EBITDA from Yahoo quarterly sum (statementsData)
+  if (ttmEbitdaDollars == null && statementsData?.ttm) {
+    const ttmIS = statementsData.ttm.incomeStatement as ApiData | null
+    const ttmCF = statementsData.ttm.cashFlow as ApiData | null
+    if (ttmIS) {
+      const rawEbitda = ttmIS['EBITDA'] ?? ttmIS['normalizedEBITDA'] ?? null
+      if (typeof rawEbitda === 'number' && isFinite(rawEbitda) && rawEbitda > 0) {
+        ttmEbitdaDollars = rawEbitda
+      } else {
+        const ebit = ttmIS['EBIT'] ?? ttmIS['ebit'] ?? null
+        const dna = ttmCF?.['depreciationAndAmortization'] ?? ttmCF?.['depreciationAmortizationDepletion'] ?? null
+        if (typeof ebit === 'number' && isFinite(ebit) && typeof dna === 'number' && isFinite(dna)) {
+          const computed = ebit + Math.abs(dna)
+          if (computed > 0) ttmEbitdaDollars = computed
+        }
+      }
+    }
+  }
+
   const fcfMargin = apiData.businessProfile?.fcfMargin ?? null
   const historicalCAGR = apiData.cagrAnalysis?.historicalCagr3y ?? null
   const analystTargetMean = apiData.quote?.analystTargetMean ?? null
