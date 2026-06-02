@@ -254,14 +254,14 @@ export default function MarketsPage() {
               <span className="text-[11px] text-slate-400">Data as of {etTime} ET</span>
             ) : undefined}
           />
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            <div className="lg:col-span-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+            <div className="lg:col-span-4 flex flex-col">
               {ctx ? <MarketPulse pulse={ctx.pulse} /> : <Sk h="h-[280px]" />}
             </div>
-            <div className="lg:col-span-5">
+            <div className="lg:col-span-5 flex flex-col">
               <NormalizedPerfChart />
             </div>
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-3 flex flex-col">
               <TopMoversCard />
             </div>
           </div>

@@ -137,29 +137,27 @@ function IndexCard({ label, value, changePct, sparklineValues, sparkLoading, int
   const changeCls = rateMode ? rateCls(changePct) : equityCls(changePct)
 
   const inner = (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_16px_rgba(15,23,42,0.04)] px-4 pt-4 pb-3 flex flex-col gap-1 h-full transition-all hover:shadow-md hover:border-slate-300 cursor-pointer">
-      {/* Icon + label + chip */}
-      <div className="flex items-center justify-between gap-1">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center shrink-0', iconBg)}>
-            {icon}
-          </div>
-          <p className="text-[11px] font-semibold text-slate-600 leading-tight truncate">{label}</p>
+    <div className="bg-white rounded-xl border border-slate-200 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_16px_rgba(15,23,42,0.04)] px-3 pt-3 pb-3 flex flex-col h-full transition-all hover:shadow-md hover:border-slate-300 cursor-pointer">
+      {/* Icon + label */}
+      <div className="flex items-center gap-2">
+        <div className={cn('w-6 h-6 rounded-lg flex items-center justify-center shrink-0', iconBg)}>
+          {icon}
         </div>
-        {interpretation}
+        <p className="text-[11px] font-semibold text-slate-600 leading-tight">{label}</p>
       </div>
       {/* Value */}
-      <p className="text-[22px] font-bold tabular-nums text-slate-900 leading-none mt-1.5">{value}</p>
-      {/* Change + Today */}
-      <div className="flex items-center gap-1.5 mt-0.5">
-        <span className={cn('text-[12px] font-semibold tabular-nums', changeCls)}>
+      <p className="text-[20px] font-bold tabular-nums text-slate-900 leading-none mt-2">{value}</p>
+      {/* Change + chip */}
+      <div className="flex items-center gap-1.5 mt-1">
+        <span className={cn('text-[11px] font-semibold tabular-nums', changeCls)}>
           {pct(changePct)}
         </span>
         <span className="text-[10px] text-slate-400">Today</span>
-        {note && <span className="text-[10px] text-slate-400 ml-auto">{note}</span>}
+        <div className="ml-auto">{interpretation}</div>
       </div>
-      {/* Sparkline */}
-      <div className="mt-2 min-h-[32px] flex items-end">
+      {note && <p className="text-[10px] text-slate-400 mt-0.5">{note}</p>}
+      {/* Sparkline — pinned to bottom */}
+      <div className="mt-auto pt-2.5 h-9 flex items-end">
         {sparkLoading
           ? <SparklineSkeleton />
           : <Sparkline values={sparklineValues} positive={positive} />
