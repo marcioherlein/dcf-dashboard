@@ -9,7 +9,9 @@ interface SearchResult {
   longname?: string
   shortname?: string
   exchange?: string
+  exchDisp?: string
   quoteType?: string
+  supported: boolean
 }
 
 const TICKER_CHIPS = [
@@ -36,11 +38,12 @@ export default function HeroSearch({ dark = false }: Props) {
   const [results, setResults] = useState<SearchResult[]>([])
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [unsupportedError, setUnsupportedError] = useState<string | null>(null)
   const debounce = useRef<ReturnType<typeof setTimeout>>()
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (query.length < 1) { setResults([]); setOpen(false); return }
+    if (query.length < 1) { setResults([]); setOpen(false); setUnsupportedError(null); return }
     clearTimeout(debounce.current)
     debounce.current = setTimeout(() => {
       setLoading(true)
@@ -60,8 +63,23 @@ export default function HeroSearch({ dark = false }: Props) {
   }, [])
 
   const select = (symbol: string) => {
-    setOpen(false); setQuery('')
+    const match = results.find(r => r.symbol === symbol)
+    if (match && !match.supported) return
+    setOpen(false); setQuery(''); setUnsupportedError(null)
     router.push(`/stock/${symbol}`)
+  }
+
+  const handleSubmit = () => {
+    const trimmed = query.trim().toUpperCase()
+    if (!trimmed) return
+    const match = results.find(r => r.symbol.toUpperCase() === trimmed)
+    if (match && !match.supported) {
+      const exch = match.exchDisp ?? match.exchange ?? 'a foreign exchange'
+      setUnsupportedError(`${match.symbol} trades on ${exch} — we only cover NYSE and NASDAQ stocks.`)
+      return
+    }
+    setOpen(false); setQuery(''); setUnsupportedError(null)
+    router.push(`/stock/${trimmed}`)
   }
 
   return (
@@ -94,8 +112,8 @@ export default function HeroSearch({ dark = false }: Props) {
           <input
             type="text"
             value={query}
-            onChange={e => setQuery(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && query.trim()) select(query.trim().toUpperCase()) }}
+            onChange={e => { setQuery(e.target.value); setUnsupportedError(null) }}
+            onKeyDown={e => { if (e.key === 'Enter') handleSubmit() }}
             placeholder="Search any ticker — NVDA, AAPL, MELI..."
             className={`flex-1 bg-transparent text-base focus:outline-none ${
               dark
@@ -106,7 +124,7 @@ export default function HeroSearch({ dark = false }: Props) {
             aria-label="Search for a stock ticker"
           />
           <button
-            onClick={() => { if (query.trim()) select(query.trim().toUpperCase()) }}
+            onClick={handleSubmit}
             className="shrink-0 rounded-[10px] px-4 py-2.5 text-[13px] font-bold text-white transition-all hover:-translate-y-px active:scale-95"
             style={{
               background: '#2563EB',
@@ -135,11 +153,16 @@ export default function HeroSearch({ dark = false }: Props) {
             {results.map(r => (
               <button
                 key={r.symbol}
-                onClick={() => select(r.symbol)}
-                className={`flex w-full items-center gap-3 px-4 py-3 text-left border-b last:border-b-0 transition-colors active:scale-95 ${
-                  dark
-                    ? 'border-white/[0.07] hover:bg-white/[0.05]'
-                    : 'border-slate-100 hover:bg-slate-50'
+                onClick={() => r.supported ? select(r.symbol) : undefined}
+                disabled={!r.supported}
+                className={`flex w-full items-center gap-3 px-4 py-3 text-left border-b last:border-b-0 transition-colors ${
+                  r.supported
+                    ? dark
+                      ? 'border-white/[0.07] hover:bg-white/[0.05] active:scale-95 cursor-pointer'
+                      : 'border-slate-100 hover:bg-slate-50 active:scale-95 cursor-pointer'
+                    : dark
+                      ? 'border-white/[0.07] opacity-40 cursor-not-allowed'
+                      : 'border-slate-100 opacity-40 cursor-not-allowed'
                 }`}
                 role="option"
                 aria-selected={false}
@@ -151,13 +174,35 @@ export default function HeroSearch({ dark = false }: Props) {
                 <span className={`text-[13px] truncate flex-1 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
                   {r.longname ?? r.shortname}
                 </span>
-                {r.exchange && (
-                  <span className={`shrink-0 text-[10px] font-medium uppercase ${dark ? 'text-slate-600' : 'text-slate-400'}`}>
-                    {r.exchange}
+                {r.supported ? (
+                  r.exchange && (
+                    <span className={`shrink-0 text-[10px] font-medium uppercase ${dark ? 'text-slate-600' : 'text-slate-400'}`}>
+                      {r.exchange}
+                    </span>
+                  )
+                ) : (
+                  <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-400 border border-slate-200 whitespace-nowrap">
+                    Not available — {r.exchDisp ?? r.exchange}
                   </span>
                 )}
               </button>
             ))}
+          </div>
+        )}
+
+        {/* Unsupported ticker error */}
+        {unsupportedError && !open && (
+          <div className="absolute left-0 right-0 top-full mt-2 rounded-xl border px-4 py-3 z-50 flex items-start gap-2"
+            style={{
+              background: dark ? 'rgba(10,22,40,0.95)' : '#FFFBEB',
+              borderColor: dark ? 'rgba(251,191,36,0.3)' : '#FDE68A',
+              boxShadow: '0 4px 12px rgba(15,23,42,0.10)',
+            }}
+          >
+            <svg className="w-4 h-4 shrink-0 mt-0.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            <p className="text-[13px] text-amber-700 leading-snug">{unsupportedError}</p>
           </div>
         )}
       </div>

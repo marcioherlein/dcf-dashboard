@@ -3,28 +3,52 @@
 const YahooFinance = require('yahoo-finance2').default
 const yf = new YahooFinance({ suppressNotices: ['ripHistorical', 'yahooSurvey'] })
 
-export async function searchTicker(query: string) {
+// Allowed exchange codes for NYSE and NASDAQ
+const NYSE_NASDAQ_CODES = new Set([
+  'NMS', 'NGM', 'NCM',           // NASDAQ (Global Select, Global Market, Capital Market)
+  'NYQ', 'NYS', 'ASE',           // NYSE, NYSE American (AMEX)
+  'PCX', 'BTS',                  // NYSE Arca, Bats (US-listed ETF venues — same securities)
+])
+
+export interface TickerSearchResult {
+  symbol: string
+  longname?: string
+  shortname?: string
+  exchange?: string
+  exchDisp?: string
+  quoteType?: string
+  supported: boolean
+}
+
+export async function searchTicker(query: string): Promise<TickerSearchResult[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result: any = await yf.search(query, { newsCount: 0 })
 
-  // Allowed exchange codes for NYSE and NASDAQ
-  const NYSE_NASDAQ_CODES = new Set([
-    'NMS', 'NGM', 'NCM',           // NASDAQ (Global Select, Global Market, Capital Market)
-    'NYQ', 'NYS', 'ASE',           // NYSE, NYSE American (AMEX)
-    'PCX', 'BTS',                  // NYSE Arca, Bats (US-listed ETF venues — same securities)
-  ])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function isSupported(q: any): boolean {
+    const code = (q.exchange ?? '').toUpperCase()
+    const name = (q.exchDisp ?? q.fullExchangeName ?? '').toUpperCase()
+    return NYSE_NASDAQ_CODES.has(code) || name.includes('NASDAQ') || name.includes('NYSE')
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (result.quotes ?? [])
-    .filter((q: any) => {
-      if (q.quoteType !== 'EQUITY') return false
-      const code = (q.exchange ?? '').toUpperCase()
-      const name = (q.exchDisp ?? q.fullExchangeName ?? '').toUpperCase()
-      return NYSE_NASDAQ_CODES.has(code)
-        || name.includes('NASDAQ')
-        || name.includes('NYSE')
-    })
-    .slice(0, 8)
+  const equities: TickerSearchResult[] = (result.quotes ?? [])
+    .filter((q: any) => q.quoteType === 'EQUITY')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((q: any): TickerSearchResult => ({
+      symbol: q.symbol as string,
+      longname: q.longname as string | undefined,
+      shortname: q.shortname as string | undefined,
+      exchange: q.exchange as string | undefined,
+      exchDisp: (q.exchDisp ?? q.fullExchangeName ?? q.exchange) as string | undefined,
+      quoteType: q.quoteType as string | undefined,
+      supported: isSupported(q),
+    }))
+
+  // Supported results first, then unsupported; cap total at 8
+  const supported = equities.filter(r => r.supported)
+  const unsupported = equities.filter(r => !r.supported)
+  return [...supported, ...unsupported].slice(0, 8)
 }
 
 // ETF-specific search — returns only ETF quote types

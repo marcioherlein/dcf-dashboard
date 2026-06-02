@@ -24,7 +24,9 @@ interface SearchResult {
   longname?: string
   shortname?: string
   exchange?: string
+  exchDisp?: string
   quoteType?: string
+  supported: boolean
 }
 
 function CompanyLogo({ ticker }: { ticker: string }) {
@@ -88,12 +90,13 @@ export default function TopBar() {
   const [results, setResults] = useState<SearchResult[]>([])
   const [open, setOpen]       = useState(false)
   const [loading, setLoading] = useState(false)
+  const [unsupportedError, setUnsupportedError] = useState<string | null>(null)
   const reduced   = useReducedMotion()
   const debounce  = useRef<ReturnType<typeof setTimeout>>()
   const searchRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (query.length < 1) { setResults([]); setOpen(false); return }
+    if (query.length < 1) { setResults([]); setOpen(false); setUnsupportedError(null); return }
     clearTimeout(debounce.current)
     debounce.current = setTimeout(() => {
       setLoading(true)
@@ -113,8 +116,24 @@ export default function TopBar() {
   }, [])
 
   const select = (symbol: string) => {
-    setOpen(false); setQuery('')
+    const match = results.find(r => r.symbol === symbol)
+    if (match && !match.supported) return
+    setOpen(false); setQuery(''); setUnsupportedError(null)
     router.push(`/stock/${symbol}`)
+  }
+
+  const handleSubmit = (raw: string) => {
+    const trimmed = raw.trim().toUpperCase()
+    if (!trimmed) return
+    const match = results.find(r => r.symbol.toUpperCase() === trimmed)
+    if (match && !match.supported) {
+      const exch = match.exchDisp ?? match.exchange ?? 'a foreign exchange'
+      setUnsupportedError(`${match.symbol} trades on ${exch} — we only cover NYSE and NASDAQ stocks.`)
+      setOpen(false)
+      return
+    }
+    setOpen(false); setQuery(''); setUnsupportedError(null)
+    router.push(`/stock/${trimmed}`)
   }
 
   return (
@@ -301,8 +320,8 @@ export default function TopBar() {
                 <input
                   type="text"
                   value={query}
-                  onChange={e => setQuery(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && query.trim()) select(query.trim().toUpperCase()) }}
+                  onChange={e => { setQuery(e.target.value); setUnsupportedError(null) }}
+                  onKeyDown={e => { if (e.key === 'Enter' && query.trim()) handleSubmit(query) }}
                   placeholder="Search tickers…"
                   className="flex-1 min-w-0 bg-transparent text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none"
                 />
@@ -328,25 +347,46 @@ export default function TopBar() {
                         <motion.button
                           key={r.symbol}
                           variants={reduced ? {} : { hidden: { opacity: 0, x: -6 }, visible: { opacity: 1, x: 0, transition: { duration: 0.18 } } }}
-                          onClick={() => select(r.symbol)}
-                          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-50 border-b border-slate-100 last:border-b-0 transition-colors"
+                          onClick={() => r.supported ? select(r.symbol) : undefined}
+                          disabled={!r.supported}
+                          className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left border-b border-slate-100 last:border-b-0 transition-colors ${
+                            r.supported
+                              ? 'hover:bg-slate-50 cursor-pointer'
+                              : 'opacity-40 cursor-not-allowed'
+                          }`}
                         >
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 mb-0.5">
                               <span className="text-[14px] font-bold text-slate-800 font-mono">{r.symbol}</span>
-                              {r.exchange && (
+                              {r.exchange && r.supported && (
                                 <span className="text-[10px] text-slate-400 font-medium uppercase">{r.exchange}</span>
                               )}
                             </div>
                             <span className="text-[12px] text-slate-500 truncate block">{r.longname ?? r.shortname}</span>
                           </div>
-                          {r.quoteType && (
-                            <span className="shrink-0 text-[11px] font-medium text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
-                              {r.quoteType === 'EQUITY' ? 'Equity' : r.quoteType === 'ETF' ? 'ETF' : r.quoteType === 'INDEX' ? 'Index' : r.quoteType}
+                          {r.supported ? (
+                            r.quoteType && (
+                              <span className="shrink-0 text-[11px] font-medium text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
+                                {r.quoteType === 'EQUITY' ? 'Equity' : r.quoteType === 'ETF' ? 'ETF' : r.quoteType === 'INDEX' ? 'Index' : r.quoteType}
+                              </span>
+                            )
+                          ) : (
+                            <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-400 border border-slate-200 whitespace-nowrap">
+                              Not available — {r.exchDisp ?? r.exchange}
                             </span>
                           )}
                         </motion.button>
                       ))}
+
+                      {/* Unsupported error inline */}
+                      {unsupportedError && (
+                        <div className="px-4 py-3 flex items-start gap-2 bg-amber-50 border-t border-amber-100">
+                          <svg className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                          </svg>
+                          <p className="text-[11px] text-amber-700 leading-snug">{unsupportedError}</p>
+                        </div>
+                      )}
                     </motion.div>
                   </motion.div>
                 )}
