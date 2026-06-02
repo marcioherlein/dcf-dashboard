@@ -39,6 +39,21 @@ const REIT_METHODS = [
   },
 ]
 
+const GROWTH_STAGE_METHODS = [
+  {
+    name: 'EV / Revenue Multiple',
+    why: 'For pre-profit or early-stage companies, compare EV/Revenue to sector peers. Check the Overview tab for the current multiple.',
+  },
+  {
+    name: 'Analyst price targets',
+    why: 'Sell-side analysts who cover the company have modelled it with proprietary data. Their consensus is a useful anchor — check the Overview tab.',
+  },
+  {
+    name: 'Comparable company analysis',
+    why: 'Find peers at a similar growth rate and margin profile. Their EV/Revenue and EV/NTM-Revenue multiples bracket a reasonable range.',
+  },
+]
+
 function isBank(reasons: string[]): boolean {
   const text = reasons.join(' ').toLowerCase()
   return text.includes('bank') || text.includes('financ') || text.includes('insurance') || text.includes('lending')
@@ -49,10 +64,29 @@ function isREIT(reasons: string[]): boolean {
   return text.includes('reit') || text.includes('real estate')
 }
 
+function isInsufficientHistory(reasons: string[]): boolean {
+  return reasons.some(r => r.includes('Insufficient revenue history'))
+}
+
 export default function ValuationNotAvailableCard({ vetoReasons, ticker }: Props) {
   const bank = isBank(vetoReasons)
   const reit = isREIT(vetoReasons)
-  const methods = reit ? REIT_METHODS : bank ? BANK_METHODS : null
+  const insufficientHistory = isInsufficientHistory(vetoReasons)
+  const growthStage = insufficientHistory && !bank && !reit
+
+  const methods = reit ? REIT_METHODS : bank ? BANK_METHODS : growthStage ? GROWTH_STAGE_METHODS : null
+
+  const disclaimer = bank || reit
+    ? 'Discounted cash flow models assume free cash flow that can be attributed to equity holders. For banks, insurers, and financial intermediaries, regulatory capital requirements and the nature of the balance sheet make FCF-based DCF unreliable.'
+    : insufficientHistory
+      ? 'Projections require a meaningful historical baseline. As this company builds its public track record, data-driven DCF will become available.'
+      : 'Discounted cash flow models require reliable revenue and free cash flow history to produce a meaningful output.'
+
+  const sectionLabel = reit
+    ? 'Real estate investment trusts use non-GAAP cash flow metrics and yield-based models instead of DCF.'
+    : bank
+      ? 'Banks and financial intermediaries are valued on book value, returns on equity, and yield metrics.'
+      : 'While DCF is unavailable, these approaches can help frame the valuation.'
 
   return (
     <div className="flex flex-col gap-4">
@@ -70,9 +104,7 @@ export default function ValuationNotAvailableCard({ vetoReasons, ticker }: Props
           ))}
         </ul>
         <p className="text-[11px] text-slate-500 border-t border-amber-100 pt-3">
-          Discounted cash flow models assume free cash flow that can be attributed to equity holders.
-          For banks, insurers, and financial intermediaries, regulatory capital requirements and the
-          nature of the balance sheet make FCF-based DCF unreliable.
+          {disclaimer}
         </p>
       </div>
 
@@ -84,9 +116,7 @@ export default function ValuationNotAvailableCard({ vetoReasons, ticker }: Props
               Relevant valuation approaches for this sector
             </p>
             <p className="text-[12px] text-[#64748B] leading-relaxed">
-              {reit
-                ? 'Real estate investment trusts use non-GAAP cash flow metrics and yield-based models instead of DCF.'
-                : 'Banks and financial intermediaries are valued on book value, returns on equity, and yield metrics.'}
+              {sectionLabel}
             </p>
           </div>
           <div className="flex flex-col gap-3">

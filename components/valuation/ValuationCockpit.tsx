@@ -38,6 +38,8 @@ interface Props {
   apiData: ApiData
   ticker: string
   statementsData?: ApiData | null
+  limitedHistory?: boolean
+  historyYears?: number
   onNavigateToFinancials?: (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => void
   onNavigateToRisks?: () => void
   onLiveDcfFVChange?: (fv: number | null) => void
@@ -97,7 +99,7 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
   }
 }
 
-export default function ValuationCockpit({ apiData, ticker, statementsData, onNavigateToFinancials: _onNavigateToFinancials, onNavigateToRisks: _onNavigateToRisks, onLiveDcfFVChange }: Props) {
+export default function ValuationCockpit({ apiData, ticker, statementsData, limitedHistory, historyYears, onNavigateToFinancials: _onNavigateToFinancials, onNavigateToRisks: _onNavigateToRisks, onLiveDcfFVChange }: Props) {
   const snapshot       = useMemo(() => buildSnapshot(apiData, statementsData), [apiData, statementsData])
   const defaults       = useMemo(() => seedAssumptions(apiData), [apiData])
   const historicalData = useMemo(() => buildHistoricalData(apiData), [apiData])
@@ -297,6 +299,16 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
         currency={currency}
         starRating={starRating}
       />
+
+      {limitedHistory && (
+        <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+          <span className="text-amber-500 shrink-0 text-xs mt-0.5">⚠</span>
+          <p className="text-[11px] text-amber-800 leading-relaxed">
+            <span className="font-[700]">Limited history ({historyYears} year{historyYears !== 1 ? 's' : ''} of data).</span>{' '}
+            Projections draw on pre-IPO S-1 financials and analyst consensus. Exit multiple models are more reliable than growth-stage DCF here — treat them as primary.
+          </p>
+        </div>
+      )}
 
       {/* Collapsible guidance at top */}
       <GuidanceStrip />

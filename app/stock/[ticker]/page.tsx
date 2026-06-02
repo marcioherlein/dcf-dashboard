@@ -150,6 +150,8 @@ interface FinancialsData {
   }
   canComputeDCF?: boolean
   vetoReasons?: string[]
+  limitedHistory?: boolean
+  historyYears?: number
 }
 
 export default function StockPage() {
@@ -518,6 +520,8 @@ function StockPageBody() {
                       apiData={data}
                       ticker={ticker}
                       statementsData={statementsData}
+                      limitedHistory={data.limitedHistory}
+                      historyYears={data.historyYears}
                       onNavigateToFinancials={handleNavigateToFinancials}
                       onNavigateToRisks={handleNavigateToRisks}
                       onLiveDcfFVChange={setPageLiveDcfFV}

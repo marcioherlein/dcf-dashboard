@@ -458,11 +458,15 @@ export async function GET(req: NextRequest) {
     const hasDividend = dividendPerShare > 0
 
     // Veto gate — detect inputs that cannot support a reliable DCF
+    const yahooRevYears   = historicalRevenues.filter((r) => r > 0).length
+    const fmpRevYears     = (fmp.incomeStatements as { revenue?: number }[])
+      .filter(s => (s.revenue ?? 0) > 0).length
+    const nonZeroRevYears = Math.max(yahooRevYears, fmpRevYears)
+
     const vetoReasons: string[] = []
     if (companyType === 'etf') {
       vetoReasons.push('ETF/fund — DCF does not apply. Valuation is based on NAV and tracking error, not free cash flow.')
     } else {
-      const nonZeroRevYears = historicalRevenues.filter((r) => r > 0).length
       if (nonZeroRevYears < 2) {
         vetoReasons.push('Insufficient revenue history — need at least 2 years of data for a reliable DCF.')
       }
@@ -470,7 +474,9 @@ export async function GET(req: NextRequest) {
         vetoReasons.push('No revenue or FCF data found — unable to project cash flows.')
       }
     }
-    const canComputeDCF = vetoReasons.length === 0
+    const canComputeDCF  = vetoReasons.length === 0
+    const limitedHistory = canComputeDCF && nonZeroRevYears < 3
+    const historyYears   = nonZeroRevYears
 
     // UFCF + Exit Multiple variant — complement to the Gordon Growth result from calculateFairValue.
     // Uses the same projected cash flows but swaps in an FCF exit multiple terminal value.
@@ -1279,6 +1285,8 @@ export async function GET(req: NextRequest) {
       historicalMultiples,
       canComputeDCF,
       vetoReasons,
+      limitedHistory,
+      historyYears,
       providerStatus: {
         fmp: {
           ok: hasFmp,
