@@ -709,7 +709,11 @@ export async function GET(req: NextRequest) {
       const fmpFcfM = fmpLatestCF.freeCashFlow / 1e6
       const fmpRevM = fmpLatestIS.revenue / 1e6
       const rawFmpMargin = fmpFcfM / fmpRevM
-      if (rawFmpMargin > 0) {
+      // Don't override a negative Yahoo TTM margin with a positive FMP historical margin.
+      // Yahoo's negative TTM is a real signal (e.g. MELI Mercado Crédito loan-book growth),
+      // and FMP's prior-year positive value would produce a spuriously negative implied CAGR.
+      const yahooMarginNegative = businessProfile.fcfMargin !== null && businessProfile.fcfMargin < 0
+      if (rawFmpMargin > 0 && !yahooMarginNegative) {
         businessProfile.fcfMargin = Math.min(rawFmpMargin, fcfMarginCeiling)
       }
     }
