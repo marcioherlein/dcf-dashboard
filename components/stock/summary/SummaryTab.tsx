@@ -49,6 +49,7 @@ interface SummaryTabProps {
   historicalCAGR: number | null
   analystCAGR: number | null
   isEmergingMarket?: boolean
+  revenueHistory?: Array<{ year: string; revenue: number | null; isProjected: boolean }>
   // scenarios
   scenarios: {
     bull: ScenarioData
@@ -87,7 +88,7 @@ export default function SummaryTab({
   price, change: _change, changePct: _changePct, high52, low52,
   fairValue, upsidePct, confidence, modelCount, totalModels,
   sharesM, cashM, debtM, revenueM, fcfMargin,
-  wacc, terminalG, historicalCAGR, analystCAGR, isEmergingMarket,
+  wacc, terminalG, historicalCAGR, analystCAGR, isEmergingMarket, revenueHistory,
   scenarios, ratings, scores, businessProfile, cagrAnalysis, statementsData,
   valuationMethods, quote, analystTargetMean, userModelFairValue,
   onViewValuation, onViewRisks, onViewAssumptions, analystRecommendation,
@@ -167,6 +168,7 @@ export default function SummaryTab({
             historicalCAGR={historicalCAGR}
             analystCAGR={analystCAGR}
             isEmergingMarket={isEmergingMarket}
+            revenueHistory={revenueHistory ?? []}
           />
           <MarketInterpretationCard
             upsidePct={upsidePct}

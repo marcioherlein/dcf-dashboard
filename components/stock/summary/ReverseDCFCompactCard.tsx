@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { computeReverseDCF } from '@/lib/valuation/methods/reverseDcf'
@@ -21,6 +22,7 @@ interface ReverseDCFCompactCardProps {
   historicalCAGR: number | null
   analystCAGR: number | null
   isEmergingMarket?: boolean
+  revenueHistory?: Array<{ year: string; revenue: number | null; isProjected: boolean }>
 }
 
 const CHIP_STYLES = {
@@ -63,6 +65,7 @@ export default function ReverseDCFCompactCard({
   historicalCAGR,
   analystCAGR,
   isEmergingMarket = false,
+  revenueHistory = [],
 }: ReverseDCFCompactCardProps) {
   const result = useMemo(
     () =>
@@ -151,14 +154,11 @@ export default function ReverseDCFCompactCard({
           )}
 
           {historicalPct != null && (
-            <div className="mt-2.5">
-              <p className="text-[11px] font-[650] text-[#64748B] mb-0.5">
-                3Y Historical CAGR
-              </p>
-              <p className="text-[14px] font-[700] text-[#334155] tabular-nums">
-                {historicalPct.toFixed(1)}%
-              </p>
-            </div>
+            <HistoricalCAGRBlock
+              historicalPct={historicalPct}
+              historicalCAGR={historicalCAGR}
+              revenueHistory={revenueHistory}
+            />
           )}
         </div>
 
@@ -244,6 +244,180 @@ export default function ReverseDCFCompactCard({
     </div>
   )
 }
+
+// ─── Historical CAGR block with revenue sparkline popover ────────────────────
+
+function HistoricalCAGRBlock({
+  historicalPct,
+  historicalCAGR,
+  revenueHistory,
+}: {
+  historicalPct: number
+  historicalCAGR: number | null
+  revenueHistory: Array<{ year: string; revenue: number | null; isProjected: boolean }>
+}) {
+  const triggerRef = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(false)
+  const [popupPos, setPopupPos] = useState<{ top: number; left: number } | null>(null)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+
+  const actuals = useMemo(
+    () =>
+      revenueHistory
+        .filter(r => !r.isProjected && r.revenue != null && r.revenue > 0)
+        .slice(-4),
+    [revenueHistory],
+  )
+
+  const hasChart = actuals.length >= 2
+
+  function openPopup() {
+    if (!triggerRef.current) return
+    const rect = triggerRef.current.getBoundingClientRect()
+    setPopupPos({ top: rect.bottom + 6, left: rect.left })
+    setOpen(true)
+  }
+
+  return (
+    <div className="mt-2.5">
+      <p className="text-[11px] font-[650] text-[#64748B] mb-0.5">3Y Historical CAGR</p>
+      <div
+        ref={triggerRef}
+        className={cn(
+          'inline-flex items-center gap-1',
+          hasChart && 'cursor-pointer group',
+        )}
+        onMouseEnter={hasChart ? openPopup : undefined}
+        onMouseLeave={hasChart ? () => setOpen(false) : undefined}
+        onClick={hasChart ? () => (open ? setOpen(false) : openPopup()) : undefined}
+      >
+        <p className="text-[14px] font-[700] text-[#334155] tabular-nums">
+          {historicalPct.toFixed(1)}%
+        </p>
+        {hasChart && (
+          <span className="text-[10px] text-[#94A3B8] group-hover:text-[#3B82F6] transition-colors select-none">
+            ↗
+          </span>
+        )}
+      </div>
+
+      {mounted && open && popupPos && hasChart && createPortal(
+        <div
+          className="fixed z-[9999] pointer-events-none"
+          style={{ top: popupPos.top, left: popupPos.left }}
+        >
+          <div
+            className="pointer-events-auto bg-white border border-[#E6ECF5] rounded-[14px] shadow-[0_8px_32px_rgba(15,23,42,0.14)] p-3 w-[230px]"
+            onMouseEnter={() => setOpen(true)}
+            onMouseLeave={() => setOpen(false)}
+          >
+            <RevenueCAGRChart actuals={actuals} historicalCAGR={historicalCAGR} />
+          </div>
+        </div>,
+        document.body,
+      )}
+    </div>
+  )
+}
+
+// ─── Mini SVG bar chart ───────────────────────────────────────────────────────
+
+type RevenueRow = { year: string; revenue: number | null }
+
+function fmtRevenue(m: number): string {
+  if (m >= 1000) return `$${(m / 1000).toFixed(1)}B`
+  return `$${m.toFixed(0)}M`
+}
+
+function RevenueCAGRChart({
+  actuals,
+  historicalCAGR,
+}: {
+  actuals: RevenueRow[]
+  historicalCAGR: number | null
+}) {
+  const W = 206, BAR_H = 64, LABEL_H = 28, SVG_H = BAR_H + LABEL_H
+  const n = actuals.length
+  const barW = Math.min(36, (W - 8) / n - 8)
+  const spacing = (W - n * barW) / (n + 1)
+  const maxRev = Math.max(...actuals.map(r => r.revenue ?? 0))
+
+  // year label — strip common prefixes like "FY", "FY " etc., keep 4-digit year
+  function yearLabel(y: string) {
+    const m = y.match(/\d{4}/)
+    return m ? m[0] : y.slice(-4)
+  }
+
+  const firstYear = yearLabel(actuals[0]?.year ?? '')
+  const lastYear  = yearLabel(actuals[n - 1]?.year ?? '')
+
+  return (
+    <div>
+      <p className="text-[11px] font-[700] text-[#0F172A] mb-2">Revenue History</p>
+      <svg width={W} height={SVG_H} viewBox={`0 0 ${W} ${SVG_H}`} overflow="visible">
+        {actuals.map((row, i) => {
+          const rev = row.revenue ?? 0
+          const bH = Math.max(6, (rev / maxRev) * (BAR_H - 22))
+          const x = spacing + i * (barW + spacing)
+          const y = BAR_H - bH
+          const isLast = i === n - 1
+          return (
+            <g key={row.year}>
+              <rect
+                x={x} y={y} width={barW} height={bH} rx={3}
+                fill={isLast ? '#3B82F6' : '#BFDBFE'}
+              />
+              {/* revenue label above bar */}
+              <text
+                x={x + barW / 2} y={y - 4}
+                textAnchor="middle" fontSize={8.5}
+                fill={isLast ? '#1D4ED8' : '#64748B'} fontWeight={isLast ? '700' : '400'}
+              >
+                {fmtRevenue(rev)}
+              </text>
+              {/* year label below */}
+              <text
+                x={x + barW / 2} y={BAR_H + 12}
+                textAnchor="middle" fontSize={9} fill="#64748B"
+              >
+                {yearLabel(row.year)}
+              </text>
+            </g>
+          )
+        })}
+
+        {/* CAGR bracket line spanning first → last bar */}
+        {historicalCAGR != null && n >= 2 && (() => {
+          const x0 = spacing + barW / 2
+          const x1 = spacing + (n - 1) * (barW + spacing) + barW / 2
+          const y0 = BAR_H + 22
+          return (
+            <g>
+              <line x1={x0} y1={y0} x2={x1} y2={y0} stroke="#3B82F6" strokeWidth={1} strokeDasharray="3 2" />
+              <line x1={x0} y1={y0 - 3} x2={x0} y2={y0 + 3} stroke="#3B82F6" strokeWidth={1} />
+              <line x1={x1} y1={y0 - 3} x2={x1} y2={y0 + 3} stroke="#3B82F6" strokeWidth={1} />
+            </g>
+          )
+        })()}
+      </svg>
+
+      {historicalCAGR != null && n >= 2 && (
+        <div className="mt-1 flex items-center justify-between border-t border-[#F1F5F9] pt-1.5">
+          <span className="text-[10px] text-[#64748B]">
+            {firstYear} → {lastYear}
+          </span>
+          <span className="text-[11px] font-[700] text-[#3B82F6]">
+            {(historicalCAGR * 100).toFixed(1)}% CAGR
+          </span>
+        </div>
+      )}
+      <p className="text-[9px] text-[#94A3B8] mt-0.5">Source: annual financial statements</p>
+    </div>
+  )
+}
+
+// ─── Bar row ─────────────────────────────────────────────────────────────────
 
 interface BarRowProps {
   label: string
