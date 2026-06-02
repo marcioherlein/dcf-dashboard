@@ -157,6 +157,7 @@ interface FinancialsData {
 
 export default function StockPage() {
   return (
+    // eslint-disable-next-line react/jsx-no-undef
     <LoginGateProvider>
       <StockPageBody />
     </LoginGateProvider>

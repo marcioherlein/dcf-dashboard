@@ -472,41 +472,6 @@ export default function FinancialsHub({ statementsData, financialsData, currency
     )
   }, [statementsData, financialsData])
 
-  // ── Growth data ────────────────────────────────────────────────────────────
-
-  // G6: financial sector EBITDA is less meaningful (no capex-heavy assets)
-  const isFinancialSector = ['Financial Services', 'Financials', 'Banks', 'Insurance', 'Financial'].some(
-    s => (financialsData?.quote?.sector ?? '').includes(s) || (financialsData?.businessProfile?.sector ?? '').includes(s)
-  )
-
-  const _growthRows = useMemo((): MetricRowDef[] => {
-    const revs    = mets.map(m => m.rev)
-    const gps     = mets.map(m => m.gp)
-    const ebits   = mets.map(m => m.ebit)
-    const ebitdas = mets.map(m => m.ebitda)
-    const nis     = mets.map(m => m.ni)
-    const epss    = mets.map(m => m.eps)
-    const fcfs    = mets.map(m => m.fcf)
-
-    // Fix G2: include a prior-year seed so every displayed column has a value.
-    // yoyArr(arr) produces one fewer non-null values — slice away the always-null
-    // first element in the caller, keeping columns aligned.
-    const yoyArr = (arr: (number | null)[]) => arr.map((v, i) => i === 0 ? null : yoy(v, arr[i - 1]))
-
-    return [
-      { label: 'Revenue',           fmt: 'growth', positiveIsGood: true, values: yoyArr(revs) },
-      { label: 'Gross Profit',      fmt: 'growth', positiveIsGood: true, values: yoyArr(gps) },
-      ...(!isFinancialSector ? [{ label: 'EBITDA', fmt: 'growth' as const, positiveIsGood: true, values: yoyArr(ebitdas) }] : []),
-      { label: 'EBIT / Op. Income', fmt: 'growth', positiveIsGood: true, values: yoyArr(ebits) },
-      { label: 'Net Income',        fmt: 'growth', positiveIsGood: true, values: yoyArr(nis) },
-      { label: 'EPS (Diluted)',     fmt: 'growth', positiveIsGood: true, values: yoyArr(epss) },
-      { label: 'Free Cash Flow',    fmt: 'growth', positiveIsGood: true, values: yoyArr(fcfs) },
-    ]
-  }, [mets, isFinancialSector])
-
-  // Fix G2: YoY table columns skip the oldest period (always "—"); use slice(1).
-  const _yoyCols  = cols.length > 1 ? cols.slice(1)  : cols
-
   // Fix G5: analyst consensus EPS growth estimates from cagrAnalysis
   const analystEst1y = (financialsData?.cagrAnalysis?.analystEstimate1y ?? null) as number | null
   const analystEst2y = (financialsData?.cagrAnalysis?.analystEstimate2y ?? null) as number | null
