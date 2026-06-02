@@ -11,17 +11,10 @@ import { blendEVEBITDAMultiple } from '@/lib/valuation/methods/evEbitda'
 type ApiData = Record<string, any>
 
 export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null): CockpitSnapshot {
-  const sharesM = apiData.fairValue?.sharesOutstanding ?? 0
-  let cashM     = apiData.fairValue?.cash ?? 0
-  let debtM     = apiData.fairValue?.debt ?? 0
+  const sharesM   = apiData.fairValue?.sharesOutstanding ?? 0
+  const cashM     = apiData.fairValue?.cash ?? 0
+  const debtM     = apiData.fairValue?.debt ?? 0
   const sharesRaw = sharesM > 0 ? sharesM * 1e6 : null
-
-  // Detect banks/insurers to avoid TTM balance sheet debt inflation.
-  // Banks' totalDebt includes customer deposits and interbank liabilities — route.ts already
-  // applies a guard using only longTermDebt for these companies. We must not undo that here.
-  const industry = (apiData.quote?.industry ?? '') as string
-  const sector   = (apiData.quote?.sector   ?? '') as string
-  const isBankLike = /bank|insurance|financ|fintech|payment|credit|lending|capital market|asset management|brokerage/i.test(sector + ' ' + industry)
 
   const incomeRows: Array<{ isProjected: boolean; revenue: number | null; ebitda?: number | null }> =
     apiData.financialStatements?.incomeStatement ?? []
@@ -75,19 +68,8 @@ export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null)
     ? ttmFCFRaw / 1e6
     : (apiData.baseFCF ?? 0)
 
-  const ttmBS = statementsData?.ttm?.balanceSheet
-  if (ttmBS) {
-    const stmtCash = (ttmBS as ApiData).cashCashEquivalentsAndShortTermInvestments ?? (ttmBS as ApiData).cash
-    if (typeof stmtCash === 'number' && isFinite(stmtCash)) cashM = stmtCash / 1e6
-    // For banks, totalDebt on the balance sheet includes customer deposits and interbank
-    // liabilities — use fairValue.debt (already guarded in route.ts to longTermDebt only).
-    if (!isBankLike) {
-      const stmtDebt = (ttmBS as ApiData).totalDebt ?? (ttmBS as ApiData).longTermDebt
-      if (typeof stmtDebt === 'number' && isFinite(stmtDebt)) debtM = stmtDebt / 1e6
-    }
-  }
-
-  // TTM revenue from Yahoo (consistent with SummaryTab path for reverse DCF)
+  // TTM revenue from Yahoo — used for reverse DCF to match the SummaryTab path.
+  // fairValue.cash/debt are used directly (already bank-guarded in route.ts).
   const ttmRevenueDollars = apiData.businessProfile?.revenueM != null
     ? (apiData.businessProfile.revenueM as number) * 1e6
     : null

@@ -1237,10 +1237,12 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
     sharesOutstanding: sharesAbsolute,
     cashM:    apiData?.fairValue?.cash ?? null,
     debtM:    apiData?.fairValue?.debt ?? null,
-    lastRevenue: lastActualRevenue,
-    lastFCFMargin,
-    wacc:     apiData?.wacc?.wacc   ?? 0.09,
-    terminalG:apiData?.terminalG    ?? 0.025,
+    lastRevenue: apiData?.businessProfile?.revenueM != null
+      ? (apiData.businessProfile.revenueM as number) * 1e6
+      : lastActualRevenue,
+    lastFCFMargin: apiData?.businessProfile?.fcfMargin ?? lastFCFMargin,
+    wacc:     apiData?.wacc?.wacc   ?? 0.10,
+    terminalG:apiData?.terminalG    ?? 0.03,
     historicalCAGR: apiData?.cagrAnalysis?.historicalCagr3y ?? null,
   }), [currentPrice, apiData, lastActualRevenue, lastFCFMargin, sharesAbsolute])
 
