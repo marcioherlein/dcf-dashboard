@@ -19,17 +19,35 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user }) {
       if (user.email) {
         try {
-          await serviceClient()
+          const sb = serviceClient()
+
+          // Check if this user already exists
+          const { data: existing } = await sb
             .from('users')
-            .upsert(
-              {
-                email: user.email,
-                name: user.name ?? null,
-                avatar_url: user.image ?? null,
-                last_seen: new Date().toISOString(),
-              },
-              { onConflict: 'email' },
-            )
+            .select('id')
+            .eq('email', user.email)
+            .maybeSingle()
+
+          const isNew = !existing
+
+          await sb.from('users').upsert(
+            {
+              email: user.email,
+              name: user.name ?? null,
+              avatar_url: user.image ?? null,
+              last_seen: new Date().toISOString(),
+            },
+            { onConflict: 'email' },
+          )
+
+          if (isNew) {
+            // Fire and forget — never block login
+            fetch(`${process.env.NEXTAUTH_URL}/api/email/welcome`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: user.email, name: user.name }),
+            }).catch(() => {})
+          }
         } catch {
           // Never block login if email capture fails
         }
