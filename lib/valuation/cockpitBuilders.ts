@@ -114,6 +114,7 @@ export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null)
     : null
 
   const sector: string | null = apiData.quote?.sector ?? null
+  const industry: string | null = apiData.quote?.industry ?? null
 
   return {
     currentPrice: apiData.quote?.price ?? 0,
@@ -135,6 +136,7 @@ export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null)
     analystRating,
     companyType: apiData.valuationMethods?.companyType ?? 'standard',
     sector,
+    industry,
     bookValuePerShare,
     fullDcfFairValue: apiData.scenarios?.base?.fairValue ?? null,
   }
@@ -154,14 +156,35 @@ export function seedAssumptions(apiData: ApiData): ValuationAssumptions {
   const currentEVEBITDA = multEstimates.find(e => e.multiple === 'EV/EBITDA')?.actualValue ?? null
   const { multiple: exitMultiple } = blendEVEBITDAMultiple(sector, industry, currentEVEBITDA, crp)
 
-  // P/B target for financial companies: use sector-based default
+  // P/B target for financial companies: blend current market P/B (55%) with sector default (45%).
+  // Using 55% of the live market P/B prevents the sector default from over-anchoring on
+  // outdated book-value norms — high-growth fintechs (NU ~6×) were being undervalued because
+  // the static 1.8× default dominated the fair-value output.
   const FINANCIAL_SECTORS_PB: Record<string, number> = {
     'Financial Services': 1.8,
     'Banks': 1.2,
     'Insurance': 1.4,
     'Financial': 1.5,
   }
-  const priceToBookMultiple = FINANCIAL_SECTORS_PB[sector ?? ''] ?? undefined
+  const sectorDefaultPB = FINANCIAL_SECTORS_PB[sector ?? ''] ?? null
+  let priceToBookMultiple: number | undefined = sectorDefaultPB ?? undefined
+  if (sectorDefaultPB != null) {
+    const bsRows: Array<{ isProjected?: boolean; totalEquity?: number | null }> =
+      apiData.financialStatements?.balanceSheet ?? []
+    const actualBSRows = bsRows.filter((r: { isProjected?: boolean }) => !r.isProjected)
+    const lastEquity = actualBSRows[actualBSRows.length - 1]?.totalEquity ?? null
+    const sharesRaw = ((apiData.businessProfile?.sharesOutstanding ?? 0) as number) * 1e6
+    const bookPerShare = lastEquity != null && lastEquity > 0 && sharesRaw > 0
+      ? (lastEquity as number) * 1e6 / sharesRaw
+      : null
+    const currentPrice = apiData.quote?.price ?? null
+    const currentPB = currentPrice != null && bookPerShare != null && bookPerShare > 0
+      ? currentPrice / bookPerShare
+      : null
+    if (currentPB != null && currentPB > 0) {
+      priceToBookMultiple = currentPB * 0.55 + sectorDefaultPB * 0.45
+    }
+  }
 
   return {
     wacc:            apiData.wacc?.wacc ?? 0.10,

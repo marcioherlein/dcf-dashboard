@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { computeReverseDCF } from '@/lib/valuation/methods/reverseDcf'
+import InfoTooltip from '@/components/ui/InfoTooltip'
 
 const CARD =
   'bg-white border border-[#E6ECF5] rounded-[18px] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]'
@@ -23,6 +24,8 @@ interface ReverseDCFCompactCardProps {
   analystCAGR: number | null
   isEmergingMarket?: boolean
   isFinancialSector?: boolean
+  rawBlendedCagr?: number | null
+  cagrCap?: number | null
   revenueHistory?: Array<{ year: string; revenue: number | null; isProjected: boolean }>
 }
 
@@ -67,6 +70,8 @@ export default function ReverseDCFCompactCard({
   analystCAGR,
   isEmergingMarket = false,
   isFinancialSector = false,
+  rawBlendedCagr,
+  cagrCap,
   revenueHistory = [],
 }: ReverseDCFCompactCardProps) {
   const result = useMemo(
@@ -108,6 +113,9 @@ export default function ReverseDCFCompactCard({
   const zeroLineLeft =
     range > 0 ? Math.max(0, Math.min(100, ((0 - minVal) / range) * 100)) : null
 
+  const cagrCapActive =
+    rawBlendedCagr != null && cagrCap != null && rawBlendedCagr > cagrCap + 0.001
+
   return (
     <div className={cn(CARD, 'p-4 flex flex-col gap-3')}>
       {/* Header */}
@@ -144,8 +152,9 @@ export default function ReverseDCFCompactCard({
       <div className="flex gap-4">
         {/* Left */}
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-[650] text-[#64748B] mb-1">
+          <p className="text-[11px] font-[650] text-[#64748B] mb-1 flex items-center gap-1">
             Implied 5Y Revenue CAGR
+            <InfoTooltip content="What annual revenue growth rate does the market assume over the next 5 years to justify today's price? Uses current FCF margins and WACC. A 5-year horizon gives a more demanding (conservative) implied rate than 10 years." />
           </p>
           {impliedPct != null ? (
             <p className={cn('text-[28px] font-[800] leading-none tabular-nums', IMPLIED_COLOR[interp])}>
@@ -242,6 +251,13 @@ export default function ReverseDCFCompactCard({
       {isEmergingMarket && (
         <p className="text-[11px] text-[#D97706] mt-1">
           ⚠ Emerging market — interpret CAGR benchmark with caution.
+        </p>
+      )}
+
+      {/* CAGR cap disclosure */}
+      {cagrCapActive && (
+        <p className="text-[10px] text-[#64748B] mt-1">
+          Raw blended rate was {((rawBlendedCagr as number) * 100).toFixed(1)}% — reduced to {((cagrCap as number) * 100).toFixed(0)}% by size/sector cap.
         </p>
       )}
     </div>

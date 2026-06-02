@@ -63,6 +63,8 @@ export interface CockpitSnapshot {
   companyType?: string
   // Sector name — determines whether P/B replaces EV/EBITDA for financial companies
   sector?: string | null
+  // Industry name — used for fintech auto-detection within the financial sector
+  industry?: string | null
   // Book value per share (raw dollars) — for P/B valuation method
   bookValuePerShare?: number | null
   // Pre-computed 4-model DCF blend from Full DCF Table (scenarios.base.fairValue).
@@ -121,16 +123,33 @@ const COCKPIT_WEIGHTS: Record<string, MethodWeights> = {
   growth:    { forward_pe: 0.25, ev_ebitda: 0.25, revenue_multiple: 0.35, core_dcf: 0.15 },
   startup:   { forward_pe: 0.10, ev_ebitda: 0.15, revenue_multiple: 0.45, core_dcf: 0.30 },
   financial: { forward_pe: 0.45, ev_ebitda: 0.05, revenue_multiple: 0.15, core_dcf: 0.35 },
+  // High-growth digital finance (neobanks, payments, credit platforms): P/E weight reduced
+  // because margins are still maturing; P/B and revenue multiple raised to reflect growth premium.
+  fintech:   { forward_pe: 0.20, ev_ebitda: 0.25, revenue_multiple: 0.25, core_dcf: 0.30 },
   dividend:  { forward_pe: 0.35, ev_ebitda: 0.25, revenue_multiple: 0.15, core_dcf: 0.25 },
   etf:       { forward_pe: 0.25, ev_ebitda: 0.25, revenue_multiple: 0.25, core_dcf: 0.25 },
 }
+
+const FINTECH_INDUSTRY_RE = /fintech|neobank|digital.?bank|payment|credit.?service|consumer.?finance|insurtech/i
 
 // For growth/startup companies with thin EBITDA margins, the TTM EBITDA is a noisy anchor —
 // a company spending heavily on growth will show near-zero EBITDA while its revenue trajectory
 // is the real signal. Reduce EV/EBITDA weight to 8% and redistribute to revenue_multiple.
 function getEffectiveWeights(snapshot: CockpitSnapshot): MethodWeights {
-  const base = COCKPIT_WEIGHTS[snapshot.companyType ?? 'standard'] ?? COCKPIT_WEIGHTS.standard
-  const isGrowthType = snapshot.companyType === 'growth' || snapshot.companyType === 'startup'
+  const companyType = snapshot.companyType ?? 'standard'
+
+  // Auto-promote financial companies that match fintech characteristics to the `fintech` type,
+  // which reduces the Forward P/E dominance (45% → 20%) that is unreliable for early-stage
+  // digital finance companies where margins are still scaling. P/B and Revenue Multiple get
+  // higher weight instead, which better captures the growth premium.
+  const effectiveType = (companyType === 'financial' || companyType === 'fintech') &&
+    FINANCIAL_SECTORS.has(snapshot.sector ?? '') &&
+    FINTECH_INDUSTRY_RE.test(snapshot.industry ?? '')
+    ? 'fintech'
+    : companyType
+
+  const base = COCKPIT_WEIGHTS[effectiveType] ?? COCKPIT_WEIGHTS.standard
+  const isGrowthType = effectiveType === 'growth' || effectiveType === 'startup'
   if (!isGrowthType) return base
   const revDollars    = snapshot.ltvRevenueDollars
   const ebitdaDollars = snapshot.ttmEbitdaDollars

@@ -172,6 +172,8 @@ export default function SummaryTab({
             analystCAGR={analystCAGR}
             isEmergingMarket={isEmergingMarket}
             isFinancialSector={isFinancialSector}
+            rawBlendedCagr={cagrAnalysis?.rawBlended ?? null}
+            cagrCap={cagrAnalysis?.cagrCap ?? null}
             revenueHistory={revenueHistory ?? []}
           />
           <MarketInterpretationCard
