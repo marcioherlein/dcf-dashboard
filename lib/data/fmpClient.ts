@@ -131,7 +131,19 @@ export interface FmpAnalystEstimate {
   numberAnalystEstimatedRevenue: number
 }
 
-// ── Fetch functions ───────────────────────────────────────────────────────────
+// Type aliases for quarterly data — same fields as annual equivalents
+export type FmpKeyMetricsQuarterly = FmpKeyMetrics
+export type FmpIncomeStatementQuarterly = FmpIncomeStatement
+
+// ── Quarterly fetch functions ─────────────────────────────────────────────────
+
+export async function getKeyMetricsQuarterly(ticker: string, limit = 16): Promise<FmpKeyMetricsQuarterly[]> {
+  return get<FmpKeyMetricsQuarterly[]>('/key-metrics', { symbol: ticker, period: 'quarter', limit })
+}
+
+export async function getIncomeStatementQuarterly(ticker: string, limit = 8): Promise<FmpIncomeStatementQuarterly[]> {
+  return get<FmpIncomeStatementQuarterly[]>('/income-statement', { symbol: ticker, period: 'quarter', limit })
+}
 
 export async function getFmpIncomeStatements(ticker: string, limit = 5): Promise<FmpIncomeStatement[]> {
   return get<FmpIncomeStatement[]>('/income-statement', { symbol: ticker, limit })
@@ -171,12 +183,14 @@ export async function getFmpAnalystEstimates(ticker: string): Promise<FmpAnalyst
  * Falls back gracefully — if FMP is unavailable, all fields are null/empty.
  */
 export async function getFmpBundle(ticker: string) {
-  const [is, cf, bs, km, ratios] = await Promise.allSettled([
+  const [is, cf, bs, km, ratios, kmQ, isQ] = await Promise.allSettled([
     getFmpIncomeStatements(ticker, 5),
     getFmpCashFlowStatements(ticker, 5),
     getFmpBalanceSheets(ticker, 5),
     getFmpKeyMetrics(ticker, 5),
     getFmpRatios(ticker, 1),
+    getKeyMetricsQuarterly(ticker, 16),
+    getIncomeStatementQuarterly(ticker, 8),
   ])
 
   return {
@@ -185,5 +199,7 @@ export async function getFmpBundle(ticker: string) {
     balanceSheets: bs.status === 'fulfilled' ? bs.value : [] as FmpBalanceSheet[],
     keyMetrics: km.status === 'fulfilled' ? km.value : [] as FmpKeyMetrics[],
     ratios: ratios.status === 'fulfilled' ? ratios.value : [] as FmpRatios[],
+    keyMetricsQuarterly: kmQ.status === 'fulfilled' ? kmQ.value : [] as FmpKeyMetricsQuarterly[],
+    incomeStatementQuarterly: isQ.status === 'fulfilled' ? isQ.value : [] as FmpIncomeStatementQuarterly[],
   }
 }

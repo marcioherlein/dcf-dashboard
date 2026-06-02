@@ -4,6 +4,25 @@ import { computeRevenueMultiple } from './methods/revenueMultiple'
 import { computeReverseDCF } from './methods/reverseDcf'
 import { projectCashFlows } from '../dcf/projectCashFlows'
 
+const FINANCIAL_SECTORS = new Set(['Financial Services', 'Banks', 'Insurance', 'Financial'])
+
+function isPBMethod(snapshot: CockpitSnapshot): boolean {
+  return FINANCIAL_SECTORS.has(snapshot.sector ?? '')
+}
+
+function computePBValuation(
+  snapshot: CockpitSnapshot,
+  assumptions: ValuationAssumptions,
+): { fairValuePerShare: number | null; guardErrors: string[] } {
+  if (snapshot.bookValuePerShare == null || snapshot.bookValuePerShare <= 0) {
+    return { fairValuePerShare: null, guardErrors: ['Book value per share unavailable'] }
+  }
+  const mult = assumptions.priceToBookMultiple ?? 1.5
+  if (mult <= 0) return { fairValuePerShare: null, guardErrors: ['Invalid P/B multiple'] }
+  const fv = Math.round(snapshot.bookValuePerShare * mult * 100) / 100
+  return { fairValuePerShare: fv > 0 ? fv : null, guardErrors: fv > 0 ? [] : ['P/B fair value ≤ 0'] }
+}
+
 export interface ValuationAssumptions {
   wacc: number           // e.g. 0.10
   cagr: number           // 5Y revenue CAGR e.g. 0.12
@@ -13,6 +32,7 @@ export interface ValuationAssumptions {
   exitPE: number         // Forward P/E exit multiple e.g. 22
   exitMultiple: number   // EV/EBITDA exit multiple e.g. 14
   revenueMultiple: number // EV/Revenue e.g. 4.5
+  priceToBookMultiple?: number // P/B target multiple (financial companies only)
 }
 
 // Fixed financial data extracted from apiData — does NOT change with assumptions
@@ -41,6 +61,10 @@ export interface CockpitSnapshot {
   analystRating: string | null
   // Company classification (determines method blend weights)
   companyType?: string
+  // Sector name — determines whether P/B replaces EV/EBITDA for financial companies
+  sector?: string | null
+  // Book value per share (raw dollars) — for P/B valuation method
+  bookValuePerShare?: number | null
   // Pre-computed 4-model DCF blend from Full DCF Table (scenarios.base.fairValue).
   // When present, Core DCF uses this directly instead of re-running the UFCF-only blend.
   fullDcfFairValue?: number | null
@@ -142,13 +166,15 @@ export function computeBlendedFV(
     terminalCAGR: assumptions.terminalG,
   })
 
-  const evEbitda = computeEVEBITDA({
-    ttmEbitda: snapshot.ttmEbitdaDollars,
-    netDebt: snapshot.netDebtDollars,
-    shares: snapshot.sharesRaw,
-    exitMultiple: assumptions.exitMultiple,
-    currentPrice,
-  })
+  const thirdMethodFV = isPBMethod(snapshot)
+    ? computePBValuation(snapshot, assumptions).fairValuePerShare
+    : (computeEVEBITDA({
+        ttmEbitda: snapshot.ttmEbitdaDollars,
+        netDebt: snapshot.netDebtDollars,
+        shares: snapshot.sharesRaw,
+        exitMultiple: assumptions.exitMultiple,
+        currentPrice,
+      }).fairValuePerShare ?? null)
 
   const revMult = computeRevenueMultiple({
     ltvRevenue: snapshot.ltvRevenueDollars,
@@ -193,7 +219,7 @@ export function computeBlendedFV(
   const candidates = (
     [
       { fv: fwdPE.fairValueToday ?? null, w: W.forward_pe },
-      { fv: evEbitda.fairValuePerShare ?? null, w: W.ev_ebitda },
+      { fv: thirdMethodFV, w: W.ev_ebitda },
       { fv: revMult.fairValueToday ?? null, w: W.revenue_multiple },
       { fv: dcfFV, w: W.core_dcf },
     ] as { fv: number | null; w: number }[]
@@ -418,14 +444,32 @@ export function computeCockpitOutput(
     terminalCAGR: assumptions.terminalG,
   })
 
-  // 2. EV/EBITDA
-  const evEbitda = computeEVEBITDA({
-    ttmEbitda: snapshot.ttmEbitdaDollars,
-    netDebt: snapshot.netDebtDollars,
-    shares: snapshot.sharesRaw,
-    exitMultiple: assumptions.exitMultiple,
-    currentPrice,
-  })
+  // 2. EV/EBITDA or Price/Book (sector-adaptive)
+  const isFinancial = isPBMethod(snapshot)
+  let thirdMethodResult: { fairValuePerShare: number | null; guardErrors: string[] }
+  let thirdMethodId: string
+  let thirdMethodName: string
+  let thirdMethodDesc: string
+
+  if (isFinancial) {
+    const pb = computePBValuation(snapshot, assumptions)
+    thirdMethodResult = pb
+    thirdMethodId = 'price_to_book'
+    thirdMethodName = 'Price / Book'
+    thirdMethodDesc = 'Book Value Per Share × Target P/B multiple. Standard anchor for banks and financial companies — reflects the market premium over tangible net assets.'
+  } else {
+    const ev = computeEVEBITDA({
+      ttmEbitda: snapshot.ttmEbitdaDollars,
+      netDebt: snapshot.netDebtDollars,
+      shares: snapshot.sharesRaw,
+      exitMultiple: assumptions.exitMultiple,
+      currentPrice,
+    })
+    thirdMethodResult = ev
+    thirdMethodId = 'ev_ebitda'
+    thirdMethodName = 'EV/EBITDA'
+    thirdMethodDesc = 'Snapshot: TTM EBITDA × exit multiple − net debt. No growth projection — most reliable for stable-margin companies.'
+  }
 
   // 3. Revenue Multiple
   const revMult = computeRevenueMultiple({
@@ -501,14 +545,14 @@ export function computeCockpitOutput(
       errors: fwdPE.guardErrors,
     },
     {
-      id: 'ev_ebitda',
-      method: 'EV/EBITDA',
-      fairValue: evEbitda.fairValuePerShare ?? null,
+      id: thirdMethodId,
+      method: thirdMethodName,
+      fairValue: thirdMethodResult.fairValuePerShare ?? null,
       weight: W.ev_ebitda,
-      confidence: evEbitda.guardErrors.length === 0 ? 'high' : 'low',
-      description: 'Snapshot: TTM EBITDA × exit multiple − net debt. No growth projection — most reliable for stable-margin companies.',
-      upsidePct: upside(evEbitda.fairValuePerShare ?? null),
-      errors: evEbitda.guardErrors,
+      confidence: thirdMethodResult.guardErrors.length === 0 ? 'high' : 'low',
+      description: thirdMethodDesc,
+      upsidePct: upside(thirdMethodResult.fairValuePerShare ?? null),
+      errors: thirdMethodResult.guardErrors,
     },
     {
       id: 'revenue_multiple',

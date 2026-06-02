@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
       getHistorical(ticker, '5y').catch(() => []),
       getSPYHistorical().catch(() => []),
       getRfRate(),
-      getFmpBundle(ticker).catch(() => ({ incomeStatements: [], cashFlowStatements: [], balanceSheets: [], keyMetrics: [], ratios: [] })),
+      getFmpBundle(ticker).catch(() => ({ incomeStatements: [], cashFlowStatements: [], balanceSheets: [], keyMetrics: [], ratios: [], keyMetricsQuarterly: [], incomeStatementQuarterly: [] })),
       getAnnualBalanceSheet(ticker).catch(() => []),
     ])
     // Sequential after main batch — avoids Yahoo rate-limiting from too many simultaneous calls
@@ -1283,6 +1283,8 @@ export async function GET(req: NextRequest) {
       valuationMethods,
       financialStatements,
       historicalMultiples,
+      keyMetricsQuarterly: fmp.keyMetricsQuarterly,
+      incomeStatementQuarterly: fmp.incomeStatementQuarterly,
       canComputeDCF,
       vetoReasons,
       limitedHistory,

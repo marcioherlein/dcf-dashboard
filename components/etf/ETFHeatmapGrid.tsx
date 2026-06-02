@@ -1,0 +1,114 @@
+'use client'
+
+import Link from 'next/link'
+import { Plus, Check } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { scoreColor, scoreLabel, scoreBgCell, scoreBadge } from '@/lib/data/etfScore'
+import { fmtMultiple } from '@/lib/formatters'
+import type { ETFMeta } from '@/lib/data/etfUniverse'
+import type { ETFBatchItem } from '@/lib/data/etfTypes'
+
+interface Props {
+  metas: ETFMeta[]
+  data: Record<string, ETFBatchItem | null>
+  watchlistedTickers: Set<string>
+  onAdd: (ticker: string) => void
+  cols?: 3 | 4
+}
+
+export function ETFHeatmapGrid({ metas, data, watchlistedTickers, onAdd, cols = 3 }: Props) {
+  const loading = Object.keys(data).length === 0
+
+  return (
+    <div
+      className={cn(
+        'grid gap-3',
+        cols === 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3',
+      )}
+    >
+      {metas.map((meta) => {
+        const item = data[meta.ticker] ?? null
+        const score = item?.valueScore ?? null
+        const isWatchlisted = watchlistedTickers.has(meta.ticker)
+
+        if (loading) {
+          return (
+            <div key={meta.ticker} className="h-[108px] rounded-xl border border-slate-100 bg-slate-50 animate-pulse" />
+          )
+        }
+
+        return (
+          <div
+            key={meta.ticker}
+            className={cn(
+              'group relative rounded-xl border p-3 transition-all hover:shadow-sm',
+              score != null ? scoreBgCell(score) : 'bg-white border-slate-200',
+            )}
+          >
+            {/* Full-card invisible link — navigates on click anywhere except the button */}
+            <Link
+              href={`/etf/${meta.ticker}`}
+              className="absolute inset-0 rounded-xl z-0"
+              tabIndex={-1}
+              aria-hidden="true"
+            />
+
+            {/* Header row */}
+            <div className="relative z-10 flex items-start justify-between gap-1 mb-2">
+              <Link href={`/etf/${meta.ticker}`} tabIndex={0} className="min-w-0 flex-1">
+                <span className="block font-mono font-black text-[14px] text-slate-900 leading-none group-hover:text-blue-600 transition-colors">
+                  {meta.ticker}
+                </span>
+                <span className="block text-[11px] text-slate-500 mt-0.5 leading-tight truncate">
+                  {meta.label}
+                </span>
+              </Link>
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(meta.ticker) }}
+                className={cn(
+                  'relative z-20 shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg transition-all',
+                  isWatchlisted
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'bg-white/80 text-slate-400 hover:bg-blue-50 hover:text-blue-600 border border-slate-200 hover:border-blue-200',
+                )}
+                aria-label={isWatchlisted ? `${meta.ticker} is in your watchlist` : `Add ${meta.ticker} to watchlist`}
+              >
+                {isWatchlisted ? <Check size={12} /> : <Plus size={12} />}
+              </button>
+            </div>
+
+            {/* Score */}
+            <div className="relative z-10 flex items-baseline gap-1.5 mb-2">
+              {score != null ? (
+                <>
+                  <span className={cn('font-mono font-black text-[22px] leading-none', scoreColor(score))}>
+                    {score}
+                  </span>
+                  <span className={cn('text-[10px] font-semibold px-1.5 py-0.5 rounded-full', scoreBadge(score))}>
+                    {scoreLabel(score)}
+                  </span>
+                </>
+              ) : (
+                <div className="h-6 w-16 rounded bg-slate-100 animate-pulse" />
+              )}
+            </div>
+
+            {/* Stat row */}
+            <div className="relative z-10 flex items-center gap-2.5 text-[11px]">
+              {item?.peRatio != null && (
+                <span className="text-slate-500">
+                  P/E <span className="font-mono font-semibold text-slate-700">{fmtMultiple(item.peRatio)}</span>
+                </span>
+              )}
+              {item?.expenseRatio != null && (
+                <span className="text-slate-500">
+                  ER <span className="font-mono font-semibold text-slate-700">{(item.expenseRatio * 100).toFixed(2)}%</span>
+                </span>
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}

@@ -3,85 +3,142 @@
 import Link from 'next/link'
 import { Trash2, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { fmtLarge, fmtPctAbs } from '@/lib/formatters'
+import { fmtPctAbs } from '@/lib/formatters'
+import { computeETFScore, scoreColor, scoreLabel, scoreBadge } from '@/lib/data/etfScore'
+import { Sparkline, SparklineSkeleton } from '@/components/ui/Sparkline'
 import type { ETFEntry } from '@/lib/data/etfTypes'
-
-function ValueScoreBadge({ score }: { score: number | null }) {
-  if (score == null) return <span className="text-xs text-slate-400">—</span>
-  const color =
-    score >= 70 ? 'bg-emerald-100 text-emerald-700' :
-    score >= 50 ? 'bg-blue-100 text-blue-700' :
-    score >= 30 ? 'bg-amber-100 text-amber-700' :
-    'bg-red-100 text-red-600'
-  const label =
-    score >= 70 ? 'Deep Value' :
-    score >= 50 ? 'Fair' :
-    score >= 30 ? 'Stretched' :
-    'Expensive'
-  return (
-    <div className={cn('flex items-center gap-1.5 rounded-lg px-2 py-1', color)}>
-      <span className="text-lg font-black font-mono">{score}</span>
-      <span className="text-[10px] font-semibold">{label}</span>
-    </div>
-  )
-}
 
 interface Props {
   entry: ETFEntry
+  /** undefined = loading, null = unavailable, number[] = prices */
+  sparklineData: number[] | null | undefined
   onDelete: (ticker: string) => void
 }
 
-export function ETFWatchlistCard({ entry, onDelete }: Props) {
-  const er = entry.expenseRatio != null ? (entry.expenseRatio * 100).toFixed(2) + '%' : '—'
-  const yld = entry.yield != null ? fmtPctAbs(entry.yield) : '—'
-  const pe = entry.peRatio != null ? entry.peRatio.toFixed(1) + 'x' : '—'
-  const aum = entry.totalAssets != null ? fmtLarge(entry.totalAssets) : '—'
+export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
+  const { score, breakdown } = computeETFScore(
+    entry.peRatio,
+    entry.pbRatio,
+    entry.yield,
+    entry.expenseRatio,
+  )
+
+  const sparkUp =
+    sparklineData != null && sparklineData.length >= 2
+      ? sparklineData[sparklineData.length - 1] >= sparklineData[0]
+      : true
+
+  const pe  = entry.peRatio      != null ? entry.peRatio.toFixed(1) + 'x'           : '—'
+  const pb  = entry.pbRatio      != null ? entry.pbRatio.toFixed(1) + 'x'           : '—'
+  const yld = entry.yield        != null ? fmtPctAbs(entry.yield)                   : '—'
+  const er  = entry.expenseRatio != null ? (entry.expenseRatio * 100).toFixed(2) + '%' : '—'
+
+  // Breakdown bar: 4 stacked segments out of 100 total
+  const barSegments = [
+    { width: breakdown.pe,           color: 'bg-blue-500',    title: `P/E +${breakdown.pe}` },
+    { width: breakdown.pb,           color: 'bg-indigo-400',  title: `P/B +${breakdown.pb}` },
+    { width: breakdown.yieldPts,     color: 'bg-emerald-500', title: `Yield +${breakdown.yieldPts}` },
+    { width: breakdown.expensePenalty, color: 'bg-red-400',   title: `Exp. −${breakdown.expensePenalty}` },
+  ]
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col gap-3 hover:border-blue-200 hover:shadow-md transition-all group">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <span className="text-base font-black font-mono text-slate-900">{entry.ticker}</span>
-          {entry.name && <p className="text-[11px] text-slate-400 mt-0.5 truncate max-w-[160px]">{entry.name}</p>}
+    <div className="flex flex-col gap-4 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md hover:border-blue-100 transition-all">
+
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <span className="block font-mono font-black text-[22px] text-slate-900 leading-none tracking-tight">
+            {entry.ticker}
+          </span>
+          {entry.name && (
+            <p className="text-[13px] text-slate-500 mt-1 truncate max-w-[220px] leading-snug">
+              {entry.name}
+            </p>
+          )}
         </div>
         <button
           onClick={() => onDelete(entry.ticker)}
           aria-label={`Remove ${entry.ticker} from watchlist`}
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-300 hover:text-red-400 transition-colors sm:opacity-0 sm:group-hover:opacity-100 opacity-100"
+          className="min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg text-slate-300 hover:text-red-400 hover:bg-red-50 transition-colors border border-transparent hover:border-red-100"
         >
           <Trash2 size={14} />
         </button>
       </div>
 
-      <ValueScoreBadge score={entry.valueScore} />
+      {/* Sparkline */}
+      <div className="h-12 rounded-lg overflow-hidden">
+        {sparklineData === undefined ? (
+          <SparklineSkeleton width={400} height={48} />
+        ) : sparklineData && sparklineData.length >= 2 ? (
+          <Sparkline prices={sparklineData} up={sparkUp} className="w-full h-12" width={400} height={48} />
+        ) : (
+          <div className="w-full h-12 flex items-center justify-center">
+            <span className="text-[11px] text-slate-300">No chart data available</span>
+          </div>
+        )}
+      </div>
 
-      {/* Flat 2×2 metric grid — no nested cards */}
-      <div className="grid grid-cols-2 gap-x-4 gap-y-3 border-t border-slate-100 pt-3">
-        <div>
-          <p className="text-[11px] text-slate-400">P/E</p>
-          <p className="text-[13px] font-semibold font-mono text-slate-700 mt-0.5">{pe}</p>
+      {/* Value Score + Breakdown bar */}
+      <div className="flex items-start gap-5">
+        {/* Number + badge */}
+        <div className="shrink-0">
+          <div className="flex items-baseline gap-2">
+            <span className={cn('font-mono font-black text-[42px] leading-none', scoreColor(score))}>
+              {score}
+            </span>
+          </div>
+          <span className={cn('inline-block mt-1 text-[11px] font-semibold px-2 py-0.5 rounded-full', scoreBadge(score))}>
+            {scoreLabel(score)}
+          </span>
         </div>
-        <div>
-          <p className="text-[11px] text-slate-400">Yield</p>
-          <p className="text-[13px] font-semibold font-mono text-slate-700 mt-0.5">{yld}</p>
-        </div>
-        <div>
-          <p className="text-[11px] text-slate-400">Exp. ratio</p>
-          <p className="text-[13px] font-semibold font-mono text-slate-700 mt-0.5">{er}</p>
-        </div>
-        <div>
-          <p className="text-[11px] text-slate-400">AUM</p>
-          <p className="text-[13px] font-semibold font-mono text-slate-700 mt-0.5">{aum}</p>
+
+        {/* Stacked bar + legend */}
+        <div className="flex-1 pt-1.5">
+          <div className="flex h-2.5 rounded-full overflow-hidden gap-px bg-slate-100">
+            {barSegments.map((s) => s.width > 0 && (
+              <div
+                key={s.title}
+                className={cn('h-full', s.color)}
+                style={{ width: `${s.width}%` }}
+                title={s.title}
+              />
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-2">
+            <span className="text-[10px] text-blue-500 font-medium">P/E +{breakdown.pe}</span>
+            <span className="text-[10px] text-indigo-400 font-medium">P/B +{breakdown.pb}</span>
+            <span className="text-[10px] text-emerald-500 font-medium">Yield +{breakdown.yieldPts}</span>
+            {breakdown.expensePenalty > 0 && (
+              <span className="text-[10px] text-red-400 font-medium">Exp. −{breakdown.expensePenalty}</span>
+            )}
+          </div>
+          <p className="text-[10px] text-slate-400 mt-1">Score breakdown / 100</p>
         </div>
       </div>
 
+      {/* Metrics */}
+      <div className="grid grid-cols-4 gap-2 border-t border-slate-100 pt-3">
+        {[
+          { label: 'P/E',       value: pe  },
+          { label: 'P/B',       value: pb  },
+          { label: 'Yield',     value: yld },
+          { label: 'Exp. ratio', value: er  },
+        ].map(({ label, value }) => (
+          <div key={label}>
+            <p className="text-[10px] font-semibold text-slate-400">{label}</p>
+            <p className="text-[12px] font-semibold font-mono text-slate-700 mt-0.5">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Footer */}
       <Link
         href={`/etf/${entry.ticker}`}
         aria-label={`View ${entry.ticker} ETF details`}
-        className="flex items-center justify-center gap-1.5 w-full rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-blue-600 text-slate-500 text-xs font-semibold py-2.5 transition-colors border border-slate-100 min-h-[44px]"
+        className="flex items-center justify-center gap-1.5 w-full rounded-xl bg-slate-50 hover:bg-blue-50 hover:text-blue-600 text-slate-500 text-[12px] font-semibold py-2.5 transition-colors border border-slate-100 min-h-[44px]"
       >
         <ExternalLink size={11} />
-        View details
+        View full analysis
       </Link>
     </div>
   )
