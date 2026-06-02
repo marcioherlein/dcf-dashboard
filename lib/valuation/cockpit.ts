@@ -21,6 +21,8 @@ export interface CockpitSnapshot {
   currency: string
   // Raw dollar values (not millions) for PE, EV/EBITDA, Revenue Multiple methods
   ltvRevenueDollars: number | null
+  // Yahoo TTM revenue — used exclusively for reverse DCF to match SummaryTab path
+  ttmRevenueDollars?: number | null
   sharesRaw: number | null
   ttmEbitdaDollars: number | null
   netDebtDollars: number | null
@@ -545,7 +547,7 @@ export function computeCockpitOutput(
     sharesOutstanding: snapshot.sharesRaw,
     cashM: snapshot.cashM,
     debtM: snapshot.debtM,
-    lastRevenue: snapshot.ltvRevenueDollars,
+    lastRevenue: snapshot.ttmRevenueDollars ?? snapshot.ltvRevenueDollars,
     lastFCFMargin: snapshot.fcfMargin,
     wacc: assumptions.wacc,
     terminalG: safeTG,

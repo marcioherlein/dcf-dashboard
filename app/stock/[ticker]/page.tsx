@@ -468,8 +468,8 @@ function StockPageBody() {
                     debtM={data.fairValue?.debt ?? null}
                     revenueM={data.businessProfile?.revenueM ?? null}
                     fcfMargin={data.businessProfile?.fcfMargin ?? null}
-                    wacc={data.wacc?.wacc ?? 0.09}
-                    terminalG={data.terminalG ?? 0.025}
+                    wacc={data.wacc?.wacc ?? 0.10}
+                    terminalG={data.terminalG ?? 0.03}
                     historicalCAGR={data.cagrAnalysis?.historicalCagr3y ?? null}
                     analystCAGR={data.cagrAnalysis?.analystEstimate1y ?? null}
                     isEmergingMarket={computedScores?.altman?.isReliable === false}

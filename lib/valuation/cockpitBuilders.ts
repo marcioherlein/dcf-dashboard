@@ -16,6 +16,13 @@ export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null)
   let debtM     = apiData.fairValue?.debt ?? 0
   const sharesRaw = sharesM > 0 ? sharesM * 1e6 : null
 
+  // Detect banks/insurers to avoid TTM balance sheet debt inflation.
+  // Banks' totalDebt includes customer deposits and interbank liabilities — route.ts already
+  // applies a guard using only longTermDebt for these companies. We must not undo that here.
+  const industry = (apiData.quote?.industry ?? '') as string
+  const sector   = (apiData.quote?.sector   ?? '') as string
+  const isBankLike = /bank|insurance|financ|fintech|payment|credit|lending|capital market|asset management|brokerage/i.test(sector + ' ' + industry)
+
   const incomeRows: Array<{ isProjected: boolean; revenue: number | null; ebitda?: number | null }> =
     apiData.financialStatements?.incomeStatement ?? []
   const actuals = incomeRows.filter(r => !r.isProjected && r.revenue != null && r.revenue > 0)
@@ -72,9 +79,18 @@ export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null)
   if (ttmBS) {
     const stmtCash = (ttmBS as ApiData).cashCashEquivalentsAndShortTermInvestments ?? (ttmBS as ApiData).cash
     if (typeof stmtCash === 'number' && isFinite(stmtCash)) cashM = stmtCash / 1e6
-    const stmtDebt = (ttmBS as ApiData).totalDebt ?? (ttmBS as ApiData).longTermDebt
-    if (typeof stmtDebt === 'number' && isFinite(stmtDebt)) debtM = stmtDebt / 1e6
+    // For banks, totalDebt on the balance sheet includes customer deposits and interbank
+    // liabilities — use fairValue.debt (already guarded in route.ts to longTermDebt only).
+    if (!isBankLike) {
+      const stmtDebt = (ttmBS as ApiData).totalDebt ?? (ttmBS as ApiData).longTermDebt
+      if (typeof stmtDebt === 'number' && isFinite(stmtDebt)) debtM = stmtDebt / 1e6
+    }
   }
+
+  // TTM revenue from Yahoo (consistent with SummaryTab path for reverse DCF)
+  const ttmRevenueDollars = apiData.businessProfile?.revenueM != null
+    ? (apiData.businessProfile.revenueM as number) * 1e6
+    : null
 
   const growthModel = (apiData.growthModel as 'two-stage' | 'three-stage') ?? 'two-stage'
 
@@ -82,6 +98,7 @@ export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null)
     currentPrice: apiData.quote?.price ?? 0,
     currency: apiData.quote?.currency ?? 'USD',
     ltvRevenueDollars,
+    ttmRevenueDollars,
     sharesRaw,
     ttmEbitdaDollars,
     netDebtDollars: (debtM - cashM) * 1e6,
