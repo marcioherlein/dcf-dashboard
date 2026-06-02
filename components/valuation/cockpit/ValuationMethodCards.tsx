@@ -522,7 +522,12 @@ export default function ValuationMethodCards({
               {/* Inputs — editable method cards */}
               {hasValue && !isCoreDCF && fields.length > 0 && (
                 <div className="space-y-1 pt-1 border-t border-slate-100">
-                  <p className="text-[10px] font-[600] text-slate-400 mb-2">Assumptions</p>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] font-[600] text-slate-400">Assumptions</p>
+                    {fields.some(f => ['exitPE', 'exitMultiple', 'revenueMultiple', 'priceToBookMultiple'].includes(String(f.key))) && (
+                      <span className="text-[9px] text-slate-300">Damodaran Jan 2025</span>
+                    )}
+                  </div>
                   {fields.map(f => {
                     const hist = historicalData?.[f.chartKey ?? f.key]
                     const hint = historicalHint(hist, f.unit)

@@ -197,6 +197,7 @@ export default function ReverseDCFCompactCard({
           {/* Analyst */}
           <BarRow
             label="Analyst Est. (1Y)"
+            labelTooltip="1-year forward revenue growth consensus from Yahoo Finance analyst estimates. A single-year estimate — may not reflect the long-term trajectory."
             dotHex="#7C3AED"
             value={analystPct}
             barColor="bg-[#7C3AED]"
@@ -444,6 +445,7 @@ function RevenueCAGRChart({
 
 interface BarRowProps {
   label: string
+  labelTooltip?: string
   dotHex: string
   value: number | null
   barColor: string
@@ -451,13 +453,14 @@ interface BarRowProps {
   zeroLineLeft: number | null
 }
 
-function BarRow({ label, dotHex, value, barColor, widthPct, zeroLineLeft }: BarRowProps) {
+function BarRow({ label, labelTooltip, dotHex, value, barColor, widthPct, zeroLineLeft }: BarRowProps) {
   return (
     <div>
       <div className="flex items-center justify-between mb-0.5">
         <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full shrink-0" style={{ background: dotHex }} />
           <span className="text-[11px] text-[#64748B] truncate">{label}</span>
+          {labelTooltip && <InfoTooltip content={labelTooltip} />}
         </div>
         <span className="text-[11px] font-[700] text-[#334155] tabular-nums ml-1 shrink-0">
           {value != null ? `${value.toFixed(1)}%` : '—'}

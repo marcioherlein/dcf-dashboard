@@ -632,7 +632,7 @@ export default function AssumptionsPanel({
             <div className="flex items-center gap-2 px-4 pt-2 pb-1">
               <span className="text-[10px] font-[700] uppercase tracking-wide text-slate-400">{group.label}</span>
               {group.label === 'Exit Multiples' && (
-                <span className="text-[10px] text-slate-400 normal-case font-normal tracking-normal">· what the market pays at exit</span>
+                <span className="text-[10px] text-slate-400 normal-case font-normal tracking-normal">· what the market pays at exit · Damodaran Jan 2025 industry medians</span>
               )}
             </div>
 

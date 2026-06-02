@@ -64,6 +64,13 @@ export async function GET(req: NextRequest) {
       financialCurrencyNote = `${financialCurrency}→${quoteCurrency} @ ${fxRate.toFixed(4)}`
     }
 
+    // Guard: if a company reports in USD but fxRate resolved to something other than 1,
+    // Yahoo may have returned inconsistent currency metadata. Log a warning so this is
+    // visible in server logs without crashing the response.
+    if (quoteCurrency === 'USD' && financialCurrency === 'USD' && fxRate !== 1) {
+      console.warn(`[financials/${ticker}] FX anomaly: USD→USD but fxRate=${fxRate} — check Yahoo currency metadata`)
+    }
+
     // Country Risk Premium (Damodaran): use country name first (handles USD-reporters from EM)
     const domicileCountry: string | null = (fin.summaryProfile?.country as string | undefined) ?? null
     const crp = getCRPByCountry(domicileCountry, financialCurrency)
