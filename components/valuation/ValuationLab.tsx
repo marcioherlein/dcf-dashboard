@@ -259,6 +259,11 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
               {toneIcon} {toneLabel}
             </span>
           )}
+          {result.interpretation === 'not_meaningful' && (
+            <span className="text-[10px] text-amber-600 text-center leading-snug mt-1 px-1">
+              Not computable — see below
+            </span>
+          )}
         </div>
         <div className="flex flex-col items-center px-3 sm:px-4 py-5 gap-1">
           <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold text-center">Analyst Says</p>
@@ -478,7 +483,9 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <div>
             <p className="text-[10px] text-slate-500">FCF Margin</p>
-            <p className="text-sm font-semibold tabular-nums text-slate-900">
+            <p className={cn('text-sm font-semibold tabular-nums',
+              lastFCFMargin != null && lastFCFMargin < 0 ? 'text-red-600' : 'text-slate-900'
+            )}>
               {lastFCFMargin != null ? (lastFCFMargin * 100).toFixed(1) + '%' : '—'}
             </p>
           </div>
@@ -492,7 +499,11 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
           </div>
         </div>
         {result.interpretationText && (
-          <p className="text-xs text-slate-500 mt-3 leading-relaxed">{result.interpretationText}</p>
+          <p className={cn('text-xs mt-3 leading-relaxed',
+            result.interpretation === 'not_meaningful' ? 'text-amber-700 font-medium' : 'text-slate-500'
+          )}>
+            {result.interpretationText}
+          </p>
         )}
         {result.guardErrors.length > 0 && (
           <div className="mt-2 space-y-1">

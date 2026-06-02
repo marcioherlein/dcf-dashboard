@@ -110,10 +110,11 @@ export function computeReverseDCF(inputs: ReverseDCFInputs): ReverseDCFResult {
   }
 
   if (errors.length > 0 || sharesOutstanding == null || lastRevenue == null || lastFCFMargin == null) {
+    const detail = errors.length === 1 ? errors[0] : errors.slice(0, 2).join('; ')
     return {
       impliedEV: null, impliedCAGR: null, impliedFCFMargin: lastFCFMargin,
       interpretation: 'not_meaningful',
-      interpretationText: 'Cannot compute implied CAGR — required inputs are missing.',
+      interpretationText: `Cannot compute implied CAGR — ${detail}.`,
       guardErrors: errors,
     }
   }
@@ -129,16 +130,17 @@ export function computeReverseDCF(inputs: ReverseDCFInputs): ReverseDCFResult {
     return {
       impliedEV, impliedCAGR: null, impliedFCFMargin: lastFCFMargin,
       interpretation: 'not_meaningful',
-      interpretationText: 'Implied EV is negative (net cash exceeds market cap) — reverse DCF not meaningful.',
+      interpretationText: 'Net cash exceeds market cap (implied EV is negative) — the stock is priced below its cash holdings. Reverse DCF does not apply here.',
       guardErrors: ['Implied EV ≤ 0'],
     }
   }
 
   if (lastFCFMargin <= 0) {
+    const pct = (lastFCFMargin * 100).toFixed(1)
     return {
       impliedEV, impliedCAGR: null, impliedFCFMargin: lastFCFMargin,
       interpretation: 'not_meaningful',
-      interpretationText: 'FCF margin is negative — cannot solve for implied CAGR with perpetuity model.',
+      interpretationText: `TTM FCF margin is ${pct}% — the model requires positive FCF to solve for an implied growth rate. Common causes: growing lending book (fintech), heavy capital deployment, or a one-off cash burn year.`,
       guardErrors: ['FCF margin must be positive for reverse DCF'],
     }
   }
