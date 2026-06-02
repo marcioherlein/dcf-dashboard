@@ -1,49 +1,91 @@
 'use client'
 
-import { TrendingUp, BarChart2, BarChart, Target } from 'lucide-react'
+import { TrendingUp, BarChart2, BarChart, Target, RotateCcw, Undo2 } from 'lucide-react'
 import { fmtPrice } from '@/lib/formatters'
-import type { CockpitMethodResult } from '@/lib/valuation/cockpit'
+import type { CockpitMethodResult, ValuationAssumptions } from '@/lib/valuation/cockpit'
 import InfoTooltip from '@/components/ui/InfoTooltip'
+import type { SparkPoint } from './AssumptionsPanel'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Props {
   methods: CockpitMethodResult[]
   currentPrice: number
   currency: string
-  cagr?: number
   fcfMargin?: number | null
   ttmEbitdaDollars?: number | null
+  assumptions: ValuationAssumptions
+  historicalData?: Partial<Record<keyof ValuationAssumptions, SparkPoint[]>>
+  onChange: (next: ValuationAssumptions) => void
+  onReset: () => void
+  onUndo: () => void
+  canUndo: boolean
+  sensitivity?: Partial<Record<keyof ValuationAssumptions, number>>
+  sectorBenchmarks?: { exitPE: number; exitMultiple: number; revenueMultiple: number } | null
+  onScrollToFullDCF: () => void
 }
 
 type IconComp = React.ComponentType<{ size?: number; className?: string }>
 
+interface FieldDef {
+  key: keyof ValuationAssumptions
+  label: string
+  unit: '%' | 'x'
+  step: number
+  min: number
+  max: number
+  shared?: boolean
+  chartKey?: keyof ValuationAssumptions
+}
+
+// ─── Per-method input definitions ─────────────────────────────────────────────
+
+const METHOD_INPUTS: Record<string, FieldDef[]> = {
+  forward_pe: [
+    { key: 'exitPE',    label: 'Exit P/E',        unit: 'x', step: 0.5,   min: 5,     max: 80,  chartKey: 'exitPE'    },
+    { key: 'cagr',      label: 'Revenue CAGR',     unit: '%', step: 0.005, min: -0.05, max: 0.60, shared: true, chartKey: 'cagr' },
+    { key: 'netMargin', label: 'Exit net margin',  unit: '%', step: 0.005, min: -0.20, max: 0.60, chartKey: 'netMargin' },
+  ],
+  ev_ebitda: [
+    { key: 'exitMultiple', label: 'EV/EBITDA multiple', unit: 'x', step: 0.5, min: 4, max: 35, chartKey: 'exitMultiple' },
+  ],
+  revenue_multiple: [
+    { key: 'revenueMultiple', label: 'EV/Revenue multiple', unit: 'x', step: 0.25, min: 0.5, max: 20, chartKey: 'revenueMultiple' },
+    { key: 'cagr', label: 'Revenue CAGR', unit: '%', step: 0.005, min: -0.05, max: 0.60, shared: true, chartKey: 'cagr' },
+  ],
+  core_dcf: [],
+}
+
+// ─── Visual config per method ─────────────────────────────────────────────────
+
 const METHOD_CFG: Record<string, {
   iconBg: string; iconText: string
   barBg: string; valueBg: string; valueText: string
-  driverLabel: string
+  chartHex: string
   Icon: IconComp
 }> = {
   forward_pe: {
     iconBg: 'bg-blue-100', iconText: 'text-blue-600',
     barBg: 'bg-blue-500', valueBg: 'bg-blue-50', valueText: 'text-blue-700',
-    driverLabel: 'Est. EPS growth',
+    chartHex: '#3b82f6',
     Icon: TrendingUp as IconComp,
   },
   ev_ebitda: {
     iconBg: 'bg-indigo-100', iconText: 'text-indigo-600',
     barBg: 'bg-indigo-400', valueBg: 'bg-indigo-50', valueText: 'text-indigo-700',
-    driverLabel: 'TTM EBITDA',
+    chartHex: '#6366f1',
     Icon: BarChart2 as IconComp,
   },
   revenue_multiple: {
     iconBg: 'bg-purple-100', iconText: 'text-purple-600',
     barBg: 'bg-purple-500', valueBg: 'bg-purple-50', valueText: 'text-purple-700',
-    driverLabel: 'Revenue growth (CAGR)',
+    chartHex: '#a855f7',
     Icon: BarChart as IconComp,
   },
   core_dcf: {
     iconBg: 'bg-emerald-100', iconText: 'text-emerald-600',
     barBg: 'bg-emerald-500', valueBg: 'bg-emerald-50', valueText: 'text-emerald-700',
-    driverLabel: 'FCF margin (TTM)',
+    chartHex: '#10b981',
     Icon: Target as IconComp,
   },
 }
@@ -54,74 +96,240 @@ const CONFIDENCE_CHIP = {
   low:    { bg: 'bg-slate-100 border-slate-200',    text: 'text-slate-500',   label: 'Low confidence'    },
 }
 
-function driverValue(
-  id: string,
-  cagr?: number,
-  fcfMargin?: number | null,
-  ttmEbitdaDollars?: number | null,
-): { text: string; hasValue: boolean } {
-  if (id === 'forward_pe' || id === 'revenue_multiple') {
-    if (cagr != null) return { text: `+${(cagr * 100).toFixed(0)}%`, hasValue: true }
-  }
-  if (id === 'ev_ebitda') {
-    if (ttmEbitdaDollars != null && ttmEbitdaDollars > 0) {
-      const b = ttmEbitdaDollars / 1e9
-      const m = ttmEbitdaDollars / 1e6
-      return { text: b >= 1 ? `$${b.toFixed(1)}B` : `$${m.toFixed(0)}M`, hasValue: true }
-    }
-  }
-  if (id === 'core_dcf') {
-    if (fcfMargin != null && fcfMargin > 0)
-      return { text: `${(fcfMargin * 100).toFixed(1)}%`, hasValue: true }
-  }
-  return { text: 'N/A', hasValue: false }
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function fmt(value: number, unit: '%' | 'x'): string {
+  if (unit === '%') return `${(value * 100).toFixed(1)}%`
+  return `${value.toFixed(1)}×`
 }
 
+function median(vals: number[]): number | null {
+  if (vals.length === 0) return null
+  const s = [...vals].sort((a, b) => a - b)
+  const m = Math.floor(s.length / 2)
+  return s.length % 2 !== 0 ? s[m] : (s[m - 1] + s[m]) / 2
+}
+
+function historicalHint(series: SparkPoint[] | undefined, unit: '%' | 'x'): string | null {
+  if (!series || series.length === 0) return null
+  const vals = series.filter(p => p.label !== 'curr').map(p => p.value)
+  const med = median(vals)
+  if (med == null) return null
+  return `5yr avg ~${fmt(med, unit)}`
+}
+
+// ─── MiniBarChart ─────────────────────────────────────────────────────────────
+
+function MiniBarChart({ series, inputVal, color }: {
+  series: SparkPoint[]
+  inputVal: number
+  color: string
+}) {
+  if (series.length === 0) return null
+
+  const W = 200, H = 44
+  const MT = 6, MB = 2
+
+  const histPoints = series.filter(p => p.label !== 'curr')
+  const currPoint  = series.find(p => p.label === 'curr')
+
+  const allVals = [...series.map(p => p.value), inputVal]
+  const rawMin  = Math.min(...allVals)
+  const rawMax  = Math.max(...allVals)
+  const span    = rawMax - rawMin || 1
+  const yMin    = rawMin - span * 0.15
+  const yMax    = rawMax + span * 0.20
+
+  const toY = (v: number) => MT + (H - MT - MB) * (1 - (v - yMin) / (yMax - yMin))
+
+  const n = series.length
+  const slotW = W / n
+  const barW  = Math.max(4, slotW * 0.55)
+
+  const refY = toY(inputVal)
+
+  return (
+    <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
+      {series.map((p, i) => {
+        const isCurr = p.label === 'curr'
+        const barTop = toY(p.value)
+        const barBot = toY(Math.max(yMin, 0))
+        const barH   = Math.max(2, barBot - barTop)
+        const x      = i * slotW + (slotW - barW) / 2
+        return (
+          <rect
+            key={i}
+            x={x} y={barTop} width={barW} height={barH}
+            fill={color}
+            opacity={isCurr ? 0.85 : 0.35}
+            rx={1.5}
+          />
+        )
+      })}
+      {/* Input value reference line */}
+      {refY >= MT && refY <= H - MB && (
+        <line
+          x1={0} y1={refY} x2={W} y2={refY}
+          stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="5 3"
+        />
+      )}
+    </svg>
+  )
+}
+
+// ─── FieldStepper ─────────────────────────────────────────────────────────────
+
+function FieldStepper({
+  label, value, unit, step, min, max, onChange, shared, hint, color,
+}: {
+  label: string; value: number; unit: '%' | 'x'
+  step: number; min: number; max: number
+  onChange: (v: number) => void
+  shared?: boolean; hint?: string | null; color: string
+}) {
+  const dec = () => onChange(Math.max(min, parseFloat((value - step).toFixed(6))))
+  const inc = () => onChange(Math.min(max, parseFloat((value + step).toFixed(6))))
+
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <div className="min-w-0">
+        <p className="text-[10px] text-slate-500 leading-none">{label}</p>
+        {hint && <p className="text-[9px] text-slate-400 mt-0.5 tabular-nums">{hint}</p>}
+        {shared && (
+          <p className="text-[9px] text-slate-300 mt-0.5">⇔ shared</p>
+        )}
+      </div>
+      <div className="flex items-center gap-0.5 shrink-0">
+        <button
+          onClick={dec}
+          aria-label={`Decrease ${label}`}
+          className="w-9 h-9 flex items-center justify-center rounded-full"
+        >
+          <span className="w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center text-[13px] font-bold text-slate-600 shadow-sm hover:bg-slate-50 transition-colors select-none">
+            −
+          </span>
+        </button>
+        <span
+          className="text-[13px] font-[750] tabular-nums text-slate-800 w-[52px] text-center"
+          style={{ color: value !== min ? color : undefined }}
+        >
+          {fmt(value, unit)}
+        </span>
+        <button
+          onClick={inc}
+          aria-label={`Increase ${label}`}
+          className="w-9 h-9 flex items-center justify-center rounded-full"
+        >
+          <span className="w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center text-[13px] font-bold text-slate-600 shadow-sm hover:bg-slate-50 transition-colors select-none">
+            +
+          </span>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─── DCF driver display (read-only) ───────────────────────────────────────────
+
+function DcfDriverRow({
+  fcfMargin, ttmEbitdaDollars,
+}: { fcfMargin?: number | null; ttmEbitdaDollars?: number | null }) {
+  return (
+    <div className="space-y-1.5">
+      {fcfMargin != null && fcfMargin > 0 && (
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-slate-500">FCF margin (TTM)</span>
+          <span className="text-[11px] font-[650] text-emerald-700 tabular-nums">
+            {(fcfMargin * 100).toFixed(1)}%
+          </span>
+        </div>
+      )}
+      {ttmEbitdaDollars != null && ttmEbitdaDollars > 0 && (
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-slate-500">TTM EBITDA</span>
+          <span className="text-[11px] font-[650] text-slate-700 tabular-nums">
+            {ttmEbitdaDollars >= 1e9
+              ? `$${(ttmEbitdaDollars / 1e9).toFixed(1)}B`
+              : `$${(ttmEbitdaDollars / 1e6).toFixed(0)}M`
+            }
+          </span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export default function ValuationMethodCards({
-  methods, currentPrice: _currentPrice, currency, cagr, fcfMargin, ttmEbitdaDollars,
+  methods, currentPrice, currency,
+  fcfMargin, ttmEbitdaDollars,
+  assumptions, historicalData,
+  onChange, onReset, onUndo, canUndo,
+  sensitivity, sectorBenchmarks,
+  onScrollToFullDCF,
 }: Props) {
   const validTotal = methods
     .filter(m => m.fairValue != null && m.fairValue > 0)
     .reduce((s, m) => s + m.weight, 0)
 
+  function change(key: keyof ValuationAssumptions, val: number) {
+    onChange({ ...assumptions, [key]: val })
+  }
+
   return (
     <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-5">
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-5">
+      <div className="flex items-center justify-between gap-4 mb-5">
         <div>
           <p className="text-sm font-semibold text-slate-700 mb-1">Valuation Models</p>
-          <p className="text-xs text-slate-400">Detailed breakdown of each model and its contribution to blended fair value</p>
+          <p className="text-xs text-slate-400">Edit each model&apos;s key inputs directly — fair values update live</p>
         </div>
-        <span className="flex items-center gap-1.5 text-[11px] text-slate-400 shrink-0">
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 16v-4M12 8h.01" />
-          </svg>
-          Methodology &amp; assumptions
-        </span>
+        <div className="flex items-center gap-2 shrink-0">
+          {canUndo && (
+            <button
+              onClick={onUndo}
+              className="flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
+              aria-label="Undo last change"
+            >
+              <Undo2 size={11} />
+              Undo
+            </button>
+          )}
+          <button
+            onClick={onReset}
+            className="flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
+            aria-label="Reset to defaults"
+          >
+            <RotateCcw size={11} />
+            Reset
+          </button>
+        </div>
       </div>
 
-      {/* Cards grid — horizontal scroll on mobile, grid on sm+ */}
+      {/* Cards grid */}
       <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-1 px-1 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible sm:snap-none sm:pb-0 sm:mx-0 sm:px-0 items-start">
         {methods.map(m => {
-          const cfg      = METHOD_CFG[m.id]
+          const cfg    = METHOD_CFG[m.id]
+          const fields = METHOD_INPUTS[m.id] ?? []
           const hasValue = m.fairValue != null && m.fairValue > 0
-          const conf     = hasValue ? CONFIDENCE_CHIP[m.confidence] : null
-          const effectiveWeight = hasValue && validTotal > 0 ? m.weight / validTotal : 0
-          const effectivePct   = Math.round(effectiveWeight * 100)
-          const upColor  = m.upsidePct != null
+          const conf   = hasValue ? CONFIDENCE_CHIP[m.confidence] : null
+          const effectivePct = hasValue && validTotal > 0
+            ? Math.round((m.weight / validTotal) * 100) : 0
+          const upColor = m.upsidePct != null
             ? (m.upsidePct >= 0 ? 'text-emerald-600' : 'text-red-600')
             : 'text-slate-400'
-          const dv = cfg ? driverValue(m.id, cagr, fcfMargin, ttmEbitdaDollars) : null
+          const isCoreDCF = m.id === 'core_dcf'
 
           return (
             <div
               key={m.id}
-              className={`rounded-xl border flex flex-col p-4 gap-3 min-w-[200px] sm:min-w-0 snap-start flex-shrink-0 sm:flex-shrink ${
+              className={`rounded-xl border flex flex-col p-4 gap-3 min-w-[240px] sm:min-w-0 snap-start flex-shrink-0 sm:flex-shrink ${
                 hasValue ? 'border-slate-200 bg-white' : 'border-slate-100 bg-slate-50/50'
               }`}
             >
-              {/* Method header: icon + name + confidence chip */}
+              {/* Header */}
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
                   {cfg && (
@@ -164,33 +372,73 @@ export default function ValuationMethodCards({
                 </div>
               </div>
 
-              {/* Error or description */}
-              {!hasValue && m.errors.length > 0 ? (
+              {/* Unavailable error */}
+              {!hasValue && m.errors.length > 0 && (
                 <p className="text-[11px] text-slate-400 italic leading-relaxed">{m.errors[0]}</p>
-              ) : hasValue ? (
-                <p className="text-[11px] text-slate-500 leading-relaxed">{m.description}</p>
-              ) : null}
+              )}
 
-              {/* Key Driver */}
-              {cfg && (
-                <div>
-                  <p className="text-[10px] text-slate-400 mb-1.5">Key Driver</p>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] text-slate-600 font-medium">{cfg.driverLabel}</span>
-                    {dv && (
-                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0 tabular-nums ${
-                        dv.hasValue
-                          ? `${cfg.valueBg} ${cfg.valueText}`
-                          : 'bg-slate-100 text-slate-400'
-                      }`}>
-                        {dv.text}
-                      </span>
-                    )}
-                  </div>
+              {/* Inputs — editable method cards */}
+              {!isCoreDCF && fields.length > 0 && (
+                <div className="space-y-1 pt-1 border-t border-slate-100">
+                  <p className="text-[10px] font-[600] text-slate-400 mb-2">Assumptions</p>
+                  {fields.map(f => {
+                    const hist = historicalData?.[f.chartKey ?? f.key]
+                    const hint = historicalHint(hist, f.unit)
+                    return (
+                      <FieldStepper
+                        key={String(f.key)}
+                        label={f.label}
+                        value={assumptions[f.key] as number}
+                        unit={f.unit}
+                        step={f.step}
+                        min={f.min}
+                        max={f.max}
+                        onChange={v => change(f.key, v)}
+                        shared={f.shared}
+                        hint={hint}
+                        color={cfg?.chartHex ?? '#64748b'}
+                      />
+                    )
+                  })}
+
+                  {/* Primary mini chart — first field with historical data */}
+                  {(() => {
+                    const primaryField = fields[0]
+                    const hist = primaryField ? historicalData?.[primaryField.chartKey ?? primaryField.key] : undefined
+                    if (!hist || hist.length === 0) return null
+                    return (
+                      <div className="mt-2 pt-2 border-t border-slate-100">
+                        <p className="text-[9px] text-slate-400 mb-1">
+                          Historical {fields[0].label}
+                        </p>
+                        <MiniBarChart
+                          series={hist.slice(-7)}
+                          inputVal={assumptions[primaryField.key] as number}
+                          color={cfg?.chartHex ?? '#64748b'}
+                        />
+                      </div>
+                    )
+                  })()}
                 </div>
               )}
 
-              {/* Effective Blend Weight */}
+              {/* Core DCF card — link to full model */}
+              {isCoreDCF && (
+                <div className="pt-1 border-t border-slate-100 space-y-2">
+                  <p className="text-[10px] text-slate-500 leading-relaxed">
+                    Uses WACC, CAGR, terminal growth, and net margin. Edit these in the Full DCF Model below.
+                  </p>
+                  <DcfDriverRow fcfMargin={fcfMargin} ttmEbitdaDollars={ttmEbitdaDollars} />
+                  <button
+                    onClick={onScrollToFullDCF}
+                    className="w-full text-[11px] font-[650] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg py-2 hover:bg-emerald-100 transition-colors"
+                  >
+                    Edit assumptions in Full DCF ↓
+                  </button>
+                </div>
+              )}
+
+              {/* Blend weight bar */}
               <div className="mt-auto pt-3 border-t border-slate-100">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-[10px] text-slate-400">Effective Blend Weight</span>
@@ -212,7 +460,7 @@ export default function ValuationMethodCards({
         })}
       </div>
 
-      {/* Footer note */}
+      {/* Footer notes */}
       <div className="mt-4 space-y-1.5">
         {methods.some(m => m.fairValue == null || m.fairValue <= 0) && (
           <p className="text-[11px] text-slate-400 flex items-center gap-1.5">

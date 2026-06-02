@@ -15,7 +15,7 @@ import GuidanceStrip from './cockpit/GuidanceStrip'
 import BusinessChecks from './cockpit/BusinessChecks'
 import ValueInvestingPanel from './cockpit/ValueInvestingPanel'
 import FairValueChart from './cockpit/FairValueChart'
-import AssumptionsPanel, { type SparkPoint } from './cockpit/AssumptionsPanel'
+import { type SparkPoint } from './cockpit/AssumptionsPanel'
 import ScenarioCards from './cockpit/ScenarioCards'
 import ValuationMethodCards from './cockpit/ValuationMethodCards'
 import ModelDivergencePanel from './cockpit/ModelDivergencePanel'
@@ -125,10 +125,6 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
     [assumptions, effectiveSnapshot]
   )
 
-  const defaultOutput = useMemo(
-    () => computeCockpitOutput(defaults, effectiveSnapshot),
-    [defaults, effectiveSnapshot]
-  )
 
   // Sensitivity: % change in blended FV per 1pp (% fields) or 1× (multiple fields)
   const sensitivity = useMemo<Partial<Record<keyof ValuationAssumptions, number>>>(() => {
@@ -340,15 +336,30 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
         currency={currency}
       />
 
-      {/* Valuation Models — detailed breakdown of each model and its blend contribution */}
-      <ValuationMethodCards
-        methods={output.methods}
-        currentPrice={currentPrice}
-        currency={currency}
-        cagr={assumptions.cagr}
-        fcfMargin={snapshot.fcfMargin}
-        ttmEbitdaDollars={snapshot.ttmEbitdaDollars}
-      />
+      {/* Valuation Models — inline assumption editing + mini historical charts */}
+      <div ref={assumptionsPanelRef} id="assumptions-panel">
+        {clampNote && (
+          <p className="mb-2 text-[11px] text-[#D97706] bg-[#FFFBEB] border border-[#FDE68A] rounded-lg px-3 py-2">
+            ⚠ {clampNote}
+          </p>
+        )}
+        <ValuationMethodCards
+          methods={output.methods}
+          currentPrice={currentPrice}
+          currency={currency}
+          fcfMargin={snapshot.fcfMargin}
+          ttmEbitdaDollars={snapshot.ttmEbitdaDollars}
+          assumptions={assumptions}
+          historicalData={historicalData}
+          onChange={handleAssumptionChange}
+          onReset={handleReset}
+          onUndo={handleUndo}
+          canUndo={history.length > 0}
+          sensitivity={sensitivity}
+          sectorBenchmarks={sectorBenchmarks}
+          onScrollToFullDCF={scrollToFullDCF}
+        />
+      </div>
 
       {/* Sensitivity matrix — always visible, updates live with assumption changes */}
       <SensitivityMatrix
@@ -362,44 +373,16 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, onNa
         defaultAxisX={defaultAxisX}
       />
 
-      {/* Workbench: assumptions (left, cause) + live output (right, effect) */}
-      <div className="mt-2 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 items-start">
-        <div ref={assumptionsPanelRef} id="assumptions-panel" className="min-w-0">
-          {clampNote && (
-            <p className="mb-2 text-[11px] text-[#D97706] bg-[#FFFBEB] border border-[#FDE68A] rounded-lg px-3 py-2">
-              ⚠ {clampNote}
-            </p>
-          )}
-          <AssumptionsPanel
-            assumptions={assumptions}
-            defaults={defaults}
-            onChange={handleAssumptionChange}
-            onReset={handleReset}
-            onUndo={handleUndo}
-            canUndo={history.length > 0}
-            historicalData={historicalData}
-            blendedFairValue={output.blendedFairValue}
-            defaultBlendedFairValue={defaultOutput.blendedFairValue}
-            sensitivity={sensitivity}
-            currency={currency}
-            sector={sector}
-            sectorBenchmarks={sectorBenchmarks}
-          />
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <RightSidebar
-            output={output}
-            currentPrice={currentPrice}
-            currency={currency}
-            ticker={ticker}
-            companyType={snapshot.companyType}
-            onViewFullDCF={scrollToFullDCF}
-            onSave={() => setSaveOpen(true)}
-            lastChange={lastChange}
-          />
-        </div>
-      </div>
+      <RightSidebar
+        output={output}
+        currentPrice={currentPrice}
+        currency={currency}
+        ticker={ticker}
+        companyType={snapshot.companyType}
+        onViewFullDCF={scrollToFullDCF}
+        onSave={() => setSaveOpen(true)}
+        lastChange={lastChange}
+      />
 
       {/* Historical multiples chart — show when history exists OR current metrics available */}
       {((apiData.historicalMultiples?.length ?? 0) > 0 || apiData.quote?.peRatio != null) && (
