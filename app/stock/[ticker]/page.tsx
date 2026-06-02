@@ -13,10 +13,13 @@ import FinancialsHub from '@/components/stock/FinancialsHub'
 
 import { LoginGateProvider } from '@/components/auth/LoginGateProvider'
 import AuthBanner from '@/components/auth/AuthBanner'
+import LoginToSaveModal from '@/components/auth/LoginToSaveModal'
+import StockLoginWall from '@/components/stock/StockLoginWall'
+import StockUpgradeWall from '@/components/stock/StockUpgradeWall'
 import { calculatePiotroski, calculateAltman, calculateBeneish } from '@/lib/dcf/calculateScores'
 import { track } from '@/lib/analytics/events'
 import { loadPreLoginState, clearPreLoginState } from '@/lib/auth/preLoginState'
-import { useSession, signIn } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import SaveToWatchlistDialog, { type WatchlistSavePayload } from '@/components/watchlist/SaveToWatchlistDialog'
 import ValuationNotAvailableCard from '@/components/stock/ValuationNotAvailableCard'
 import SummaryTab from '@/components/stock/summary/SummaryTab'
@@ -179,6 +182,9 @@ function StockPageBody() {
   const [financialsSubTab, _setFinancialsSubTab] = useState<'statements' | 'growth' | 'profitability' | 'solvency' | 'analysts' | 'ownership' | null>(null)
   const [userModelFairValue, setUserModelFairValue] = useState<number | null>(null)
   const [pageLiveDcfFV, setPageLiveDcfFV] = useState<number | null>(null)
+  const [viewGate, setViewGate] = useState<'idle' | 'allowed' | 'login' | 'upgrade'>('idle')
+  const [viewCount, setViewCount] = useState(0)
+  const [loginToSaveOpen, setLoginToSaveOpen] = useState(false)
 
   // After Google OAuth redirect, restore the user's pre-login state (tab, etc.)
   useEffect(() => {
@@ -193,6 +199,27 @@ function StockPageBody() {
   // Only run once when session first becomes available
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user])
+
+  // Check / record stock view gate
+  useEffect(() => {
+    if (session === undefined) return // still loading
+    if (!session?.user) {
+      setViewGate('login')
+      return
+    }
+    fetch('/api/stock-views', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticker }),
+    })
+      .then(r => r.json())
+      .then((res: { allowed: boolean; viewCount: number }) => {
+        setViewCount(res.viewCount)
+        setViewGate(res.allowed ? 'allowed' : 'upgrade')
+      })
+      .catch(() => setViewGate('allowed')) // fail open
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, ticker])
 
   const handleNavigateToFinancials = (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => {
     setActiveTab('financials')
@@ -331,7 +358,7 @@ function StockPageBody() {
         activeTab={activeTab}
         onChange={handleTabChange}
         onSave={() => {
-            if (!session?.user) { signIn('google'); return }
+            if (!session?.user) { setLoginToSaveOpen(true); return }
             const isETF = (data?.quote?.quoteType ?? '').toUpperCase() === 'ETF'
             setSavePayload({
               ticker,
@@ -430,6 +457,41 @@ function StockPageBody() {
 
         {data && !loading && (
           <>
+            {/* ── View gate: login wall or upgrade wall ── */}
+            {viewGate === 'login' && (
+              <StockLoginWall
+                ticker={ticker}
+                companyName={data.companyName}
+                price={data.quote.price}
+                currency={currency}
+                fairValue={cockpitOutput?.blendedFairValue ?? null}
+                upsidePct={cockpitOutput?.upsidePct ?? null}
+                scenarios={cockpitOutput ? {
+                  bull: { fairValue: cockpitOutput.scenarios.bull.fairValue ?? 0 },
+                  base: { fairValue: cockpitOutput.scenarios.base.fairValue ?? 0 },
+                  bear: { fairValue: cockpitOutput.scenarios.bear.fairValue ?? 0 },
+                } : null}
+                grade={null}
+              />
+            )}
+            {viewGate === 'upgrade' && (
+              <StockUpgradeWall
+                ticker={ticker}
+                companyName={data.companyName}
+                price={data.quote.price}
+                currency={currency}
+                fairValue={cockpitOutput?.blendedFairValue ?? null}
+                upsidePct={cockpitOutput?.upsidePct ?? null}
+                scenarios={cockpitOutput ? {
+                  bull: { fairValue: cockpitOutput.scenarios.bull.fairValue ?? 0 },
+                  base: { fairValue: cockpitOutput.scenarios.base.fairValue ?? 0 },
+                  bear: { fairValue: cockpitOutput.scenarios.bear.fairValue ?? 0 },
+                } : null}
+                grade={null}
+                viewCount={viewCount}
+              />
+            )}
+            {viewGate === 'allowed' && (
             <div className="min-w-0">
             <AnimatePresence mode="wait">
               {/* ── Overview tab ── */}
@@ -605,7 +667,8 @@ function StockPageBody() {
                 </motion.div>
               )}
             </AnimatePresence>
-            </div>{/* end main column */}
+            </div>
+            )}
           </>
         )}
 
@@ -632,6 +695,16 @@ function StockPageBody() {
       onClose={() => setSaveDialogOpen(false)}
       onReviewAssumptions={() => handleTabChange('valuation')}
     />
+    {loginToSaveOpen && (
+      <LoginToSaveModal
+        ticker={ticker}
+        companyName={data?.companyName ?? ticker}
+        fairValue={cockpitOutput?.blendedFairValue ?? null}
+        upsidePct={cockpitOutput?.upsidePct ?? null}
+        currency={currency}
+        onClose={() => setLoginToSaveOpen(false)}
+      />
+    )}
     </>
   )
 }

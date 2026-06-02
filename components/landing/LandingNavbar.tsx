@@ -123,7 +123,7 @@ export default function LandingNavbar() {
                   Sign in
                 </button>
                 <Link
-                  href="/pricing"
+                  href="/analyze"
                   className="hidden lg:inline-flex items-center rounded-xl border px-4 py-2.5 text-[13px] font-semibold transition-all active:scale-95"
                   style={{
                     borderColor: '#BFDBFE',
@@ -154,7 +154,7 @@ export default function LandingNavbar() {
                     minHeight: '44px',
                   }}
                 >
-                  Start free trial
+                  Get started free
                 </button>
               </>
             )}
@@ -246,7 +246,7 @@ export default function LandingNavbar() {
                   className="w-full text-center rounded-xl py-3.5 text-[15px] font-semibold text-white active:scale-95 transition-all"
                   style={{ background: '#2563EB', minHeight: '44px' }}
                 >
-                  Start free trial
+                  Get started free
                 </button>
                 <button
                   onClick={() => { setMobileOpen(false); signIn('google') }}

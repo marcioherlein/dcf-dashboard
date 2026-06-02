@@ -207,10 +207,14 @@ export default function PricingPage() {
 
             <button
               onClick={() => signIn('google')}
-              className="w-full rounded-xl bg-white py-3.5 text-sm font-bold text-[#0F2A5E] hover:bg-blue-50 transition-colors mb-8 min-h-[48px]"
+              className="w-full rounded-xl bg-white py-3.5 text-sm font-bold text-[#0F2A5E] hover:bg-blue-50 transition-colors mb-3 min-h-[48px]"
             >
               Start Pro — {annual ? `$${annualTotal}/year` : `$${monthlyPrice}/month`} →
             </button>
+            <p className="text-center text-[12px] text-blue-300 mb-6">
+              Have a code?{' '}
+              <a href="/redeem" className="text-white hover:underline font-semibold">Redeem it here</a>
+            </p>
 
             <ul className="space-y-3.5 flex-1">
               {PRO_FEATURES.map((f, i) => {

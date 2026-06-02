@@ -132,7 +132,7 @@ export default function PricingSection() {
                 minHeight: '44px',
               }}
             >
-              Start free trial
+              Start Pro plan
             </button>
           </div>
         </div>

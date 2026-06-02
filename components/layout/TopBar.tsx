@@ -430,7 +430,7 @@ export default function TopBar() {
                 onClick={() => signIn('google')}
                 className="text-[12px] text-white px-3 py-1.5 rounded-lg transition-all font-semibold bg-blue-600 hover:bg-blue-500 shadow-sm whitespace-nowrap"
               >
-                Start free trial
+                Get started free
               </button>
               <button
                 onClick={() => signIn('google')}
