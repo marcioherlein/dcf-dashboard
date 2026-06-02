@@ -75,8 +75,8 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
   }
 
   // Net margin: prefer quarterly rolling data for more data points
-  const kmQ: Array<{ date: string; peRatio: number | null; enterpriseValueOverEBITDA: number | null; evToSales: number | null; priceToBookRatio: number | null }> =
-    (apiData.keyMetricsQuarterly ?? []).slice().reverse() // reverse to oldest-first for chart
+  const ratiosQ: Array<{ date: string; priceEarningsRatio: number | null; enterpriseValueMultiple: number | null; evToSales: number | null; priceToBookRatio: number | null }> =
+    (apiData.ratiosQuarterly ?? []).slice().reverse() // reverse to oldest-first for chart
 
   const isQ: Array<{ date: string; revenue: number; netIncome: number }> =
     (apiData.incomeStatementQuarterly ?? []).slice().reverse() // oldest-first
@@ -96,26 +96,26 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
   }
 
   // Build quarterly series for P/E, EV/EBITDA, EV/Revenue, P/B
-  const peSeries: SparkPoint[] = kmQ
-    .map(km => ({ label: quarterLabel(km.date), v: clamp(km.peRatio, 1, 500) }))
+  const peSeries: SparkPoint[] = ratiosQ
+    .map(r => ({ label: quarterLabel(r.date), v: clamp(r.priceEarningsRatio, 1, 500) }))
     .filter((p): p is { label: string; v: number } => p.v != null)
     .slice(-12)
     .map(p => ({ label: p.label, value: p.v }))
 
-  const ebitdaSeries: SparkPoint[] = kmQ
-    .map(km => ({ label: quarterLabel(km.date), v: clamp(km.enterpriseValueOverEBITDA, 1, 80) }))
+  const ebitdaSeries: SparkPoint[] = ratiosQ
+    .map(r => ({ label: quarterLabel(r.date), v: clamp(r.enterpriseValueMultiple, 1, 80) }))
     .filter((p): p is { label: string; v: number } => p.v != null)
     .slice(-12)
     .map(p => ({ label: p.label, value: p.v }))
 
-  const revSeries: SparkPoint[] = kmQ
-    .map(km => ({ label: quarterLabel(km.date), v: clamp(km.evToSales, 0.1, 50) }))
+  const revSeries: SparkPoint[] = ratiosQ
+    .map(r => ({ label: quarterLabel(r.date), v: clamp(r.evToSales, 0.1, 50) }))
     .filter((p): p is { label: string; v: number } => p.v != null)
     .slice(-12)
     .map(p => ({ label: p.label, value: p.v }))
 
-  const pbSeries: SparkPoint[] = kmQ
-    .map(km => ({ label: quarterLabel(km.date), v: clamp(km.priceToBookRatio, 0.1, 20) }))
+  const pbSeries: SparkPoint[] = ratiosQ
+    .map(r => ({ label: quarterLabel(r.date), v: clamp(r.priceToBookRatio, 0.1, 20) }))
     .filter((p): p is { label: string; v: number } => p.v != null)
     .slice(-12)
     .map(p => ({ label: p.label, value: p.v }))
