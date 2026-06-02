@@ -479,7 +479,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
     s => (financialsData?.quote?.sector ?? '').includes(s) || (financialsData?.businessProfile?.sector ?? '').includes(s)
   )
 
-  const growthRows = useMemo((): MetricRowDef[] => {
+  const _growthRows = useMemo((): MetricRowDef[] => {
     const revs    = mets.map(m => m.rev)
     const gps     = mets.map(m => m.gp)
     const ebits   = mets.map(m => m.ebit)
@@ -505,7 +505,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
   }, [mets, isFinancialSector])
 
   // Fix G2: YoY table columns skip the oldest period (always "—"); use slice(1).
-  const yoyCols  = cols.length > 1 ? cols.slice(1)  : cols
+  const _yoyCols  = cols.length > 1 ? cols.slice(1)  : cols
 
   // Fix G5: analyst consensus EPS growth estimates from cagrAnalysis
   const analystEst1y = (financialsData?.cagrAnalysis?.analystEstimate1y ?? null) as number | null

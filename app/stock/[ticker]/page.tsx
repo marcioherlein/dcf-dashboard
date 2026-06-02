@@ -21,6 +21,7 @@ import SaveToWatchlistDialog, { type WatchlistSavePayload } from '@/components/w
 import ValuationNotAvailableCard from '@/components/stock/ValuationNotAvailableCard'
 import SummaryTab from '@/components/stock/summary/SummaryTab'
 import StockOrientationStrip from '@/components/onboarding/StockOrientationStrip'
+import { LoginGateProvider } from '@/components/auth/LoginGateProvider'
 
 
 interface CAGRAnalysisData {
