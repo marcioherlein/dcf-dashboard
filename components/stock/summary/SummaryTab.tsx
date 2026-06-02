@@ -107,6 +107,8 @@ export default function SummaryTab({
     historicalCAGR,
   }), [price, sharesM, cashM, debtM, revenueM, fcfMargin, wacc, terminalG, historicalCAGR])
 
+  const isFinancialSector = ['Financial Services', 'Banks', 'Insurance', 'Financial'].includes(sector)
+
   const drivers: string[] = cagrAnalysis?.drivers ?? []
 
   return (
@@ -169,6 +171,7 @@ export default function SummaryTab({
             historicalCAGR={historicalCAGR}
             analystCAGR={analystCAGR}
             isEmergingMarket={isEmergingMarket}
+            isFinancialSector={isFinancialSector}
             revenueHistory={revenueHistory ?? []}
           />
           <MarketInterpretationCard

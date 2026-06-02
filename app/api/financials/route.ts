@@ -247,10 +247,15 @@ export async function GET(req: NextRequest) {
     // Financial sector: Yahoo's OCF is distorted by loan disbursements (client fund flows,
     // loan book growth). Use normalized net income × haircut as distributable earnings proxy —
     // consistent with projectCashFlows.ts behavior for the DCF model.
+    // Prefer normalizedNetIncomeM (2-year smoothed from historical statements) over Yahoo's
+    // single-point TTM netIncomeToCommon, which is volatile for early-stage fintechs like NU
+    // and can flip negative on one bad quarter, making fcfMargin null → reverse DCF → "N/A".
     if (isBankOrInsurer) {
-      const ttmNetIncome = ((fd.netIncomeToCommon ?? fd.netIncome ?? 0) as number) / 1e6
-      if (ttmNetIncome > 0) {
-        annualFCFLocal = ttmNetIncome * 0.85
+      const stableNI = normalizedNetIncomeM > 0
+        ? normalizedNetIncomeM
+        : ((fd.netIncomeToCommon ?? fd.netIncome ?? 0) as number) / 1e6
+      if (stableNI > 0) {
+        annualFCFLocal = stableNI * 0.85
       } else if (annualFCFLocal < 0) {
         annualFCFLocal = 0
       }

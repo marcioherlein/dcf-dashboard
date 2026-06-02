@@ -22,6 +22,7 @@ interface ReverseDCFCompactCardProps {
   historicalCAGR: number | null
   analystCAGR: number | null
   isEmergingMarket?: boolean
+  isFinancialSector?: boolean
   revenueHistory?: Array<{ year: string; revenue: number | null; isProjected: boolean }>
 }
 
@@ -65,6 +66,7 @@ export default function ReverseDCFCompactCard({
   historicalCAGR,
   analystCAGR,
   isEmergingMarket = false,
+  isFinancialSector = false,
   revenueHistory = [],
 }: ReverseDCFCompactCardProps) {
   const result = useMemo(
@@ -158,6 +160,7 @@ export default function ReverseDCFCompactCard({
               historicalPct={historicalPct}
               historicalCAGR={historicalCAGR}
               revenueHistory={revenueHistory}
+              isFinancialSector={isFinancialSector}
             />
           )}
         </div>
@@ -211,10 +214,10 @@ export default function ReverseDCFCompactCard({
         <div className="rounded-[10px] bg-[#EFF6FF] border border-[#BFDBFE] px-3 py-2.5">
           <p className="text-[12px] text-[#334155] leading-relaxed">
             The market assumes{' '}
-            <strong>{impliedPct.toFixed(1)}%</strong> —{' '}
+            <strong>{impliedPct.toFixed(1)}%</strong> revenue growth —{' '}
             {Math.abs(impliedPct - historicalPct).toFixed(1)}pp{' '}
-            {impliedPct > historicalPct ? 'above' : 'below'} the 3-year historical
-            track record of {historicalPct.toFixed(1)}%.
+            {impliedPct > historicalPct ? 'above' : 'below'} the 3-year{' '}
+            {isFinancialSector ? 'earnings' : 'revenue'} track record of {historicalPct.toFixed(1)}%.
           </p>
         </div>
       )}
@@ -251,10 +254,12 @@ function HistoricalCAGRBlock({
   historicalPct,
   historicalCAGR,
   revenueHistory,
+  isFinancialSector = false,
 }: {
   historicalPct: number
   historicalCAGR: number | null
   revenueHistory: Array<{ year: string; revenue: number | null; isProjected: boolean }>
+  isFinancialSector?: boolean
 }) {
   const triggerRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
@@ -281,7 +286,9 @@ function HistoricalCAGRBlock({
 
   return (
     <div className="mt-2.5">
-      <p className="text-[11px] font-[650] text-[#64748B] mb-0.5">3Y Historical CAGR</p>
+      <p className="text-[11px] font-[650] text-[#64748B] mb-0.5">
+        {isFinancialSector ? '3Y Historical Earnings CAGR' : '3Y Historical CAGR'}
+      </p>
       <div
         ref={triggerRef}
         className={cn(

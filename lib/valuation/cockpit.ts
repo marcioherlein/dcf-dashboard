@@ -153,8 +153,13 @@ export function computeBlendedFV(
   const { currentPrice } = snapshot
   const W = getEffectiveWeights(snapshot)
 
+  // Use TTM revenue when available: it reflects the most recent 12-month run-rate, which for
+  // fast-growing companies (NU, NVDA) can be 20-40% higher than the last annual period close.
+  // Projecting from a stale annual base systematically understates fair value for hypergrowth.
+  const revenueBase = snapshot.ttmRevenueDollars ?? snapshot.ltvRevenueDollars
+
   const fwdPE = computeForwardPE({
-    ltvRevenue: snapshot.ltvRevenueDollars,
+    ltvRevenue: revenueBase,
     sharesOutstanding: snapshot.sharesRaw,
     revenueCAGR: assumptions.cagr,
     netMargin: assumptions.netMargin,
@@ -177,7 +182,7 @@ export function computeBlendedFV(
       }).fairValuePerShare ?? null)
 
   const revMult = computeRevenueMultiple({
-    ltvRevenue: snapshot.ltvRevenueDollars,
+    ltvRevenue: revenueBase,
     revenueCAGR: assumptions.cagr,
     exitEVRevenue: assumptions.revenueMultiple,
     netDebt: snapshot.netDebtDollars,
@@ -431,8 +436,9 @@ export function computeCockpitOutput(
   const W = getEffectiveWeights(snapshot)
 
   // 1. Forward P/E
+  const revenueBase = snapshot.ttmRevenueDollars ?? snapshot.ltvRevenueDollars
   const fwdPE = computeForwardPE({
-    ltvRevenue: snapshot.ltvRevenueDollars,
+    ltvRevenue: revenueBase,
     sharesOutstanding: snapshot.sharesRaw,
     revenueCAGR: assumptions.cagr,
     netMargin: assumptions.netMargin,
@@ -473,7 +479,7 @@ export function computeCockpitOutput(
 
   // 3. Revenue Multiple
   const revMult = computeRevenueMultiple({
-    ltvRevenue: snapshot.ltvRevenueDollars,
+    ltvRevenue: revenueBase,
     revenueCAGR: assumptions.cagr,
     exitEVRevenue: assumptions.revenueMultiple,
     netDebt: snapshot.netDebtDollars,
