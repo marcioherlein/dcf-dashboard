@@ -86,7 +86,7 @@ export default function SignalDivergenceCallout({
 
         <div className="rounded-xl border border-amber-200 bg-white px-3 py-3">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-1.5">
-            Intrinsico Model
+            Insic Model
           </p>
           <span className={cn(
             'inline-flex text-[12px] font-bold px-2.5 py-1 rounded-full border mb-1.5',

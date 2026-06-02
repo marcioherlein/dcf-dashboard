@@ -42,7 +42,7 @@ export default function RedeemPage() {
 
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <Image src="/logos/logo-transparent.png" alt="intrinsico" width={40} height={40} />
+          <Image src="/logos/logo-transparent.png" alt="insic" width={40} height={40} />
         </div>
 
         {!session && status !== 'loading' ? (
@@ -92,7 +92,7 @@ export default function RedeemPage() {
                 value={code}
                 onChange={e => { setCode(e.target.value.toUpperCase()); setError('') }}
                 onKeyDown={e => { if (e.key === 'Enter') handleRedeem() }}
-                placeholder="e.g. INTRINSICO"
+                placeholder="e.g. INSIC2024"
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] font-mono font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all uppercase tracking-wider"
               />
 

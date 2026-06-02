@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-export const metadata = { title: 'Terms of Service — intrinsico' }
+export const metadata = { title: 'Terms of Service — Insic' }
 
 const EFFECTIVE_DATE = 'June 1, 2025'
 
@@ -10,7 +10,7 @@ export default function TermsPage() {
       <div className="mx-auto max-w-2xl px-4 sm:px-6 py-12 sm:py-24">
 
         <div className="mb-8">
-          <Link href="/" className="inline-flex items-center min-h-[44px] text-sm text-blue-600 hover:underline">← Back to intrinsico</Link>
+          <Link href="/" className="inline-flex items-center min-h-[44px] text-sm text-blue-600 hover:underline">← Back to Insic</Link>
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">Terms of Service</h1>
@@ -22,7 +22,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">1. Acceptance of Terms</h2>
             <p>
-              By accessing or using intrinsico (&quot;the Service&quot;, &quot;we&quot;, &quot;us&quot;), you agree to be bound by
+              By accessing or using Insic (&quot;the Service&quot;, &quot;we&quot;, &quot;us&quot;), you agree to be bound by
               these Terms of Service. If you do not agree, do not use the Service.
               We reserve the right to update these terms at any time; continued use
               after changes constitutes acceptance.
@@ -104,7 +104,7 @@ export default function TermsPage() {
             <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">7. Intellectual Property</h2>
             <p>
               All content, design, code, and branding on the Service is the property of
-              intrinsico and may not be copied, reproduced, or distributed without written
+              Insic and may not be copied, reproduced, or distributed without written
               permission, except for personal, non-commercial use.
             </p>
           </section>
@@ -113,7 +113,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">8. Limitation of Liability</h2>
             <p>
-              To the fullest extent permitted by law, intrinsico and its operators shall
+              To the fullest extent permitted by law, Insic and its operators shall
               not be liable for any direct, indirect, incidental, special, consequential,
               or punitive damages arising from your use of the Service, including but not
               limited to investment losses resulting from reliance on model outputs.
@@ -138,8 +138,8 @@ export default function TermsPage() {
             <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">10. Contact</h2>
             <p>
               Questions about these terms? Reach us at{' '}
-              <a href="mailto:hello@intrinsico.capital" className="text-blue-600 hover:underline">
-                hello@intrinsico.capital
+              <a href="mailto:hello@insic.app" className="text-blue-600 hover:underline">
+                hello@insic.app
               </a>.
             </p>
           </section>

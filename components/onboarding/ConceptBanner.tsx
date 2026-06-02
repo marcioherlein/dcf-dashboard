@@ -63,11 +63,11 @@ export default function ConceptBanner() {
               {/* Content */}
               <div className="flex-1 min-w-0">
                 <p className="text-[13px] font-bold text-slate-900 leading-snug">
-                  Intrinsico reads the growth rate the market is pricing in
+                  Insic reads the growth rate the market is pricing in
                 </p>
                 <p className="mt-1 text-[12px] text-slate-600 leading-relaxed max-w-xl">
                   Every stock price implies a 5-year revenue growth assumption.
-                  Intrinsico makes that number explicit and compares it to the company&apos;s history.
+                  Insic makes that number explicit and compares it to the company&apos;s history.
                   The gap is where the signal lives.
                 </p>
 

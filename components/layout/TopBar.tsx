@@ -224,14 +224,14 @@ export default function TopBar() {
           <Link href="/" className="flex items-center gap-2 shrink-0 group">
             <Image
               src="/logos/logo-transparent.png"
-              alt="intrinsico"
+              alt="insic"
               width={28}
               height={28}
               className="shrink-0"
             />
             {!stockNav && (
               <span className="hidden sm:block text-[15px] font-bold tracking-tight text-slate-800 group-hover:text-blue-600 transition-colors select-none">
-                intrinsico
+                insic
               </span>
             )}
           </Link>

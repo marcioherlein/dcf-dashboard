@@ -185,8 +185,8 @@ function SearchHero() {
               className="overflow-hidden"
             >
               <div className="mt-3 rounded-xl bg-slate-50 border border-slate-200 p-4 text-[12px] leading-relaxed text-slate-700">
-                <p className="font-semibold text-[13px] text-slate-800 mb-2">What Intrinsico measures</p>
-                <p>Every stock price implies a 5-year revenue growth rate the market is betting on. Intrinsico calls this the <strong>implied CAGR</strong> and compares it to the company&apos;s 3-year historical growth rate. The gap is where the signal lives.</p>
+                <p className="font-semibold text-[13px] text-slate-800 mb-2">What Insic measures</p>
+                <p>Every stock price implies a 5-year revenue growth rate the market is betting on. Insic calls this the <strong>implied CAGR</strong> and compares it to the company&apos;s 3-year historical growth rate. The gap is where the signal lives.</p>
                 <div className="mt-3 space-y-2">
                   <p className="font-semibold text-slate-700 mb-1">Expectation labels:</p>
                   <div className="flex items-start gap-2.5">

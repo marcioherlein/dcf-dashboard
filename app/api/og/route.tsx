@@ -100,7 +100,7 @@ export async function GET(req: NextRequest) {
         {/* Footer */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: '24px', borderTop: '1px solid rgba(59,130,246,0.15)' }}>
           <span style={{ color: '#334155', fontSize: '12px' }}>
-            Not financial advice · model output · intrinsico.app
+            Not financial advice · model output · insic.app
           </span>
           <span style={{ color: '#334155', fontSize: '12px' }}>
             DCF + multiples consensus · {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}

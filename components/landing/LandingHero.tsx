@@ -225,7 +225,7 @@ export default function LandingHero() {
                 textWrap: 'pretty',
               } as React.CSSProperties}
             >
-              intrinsico shows you what today&apos;s stock price already assumes
+              insic shows you what today&apos;s stock price already assumes
               about growth, margins, and execution — so you can decide with
               confidence, not hope.
             </motion.p>

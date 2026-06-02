@@ -43,7 +43,7 @@ export default function LandingNavbar() {
           <Link href="/" className="flex items-center gap-3 shrink-0 group">
             <Image
               src="/logos/logo-transparent.png"
-              alt="intrinsico"
+              alt="insic"
               width={40}
               height={40}
               className="transition-transform duration-200 group-hover:scale-105"
@@ -57,7 +57,7 @@ export default function LandingNavbar() {
                   color: '#0F172A',
                 }}
               >
-                intrinsico
+                insic
               </span>
               <span
                 className="hidden sm:block text-[8px] font-bold tracking-[0.18em] uppercase mt-0.5"

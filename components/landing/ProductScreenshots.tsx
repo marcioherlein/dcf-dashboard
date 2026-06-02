@@ -1,4 +1,4 @@
-// Polished React mockups of the Intrinsico app UI — used as hero screenshots
+// Polished React mockups of the Insic app UI — used as hero screenshots
 
 export function SummaryMockScreen() {
   return (
@@ -18,7 +18,7 @@ export function SummaryMockScreen() {
         <div className="w-3 h-3 rounded-full bg-[#FDBC40]" />
         <div className="w-3 h-3 rounded-full bg-[#34C749]" />
         <div className="flex-1 mx-3 rounded-md bg-white border border-slate-200 px-3 py-1 text-[11px] text-slate-400 font-mono">
-          intrinsico.capital/stock/NVDA
+          insic.app/stock/NVDA
         </div>
       </div>
 
@@ -147,7 +147,7 @@ export function ValuationMockScreen() {
         <div className="w-2.5 h-2.5 rounded-full bg-[#FDBC40]" />
         <div className="w-2.5 h-2.5 rounded-full bg-[#34C749]" />
         <div className="flex-1 mx-3 rounded-md bg-white border border-slate-200 px-2 py-0.5 text-[10px] text-slate-400 font-mono">
-          intrinsico.capital/stock/NVDA — Valuation
+          insic.app/stock/NVDA — Valuation
         </div>
       </div>
 

@@ -12,7 +12,7 @@ export default function LandingFooter() {
             <Link href="/" className="flex items-center gap-2.5 mb-3 group active:scale-95 transition-transform">
               <Image
                 src="/logos/logo-transparent.png"
-                alt="intrinsico"
+                alt="insic"
                 width={30}
                 height={30}
                 className="transition-transform duration-200 group-hover:scale-105"
@@ -27,7 +27,7 @@ export default function LandingFooter() {
                   backgroundClip: 'text',
                 }}
               >
-                intrinsico
+                insic
               </span>
             </Link>
             <p className="text-sm text-slate-500 leading-relaxed">
@@ -71,7 +71,7 @@ export default function LandingFooter() {
                 {[
                   { label: 'Terms', href: '/terms' },
                   { label: 'Privacy', href: '/privacy' },
-                  { label: 'Contact', href: 'mailto:hello@intrinsico.capital' },
+                  { label: 'Contact', href: 'mailto:hello@insic.app' },
                 ].map(l => (
                   <a key={l.label} href={l.href} className="text-sm text-slate-500 hover:text-slate-800 transition-colors py-1" style={{ minHeight: '36px', display: 'flex', alignItems: 'center' }}>
                     {l.label}
@@ -94,7 +94,7 @@ export default function LandingFooter() {
           </p>
           <p className="text-[12px] text-slate-400">
             Data sourced from Yahoo Finance, FRED, and Damodaran&apos;s research. &nbsp;
-            © {new Date().getFullYear()} intrinsico. All rights reserved.
+            © {new Date().getFullYear()} insic. All rights reserved.
           </p>
         </div>
       </div>

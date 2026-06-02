@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-export const metadata = { title: 'Privacy Policy — intrinsico' }
+export const metadata = { title: 'Privacy Policy — Insic' }
 
 const EFFECTIVE_DATE = 'June 1, 2025'
 
@@ -10,7 +10,7 @@ export default function PrivacyPage() {
       <div className="mx-auto max-w-2xl px-4 sm:px-6 py-12 sm:py-24">
 
         <div className="mb-8">
-          <Link href="/" className="inline-flex items-center min-h-[44px] text-sm text-blue-600 hover:underline">← Back to intrinsico</Link>
+          <Link href="/" className="inline-flex items-center min-h-[44px] text-sm text-blue-600 hover:underline">← Back to Insic</Link>
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">Privacy Policy</h1>
@@ -22,7 +22,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">1. Overview</h2>
             <p>
-              intrinsico (&quot;we&quot;, &quot;us&quot;) is committed to protecting your privacy. This policy
+              Insic (&quot;we&quot;, &quot;us&quot;) is committed to protecting your privacy. This policy
               explains what data we collect, how we use it, and your rights regarding it.
               We collect only what is necessary to provide the Service.
             </p>
@@ -79,7 +79,7 @@ export default function PrivacyPage() {
           {/* ── 4 ── */}
           <section>
             <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">4. Third-Party Services</h2>
-            <p>We use the following services to operate intrinsico. Each has its own privacy policy.</p>
+            <p>We use the following services to operate Insic. Each has its own privacy policy.</p>
             <div className="mt-3 rounded-xl border border-slate-200 overflow-x-auto">
               <table className="w-full text-xs min-w-[420px]">
                 <thead className="bg-slate-50">
@@ -152,8 +152,8 @@ export default function PrivacyPage() {
             </ul>
             <p className="mt-3">
               To exercise any of these rights, email us at{' '}
-              <a href="mailto:hello@intrinsico.capital" className="text-blue-600 hover:underline">
-                hello@intrinsico.capital
+              <a href="mailto:hello@insic.app" className="text-blue-600 hover:underline">
+                hello@insic.app
               </a>.
               We will respond within 30 days.
             </p>
@@ -194,8 +194,8 @@ export default function PrivacyPage() {
             <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">11. Contact</h2>
             <p>
               Privacy questions or requests:{' '}
-              <a href="mailto:hello@intrinsico.capital" className="text-blue-600 hover:underline">
-                hello@intrinsico.capital
+              <a href="mailto:hello@insic.app" className="text-blue-600 hover:underline">
+                hello@insic.app
               </a>
             </p>
           </section>

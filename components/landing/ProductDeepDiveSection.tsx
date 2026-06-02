@@ -122,7 +122,7 @@ export default function ProductDeepDiveSection() {
             className="text-base sm:text-[17px] text-slate-600 mx-auto"
             style={{ lineHeight: 1.6, maxWidth: '560px' }}
           >
-            intrinsico turns valuation into a structured workflow: price, intrinsic
+            insic turns valuation into a structured workflow: price, intrinsic
             value, reverse DCF, business quality, risks, and assumptions.
           </p>
         </motion.div>
