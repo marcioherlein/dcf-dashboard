@@ -140,35 +140,51 @@ function TinyLineChart({
   yFormat: (v: number) => string
 }) {
   const chartData = data.filter(p => p.label !== 'curr')
+
   if (chartData.length < 2) return (
-    <div className="flex flex-col gap-1">
-      <p className="text-[9px] font-[600] text-slate-400 uppercase tracking-wide">{title}</p>
-      <div className="flex items-center justify-center" style={{ height: 90 }}>
-        <p className="text-[9px] text-slate-300">No data</p>
+    <div className="flex flex-col">
+      <p className="text-[10px] font-[600] text-slate-500 mb-2">{title}</p>
+      <div className="flex items-center justify-center rounded-lg bg-slate-50 border border-slate-100" style={{ height: 120 }}>
+        <p className="text-[10px] text-slate-300">No data</p>
       </div>
     </div>
   )
 
-  const xInterval = chartData.length <= 6 ? 0 : Math.floor(chartData.length / 4)
+  // For quarterly data (12 points), show one tick per year; for annual (≤6), show all
+  const yearFromLabel = (label: string) => {
+    const m = label.match(/'(\d{2})/)
+    return m ? `20${m[1]}` : label
+  }
+  const tickSet = new Set<string>()
+  const filteredTicks = chartData
+    .map(p => p.label)
+    .filter(label => {
+      const yr = yearFromLabel(label)
+      if (tickSet.has(yr)) return false
+      tickSet.add(yr)
+      return true
+    })
 
   return (
-    <div>
-      <p className="text-[9px] font-[600] text-slate-400 uppercase tracking-wide mb-1">{title}</p>
-      <ResponsiveContainer width="100%" height={90}>
-        <LineChart data={chartData} margin={{ top: 6, right: 4, bottom: 0, left: -14 }}>
+    <div className="flex flex-col">
+      <p className="text-[10px] font-[600] text-slate-500 mb-2">{title}</p>
+      <ResponsiveContainer width="100%" height={120}>
+        <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 4, left: 0 }}>
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 8, fill: '#94a3b8' }}
+            tick={{ fontSize: 10, fill: '#94a3b8' }}
             tickLine={false}
             axisLine={false}
-            interval={xInterval}
+            ticks={filteredTicks}
+            tickFormatter={yearFromLabel}
           />
           <YAxis
-            tick={{ fontSize: 8, fill: '#94a3b8' }}
+            tick={{ fontSize: 10, fill: '#94a3b8' }}
             tickLine={false}
             axisLine={false}
             tickFormatter={yFormat}
-            width={34}
+            width={40}
+            tickCount={4}
           />
           <Tooltip
             cursor={{ stroke: '#e2e8f0', strokeWidth: 1 }}
@@ -176,12 +192,12 @@ function TinyLineChart({
               background: 'white',
               border: '1px solid #e2e8f0',
               borderRadius: 6,
-              fontSize: 10,
-              padding: '3px 8px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              fontSize: 11,
+              padding: '4px 10px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
             }}
             itemStyle={{ color: '#374151', padding: 0 }}
-            labelStyle={{ color: '#94a3b8', fontSize: 9, marginBottom: 1 }}
+            labelStyle={{ color: '#94a3b8', fontSize: 10, marginBottom: 2 }}
             formatter={(v) => [typeof v === 'number' ? yFormat(v) : '—', '']}
           />
           {refValue != null && (
@@ -196,8 +212,8 @@ function TinyLineChart({
             type="monotone"
             dataKey="value"
             stroke={color}
-            strokeWidth={1.5}
-            dot={{ r: 2, fill: color, fillOpacity: 0.55, strokeWidth: 0 }}
+            strokeWidth={2}
+            dot={false}
             activeDot={{ r: 4, fill: color, strokeWidth: 0 }}
           />
         </LineChart>
@@ -279,54 +295,54 @@ function SharedCAGRPanel({
   const hasAnySeries = (cagrSeries?.length ?? 0) > 0 || (peSeries?.length ?? 0) > 0 || (evRevSeries?.length ?? 0) > 0
 
   return (
-    <div className="rounded-xl border border-slate-100 bg-slate-50/60 px-5 py-4 mb-3">
-      <div className="flex items-start gap-6 flex-wrap sm:flex-nowrap">
+    <div className="rounded-xl border border-slate-100 bg-white px-5 py-4 mb-3">
 
-        {/* Left: stepper */}
-        <div className="shrink-0 min-w-[160px]">
-          <p className="text-[11px] font-[650] text-slate-600 mb-0.5">Revenue CAGR</p>
-          <p className="text-[10px] text-slate-400 mb-3">Shared by Forward P/E and Revenue Multiple</p>
-          <FieldStepper
-            label="5Y growth rate"
-            value={value}
-            unit="%"
-            step={step}
-            min={min}
-            max={max}
-            onChange={onChange}
-            hint={hint}
+      {/* Top row: label + stepper */}
+      <div className="flex items-center justify-between gap-6 mb-4">
+        <div>
+          <p className="text-[12px] font-[650] text-slate-700">Revenue CAGR</p>
+          <p className="text-[11px] text-slate-400">Shared by Forward P/E and Revenue Multiple</p>
+        </div>
+        <FieldStepper
+          label="5Y growth rate"
+          value={value}
+          unit="%"
+          step={step}
+          min={min}
+          max={max}
+          onChange={onChange}
+          hint={hint}
+          color={color}
+        />
+      </div>
+
+      {/* Charts row — full panel width */}
+      {hasAnySeries && (
+        <div className="grid grid-cols-3 gap-5">
+          <TinyLineChart
+            data={cagrSeries ?? []}
+            title="Revenue growth % / yr"
             color={color}
+            refValue={value}
+            yFormat={v => `${(v * 100).toFixed(0)}%`}
+          />
+          <TinyLineChart
+            data={peSeries ?? []}
+            title="Historical P/E ratio"
+            color="#3b82f6"
+            refValue={peAssumption}
+            yFormat={v => `${v.toFixed(0)}x`}
+          />
+          <TinyLineChart
+            data={evRevSeries ?? []}
+            title="Historical EV / Revenue"
+            color="#a855f7"
+            refValue={evRevAssumption}
+            yFormat={v => `${v.toFixed(1)}x`}
           />
         </div>
+      )}
 
-        {/* Right: 3 charts — always rendered so layout stays consistent */}
-        {hasAnySeries && (
-          <div className="flex-1 grid grid-cols-3 gap-4 min-w-0">
-            <TinyLineChart
-              data={cagrSeries ?? []}
-              title="Rev. Growth % / yr"
-              color={color}
-              refValue={value}
-              yFormat={v => `${(v * 100).toFixed(0)}%`}
-            />
-            <TinyLineChart
-              data={peSeries ?? []}
-              title="Historical P/E"
-              color="#3b82f6"
-              refValue={peAssumption}
-              yFormat={v => `${v.toFixed(0)}x`}
-            />
-            <TinyLineChart
-              data={evRevSeries ?? []}
-              title="Historical EV / Revenue"
-              color="#a855f7"
-              refValue={evRevAssumption}
-              yFormat={v => `${v.toFixed(1)}x`}
-            />
-          </div>
-        )}
-
-      </div>
     </div>
   )
 }
