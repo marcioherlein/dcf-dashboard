@@ -1,6 +1,10 @@
 'use client'
 
 import { TrendingUp, BarChart2, BarChart, Target, RotateCcw, Undo2, BookOpen } from 'lucide-react'
+import {
+  LineChart, Line, XAxis, YAxis, ResponsiveContainer,
+  ReferenceLine, Tooltip,
+} from 'recharts'
 import { fmtPrice } from '@/lib/formatters'
 import type { CockpitMethodResult, ValuationAssumptions } from '@/lib/valuation/cockpit'
 import InfoTooltip from '@/components/ui/InfoTooltip'
@@ -124,103 +128,81 @@ function historicalHint(series: SparkPoint[] | undefined, unit: '%' | 'x'): stri
   return `Median ~${fmt(med, unit)}`
 }
 
-// ─── MiniLineChart ────────────────────────────────────────────────────────────
+// ─── TinyLineChart ────────────────────────────────────────────────────────────
 
-function MiniLineChart({ series, inputVal, color }: {
-  series: SparkPoint[]
-  inputVal: number
+function TinyLineChart({
+  data, title, color, refValue, yFormat,
+}: {
+  data: SparkPoint[]
+  title: string
   color: string
+  refValue?: number
+  yFormat: (v: number) => string
 }) {
-  if (series.length === 0) return null
+  const chartData = data.filter(p => p.label !== 'curr')
+  if (chartData.length < 2) return (
+    <div className="flex flex-col gap-1">
+      <p className="text-[9px] font-[600] text-slate-400 uppercase tracking-wide">{title}</p>
+      <div className="flex items-center justify-center" style={{ height: 90 }}>
+        <p className="text-[9px] text-slate-300">No data</p>
+      </div>
+    </div>
+  )
 
-  const W = 240, H = 64
-  const MT = 8, MB = 16
-
-  const allVals = [...series.map(p => p.value), inputVal]
-  const rawMin  = Math.min(...allVals)
-  const rawMax  = Math.max(...allVals)
-  const span    = rawMax - rawMin || 1
-  const yMin    = rawMin - span * 0.12
-  const yMax    = rawMax + span * 0.12
-
-  const toY = (v: number) => MT + (H - MT - MB) * (1 - (v - yMin) / (yMax - yMin))
-  const toX = (i: number) => series.length > 1 ? (i / (series.length - 1)) * W : W / 2
-
-  const refY = Math.min(Math.max(toY(inputVal), MT), H - MB)
-  const inputAbove = inputVal > yMax
-  const inputBelow = inputVal < yMin
-
-  const points = series.map((_, i) => `${toX(i).toFixed(1)},${toY(series[i].value).toFixed(1)}`).join(' ')
-
-  // Show quarter labels every 4th point when enough data
-  const showLabels = series.length >= 6
-  const labelIndices = showLabels
-    ? series.reduce((acc: number[], p, i) => {
-        if (i === 0 || i === series.length - 1 || (i % 4 === 0)) acc.push(i)
-        return acc
-      }, [])
-    : []
+  const xInterval = chartData.length <= 6 ? 0 : Math.floor(chartData.length / 4)
 
   return (
-    <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
-      {/* Polyline connecting data points */}
-      <polyline
-        points={points}
-        fill="none"
-        stroke={color}
-        strokeWidth={1.5}
-        strokeLinejoin="round"
-        strokeLinecap="round"
-        opacity={0.7}
-      />
-
-      {/* Data point dots */}
-      {series.map((p, i) => {
-        const cx = toX(i)
-        const cy = toY(p.value)
-        const isCurr = p.label === 'curr'
-        return (
-          <circle
-            key={i}
-            cx={cx} cy={cy}
-            r={isCurr ? 3.5 : 2}
-            fill={isCurr ? color : color}
-            opacity={isCurr ? 1 : 0.5}
+    <div>
+      <p className="text-[9px] font-[600] text-slate-400 uppercase tracking-wide mb-1">{title}</p>
+      <ResponsiveContainer width="100%" height={90}>
+        <LineChart data={chartData} margin={{ top: 6, right: 4, bottom: 0, left: -14 }}>
+          <XAxis
+            dataKey="label"
+            tick={{ fontSize: 8, fill: '#94a3b8' }}
+            tickLine={false}
+            axisLine={false}
+            interval={xInterval}
           />
-        )
-      })}
-
-      {/* Amber reference line at user's input value */}
-      <line
-        x1={0} y1={refY} x2={W} y2={refY}
-        stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="5 3"
-      />
-      {/* Overflow indicator when inputVal is outside series range */}
-      {inputAbove && (
-        <text x={W - 4} y={MT + 6} fontSize="8" fill="#f59e0b" textAnchor="end">▲</text>
-      )}
-      {inputBelow && (
-        <text x={W - 4} y={H - MB - 2} fontSize="8" fill="#f59e0b" textAnchor="end">▼</text>
-      )}
-
-      {/* X-axis quarter labels */}
-      {labelIndices.map(i => {
-        const p = series[i]
-        if (p.label === 'curr') return null
-        return (
-          <text
-            key={i}
-            x={toX(i)}
-            y={H - 2}
-            fontSize="7"
-            fill="#94a3b8"
-            textAnchor="middle"
-          >
-            {p.label}
-          </text>
-        )
-      })}
-    </svg>
+          <YAxis
+            tick={{ fontSize: 8, fill: '#94a3b8' }}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={yFormat}
+            width={34}
+          />
+          <Tooltip
+            cursor={{ stroke: '#e2e8f0', strokeWidth: 1 }}
+            contentStyle={{
+              background: 'white',
+              border: '1px solid #e2e8f0',
+              borderRadius: 6,
+              fontSize: 10,
+              padding: '3px 8px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+            }}
+            itemStyle={{ color: '#374151', padding: 0 }}
+            labelStyle={{ color: '#94a3b8', fontSize: 9, marginBottom: 1 }}
+            formatter={(v) => [typeof v === 'number' ? yFormat(v) : '—', '']}
+          />
+          {refValue != null && (
+            <ReferenceLine
+              y={refValue}
+              stroke="#f59e0b"
+              strokeDasharray="4 3"
+              strokeWidth={1.5}
+            />
+          )}
+          <Line
+            type="monotone"
+            dataKey="value"
+            stroke={color}
+            strokeWidth={1.5}
+            dot={{ r: 2, fill: color, fillOpacity: 0.55, strokeWidth: 0 }}
+            activeDot={{ r: 4, fill: color, strokeWidth: 0 }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
   )
 }
 
@@ -277,46 +259,85 @@ function FieldStepper({
 
 function SharedCAGRPanel({
   value, step = 0.005, min = -0.05, max = 0.60,
-  onChange, historicalSeries, color = '#8b5cf6',
+  onChange, cagrSeries, peSeries, evRevSeries,
+  peAssumption, evRevAssumption,
+  color = '#8b5cf6',
 }: {
   value: number
   step?: number
   min?: number
   max?: number
   onChange: (v: number) => void
-  historicalSeries?: SparkPoint[]
+  cagrSeries?: SparkPoint[]
+  peSeries?: SparkPoint[]
+  evRevSeries?: SparkPoint[]
+  peAssumption?: number
+  evRevAssumption?: number
   color?: string
 }) {
-  const hint = historicalHint(historicalSeries, '%')
+  const hint = historicalHint(cagrSeries, '%')
+  const hasCharts =
+    (cagrSeries && cagrSeries.filter(p => p.label !== 'curr').length >= 2) ||
+    (peSeries   && peSeries.filter(p => p.label !== 'curr').length >= 2)   ||
+    (evRevSeries && evRevSeries.filter(p => p.label !== 'curr').length >= 2)
+
   return (
-    <div className="rounded-xl border border-slate-100 bg-slate-50/60 px-5 py-3 mb-3 flex items-center gap-6">
-      <div className="shrink-0">
-        <p className="text-[11px] font-[650] text-slate-600 mb-0.5">Revenue CAGR</p>
-        <p className="text-[10px] text-slate-400 mb-2">Shared by Forward P/E and Revenue Multiple</p>
-        <FieldStepper
-          label="5Y growth rate"
-          value={value}
-          unit="%"
-          step={step}
-          min={min}
-          max={max}
-          onChange={onChange}
-          hint={hint}
-          color={color}
-        />
-      </div>
-      {historicalSeries && historicalSeries.length >= 2 && (
-        <div className="flex-1 min-w-0">
-          <p className="text-[9px] text-slate-400 mb-1">Historical Revenue CAGR</p>
-          <div style={{ maxWidth: '280px' }}>
-            <MiniLineChart
-              series={historicalSeries.slice(-8)}
-              inputVal={value}
-              color={color}
-            />
-          </div>
+    <div className="rounded-xl border border-slate-100 bg-slate-50/60 px-5 py-4 mb-3">
+      <div className="flex items-start gap-6 flex-wrap sm:flex-nowrap">
+
+        {/* Left: stepper */}
+        <div className="shrink-0 min-w-[160px]">
+          <p className="text-[11px] font-[650] text-slate-600 mb-0.5">Revenue CAGR</p>
+          <p className="text-[10px] text-slate-400 mb-3">Shared by Forward P/E and Revenue Multiple</p>
+          <FieldStepper
+            label="5Y growth rate"
+            value={value}
+            unit="%"
+            step={step}
+            min={min}
+            max={max}
+            onChange={onChange}
+            hint={hint}
+            color={color}
+          />
         </div>
-      )}
+
+        {/* Right: 3 charts */}
+        {hasCharts && (
+          <div className="flex-1 grid grid-cols-3 gap-4 min-w-0">
+            {cagrSeries && cagrSeries.filter(p => p.label !== 'curr').length >= 2 ? (
+              <TinyLineChart
+                data={cagrSeries}
+                title="Rev. Growth % / yr"
+                color={color}
+                refValue={value}
+                yFormat={v => `${(v * 100).toFixed(0)}%`}
+              />
+            ) : <div />}
+
+            {peSeries && peSeries.filter(p => p.label !== 'curr').length >= 2 ? (
+              <TinyLineChart
+                data={peSeries}
+                title="Historical P/E"
+                color="#3b82f6"
+                refValue={peAssumption}
+                yFormat={v => `${v.toFixed(0)}x`}
+              />
+            ) : <div />}
+
+            {evRevSeries && evRevSeries.filter(p => p.label !== 'curr').length >= 2 ? (
+              <TinyLineChart
+                data={evRevSeries}
+                title="Historical EV / Revenue"
+                color="#a855f7"
+                refValue={evRevAssumption}
+                yFormat={v => `${v.toFixed(1)}x`}
+              />
+            ) : <div />}
+          </div>
+        )}
+
+      </div>
     </div>
   )
 }
@@ -409,7 +430,11 @@ export default function ValuationMethodCards({
         <SharedCAGRPanel
           value={assumptions.cagr}
           onChange={v => change('cagr', v)}
-          historicalSeries={historicalData?.cagr}
+          cagrSeries={historicalData?.cagr}
+          peSeries={historicalData?.exitPE}
+          evRevSeries={historicalData?.revenueMultiple}
+          peAssumption={assumptions.exitPE}
+          evRevAssumption={assumptions.revenueMultiple}
         />
       )}
 
@@ -512,26 +537,6 @@ export default function ValuationMethodCards({
                       />
                     )
                   })}
-
-                  {/* Historical line chart for primary field */}
-                  {(() => {
-                    const primaryField = fields[0]
-                    const hist = primaryField ? historicalData?.[primaryField.chartKey ?? primaryField.key] : undefined
-                    if (!hist || hist.length < 2) return null
-                    const fValue = assumptions[primaryField.key] as number ?? (primaryField.unit === '%' ? 0 : 1)
-                    return (
-                      <div className="mt-2 pt-2 border-t border-slate-100">
-                        <p className="text-[9px] text-slate-400 mb-1">
-                          Historical {fields[0].label}
-                        </p>
-                        <MiniLineChart
-                          series={hist}
-                          inputVal={fValue}
-                          color={cfg?.chartHex ?? '#64748b'}
-                        />
-                      </div>
-                    )
-                  })()}
                 </div>
               )}
 
