@@ -40,7 +40,7 @@ interface HistoricalMultiple {
   ps: number | null
 }
 
-type ChartKey = 'revNI' | 'fcf' | 'margins' | 'ebitda' | 'revGrowth' | 'fcfGrowth' | 'multiples'
+type ChartKey = 'revNI' | 'fcf' | 'margins' | 'ebitda' | 'revGrowth' | 'fcfGrowth' | 'multiples' | 'multiGrowth' | 'multiAbsolute'
 
 interface Props {
   incomeStatement: ISRow[]
@@ -157,6 +157,36 @@ export default function FinancialCharts({
     .slice(1)
     .filter((r) => r.growth != null)
 
+  // ── Chart 7 data: Multi-metric YoY growth rates (5 lines) ────────────────────
+  const multiGrowthData = historicalIS.slice(1).map((r, i) => {
+    const prev   = historicalIS[i]
+    const cfRow  = cashFlow.find(c => c.year === r.year)
+    const prevCf = cashFlow.find(c => c.year === prev.year)
+    const pct = (curr: number | null, p: number | null) =>
+      curr != null && p != null && p !== 0 ? ((curr - p) / Math.abs(p)) * 100 : null
+    return {
+      year:    r.year,
+      revenue: pct(r.revenue,        prev.revenue),
+      ebitda:  pct(r.ebitda,          prev.ebitda),
+      ebit:    pct(r.operatingIncome, prev.operatingIncome),
+      ni:      pct(r.netIncome,       prev.netIncome),
+      fcf:     pct(cfRow?.freeCashFlow ?? null, prevCf?.freeCashFlow ?? null),
+    }
+  }).filter(d => d.revenue != null || d.ni != null)
+
+  // ── Chart 8 data: Multi-metric absolute values ────────────────────────────────
+  const multiAbsData = historicalIS.map(r => {
+    const cfRow = cashFlow.find(c => c.year === r.year)
+    return {
+      year:    r.year,
+      revenue: r.revenue,
+      ebitda:  r.ebitda,
+      ebit:    r.operatingIncome,
+      ni:      r.netIncome,
+      fcf:     cfRow?.freeCashFlow ?? null,
+    }
+  })
+
   return (
     <>
       <div className={`grid grid-cols-1 gap-4 ${isSingle ? '' : 'sm:grid-cols-2'}`}>
@@ -225,7 +255,7 @@ export default function FinancialCharts({
         {show.includes('margins') && marginData.length >= 2 && (
           <div className={panel}>
             <p className={sectionTitle}>Margin Trends <span className="normal-case font-normal">(%)</span></p>
-            <ResponsiveContainer width="100%" height={CHART_H}>
+            <ResponsiveContainer width="100%" height={240}>
               <LineChart data={marginData} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
                 <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
@@ -330,9 +360,78 @@ export default function FinancialCharts({
           </div>
         )}
 
+        {/* ── Chart 7 — Multi-metric Growth Rate Trends ── */}
+        {show.includes('multiGrowth') && multiGrowthData.length >= 2 && (
+          <div className={panel}>
+            <p className={sectionTitle}>Growth Rate Trends <span className="normal-case font-normal">· YoY %</span></p>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={multiGrowthData} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
+                <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false}
+                  tickFormatter={(v) => `${v > 0 ? '+' : ''}${v.toFixed(0)}%`} />
+                <ReferenceLine y={0} stroke="rgba(148,163,184,0.4)" />
+                <Tooltip
+                  contentStyle={tooltipStyle} wrapperStyle={{ zIndex: 50 }}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  formatter={(v: any, name: any) => [
+                    `${Number(v) > 0 ? '+' : ''}${Number(v).toFixed(1)}%`,
+                    name === 'revenue' ? 'Revenue' : name === 'ebitda' ? 'EBITDA' : name === 'ebit' ? 'EBIT' : name === 'ni' ? 'Net Income' : 'FCF',
+                  ]}
+                />
+                <Legend
+                  formatter={(v) => v === 'revenue' ? 'Revenue' : v === 'ebitda' ? 'EBITDA' : v === 'ebit' ? 'EBIT' : v === 'ni' ? 'Net Income' : 'FCF'}
+                  wrapperStyle={{ fontSize: '10px', color: tickFill }}
+                />
+                <Line type="monotone" dataKey="revenue" stroke="#2563EB" strokeWidth={2} dot={{ r: 3, fill: '#2563EB', strokeWidth: 0 }} connectNulls isAnimationActive={false} />
+                <Line type="monotone" dataKey="ebitda"  stroke="#7C3AED" strokeWidth={2} dot={{ r: 3, fill: '#7C3AED', strokeWidth: 0 }} connectNulls isAnimationActive={false} />
+                <Line type="monotone" dataKey="ebit"    stroke="#D97706" strokeWidth={2} dot={{ r: 3, fill: '#D97706', strokeWidth: 0 }} connectNulls isAnimationActive={false} strokeDasharray="5 2" />
+                <Line type="monotone" dataKey="ni"      stroke="#059669" strokeWidth={2} dot={{ r: 3, fill: '#059669', strokeWidth: 0 }} connectNulls isAnimationActive={false} />
+                <Line type="monotone" dataKey="fcf"     stroke="#0891b2" strokeWidth={2} dot={{ r: 3, fill: '#0891b2', strokeWidth: 0 }} connectNulls isAnimationActive={false} strokeDasharray="3 2" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* ── Chart 8 — Multi-metric Absolute Values ── */}
+        {show.includes('multiAbsolute') && multiAbsData.length >= 2 && (
+          <div className={panel}>
+            <p className={sectionTitle}>Absolute Values <span className="normal-case font-normal">({currency}M)</span></p>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={multiAbsData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barCategoryGap="20%">
+                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
+                <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={fmtM} width={44} />
+                <ReferenceLine y={0} stroke="rgba(148,163,184,0.3)" />
+                <Tooltip
+                  contentStyle={tooltipStyle} wrapperStyle={{ zIndex: 50 }}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  formatter={(v: any, name: any) => [
+                    `${currency}${fmtM(Number(v))}`,
+                    name === 'revenue' ? 'Revenue' : name === 'ebitda' ? 'EBITDA' : name === 'ebit' ? 'EBIT' : name === 'ni' ? 'Net Income' : 'FCF',
+                  ]}
+                />
+                <Legend
+                  formatter={(v) => v === 'revenue' ? 'Revenue' : v === 'ebitda' ? 'EBITDA' : v === 'ebit' ? 'EBIT' : v === 'ni' ? 'Net Income' : 'FCF'}
+                  wrapperStyle={{ fontSize: '10px', color: tickFill }}
+                />
+                <Bar dataKey="revenue" name="revenue" fill="#2563EB" radius={[3,3,0,0]} maxBarSize={20} isAnimationActive={false} />
+                <Bar dataKey="ebitda"  name="ebitda"  fill="#7C3AED" radius={[3,3,0,0]} maxBarSize={20} isAnimationActive={false} />
+                <Bar dataKey="ebit"    name="ebit"    fill="#D97706" radius={[3,3,0,0]} maxBarSize={20} isAnimationActive={false} />
+                <Bar dataKey="ni" name="ni" radius={[3,3,0,0]} maxBarSize={20} isAnimationActive={false}>
+                  {multiAbsData.map((d, i) => <Cell key={i} fill={(d.ni ?? 0) >= 0 ? '#059669' : '#DC2626'} />)}
+                </Bar>
+                <Bar dataKey="fcf" name="fcf" radius={[3,3,0,0]} maxBarSize={20} isAnimationActive={false}>
+                  {multiAbsData.map((d, i) => <Cell key={i} fill={(d.fcf ?? 0) >= 0 ? '#0891b2' : '#DC2626'} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
       </div>
 
-      {/* ── Chart 7 — Historical Valuation Multiples ── */}
+      {/* ── Historical Valuation Multiples ── */}
       {show.includes('multiples') && historicalMultiples.length >= 2 && (() => {
         type TabKey = 'pe' | 'evEbitda' | 'evRevenue' | 'ps'
         const TABS: { key: TabKey; label: string; color: string; currentVal: number | null | undefined; description: string }[] = [

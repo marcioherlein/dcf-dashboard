@@ -6,12 +6,9 @@ import NewsPanel from '@/components/stock/NewsPanel'
 import HealthSection from '@/components/stock/HealthSection'
 import { type TabId } from '@/components/stock/TabNav'
 import StockContextBar from '@/components/stock/StockContextBar'
-import FinancialsSidebar from '@/components/stock/sidebar/FinancialsSidebar'
-import ValuationCockpit, { buildSnapshot, seedAssumptions } from '@/components/valuation/ValuationCockpit'
-import { computeCockpitOutput } from '@/lib/valuation/cockpit'
 import FinancialsHub from '@/components/stock/FinancialsHub'
-
-import { LoginGateProvider } from '@/components/auth/LoginGateProvider'
+import { computeCockpitOutput } from '@/lib/valuation/cockpit'
+import ValuationCockpit, { buildSnapshot, seedAssumptions } from '@/components/valuation/ValuationCockpit'
 import AuthBanner from '@/components/auth/AuthBanner'
 import LoginToSaveModal from '@/components/auth/LoginToSaveModal'
 import StockLoginWall from '@/components/stock/StockLoginWall'
@@ -614,13 +611,6 @@ function StockPageBody() {
                     cagr={data.cagr}
                     highlight={financialsHighlight}
                     initialSubTab={financialsSubTab}
-                  />
-                  {/* Sidebar content as grid of boxes below the main card */}
-                  <FinancialsSidebar
-                    businessProfile={data.businessProfile}
-                    scores={computedScores ?? data.scores}
-                    financialStatements={data.financialStatements}
-                    ownership={data.ownership}
                   />
                 </motion.div>
               )}
