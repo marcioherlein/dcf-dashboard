@@ -130,9 +130,6 @@ function MiniBarChart({ series, inputVal, color }: {
   const W = 200, H = 44
   const MT = 6, MB = 2
 
-  const histPoints = series.filter(p => p.label !== 'curr')
-  const currPoint  = series.find(p => p.label === 'curr')
-
   const allVals = [...series.map(p => p.value), inputVal]
   const rawMin  = Math.min(...allVals)
   const rawMax  = Math.max(...allVals)
@@ -262,11 +259,11 @@ function DcfDriverRow({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function ValuationMethodCards({
-  methods, currentPrice, currency,
+  methods, currentPrice: _currentPrice, currency,
   fcfMargin, ttmEbitdaDollars,
   assumptions, historicalData,
   onChange, onReset, onUndo, canUndo,
-  sensitivity, sectorBenchmarks,
+  sensitivity: _sensitivity, sectorBenchmarks: _sectorBenchmarks,
   onScrollToFullDCF,
 }: Props) {
   const validTotal = methods
