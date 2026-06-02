@@ -1,6 +1,6 @@
 'use client'
 
-import { TrendingUp, BarChart2, BarChart, Target, RotateCcw, Undo2 } from 'lucide-react'
+import { TrendingUp, BarChart2, BarChart, Target, RotateCcw, Undo2, BookOpen } from 'lucide-react'
 import { fmtPrice } from '@/lib/formatters'
 import type { CockpitMethodResult, ValuationAssumptions } from '@/lib/valuation/cockpit'
 import InfoTooltip from '@/components/ui/InfoTooltip'
@@ -34,7 +34,6 @@ interface FieldDef {
   step: number
   min: number
   max: number
-  shared?: boolean
   chartKey?: keyof ValuationAssumptions
 }
 
@@ -43,7 +42,6 @@ interface FieldDef {
 const METHOD_INPUTS: Record<string, FieldDef[]> = {
   forward_pe: [
     { key: 'exitPE',    label: 'Exit P/E',        unit: 'x', step: 0.5,   min: 5,     max: 80,  chartKey: 'exitPE'    },
-    { key: 'cagr',      label: 'Revenue CAGR',     unit: '%', step: 0.005, min: -0.05, max: 0.60, shared: true, chartKey: 'cagr' },
     { key: 'netMargin', label: 'Exit net margin',  unit: '%', step: 0.005, min: -0.20, max: 0.60, chartKey: 'netMargin' },
   ],
   ev_ebitda: [
@@ -51,7 +49,9 @@ const METHOD_INPUTS: Record<string, FieldDef[]> = {
   ],
   revenue_multiple: [
     { key: 'revenueMultiple', label: 'EV/Revenue multiple', unit: 'x', step: 0.25, min: 0.5, max: 20, chartKey: 'revenueMultiple' },
-    { key: 'cagr', label: 'Revenue CAGR', unit: '%', step: 0.005, min: -0.05, max: 0.60, shared: true, chartKey: 'cagr' },
+  ],
+  price_to_book: [
+    { key: 'priceToBookMultiple', label: 'Target P/B', unit: 'x', step: 0.1, min: 0.3, max: 5.0, chartKey: 'priceToBookMultiple' },
   ],
   core_dcf: [],
 }
@@ -81,6 +81,12 @@ const METHOD_CFG: Record<string, {
     barBg: 'bg-purple-500', valueBg: 'bg-purple-50', valueText: 'text-purple-700',
     chartHex: '#a855f7',
     Icon: BarChart as IconComp,
+  },
+  price_to_book: {
+    iconBg: 'bg-indigo-100', iconText: 'text-indigo-600',
+    barBg: 'bg-indigo-400', valueBg: 'bg-indigo-50', valueText: 'text-indigo-700',
+    chartHex: '#6366f1',
+    Icon: BookOpen as IconComp,
   },
   core_dcf: {
     iconBg: 'bg-emerald-100', iconText: 'text-emerald-600',
@@ -115,61 +121,105 @@ function historicalHint(series: SparkPoint[] | undefined, unit: '%' | 'x'): stri
   const vals = series.filter(p => p.label !== 'curr').map(p => p.value)
   const med = median(vals)
   if (med == null) return null
-  return `5yr avg ~${fmt(med, unit)}`
+  return `Median ~${fmt(med, unit)}`
 }
 
-// ─── MiniBarChart ─────────────────────────────────────────────────────────────
+// ─── MiniLineChart ────────────────────────────────────────────────────────────
 
-function MiniBarChart({ series, inputVal, color }: {
+function MiniLineChart({ series, inputVal, color }: {
   series: SparkPoint[]
   inputVal: number
   color: string
 }) {
   if (series.length === 0) return null
 
-  const W = 200, H = 44
-  const MT = 6, MB = 2
+  const W = 240, H = 64
+  const MT = 8, MB = 16
 
   const allVals = [...series.map(p => p.value), inputVal]
   const rawMin  = Math.min(...allVals)
   const rawMax  = Math.max(...allVals)
   const span    = rawMax - rawMin || 1
-  const yMin    = rawMin - span * 0.15
-  const yMax    = rawMax + span * 0.20
+  const yMin    = rawMin - span * 0.12
+  const yMax    = rawMax + span * 0.12
 
   const toY = (v: number) => MT + (H - MT - MB) * (1 - (v - yMin) / (yMax - yMin))
+  const toX = (i: number) => series.length > 1 ? (i / (series.length - 1)) * W : W / 2
 
-  const n = series.length
-  const slotW = W / n
-  const barW  = Math.max(4, slotW * 0.55)
+  const refY = Math.min(Math.max(toY(inputVal), MT), H - MB)
+  const inputAbove = inputVal > yMax
+  const inputBelow = inputVal < yMin
 
-  const refY = toY(inputVal)
+  const points = series.map((_, i) => `${toX(i).toFixed(1)},${toY(series[i].value).toFixed(1)}`).join(' ')
+
+  // Show quarter labels every 4th point when enough data
+  const showLabels = series.length >= 6
+  const labelIndices = showLabels
+    ? series.reduce((acc: number[], p, i) => {
+        if (i === 0 || i === series.length - 1 || (i % 4 === 0)) acc.push(i)
+        return acc
+      }, [])
+    : []
 
   return (
     <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
+      {/* Polyline connecting data points */}
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth={1.5}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        opacity={0.7}
+      />
+
+      {/* Data point dots */}
       {series.map((p, i) => {
+        const cx = toX(i)
+        const cy = toY(p.value)
         const isCurr = p.label === 'curr'
-        const barTop = toY(p.value)
-        const barBot = toY(Math.max(yMin, 0))
-        const barH   = Math.max(2, barBot - barTop)
-        const x      = i * slotW + (slotW - barW) / 2
         return (
-          <rect
+          <circle
             key={i}
-            x={x} y={barTop} width={barW} height={barH}
-            fill={color}
-            opacity={isCurr ? 0.85 : 0.35}
-            rx={1.5}
+            cx={cx} cy={cy}
+            r={isCurr ? 3.5 : 2}
+            fill={isCurr ? color : color}
+            opacity={isCurr ? 1 : 0.5}
           />
         )
       })}
-      {/* Input value reference line */}
-      {refY >= MT && refY <= H - MB && (
-        <line
-          x1={0} y1={refY} x2={W} y2={refY}
-          stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="5 3"
-        />
+
+      {/* Amber reference line at user's input value */}
+      <line
+        x1={0} y1={refY} x2={W} y2={refY}
+        stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="5 3"
+      />
+      {/* Overflow indicator when inputVal is outside series range */}
+      {inputAbove && (
+        <text x={W - 4} y={MT + 6} fontSize="8" fill="#f59e0b" textAnchor="end">▲</text>
       )}
+      {inputBelow && (
+        <text x={W - 4} y={H - MB - 2} fontSize="8" fill="#f59e0b" textAnchor="end">▼</text>
+      )}
+
+      {/* X-axis quarter labels */}
+      {labelIndices.map(i => {
+        const p = series[i]
+        if (p.label === 'curr') return null
+        return (
+          <text
+            key={i}
+            x={toX(i)}
+            y={H - 2}
+            fontSize="7"
+            fill="#94a3b8"
+            textAnchor="middle"
+          >
+            {p.label}
+          </text>
+        )
+      })}
     </svg>
   )
 }
@@ -177,12 +227,12 @@ function MiniBarChart({ series, inputVal, color }: {
 // ─── FieldStepper ─────────────────────────────────────────────────────────────
 
 function FieldStepper({
-  label, value, unit, step, min, max, onChange, shared, hint, color,
+  label, value, unit, step, min, max, onChange, hint, color,
 }: {
   label: string; value: number; unit: '%' | 'x'
   step: number; min: number; max: number
   onChange: (v: number) => void
-  shared?: boolean; hint?: string | null; color: string
+  hint?: string | null; color: string
 }) {
   const dec = () => onChange(Math.max(min, parseFloat((value - step).toFixed(6))))
   const inc = () => onChange(Math.min(max, parseFloat((value + step).toFixed(6))))
@@ -192,9 +242,6 @@ function FieldStepper({
       <div className="min-w-0">
         <p className="text-[10px] text-slate-500 leading-none">{label}</p>
         {hint && <p className="text-[9px] text-slate-400 mt-0.5 tabular-nums">{hint}</p>}
-        {shared && (
-          <p className="text-[9px] text-slate-300 mt-0.5">⇔ shared</p>
-        )}
       </div>
       <div className="flex items-center gap-0.5 shrink-0">
         <button
@@ -222,6 +269,54 @@ function FieldStepper({
           </span>
         </button>
       </div>
+    </div>
+  )
+}
+
+// ─── SharedCAGRPanel ──────────────────────────────────────────────────────────
+
+function SharedCAGRPanel({
+  value, step = 0.005, min = -0.05, max = 0.60,
+  onChange, historicalSeries, color = '#8b5cf6',
+}: {
+  value: number
+  step?: number
+  min?: number
+  max?: number
+  onChange: (v: number) => void
+  historicalSeries?: SparkPoint[]
+  color?: string
+}) {
+  const hint = historicalHint(historicalSeries, '%')
+  return (
+    <div className="rounded-xl border border-slate-100 bg-slate-50/60 px-5 py-3 mb-3 flex items-center gap-6">
+      <div className="shrink-0">
+        <p className="text-[11px] font-[650] text-slate-600 mb-0.5">Revenue CAGR</p>
+        <p className="text-[10px] text-slate-400 mb-2">Shared by Forward P/E and Revenue Multiple</p>
+        <FieldStepper
+          label="5Y growth rate"
+          value={value}
+          unit="%"
+          step={step}
+          min={min}
+          max={max}
+          onChange={onChange}
+          hint={hint}
+          color={color}
+        />
+      </div>
+      {historicalSeries && historicalSeries.length >= 2 && (
+        <div className="flex-1 min-w-0">
+          <p className="text-[9px] text-slate-400 mb-1">Historical Revenue CAGR</p>
+          <div style={{ maxWidth: '280px' }}>
+            <MiniLineChart
+              series={historicalSeries.slice(-8)}
+              inputVal={value}
+              color={color}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -274,11 +369,15 @@ export default function ValuationMethodCards({
     onChange({ ...assumptions, [key]: val })
   }
 
+  const showCAGRPanel = methods.some(m =>
+    (m.id === 'forward_pe' || m.id === 'revenue_multiple') && m.fairValue != null && m.fairValue > 0
+  )
+
   return (
     <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-5">
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 mb-5">
+      <div className="flex items-center justify-between gap-4 mb-4">
         <div>
           <p className="text-sm font-semibold text-slate-700 mb-1">Valuation Models</p>
           <p className="text-xs text-slate-400">Edit each model&apos;s key inputs directly — fair values update live</p>
@@ -305,8 +404,17 @@ export default function ValuationMethodCards({
         </div>
       </div>
 
+      {/* Shared CAGR panel */}
+      {showCAGRPanel && (
+        <SharedCAGRPanel
+          value={assumptions.cagr}
+          onChange={v => change('cagr', v)}
+          historicalSeries={historicalData?.cagr}
+        />
+      )}
+
       {/* Cards grid */}
-      <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-1 px-1 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible sm:snap-none sm:pb-0 sm:mx-0 sm:px-0 items-start">
+      <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-1 px-1 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible sm:snap-none sm:pb-0 sm:mx-0 sm:px-0">
         {methods.map(m => {
           const cfg    = METHOD_CFG[m.id]
           const fields = METHOD_INPUTS[m.id] ?? []
@@ -369,48 +477,56 @@ export default function ValuationMethodCards({
                 </div>
               </div>
 
-              {/* Unavailable error */}
-              {!hasValue && m.errors.length > 0 && (
-                <p className="text-[11px] text-slate-400 italic leading-relaxed">{m.errors[0]}</p>
+              {/* Unavailable: consistent-height placeholder */}
+              {!hasValue && (
+                <div className="flex-1 min-h-[80px] flex flex-col items-center justify-center gap-1.5">
+                  <svg className="w-5 h-5 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <circle cx="12" cy="12" r="9" /><path strokeLinecap="round" d="M12 8v4M12 16h.01" />
+                  </svg>
+                  <p className="text-[11px] text-slate-400 italic text-center leading-snug px-2">
+                    {m.errors[0] ?? 'Insufficient data. Excluded from the blend.'}
+                  </p>
+                </div>
               )}
 
               {/* Inputs — editable method cards */}
-              {!isCoreDCF && fields.length > 0 && (
+              {hasValue && !isCoreDCF && fields.length > 0 && (
                 <div className="space-y-1 pt-1 border-t border-slate-100">
                   <p className="text-[10px] font-[600] text-slate-400 mb-2">Assumptions</p>
                   {fields.map(f => {
                     const hist = historicalData?.[f.chartKey ?? f.key]
                     const hint = historicalHint(hist, f.unit)
+                    const fValue = assumptions[f.key] as number ?? (f.unit === '%' ? 0 : 1)
                     return (
                       <FieldStepper
                         key={String(f.key)}
                         label={f.label}
-                        value={assumptions[f.key] as number}
+                        value={fValue}
                         unit={f.unit}
                         step={f.step}
                         min={f.min}
                         max={f.max}
                         onChange={v => change(f.key, v)}
-                        shared={f.shared}
                         hint={hint}
                         color={cfg?.chartHex ?? '#64748b'}
                       />
                     )
                   })}
 
-                  {/* Primary mini chart — first field with historical data */}
+                  {/* Historical line chart for primary field */}
                   {(() => {
                     const primaryField = fields[0]
                     const hist = primaryField ? historicalData?.[primaryField.chartKey ?? primaryField.key] : undefined
-                    if (!hist || hist.length === 0) return null
+                    if (!hist || hist.length < 2) return null
+                    const fValue = assumptions[primaryField.key] as number ?? (primaryField.unit === '%' ? 0 : 1)
                     return (
                       <div className="mt-2 pt-2 border-t border-slate-100">
                         <p className="text-[9px] text-slate-400 mb-1">
                           Historical {fields[0].label}
                         </p>
-                        <MiniBarChart
-                          series={hist.slice(-7)}
-                          inputVal={assumptions[primaryField.key] as number}
+                        <MiniLineChart
+                          series={hist}
+                          inputVal={fValue}
                           color={cfg?.chartHex ?? '#64748b'}
                         />
                       </div>
@@ -420,7 +536,7 @@ export default function ValuationMethodCards({
               )}
 
               {/* Core DCF card — link to full model */}
-              {isCoreDCF && (
+              {isCoreDCF && hasValue && (
                 <div className="pt-1 border-t border-slate-100 space-y-2">
                   <p className="text-[10px] text-slate-500 leading-relaxed">
                     Uses WACC, CAGR, terminal growth, and net margin. Edit these in the Full DCF Model below.
@@ -435,8 +551,11 @@ export default function ValuationMethodCards({
                 </div>
               )}
 
+              {/* Spacer pushes blend weight to bottom in all cards */}
+              {hasValue && <div className="flex-1" />}
+
               {/* Blend weight bar */}
-              <div className="mt-auto pt-3 border-t border-slate-100">
+              <div className="pt-3 border-t border-slate-100">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-[10px] text-slate-400">Effective Blend Weight</span>
                   <span className={`text-[11px] font-bold tabular-nums ${

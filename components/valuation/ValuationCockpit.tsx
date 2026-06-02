@@ -50,6 +50,14 @@ export { buildSnapshot, seedAssumptions } from '@/lib/valuation/cockpitBuilders'
 
 type HistoricalData = Partial<Record<keyof ValuationAssumptions, SparkPoint[]>>
 
+function quarterLabel(dateStr: string): string {
+  const d = new Date(dateStr)
+  const m = d.getUTCMonth() // 0-indexed
+  const yr = String(d.getUTCFullYear()).slice(2)
+  const q = m < 3 ? 'Q1' : m < 6 ? 'Q2' : m < 9 ? 'Q3' : 'Q4'
+  return `${q} '${yr}`
+}
+
 function buildHistoricalData(apiData: ApiData): HistoricalData {
   const incomeRows: Array<{
     year: string; isProjected: boolean
@@ -66,36 +74,81 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
     }
   }
 
-  const netMarginPoints: SparkPoint[] = actuals
-    .filter(r => r.revenue != null && r.revenue > 0 && r.netIncome != null)
-    .map(r => ({ label: String(r.year), value: r.netIncome! / r.revenue! }))
+  // Net margin: prefer quarterly rolling data for more data points
+  const kmQ: Array<{ date: string; peRatio: number | null; enterpriseValueOverEBITDA: number | null; evToSales: number | null; priceToBookRatio: number | null }> =
+    (apiData.keyMetricsQuarterly ?? []).slice().reverse() // reverse to oldest-first for chart
 
-  // Year-by-year multiples from FMP key metrics (last 5 fiscal years)
+  const isQ: Array<{ date: string; revenue: number; netIncome: number }> =
+    (apiData.incomeStatementQuarterly ?? []).slice().reverse() // oldest-first
+
+  const netMarginPoints: SparkPoint[] = isQ.length >= 4
+    ? isQ
+        .filter(q => q.revenue > 0 && q.netIncome != null)
+        .slice(-12)
+        .map(q => ({ label: quarterLabel(q.date), value: q.netIncome / q.revenue }))
+    : actuals
+        .filter(r => r.revenue != null && r.revenue > 0 && r.netIncome != null)
+        .map(r => ({ label: String(r.year), value: r.netIncome! / r.revenue! }))
+
+  const clamp = (v: number | null | undefined, lo: number, hi: number): number | null => {
+    if (v == null || !isFinite(v) || v <= 0) return null
+    return v < lo || v > hi ? null : v
+  }
+
+  // Build quarterly series for P/E, EV/EBITDA, EV/Revenue, P/B
+  const peSeries: SparkPoint[] = kmQ
+    .map(km => ({ label: quarterLabel(km.date), v: clamp(km.peRatio, 1, 500) }))
+    .filter((p): p is { label: string; v: number } => p.v != null)
+    .slice(-12)
+    .map(p => ({ label: p.label, value: p.v }))
+
+  const ebitdaSeries: SparkPoint[] = kmQ
+    .map(km => ({ label: quarterLabel(km.date), v: clamp(km.enterpriseValueOverEBITDA, 1, 80) }))
+    .filter((p): p is { label: string; v: number } => p.v != null)
+    .slice(-12)
+    .map(p => ({ label: p.label, value: p.v }))
+
+  const revSeries: SparkPoint[] = kmQ
+    .map(km => ({ label: quarterLabel(km.date), v: clamp(km.evToSales, 0.1, 50) }))
+    .filter((p): p is { label: string; v: number } => p.v != null)
+    .slice(-12)
+    .map(p => ({ label: p.label, value: p.v }))
+
+  const pbSeries: SparkPoint[] = kmQ
+    .map(km => ({ label: quarterLabel(km.date), v: clamp(km.priceToBookRatio, 0.1, 20) }))
+    .filter((p): p is { label: string; v: number } => p.v != null)
+    .slice(-12)
+    .map(p => ({ label: p.label, value: p.v }))
+
+  // Fall back to annual data if quarterly is empty
   const histMult: Array<{ fiscalYear: string; pe: number | null; evEbitda: number | null; evRevenue: number | null }> =
     apiData.historicalMultiples ?? []
 
+  const peFinal = peSeries.length >= 2 ? peSeries : histMult.filter(h => h.pe != null).slice(-5).map(h => ({ label: String(h.fiscalYear), value: h.pe! }))
+  const ebitdaFinal = ebitdaSeries.length >= 2 ? ebitdaSeries : histMult.filter(h => h.evEbitda != null).slice(-5).map(h => ({ label: String(h.fiscalYear), value: h.evEbitda! }))
+  const revFinal = revSeries.length >= 2 ? revSeries : histMult.filter(h => h.evRevenue != null).slice(-5).map(h => ({ label: String(h.fiscalYear), value: h.evRevenue! }))
+
+  // Append current TTM value as 'curr' point
   const peCurrent       = apiData.quote?.peRatio ?? null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const multEst: Array<{ multiple: string; actualValue: number }> =
     apiData.valuationMethods?.models?.multiples?.estimates ?? []
   const evEbitdaCurrent = multEst.find(e => e.multiple === 'EV/EBITDA')?.actualValue ?? null
   const evRevCurrent    = multEst.find(e => e.multiple === 'EV/Revenue')?.actualValue ?? null
+  const pbCurrent       = multEst.find(e => e.multiple === 'P/Book')?.actualValue ?? null
 
-  const peSeries     = histMult.filter(h => h.pe != null).slice(-5).map(h => ({ label: String(h.fiscalYear), value: h.pe! }))
-  const ebitdaSeries = histMult.filter(h => h.evEbitda != null).slice(-5).map(h => ({ label: String(h.fiscalYear), value: h.evEbitda! }))
-  const revSeries    = histMult.filter(h => h.evRevenue != null).slice(-5).map(h => ({ label: String(h.fiscalYear), value: h.evRevenue! }))
-
-  // Append current TTM value as 'curr' point (blue dot to the right of the historical line)
-  if (peCurrent != null && peCurrent > 0 && peCurrent < 1000) peSeries.push({ label: 'curr', value: peCurrent })
-  if (evEbitdaCurrent != null && evEbitdaCurrent > 0) ebitdaSeries.push({ label: 'curr', value: evEbitdaCurrent })
-  if (evRevCurrent != null && evRevCurrent > 0) revSeries.push({ label: 'curr', value: evRevCurrent })
+  if (peCurrent != null && peCurrent > 0 && peCurrent < 1000) peFinal.push({ label: 'curr', value: peCurrent })
+  if (evEbitdaCurrent != null && evEbitdaCurrent > 0) ebitdaFinal.push({ label: 'curr', value: evEbitdaCurrent })
+  if (evRevCurrent != null && evRevCurrent > 0) revFinal.push({ label: 'curr', value: evRevCurrent })
+  if (pbCurrent != null && pbCurrent > 0) pbSeries.push({ label: 'curr', value: pbCurrent })
 
   return {
-    cagr:            cagrPoints.length >= 2 ? cagrPoints.slice(-5) : undefined,
-    netMargin:       netMarginPoints.length >= 2 ? netMarginPoints.slice(-5) : undefined,
-    exitPE:          peSeries.length >= 1 ? peSeries : undefined,
-    exitMultiple:    ebitdaSeries.length >= 1 ? ebitdaSeries : undefined,
-    revenueMultiple: revSeries.length >= 1 ? revSeries : undefined,
+    cagr:               cagrPoints.length >= 2 ? cagrPoints.slice(-5) : undefined,
+    netMargin:          netMarginPoints.length >= 2 ? netMarginPoints : undefined,
+    exitPE:             peFinal.length >= 1 ? peFinal : undefined,
+    exitMultiple:       ebitdaFinal.length >= 1 ? ebitdaFinal : undefined,
+    revenueMultiple:    revFinal.length >= 1 ? revFinal : undefined,
+    priceToBookMultiple: pbSeries.length >= 1 ? pbSeries : undefined,
   }
 }
 

@@ -26,6 +26,34 @@ export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null)
   const lastEbitda = ebitdaRows[ebitdaRows.length - 1]?.ebitda ?? null
   let ttmEbitdaDollars: number | null = lastEbitda != null ? lastEbitda * 1e6 : null
 
+  // Step 0 (highest priority): TTM EBITDA from quarterly income statements — 4-quarter rolling sum
+  if (ttmEbitdaDollars == null) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const qIncome: any[] = apiData.incomeStatementQuarterly ?? []
+    const last4 = qIncome.slice(0, 4)
+    if (last4.length === 4) {
+      const allHaveEbitda = last4.every((q: { ebitda?: number | null }) => typeof q.ebitda === 'number' && (q.ebitda as number) > 0)
+      if (allHaveEbitda) {
+        const sum = last4.reduce((s: number, q: { ebitda: number }) => s + q.ebitda, 0)
+        if (sum > 0) ttmEbitdaDollars = sum * 1e6
+      }
+      if (ttmEbitdaDollars == null) {
+        const allHaveComponents = last4.every(
+          (q: { operatingIncome?: number | null; depreciationAndAmortization?: number | null }) =>
+            typeof q.operatingIncome === 'number' && typeof q.depreciationAndAmortization === 'number'
+        )
+        if (allHaveComponents) {
+          const sum = last4.reduce(
+            (s: number, q: { operatingIncome: number; depreciationAndAmortization: number }) =>
+              s + q.operatingIncome + Math.abs(q.depreciationAndAmortization),
+            0
+          )
+          if (sum > 0) ttmEbitdaDollars = sum * 1e6
+        }
+      }
+    }
+  }
+
   if (ttmEbitdaDollars == null) {
     const multEstimates: Array<{ multiple: string; actualValue: number }> =
       (apiData.valuationMethods?.models?.multiples?.estimates ?? []) as Array<{ multiple: string; actualValue: number }>
@@ -76,6 +104,17 @@ export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null)
 
   const growthModel = (apiData.growthModel as 'two-stage' | 'three-stage') ?? 'two-stage'
 
+  // Book value per share — for P/B valuation method (financial companies)
+  const bsRows: Array<{ isProjected?: boolean; totalEquity?: number | null }> =
+    apiData.financialStatements?.balanceSheet ?? []
+  const actualBSRows = bsRows.filter(r => !r.isProjected)
+  const lastBSEquity = actualBSRows[actualBSRows.length - 1]?.totalEquity ?? null
+  const bookValuePerShare = lastBSEquity != null && lastBSEquity > 0 && sharesRaw != null && sharesRaw > 0
+    ? (lastBSEquity * 1e6) / sharesRaw
+    : null
+
+  const sector: string | null = apiData.quote?.sector ?? null
+
   return {
     currentPrice: apiData.quote?.price ?? 0,
     currency: apiData.quote?.currency ?? 'USD',
@@ -95,6 +134,8 @@ export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null)
     analystTargetMean,
     analystRating,
     companyType: apiData.valuationMethods?.companyType ?? 'standard',
+    sector,
+    bookValuePerShare,
     fullDcfFairValue: apiData.scenarios?.base?.fairValue ?? null,
   }
 }
@@ -113,6 +154,15 @@ export function seedAssumptions(apiData: ApiData): ValuationAssumptions {
   const currentEVEBITDA = multEstimates.find(e => e.multiple === 'EV/EBITDA')?.actualValue ?? null
   const { multiple: exitMultiple } = blendEVEBITDAMultiple(sector, industry, currentEVEBITDA, crp)
 
+  // P/B target for financial companies: use sector-based default
+  const FINANCIAL_SECTORS_PB: Record<string, number> = {
+    'Financial Services': 1.8,
+    'Banks': 1.2,
+    'Insurance': 1.4,
+    'Financial': 1.5,
+  }
+  const priceToBookMultiple = FINANCIAL_SECTORS_PB[sector ?? ''] ?? undefined
+
   return {
     wacc:            apiData.wacc?.wacc ?? 0.10,
     cagr:            apiData.cagr ?? fwdPEBase.revenueCAGR,
@@ -122,5 +172,6 @@ export function seedAssumptions(apiData: ApiData): ValuationAssumptions {
     exitPE:          fwdPEBase.exitPE,
     exitMultiple,
     revenueMultiple: revMultBase.exitEVRevenue,
+    priceToBookMultiple,
   }
 }
