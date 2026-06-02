@@ -46,12 +46,15 @@ function NavItem({
       <Link
         href={href}
         className={cn(
-          'group flex items-center gap-3 px-3 py-[7px] rounded-lg text-[13px] transition-colors duration-150',
+          'group relative flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] transition-colors duration-150',
           active
             ? 'bg-blue-50 text-[#1D4ED8] font-[600]'
-            : 'text-slate-600 font-medium hover:bg-slate-100/80 hover:text-slate-900',
+            : 'text-slate-500 font-medium hover:bg-slate-100/80 hover:text-slate-900',
         )}
       >
+        {active && (
+          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[18px] rounded-r-full bg-blue-600" />
+        )}
         <Icon
           size={15}
           strokeWidth={active ? 2.3 : 1.8}
@@ -86,6 +89,7 @@ export default function Sidebar() {
       <nav className="flex-1 px-2 pt-3 pb-2 overflow-y-auto custom-scrollbar">
 
         {/* Primary nav */}
+        <p className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">Workspace</p>
         <div className="flex flex-col gap-0.5">
           {PRIMARY_NAV.map(({ href, label, icon, match }, i) => (
             <NavItem
@@ -100,11 +104,12 @@ export default function Sidebar() {
         </div>
 
         {/* Divider */}
-        <div className="my-2.5">
+        <div className="my-3">
           <NavDivider />
         </div>
 
         {/* Utility nav */}
+        <p className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">Account</p>
         <div className="flex flex-col gap-0.5">
           {UTILITY_NAV.map(({ href, label, icon, match }, i) => (
             <NavItem
