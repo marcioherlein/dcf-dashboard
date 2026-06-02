@@ -55,11 +55,6 @@ function safe(a: unknown, b: unknown, fn: (a: number, b: number) => number): num
   return isFinite(r) ? r : null
 }
 
-function yoy(curr: number | null, prev: number | null): number | null {
-  if (curr == null || prev == null || prev === 0) return null
-  return (curr - prev) / Math.abs(prev)
-}
-
 function cagrN(arr: (number | null)[], n: number): number | null {
   // Fix G3: use actual positional index, not a filtered positive-only subset.
   // Intermediate negative values are fine; only require both endpoints > 0.
