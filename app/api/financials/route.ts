@@ -1218,12 +1218,13 @@ export async function GET(req: NextRequest) {
         const mktCap = km?.marketCap ?? null
         const cash   = bs?.cashAndShortTermInvestments ?? 0
         const debt   = bs?.longTermDebt ?? 0
-        const ev     = mktCap != null && mktCap > 0 ? mktCap + debt - cash : null
+        // mktCap from FMP key-metrics is in full USD; cash/debt from balance sheet are in millions — align units
+        const ev     = mktCap != null && mktCap > 0 ? mktCap + (debt - cash) * 1e6 : null
 
-        // Compute from raw financials; fall back to FMP key-metrics pre-computed ratio if unavailable
-        const peComputed    = mktCap != null && mktCap > 0 && is.netIncome > 0 ? mktCap / is.netIncome : null
-        const evEbComputed  = ev != null && ev > 0 && is.ebitda > 0 ? ev / is.ebitda : null
-        const evRevComputed = ev != null && ev > 0 && is.revenue > 0 ? ev / is.revenue : null
+        // Income statement values (netIncome, ebitda, revenue) are in millions — multiply by 1e6 for ratio math
+        const peComputed    = mktCap != null && mktCap > 0 && is.netIncome > 0 ? mktCap / (is.netIncome * 1e6) : null
+        const evEbComputed  = ev != null && ev > 0 && is.ebitda > 0 ? ev / (is.ebitda * 1e6) : null
+        const evRevComputed = ev != null && ev > 0 && is.revenue > 0 ? ev / (is.revenue * 1e6) : null
 
         // Wider clamp bounds: preserve valid high-multiple years (e.g. P/E 300 on a cyclical recovery)
         const pe        = clamp(peComputed    ?? km?.peRatio,                   1, 500)

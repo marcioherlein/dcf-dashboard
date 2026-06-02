@@ -276,10 +276,7 @@ function SharedCAGRPanel({
   color?: string
 }) {
   const hint = historicalHint(cagrSeries, '%')
-  const hasCharts =
-    (cagrSeries && cagrSeries.filter(p => p.label !== 'curr').length >= 2) ||
-    (peSeries   && peSeries.filter(p => p.label !== 'curr').length >= 2)   ||
-    (evRevSeries && evRevSeries.filter(p => p.label !== 'curr').length >= 2)
+  const hasAnySeries = (cagrSeries?.length ?? 0) > 0 || (peSeries?.length ?? 0) > 0 || (evRevSeries?.length ?? 0) > 0
 
   return (
     <div className="rounded-xl border border-slate-100 bg-slate-50/60 px-5 py-4 mb-3">
@@ -302,38 +299,30 @@ function SharedCAGRPanel({
           />
         </div>
 
-        {/* Right: 3 charts */}
-        {hasCharts && (
+        {/* Right: 3 charts — always rendered so layout stays consistent */}
+        {hasAnySeries && (
           <div className="flex-1 grid grid-cols-3 gap-4 min-w-0">
-            {cagrSeries && cagrSeries.filter(p => p.label !== 'curr').length >= 2 ? (
-              <TinyLineChart
-                data={cagrSeries}
-                title="Rev. Growth % / yr"
-                color={color}
-                refValue={value}
-                yFormat={v => `${(v * 100).toFixed(0)}%`}
-              />
-            ) : <div />}
-
-            {peSeries && peSeries.filter(p => p.label !== 'curr').length >= 2 ? (
-              <TinyLineChart
-                data={peSeries}
-                title="Historical P/E"
-                color="#3b82f6"
-                refValue={peAssumption}
-                yFormat={v => `${v.toFixed(0)}x`}
-              />
-            ) : <div />}
-
-            {evRevSeries && evRevSeries.filter(p => p.label !== 'curr').length >= 2 ? (
-              <TinyLineChart
-                data={evRevSeries}
-                title="Historical EV / Revenue"
-                color="#a855f7"
-                refValue={evRevAssumption}
-                yFormat={v => `${v.toFixed(1)}x`}
-              />
-            ) : <div />}
+            <TinyLineChart
+              data={cagrSeries ?? []}
+              title="Rev. Growth % / yr"
+              color={color}
+              refValue={value}
+              yFormat={v => `${(v * 100).toFixed(0)}%`}
+            />
+            <TinyLineChart
+              data={peSeries ?? []}
+              title="Historical P/E"
+              color="#3b82f6"
+              refValue={peAssumption}
+              yFormat={v => `${v.toFixed(0)}x`}
+            />
+            <TinyLineChart
+              data={evRevSeries ?? []}
+              title="Historical EV / Revenue"
+              color="#a855f7"
+              refValue={evRevAssumption}
+              yFormat={v => `${v.toFixed(1)}x`}
+            />
           </div>
         )}
 
