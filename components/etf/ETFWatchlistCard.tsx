@@ -46,8 +46,8 @@ export function ETFWatchlistCard({ entry, onDelete }: Props) {
         </div>
         <button
           onClick={() => onDelete(entry.ticker)}
+          aria-label={`Remove ${entry.ticker} from watchlist`}
           className="min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-300 hover:text-red-400 transition-colors sm:opacity-0 sm:group-hover:opacity-100 opacity-100"
-          title="Remove"
         >
           <Trash2 size={14} />
         </button>
@@ -55,31 +55,33 @@ export function ETFWatchlistCard({ entry, onDelete }: Props) {
 
       <ValueScoreBadge score={entry.valueScore} />
 
-      <div className="grid grid-cols-2 gap-2">
-        <div className="bg-slate-50 rounded-lg px-2.5 py-2.5">
-          <p className="text-[9px] text-slate-400 uppercase tracking-wider">P/E</p>
-          <p className="text-xs font-semibold font-mono text-slate-700 mt-0.5">{pe}</p>
+      {/* Flat 2×2 metric grid — no nested cards */}
+      <div className="grid grid-cols-2 gap-x-4 gap-y-3 border-t border-slate-100 pt-3">
+        <div>
+          <p className="text-[11px] text-slate-400">P/E</p>
+          <p className="text-[13px] font-semibold font-mono text-slate-700 mt-0.5">{pe}</p>
         </div>
-        <div className="bg-slate-50 rounded-lg px-2.5 py-2.5">
-          <p className="text-[9px] text-slate-400 uppercase tracking-wider">Yield</p>
-          <p className="text-xs font-semibold font-mono text-slate-700 mt-0.5">{yld}</p>
+        <div>
+          <p className="text-[11px] text-slate-400">Yield</p>
+          <p className="text-[13px] font-semibold font-mono text-slate-700 mt-0.5">{yld}</p>
         </div>
-        <div className="bg-slate-50 rounded-lg px-2.5 py-2.5">
-          <p className="text-[9px] text-slate-400 uppercase tracking-wider">Exp. Ratio</p>
-          <p className="text-xs font-semibold font-mono text-slate-700 mt-0.5">{er}</p>
+        <div>
+          <p className="text-[11px] text-slate-400">Exp. ratio</p>
+          <p className="text-[13px] font-semibold font-mono text-slate-700 mt-0.5">{er}</p>
         </div>
-        <div className="bg-slate-50 rounded-lg px-2.5 py-2.5">
-          <p className="text-[9px] text-slate-400 uppercase tracking-wider">AUM</p>
-          <p className="text-xs font-semibold font-mono text-slate-700 mt-0.5">{aum}</p>
+        <div>
+          <p className="text-[11px] text-slate-400">AUM</p>
+          <p className="text-[13px] font-semibold font-mono text-slate-700 mt-0.5">{aum}</p>
         </div>
       </div>
 
       <Link
         href={`/etf/${entry.ticker}`}
+        aria-label={`View ${entry.ticker} ETF details`}
         className="flex items-center justify-center gap-1.5 w-full rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-blue-600 text-slate-500 text-xs font-semibold py-2.5 transition-colors border border-slate-100 min-h-[44px]"
       >
         <ExternalLink size={11} />
-        Open
+        View details
       </Link>
     </div>
   )

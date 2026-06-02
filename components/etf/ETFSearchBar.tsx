@@ -18,6 +18,7 @@ export function ETFSearchBar() {
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const listboxId = 'etf-search-listbox'
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -60,11 +61,17 @@ export function ETFSearchBar() {
   }
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-xl mx-auto">
+    <div ref={containerRef} className="relative w-full max-w-xl">
       <div className="relative flex items-center">
-        <Search size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+        <Search size={16} className="absolute left-3.5 text-slate-400 pointer-events-none" aria-hidden="true" />
         <input
           type="text"
+          role="combobox"
+          aria-label="Search ETFs"
+          aria-expanded={open}
+          aria-haspopup="listbox"
+          aria-autocomplete="list"
+          aria-controls={listboxId}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search ETF — SPY, QQQ, VTI, SCHD…"
@@ -73,6 +80,7 @@ export function ETFSearchBar() {
         {query && (
           <button
             onClick={() => { setQuery(''); setResults([]); setOpen(false) }}
+            aria-label="Clear search"
             className="absolute right-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600"
           >
             <X size={14} />
@@ -81,13 +89,20 @@ export function ETFSearchBar() {
       </div>
 
       {open && (
-        <div className="absolute top-full mt-1.5 w-full bg-white rounded-xl border border-slate-200 shadow-lg z-50 overflow-hidden">
+        <div
+          id={listboxId}
+          role="listbox"
+          aria-label="ETF search results"
+          className="absolute top-full mt-1.5 w-full bg-white rounded-xl border border-slate-200 shadow-lg z-50 overflow-hidden"
+        >
           {loading ? (
             <div className="px-4 py-3 text-[14px] text-slate-400 min-h-[48px] flex items-center">Searching…</div>
           ) : (
             results.map((r) => (
               <button
                 key={r.symbol}
+                role="option"
+                aria-selected={false}
                 onMouseDown={() => handleSelect(r.symbol)}
                 className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors text-left group min-h-[48px]"
               >

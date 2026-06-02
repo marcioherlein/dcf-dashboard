@@ -98,6 +98,9 @@ function scoreBg(score: number): string {
 }
 
 // ─── Shelf Card ───────────────────────────────────────────────────────────────
+// Uses the card-with-link pattern: absolute-positioned <Link> at z-0,
+// interactive elements (button) at relative z-10 to float above it.
+// This avoids the invalid HTML anti-pattern of nesting <button> inside <a>.
 
 function ShelfCard({
   meta,
@@ -113,64 +116,72 @@ function ShelfCard({
   const score = data?.valueScore ?? null
 
   return (
-    <Link
-      href={`/etf/${meta.ticker}`}
-      className="group relative flex flex-col gap-2.5 bg-white rounded-xl border border-slate-200 p-3.5 w-[152px] shrink-0 hover:border-blue-200 hover:shadow-md transition-all"
-    >
+    <div className="group relative flex flex-col gap-2.5 bg-white rounded-xl border border-slate-200 p-3.5 w-[152px] shrink-0 hover:border-blue-200 hover:shadow-md transition-all">
+      {/* Full-card link at z-0 — navigates on click anywhere on the card */}
+      <Link
+        href={`/etf/${meta.ticker}`}
+        className="absolute inset-0 rounded-xl z-0"
+        aria-label={`View ${meta.ticker} ETF details`}
+        tabIndex={-1}
+        aria-hidden="true"
+      />
+
       {/* Header */}
-      <div className="flex items-start justify-between gap-1">
-        <div className="min-w-0">
-          <span className="block text-[15px] font-black font-mono text-slate-900 leading-none">
+      <div className="relative z-10 flex items-start justify-between gap-1">
+        <Link href={`/etf/${meta.ticker}`} className="min-w-0" tabIndex={0}>
+          <span className="block text-[15px] font-black font-mono text-slate-900 leading-none group-hover:text-blue-600 transition-colors">
             {meta.ticker}
           </span>
           <span className="block text-[11px] text-slate-400 mt-1 leading-tight line-clamp-1">
             {meta.label}
           </span>
-        </div>
+        </Link>
         <button
-          onClick={(e) => { e.preventDefault(); onAdd(meta.ticker) }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(meta.ticker) }}
           className={cn(
-            'shrink-0 w-7 h-7 flex items-center justify-center rounded-lg transition-all',
+            'relative z-20 shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition-all',
             isWatchlisted
               ? 'bg-emerald-50 text-emerald-600'
               : 'bg-slate-100 text-slate-400 hover:bg-blue-50 hover:text-blue-600',
           )}
-          title={isWatchlisted ? 'In watchlist' : 'Add to watchlist'}
+          aria-label={isWatchlisted ? `${meta.ticker} is in your watchlist` : `Add ${meta.ticker} to watchlist`}
         >
           {isWatchlisted ? <Check size={12} /> : <Plus size={12} />}
         </button>
       </div>
 
       {/* Score badge */}
-      {score != null ? (
-        <div className={cn('flex items-center gap-1.5 rounded-lg px-2 py-1.5 border', scoreBg(score))}>
-          <span className={cn('text-lg font-black font-mono leading-none', scoreColor(score))}>
-            {score}
-          </span>
-          <span className={cn('text-[10px] font-semibold leading-tight', scoreColor(score))}>
-            {scoreLabel(score)}
-          </span>
-        </div>
-      ) : (
-        <div className="h-9 rounded-lg bg-slate-100 animate-pulse" />
-      )}
+      <div className="relative z-10">
+        {score != null ? (
+          <div className={cn('flex items-center gap-1.5 rounded-lg px-2 py-1.5 border', scoreBg(score))}>
+            <span className={cn('text-lg font-black font-mono leading-none', scoreColor(score))}>
+              {score}
+            </span>
+            <span className={cn('text-[10px] font-semibold leading-tight', scoreColor(score))}>
+              {scoreLabel(score)}
+            </span>
+          </div>
+        ) : (
+          <div className="h-9 rounded-lg bg-slate-100 animate-pulse" />
+        )}
+      </div>
 
       {/* Stats */}
-      <div className="space-y-1.5">
+      <div className="relative z-10 space-y-1.5">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] text-slate-400 font-medium">P/E</span>
+          <span className="text-[11px] text-slate-400">P/E</span>
           <span className="text-[11px] font-mono font-semibold text-slate-700">
             {data?.peRatio != null ? fmtMultiple(data.peRatio) : '—'}
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-[10px] text-slate-400 font-medium">ER</span>
+          <span className="text-[11px] text-slate-400">Exp. ratio</span>
           <span className="text-[11px] font-mono font-semibold text-slate-700">
             {data?.expenseRatio != null ? (data.expenseRatio * 100).toFixed(2) + '%' : '—'}
           </span>
         </div>
       </div>
-    </Link>
+    </div>
   )
 }
 
@@ -197,20 +208,29 @@ function ShelfRow({
         <h2 className="text-[15px] font-bold text-slate-900">{title}</h2>
         <span className="text-[12px] text-slate-400">{description}</span>
       </div>
-      <div
-        className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1"
-        style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}
-      >
-        {metas.map((meta) => (
-          <div key={meta.ticker} style={{ scrollSnapAlign: 'start' }}>
-            <ShelfCard
-              meta={meta}
-              data={data[meta.ticker] ?? null}
-              isWatchlisted={watchlistedTickers.has(meta.ticker)}
-              onAdd={onAdd}
-            />
-          </div>
-        ))}
+      {/* Relative wrapper for the scroll-fade overlay */}
+      <div className="relative">
+        <div
+          className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1"
+          style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
+        >
+          {metas.map((meta) => (
+            <div key={meta.ticker} style={{ scrollSnapAlign: 'start' }}>
+              <ShelfCard
+                meta={meta}
+                data={data[meta.ticker] ?? null}
+                isWatchlisted={watchlistedTickers.has(meta.ticker)}
+                onAdd={onAdd}
+              />
+            </div>
+          ))}
+        </div>
+        {/* Right-side gradient — signals more cards to scroll into */}
+        <div
+          className="pointer-events-none absolute right-0 top-0 bottom-2 w-12"
+          style={{ background: 'linear-gradient(to left, #F1F5F9, transparent)' }}
+          aria-hidden="true"
+        />
       </div>
     </section>
   )
@@ -277,12 +297,12 @@ function Leaderboard({
 
   type ColDef = { key: SortKey; label: string; align: 'left' | 'right' }
   const COLS: ColDef[] = [
-    { key: 'peRatio',      label: 'P/E',   align: 'right' },
-    { key: 'pbRatio',      label: 'P/B',   align: 'right' },
-    { key: 'expenseRatio', label: 'Exp. Ratio', align: 'right' },
-    { key: 'yield',        label: 'Yield', align: 'right' },
-    { key: 'aum',          label: 'AUM',   align: 'right' },
-    { key: 'valueScore',   label: 'Val. Score', align: 'right' },
+    { key: 'peRatio',      label: 'P/E',        align: 'right' },
+    { key: 'pbRatio',      label: 'P/B',        align: 'right' },
+    { key: 'expenseRatio', label: 'Exp. ratio', align: 'right' },
+    { key: 'yield',        label: 'Yield',      align: 'right' },
+    { key: 'aum',          label: 'AUM',        align: 'right' },
+    { key: 'valueScore',   label: 'Val. score', align: 'right' },
   ]
 
   return (
@@ -312,25 +332,34 @@ function Leaderboard({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
-                <th className="text-left pl-4 pr-3 py-2.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-[200px] sticky left-0 bg-slate-50">
+                <th
+                  scope="col"
+                  className="text-left pl-4 pr-3 py-2.5 text-[11px] font-semibold text-slate-500 w-[200px] sticky left-0 bg-slate-50"
+                >
                   ETF
                 </th>
-                <th className="text-left px-3 py-2.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                <th scope="col" className="text-left px-3 py-2.5 text-[11px] font-semibold text-slate-500">
                   Type
                 </th>
                 {COLS.map((col) => (
                   <th
                     key={col.key}
+                    scope="col"
                     className="px-3 py-2.5 text-right cursor-pointer select-none whitespace-nowrap"
                     onClick={() => toggleSort(col.key)}
+                    aria-sort={
+                      col.key === sortKey
+                        ? sortDir === 'desc' ? 'descending' : 'ascending'
+                        : 'none'
+                    }
                   >
-                    <span className="inline-flex items-center justify-end gap-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider hover:text-slate-700 transition-colors">
+                    <span className="inline-flex items-center justify-end gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-700 transition-colors">
                       {col.label}
                       <SortIcon col={col.key} sortKey={sortKey} sortDir={sortDir} />
                     </span>
                   </th>
                 ))}
-                <th className="px-4 py-2.5 w-10" />
+                <th scope="col" className="px-4 py-2.5 w-10" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -410,13 +439,13 @@ function Leaderboard({
                     <td className="px-4 py-3">
                       <button
                         onClick={() => onAdd(meta.ticker)}
+                        aria-label={watchlistedTickers.has(meta.ticker) ? `${meta.ticker} in watchlist` : `Add ${meta.ticker} to watchlist`}
                         className={cn(
-                          'w-7 h-7 flex items-center justify-center rounded-lg transition-all',
+                          'w-8 h-8 flex items-center justify-center rounded-lg transition-all',
                           watchlistedTickers.has(meta.ticker)
                             ? 'bg-emerald-50 text-emerald-600'
                             : 'bg-slate-100 text-slate-400 hover:bg-blue-50 hover:text-blue-600 opacity-0 group-hover:opacity-100',
                         )}
-                        title={watchlistedTickers.has(meta.ticker) ? 'In watchlist' : 'Add to watchlist'}
                       >
                         {watchlistedTickers.has(meta.ticker) ? <Check size={12} /> : <Plus size={12} />}
                       </button>

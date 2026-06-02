@@ -27,8 +27,8 @@ function fmt(v: number | null, decimals = 1): string {
 function MetricRow({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
     <div className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
-      <span className="text-xs text-slate-500">{label}</span>
-      <span className={cn('text-xs font-semibold font-mono', color ?? 'text-slate-800')}>{value}</span>
+      <span className="text-[12px] text-slate-500">{label}</span>
+      <span className={cn('text-[12px] font-semibold font-mono', color ?? 'text-slate-800')}>{value}</span>
     </div>
   )
 }
@@ -63,7 +63,15 @@ function ScoreGauge({ score, label }: { score: number; label: string }) {
       <div className={cn('text-4xl font-black font-mono', textColor)}>{score}</div>
       <div className={cn('text-xs font-semibold px-2 py-0.5 rounded-full text-white', color)}>{label}</div>
       <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mt-1">
-        <div className={cn('h-full rounded-full transition-all', color)} style={{ width: `${score}%` }} />
+        <div
+          role="progressbar"
+          aria-valuenow={score}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Value Score"
+          className={cn('h-full rounded-full transition-all', color)}
+          style={{ width: `${score}%` }}
+        />
       </div>
     </div>
   )
@@ -77,28 +85,28 @@ export function ETFMetricsGrid({ metrics }: { metrics: ETFMetrics }) {
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {/* Basket Valuation */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-        <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-3">Basket Valuation</p>
-        <MetricRow label="P/E Ratio" value={fmt(metrics.peRatio)} color={peColor(metrics.peRatio)} />
-        <MetricRow label="P/B Ratio" value={fmt(metrics.pbRatio)} color={pbColor(metrics.pbRatio)} />
-        <MetricRow label="P/S Ratio" value={fmt(metrics.psRatio)} />
-        <MetricRow label="P/CF Ratio" value={fmt(metrics.pcfRatio)} />
+        <p className="text-[12px] font-semibold text-slate-500 mb-3">Basket valuation</p>
+        <MetricRow label="P/E ratio" value={fmt(metrics.peRatio)} color={peColor(metrics.peRatio)} />
+        <MetricRow label="P/B ratio" value={fmt(metrics.pbRatio)} color={pbColor(metrics.pbRatio)} />
+        <MetricRow label="P/S ratio" value={fmt(metrics.psRatio)} />
+        <MetricRow label="P/CF ratio" value={fmt(metrics.pcfRatio)} />
       </div>
 
       {/* Value Score */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-        <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-3">Value Score</p>
+        <p className="text-[12px] font-semibold text-slate-500 mb-3">Value score</p>
         <ScoreGauge score={metrics.valueScore} label={metrics.valueScoreLabel} />
         <div className="mt-3 space-y-1">
-          <div className="flex justify-between text-[10px] text-slate-400">
+          <div className="flex justify-between text-[11px] text-slate-400">
             <span>P/E contribution</span><span className="font-mono">{metrics.scoreBreakdown.pe}/30</span>
           </div>
-          <div className="flex justify-between text-[10px] text-slate-400">
+          <div className="flex justify-between text-[11px] text-slate-400">
             <span>P/B contribution</span><span className="font-mono">{metrics.scoreBreakdown.pb}/25</span>
           </div>
-          <div className="flex justify-between text-[10px] text-slate-400">
+          <div className="flex justify-between text-[11px] text-slate-400">
             <span>Yield contribution</span><span className="font-mono">{metrics.scoreBreakdown.yieldPts}/25</span>
           </div>
-          <div className="flex justify-between text-[10px] text-slate-400">
+          <div className="flex justify-between text-[11px] text-slate-400">
             <span>Expense penalty</span><span className="font-mono text-red-400">−{metrics.scoreBreakdown.expensePenalty}</span>
           </div>
         </div>
@@ -106,8 +114,8 @@ export function ETFMetricsGrid({ metrics }: { metrics: ETFMetrics }) {
 
       {/* Fund Profile */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-        <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-3">Fund Profile</p>
-        <MetricRow label="Expense Ratio" value={er} />
+        <p className="text-[12px] font-semibold text-slate-500 mb-3">Fund profile</p>
+        <MetricRow label="Expense ratio" value={er} />
         <MetricRow label="Issuer" value={metrics.issuer ?? '—'} />
         <MetricRow label="Category" value={metrics.category ?? '—'} />
         <MetricRow label="Management" value={metrics.managementStyle ?? '—'} />
@@ -115,9 +123,9 @@ export function ETFMetricsGrid({ metrics }: { metrics: ETFMetrics }) {
 
       {/* Income */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-        <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-3">Income</p>
-        <MetricRow label="Trailing Yield" value={yld} color={metrics.yield && metrics.yield > 0.02 ? 'text-emerald-600' : 'text-slate-800'} />
-        <MetricRow label="Annual Dividend" value={metrics.dividendRate != null ? `$${metrics.dividendRate.toFixed(2)}` : '—'} />
+        <p className="text-[12px] font-semibold text-slate-500 mb-3">Income</p>
+        <MetricRow label="Trailing yield" value={yld} color={metrics.yield && metrics.yield > 0.02 ? 'text-emerald-600' : 'text-slate-800'} />
+        <MetricRow label="Annual dividend" value={metrics.dividendRate != null ? `$${metrics.dividendRate.toFixed(2)}` : '—'} />
       </div>
     </div>
   )

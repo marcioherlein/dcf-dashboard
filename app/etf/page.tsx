@@ -35,7 +35,7 @@ export default function ETFTrackerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFB]">
+    <div className="min-h-screen bg-[#F1F5F9]">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-4 sm:px-8 pt-4 sm:pt-8">
         <div className="max-w-7xl mx-auto">
@@ -50,7 +50,7 @@ export default function ETFTrackerPage() {
           </p>
 
           {/* Search */}
-          <div className="ml-11 mb-4">
+          <div className="mb-4">
             <ETFSearchBar />
           </div>
 
