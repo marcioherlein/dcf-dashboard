@@ -124,6 +124,21 @@ export async function getAnnualBalanceSheet(ticker: string): Promise<any[]> {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function getAnnualIncomeStatement(ticker: string): Promise<any[]> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rows: any[] = await yf.fundamentalsTimeSeries(ticker, {
+      type: 'annual',
+      module: 'income-statement',
+      period1: '2015-01-01',
+    })
+    return rows ?? []
+  } catch {
+    return []
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getAnnualCashFlow(ticker: string): Promise<any[]> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

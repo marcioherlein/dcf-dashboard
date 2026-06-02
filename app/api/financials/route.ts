@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getFmpBundle, type FmpIncomeStatement, type FmpBalanceSheet, type FmpCashFlowStatement } from '@/lib/data/fmpClient'
-import { getFinancials, getQuote, getHistorical, getSPYHistorical, getFXRate, getPeerQuotes, getAnnualBalanceSheet, getAnnualCashFlow } from '@/lib/data/yahooClient'
+import { getFinancials, getQuote, getHistorical, getSPYHistorical, getFXRate, getPeerQuotes, getAnnualBalanceSheet, getAnnualCashFlow, getAnnualIncomeStatement } from '@/lib/data/yahooClient'
 import { calculateBeta } from '@/lib/dcf/calculateBeta'
 import { calculateWACC, extractWACCInputs } from '@/lib/dcf/calculateWACC'
 import { projectCashFlows, extractFCFInputs } from '@/lib/dcf/projectCashFlows'
@@ -30,6 +30,8 @@ export async function GET(req: NextRequest) {
     ])
     // Sequential after main batch — avoids Yahoo rate-limiting from too many simultaneous calls
     const annualCFRows = await getAnnualCashFlow(ticker).catch(() => [])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const annualISRows: any[] = await getAnnualIncomeStatement(ticker).catch(() => [])
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const fin = financials as any
@@ -461,7 +463,10 @@ export async function GET(req: NextRequest) {
     const yahooRevYears   = historicalRevenues.filter((r) => r > 0).length
     const fmpRevYears     = (fmp.incomeStatements as { revenue?: number }[])
       .filter(s => (s.revenue ?? 0) > 0).length
-    const nonZeroRevYears = Math.max(yahooRevYears, fmpRevYears)
+    // fundamentalsTimeSeries is the same source the Financials tab uses — includes S-1 data for recent IPOs
+    const tsRevYears      = annualISRows
+      .filter(r => (r.totalRevenue ?? r.operatingRevenue ?? 0) > 0).length
+    const nonZeroRevYears = Math.max(yahooRevYears, fmpRevYears, tsRevYears)
 
     const vetoReasons: string[] = []
     if (companyType === 'etf') {
