@@ -876,6 +876,69 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                     })()}
                   </div>
                 )}
+                {/* Revenue Forecast Bar Chart */}
+                {(() => {
+                  const annual: any[] = statementsData?.annual?.incomeStatement ?? []
+                  const histRevs = annual
+                    .map((r: any) => ({
+                      year: String(r.endDate ?? '').slice(0, 4),
+                      value: (r.totalRevenue ?? null) as number | null,
+                      isProjected: false,
+                    }))
+                    .filter(r => r.year.length === 4 && r.value != null)
+                    .slice(-4)
+
+                  const fwdEst: any[] = financialsData?.analystForwardEstimates ?? []
+                  const fwdRevs = fwdEst
+                    .filter((r: any) => r.revenue.avg != null)
+                    .map((r: any) => ({
+                      year: r.endDate ? String(new Date(r.endDate).getFullYear()) : r.period,
+                      value: r.revenue.avg as number,
+                      isProjected: true,
+                      growth: r.revenue.growth as number | null,
+                    }))
+
+                  const allBars = [...histRevs, ...fwdRevs]
+                  if (allBars.length < 2) return null
+
+                  const maxVal = Math.max(...allBars.map(b => b.value ?? 0))
+                  const fmtRev = (v: number) => v >= 1e12 ? (v / 1e12).toFixed(1) + 'T' : v >= 1e9 ? (v / 1e9).toFixed(1) + 'B' : v >= 1e6 ? (v / 1e6).toFixed(0) + 'M' : v.toFixed(0)
+
+                  return (
+                    <div>
+                      <p className="text-[13px] font-semibold text-slate-700 mb-3">Revenue Forecast</p>
+                      <div className="flex items-end gap-1.5 h-36 px-1">
+                        {allBars.map((bar, i) => {
+                          const val = bar.value ?? 0
+                          const heightPct = maxVal > 0 ? Math.max(4, (val / maxVal) * 100) : 4
+                          const gr = (bar as any).growth
+                          return (
+                            <div key={`${bar.year}-${i}`} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-1">
+                              {gr != null && (
+                                <span className={`text-[9px] font-semibold ${gr >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                                  {gr >= 0 ? '+' : ''}{(gr * 100).toFixed(0)}%
+                                </span>
+                              )}
+                              <div className="relative w-full flex items-end" style={{ height: `${heightPct}%` }}>
+                                <div
+                                  className={`w-full rounded-t-sm transition-all ${bar.isProjected ? 'bg-blue-200 border border-dashed border-blue-400' : 'bg-blue-500'}`}
+                                  style={{ height: '100%' }}
+                                  title={`${bar.year}: ${sym}${fmtRev(val)}`}
+                                />
+                              </div>
+                              <span className="text-[9px] font-medium text-slate-500 truncate max-w-full">{bar.year}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                      <div className="flex items-center gap-3 mt-2">
+                        <span className="flex items-center gap-1 text-[10px] text-slate-500"><span className="inline-block w-3 h-2 rounded-sm bg-blue-500" />Actual</span>
+                        <span className="flex items-center gap-1 text-[10px] text-slate-500"><span className="inline-block w-3 h-2 rounded-sm bg-blue-200 border border-dashed border-blue-400" />Estimate</span>
+                      </div>
+                    </div>
+                  )
+                })()}
+
                 {/* A6: data source disclosure */}
                 <p className="text-[11px] text-slate-400 leading-relaxed">
                   Analyst targets represent Wall Street consensus sourced from Yahoo Finance. They may differ from our intrinsic value model, which uses discounted cash flow analysis. Targets are typically 12-month forward estimates.
