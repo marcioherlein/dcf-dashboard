@@ -11,14 +11,19 @@ const serviceClient = () =>
   )
 
 async function sendWelcomeEmail(email: string, name: string | null | undefined) {
-  if (!process.env.RESEND_API_KEY) return
+  if (!process.env.RESEND_API_KEY) {
+    console.error('[auth] RESEND_API_KEY is not set — skipping welcome email')
+    return
+  }
+  console.log('[auth] sending welcome email to', email)
   const resend = new Resend(process.env.RESEND_API_KEY)
-  await resend.emails.send({
+  const result = await resend.emails.send({
     from: 'insic <team@insic.app>',
     to: email,
     subject: 'Welcome to insic — your first stock analysis awaits',
     react: WelcomeEmail({ name: name ?? null }),
   })
+  console.log('[auth] welcome email result:', JSON.stringify(result))
 }
 
 export const authOptions: NextAuthOptions = {
@@ -55,7 +60,9 @@ export const authOptions: NextAuthOptions = {
 
           if (isNew) {
             // Fire and forget — never block login
-            sendWelcomeEmail(user.email, user.name).catch(() => {})
+            sendWelcomeEmail(user.email, user.name).catch((err) => {
+              console.error('[auth] welcome email failed:', err?.message ?? err)
+            })
           }
         } catch {
           // Never block login if email capture fails
