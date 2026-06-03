@@ -16,14 +16,14 @@ const SENTIMENT_RULES: Array<{ pattern: RegExp; label: Sentiment }> = [
   { pattern: /miss|warning|slump|plunge|fall|decline|weak|disapp|concern|bear|pessim|layoff|cut|worr/i, label: 'Bearish' },
 ]
 
-const SENTIMENT_STYLE: Record<Sentiment, { badge: string; border: string; dot: string }> = {
-  Bullish:   { badge: 'bg-emerald-50 text-emerald-700 border-emerald-200', border: 'border-l-emerald-400', dot: 'bg-emerald-400' },
-  Bearish:   { badge: 'bg-red-50 text-red-600 border-red-200',             border: 'border-l-red-400',     dot: 'bg-red-400' },
-  Earnings:  { badge: 'bg-blue-50 text-blue-700 border-blue-200',           border: 'border-l-blue-400',    dot: 'bg-blue-400' },
-  Guidance:  { badge: 'bg-violet-50 text-violet-700 border-violet-200',     border: 'border-l-violet-400',  dot: 'bg-violet-400' },
-  Upgrade:   { badge: 'bg-emerald-50 text-emerald-700 border-emerald-200',  border: 'border-l-emerald-500', dot: 'bg-emerald-500' },
-  Downgrade: { badge: 'bg-orange-50 text-orange-700 border-orange-200',     border: 'border-l-orange-400',  dot: 'bg-orange-400' },
-  Neutral:   { badge: 'bg-slate-100 text-slate-500 border-slate-200',       border: 'border-l-slate-200',   dot: 'bg-slate-300' },
+const SENTIMENT_STYLE: Record<Sentiment, { badge: string; card: string; dot: string }> = {
+  Bullish:   { badge: 'bg-emerald-50 text-emerald-700 border-emerald-200', card: 'border-emerald-200 bg-emerald-50/25', dot: 'bg-emerald-400' },
+  Bearish:   { badge: 'bg-red-50 text-red-600 border-red-200',             card: 'border-red-200 bg-red-50/25',        dot: 'bg-red-400' },
+  Earnings:  { badge: 'bg-blue-50 text-blue-700 border-blue-200',          card: 'border-blue-200 bg-blue-50/20',      dot: 'bg-blue-400' },
+  Guidance:  { badge: 'bg-violet-50 text-violet-700 border-violet-200',    card: 'border-violet-200 bg-violet-50/20',  dot: 'bg-violet-400' },
+  Upgrade:   { badge: 'bg-emerald-50 text-emerald-700 border-emerald-200', card: 'border-emerald-200 bg-emerald-50/25',dot: 'bg-emerald-500' },
+  Downgrade: { badge: 'bg-orange-50 text-orange-700 border-orange-200',    card: 'border-orange-200 bg-orange-50/20',  dot: 'bg-orange-400' },
+  Neutral:   { badge: 'bg-slate-100 text-slate-500 border-slate-200',      card: 'border-slate-200 bg-white',          dot: 'bg-slate-300' },
 }
 
 // Stable color for publisher initial avatar (hashed from publisher name)
@@ -58,7 +58,7 @@ function formatTime(epochSeconds: number): { relative: string; absolute: string;
 
 function SkeletonCard() {
   return (
-    <div className="rounded-xl border border-slate-200 border-l-4 border-l-slate-200 bg-white px-4 py-4 animate-pulse min-h-[88px]">
+    <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 animate-pulse min-h-[88px]">
       <div className="h-4 bg-slate-200 rounded w-4/5 mb-1.5" />
       <div className="h-3.5 bg-slate-200 rounded w-3/5 mb-3" />
       <div className="flex items-center gap-2">
@@ -170,7 +170,7 @@ export default function NewsPanel({ ticker }: { ticker: string }) {
                 target="_blank"
                 rel="noreferrer"
                 variants={reduced ? {} : stagger.item}
-                className={`group block rounded-xl border border-slate-200 border-l-4 bg-white px-4 py-3.5 hover:border-blue-200 hover:bg-blue-50/30 transition-all ${sentStyle.border}`}
+                className={`group block rounded-xl border px-4 py-3.5 hover:border-blue-200 hover:bg-blue-50/30 transition-all ${sentStyle.card}`}
               >
                 {/* Title row */}
                 <p className="text-[13.5px] font-semibold leading-snug text-slate-800 group-hover:text-blue-700 transition-colors mb-2.5 line-clamp-2">

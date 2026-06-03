@@ -92,7 +92,7 @@ export default function FinancialCharts({
   const CHART_H  = 168
   const show = chartsToShow ?? (['revNI', 'fcf', 'margins', 'ebitda', 'revGrowth', 'fcfGrowth', 'multiples'] as ChartKey[])
   const isSingle = show.length === 1
-  const sectionTitle = 'text-sm font-semibold text-slate-700 mb-3'
+  const sectionTitle = 'text-[13px] font-semibold text-slate-700 mb-3'
   const panel        = 'rounded-xl card p-4 sm:p-5'
 
   // ── Chart 1 data: Revenue & Net Income ──────────────────────────────────────
@@ -387,7 +387,7 @@ export default function FinancialCharts({
                 <Line type="monotone" dataKey="ebitda"  stroke="#7C3AED" strokeWidth={2} dot={{ r: 3, fill: '#7C3AED', strokeWidth: 0 }} connectNulls isAnimationActive={false} />
                 <Line type="monotone" dataKey="ebit"    stroke="#D97706" strokeWidth={2} dot={{ r: 3, fill: '#D97706', strokeWidth: 0 }} connectNulls isAnimationActive={false} strokeDasharray="5 2" />
                 <Line type="monotone" dataKey="ni"      stroke="#059669" strokeWidth={2} dot={{ r: 3, fill: '#059669', strokeWidth: 0 }} connectNulls isAnimationActive={false} />
-                <Line type="monotone" dataKey="fcf"     stroke="#0891b2" strokeWidth={2} dot={{ r: 3, fill: '#0891b2', strokeWidth: 0 }} connectNulls isAnimationActive={false} strokeDasharray="3 2" />
+                <Line type="monotone" dataKey="fcf"     stroke="#06B6D4" strokeWidth={2} dot={{ r: 3, fill: '#06B6D4', strokeWidth: 0 }} connectNulls isAnimationActive={false} strokeDasharray="3 2" />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -422,7 +422,7 @@ export default function FinancialCharts({
                   {multiAbsData.map((d, i) => <Cell key={i} fill={(d.ni ?? 0) >= 0 ? '#059669' : '#DC2626'} />)}
                 </Bar>
                 <Bar dataKey="fcf" name="fcf" radius={[3,3,0,0]} maxBarSize={20} isAnimationActive={false}>
-                  {multiAbsData.map((d, i) => <Cell key={i} fill={(d.fcf ?? 0) >= 0 ? '#0891b2' : '#DC2626'} />)}
+                  {multiAbsData.map((d, i) => <Cell key={i} fill={(d.fcf ?? 0) >= 0 ? '#06B6D4' : '#DC2626'} />)}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>

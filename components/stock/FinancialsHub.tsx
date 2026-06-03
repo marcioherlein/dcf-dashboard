@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect } from 'react'
 import YahooFinancials from './YahooFinancials'
 import FinancialCharts from './FinancialCharts'
 import InsiderTransactionsWidget from './InsiderTransactionsWidget'
+import InfoTooltip from '@/components/ui/InfoTooltip'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyRow = Record<string, any>
@@ -161,12 +162,12 @@ function MetricsTable({ columns, rows, hideSparks }: { columns: string[]; rows: 
       <table className="min-w-[480px] w-full border-collapse">
         <thead>
           <tr className="border-b border-slate-100">
-            <th className="sticky left-0 z-10 bg-white px-3 sm:px-4 py-2 text-left text-[11px] font-medium text-slate-400 w-40 min-w-[160px] sm:w-56 sm:min-w-[224px]">
+            <th className="sticky left-0 z-10 bg-white px-3 sm:px-4 py-2 text-left text-[11px] font-semibold text-slate-500 w-40 min-w-[160px] sm:w-56 sm:min-w-[224px]">
               Metric
             </th>
             {columns.map(col => (
               <th key={col} className={`px-2 sm:px-3 py-2 text-right text-[11px] font-semibold whitespace-nowrap ${
-                col === 'TTM' ? 'text-amber-600' : 'text-slate-500'
+                col === 'TTM' ? 'text-amber-600 bg-amber-50/40' : 'text-slate-500'
               }`}>
                 {col}
               </th>
@@ -194,18 +195,15 @@ function MetricsTable({ columns, rows, hideSparks }: { columns: string[]; rows: 
                   {!hideSparks && <Sparkline values={row.values} positiveIsGood={pig} />}
                   {row.label}
                   {row.positiveIsGood != null && !row.indent && (
-                    <span className="ml-1 text-[9px] text-slate-400 font-normal" aria-label={row.positiveIsGood ? 'higher is better' : 'lower is better'}>
+                    <span className="ml-1 text-[10px] text-slate-400 font-normal" aria-label={row.positiveIsGood ? 'higher is better' : 'lower is better'}>
                       {row.positiveIsGood ? '↑' : '↓'}
                     </span>
                   )}
-                  {/* Fix P4: render tooltip as native title for turnover/days metrics */}
-                  {row.tooltip && (
-                    <span title={row.tooltip} className="ml-1 text-slate-400 cursor-help select-none" aria-label={row.tooltip}>ⓘ</span>
-                  )}
+                  {row.tooltip && <InfoTooltip content={row.tooltip} />}
                 </td>
                 {row.values.map((v, j) => (
                   <td key={j} className={`px-2 sm:px-3 py-2 text-right text-xs tabular-nums font-mono whitespace-nowrap ${
-                    columns[j] === 'TTM' ? 'font-semibold' : ''
+                    columns[j] === 'TTM' ? 'font-semibold bg-amber-50/30' : ''
                   } ${cellColor(v, row.fmt, pig)}`}>
                     {formatVal(v, row.fmt)}
                   </td>
@@ -384,6 +382,7 @@ function toM(v: unknown): number | null {
 
 export default function FinancialsHub({ statementsData, financialsData, currency = '$', reportingCurrency, highlight, initialSubTab }: Props) {
   const [subTab, setSubTab] = useState<SubTab>(initialSubTab ?? 'statements')
+  const [analyticsPeriod, setAnalyticsPeriod] = useState<'annual' | 'quarterly'>('annual')
 
   // When a navigation highlight arrives from Valuation Lab, switch to Statements sub-tab
   const highlightKey = highlight ? `${highlight.rowKey}:${highlight.statement}` : null
@@ -397,7 +396,40 @@ export default function FinancialsHub({ statementsData, financialsData, currency
     if (initialSubTab) setSubTab(initialSubTab)
   }, [initialSubTab])
 
-  const periods = useMemo(() => buildPeriods(statementsData), [statementsData])
+  const periods = useMemo(() => {
+    if (analyticsPeriod === 'quarterly' && statementsData?.quarterly) {
+      // Build quarterly periods for analytical tabs
+      const { quarterly, ttm } = statementsData
+      const isMap  = new Map<string, AnyRow>()
+      const bsMap  = new Map<string, AnyRow>()
+      const cfMap  = new Map<string, AnyRow>()
+      const label = (r: AnyRow) => {
+        const d = String(r.endDate ?? r.date ?? '')
+        if (!d) return ''
+        const dt = new Date(d)
+        const m = dt.getUTCMonth()
+        const yr = String(dt.getUTCFullYear()).slice(2)
+        const q = m < 3 ? 'Q1' : m < 6 ? 'Q2' : m < 9 ? 'Q3' : 'Q4'
+        return `${q}'${yr}`
+      }
+      for (const r of quarterly.incomeStatement ?? []) { const k = label(r); if (k) isMap.set(k, r) }
+      for (const r of quarterly.balanceSheet ?? [])    { const k = label(r); if (k) bsMap.set(k, r) }
+      for (const r of quarterly.cashFlow ?? [])        { const k = label(r); if (k) cfMap.set(k, r) }
+      const keys = Array.from(isMap.keys())
+      // Sort chronologically: Q1'20, Q2'20 … Q4'24. Use a stable sort via the source array order
+      const qPeriods: PeriodData[] = keys.map(k => ({
+        year: k,
+        is:   isMap.get(k) ?? {},
+        bs:   bsMap.get(k) ?? {},
+        cf:   cfMap.get(k) ?? {},
+      }))
+      if (ttm.incomeStatement || ttm.balanceSheet || ttm.cashFlow) {
+        qPeriods.push({ year: 'TTM', is: ttm.incomeStatement ?? {}, bs: ttm.balanceSheet ?? {}, cf: ttm.cashFlow ?? {} })
+      }
+      return qPeriods.slice(-9) // last 8 quarters + TTM
+    }
+    return buildPeriods(statementsData)
+  }, [statementsData, analyticsPeriod])
   const cols    = periods.map(p => p.year)
   const mets    = useMemo(() => periods.map(metrics), [periods])
 
@@ -586,7 +618,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
     <>
     <div className="rounded-xl card overflow-hidden">
       {/* Sub-tab nav — scrollable on mobile */}
-      <div className="flex items-center justify-between px-2 sm:px-5 pt-4 pb-0 border-b border-slate-100 overflow-x-auto scrollbar-none -webkit-overflow-scrolling-touch">
+      <div className="flex items-center justify-between px-2 sm:px-5 pt-4 pb-0 border-b border-slate-100 overflow-x-auto scrollbar-none">
         <div role="tablist" className="flex gap-0 min-w-max">
           {SUB_TABS.map(({ id, label }) => (
             <button
@@ -605,6 +637,23 @@ export default function FinancialsHub({ statementsData, financialsData, currency
             </button>
           ))}
         </div>
+        {/* Annual / Quarterly toggle — only for analytical sub-tabs */}
+        {['growth', 'profitability', 'solvency'].includes(subTab) && (
+          <div className="flex rounded-lg overflow-hidden border border-slate-200 text-[11px] shrink-0 ml-3">
+            <button
+              onClick={() => setAnalyticsPeriod('annual')}
+              className={`px-2.5 py-1.5 transition-colors ${analyticsPeriod === 'annual' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-slate-400 hover:bg-slate-50'}`}
+            >
+              Annual
+            </button>
+            <button
+              onClick={() => setAnalyticsPeriod('quarterly')}
+              className={`px-2.5 py-1.5 border-l border-slate-200 transition-colors ${analyticsPeriod === 'quarterly' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-slate-400 hover:bg-slate-50'}`}
+            >
+              Quarterly
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Per-tab context strip */}
@@ -685,7 +734,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                   <div className="grid grid-cols-3 sm:grid-cols-6 divide-x divide-slate-100">
                     {cagrItems.map((item) => (
                       <div key={item.label} className="px-3 py-2.5">
-                        <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5 truncate">{item.label}</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5 truncate">{item.label}</p>
                         <p className={`text-[15px] font-bold tabular-nums leading-tight ${item.color}`}>{item.value}</p>
                       </div>
                     ))}
@@ -743,7 +792,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                       return (
                         <div key={p.year} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-0.5">
                           {yoy != null && (
-                            <span className={`text-[8px] font-semibold leading-none ${isUp ? 'text-red-500' : isDn ? 'text-emerald-600' : 'text-slate-400'}`}>
+                            <span className={`text-[10px] font-semibold leading-none ${isUp ? 'text-red-500' : isDn ? 'text-emerald-600' : 'text-slate-400'}`}>
                               {isUp ? '+' : isDn ? '' : ''}{(yoy * 100).toFixed(1)}%
                             </span>
                           )}
@@ -751,14 +800,14 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                             <div className={`w-full h-full rounded-t-sm ${isUp ? 'bg-red-300' : isDn ? 'bg-emerald-400' : 'bg-slate-300'}`}
                               title={`${p.year}: ${fmtShares(p.sharesM)}`} />
                           </div>
-                          <span className="text-[8px] text-slate-400 truncate max-w-full">{p.year}</span>
+                          <span className="text-[10px] text-slate-400 truncate max-w-full">{p.year}</span>
                         </div>
                       )
                     })}
                   </div>
                   <div className="flex items-center gap-4 mt-1.5">
-                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Decreasing (buybacks)</span>
-                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />Increasing (dilution)</span>
+                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Decreasing (buybacks)</span>
+                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />Increasing (dilution)</span>
                   </div>
                 </div>
               )
@@ -804,7 +853,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                       return (
                         <div key={p.year} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-0.5">
                           {yoy != null && (
-                            <span className={`text-[8px] font-semibold leading-none ${yoy >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                            <span className={`text-[10px] font-semibold leading-none ${yoy >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                               {yoy >= 0 ? '+' : ''}{(yoy * 100).toFixed(0)}%
                             </span>
                           )}
@@ -812,7 +861,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                             <div className={`w-full h-full rounded-t-sm ${isPos ? 'bg-emerald-500' : 'bg-red-400'}`}
                               title={`${p.year}: EPS ${isPos ? '+' : ''}$${val.toFixed(2)}`} />
                           </div>
-                          <span className="text-[8px] text-slate-400 truncate max-w-full">{p.year}</span>
+                          <span className="text-[10px] text-slate-400 truncate max-w-full">{p.year}</span>
                         </div>
                       )
                     })}
@@ -826,48 +875,8 @@ export default function FinancialsHub({ statementsData, financialsData, currency
 
       {/* ── Profitability ── */}
       {subTab === 'profitability' && hasData && (() => {
-        const latestMet = mets[mets.length - 1]
-        const fcfMarginVal = latestMet?.fcf != null && latestMet?.rev != null && latestMet.rev > 0
-          ? latestMet.fcf / latestMet.rev : null
-
-        const marginSummary = [
-          { label: 'Gross Margin',   value: latestMet?.grossMargin  },
-          { label: 'EBITDA Margin',  value: latestMet?.ebitdaMargin },
-          { label: 'EBIT Margin',    value: latestMet?.ebitMargin   },
-          { label: 'Net Margin',     value: latestMet?.netMargin    },
-          { label: 'FCF Margin',     value: fcfMarginVal            },
-        ]
-
         return (
           <div>
-            {/* Profit Margins summary box */}
-            <div className="px-4 sm:px-5 pt-4 pb-0">
-              <div className="rounded-xl border border-slate-200 bg-white p-4 max-w-sm">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Profit Margins</p>
-                <div className="space-y-2.5">
-                  {marginSummary.map(({ label, value }) => (
-                    <div key={label}>
-                      <div className="flex items-center justify-between mb-0.5">
-                        <span className="text-[12px] text-slate-600">{label}</span>
-                        <span className={`text-[12px] font-bold tabular-nums ${value != null ? 'text-slate-800' : 'text-slate-400'}`}>
-                          {value != null ? `${(value * 100).toFixed(1)}%` : '—'}
-                        </span>
-                      </div>
-                      {value != null && value > 0 && (
-                        <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                          <div className="h-full rounded-full bg-emerald-500" style={{ width: `${Math.min(100, value * 100)}%` }} />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                {isFinancialSector && (
-                  <p className="text-[10px] text-slate-400 mt-3 pt-2.5 border-t border-slate-100">
-                    Gross Profit and EBITDA are not standard metrics for financial companies.
-                  </p>
-                )}
-              </div>
-            </div>
             <div className="px-4 sm:px-5 pt-4 pb-4">
               <MetricsTable columns={cols} rows={profitRows} />
             </div>
@@ -908,7 +917,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                         style={{ bottom: `${((wacc / maxAbs) * 50 + 50).toFixed(1)}%`, transform: 'translateY(50%)' }}
                       >
                         <div className="flex-1 border-t-2 border-dashed border-amber-400" />
-                        <span className="text-[9px] font-bold text-amber-600 bg-white px-1 shrink-0">
+                        <span className="text-[10px] font-bold text-amber-600 bg-white px-1 shrink-0">
                           WACC {(wacc * 100).toFixed(1)}%
                         </span>
                       </div>
@@ -935,7 +944,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                             />
                             {/* Value label above bar */}
                             <span
-                              className={`absolute text-[8px] font-semibold left-0 right-0 text-center leading-none ${aboveWacc ? 'text-emerald-600' : 'text-red-500'}`}
+                              className={`absolute text-[10px] font-semibold left-0 right-0 text-center leading-none ${aboveWacc ? 'text-emerald-600' : 'text-red-500'}`}
                               style={{ bottom: `${barBottom + barH + 1}%` }}
                             >
                               {(val * 100).toFixed(0)}%
@@ -947,15 +956,15 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                     {/* X-axis labels (fixed margin below bars) */}
                     <div className="flex gap-1.5 mt-4">
                       {roicPoints.map((p) => (
-                        <div key={p.year} className="flex-1 text-center text-[8px] text-slate-400">{p.year}</div>
+                        <div key={p.year} className="flex-1 text-center text-[10px] text-slate-400">{p.year}</div>
                       ))}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4 mt-2">
-                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />ROIC above WACC</span>
-                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />ROIC below WACC</span>
-                    {wacc != null && <span className="flex items-center gap-1 text-[9px] text-amber-500"><span className="w-5 border-t-2 border-dashed border-amber-400 inline-block" />WACC</span>}
+                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />ROIC above WACC</span>
+                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />ROIC below WACC</span>
+                    {wacc != null && <span className="flex items-center gap-1 text-[10px] text-amber-500"><span className="w-5 border-t-2 border-dashed border-amber-400 inline-block" />WACC</span>}
                   </div>
                   <p className="text-[10px] text-slate-400 mt-1.5 leading-snug">
                     ROIC above WACC = company creates value for shareholders. Below WACC = capital is being destroyed even if profits appear positive.
@@ -999,22 +1008,22 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                       return (
                         <div key={p.year} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-0.5">
                           {yoy != null && (
-                            <span className={`text-[8px] font-semibold leading-none ${yoy >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                            <span className={`text-[10px] font-semibold leading-none ${yoy >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                               {yoy >= 0 ? '+' : ''}{(yoy * 100).toFixed(0)}%
                             </span>
                           )}
                           <div className="relative w-full" style={{ height: `${hp}%` }}>
-                            <div className={`w-full h-full rounded-t-sm ${isPositive ? 'bg-teal-400' : 'bg-red-300'}`}
+                            <div className={`w-full h-full rounded-t-sm ${isPositive ? 'bg-[#059669]' : 'bg-red-300'}`}
                               title={`${p.year}: FCF ${fmtM(val)}`} />
                           </div>
-                          <span className="text-[8px] text-slate-400 truncate max-w-full">{p.year}</span>
+                          <span className="text-[10px] text-slate-400 truncate max-w-full">{p.year}</span>
                         </div>
                       )
                     })}
                   </div>
                   <div className="flex items-center gap-4 mt-1.5">
-                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-teal-400 inline-block" />Positive FCF</span>
-                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />Negative FCF (cash burn)</span>
+                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-[#059669] inline-block" />Positive FCF</span>
+                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />Negative FCF (cash burn)</span>
                   </div>
                 </div>
               )
@@ -1057,7 +1066,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                         <div className="w-full flex gap-0.5 items-end h-full">
                           {/* Gross margin */}
                           <div
-                            className="flex-1 min-w-0 bg-blue-400 rounded-t-sm"
+                            className="flex-1 min-w-0 bg-[#2563EB] rounded-t-sm"
                             style={{ height: `${Math.max(2, (p.grossM! / maxM) * 100)}%` }}
                             title={`${p.year} Gross Margin: ${(p.grossM! * 100).toFixed(1)}%`}
                           />
@@ -1078,14 +1087,14 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                             />
                           ) : <div className="flex-1" />}
                         </div>
-                        <span className="text-[8px] text-slate-400 truncate max-w-full">{p.year}</span>
+                        <span className="text-[10px] text-slate-400 truncate max-w-full">{p.year}</span>
                       </div>
                     ))}
                   </div>
                   <div className="flex items-center gap-4 mt-1.5 flex-wrap">
-                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-blue-400 inline-block" />Gross</span>
-                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-violet-400 inline-block" />Operating</span>
-                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Net</span>
+                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-[#2563EB] inline-block" />Gross</span>
+                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-violet-400 inline-block" />Operating</span>
+                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Net</span>
                   </div>
                 </div>
               )
@@ -1123,7 +1132,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                         <div key={p.year} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-0.5">
                           <div className="w-full flex gap-0.5 items-end h-full">
                             <div
-                              className="flex-[2] min-w-0 bg-teal-400 rounded-t-sm"
+                              className="flex-[2] min-w-0 bg-[#059669] rounded-t-sm"
                               style={{ height: `${ocfH}%` }}
                               title={`${p.year} Operating CF: ${currency}${p.ocf!.toFixed(0)}M`}
                             />
@@ -1135,15 +1144,15 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                               />
                             ) : <div className="flex-1" />}
                           </div>
-                          <span className="text-[8px] text-slate-400 truncate max-w-full">{p.year}</span>
+                          <span className="text-[10px] text-slate-400 truncate max-w-full">{p.year}</span>
                         </div>
                       )
                     })}
                   </div>
                   <div className="flex items-center gap-4 mt-1.5 flex-wrap">
-                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-teal-400 inline-block" />Operating CF</span>
-                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-500 inline-block" />Free CF</span>
-                    <span className="text-[9px] text-slate-400">Both scaled to max OCF. FCF conversion = FCF/OCF</span>
+                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-[#059669] inline-block" />Operating CF</span>
+                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-500 inline-block" />Free CF</span>
+                    <span className="text-[10px] text-slate-400">Both scaled to max OCF. FCF conversion = FCF/OCF</span>
                   </div>
                 </div>
               )
@@ -1218,7 +1227,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                     <div className={`grid ${cols} divide-x divide-slate-100`}>
                       {items.map((item) => (
                         <div key={item.label} className="px-3 py-2.5">
-                          <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5 truncate">{item.label}</p>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5 truncate">{item.label}</p>
                           <p className={`text-[15px] font-bold tabular-nums leading-tight ${item.color}`}>{item.value}</p>
                         </div>
                       ))}
@@ -1285,7 +1294,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                         const color = isNeg ? 'bg-emerald-400' : 'bg-slate-400'
                         return (
                           <div key={p.year} className={`flex flex-col items-center flex-1 min-w-0 h-full ${hasMix ? 'justify-center' : 'justify-end'} gap-0.5`}>
-                            {!hasMix && <span className={`text-[8px] font-semibold leading-none ${isNeg ? 'text-emerald-600' : 'text-slate-500'}`}>{fmtND(val)}</span>}
+                            {!hasMix && <span className={`text-[10px] font-semibold leading-none ${isNeg ? 'text-emerald-600' : 'text-slate-500'}`}>{fmtND(val)}</span>}
                             {hasMix ? (
                               <div className="relative w-full flex flex-col items-center" style={{ height: '100%' }}>
                                 {isNeg ? (
@@ -1299,14 +1308,14 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                                 <div className={`w-full h-full rounded-t-sm ${color}`} title={`${p.year}: ${fmtND(val)}`} />
                               </div>
                             )}
-                            <span className="text-[8px] text-slate-400 truncate max-w-full shrink-0">{p.year}</span>
+                            <span className="text-[10px] text-slate-400 truncate max-w-full shrink-0">{p.year}</span>
                           </div>
                         )
                       })}
                     </div>
                     <div className="flex items-center gap-3 mt-2">
-                      <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Net cash (negative debt)</span>
-                      <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-slate-400 inline-block" />Net debt</span>
+                      <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Net cash (negative debt)</span>
+                      <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-slate-400 inline-block" />Net debt</span>
                     </div>
                   </div>
                 )
@@ -1425,7 +1434,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                                 <div className="relative w-full" style={{ height: `${hp}%` }}>
                                   <div className="w-full h-full rounded-t-sm bg-emerald-400" title={`${d.year}: ${fmtM(d.paid)}`} />
                                 </div>
-                                <span className="text-[8px] text-slate-400 truncate max-w-full">{d.year}</span>
+                                <span className="text-[10px] text-slate-400 truncate max-w-full">{d.year}</span>
                               </div>
                             )
                           })}
@@ -1508,15 +1517,15 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                             return (
                               <div key={i} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-0.5">
                                 {yoy != null && (
-                                  <span className={`text-[8px] font-semibold leading-none ${positive ? 'text-emerald-600' : 'text-red-500'}`}>
+                                  <span className={`text-[10px] font-semibold leading-none ${positive ? 'text-emerald-600' : 'text-red-500'}`}>
                                     {positive ? '+' : ''}{(yoy * 100).toFixed(0)}%
                                   </span>
                                 )}
                                 <div className="relative w-full" style={{ height: `${hp}%` }}>
-                                  <div className={`w-full h-full rounded-t-sm ${positive ? 'bg-blue-400' : 'bg-slate-300'}`}
+                                  <div className={`w-full h-full rounded-t-sm ${positive ? 'bg-[#2563EB]' : 'bg-slate-300'}`}
                                     title={`${quarterLabel(r)}: ${sym}${fmtRevShort(val ?? 0)}`} />
                                 </div>
-                                <span className="text-[8px] text-slate-400 truncate max-w-full">{quarterLabel(r)}</span>
+                                <span className="text-[10px] text-slate-400 truncate max-w-full">{quarterLabel(r)}</span>
                               </div>
                             )
                           })}
@@ -1540,7 +1549,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                             return (
                               <div key={i} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-0.5">
                                 {beat != null && (
-                                  <span className={`text-[8px] font-bold leading-none ${hasBeat ? 'text-emerald-600' : hasMiss ? 'text-red-500' : 'text-slate-400'}`}>
+                                  <span className={`text-[10px] font-bold leading-none ${hasBeat ? 'text-emerald-600' : hasMiss ? 'text-red-500' : 'text-slate-400'}`}>
                                     {hasBeat ? '▲' : hasMiss ? '▼' : '—'}
                                   </span>
                                 )}
@@ -1548,15 +1557,15 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                                   <div className={`w-full h-full rounded-t-sm ${hasBeat ? 'bg-emerald-400' : hasMiss ? 'bg-red-300' : isPositive ? 'bg-violet-400' : 'bg-slate-300'}`}
                                     title={`${quarterLabel(r)}: ${sym}${val?.toFixed(2) ?? '—'}${beat != null ? ` (${beat > 0 ? '+' : ''}${beat.toFixed(1)}% surprise)` : ''}`} />
                                 </div>
-                                <span className="text-[8px] text-slate-400 truncate max-w-full">{quarterLabel(r)}</span>
+                                <span className="text-[10px] text-slate-400 truncate max-w-full">{quarterLabel(r)}</span>
                               </div>
                             )
                           })}
                         </div>
                         <div className="flex items-center gap-3 mt-1.5">
-                          <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Beat</span>
-                          <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />Miss</span>
-                          <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-violet-400 inline-block" />Positive</span>
+                          <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Beat</span>
+                          <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />Miss</span>
+                          <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-violet-400 inline-block" />Positive</span>
                         </div>
                       </div>
                     )}
@@ -1733,7 +1742,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                           return (
                             <div key={`${bar.year}-${i}`} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-1">
                               {gr != null && (
-                                <span className={`text-[9px] font-semibold ${gr >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                                <span className={`text-[10px] font-semibold ${gr >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                                   {gr >= 0 ? '+' : ''}{(gr * 100).toFixed(0)}%
                                 </span>
                               )}
@@ -1744,7 +1753,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                                   title={`${bar.year}: ${sym}${fmtRev(val)}`}
                                 />
                               </div>
-                              <span className="text-[9px] font-medium text-slate-500 truncate max-w-full">{bar.year}</span>
+                              <span className="text-[10px] font-medium text-slate-500 truncate max-w-full">{bar.year}</span>
                             </div>
                           )
                         })}
@@ -1810,7 +1819,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                                 <tr key={row.period} className="hover:bg-slate-50/60 transition-colors">
                                   <td className="px-4 py-3 font-semibold text-slate-700">{periodLabel(row.period, row.endDate)}</td>
                                   {hasRevenue && <>
-                                    <td className="px-4 py-3 text-right tabular-nums text-slate-800 font-medium">
+                                    <td className="px-4 py-3 text-right tabular-nums font-mono text-slate-800 font-medium">
                                       {revAvg != null ? (revAvg >= 1e12 ? `${sym}${(revAvg / 1e12).toFixed(2)}T` : revAvg >= 1e9 ? `${sym}${(revAvg / 1e9).toFixed(1)}B` : revAvg >= 1e6 ? `${sym}${(revAvg / 1e6).toFixed(0)}M` : `${sym}${revAvg.toFixed(0)}`) : '—'}
                                       {row.revenue.analysts != null && <span className="text-[10px] text-slate-400 ml-1">({row.revenue.analysts})</span>}
                                     </td>
@@ -1819,7 +1828,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                                     </td>
                                   </>}
                                   {hasEPS && <>
-                                    <td className="px-4 py-3 text-right tabular-nums text-slate-800 font-medium">
+                                    <td className="px-4 py-3 text-right tabular-nums font-mono text-slate-800 font-medium">
                                       {epsAvg != null ? `${sym}${epsAvg.toFixed(2)}` : '—'}
                                       {row.eps.analysts != null && <span className="text-[10px] text-slate-400 ml-1">({row.eps.analysts})</span>}
                                     </td>
@@ -1984,10 +1993,10 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                                 {/* Current company row */}
                                 <tr className="bg-blue-50/60 font-semibold">
                                   <td className="px-3 py-2.5 text-blue-700 font-bold">{currTicker} ★</td>
-                                  <td className="px-3 py-2.5 text-right tabular-nums text-slate-800">{peEst != null ? peEst.toFixed(1) + '×' : '—'}</td>
-                                  <td className="px-3 py-2.5 text-right tabular-nums text-slate-800">{evEbitdaEst != null ? evEbitdaEst.toFixed(1) + '×' : '—'}</td>
-                                  <td className="px-3 py-2.5 text-right tabular-nums text-slate-800">{pbEst != null ? pbEst.toFixed(1) + '×' : '—'}</td>
-                                  <td className="px-3 py-2.5 text-right tabular-nums text-slate-800">{psEst != null ? psEst.toFixed(1) + '×' : '—'}</td>
+                                  <td className="px-3 py-2.5 text-right tabular-nums font-mono text-slate-800">{peEst != null ? peEst.toFixed(1) + '×' : '—'}</td>
+                                  <td className="px-3 py-2.5 text-right tabular-nums font-mono text-slate-800">{evEbitdaEst != null ? evEbitdaEst.toFixed(1) + '×' : '—'}</td>
+                                  <td className="px-3 py-2.5 text-right tabular-nums font-mono text-slate-800">{pbEst != null ? pbEst.toFixed(1) + '×' : '—'}</td>
+                                  <td className="px-3 py-2.5 text-right tabular-nums font-mono text-slate-800">{psEst != null ? psEst.toFixed(1) + '×' : '—'}</td>
                                 </tr>
                                 {peerComps.map(p => (
                                   <tr key={p.ticker} className="hover:bg-slate-50/60 transition-colors">
@@ -2058,7 +2067,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                         <span className={`w-2.5 h-2.5 rounded-full ${s.color}`} />
                         <span className="text-[13px] text-slate-600">{s.label}</span>
                       </div>
-                      <span className="text-[13px] font-bold tabular-nums text-slate-800">{s.pct.toFixed(1)}%</span>
+                      <span className="text-[13px] font-bold tabular-nums font-mono text-slate-800">{s.pct.toFixed(1)}%</span>
                     </div>
                     <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
                       <div className={`h-full rounded-full ${s.bar}`} style={{ width: `${s.pct}%` }} />

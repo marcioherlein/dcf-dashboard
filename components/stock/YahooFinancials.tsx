@@ -383,10 +383,10 @@ export default function YahooFinancials({ statementsData, currency = '$', report
               Quarterly
             </button>
           </div>
-          <button onClick={() => toggleAll(false)} className="text-[12px] text-slate-400 hover:text-slate-700 whitespace-nowrap min-h-[44px] px-2">
+          <button onClick={() => toggleAll(false)} className="text-[12px] text-slate-500 hover:text-slate-700 whitespace-nowrap min-h-[36px] px-2.5 py-1 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors">
             Collapse all
           </button>
-          <button onClick={() => toggleAll(true)} className="text-[12px] text-blue-600 hover:text-blue-700 whitespace-nowrap min-h-[44px] px-2">
+          <button onClick={() => toggleAll(true)} className="text-[12px] text-blue-600 hover:text-blue-700 whitespace-nowrap min-h-[36px] px-2.5 py-1 rounded-full border border-blue-200 hover:border-blue-300 hover:bg-blue-50/50 transition-colors">
             Expand all
           </button>
         </div>
@@ -403,7 +403,7 @@ export default function YahooFinancials({ statementsData, currency = '$', report
       )}
 
       <div className="px-4 pt-2 pb-1 text-[11px] text-slate-400 flex items-center gap-3">
-        <span>All figures in thousands ({reportingCurrency ?? currency}) · TTM = trailing twelve months</span>
+        <span>Values displayed in thousands (K), millions (M), or billions (B) · TTM = trailing twelve months{reportingCurrency && reportingCurrency !== currency ? ` · Reported in ${reportingCurrency}` : ''}</span>
         {/* Fix S1: show note when TTM data absent for this statement */}
         {ttmMissing && (
           <span className="text-slate-400 italic">TTM not available for this statement</span>
@@ -510,7 +510,7 @@ export default function YahooFinancials({ statementsData, currency = '$', report
       </div>
 
       <div className="px-4 py-2 text-[10px] text-slate-400">
-        Source: Yahoo Finance · Values in thousands · Empty rows hidden automatically
+        Source: Yahoo Finance · Empty rows hidden automatically
       </div>
     </div>
   )
