@@ -1182,9 +1182,51 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 <span className={`text-[12px] font-semibold px-3 py-1 rounded-full border ${ratingColor}`}>
                   {ratingLabel}
                 </span>
-                {nd != null && <span className="text-[11px] text-slate-400">Net Debt/EBITDA: {nd.toFixed(1)}×</span>}
               </div>
             )}
+
+            {/* Key Solvency Metrics grid */}
+            {(() => {
+              const latest = mets[mets.length - 1]
+              type SolvItem = { label: string; value: string; color: string }
+              const items: SolvItem[] = []
+              const xFmt = (v: number | null, inv?: boolean) => {
+                if (v == null) return null
+                const good = inv ? v < 0 : v >= 0
+                void good
+                return v.toFixed(1) + '×'
+              }
+              const addNum = (label: string, v: number | null, thresholds: [number, number], higherIsBetter: boolean) => {
+                if (v == null) return
+                const color = higherIsBetter
+                  ? (v >= thresholds[0] ? 'text-emerald-600' : v >= thresholds[1] ? 'text-blue-600' : 'text-red-500')
+                  : (v <= thresholds[0] ? 'text-emerald-600' : v <= thresholds[1] ? 'text-amber-600' : 'text-red-500')
+                items.push({ label, value: xFmt(v) ?? '—', color })
+              }
+              if (latest) {
+                addNum('Net Debt/EBITDA', latest.netDebtToEbitda, [-0.01, 3], false)
+                addNum('Interest Cov.',   latest.ebitCov,         [5, 3],     true)
+                addNum('Current Ratio',   latest.currRatio,        [2, 1],     true)
+                addNum('Quick Ratio',     latest.quickRatio,       [1.5, 1],   true)
+                addNum('Debt/Equity',     latest.debtToEq,         [0.5, 1.5], false)
+              }
+              if (items.length === 0) return null
+              const cols = items.length <= 3 ? `grid-cols-${items.length}` : items.length <= 4 ? 'grid-cols-4' : 'grid-cols-3 sm:grid-cols-5'
+              return (
+                <div className="px-4 sm:px-5 pt-3 pb-2">
+                  <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+                    <div className={`grid ${cols} divide-x divide-slate-100`}>
+                      {items.map((item) => (
+                        <div key={item.label} className="px-3 py-2.5">
+                          <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5 truncate">{item.label}</p>
+                          <p className={`text-[15px] font-bold tabular-nums leading-tight ${item.color}`}>{item.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
 
             <div className="border-t border-slate-100 px-4 sm:px-5 pt-4 pb-4">
               <MetricsTable columns={cols} rows={solvencyRows} />
