@@ -23,7 +23,10 @@ async function sendWelcomeEmail(email: string, name: string | null | undefined) 
     subject: 'Welcome to insic — your first stock analysis awaits',
     react: WelcomeEmail({ name: name ?? null }),
   })
-  console.log('[auth] welcome email result:', JSON.stringify(result))
+  if (result.error) {
+    throw new Error(`Resend error: ${result.error.message}`)
+  }
+  console.log('[auth] welcome email sent, id:', result.data?.id)
 }
 
 export const authOptions: NextAuthOptions = {
@@ -39,7 +42,7 @@ export const authOptions: NextAuthOptions = {
         try {
           const sb = serviceClient()
 
-          // Check if this user already exists
+          // Upsert first, then check if it was an insert (new user) via count
           const { data: existing } = await sb
             .from('users')
             .select('id')
@@ -48,7 +51,7 @@ export const authOptions: NextAuthOptions = {
 
           const isNew = !existing
 
-          await sb.from('users').upsert(
+          const { error: upsertError } = await sb.from('users').upsert(
             {
               email: user.email,
               name: user.name ?? null,
@@ -58,14 +61,18 @@ export const authOptions: NextAuthOptions = {
             { onConflict: 'email' },
           )
 
+          if (upsertError) {
+            console.error('[auth] upsert failed:', upsertError.message)
+          }
+
           if (isNew) {
-            // Fire and forget — never block login
             sendWelcomeEmail(user.email, user.name).catch((err) => {
               console.error('[auth] welcome email failed:', err?.message ?? err)
             })
           }
-        } catch {
-          // Never block login if email capture fails
+        } catch (err) {
+          console.error('[auth] signIn callback error:', err)
+          // Never block login
         }
       }
       return true
