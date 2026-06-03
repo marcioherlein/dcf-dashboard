@@ -155,6 +155,8 @@ export default function IncomeFlowCard({ statementsData, currency = 'USD' }: Inc
     const gap        = 10
     const labelX     = isRevenue ? x - gap : x + width + gap
     const anchor     = isRevenue ? 'end'   : 'start'
+    // on narrow screens, hide labels entirely for intermediate nodes to prevent overlap
+    const showName   = height >= 14 && (!isNarrow || isRevenue || isLeaf)
     const showValue  = fullLabel && height >= 26
     const showPct    = fullLabel && height >= 38
 
@@ -162,7 +164,7 @@ export default function IncomeFlowCard({ statementsData, currency = 'USD' }: Inc
       <g>
         <rect x={x} y={y} width={width} height={Math.max(height, 2)} rx={3} ry={3} fill={fill} />
 
-        {height >= 14 && (
+        {showName && (
           <text
             x={labelX}
             y={y + height / 2 - (showValue ? 9 : 0)}
