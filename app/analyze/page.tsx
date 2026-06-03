@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
@@ -849,7 +849,8 @@ function RecentlyViewed() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function AnalyzePage() {
+// Isolated to its own component so useSearchParams() is inside a Suspense boundary
+function AnalyzePageInner() {
   const searchParams = useSearchParams()
   const [quotes, setQuotes]     = useState<FeaturedQuote[]>(STATIC_QUOTES)
   const [dataStale, setDataStale] = useState(false)
@@ -915,5 +916,13 @@ export default function AnalyzePage() {
 
       </div>
     </div>
+  )
+}
+
+export default function AnalyzePage() {
+  return (
+    <Suspense>
+      <AnalyzePageInner />
+    </Suspense>
   )
 }
