@@ -1,12 +1,25 @@
 import { createClient } from '@supabase/supabase-js'
 import type { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
+import { Resend } from 'resend'
+import WelcomeEmail from '@/emails/WelcomeEmail'
 
 const serviceClient = () =>
   createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
+
+async function sendWelcomeEmail(email: string, name: string | null | undefined) {
+  if (!process.env.RESEND_API_KEY) return
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  await resend.emails.send({
+    from: 'insic <team@insic.app>',
+    to: email,
+    subject: 'Welcome to insic — your first stock analysis awaits',
+    react: WelcomeEmail({ name: name ?? null }),
+  })
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -42,11 +55,7 @@ export const authOptions: NextAuthOptions = {
 
           if (isNew) {
             // Fire and forget — never block login
-            fetch(`${process.env.NEXTAUTH_URL}/api/email/welcome`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: user.email, name: user.name }),
-            }).catch(() => {})
+            sendWelcomeEmail(user.email, user.name).catch(() => {})
           }
         } catch {
           // Never block login if email capture fails
