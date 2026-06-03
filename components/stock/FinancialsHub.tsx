@@ -879,6 +879,62 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 </div>
               )
             })()}
+
+            {/* FCF trend */}
+            {(() => {
+              const annualFCF = mets
+                .map((m, i) => ({ year: periods[i]?.year, fcf: m.fcf, rev: m.rev }))
+                .filter(p => p.year && p.year !== 'TTM' && p.fcf != null && p.rev != null && p.rev! > 0)
+                .slice(-6)
+              if (annualFCF.length < 2) return null
+              const maxAbsFcf = Math.max(...annualFCF.map(p => Math.abs(p.fcf!)), 0.01)
+              const latestFcfMargin = annualFCF[annualFCF.length - 1]
+              const fcfM = latestFcfMargin.fcf != null && latestFcfMargin.rev != null && latestFcfMargin.rev > 0
+                ? latestFcfMargin.fcf / latestFcfMargin.rev : null
+              const fmtM = (v: number) => {
+                const abs = Math.abs(v)
+                return (v < 0 ? '-' : '') + (abs >= 1e3 ? (abs / 1e3).toFixed(1) + 'B' : abs.toFixed(0) + 'M')
+              }
+              return (
+                <div className="px-4 sm:px-5 pb-4 border-t border-slate-100 pt-4">
+                  <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                    <p className="text-[13px] font-semibold text-slate-700">Free Cash Flow Trend</p>
+                    {fcfM != null && (
+                      <span className={`text-[11px] font-semibold tabular-nums ${fcfM > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                        FCF margin: {(fcfM * 100).toFixed(1)}%
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-end gap-1.5 h-24">
+                    {annualFCF.map((p) => {
+                      const val = p.fcf!
+                      const isPositive = val >= 0
+                      const hp = Math.max(6, (Math.abs(val) / maxAbsFcf) * 100)
+                      const prev = annualFCF[annualFCF.indexOf(p) - 1]?.fcf ?? null
+                      const yoy = prev != null && Math.abs(prev) > 0 ? (val - prev) / Math.abs(prev) : null
+                      return (
+                        <div key={p.year} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-0.5">
+                          {yoy != null && (
+                            <span className={`text-[8px] font-semibold leading-none ${yoy >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                              {yoy >= 0 ? '+' : ''}{(yoy * 100).toFixed(0)}%
+                            </span>
+                          )}
+                          <div className="relative w-full" style={{ height: `${hp}%` }}>
+                            <div className={`w-full h-full rounded-t-sm ${isPositive ? 'bg-teal-400' : 'bg-red-300'}`}
+                              title={`${p.year}: FCF ${fmtM(val)}`} />
+                          </div>
+                          <span className="text-[8px] text-slate-400 truncate max-w-full">{p.year}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <div className="flex items-center gap-4 mt-1.5">
+                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-teal-400 inline-block" />Positive FCF</span>
+                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />Negative FCF (cash burn)</span>
+                  </div>
+                </div>
+              )
+            })()}
           </div>
         )
       })()}
