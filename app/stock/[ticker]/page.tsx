@@ -560,6 +560,8 @@ function StockPageBody() {
                     valuationMethods={data.valuationMethods ?? null}
                     quote={data.quote}
                     analystTargetMean={data.quote.analystTargetMean ?? null}
+                    analystTargetLow={data.quote.analystTargetLow ?? null}
+                    analystTargetHigh={data.quote.analystTargetHigh ?? null}
                     marketCap={data.quote.marketCap ?? null}
                     peRatio={data.quote.peRatio ?? null}
                     beta={data.wacc?.inputs?.beta ?? null}

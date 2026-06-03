@@ -19,6 +19,9 @@ interface MarketInterpretationCardProps {
   reverseDCFText: string | null
   analystRecommendation: string
   analystTargetMean: number | null
+  analystTargetLow?: number | null
+  analystTargetHigh?: number | null
+  currentPrice?: number | null
   currency: string
 }
 
@@ -109,6 +112,9 @@ export default function MarketInterpretationCard({
   reverseDCFText,
   analystRecommendation,
   analystTargetMean,
+  analystTargetLow,
+  analystTargetHigh,
+  currentPrice,
   currency,
 }: MarketInterpretationCardProps) {
   const interp = buildInterpretation(upsidePct, confidence, reverseDCFInterpretation)
@@ -148,22 +154,84 @@ export default function MarketInterpretationCard({
 
       {/* Analyst consensus */}
       {showAnalyst && (
-        <div className="flex items-center justify-between gap-2 border-t border-[#E6ECF5] pt-3 mt-1">
-          <div>
-            <p className="text-[11px] font-[600] text-[#64748B] mb-0.5">
-              Analyst consensus
-            </p>
-            <p className={cn('text-[13px] font-[700]', recColor)}>{recLabel}</p>
-          </div>
-          {analystTargetMean != null && analystTargetMean > 0 && (
-            <div className="text-right">
+        <div className="flex flex-col gap-2 border-t border-[#E6ECF5] pt-3 mt-1">
+          <div className="flex items-center justify-between gap-2">
+            <div>
               <p className="text-[11px] font-[600] text-[#64748B] mb-0.5">
-                Target price
+                Analyst consensus
               </p>
-              <p className="text-[13px] font-[700] text-[#0F172A] tabular-nums">
-                {fmtPrice(analystTargetMean, currency)}
-              </p>
+              <p className={cn('text-[13px] font-[700]', recColor)}>{recLabel}</p>
             </div>
+            {analystTargetMean != null && analystTargetMean > 0 && (
+              <div className="text-right">
+                <p className="text-[11px] font-[600] text-[#64748B] mb-0.5">
+                  Target price
+                </p>
+                <p className="text-[13px] font-[700] text-[#0F172A] tabular-nums">
+                  {fmtPrice(analystTargetMean, currency)}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Price target range bar */}
+          {analystTargetLow != null && analystTargetHigh != null && analystTargetMean != null &&
+           currentPrice != null && currentPrice > 0 && analystTargetHigh > analystTargetLow && (
+            (() => {
+              const lo = Math.min(analystTargetLow, currentPrice * 0.85)
+              const hi = Math.max(analystTargetHigh, currentPrice * 1.15)
+              const span = hi - lo
+              const pricePct  = ((currentPrice - lo) / span) * 100
+              const meanPct   = ((analystTargetMean - lo) / span) * 100
+              const lowPct    = ((analystTargetLow  - lo) / span) * 100
+              const highPct   = ((analystTargetHigh - lo) / span) * 100
+              const upside    = (analystTargetMean - currentPrice) / currentPrice
+              const upsideStr = `${upside >= 0 ? '+' : ''}${(upside * 100).toFixed(1)}%`
+
+              return (
+                <div className="mt-1">
+                  {/* Bar */}
+                  <div className="relative h-4 rounded-full bg-slate-100 overflow-visible">
+                    {/* Range band (low to high target) */}
+                    <div
+                      className="absolute top-0 bottom-0 rounded-full bg-gradient-to-r from-slate-200 to-emerald-200"
+                      style={{ left: `${lowPct}%`, right: `${100 - highPct}%` }}
+                    />
+                    {/* Current price marker */}
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-slate-700 border-2 border-white shadow-sm z-10"
+                      style={{ left: `${Math.max(0, Math.min(97, pricePct))}%`, marginLeft: '-6px' }}
+                      title={`Current: ${fmtPrice(currentPrice, currency)}`}
+                    />
+                    {/* Mean target marker */}
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white shadow-sm z-10"
+                      style={{ left: `${Math.max(3, Math.min(97, meanPct))}%`, marginLeft: '-6px' }}
+                      title={`Mean target: ${fmtPrice(analystTargetMean, currency)}`}
+                    />
+                  </div>
+                  {/* Labels */}
+                  <div className="flex items-center justify-between mt-1.5 text-[10px] text-slate-400 tabular-nums">
+                    <span>{fmtPrice(analystTargetLow, currency)}</span>
+                    <span className={`font-semibold ${upside > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                      Mean {upsideStr} upside
+                    </span>
+                    <span>{fmtPrice(analystTargetHigh, currency)}</span>
+                  </div>
+                  {/* Legend */}
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="flex items-center gap-1 text-[10px] text-slate-400">
+                      <span className="w-2.5 h-2.5 rounded-full bg-slate-700 border border-white inline-block" />
+                      Current
+                    </span>
+                    <span className="flex items-center gap-1 text-[10px] text-slate-400">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 border border-white inline-block" />
+                      Consensus target
+                    </span>
+                  </div>
+                </div>
+              )
+            })()
           )}
         </div>
       )}

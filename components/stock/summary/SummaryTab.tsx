@@ -76,6 +76,8 @@ interface SummaryTabProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   quote?: any
   analystTargetMean?: number | null
+  analystTargetLow?: number | null
+  analystTargetHigh?: number | null
   // quick stats bar
   marketCap?: number | null
   peRatio?: number | null
@@ -107,7 +109,7 @@ export default function SummaryTab({
   sharesM, cashM, debtM, revenueM, fcfMargin,
   wacc, terminalG, historicalCAGR, analystCAGR, isEmergingMarket, revenueHistory,
   scenarios, ratings, scores, businessProfile, cagrAnalysis, statementsData,
-  valuationMethods, quote, analystTargetMean, userModelFairValue,
+  valuationMethods, quote, analystTargetMean, analystTargetLow, analystTargetHigh, userModelFairValue,
   marketCap, peRatio, beta, pegRatio, evToEbitda, dividendYield, holdingReturns, nextEarningsDate,
   onViewValuation, onViewRisks, onViewAssumptions, analystRecommendation,
 }: SummaryTabProps) {
@@ -219,6 +221,9 @@ export default function SummaryTab({
             reverseDCFText={rdcfResult.interpretationText}
             analystRecommendation={analystRecommendation ?? ''}
             analystTargetMean={analystTargetMean ?? null}
+            analystTargetLow={analystTargetLow ?? null}
+            analystTargetHigh={analystTargetHigh ?? null}
+            currentPrice={price}
             currency={currency}
           />
         </div>
