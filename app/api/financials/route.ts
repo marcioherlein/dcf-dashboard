@@ -1358,6 +1358,14 @@ export async function GET(req: NextRequest) {
       keyMetricsQuarterly: fmp.keyMetricsQuarterly,
       incomeStatementQuarterly: fmp.incomeStatementQuarterly,
       ratiosQuarterly: fmp.ratiosQuarterly,
+      keyMetricsAnnual: fmp.keyMetrics
+        .filter(km => km.fiscalYear)
+        .sort((a, b) => a.fiscalYear.localeCompare(b.fiscalYear))
+        .map(km => ({
+          fiscalYear: km.fiscalYear,
+          roic: typeof km.returnOnInvestedCapital === 'number' ? km.returnOnInvestedCapital : null,
+          roe:  typeof km.returnOnEquity           === 'number' ? km.returnOnEquity           : null,
+        })),
       canComputeDCF,
       vetoReasons,
       limitedHistory,

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { buildHealthInterpretation, buildRiskSummary } from '@/lib/simplifier/summaryBuilder'
 import type { StockRatings } from '@/lib/dcf/calculateRatings'
 import type { PiotroskiResult, AltmanResult, BeneishResult, ROICResult } from '@/lib/dcf/calculateScores'
+import RiskRadar from './RiskRadar'
 
 interface ScoresData {
   piotroski: PiotroskiResult
@@ -255,6 +256,10 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
         </div>
       </div>
       </div>
+
+      {/* Risk Radar — 5-dimension risk breakdown */}
+      {financialsData && <RiskRadar financialsData={financialsData} />}
+
       </> )} {/* end collapsible content */}
     </div>
   )
