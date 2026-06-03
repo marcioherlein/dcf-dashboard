@@ -13,6 +13,7 @@ import OverviewMetricGrid from '@/components/stock/OverviewMetricGrid'
 import CompanyCard from '@/components/stock/overview/CompanyCard'
 import IncomeFlowCard from './IncomeFlowCard'
 import { ETFExposureCard } from './ETFExposureCard'
+import QuickStatsBar from '@/components/stock/QuickStatsBar'
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -74,6 +75,11 @@ interface SummaryTabProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   quote?: any
   analystTargetMean?: number | null
+  // quick stats bar
+  marketCap?: number | null
+  peRatio?: number | null
+  beta?: number | null
+  pegRatio?: number | null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   userModelFairValue?: number | null
   // callbacks
@@ -93,6 +99,7 @@ export default function SummaryTab({
   wacc, terminalG, historicalCAGR, analystCAGR, isEmergingMarket, revenueHistory,
   scenarios, ratings, scores, businessProfile, cagrAnalysis, statementsData,
   valuationMethods, quote, analystTargetMean, userModelFairValue,
+  marketCap, peRatio, beta, pegRatio,
   onViewValuation, onViewRisks, onViewAssumptions, analystRecommendation,
 }: SummaryTabProps) {
 
@@ -126,6 +133,18 @@ export default function SummaryTab({
           ticker={ticker}
         />
       )}
+
+      {/* ── Row 0.5: Quick stats bar ──────────────────────────────────────── */}
+      <QuickStatsBar
+        marketCap={marketCap ?? null}
+        peRatio={peRatio ?? null}
+        beta={beta ?? null}
+        high52={high52}
+        low52={low52}
+        currentPrice={price}
+        currency={currency}
+        pegRatio={pegRatio ?? null}
+      />
 
       {/* ── Zone 1: Verdict — hero + price chart, equal columns ──────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">

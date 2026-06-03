@@ -9,6 +9,7 @@ export interface StockNavState {
   changePct: number | null
   currency: string
   activeTab: TabId
+  nextEarningsDate?: string | null
 }
 
 interface StockNavContextValue {

@@ -7,8 +7,11 @@ import {
 } from 'lightweight-charts'
 
 // ─────────────────────────────────────────────────────────────────────────────
-const PERIODS = ['1mo', '3mo', '1y', '5y'] as const
+const PERIODS = ['5d', '1mo', '3mo', '6mo', '1y', '5y', 'max'] as const
 type Period = typeof PERIODS[number]
+const PERIOD_LABELS: Record<Period, string> = {
+  '5d': '5D', '1mo': '1M', '3mo': '3M', '6mo': '6M', '1y': '1Y', '5y': '5Y', 'max': 'Max',
+}
 const COMPARE_COLORS = ['#f97316', '#a855f7', '#06b6d4'] as const
 
 interface ValuationLevels {
@@ -465,7 +468,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
           {PERIODS.map(p => (
             <button key={p} onClick={() => setPeriod(p)}
               className={`rounded-lg px-3 py-1 text-xs font-medium transition ${period === p ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'}`}>
-              {p.toUpperCase()}
+              {PERIOD_LABELS[p]}
             </button>
           ))}
         </div>

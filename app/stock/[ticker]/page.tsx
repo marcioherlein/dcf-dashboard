@@ -22,6 +22,7 @@ import ValuationNotAvailableCard from '@/components/stock/ValuationNotAvailableC
 import SummaryTab from '@/components/stock/summary/SummaryTab'
 import StockOrientationStrip from '@/components/onboarding/StockOrientationStrip'
 import { LoginGateProvider } from '@/components/auth/LoginGateProvider'
+import TabErrorBoundary from '@/components/stock/TabErrorBoundary'
 
 
 interface CAGRAnalysisData {
@@ -356,6 +357,7 @@ function StockPageBody() {
         exchange={data?.quote.exchange ?? ''}
         activeTab={activeTab}
         onChange={handleTabChange}
+        nextEarningsDate={data?.quote.nextEarningsDate ?? null}
         onSave={() => {
             if (!session?.user) { setLoginToSaveOpen(true); return }
             const isETF = (data?.quote?.quoteType ?? '').toUpperCase() === 'ETF'
@@ -490,6 +492,13 @@ function StockPageBody() {
                 viewCount={viewCount}
               />
             )}
+            {/* While auth state is being determined, render a subtle pulse placeholder */}
+            {viewGate === 'idle' && (
+              <div className="pt-5 space-y-4 animate-pulse">
+                <div className="h-24 rounded-xl bg-white border border-slate-100" />
+                <div className="h-48 rounded-xl bg-white border border-slate-100" />
+              </div>
+            )}
             {viewGate === 'allowed' && (
             <div className="min-w-0">
             <AnimatePresence mode="wait">
@@ -506,6 +515,7 @@ function StockPageBody() {
                   exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
+                  <TabErrorBoundary tabName="Overview">
                   {/* Summary tab — 5-card strip, insight tri-column, quality grid, bottom row */}
                   <SummaryTab
                     ticker={data.ticker}
@@ -550,6 +560,10 @@ function StockPageBody() {
                     valuationMethods={data.valuationMethods ?? null}
                     quote={data.quote}
                     analystTargetMean={data.quote.analystTargetMean ?? null}
+                    marketCap={data.quote.marketCap ?? null}
+                    peRatio={data.quote.peRatio ?? null}
+                    beta={data.wacc?.inputs?.beta ?? null}
+                    pegRatio={data.quote.pegRatio ?? null}
                     userModelFairValue={userModelFairValue}
                     analystRecommendation={data.analystRecommendation ?? ''}
                     onViewValuation={() => handleTabChange('valuation')}
@@ -561,6 +575,7 @@ function StockPageBody() {
                       }, 400)
                     }}
                   />
+                  </TabErrorBoundary>
                 </motion.div>
               )}
               {activeTab === 'valuation' && (
@@ -575,6 +590,7 @@ function StockPageBody() {
                   exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
+                  <TabErrorBoundary tabName="Valuation">
                   {data.canComputeDCF === false ? (
                     <ValuationNotAvailableCard vetoReasons={data.vetoReasons ?? []} ticker={ticker} />
                   ) : (
@@ -589,6 +605,7 @@ function StockPageBody() {
                       onLiveDcfFVChange={setPageLiveDcfFV}
                     />
                   )}
+                  </TabErrorBoundary>
                 </motion.div>
               )}
 
@@ -605,6 +622,7 @@ function StockPageBody() {
                   exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
+                  <TabErrorBoundary tabName="Financials">
                   <FinancialsHub
                     statementsData={statementsData}
                     financialsData={data}
@@ -614,6 +632,7 @@ function StockPageBody() {
                     highlight={financialsHighlight}
                     initialSubTab={financialsSubTab}
                   />
+                  </TabErrorBoundary>
                 </motion.div>
               )}
 
@@ -630,6 +649,7 @@ function StockPageBody() {
                   exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
+                  <TabErrorBoundary tabName="Risks">
                   {data.ratings && data.scores ? (
                     <HealthSection
                       ratings={data.ratings}
@@ -639,6 +659,7 @@ function StockPageBody() {
                   ) : (
                     <p className="text-sm text-slate-400 text-center py-12">Health data unavailable for this stock.</p>
                   )}
+                  </TabErrorBoundary>
                 </motion.div>
               )}
 
@@ -655,7 +676,9 @@ function StockPageBody() {
                   exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
+                  <TabErrorBoundary tabName="News">
                   <NewsPanel ticker={ticker} />
+                  </TabErrorBoundary>
                 </motion.div>
               )}
             </AnimatePresence>

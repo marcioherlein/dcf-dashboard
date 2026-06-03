@@ -16,10 +16,11 @@ interface Props {
   activeTab: TabId
   onChange: (tab: TabId) => void
   onSave?: () => void
+  nextEarningsDate?: string | null
 }
 
 export default function StockContextBar({
-  ticker, companyName, price, changePct, currency, activeTab, onChange, onSave,
+  ticker, companyName, price, changePct, currency, activeTab, onChange, onSave, nextEarningsDate,
 }: Props) {
   const { setStockNav, onTabChangeRef, onSaveRef } = useStockNav()
   const onChangeRef = useRef(onChange)
@@ -30,8 +31,8 @@ export default function StockContextBar({
   onSaveRef.current = onSave ?? null
 
   useEffect(() => {
-    setStockNav({ ticker, companyName, price, changePct, currency, activeTab })
-  }, [ticker, companyName, price, changePct, currency, activeTab, setStockNav])
+    setStockNav({ ticker, companyName, price, changePct, currency, activeTab, nextEarningsDate })
+  }, [ticker, companyName, price, changePct, currency, activeTab, nextEarningsDate, setStockNav])
 
   useEffect(() => {
     return () => {

@@ -278,6 +278,18 @@ export default function TopBar() {
                       {stockNav.changePct >= 0 ? ' ↑' : ' ↓'}
                     </span>
                   )}
+                  {stockNav.nextEarningsDate && (() => {
+                    const d = new Date(stockNav.nextEarningsDate)
+                    const now = new Date()
+                    const daysUntil = Math.ceil((d.getTime() - now.getTime()) / 86400000)
+                    if (daysUntil < 0 || daysUntil > 60) return null
+                    const label = daysUntil === 0 ? 'Earnings today' : daysUntil === 1 ? 'Earnings tomorrow' : `Earnings in ${daysUntil}d`
+                    return (
+                      <span className="hidden md:inline text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200 shrink-0 whitespace-nowrap">
+                        {label}
+                      </span>
+                    )
+                  })()}
                 </div>
               )}
             </div>
