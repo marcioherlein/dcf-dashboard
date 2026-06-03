@@ -278,15 +278,17 @@ function metrics(p: PeriodData) {
   const rev   = n(is.totalRevenue)
   const gp    = n(is.grossProfit)
   const cogs  = n(is.costOfRevenue)
-  const ebit  = n(is.operatingIncome ?? is.EBIT)
-  const ebitda = n(is.EBITDA)
+  const ebit  = n(is.operatingIncome ?? is.EBIT ?? is.totalOperatingIncomeAsReported)
+  const da    = n(cf.depreciationAndAmortization ?? cf.reconciledDepreciation ?? cf.depreciationAmortizationDepletion)
+  // EBITDA: prefer Yahoo's direct value; fall back to EBIT + D&A (common for non-US companies)
+  const ebitda = n(is.EBITDA ?? is.normalizedEBITDA) ?? (ebit != null && da != null ? ebit + da : null)
   const ni    = n(is.netIncome)
   const eps   = n(is.dilutedEPS)
-  const sga   = n(is.sellingGeneralAndAdministration)
+  const sga   = n(is.sellingGeneralAndAdministration ?? is.generalAndAdministrativeExpense)
   const rnd   = n(is.researchAndDevelopment)
-  const intEx = n(is.interestExpenseNonOperating ?? is.interestExpense)
+  // For banks, interest expense is an operating cost and may appear under different keys
+  const intEx = n(is.interestExpenseNonOperating ?? is.interestExpense ?? is.netNonOperatingInterestIncomeExpense)
   const tax   = n(is.taxRateForCalcs)
-  const da    = n(cf.depreciationAndAmortization ?? cf.reconciledDepreciation)
 
   // Balance Sheet
   const totalAssets    = n(bs.totalAssets)
@@ -471,6 +473,45 @@ export default function FinancialsHub({ statementsData, financialsData, currency
   const analystEst1y = (financialsData?.cagrAnalysis?.analystEstimate1y ?? null) as number | null
   const analystEst2y = (financialsData?.cagrAnalysis?.analystEstimate2y ?? null) as number | null
 
+  // ── Growth data ────────────────────────────────────────────────────────────
+
+  const isFinancialSector = ['Financial Services', 'Financials', 'Banks', 'Insurance', 'Financial'].some(
+    s => (financialsData?.quote?.sector ?? '').includes(s) || (financialsData?.businessProfile?.sector ?? '').includes(s)
+  )
+
+  const yoy = (curr: number | null, prev: number | null): number | null => {
+    if (curr == null || prev == null || prev === 0) return null
+    const r = (curr - prev) / Math.abs(prev)
+    return isFinite(r) ? r : null
+  }
+
+  const growthRows = useMemo((): MetricRowDef[] => {
+    const revs    = mets.map(m => m.rev)
+    const gps     = mets.map(m => m.gp)
+    const ebits   = mets.map(m => m.ebit)
+    const ebitdas = mets.map(m => m.ebitda)
+    const nis     = mets.map(m => m.ni)
+    const epss    = mets.map(m => m.eps)
+    const fcfs    = mets.map(m => m.fcf)
+
+    const yoyArr = (arr: (number | null)[]) => arr.map((v, i) => i === 0 ? null : yoy(v, arr[i - 1]))
+
+    return [
+      { label: 'Revenue',           fmt: 'growth', positiveIsGood: true, values: yoyArr(revs) },
+      { label: 'Gross Profit',      fmt: 'growth', positiveIsGood: true, values: yoyArr(gps) },
+      ...(!isFinancialSector ? [{ label: 'EBITDA', fmt: 'growth' as const, positiveIsGood: true, values: yoyArr(ebitdas) }] : []),
+      { label: 'EBIT / Op. Income', fmt: 'growth', positiveIsGood: true, values: yoyArr(ebits) },
+      { label: 'Net Income',        fmt: 'growth', positiveIsGood: true, values: yoyArr(nis) },
+      { label: 'EPS (Diluted)',     fmt: 'growth', positiveIsGood: true, values: yoyArr(epss) },
+      { label: 'Free Cash Flow',    fmt: 'growth', positiveIsGood: true, values: yoyArr(fcfs) },
+    ]
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mets, isFinancialSector])
+
+  // Skip oldest period in YoY table (always "—" since no prior year to compare to)
+  const yoyCols = cols.length > 1 ? cols.slice(1) : cols
+  const yoyRows = growthRows.map(r => ({ ...r, values: r.values.slice(1) }))
+
   // ── Profitability data ─────────────────────────────────────────────────────
 
   const profitRows = useMemo((): MetricRowDef[] => {
@@ -500,7 +541,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
       { label: 'Leverage', isHeader: true, fmt: 'x', values: [] },
       { label: 'Total Debt / Equity',     fmt: 'x',   positiveIsGood: false, values: v(m => m.debtToEq),     tooltip: 'Total Debt (ST + LT) ÷ Shareholders Equity. Higher = more leveraged.' },
       { label: 'LT Debt / Equity',        fmt: 'x',   positiveIsGood: false, values: v(m => m.ltDebtToEq),   tooltip: 'Long-Term Debt only ÷ Shareholders Equity.' },
-      { label: 'Short-Term Debt',         fmt: '$M',  positiveIsGood: false, values: v(m => m.stDebt),        tooltip: 'Current portion of debt due within 12 months.' },
+      { label: 'Short-Term Debt',         fmt: '$M',  positiveIsGood: false, values: v(m => m.stDebt != null ? m.stDebt / 1e6 : null), tooltip: 'Current portion of debt due within 12 months.' },
       { label: 'Total Debt / Capital',    fmt: 'pct', positiveIsGood: false, values: v(m => m.debtToCap),     tooltip: 'Total Debt ÷ (Total Debt + Equity). Proportion of capital financed by debt.' },
       { label: 'LT Debt / Capital',       fmt: 'pct', positiveIsGood: false, values: v(m => m.ltDebtToCap),   tooltip: 'Long-Term Debt ÷ (Total Debt + Equity).' },
       { label: 'Total Liab. / Assets',    fmt: 'pct', positiveIsGood: false, values: v(m => m.liabToAssets),  tooltip: 'Total Liabilities ÷ Total Assets. Includes operating liabilities (deferred revenue, etc.) — not purely financial debt.' },
@@ -610,7 +651,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         return (
           <div>
             {ratingLabel && (
-              <div className="px-4 sm:px-5 pt-4 pb-4 flex items-center gap-2 flex-wrap">
+              <div className="px-4 sm:px-5 pt-4 pb-2 flex items-center gap-2 flex-wrap">
                 <span className={`text-[12px] font-semibold px-3 py-1 rounded-full border ${ratingColor}`}>
                   {ratingLabel}
                 </span>
@@ -621,6 +662,9 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 )}
               </div>
             )}
+            <div className="px-4 sm:px-5 pt-2 pb-4">
+              <MetricsTable columns={yoyCols} rows={yoyRows} hideSparks />
+            </div>
           </div>
         )
       })()}
@@ -662,6 +706,11 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                     </div>
                   ))}
                 </div>
+                {isFinancialSector && (
+                  <p className="text-[10px] text-slate-400 mt-3 pt-2.5 border-t border-slate-100">
+                    Gross Profit and EBITDA are not standard metrics for financial companies.
+                  </p>
+                )}
               </div>
             </div>
             <div className="px-4 sm:px-5 pt-4 pb-4">
@@ -711,6 +760,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 Net Debt = Total Debt − Cash &amp; Equivalents. Negative Net Debt means net cash position.
                 Total Liab./Assets includes operating liabilities (deferred revenue, lease obligations).
                 Cash Runway only shown when operating cash flow is negative.
+                {isFinancialSector && ' Interest Coverage and EBITDA-based metrics are not applicable for banks and financial companies — interest expense is an operating cost netted into net interest income.'}
               </p>
             </div>
           </div>
