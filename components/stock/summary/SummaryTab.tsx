@@ -12,6 +12,7 @@ import NextStepsCard from './NextStepsCard'
 import OverviewMetricGrid from '@/components/stock/OverviewMetricGrid'
 import CompanyCard from '@/components/stock/overview/CompanyCard'
 import IncomeFlowCard from './IncomeFlowCard'
+import RevenueEarningsChart from './RevenueEarningsChart'
 import { ETFExposureCard } from './ETFExposureCard'
 import QuickStatsBar from '@/components/stock/QuickStatsBar'
 import HoldingReturns from '@/components/stock/HoldingReturns'
@@ -229,7 +230,12 @@ export default function SummaryTab({
         </div>
       </div>
 
-      {/* ── Zone 2.5: Income flow chart ───────────────────────────────────── */}
+      {/* ── Zone 2.5: Revenue & earnings trend ───────────────────────────── */}
+      {statementsData && (
+        <RevenueEarningsChart statementsData={statementsData} currency={currency} />
+      )}
+
+      {/* ── Zone 2.6: Income flow chart ───────────────────────────────────── */}
       {statementsData && (
         <IncomeFlowCard
           statementsData={statementsData}
