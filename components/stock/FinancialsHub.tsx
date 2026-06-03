@@ -985,45 +985,124 @@ export default function FinancialsHub({ statementsData, financialsData, currency
 
             {/* Capital Returns (buybacks + dividends) */}
             {(() => {
+              // Net Debt Trend — bar chart showing how leverage has evolved
+              const annualMets = mets.filter((_, i) => periods[i]?.year !== 'TTM' && !(periods[i] as any)?.isProjected)
+              const ndPoints = annualMets
+                .map((m, i) => ({ year: periods[i]?.year as string, netDebt: m.netDebt }))
+                .filter(p => p.year && p.netDebt != null)
+                .slice(-6)
+
+              const fmtND = (v: number) => {
+                const abs = Math.abs(v)
+                const sign = v < 0 ? '-' : ''
+                return abs >= 1000 ? `${sign}${currency}${(abs / 1000).toFixed(1)}B` : `${sign}${currency}${abs.toFixed(0)}M`
+              }
+
+              const renderNetDebtChart = ndPoints.length >= 2 ? (() => {
+                const maxAbs = Math.max(...ndPoints.map(p => Math.abs(p.netDebt!)), 1)
+                const hasMix = ndPoints.some(p => p.netDebt! < 0) && ndPoints.some(p => p.netDebt! >= 0)
+                const firstND = ndPoints[0].netDebt!
+                const lastND  = ndPoints[ndPoints.length - 1].netDebt!
+                const trend = lastND - firstND
+                const isImproving = trend < -0.05 * maxAbs || (firstND > 0 && lastND < 0)
+                const isWorsening = trend >  0.05 * maxAbs || (firstND < 0 && lastND > 0)
+                return (
+                  <div className="border-t border-slate-100 px-4 sm:px-5 pb-4 pt-4">
+                    <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                      <p className="text-[13px] font-semibold text-slate-700">Net Debt Trend</p>
+                      <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${
+                        isImproving ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
+                        isWorsening ? 'bg-red-50 border-red-200 text-red-600' :
+                        'bg-slate-100 border-slate-200 text-slate-500'
+                      }`}>
+                        {isImproving ? 'Deleveraging' : isWorsening ? 'Leveraging up' : 'Stable'}
+                      </span>
+                    </div>
+                    <div className={`relative flex items-${hasMix ? 'center' : 'end'} gap-1.5 h-28`}>
+                      {hasMix && (
+                        <div className="absolute left-0 right-0 top-1/2 border-t border-dashed border-slate-300 pointer-events-none" />
+                      )}
+                      {ndPoints.map((p) => {
+                        const val = p.netDebt!
+                        const isNeg = val < 0
+                        const pct = (Math.abs(val) / maxAbs) * (hasMix ? 50 : 100)
+                        const barH = Math.max(4, pct)
+                        const color = isNeg ? 'bg-emerald-400' : 'bg-slate-400'
+                        return (
+                          <div key={p.year} className={`flex flex-col items-center flex-1 min-w-0 h-full ${hasMix ? 'justify-center' : 'justify-end'} gap-0.5`}>
+                            {!hasMix && <span className={`text-[8px] font-semibold leading-none ${isNeg ? 'text-emerald-600' : 'text-slate-500'}`}>{fmtND(val)}</span>}
+                            {hasMix ? (
+                              <div className="relative w-full flex flex-col items-center" style={{ height: '100%' }}>
+                                {isNeg ? (
+                                  <div className={`absolute w-full ${color} rounded-b-sm`} style={{ top: '50%', height: `${barH}%` }} title={`${p.year}: ${fmtND(val)}`} />
+                                ) : (
+                                  <div className={`absolute w-full ${color} rounded-t-sm`} style={{ bottom: '50%', height: `${barH}%` }} title={`${p.year}: ${fmtND(val)}`} />
+                                )}
+                              </div>
+                            ) : (
+                              <div className="relative w-full" style={{ height: `${barH}%` }}>
+                                <div className={`w-full h-full rounded-t-sm ${color}`} title={`${p.year}: ${fmtND(val)}`} />
+                              </div>
+                            )}
+                            <span className="text-[8px] text-slate-400 truncate max-w-full shrink-0">{p.year}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    <div className="flex items-center gap-3 mt-2">
+                      <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Net cash (negative debt)</span>
+                      <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-slate-400 inline-block" />Net debt</span>
+                    </div>
+                  </div>
+                )
+              })() : null
+
               const capRetRows = finCF
                 .filter((r: any) => r.year !== 'TTM' && (r.buybacks != null || r.dividendsPaid != null))
                 .slice(-4)
-              if (capRetRows.length === 0) return null
               const hasBuybacks  = capRetRows.some((r: any) => r.buybacks    != null && r.buybacks    > 0)
               const hasDividends = capRetRows.some((r: any) => r.dividendsPaid != null && r.dividendsPaid > 0)
-              if (!hasBuybacks && !hasDividends) return null
+              const showCapRet   = capRetRows.length > 0 && (hasBuybacks || hasDividends)
               const fmtM = (v: number | null) => v == null ? '—' : v >= 1000 ? `${currency}${(v / 1000).toFixed(1)}B` : `${currency}${v.toFixed(0)}M`
+
+              if (!renderNetDebtChart && !showCapRet) return null
+
               return (
-                <div className="border-t border-slate-100 px-4 sm:px-5 pb-4 pt-4">
-                  <p className="text-[13px] font-semibold text-slate-700 mb-3">Capital Returns to Shareholders</p>
-                  <div className="rounded-xl border border-slate-200 overflow-hidden">
-                    <table className="w-full text-[12px]">
-                      <thead>
-                        <tr className="bg-slate-50 border-b border-slate-200">
-                          <th className="px-4 py-2 text-left font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Year</th>
-                          {hasBuybacks  && <th className="px-4 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Buybacks</th>}
-                          {hasDividends && <th className="px-4 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Dividends</th>}
-                          <th className="px-4 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Total</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 bg-white">
-                        {capRetRows.map((r: any) => {
-                          const bb  = (r.buybacks     ?? 0) as number
-                          const div = (r.dividendsPaid ?? 0) as number
-                          const total = bb + div
-                          return (
-                            <tr key={r.year} className="hover:bg-slate-50/60 transition-colors">
-                              <td className="px-4 py-3 font-medium text-slate-700">{r.year}</td>
-                              {hasBuybacks  && <td className="px-4 py-3 text-right tabular-nums text-slate-700">{fmtM(r.buybacks)}</td>}
-                              {hasDividends && <td className="px-4 py-3 text-right tabular-nums text-slate-700">{fmtM(r.dividendsPaid)}</td>}
-                              <td className="px-4 py-3 text-right tabular-nums font-semibold text-slate-900">{total > 0 ? fmtM(total) : '—'}</td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
+                <>
+                  {renderNetDebtChart}
+                  {showCapRet && (
+                  <div className="border-t border-slate-100 px-4 sm:px-5 pb-4 pt-4">
+                    <p className="text-[13px] font-semibold text-slate-700 mb-3">Capital Returns to Shareholders</p>
+                    <div className="rounded-xl border border-slate-200 overflow-hidden">
+                      <table className="w-full text-[12px]">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-slate-200">
+                            <th className="px-4 py-2 text-left font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Year</th>
+                            {hasBuybacks  && <th className="px-4 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Buybacks</th>}
+                            {hasDividends && <th className="px-4 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Dividends</th>}
+                            <th className="px-4 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 bg-white">
+                          {capRetRows.map((r: any) => {
+                            const bb  = (r.buybacks     ?? 0) as number
+                            const div = (r.dividendsPaid ?? 0) as number
+                            const total = bb + div
+                            return (
+                              <tr key={r.year} className="hover:bg-slate-50/60 transition-colors">
+                                <td className="px-4 py-3 font-medium text-slate-700">{r.year}</td>
+                                {hasBuybacks  && <td className="px-4 py-3 text-right tabular-nums text-slate-700">{fmtM(r.buybacks)}</td>}
+                                {hasDividends && <td className="px-4 py-3 text-right tabular-nums text-slate-700">{fmtM(r.dividendsPaid)}</td>}
+                                <td className="px-4 py-3 text-right tabular-nums font-semibold text-slate-900">{total > 0 ? fmtM(total) : '—'}</td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
+                  )}
+                </>
               )
             })()}
           </div>
