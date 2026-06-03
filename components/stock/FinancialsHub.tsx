@@ -649,6 +649,25 @@ export default function FinancialsHub({ statementsData, financialsData, currency
           }
         }
 
+        const rev5y = cagrN(revVals, 5)
+        const epsVals = annualMets.map(m => m.eps)
+        const eps3y = cagrN(epsVals, 3)
+        const eps5y = cagrN(epsVals, 5)
+
+        type CagrItem = { label: string; value: string; color: string }
+        const cagrItems: CagrItem[] = []
+        const cagrColor = (v: number | null) =>
+          v == null ? 'text-slate-400' : v >= 0.15 ? 'text-emerald-600' : v >= 0.05 ? 'text-blue-600' : v >= 0 ? 'text-slate-700' : 'text-red-500'
+        const cagrFmt = (v: number | null) =>
+          v == null ? '—' : `${v >= 0 ? '+' : ''}${(v * 100).toFixed(1)}%`
+
+        if (recentCAGR != null) cagrItems.push({ label: 'Rev 3Y CAGR', value: cagrFmt(recentCAGR), color: cagrColor(recentCAGR) })
+        if (rev5y != null)      cagrItems.push({ label: 'Rev 5Y CAGR', value: cagrFmt(rev5y),      color: cagrColor(rev5y) })
+        if (eps3y != null)      cagrItems.push({ label: 'EPS 3Y CAGR', value: cagrFmt(eps3y),      color: cagrColor(eps3y) })
+        if (eps5y != null)      cagrItems.push({ label: 'EPS 5Y CAGR', value: cagrFmt(eps5y),      color: cagrColor(eps5y) })
+        if (analystEst1y != null) cagrItems.push({ label: 'Analyst Est (1Y)', value: cagrFmt(analystEst1y), color: cagrColor(analystEst1y) })
+        if (analystEst2y != null) cagrItems.push({ label: 'Analyst Est (2Y)', value: cagrFmt(analystEst2y), color: cagrColor(analystEst2y) })
+
         return (
           <div>
             {ratingLabel && (
@@ -656,13 +675,25 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 <span className={`text-[12px] font-semibold px-3 py-1 rounded-full border ${ratingColor}`}>
                   {ratingLabel}
                 </span>
-                {recentCAGR != null && (
-                  <span className="text-[11px] text-slate-400">
-                    3-year revenue CAGR: {recentCAGR >= 0 ? '+' : ''}{(recentCAGR * 100).toFixed(1)}%
-                  </span>
-                )}
               </div>
             )}
+
+            {/* CAGR Summary grid */}
+            {cagrItems.length > 0 && (
+              <div className="px-4 sm:px-5 pb-3">
+                <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+                  <div className="grid grid-cols-3 sm:grid-cols-6 divide-x divide-slate-100">
+                    {cagrItems.map((item) => (
+                      <div key={item.label} className="px-3 py-2.5">
+                        <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5 truncate">{item.label}</p>
+                        <p className={`text-[15px] font-bold tabular-nums leading-tight ${item.color}`}>{item.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="px-4 sm:px-5 pt-2 pb-4">
               <MetricsTable columns={yoyCols} rows={yoyRows} />
             </div>
