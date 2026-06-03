@@ -1331,6 +1331,8 @@ export async function GET(req: NextRequest) {
           ? new Date((ks.earningsTimestamp as number) * 1000).toISOString().split('T')[0]
           : null,
         sharesOutstanding: ks.sharesOutstanding ?? null,
+        dividendYield: dividendYield,
+        payoutRatio: payoutRatio > 0 ? payoutRatio : null,
       },
       wacc: { ...waccResult, crp, financialCurrency },
       dcf: dcfResult,

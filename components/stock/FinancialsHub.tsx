@@ -1105,6 +1105,82 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 </>
               )
             })()}
+
+            {/* Dividend Analysis — only shown for dividend-paying stocks */}
+            {(() => {
+              const divYield: number | null = financialsData?.quote?.dividendYield ?? null
+              const payoutRatio: number | null = financialsData?.quote?.payoutRatio ?? null
+              if (!divYield || divYield <= 0) return null
+
+              // Historical dividends from cash flow (already in finCF as dividendsPaid, stored as negative)
+              const divHistory = finCF
+                .filter((r: any) => r.year !== 'TTM' && !r.isProjected && r.dividendsPaid != null && r.dividendsPaid < 0)
+                .slice(-5)
+                .map((r: any) => ({ year: r.year as string, paid: Math.abs(r.dividendsPaid as number) }))
+
+              // Payout ratio assessment
+              const payoutLabel = payoutRatio == null ? null
+                : payoutRatio > 0.9 ? { label: 'Unsustainable', cls: 'bg-red-50 border-red-200 text-red-700' }
+                : payoutRatio > 0.7 ? { label: 'High', cls: 'bg-amber-50 border-amber-200 text-amber-700' }
+                : payoutRatio > 0.4 ? { label: 'Healthy', cls: 'bg-emerald-50 border-emerald-200 text-emerald-700' }
+                : { label: 'Conservative', cls: 'bg-blue-50 border-blue-200 text-blue-700' }
+
+              return (
+                <div className="border-t border-slate-100 px-4 sm:px-5 pb-4 pt-4">
+                  <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                    <p className="text-[13px] font-semibold text-slate-700">Dividend Analysis</p>
+                    {payoutLabel && (
+                      <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${payoutLabel.cls}`}>
+                        Payout: {payoutLabel.label}
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
+                    <div className="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5">
+                      <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">Dividend Yield</p>
+                      <p className="text-[18px] font-bold text-emerald-600 tabular-nums">{(divYield * 100).toFixed(2)}%</p>
+                    </div>
+                    {payoutRatio != null && payoutRatio > 0 && (
+                      <div className="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5">
+                        <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">Payout Ratio</p>
+                        <p className="text-[18px] font-bold text-slate-800 tabular-nums">{(payoutRatio * 100).toFixed(0)}%</p>
+                        <div className="h-1 bg-slate-200 rounded-full mt-1">
+                          <div className={`h-full rounded-full ${payoutRatio > 0.9 ? 'bg-red-400' : payoutRatio > 0.7 ? 'bg-amber-400' : 'bg-emerald-400'}`} style={{ width: `${Math.min(100, payoutRatio * 100)}%` }} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {divHistory.length >= 2 && (() => {
+                    const maxDiv = Math.max(...divHistory.map((d: { year: string; paid: number }) => d.paid))
+                    const fmtM = (v: number) => v >= 1000 ? `${currency}${(v / 1000).toFixed(1)}B` : `${currency}${v.toFixed(0)}M`
+                    const first = divHistory[0].paid
+                    const last  = divHistory[divHistory.length - 1].paid
+                    const isGrowing = last > first * 1.01
+                    return (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-[11px] font-medium text-slate-500">Historical Dividends Paid</p>
+                          {isGrowing && <span className="text-[10px] font-semibold text-emerald-600">Growing dividend ↑</span>}
+                        </div>
+                        <div className="flex items-end gap-1.5 h-20">
+                          {divHistory.map((d: { year: string; paid: number }) => {
+                            const hp = maxDiv > 0 ? Math.max(8, (d.paid / maxDiv) * 100) : 8
+                            return (
+                              <div key={d.year} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-0.5">
+                                <div className="relative w-full" style={{ height: `${hp}%` }}>
+                                  <div className="w-full h-full rounded-t-sm bg-emerald-400" title={`${d.year}: ${fmtM(d.paid)}`} />
+                                </div>
+                                <span className="text-[8px] text-slate-400 truncate max-w-full">{d.year}</span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })()}
+                </div>
+              )
+            })()}
           </div>
         )
       })()}
