@@ -1373,6 +1373,14 @@ export async function GET(req: NextRequest) {
       limitedHistory,
       historyYears,
       analystForwardEstimates,
+      peerComps: livePeers.map(p => ({
+        ticker:       p.ticker,
+        trailingPE:   p.trailingPE,
+        priceToBook:  p.priceToBook,
+        priceToSales: p.priceToSales,
+        evToEbitda:   p.evToEbitda,
+        evToRevenue:  p.evToRevenue,
+      })),
       earningsSurprises,
       analystRatingTrend,
       providerStatus: {

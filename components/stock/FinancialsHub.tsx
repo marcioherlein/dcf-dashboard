@@ -845,10 +845,6 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                               }}
                               title={`${p.year}: ROIC ${(val * 100).toFixed(1)}%${wacc != null ? `, WACC ${(wacc * 100).toFixed(1)}%` : ''}`}
                             />
-                            {/* Label */}
-                            <span className="absolute bottom-0 left-0 right-0 text-center text-[8px] text-slate-400 leading-none" style={{ bottom: '-14px' }}>
-                              {p.year}
-                            </span>
                             {/* Value label above bar */}
                             <span
                               className={`absolute text-[8px] font-semibold left-0 right-0 text-center leading-none ${aboveWacc ? 'text-emerald-600' : 'text-red-500'}`}
@@ -1645,8 +1641,20 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                     impliedFairValue: number; upsidePct: number; applicable: boolean
                   }> = financialsData?.valuationMethods?.models?.multiples?.estimates ?? []
                   const allPeers: string[] = financialsData?.valuationMethods?.models?.multiples?.peerTickers ?? []
+                  const peerComps: Array<{
+                    ticker: string; trailingPE: number | null; priceToBook: number | null
+                    priceToSales: number | null; evToEbitda: number | null; evToRevenue: number | null
+                  }> = financialsData?.peerComps ?? []
                   const applicableEsts = estimates.filter(e => e.applicable && e.actualValue > 0 && e.sectorMedian > 0)
                   if (applicableEsts.length === 0) return null
+
+                  const currTicker = (financialsData?.ticker ?? '').toUpperCase()
+                  // Get current company's multiples from estimates
+                  const peEst      = estimates.find(e => e.multiple === 'P/E')?.actualValue ?? null
+                  const evEbitdaEst = estimates.find(e => e.multiple === 'EV/EBITDA')?.actualValue ?? null
+                  const pbEst      = estimates.find(e => e.multiple === 'P/Book')?.actualValue ?? null
+                  const psEst      = estimates.find(e => e.multiple === 'P/Sales')?.actualValue ?? null
+
                   return (
                     <div>
                       <div className="flex items-baseline justify-between mb-3">
@@ -1697,6 +1705,45 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                         {allPeers.length > 0 ? 'Live peer medians' : 'Industry medians (Damodaran 2025)'}
                         . Discount = trading below peers; Premium = trading above.
                       </p>
+
+                      {/* Per-peer breakdown table */}
+                      {peerComps.length >= 2 && (
+                        <div className="mt-4">
+                          <p className="text-[12px] font-semibold text-slate-600 mb-2">Peer Comparison</p>
+                          <div className="rounded-xl border border-slate-200 overflow-x-auto">
+                            <table className="w-full text-[11px] min-w-[360px]">
+                              <thead>
+                                <tr className="bg-slate-50 border-b border-slate-200">
+                                  <th className="px-3 py-2 text-left font-semibold text-slate-400 uppercase tracking-wide">Ticker</th>
+                                  <th className="px-3 py-2 text-right font-semibold text-slate-400 uppercase tracking-wide">P/E</th>
+                                  <th className="px-3 py-2 text-right font-semibold text-slate-400 uppercase tracking-wide">EV/EBITDA</th>
+                                  <th className="px-3 py-2 text-right font-semibold text-slate-400 uppercase tracking-wide">P/B</th>
+                                  <th className="px-3 py-2 text-right font-semibold text-slate-400 uppercase tracking-wide">P/S</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100 bg-white">
+                                {/* Current company row */}
+                                <tr className="bg-blue-50/60 font-semibold">
+                                  <td className="px-3 py-2.5 text-blue-700 font-bold">{currTicker} ★</td>
+                                  <td className="px-3 py-2.5 text-right tabular-nums text-slate-800">{peEst != null ? peEst.toFixed(1) + '×' : '—'}</td>
+                                  <td className="px-3 py-2.5 text-right tabular-nums text-slate-800">{evEbitdaEst != null ? evEbitdaEst.toFixed(1) + '×' : '—'}</td>
+                                  <td className="px-3 py-2.5 text-right tabular-nums text-slate-800">{pbEst != null ? pbEst.toFixed(1) + '×' : '—'}</td>
+                                  <td className="px-3 py-2.5 text-right tabular-nums text-slate-800">{psEst != null ? psEst.toFixed(1) + '×' : '—'}</td>
+                                </tr>
+                                {peerComps.map(p => (
+                                  <tr key={p.ticker} className="hover:bg-slate-50/60 transition-colors">
+                                    <td className="px-3 py-2.5 font-mono font-bold text-slate-700">{p.ticker}</td>
+                                    <td className="px-3 py-2.5 text-right tabular-nums text-slate-600">{p.trailingPE != null ? p.trailingPE.toFixed(1) + '×' : '—'}</td>
+                                    <td className="px-3 py-2.5 text-right tabular-nums text-slate-600">{p.evToEbitda != null ? p.evToEbitda.toFixed(1) + '×' : '—'}</td>
+                                    <td className="px-3 py-2.5 text-right tabular-nums text-slate-600">{p.priceToBook != null ? p.priceToBook.toFixed(1) + '×' : '—'}</td>
+                                    <td className="px-3 py-2.5 text-right tabular-nums text-slate-600">{p.priceToSales != null ? p.priceToSales.toFixed(1) + '×' : '—'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )
                 })()}
