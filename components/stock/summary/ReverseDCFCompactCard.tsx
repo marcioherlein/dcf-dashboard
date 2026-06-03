@@ -149,7 +149,7 @@ export default function ReverseDCFCompactCard({
       </div>
 
       {/* Content split */}
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         {/* Left */}
         <div className="flex-1 min-w-0">
           <p className="text-[11px] font-[650] text-[#64748B] mb-1 flex items-center gap-1">
@@ -175,7 +175,7 @@ export default function ReverseDCFCompactCard({
         </div>
 
         {/* Right — horizontal bars */}
-        <div className="flex-1 min-w-0 flex flex-col gap-2">
+        <div className="flex-1 min-w-0 flex flex-col gap-2 sm:max-w-none">
           {/* Implied */}
           <BarRow
             label="Implied 5Y CAGR"
@@ -297,7 +297,9 @@ function HistoricalCAGRBlock({
   function openPopup() {
     if (!triggerRef.current) return
     const rect = triggerRef.current.getBoundingClientRect()
-    setPopupPos({ top: rect.bottom + 6, left: rect.left })
+    const popupW = 246
+    const left = Math.min(rect.left, Math.max(8, window.innerWidth - popupW - 8))
+    setPopupPos({ top: rect.bottom + 6, left })
     setOpen(true)
   }
 

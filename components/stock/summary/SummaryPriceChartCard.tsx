@@ -97,7 +97,7 @@ export default function SummaryPriceChartCard({
 
       {/* Footer metrics */}
       <div className="border-t border-[#E6ECF5] mt-2">
-        <div className="grid grid-cols-4 divide-x divide-[#E6ECF5]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#E6ECF5]">
           <FooterMetric label="52W Low"    value={fmtPrice(low52, currency)} />
           <FooterMetric label="52W High"   value={fmtPrice(high52, currency)} />
           <FooterMetric label="Market Cap" value={fmtLargeCurrency(marketCap, currency)} />
