@@ -45,11 +45,9 @@ export default function QuickStatsBar({
 
   if (evToEbitda != null && evToEbitda > 0 && evToEbitda < 999) {
     stats.push({ label: 'EV/EBITDA', value: evToEbitda.toFixed(1) + '×' })
-  } else if (beta != null) {
-    stats.push({ label: 'Beta', value: beta.toFixed(2) })
   }
 
-  if (beta != null && evToEbitda != null) {
+  if (beta != null) {
     stats.push({ label: 'Beta', value: beta.toFixed(2) })
   }
 
@@ -81,14 +79,15 @@ export default function QuickStatsBar({
 
   if (stats.length === 0) return null
 
-  // Show at most 4 stats in a 2×2 grid on mobile, 4-col on desktop
-  const displayed = stats.slice(0, 4)
-
+  // On mobile (2 cols): show first 4. On sm (4 cols): show first 4. On lg (up to 7 cols): show all.
   return (
     <div className="rounded-[16px] bg-white border border-slate-100 shadow-[0_1px_3px_rgba(15,23,42,0.06)] px-4 sm:px-5 py-3">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3">
-        {displayed.map(stat => (
-          <div key={stat.label} className="min-w-0">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-x-4 gap-y-3">
+        {stats.map((stat, i) => (
+          <div
+            key={stat.label}
+            className={i >= 4 ? 'hidden lg:block' : i >= 2 ? 'hidden sm:block' : undefined}
+          >
             <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-0.5 truncate">{stat.label}</p>
             <p className={`text-[13px] font-semibold tabular-nums leading-tight truncate ${stat.label === 'Next Earnings' ? 'text-amber-700' : 'text-slate-800'}`}>{stat.value}</p>
             {stat.sub && <p className="text-[11px] text-slate-400 mt-0.5 truncate">{stat.sub}</p>}
