@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import yahooFinance from 'yahoo-finance2'
+import { getRecommendedPeers, getQuoteSummaryForPeer } from '@/lib/data/yahooClient'
 
 export interface PeerData {
   ticker: string
@@ -19,27 +19,13 @@ export interface PeersResponse {
 async function fetchPeerData(ticker: string): Promise<PeerData | null> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const summaryP: Promise<any> = yahooFinance.quoteSummary(ticker, {
-      modules: ['defaultKeyStatistics', 'summaryDetail', 'earningsTrend', 'price'],
-    }, { validateResult: false })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const quoteP: Promise<any> = yahooFinance.quote(ticker)
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const [summary, quote]: [any, any] = await Promise.all([
-      summaryP.catch(() => null),
-      quoteP.catch(() => null),
-    ])
-
+    const summary: any = await getQuoteSummaryForPeer(ticker)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const s = summary as any
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const q = quote as any
 
     const forwardPE: number | null =
       s?.defaultKeyStatistics?.forwardPE ??
       s?.summaryDetail?.forwardPE ??
-      q?.forwardPE ??
       null
 
     // earningsTrend +1y: rolling 1-year-forward EPS consensus
@@ -49,8 +35,8 @@ async function fetchPeerData(ticker: string): Promise<PeerData | null> {
     const analystCount: number | null = trend1y?.earningsEstimate?.numberOfAnalysts ?? null
 
     const name: string = s?.price?.longName ?? s?.price?.shortName ?? ticker
-    const marketCap: number | null = s?.price?.marketCap ?? q?.marketCap ?? null
-    const sector: string | null = s?.price?.sector ?? q?.sector ?? null
+    const marketCap: number | null = s?.price?.marketCap ?? null
+    const sector: string | null = s?.price?.sector ?? null
 
     // Filter out bad data: no PE, no growth, PE outside useful scatter range
     if (forwardPE == null || epsGrowth == null) return null
@@ -71,13 +57,8 @@ export async function GET(req: NextRequest) {
 
   try {
     // 1. Fetch recommendations (People also watch) + anchor data in parallel
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const recP: Promise<any> = yahooFinance.quoteSummary(ticker, {
-      modules: ['recommendationsBySymbol'],
-    }, { validateResult: false })
-
-    const [recSummary, anchorData] = await Promise.all([
-      recP.catch(() => null),
+    const [recommended, anchorData] = await Promise.all([
+      getRecommendedPeers(ticker),
       fetchPeerData(ticker),
     ])
 
@@ -85,23 +66,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'No valuation data available for this ticker' }, { status: 404 })
     }
 
-    // 2. Extract recommended peers sorted by co-view score, cap at 8 candidates
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rec = recSummary as any
-    const recommended: string[] = (rec?.recommendationsBySymbol?.recommendedSymbols ?? [])
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .sort((a: any, b: any) => (b.score ?? 0) - (a.score ?? 0))
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((r: any) => (r.symbol as string).toUpperCase())
-      .filter((s: string) => s !== ticker)
-      .slice(0, 8)
+    // 2. Filter self from recommended list
+    const candidatePeers = recommended.filter(s => s !== ticker)
 
-    if (recommended.length === 0) {
+    if (candidatePeers.length === 0) {
       return NextResponse.json({ anchor: anchorData, peers: [] }, CACHE)
     }
 
     // 3. Fetch peer data in parallel
-    const peerResults = await Promise.all(recommended.map(fetchPeerData))
+    const peerResults = await Promise.all(candidatePeers.map(fetchPeerData))
     const rawPeers = peerResults.filter((p): p is PeerData => p !== null)
 
     // 4. Sector filter: prefer same-sector peers when anchor has a known sector

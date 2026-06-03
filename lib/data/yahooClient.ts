@@ -279,3 +279,30 @@ export async function getPeerQuotes(tickers: string[]): Promise<PeerQuoteRaw[]> 
   _peerCache.set(cacheKey, { data, ts: now })
   return data
 }
+
+// Fetch recommendations ("People also watch") for the peer scatter chart
+export async function getRecommendedPeers(ticker: string): Promise<string[]> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const res: any = await yf.recommendationsBySymbol(ticker)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const recs: any[] = res?.recommendedSymbols ?? []
+    return recs
+      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+      .map(r => (r.symbol as string).toUpperCase())
+      .slice(0, 8)
+  } catch {
+    return []
+  }
+}
+
+// Fetch full quote summary for a ticker (defaultKeyStatistics + earningsTrend + price)
+export async function getQuoteSummaryForPeer(ticker: string): Promise<any> {
+  try {
+    return await yf.quoteSummary(ticker, {
+      modules: ['defaultKeyStatistics', 'summaryDetail', 'earningsTrend', 'price'],
+    }, { validateResult: false })
+  } catch {
+    return null
+  }
+}

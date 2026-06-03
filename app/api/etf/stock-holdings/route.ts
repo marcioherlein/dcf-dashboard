@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ALL_TICKERS } from '@/lib/data/etfUniverse'
+import { getETFData } from '@/lib/data/yahooClient'
+import { computeETFScore } from '@/lib/data/etfScore'
 
 interface HoldingResult {
   etfTicker: string
@@ -8,25 +10,51 @@ interface HoldingResult {
   valueScore: number | null
 }
 
-const CONCURRENCY = 8
+function toMultiple(v: unknown): number | null {
+  if (typeof v !== 'number' || v <= 0) return null
+  return v < 1 ? Math.round((1 / v) * 10) / 10 : Math.round(v * 10) / 10
+}
 
-async function fetchProfileWithTimeout(ticker: string): Promise<{ ticker: string; profile: Record<string, unknown> | null }> {
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 5000)
+async function getETFHoldings(etfTicker: string): Promise<{
+  name: string
+  holdings: Array<{ symbol: string; weight: number | null }>
+  valueScore: number | null
+} | null> {
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/api/etf/profile?ticker=${ticker}`,
-      { signal: controller.signal },
-    )
-    if (!res.ok) return { ticker, profile: null }
-    const profile = await res.json()
-    return { ticker, profile }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const raw: any = await getETFData(etfTicker)
+    if (!raw) return null
+
+    const top = raw?.topHoldings ?? {}
+    const price = raw?.price ?? {}
+
+    const name: string = price?.longName ?? price?.shortName ?? etfTicker
+
+    const holdings = (top.holdings ?? [])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((h: any) => ({
+        symbol: (h.symbol ?? '') as string,
+        weight: typeof h.holdingPercent === 'number' ? h.holdingPercent : null,
+      }))
+
+    const eq = top.equityHoldings ?? {}
+    const detail = raw?.summaryDetail ?? {}
+    const stats = raw?.defaultKeyStatistics ?? {}
+
+    const peRatio = toMultiple(eq.priceToEarnings)
+    const pbRatio = toMultiple(eq.priceToBook)
+    const yieldVal = typeof detail.yield === 'number' ? detail.yield : null
+    const expenseRatio = typeof stats.annualReportExpenseRatio === 'number' ? stats.annualReportExpenseRatio : null
+
+    const { score: valueScore } = computeETFScore(peRatio, pbRatio, yieldVal, expenseRatio)
+
+    return { name, holdings, valueScore }
   } catch {
-    return { ticker, profile: null }
-  } finally {
-    clearTimeout(timeoutId)
+    return null
   }
 }
+
+const CONCURRENCY = 6
 
 export async function GET(req: NextRequest) {
   const stockTicker = req.nextUrl.searchParams.get('ticker')?.toUpperCase()?.trim()
@@ -36,18 +64,17 @@ export async function GET(req: NextRequest) {
 
   for (let i = 0; i < ALL_TICKERS.length; i += CONCURRENCY) {
     const batch = ALL_TICKERS.slice(i, i + CONCURRENCY)
-    const settled = await Promise.allSettled(batch.map((t) => fetchProfileWithTimeout(t)))
+    const settled = await Promise.allSettled(batch.map(t => getETFHoldings(t).then(profile => ({ ticker: t, profile }))))
     for (const r of settled) {
       if (r.status !== 'fulfilled' || !r.value.profile) continue
-      const profile = r.value.profile
-      const holdings = (profile.holdings as Array<{ symbol: string; weight: number | null }> | undefined) ?? []
-      const match = holdings.find((h) => h.symbol?.toUpperCase() === stockTicker)
+      const { profile } = r.value
+      const match = profile.holdings.find(h => h.symbol?.toUpperCase() === stockTicker)
       if (match) {
         results.push({
           etfTicker: r.value.ticker,
-          etfName: (profile.name as string) ?? r.value.ticker,
+          etfName: profile.name,
           weight: match.weight ?? 0,
-          valueScore: (profile.valueScore as number | null) ?? null,
+          valueScore: profile.valueScore,
         })
       }
     }
