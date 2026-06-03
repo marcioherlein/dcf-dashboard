@@ -18,6 +18,8 @@ export default function FinalCTASection() {
   const [results, setResults] = useState<SearchResult[]>([])
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [fetchError, setFetchError] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(-1)
   const debounce = useRef<ReturnType<typeof setTimeout>>()
   const containerRef = useRef<HTMLDivElement>(null)
   const sectionRef = useRef<HTMLElement>(null)
@@ -25,15 +27,17 @@ export default function FinalCTASection() {
   const reduced = useReducedMotion()
 
   useEffect(() => {
-    if (query.length < 1) { setResults([]); setOpen(false); return }
+    if (query.length < 1) { setResults([]); setOpen(false); setFetchError(false); return }
     clearTimeout(debounce.current)
+    setFetchError(false)
     debounce.current = setTimeout(() => {
       setLoading(true)
       fetch(`/api/search?q=${encodeURIComponent(query)}`)
         .then(r => r.json())
         .then(d => { setResults(d); setOpen(d.length > 0); setLoading(false) })
-        .catch(() => setLoading(false))
+        .catch(() => { setLoading(false); setResults([]); setFetchError(true) })
     }, 300)
+    return () => clearTimeout(debounce.current)
   }, [query])
 
   useEffect(() => {
@@ -43,6 +47,10 @@ export default function FinalCTASection() {
     document.addEventListener('mousedown', h)
     return () => document.removeEventListener('mousedown', h)
   }, [])
+
+  useEffect(() => {
+    if (!open) setActiveIndex(-1)
+  }, [open])
 
   const select = (symbol: string) => {
     setOpen(false); setQuery('')
@@ -99,11 +107,29 @@ export default function FinalCTASection() {
               <input
                 type="text"
                 value={query}
-                onChange={e => setQuery(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && query.trim()) select(query.trim().toUpperCase()) }}
+                onChange={e => { setQuery(e.target.value); setFetchError(false) }}
+                onKeyDown={e => {
+                  if (e.key === 'ArrowDown') {
+                    e.preventDefault()
+                    if (open && results.length > 0) setActiveIndex(i => Math.min(i + 1, results.length - 1))
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault()
+                    setActiveIndex(i => Math.max(i - 1, -1))
+                  } else if (e.key === 'Escape') {
+                    setOpen(false)
+                  } else if (e.key === 'Enter') {
+                    if (activeIndex >= 0 && results[activeIndex]) select(results[activeIndex].symbol)
+                    else if (query.trim()) select(query.trim().toUpperCase())
+                  }
+                }}
                 placeholder="Search any ticker — NVDA, AAPL, MELI..."
                 className="flex-1 bg-transparent text-base text-slate-800 placeholder-slate-400 focus:outline-none"
                 style={{ fontWeight: 500, fontSize: '16px' }}
+                role="combobox"
+                aria-autocomplete="list"
+                aria-expanded={open}
+                aria-controls="cta-search-listbox"
+                aria-activedescendant={activeIndex >= 0 ? `cta-search-opt-${activeIndex}` : undefined}
                 aria-label="Search for a stock ticker"
               />
               <button
@@ -122,20 +148,41 @@ export default function FinalCTASection() {
 
             {open && results.length > 0 && (
               <div
+                id="cta-search-listbox"
                 className="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl border border-slate-200 overflow-hidden z-50 text-left"
                 style={{ boxShadow: '0 16px 40px rgba(15,23,42,0.12)' }}
+                role="listbox"
               >
-                {results.map(r => (
+                {results.map((r, i) => (
                   <button
                     key={r.symbol}
+                    id={`cta-search-opt-${i}`}
                     onClick={() => select(r.symbol)}
                     className="flex w-full items-center gap-3 px-4 py-3 hover:bg-slate-50 border-b border-slate-100 last:border-b-0 transition-colors active:scale-95"
-                    style={{ minHeight: '44px' }}
+                    role="option"
+                    aria-selected={i === activeIndex}
+                    style={{
+                      minHeight: '44px',
+                      backgroundColor: i === activeIndex ? '#EFF6FF' : undefined,
+                    }}
                   >
-                    <span className="text-[14px] font-bold text-slate-800 font-mono w-14 shrink-0">{r.symbol}</span>
+                    <span className="text-[14px] font-bold text-slate-800 w-14 shrink-0">{r.symbol}</span>
                     <span className="text-[13px] text-slate-500 truncate">{r.longname ?? r.shortname}</span>
                   </button>
                 ))}
+              </div>
+            )}
+
+            {fetchError && !open && (
+              <div
+                className="absolute left-0 right-0 top-full mt-2 bg-red-50 rounded-xl border border-red-200 px-4 py-2.5 z-50 flex items-center gap-2"
+                role="alert"
+                style={{ boxShadow: '0 4px 12px rgba(15,23,42,0.08)' }}
+              >
+                <svg className="w-3.5 h-3.5 shrink-0 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <circle cx="12" cy="12" r="10" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4M12 16h.01" />
+                </svg>
+                <p className="text-[13px] text-red-600 leading-snug">Search unavailable. Please try again.</p>
               </div>
             )}
           </div>

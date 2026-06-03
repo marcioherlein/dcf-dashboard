@@ -50,18 +50,22 @@ export default function LandingNavbar() {
             />
             <div className="flex flex-col leading-none">
               <span
-                className="font-black text-[17px] sm:text-[20px]"
+                className="font-bold text-[19px] sm:text-[23px]"
                 style={{
-                  letterSpacing: '-0.04em',
-                  lineHeight: 1.15,
-                  color: '#0F172A',
+                  fontFamily: 'var(--font-display, "Space Grotesk"), system-ui, sans-serif',
+                  letterSpacing: '-0.048em',
+                  lineHeight: 1.08,
+                  background: 'linear-gradient(135deg, #2563EB 0%, #06B6D4 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
                 }}
               >
                 insic
               </span>
               <span
-                className="hidden sm:block text-[8px] font-bold tracking-[0.18em] uppercase mt-0.5"
-                style={{ color: '#94A3B8' }}
+                className="hidden sm:block text-[8px] font-semibold tracking-[0.16em] uppercase mt-0.5"
+                style={{ color: '#94A3B8', fontFamily: 'var(--font-sans, Inter), system-ui, sans-serif' }}
               >
                 Valuation Intelligence
               </span>

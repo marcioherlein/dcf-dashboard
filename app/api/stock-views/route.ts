@@ -3,13 +3,18 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { createClient } from '@supabase/supabase-js'
 
-const FREE_LIMIT = 3
+const FREE_LIMIT = 5
 
 function getClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!url || !key) return null
   return createClient(url, key)
+}
+
+function monthStart() {
+  const d = new Date()
+  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString()
 }
 
 export async function POST(req: NextRequest) {
@@ -39,37 +44,42 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ allowed: true, isPro: true, viewCount: 0, limit: FREE_LIMIT })
   }
 
-  // Check if this ticker was already viewed by this user
-  const { data: existing } = await sb
+  const start = monthStart()
+
+  // Check if this ticker was already viewed this month
+  const { data: existingThisMonth } = await sb
     .from('stock_views')
     .select('id')
     .eq('user_id', userId)
     .eq('ticker', ticker)
+    .gte('first_viewed_at', start)
     .maybeSingle()
 
-  if (existing) {
-    // Already unlocked — count how many they have
-    const { count } = await sb
+  if (existingThisMonth) {
+    // Already unlocked this month — count how many distinct tickers this month
+    const { data: monthRows } = await sb
       .from('stock_views')
-      .select('id', { count: 'exact', head: true })
+      .select('ticker')
       .eq('user_id', userId)
-    return NextResponse.json({ allowed: true, isPro: false, viewCount: count ?? FREE_LIMIT, limit: FREE_LIMIT })
+      .gte('first_viewed_at', start)
+    const monthCount = new Set(monthRows?.map(r => r.ticker) ?? []).size
+    return NextResponse.json({ allowed: true, isPro: false, viewCount: monthCount, limit: FREE_LIMIT })
   }
 
-  // Count unique tickers viewed so far
-  const { count: currentCount } = await sb
+  // Count distinct tickers viewed this month
+  const { data: monthRows } = await sb
     .from('stock_views')
-    .select('id', { count: 'exact', head: true })
+    .select('ticker')
     .eq('user_id', userId)
+    .gte('first_viewed_at', start)
+  const monthCount = new Set(monthRows?.map(r => r.ticker) ?? []).size
 
-  const total = currentCount ?? 0
-
-  if (total >= FREE_LIMIT) {
-    return NextResponse.json({ allowed: false, isPro: false, viewCount: total, limit: FREE_LIMIT })
+  if (monthCount >= FREE_LIMIT) {
+    return NextResponse.json({ allowed: false, isPro: false, viewCount: monthCount, limit: FREE_LIMIT })
   }
 
   // Record the new view
   await sb.from('stock_views').insert({ user_id: userId, ticker })
 
-  return NextResponse.json({ allowed: true, isPro: false, viewCount: total + 1, limit: FREE_LIMIT })
+  return NextResponse.json({ allowed: true, isPro: false, viewCount: monthCount + 1, limit: FREE_LIMIT })
 }

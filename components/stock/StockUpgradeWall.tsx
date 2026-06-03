@@ -18,7 +18,7 @@ interface Props {
   viewCount: number
 }
 
-const LIMIT = 3
+const LIMIT = 5
 
 function fmt(n: number, currency: string) {
   return `${currency}${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -94,15 +94,15 @@ export default function StockUpgradeWall({ ticker, companyName, price, currency,
             <Lock size={14} className="text-amber-600" strokeWidth={2.5} />
           </div>
           <div>
-            <h3 className="text-[15px] font-bold text-slate-900">Free analyses used up</h3>
-            <p className="text-[12px] text-slate-500">Upgrade to Pro for unlimited access</p>
+            <h3 className="text-[15px] font-bold text-slate-900">Monthly limit reached</h3>
+            <p className="text-[12px] text-slate-500">Resets next month · Upgrade for unlimited access</p>
           </div>
         </div>
 
         {/* Usage indicator */}
         <div className="space-y-1.5">
           <div className="flex justify-between text-[11px] font-medium">
-            <span className="text-slate-600">{viewCount} of {LIMIT} free analyses used</span>
+            <span className="text-slate-600">{viewCount} of {LIMIT} free analyses this month</span>
             <span className="text-amber-600">Limit reached</span>
           </div>
           <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">

@@ -102,7 +102,7 @@ export default function TestimonialsSection() {
                   </div>
                   <div>
                     <p style={{ fontSize: '14px', fontWeight: 650, color: '#F1F5F9' }}>{q.name}</p>
-                    <p style={{ fontSize: '12px', color: '#64748B' }}>{q.role}</p>
+                    <p style={{ fontSize: '12px', color: '#94A3B8' }}>{q.role}</p>
                   </div>
                 </div>
               </motion.div>
@@ -112,7 +112,7 @@ export default function TestimonialsSection() {
 
         <motion.p
           className="text-center mt-8 text-[12px]"
-          style={{ color: '#334155' }}
+          style={{ color: '#94A3B8' }}
           initial={reduced !== false ? {} : { opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ duration: 0.5, delay: 0.5 }}

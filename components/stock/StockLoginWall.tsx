@@ -95,7 +95,7 @@ export default function StockLoginWall({ ticker, companyName, price, currency, f
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm px-5 py-5 space-y-4">
         <div>
           <h3 className="text-[16px] font-bold text-slate-900 mb-1">Sign in free to unlock</h3>
-          <p className="text-[13px] text-slate-500">3 free full analyses — no credit card required</p>
+          <p className="text-[13px] text-slate-500">5 free analyses per month — no credit card required</p>
         </div>
 
         <ul className="space-y-2">

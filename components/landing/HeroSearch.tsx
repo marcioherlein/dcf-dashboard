@@ -39,19 +39,23 @@ export default function HeroSearch({ dark = false }: Props) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [unsupportedError, setUnsupportedError] = useState<string | null>(null)
+  const [fetchError, setFetchError] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(-1)
   const debounce = useRef<ReturnType<typeof setTimeout>>()
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (query.length < 1) { setResults([]); setOpen(false); setUnsupportedError(null); return }
+    if (query.length < 1) { setResults([]); setOpen(false); setUnsupportedError(null); setFetchError(false); return }
     clearTimeout(debounce.current)
+    setFetchError(false)
     debounce.current = setTimeout(() => {
       setLoading(true)
       fetch(`/api/search?q=${encodeURIComponent(query)}`)
         .then(r => r.json())
         .then(d => { setResults(d); setOpen(d.length > 0); setLoading(false) })
-        .catch(() => setLoading(false))
+        .catch(() => { setLoading(false); setResults([]); setFetchError(true) })
     }, 300)
+    return () => clearTimeout(debounce.current)
   }, [query])
 
   useEffect(() => {
@@ -61,6 +65,10 @@ export default function HeroSearch({ dark = false }: Props) {
     document.addEventListener('mousedown', h)
     return () => document.removeEventListener('mousedown', h)
   }, [])
+
+  useEffect(() => {
+    if (!open) setActiveIndex(-1)
+  }, [open])
 
   const select = (symbol: string) => {
     const match = results.find(r => r.symbol === symbol)
@@ -112,8 +120,21 @@ export default function HeroSearch({ dark = false }: Props) {
           <input
             type="text"
             value={query}
-            onChange={e => { setQuery(e.target.value); setUnsupportedError(null) }}
-            onKeyDown={e => { if (e.key === 'Enter') handleSubmit() }}
+            onChange={e => { setQuery(e.target.value); setUnsupportedError(null); setFetchError(false) }}
+            onKeyDown={e => {
+              if (e.key === 'ArrowDown') {
+                e.preventDefault()
+                if (open && results.length > 0) setActiveIndex(i => Math.min(i + 1, results.length - 1))
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault()
+                setActiveIndex(i => Math.max(i - 1, -1))
+              } else if (e.key === 'Escape') {
+                setOpen(false)
+              } else if (e.key === 'Enter') {
+                if (activeIndex >= 0 && results[activeIndex]?.supported) select(results[activeIndex].symbol)
+                else handleSubmit()
+              }
+            }}
             placeholder="Search any ticker — NVDA, AAPL, MELI..."
             className={`flex-1 bg-transparent text-base focus:outline-none ${
               dark
@@ -121,6 +142,11 @@ export default function HeroSearch({ dark = false }: Props) {
                 : 'text-slate-800 placeholder-slate-400'
             }`}
             style={{ fontWeight: 500, fontSize: '16px' }}
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={open}
+            aria-controls="hero-search-listbox"
+            aria-activedescendant={activeIndex >= 0 ? `hero-search-opt-${activeIndex}` : undefined}
             aria-label="Search for a stock ticker"
           />
           <button
@@ -141,6 +167,7 @@ export default function HeroSearch({ dark = false }: Props) {
         {/* Dropdown */}
         {open && results.length > 0 && (
           <div
+            id="hero-search-listbox"
             className="absolute left-0 right-0 top-full mt-2 rounded-xl border overflow-hidden z-50"
             style={{
               background: dark ? 'rgba(10,22,40,0.95)' : '#FFFFFF',
@@ -150,9 +177,10 @@ export default function HeroSearch({ dark = false }: Props) {
             }}
             role="listbox"
           >
-            {results.map(r => (
+            {results.map((r, i) => (
               <button
                 key={r.symbol}
+                id={`hero-search-opt-${i}`}
                 onClick={() => r.supported ? select(r.symbol) : undefined}
                 disabled={!r.supported}
                 className={`flex w-full items-center gap-3 px-4 py-3 text-left border-b last:border-b-0 transition-colors ${
@@ -165,10 +193,13 @@ export default function HeroSearch({ dark = false }: Props) {
                       : 'border-slate-100 opacity-40 cursor-not-allowed'
                 }`}
                 role="option"
-                aria-selected={false}
-                style={{ minHeight: '44px' }}
+                aria-selected={i === activeIndex}
+                style={{
+                  minHeight: '44px',
+                  backgroundColor: i === activeIndex ? (dark ? 'rgba(255,255,255,0.08)' : '#EFF6FF') : undefined,
+                }}
               >
-                <span className={`text-[14px] font-bold font-mono w-14 shrink-0 ${dark ? 'text-slate-100' : 'text-slate-800'}`}>
+                <span className={`text-[14px] font-bold w-14 shrink-0 ${dark ? 'text-slate-100' : 'text-slate-800'}`}>
                   {r.symbol}
                 </span>
                 <span className={`text-[13px] truncate flex-1 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
@@ -205,6 +236,26 @@ export default function HeroSearch({ dark = false }: Props) {
             <p className="text-[13px] text-amber-700 leading-snug">{unsupportedError}</p>
           </div>
         )}
+
+        {/* Search API error */}
+        {fetchError && !open && (
+          <div
+            className="absolute left-0 right-0 top-full mt-2 rounded-xl border px-4 py-2.5 z-50 flex items-center gap-2"
+            role="alert"
+            style={{
+              background: dark ? 'rgba(10,22,40,0.95)' : '#FFF1F2',
+              borderColor: dark ? 'rgba(239,68,68,0.2)' : '#FECDD3',
+              boxShadow: '0 4px 12px rgba(15,23,42,0.10)',
+            }}
+          >
+            <svg className="w-3.5 h-3.5 shrink-0 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <circle cx="12" cy="12" r="10" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4M12 16h.01" />
+            </svg>
+            <p className={`text-[13px] leading-snug ${dark ? 'text-red-300' : 'text-red-600'}`}>
+              Search unavailable. Please try again.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Ticker chips */}
@@ -220,7 +271,6 @@ export default function HeroSearch({ dark = false }: Props) {
                 : 'border-slate-200 text-slate-600 bg-white hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700'
             }`}
             style={{
-              fontFamily: 'var(--font-mono, monospace)',
               fontVariantNumeric: 'tabular-nums',
               minHeight: '36px',
               background: dark ? 'rgba(255,255,255,0.04)' : undefined,

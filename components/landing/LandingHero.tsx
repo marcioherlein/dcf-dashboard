@@ -278,7 +278,7 @@ export default function LandingHero() {
                     minHeight: '44px',
                   }}
                 >
-                  Start free trial
+                  Get started free
                 </button>
               </div>
 

@@ -230,7 +230,17 @@ export default function TopBar() {
               className="shrink-0"
             />
             {!stockNav && (
-              <span className="hidden sm:block text-[15px] font-bold tracking-tight text-slate-800 group-hover:text-blue-600 transition-colors select-none">
+              <span
+                className="hidden sm:block text-[16px] font-bold select-none transition-opacity group-hover:opacity-70"
+                style={{
+                  fontFamily: 'var(--font-display, "Space Grotesk"), system-ui, sans-serif',
+                  letterSpacing: '-0.042em',
+                  background: 'linear-gradient(135deg, #2563EB 0%, #06B6D4 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
                 insic
               </span>
             )}

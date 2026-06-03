@@ -93,7 +93,7 @@ export function SummaryMockScreen() {
         <div className="w-3 h-3 rounded-full bg-[#FC605C]" />
         <div className="w-3 h-3 rounded-full bg-[#FDBC40]" />
         <div className="w-3 h-3 rounded-full bg-[#34C749]" />
-        <div className="flex-1 mx-3 rounded-md bg-white border border-slate-200 px-3 py-1 text-[11px] text-slate-400 font-mono">
+        <div className="flex-1 mx-3 rounded-md bg-white border border-slate-200 px-3 py-1 text-[11px] text-slate-400">
           insic.app/stock/MSFT
         </div>
       </div>
@@ -101,11 +101,11 @@ export function SummaryMockScreen() {
       {/* App header */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 bg-white">
         <div className="flex items-center gap-2">
-          <span className="text-[13px] font-bold text-slate-800 font-mono">MSFT</span>
+          <span className="text-[13px] font-bold text-slate-800">MSFT</span>
           <span className="text-[11px] text-slate-400">Microsoft Corporation</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-[13px] font-bold text-slate-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums' }}>$388.20</span>
+          <span className="text-[13px] font-bold text-slate-900" style={{ fontVariantNumeric: 'tabular-nums' }}>$388.20</span>
           <span className="text-[11px] font-semibold text-emerald-500">+0.82%</span>
         </div>
       </div>
@@ -274,7 +274,7 @@ export function ValuationMockScreen() {
         <div className="w-2.5 h-2.5 rounded-full bg-[#FC605C]" />
         <div className="w-2.5 h-2.5 rounded-full bg-[#FDBC40]" />
         <div className="w-2.5 h-2.5 rounded-full bg-[#34C749]" />
-        <div className="flex-1 mx-3 rounded-md bg-white border border-slate-200 px-2 py-0.5 text-[10px] text-slate-400 font-mono">
+        <div className="flex-1 mx-3 rounded-md bg-white border border-slate-200 px-2 py-0.5 text-[10px] text-slate-400">
           insic.app/stock/MSFT — Valuation
         </div>
       </div>
@@ -282,11 +282,11 @@ export function ValuationMockScreen() {
       {/* App header */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 bg-white">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold text-slate-800 font-mono">MSFT</span>
+          <span className="text-[11px] font-bold text-slate-800">MSFT</span>
           <span className="text-[10px] text-slate-400">Microsoft Corporation</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px] font-bold text-slate-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums' }}>$388.20</span>
+          <span className="text-[11px] font-bold text-slate-900" style={{ fontVariantNumeric: 'tabular-nums' }}>$388.20</span>
           <span className="text-[10px] font-semibold text-emerald-500">+0.82%</span>
         </div>
       </div>
@@ -416,7 +416,7 @@ export function ValuationMockScreen() {
                     transition={reduced ? { duration: 0 } : { duration: 0.9, ease: EASE, delay: 0.4 + i * 0.08 }}
                   />
                 </div>
-                <span className="text-[9px] font-[650] font-mono text-[#64748B] w-5 text-right shrink-0" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                <span className="text-[9px] font-[650] text-[#64748B] w-5 text-right shrink-0" style={{ fontVariantNumeric: 'tabular-nums' }}>
                   {m.pct}%
                 </span>
               </div>

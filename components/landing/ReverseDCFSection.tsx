@@ -141,11 +141,11 @@ export default function ReverseDCFSection() {
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-[14px] font-bold text-slate-800 font-mono">{stock.ticker}</span>
-                        <span className="text-[11px] text-slate-400">{stock.company}</span>
+                        <span className="text-[14px] font-bold text-slate-800">{stock.ticker}</span>
+                        <span className="text-[11px] text-slate-400 min-w-0 truncate">{stock.company}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[16px] font-bold text-slate-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                        <span className="text-[16px] font-bold text-slate-900" style={{ fontVariantNumeric: 'tabular-nums' }}>
                           {stock.price}
                         </span>
                         <span
@@ -169,7 +169,7 @@ export default function ReverseDCFSection() {
                     <div className="shrink-0">
                       <p className="text-[10px] text-slate-400 mb-0.5">Implied 5Y Revenue CAGR</p>
                       <p
-                        className="text-[28px] font-extrabold font-mono leading-none"
+                        className="text-[28px] font-extrabold leading-none"
                         style={{ color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}
                       >
                         {stock.impliedCAGR}%
@@ -199,6 +199,9 @@ export default function ReverseDCFSection() {
                   </div>
 
                   <p className="mt-2 text-[12px] text-slate-500">{stock.note}</p>
+                  <p className="mt-2 text-[12px] font-semibold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Analyze →
+                  </p>
                 </Link>
               </motion.div>
             ))}

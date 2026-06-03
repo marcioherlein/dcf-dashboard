@@ -5,7 +5,7 @@ import { Check } from 'lucide-react'
 import { signIn } from 'next-auth/react'
 
 const FREE_ITEMS = [
-  '5 valuations per day',
+  '5 stock analyses per month',
   'Access to key metrics',
   'Reverse DCF summary',
   'Watchlist & alerts',
@@ -61,7 +61,7 @@ export default function PricingSection() {
               <p style={{ fontSize: '20px', fontWeight: 700, color: '#0F172A', marginBottom: '6px' }}>Free</p>
               <div className="flex items-baseline gap-1">
                 <span style={{ fontSize: '36px', fontWeight: 700, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>$0</span>
-                <span style={{ fontSize: '14px', color: '#94A3B8' }}>/mo</span>
+                <span style={{ fontSize: '14px', color: '#64748B' }}>/mo</span>
               </div>
               <p className="text-base" style={{ color: '#475569', marginTop: '6px' }}>
                 No account needed to start. Always free.
@@ -107,7 +107,7 @@ export default function PricingSection() {
               <p style={{ fontSize: '20px', fontWeight: 700, color: '#0F172A', marginBottom: '6px' }}>Pro</p>
               <div className="flex items-baseline gap-1">
                 <span style={{ fontSize: '36px', fontWeight: 700, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>$17</span>
-                <span style={{ fontSize: '14px', color: '#94A3B8' }}>/mo</span>
+                <span style={{ fontSize: '14px', color: '#64748B' }}>/mo</span>
               </div>
               <p className="text-base" style={{ color: '#475569', marginTop: '6px' }}>
                 For investors who do serious research.
