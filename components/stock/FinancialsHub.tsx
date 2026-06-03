@@ -732,6 +732,63 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 </div>
               )
             })()}
+
+            {/* EPS (Diluted) trend */}
+            {(() => {
+              const epsPoints = mets
+                .map((m, i) => ({ year: periods[i]?.year, eps: m.eps }))
+                .filter(p => p.year && p.year !== 'TTM' && p.eps != null && isFinite(p.eps!))
+                .slice(-6)
+              if (epsPoints.length < 2) return null
+              const maxAbsEps = Math.max(...epsPoints.map(p => Math.abs(p.eps!)), 0.01)
+              const latestEps = epsPoints[epsPoints.length - 1]
+              const prevEps   = epsPoints[epsPoints.length - 2]
+              const epsGrowth = prevEps?.eps != null && Math.abs(prevEps.eps) > 0.001
+                ? (latestEps.eps! - prevEps.eps) / Math.abs(prevEps.eps)
+                : null
+              return (
+                <div className="px-4 sm:px-5 pb-4 border-t border-slate-100 pt-4">
+                  <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                    <p className="text-[13px] font-semibold text-slate-700">EPS (Diluted) Trend</p>
+                    <div className="flex items-center gap-2">
+                      {latestEps.eps != null && (
+                        <span className={`text-[11px] font-semibold tabular-nums ${latestEps.eps >= 0 ? 'text-slate-700' : 'text-red-500'}`}>
+                          {latestEps.eps >= 0 ? '+' : ''}${latestEps.eps.toFixed(2)}
+                        </span>
+                      )}
+                      {epsGrowth != null && (
+                        <span className={`text-[11px] font-semibold tabular-nums ${epsGrowth >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                          {epsGrowth >= 0 ? '+' : ''}{(epsGrowth * 100).toFixed(0)}% YoY
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-end gap-1.5 h-24">
+                    {epsPoints.map((p, i) => {
+                      const val = p.eps!
+                      const isPos = val >= 0
+                      const hp = Math.max(6, (Math.abs(val) / maxAbsEps) * 100)
+                      const prev = epsPoints[i - 1]?.eps ?? null
+                      const yoy = prev != null && Math.abs(prev) > 0.001 ? (val - prev) / Math.abs(prev) : null
+                      return (
+                        <div key={p.year} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-0.5">
+                          {yoy != null && (
+                            <span className={`text-[8px] font-semibold leading-none ${yoy >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                              {yoy >= 0 ? '+' : ''}{(yoy * 100).toFixed(0)}%
+                            </span>
+                          )}
+                          <div className="relative w-full" style={{ height: `${hp}%` }}>
+                            <div className={`w-full h-full rounded-t-sm ${isPos ? 'bg-emerald-500' : 'bg-red-400'}`}
+                              title={`${p.year}: EPS ${isPos ? '+' : ''}$${val.toFixed(2)}`} />
+                          </div>
+                          <span className="text-[8px] text-slate-400 truncate max-w-full">{p.year}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })()}
           </div>
         )
       })()}
