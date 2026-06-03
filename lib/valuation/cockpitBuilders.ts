@@ -6,6 +6,7 @@ import {
 } from '@/lib/valuation/cockpit'
 import { deriveForwardPEAssumptions, deriveRevenueMultipleAssumptions } from '@/lib/valuation/assumptions/deriveAssumptions'
 import { blendEVEBITDAMultiple } from '@/lib/valuation/methods/evEbitda'
+import { getIndustryMultiples } from '@/lib/dcf/calculateMultiples'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ApiData = Record<string, any>
@@ -116,6 +117,37 @@ export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null)
   const sector: string | null = apiData.quote?.sector ?? null
   const industry: string | null = apiData.quote?.industry ?? null
 
+  // Phase 1: ROE for justified P/B formula
+  const incomeRowsForROE: Array<{ isProjected?: boolean; netIncome?: number | null }> =
+    apiData.financialStatements?.incomeStatement ?? []
+  const lastNetIncomeM = incomeRowsForROE.filter(r => !r.isProjected).slice(-1)[0]?.netIncome ?? null
+  const roe = lastNetIncomeM != null && lastNetIncomeM > 0 && lastBSEquity != null && lastBSEquity > 0
+    ? lastNetIncomeM / lastBSEquity
+    : null
+
+  // Phase 2: TTM net income and D&A in dollars — for P/FFO method (REITs)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const qIncome: any[] = apiData.incomeStatementQuarterly ?? []
+  const last4Q = qIncome.slice(0, 4)
+  let netIncomeDollars: number | null = null
+  let dnaDollars: number | null = null
+  if (last4Q.length === 4) {
+    const allHaveNI = last4Q.every((q: { netIncome?: number | null }) => typeof q.netIncome === 'number')
+    if (allHaveNI) {
+      const niSum = last4Q.reduce((s: number, q: { netIncome: number }) => s + q.netIncome, 0)
+      if (isFinite(niSum)) netIncomeDollars = niSum * 1e6
+    }
+    const allHaveDNA = last4Q.every((q: { depreciationAndAmortization?: number | null }) => typeof q.depreciationAndAmortization === 'number')
+    if (allHaveDNA) {
+      const dnaSum = last4Q.reduce((s: number, q: { depreciationAndAmortization: number }) => s + Math.abs(q.depreciationAndAmortization), 0)
+      if (isFinite(dnaSum)) dnaDollars = dnaSum * 1e6
+    }
+  }
+
+  // Phase 2: dividend per share and payout ratio — for DDM method (utilities, dividends)
+  const dividendPerShare: number | null = apiData.quote?.dividendRate ?? apiData.quote?.trailingAnnualDividendRate ?? null
+  const payoutRatio: number | null = apiData.quote?.payoutRatio ?? null
+
   return {
     currentPrice: apiData.quote?.price ?? 0,
     currency: apiData.quote?.currency ?? 'USD',
@@ -138,6 +170,11 @@ export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null)
     sector,
     industry,
     bookValuePerShare,
+    roe,
+    netIncomeDollars,
+    dnaDollars,
+    dividendPerShare,
+    payoutRatio,
     fullDcfFairValue: apiData.scenarios?.base?.fairValue ?? null,
   }
 }
@@ -156,10 +193,17 @@ export function seedAssumptions(apiData: ApiData): ValuationAssumptions {
   const currentEVEBITDA = multEstimates.find(e => e.multiple === 'EV/EBITDA')?.actualValue ?? null
   const { multiple: exitMultiple } = blendEVEBITDAMultiple(sector, industry, currentEVEBITDA, crp)
 
+  // Phase 1: Ke (cost of equity) — used to discount equity-level P/E estimates.
+  // Ke = Rf + β×ERP + CRP. Always higher than WACC because equity is a residual claim.
+  const waccInputs = apiData.wacc?.inputs ?? {}
+  const keComputed = (waccInputs.rfRate ?? 0.045) + (waccInputs.beta ?? 1.0) * (waccInputs.erp ?? 0.055) + crp
+  const ke: number = apiData.wacc?.costOfEquity ?? keComputed
+
+  // Phase 2: P/FFO multiple from industry medians (REITs only; benign default for other types)
+  const industryMeds = getIndustryMultiples(industry ?? '', sector ?? '')
+  const exitPFFOMultiple: number = industryMeds.pFfo ?? 16
+
   // P/B target for financial companies: blend current market P/B (55%) with sector default (45%).
-  // Using 55% of the live market P/B prevents the sector default from over-anchoring on
-  // outdated book-value norms — high-growth fintechs (NU ~6×) were being undervalued because
-  // the static 1.8× default dominated the fair-value output.
   const FINANCIAL_SECTORS_PB: Record<string, number> = {
     'Financial Services': 1.8,
     'Banks': 1.2,
@@ -188,6 +232,7 @@ export function seedAssumptions(apiData: ApiData): ValuationAssumptions {
 
   return {
     wacc:            apiData.wacc?.wacc ?? 0.10,
+    ke,
     cagr:            apiData.cagr ?? fwdPEBase.revenueCAGR,
     terminalG:       apiData.terminalG ?? 0.03,
     netMargin:       fwdPEBase.netMargin,
@@ -196,5 +241,6 @@ export function seedAssumptions(apiData: ApiData): ValuationAssumptions {
     exitMultiple,
     revenueMultiple: revMultBase.exitEVRevenue,
     priceToBookMultiple,
+    exitPFFOMultiple,
   }
 }

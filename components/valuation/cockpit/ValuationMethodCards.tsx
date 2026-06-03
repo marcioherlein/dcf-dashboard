@@ -1,6 +1,6 @@
 'use client'
 
-import { TrendingUp, BarChart2, BarChart, Target, RotateCcw, Undo2, BookOpen } from 'lucide-react'
+import { TrendingUp, BarChart2, BarChart, Target, RotateCcw, Undo2, BookOpen, Building2, Coins } from 'lucide-react'
 import {
   LineChart, Line, XAxis, YAxis, ResponsiveContainer,
   ReferenceLine, Tooltip,
@@ -57,6 +57,10 @@ const METHOD_INPUTS: Record<string, FieldDef[]> = {
   price_to_book: [
     { key: 'priceToBookMultiple', label: 'Target P/B', unit: 'x', step: 0.1, min: 0.3, max: 5.0, chartKey: 'priceToBookMultiple' },
   ],
+  p_ffo: [
+    { key: 'exitPFFOMultiple', label: 'P/FFO multiple', unit: 'x', step: 0.5, min: 8, max: 30, chartKey: 'exitPFFOMultiple' },
+  ],
+  ddm: [],
   core_dcf: [],
 }
 
@@ -91,6 +95,18 @@ const METHOD_CFG: Record<string, {
     barBg: 'bg-indigo-400', valueBg: 'bg-indigo-50', valueText: 'text-indigo-700',
     chartHex: '#6366f1',
     Icon: BookOpen as IconComp,
+  },
+  p_ffo: {
+    iconBg: 'bg-orange-100', iconText: 'text-orange-600',
+    barBg: 'bg-orange-400', valueBg: 'bg-orange-50', valueText: 'text-orange-700',
+    chartHex: '#f97316',
+    Icon: Building2 as IconComp,
+  },
+  ddm: {
+    iconBg: 'bg-teal-100', iconText: 'text-teal-600',
+    barBg: 'bg-teal-400', valueBg: 'bg-teal-50', valueText: 'text-teal-700',
+    chartHex: '#14b8a6',
+    Icon: Coins as IconComp,
   },
   core_dcf: {
     iconBg: 'bg-emerald-100', iconText: 'text-emerald-600',

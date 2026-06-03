@@ -129,10 +129,17 @@ export async function GET(req: NextRequest) {
 
     // DCF (FCFF)
     // Terminal growth aligned with Damodaran: should approximate long-run nominal GDP growth.
-    // High-growth companies (>15% CAGR) → 2.5% (emerging/global nominal GDP)
+    // High-growth companies (>15% CAGR) → 2.5% developed, but for EM companies (CRP > 2%)
+    // use max(rule, rfRate + 2%) as proxy for nominal EM GDP growth.
     // Standard companies (5–15% CAGR) → 2.0% (developed market nominal GDP)
     // Mature / low-growth (<5%) → 1.5% (conservative / real GDP)
-    const terminalG = cagr > 0.15 ? 0.025 : cagr > 0.05 ? 0.020 : 0.015
+    const _terminalGBase = cagr > 0.15 ? 0.025 : cagr > 0.05 ? 0.020 : 0.015
+    // Emerging market uplift: when CRP > 2% the company operates in a higher nominal GDP
+    // environment — anchoring terminal growth at developed-market 2.5% structurally undervalues it.
+    // Proxy: rfRate (risk-free rate, typically US 10Y) + 2% reflects ~4.5–5% nominal EM GDP.
+    const terminalG = crp > 0.02
+      ? Math.min(Math.max(_terminalGBase, rfRate + 0.02), 0.055)  // floor at EM-calibrated rate, cap at 5.5%
+      : _terminalGBase
     // Growth model selection (Damodaran): three-stage when growth >> stable (CAGR > 15% or pre-profit).
     // companyType is detected later; cagr + isNegativeFCF covers all practical cases before that.
     const growthModel = (cagr > 0.15 || isNegativeFCF) ? 'three-stage' as const : 'two-stage' as const
@@ -497,7 +504,22 @@ export async function GET(req: NextRequest) {
 
     // UFCF + Exit Multiple variant — complement to the Gordon Growth result from calculateFairValue.
     // Uses the same projected cash flows but swaps in an FCF exit multiple terminal value.
-    const _exitMultByType: Record<string, number> = { growth: 25, startup: 20, financial: 12, dividend: 15 }
+    // Exit multiples are calibrated per company type — fintech/growth fintechs trade at 25×
+    // (not 12× traditional bank), REITs at 20× (P/FFO basis), utilities at 16× (regulated income).
+    const _exitMultByType: Record<string, number> = {
+      growth:    25,
+      startup:   20,
+      financial: 12,   // traditional banks / insurers
+      fintech:   25,   // high-growth digital finance (NU, StoneCo, PAGS) — same as growth
+      dividend:  15,
+      reit:      20,   // P/FFO basis; REITs use FFO, not net income, for exit multiple
+      utility:   16,   // regulated income stream; lower multiple than growth
+      energy:     7,   // commodity-cycle; EV/EBITDA-like exit
+      mining:     6,   // capital-intensive; conservative exit
+      alt_asset: 20,   // Blackstone/KKR: fee-related earnings multiple
+      mreeit:    10,   // mortgage REITs: book value / spread business
+      bdc:       12,   // BDCs: net investment income multiple
+    }
     const _exitMult = _exitMultByType[companyType] ?? 18
     const _lastCF = dcfResult.projections.length > 0 ? dcfResult.projections[dcfResult.projections.length - 1].cashFlow : null
     const _nYrs = dcfResult.projections.length

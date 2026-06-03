@@ -177,9 +177,9 @@ describe('calculateMultiples — adversarial inputs', () => {
     ]
     const result = calculateMultiples({ ...base, livePeers })
     const pe = result.estimates.find(e => e.multiple === 'P/E')!
-    // Should fall back to static (Semiconductors: 26×)
+    // Should fall back to static (Semiconductors: 28×)
     expect(pe.benchmarkSource).not.toBe('live-peers')
-    expect(pe.sectorMedian).toBe(26)
+    expect(pe.sectorMedian).toBe(28)
   })
 })
 

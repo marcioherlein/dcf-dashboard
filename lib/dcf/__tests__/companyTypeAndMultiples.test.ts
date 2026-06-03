@@ -170,17 +170,17 @@ describe('calculateMultiples — industry median lookup', () => {
     evToRevenue: 7,
   }
 
-  it('uses Semiconductors industry median PE = 26×', () => {
+  it('uses Semiconductors industry median PE = 28×', () => {
     const result = calculateMultiples(baseMultInput)
     const pe = result.estimates.find(e => e.multiple === 'P/E')!
-    expect(pe.sectorMedian).toBe(26)
+    expect(pe.sectorMedian).toBe(28)
     expect(pe.applicable).toBe(true)
   })
 
   it('implied fair value = currentPrice × benchmarkMedian / actual', () => {
     const result = calculateMultiples(baseMultInput)
     const pe = result.estimates.find(e => e.multiple === 'P/E')!
-    const expected = (100 * 26) / 20
+    const expected = (100 * 28) / 20
     expect(pe.impliedFairValue).toBeCloseTo(expected, 1)
   })
 

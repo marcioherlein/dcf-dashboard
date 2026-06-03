@@ -2,12 +2,20 @@ import { computeForwardPE } from './methods/forwardPE'
 import { computeEVEBITDA } from './methods/evEbitda'
 import { computeRevenueMultiple } from './methods/revenueMultiple'
 import { computeReverseDCF } from './methods/reverseDcf'
+import { computePFFO } from './methods/pFfo'
 import { projectCashFlows } from '../dcf/projectCashFlows'
+import { calculateDDM } from '../dcf/calculateDDM'
 
 const FINANCIAL_SECTORS = new Set(['Financial Services', 'Banks', 'Insurance', 'Financial'])
 
-function isPBMethod(snapshot: CockpitSnapshot): boolean {
-  return FINANCIAL_SECTORS.has(snapshot.sector ?? '')
+type AdaptiveMethod = 'pb' | 'evEbitda' | 'pffo' | 'ddm'
+
+function resolveAdaptiveMethod(companyType: string, sector: string | null | undefined): AdaptiveMethod {
+  if (companyType === 'reit')    return 'pffo'
+  if (companyType === 'utility' || companyType === 'bdc') return 'ddm'
+  if (companyType === 'mreeit') return 'pb'  // mortgage REITs: P/B is the anchor
+  if (companyType === 'financial' || companyType === 'fintech' || companyType === 'alt_asset' || FINANCIAL_SECTORS.has(sector ?? '')) return 'pb'
+  return 'evEbitda'
 }
 
 function computePBValuation(
@@ -17,14 +25,29 @@ function computePBValuation(
   if (snapshot.bookValuePerShare == null || snapshot.bookValuePerShare <= 0) {
     return { fairValuePerShare: null, guardErrors: ['Book value per share unavailable'] }
   }
-  const mult = assumptions.priceToBookMultiple ?? 1.5
-  if (mult <= 0) return { fairValuePerShare: null, guardErrors: ['Invalid P/B multiple'] }
-  const fv = Math.round(snapshot.bookValuePerShare * mult * 100) / 100
+
+  // Justified P/B = (ROE − g) / (Ke − g): theoretically correct for financial companies.
+  // High-ROE fintechs (ROE ~20%) justify P/B 3–5×; mature banks (ROE ~12%) justify P/B ~1.3×.
+  const roe = snapshot.roe ?? null
+  const ke  = assumptions.ke ?? assumptions.wacc * 1.2  // fallback: ke ≈ 120% of wacc
+  const g   = Math.max(0.01, assumptions.wacc - 0.02)
+  const justifiedPB = roe != null && roe > 0 && ke > g && ke > 0
+    ? Math.max(0.8, Math.min(10, (roe - g) / (ke - g)))
+    : null
+
+  const marketMult = assumptions.priceToBookMultiple ?? (justifiedPB ?? 1.5)
+  const blendedMult = justifiedPB != null
+    ? justifiedPB * 0.60 + marketMult * 0.40
+    : marketMult
+
+  if (blendedMult <= 0) return { fairValuePerShare: null, guardErrors: ['Invalid P/B multiple'] }
+  const fv = Math.round(snapshot.bookValuePerShare * blendedMult * 100) / 100
   return { fairValuePerShare: fv > 0 ? fv : null, guardErrors: fv > 0 ? [] : ['P/B fair value ≤ 0'] }
 }
 
 export interface ValuationAssumptions {
   wacc: number           // e.g. 0.10
+  ke: number             // cost of equity — used to discount equity-level P/E estimates
   cagr: number           // 5Y revenue CAGR e.g. 0.12
   terminalG: number      // e.g. 0.03
   netMargin: number      // e.g. 0.18
@@ -33,6 +56,7 @@ export interface ValuationAssumptions {
   exitMultiple: number   // EV/EBITDA exit multiple e.g. 14
   revenueMultiple: number // EV/Revenue e.g. 4.5
   priceToBookMultiple?: number // P/B target multiple (financial companies only)
+  exitPFFOMultiple?: number    // P/FFO target multiple (REITs only)
 }
 
 // Fixed financial data extracted from apiData — does NOT change with assumptions
@@ -67,6 +91,14 @@ export interface CockpitSnapshot {
   industry?: string | null
   // Book value per share (raw dollars) — for P/B valuation method
   bookValuePerShare?: number | null
+  // Return on equity (trailing) — for justified P/B formula: (ROE−g)/(Ke−g)
+  roe?: number | null
+  // TTM net income (dollars) and D&A (dollars) — for P/FFO method (REITs)
+  netIncomeDollars?: number | null
+  dnaDollars?: number | null
+  // Dividend per share and payout ratio — for DDM method (utilities/dividend companies)
+  dividendPerShare?: number | null
+  payoutRatio?: number | null
   // Pre-computed 4-model DCF blend from Full DCF Table (scenarios.base.fairValue).
   // When present, Core DCF uses this directly instead of re-running the UFCF-only blend.
   fullDcfFairValue?: number | null
@@ -122,11 +154,25 @@ const COCKPIT_WEIGHTS: Record<string, MethodWeights> = {
   standard:  { forward_pe: 0.35, ev_ebitda: 0.30, revenue_multiple: 0.25, core_dcf: 0.10 },
   growth:    { forward_pe: 0.25, ev_ebitda: 0.25, revenue_multiple: 0.35, core_dcf: 0.15 },
   startup:   { forward_pe: 0.10, ev_ebitda: 0.15, revenue_multiple: 0.45, core_dcf: 0.30 },
-  financial: { forward_pe: 0.45, ev_ebitda: 0.05, revenue_multiple: 0.15, core_dcf: 0.35 },
-  // High-growth digital finance (neobanks, payments, credit platforms): P/E weight reduced
-  // because margins are still maturing; P/B and revenue multiple raised to reflect growth premium.
+  // financial: Core DCF reduced 35%→15% (GAAP earnings embed provisions; P/E and P/B are more reliable)
+  financial: { forward_pe: 0.50, ev_ebitda: 0.35, revenue_multiple: 0.00, core_dcf: 0.15 },
+  // fintech: auto-promoted from financial when industry matches FINTECH_INDUSTRY_RE
   fintech:   { forward_pe: 0.20, ev_ebitda: 0.25, revenue_multiple: 0.25, core_dcf: 0.30 },
+  // alt_asset: FRE-based — P/B and P/E primary; revenue multiple secondary
+  alt_asset: { forward_pe: 0.40, ev_ebitda: 0.30, revenue_multiple: 0.10, core_dcf: 0.20 },
+  // mreeit: P/B primary (book value/NAV); DDM secondary; no revenue multiple
+  mreeit:    { forward_pe: 0.15, ev_ebitda: 0.50, revenue_multiple: 0.00, core_dcf: 0.35 },
+  // bdc: DDM primary; P/B secondary; revenue multiple not meaningful
+  bdc:       { forward_pe: 0.15, ev_ebitda: 0.55, revenue_multiple: 0.00, core_dcf: 0.30 },
   dividend:  { forward_pe: 0.35, ev_ebitda: 0.25, revenue_multiple: 0.15, core_dcf: 0.25 },
+  // REITs: Forward P/E excluded (distorted by real estate depreciation); P/FFO primary
+  reit:      { forward_pe: 0.00, ev_ebitda: 0.55, revenue_multiple: 0.15, core_dcf: 0.30 },
+  // Utilities: DDM primary; stable regulated cash flows suit income-based valuation
+  utility:   { forward_pe: 0.20, ev_ebitda: 0.50, revenue_multiple: 0.00, core_dcf: 0.30 },
+  // Energy: EV/EBITDA primary (CAGR capped, commodity cycles distort P/E)
+  energy:    { forward_pe: 0.25, ev_ebitda: 0.45, revenue_multiple: 0.15, core_dcf: 0.15 },
+  // Mining: same logic as energy
+  mining:    { forward_pe: 0.25, ev_ebitda: 0.45, revenue_multiple: 0.15, core_dcf: 0.15 },
   etf:       { forward_pe: 0.25, ev_ebitda: 0.25, revenue_multiple: 0.25, core_dcf: 0.25 },
 }
 
@@ -139,10 +185,11 @@ function getEffectiveWeights(snapshot: CockpitSnapshot): MethodWeights {
   const companyType = snapshot.companyType ?? 'standard'
 
   // Auto-promote financial companies that match fintech characteristics to the `fintech` type,
-  // which reduces the Forward P/E dominance (45% → 20%) that is unreliable for early-stage
+  // which reduces the Forward P/E dominance that is unreliable for early-stage
   // digital finance companies where margins are still scaling. P/B and Revenue Multiple get
   // higher weight instead, which better captures the growth premium.
-  const effectiveType = (companyType === 'financial' || companyType === 'fintech') &&
+  // Also: 'fintech' type (from detectCompanyType) stays fintech even if sector says Financial.
+  const effectiveType = (companyType === 'financial') &&
     FINANCIAL_SECTORS.has(snapshot.sector ?? '') &&
     FINTECH_INDUSTRY_RE.test(snapshot.industry ?? '')
     ? 'fintech'
@@ -162,6 +209,15 @@ function getEffectiveWeights(snapshot: CockpitSnapshot): MethodWeights {
   return base
 }
 
+// Dynamic terminal growth fade — scales with initial CAGR so high-growth companies
+// aren't unfairly penalised by fading to a 4% terminal rate that's too low for their stage.
+function dynamicTerminalFade(cagr: number, terminalG: number): number {
+  if (cagr > 0.35) return 0.12
+  if (cagr > 0.25) return 0.08
+  if (cagr > 0.15) return 0.06
+  return terminalG  // stable/mature companies: use user-set terminalG
+}
+
 // Fix 1+2+3: runs all 4 methods at given assumptions and returns weighted blended fair value.
 // Fix 1: terminal growth is capped at wacc−0.02 (200bps minimum spread) to prevent denominator explosion.
 // Fix 3: DCF output is discarded if it exceeds 8× current price (terminal value explosion guard).
@@ -177,28 +233,58 @@ export function computeBlendedFV(
   // Projecting from a stale annual base systematically understates fair value for hypergrowth.
   const revenueBase = snapshot.ttmRevenueDollars ?? snapshot.ltvRevenueDollars
 
-  const fwdPE = computeForwardPE({
-    ltvRevenue: revenueBase,
-    sharesOutstanding: snapshot.sharesRaw,
-    revenueCAGR: assumptions.cagr,
-    netMargin: assumptions.netMargin,
-    exitPE: assumptions.exitPE,
-    dilutionRate: assumptions.dilutionRate,
-    discountRate: assumptions.wacc,
-    currentPrice,
-    dividendYield: snapshot.dividendYield,
-    terminalCAGR: assumptions.terminalG,
-  })
+  // Phase 1: use Ke (cost of equity) to discount equity-level P/E estimate; apply dynamic fade
+  const ke = assumptions.ke ?? assumptions.wacc
+  const termFade = dynamicTerminalFade(assumptions.cagr, assumptions.terminalG)
 
-  const thirdMethodFV = isPBMethod(snapshot)
-    ? computePBValuation(snapshot, assumptions).fairValuePerShare
-    : (computeEVEBITDA({
-        ttmEbitda: snapshot.ttmEbitdaDollars,
-        netDebt: snapshot.netDebtDollars,
-        shares: snapshot.sharesRaw,
-        exitMultiple: assumptions.exitMultiple,
-        currentPrice,
-      }).fairValuePerShare ?? null)
+  // Pre-revenue biotech exclusion: exitPE === 0 signals the method should be skipped
+  const fwdPEValue: number | null = assumptions.exitPE <= 0 ? null : (() => {
+    const fwdPE = computeForwardPE({
+      ltvRevenue: revenueBase,
+      sharesOutstanding: snapshot.sharesRaw,
+      revenueCAGR: assumptions.cagr,
+      netMargin: assumptions.netMargin,
+      exitPE: assumptions.exitPE,
+      dilutionRate: assumptions.dilutionRate,
+      discountRate: ke,
+      currentPrice,
+      dividendYield: snapshot.dividendYield,
+      terminalCAGR: termFade,
+    })
+    return fwdPE.fairValueToday ?? null
+  })()
+
+  const adaptiveMethod = resolveAdaptiveMethod(snapshot.companyType ?? 'standard', snapshot.sector)
+  let adaptiveFV: number | null = null
+
+  if (adaptiveMethod === 'pb') {
+    adaptiveFV = computePBValuation(snapshot, assumptions).fairValuePerShare
+  } else if (adaptiveMethod === 'pffo') {
+    adaptiveFV = computePFFO({
+      netIncomeDollars: snapshot.netIncomeDollars ?? null,
+      dnaDollars: snapshot.dnaDollars ?? null,
+      sharesOutstanding: snapshot.sharesRaw,
+      exitPFFOMultiple: assumptions.exitPFFOMultiple ?? null,
+      currentPrice,
+    }).fairValueToday
+  } else if (adaptiveMethod === 'ddm') {
+    const ddmResult = calculateDDM(
+      snapshot.dividendPerShare ?? 0,
+      ke,
+      snapshot.roe ?? null,
+      snapshot.payoutRatio ?? 0.60,
+      currentPrice,
+    )
+    adaptiveFV = ddmResult.applicable ? ddmResult.fairValuePerShare : null
+  } else {
+    adaptiveFV = computeEVEBITDA({
+      ttmEbitda: snapshot.ttmEbitdaDollars,
+      netDebt: snapshot.netDebtDollars,
+      shares: snapshot.sharesRaw,
+      exitMultiple: assumptions.exitMultiple,
+      currentPrice,
+    }).fairValuePerShare ?? null
+  }
 
   const revMult = computeRevenueMultiple({
     ltvRevenue: revenueBase,
@@ -242,8 +328,8 @@ export function computeBlendedFV(
 
   const candidates = (
     [
-      { fv: fwdPE.fairValueToday ?? null, w: W.forward_pe },
-      { fv: thirdMethodFV, w: W.ev_ebitda },
+      { fv: fwdPEValue, w: W.forward_pe },
+      { fv: adaptiveFV, w: W.ev_ebitda },
       { fv: revMult.fairValueToday ?? null, w: W.revenue_multiple },
       { fv: dcfFV, w: W.core_dcf },
     ] as { fv: number | null; w: number }[]
@@ -454,34 +540,71 @@ export function computeCockpitOutput(
   const { currentPrice } = snapshot
   const W = getEffectiveWeights(snapshot)
 
-  // 1. Forward P/E
   const revenueBase = snapshot.ttmRevenueDollars ?? snapshot.ltvRevenueDollars
-  const fwdPE = computeForwardPE({
+  const ke = assumptions.ke ?? assumptions.wacc
+  const termFade = dynamicTerminalFade(assumptions.cagr, assumptions.terminalG)
+
+  // 1. Forward P/E (Phase 1: discount at Ke, dynamic terminal fade)
+  // Pre-revenue biotech: exitPE === 0 means skip this method entirely
+  const skipFwdPE = assumptions.exitPE <= 0
+  const fwdPE = skipFwdPE ? null : computeForwardPE({
     ltvRevenue: revenueBase,
     sharesOutstanding: snapshot.sharesRaw,
     revenueCAGR: assumptions.cagr,
     netMargin: assumptions.netMargin,
     exitPE: assumptions.exitPE,
     dilutionRate: assumptions.dilutionRate,
-    discountRate: assumptions.wacc,
+    discountRate: ke,
     currentPrice,
     dividendYield: snapshot.dividendYield,
-    terminalCAGR: assumptions.terminalG,
+    terminalCAGR: termFade,
   })
 
-  // 2. EV/EBITDA or Price/Book (sector-adaptive)
-  const isFinancial = isPBMethod(snapshot)
+  // 2. Adaptive method (P/B for financials, P/FFO for REITs, DDM for utilities, EV/EBITDA for rest)
+  const adaptiveMethod = resolveAdaptiveMethod(snapshot.companyType ?? 'standard', snapshot.sector)
   let thirdMethodResult: { fairValuePerShare: number | null; guardErrors: string[] }
   let thirdMethodId: string
   let thirdMethodName: string
   let thirdMethodDesc: string
 
-  if (isFinancial) {
+  if (adaptiveMethod === 'pb') {
     const pb = computePBValuation(snapshot, assumptions)
     thirdMethodResult = pb
     thirdMethodId = 'price_to_book'
     thirdMethodName = 'Price / Book'
-    thirdMethodDesc = 'Book Value Per Share × Target P/B multiple. Standard anchor for banks and financial companies — reflects the market premium over tangible net assets.'
+    const pbCompanyType = snapshot.companyType ?? 'financial'
+    thirdMethodDesc = pbCompanyType === 'mreeit'
+      ? 'P/B (book value) is the primary anchor for mortgage REITs — earnings driven by net interest spread and leverage, not property cash flows.'
+      : pbCompanyType === 'alt_asset'
+      ? 'P/B for alternative asset managers reflects the premium over tangible NAV. Justified P/B = (ROE − g) / (Ke − g) for high-ROE platforms.'
+      : 'Justified P/B = (ROE − g) / (Ke − g), blended 60% with market P/B. Standard anchor for banks and financial companies — reflects ROE premium over cost of equity.'
+  } else if (adaptiveMethod === 'pffo') {
+    const pffo = computePFFO({
+      netIncomeDollars: snapshot.netIncomeDollars ?? null,
+      dnaDollars: snapshot.dnaDollars ?? null,
+      sharesOutstanding: snapshot.sharesRaw,
+      exitPFFOMultiple: assumptions.exitPFFOMultiple ?? null,
+      currentPrice,
+    })
+    thirdMethodResult = { fairValuePerShare: pffo.fairValueToday, guardErrors: pffo.guardErrors }
+    thirdMethodId = 'p_ffo'
+    thirdMethodName = 'Price / FFO'
+    thirdMethodDesc = 'FFO = Net Income + D&A − property gains. Industry-standard REIT metric — strips out real estate depreciation that distorts GAAP earnings.'
+  } else if (adaptiveMethod === 'ddm') {
+    const ddmResult = calculateDDM(
+      snapshot.dividendPerShare ?? 0,
+      ke,
+      snapshot.roe ?? null,
+      snapshot.payoutRatio ?? 0.60,
+      currentPrice,
+    )
+    thirdMethodResult = {
+      fairValuePerShare: ddmResult.applicable ? ddmResult.fairValuePerShare : null,
+      guardErrors: ddmResult.applicable ? [] : [ddmResult.reason],
+    }
+    thirdMethodId = 'ddm'
+    thirdMethodName = 'Dividend Discount'
+    thirdMethodDesc = `Gordon Growth DDM: D₁ / (Ke − g). Sustainable growth g = ROE × (1 − payout). Most reliable for regulated utilities with stable, high dividend payout ratios.`
   } else {
     const ev = computeEVEBITDA({
       ttmEbitda: snapshot.ttmEbitdaDollars,
@@ -558,16 +681,21 @@ export function computeCockpitOutput(
   const upside = (fv: number | null) =>
     fv != null && currentPrice > 0 ? (fv - currentPrice) / currentPrice : null
 
+  const fwdPEFairValue = skipFwdPE ? null : (fwdPE?.fairValueToday ?? null)
+  const fwdPEErrors = skipFwdPE
+    ? ['Pre-revenue or no earnings base — Forward P/E excluded from blend']
+    : (fwdPE?.guardErrors ?? [])
+
   const methods: CockpitMethodResult[] = [
     {
       id: 'forward_pe',
       method: 'Forward P/E',
-      fairValue: fwdPE.fairValueToday ?? null,
+      fairValue: fwdPEFairValue,
       weight: W.forward_pe,
-      confidence: fwdPE.guardErrors.length === 0 ? 'high' : 'low',
-      description: 'Projects revenue × exit net margin to year 5, applies exit P/E, discounts back at WACC. Assumes margin expands to exit-year level.',
-      upsidePct: upside(fwdPE.fairValueToday ?? null),
-      errors: fwdPE.guardErrors,
+      confidence: fwdPEErrors.length === 0 && fwdPEFairValue != null ? 'high' : 'low',
+      description: 'Projects revenue × exit net margin to year 5, applies exit P/E, discounts back at Ke (cost of equity). Assumes margin expands to exit-year level.',
+      upsidePct: upside(fwdPEFairValue),
+      errors: fwdPEErrors,
     },
     {
       id: thirdMethodId,

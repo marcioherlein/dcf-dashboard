@@ -30,12 +30,13 @@ export interface MultiplesResult {
 }
 
 // Damodaran Jan 2025 US industry-level medians — keyed by Yahoo summaryProfile.industry
-const INDUSTRY_MEDIANS: Record<string, { pe: number; evEbitda: number; pb: number; ps: number; evRevenue: number }> = {
+const INDUSTRY_MEDIANS: Record<string, { pe: number; evEbitda: number; pb: number; ps: number; evRevenue: number; pFfo?: number }> = {
   // Technology
   'Software—Application':              { pe: 38, evEbitda: 28, pb: 9.0, ps: 7.0, evRevenue: 8.0 },
   'Software—Infrastructure':           { pe: 32, evEbitda: 24, pb: 8.0, ps: 6.5, evRevenue: 7.0 },
-  'Semiconductors':                    { pe: 26, evEbitda: 18, pb: 6.5, ps: 6.0, evRevenue: 7.5 },
-  'Semiconductor Equipment & Materials': { pe: 22, evEbitda: 16, pb: 5.0, ps: 4.5, evRevenue: 5.0 },
+  'Semiconductors':                    { pe: 28, evEbitda: 20, pb: 6.0, ps: 8.0, evRevenue: 9.0 },
+  'Semiconductor Equipment & Materials': { pe: 26, evEbitda: 18, pb: 5.0, ps: 7.0, evRevenue: 8.0 },
+  'AI Semiconductors':                 { pe: 40, evEbitda: 30, pb: 15.0, ps: 14.0, evRevenue: 15.0 },
   'Internet Content & Information':    { pe: 24, evEbitda: 16, pb: 6.0, ps: 5.5, evRevenue: 6.0 },
   'Internet Retail':                   { pe: 35, evEbitda: 22, pb: 8.5, ps: 3.5, evRevenue: 3.8 },
   'Consumer Electronics':              { pe: 28, evEbitda: 18, pb: 7.0, ps: 3.5, evRevenue: 3.5 },
@@ -44,18 +45,27 @@ const INDUSTRY_MEDIANS: Record<string, { pe: number; evEbitda: number; pb: numbe
   'Information Technology Services':   { pe: 22, evEbitda: 14, pb: 5.0, ps: 2.8, evRevenue: 3.0 },
   'Computer Hardware':                 { pe: 18, evEbitda: 12, pb: 4.0, ps: 1.8, evRevenue: 2.0 },
   'Communication Equipment':           { pe: 18, evEbitda: 12, pb: 3.5, ps: 2.5, evRevenue: 2.8 },
-  'Data Center REITs':                 { pe: 45, evEbitda: 28, pb: 5.0, ps: 9.0, evRevenue: 10.0 },
+  'Data Center REITs':                 { pe: 30, evEbitda: 28, pb: 5.0, ps: 9.0, evRevenue: 10.0, pFfo: 28 },
   // Financial
   'Banks—Diversified':                 { pe: 12, evEbitda: 10, pb: 1.3, ps: 3.2, evRevenue: 3.5 },
   'Banks—Regional':                    { pe: 12, evEbitda: 10, pb: 1.1, ps: 3.0, evRevenue: 3.2 },
   'Insurance—Diversified':             { pe: 13, evEbitda: 11, pb: 1.5, ps: 1.2, evRevenue: 1.3 },
   'Insurance—Life':                    { pe: 11, evEbitda: 9,  pb: 1.2, ps: 1.0, evRevenue: 1.1 },
   'Insurance—Property & Casualty':     { pe: 14, evEbitda: 11, pb: 1.8, ps: 1.4, evRevenue: 1.5 },
-  'Capital Markets':                   { pe: 14, evEbitda: 12, pb: 2.2, ps: 3.5, evRevenue: 3.8 },
-  'Asset Management':                  { pe: 16, evEbitda: 13, pb: 3.0, ps: 4.0, evRevenue: 4.5 },
+  'Capital Markets':                   { pe: 20, evEbitda: 14, pb: 3.0, ps: 4.5, evRevenue: 5.0 },
+  'Asset Management':                  { pe: 20, evEbitda: 14, pb: 3.5, ps: 5.0, evRevenue: 5.5 },
   'Financial Data & Stock Exchanges':  { pe: 30, evEbitda: 22, pb: 7.0, ps: 8.0, evRevenue: 9.0 },
   'Credit Services':                   { pe: 18, evEbitda: 14, pb: 4.0, ps: 5.0, evRevenue: 5.5 },
   'Mortgage Finance':                  { pe: 10, evEbitda: 9,  pb: 1.0, ps: 2.5, evRevenue: 2.8 },
+  // Mortgage REITs: interest-rate spread vehicles — P/B and NII multiple; P/FFO not applicable
+  'REIT—Mortgage':                     { pe: 10, evEbitda: 9,  pb: 1.1, ps: 3.0, evRevenue: 3.5 },
+  // Fintech / Digital Finance (growth-stage neobanks, payments, digital lending)
+  'Consumer Finance':                  { pe: 28, evEbitda: 18, pb: 4.5, ps: 6.0, evRevenue: 6.5 },
+  'Financial Technology':              { pe: 35, evEbitda: 25, pb: 7.0, ps: 8.0, evRevenue: 9.0 },
+  'Fintech':                           { pe: 35, evEbitda: 25, pb: 7.0, ps: 8.0, evRevenue: 9.0 },
+  'Digital Payments':                  { pe: 32, evEbitda: 22, pb: 8.0, ps: 8.0, evRevenue: 9.0 },
+  'Neobank':                           { pe: 30, evEbitda: 20, pb: 5.0, ps: 7.0, evRevenue: 8.0 },
+  'Payments Processing & Specialized': { pe: 30, evEbitda: 22, pb: 6.0, ps: 7.5, evRevenue: 8.5 },
   // Healthcare
   'Drug Manufacturers—General':        { pe: 18, evEbitda: 12, pb: 4.5, ps: 4.0, evRevenue: 4.5 },
   'Drug Manufacturers—Specialty & Generic': { pe: 16, evEbitda: 11, pb: 3.5, ps: 3.0, evRevenue: 3.5 },
@@ -105,11 +115,15 @@ const INDUSTRY_MEDIANS: Record<string, { pe: number; evEbitda: number; pb: numbe
   'Utilities—Regulated Electric':      { pe: 18, evEbitda: 12, pb: 1.8, ps: 2.0, evRevenue: 2.5 },
   'Utilities—Renewable':               { pe: 22, evEbitda: 15, pb: 2.5, ps: 3.5, evRevenue: 4.0 },
   'Utilities—Diversified':             { pe: 17, evEbitda: 11, pb: 1.6, ps: 1.8, evRevenue: 2.0 },
-  // Real Estate
-  'REIT—Diversified':                  { pe: 35, evEbitda: 20, pb: 2.2, ps: 6.0, evRevenue: 7.0 },
-  'REIT—Retail':                       { pe: 30, evEbitda: 18, pb: 2.0, ps: 8.0, evRevenue: 9.0 },
-  'REIT—Office':                       { pe: 20, evEbitda: 14, pb: 1.2, ps: 5.0, evRevenue: 5.5 },
-  'REIT—Industrial':                   { pe: 40, evEbitda: 25, pb: 3.5, ps: 12.0, evRevenue: 13.0 },
+  // Real Estate (REIT industry names use em-dash as Yahoo Finance returns them)
+  'REIT—Diversified':                  { pe: 35, evEbitda: 20, pb: 2.2, ps: 6.0, evRevenue: 7.0, pFfo: 16 },
+  'REIT—Retail':                       { pe: 30, evEbitda: 18, pb: 2.0, ps: 8.0, evRevenue: 9.0, pFfo: 15 },
+  'REIT—Office':                       { pe: 20, evEbitda: 14, pb: 1.2, ps: 5.0, evRevenue: 5.5, pFfo: 12 },
+  'REIT—Industrial':                   { pe: 40, evEbitda: 25, pb: 3.5, ps: 12.0, evRevenue: 13.0, pFfo: 20 },
+  'REIT—Residential':                  { pe: 35, evEbitda: 20, pb: 2.0, ps: 8.0, evRevenue: 9.0, pFfo: 18 },
+  'REIT—Healthcare Facilities':        { pe: 42, evEbitda: 20, pb: 2.0, ps: 9.0, evRevenue: 10.0, pFfo: 17 },
+  'REIT—Specialty':                    { pe: 38, evEbitda: 22, pb: 2.5, ps: 10.0, evRevenue: 11.0, pFfo: 22 },
+  'REIT—Tower':                        { pe: 55, evEbitda: 28, pb: 6.0, ps: 14.0, evRevenue: 15.0, pFfo: 25 },
   'Real Estate Services':              { pe: 20, evEbitda: 14, pb: 3.5, ps: 3.0, evRevenue: 3.5 },
   // Materials
   'Basic Materials':                   { pe: 16, evEbitda: 10, pb: 2.0, ps: 1.5, evRevenue: 1.8 },
@@ -117,11 +131,16 @@ const INDUSTRY_MEDIANS: Record<string, { pe: number; evEbitda: number; pb: numbe
   'Steel':                             { pe: 10, evEbitda: 6,  pb: 1.3, ps: 0.6, evRevenue: 0.7 },
   'Aluminum':                          { pe: 12, evEbitda: 7,  pb: 1.5, ps: 0.8, evRevenue: 0.9 },
   'Gold':                              { pe: 18, evEbitda: 10, pb: 2.0, ps: 4.0, evRevenue: 4.5 },
+  // Gold/silver streaming & royalty companies trade at premium to physical miners
+  'Gold Royalty':                      { pe: 35, evEbitda: 25, pb: 3.5, ps: 12.0, evRevenue: 13.0 },
+  'Silver Royalty':                    { pe: 32, evEbitda: 22, pb: 3.0, ps: 10.0, evRevenue: 11.0 },
+  'Copper':                            { pe: 14, evEbitda: 8,  pb: 1.8, ps: 3.0, evRevenue: 3.5 },
+  'Silver':                            { pe: 20, evEbitda: 11, pb: 2.2, ps: 4.5, evRevenue: 5.0 },
   'default':                           { pe: 20, evEbitda: 14, pb: 3.0, ps: 2.5, evRevenue: 3.0 },
 }
 
 // Broad sector fallback (if industry not found)
-const SECTOR_MEDIANS: Record<string, { pe: number; evEbitda: number; pb: number; ps: number; evRevenue: number }> = {
+const SECTOR_MEDIANS: Record<string, { pe: number; evEbitda: number; pb: number; ps: number; evRevenue: number; pFfo?: number }> = {
   'Technology':              { pe: 28, evEbitda: 20, pb: 7.5, ps: 5.0, evRevenue: 6.0 },
   'Financial Services':      { pe: 14, evEbitda: 12, pb: 1.4, ps: 2.8, evRevenue: 3.5 },
   'Healthcare':              { pe: 24, evEbitda: 16, pb: 4.2, ps: 4.5, evRevenue: 4.5 },
@@ -236,9 +255,9 @@ function getMedians(industry: string, sector: string) {
 export function getIndustryMultiples(
   industry: string,
   sector: string,
-): { pe: number; evEbitda: number; evRevenue: number; source: BenchmarkSource } {
+): { pe: number; evEbitda: number; evRevenue: number; pFfo: number | undefined; source: BenchmarkSource } {
   const { medians, source } = getMedians(industry, sector)
-  return { pe: medians.pe, evEbitda: medians.evEbitda, evRevenue: medians.evRevenue, source }
+  return { pe: medians.pe, evEbitda: medians.evEbitda, evRevenue: medians.evRevenue, pFfo: medians.pFfo, source }
 }
 
 function peerMedian(
@@ -337,31 +356,31 @@ export function calculateMultiples(input: {
 
   estimates.push(makeEstimate(
     'P/E', input.trailingPE, 'trailingPE', staticMed.pe,
-    ['standard', 'dividend', 'financial', 'growth'],
+    ['standard', 'dividend', 'financial', 'fintech', 'alt_asset', 'growth'],
     'Trailing P/E',
   ))
 
   estimates.push(makeEstimate(
     'EV/EBITDA', input.evToEbitda, 'evToEbitda', staticMed.evEbitda,
-    ['standard', 'dividend', 'growth'],
+    ['standard', 'dividend', 'growth', 'energy', 'mining'],
     'EV/EBITDA',
   ))
 
   estimates.push(makeEstimate(
     'P/Book', input.priceToBook, 'priceToBook', staticMed.pb,
-    ['financial', 'standard'],
+    ['financial', 'fintech', 'mreeit', 'bdc', 'standard'],
     'Price-to-Book',
   ))
 
   estimates.push(makeEstimate(
     'P/Sales', input.priceToSales, 'priceToSales', staticMed.ps,
-    ['growth', 'startup', 'financial'],
+    ['growth', 'startup', 'financial', 'fintech'],
     'Price-to-Sales',
   ))
 
   estimates.push(makeEstimate(
     'EV/Revenue', input.evToRevenue, 'evToRevenue', staticMed.evRevenue,
-    ['startup', 'growth', 'standard', 'dividend', 'financial'],
+    ['startup', 'growth', 'standard', 'dividend', 'financial', 'fintech', 'alt_asset', 'energy', 'mining'],
     'EV/Revenue',
   ))
 

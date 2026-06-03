@@ -1531,7 +1531,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                         <div className="flex items-end gap-1 h-28">
                           {sorted.map((r, i) => {
                             const val = epsArr[i]
-                            const yoy = yoyPct(i, epsArr as number[])
+                            const _yoy = yoyPct(i, epsArr as number[])
                             const hp = val != null && maxAbsEps > 0 ? Math.max(6, (Math.abs(val) / maxAbsEps) * 100) : 4
                             const isPositive = (val ?? 0) >= 0
                             const beat = surpriseByDate.get((r.date ?? '').slice(0, 10))

@@ -10,6 +10,9 @@ import type { ValuationAssumption, EvidenceItem, AssumptionSource } from '@/comp
 import { VALUATION_CONFIG } from '@/config/valuation.config'
 import { getIndustryMultiples } from '@/lib/dcf/calculateMultiples'
 
+// Fintech / neobank / digital finance industries — used for P/E floor in deriveExitPE
+const FINTECH_INDUSTRY_RE = /fintech|neobank|digital.?bank|payment|credit.?service|consumer.?finance|insurtech/i
+
 // ─── Sector CAGR fallback (when no analyst/historical data available) ─────────
 
 const SECTOR_CAGR: Record<string, number> = {
@@ -155,7 +158,23 @@ function deriveExitPE(
   currentPE: number | null,
   crp: number = 0,
   trailingMargin: number | null = null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data?: any,
 ): { pe: number; sectorPE: number; evidence: string; source: AssumptionSource } {
+  // Pre-revenue biotech guard: no revenue base means Forward P/E is unreliable.
+  // Return exitPE = 0 to signal the cockpit should exclude this method from the blend.
+  const isPreRevenueBiotech =
+    (sector === 'Healthcare' || (industry ?? '').toLowerCase().includes('biotech')) &&
+    (data?.businessProfile?.revenueM ?? 0) < 50
+  if (isPreRevenueBiotech) {
+    return {
+      pe: 0,
+      sectorPE: 0,
+      evidence: 'Pre-revenue biotech — Forward P/E excluded from blend (no revenue base to project from)',
+      source: 'sector_fallback',
+    }
+  }
+
   const { pe: sectorPE, source } = getIndustryMultiples(industry ?? '', sector ?? '')
 
   // Cap the current P/E anchor when it is inflated by thin margins.
@@ -177,11 +196,28 @@ function deriveExitPE(
   const geoStr = geoDiscount < 0.99 ? ` (geo-discounted ${(geoDiscount * 100).toFixed(0)}%)` : ''
   const capNote = shouldCapPE ? ` [capped from ${companyPEStr} — thin margin inflates current P/E]` : ''
 
-  const evidence = currentPE != null && currentPE > 0
-    ? `Blend: anchor ${effectivePEStr}${capNote} × 55% + sector ${sectorPE}×${geoStr} × 35% → ${blended.toFixed(1)}× exit P/E`
-    : `No current P/E; sector median ${sectorPE}× (${label})${geoStr} → ${blended.toFixed(1)}×`
+  // Phase 1: Fintech floor — prevents blend from anchoring to traditional bank/credit P/Es (18×)
+  const isFintechIndustry = FINTECH_INDUSTRY_RE.test(industry ?? '')
+  let finalPE = blended
+  let floorNote = ''
+  if (isFintechIndustry && finalPE < 22) {
+    finalPE = 22
+    floorNote = ` [fintech floor applied: 22×]`
+  }
 
-  return { pe: blended, sectorPE, evidence, source: source === 'industry-median' ? 'historical_3y_median' : 'sector_fallback' }
+  // Phase 2: AI semiconductor premium — high-CAGR semis trade at 30–40×, not the 26× sector median
+  const isAISemi = (industry ?? '').toLowerCase().includes('semiconductor') &&
+    (data?.cagrAnalysis?.historicalCagr3y ?? 0) > 0.25
+  if (isAISemi && finalPE < 32) {
+    finalPE = 32
+    floorNote += ` [AI semi premium applied: floor 32×]`
+  }
+
+  const evidence = currentPE != null && currentPE > 0
+    ? `Blend: anchor ${effectivePEStr}${capNote} × 55% + sector ${sectorPE}×${geoStr} × 35% → ${finalPE.toFixed(1)}× exit P/E${floorNote}`
+    : `No current P/E; sector median ${sectorPE}× (${label})${geoStr} → ${finalPE.toFixed(1)}×${floorNote}`
+
+  return { pe: finalPE, sectorPE, evidence, source: source === 'industry-median' ? 'historical_3y_median' : 'sector_fallback' }
 }
 
 // ─── Dilution derivation ─────────────────────────────────────────────────────
@@ -302,15 +338,36 @@ export function deriveForwardPEAssumptions(data: {
   const sectorFallback = SECTOR_CAGR[sector ?? ''] ?? 0.07
 
   const cagrDerived     = deriveCagr(data.cagrAnalysis, sectorFallback)
-  const marginDerived   = deriveNetMargin(incomeRows, cagrDerived.cagr)
+
+  // Phase 2: CAGR cap for energy and mining — commodity cycles inflate historical rates
+  const cyclicalSectors = new Set(['Energy', 'Basic Materials'])
+  let effectiveCagr = cagrDerived.cagr
+  let cagrCapNote = ''
+  if (cyclicalSectors.has(sector ?? '') && effectiveCagr > 0.08) {
+    effectiveCagr = 0.08
+    cagrCapNote = ' [capped at 8% — commodity cycles inflate historical CAGR]'
+  }
+
+  // Alt-asset managers (BX, KKR, Apollo): CAGR from AUM/FRE growth, not revenue cycles
+  const FINTECH_INDUSTRY_RE_LOCAL = /fintech|neobank|digital.?bank|payment|credit.?service|consumer.?finance|insurtech/i
+  const isAltAsset = (industry ?? '').toLowerCase().includes('capital market') ||
+    ((industry ?? '').toLowerCase().includes('asset management') && (data?.cagrAnalysis?.historicalCagr3y ?? 0) > 0.12)
+  if (isAltAsset && effectiveCagr > 0.25 && !FINTECH_INDUSTRY_RE_LOCAL.test(industry ?? '')) {
+    // Cap alt-asset CAGR at 25% — AUM growth doesn't compound indefinitely
+    effectiveCagr = Math.min(effectiveCagr, 0.25)
+    if (effectiveCagr !== cagrDerived.cagr) cagrCapNote = ' [capped at 25% — alt-asset AUM growth cap]'
+  }
+
+  const marginDerived   = deriveNetMargin(incomeRows, effectiveCagr)
   const trailingMargin  = incomeRows
     .filter(r => !r.isProjected && r.netIncome != null && r.revenue != null && r.revenue! > 0)
     .map(r => r.netIncome! / r.revenue!).slice(-1)[0] ?? null
-  const peDerived       = deriveExitPE(sector, industry, data.quote?.peRatio ?? null, crp, trailingMargin)
+  const peDerived       = deriveExitPE(sector, industry, data.quote?.peRatio ?? null, crp, trailingMargin, data)
   const dilutionDerived = deriveDilution(sector, marginDerived.margin)
   const waccEvidence    = deriveWACCEvidence(data.wacc?.inputs ?? {}, wacc)
   const ltmRev          = ltmRevenue(incomeRows)
   const currentPE       = data.quote?.peRatio ?? null
+  const cagrEvidence    = cagrCapNote ? cagrDerived.evidence + cagrCapNote : cagrDerived.evidence
 
   const assumptions: ValuationAssumption[] = [
     {
@@ -323,8 +380,8 @@ export function deriveForwardPEAssumptions(data: {
     },
     {
       key: 'revenueCAGR', label: '5Y Revenue CAGR', description: 'How fast you expect revenue to grow each year for the next 5 years. This is your most important assumption — small changes here have a big impact on fair value.',
-      value: cagrDerived.cagr, unit: '%', min: -0.10, max: 1.00, step: 0.5,
-      editable: true, source: cagrDerived.source, sourceExplanation: cagrDerived.evidence,
+      value: effectiveCagr, unit: '%', min: -0.10, max: 1.00, step: 0.5,
+      editable: true, source: cagrDerived.source, sourceExplanation: cagrEvidence,
     },
     {
       key: 'netMargin', label: 'Net Margin (exit year)', description: 'What fraction of revenue becomes profit by year 5. Higher margin = more valuable company. Mature tech companies often land at 15–30%.',
@@ -353,7 +410,7 @@ export function deriveForwardPEAssumptions(data: {
   ]
 
   const evidence: EvidenceItem[] = [
-    { label: 'Revenue CAGR',     text: cagrDerived.evidence },
+    { label: 'Revenue CAGR',     text: cagrEvidence },
     { label: 'Net Margin',       text: marginDerived.evidence },
     { label: 'Exit P/E',         text: peDerived.evidence },
     { label: 'Share Dilution',   text: dilutionDerived.evidence },
@@ -362,7 +419,7 @@ export function deriveForwardPEAssumptions(data: {
 
   return {
     ltvRevenue: ltmRev, sharesOutstanding: shares,
-    revenueCAGR: cagrDerived.cagr, netMargin: marginDerived.margin,
+    revenueCAGR: effectiveCagr, netMargin: marginDerived.margin,
     exitPE: peDerived.pe, dilutionRate: dilutionDerived.rate,
     discountRate: wacc, currentPrice,
     dividendYield: null,
