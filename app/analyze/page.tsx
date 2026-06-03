@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence, useReducedMotion, useInView } from 'motion/react'
 import {
@@ -850,8 +850,28 @@ function RecentlyViewed() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AnalyzePage() {
+  const searchParams = useSearchParams()
   const [quotes, setQuotes]     = useState<FeaturedQuote[]>(STATIC_QUOTES)
   const [dataStale, setDataStale] = useState(false)
+  const [showUpgradeToast, setShowUpgradeToast] = useState(false)
+
+  const bannerLiveData = useMemo(() => {
+    const nvda = quotes.find(q => q.ticker === 'NVDA')
+    const aapl = quotes.find(q => q.ticker === 'AAPL')
+    if (!nvda || !aapl) return undefined
+    return [
+      { ticker: nvda.ticker, impliedCagr: nvda.impliedCagr, historicalCagr3y: nvda.historicalCagr3y },
+      { ticker: aapl.ticker, impliedCagr: aapl.impliedCagr, historicalCagr3y: aapl.historicalCagr3y },
+    ]
+  }, [quotes])
+
+  useEffect(() => {
+    if (searchParams.get('upgraded') === 'true') {
+      setShowUpgradeToast(true)
+      const t = setTimeout(() => setShowUpgradeToast(false), 5000)
+      return () => clearTimeout(t)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     fetch('/api/analyze/quotes')
@@ -868,6 +888,15 @@ export default function AnalyzePage() {
       >
         Skip to content
       </a>
+
+      {showUpgradeToast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-emerald-600 text-white text-sm font-medium px-5 py-3 rounded-xl shadow-lg">
+          <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
+          Welcome to Pro — unlimited stock analysis is now unlocked.
+        </div>
+      )}
       <div id="main-content" className="space-y-8" tabIndex={-1}>
 
         <motion.div
@@ -878,7 +907,7 @@ export default function AnalyzePage() {
           <SearchHero />
         </motion.div>
 
-        <ConceptBanner />
+        <ConceptBanner liveData={bannerLiveData} />
         <PopularAnalysesSection quotes={quotes} dataStale={dataStale} />
         <MarketPricingLeaderboard quotes={quotes} />
         <QuickActions />

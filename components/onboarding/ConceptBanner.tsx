@@ -1,35 +1,50 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { X, Zap, ChevronRight } from 'lucide-react'
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
 import Link from 'next/link'
 
 const KEY = 'intrinsico_concept_seen'
 
-const EXAMPLES = [
-  {
-    ticker: 'NVDA',
-    implied: 45,
-    historical: 60,
-    impliedW: 76,
-    historicalW: 100,
-    impliedColor: 'bg-red-400',
-    note: 'extreme AI bets baked in',
-  },
-  {
-    ticker: 'AAPL',
-    implied: 6,
-    historical: 8,
-    impliedW: 14,
-    historicalW: 18,
-    impliedColor: 'bg-emerald-400',
-    note: 'market betting on a slowdown',
-  },
+export interface ConceptBannerCagr {
+  ticker: string
+  impliedCagr: number
+  historicalCagr3y: number
+}
+
+interface ConceptBannerProps {
+  liveData?: ConceptBannerCagr[]
+}
+
+// Editorial notes by ticker — human commentary on WHY, independent of daily numbers
+const STATIC_NOTES: Record<string, string> = {
+  NVDA: 'extreme AI bets baked in',
+  AAPL: 'market betting on a slowdown',
+}
+
+// Fallback numbers used only when liveData is not passed (e.g. isolated rendering)
+const FALLBACK: ConceptBannerCagr[] = [
+  { ticker: 'NVDA', impliedCagr: 45, historicalCagr3y: 60 },
+  { ticker: 'AAPL', impliedCagr: 6,  historicalCagr3y: 8  },
 ]
 
-export default function ConceptBanner() {
-  // null = not yet determined (prevents flicker on first paint)
+function impliedBarColor(cagr: number): string {
+  if (cagr > 30) return 'bg-red-400'
+  if (cagr > 15) return 'bg-amber-400'
+  return 'bg-emerald-400'
+}
+
+function deriveNote(implied: number, historical: number): string {
+  const gap = implied - historical
+  if (gap > 15)  return 'implied significantly above historical pace'
+  if (gap > 5)   return 'implied above historical pace'
+  if (gap > -5)  return 'implied near historical pace'
+  if (gap > -15) return 'market pricing in a slowdown'
+  return 'implied well below historical pace'
+}
+
+export default function ConceptBanner({ liveData }: ConceptBannerProps) {
   const [visible, setVisible] = useState<boolean | null>(null)
   const reduced = useReducedMotion()
 
@@ -46,7 +61,21 @@ export default function ConceptBanner() {
     }
   }
 
-  // Don't render anything until localStorage has been checked to avoid CLS
+  const examples = useMemo(() => {
+    const source = (liveData && liveData.length >= 2) ? liveData : FALLBACK
+    const maxCagr = Math.max(...source.map(e => Math.max(e.impliedCagr, e.historicalCagr3y)), 1)
+
+    return source.map(ex => ({
+      ticker:        ex.ticker,
+      implied:       ex.impliedCagr,
+      historical:    ex.historicalCagr3y,
+      impliedW:      Math.max(6, Math.round((ex.impliedCagr    / maxCagr) * 100)),
+      historicalW:   Math.max(6, Math.round((ex.historicalCagr3y / maxCagr) * 100)),
+      impliedColor:  impliedBarColor(ex.impliedCagr),
+      note:          STATIC_NOTES[ex.ticker] ?? deriveNote(ex.impliedCagr, ex.historicalCagr3y),
+    }))
+  }, [liveData])
+
   if (visible === null) return null
 
   return (
@@ -82,7 +111,7 @@ export default function ConceptBanner() {
 
                 {/* Mini CAGR visual */}
                 <div className="mt-3 space-y-1.5" aria-hidden="true">
-                  {EXAMPLES.map((ex) => (
+                  {examples.map((ex) => (
                     <div key={ex.ticker} className="flex items-center gap-2 min-w-0">
                       <span className="text-[10px] font-mono font-bold text-slate-400 w-9 shrink-0">
                         {ex.ticker}
@@ -94,7 +123,7 @@ export default function ConceptBanner() {
                             style={{ width: `${ex.impliedW}px` }}
                           />
                           <span className="text-[10px] font-semibold text-slate-700 tabular-nums whitespace-nowrap">
-                            {ex.implied}% implied
+                            {ex.implied.toFixed(1)}% implied
                           </span>
                         </div>
                         <span className="text-[10px] text-slate-300">vs</span>
@@ -104,7 +133,7 @@ export default function ConceptBanner() {
                             style={{ width: `${ex.historicalW}px` }}
                           />
                           <span className="text-[10px] font-semibold text-slate-500 tabular-nums whitespace-nowrap">
-                            {ex.historical}% historical
+                            {ex.historical.toFixed(1)}% historical
                           </span>
                         </div>
                         <span className="text-[10px] text-slate-400 hidden sm:inline">
@@ -117,7 +146,6 @@ export default function ConceptBanner() {
                   {/* Legend + CTA */}
                   <div className="flex items-center gap-3 mt-2.5">
                     <div className="flex items-center gap-1">
-                      {/* Bicolor swatch: implied bar color varies by expectation level */}
                       <div className="flex items-center gap-px">
                         <div className="w-1.5 h-1.5 rounded-l-full bg-emerald-400" />
                         <div className="w-1.5 h-1.5 rounded-r-full bg-red-400" />
