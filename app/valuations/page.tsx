@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import { useSession, signIn } from 'next-auth/react'
 import {
@@ -196,10 +196,20 @@ function SortDropdown({ current, dir, onSort }: {
   onSort:  (key: SortKey, dir: 'asc' | 'desc') => void
 }) {
   const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
   const currentLabel = SORT_OPTIONS.find((o) => o.key === current)?.label ?? 'Updated'
 
+  useEffect(() => {
+    if (!open) return
+    function handleOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [open])
+
   return (
-    <div className="relative">
+    <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
