@@ -931,6 +931,77 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 </div>
               )
             })()}
+
+            {/* Margin trend */}
+            {(() => {
+              const annualMargins = mets
+                .map((m, i) => ({
+                  year:       periods[i]?.year,
+                  grossM:     m.grossMargin,
+                  opM:        m.ebitMargin,
+                  netM:       m.netMargin,
+                }))
+                .filter(p => p.year && p.year !== 'TTM' && !(p as any).isProjected && p.grossM != null)
+                .slice(-6)
+              if (annualMargins.length < 2) return null
+              // Scale bars relative to highest gross margin observed (always the largest)
+              const maxM = Math.max(...annualMargins.map(p => p.grossM!), 0.01)
+              const latestM = annualMargins[annualMargins.length - 1]
+              return (
+                <div className="px-4 sm:px-5 pb-4 border-t border-slate-100 pt-4">
+                  <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                    <p className="text-[13px] font-semibold text-slate-700">Margin Trend</p>
+                    <div className="flex items-center gap-2.5 text-[10px] tabular-nums flex-wrap">
+                      {latestM.grossM != null && (
+                        <span className="text-slate-500">Gross <span className="font-semibold text-blue-600">{(latestM.grossM * 100).toFixed(1)}%</span></span>
+                      )}
+                      {latestM.opM != null && (
+                        <span className="text-slate-500">Op. <span className="font-semibold text-violet-600">{(latestM.opM * 100).toFixed(1)}%</span></span>
+                      )}
+                      {latestM.netM != null && (
+                        <span className="text-slate-500">Net <span className={`font-semibold ${latestM.netM >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{(latestM.netM * 100).toFixed(1)}%</span></span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-end gap-1.5 h-24">
+                    {annualMargins.map((p) => (
+                      <div key={p.year} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-0.5">
+                        <div className="w-full flex gap-0.5 items-end h-full">
+                          {/* Gross margin */}
+                          <div
+                            className="flex-1 min-w-0 bg-blue-400 rounded-t-sm"
+                            style={{ height: `${Math.max(2, (p.grossM! / maxM) * 100)}%` }}
+                            title={`${p.year} Gross Margin: ${(p.grossM! * 100).toFixed(1)}%`}
+                          />
+                          {/* Operating margin */}
+                          {p.opM != null ? (
+                            <div
+                              className="flex-1 min-w-0 bg-violet-400 rounded-t-sm"
+                              style={{ height: `${Math.max(2, (Math.max(0, p.opM) / maxM) * 100)}%` }}
+                              title={`${p.year} Op. Margin: ${(p.opM * 100).toFixed(1)}%`}
+                            />
+                          ) : <div className="flex-1" />}
+                          {/* Net margin */}
+                          {p.netM != null ? (
+                            <div
+                              className={`flex-1 min-w-0 rounded-t-sm ${p.netM >= 0 ? 'bg-emerald-400' : 'bg-red-300'}`}
+                              style={{ height: `${Math.max(2, (Math.abs(p.netM) / maxM) * 100)}%` }}
+                              title={`${p.year} Net Margin: ${(p.netM * 100).toFixed(1)}%`}
+                            />
+                          ) : <div className="flex-1" />}
+                        </div>
+                        <span className="text-[8px] text-slate-400 truncate max-w-full">{p.year}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-4 mt-1.5 flex-wrap">
+                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-blue-400 inline-block" />Gross</span>
+                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-violet-400 inline-block" />Operating</span>
+                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Net</span>
+                  </div>
+                </div>
+              )
+            })()}
           </div>
         )
       })()}
