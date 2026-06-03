@@ -564,6 +564,7 @@ function StockPageBody() {
                     peRatio={data.quote.peRatio ?? null}
                     beta={data.wacc?.inputs?.beta ?? null}
                     pegRatio={data.quote.pegRatio ?? null}
+                    holdingReturns={data.holdingReturns ?? null}
                     userModelFairValue={userModelFairValue}
                     analystRecommendation={data.analystRecommendation ?? ''}
                     onViewValuation={() => handleTabChange('valuation')}
@@ -655,6 +656,7 @@ function StockPageBody() {
                       ratings={data.ratings}
                       scores={computedScores ?? data.scores}
                       financialsData={data}
+                      nextEarningsDate={data.quote.nextEarningsDate ?? null}
                     />
                   ) : (
                     <p className="text-sm text-slate-400 text-center py-12">Health data unavailable for this stock.</p>

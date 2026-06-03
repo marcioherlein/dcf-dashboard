@@ -14,6 +14,7 @@ import CompanyCard from '@/components/stock/overview/CompanyCard'
 import IncomeFlowCard from './IncomeFlowCard'
 import { ETFExposureCard } from './ETFExposureCard'
 import QuickStatsBar from '@/components/stock/QuickStatsBar'
+import HoldingReturns from '@/components/stock/HoldingReturns'
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -80,6 +81,11 @@ interface SummaryTabProps {
   peRatio?: number | null
   beta?: number | null
   pegRatio?: number | null
+  // holding returns
+  holdingReturns?: {
+    stock1y: number | null; stock3y: number | null; stock5y: number | null
+    spy1y: number | null;   spy3y: number | null;   spy5y: number | null
+  } | null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   userModelFairValue?: number | null
   // callbacks
@@ -99,7 +105,7 @@ export default function SummaryTab({
   wacc, terminalG, historicalCAGR, analystCAGR, isEmergingMarket, revenueHistory,
   scenarios, ratings, scores, businessProfile, cagrAnalysis, statementsData,
   valuationMethods, quote, analystTargetMean, userModelFairValue,
-  marketCap, peRatio, beta, pegRatio,
+  marketCap, peRatio, beta, pegRatio, holdingReturns,
   onViewValuation, onViewRisks, onViewAssumptions, analystRecommendation,
 }: SummaryTabProps) {
 
@@ -174,8 +180,12 @@ export default function SummaryTab({
         />
       </div>
 
-      {/* ── Zone 2: What the price assumes ───────────────────────────────── */}
-      <div className="rounded-[20px] bg-[#F8FAFC] border border-[#E6ECF5] p-4 sm:p-5">
+      {/* ── Zone 1.5: Historical returns vs. SPY ─────────────────────────── */}
+      {holdingReturns && (
+        <HoldingReturns returns={holdingReturns} ticker={ticker} />
+      )}
+
+      {/* ── Zone 2: What the price assumes ───────────────────────────────── */}      <div className="rounded-[20px] bg-[#F8FAFC] border border-[#E6ECF5] p-4 sm:p-5">
         <p className="text-[12px] font-[650] text-slate-500 mb-3">What the market is pricing in</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
           <ReverseDCFCompactCard

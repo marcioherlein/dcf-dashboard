@@ -17,6 +17,7 @@ interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   financialsData?: any
   collapsible?: boolean
+  nextEarningsDate?: string | null
 }
 
 function InfoTip({ text }: { text: string }) {
@@ -93,7 +94,7 @@ function CategoryRow({ catKey, ratings }: { catKey: string; ratings: StockRating
   )
 }
 
-export default function HealthSection({ ratings, scores, financialsData, collapsible }: Props) {
+export default function HealthSection({ ratings, scores, financialsData, collapsible, nextEarningsDate }: Props) {
   const [open, setOpen] = useState(true)
   const piotroski       = scores.piotroski?.score ?? null
   const altmanZone      = scores.altman?.zone ?? null
@@ -142,6 +143,26 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
       )}
 
       {(!collapsible || open) && (
+      <>
+      {/* Earnings countdown notice */}
+      {nextEarningsDate && (() => {
+        const d = new Date(nextEarningsDate)
+        const daysUntil = Math.ceil((d.getTime() - Date.now()) / 86400000)
+        if (daysUntil < 0 || daysUntil > 45) return null
+        const label = daysUntil === 0 ? 'Earnings today' : daysUntil === 1 ? 'Earnings tomorrow' : `Earnings in ${daysUntil} days`
+        const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        return (
+          <div className="mx-4 sm:mx-6 mt-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 flex items-center gap-3">
+            <svg className="w-4 h-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <div className="min-w-0">
+              <p className="text-[12px] font-semibold text-amber-800">{label} — {dateStr}</p>
+              <p className="text-[11px] text-amber-600 mt-0.5">Health scores are based on the most recent filing. New data will be available after the report.</p>
+            </div>
+          </div>
+        )
+      })()}
       <div className="px-4 sm:px-6 pb-6 pt-4">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
@@ -234,7 +255,7 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
         </div>
       </div>
       </div>
-      )} {/* end collapsible content */}
+      </> )} {/* end collapsible content */}
     </div>
   )
 }

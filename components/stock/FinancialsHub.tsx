@@ -1075,7 +1075,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         cashFlow={finCF}
         currency={currency}
         isDark={false}
-        historicalMultiples={[]}
+        historicalMultiples={financialsData?.historicalMultiples ?? []}
         currentPE={financialsData?.quote?.peRatio ?? null}
         currentEVEbitda={financialsData?.businessProfile?.evToEbitda ?? null}
         currentEVRevenue={financialsData?.businessProfile?.evToRevenue ?? null}
