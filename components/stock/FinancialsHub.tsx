@@ -1059,6 +1059,64 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 </div>
               )
             })()}
+
+            {/* OCF vs FCF — cash conversion efficiency */}
+            {(() => {
+              const ocfPoints = mets
+                .map((m, i) => ({ year: periods[i]?.year, ocf: m.ocf, fcf: m.fcf }))
+                .filter(p => p.year && p.year !== 'TTM' && !(p as any).isProjected && p.ocf != null && p.ocf! > 0 && p.fcf != null)
+                .slice(-6)
+              if (ocfPoints.length < 2) return null
+              const maxOCF = Math.max(...ocfPoints.map(p => p.ocf!), 0.01)
+              const latestConversion = (() => {
+                const p = ocfPoints[ocfPoints.length - 1]
+                if (p.ocf == null || p.ocf <= 0 || p.fcf == null) return null
+                return p.fcf / p.ocf
+              })()
+              return (
+                <div className="px-4 sm:px-5 pb-4 border-t border-slate-100 pt-4">
+                  <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                    <p className="text-[13px] font-semibold text-slate-700">Cash Generation</p>
+                    {latestConversion != null && (
+                      <span className={`text-[11px] font-semibold tabular-nums ${latestConversion >= 0.7 ? 'text-emerald-600' : latestConversion >= 0.4 ? 'text-amber-600' : 'text-red-500'}`}>
+                        FCF conversion: {(latestConversion * 100).toFixed(0)}%
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-end gap-1.5 h-24">
+                    {ocfPoints.map((p) => {
+                      const ocfH  = Math.max(4, (p.ocf! / maxOCF) * 100)
+                      const fcfH  = p.fcf != null ? Math.max(2, (Math.abs(p.fcf) / maxOCF) * 100) : null
+                      const fcfPos = p.fcf != null && p.fcf >= 0
+                      return (
+                        <div key={p.year} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-0.5">
+                          <div className="w-full flex gap-0.5 items-end h-full">
+                            <div
+                              className="flex-[2] min-w-0 bg-teal-400 rounded-t-sm"
+                              style={{ height: `${ocfH}%` }}
+                              title={`${p.year} Operating CF: ${currency}${p.ocf!.toFixed(0)}M`}
+                            />
+                            {fcfH != null ? (
+                              <div
+                                className={`flex-1 min-w-0 rounded-t-sm ${fcfPos ? 'bg-emerald-500' : 'bg-red-400'}`}
+                                style={{ height: `${fcfH}%` }}
+                                title={`${p.year} Free CF: ${currency}${p.fcf!.toFixed(0)}M`}
+                              />
+                            ) : <div className="flex-1" />}
+                          </div>
+                          <span className="text-[8px] text-slate-400 truncate max-w-full">{p.year}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <div className="flex items-center gap-4 mt-1.5 flex-wrap">
+                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-teal-400 inline-block" />Operating CF</span>
+                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-500 inline-block" />Free CF</span>
+                    <span className="text-[9px] text-slate-400">Both scaled to max OCF. FCF conversion = FCF/OCF</span>
+                  </div>
+                </div>
+              )
+            })()}
           </div>
         )
       })()}
