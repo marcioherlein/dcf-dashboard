@@ -4,6 +4,7 @@ interface Stat {
   label: string
   value: string
   sub?: string
+  gauge?: { pct: number } // optional visual gauge (0–100)
 }
 
 interface QuickStatsBarProps {
@@ -53,12 +54,13 @@ export default function QuickStatsBar({
 
   if (high52 != null && low52 != null) {
     const pct = currentPrice != null && high52 > low52
-      ? ((currentPrice - low52) / (high52 - low52)) * 100
+      ? Math.max(0, Math.min(100, ((currentPrice - low52) / (high52 - low52)) * 100))
       : null
     stats.push({
       label: '52W Range',
       value: `${currency}${low52.toFixed(2)} – ${currency}${high52.toFixed(2)}`,
-      sub: pct != null ? `${pct.toFixed(0)}% from low` : undefined,
+      sub: pct != null ? `${pct.toFixed(0)}% from 52W low` : undefined,
+      gauge: pct != null ? { pct } : undefined,
     })
   }
 
@@ -89,8 +91,27 @@ export default function QuickStatsBar({
             className={i >= 4 ? 'hidden lg:block' : i >= 2 ? 'hidden sm:block' : undefined}
           >
             <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-0.5 truncate">{stat.label}</p>
-            <p className={`text-[13px] font-semibold tabular-nums leading-tight truncate ${stat.label === 'Next Earnings' ? 'text-amber-700' : 'text-slate-800'}`}>{stat.value}</p>
-            {stat.sub && <p className="text-[11px] text-slate-400 mt-0.5 truncate">{stat.sub}</p>}
+            {stat.gauge ? (
+              <div>
+                {/* Gauge bar for 52W range */}
+                <div className="relative h-1.5 bg-slate-100 rounded-full overflow-visible mb-1 mt-1">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-slate-300 via-blue-400 to-emerald-400"
+                    style={{ width: `${stat.gauge.pct}%` }}
+                  />
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-blue-600 border border-white shadow-sm"
+                    style={{ left: `calc(${stat.gauge.pct}% - 4px)` }}
+                  />
+                </div>
+                {stat.sub && <p className="text-[11px] text-slate-400 mt-0.5 truncate">{stat.sub}</p>}
+              </div>
+            ) : (
+              <>
+                <p className={`text-[13px] font-semibold tabular-nums leading-tight truncate ${stat.label === 'Next Earnings' ? 'text-amber-700' : 'text-slate-800'}`}>{stat.value}</p>
+                {stat.sub && <p className="text-[11px] text-slate-400 mt-0.5 truncate">{stat.sub}</p>}
+              </>
+            )}
           </div>
         ))}
       </div>
