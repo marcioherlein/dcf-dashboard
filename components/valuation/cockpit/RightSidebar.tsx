@@ -140,13 +140,13 @@ function WeightBars({ methods }: { methods: CockpitMethodResult[] }) {
               className="w-2 h-2 rounded-full shrink-0"
               style={{ background: isAvail ? METHOD_FILLS[i] : '#E2E8F0' }}
             />
-            <span className={`text-[11px] flex-1 min-w-0 ${isAvail ? 'text-[#475569]' : 'text-[#CBD5E1]'}`}>
+            <span className={`text-[11px] flex-1 min-w-0 truncate ${isAvail ? 'text-[#475569]' : 'text-[#CBD5E1]'}`}>
               {m.method}
             </span>
             <div className="w-20 h-1.5 bg-[#F1F5F9] rounded-full overflow-hidden shrink-0">
               {isAvail && (
                 <div
-                  className="h-full rounded-full transition-[width] duration-300"
+                  className="h-full rounded-full motion-safe:transition-[width] duration-300"
                   style={{ width: `${effectivePct}%`, background: METHOD_FILLS[i] }}
                 />
               )}
@@ -178,7 +178,7 @@ export default function RightSidebar({
 
   return (
     <div
-      className="rounded-[18px] border border-[#E6ECF5] bg-white flex flex-col gap-4 sticky top-4"
+      className="rounded-[18px] border border-[#E6ECF5] bg-white flex flex-col gap-4"
       style={{ boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.04)' }}
     >
       <div className="px-5 pt-5 pb-0">
@@ -247,7 +247,7 @@ export default function RightSidebar({
         <div className="px-5">
           <button
             onClick={onSave}
-            className="w-full rounded-[10px] text-white text-[13px] font-[650] py-2.5 px-4 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+            className="w-full rounded-[10px] text-white text-[13px] font-[650] py-2.5 px-4 transition-all motion-safe:active:scale-[0.98] flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-blue-600"
             style={{ background: '#2563EB', boxShadow: '0 2px 12px rgba(37,99,235,0.25)' }}
           >
             <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
@@ -262,7 +262,7 @@ export default function RightSidebar({
         <div className="px-5">
           <button
             onClick={onViewFullDCF}
-            className="w-full rounded-[10px] border border-[#E6ECF5] bg-white hover:bg-[#F8FAFC] text-[#475569] hover:text-[#0F172A] text-[13px] font-[650] py-2.5 px-4 transition-colors flex items-center justify-center gap-2"
+            className="w-full rounded-[10px] border border-[#E6ECF5] bg-white hover:bg-[#F8FAFC] text-[#475569] hover:text-[#0F172A] text-[13px] font-[650] py-2.5 px-4 transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
           >
             View Year-by-Year DCF
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -274,7 +274,12 @@ export default function RightSidebar({
 
       <div className="px-5 pb-5">
         <p className="text-[11px] text-[#64748B] leading-relaxed pt-3 border-t border-[#F1F5F9]">
-          Blended estimate from {output.methods.filter(m => m.fairValue != null && m.fairValue > 0).map(m => m.method).join(', ')}. Not investment advice.
+          {(() => {
+            const activeNames = output.methods.filter(m => m.fairValue != null && m.fairValue > 0).map(m => m.method)
+            return activeNames.length > 0
+              ? `Blended estimate from ${activeNames.join(', ')}. Not investment advice.`
+              : 'Insufficient data to compute a blended estimate. Not investment advice.'
+          })()}
         </p>
       </div>
     </div>

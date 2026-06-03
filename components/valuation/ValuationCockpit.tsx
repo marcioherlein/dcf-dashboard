@@ -10,17 +10,15 @@ import {
 import { buildSnapshot, seedAssumptions } from '@/lib/valuation/cockpitBuilders'
 import { buildValueInvestingData, computeStarRating, computeUncertainty } from '@/lib/valuation/valueInvestingAnalysis'
 import { getIndustryMultiples } from '@/lib/dcf/calculateMultiples'
-import SummaryCards from './cockpit/SummaryCards'
 import GuidanceStrip from './cockpit/GuidanceStrip'
 import BusinessChecks from './cockpit/BusinessChecks'
 import ValueInvestingPanel from './cockpit/ValueInvestingPanel'
 import FairValueChart from './cockpit/FairValueChart'
 import { type SparkPoint } from './cockpit/AssumptionsPanel'
-import ScenarioCards from './cockpit/ScenarioCards'
 import ValuationMethodCards from './cockpit/ValuationMethodCards'
 import ModelDivergencePanel from './cockpit/ModelDivergencePanel'
 import RightSidebar from './cockpit/RightSidebar'
-import HistoricalMultiplesChart from './cockpit/HistoricalMultiplesChart'
+import VerdictHero from './cockpit/VerdictHero'
 import SensitivityMatrix from './SensitivityMatrix'
 import SaveToWatchlistDialog from '@/components/watchlist/SaveToWatchlistDialog'
 import type { WatchlistSavePayload } from '@/components/watchlist/SaveToWatchlistDialog'
@@ -344,12 +342,13 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
           assumptionsPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }}
       />
-      {/* 5-item summary strip */}
-      <SummaryCards
+      {/* Verdict hero — editorial headline, key numbers, scenario slider */}
+      <VerdictHero
         output={output}
         currentPrice={currentPrice}
         changePct={changePct}
         currency={currency}
+        ticker={ticker}
         starRating={starRating}
       />
 
@@ -366,7 +365,32 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
       {/* Collapsible guidance at top */}
       <GuidanceStrip />
 
-      {/* Independent checks: business quality, growth premium, bonds, reverse DCF, P/B */}
+      {/* Valuation Models — inline assumption editing + mini historical charts */}
+      <div ref={assumptionsPanelRef} id="assumptions-panel">
+        {clampNote && (
+          <p className="mb-2 text-[11px] text-[#D97706] bg-[#FFFBEB] border border-[#FDE68A] rounded-lg px-3 py-2">
+            ⚠ {clampNote}
+          </p>
+        )}
+        <ValuationMethodCards
+          methods={output.methods}
+          currentPrice={currentPrice}
+          currency={currency}
+          fcfMargin={snapshot.fcfMargin}
+          ttmEbitdaDollars={snapshot.ttmEbitdaDollars}
+          assumptions={assumptions}
+          historicalData={historicalData}
+          onChange={handleAssumptionChange}
+          onReset={handleReset}
+          onUndo={handleUndo}
+          canUndo={history.length > 0}
+          sensitivity={sensitivity}
+          sectorBenchmarks={sectorBenchmarks}
+          onScrollToFullDCF={scrollToFullDCF}
+        />
+      </div>
+
+      {/* Business fundamentals — what the market is pricing in vs what the business actually delivers */}
       <BusinessChecks
         roic={valueInvestingData.roic}
         roicSpread={valueInvestingData.roicSpread}
@@ -394,38 +418,6 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         countryRisk={valueInvestingData.countryRiskDisclaimer}
       />
 
-      {/* Scenario analysis — three stress cases, full width, above the matrix */}
-      <ScenarioCards
-        scenarios={output.scenarios}
-        currentPrice={currentPrice}
-        currency={currency}
-      />
-
-      {/* Valuation Models — inline assumption editing + mini historical charts */}
-      <div ref={assumptionsPanelRef} id="assumptions-panel">
-        {clampNote && (
-          <p className="mb-2 text-[11px] text-[#D97706] bg-[#FFFBEB] border border-[#FDE68A] rounded-lg px-3 py-2">
-            ⚠ {clampNote}
-          </p>
-        )}
-        <ValuationMethodCards
-          methods={output.methods}
-          currentPrice={currentPrice}
-          currency={currency}
-          fcfMargin={snapshot.fcfMargin}
-          ttmEbitdaDollars={snapshot.ttmEbitdaDollars}
-          assumptions={assumptions}
-          historicalData={historicalData}
-          onChange={handleAssumptionChange}
-          onReset={handleReset}
-          onUndo={handleUndo}
-          canUndo={history.length > 0}
-          sensitivity={sensitivity}
-          sectorBenchmarks={sectorBenchmarks}
-          onScrollToFullDCF={scrollToFullDCF}
-        />
-      </div>
-
       {/* Sensitivity matrix — always visible, updates live with assumption changes */}
       <SensitivityMatrix
         assumptions={assumptions}
@@ -448,25 +440,6 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         onSave={() => setSaveOpen(true)}
         lastChange={lastChange}
       />
-
-      {/* Historical multiples chart — show when history exists OR current metrics available */}
-      {((apiData.historicalMultiples?.length ?? 0) > 0 || apiData.quote?.peRatio != null) && (
-        <HistoricalMultiplesChart
-          historicalMultiples={apiData.historicalMultiples ?? []}
-          currentPE={apiData.quote?.peRatio ?? null}
-          currentEVEbitda={
-            (apiData.valuationMethods?.models?.multiples?.estimates ?? [])
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              .find((e: any) => e.multiple === 'EV/EBITDA')?.actualValue ?? null
-          }
-          currentEVRevenue={
-            (apiData.valuationMethods?.models?.multiples?.estimates ?? [])
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              .find((e: any) => e.multiple === 'EV/Revenue')?.actualValue ?? null
-          }
-          sectorBenchmarks={sectorBenchmarks}
-        />
-      )}
 
       {/* Evidence tier — collapsed by default; decision surface above this fold */}
       <details className="group" id="model_evidence">

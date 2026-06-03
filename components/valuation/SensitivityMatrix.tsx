@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { computeBlendedFV, type ValuationAssumptions, type CockpitSnapshot } from '@/lib/valuation/cockpit'
 import { fmtPrice } from '@/lib/formatters'
@@ -67,55 +67,6 @@ interface Props {
   defaultAxisX: keyof ValuationAssumptions
 }
 
-// ── Axis pill selector ────────────────────────────────────────────────────────
-
-function AxisPills({
-  label, role, selected, blocked, onSelect,
-}: {
-  label: string
-  role: 'row' | 'col'
-  selected: keyof ValuationAssumptions
-  blocked: keyof ValuationAssumptions
-  onSelect: (k: keyof ValuationAssumptions) => void
-}) {
-  const activeClass = role === 'row'
-    ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
-    : 'bg-violet-600 border-violet-600 text-white shadow-sm'
-  const hoverClass = role === 'row'
-    ? 'bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600'
-    : 'bg-white border-slate-200 text-slate-600 hover:border-violet-300 hover:text-violet-600'
-
-  return (
-    <div className="flex items-center gap-2 flex-wrap">
-      <span className="text-[10px] font-[700] text-slate-400 uppercase tracking-wide w-[44px] shrink-0 leading-tight">
-        {label}
-      </span>
-      <div className="flex items-center gap-1.5 flex-wrap">
-        {AXIS_FIELDS.map(f => {
-          const isSelected = f.key === selected
-          const isBlocked = f.key === blocked
-          return (
-            <button
-              key={f.key}
-              disabled={isBlocked}
-              onClick={() => onSelect(f.key)}
-              title={isBlocked ? 'Already used on the other axis' : f.description}
-              className={cn(
-                'px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all border',
-                isSelected ? activeClass
-                  : isBlocked ? 'border-transparent text-slate-300 cursor-not-allowed select-none'
-                  : hoverClass,
-              )}
-            >
-              {f.shortLabel}
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
 // ── Cell detail panel ─────────────────────────────────────────────────────────
 
 function CellDetail({
@@ -135,9 +86,11 @@ function CellDetail({
   const { fv, upside } = grid[yi][xi]
   const isBase = yi === baseYIdx && xi === baseXIdx
   const scenarioAssumptions: ValuationAssumptions = { ...assumptions, [fieldY.key]: yv, [fieldX.key]: xv }
+  const closeRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => { closeRef.current?.focus() }, [])
 
   return (
-    <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4 animate-in fade-in slide-in-from-top-1 duration-150">
+    <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1 duration-150">
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
@@ -156,7 +109,8 @@ function CellDetail({
         <button
           onClick={onClose}
           aria-label="Close scenario detail"
-          className="w-6 h-6 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors text-[16px] leading-none shrink-0"
+          ref={closeRef}
+          className="w-6 h-6 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors text-[16px] leading-none shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
         >
           ×
         </button>
@@ -228,6 +182,44 @@ function CellDetail({
   )
 }
 
+// ── Axis pill button ──────────────────────────────────────────────────────────
+
+function AxisPill({
+  field, isSelected, isBlocked, role, onClick,
+}: {
+  field: AxisField
+  isSelected: boolean
+  isBlocked: boolean
+  role: 'row' | 'col'
+  onClick: () => void
+}) {
+  const activeClass = role === 'row'
+    ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
+    : 'bg-violet-600 border-violet-600 text-white shadow-sm'
+  const hoverClass = role === 'row'
+    ? 'bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600'
+    : 'bg-white border-slate-200 text-slate-600 hover:border-violet-300 hover:text-violet-600'
+
+  return (
+    <button
+      disabled={isBlocked}
+      onClick={onClick}
+      aria-label={`${isBlocked ? `${field.shortLabel} (already used on other axis)` : `Set ${role === 'row' ? 'row' : 'column'} axis to ${field.shortLabel}`}`}
+      aria-pressed={isSelected}
+      title={isBlocked ? 'Already used on the other axis' : field.description}
+      className={cn(
+        'px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all border whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1',
+        role === 'row' ? 'focus-visible:ring-blue-500' : 'focus-visible:ring-violet-500',
+        isSelected ? activeClass
+          : isBlocked ? 'border-transparent text-slate-300 cursor-not-allowed select-none'
+          : hoverClass,
+      )}
+    >
+      {field.shortLabel}
+    </button>
+  )
+}
+
 // ── Main Component ─────────────────────────────────────────────────────────────
 
 export default function SensitivityMatrix({
@@ -291,10 +283,10 @@ export default function SensitivityMatrix({
   }
 
   return (
-    <div className="bg-white rounded-[14px] border border-[#E6ECF5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-5">
+    <div className="bg-white rounded-[14px] border border-[#E6ECF5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 sm:p-5">
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 flex-wrap mb-4">
+      <div className="flex items-start justify-between gap-3 flex-col sm:flex-row mb-4">
         <div>
           <div className="flex items-center gap-2">
             <p className="text-[13px] font-bold text-slate-800">Sensitivity Analysis</p>
@@ -306,17 +298,19 @@ export default function SensitivityMatrix({
         </div>
 
         {/* Display mode toggle */}
-        <div className="flex items-center gap-1 rounded-lg border border-slate-200 p-0.5 bg-slate-50 shrink-0">
+        <div className="flex items-center gap-1 rounded-lg border border-slate-200 p-0.5 bg-slate-50 shrink-0 self-start sm:self-auto">
           <button
             onClick={() => setDisplayMode('upside')}
-            className={cn('text-[11px] font-semibold px-3 py-1 rounded-md transition-all',
+            aria-pressed={displayMode === 'upside'}
+            className={cn('text-[11px] font-semibold px-3 py-1 rounded-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1',
               displayMode === 'upside' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600')}
           >
             % Upside
           </button>
           <button
             onClick={() => setDisplayMode('fv')}
-            className={cn('text-[11px] font-semibold px-3 py-1 rounded-md transition-all',
+            aria-pressed={displayMode === 'fv'}
+            className={cn('text-[11px] font-semibold px-3 py-1 rounded-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1',
               displayMode === 'fv' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600')}
           >
             Fair Value
@@ -324,18 +318,38 @@ export default function SensitivityMatrix({
         </div>
       </div>
 
-      {/* Axis pills */}
-      <div className="flex flex-col gap-2 mb-5 p-3 bg-slate-50/60 rounded-xl border border-slate-100">
-        <AxisPills label="Rows" role="row" selected={axisY} blocked={axisX} onSelect={pickY} />
-        <AxisPills label="Cols" role="col" selected={axisX} blocked={axisY} onSelect={pickX} />
-      </div>
-
-      {/* Grid */}
+      {/* Grid — axis selectors embedded at their axis */}
+      {currentPrice <= 0 ? (
+        <div className="py-8 text-center rounded-xl border border-slate-100 bg-slate-50">
+          <p className="text-[12px] font-semibold text-slate-500">Price unavailable</p>
+          <p className="text-[11px] text-slate-400 mt-1">Upside calculations require a current market price.</p>
+        </div>
+      ) : (
       <div className="overflow-x-auto -mx-1 px-1">
-        <table className="w-full border-collapse" style={{ minWidth: 360 }}>
+        <table className="w-full border-collapse" style={{ minWidth: 400 }}>
           <thead>
+            {/* COLS selector — spans the data column area */}
             <tr>
-              <th className="text-right pr-2 pb-2 w-[90px]">
+              <th colSpan={2} />
+              <th colSpan={xVals.length} className="pb-2 pl-1">
+                <div className="flex items-center gap-1 flex-wrap">
+                  <span className="text-[8px] font-[700] text-violet-500 uppercase tracking-wide shrink-0 mr-0.5">COLS</span>
+                  {AXIS_FIELDS.map(f => (
+                    <AxisPill
+                      key={f.key}
+                      field={f}
+                      isSelected={f.key === axisX}
+                      isBlocked={f.key === axisY}
+                      role="col"
+                      onClick={() => pickX(f.key)}
+                    />
+                  ))}
+                </div>
+              </th>
+            </tr>
+            {/* Column value headers */}
+            <tr>
+              <th colSpan={2} className="pr-2 pb-2 text-right">
                 <div className="flex flex-col items-end gap-0.5">
                   <span className="text-[9px] font-[700] text-blue-400 uppercase tracking-wide">{fieldY.shortLabel} ↓</span>
                   <span className="text-[9px] font-[700] text-violet-400 uppercase tracking-wide">{fieldX.shortLabel} →</span>
@@ -356,7 +370,27 @@ export default function SensitivityMatrix({
           <tbody>
             {yVals.map((yv, yi) => (
               <tr key={yi}>
-                <td className="pr-2 text-right py-0.5">
+                {/* ROWS selector — first row only, spans all data rows */}
+                {yi === 0 && (
+                  <td rowSpan={yVals.length} className="align-top pt-0.5 pr-2 w-[90px]">
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="text-[8px] font-[700] text-blue-500 uppercase tracking-wide mb-0.5">ROWS</span>
+                      {AXIS_FIELDS.map(f => (
+                        <AxisPill
+                          key={f.key}
+                          field={f}
+                          isSelected={f.key === axisY}
+                          isBlocked={f.key === axisX}
+                          role="row"
+                          onClick={() => pickY(f.key)}
+                        />
+                      ))}
+                    </div>
+                  </td>
+                )}
+
+                {/* Row label */}
+                <td className="pr-2 text-right py-0.5 w-[52px]">
                   <div className={cn('text-[11px] font-[700] tabular-nums', yi === baseYIdx ? 'text-blue-600' : 'text-slate-500')}>
                     {fieldY.format(yv)}
                   </div>
@@ -365,6 +399,7 @@ export default function SensitivityMatrix({
                   )}
                 </td>
 
+                {/* Data cells */}
                 {xVals.map((_, xi) => {
                   const { fv, upside } = grid[yi][xi]
                   const isBase = yi === baseYIdx && xi === baseXIdx
@@ -378,22 +413,22 @@ export default function SensitivityMatrix({
                         aria-pressed={isSelected}
                         aria-label={`Scenario: ${fieldY.shortLabel} ${fieldY.format(yv)}, ${fieldX.shortLabel} ${fieldX.format(xVals[xi])}`}
                         className={cn(
-                          'w-full flex flex-col items-center justify-center rounded-lg h-[44px] transition-all cursor-pointer group',
+                          'w-full flex flex-col items-center justify-center rounded-lg h-[36px] sm:h-[44px] transition-all cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-1',
                           colors.bg,
                           isBase && !isSelected && 'ring-2 ring-blue-500 ring-offset-1',
-                          isSelected ? 'ring-2 ring-slate-900 ring-offset-2 scale-105 z-10 relative shadow-md' : 'hover:brightness-95 hover:scale-[1.03]',
+                          isSelected ? 'ring-2 ring-slate-900 ring-offset-2 motion-safe:scale-105 z-10 relative shadow-md' : 'motion-safe:hover:brightness-95 motion-safe:hover:scale-[1.03]',
                         )}
                       >
                         {displayMode === 'upside' ? (
                           <>
-                            <span className={cn('text-[12px] font-[800] tabular-nums leading-tight', colors.text)}>
+                            <span className={cn('text-[11px] sm:text-[12px] font-[800] tabular-nums leading-tight', colors.text)}>
                               {upside != null ? (upside >= 0 ? '+' : '') + (upside * 100).toFixed(0) + '%' : '—'}
                             </span>
                             {isBase && <span className={cn('text-[8px] font-[600] leading-none mt-0.5', colors.text)}>base</span>}
                           </>
                         ) : (
                           <>
-                            <span className={cn('text-[11px] font-[800] tabular-nums leading-tight', colors.text)}>
+                            <span className={cn('text-[10px] sm:text-[11px] font-[800] tabular-nums leading-tight', colors.text)}>
                               {fv != null ? fmtPrice(fv, currency) : '—'}
                             </span>
                             {isBase && <span className={cn('text-[8px] font-[600] leading-none mt-0.5', colors.text)}>base</span>}
@@ -408,6 +443,7 @@ export default function SensitivityMatrix({
           </tbody>
         </table>
       </div>
+      )} {/* end currentPrice > 0 */}
 
       {/* Cell detail panel */}
       {selectedCell != null && (
