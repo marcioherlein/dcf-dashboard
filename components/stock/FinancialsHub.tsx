@@ -829,6 +829,114 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         const targetUpside = q.analystTargetMean > 0 && q.price > 0 ? (q.analystTargetMean - q.price) / q.price : null
         return (
           <div className="px-4 sm:px-5 py-5 space-y-5">
+
+            {/* Quarterly Earnings Momentum */}
+            {(() => {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const qRows: any[] = (financialsData?.incomeStatementQuarterly ?? [])
+              if (qRows.length < 4) return null
+              // Sort oldest-first, take last 8 quarters
+              const sorted = [...qRows].sort((a, b) => (a.date ?? '').localeCompare(b.date ?? '')).slice(-8)
+              // YoY helpers
+              const yoyPct = (i: number, arr: number[]): number | null => {
+                const prev = arr[i - 4]
+                const curr = arr[i]
+                if (prev == null || curr == null || prev === 0 || prev < 0) return null
+                return (curr - prev) / Math.abs(prev)
+              }
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const revArr = sorted.map((r: any) => (typeof r.revenue === 'number' ? r.revenue : null) as number | null)
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const epsArr = sorted.map((r: any) => (typeof r.epsDiluted === 'number' ? r.epsDiluted : (typeof r.eps === 'number' ? r.eps : null)) as number | null)
+              const maxRev = Math.max(...revArr.map(v => v ?? 0))
+              const maxAbsEps = Math.max(...epsArr.map(v => Math.abs(v ?? 0)))
+              // Beat/miss lookup from earningsSurprises
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const surprisesRaw: any[] = financialsData?.earningsSurprises ?? []
+              const surpriseByDate = new Map(surprisesRaw.map(s => [s.date?.slice(0, 10), s.surprisePercent as number | null]))
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const quarterLabel = (r: any) => {
+                const period = r.period ?? ''
+                const year = (r.date ?? '').slice(2, 4)
+                return period ? `${period} '${year}` : (r.date ?? '').slice(0, 7)
+              }
+              const fmtRevShort = (v: number) => v >= 1e12 ? (v / 1e12).toFixed(1) + 'T' : v >= 1e9 ? (v / 1e9).toFixed(1) + 'B' : v >= 1e6 ? (v / 1e6).toFixed(0) + 'M' : v.toFixed(0)
+
+              return (
+                <div>
+                  <p className="text-[13px] font-semibold text-slate-700 mb-4">Quarterly Earnings Momentum</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                    {/* Revenue chart */}
+                    {maxRev > 0 && (
+                      <div>
+                        <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-2">Revenue</p>
+                        <div className="flex items-end gap-1 h-28">
+                          {sorted.map((r, i) => {
+                            const val = revArr[i]
+                            const yoy = yoyPct(i, revArr as number[])
+                            const hp = val != null && maxRev > 0 ? Math.max(6, (val / maxRev) * 100) : 4
+                            const positive = yoy == null || yoy >= 0
+                            return (
+                              <div key={i} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-0.5">
+                                {yoy != null && (
+                                  <span className={`text-[8px] font-semibold leading-none ${positive ? 'text-emerald-600' : 'text-red-500'}`}>
+                                    {positive ? '+' : ''}{(yoy * 100).toFixed(0)}%
+                                  </span>
+                                )}
+                                <div className="relative w-full" style={{ height: `${hp}%` }}>
+                                  <div className={`w-full h-full rounded-t-sm ${positive ? 'bg-blue-400' : 'bg-slate-300'}`}
+                                    title={`${quarterLabel(r)}: ${sym}${fmtRevShort(val ?? 0)}`} />
+                                </div>
+                                <span className="text-[8px] text-slate-400 truncate max-w-full">{quarterLabel(r)}</span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* EPS chart */}
+                    {maxAbsEps > 0 && (
+                      <div>
+                        <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-2">EPS (Diluted)</p>
+                        <div className="flex items-end gap-1 h-28">
+                          {sorted.map((r, i) => {
+                            const val = epsArr[i]
+                            const yoy = yoyPct(i, epsArr as number[])
+                            const hp = val != null && maxAbsEps > 0 ? Math.max(6, (Math.abs(val) / maxAbsEps) * 100) : 4
+                            const isPositive = (val ?? 0) >= 0
+                            const beat = surpriseByDate.get((r.date ?? '').slice(0, 10))
+                            const hasBeat = beat != null && beat > 0
+                            const hasMiss = beat != null && beat < 0
+                            return (
+                              <div key={i} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-0.5">
+                                {beat != null && (
+                                  <span className={`text-[8px] font-bold leading-none ${hasBeat ? 'text-emerald-600' : hasMiss ? 'text-red-500' : 'text-slate-400'}`}>
+                                    {hasBeat ? '▲' : hasMiss ? '▼' : '—'}
+                                  </span>
+                                )}
+                                <div className="relative w-full" style={{ height: `${hp}%` }}>
+                                  <div className={`w-full h-full rounded-t-sm ${hasBeat ? 'bg-emerald-400' : hasMiss ? 'bg-red-300' : isPositive ? 'bg-violet-400' : 'bg-slate-300'}`}
+                                    title={`${quarterLabel(r)}: ${sym}${val?.toFixed(2) ?? '—'}${beat != null ? ` (${beat > 0 ? '+' : ''}${beat.toFixed(1)}% surprise)` : ''}`} />
+                                </div>
+                                <span className="text-[8px] text-slate-400 truncate max-w-full">{quarterLabel(r)}</span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                        <div className="flex items-center gap-3 mt-1.5">
+                          <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Beat</span>
+                          <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />Miss</span>
+                          <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-violet-400 inline-block" />Positive</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })()}
+
             {/* A3: show empty state when no coverage */}
             {!hasAnalystCoverage ? (
               <div className="py-8 text-center">
