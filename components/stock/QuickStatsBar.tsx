@@ -17,6 +17,7 @@ interface QuickStatsBarProps {
   pegRatio?: number | null
   evToEbitda?: number | null
   dividendYield?: number | null
+  nextEarningsDate?: string | null
 }
 
 function fmt(n: number): string {
@@ -28,7 +29,7 @@ function fmt(n: number): string {
 
 export default function QuickStatsBar({
   marketCap, peRatio, beta, high52, low52, currentPrice, currency,
-  pegRatio, evToEbitda, dividendYield,
+  pegRatio, evToEbitda, dividendYield, nextEarningsDate,
 }: QuickStatsBarProps) {
   const stats: Stat[] = []
 
@@ -67,6 +68,17 @@ export default function QuickStatsBar({
     stats.push({ label: 'Div. Yield', value: (dividendYield * 100).toFixed(2) + '%' })
   }
 
+  // Earnings date — only show when within 45 days
+  if (nextEarningsDate) {
+    const d = new Date(nextEarningsDate)
+    const daysUntil = Math.ceil((d.getTime() - Date.now()) / 86400000)
+    if (daysUntil >= 0 && daysUntil <= 45) {
+      const label = daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `In ${daysUntil}d`
+      const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      stats.push({ label: 'Next Earnings', value: label, sub: dateStr })
+    }
+  }
+
   if (stats.length === 0) return null
 
   // Show at most 4 stats in a 2×2 grid on mobile, 4-col on desktop
@@ -78,7 +90,7 @@ export default function QuickStatsBar({
         {displayed.map(stat => (
           <div key={stat.label} className="min-w-0">
             <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-0.5 truncate">{stat.label}</p>
-            <p className="text-[13px] font-semibold text-slate-800 tabular-nums leading-tight truncate">{stat.value}</p>
+            <p className={`text-[13px] font-semibold tabular-nums leading-tight truncate ${stat.label === 'Next Earnings' ? 'text-amber-700' : 'text-slate-800'}`}>{stat.value}</p>
             {stat.sub && <p className="text-[11px] text-slate-400 mt-0.5 truncate">{stat.sub}</p>}
           </div>
         ))}

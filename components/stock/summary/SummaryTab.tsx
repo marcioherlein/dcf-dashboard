@@ -83,6 +83,7 @@ interface SummaryTabProps {
   pegRatio?: number | null
   evToEbitda?: number | null
   dividendYield?: number | null
+  nextEarningsDate?: string | null
   // holding returns
   holdingReturns?: {
     stock1y: number | null; stock3y: number | null; stock5y: number | null
@@ -107,7 +108,7 @@ export default function SummaryTab({
   wacc, terminalG, historicalCAGR, analystCAGR, isEmergingMarket, revenueHistory,
   scenarios, ratings, scores, businessProfile, cagrAnalysis, statementsData,
   valuationMethods, quote, analystTargetMean, userModelFairValue,
-  marketCap, peRatio, beta, pegRatio, evToEbitda, dividendYield, holdingReturns,
+  marketCap, peRatio, beta, pegRatio, evToEbitda, dividendYield, holdingReturns, nextEarningsDate,
   onViewValuation, onViewRisks, onViewAssumptions, analystRecommendation,
 }: SummaryTabProps) {
 
@@ -154,6 +155,7 @@ export default function SummaryTab({
         pegRatio={pegRatio ?? null}
         evToEbitda={evToEbitda ?? null}
         dividendYield={dividendYield ?? null}
+        nextEarningsDate={nextEarningsDate ?? null}
       />
 
       {/* ── Zone 1: Verdict — hero + price chart, equal columns ──────────── */}
