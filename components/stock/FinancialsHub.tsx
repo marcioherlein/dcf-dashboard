@@ -764,6 +764,50 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 {isFinancialSector && ' Interest Coverage and EBITDA-based metrics are not applicable for banks and financial companies — interest expense is an operating cost netted into net interest income.'}
               </p>
             </div>
+
+            {/* Capital Returns (buybacks + dividends) */}
+            {(() => {
+              const capRetRows = finCF
+                .filter((r: any) => r.year !== 'TTM' && (r.buybacks != null || r.dividendsPaid != null))
+                .slice(-4)
+              if (capRetRows.length === 0) return null
+              const hasBuybacks  = capRetRows.some((r: any) => r.buybacks    != null && r.buybacks    > 0)
+              const hasDividends = capRetRows.some((r: any) => r.dividendsPaid != null && r.dividendsPaid > 0)
+              if (!hasBuybacks && !hasDividends) return null
+              const fmtM = (v: number | null) => v == null ? '—' : v >= 1000 ? `${currency}${(v / 1000).toFixed(1)}B` : `${currency}${v.toFixed(0)}M`
+              return (
+                <div className="border-t border-slate-100 px-4 sm:px-5 pb-4 pt-4">
+                  <p className="text-[13px] font-semibold text-slate-700 mb-3">Capital Returns to Shareholders</p>
+                  <div className="rounded-xl border border-slate-200 overflow-hidden">
+                    <table className="w-full text-[12px]">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-200">
+                          <th className="px-4 py-2 text-left font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Year</th>
+                          {hasBuybacks  && <th className="px-4 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Buybacks</th>}
+                          {hasDividends && <th className="px-4 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Dividends</th>}
+                          <th className="px-4 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 bg-white">
+                        {capRetRows.map((r: any) => {
+                          const bb  = (r.buybacks     ?? 0) as number
+                          const div = (r.dividendsPaid ?? 0) as number
+                          const total = bb + div
+                          return (
+                            <tr key={r.year} className="hover:bg-slate-50/60 transition-colors">
+                              <td className="px-4 py-3 font-medium text-slate-700">{r.year}</td>
+                              {hasBuybacks  && <td className="px-4 py-3 text-right tabular-nums text-slate-700">{fmtM(r.buybacks)}</td>}
+                              {hasDividends && <td className="px-4 py-3 text-right tabular-nums text-slate-700">{fmtM(r.dividendsPaid)}</td>}
+                              <td className="px-4 py-3 text-right tabular-nums font-semibold text-slate-900">{total > 0 ? fmtM(total) : '—'}</td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )
+            })()}
           </div>
         )
       })()}
