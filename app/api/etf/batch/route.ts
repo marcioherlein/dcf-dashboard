@@ -1,24 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getETFData } from '@/lib/data/yahooClient'
+import { computeETFScore } from '@/lib/data/etfScore'
 
-function computeValueScore(params: {
-  peRatio: number | null
-  pbRatio: number | null
-  yieldVal: number | null
-  expenseRatio: number | null
-}): number {
-  const { peRatio, pbRatio, yieldVal, expenseRatio } = params
-  let pe = 0
-  if (peRatio != null && peRatio > 0) pe = Math.max(0, Math.min(30, ((30 - peRatio) / (30 - 12)) * 30))
-  let pb = 0
-  if (pbRatio != null && pbRatio > 0) pb = Math.max(0, Math.min(25, ((4 - pbRatio) / (4 - 1)) * 25))
-  let yieldPts = 0
-  if (yieldVal != null && yieldVal > 0) yieldPts = Math.min(25, (yieldVal / 0.04) * 25)
-  let expensePenalty = 0
-  if (expenseRatio != null && expenseRatio > 0.0005) {
-    expensePenalty = Math.min(20, ((expenseRatio - 0.0005) / (0.0075 - 0.0005)) * 20)
+// Simple in-memory IP rate limiter: max 5 requests per 60s per IP
+const ipRequestMap = new Map<string, { count: number; resetAt: number }>()
+const RATE_LIMIT = 5
+const RATE_WINDOW_MS = 60_000
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const entry = ipRequestMap.get(ip)
+  if (!entry || now > entry.resetAt) {
+    ipRequestMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS })
+    return true
   }
-  return Math.round(Math.max(0, Math.min(100, pe + pb + yieldPts - expensePenalty)))
+  if (entry.count >= RATE_LIMIT) return false
+  entry.count++
+  return true
 }
 
 function toMultiple(v: unknown): number | null {
@@ -40,8 +38,18 @@ export interface ETFBatchItem {
 
 async function fetchOne(ticker: string): Promise<ETFBatchItem | null> {
   try {
+    // 5-second timeout to avoid hanging on Yahoo rate limits
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const raw: any = await getETFData(ticker)
+    const raw: any = await Promise.race([
+      getETFData(ticker),
+      new Promise<never>((_, reject) =>
+        controller.signal.addEventListener('abort', () => reject(new Error('timeout'))),
+      ),
+    ]).finally(() => clearTimeout(timeoutId))
+
     const top = raw?.topHoldings ?? {}
     const fund = raw?.fundProfile ?? {}
     const detail = raw?.summaryDetail ?? {}
@@ -56,6 +64,8 @@ async function fetchOne(ticker: string): Promise<ETFBatchItem | null> {
       typeof fees.annualReportExpenseRatio === 'number' ? fees.annualReportExpenseRatio :
       typeof fund.expenseRatio === 'number' ? fund.expenseRatio : null
 
+    const { score: valueScore } = computeETFScore(peRatio, pbRatio, yieldVal, expenseRatio)
+
     return {
       ticker,
       name: (price.longName ?? price.shortName ?? ticker) as string,
@@ -65,7 +75,7 @@ async function fetchOne(ticker: string): Promise<ETFBatchItem | null> {
       expenseRatio,
       yield: yieldVal,
       aum: typeof detail.totalAssets === 'number' ? detail.totalAssets : null,
-      valueScore: computeValueScore({ peRatio, pbRatio, yieldVal, expenseRatio }),
+      valueScore,
     }
   } catch {
     return null
@@ -73,6 +83,11 @@ async function fetchOne(ticker: string): Promise<ETFBatchItem | null> {
 }
 
 export async function GET(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
+  }
+
   const tickersParam = req.nextUrl.searchParams.get('tickers')
   if (!tickersParam) return NextResponse.json({ error: 'tickers required' }, { status: 400 })
 
@@ -82,8 +97,7 @@ export async function GET(req: NextRequest) {
     .filter(Boolean)
     .slice(0, 50)
 
-  // Fetch in parallel batches of 6 to avoid Yahoo rate limits
-  const CONCURRENCY = 6
+  const CONCURRENCY = 10
   const results: Record<string, ETFBatchItem | null> = {}
 
   for (let i = 0; i < tickers.length; i += CONCURRENCY) {

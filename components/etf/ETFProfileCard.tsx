@@ -1,6 +1,7 @@
 'use client'
 
-import { Plus, Check, TrendingUp, TrendingDown } from 'lucide-react'
+import { Plus, Check, TrendingUp, TrendingDown, GitCompare } from 'lucide-react'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { fmtPrice, fmtPct, fmtLarge, fmtPctAbs } from '@/lib/formatters'
 
@@ -41,11 +42,11 @@ export function ETFProfileCard({ profile, isWatchlisted, onWatchlist }: Props) {
   ]
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+    <div className="glass-card-light rounded-2xl p-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <div className="flex items-baseline gap-3">
-            <span className="text-2xl font-black font-mono text-slate-900">{profile.ticker}</span>
+            <span className="text-3xl font-black font-mono text-slate-900">{profile.ticker}</span>
             {profile.price != null && (
               <span className="text-2xl font-bold text-slate-800">{fmtPrice(profile.price, 'USD')}</span>
             )}
@@ -64,18 +65,27 @@ export function ETFProfileCard({ profile, isWatchlisted, onWatchlist }: Props) {
           )}
         </div>
 
-        <button
-          onClick={onWatchlist}
-          className={cn(
-            'flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-colors shrink-0',
-            isWatchlisted
-              ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100'
-              : 'bg-blue-600 text-white hover:bg-blue-500',
-          )}
-        >
-          {isWatchlisted ? <Check size={14} /> : <Plus size={14} />}
-          {isWatchlisted ? 'Watchlisted' : 'Add to Watchlist'}
-        </button>
+        <div className="flex items-center gap-2 flex-wrap shrink-0">
+          <Link
+            href={`/etf/compare?symbols=${profile.ticker}`}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors border border-slate-200 text-slate-600 hover:border-blue-200 hover:text-blue-600 hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
+          >
+            <GitCompare size={14} />
+            Compare
+          </Link>
+          <button
+            onClick={onWatchlist}
+            className={cn(
+              'flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-colors shrink-0 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 focus-visible:outline-none',
+              isWatchlisted
+                ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100'
+                : 'bg-blue-600 text-white hover:bg-blue-500',
+            )}
+          >
+            {isWatchlisted ? <Check size={14} /> : <Plus size={14} />}
+            {isWatchlisted ? 'In watchlist' : 'Add to Watchlist'}
+          </button>
+        </div>
       </div>
 
       <div className="mt-5 flex flex-wrap gap-2">

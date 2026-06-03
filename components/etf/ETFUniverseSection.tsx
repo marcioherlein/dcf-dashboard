@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import { Plus, Check, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { fmtLarge, fmtPctAbs, fmtMultiple } from '@/lib/formatters'
 import { scoreColor, scoreLabel } from '@/lib/data/etfScore'
+import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { ETFHeatmapGrid } from '@/components/etf/ETFHeatmapGrid'
 import { SECTOR_META, GEO_META, STYLE_META, ALL_META } from '@/lib/data/etfUniverse'
 import type { ETFBatchItem } from '@/lib/data/etfTypes'
@@ -182,6 +183,7 @@ function Leaderboard({
                         <div className="inline-flex items-center gap-1.5 justify-end">
                           <span className={cn('text-[13px] font-black font-mono', scoreColor(score))}>{score}</span>
                           <span className={cn('text-[10px] font-semibold', scoreColor(score))}>{scoreLabel(score)}</span>
+                          <InfoTooltip text="Score = P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio penalty (20 pts). 70+ = Deep Value." side="top" />
                         </div>
                       ) : (
                         <span className="text-slate-300">—</span>
@@ -222,9 +224,9 @@ interface Props {
 }
 
 export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpdate }: Props) {
-  const watchlistedTickers = new Set(watchlist.map((e) => e.ticker))
+  const watchlistedTickers = useMemo(() => new Set(watchlist.map((e) => e.ticker)), [watchlist])
 
-  async function handleAdd(ticker: string) {
+  const handleAdd = useCallback(async (ticker: string) => {
     if (watchlistedTickers.has(ticker)) return
     const item = data[ticker]
     if (!item) return
@@ -243,7 +245,7 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
       userEmail,
     )
     onWatchlistUpdate()
-  }
+  }, [data, userEmail, watchlistedTickers, onWatchlistUpdate])
 
   return (
     <div className="space-y-10">

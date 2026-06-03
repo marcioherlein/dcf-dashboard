@@ -32,11 +32,17 @@ export function ETFSearchBar() {
       setLoading(true)
       try {
         const res = await fetch(`/api/etf/search?q=${encodeURIComponent(query)}`)
+        if (!res.ok) {
+          setResults([])
+          setOpen(query.length >= 2)
+          return
+        }
         const data: ETFResult[] = await res.json()
         setResults(data)
-        setOpen(data.length > 0)
+        setOpen(query.length >= 2)
       } catch {
         setResults([])
+        setOpen(false)
       } finally {
         setLoading(false)
       }
@@ -97,6 +103,10 @@ export function ETFSearchBar() {
         >
           {loading ? (
             <div className="px-4 py-3 text-[14px] text-slate-400 min-h-[48px] flex items-center">Searching…</div>
+          ) : results.length === 0 ? (
+            <div className="px-4 py-3 text-[14px] text-slate-400 min-h-[48px] flex items-center">
+              No ETFs found for &ldquo;{query}&rdquo;
+            </div>
           ) : (
             results.map((r) => (
               <button

@@ -1,10 +1,12 @@
 'use client'
 
+import { memo } from 'react'
 import Link from 'next/link'
 import { Plus, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { scoreColor, scoreLabel, scoreBgCell, scoreBadge } from '@/lib/data/etfScore'
 import { fmtMultiple } from '@/lib/formatters'
+import { InfoTooltip } from '@/components/ui/info-tooltip'
 import type { ETFMeta } from '@/lib/data/etfUniverse'
 import type { ETFBatchItem } from '@/lib/data/etfTypes'
 
@@ -16,7 +18,7 @@ interface Props {
   cols?: 3 | 4
 }
 
-export function ETFHeatmapGrid({ metas, data, watchlistedTickers, onAdd, cols = 3 }: Props) {
+export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchlistedTickers, onAdd, cols = 3 }: Props) {
   const loading = Object.keys(data).length === 0
 
   return (
@@ -66,7 +68,7 @@ export function ETFHeatmapGrid({ metas, data, watchlistedTickers, onAdd, cols = 
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(meta.ticker) }}
                 className={cn(
-                  'relative z-20 shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg transition-all',
+                  'relative z-20 shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 focus-visible:outline-none',
                   isWatchlisted
                     ? 'bg-emerald-100 text-emerald-700'
                     : 'bg-white/80 text-slate-400 hover:bg-blue-50 hover:text-blue-600 border border-slate-200 hover:border-blue-200',
@@ -78,7 +80,7 @@ export function ETFHeatmapGrid({ metas, data, watchlistedTickers, onAdd, cols = 
             </div>
 
             {/* Score */}
-            <div className="relative z-10 flex items-baseline gap-1.5 mb-2">
+            <div className="relative z-10 flex items-center gap-1.5 mb-2">
               {score != null ? (
                 <>
                   <span className={cn('font-mono font-black text-[22px] leading-none', scoreColor(score))}>
@@ -87,6 +89,7 @@ export function ETFHeatmapGrid({ metas, data, watchlistedTickers, onAdd, cols = 
                   <span className={cn('text-[10px] font-semibold px-1.5 py-0.5 rounded-full', scoreBadge(score))}>
                     {scoreLabel(score)}
                   </span>
+                  <InfoTooltip text="Score = P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio penalty (20 pts). 70+ = Deep Value." side="top" />
                 </>
               ) : (
                 <div className="h-6 w-16 rounded bg-slate-100 animate-pulse" />
@@ -111,4 +114,4 @@ export function ETFHeatmapGrid({ metas, data, watchlistedTickers, onAdd, cols = 
       })}
     </div>
   )
-}
+})

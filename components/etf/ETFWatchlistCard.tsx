@@ -42,7 +42,7 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
   ]
 
   return (
-    <div className="flex flex-col gap-4 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md hover:border-blue-100 transition-all">
+    <div className="flex flex-col gap-4 glass-card-light rounded-2xl p-5 hover:shadow-md transition-all">
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
@@ -51,7 +51,7 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
             {entry.ticker}
           </span>
           {entry.name && (
-            <p className="text-[13px] text-slate-500 mt-1 truncate max-w-[220px] leading-snug">
+            <p className="text-[13px] text-slate-500 mt-1 truncate leading-snug">
               {entry.name}
             </p>
           )}
@@ -59,7 +59,7 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
         <button
           onClick={() => onDelete(entry.ticker)}
           aria-label={`Remove ${entry.ticker} from watchlist`}
-          className="min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg text-slate-300 hover:text-red-400 hover:bg-red-50 transition-colors border border-transparent hover:border-red-100"
+          className="min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg text-slate-300 hover:text-red-400 hover:bg-red-50 transition-colors border border-transparent hover:border-red-100 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 focus-visible:outline-none"
         >
           <Trash2 size={14} />
         </button>

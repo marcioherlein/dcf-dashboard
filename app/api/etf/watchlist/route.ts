@@ -44,7 +44,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { ticker, name, value_score, expense_ratio, yield: yieldVal, pe_ratio, pb_ratio, total_assets } = body
 
-    if (!ticker) return NextResponse.json({ error: 'ticker required' }, { status: 400 })
+    if (typeof ticker !== 'string' || ticker.length === 0 || ticker.length > 10) {
+      return NextResponse.json({ error: 'Invalid ticker' }, { status: 400 })
+    }
 
     const { data, error } = await client
       .from('etf_watchlist')

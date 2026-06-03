@@ -9,6 +9,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(results)
   } catch (err) {
     console.error('ETF search error:', err)
-    return NextResponse.json([], { status: 500 })
+    return NextResponse.json({ error: 'Search unavailable' }, { status: 500 })
   }
 }

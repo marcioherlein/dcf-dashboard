@@ -1,15 +1,41 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { PieChart } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { PieChart, RefreshCw } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { ETFSearchBar } from '@/components/etf/ETFSearchBar'
 import { ETFWatchlistCard } from '@/components/etf/ETFWatchlistCard'
 import { ETFUniverseSection } from '@/components/etf/ETFUniverseSection'
 import { ETFMarketPulse } from '@/components/etf/ETFMarketPulse'
-import { loadETFWatchlist, deleteETFEntry } from '@/lib/data/etfWatchlistStore'
+import { ETFOnboardBanner } from '@/components/etf/ETFOnboardBanner'
+import { loadETFWatchlist, deleteETFEntry, saveETFEntry } from '@/lib/data/etfWatchlistStore'
 import { ALL_TICKERS } from '@/lib/data/etfUniverse'
 import type { ETFEntry, ETFBatchItem } from '@/lib/data/etfTypes'
+
+const SESSION_CACHE_KEY = 'etf_batch_v1'
+const SESSION_CACHE_TTL = 30 * 60 * 1000 // 30 minutes
+
+function readBatchCache(): Record<string, ETFBatchItem | null> | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = sessionStorage.getItem(SESSION_CACHE_KEY)
+    if (!raw) return null
+    const { data, ts } = JSON.parse(raw) as { data: Record<string, ETFBatchItem | null>; ts: number }
+    if (Date.now() - ts > SESSION_CACHE_TTL) return null
+    return data
+  } catch {
+    return null
+  }
+}
+
+function writeBatchCache(data: Record<string, ETFBatchItem | null>): void {
+  if (typeof window === 'undefined') return
+  try {
+    sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({ data, ts: Date.now() }))
+  } catch {
+    // quota exceeded — silent fail
+  }
+}
 
 export default function ETFTrackerPage() {
   const { data: session } = useSession()
@@ -19,6 +45,8 @@ export default function ETFTrackerPage() {
   const [watchlist, setWatchlist]   = useState<ETFEntry[]>([])
   const [wlLoading, setWlLoading]   = useState(true)
   const [sparklines, setSparklines] = useState<Record<string, number[] | null>>({})
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const fetchedSparklines = useRef<Set<string>>(new Set())
 
   const loadWatchlist = useCallback(async () => {
     setWlLoading(true)
@@ -29,11 +57,14 @@ export default function ETFTrackerPage() {
 
   useEffect(() => { loadWatchlist() }, [loadWatchlist])
 
-  // Batch-fetch sparklines whenever watchlist changes
+  // Batch-fetch sparklines for new tickers only (deduplication)
   useEffect(() => {
     if (watchlist.length === 0) { setSparklines({}); return }
+    const newTickers = watchlist.filter((e) => !fetchedSparklines.current.has(e.ticker))
+    if (newTickers.length === 0) return
+
     Promise.allSettled(
-      watchlist.map((e) =>
+      newTickers.map((e) =>
         fetch(`/api/price-history?ticker=${e.ticker}`)
           .then((r) => r.json())
           .then((bars: Array<{ close: number }>) => ({
@@ -46,40 +77,88 @@ export default function ETFTrackerPage() {
       const map: Record<string, number[] | null> = {}
       for (const r of results) {
         if (r.status === 'fulfilled') {
-          map[r.value.ticker] = r.value.prices.length >= 2 ? r.value.prices : null
+          const prices = r.value.prices.length >= 2 ? r.value.prices : null
+          map[r.value.ticker] = prices
+          fetchedSparklines.current.add(r.value.ticker)
         }
       }
-      setSparklines(map)
+      setSparklines((prev) => ({ ...prev, ...map }))
     })
   }, [watchlist])
 
   async function handleDelete(ticker: string) {
-    await deleteETFEntry(ticker, userEmail)
-    setWatchlist((prev) => prev.filter((e) => e.ticker !== ticker))
+    const prev = watchlist
+    setWatchlist((current) => current.filter((e) => e.ticker !== ticker))
+    setDeleteError(null)
+    try {
+      await deleteETFEntry(ticker, userEmail)
+    } catch {
+      setWatchlist(prev)
+      setDeleteError(`Failed to remove ${ticker}. Please try again.`)
+    }
   }
 
-  // ── Batch / universe state (lifted so ETFMarketPulse can share it) ──────────
-  const [batchData, setBatchData]   = useState<Record<string, ETFBatchItem | null>>({})
-  const [batchLoading, setBatchLoading] = useState(false)
+  // ── Batch / universe state ───────────────────────────────────────────────────
+  const [batchData, setBatchData]       = useState<Record<string, ETFBatchItem | null>>({})
+  const [batchLoading, setBatchLoading] = useState(true)
+  const [batchError, setBatchError]     = useState<string | null>(null)
   const [batchFetched, setBatchFetched] = useState(false)
 
   const fetchBatch = useCallback(async () => {
     if (batchFetched) return
+
+    // Serve from sessionStorage cache if available
+    const cached = readBatchCache()
+    if (cached) {
+      setBatchData(cached)
+      setBatchFetched(true)
+      setBatchLoading(false)
+      return
+    }
+
     setBatchLoading(true)
+    setBatchError(null)
     try {
       const res = await fetch(`/api/etf/batch?tickers=${ALL_TICKERS.join(',')}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const json = await res.json()
       setBatchData(json)
-      setBatchFetched(true)
+      // Only mark fetched if we actually got data
+      const hasData = Object.values(json).some((v) => v !== null)
+      if (hasData) {
+        setBatchFetched(true)
+        writeBatchCache(json)
+      }
     } catch (e) {
       console.error('ETF batch fetch failed:', e)
+      setBatchError('Failed to load ETF data.')
     } finally {
       setBatchLoading(false)
     }
   }, [batchFetched])
 
   useEffect(() => { fetchBatch() }, [fetchBatch])
+
+  // Quick-add handler for empty state buttons
+  async function handleQuickAdd(ticker: string) {
+    const item = batchData[ticker]
+    if (!item) return
+    await saveETFEntry(
+      {
+        ticker: item.ticker,
+        name: item.name,
+        valueScore: item.valueScore,
+        expenseRatio: item.expenseRatio,
+        yield: item.yield,
+        peRatio: item.peRatio,
+        pbRatio: item.pbRatio,
+        totalAssets: item.aum,
+        addedAt: new Date().toISOString(),
+      },
+      userEmail,
+    )
+    loadWatchlist()
+  }
 
   return (
     <div className="min-h-screen bg-[#F1F5F9]">
@@ -108,8 +187,23 @@ export default function ETFTrackerPage() {
       {/* ── Content ─────────────────────────────────────────────────────────── */}
       <div className="px-4 sm:px-8 py-6 sm:py-8 max-w-7xl mx-auto space-y-10">
 
+        {/* Onboarding banner (first-run only) */}
+        <ETFOnboardBanner />
+
         {/* Market Pulse */}
-        <ETFMarketPulse data={batchData} loading={batchLoading} />
+        {batchError ? (
+          <div className="glass-card-light rounded-xl p-4 flex items-center justify-between gap-4">
+            <p className="text-sm text-slate-500">{batchError}</p>
+            <button
+              onClick={() => { setBatchFetched(false); fetchBatch() }}
+              className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-500 transition-colors"
+            >
+              <RefreshCw size={13} /> Retry
+            </button>
+          </div>
+        ) : (
+          <ETFMarketPulse data={batchData} loading={batchLoading} />
+        )}
 
         {/* ── My Watchlist ──────────────────────────────────────────────────── */}
         <section>
@@ -127,10 +221,14 @@ export default function ETFTrackerPage() {
             )}
           </div>
 
+          {deleteError && (
+            <p className="text-sm text-red-500 mb-3">{deleteError}</p>
+          )}
+
           {wlLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="h-[340px] bg-white rounded-2xl border border-slate-200 animate-pulse" />
+                <div key={i} className="h-[340px] bg-slate-100 rounded-2xl border border-slate-200 animate-pulse" />
               ))}
             </div>
           ) : watchlist.length > 0 ? (
@@ -147,14 +245,27 @@ export default function ETFTrackerPage() {
               ))}
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-slate-200 p-8 flex flex-col items-center text-center">
+            <div className="glass-card-light rounded-2xl p-8 flex flex-col items-center text-center">
               <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mb-4">
                 <PieChart size={22} className="text-slate-400" />
               </div>
-              <h3 className="text-[14px] font-semibold text-slate-700 mb-1">No ETFs tracked yet</h3>
-              <p className="text-[13px] text-slate-400 max-w-sm">
+              <h3 className="text-[14px] font-semibold text-slate-700 mb-1">Track ETFs by what they&apos;re actually worth</h3>
+              <p className="text-[13px] text-slate-400 max-w-sm mb-5">
                 Search for a ticker above, or browse and add from the sectors, geographies, and styles below.
               </p>
+              {Object.keys(batchData).length > 0 && (
+                <div className="flex gap-2 flex-wrap justify-center">
+                  {['SPY', 'VTV', 'VYM'].map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => handleQuickAdd(t)}
+                      className="px-4 py-2 rounded-lg border border-slate-200 bg-white text-[13px] font-semibold text-slate-600 hover:border-blue-200 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                    >
+                      + {t}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </section>

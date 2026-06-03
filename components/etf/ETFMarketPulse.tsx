@@ -16,7 +16,7 @@ export function ETFMarketPulse({ data, loading }: Props) {
     return (
       <div className="flex gap-3 flex-wrap">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-[68px] w-48 rounded-xl border border-slate-200 bg-white animate-pulse" />
+          <div key={i} className="h-[68px] w-48 rounded-xl border border-slate-200 bg-slate-100 animate-pulse" />
         ))}
       </div>
     )
@@ -83,7 +83,7 @@ export function ETFMarketPulse({ data, loading }: Props) {
 
 function Chip({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 px-4 py-3 flex flex-col gap-1 min-w-[152px]">
+    <div className="glass-card-light rounded-xl px-4 py-3 flex flex-col gap-1 min-w-[152px]">
       <span className="text-[11px] font-semibold text-slate-500">{label}</span>
       <div className="flex items-baseline gap-1.5">{children}</div>
     </div>

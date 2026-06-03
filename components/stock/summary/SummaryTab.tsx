@@ -12,6 +12,7 @@ import NextStepsCard from './NextStepsCard'
 import OverviewMetricGrid from '@/components/stock/OverviewMetricGrid'
 import CompanyCard from '@/components/stock/overview/CompanyCard'
 import IncomeFlowCard from './IncomeFlowCard'
+import { ETFExposureCard } from './ETFExposureCard'
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -195,6 +196,9 @@ export default function SummaryTab({
           currency={currency}
         />
       )}
+
+      {/* ── Zone 2.7: ETF Exposure ─────────────────────────────────────────── */}
+      <ETFExposureCard ticker={ticker} />
 
       {/* ── Zone 3: Business fundamentals panel ──────────────────────────── */}      {ratings && (
         <div className="rounded-[20px] overflow-hidden border border-slate-100 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">

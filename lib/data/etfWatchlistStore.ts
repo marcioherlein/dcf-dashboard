@@ -4,6 +4,7 @@ import type { ETFEntry } from './etfTypes'
 const LOCAL_KEY = 'etf_watchlist'
 
 let _client: SupabaseClient | null = null
+let _localCache: ETFEntry[] | null = null
 
 function getClient(): SupabaseClient | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -15,9 +16,11 @@ function getClient(): SupabaseClient | null {
 
 function readLocal(): ETFEntry[] {
   if (typeof window === 'undefined') return []
+  if (_localCache !== null) return _localCache
   try {
     const raw = localStorage.getItem(LOCAL_KEY)
-    return raw ? (JSON.parse(raw) as ETFEntry[]) : []
+    _localCache = raw ? (JSON.parse(raw) as ETFEntry[]) : []
+    return _localCache
   } catch {
     return []
   }
@@ -25,6 +28,7 @@ function readLocal(): ETFEntry[] {
 
 function writeLocal(entries: ETFEntry[]): void {
   if (typeof window === 'undefined') return
+  _localCache = entries
   try {
     localStorage.setItem(LOCAL_KEY, JSON.stringify(entries))
   } catch {

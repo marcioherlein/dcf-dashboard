@@ -21,3 +21,33 @@ export interface ETFEntry {
   totalAssets: number | null
   addedAt: string
 }
+
+export interface ETFProfileResponse {
+  ticker: string
+  name: string
+  price: number | null
+  priceChange: number | null
+  priceChangePct: number | null
+  fiftyTwoWeekHigh: number | null
+  fiftyTwoWeekLow: number | null
+  aum: number | null
+  navPrice: number | null
+  expenseRatio: number | null
+  yield: number | null
+  dividendRate: number | null
+  beta3Year: number | null
+  inceptionDate: string | null
+  issuer: string | null
+  category: string | null
+  managementStyle: string | null
+  peRatio: number | null
+  pbRatio: number | null
+  psRatio: number | null
+  pcfRatio: number | null
+  medianMarketCap: number | null
+  valueScore: number
+  valueScoreLabel: string
+  scoreBreakdown: { pe: number; pb: number; yieldPts: number; expensePenalty: number }
+  holdings: Array<{ rank: number; symbol: string; name: string; weight: number | null }>
+  sectorWeights: Array<{ sector: string; weight: number }>
+}

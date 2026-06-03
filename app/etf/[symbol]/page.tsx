@@ -5,15 +5,20 @@ import { useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { ETFProfileCard } from '@/components/etf/ETFProfileCard'
 import { ETFMetricsGrid } from '@/components/etf/ETFMetricsGrid'
 import { ETFHoldingsTable } from '@/components/etf/ETFHoldingsTable'
 import { ETFSectorAllocation } from '@/components/etf/ETFSectorAllocation'
-import PriceChart from '@/components/stock/PriceChart'
+import { ETFValuationHistory } from '@/components/etf/ETFValuationHistory'
+import { ETFBasketDCF } from '@/components/etf/ETFBasketDCF'
 import { saveETFEntry, deleteETFEntry, getETFEntry } from '@/lib/data/etfWatchlistStore'
+import type { ETFProfileResponse } from '@/lib/data/etfTypes'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ETFProfile = any
+const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
+  ssr: false,
+  loading: () => <div className="min-h-[200px] rounded-xl bg-slate-100 animate-pulse" />,
+})
 
 export default function ETFDetailPage() {
   const params = useParams()
@@ -21,7 +26,7 @@ export default function ETFDetailPage() {
   const { data: session } = useSession()
   const userEmail = session?.user?.email ?? null
 
-  const [profile, setProfile] = useState<ETFProfile | null>(null)
+  const [profile, setProfile] = useState<ETFProfileResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isWatchlisted, setIsWatchlisted] = useState(false)
@@ -107,7 +112,7 @@ export default function ETFDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFB]">
+    <div className="min-h-screen bg-[#F1F5F9]">
       <div className="px-4 sm:px-8 py-6 sm:py-8 max-w-6xl mx-auto space-y-5">
         <Link href="/etf" className="inline-flex items-center gap-1.5 text-[14px] text-slate-500 hover:text-slate-700 min-h-[44px]">
           <ArrowLeft size={14} /> ETF Tracker
@@ -123,6 +128,9 @@ export default function ETFDetailPage() {
         {/* Metrics grid */}
         <ETFMetricsGrid metrics={profile} />
 
+        {/* Basket DCF Signal */}
+        <ETFBasketDCF holdings={profile.holdings ?? []} />
+
         {/* Holdings + Sector side by side */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           <div className="lg:col-span-3">
@@ -133,10 +141,12 @@ export default function ETFDetailPage() {
           </div>
         </div>
 
+        {/* Value Score History */}
+        <ETFValuationHistory ticker={symbol} />
+
         {/* Price chart */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-          <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-3">Price History</p>
-          <p className="text-[11px] text-slate-400 mb-3">Tip: use the comparison input in the chart to overlay SPY, QQQ, or any ticker.</p>
+        <div className="glass-card-light rounded-2xl p-4">
+          <p className="text-sm font-semibold text-slate-700 mb-3">Price History</p>
           <div className="min-h-[200px] w-full">
             <PriceChart ticker={symbol} />
           </div>

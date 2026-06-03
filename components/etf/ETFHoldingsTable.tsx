@@ -16,28 +16,35 @@ interface Props {
 
 export function ETFHoldingsTable({ holdings }: Props) {
   if (!holdings.length) {
-    return <p className="text-sm text-slate-400 py-4">Holdings data unavailable.</p>
+    return (
+      <div className="glass-card-light rounded-xl p-4">
+        <p className="text-sm font-semibold text-slate-700 mb-2">Top Holdings</p>
+        <p className="text-sm text-slate-400 py-2">Holdings data unavailable.</p>
+      </div>
+    )
   }
 
+  const maxWeight = Math.max(...holdings.map((h) => h.weight ?? 0), 0.001)
+
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="px-4 py-3 border-b border-slate-100">
-        <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Top Holdings</p>
+    <div className="glass-card-light rounded-xl overflow-hidden">
+      <div className="px-4 py-3 border-b border-slate-200/60">
+        <p className="text-sm font-semibold text-slate-700">Top Holdings</p>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-100 bg-slate-50">
-              <th className="text-left px-4 py-2 text-[10px] text-slate-400 uppercase tracking-wider font-semibold w-8">#</th>
-              <th className="text-left px-4 py-2 text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Ticker</th>
-              <th className="text-left px-4 py-2 text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Name</th>
-              <th className="text-right px-4 py-2 text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Weight</th>
+            <tr className="border-b border-slate-100 bg-slate-50/60">
+              <th className="text-left px-4 py-2 text-xs text-slate-500 font-semibold w-8">#</th>
+              <th className="text-left px-4 py-2 text-xs text-slate-500 font-semibold">Ticker</th>
+              <th className="text-left px-4 py-2 text-xs text-slate-500 font-semibold">Name</th>
+              <th className="text-right px-4 py-2 text-xs text-slate-500 font-semibold">Weight</th>
               <th className="px-4 py-2 w-8"></th>
             </tr>
           </thead>
           <tbody>
             {holdings.map((h) => (
-              <tr key={h.symbol} className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors">
+              <tr key={h.symbol} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/60 transition-colors group">
                 <td className="px-4 py-2.5 text-xs text-slate-400 font-mono">{h.rank}</td>
                 <td className="px-4 py-2.5">
                   <span className="font-black font-mono text-slate-900 text-xs">{h.symbol}</span>
@@ -49,7 +56,7 @@ export function ETFHoldingsTable({ holdings }: Props) {
                       <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden hidden sm:block">
                         <div
                           className="h-full bg-blue-400 rounded-full"
-                          style={{ width: `${Math.min(100, h.weight * 100 * 3)}%` }}
+                          style={{ width: `${(h.weight / maxWeight) * 100}%` }}
                         />
                       </div>
                       <span className="text-xs font-mono font-semibold text-slate-700">
@@ -64,10 +71,11 @@ export function ETFHoldingsTable({ holdings }: Props) {
                   {h.symbol && (
                     <Link
                       href={`/stock/${h.symbol}`}
-                      className="text-slate-300 hover:text-blue-500 transition-colors"
-                      title={`Analyze ${h.symbol}`}
+                      className="inline-flex items-center gap-1 text-slate-500 hover:text-blue-500 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none rounded"
+                      aria-label={`Open DCF analysis for ${h.symbol}`}
                     >
                       <ExternalLink size={12} />
+                      <span className="text-[10px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity">DCF</span>
                     </Link>
                   )}
                 </td>

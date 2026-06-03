@@ -1,48 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getETFData } from '@/lib/data/yahooClient'
-
-function computeValueScore(params: {
-  peRatio: number | null
-  pbRatio: number | null
-  yieldVal: number | null
-  expenseRatio: number | null
-}): { score: number; breakdown: { pe: number; pb: number; yieldPts: number; expensePenalty: number } } {
-  const { peRatio, pbRatio, yieldVal, expenseRatio } = params
-
-  // P/E: 0-30 pts — lower is better (≤12 → 30, ≥30 → 0)
-  let pe = 0
-  if (peRatio != null && peRatio > 0) {
-    pe = Math.max(0, Math.min(30, ((30 - peRatio) / (30 - 12)) * 30))
-  }
-
-  // P/B: 0-25 pts — lower is better (≤1.0 → 25, ≥4.0 → 0)
-  let pb = 0
-  if (pbRatio != null && pbRatio > 0) {
-    pb = Math.max(0, Math.min(25, ((4 - pbRatio) / (4 - 1)) * 25))
-  }
-
-  // Yield: 0-25 pts — higher is better (≥4% → 25, 0% → 0)
-  let yieldPts = 0
-  if (yieldVal != null && yieldVal > 0) {
-    yieldPts = Math.min(25, (yieldVal / 0.04) * 25)
-  }
-
-  // Expense ratio penalty: 0-20 pts (≤0.05% → 0, ≥0.75% → 20)
-  let expensePenalty = 0
-  if (expenseRatio != null && expenseRatio > 0.0005) {
-    expensePenalty = Math.min(20, ((expenseRatio - 0.0005) / (0.0075 - 0.0005)) * 20)
-  }
-
-  const score = Math.round(Math.max(0, Math.min(100, pe + pb + yieldPts - expensePenalty)))
-  return { score, breakdown: { pe: Math.round(pe), pb: Math.round(pb), yieldPts: Math.round(yieldPts), expensePenalty: Math.round(expensePenalty) } }
-}
-
-function valueScoreLabel(score: number): string {
-  if (score >= 70) return 'Deep Value'
-  if (score >= 50) return 'Fair Value'
-  if (score >= 30) return 'Stretched'
-  return 'Expensive'
-}
+import { computeETFScore, scoreLabel } from '@/lib/data/etfScore'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function parseSectorWeights(raw: any[]): Array<{ sector: string; weight: number }> {
@@ -110,41 +68,53 @@ export async function GET(req: NextRequest) {
       typeof fees.annualReportExpenseRatio === 'number' ? fees.annualReportExpenseRatio :
       typeof fund.expenseRatio === 'number' ? fund.expenseRatio : null
 
-    const { score: valueScore, breakdown: scoreBreakdown } = computeValueScore({ peRatio, pbRatio, yieldVal, expenseRatio })
+    const { score: valueScore, breakdown: scoreBreakdown } = computeETFScore(peRatio, pbRatio, yieldVal, expenseRatio)
 
-    return NextResponse.json({
-      ticker,
-      name: (price.longName ?? price.shortName ?? ticker) as string,
-      price: typeof price.regularMarketPrice === 'number' ? price.regularMarketPrice : null,
-      priceChange: typeof price.regularMarketChange === 'number' ? price.regularMarketChange : null,
-      priceChangePct: typeof price.regularMarketChangePercent === 'number' ? price.regularMarketChangePercent : null,
-      fiftyTwoWeekHigh: typeof price.fiftyTwoWeekHigh === 'number' ? price.fiftyTwoWeekHigh : null,
-      fiftyTwoWeekLow: typeof price.fiftyTwoWeekLow === 'number' ? price.fiftyTwoWeekLow : null,
-      aum: typeof detail.totalAssets === 'number' ? detail.totalAssets : null,
-      navPrice: typeof detail.navPrice === 'number' ? detail.navPrice : null,
-      expenseRatio,
-      yield: yieldVal,
-      dividendRate: typeof detail.dividendRate === 'number' ? detail.dividendRate : null,
-      beta3Year: typeof stats.beta3Year === 'number' ? stats.beta3Year : null,
-      inceptionDate: stats.fundInceptionDate
-        ? new Date(stats.fundInceptionDate).toISOString().split('T')[0]
-        : null,
-      issuer: typeof fund.family === 'string' ? fund.family : null,
-      category: typeof fund.categoryName === 'string' ? fund.categoryName : null,
-      managementStyle: typeof fund.managementStyle === 'string' ? fund.managementStyle : null,
-      peRatio,
-      pbRatio,
-      psRatio,
-      pcfRatio,
-      medianMarketCap: typeof eq.medianMarketCap === 'number' ? eq.medianMarketCap : null,
-      valueScore,
-      valueScoreLabel: valueScoreLabel(valueScore),
-      scoreBreakdown,
-      holdings,
-      sectorWeights,
-    })
+    // Fire-and-forget: record score snapshot for history chart
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    fetch(`${baseUrl}/api/etf/score-history`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticker, score: valueScore, peRatio, pbRatio, yieldVal, expenseRatio }),
+    }).catch(() => { /* silent — history is best-effort */ })
+
+    return NextResponse.json(
+      {
+        ticker,
+        name: (price.longName ?? price.shortName ?? ticker) as string,
+        price: typeof price.regularMarketPrice === 'number' ? price.regularMarketPrice : null,
+        priceChange: typeof price.regularMarketChange === 'number' ? price.regularMarketChange : null,
+        priceChangePct: typeof price.regularMarketChangePercent === 'number' ? price.regularMarketChangePercent : null,
+        fiftyTwoWeekHigh: typeof price.fiftyTwoWeekHigh === 'number' ? price.fiftyTwoWeekHigh : null,
+        fiftyTwoWeekLow: typeof price.fiftyTwoWeekLow === 'number' ? price.fiftyTwoWeekLow : null,
+        aum: typeof detail.totalAssets === 'number' ? detail.totalAssets : null,
+        navPrice: typeof detail.navPrice === 'number' ? detail.navPrice : null,
+        expenseRatio,
+        yield: yieldVal,
+        dividendRate: typeof detail.dividendRate === 'number' ? detail.dividendRate : null,
+        beta3Year: typeof stats.beta3Year === 'number' ? stats.beta3Year : null,
+        // H3: fundInceptionDate is Unix seconds — multiply by 1000 for ms
+        inceptionDate: stats.fundInceptionDate
+          ? new Date(stats.fundInceptionDate * 1000).toISOString().split('T')[0]
+          : null,
+        issuer: typeof fund.family === 'string' ? fund.family : null,
+        category: typeof fund.categoryName === 'string' ? fund.categoryName : null,
+        managementStyle: typeof fund.managementStyle === 'string' ? fund.managementStyle : null,
+        peRatio,
+        pbRatio,
+        psRatio,
+        pcfRatio,
+        medianMarketCap: typeof eq.medianMarketCap === 'number' ? eq.medianMarketCap : null,
+        valueScore,
+        valueScoreLabel: scoreLabel(valueScore),
+        scoreBreakdown,
+        holdings,
+        sectorWeights,
+      },
+      { headers: { 'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=3600' } },
+    )
   } catch (err) {
     console.error('ETF profile error:', err)
-    return NextResponse.json({ error: String(err) }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to load ETF data' }, { status: 500 })
   }
 }
