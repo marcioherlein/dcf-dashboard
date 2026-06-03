@@ -107,11 +107,11 @@ function SearchHero() {
   useEffect(() => { setActiveIdx(-1) }, [results])
 
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
+    const handler = (e: PointerEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) setOpen(false)
     }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    document.addEventListener('pointerdown', handler)
+    return () => document.removeEventListener('pointerdown', handler)
   }, [])
 
   useEffect(() => {
@@ -454,12 +454,12 @@ function PopularAnalysesSection({
 
   return (
     <section>
-      <div className="flex items-center justify-between gap-3 mb-4">
-        <div>
+      <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
+        <div className="min-w-0">
           <h2 className="text-[15px] font-bold text-slate-900">Popular analyses</h2>
           <p className="text-[12px] text-slate-500 mt-0.5">Top holdings from SPY · QQQ · DIA — no duplicates</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           {dataStale && (
             <span className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-0.5 whitespace-nowrap">
               Cached · live prices unavailable
@@ -501,7 +501,17 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
   const [showInfo, setShowInfo] = useState(false)
   const reduced   = useReducedMotion()
   const tableRef  = useRef<HTMLDivElement>(null)
+  const infoRef   = useRef<HTMLDivElement>(null)
   const inView    = useInView(tableRef, { once: true, margin: '-60px' })
+
+  useEffect(() => {
+    if (!showInfo) return
+    function handleOutside(e: PointerEvent) {
+      if (infoRef.current && !infoRef.current.contains(e.target as Node)) setShowInfo(false)
+    }
+    document.addEventListener('pointerdown', handleOutside)
+    return () => document.removeEventListener('pointerdown', handleOutside)
+  }, [showInfo])
 
   return (
     <section className="glass-card-light rounded-2xl overflow-hidden">
@@ -601,7 +611,7 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
       </div>
 
       {/* Footer with info tooltip */}
-      <div className="flex items-center gap-1.5 px-5 py-3 border-t border-slate-100 relative">
+      <div ref={infoRef} className="flex items-center gap-1.5 px-5 py-3 border-t border-slate-100 relative">
         <button
           onClick={() => setShowInfo((v) => !v)}
           className="flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-700 transition-colors"
@@ -617,7 +627,7 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 4, scale: 0.97 }}
               transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute left-5 bottom-full mb-2 z-20 w-72 rounded-xl bg-slate-900 text-white text-[11px] leading-relaxed px-3.5 py-3 shadow-lg"
+              className="absolute left-5 bottom-full mb-2 z-20 w-72 max-w-[calc(100vw-40px)] rounded-xl bg-slate-900 text-white text-[11px] leading-relaxed px-3.5 py-3 shadow-lg"
             >
               <p className="font-semibold mb-1">Reverse DCF method</p>
               <p className="text-slate-300">Implied CAGR is the 5-year revenue growth rate that would justify the current stock price, computed via a reverse discounted cash flow model at the company&apos;s estimated WACC.</p>
