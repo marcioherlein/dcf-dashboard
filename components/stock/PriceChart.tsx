@@ -476,13 +476,29 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
 
       {/* Compare row */}
       <div className="flex flex-wrap items-center gap-2 px-5 pb-1.5">
-        {compareTickers.map((ct, i) => (
-          <span key={ct} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold"
-            style={{ background: COMPARE_COLORS[i % 3] + '22', color: COMPARE_COLORS[i % 3] }}>
-            {ct}
-            <button onClick={() => removeCompareTicker(ct)} className="opacity-70 hover:opacity-100 leading-none ml-0.5">×</button>
-          </span>
-        ))}
+        {/* SPY quick-compare toggle */}
+        {ticker.toUpperCase() !== 'SPY' && (() => {
+          const spyOn = compareTickers.includes('SPY')
+          return (
+            <button
+              onClick={() => spyOn ? removeCompareTicker('SPY') : addCompareTicker('SPY')}
+              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold border transition-all ${spyOn ? 'bg-[#f9731622] border-[#f97316] text-[#f97316]' : 'border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50'}`}
+            >
+              {spyOn ? <>SPY <span className="opacity-70">×</span></> : 'vs SPY'}
+            </button>
+          )
+        })()}
+        {/* Other (non-SPY) compare tickers */}
+        {compareTickers.filter(t => t !== 'SPY').map((ct) => {
+          const i = compareTickers.indexOf(ct)
+          return (
+            <span key={ct} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold"
+              style={{ background: COMPARE_COLORS[i % 3] + '22', color: COMPARE_COLORS[i % 3] }}>
+              {ct}
+              <button onClick={() => removeCompareTicker(ct)} className="opacity-70 hover:opacity-100 leading-none ml-0.5">×</button>
+            </span>
+          )
+        })}
         {compareTickers.length < 3 && (
           <form onSubmit={e => { e.preventDefault(); addCompareTicker(compareInput) }}>
             <input ref={compareInputRef} type="text" value={compareInput}
