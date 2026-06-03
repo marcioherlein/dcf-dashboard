@@ -13,6 +13,7 @@ import OverviewMetricGrid from '@/components/stock/OverviewMetricGrid'
 import CompanyCard from '@/components/stock/overview/CompanyCard'
 import IncomeFlowCard from './IncomeFlowCard'
 import RevenueEarningsChart from './RevenueEarningsChart'
+import FinancialSnapshotBar from './FinancialSnapshotBar'
 import { ETFExposureCard } from './ETFExposureCard'
 import QuickStatsBar from '@/components/stock/QuickStatsBar'
 import HoldingReturns from '@/components/stock/HoldingReturns'
@@ -160,6 +161,11 @@ export default function SummaryTab({
         dividendYield={dividendYield ?? null}
         nextEarningsDate={nextEarningsDate ?? null}
       />
+
+      {/* ── Zone 0.7: Financial performance snapshot ─────────────────────── */}
+      {statementsData && (
+        <FinancialSnapshotBar statementsData={statementsData} currency={currency} currentPrice={price} />
+      )}
 
       {/* ── Zone 1: Verdict — hero + price chart, equal columns ──────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
