@@ -221,7 +221,7 @@ export default function TopBar() {
         {/* ── Column 1: Logo + name ── */}
         {/* On non-stock pages hide logo entirely on mobile to give search bar full width */}
         <div className={cn('flex items-center', !stockNav && 'hidden sm:flex')}>
-          <Link href="/" className="flex items-center gap-2 shrink-0 group">
+          <Link href={session ? '/analyze' : '/'} className="flex items-center gap-2 shrink-0 group">
             <Image
               src="/logos/logo-transparent.png"
               alt="insic"

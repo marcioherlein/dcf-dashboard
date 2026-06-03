@@ -1,7 +1,6 @@
 'use client'
 import Link from 'next/link'
 import { Shield } from 'lucide-react'
-import { signIn } from 'next-auth/react'
 import { motion, useReducedMotion } from 'motion/react'
 import HeroSearch from './HeroSearch'
 import { SummaryMockScreen, ValuationMockScreen } from './ProductScreenshots'
@@ -268,8 +267,8 @@ export default function LandingHero() {
                       : { duration: 2.8, repeat: Infinity, ease: 'easeInOut' }
                   }
                 />
-                <button
-                  onClick={() => signIn('google')}
+                <Link
+                  href="/analyze"
                   className="relative w-full sm:w-auto inline-flex items-center justify-center rounded-xl px-5 py-3 text-[15px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
                   style={{
                     background: '#2563EB',
@@ -279,7 +278,7 @@ export default function LandingHero() {
                   }}
                 >
                   Get started free
-                </button>
+                </Link>
               </div>
 
               {/* Secondary CTA — dark glass */}
