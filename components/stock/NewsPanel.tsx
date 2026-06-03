@@ -5,6 +5,34 @@ import { stagger } from '@/lib/motion'
 
 interface NewsItem { title: string; link: string; publisher: string; providerPublishTime: number }
 
+type Sentiment = 'Bullish' | 'Bearish' | 'Earnings' | 'Guidance' | 'Upgrade' | 'Downgrade' | 'Neutral'
+
+const SENTIMENT_RULES: Array<{ pattern: RegExp; label: Sentiment }> = [
+  { pattern: /upgrad|outperform|buy rating|target raise|price target.*(raise|increas|hike|lift|up)/i, label: 'Upgrade' },
+  { pattern: /downgrad|underperform|sell rating|target (cut|lower|decreas|reduc)/i, label: 'Downgrade' },
+  { pattern: /earnings?|eps|quarter(ly)?|profit|revenue\s*(beat|miss|top|top|exceed|surpass)/i, label: 'Earnings' },
+  { pattern: /guidance|outlook|forecast|forward.*(revenue|eps|guidance)/i, label: 'Guidance' },
+  { pattern: /beat|surpass|record|strong|solid|exceed|rally|jump|soar|surge|bull|optimis/i, label: 'Bullish' },
+  { pattern: /miss|warning|slump|plunge|fall|decline|weak|disapp|concern|bear|pessim|layoff|cut|worr/i, label: 'Bearish' },
+]
+
+const SENTIMENT_STYLE: Record<Sentiment, string> = {
+  Bullish:   'bg-emerald-50 text-emerald-700 border-emerald-200',
+  Bearish:   'bg-red-50 text-red-600 border-red-200',
+  Earnings:  'bg-blue-50 text-blue-700 border-blue-200',
+  Guidance:  'bg-violet-50 text-violet-700 border-violet-200',
+  Upgrade:   'bg-emerald-50 text-emerald-700 border-emerald-200',
+  Downgrade: 'bg-orange-50 text-orange-700 border-orange-200',
+  Neutral:   'bg-slate-100 text-slate-500 border-slate-200',
+}
+
+function classify(title: string): Sentiment {
+  for (const { pattern, label } of SENTIMENT_RULES) {
+    if (pattern.test(title)) return label
+  }
+  return 'Neutral'
+}
+
 function relativeTime(epochSeconds: number): string {
   const diff = Math.floor(Date.now() / 1000) - epochSeconds
   if (diff < 60)     return 'Just now'
@@ -27,9 +55,19 @@ function SkeletonCard() {
   )
 }
 
+const FILTERS: Array<{ label: string; sentiment: Sentiment | null }> = [
+  { label: 'All', sentiment: null },
+  { label: 'Bullish', sentiment: 'Bullish' },
+  { label: 'Bearish', sentiment: 'Bearish' },
+  { label: 'Earnings', sentiment: 'Earnings' },
+  { label: 'Upgrades', sentiment: 'Upgrade' },
+  { label: 'Downgrades', sentiment: 'Downgrade' },
+]
+
 export default function NewsPanel({ ticker }: { ticker: string }) {
   const [news, setNews] = useState<NewsItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState<Sentiment | null>(null)
   const reduced = useReducedMotion()
 
   useEffect(() => {
@@ -40,12 +78,44 @@ export default function NewsPanel({ ticker }: { ticker: string }) {
       .catch(() => setLoading(false))
   }, [ticker])
 
+  const tagged = news.map(item => ({ ...item, sentiment: classify(item.title) }))
+  const filtered = filter ? tagged.filter(item => item.sentiment === filter) : tagged
+
+  const counts = FILTERS.slice(1).reduce<Record<string, number>>((acc, f) => {
+    if (f.sentiment) acc[f.sentiment] = tagged.filter(i => i.sentiment === f.sentiment).length
+    return acc
+  }, {})
+
   return (
     <div className="rounded-xl card px-4 py-4 sm:p-6">
-      <div className="flex items-center justify-between mb-4 sm:mb-5">
+      <div className="flex items-center justify-between mb-4">
         <h2 className="text-[15px] font-bold text-slate-900">Latest News</h2>
         <span className="text-[12px] text-slate-400 font-mono">{ticker}</span>
       </div>
+
+      {/* Filter chips */}
+      {!loading && news.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          {FILTERS.map(f => {
+            const count = f.sentiment ? counts[f.sentiment] ?? 0 : news.length
+            if (f.sentiment && count === 0) return null
+            const active = filter === f.sentiment
+            return (
+              <button
+                key={f.label}
+                onClick={() => setFilter(active ? null : f.sentiment)}
+                className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-colors ${
+                  active
+                    ? f.sentiment ? SENTIMENT_STYLE[f.sentiment] + ' border' : 'bg-slate-800 text-white border-slate-800'
+                    : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700'
+                }`}
+              >
+                {f.label}{count > 0 && count !== news.length ? ` (${count})` : ''}
+              </button>
+            )
+          })}
+        </div>
+      )}
 
       {loading ? (
         <div className="space-y-3">
@@ -61,6 +131,8 @@ export default function NewsPanel({ ticker }: { ticker: string }) {
           <p className="text-[14px] font-medium text-slate-500">No recent news</p>
           <p className="text-[12px] text-slate-400 mt-1">Check back later for updates</p>
         </div>
+      ) : filtered.length === 0 ? (
+        <p className="text-[13px] text-slate-400 text-center py-8">No {filter} articles in the last batch.</p>
       ) : (
         <motion.div
           className="space-y-3"
@@ -68,7 +140,7 @@ export default function NewsPanel({ ticker }: { ticker: string }) {
           animate="visible"
           variants={reduced ? {} : { visible: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } } }}
         >
-          {news.map((item, i) => (
+          {filtered.map((item, i) => (
             <motion.a
               key={i}
               href={item.link}
@@ -80,13 +152,18 @@ export default function NewsPanel({ ticker }: { ticker: string }) {
               <p className="text-[14px] font-semibold leading-snug text-slate-800 group-hover:text-blue-600 transition-colors mb-2.5 line-clamp-2">
                 {item.title}
               </p>
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center gap-2 min-w-0 flex-wrap">
                 <span className="rounded-full bg-slate-100 text-slate-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide truncate max-w-[140px] sm:max-w-none">
                   {item.publisher}
                 </span>
                 <span className="text-[11px] text-slate-400 shrink-0">
                   {relativeTime(item.providerPublishTime)}
                 </span>
+                {item.sentiment !== 'Neutral' && (
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 ${SENTIMENT_STYLE[item.sentiment]}`}>
+                    {item.sentiment}
+                  </span>
+                )}
                 <svg
                   className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 transition-colors ml-auto shrink-0"
                   fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}

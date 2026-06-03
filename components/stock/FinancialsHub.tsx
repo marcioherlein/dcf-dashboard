@@ -2,6 +2,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import YahooFinancials from './YahooFinancials'
 import FinancialCharts from './FinancialCharts'
+import InsiderTransactionsWidget from './InsiderTransactionsWidget'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyRow = Record<string, any>
@@ -879,6 +880,70 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 <p className="text-[11px] text-slate-400 leading-relaxed">
                   Analyst targets represent Wall Street consensus sourced from Yahoo Finance. They may differ from our intrinsic value model, which uses discounted cash flow analysis. Targets are typically 12-month forward estimates.
                 </p>
+
+                {/* Peer Multiples Comparison */}
+                {(() => {
+                  const estimates: Array<{
+                    multiple: string; actualValue: number; sectorMedian: number
+                    benchmarkSource: string; peerTickers: string[]
+                    impliedFairValue: number; upsidePct: number; applicable: boolean
+                  }> = financialsData?.valuationMethods?.models?.multiples?.estimates ?? []
+                  const allPeers: string[] = financialsData?.valuationMethods?.models?.multiples?.peerTickers ?? []
+                  const applicableEsts = estimates.filter(e => e.applicable && e.actualValue > 0 && e.sectorMedian > 0)
+                  if (applicableEsts.length === 0) return null
+                  return (
+                    <div>
+                      <div className="flex items-baseline justify-between mb-3">
+                        <p className="text-[13px] font-semibold text-slate-700">Relative Valuation</p>
+                        {allPeers.length > 0 && (
+                          <span className="text-[10px] text-slate-400">
+                            vs. {allPeers.slice(0, 4).join(', ')}{allPeers.length > 4 ? ` +${allPeers.length - 4}` : ''}
+                          </span>
+                        )}
+                      </div>
+                      <div className="rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
+                        {/* Header */}
+                        <div className="grid grid-cols-4 px-4 py-2 bg-slate-50">
+                          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Multiple</span>
+                          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide text-right">Current</span>
+                          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide text-right">Median</span>
+                          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide text-right">vs. Peers</span>
+                        </div>
+                        {applicableEsts.map(e => {
+                          const premium = e.sectorMedian > 0 ? (e.actualValue - e.sectorMedian) / e.sectorMedian : null
+                          const isDiscount = premium != null && premium < -0.05
+                          const isPremium  = premium != null && premium > 0.05
+                          return (
+                            <div key={e.multiple} className="grid grid-cols-4 px-4 py-3 bg-white items-center">
+                              <span className="text-[12px] font-medium text-slate-700">{e.multiple}</span>
+                              <span className="text-[12px] font-bold text-slate-900 tabular-nums text-right">
+                                {e.actualValue.toFixed(1)}×
+                              </span>
+                              <span className="text-[12px] text-slate-500 tabular-nums text-right">
+                                {e.sectorMedian.toFixed(1)}×
+                              </span>
+                              <div className="flex justify-end">
+                                {premium != null ? (
+                                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
+                                    isDiscount ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                                    isPremium  ? 'bg-red-50 text-red-600 border border-red-200' :
+                                    'bg-slate-100 text-slate-500'
+                                  }`}>
+                                    {premium >= 0 ? '+' : ''}{(premium * 100).toFixed(0)}%
+                                  </span>
+                                ) : <span className="text-[11px] text-slate-300">—</span>}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-2">
+                        {allPeers.length > 0 ? 'Live peer medians' : 'Industry medians (Damodaran 2025)'}
+                        . Discount = trading below peers; Premium = trading above.
+                      </p>
+                    </div>
+                  )
+                })()}
               </>
             )}
           </div>
@@ -990,6 +1055,14 @@ export default function FinancialsHub({ statementsData, financialsData, currency
               Institutional ownership reflects 13F filings (lag up to 45 days). Insider ownership from most recent proxy statement.
               Short interest reported bi-monthly — may not reflect intraday changes.
             </p>
+
+            {/* Insider Transactions feed */}
+            {financialsData?.ticker && (
+              <div>
+                <p className="text-[13px] font-semibold text-slate-700 mb-3">Recent Insider Transactions</p>
+                <InsiderTransactionsWidget ticker={financialsData.ticker} />
+              </div>
+            )}
           </div>
         )
       })()}
