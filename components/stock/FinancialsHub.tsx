@@ -666,6 +666,72 @@ export default function FinancialsHub({ statementsData, financialsData, currency
             <div className="px-4 sm:px-5 pt-2 pb-4">
               <MetricsTable columns={yoyCols} rows={yoyRows} hideSparks />
             </div>
+
+            {/* Share count trend */}
+            {(() => {
+              const annual = statementsData?.annual?.incomeStatement ?? []
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const sharePoints: Array<{ year: string; sharesM: number }> = (annual as any[])
+                .filter((r: any) => !r.isProjected && r.netIncome != null && r.eps != null && Math.abs(r.eps) > 0.001)
+                .map((r: any) => ({
+                  year: String(r.year ?? r.endDate ?? '').slice(0, 4),
+                  sharesM: Math.abs((r.netIncome as number) / (r.eps as number)), // netIncome($M) / eps($/share) = shares(M)
+                }))
+                .filter(p => p.sharesM > 0 && p.sharesM < 1e7) // sanity: <10T shares
+                .slice(-6)
+
+              if (sharePoints.length < 2) return null
+              const maxShares = Math.max(...sharePoints.map(p => p.sharesM))
+              const firstVal = sharePoints[0].sharesM
+              const lastVal  = sharePoints[sharePoints.length - 1].sharesM
+              const totalChg = (lastVal - firstVal) / firstVal
+              const isReducing = totalChg < -0.01
+              const isGrowing  = totalChg > 0.01
+
+              return (
+                <div className="px-4 sm:px-5 pb-4 border-t border-slate-100 pt-4">
+                  <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                    <p className="text-[13px] font-semibold text-slate-700">Shares Outstanding Trend</p>
+                    <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${
+                      isReducing ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
+                      isGrowing  ? 'bg-red-50 border-red-200 text-red-600' :
+                      'bg-slate-100 border-slate-200 text-slate-500'
+                    }`}>
+                      {isReducing ? `Buybacks: ${(totalChg * 100).toFixed(1)}%` :
+                       isGrowing  ? `Dilution: +${(totalChg * 100).toFixed(1)}%` : 'Stable'}
+                    </span>
+                  </div>
+                  <div className="flex items-end gap-1.5 h-24">
+                    {sharePoints.map((p, i) => {
+                      const hp = maxShares > 0 ? Math.max(10, (p.sharesM / maxShares) * 100) : 10
+                      const prev = sharePoints[i - 1]?.sharesM ?? null
+                      const yoy = prev != null && prev > 0 ? (p.sharesM - prev) / prev : null
+                      const isUp = yoy != null && yoy > 0.001
+                      const isDn = yoy != null && yoy < -0.001
+                      const fmtShares = (v: number) => v >= 1000 ? (v / 1000).toFixed(1) + 'B' : v.toFixed(0) + 'M'
+                      return (
+                        <div key={p.year} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-0.5">
+                          {yoy != null && (
+                            <span className={`text-[8px] font-semibold leading-none ${isUp ? 'text-red-500' : isDn ? 'text-emerald-600' : 'text-slate-400'}`}>
+                              {isUp ? '+' : isDn ? '' : ''}{(yoy * 100).toFixed(1)}%
+                            </span>
+                          )}
+                          <div className="relative w-full" style={{ height: `${hp}%` }}>
+                            <div className={`w-full h-full rounded-t-sm ${isUp ? 'bg-red-300' : isDn ? 'bg-emerald-400' : 'bg-slate-300'}`}
+                              title={`${p.year}: ${fmtShares(p.sharesM)}`} />
+                          </div>
+                          <span className="text-[8px] text-slate-400 truncate max-w-full">{p.year}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <div className="flex items-center gap-4 mt-1.5">
+                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Decreasing (buybacks)</span>
+                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />Increasing (dilution)</span>
+                  </div>
+                </div>
+              )
+            })()}
           </div>
         )
       })()}
