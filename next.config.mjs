@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ['yahoo-finance2'],
+    serverComponentsExternalPackages: ['yahoo-finance2', 'resend', '@react-email/components', '@react-email/render'],
   },
   images: {
     remotePatterns: [
