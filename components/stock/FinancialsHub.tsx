@@ -783,6 +783,102 @@ export default function FinancialsHub({ statementsData, financialsData, currency
             <div className="px-4 sm:px-5 pt-4 pb-4">
               <MetricsTable columns={cols} rows={profitRows} />
             </div>
+
+            {/* ROIC vs WACC trend */}
+            {(() => {
+              const wacc: number | null = financialsData?.wacc?.wacc ?? null
+              const annualMets = mets.filter((_, i) => periods[i]?.year !== 'TTM' && !(periods[i] as any)?.isProjected)
+              const roicPoints = annualMets
+                .map((m, i) => ({ year: periods[i]?.year, roic: m.roic }))
+                .filter(p => p.year && p.roic != null && isFinite(p.roic!) && Math.abs(p.roic!) < 5)
+                .slice(-6)
+
+              if (roicPoints.length < 2) return null
+              const allVals = [...roicPoints.map(p => p.roic!), wacc ?? 0].filter(v => isFinite(v))
+              const maxAbs = Math.max(...allVals.map(Math.abs), 0.01)
+              const latestRoic = roicPoints[roicPoints.length - 1].roic!
+              const spread = wacc != null ? latestRoic - wacc : null
+              const creatingValue = spread != null && spread > 0
+
+              return (
+                <div className="px-4 sm:px-5 pb-4 border-t border-slate-100 pt-4">
+                  <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                    <p className="text-[13px] font-semibold text-slate-700">ROIC vs WACC</p>
+                    {spread != null && (
+                      <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${creatingValue ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-600'}`}>
+                        {creatingValue ? 'Creating value' : 'Destroying value'} ({spread >= 0 ? '+' : ''}{(spread * 100).toFixed(1)}% spread)
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Chart area — bars with zero-baseline in middle */}
+                  <div className="relative">
+                    {/* WACC reference line */}
+                    {wacc != null && (
+                      <div
+                        className="absolute left-0 right-0 flex items-center pointer-events-none z-10"
+                        style={{ bottom: `${((wacc / maxAbs) * 50 + 50).toFixed(1)}%`, transform: 'translateY(50%)' }}
+                      >
+                        <div className="flex-1 border-t-2 border-dashed border-amber-400" />
+                        <span className="text-[9px] font-bold text-amber-600 bg-white px-1 shrink-0">
+                          WACC {(wacc * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-1.5 h-28">
+                      {roicPoints.map((p) => {
+                        const val = p.roic!
+                        const aboveWacc = wacc == null || val >= wacc
+                        // Normalize: center at 0, max bar height = 50% above or below midpoint
+                        const pct = (val / maxAbs) * 50 // -50 to +50, mapped as % from center
+                        const barH = Math.abs(pct)
+                        const barBottom = val >= 0 ? 50 : 50 - barH // % from bottom of container
+                        return (
+                          <div key={p.year} className="relative flex-1 min-w-0 h-full">
+                            {/* Bar */}
+                            <div
+                              className={`absolute left-1 right-1 rounded-sm transition-colors ${aboveWacc ? 'bg-emerald-400' : 'bg-red-300'}`}
+                              style={{
+                                bottom: `${barBottom}%`,
+                                height: `${Math.max(2, barH)}%`,
+                              }}
+                              title={`${p.year}: ROIC ${(val * 100).toFixed(1)}%${wacc != null ? `, WACC ${(wacc * 100).toFixed(1)}%` : ''}`}
+                            />
+                            {/* Label */}
+                            <span className="absolute bottom-0 left-0 right-0 text-center text-[8px] text-slate-400 leading-none" style={{ bottom: '-14px' }}>
+                              {p.year}
+                            </span>
+                            {/* Value label above bar */}
+                            <span
+                              className={`absolute text-[8px] font-semibold left-0 right-0 text-center leading-none ${aboveWacc ? 'text-emerald-600' : 'text-red-500'}`}
+                              style={{ bottom: `${barBottom + barH + 1}%` }}
+                            >
+                              {(val * 100).toFixed(0)}%
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    {/* X-axis labels (fixed margin below bars) */}
+                    <div className="flex gap-1.5 mt-4">
+                      {roicPoints.map((p) => (
+                        <div key={p.year} className="flex-1 text-center text-[8px] text-slate-400">{p.year}</div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 mt-2">
+                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />ROIC above WACC</span>
+                    <span className="flex items-center gap-1 text-[9px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />ROIC below WACC</span>
+                    {wacc != null && <span className="flex items-center gap-1 text-[9px] text-amber-500"><span className="w-5 border-t-2 border-dashed border-amber-400 inline-block" />WACC</span>}
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1.5 leading-snug">
+                    ROIC above WACC = company creates value for shareholders. Below WACC = capital is being destroyed even if profits appear positive.
+                  </p>
+                </div>
+              )
+            })()}
           </div>
         )
       })()}
