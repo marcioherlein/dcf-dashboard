@@ -799,6 +799,44 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                     {rawRec !== '' && <span className={`text-sm font-bold px-4 py-1.5 rounded-full border ${recBg}`}>{recLabel}</span>}
                     {ca.numAnalysts > 0 && <span className="text-[12px] text-slate-400">{ca.numAnalysts} analysts covering this stock</span>}
                   </div>
+                  {/* Rating breakdown stacked bar */}
+                  {(() => {
+                    const trend: Array<{ period: string; strongBuy: number; buy: number; hold: number; sell: number; strongSell: number }> =
+                      financialsData?.analystRatingTrend ?? []
+                    const latest = trend[0]
+                    if (!latest) return null
+                    const total = latest.strongBuy + latest.buy + latest.hold + latest.sell + latest.strongSell
+                    if (total === 0) return null
+                    const segments = [
+                      { label: 'Strong Buy', count: latest.strongBuy,  color: 'bg-emerald-600' },
+                      { label: 'Buy',        count: latest.buy,        color: 'bg-emerald-400' },
+                      { label: 'Hold',       count: latest.hold,       color: 'bg-amber-400'   },
+                      { label: 'Sell',       count: latest.sell,       color: 'bg-red-400'     },
+                      { label: 'Strong Sell',count: latest.strongSell, color: 'bg-red-600'     },
+                    ].filter(s => s.count > 0)
+                    return (
+                      <div className="mt-3">
+                        <div className="flex rounded-full overflow-hidden h-3 gap-px">
+                          {segments.map(s => (
+                            <div
+                              key={s.label}
+                              className={`${s.color} transition-all`}
+                              style={{ width: `${(s.count / total) * 100}%` }}
+                              title={`${s.label}: ${s.count}`}
+                            />
+                          ))}
+                        </div>
+                        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                          {segments.map(s => (
+                            <span key={s.label} className="flex items-center gap-1 text-[10px] text-slate-500">
+                              <span className={`inline-block w-2 h-2 rounded-sm ${s.color}`} />
+                              {s.label} ({s.count})
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })()}
                 </div>
                 {/* EPS Growth Estimates */}
                 {(analystEst1y != null || analystEst2y != null) && (

@@ -1298,6 +1298,17 @@ export async function GET(req: NextRequest) {
         surprisePercent: (h.surprisePercent ?? null) as number | null,
       }))
 
+    // Analyst recommendation trend (last 4 months for stacked bar chart)
+    const recTrend: any[] = (fin.recommendationTrend?.trend ?? []) as any[]
+    const analystRatingTrend = recTrend.slice(0, 4).map((r: any) => ({
+      period:    (r.period ?? '') as string,
+      strongBuy: (r.strongBuy ?? 0) as number,
+      buy:       (r.buy ?? 0) as number,
+      hold:      (r.hold ?? 0) as number,
+      sell:      (r.sell ?? 0) as number,
+      strongSell:(r.strongSell ?? 0) as number,
+    }))
+
     return NextResponse.json({
       ticker,
       quote: {
@@ -1353,6 +1364,7 @@ export async function GET(req: NextRequest) {
       historyYears,
       analystForwardEstimates,
       earningsSurprises,
+      analystRatingTrend,
       providerStatus: {
         fmp: {
           ok: hasFmp,
