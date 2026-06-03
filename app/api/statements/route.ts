@@ -136,6 +136,8 @@ export async function GET(req: NextRequest) {
       ttm:       { incomeStatement: ttmIS,           balanceSheet: ttmBS,           cashFlow: ttmCF           },
       priorTtm:  { incomeStatement: priorTtmIS,      cashFlow: priorTtmCF          },
       ttmMeta,
+    }, {
+      headers: { 'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=3600' },
     })
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 })

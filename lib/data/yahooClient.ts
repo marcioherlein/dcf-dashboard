@@ -3,6 +3,15 @@
 const YahooFinance = require('yahoo-finance2').default
 const yf = new YahooFinance({ suppressNotices: ['ripHistorical', 'yahooSurvey'] })
 
+// Module-level caches — survive across requests within the same serverless instance
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _spyCache: { data: any[]; ts: number } | null = null
+const SPY_CACHE_TTL = 60 * 60 * 1000 // 1 hour
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const _peerCache = new Map<string, { data: any[]; ts: number }>()
+const PEER_CACHE_TTL = 30 * 60 * 1000 // 30 min
+
 // Allowed exchange codes for NYSE and NASDAQ
 const NYSE_NASDAQ_CODES = new Set([
   'NMS', 'NGM', 'NCM',           // NASDAQ (Global Select, Global Market, Capital Market)
@@ -181,14 +190,18 @@ export async function getHistorical(ticker: string, period: HistoricalPeriod = '
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getSPYHistorical(): Promise<any[]> {
+  const now = Date.now()
+  if (_spyCache && now - _spyCache.ts < SPY_CACHE_TTL) return _spyCache.data
   const period2 = new Date()
   const period1 = new Date()
   period1.setFullYear(period1.getFullYear() - 5)
-  return yf.historical('SPY', {
+  const data = await yf.historical('SPY', {
     period1: period1.toISOString().split('T')[0],
     period2: period2.toISOString().split('T')[0],
     interval: '1wk',
   }, { validateResult: false })
+  _spyCache = { data, ts: now }
+  return data
 }
 
 // Returns the spot FX rate to convert fromCurrency → toCurrency (e.g. CNY → USD = 0.138)
@@ -241,9 +254,14 @@ export interface PeerQuoteRaw {
 
 // Fetch live multiples for a list of peer tickers in parallel; silently drops failures
 export async function getPeerQuotes(tickers: string[]): Promise<PeerQuoteRaw[]> {
+  const cacheKey = [...tickers].sort().join(',')
+  const now = Date.now()
+  const cached = _peerCache.get(cacheKey)
+  if (cached && now - cached.ts < PEER_CACHE_TTL) return cached.data
+
   const results = await Promise.allSettled(tickers.map((t) => yf.quote(t)))
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return results.flatMap((r): PeerQuoteRaw[] => {
+  const data = results.flatMap((r): PeerQuoteRaw[] => {
     if (r.status !== 'fulfilled') return []
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const q = r.value as any
@@ -257,4 +275,6 @@ export async function getPeerQuotes(tickers: string[]): Promise<PeerQuoteRaw[]> 
       evToRevenue: typeof q.enterpriseToRevenue === 'number' ? q.enterpriseToRevenue : null,
     }]
   })
+  _peerCache.set(cacheKey, { data, ts: now })
+  return data
 }

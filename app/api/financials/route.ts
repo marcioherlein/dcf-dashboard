@@ -957,9 +957,7 @@ export async function GET(req: NextRequest) {
       const dnaY   = rawDna   != null ? (rawDna   as number) / 1e6 * fxRate : null
       const opCFY  = rawOpCF  != null ? (rawOpCF  as number) / 1e6 * fxRate : null
       const fcfY   = capexY != null && opCFY != null ? Math.round(opCFY + capexY) : null
-      // Also store Yahoo's direct FCF as an independent fallback (doesn't require both OCF & Capex)
       const fcfDirectY = rawFcf != null ? Math.round((rawFcf as number) / 1e6 * fxRate) : null
-      console.log(`[financials] yahooCF ${yr}: opCF=${opCFY}, capex=${capexY}, fcf=${fcfY}, fcfDirect=${fcfDirectY}`)
       yahooCfByYear[yr] = { capex: capexY, dna: dnaY, opCF: opCFY, fcf: fcfY, fcfDirect: fcfDirectY }
     }
 
@@ -1256,7 +1254,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       ticker,
-      companyName: q.longName ?? q.shortName ?? ticker,
       quote: {
         price: currentPrice,
         change: q.regularMarketChange ?? 0,
@@ -1323,6 +1320,8 @@ export async function GET(req: NextRequest) {
           source: fxRate === 1 ? ('parity' as const) : ('api' as const),
         },
       },
+    }, {
+      headers: { 'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=3600' },
     })
   } catch (err) {
     console.error(`Financials error for ${ticker}:`, err)
