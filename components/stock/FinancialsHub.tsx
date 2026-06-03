@@ -664,7 +664,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
               </div>
             )}
             <div className="px-4 sm:px-5 pt-2 pb-4">
-              <MetricsTable columns={yoyCols} rows={yoyRows} hideSparks />
+              <MetricsTable columns={yoyCols} rows={yoyRows} />
             </div>
 
             {/* Share count trend */}
