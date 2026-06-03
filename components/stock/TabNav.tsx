@@ -1,4 +1,5 @@
 'use client'
+import { useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { motion, useReducedMotion } from 'motion/react'
 import {
@@ -23,6 +24,13 @@ interface Props {
 export default function TabNav({ activeTab, onChange }: Props) {
   const reduced = useReducedMotion()
   const tabIds = TABS.map(t => t.id)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Scroll active tab into view on mobile
+  useEffect(() => {
+    const el = document.getElementById(`tab-${activeTab}`)
+    el?.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' })
+  }, [activeTab])
 
   function handleKeyDown(e: React.KeyboardEvent) {
     const idx = tabIds.indexOf(activeTab)
@@ -45,7 +53,7 @@ export default function TabNav({ activeTab, onChange }: Props) {
       onKeyDown={handleKeyDown}
     >
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        <div className="flex gap-0 overflow-x-auto scrollbar-hide -mb-px">
+        <div ref={containerRef} className="flex gap-0 overflow-x-auto scrollbar-hide -mb-px">
           {TABS.map(({ id, label, Icon, primary }, i) => {
             const active = activeTab === id
             const isFirstSecondary = !primary && TABS[i - 1]?.primary
