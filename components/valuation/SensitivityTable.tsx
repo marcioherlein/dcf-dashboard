@@ -140,12 +140,12 @@ export default function SensitivityTable({
         </div>
       ) : (
         <div className="overflow-x-auto px-4 py-4">
-          <div className="min-w-[600px]">
+          <div className="min-w-[480px] sm:min-w-[580px]">
 
             {/* Column header: CAGR axis */}
             <div className="flex items-end mb-1.5">
               {/* Corner: WACC label */}
-              <div className="shrink-0 text-right pr-3" style={{ width: 90 }}>
+              <div className="shrink-0 text-right pr-3 w-[64px] sm:w-[90px]">
                 <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">WACC ↓</span>
               </div>
 
@@ -179,7 +179,7 @@ export default function SensitivityTable({
 
             {/* Title above columns */}
             <div className="flex items-start mb-2">
-              <div className="shrink-0" style={{ width: 90 }} />
+              <div className="shrink-0 w-[64px] sm:w-[90px]" />
               <div className="flex-1 text-center">
                 <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Revenue CAGR →</span>
               </div>
@@ -192,7 +192,7 @@ export default function SensitivityTable({
               return (
                 <div key={wi} className="flex items-stretch mb-0.5">
                   {/* WACC row label */}
-                  <div className="shrink-0 pr-3 flex flex-col justify-center text-right" style={{ width: 90 }}>
+                  <div className="shrink-0 pr-3 flex flex-col justify-center text-right w-[64px] sm:w-[90px]">
                     <div className={cn(
                       'text-[10px] font-bold font-mono leading-tight',
                       isBaseRow ? 'text-blue-400' : 'text-slate-300'
