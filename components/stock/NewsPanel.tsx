@@ -16,14 +16,24 @@ const SENTIMENT_RULES: Array<{ pattern: RegExp; label: Sentiment }> = [
   { pattern: /miss|warning|slump|plunge|fall|decline|weak|disapp|concern|bear|pessim|layoff|cut|worr/i, label: 'Bearish' },
 ]
 
-const SENTIMENT_STYLE: Record<Sentiment, string> = {
-  Bullish:   'bg-emerald-50 text-emerald-700 border-emerald-200',
-  Bearish:   'bg-red-50 text-red-600 border-red-200',
-  Earnings:  'bg-blue-50 text-blue-700 border-blue-200',
-  Guidance:  'bg-violet-50 text-violet-700 border-violet-200',
-  Upgrade:   'bg-emerald-50 text-emerald-700 border-emerald-200',
-  Downgrade: 'bg-orange-50 text-orange-700 border-orange-200',
-  Neutral:   'bg-slate-100 text-slate-500 border-slate-200',
+const SENTIMENT_STYLE: Record<Sentiment, { badge: string; border: string; dot: string }> = {
+  Bullish:   { badge: 'bg-emerald-50 text-emerald-700 border-emerald-200', border: 'border-l-emerald-400', dot: 'bg-emerald-400' },
+  Bearish:   { badge: 'bg-red-50 text-red-600 border-red-200',             border: 'border-l-red-400',     dot: 'bg-red-400' },
+  Earnings:  { badge: 'bg-blue-50 text-blue-700 border-blue-200',           border: 'border-l-blue-400',    dot: 'bg-blue-400' },
+  Guidance:  { badge: 'bg-violet-50 text-violet-700 border-violet-200',     border: 'border-l-violet-400',  dot: 'bg-violet-400' },
+  Upgrade:   { badge: 'bg-emerald-50 text-emerald-700 border-emerald-200',  border: 'border-l-emerald-500', dot: 'bg-emerald-500' },
+  Downgrade: { badge: 'bg-orange-50 text-orange-700 border-orange-200',     border: 'border-l-orange-400',  dot: 'bg-orange-400' },
+  Neutral:   { badge: 'bg-slate-100 text-slate-500 border-slate-200',       border: 'border-l-slate-200',   dot: 'bg-slate-300' },
+}
+
+// Stable color for publisher initial avatar (hashed from publisher name)
+function publisherColor(name: string): string {
+  const palette = ['bg-blue-100 text-blue-700', 'bg-violet-100 text-violet-700', 'bg-amber-100 text-amber-700',
+    'bg-emerald-100 text-emerald-700', 'bg-rose-100 text-rose-700', 'bg-cyan-100 text-cyan-700',
+    'bg-indigo-100 text-indigo-700', 'bg-orange-100 text-orange-700']
+  let h = 0
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffff
+  return palette[h % palette.length]
 }
 
 function classify(title: string): Sentiment {
@@ -33,23 +43,28 @@ function classify(title: string): Sentiment {
   return 'Neutral'
 }
 
-function relativeTime(epochSeconds: number): string {
+function formatTime(epochSeconds: number): { relative: string; absolute: string; isNew: boolean } {
   const diff = Math.floor(Date.now() / 1000) - epochSeconds
-  if (diff < 60)     return 'Just now'
-  if (diff < 3600)   return `${Math.floor(diff / 60)}m ago`
-  if (diff < 86400)  return `${Math.floor(diff / 3600)}h ago`
-  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`
-  return new Date(epochSeconds * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const isNew = diff < 21600 // 6 hours
+  let relative: string
+  if (diff < 60)     relative = 'Just now'
+  else if (diff < 3600)  relative = `${Math.floor(diff / 60)}m ago`
+  else if (diff < 86400) relative = `${Math.floor(diff / 3600)}h ago`
+  else if (diff < 604800) relative = `${Math.floor(diff / 86400)}d ago`
+  else relative = new Date(epochSeconds * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const absolute = new Date(epochSeconds * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: diff > 86400 * 365 ? 'numeric' : undefined })
+  return { relative, absolute, isNew }
 }
 
 function SkeletonCard() {
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 animate-pulse min-h-[80px]">
-      <div className="h-4 bg-slate-200 rounded w-3/4 mb-2" />
-      <div className="h-3.5 bg-slate-200 rounded w-1/2 mb-3" />
-      <div className="flex gap-2">
-        <div className="h-5 w-20 bg-slate-200 rounded-full" />
-        <div className="h-5 w-14 bg-slate-200 rounded-full" />
+    <div className="rounded-xl border border-slate-200 border-l-4 border-l-slate-200 bg-white px-4 py-4 animate-pulse min-h-[88px]">
+      <div className="h-4 bg-slate-200 rounded w-4/5 mb-1.5" />
+      <div className="h-3.5 bg-slate-200 rounded w-3/5 mb-3" />
+      <div className="flex items-center gap-2">
+        <div className="h-5 w-5 bg-slate-200 rounded-full" />
+        <div className="h-3.5 w-24 bg-slate-200 rounded" />
+        <div className="h-5 w-14 bg-slate-200 rounded-full ml-auto" />
       </div>
     </div>
   )
@@ -100,17 +115,20 @@ export default function NewsPanel({ ticker }: { ticker: string }) {
             const count = f.sentiment ? counts[f.sentiment] ?? 0 : news.length
             if (f.sentiment && count === 0) return null
             const active = filter === f.sentiment
+            const style = f.sentiment ? SENTIMENT_STYLE[f.sentiment] : null
             return (
               <button
                 key={f.label}
                 onClick={() => setFilter(active ? null : f.sentiment)}
-                className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-colors ${
+                className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-colors ${
                   active
-                    ? f.sentiment ? SENTIMENT_STYLE[f.sentiment] + ' border' : 'bg-slate-800 text-white border-slate-800'
+                    ? (style ? style.badge + ' border' : 'bg-slate-800 text-white border-slate-800')
                     : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700'
                 }`}
               >
-                {f.label}{count > 0 && count !== news.length ? ` (${count})` : ''}
+                {style && <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${active ? style.dot : 'bg-slate-300'}`} />}
+                {f.label}
+                {count > 0 && count !== news.length ? <span className="opacity-70">({count})</span> : ''}
               </button>
             )
           })}
@@ -118,7 +136,7 @@ export default function NewsPanel({ ticker }: { ticker: string }) {
       )}
 
       {loading ? (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {[1, 2, 3].map(i => <SkeletonCard key={i} />)}
         </div>
       ) : news.length === 0 ? (
@@ -135,44 +153,72 @@ export default function NewsPanel({ ticker }: { ticker: string }) {
         <p className="text-[13px] text-slate-400 text-center py-8">No {filter} articles in the last batch.</p>
       ) : (
         <motion.div
-          className="space-y-3"
+          className="space-y-2.5"
           initial="hidden"
           animate="visible"
           variants={reduced ? {} : { visible: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } } }}
         >
-          {filtered.map((item, i) => (
-            <motion.a
-              key={i}
-              href={item.link}
-              target="_blank"
-              rel="noreferrer"
-              variants={reduced ? {} : stagger.item}
-              className="group block rounded-xl border border-slate-200 bg-white px-4 py-4 min-h-[80px] hover:border-blue-300 hover:bg-slate-50 transition-all"
-            >
-              <p className="text-[14px] font-semibold leading-snug text-slate-800 group-hover:text-blue-600 transition-colors mb-2.5 line-clamp-2">
-                {item.title}
-              </p>
-              <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                <span className="rounded-full bg-slate-100 text-slate-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide truncate max-w-[140px] sm:max-w-none">
-                  {item.publisher}
-                </span>
-                <span className="text-[11px] text-slate-400 shrink-0">
-                  {relativeTime(item.providerPublishTime)}
-                </span>
-                {item.sentiment !== 'Neutral' && (
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 ${SENTIMENT_STYLE[item.sentiment]}`}>
-                    {item.sentiment}
+          {filtered.map((item, i) => {
+            const { relative, absolute, isNew } = formatTime(item.providerPublishTime)
+            const sentStyle = SENTIMENT_STYLE[item.sentiment]
+            const pubInitial = item.publisher.charAt(0).toUpperCase()
+            const pubColor = publisherColor(item.publisher)
+            return (
+              <motion.a
+                key={i}
+                href={item.link}
+                target="_blank"
+                rel="noreferrer"
+                variants={reduced ? {} : stagger.item}
+                className={`group block rounded-xl border border-slate-200 border-l-4 bg-white px-4 py-3.5 hover:border-blue-200 hover:bg-blue-50/30 transition-all ${sentStyle.border}`}
+              >
+                {/* Title row */}
+                <p className="text-[13.5px] font-semibold leading-snug text-slate-800 group-hover:text-blue-700 transition-colors mb-2.5 line-clamp-2">
+                  {item.title}
+                </p>
+
+                {/* Meta row */}
+                <div className="flex items-center gap-2 min-w-0">
+                  {/* Publisher initial avatar */}
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${pubColor}`}>
+                    {pubInitial}
                   </span>
-                )}
-                <svg
-                  className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 transition-colors ml-auto shrink-0"
-                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                </svg>
-              </div>
-            </motion.a>
-          ))}
+
+                  {/* Publisher name */}
+                  <span className="text-[11.5px] text-slate-600 font-medium truncate max-w-[120px] sm:max-w-[180px]">
+                    {item.publisher}
+                  </span>
+
+                  {/* Time */}
+                  <span className="text-[11px] text-slate-400 shrink-0 tabular-nums">
+                    {relative !== absolute ? `${relative} · ${absolute}` : relative}
+                  </span>
+
+                  <div className="flex items-center gap-1.5 ml-auto shrink-0">
+                    {/* New badge */}
+                    {isNew && (
+                      <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-600 text-white leading-none">
+                        New
+                      </span>
+                    )}
+                    {/* Sentiment badge */}
+                    {item.sentiment !== 'Neutral' && (
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${sentStyle.badge}`}>
+                        {item.sentiment}
+                      </span>
+                    )}
+                    {/* External link icon */}
+                    <svg
+                      className="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-400 transition-colors"
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
+                  </div>
+                </div>
+              </motion.a>
+            )
+          })}
         </motion.div>
       )}
     </div>
