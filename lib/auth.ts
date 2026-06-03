@@ -66,9 +66,11 @@ export const authOptions: NextAuthOptions = {
           }
 
           if (isNew) {
-            sendWelcomeEmail(user.email, user.name).catch((err) => {
-              console.error('[auth] welcome email failed:', err?.message ?? err)
-            })
+            try {
+              await sendWelcomeEmail(user.email, user.name)
+            } catch (err) {
+              console.error('[auth] welcome email failed:', err instanceof Error ? err.message : err)
+            }
           }
         } catch (err) {
           console.error('[auth] signIn callback error:', err)
