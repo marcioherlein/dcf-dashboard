@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
@@ -99,7 +99,7 @@ function SearchHero() {
       setLoading(true)
       fetch(`/api/search?q=${encodeURIComponent(query)}`)
         .then((r) => r.json())
-        .then((d: SearchResult[]) => { setResults(d); setOpen(d.length > 0); setLoading(false) })
+        .then((d: SearchResult[]) => { setResults(d); setOpen(true); setLoading(false) })
         .catch(() => setLoading(false))
     }, 300)
   }, [query])
@@ -238,6 +238,11 @@ function SearchHero() {
             placeholder="Search ticker or company name, e.g. NVDA, MercadoLibre…"
             className="flex-1 min-w-0 bg-transparent text-[16px] text-slate-800 placeholder-slate-400 focus:outline-none"
           />
+          {!query && (
+            <kbd className="shrink-0 hidden sm:flex items-center rounded border border-slate-200 px-1.5 py-0.5 text-[10px] text-slate-400 font-mono leading-tight select-none">
+              /
+            </kbd>
+          )}
           <button
             onClick={() => query.trim() && select(query.trim().toUpperCase())}
             disabled={!query.trim()}
@@ -259,7 +264,12 @@ function SearchHero() {
               style={{ originY: 0 }}
               className="absolute left-0 right-0 top-full mt-1 z-50 rounded-xl bg-white border border-slate-200 shadow-lg overflow-hidden max-h-72 overflow-y-auto"
             >
-              {results.map((r, idx) => (
+              {results.length === 0 ? (
+                <div className="px-4 py-6 text-center">
+                  <p className="text-[12px] text-slate-500">No results for &ldquo;{query}&rdquo;</p>
+                  <p className="text-[11px] text-slate-400 mt-1">Try the full ticker symbol, e.g. MELI, NVDA</p>
+                </div>
+              ) : results.map((r, idx) => (
                 <button
                   id={`analyze-result-${idx}`}
                   role="option"
@@ -317,11 +327,15 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
   const [upsidePct,  setUpsidePct]  = useState<number | null>(q.upsidePct)
   const [fvLoading,  setFvLoading]  = useState(q.fairValue == null)
   const [fvError,    setFvError]    = useState(false)
+  const [retryKey,   setRetryKey]   = useState(0)
 
   useEffect(() => {
-    if (fairValue != null) { setFvLoading(false); return }
+    if (fairValue != null && retryKey === 0) { setFvLoading(false); return }
+    const controller = new AbortController()
+    setFvLoading(true)
+    setFvError(false)
     const timer = setTimeout(() => {
-      fetch(`/api/financials?ticker=${q.ticker}`)
+      fetch(`/api/financials?ticker=${q.ticker}`, { signal: controller.signal })
         .then((r) => r.json())
         .then((data) => {
           const fv    = data?.valuationMethods?.triangulatedFairValue ?? null
@@ -329,12 +343,12 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
           setFairValue(fv)
           if (fv != null && price && price > 0) setUpsidePct((fv - price) / price)
         })
-        .catch(() => { setFvError(true) })
+        .catch((err) => { if (err?.name !== 'AbortError') setFvError(true) })
         .finally(() => setFvLoading(false))
-    }, index * 200)
-    return () => clearTimeout(timer)
+    }, retryKey === 0 ? index * 200 : 0)
+    return () => { clearTimeout(timer); controller.abort() }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q.ticker])
+  }, [q.ticker, retryKey])
 
   const zone  = upsidePct != null ? upsideZone(upsidePct) : null
   const badge = statusBadge(zone)
@@ -395,18 +409,24 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
           <div>
             <p className="flex items-center gap-1 text-[11px] font-medium text-slate-500 mb-0.5">
               Intrinsic value
-              <button
-                type="button"
+              <span
                 aria-label="DCF-based fair value estimate using market-implied growth and WACC inputs"
+                title="DCF-based fair value estimate using market-implied growth and WACC inputs"
                 className="cursor-help inline-flex items-center"
               >
                 <Info size={11} className="text-slate-300" />
-              </button>
+              </span>
             </p>
             {fvLoading ? (
               <div className="h-4 w-14 rounded bg-slate-100 animate-pulse mt-0.5" />
             ) : fvError ? (
-              <p className="text-[12px] text-slate-400">Unavailable</p>
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRetryKey(k => k + 1) }}
+                className="text-[11px] text-blue-500 hover:text-blue-700 transition-colors"
+              >
+                Retry ↺
+              </button>
             ) : fairValue != null ? (
               <p className={cn('text-[14px] font-bold tabular-nums', (upsidePct ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600')}>
                 {fmtPrice(fairValue)}
@@ -504,6 +524,13 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
   const infoRef   = useRef<HTMLDivElement>(null)
   const inView    = useInView(tableRef, { once: true, margin: '-60px' })
 
+  const rowData = useMemo(() => quotes.map(q => ({
+    ...q,
+    shortName: q.name.split(',')[0],
+    impliedBarW: Math.min(100, Math.abs(q.impliedCagr) * BAR_SCALE),
+    histBarW: Math.min(100, Math.abs(q.historicalCagr3y) * BAR_SCALE),
+  })), [quotes])
+
   useEffect(() => {
     if (!showInfo) return
     function handleOutside(e: PointerEvent) {
@@ -548,7 +575,7 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
           </div>
 
           <div ref={tableRef} className="divide-y divide-slate-50">
-            {quotes.map((q, rowIndex) => (
+            {rowData.map((q, rowIndex) => (
               <Link
                 key={q.ticker}
                 href={`/stock/${q.ticker}`}
@@ -557,12 +584,12 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
                 {/* Stock */}
                 <div className="min-w-0">
                   <span className="text-[12px] font-bold text-slate-800 font-mono">{q.ticker}</span>
-                  <span className="text-[11px] text-slate-500 ml-1.5 hidden sm:inline truncate">{q.name.split(' ')[0]}</span>
+                  <span className="text-[11px] text-slate-500 ml-1.5 hidden sm:inline truncate">{q.shortName}</span>
                 </div>
 
                 {/* Implied CAGR bar */}
                 <div className="flex items-center gap-2">
-                  <div className="overflow-hidden" style={{ width: `${Math.min(100, Math.abs(q.impliedCagr) * BAR_SCALE)}px` }}>
+                  <div className="overflow-hidden" style={{ width: `${q.impliedBarW}px` }}>
                     <motion.div
                       className={cn('h-2 rounded-full w-full', cagrBarColor(Math.abs(q.impliedCagr), 'implied'))}
                       style={{ transformOrigin: 'left' }}
@@ -578,7 +605,7 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
 
                 {/* Historical CAGR bar */}
                 <div className="flex items-center gap-2">
-                  <div className="overflow-hidden" style={{ width: `${Math.min(100, Math.abs(q.historicalCagr3y) * BAR_SCALE)}px` }}>
+                  <div className="overflow-hidden" style={{ width: `${q.histBarW}px` }}>
                     <motion.div
                       className="h-2 bg-blue-400 rounded-full w-full"
                       style={{ transformOrigin: 'left' }}
@@ -737,7 +764,7 @@ function RecentlyViewed() {
           <div className="sm:hidden flex flex-col gap-2">
             <AnimatePresence initial={false}>
             {recent.slice(0, 6).map((r) => {
-              const up = r.changePct >= 0
+              const up = (r.changePct ?? 0) >= 0
               return (
                 <motion.div
                   key={r.ticker}
@@ -756,7 +783,7 @@ function RecentlyViewed() {
                       <div className="flex items-center gap-1.5">
                         <span className="text-[13px] font-bold text-blue-700 font-mono">{r.ticker}</span>
                         <span className={cn('text-[11px] font-semibold tabular-nums', up ? 'text-emerald-600' : 'text-red-600')}>
-                          {fmtPct(r.changePct / 100)}
+                          {fmtPct((r.changePct ?? 0) / 100)}
                         </span>
                       </div>
                       <p className="text-[11px] text-slate-500 truncate mt-0.5">{r.name}</p>
@@ -780,7 +807,7 @@ function RecentlyViewed() {
           <div className="hidden sm:flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
             <AnimatePresence initial={false}>
             {recent.slice(0, 8).map((r) => {
-              const up = r.changePct >= 0
+              const up = (r.changePct ?? 0) >= 0
               return (
                 <motion.div
                   key={r.ticker}
@@ -799,7 +826,7 @@ function RecentlyViewed() {
                     <p className="text-[11px] text-slate-500 truncate mt-0.5 mb-2">{r.name}</p>
                     <p className="text-[15px] font-bold text-slate-900 tabular-nums">{fmtPrice(r.price)}</p>
                     <p className={cn('text-[11px] font-semibold tabular-nums mt-0.5', up ? 'text-emerald-600' : 'text-red-600')}>
-                      {fmtPct(r.changePct / 100)}
+                      {fmtPct((r.changePct ?? 0) / 100)}
                     </p>
                   </button>
                   <button
