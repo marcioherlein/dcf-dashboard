@@ -15,6 +15,7 @@ import IncomeFlowCard from './IncomeFlowCard'
 import RevenueEarningsChart from './RevenueEarningsChart'
 import FinancialSnapshotBar from './FinancialSnapshotBar'
 import { ETFExposureCard } from './ETFExposureCard'
+import PeerValuationChart from './PeerValuationChart'
 import QuickStatsBar from '@/components/stock/QuickStatsBar'
 import HoldingReturns from '@/components/stock/HoldingReturns'
 
@@ -240,6 +241,9 @@ export default function SummaryTab({
       {statementsData && (
         <RevenueEarningsChart statementsData={statementsData} currency={currency} />
       )}
+
+      {/* ── Zone 2.55: Peer P/E vs EPS growth scatter ────────────────────── */}
+      <PeerValuationChart ticker={ticker} isFinancialSector={isFinancialSector} />
 
       {/* ── Zone 2.6: Income flow chart ───────────────────────────────────── */}
       {statementsData && (
