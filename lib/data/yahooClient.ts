@@ -107,6 +107,7 @@ export async function getFinancials(ticker: string): Promise<any> {
       'defaultKeyStatistics',
       'summaryDetail',
       'earningsTrend',
+      'earningsHistory',
       'recommendationTrend',
       'insiderTransactions',
       'summaryProfile',

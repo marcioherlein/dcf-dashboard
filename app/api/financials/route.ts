@@ -1284,6 +1284,20 @@ export async function GET(req: NextRequest) {
         },
       }))
 
+    // EPS surprise history from earningsHistory (last 4 quarters)
+    const ehHistory: any[] = (fin.earningsHistory?.history ?? []) as any[]
+    const earningsSurprises = ehHistory
+      .filter((h: any) => h.epsActual != null && h.epsEstimate != null)
+      .slice(-4)
+      .map((h: any) => ({
+        quarter:         h.period as string | null,
+        date:            h.earningsDate ? new Date(h.earningsDate).toISOString().split('T')[0] : null,
+        epsActual:       (h.epsActual   ?? null) as number | null,
+        epsEstimate:     (h.epsEstimate ?? null) as number | null,
+        epsDifference:   (h.epsDifference ?? null) as number | null,
+        surprisePercent: (h.surprisePercent ?? null) as number | null,
+      }))
+
     return NextResponse.json({
       ticker,
       quote: {
@@ -1338,6 +1352,7 @@ export async function GET(req: NextRequest) {
       limitedHistory,
       historyYears,
       analystForwardEstimates,
+      earningsSurprises,
       providerStatus: {
         fmp: {
           ok: hasFmp,
