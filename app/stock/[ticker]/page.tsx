@@ -564,6 +564,10 @@ function StockPageBody() {
                     peRatio={data.quote.peRatio ?? null}
                     beta={data.wacc?.inputs?.beta ?? null}
                     pegRatio={data.quote.pegRatio ?? null}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    evToEbitda={(data.businessProfile as any)?.evToEbitda ?? null}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    dividendYield={(data as any)?.quote?.dividendYield ?? null}
                     holdingReturns={data.holdingReturns ?? null}
                     userModelFairValue={userModelFairValue}
                     analystRecommendation={data.analystRecommendation ?? ''}

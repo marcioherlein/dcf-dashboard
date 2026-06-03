@@ -724,6 +724,13 @@ export async function GET(req: NextRequest) {
     if (fmpGrossMargin != null) businessProfile.grossMargin = fmpGrossMargin
     if (fmpNetMargin   != null) businessProfile.netMargin   = fmpNetMargin
 
+    // Enrich businessProfile with multiples so components can display them without
+    // digging into the nested valuationMethods structure
+    ;(businessProfile as Record<string, unknown>).evToEbitda   = evToEbitda
+    ;(businessProfile as Record<string, unknown>).evToRevenue  = evToRevenue
+    ;(businessProfile as Record<string, unknown>).priceToBook  = priceToBook
+    ;(businessProfile as Record<string, unknown>).priceToSales = priceToSales
+
     // FCF margin from FMP cash flows — capped at same ceiling as baseFCF to prevent
     // loan-distorted OCF (e.g. MELI Mercado Crédito) from inflating the reverse DCF model.
     const fmpLatestCF = fmp.cashFlowStatements[0]
