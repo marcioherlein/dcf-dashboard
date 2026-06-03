@@ -881,6 +881,82 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                   Analyst targets represent Wall Street consensus sourced from Yahoo Finance. They may differ from our intrinsic value model, which uses discounted cash flow analysis. Targets are typically 12-month forward estimates.
                 </p>
 
+                {/* Forward Revenue & EPS Estimates */}
+                {(() => {
+                  const fwdEst: Array<{
+                    period: string; endDate: string | null
+                    revenue: { avg: number | null; low: number | null; high: number | null; growth: number | null; analysts: number | null }
+                    eps: { avg: number | null; low: number | null; high: number | null; growth: number | null; analysts: number | null; yearAgo: number | null }
+                  }> = financialsData?.analystForwardEstimates ?? []
+                  if (fwdEst.length === 0) return null
+                  const hasRevenue = fwdEst.some(r => r.revenue.avg != null)
+                  const hasEPS     = fwdEst.some(r => r.eps.avg != null)
+                  if (!hasRevenue && !hasEPS) return null
+
+                  const periodLabel = (period: string, endDate: string | null) => {
+                    if (endDate) {
+                      const yr = new Date(endDate).getFullYear()
+                      return `FY${yr}`
+                    }
+                    return period === '0y' ? 'Current FY' : period === '+1y' ? 'Next FY' : 'FY+2'
+                  }
+
+                  return (
+                    <div>
+                      <p className="text-[13px] font-semibold text-slate-700 mb-3">Forward Estimates</p>
+                      <div className="rounded-xl border border-slate-200 overflow-hidden">
+                        <table className="w-full text-[12px]">
+                          <thead>
+                            <tr className="bg-slate-50 border-b border-slate-200">
+                              <th className="px-4 py-2 text-left font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Period</th>
+                              {hasRevenue && <>
+                                <th className="px-4 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Rev. Est.</th>
+                                <th className="px-3 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Rev. Growth</th>
+                              </>}
+                              {hasEPS && <>
+                                <th className="px-4 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">EPS Est.</th>
+                                <th className="px-3 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">EPS Growth</th>
+                              </>}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 bg-white">
+                            {fwdEst.map(row => {
+                              const revGrowth = row.revenue.growth
+                              const epsGrowth = row.eps.growth
+                              const revAvg = row.revenue.avg
+                              const epsAvg = row.eps.avg
+                              return (
+                                <tr key={row.period} className="hover:bg-slate-50/60 transition-colors">
+                                  <td className="px-4 py-3 font-semibold text-slate-700">{periodLabel(row.period, row.endDate)}</td>
+                                  {hasRevenue && <>
+                                    <td className="px-4 py-3 text-right tabular-nums text-slate-800 font-medium">
+                                      {revAvg != null ? (revAvg >= 1e12 ? `${sym}${(revAvg / 1e12).toFixed(2)}T` : revAvg >= 1e9 ? `${sym}${(revAvg / 1e9).toFixed(1)}B` : revAvg >= 1e6 ? `${sym}${(revAvg / 1e6).toFixed(0)}M` : `${sym}${revAvg.toFixed(0)}`) : '—'}
+                                      {row.revenue.analysts != null && <span className="text-[10px] text-slate-400 ml-1">({row.revenue.analysts})</span>}
+                                    </td>
+                                    <td className={`px-3 py-3 text-right tabular-nums text-[12px] font-semibold ${revGrowth == null ? 'text-slate-400' : revGrowth >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                      {revGrowth != null ? `${revGrowth >= 0 ? '+' : ''}${(revGrowth * 100).toFixed(1)}%` : '—'}
+                                    </td>
+                                  </>}
+                                  {hasEPS && <>
+                                    <td className="px-4 py-3 text-right tabular-nums text-slate-800 font-medium">
+                                      {epsAvg != null ? `${sym}${epsAvg.toFixed(2)}` : '—'}
+                                      {row.eps.analysts != null && <span className="text-[10px] text-slate-400 ml-1">({row.eps.analysts})</span>}
+                                    </td>
+                                    <td className={`px-3 py-3 text-right tabular-nums text-[12px] font-semibold ${epsGrowth == null ? 'text-slate-400' : epsGrowth >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                      {epsGrowth != null ? `${epsGrowth >= 0 ? '+' : ''}${(epsGrowth * 100).toFixed(1)}%` : '—'}
+                                    </td>
+                                  </>}
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-1.5">Number in parentheses = analysts covering this estimate. Low/High ranges available from Yahoo Finance.</p>
+                    </div>
+                  )
+                })()}
+
                 {/* Peer Multiples Comparison */}
                 {(() => {
                   const estimates: Array<{

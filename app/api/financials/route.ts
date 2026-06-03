@@ -1259,6 +1259,31 @@ export async function GET(req: NextRequest) {
       .slice(-3)
       .map((r) => ({ year: parseInt(r.year), cashFlow: Math.round(r.freeCashFlow!) }))
 
+    // Analyst forward estimates from earningsTrend (EPS + revenue by period)
+    const etTrends: any[] = (fin.earningsTrend?.trend ?? []) as any[]
+    const analystForwardEstimates = etTrends
+      .filter((t: any) => ['0y', '+1y', '+2y'].includes(t.period))
+      .map((t: any) => ({
+        period: t.period as string,
+        endDate: t.endDate ? new Date(t.endDate).toISOString().split('T')[0] : null,
+        revenue: {
+          avg:       (t.revenueEstimate?.avg ?? null) as number | null,
+          low:       (t.revenueEstimate?.low ?? null) as number | null,
+          high:      (t.revenueEstimate?.high ?? null) as number | null,
+          growth:    (t.revenueEstimate?.growth ?? null) as number | null,
+          analysts:  (t.revenueEstimate?.numberOfAnalysts ?? null) as number | null,
+          yearAgo:   (t.revenueEstimate?.yearAgoRevenue ?? null) as number | null,
+        },
+        eps: {
+          avg:       (t.earningsEstimate?.avg ?? null) as number | null,
+          low:       (t.earningsEstimate?.low ?? null) as number | null,
+          high:      (t.earningsEstimate?.high ?? null) as number | null,
+          growth:    (t.earningsEstimate?.growth ?? null) as number | null,
+          analysts:  (t.earningsEstimate?.numberOfAnalysts ?? null) as number | null,
+          yearAgo:   (t.earningsEstimate?.yearAgoEps ?? null) as number | null,
+        },
+      }))
+
     return NextResponse.json({
       ticker,
       quote: {
@@ -1312,6 +1337,7 @@ export async function GET(req: NextRequest) {
       vetoReasons,
       limitedHistory,
       historyYears,
+      analystForwardEstimates,
       providerStatus: {
         fmp: {
           ok: hasFmp,
