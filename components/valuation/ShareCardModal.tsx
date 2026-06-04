@@ -44,8 +44,8 @@ export default function ShareCardModal({ open, onClose, ticker, companyName, out
     ticker,
     name: companyName,
     price: currentPrice,
-    fv: output.blendedFairValue,
-    upside: output.upsidePct,
+    fv:     output.blendedFairValue ?? 'none',
+    upside: output.upsidePct        ?? 'none',
     bear: output.scenarios.bear.fairValue,
     bull: output.scenarios.bull.fairValue,
     currency,
@@ -87,6 +87,7 @@ export default function ShareCardModal({ open, onClose, ticker, companyName, out
     setDownloading(true)
     try {
       const res = await fetch(previewUrl)
+      if (!res.ok) throw new Error(`Image generation failed (${res.status})`)
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -94,27 +95,28 @@ export default function ShareCardModal({ open, onClose, ticker, companyName, out
       a.download = `${ticker.toLowerCase()}-valuation-${format}.png`
       a.click()
       URL.revokeObjectURL(url)
+    } catch {
+      // surface nothing — user sees no change, can retry
     } finally {
       setDownloading(false)
     }
   }
 
   async function handleShare() {
-    // Web Share API — native sheet on mobile
     if (typeof navigator !== 'undefined' && navigator.canShare) {
       try {
         const res = await fetch(previewUrl)
+        if (!res.ok) throw new Error('fetch failed')
         const blob = await res.blob()
         const file = new File([blob], `${ticker.toLowerCase()}-valuation.png`, { type: 'image/png' })
         if (navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: `${ticker} Valuation — Intrinsico`, text: `${ticker} looks ${output.verdict} — check the analysis on Intrinsico.` })
+          await navigator.share({ files: [file], title: `${ticker} Valuation — Insic`, text: `${ticker} looks ${output.verdict} — check the analysis on Insic.` })
           return
         }
       } catch { /* fall through */ }
     }
-    // Fallback: copy URL to clipboard
     try {
-      await navigator.clipboard.writeText(`https://intrinsico.app/stock/${ticker}`)
+      await navigator.clipboard.writeText(`https://insic.app/stock/${ticker}`)
       setCopying(true)
       setTimeout(() => setCopying(false), 2000)
     } catch { /* ignore */ }
