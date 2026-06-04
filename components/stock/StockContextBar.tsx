@@ -17,22 +17,32 @@ interface Props {
   onChange: (tab: TabId) => void
   onSave?: () => void
   nextEarningsDate?: string | null
+  marketState?: string | null
+  preMarketPrice?: number | null
+  preMarketChangePct?: number | null
+  postMarketPrice?: number | null
+  postMarketChangePct?: number | null
 }
 
 export default function StockContextBar({
   ticker, companyName, price, changePct, currency, activeTab, onChange, onSave, nextEarningsDate,
+  marketState, preMarketPrice, preMarketChangePct, postMarketPrice, postMarketChangePct,
 }: Props) {
   const { setStockNav, onTabChangeRef, onSaveRef } = useStockNav()
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
 
-  // Keep onTabChangeRef pointing at the stock page's handler (always current, no re-render)
   onTabChangeRef.current = (tab: TabId) => onChangeRef.current(tab)
   onSaveRef.current = onSave ?? null
 
   useEffect(() => {
-    setStockNav({ ticker, companyName, price, changePct, currency, activeTab, nextEarningsDate })
-  }, [ticker, companyName, price, changePct, currency, activeTab, nextEarningsDate, setStockNav])
+    setStockNav({
+      ticker, companyName, price, changePct, currency, activeTab, nextEarningsDate,
+      marketState, preMarketPrice, preMarketChangePct, postMarketPrice, postMarketChangePct,
+    })
+  }, [ticker, companyName, price, changePct, currency, activeTab, nextEarningsDate,
+      marketState, preMarketPrice, preMarketChangePct, postMarketPrice, postMarketChangePct,
+      setStockNav])
 
   useEffect(() => {
     return () => {

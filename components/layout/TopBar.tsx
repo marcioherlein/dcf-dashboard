@@ -36,8 +36,8 @@ function CompanyLogo({ ticker }: { ticker: string }) {
 
   if (failed) {
     return (
-      <div className="w-6 h-6 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center shrink-0">
-        <span className="text-[9px] font-bold text-blue-700 leading-none">{initials}</span>
+      <div className="w-6 h-6 rounded-full bg-[#EEF4DD] border border-[#CBD1C4] flex items-center justify-center shrink-0">
+        <span className="text-[9px] font-bold text-[#5F790B] leading-none">{initials}</span>
       </div>
     )
   }
@@ -48,7 +48,7 @@ function CompanyLogo({ ticker }: { ticker: string }) {
       alt={ticker}
       width={24}
       height={24}
-      className="rounded-full border border-slate-200 shrink-0 object-cover"
+      className="rounded-full border border-[#E3E6E0] shrink-0 object-cover"
       onError={() => setFailed(true)}
     />
   )
@@ -64,16 +64,16 @@ function UserAvatar({ image, name }: { image: string | null; name: string | null
       <Image
         src={image}
         alt={name ?? ''}
-        width={26}
-        height={26}
-        className="rounded-full ring-2 ring-blue-200 shrink-0"
+        width={28}
+        height={28}
+        className="rounded-full ring-2 ring-[#E3E6E0] shrink-0"
       />
     )
   }
 
   return (
     <div
-      className="w-[26px] h-[26px] rounded-full ring-2 ring-blue-200 bg-blue-600 flex items-center justify-center shrink-0"
+      className="w-7 h-7 rounded-full ring-2 ring-[#E3E6E0] bg-[#5F790B] flex items-center justify-center shrink-0"
       aria-label={name ?? undefined}
     >
       <span className="text-[10px] font-bold text-white leading-none">{initials}</span>
@@ -151,7 +151,7 @@ export default function TopBar() {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 glass-toolbar">
+    <header className="fixed top-0 left-0 right-0 z-40 glass-toolbar" data-topbar>
 
       {/* ── Mobile two-row stock header (hidden on sm+) ── */}
       {stockNav && (
@@ -159,22 +159,24 @@ export default function TopBar() {
           {/* Row 1: back + identity + save + search icons */}
           <div className="h-[52px] flex items-center justify-between px-3 gap-2">
             {mobileSearchOpen ? (
-              /* Search overlay mode */
               <div className="flex items-center gap-2 flex-1 min-w-0">
-                <Search size={14} className="text-slate-400 shrink-0" />
+                <Search size={14} className="text-[#8A96A8] shrink-0" />
                 <input
                   ref={mobileSearchRef}
                   type="text"
                   value={query}
                   onChange={e => { setQuery(e.target.value); setUnsupportedError(null) }}
-                  onKeyDown={e => { if (e.key === 'Enter' && query.trim()) { handleSubmit(query); setMobileSearchOpen(false) } if (e.key === 'Escape') { setMobileSearchOpen(false); setQuery(''); setOpen(false) } }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && query.trim()) { handleSubmit(query); setMobileSearchOpen(false) }
+                    if (e.key === 'Escape') { setMobileSearchOpen(false); setQuery(''); setOpen(false) }
+                  }}
                   placeholder="Search ticker…"
-                  className="flex-1 text-[14px] bg-transparent text-slate-900 placeholder-slate-400 focus:outline-none"
+                  className="flex-1 text-[14px] bg-transparent text-[#0A1424] placeholder-[#8A96A8] focus:outline-none"
                   autoFocus
                 />
                 <button
                   onClick={() => { setMobileSearchOpen(false); setQuery(''); setOpen(false) }}
-                  className="p-1 text-slate-400 hover:text-slate-700 shrink-0"
+                  className="p-1 text-[#8A96A8] hover:text-[#536174] shrink-0"
                   aria-label="Close search"
                 >
                   <X size={15} />
@@ -186,43 +188,53 @@ export default function TopBar() {
                   <button
                     onClick={() => router.push('/analyze')}
                     aria-label="Back to Analyze"
-                    className="text-slate-400 hover:text-blue-600 transition-colors shrink-0 p-1 -ml-1"
+                    className="text-[#8A96A8] hover:text-[#5F790B] transition-colors shrink-0 p-1 -ml-1"
                   >
                     <ChevronLeft size={16} strokeWidth={2.5} />
                   </button>
                   <CompanyLogo ticker={stockNav.ticker} />
-                  <span className="font-bold text-[14px] text-slate-900 tracking-tight shrink-0">
+                  <span className="font-bold text-[14px] text-[#0A1424] tracking-tight shrink-0">
                     {stockNav.ticker}
                   </span>
                   {stockNav.price != null && (
-                    <div className="flex items-baseline gap-1 min-w-0">
-                      <span className="font-semibold text-[13px] text-slate-800 tabular-nums">
+                    <div className="flex items-center gap-1 min-w-0 flex-wrap">
+                      <span className="font-semibold text-[13px] text-[#0A1424] tabular-nums">
                         {stockNav.currency}{stockNav.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                       {stockNav.changePct != null && (
                         <span className={cn(
                           'text-[11px] font-medium tabular-nums',
-                          stockNav.changePct >= 0 ? 'text-emerald-600' : 'text-red-500',
+                          stockNav.changePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]',
                         )}>
                           {stockNav.changePct >= 0 ? '+' : ''}{stockNav.changePct.toFixed(2)}%
+                        </span>
+                      )}
+                      {/* Pre-market badge (mobile) */}
+                      {stockNav.marketState === 'PRE' && stockNav.preMarketPrice != null && (
+                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-[#EFF6FF] text-[#1D4ED8] border border-[#BFDBFE] whitespace-nowrap tabular-nums">
+                          Pre {stockNav.currency}{stockNav.preMarketPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      )}
+                      {/* Post-market badge (mobile) */}
+                      {stockNav.marketState === 'POST' && stockNav.postMarketPrice != null && (
+                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-[#F5F3FF] text-[#6D28D9] border border-[#DDD6FE] whitespace-nowrap tabular-nums">
+                          After {stockNav.currency}{stockNav.postMarketPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       )}
                     </div>
                   )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  {/* Search icon — opens inline search */}
                   <button
                     onClick={() => { setMobileSearchOpen(true); setTimeout(() => mobileSearchRef.current?.focus(), 50) }}
-                    className="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                    className="p-2 rounded-[10px] text-[#8A96A8] hover:text-[#5F790B] hover:bg-[#F6FAEA] transition-colors"
                     aria-label="Search for a stock"
                   >
                     <Search size={16} strokeWidth={2} />
                   </button>
-                  {/* Save icon */}
                   <button
                     onClick={() => onSaveRef.current?.()}
-                    className="p-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+                    className="p-2 rounded-[10px] text-[#5F790B] hover:bg-[#F6FAEA] transition-colors"
                     aria-label="Save analysis"
                   >
                     <Bookmark size={18} strokeWidth={2} />
@@ -232,7 +244,11 @@ export default function TopBar() {
             )}
           </div>
           {/* Row 2: scrollable tabs */}
-          <div className="h-9 border-t border-slate-100 flex overflow-x-auto scrollbar-hide px-1" role="tablist" style={{ overscrollBehaviorX: 'contain' }}>
+          <div
+            className="h-9 border-t border-[#E3E6E0] flex overflow-x-auto scrollbar-hide px-1"
+            role="tablist"
+            style={{ overscrollBehaviorX: 'contain' }}
+          >
             {STOCK_TABS.map(({ id, label }) => {
               const active = stockNav.activeTab === id
               return (
@@ -243,30 +259,30 @@ export default function TopBar() {
                   onClick={() => onTabChangeRef.current?.(id)}
                   className={cn(
                     'relative flex items-center px-3 text-[12px] font-medium whitespace-nowrap transition-colors shrink-0 h-full',
-                    active ? 'text-blue-600' : 'text-slate-500',
+                    active ? 'text-[#5F790B]' : 'text-[#536174]',
                   )}
                 >
                   {label}
-                  {active && <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-600 rounded-t" />}
+                  {active && <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#5F790B] rounded-t" />}
                 </button>
               )
             })}
           </div>
           {/* Mobile search results dropdown */}
           {mobileSearchOpen && open && results.length > 0 && (
-            <div className="absolute top-[88px] left-0 right-0 z-50 bg-white border-b border-slate-200 shadow-lg">
+            <div className="absolute top-[88px] left-0 right-0 z-50 bg-white border-b border-[#E3E6E0] shadow-lg">
               {results.slice(0, 6).map(r => (
                 <button
                   key={r.symbol}
                   onClick={() => { if (!r.supported) return; select(r.symbol); setMobileSearchOpen(false) }}
                   className={cn(
                     'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors',
-                    r.supported ? 'hover:bg-blue-50' : 'opacity-40 cursor-not-allowed',
+                    r.supported ? 'hover:bg-[#F6FAEA]' : 'opacity-40 cursor-not-allowed',
                   )}
                 >
-                  <span className="font-mono font-bold text-[13px] text-slate-900 w-14 shrink-0">{r.symbol}</span>
-                  <span className="text-[12px] text-slate-500 truncate flex-1">{r.longname ?? r.shortname}</span>
-                  <span className="text-[10px] text-slate-400 shrink-0">{r.exchDisp ?? r.exchange}</span>
+                  <span className="font-mono font-bold text-[13px] text-[#0A1424] w-14 shrink-0">{r.symbol}</span>
+                  <span className="text-[12px] text-[#536174] truncate flex-1">{r.longname ?? r.shortname}</span>
+                  <span className="text-[10px] text-[#8A96A8] shrink-0">{r.exchDisp ?? r.exchange}</span>
                 </button>
               ))}
             </div>
@@ -287,32 +303,17 @@ export default function TopBar() {
           gap: '8px',
         }}
       >
-        {/* ── Column 1: Logo + name ── */}
-        {/* On non-stock pages hide logo entirely on mobile to give search bar full width */}
+        {/* ── Column 1: Logo ── */}
         <div className={cn('flex items-center', !stockNav && 'hidden sm:flex')}>
-          <Link href={session ? '/analyze' : '/'} className="flex items-center gap-2 shrink-0 group">
+          <Link href={session ? '/analyze' : '/'} className="flex items-center gap-2 shrink-0 group" aria-label="insic home">
             <Image
-              src="/logos/logo-transparent.png"
+              src="/logos/insic-header.png"
               alt="insic"
-              width={28}
+              width={88}
               height={28}
-              className="shrink-0"
+              className="shrink-0 h-7 w-auto object-contain"
+              priority
             />
-            {!stockNav && (
-              <span
-                className="hidden sm:block text-[16px] font-bold select-none transition-opacity group-hover:opacity-70"
-                style={{
-                  fontFamily: 'var(--font-display, "Space Grotesk"), system-ui, sans-serif',
-                  letterSpacing: '-0.042em',
-                  background: 'linear-gradient(135deg, #2563EB 0%, #06B6D4 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                insic
-              </span>
-            )}
           </Link>
         </div>
 
@@ -320,31 +321,48 @@ export default function TopBar() {
         {stockNav ? (
           <div className="flex items-center min-w-0 gap-0">
             {/* Identity + price */}
-            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pr-2 sm:pr-4 border-r border-slate-100 mr-1">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pr-2 sm:pr-4 border-r border-[#E3E6E0] mr-1">
               <button
                 onClick={() => router.push('/analyze')}
                 aria-label="Back to Analyze"
-                className="text-slate-400 hover:text-blue-600 transition-colors shrink-0"
+                className="text-[#8A96A8] hover:text-[#5F790B] transition-colors shrink-0"
               >
                 <ChevronLeft size={15} strokeWidth={2.5} />
               </button>
-              {/* Company logo */}
               <CompanyLogo ticker={stockNav.ticker} />
-              <span className="font-bold text-[13px] text-slate-900 tracking-tight shrink-0">
+              <span className="font-bold text-[13px] text-[#0A1424] tracking-tight shrink-0">
                 {stockNav.ticker}
               </span>
               {stockNav.price != null && (
-                <div className="flex items-baseline gap-1 shrink-0">
-                  <span className="font-semibold text-[13px] text-slate-800 tabular-nums">
+                <div className="flex items-baseline gap-1 shrink-0 flex-wrap">
+                  <span className="font-semibold text-[13px] text-[#0A1424] tabular-nums">
                     {stockNav.currency}{stockNav.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                   {stockNav.changePct != null && (
                     <span className={cn(
                       'text-[11px] font-medium tabular-nums hidden sm:inline',
-                      stockNav.changePct >= 0 ? 'text-emerald-600' : 'text-red-500',
+                      stockNav.changePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]',
                     )}>
                       {stockNav.changePct >= 0 ? '+' : ''}{stockNav.changePct.toFixed(2)}%
                       {stockNav.changePct >= 0 ? ' ↑' : ' ↓'}
+                    </span>
+                  )}
+                  {/* Pre-market badge */}
+                  {stockNav.marketState === 'PRE' && stockNav.preMarketPrice != null && (
+                    <span className="hidden sm:inline text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-[#EFF6FF] text-[#1D4ED8] border border-[#BFDBFE] shrink-0 whitespace-nowrap tabular-nums">
+                      Pre {stockNav.currency}{stockNav.preMarketPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {stockNav.preMarketChangePct != null && (
+                        <> {stockNav.preMarketChangePct >= 0 ? '+' : ''}{stockNav.preMarketChangePct.toFixed(2)}%</>
+                      )}
+                    </span>
+                  )}
+                  {/* Post-market badge */}
+                  {stockNav.marketState === 'POST' && stockNav.postMarketPrice != null && (
+                    <span className="hidden sm:inline text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-[#F5F3FF] text-[#6D28D9] border border-[#DDD6FE] shrink-0 whitespace-nowrap tabular-nums">
+                      After {stockNav.currency}{stockNav.postMarketPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {stockNav.postMarketChangePct != null && (
+                        <> {stockNav.postMarketChangePct >= 0 ? '+' : ''}{stockNav.postMarketChangePct.toFixed(2)}%</>
+                      )}
                     </span>
                   )}
                   {stockNav.nextEarningsDate && (() => {
@@ -354,7 +372,7 @@ export default function TopBar() {
                     if (daysUntil < 0 || daysUntil > 60) return null
                     const label = daysUntil === 0 ? 'Earnings today' : daysUntil === 1 ? 'Earnings tomorrow' : `Earnings in ${daysUntil}d`
                     return (
-                      <span className="hidden md:inline text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200 shrink-0 whitespace-nowrap">
+                      <span className="hidden md:inline text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-[#FFF4DA] text-[#B56A00] border border-[#F3D391] shrink-0 whitespace-nowrap">
                         {label}
                       </span>
                     )
@@ -363,7 +381,7 @@ export default function TopBar() {
               )}
             </div>
 
-            {/* Tabs — flex-1 min-w-0 so overflow-x-auto actually constrains scrolling */}
+            {/* Tabs */}
             <div className="flex flex-1 min-w-0 overflow-x-auto scrollbar-hide" role="tablist">
               {STOCK_TABS.map(({ id, label }) => {
                 const active = stockNav.activeTab === id
@@ -374,13 +392,13 @@ export default function TopBar() {
                     aria-selected={active}
                     onClick={() => onTabChangeRef.current?.(id)}
                     className={cn(
-                      'relative flex items-center gap-1.5 px-3 sm:px-3.5 text-[12px] font-medium whitespace-nowrap transition-colors shrink-0 h-[52px]',
-                      active ? 'text-blue-600' : 'text-slate-500 hover:text-slate-800',
+                      'relative flex items-center gap-1.5 px-3 sm:px-3.5 text-[13px] font-medium whitespace-nowrap transition-colors shrink-0 h-[52px]',
+                      active ? 'text-[#0A1424]' : 'text-[#536174] hover:text-[#0A1424]',
                     )}
                   >
                     {label}
                     {active && (
-                      <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-600 rounded-t" />
+                      <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#5F790B] rounded-t" />
                     )}
                   </button>
                 )
@@ -392,29 +410,27 @@ export default function TopBar() {
           <div className="flex justify-center w-full mx-3 sm:mx-0">
             <div className="relative w-full sm:w-auto sm:max-w-[480px]" ref={searchRef}>
               <div
-                className="flex items-center gap-2 rounded-xl px-3 py-1.5 transition-all border"
+                className="flex items-center gap-2 rounded-[999px] px-3.5 py-2 transition-all border"
                 style={{
-                  background: 'rgba(255,255,255,0.55)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                  borderColor: open ? 'rgba(99,102,241,0.35)' : 'rgba(148,163,184,0.35)',
-                  boxShadow: open ? '0 0 0 3px rgba(99,102,241,0.08)' : 'none',
+                  background: 'rgba(255, 255, 255, 0.80)',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  borderColor: open ? 'rgba(95, 121, 11, 0.45)' : '#E3E6E0',
+                  boxShadow: open ? '0 0 0 3px rgba(95, 121, 11, 0.09)' : 'none',
                 }}
               >
                 {loading ? (
-                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-blue-500 shrink-0" />
+                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#E3E6E0] border-t-[#5F790B] shrink-0" />
                 ) : (
-                  <svg className="h-3.5 w-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
-                  </svg>
+                  <Search size={14} className="text-[#8A96A8] shrink-0" />
                 )}
                 <input
                   type="text"
                   value={query}
                   onChange={e => { setQuery(e.target.value); setUnsupportedError(null) }}
                   onKeyDown={e => { if (e.key === 'Enter' && query.trim()) handleSubmit(query) }}
-                  placeholder="Search tickers…"
-                  className="flex-1 min-w-0 bg-transparent text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none"
+                  placeholder="Search ticker or company…"
+                  className="flex-1 min-w-0 bg-transparent text-[13px] text-[#0A1424] placeholder-[#8A96A8] focus:outline-none"
                 />
               </div>
 
@@ -427,7 +443,7 @@ export default function TopBar() {
                     animate="visible"
                     exit="exit"
                     style={{ originY: 0 }}
-                    className="absolute left-0 right-0 top-full mt-1 overflow-hidden glass-card-light rounded-xl z-50 max-h-[70vh] overflow-y-auto"
+                    className="absolute left-0 right-0 top-full mt-1.5 overflow-hidden glass-card-light rounded-xl z-50 max-h-[70vh] overflow-y-auto"
                   >
                     <motion.div
                       variants={reduced ? {} : { visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } } }}
@@ -437,45 +453,44 @@ export default function TopBar() {
                       {results.map(r => (
                         <motion.button
                           key={r.symbol}
-                          variants={reduced ? {} : { hidden: { opacity: 0, x: -6 }, visible: { opacity: 1, x: 0, transition: { duration: 0.18 } } }}
+                          variants={reduced ? {} : { hidden: { opacity: 0, x: -6 }, visible: { opacity: 1, x: 0, transition: { duration: 0.16 } } }}
                           onClick={() => r.supported ? select(r.symbol) : undefined}
                           disabled={!r.supported}
-                          className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left border-b border-slate-100 last:border-b-0 transition-colors ${
+                          className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left border-b border-[#E3E6E0] last:border-b-0 transition-colors ${
                             r.supported
-                              ? 'hover:bg-slate-50 cursor-pointer'
+                              ? 'hover:bg-[#F6FAEA] cursor-pointer'
                               : 'opacity-40 cursor-not-allowed'
                           }`}
                         >
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 mb-0.5">
-                              <span className="text-[14px] font-bold text-slate-800 font-mono">{r.symbol}</span>
+                              <span className="text-[14px] font-bold text-[#0A1424] font-mono">{r.symbol}</span>
                               {r.exchange && r.supported && (
-                                <span className="text-[10px] text-slate-400 font-medium uppercase">{r.exchange}</span>
+                                <span className="text-[10px] text-[#8A96A8] font-medium uppercase">{r.exchange}</span>
                               )}
                             </div>
-                            <span className="text-[12px] text-slate-500 truncate block">{r.longname ?? r.shortname}</span>
+                            <span className="text-[12px] text-[#536174] truncate block">{r.longname ?? r.shortname}</span>
                           </div>
                           {r.supported ? (
                             r.quoteType && (
-                              <span className="shrink-0 text-[11px] font-medium text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
+                              <span className="shrink-0 text-[11px] font-semibold text-[#5F790B] bg-[#EEF4DD] border border-[#BFD2A1] px-2 py-0.5 rounded-md">
                                 {r.quoteType === 'EQUITY' ? 'Equity' : r.quoteType === 'ETF' ? 'ETF' : r.quoteType === 'INDEX' ? 'Index' : r.quoteType}
                               </span>
                             )
                           ) : (
-                            <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-400 border border-slate-200 whitespace-nowrap">
+                            <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[#F8F7F2] text-[#8A96A8] border border-[#E3E6E0] whitespace-nowrap">
                               Not available — {r.exchDisp ?? r.exchange}
                             </span>
                           )}
                         </motion.button>
                       ))}
 
-                      {/* Unsupported error inline */}
                       {unsupportedError && (
-                        <div className="px-4 py-3 flex items-start gap-2 bg-amber-50 border-t border-amber-100">
-                          <svg className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <div className="px-4 py-3 flex items-start gap-2 bg-[#FFF4DA] border-t border-[#F3D391]">
+                          <svg className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[#B56A00]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                           </svg>
-                          <p className="text-[11px] text-amber-700 leading-snug">{unsupportedError}</p>
+                          <p className="text-[11px] text-[#B56A00] leading-snug">{unsupportedError}</p>
                         </div>
                       )}
                     </motion.div>
@@ -486,19 +501,19 @@ export default function TopBar() {
           </div>
         )}
 
-        {/* ── Column 3: watchlist button (stock only) + search (stock only) + auth ── */}
+        {/* ── Column 3: save + auth ── */}
         <div className="flex items-center gap-2 sm:gap-3 justify-end min-w-0">
 
           {/* "Save analysis" — only on stock pages */}
           {stockNav && (
             <button
               onClick={() => onSaveRef.current?.()}
-              className="flex items-center gap-1.5 text-[12px] font-semibold text-white px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-colors whitespace-nowrap shadow-sm"
+              className="flex items-center gap-1.5 text-[12.5px] font-semibold text-white px-3.5 py-1.5 rounded-[10px] bg-[#5F790B] hover:bg-[#526A08] active:bg-[#4A5E07] transition-colors whitespace-nowrap shadow-sm"
             >
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
-              Save analysis
+              Save
             </button>
           )}
 
@@ -511,14 +526,14 @@ export default function TopBar() {
               {isPro && (
                 <button
                   onClick={openBillingPortal}
-                  className="text-[12px] text-slate-400 hover:text-slate-700 transition-colors whitespace-nowrap hidden sm:block"
+                  className="text-[12px] text-[#8A96A8] hover:text-[#536174] transition-colors whitespace-nowrap hidden sm:block"
                 >
-                  Manage billing
+                  Billing
                 </button>
               )}
               <button
                 onClick={() => signOut()}
-                className="text-[12px] text-slate-400 hover:text-slate-700 transition-colors whitespace-nowrap hidden sm:block"
+                className="text-[12px] text-[#8A96A8] hover:text-[#536174] transition-colors whitespace-nowrap hidden sm:block"
               >
                 Sign out
               </button>
@@ -527,13 +542,13 @@ export default function TopBar() {
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={() => signIn('google')}
-                className="text-[12px] text-white px-3 py-1.5 rounded-lg transition-all font-semibold bg-blue-600 hover:bg-blue-500 shadow-sm whitespace-nowrap"
+                className="text-[12.5px] text-white px-3.5 py-1.5 rounded-[10px] transition-colors font-semibold bg-[#5F790B] hover:bg-[#526A08] active:bg-[#4A5E07] shadow-sm whitespace-nowrap"
               >
                 Get started free
               </button>
               <button
                 onClick={() => signIn('google')}
-                className="text-[12px] text-slate-600 hover:text-slate-900 transition-colors whitespace-nowrap hidden md:block"
+                className="text-[12.5px] text-[#536174] hover:text-[#0A1424] transition-colors whitespace-nowrap hidden md:block"
               >
                 Sign in
               </button>

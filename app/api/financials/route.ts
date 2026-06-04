@@ -1396,6 +1396,12 @@ export async function GET(req: NextRequest) {
         sharesOutstanding: ks.sharesOutstanding ?? null,
         dividendYield: dividendYield,
         payoutRatio: payoutRatio > 0 ? payoutRatio : null,
+        // Extended hours
+        marketState: (q.marketState ?? 'REGULAR') as string,
+        preMarketPrice: (q.preMarketPrice ?? null) as number | null,
+        preMarketChangePct: (q.preMarketChangePercent ?? null) as number | null,
+        postMarketPrice: (q.postMarketPrice ?? null) as number | null,
+        postMarketChangePct: (q.postMarketChangePercent ?? null) as number | null,
       },
       wacc: { ...waccResult, crp, financialCurrency },
       dcf: dcfResult,

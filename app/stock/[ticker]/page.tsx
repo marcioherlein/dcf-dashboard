@@ -71,6 +71,10 @@ interface FinancialsData {
     analystTargetMean: number; currency: string; sector: string; industry?: string; exchange?: string; quoteType?: string
     analystTargetLow?: number | null; analystTargetHigh?: number | null
     pegRatio?: number | null; nextEarningsDate?: string | null; sharesOutstanding?: number | null
+    // Extended hours
+    marketState?: string | null
+    preMarketPrice?: number | null; preMarketChangePct?: number | null
+    postMarketPrice?: number | null; postMarketChangePct?: number | null
   }
   wacc: {
     wacc: number; costOfEquity: number; afterTaxCostOfDebt: number
@@ -358,6 +362,11 @@ function StockPageBody() {
         activeTab={activeTab}
         onChange={handleTabChange}
         nextEarningsDate={data?.quote.nextEarningsDate ?? null}
+        marketState={data?.quote.marketState ?? null}
+        preMarketPrice={data?.quote.preMarketPrice ?? null}
+        preMarketChangePct={data?.quote.preMarketChangePct ?? null}
+        postMarketPrice={data?.quote.postMarketPrice ?? null}
+        postMarketChangePct={data?.quote.postMarketChangePct ?? null}
         onSave={() => {
             if (!session?.user) { setLoginToSaveOpen(true); return }
             const isETF = (data?.quote?.quoteType ?? '').toUpperCase() === 'ETF'

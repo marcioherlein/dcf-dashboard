@@ -10,6 +10,11 @@ export interface StockNavState {
   currency: string
   activeTab: TabId
   nextEarningsDate?: string | null
+  marketState?: string | null
+  preMarketPrice?: number | null
+  preMarketChangePct?: number | null
+  postMarketPrice?: number | null
+  postMarketChangePct?: number | null
 }
 
 interface StockNavContextValue {
