@@ -47,10 +47,9 @@ export default function LandingNavbar() {
           >
             {/* Logo — big and prominent */}
             <Link href="/" className="flex items-center leading-none shrink-0 group" aria-label="insic home">
-              <InsicLogo
+            <InsicLogo
                 variant="horizontal"
-                className="block w-auto group-hover:opacity-85 transition-opacity"
-                style={{ height: '40px' }}
+                className="block h-10 w-auto"
               />
             </Link>
 
