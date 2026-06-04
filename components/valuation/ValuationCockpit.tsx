@@ -20,6 +20,7 @@ import ModelDivergencePanel from './cockpit/ModelDivergencePanel'
 import RightSidebar from './cockpit/RightSidebar'
 import VerdictHero from './cockpit/VerdictHero'
 import SensitivityMatrix from './SensitivityMatrix'
+import MonteCarloPanel from './cockpit/MonteCarloPanel'
 import SaveToWatchlistDialog from '@/components/watchlist/SaveToWatchlistDialog'
 import type { WatchlistSavePayload } from '@/components/watchlist/SaveToWatchlistDialog'
 import { fmtPrice } from '@/lib/formatters'
@@ -441,6 +442,16 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         historicalData={historicalData}
         defaultAxisY={defaultAxisY}
         defaultAxisX={defaultAxisX}
+      />
+
+      {/* Monte Carlo DCF [BETA] — Markov-chain regime simulation + LS real options */}
+      <MonteCarloPanel
+        assumptions={assumptions}
+        snapshot={effectiveSnapshot}
+        apiData={apiData}
+        sensitivity={sensitivity}
+        currentPrice={currentPrice}
+        currency={currency}
       />
 
       <RightSidebar
