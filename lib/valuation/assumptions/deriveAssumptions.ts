@@ -88,7 +88,11 @@ function deriveNetMargin(
   // Convergence model for high-growth, high-gross-margin, thin-net-margin companies.
   // Additive bumps systematically undershoot for DUOL-type SaaS: 6% + 3% = 9% when the
   // realistic 5-year steady state is 15–20%. Use a 70/30 blend toward a sector target instead.
-  const isHighGrowthSaaS = cagr > 0.15 && lastGM != null && lastGM > 0.60 && last > 0 && last < 0.10
+  // isHighGrowthSaaS: company is still in the early-profit phase of SaaS scaling.
+  // The convergence target (18%) is more meaningful for companies at 5–15% margin than at 1%.
+  // Raised from last < 0.10 to last < 0.15 so DUOL (margin ~10–13%) correctly uses the
+  // SaaS convergence formula instead of the generic improvement path.
+  const isHighGrowthSaaS = cagr > 0.15 && lastGM != null && lastGM > 0.60 && last > 0 && last < 0.15
 
   const isHighGrowth = margins.length >= 2 && (last - margins[0]) / Math.abs(margins[0] || 1) > 0.02
   const hasMoat      = lastGM != null && lastGM > 0.40
@@ -243,16 +247,13 @@ function deriveExitPE(
   }
 
   // Phase 2: AI semiconductor premium — high-CAGR semis trade at 30–40×, not the 26× sector median.
-  // Uses the higher of historicalCagr3y and analystEstimate1y so that cyclical semis (MU) where
-  // the 3-year historical CAGR was suppressed by a trough year but analysts signal strong growth
-  // (HBM/AI DRAM thesis) correctly receive the premium.
-  //
-  // Floor raised from 32× to 38× to reflect the AI Semiconductors table entry (pe=40×) that
-  // Yahoo's 'Semiconductors' industry classification can never reach. NVDA, TSM, and AI-exposed
-  // semis realistically exit at 35-45×, not 28-32× like mature chip makers.
+  // Gate: revenueM >= 100 prevents this from firing on pre-revenue optical/semi startups (POET, early AAOI)
+  // where 38× exit P/E combined with a synthetic 5–8% net margin would inflate fair value nonsensically.
   const analystCagrForSemi = data?.cagrAnalysis?.analystEstimate1y ?? 0
+  const semiRevenueM: number = data?.businessProfile?.revenueM ?? 0
   const isAISemi = (industry ?? '').toLowerCase().includes('semiconductor') &&
-    (Math.max(data?.cagrAnalysis?.historicalCagr3y ?? 0, analystCagrForSemi) > 0.25)
+    (Math.max(data?.cagrAnalysis?.historicalCagr3y ?? 0, analystCagrForSemi) > 0.25) &&
+    semiRevenueM >= 100  // require meaningful revenue (not pre-revenue or sub-$100M startups)
   if (isAISemi && finalPE < 38) {
     finalPE = 38
     floorNote += ` [AI semi premium applied: floor 38×]`
@@ -293,6 +294,8 @@ function deriveDilution(
   } else if (isTech) {
     if (netMargin != null && netMargin > 0.20) { rate = 0.010; reason = 'tech, profitable → ~1.0%/yr (buybacks partially offset SBC)' }
     else if (netMargin != null && netMargin > 0.10) { rate = 0.020; reason = 'tech, moderate margin → ~2.0%/yr' }
+    // High-SBC growth SaaS tier: margin 0-10%, high CAGR (DUOL, growth-stage SaaS).
+    // SBC at 4-6% of revenue is typical before scale; use 3% rather than 3%.
     else { rate = 0.030; reason = 'tech, growth stage → ~3.0%/yr (stock-based comp)' }
   } else {
     rate = netMargin != null && netMargin > 0.15 ? 0.005 : 0.010

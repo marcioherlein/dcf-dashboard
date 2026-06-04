@@ -3,6 +3,7 @@ export type CompanyType = 'financial' | 'dividend' | 'growth' | 'startup' | 'sta
 const MINING_INDUSTRIES = new Set([
   'Gold', 'Silver', 'Copper', 'Coal', 'Uranium',
   'Other Precious Metals & Mining', 'Aluminum', 'Steel',
+  'Bitcoin Mining', 'Crypto Mining', 'Digital Mining', 'Blockchain Infrastructure',
 ])
 
 export function detectCompanyType(input: {
@@ -63,6 +64,16 @@ export function detectCompanyType(input: {
 
   // 1e. Mining: commodity prices drive reported revenue; same CAGR cap as energy
   if (sector === 'Basic Materials' && MINING_INDUSTRIES.has(industry)) {
+    return 'mining'
+  }
+
+  // 1f. Crypto/Bitcoin mining: revenue is Bitcoin-price-denominated, not a technology business.
+  // Yahoo often classifies miners under Technology or Financial Services, but the economics
+  // are commodity-like (hash rate as "production capacity", BTC price as the commodity).
+  // Use 'mining' type so energy-style EV/EBITDA + exit multiple weighting applies and
+  // the 8% cyclical CAGR cap prevents peak-cycle extrapolation.
+  if (/bitcoin.*min|crypto.*min|digital.*min|blockchain.*min|BTC.*min|min.*bitcoin|min.*crypto/i.test(haystack) ||
+      /bitcoin mining|crypto mining|digital mining|blockchain infrastructure/i.test(industry)) {
     return 'mining'
   }
 

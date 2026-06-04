@@ -389,9 +389,14 @@ export function extractFCFInputs(financials: any, foreignCurrency = false): {
   else if (revB > 10)       sizeCap = 0.28  // large-cap
   else if (revB > 2)        sizeCap = 0.38  // mid-cap
   else                      sizeCap = 0.55  // small-cap/startup
-  // Foreign-currency companies use USD-converted revenues, so the same size-based caps apply.
-  // The old flat 18% cap was too conservative for high-growth EM fintechs (e.g. NU, MELI)
-  // whose USD revenue CAGR is real even as the local currency depreciates.
+
+  // Energy and Basic Materials: commodity cycles inflate historical CAGR.
+  // Cap at 8% matching the deriveForwardPEAssumptions cyclical cap so the Full DCF Table
+  // and Cockpit use consistent CAGR for energy/mining/commodity companies.
+  const isCyclicalSector2 = sector === 'energy' || sector === 'basic materials' ||
+    (financials.summaryProfile?.sector === 'Energy') ||
+    (financials.summaryProfile?.sector === 'Basic Materials')
+  if (isCyclicalSector2 && sizeCap > 0.08) sizeCap = Math.min(sizeCap, 0.08)
 
   const cagr = Math.min(Math.max(blendedCagr, -0.10), sizeCap)
 

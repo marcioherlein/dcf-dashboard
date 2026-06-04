@@ -94,6 +94,9 @@ const INDUSTRY_MEDIANS: Record<string, { pe: number; evEbitda: number; pb: numbe
   'Specialty Retail':                  { pe: 18, evEbitda: 12, pb: 5.0, ps: 1.5, evRevenue: 1.8 },
   'Apparel Retail':                    { pe: 16, evEbitda: 11, pb: 4.5, ps: 1.2, evRevenue: 1.4 },
   'Apparel Manufacturing':             { pe: 18, evEbitda: 12, pb: 4.0, ps: 2.0, evRevenue: 2.2 },
+  // Luxury Goods: Hermès, LVMH, Kering, Richemont — pricing power + scarcity premium justify premium multiples
+  'Luxury Goods':                      { pe: 42, evEbitda: 28, pb: 8.0, ps: 5.0, evRevenue: 8.0 },
+  'Luxury':                            { pe: 42, evEbitda: 28, pb: 8.0, ps: 5.0, evRevenue: 8.0 },
   'Household & Personal Products':     { pe: 22, evEbitda: 15, pb: 5.0, ps: 2.8, evRevenue: 3.2 },
   'Packaged Foods':                    { pe: 20, evEbitda: 14, pb: 4.5, ps: 2.0, evRevenue: 2.2 },
   'Personal Services':                 { pe: 20, evEbitda: 13, pb: 5.0, ps: 2.0, evRevenue: 2.2 },
@@ -103,6 +106,13 @@ const INDUSTRY_MEDIANS: Record<string, { pe: number; evEbitda: number; pb: numbe
   'Oil & Gas Refining & Marketing':    { pe: 9,  evEbitda: 7,  pb: 1.5, ps: 0.3, evRevenue: 0.35 },
   'Oil & Gas Midstream':               { pe: 14, evEbitda: 10, pb: 2.5, ps: 2.0, evRevenue: 2.5 },
   'Oil & Gas Equipment & Services':    { pe: 16, evEbitda: 10, pb: 2.0, ps: 1.5, evRevenue: 1.8 },
+  // Crypto/Bitcoin Mining — commodity-like revenue (BTC price × hash rate), capital-intensive.
+  // P/E multiples are volatile and cycle-driven; EV/Revenue and EV/EBITDA anchor on production economics.
+  // Peers: MARA, RIOT, CLSK, BTBT, IRIS Energy (IREN). EV/Revenue ~3-5× in bull cycles, 1-2× in bear.
+  'Bitcoin Mining':                    { pe: 12, evEbitda: 8,  pb: 2.0, ps: 2.5, evRevenue: 3.0 },
+  'Crypto Mining':                     { pe: 12, evEbitda: 8,  pb: 2.0, ps: 2.5, evRevenue: 3.0 },
+  'Digital Mining':                    { pe: 12, evEbitda: 8,  pb: 2.0, ps: 2.5, evRevenue: 3.0 },
+  'Blockchain Infrastructure':         { pe: 14, evEbitda: 10, pb: 2.5, ps: 3.0, evRevenue: 3.5 },
   // Industrials
   'Aerospace & Defense':               { pe: 24, evEbitda: 16, pb: 5.5, ps: 2.0, evRevenue: 2.2 },
   'Industrial Conglomerates':          { pe: 21, evEbitda: 14, pb: 3.8, ps: 1.8, evRevenue: 2.0 },

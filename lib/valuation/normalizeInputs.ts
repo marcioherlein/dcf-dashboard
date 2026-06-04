@@ -136,7 +136,7 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
       const allRows = buildRowsFromStatements(statementsData!.annual, statementsData!.ttm, fxRate)
       const ttmOrLast = allRows.find(r => r.year === 'TTM') ?? allRows.filter(r => !r.isProjected).at(-1)
       const revM = ttmOrLast?.revenue ?? null
-      cagr = applyCagrCapsFromRevenue(rawStmtCagr, revM)
+      cagr = applyCagrCapsFromRevenue(rawStmtCagr, revM, apiData?.quote?.sector)
     }
   }
 
@@ -569,7 +569,7 @@ function buildRowsFromStatements(
       capex:        toM(cf.capitalExpenditure ?? cf.purchaseOfPPE ?? cf.capitalExpenditures),
       operatingCF:  toM(cf.operatingCashFlow ?? cf.cashFlowFromContinuingOperatingActivities),
       freeCashFlow: toM(cf.freeCashFlow),
-      dna:          toM(cf.depreciationAndAmortization ?? cf.reconciledDepreciation ?? cf.depreciationAmortizationDepletion),
+      dna:          toM(cf.depreciationAndAmortization ?? cf.reconciledDepreciation ?? cf.depreciationAmortizationDepletion ?? cf.amortizationOfIntangibles),
       dividendsPaid: toM(cf.cashDividendsPaid ?? cf.dividendsPaid ?? cf.paymentOfDividends),
       financingCF:  toM(cf.financingCashFlow ?? cf.cashFlowFromContinuingFinancingActivities),
       cash:                    toM(bs.cashCashEquivalentsAndShortTermInvestments ?? bs.cashAndShortTermInvestments ?? bs.cashAndCashEquivalents ?? bs.cash),
@@ -632,8 +632,15 @@ function deriveCAGRFromStatements(annualIS: AnyRow[]): number | null {
 // ── Apply Damodaran size caps + convergence discount to a raw CAGR ────────────
 // Mirrors the logic in extractFCFInputs() (projectCashFlows.ts) so both the
 // main valuation path and the ForecastTable modelling path use identical caps.
-function applyCagrCapsFromRevenue(rawCagr: number, revenueMillion: number | null): number {
+function applyCagrCapsFromRevenue(rawCagr: number, revenueMillion: number | null, sector?: string | null): number {
   const revB = (revenueMillion ?? 0) / 1000  // M → B
+
+  // Energy and Basic Materials: commodity cycles inflate historical CAGR. Cap at 8%
+  // matching the deriveForwardPEAssumptions cyclical cap so the Full DCF Table and
+  // Cockpit use consistent CAGR for energy/mining companies.
+  const isCyclicalSector = sector === 'Energy' || sector === 'Basic Materials'
+  if (isCyclicalSector && rawCagr > 0.08) return 0.08
+
   let sizeCap: number
   if (revB > 50)       sizeCap = 0.22   // mega-cap  (>$50B revenue)
   else if (revB > 10)  sizeCap = 0.28   // large-cap (>$10B)
