@@ -82,6 +82,7 @@ export async function GET(req: NextRequest) {
 
         {/* ── Header: logo + conviction ── */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 36, position: 'relative' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           {logoData
             ? <img src={logoData} style={{ height: 28, objectFit: 'contain' }} alt="Intrinsico" />
             : <span style={{ color: '#2563EB', fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em' }}>Intrinsico</span>

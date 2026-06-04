@@ -84,6 +84,7 @@ export async function GET(req: NextRequest) {
         {/* ── Header ── */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 56, position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             {logoData
               ? <img src={logoData} style={{ width: 36, height: 36, objectFit: 'contain' }} alt="Intrinsico" />
               : <div style={{ width: 36, height: 36, borderRadius: 8, background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

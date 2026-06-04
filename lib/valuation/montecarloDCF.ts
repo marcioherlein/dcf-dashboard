@@ -217,7 +217,7 @@ function lsRegression(x: number[], y: number[]): [number, number, number] {
   if (n < 3) return [0, 0, 0]
 
   // Σ matrices for OLS: [1, x, x²] basis
-  let s0 = n, s1 = 0, s2 = 0, s3 = 0, s4 = 0
+  const s0 = n; let s1 = 0, s2 = 0, s3 = 0, s4 = 0
   let t0 = 0, t1 = 0, t2 = 0
   for (let i = 0; i < n; i++) {
     const xi = x[i], yi = y[i]
@@ -340,7 +340,7 @@ export function runMonteCarlo(inputs: MCInputs): MCResult {
 
     if (itmAbandonment.length > 10) {
       const xVec = itmAbandonment.map(d => d.cum)
-      const yVec = itmAbandonment.map(d => liquidFloor)  // exercise payoff
+      const yVec = itmAbandonment.map(_d => liquidFloor)  // exercise payoff
       const [a, b, c] = lsRegression(xVec, yVec)
       let optionGain = 0
       for (const d of itmAbandonment) {

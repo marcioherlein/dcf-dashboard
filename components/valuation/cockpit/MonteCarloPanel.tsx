@@ -387,7 +387,7 @@ export default function MonteCarloPanel({
 
             {/* Disclaimer */}
             <p className="text-[9px] text-slate-400 leading-relaxed border-t border-slate-100 pt-3">
-              Beta model — for exploratory analysis only. P50 is reported as this method's fair value contribution when weighted into the main blend. Real option values are not added to the point estimate; they are informational. Not financial advice.
+              Beta model — for exploratory analysis only. P50 is reported as this method&apos;s fair value contribution when weighted into the main blend. Real option values are not added to the point estimate; they are informational. Not financial advice.
             </p>
           </>
         )}
