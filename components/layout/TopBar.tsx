@@ -308,9 +308,11 @@ export default function TopBar() {
         <div className="flex items-center">
           <Link href={session ? '/analyze' : '/'} className="flex items-center leading-none shrink-0" aria-label="insic home">
             {/* Mobile: mark only */}
-            <InsicLogo variant="mark" className="sm:hidden" style={{ width: 20, height: 28 }} />
+            <InsicLogo variant="mark" className="sm:hidden" style={{ width: 18, height: 26 }} />
             {/* Desktop: full lockup */}
-            <InsicLogoLockup size="md" className="hidden sm:inline-flex" />
+            <span className="hidden sm:block">
+              <InsicLogoLockup size="md" />
+            </span>
           </Link>
         </div>
 
