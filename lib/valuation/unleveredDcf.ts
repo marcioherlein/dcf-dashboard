@@ -67,9 +67,21 @@ export function computeUFCFRows(
       ufcf = nopat + dnaComponent + capexComponent - dnwcComponent
     }
     // Fallback for projected rows where build-up components are incomplete (e.g. financial sector):
-    // use freeCashFlow if available (set from median historical FCF margin in normalizeInputs)
-    if (ufcf == null && r.isProjected && (r as any).freeCashFlow != null) {
-      ufcf = (r as any).freeCashFlow as number
+    // use freeCashFlow if available (set from median historical FCF margin in normalizeInputs).
+    //
+    // Also applies when UFCF is negative AND freeCashFlow is positive — this handles the
+    // SBC-distorted ramp case (ZETA, SNAP): buildProjectedRows sets freeCashFlow = medianFcfMargin
+    // × revenue as a positive anchor, and also ramps EBIT from negative toward target. In early
+    // ramp years (year 1-2), the NOPAT-based UFCF is negative even though the company has
+    // positive FCF today. Use freeCashFlow as the floor: take max(ufcf, freeCashFlow) so the
+    // result is at least the positive FCF margin baseline. This prevents the DCF from showing
+    // negative projected cash flows for a company that is currently FCF-positive.
+    const fcfOverride = r.isProjected ? (r as any).freeCashFlow as number | null : null
+    if (ufcf == null && fcfOverride != null) {
+      ufcf = fcfOverride
+    } else if (ufcf != null && fcfOverride != null && fcfOverride > 0 && ufcf < 0) {
+      // UFCF negative but FCF positive: take FCF as the floor (SBC ramp early years)
+      ufcf = fcfOverride
     }
 
     const projectedYearIndex = result.filter(x => x.isProjected).length + (r.isProjected ? 1 : 0)
