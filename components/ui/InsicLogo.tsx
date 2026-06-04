@@ -1,7 +1,7 @@
 import * as React from "react";
 import Image from "next/image";
 
-// ─── Standalone mark (pure SVG, geometry only) ───────────────────────────────
+// ─── Standalone mark (SVG, geometry only) ────────────────────────────────────
 
 type MarkProps = {
   className?: string;
@@ -35,29 +35,49 @@ function InsicMark({ className, style, mono = false, title = "insic" }: MarkProp
   );
 }
 
-// ─── Lockup using the designer-cropped PNG ────────────────────────────────────
+// ─── Logo lockup ─────────────────────────────────────────────────────────────
 //
-// The source PNGs (insic-logo-horizontal.png) have heavy whitespace:
-//   top 14%, bottom 6%, left 10%, right 23% — all empty.
-// We pre-cropped them to content + 4px padding → 235×104px, aspect 2.260:1.
-// At any `height` h, width = h × 2.260. The PNG has the mark/wordmark
-// already designed to be optically aligned (dot above bars, text beside bars).
-// No CSS translateY tricks needed — the PNG is the truth.
+// WHY SPLIT MARK + WORDMARK:
+//   The combined horizontal PNG has the olive dot baked above the wordmark.
+//   The full PNG bounding box is dot-top → wordmark-bottom, so the wordmark
+//   occupies only 46% of the render height. At header sizes (26–32px) the
+//   wordmark cap height is only ~11px — far too small.
 //
-// Sizes map to target visual heights for the logo content:
-//   sm  →  20px tall (pricing breadcrumb)
-//   md  →  26px tall (app TopBar, Sidebar)
-//   lg  →  32px tall (landing navbar)
+//   Fix: render the SVG mark independently and the wordmark PNG independently,
+//   each sized to their actual content, aligned with flex-start + translateY.
+//
+// GEOMETRY (from pixel measurement of insic-wordmark-cropped.png, 158×55):
+//   Wordmark content spans rows 3–51 within the 55px crop (3px padding each side).
+//   Cap height of 'insic' (no descenders) ≈ full 49px content ≈ 89% of crop height.
+//
+// GEOMETRY (mark SVG viewBox 0 0 124 160):
+//   Bars span y=53.9–139 (85/160 = 53% of height).
+//   Bars center = y=96.5 → 60.3% of mark height.
+//
+// At size "md" (mark rendered at 38px tall):
+//   bars_center = 22.9px from SVG top
+//   dot_bottom  =  8.6px            → dot sits clearly above wordmark
+//   wordmark rendered at 27px tall
+//   cap_center_from_word_top ≈ 13.5px
+//   translateY = 22.9 - 13.5 = 9px  → aligns cap-center to bars-center
 
 export type LogoSize = "sm" | "md" | "lg";
 
-const HEIGHTS: Record<LogoSize, number> = { sm: 20, md: 26, lg: 32 };
-// Cropped PNG is 235×104 → aspect = 235/104
-const ASPECT = 235 / 104;
+// All sizes: { markH, wordH, translateY, gap }
+// markH  = rendered height of SVG mark (chosen so bars ≈ wordH)
+// wordH  = rendered height of wordmark PNG
+// translateY = px to shift wordmark down so cap aligns with bars center
+const SIZES: Record<LogoSize, { markH: number; wordH: number; ty: number; gap: number }> = {
+  sm: { markH: 26, wordH: 19, ty: 6,  gap: 6 },
+  md: { markH: 38, wordH: 27, ty: 9,  gap: 8 },
+  lg: { markH: 47, wordH: 34, ty: 11, gap: 10 },
+};
+
+// Wordmark PNG (insic-wordmark-cropped.png): 158×55 → aspect 2.873
+const WORD_ASPECT = 158 / 55;
 
 export type InsicLogoLockupProps = {
   size?: LogoSize;
-  /** "dark" = white-on-transparent variant for dark backgrounds */
   on?: "light" | "dark";
   className?: string;
   style?: React.CSSProperties;
@@ -69,26 +89,59 @@ export function InsicLogoLockup({
   className,
   style,
 }: InsicLogoLockupProps) {
-  const h = HEIGHTS[size];
-  const w = Math.round(h * ASPECT);
-  const src = on === "dark"
-    ? "/brand/insic-logo-horizontal-white-cropped.png"
-    : "/brand/insic-logo-horizontal-cropped.png";
+  const { markH, wordH, ty, gap } = SIZES[size];
+  const markW = Math.round(markH * 124 / 160);
+  const wordW = Math.round(wordH * WORD_ASPECT);
+  const dark = on === "dark";
+
+  // SVG mark: for dark mode we use the white/mono variant rendered as SVG
+  // Wordmark PNG: separate light/dark crops
+  const wordSrc = dark
+    ? "/brand/insic-wordmark-white-cropped.png"
+    : "/brand/insic-wordmark-cropped.png";
 
   return (
-    <Image
-      src={src}
-      alt="insic"
-      width={235}
-      height={104}
-      priority
+    <span
       className={className}
-      style={{ height: h, width: w, display: "block", flexShrink: 0, ...style }}
-    />
+      style={{
+        display: "inline-flex",
+        alignItems: "flex-start",
+        gap,
+        lineHeight: 0,
+        userSelect: "none",
+        ...style,
+      }}
+      role="img"
+      aria-label="insic"
+    >
+      {/* Mark — SVG, sized so bars height ≈ wordmark height */}
+      <InsicMark
+        style={{ width: markW, height: markH, flexShrink: 0, display: "block" }}
+        mono={dark}
+        title=""
+      />
+      {/* Wordmark PNG — shifted down so cap-center aligns to bars-center */}
+      <Image
+        src={wordSrc}
+        alt=""
+        aria-hidden
+        width={158}
+        height={55}
+        priority
+        style={{
+          height: wordH,
+          width: wordW,
+          display: "block",
+          flexShrink: 0,
+          transform: `translateY(${ty}px)`,
+          ...(dark ? { filter: "brightness(0) invert(1)" } : {}),
+        }}
+      />
+    </span>
   );
 }
 
-// ─── Legacy API (backward compat — InsicLogo still works) ────────────────────
+// ─── Legacy variant API ───────────────────────────────────────────────────────
 
 type InsicLogoProps = {
   variant?: "horizontal" | "mark" | "wordmark";
