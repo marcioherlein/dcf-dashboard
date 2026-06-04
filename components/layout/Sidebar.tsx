@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { motion, useReducedMotion } from 'motion/react'
 import {
   TrendingUp, Bookmark, Briefcase, Globe,
-  Sparkles, Bell, Settings, HelpCircle, PieChart, SlidersHorizontal,
+  Bell, Settings, HelpCircle, PieChart, SlidersHorizontal,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -22,7 +22,6 @@ const PRIMARY_NAV: Array<{ href: string; label: string; icon: LucideIcon; match:
 ]
 
 const UTILITY_NAV: Array<{ href: string; label: string; icon: LucideIcon; match: (p: string) => boolean }> = [
-  { href: '/ai-stack', label: 'AI Stack',  icon: Sparkles,   match: (p) => p.startsWith('/ai-stack') },
   { href: '/alerts',   label: 'Alerts',    icon: Bell,       match: (p) => p.startsWith('/alerts') },
   { href: '/settings', label: 'Settings',  icon: Settings,   match: (p) => p.startsWith('/settings') },
   { href: '/help',     label: 'Help',      icon: HelpCircle, match: (p) => p.startsWith('/help') },
