@@ -226,15 +226,22 @@ export function extractFCFInputs(financials: any, foreignCurrency = false): {
     : (analyst1y > 0.20 ? analyst1y * 0.80 : analyst1y * 0.88)
 
   // ── Source 2: Historical CAGR ────────────────────────────────────────────────
-  // For foreign-currency companies this is in local currency (inflation-distorted)
-  // and is zeroed out below. For others, cap at 60% to filter data outliers.
+  // historicalRevenues are already USD-converted (fxRate applied in route.ts), so the
+  // CAGR computed here is in USD terms. For foreign-currency companies this reflects real
+  // USD revenue growth, not local-currency inflation. The old approach set this to null
+  // for all foreign-currency companies to avoid ARS-inflation distortion — but that throws
+  // away valid USD-revenue CAGR data for Brazilian/Mexican/etc fintechs where BRL/MXN
+  // depreciation doesn't inflate USD revenues (it actually deflates them).
+  // ARS exception: Argentina uses extreme inflation. Detect via financials.summaryDetail.currency.
+  const reportCurrency = ((financials.summaryDetail?.currency ?? financials.price?.currency ?? '') as string).toUpperCase()
+  const isARSCompany = reportCurrency === 'ARS'
   let historicalCagr3y: number | null
-  if (foreignCurrency) {
-    historicalCagr3y = null  // ARS revenues are inflation-distorted; not used in blend (wHistorical = 0)
+  if (foreignCurrency && isARSCompany) {
+    historicalCagr3y = null  // ARS revenues are inflation-distorted in local currency
   } else if (isFinancialSector && netIncomeHistory.length >= 2) {
     const n = Math.min(netIncomeHistory.length - 1, 3)
     historicalCagr3y = Math.pow(netIncomeHistory[0] / netIncomeHistory[n], 1 / n) - 1
-    historicalCagr3y = Math.min(Math.max(historicalCagr3y, -0.10), 0.20)
+    historicalCagr3y = Math.min(Math.max(historicalCagr3y, -0.10), 0.60)
   } else if (historicalRevenues.length >= 2) {
     const n = Math.min(historicalRevenues.length - 1, 3)
     historicalCagr3y = Math.pow(historicalRevenues[0] / historicalRevenues[n], 1 / n) - 1
@@ -283,14 +290,31 @@ export function extractFCFInputs(financials: any, foreignCurrency = false): {
   let wAnalyst: number, wFundamental: number, wHistorical: number, wTTM: number
 
   if (foreignCurrency) {
-    wHistorical  = 0
-    wTTM         = 0
-    if (fundamentalGrowth != null) {
-      wAnalyst     = numAnalysts >= 2 ? 0.75 : 0.55
-      wFundamental = 1 - wAnalyst
+    // Historical revenue CAGR is computed from USD-converted figures (fxRate already applied),
+    // so it is valid to include. Analyst estimates, however, may be stated in local currency
+    // by Yahoo (common for BRL/MXN-reporting companies), causing them to look near-zero in
+    // USD terms when the local currency has depreciated. Reduce analyst weight and restore
+    // historical weight so that USD-revenue-based growth informs the blend.
+    wTTM = 0  // earnings growth still local-currency contaminated
+    if (historicalCagr3y != null && historicalCagr3y > 0) {
+      // Have USD-converted historical CAGR — blend it with analyst
+      wHistorical  = 0.35
+      wAnalyst     = numAnalysts >= 2 ? 0.50 : 0.30
+      wFundamental = fundamentalGrowth != null ? (1 - wHistorical - wAnalyst) : 0
+      if (fundamentalGrowth == null) {
+        // Redistribute fundamental weight to historical
+        wHistorical = 1 - wAnalyst
+      }
     } else {
-      wAnalyst     = numAnalysts >= 1 ? 0.90 : 0
-      wFundamental = 0
+      // No historical data — fall back to analyst-only
+      wHistorical  = 0
+      if (fundamentalGrowth != null) {
+        wAnalyst     = numAnalysts >= 2 ? 0.75 : 0.55
+        wFundamental = 1 - wAnalyst
+      } else {
+        wAnalyst     = numAnalysts >= 1 ? 0.90 : 0
+        wFundamental = 0
+      }
     }
   } else if (numAnalysts >= 10) {
     wAnalyst     = 0.55
@@ -359,11 +383,13 @@ export function extractFCFInputs(financials: any, foreignCurrency = false): {
   const revB = rawRevM / 1000  // revenue in USD billions
   let sizeCap: number
   if (isFinancialSector && !isHighGrowthFinancial) sizeCap = 0.12  // mature bank / insurer
-  else if (foreignCurrency) sizeCap = 0.18
   else if (revB > 50)       sizeCap = 0.22  // mega-cap ($50B+ revenue)
   else if (revB > 10)       sizeCap = 0.28  // large-cap
   else if (revB > 2)        sizeCap = 0.38  // mid-cap
   else                      sizeCap = 0.55  // small-cap/startup
+  // Foreign-currency companies use USD-converted revenues, so the same size-based caps apply.
+  // The old flat 18% cap was too conservative for high-growth EM fintechs (e.g. NU, MELI)
+  // whose USD revenue CAGR is real even as the local currency depreciates.
 
   const cagr = Math.min(Math.max(blendedCagr, -0.10), sizeCap)
 
