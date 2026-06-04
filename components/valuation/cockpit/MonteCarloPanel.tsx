@@ -8,74 +8,114 @@ import { runMonteCarlo, buildMCInputs, type MCResult, type MCInputs } from '@/li
 import type { ValuationAssumptions, CockpitSnapshot } from '@/lib/valuation/cockpit'
 
 interface Props {
-  assumptions: ValuationAssumptions
-  snapshot: CockpitSnapshot
+  assumptions:  ValuationAssumptions
+  snapshot:     CockpitSnapshot
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  apiData: Record<string, any>
-  sensitivity: Partial<Record<keyof ValuationAssumptions, number>>
+  apiData:      Record<string, any>
+  sensitivity:  Partial<Record<keyof ValuationAssumptions, number>>
   currentPrice: number
-  currency: string
+  currency:     string
 }
 
-// ── Histogram bar component ──────────────────────────────────────────────────
+// ── CVaR quality dots ─────────────────────────────────────────────────────────
+
+function cvarDots(ratio: number): { dots: number; label: string; color: string } {
+  if (ratio >= 0.80) return { dots: 5, label: 'Excellent tail shape',  color: 'text-emerald-600' }
+  if (ratio >= 0.65) return { dots: 4, label: 'Contained tail risk',   color: 'text-emerald-500' }
+  if (ratio >= 0.50) return { dots: 3, label: 'Moderate tail risk',    color: 'text-amber-600'   }
+  if (ratio >= 0.35) return { dots: 2, label: 'Elevated tail risk',    color: 'text-orange-500'  }
+  return               { dots: 1, label: 'Severe left tail',           color: 'text-red-600'     }
+}
+
+function CvarDots({ ratio }: { ratio: number }) {
+  const { dots, label, color } = cvarDots(ratio)
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-0.5" aria-hidden="true">
+        {Array.from({ length: 5 }, (_, i) => (
+          <div
+            key={i}
+            className={cn('w-2 h-2 rounded-full', i < dots ? color.replace('text-', 'bg-') : 'bg-slate-200')}
+          />
+        ))}
+      </div>
+      <span className={cn('text-[10px] font-[650]', color)}>{label}</span>
+    </div>
+  )
+}
+
+// ── Plain-language summary ────────────────────────────────────────────────────
+
+function buildSummary(result: MCResult, currentPrice: number, currency: string): string {
+  const lo = fmtPrice(result.p25, currency)
+  const hi = fmtPrice(result.p75, currency)
+  const pct = Math.round((result.p75 - result.p25) / result.mean * 100)
+  const upsideMed = currentPrice > 0 ? ((result.adjustedP50 - currentPrice) / currentPrice * 100) : null
+  const upStr = upsideMed != null
+    ? ` The median scenario implies ${upsideMed >= 0 ? '+' : ''}${upsideMed.toFixed(0)}% vs current price.`
+    : ''
+  return `In 50% of ${result.nPaths.toLocaleString()} simulated paths, fair value falls between ${lo} and ${hi} — a ${pct}% spread driven by regime uncertainty.${upStr}`
+}
+
+// ── Histogram ────────────────────────────────────────────────────────────────
 
 function Histogram({
-  histogram, p10, p50, p90, currentPrice, currency,
+  histogram, p10, p25, p50, p75, p90, currentPrice, adjustedP50, currency,
 }: {
   histogram: MCResult['histogram']
-  p10: number; p50: number; p90: number
-  currentPrice: number; currency: string
+  p10: number; p25: number; p50: number; p75: number; p90: number
+  currentPrice: number; adjustedP50: number; currency: string
 }) {
-  if (histogram.length === 0) return null
-  const maxPct = Math.max(...histogram.map(b => b.pct))
+  if (!histogram.length) return null
+  const maxPct = Math.max(...histogram.map(b => b.pct), 0.001)
 
   return (
-    <div className="space-y-1">
-      {/* Bars */}
-      <div className="flex items-end gap-px h-20 w-full">
+    <div className="space-y-1.5">
+      <div className="flex items-end gap-px h-16 w-full" role="img" aria-label="Fair value distribution histogram">
         {histogram.map((b, i) => {
-          const height = maxPct > 0 ? (b.pct / maxPct) * 100 : 0
-          const isCurrentPrice = currentPrice >= b.lo && currentPrice < b.hi
-          const isP50 = p50 >= b.lo && p50 < b.hi
-          const isTail = b.hi <= p10
-          const isCore = b.lo >= p10 && b.hi <= p90
+          const h = (b.pct / maxPct) * 100
+          const isPrice   = currentPrice >= b.lo && currentPrice < b.hi
+          const isAdjP50  = adjustedP50 >= b.lo && adjustedP50 < b.hi
+          const isTailLo  = b.hi <= p10
+          const isTailHi  = b.lo >= p90
+          const isCore    = b.lo >= p25 && b.hi <= p75
           return (
             <div
               key={i}
-              className="flex-1 rounded-t-[1px] transition-none"
+              className="flex-1 rounded-t-[1px]"
               style={{
-                height: `${Math.max(2, height)}%`,
-                backgroundColor: isCurrentPrice
-                  ? '#2563EB'
-                  : isP50
-                  ? '#10B981'
-                  : isTail
-                  ? 'rgba(239,68,68,0.5)'
-                  : isCore
-                  ? 'rgba(100,116,139,0.35)'
-                  : 'rgba(100,116,139,0.18)',
+                height: `${Math.max(3, h)}%`,
+                backgroundColor:
+                  isPrice   ? '#2563EB' :
+                  isAdjP50  ? '#5F790B' :
+                  isTailLo  ? 'rgba(216,59,59,0.45)' :
+                  isTailHi  ? 'rgba(95,121,11,0.35)' :
+                  isCore    ? 'rgba(95,121,11,0.22)' :
+                              'rgba(100,116,139,0.20)',
               }}
-              title={`${fmtPrice(b.lo, currency)} – ${fmtPrice(b.hi, currency)}: ${(b.pct * 100).toFixed(1)}%`}
+              title={`${fmtPrice(b.lo, currency)}–${fmtPrice(b.hi, currency)}: ${(b.pct*100).toFixed(1)}%`}
             />
           )
         })}
       </div>
-      {/* X-axis labels */}
-      <div className="flex justify-between text-[9px] text-slate-400 font-mono">
+
+      {/* X-axis */}
+      <div className="flex justify-between text-[9px] text-slate-400 font-mono tabular-nums">
         <span>{fmtPrice(histogram[0]?.lo ?? 0, currency)}</span>
         <span>{fmtPrice(histogram[Math.floor(histogram.length / 2)]?.lo ?? 0, currency)}</span>
         <span>{fmtPrice(histogram[histogram.length - 1]?.hi ?? 0, currency)}</span>
       </div>
+
       {/* Legend */}
-      <div className="flex items-center gap-3 flex-wrap mt-1">
+      <div className="flex items-center gap-3 flex-wrap">
         {[
-          { color: '#EF4444', opacity: 0.5, label: 'P10 tail' },
-          { color: '#64748B', opacity: 0.35, label: 'P10–P90 range' },
-          { color: '#10B981', opacity: 1, label: 'P50 (fair value)' },
-          { color: '#2563EB', opacity: 1, label: 'Current price' },
-        ].map(({ color, opacity, label }) => (
+          { color: 'rgba(216,59,59,0.45)', label: 'P10 tail' },
+          { color: 'rgba(95,121,11,0.22)', label: 'P25–P75' },
+          { color: '#5F790B',              label: 'Adjusted P50' },
+          { color: '#2563EB',              label: 'Current price' },
+        ].map(({ color, label }) => (
           <div key={label} className="flex items-center gap-1">
-            <div className="w-2.5 h-2.5 rounded-[2px]" style={{ backgroundColor: color, opacity }} />
+            <div className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: color }} />
             <span className="text-[9px] text-slate-500">{label}</span>
           </div>
         ))}
@@ -84,44 +124,21 @@ function Histogram({
   )
 }
 
-// ── Regime bar ───────────────────────────────────────────────────────────────
-
-function RegimeBar({ probabilities }: { probabilities: [number, number, number] }) {
-  const [bear, base, bull] = probabilities
-  return (
-    <div>
-      <p className="text-[10px] font-[650] text-slate-500 mb-1.5">
-        Regime time allocation
-        <InfoTooltip text="Proportion of simulation steps spent in each regime across all 10,000 paths. Driven by Markov transition matrix weighted by sensitivity analysis." side="top" />
-      </p>
-      <div className="flex h-4 rounded-full overflow-hidden w-full">
-        <div className="h-full bg-red-400/70 transition-none" style={{ width: `${bear * 100}%` }} />
-        <div className="h-full bg-slate-300 transition-none" style={{ width: `${base * 100}%` }} />
-        <div className="h-full bg-emerald-400/70 transition-none" style={{ width: `${bull * 100}%` }} />
-      </div>
-      <div className="flex justify-between mt-1 text-[9px] font-mono text-slate-400">
-        <span className="text-red-500 font-[600]">Bear {(bear * 100).toFixed(0)}%</span>
-        <span className="text-slate-500 font-[600]">Base {(base * 100).toFixed(0)}%</span>
-        <span className="text-emerald-600 font-[600]">Bull {(bull * 100).toFixed(0)}%</span>
-      </div>
-    </div>
-  )
-}
-
-// ── Percentile strip ─────────────────────────────────────────────────────────
+// ── Percentile strip ──────────────────────────────────────────────────────────
 
 function PercentileStrip({
-  p10, p25, p50, p75, p90, currentPrice, currency,
+  p10, p25, p50, p75, p90, adjustedP50, cvarDiscount, currentPrice, currency,
 }: {
   p10: number; p25: number; p50: number; p75: number; p90: number
+  adjustedP50: number; cvarDiscount: number
   currentPrice: number; currency: string
 }) {
   const items = [
-    { label: 'P10',    value: p10,  color: 'text-red-500',     sub: 'Worst 10%' },
-    { label: 'P25',    value: p25,  color: 'text-orange-500',  sub: '1st quartile' },
-    { label: 'P50',    value: p50,  color: 'text-blue-600',    sub: 'Median (FV)' },
-    { label: 'P75',    value: p75,  color: 'text-emerald-500', sub: '3rd quartile' },
-    { label: 'P90',    value: p90,  color: 'text-emerald-600', sub: 'Best 10%' },
+    { label: 'P10',  value: p10,          color: 'text-[#D83B3B]', sub: 'Worst 10%'    },
+    { label: 'P25',  value: p25,          color: 'text-orange-500', sub: '1st quartile' },
+    { label: 'P50',  value: adjustedP50,  color: 'text-[#5F790B]',  sub: cvarDiscount > 0.001 ? `−${(cvarDiscount*100).toFixed(0)}% CVaR adj` : 'Median'  },
+    { label: 'P75',  value: p75,          color: 'text-emerald-500', sub: '3rd quartile' },
+    { label: 'P90',  value: p90,          color: 'text-emerald-600', sub: 'Best 10%'     },
   ]
   return (
     <div className="grid grid-cols-5 gap-px bg-slate-100 rounded-xl overflow-hidden border border-slate-100">
@@ -130,15 +147,15 @@ function PercentileStrip({
         return (
           <div key={label} className="bg-white px-2 py-2.5 flex flex-col items-center gap-0.5">
             <span className="text-[9px] font-[700] text-slate-400 uppercase tracking-wide">{label}</span>
-            <span className={cn('text-[13px] font-[800] tabular-nums', color)}>
+            <span className={cn('text-[13px] font-[800] tabular-nums leading-tight', color)}>
               {fmtPrice(value, currency)}
             </span>
             {upside != null && (
-              <span className={cn('text-[9px] font-[600] tabular-nums', upside >= 0 ? 'text-emerald-600' : 'text-red-500')}>
+              <span className={cn('text-[9px] font-[650] tabular-nums', upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
                 {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(0)}%
               </span>
             )}
-            <span className="text-[8px] text-slate-300 leading-none">{sub}</span>
+            <span className="text-[8px] text-slate-300 leading-none text-center">{sub}</span>
           </div>
         )
       })}
@@ -146,252 +163,360 @@ function PercentileStrip({
   )
 }
 
-// ── Main component ───────────────────────────────────────────────────────────
+// ── Regime bar ────────────────────────────────────────────────────────────────
+
+function RegimeBar({ probs }: { probs: [number, number, number] }) {
+  const [bear, base, bull] = probs
+  return (
+    <div>
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <p className="text-[10px] font-[650] text-slate-500">Regime time allocation</p>
+        <InfoTooltip
+          text="Proportion of simulation steps spent in Bear, Base, and Bull regimes across all paths. Calibrated to this company's historical growth and margin distribution."
+          side="top"
+        />
+      </div>
+      <div className="flex h-3 rounded-full overflow-hidden w-full">
+        <div className="h-full bg-[#D83B3B]/50" style={{ width: `${bear*100}%` }} />
+        <div className="h-full bg-slate-300"    style={{ width: `${base*100}%` }} />
+        <div className="h-full bg-[#5F790B]/50" style={{ width: `${bull*100}%` }} />
+      </div>
+      <div className="flex justify-between mt-1">
+        <span className="text-[9px] font-[650] text-[#D83B3B] tabular-nums">Bear {(bear*100).toFixed(0)}%</span>
+        <span className="text-[9px] font-[650] text-slate-500 tabular-nums">Base {(base*100).toFixed(0)}%</span>
+        <span className="text-[9px] font-[650] text-[#5F790B] tabular-nums">Bull {(bull*100).toFixed(0)}%</span>
+      </div>
+    </div>
+  )
+}
+
+// ── First-run onboarding tooltip ──────────────────────────────────────────────
+
+const ONBOARD_KEY = 'mc_panel_onboarded_v1'
+
+function OnboardTooltip({ onDismiss }: { onDismiss: () => void }) {
+  return (
+    <div className="rounded-xl border border-[#BFD2A1] bg-[#F6FAEA] p-4 text-[11px] text-[#3D5A08] leading-relaxed">
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-1.5">
+          <p className="font-[700] text-[12px] text-[#5F790B]">What is this?</p>
+          <p>
+            Instead of a single fair value estimate, this model runs {(10_000).toLocaleString()} independent futures for the company.
+            Each path moves through realistic economic regimes — Bear, Base, and Bull — using this company&apos;s own historical data to calibrate what &quot;bad&quot; and &quot;good&quot; look like for this specific business.
+          </p>
+          <p>
+            The result is a <strong>distribution</strong> of fair values. The <strong>P50</strong> (median) is the adjusted fair value.
+            The width of the distribution tells you how uncertain the model is — a tight band means high conviction, a wide band means outcome uncertainty is genuinely high.
+          </p>
+          <p>
+            The <strong>tail risk score</strong> (●●●●○) measures how bad the worst 10% of scenarios are relative to the average. A full 5 dots means even bad scenarios aren&apos;t catastrophic. 1–2 dots means the left tail is severe.
+          </p>
+        </div>
+        <button
+          onClick={onDismiss}
+          aria-label="Dismiss explanation"
+          className="shrink-0 text-[#5F790B] hover:text-[#3D5A08] text-[16px] leading-none mt-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] rounded"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 export default function MonteCarloPanel({
   assumptions, snapshot, apiData, sensitivity, currentPrice, currency,
 }: Props) {
-  const [result, setResult] = useState<MCResult | null>(null)
-  const [running, setRunning] = useState(false)
-  const [hasRun, setHasRun] = useState(false)
+  const [result,    setResult]    = useState<MCResult | null>(null)
+  const [running,   setRunning]   = useState(false)
+  const [expanded,  setExpanded]  = useState(false)
+  const [hasRun,    setHasRun]    = useState(false)
+  const [showOnboard, setShowOnboard] = useState(false)
   const [nPaths, setNPaths] = useState<5_000 | 10_000 | 50_000>(10_000)
   const runIdRef = useRef(0)
 
+  // First-run onboarding check
+  useEffect(() => {
+    try {
+      if (typeof localStorage !== 'undefined' && !localStorage.getItem(ONBOARD_KEY)) {
+        setShowOnboard(true)
+      }
+    } catch { /* ignore */ }
+  }, [])
+
+  function dismissOnboard() {
+    setShowOnboard(false)
+    try { localStorage.setItem(ONBOARD_KEY, '1') } catch { /* ignore */ }
+  }
+
   const runSimulation = useCallback(() => {
     setRunning(true)
-    const myRunId = ++runIdRef.current
-    // Defer to next tick so the loading state renders before the blocking computation
+    const id = ++runIdRef.current
     setTimeout(() => {
       try {
-        const inputs: MCInputs = {
-          ...buildMCInputs(assumptions, snapshot, apiData, sensitivity),
-          nPaths,
-        }
+        const inputs: MCInputs = { ...buildMCInputs(assumptions, snapshot, apiData, sensitivity), nPaths }
         const r = runMonteCarlo(inputs)
-        if (runIdRef.current === myRunId) {
-          setResult(r)
-          setHasRun(true)
-        }
+        if (runIdRef.current === id) { setResult(r); setHasRun(true) }
       } finally {
-        if (runIdRef.current === myRunId) setRunning(false)
+        if (runIdRef.current === id) setRunning(false)
       }
     }, 0)
   }, [assumptions, snapshot, apiData, sensitivity, nPaths])
 
-  // Run once on mount
-  useEffect(() => {
-    if (!hasRun) runSimulation()
-  }, [hasRun, runSimulation])
+  useEffect(() => { if (!hasRun) runSimulation() }, [hasRun, runSimulation])
 
   const noData = snapshot.baseFCF <= 0 || snapshot.sharesM <= 0
 
+  // ── Collapsed card view (peer method card) ────────────────────────────────
+  const fairValue = result?.adjustedP50 ?? null
+  const upside    = fairValue != null && currentPrice > 0 ? (fairValue - currentPrice) / currentPrice : null
+  const upColor   = upside != null ? (upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]') : 'text-slate-400'
+  const cv        = result ? cvarDots(result.cvarRatio) : null
+
   return (
-    <div className="bg-white rounded-[14px] border border-[#E6ECF5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden">
+    <div className={cn(
+      'bg-white rounded-[14px] border shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden transition-colors',
+      expanded ? 'border-[#BFD2A1]' : 'border-[#E6ECF5]'
+    )}>
 
-      {/* Header */}
-      <div className="px-5 py-4 border-b border-slate-100">
-        <div className="flex items-start justify-between gap-3 flex-wrap">
-          <div>
-            <div className="flex items-center gap-2">
-              <p className="text-[13px] font-[700] text-slate-900">Monte Carlo DCF</p>
-              <span className="px-1.5 py-0.5 text-[9px] font-[700] uppercase tracking-wide bg-amber-100 text-amber-700 border border-amber-200 rounded-full">Beta</span>
-              <InfoTooltip
-                text="10,000 simulation paths. Each path evolves through Bear / Base / Bull regimes via a Markov chain calibrated to this company's own historical distribution. Longstaff-Schwartz pricing for real options (abandonment floor + expansion optionality). P50 is the reported fair value."
-                side="bottom"
-              />
-            </div>
-            <p className="text-[11px] text-slate-400 mt-0.5">
-              Markov-chain regime transitions · Longstaff-Schwartz real options
-            </p>
-          </div>
+      {/* ── Method card header — matches ValuationMethodCards style ── */}
+      <button
+        onClick={() => { setExpanded(e => !e); if (!expanded && !hasRun) runSimulation() }}
+        className="w-full text-left px-5 py-4 flex items-center gap-3 hover:bg-slate-50/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-inset"
+        aria-expanded={expanded}
+      >
+        {/* Expand chevron */}
+        <svg
+          className={cn('w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-150', expanded && 'rotate-90')}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Path count selector */}
-            <div className="flex items-center gap-1 rounded-lg border border-slate-200 p-0.5 bg-slate-50">
-              {([5_000, 10_000, 50_000] as const).map(n => (
-                <button
-                  key={n}
-                  onClick={() => setNPaths(n)}
-                  className={cn(
-                    'text-[10px] font-[650] px-2 py-1 rounded-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
-                    nPaths === n ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'
-                  )}
-                >
-                  {n >= 10_000 ? `${n / 1000}k` : `${n / 1000}k`}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={runSimulation}
-              disabled={running || noData}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2563EB] text-white text-[11px] font-[650] hover:bg-[#1D4ED8] disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-blue-600"
-            >
-              {running ? (
-                <>
-                  <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Running…
-                </>
-              ) : (
-                <>Re-run</>
-              )}
-            </button>
-          </div>
+        {/* Method label */}
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <span className="text-[13px] font-[700] text-slate-800 truncate">Monte Carlo DCF</span>
+          <span className="shrink-0 px-1.5 py-0.5 text-[9px] font-[700] uppercase tracking-wide bg-amber-100 text-amber-700 border border-amber-200 rounded-full">
+            Beta
+          </span>
+          <InfoTooltip
+            text="10,000 Markov-regime simulation paths with Longstaff-Schwartz real options. P50 adjusted for tail risk via CVaR. Analyst consensus anchors years 1–3."
+            side="bottom"
+          />
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="px-5 py-4 space-y-5">
-
-        {noData ? (
-          <div className="py-8 text-center">
-            <p className="text-[12px] font-[600] text-slate-500">Insufficient FCF data</p>
-            <p className="text-[11px] text-slate-400 mt-1">Monte Carlo DCF requires positive trailing FCF and share count.</p>
+        {/* Fair value + upside — shown collapsed */}
+        {!expanded && (
+          <div className="flex items-center gap-4 shrink-0">
+            {running ? (
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+                Running…
+              </div>
+            ) : fairValue != null ? (
+              <>
+                <div className="text-right">
+                  <p className="text-[13px] font-[750] tabular-nums text-slate-900">{fmtPrice(fairValue, currency)}</p>
+                  {upside != null && (
+                    <p className={cn('text-[11px] font-[650] tabular-nums', upColor)}>
+                      {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(1)}%
+                    </p>
+                  )}
+                </div>
+                {cv && (
+                  <div className="flex items-center gap-0.5" aria-label={`Tail risk: ${cv.label}`} title={cv.label}>
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <div key={i} className={cn('w-1.5 h-1.5 rounded-full', i < cv.dots ? cv.color.replace('text-', 'bg-') : 'bg-slate-200')} />
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : noData ? (
+              <span className="text-[11px] text-slate-400">Insufficient data</span>
+            ) : null}
           </div>
-        ) : !result || running ? (
-          <div className="space-y-3">
-            <div className="h-20 bg-slate-100 rounded-lg animate-pulse" />
-            <div className="h-10 bg-slate-100 rounded-xl animate-pulse" />
-            <div className="grid grid-cols-3 gap-2">
-              {[0, 1, 2].map(i => <div key={i} className="h-14 bg-slate-100 rounded-lg animate-pulse" />)}
+        )}
+      </button>
+
+      {/* ── Expanded content ── */}
+      {expanded && (
+        <div className="px-5 pb-5 space-y-5 border-t border-slate-100">
+
+          {/* Onboarding tooltip — first time only */}
+          {showOnboard && (
+            <div className="pt-4">
+              <OnboardTooltip onDismiss={dismissOnboard} />
+            </div>
+          )}
+
+          {/* Header controls */}
+          <div className="flex items-center justify-between gap-3 flex-wrap pt-4">
+            {result && (
+              <p className="text-[11px] text-slate-500 leading-snug max-w-[480px]">
+                {buildSummary(result, currentPrice, currency)}
+              </p>
+            )}
+            <div className="flex items-center gap-2 shrink-0 ml-auto">
+              <div className="flex items-center gap-1 rounded-lg border border-slate-200 p-0.5 bg-slate-50">
+                {([5_000, 10_000, 50_000] as const).map(n => (
+                  <button
+                    key={n}
+                    onClick={() => setNPaths(n)}
+                    className={cn(
+                      'text-[10px] font-[650] px-2 py-1 rounded-md transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#5F790B]',
+                      nPaths === n ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                    )}
+                  >
+                    {n / 1000}k
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={runSimulation}
+                disabled={running || noData}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#5F790B] text-white text-[11px] font-[650] hover:bg-[#4A6009] disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-1"
+              >
+                {running ? (
+                  <>
+                    <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                    </svg>
+                    Running…
+                  </>
+                ) : 'Re-run'}
+              </button>
             </div>
           </div>
-        ) : (
-          <>
-            {/* Histogram */}
-            <div>
-              <p className="text-[10px] font-[650] text-slate-500 mb-2">
-                Fair value distribution ({result.nPaths.toLocaleString()} paths, {result.numYears}Y horizon)
-              </p>
+
+          {noData ? (
+            <div className="py-8 text-center rounded-xl border border-slate-100 bg-slate-50">
+              <p className="text-[12px] font-[650] text-slate-500">Insufficient data</p>
+              <p className="text-[11px] text-slate-400 mt-1">Requires positive trailing FCF and diluted share count.</p>
+            </div>
+          ) : !result || running ? (
+            <div className="space-y-3">
+              <div className="h-16 bg-slate-100 rounded-lg animate-pulse" />
+              <div className="h-10 bg-slate-100 rounded-xl animate-pulse" />
+              <div className="grid grid-cols-4 gap-2">
+                {[0,1,2,3].map(i => <div key={i} className="h-14 bg-slate-100 rounded-lg animate-pulse" />)}
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Histogram */}
               <Histogram
                 histogram={result.histogram}
-                p10={result.p10}
-                p50={result.p50}
-                p90={result.p90}
+                p10={result.p10} p25={result.p25} p50={result.p50}
+                p75={result.p75} p90={result.p90}
+                currentPrice={currentPrice}
+                adjustedP50={result.adjustedP50}
+                currency={currency}
+              />
+
+              {/* Percentile strip */}
+              <PercentileStrip
+                p10={result.p10} p25={result.p25} p50={result.p50}
+                p75={result.p75} p90={result.p90}
+                adjustedP50={result.adjustedP50}
+                cvarDiscount={result.cvarDiscount}
                 currentPrice={currentPrice}
                 currency={currency}
               />
-            </div>
 
-            {/* Percentile strip */}
-            <PercentileStrip
-              p10={result.p10}
-              p25={result.p25}
-              p50={result.p50}
-              p75={result.p75}
-              p90={result.p90}
-              currentPrice={currentPrice}
-              currency={currency}
-            />
-
-            {/* Regime bar */}
-            <RegimeBar probabilities={result.regimeProbabilities} />
-
-            {/* Stats row */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-
-              {/* Std dev */}
-              <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
-                <p className="text-[9px] font-[650] text-slate-400 uppercase tracking-wide mb-1">
-                  Std deviation
-                  <InfoTooltip text="Standard deviation of fair value across all paths. Higher = wider outcome range." side="top" />
-                </p>
-                <p className="text-[14px] font-[750] tabular-nums text-slate-700">{fmtPrice(result.stdDev, currency)}</p>
-                <p className="text-[9px] text-slate-400 mt-0.5">
-                  {result.mean > 0 ? ((result.stdDev / result.mean) * 100).toFixed(0) : '—'}% of mean
-                </p>
-              </div>
-
-              {/* CVaR ratio */}
-              <div className={cn(
-                'rounded-xl border px-3 py-2.5',
-                result.cvarRatio >= 0.65 ? 'border-emerald-200 bg-emerald-50'
-                  : result.cvarRatio >= 0.40 ? 'border-amber-200 bg-amber-50'
-                  : 'border-red-200 bg-red-50'
-              )}>
-                <p className="text-[9px] font-[650] text-slate-400 uppercase tracking-wide mb-1">
-                  Tail risk ratio
-                  <InfoTooltip text="CVaR(P10) / mean. Expected value in worst 10% of outcomes divided by the mean. 1.0 = no tail risk. Below 0.50 = severe left tail." side="top" />
-                </p>
-                <p className={cn(
-                  'text-[14px] font-[750] tabular-nums',
-                  result.cvarRatio >= 0.65 ? 'text-emerald-700'
-                    : result.cvarRatio >= 0.40 ? 'text-amber-700'
-                    : 'text-red-600'
-                )}>
-                  {result.cvarRatio.toFixed(2)}
-                </p>
-                <p className="text-[9px] text-slate-400 mt-0.5">
-                  {result.cvarRatio >= 0.65 ? 'Contained left tail'
-                    : result.cvarRatio >= 0.40 ? 'Moderate tail risk'
-                    : 'Heavy left tail'}
-                </p>
-              </div>
-
-              {/* Abandonment option */}
-              <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
-                <p className="text-[9px] font-[650] text-slate-400 uppercase tracking-wide mb-1">
-                  Abandonment option
-                  <InfoTooltip text="Longstaff-Schwartz value of the option to liquidate the firm (at cash / shares) if cumulative FCF turns deeply negative. Bounds the worst-case left tail." side="top" />
-                </p>
-                <p className="text-[14px] font-[750] tabular-nums text-slate-700">
-                  {result.abandonmentOptionValue > 0.001
-                    ? '+' + fmtPrice(result.abandonmentOptionValue, currency)
-                    : '—'}
-                </p>
-                <p className="text-[9px] text-slate-400 mt-0.5">per share (LS)</p>
-              </div>
-
-              {/* Expansion option */}
-              <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
-                <p className="text-[9px] font-[650] text-slate-400 uppercase tracking-wide mb-1">
-                  Expansion option
-                  <InfoTooltip text="Value of the option to deploy additional capex for 2 extra FCF years when year-3 CAGR beats the historical P75 threshold. Captures compounder optionality." side="top" />
-                </p>
-                <p className="text-[14px] font-[750] tabular-nums text-slate-700">
-                  {result.expansionOptionValue > 0.001
-                    ? '+' + fmtPrice(result.expansionOptionValue, currency)
-                    : '—'}
-                </p>
-                <p className="text-[9px] text-slate-400 mt-0.5">per share (LS)</p>
-              </div>
-            </div>
-
-            {/* Inputs summary */}
-            <details className="group">
-              <summary className="flex items-center gap-1.5 cursor-pointer list-none text-[10px] font-[650] text-slate-400 hover:text-slate-600 transition-colors select-none">
-                <span className="text-[9px] group-open:rotate-90 transition-transform inline-block">▶</span>
-                Regime calibration inputs
-              </summary>
-              <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px]">
-                {[
-                  { label: 'P25 Growth', value: result.inputs.p25Growth != null ? `${(result.inputs.p25Growth * 100).toFixed(1)}%` : 'derived' },
-                  { label: 'P75 Growth', value: result.inputs.p75Growth != null ? `${(result.inputs.p75Growth * 100).toFixed(1)}%` : 'derived' },
-                  { label: 'P25 Margin', value: result.inputs.p25Margin != null ? `${(result.inputs.p25Margin * 100).toFixed(1)}%` : 'derived' },
-                  { label: 'P75 Margin', value: result.inputs.p75Margin != null ? `${(result.inputs.p75Margin * 100).toFixed(1)}%` : 'derived' },
-                  { label: 'Sens. WACC', value: result.inputs.sensWacc.toFixed(3) },
-                  { label: 'Sens. CAGR', value: result.inputs.sensCagr.toFixed(3) },
-                  { label: 'Sens. Margin', value: result.inputs.sensMarg.toFixed(3) },
-                  { label: 'Liquidation floor', value: result.inputs.liquidationPerShare != null ? fmtPrice(result.inputs.liquidationPerShare, currency) : 'none' },
-                ].map(({ label, value }) => (
-                  <div key={label} className="rounded-lg border border-slate-100 bg-slate-50 px-2 py-1.5">
-                    <p className="text-[9px] text-slate-400">{label}</p>
-                    <p className="font-[650] text-slate-600 mt-0.5">{value}</p>
+              {/* CVaR + regime row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* CVaR */}
+                <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-[10px] font-[650] text-slate-500">Tail risk quality</p>
+                    <InfoTooltip
+                      text={`CVaR ratio: ${result.cvarRatio.toFixed(2)}. Expected value in worst 10% of paths divided by the overall mean. 1.0 = no tail drag. Below 0.50 = severe left tail. A ${(result.cvarDiscount * 100).toFixed(0)}% discount has been applied to the reported P50.`}
+                      side="top"
+                    />
                   </div>
-                ))}
-              </div>
-            </details>
+                  <CvarDots ratio={result.cvarRatio} />
+                  <p className="text-[9px] text-slate-400 tabular-nums">
+                    CVaR ratio {result.cvarRatio.toFixed(2)}
+                    {result.cvarDiscount > 0.001 && (
+                      <span className="text-orange-500 ml-1">· −{(result.cvarDiscount*100).toFixed(0)}% applied to P50</span>
+                    )}
+                  </p>
+                </div>
 
-            {/* Disclaimer */}
-            <p className="text-[9px] text-slate-400 leading-relaxed border-t border-slate-100 pt-3">
-              Beta model — for exploratory analysis only. P50 is reported as this method&apos;s fair value contribution when weighted into the main blend. Real option values are not added to the point estimate; they are informational. Not financial advice.
-            </p>
-          </>
-        )}
-      </div>
+                {/* Regime bar */}
+                <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+                  <RegimeBar probs={result.regimeProbabilities} />
+                </div>
+              </div>
+
+              {/* Real options */}
+              {(result.abandonmentOptionValue > 0.001 || result.expansionOptionValue > 0.001) && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
+                    <p className="text-[9px] font-[650] text-slate-400 uppercase tracking-wide mb-1">
+                      Abandonment option
+                      <InfoTooltip text="Value of the right to liquidate the firm at cash value if cumulative FCF turns deeply negative. Computed via Longstaff-Schwartz backward induction." side="top" />
+                    </p>
+                    <p className="text-[14px] font-[750] tabular-nums text-slate-700">
+                      {result.abandonmentOptionValue > 0.001
+                        ? '+' + fmtPrice(result.abandonmentOptionValue, currency)
+                        : '—'}
+                    </p>
+                    <p className="text-[9px] text-slate-400 mt-0.5">per share</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
+                    <p className="text-[9px] font-[650] text-slate-400 uppercase tracking-wide mb-1">
+                      Expansion option
+                      <InfoTooltip text="Value of deploying additional capex for 2 extra FCF years when year-3+ CAGR beats the historical P75. Captures compounder optionality." side="top" />
+                    </p>
+                    <p className="text-[14px] font-[750] tabular-nums text-slate-700">
+                      {result.expansionOptionValue > 0.001
+                        ? '+' + fmtPrice(result.expansionOptionValue, currency)
+                        : '—'}
+                    </p>
+                    <p className="text-[9px] text-slate-400 mt-0.5">per share</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Calibration details */}
+              <details className="group">
+                <summary className="flex items-center gap-1.5 cursor-pointer list-none text-[10px] font-[650] text-slate-400 hover:text-slate-600 transition-colors select-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-400 rounded">
+                  <span className="text-[9px] group-open:rotate-90 transition-transform inline-block">▶</span>
+                  Calibration details
+                </summary>
+                <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { label: 'Bear growth',     value: result.inputs.p25Growth != null ? `${(result.inputs.p25Growth*100).toFixed(1)}%` : 'derived' },
+                    { label: 'Bull growth',     value: result.inputs.p75Growth != null ? `${(result.inputs.p75Growth*100).toFixed(1)}%` : 'derived' },
+                    { label: 'Bear margin',     value: result.inputs.p25Margin != null ? `${(result.inputs.p25Margin*100).toFixed(1)}%` : 'derived' },
+                    { label: 'Bull margin',     value: result.inputs.p75Margin != null ? `${(result.inputs.p75Margin*100).toFixed(1)}%` : 'derived' },
+                    { label: 'G/M correlation', value: result.inputs.growthMarginCorr.toFixed(2) },
+                    { label: 'Analyst Y1 rev',  value: result.inputs.analystRevY1 != null ? fmtPrice(result.inputs.analystRevY1, currency) : 'none' },
+                    { label: 'Liq. floor',      value: result.inputs.liquidationPerShare != null ? fmtPrice(result.inputs.liquidationPerShare, currency) : 'none' },
+                    { label: 'Std deviation',   value: fmtPrice(result.stdDev, currency) },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="rounded-lg border border-slate-100 bg-white px-2.5 py-1.5">
+                      <p className="text-[9px] text-slate-400">{label}</p>
+                      <p className="text-[11px] font-[650] text-slate-600 mt-0.5 tabular-nums">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              </details>
+
+              <p className="text-[9px] text-slate-400 leading-relaxed border-t border-slate-100 pt-3">
+                Beta model — exploratory analysis only. P50 is CVaR-adjusted and shown as this method&apos;s fair value estimate. Real option values are informational; they are not added to the point estimate. Not financial advice.
+              </p>
+            </>
+          )}
+        </div>
+      )}
     </div>
   )
 }
