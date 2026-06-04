@@ -67,10 +67,13 @@ export type LogoSize = "sm" | "md" | "lg";
 // markH  = rendered height of SVG mark (chosen so bars ≈ wordH)
 // wordH  = rendered height of wordmark PNG
 // translateY = px to shift wordmark down so cap aligns with bars center
+// ty = bars_center - stem_center_within_word
+// Measured from actual pixel rows: stem rows 15-50 in the 55px canvas,
+// bars rows 53.9-138.95 in the 160px SVG viewBox.
 const SIZES: Record<LogoSize, { markH: number; wordH: number; ty: number; gap: number }> = {
-  sm: { markH: 26, wordH: 19, ty: 6,  gap: 6 },
-  md: { markH: 38, wordH: 27, ty: 9,  gap: 8 },
-  lg: { markH: 47, wordH: 34, ty: 11, gap: 10 },
+  sm: { markH: 26, wordH: 19, ty: 4,  gap: 6 },
+  md: { markH: 38, wordH: 27, ty: 7,  gap: 8 },
+  lg: { markH: 47, wordH: 34, ty: 8,  gap: 10 },
 };
 
 // Wordmark PNG (insic-wordmark-cropped.png): 158×55 → aspect 2.873
@@ -134,7 +137,6 @@ export function InsicLogoLockup({
           display: "block",
           flexShrink: 0,
           transform: `translateY(${ty}px)`,
-          ...(dark ? { filter: "brightness(0) invert(1)" } : {}),
         }}
       />
     </span>
