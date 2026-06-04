@@ -6,9 +6,8 @@ import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 
 const EASE = [0.16, 1, 0.3, 1] as const
-const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const
 
-// ── Animated path that draws itself ─────────────────────────────────────────
+// ── Animated SVG path that draws itself ─────────────────────────────────────
 function AnimatedPath({ d, stroke, strokeWidth, delay = 0, animate: shouldAnimate = true }: {
   d: string; stroke: string; strokeWidth: number; delay?: number; animate?: boolean
 }) {
@@ -36,187 +35,114 @@ function AnimatedPath({ d, stroke, strokeWidth, delay = 0, animate: shouldAnimat
       style={{
         strokeDasharray: len,
         strokeDashoffset: drawn ? 0 : len,
-        transition: shouldAnimate ? `stroke-dashoffset 1.2s cubic-bezier(0.16,1,0.3,1) ${delay * 1000 + 600}ms` : 'none',
+        transition: shouldAnimate ? `stroke-dashoffset 1.4s cubic-bezier(0.16,1,0.3,1) ${delay * 1000 + 600}ms` : 'none',
       }}
     />
   )
 }
 
-// ── Click ripple ─────────────────────────────────────────────────────────────
-function ClickRipple({ x, y, visible }: { x: number; y: number; visible: boolean }) {
+// ── Tab indicator — cycles through tabs on an interval ───────────────────────
+const TABS = ['Overview', 'Valuation', 'Financials', 'Risks', 'News'] as const
+
+function LiveTabIndicator({ activeTab }: { activeTab: number }) {
   return (
-    <motion.div
-      className="pointer-events-none absolute rounded-full border border-[#5F790B]"
-      style={{ left: x - 12, top: y - 12, width: 24, height: 24, zIndex: 20 }}
-      initial={{ scale: 0, opacity: 0.8 }}
-      animate={visible ? { scale: 2.2, opacity: 0 } : { scale: 0, opacity: 0 }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-    />
-  )
-}
-
-// ── SVG cursor ───────────────────────────────────────────────────────────────
-function DemoCursor({ x, y, clicking }: { x: number; y: number; clicking: boolean }) {
-  return (
-    <motion.div
-      className="pointer-events-none absolute z-30"
-      style={{
-        left: x,
-        top: y,
-        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.28))',
-        transition: 'left 0.55s cubic-bezier(0.16,1,0.3,1), top 0.55s cubic-bezier(0.16,1,0.3,1)',
-      }}
-      animate={{ scale: clicking ? 0.85 : 1 }}
-      transition={{ duration: 0.12 }}
-    >
-      <svg width="18" height="21" viewBox="0 0 18 21" fill="none">
-        <path d="M0 0L0 16.5L4.5 12.5L8 19.5L10 18.5L6.5 11.5L12 11.5L0 0Z" fill="white" />
-        <path d="M0 0L0 16.5L4.5 12.5L8 19.5L10 18.5L6.5 11.5L12 11.5L0 0Z" stroke="#0A1424" strokeWidth="1.2" strokeLinejoin="round" />
-      </svg>
-    </motion.div>
-  )
-}
-
-// ── Demo orchestration ────────────────────────────────────────────────────────
-// Positions are relative to the card's top-left, in px (approximate layout coords)
-// Card is ~320px wide. Key targets:
-//   Search bar: x≈140, y≈14 (in header zone)
-//   "Valuation" tab: x≈110, y≈50
-//   "Overview" tab: x≈32, y≈50
-//   Verdict card: x≈180, y≈110
-
-type DemoStep =
-  | { kind: 'move'; x: number; y: number; duration: number }
-  | { kind: 'click'; duration: number }
-  | { kind: 'pause'; duration: number }
-  | { kind: 'type'; text: string; duration: number }
-
-const DEMO_SEQUENCE: DemoStep[] = [
-  { kind: 'move',  x: -20, y: -20, duration: 0 },      // start off-card
-  { kind: 'pause', duration: 600 },
-  { kind: 'move',  x: 190, y: 12,  duration: 600 },     // move to header ticker area
-  { kind: 'pause', duration: 300 },
-  { kind: 'click', duration: 200 },
-  { kind: 'pause', duration: 400 },
-  { kind: 'move',  x: 108, y: 48,  duration: 500 },     // move to Valuation tab
-  { kind: 'pause', duration: 300 },
-  { kind: 'click', duration: 200 },
-  { kind: 'pause', duration: 600 },
-  { kind: 'move',  x: 200, y: 105, duration: 700 },     // hover over verdict card
-  { kind: 'pause', duration: 800 },
-  { kind: 'move',  x: 240, y: 200, duration: 600 },     // move to fair value area
-  { kind: 'pause', duration: 500 },
-  { kind: 'move',  x: 30,  y: 48,  duration: 700 },     // move to Overview tab
-  { kind: 'pause', duration: 300 },
-  { kind: 'click', duration: 200 },
-  { kind: 'pause', duration: 500 },
-  { kind: 'move',  x: -20, y: -20, duration: 400 },     // exit
-  { kind: 'pause', duration: 1200 },
-]
-
-function useDemoOrchestration(active: boolean, reduced: boolean | null) {
-  const [cx, setCx] = useState(-20)
-  const [cy, setCy] = useState(-20)
-  const [clicking, setClicking] = useState(false)
-  const [clickPos, setClickPos] = useState({ x: 0, y: 0 })
-  const [rippleKey, setRippleKey] = useState(0)
-  const [activeTab, setActiveTab] = useState(0)
-  const [hoverTab, setHoverTab] = useState<number | null>(null)
-  const [rippleVisible, setRippleVisible] = useState(false)
-
-  // Derive hoverTab from cursor position
-  useEffect(() => {
-    if (cy > 35 && cy < 65) {
-      if (cx > 0 && cx < 60) setHoverTab(0)
-      else if (cx >= 60 && cx < 150) setHoverTab(1)
-      else setHoverTab(null)
-    } else {
-      setHoverTab(null)
-    }
-  }, [cx, cy])
-
-  useEffect(() => {
-    if (!active || reduced) return
-
-    let cancelled = false
-    const timers: ReturnType<typeof setTimeout>[] = []
-
-    function scheduleStep(steps: DemoStep[], currentX: number, currentY: number, offset: number): void {
-      if (steps.length === 0) {
-        const t = setTimeout(() => {
-          if (!cancelled) scheduleStep(DEMO_SEQUENCE, -20, -20, 0)
-        }, offset)
-        timers.push(t)
-        return
-      }
-      const [step, ...rest] = steps
-      if (step.kind === 'move') {
-        const t = setTimeout(() => {
-          if (cancelled) return
-          setCx(step.x); setCy(step.y)
-          scheduleStep(rest, step.x, step.y, step.duration)
-        }, offset)
-        timers.push(t)
-      } else if (step.kind === 'click') {
-        const t = setTimeout(() => {
-          if (cancelled) return
-          setClicking(true)
-          setClickPos({ x: currentX, y: currentY })
-          setRippleVisible(true)
-          setRippleKey(k => k + 1)
-          if (currentX > 80 && currentX < 150 && currentY < 65) setActiveTab(1)
-          if (currentX < 60 && currentY < 65) setActiveTab(0)
-          setTimeout(() => { if (!cancelled) setClicking(false) }, 150)
-          setTimeout(() => { if (!cancelled) setRippleVisible(false) }, 500)
-          scheduleStep(rest, currentX, currentY, step.duration)
-        }, offset)
-        timers.push(t)
-      } else if (step.kind === 'pause') {
-        scheduleStep(rest, currentX, currentY, offset + step.duration)
-      }
-    }
-
-    scheduleStep(DEMO_SEQUENCE, -20, -20, 0)
-    return () => { cancelled = true; timers.forEach(clearTimeout) }
-  }, [active, reduced])
-
-  return { cx, cy, clicking, clickPos, rippleKey, rippleVisible, activeTab, hoverTab }
-}
-
-// ── Tab bar that syncs with demo cursor ──────────────────────────────────────
-function LiveTabIndicator({ activeTab, hoverTab }: { activeTab: number; hoverTab: number | null }) {
-  const tabs = ['Overview', 'Valuation', 'Financials', 'Risks', 'News']
-
-  return (
-    <div className="flex border-b border-[#E3E6E0] px-4 gap-4">
-      {tabs.map((t, i) => (
-        <span
-          key={t}
-          className="text-[11px] py-2.5 font-medium border-b-2 -mb-px transition-all duration-300"
-          style={{
-            borderColor: i === activeTab ? '#5F790B' : 'transparent',
-            color: i === activeTab ? '#0A1424' : i === hoverTab ? '#536174' : '#8A96A8',
-            background: i === hoverTab && i !== activeTab ? 'rgba(95,121,11,0.06)' : 'transparent',
-            borderRadius: i === hoverTab ? '4px 4px 0 0' : undefined,
-          }}
-        >
-          {t}
-        </span>
-      ))}
+    <div className="flex border-b border-[#E3E6E0] px-4 gap-0">
+      {TABS.map((t, i) => {
+        const active = i === activeTab
+        return (
+          <span
+            key={t}
+            className="relative text-[11px] py-2.5 px-3 font-medium transition-colors duration-300"
+            style={{ color: active ? '#0A1424' : '#8A96A8' }}
+          >
+            {t}
+            <span
+              className="absolute bottom-0 left-0 right-0 h-[2px] rounded-t transition-all duration-300"
+              style={{
+                background: '#5F790B',
+                opacity: active ? 1 : 0,
+                transform: active ? 'scaleX(1)' : 'scaleX(0)',
+                transformOrigin: 'left',
+              }}
+            />
+          </span>
+        )
+      })}
     </div>
   )
 }
 
-// ── Product mock card with internal "demo" animations ───────────────────────
+// ── Browser chrome frame ──────────────────────────────────────────────────────
+function BrowserChrome({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="w-full rounded-[16px] overflow-hidden"
+      style={{
+        boxShadow: '0 24px 64px rgba(6,16,31,0.16), 0 4px 16px rgba(6,16,31,0.08), 0 1px 0 rgba(255,255,255,0.9) inset',
+        border: '1px solid rgba(0,0,0,0.1)',
+      }}
+    >
+      {/* Title bar */}
+      <div
+        className="flex items-center gap-2 px-4"
+        style={{ height: '36px', background: '#F2F1ED', borderBottom: '1px solid #E0DED9' }}
+      >
+        {/* Traffic lights */}
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-full" style={{ background: '#FF5F56', border: '0.5px solid rgba(0,0,0,0.12)' }} />
+          <div className="w-3 h-3 rounded-full" style={{ background: '#FFBD2E', border: '0.5px solid rgba(0,0,0,0.12)' }} />
+          <div className="w-3 h-3 rounded-full" style={{ background: '#28C840', border: '0.5px solid rgba(0,0,0,0.12)' }} />
+        </div>
+        {/* Address bar */}
+        <div
+          className="flex-1 mx-3 rounded-md flex items-center px-3 gap-1.5"
+          style={{ height: '22px', background: '#E8E7E3', border: '0.5px solid rgba(0,0,0,0.1)' }}
+        >
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#8A96A8" strokeWidth={2.5} className="shrink-0">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+          <span className="text-[10px] text-[#8A96A8] font-medium tracking-tight">insic.app/stock/AAPL</span>
+        </div>
+      </div>
+      {/* Content */}
+      <div style={{ background: '#F8F7F2' }}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// ── Product mock card ─────────────────────────────────────────────────────────
 function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolean | null }) {
+  const [activeTab, setActiveTab] = useState(0)
   const [verdictVisible, setVerdictVisible] = useState(false)
   const [metricsVisible, setMetricsVisible] = useState(false)
   const [chartVisible, setChartVisible] = useState(false)
   const [cagrVisible, setCagrVisible] = useState(false)
   const [barDrawn, setBarDrawn] = useState(false)
 
-  const { cx, cy, clicking, clickPos, rippleKey, rippleVisible, activeTab, hoverTab } =
-    useDemoOrchestration(inView, reduced)
+  // Tab cycling: pause on Valuation (index 1) for longer
+  useEffect(() => {
+    if (!inView || reduced) return
+    const sequence = [
+      { tab: 0, wait: 2200 },
+      { tab: 1, wait: 4000 },
+      { tab: 2, wait: 2200 },
+      { tab: 0, wait: 2200 },
+    ]
+    let i = 0
+    let timer: ReturnType<typeof setTimeout>
+
+    function advance() {
+      const { tab, wait } = sequence[i % sequence.length]
+      setActiveTab(tab)
+      i++
+      timer = setTimeout(advance, wait)
+    }
+
+    timer = setTimeout(advance, 1800)
+    return () => clearTimeout(timer)
+  }, [inView, reduced])
 
   useEffect(() => {
     if (!inView || reduced) {
@@ -224,208 +150,253 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
       setChartVisible(true); setCagrVisible(true); setBarDrawn(true)
       return
     }
-    const t1 = setTimeout(() => setVerdictVisible(true), 400)
-    const t2 = setTimeout(() => setMetricsVisible(true), 900)
-    const t3 = setTimeout(() => setChartVisible(true), 1300)
-    const t4 = setTimeout(() => setCagrVisible(true), 1700)
-    const t5 = setTimeout(() => setBarDrawn(true), 2000)
+    const t1 = setTimeout(() => setVerdictVisible(true), 300)
+    const t2 = setTimeout(() => setMetricsVisible(true), 700)
+    const t3 = setTimeout(() => setChartVisible(true), 1100)
+    const t4 = setTimeout(() => setCagrVisible(true), 1500)
+    const t5 = setTimeout(() => setBarDrawn(true), 1800)
     return () => [t1, t2, t3, t4, t5].forEach(clearTimeout)
   }, [inView, reduced])
 
   return (
-    <div
-      className="relative w-full rounded-[20px] border border-[#E3E6E0] bg-white"
-      style={{ boxShadow: '0 16px 48px rgba(6,16,31,0.12), 0 4px 16px rgba(6,16,31,0.06)', overflow: 'visible' }}
-    >
-      {/* Cursor overlay — rendered outside overflow:hidden so it can sit above the card */}
-      {!reduced && inView && (
-        <>
-          <DemoCursor x={cx} y={cy} clicking={clicking} />
-          <ClickRipple key={rippleKey} x={clickPos.x} y={clickPos.y} visible={rippleVisible} />
-        </>
-      )}
-
-      {/* Inner clip — needed for rounded corners on content */}
-      <div className="rounded-[20px] overflow-hidden">
+    <BrowserChrome>
+      {/* App top bar */}
+      <div
+        className="flex items-center justify-between px-4"
+        style={{ height: '44px', borderBottom: '1px solid #E3E6E0', background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(12px)' }}
+      >
+        {/* Logo */}
+        <span className="font-bold text-[13px] tracking-tight" style={{ color: '#0A1424', letterSpacing: '-0.03em' }}>insic</span>
+        {/* Search mock */}
+        <div className="flex items-center gap-1.5 rounded-[8px] px-2.5 py-1.5" style={{ background: '#F1EFE9', border: '1px solid #E3E6E0' }}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#8A96A8" strokeWidth={2.5}>
+            <circle cx="11" cy="11" r="8" /><path strokeLinecap="round" d="m21 21-4.35-4.35" />
+          </svg>
+          <span className="text-[10px] text-[#8A96A8]">Search tickers…</span>
+        </div>
+        {/* Avatar */}
+        <div className="w-6 h-6 rounded-full bg-[#5F790B] flex items-center justify-center">
+          <span className="text-[8px] font-bold text-white">MH</span>
+        </div>
+      </div>
 
       {/* Stock header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#E3E6E0] bg-[#FBFAF7]">
+      <div className="flex items-center justify-between px-4 py-3" style={{ background: '#FBFAF7', borderBottom: '1px solid #E3E6E0' }}>
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-[#F0F0F0] border border-[#E3E6E0] flex items-center justify-center text-[9px] font-bold text-[#0A1424]">A</div>
-          <span className="text-[12px] font-bold text-[#0A1424]">AAPL</span>
-          <span className="text-[11px] text-[#536174]">Apple Inc.</span>
+          <div className="w-7 h-7 rounded-full bg-[#F0F0F0] border border-[#E3E6E0] flex items-center justify-center text-[10px] font-bold text-[#0A1424]">A</div>
+          <div>
+            <span className="text-[13px] font-bold text-[#0A1424] mr-1.5">AAPL</span>
+            <span className="text-[11px] text-[#8A96A8]">Apple Inc.</span>
+          </div>
         </div>
         <div className="flex items-baseline gap-1.5">
-          <span className="text-[13px] font-bold tabular-nums text-[#0A1424]">$183.42</span>
+          <span className="text-[14px] font-bold tabular-nums text-[#0A1424]">$183.42</span>
           <motion.span
             className="text-[11px] font-semibold tabular-nums"
             style={{ color: '#11875D' }}
-            initial={{ opacity: 0 }}
-            animate={inView ? { opacity: 1 } : {}}
-            transition={{ delay: 0.3, duration: 0.4 }}
+            initial={{ opacity: 0, x: 4 }}
+            animate={inView ? { opacity: 1, x: 0 } : {}}
+            transition={{ delay: 0.2, duration: 0.4, ease: EASE }}
           >
             +1.25%
           </motion.span>
         </div>
       </div>
 
-      {/* Animated tabs */}
-      <LiveTabIndicator activeTab={activeTab} hoverTab={hoverTab} />
-
-      {/* Verdict — slides in */}
-      <motion.div
-        className="mx-4 mt-3 mb-2 rounded-[12px] border border-[#BFD2A1] bg-[#F6FAEA] px-4 py-3"
-        initial={{ opacity: 0, y: 8, scale: 0.97 }}
-        animate={verdictVisible ? { opacity: 1, y: 0, scale: 1 } : {}}
-        transition={{ duration: 0.45, ease: EASE }}
-      >
-        <p className="text-[9px] font-bold uppercase tracking-[0.08em] text-[#5F790B] mb-1">INSIC VERDICT</p>
-        <p className="text-[14px] font-bold text-[#0A1424]">
-          AAPL looks{' '}
-          <motion.span
-            style={{ color: '#5F790B' }}
-            initial={{ opacity: 0 }}
-            animate={verdictVisible ? { opacity: 1 } : {}}
-            transition={{ delay: 0.25, duration: 0.4 }}
-          >
-            Undervalued
-          </motion.span>
-        </p>
-        <div className="flex items-center gap-2 mt-1.5">
-          <motion.span
-            className="text-[10px] font-semibold text-[#11875D] bg-[#E8F7EF] border border-[#A7D7C0] rounded-full px-2 py-0.5"
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={verdictVisible ? { opacity: 1, scale: 1 } : {}}
-            transition={{ delay: 0.35, duration: 0.35, ease: EASE }}
-          >
-            High confidence
-          </motion.span>
-          <motion.span
-            className="text-[10px] text-[#536174]"
-            initial={{ opacity: 0 }}
-            animate={verdictVisible ? { opacity: 1 } : {}}
-            transition={{ delay: 0.45, duration: 0.3 }}
-          >
-            4 of 4 models
-          </motion.span>
-        </div>
-      </motion.div>
-
-      {/* Metrics — counter animation */}
-      <div className="grid grid-cols-3 gap-0 mx-4 mb-3">
-        {[
-          { label: 'Fair Value', val: '$226.80', cls: '#5F790B', delay: 0 },
-          { label: 'Current Price', val: '$183.42', cls: '#0A1424', delay: 0.08 },
-          { label: 'Upside', val: '+23.6%', cls: '#11875D', delay: 0.16 },
-        ].map(m => (
-          <motion.div
-            key={m.label}
-            className="text-center"
-            initial={{ opacity: 0, y: 6 }}
-            animate={metricsVisible ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: m.delay, duration: 0.4, ease: EASE }}
-          >
-            <p className="text-[9px] text-[#8A96A8] mb-0.5">{m.label}</p>
-            <p className="text-[13px] font-bold tabular-nums" style={{ color: m.cls }}>{m.val}</p>
-          </motion.div>
-        ))}
+      {/* Tabs */}
+      <div style={{ background: 'white' }}>
+        <LiveTabIndicator activeTab={activeTab} />
       </div>
 
-      {/* Scenario range bar */}
-      <div className="mx-4 mb-3">
-        <p className="text-[9px] text-[#8A96A8] mb-1.5">Scenario range</p>
-        <div className="relative h-1.5 rounded-full bg-gradient-to-r from-[#F0B8B8] via-[#E3E6E0] to-[#BFD2A1]">
-          <motion.div
-            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-[#5F790B] shadow-sm"
-            style={{ left: '42%' }}
-            initial={{ scale: 0, opacity: 0 }}
-            animate={metricsVisible ? { scale: 1, opacity: 1 } : {}}
-            transition={{ delay: 0.3, duration: 0.4, type: 'spring', stiffness: 250, damping: 18 }}
-          />
+      {/* Content area */}
+      <div style={{ background: 'white', padding: '0 0 4px' }}>
+
+        {/* Verdict card */}
+        <motion.div
+          className="mx-4 mt-3 mb-2 rounded-[12px] px-4 py-3"
+          style={{ border: '1px solid #BFD2A1', background: 'linear-gradient(135deg, #F6FAEA 0%, #EEF4DD 100%)' }}
+          initial={{ opacity: 0, y: 12, scale: 0.96 }}
+          animate={verdictVisible ? { opacity: 1, y: 0, scale: 1 } : {}}
+          transition={{ duration: 0.5, ease: EASE }}
+        >
+          <p className="text-[8.5px] font-bold uppercase tracking-[0.1em] text-[#5F790B] mb-1.5">INSIC VERDICT</p>
+          <p className="text-[15px] font-bold text-[#0A1424] leading-snug">
+            AAPL looks{' '}
+            <motion.span
+              style={{ color: '#5F790B' }}
+              initial={{ opacity: 0, filter: 'blur(4px)' }}
+              animate={verdictVisible ? { opacity: 1, filter: 'blur(0px)' } : {}}
+              transition={{ delay: 0.2, duration: 0.45, ease: EASE }}
+            >
+              Undervalued
+            </motion.span>
+          </p>
+          <div className="flex items-center gap-2 mt-2">
+            <motion.span
+              className="text-[9.5px] font-semibold rounded-full px-2 py-0.5"
+              style={{ color: '#11875D', background: '#E8F7EF', border: '1px solid #A7D7C0' }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={verdictVisible ? { opacity: 1, scale: 1 } : {}}
+              transition={{ delay: 0.32, duration: 0.38, ease: EASE }}
+            >
+              High confidence
+            </motion.span>
+            <motion.span
+              className="text-[9.5px] text-[#8A96A8]"
+              initial={{ opacity: 0 }}
+              animate={verdictVisible ? { opacity: 1 } : {}}
+              transition={{ delay: 0.44, duration: 0.35 }}
+            >
+              4 of 4 models
+            </motion.span>
+          </div>
+        </motion.div>
+
+        {/* Metrics row */}
+        <div className="grid grid-cols-3 mx-4 mb-3 rounded-[10px] overflow-hidden" style={{ border: '1px solid #E8E6E0' }}>
+          {[
+            { label: 'Fair Value', val: '$226.80', color: '#5F790B', bg: '#F6FAEA', delay: 0 },
+            { label: 'Current Price', val: '$183.42', color: '#0A1424', bg: '#FBFAF7', delay: 0.07 },
+            { label: 'Upside', val: '+23.6%', color: '#11875D', bg: '#F6FAEA', delay: 0.14 },
+          ].map((m, i) => (
+            <motion.div
+              key={m.label}
+              className="text-center py-2.5"
+              style={{ background: m.bg, borderRight: i < 2 ? '1px solid #E8E6E0' : 'none' }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={metricsVisible ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: m.delay, duration: 0.4, ease: EASE }}
+            >
+              <p className="text-[8px] text-[#8A96A8] uppercase tracking-wider mb-0.5">{m.label}</p>
+              <p className="text-[13px] font-bold tabular-nums" style={{ color: m.color }}>{m.val}</p>
+            </motion.div>
+          ))}
         </div>
-        <div className="flex justify-between mt-1">
-          <span className="text-[9px] text-[#8A96A8]">$150.10 Bear</span>
-          <span className="text-[9px] font-semibold text-[#5F790B]">$226.60 Base</span>
-          <span className="text-[9px] text-[#8A96A8]">$305.40 Bull</span>
-        </div>
+
+        {/* Scenario range */}
+        <motion.div
+          className="mx-4 mb-3"
+          initial={{ opacity: 0 }}
+          animate={metricsVisible ? { opacity: 1 } : {}}
+          transition={{ delay: 0.25, duration: 0.4 }}
+        >
+          <p className="text-[8.5px] text-[#8A96A8] mb-1.5">Scenario range</p>
+          <div className="relative h-2 rounded-full overflow-hidden" style={{ background: 'linear-gradient(to right, #F0B8B8 0%, #E3E6E0 42%, #BFD2A1 100%)' }}>
+            <motion.div
+              className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-sm"
+              style={{ left: '42%', border: '2px solid #5F790B' }}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={metricsVisible ? { scale: 1, opacity: 1 } : {}}
+              transition={{ delay: 0.4, duration: 0.5, type: 'spring', stiffness: 300, damping: 20 }}
+            />
+          </div>
+          <div className="flex justify-between mt-1">
+            <span className="text-[8px] text-[#8A96A8]">$150.10 Bear</span>
+            <span className="text-[8px] font-semibold text-[#5F790B]">$226.60 Base</span>
+            <span className="text-[8px] text-[#8A96A8]">$305.40 Bull</span>
+          </div>
+        </motion.div>
+
+        {/* Price chart */}
+        <motion.div
+          className="mx-4 mb-3"
+          initial={{ opacity: 0, y: 6 }}
+          animate={chartVisible ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.4, ease: EASE }}
+        >
+          <div className="flex items-center gap-4 mb-2">
+            {[['Price', '#0A1424'], ['Fair Value', '#5F790B'], ['Analyst Target', '#2563EB']].map(([l, c]) => (
+              <span key={l} className="flex items-center gap-1.5 text-[8.5px] text-[#8A96A8]">
+                <span style={{ display: 'inline-block', width: 14, height: 2, background: c, borderRadius: 1 }} />
+                {l}
+              </span>
+            ))}
+          </div>
+          <div className="rounded-[8px] overflow-hidden" style={{ background: '#FBFAF7', border: '1px solid #E8E6E0', padding: '8px 8px 4px' }}>
+            <svg viewBox="0 0 260 64" className="w-full" style={{ height: 52, display: 'block' }}>
+              {/* Area fill under price line */}
+              <defs>
+                <linearGradient id="priceGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#0A1424" stopOpacity="0.08" />
+                  <stop offset="100%" stopColor="#0A1424" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M0,52 C20,49 40,45 60,42 C80,39 90,35 110,29 C130,23 150,25 170,21 C190,17 210,13 230,11 C245,9 255,7 260,7 L260,64 L0,64 Z"
+                fill="url(#priceGrad)"
+                opacity={chartVisible ? 1 : 0}
+                style={{ transition: 'opacity 0.6s ease 0.8s' }}
+              />
+              <AnimatedPath
+                d="M0,52 C20,49 40,45 60,42 C80,39 90,35 110,29 C130,23 150,25 170,21 C190,17 210,13 230,11 C245,9 255,7 260,7"
+                stroke="#0A1424"
+                strokeWidth={1.5}
+                animate={chartVisible && !reduced}
+              />
+              <AnimatedPath
+                d="M0,40 L260,26"
+                stroke="#5F790B"
+                strokeWidth={1.5}
+                delay={0.3}
+                animate={chartVisible && !reduced}
+              />
+              <path d="M0,34 L260,34" stroke="#2563EB" strokeWidth={1} fill="none" strokeDasharray="4 3"
+                opacity={chartVisible ? 0.7 : 0}
+                style={{ transition: 'opacity 0.4s ease 1.8s' }}
+              />
+              {['Jul','Oct','2025','Apr','Jul'].map((t, i) => (
+                <text key={t} x={[2,65,120,175,230][i]} y="63" fontSize="6.5" fill="#B0B8C4">{t}</text>
+              ))}
+            </svg>
+          </div>
+        </motion.div>
+
+        {/* CAGR card */}
+        <motion.div
+          className="mx-4 mb-4 rounded-[10px] px-3 py-2.5"
+          style={{ border: '1px solid #E3E6E0', background: '#FBFAF7' }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={cagrVisible ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, ease: EASE }}
+        >
+          <p className="text-[8.5px] text-[#8A96A8] mb-1.5">Market-implied 5Y revenue CAGR at today&apos;s price</p>
+          <div className="flex items-center justify-between">
+            <motion.span
+              className="text-[17px] font-bold tabular-nums text-[#0A1424]"
+              initial={{ opacity: 0 }}
+              animate={cagrVisible ? { opacity: 1 } : {}}
+              transition={{ delay: 0.15, duration: 0.5 }}
+            >
+              12.1%
+            </motion.span>
+            <motion.span
+              className="text-[9.5px] font-semibold rounded-full px-2.5 py-0.5"
+              style={{ background: '#FFF4DA', color: '#B56A00', border: '1px solid #F3D391' }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={cagrVisible ? { opacity: 1, scale: 1 } : {}}
+              transition={{ delay: 0.22, duration: 0.38, ease: EASE }}
+            >
+              Moderate
+            </motion.span>
+          </div>
+          <div className="relative mt-2 h-1 rounded-full overflow-hidden" style={{ background: '#E3E6E0' }}>
+            <motion.div
+              className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white"
+              style={{ border: '2px solid #5F790B' }}
+              initial={{ left: '5%', opacity: 0 }}
+              animate={barDrawn ? { left: '38%', opacity: 1 } : {}}
+              transition={{ delay: 0.1, duration: 0.9, ease: [0.34, 1, 0.64, 1] }}
+            />
+          </div>
+          <div className="flex justify-between mt-1">
+            {['Conservative\n<8%', 'Moderate\n8–15%', 'Aggressive\n15–25%', 'Very Aggressive\n>25%'].map(l => (
+              <span key={l} className="text-[7.5px] text-[#B0B8C4] text-center leading-tight" style={{ whiteSpace: 'pre-line' }}>{l}</span>
+            ))}
+          </div>
+        </motion.div>
+
       </div>
-
-      {/* Price chart — draws itself */}
-      <motion.div
-        className="mx-4 mb-3"
-        initial={{ opacity: 0 }}
-        animate={chartVisible ? { opacity: 1 } : {}}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="flex items-center gap-3 mb-1.5">
-          {[['Price', '#0A1424'], ['Fair Value (Base)', '#5F790B'], ['Analyst Target', '#2563EB']].map(([l, c]) => (
-            <span key={l} className="flex items-center gap-1 text-[9px] text-[#536174]">
-              <span style={{ display: 'inline-block', width: 12, height: 1.5, background: c }} />
-              {l}
-            </span>
-          ))}
-        </div>
-        <svg viewBox="0 0 260 70" className="w-full" style={{ height: 56 }}>
-          <AnimatedPath
-            d="M0,55 C20,52 40,48 60,45 C80,42 90,38 110,32 C130,26 150,28 170,24 C190,20 210,16 230,14 C245,12 255,10 260,10"
-            stroke="#0A1424"
-            strokeWidth={1.5}
-            animate={chartVisible && !reduced}
-          />
-          <AnimatedPath
-            d="M0,42 L260,28"
-            stroke="#5F790B"
-            strokeWidth={1.5}
-            delay={0.3}
-            animate={chartVisible && !reduced}
-          />
-          <path d="M0,36 L260,36" stroke="#2563EB" strokeWidth={1} fill="none" strokeDasharray="4 3" opacity={chartVisible ? 1 : 0} style={{ transition: 'opacity 0.4s ease 1.6s' }} />
-          {['Jul','Oct','2025','Apr','Jul'].map((t, i) => (
-            <text key={t} x={[2,65,120,175,230][i]} y="68" fontSize="7" fill="#8A96A8">{t}</text>
-          ))}
-        </svg>
-      </motion.div>
-
-      {/* Market implied CAGR */}
-      <motion.div
-        className="mx-4 mb-4 rounded-[10px] border border-[#E3E6E0] bg-[#FBFAF7] px-3 py-2.5"
-        initial={{ opacity: 0, y: 8 }}
-        animate={cagrVisible ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.45, ease: EASE }}
-      >
-        <p className="text-[9px] text-[#536174] mb-1">Market-implied 5Y revenue CAGR at today&apos;s price</p>
-        <div className="flex items-center justify-between">
-          <span className="text-[15px] font-bold tabular-nums text-[#0A1424]">12.1%</span>
-          <motion.span
-            className="text-[10px] font-semibold bg-[#FFF4DA] text-[#B56A00] border border-[#F3D391] rounded-full px-2 py-0.5"
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={cagrVisible ? { opacity: 1, scale: 1 } : {}}
-            transition={{ delay: 0.2, duration: 0.35, ease: EASE }}
-          >
-            Moderate
-          </motion.span>
-        </div>
-        <div className="relative mt-2 h-1 rounded-full bg-[#E3E6E0] overflow-hidden">
-          <motion.div
-            className="absolute left-0 top-0 h-full rounded-full bg-[#E3E6E0]"
-            style={{ width: '100%' }}
-          />
-          <motion.div
-            className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white border-2 border-[#5F790B]"
-            initial={{ left: '0%', opacity: 0 }}
-            animate={barDrawn ? { left: '38%', opacity: 1 } : {}}
-            transition={{ delay: 0.1, duration: 0.8, ease: [0.34, 1, 0.64, 1] }}
-          />
-        </div>
-        <div className="flex justify-between mt-1">
-          {['Conservative\n<8%', 'Moderate\n8–15%', 'Aggressive\n15–25%', 'Very Aggressive\n>25%'].map(l => (
-            <span key={l} className="text-[8px] text-[#8A96A8] text-center leading-tight" style={{ whiteSpace: 'pre-line' }}>{l}</span>
-          ))}
-        </div>
-      </motion.div>
-
-      </div>{/* end inner clip */}
-    </div>
+    </BrowserChrome>
   )
 }
 
@@ -542,7 +513,7 @@ function MarketTeaserSection({ reduced }: { reduced: boolean | null }) {
                   initial={reduced ? {} : { opacity: 0, x: -14 }}
                   whileInView={reduced ? {} : { opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: '-30px' }}
-                  transition={{ delay: i * 0.08, duration: 0.4, ease: EASE_OUT_EXPO }}
+                  transition={{ delay: i * 0.08, duration: 0.4, ease: EASE }}
                 >
                   <span className={`text-[13px] leading-snug ${type === 'hero' ? 'font-semibold text-[#0A1424]' : 'text-[#536174]'}`}>
                     {label}
