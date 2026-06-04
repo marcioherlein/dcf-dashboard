@@ -349,6 +349,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         changePct={changePct}
         currency={currency}
         ticker={ticker}
+        companyName={apiData.quote?.longName ?? apiData.quote?.shortName ?? ''}
         starRating={starRating}
       />
 

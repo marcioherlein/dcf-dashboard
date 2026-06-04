@@ -1,9 +1,13 @@
 'use client'
 
+import { useState } from 'react'
+import { Share2 } from 'lucide-react'
 import { fmtPrice } from '@/lib/formatters'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
+import { VERDICT_DISPLAY } from '@/lib/brand'
 import type { CockpitOutput } from '@/lib/valuation/cockpit'
 import type { StarRatingResult } from '@/lib/valuation/valueInvestingAnalysis'
+import ShareCardModal from '@/components/valuation/ShareCardModal'
 
 interface Props {
   output: CockpitOutput
@@ -11,15 +15,16 @@ interface Props {
   changePct: number | null
   currency: string
   ticker: string
+  companyName?: string
   starRating?: StarRatingResult | null
 }
 
-// Verdict → editorial adjective and color
-const VERDICT_WORD: Record<CockpitOutput['verdict'], { word: string; color: string }> = {
-  'Undervalued':         { word: 'Attractive',         color: 'text-emerald-600' },
-  'Fairly Valued':       { word: 'Fairly Priced',       color: 'text-[#2563EB]'  },
-  'Overvalued':          { word: 'Expensive',           color: 'text-red-600'    },
-  'Insufficient Data':   { word: 'Inconclusive',        color: 'text-slate-500'  },
+// Tailwind color classes derived from VERDICT_DISPLAY hex values
+const VERDICT_TAILWIND: Record<CockpitOutput['verdict'], string> = {
+  'Undervalued':       'text-emerald-600',
+  'Fairly Valued':     'text-[#2563EB]',
+  'Overvalued':        'text-red-600',
+  'Insufficient Data': 'text-slate-500',
 }
 
 const CONVICTION_LABEL: Record<string, string> = {
@@ -27,7 +32,6 @@ const CONVICTION_LABEL: Record<string, string> = {
   medium: 'Moderate confidence',
   low:    'Low confidence',
 }
-
 function ScenarioSlider({
   bear, base, bull, currentPrice, currency,
 }: {
@@ -111,13 +115,14 @@ function ScenarioSlider({
 }
 
 export default function VerdictHero({
-  output, currentPrice, changePct, currency, ticker, starRating,
+  output, currentPrice, changePct, currency, ticker, companyName = '', starRating,
 }: Props) {
-  const vw = VERDICT_WORD[output.verdict]
+  const [shareOpen, setShareOpen] = useState(false)
+  const vd = VERDICT_DISPLAY[output.verdict] ?? VERDICT_DISPLAY['Insufficient Data']
+  const verdictTailwind = VERDICT_TAILWIND[output.verdict]
   const conv = CONVICTION_LABEL[output.divergence.overallConfidence] ?? 'Moderate confidence'
   const validCount = output.methods.filter(m => m.fairValue != null && m.fairValue > 0).length
 
-  // Efficiency metric: cents paid per $1 of estimated value
   const efficiency = output.blendedFairValue != null && output.blendedFairValue > 0 && currentPrice > 0
     ? currentPrice / output.blendedFairValue
     : null
@@ -134,16 +139,24 @@ export default function VerdictHero({
         {/* ── Left: Verdict + metrics ── */}
         <div className="px-6 py-5 flex flex-col gap-4">
 
-          {/* Eyebrow */}
-          <div className="flex items-center gap-2">
+          {/* Eyebrow + Share button */}
+          <div className="flex items-center justify-between">
             <span className="text-[10px] font-[700] uppercase tracking-widest text-slate-400">Our Verdict</span>
+            <button
+              onClick={() => setShareOpen(true)}
+              aria-label="Share valuation card"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 text-[11px] font-[650] text-slate-500 hover:border-blue-300 hover:text-blue-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
+            >
+              <Share2 size={11} />
+              Share
+            </button>
           </div>
 
           {/* Headline */}
           <div>
             <h2 className="text-[2rem] sm:text-[2.5rem] font-[800] leading-[1.1] tracking-tight text-slate-900" style={{ fontFamily: 'Space Grotesk, system-ui, sans-serif', textWrap: 'balance' }}>
               <span>{ticker} looks </span>
-              <span className={vw.color}>{vw.word}</span>
+              <span className={verdictTailwind}>{vd.word}</span>
             </h2>
 
             {/* Conviction line */}
@@ -273,6 +286,16 @@ export default function VerdictHero({
         </div>
 
       </div>
+
+      <ShareCardModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        ticker={ticker}
+        companyName={companyName}
+        output={output}
+        currentPrice={currentPrice}
+        currency={currency}
+      />
     </div>
   )
 }
