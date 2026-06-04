@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { scoreLabel, scoreBadge } from '@/lib/data/etfScore'
 
@@ -19,15 +20,36 @@ interface Props {
 export function ETFExposureCard({ ticker }: Props) {
   const [data, setData] = useState<ETFHoldingResult[] | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!ticker) return
+    const controller = new AbortController()
     setLoading(true)
-    fetch(`/api/etf/stock-holdings?ticker=${encodeURIComponent(ticker)}`)
-      .then((r) => r.ok ? r.json() : [])
+    setError(null)
+
+    fetch(`/api/etf/stock-holdings?ticker=${encodeURIComponent(ticker)}`, { signal: controller.signal })
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(`${r.status}`)))
       .then((d: ETFHoldingResult[]) => { setData(d); setLoading(false) })
-      .catch(() => { setData([]); setLoading(false) })
+      .catch(e => {
+        if (e?.name === 'AbortError') return
+        setData([])
+        setError('Could not load ETF data')
+        setLoading(false)
+      })
+
+    return () => controller.abort()
   }, [ticker])
+
+  const retry = () => {
+    setLoading(true)
+    setError(null)
+    setData(null)
+    fetch(`/api/etf/stock-holdings?ticker=${encodeURIComponent(ticker)}`)
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(`${r.status}`)))
+      .then((d: ETFHoldingResult[]) => { setData(d); setLoading(false) })
+      .catch(() => { setData([]); setError('Could not load ETF data'); setLoading(false) })
+  }
 
   if (loading) {
     return (
@@ -49,9 +71,21 @@ export function ETFExposureCard({ ticker }: Props) {
         {data && data.length > 0 && (
           <span className="text-xs text-slate-400">Found in {data.length} ETF{data.length !== 1 ? 's' : ''} we track</span>
         )}
+        {error && (
+          <button
+            onClick={retry}
+            className="ml-auto flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-600 transition-colors"
+            aria-label="Retry loading ETF data"
+          >
+            <RefreshCw className="w-3 h-3" />
+            Retry
+          </button>
+        )}
       </div>
 
-      {!data || data.length === 0 ? (
+      {error ? (
+        <p className="text-sm text-slate-400 py-2">{error}</p>
+      ) : !data || data.length === 0 ? (
         <p className="text-sm text-slate-400 py-2">{ticker} not found in any ETF in our universe.</p>
       ) : (
         <div className="space-y-1.5">

@@ -158,13 +158,19 @@ function TinyLineChart({
   const chartData = data.filter(p => p.label !== 'curr')
 
   if (chartData.length < 2) return (
-    <div className="flex flex-col">
+    <div className="flex flex-col" role="img" aria-label={`${title}: no data`}>
       <p className="text-[10px] font-[600] text-slate-500 mb-2">{title}</p>
       <div className="flex items-center justify-center rounded-lg bg-slate-50 border border-slate-100" style={{ height: 120 }}>
         <p className="text-[10px] text-slate-300">No data</p>
       </div>
     </div>
   )
+
+  // Compute Y-axis width from longest formatted tick so values never clip
+  const allVals = chartData.map(p => p.value)
+  const [yMin, yMax] = [Math.min(...allVals), Math.max(...allVals)]
+  const longestTick = [yMin, yMax].map(v => yFormat(v)).reduce((a, b) => a.length >= b.length ? a : b, '')
+  const yWidth = Math.max(32, longestTick.length * 6.5 + 4)
 
   // For quarterly data (12 points), show one tick per year; for annual (≤6), show all
   const yearFromLabel = (label: string) => {
@@ -182,7 +188,7 @@ function TinyLineChart({
     })
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col" role="img" aria-label={title}>
       <p className="text-[10px] font-[600] text-slate-500 mb-2">{title}</p>
       <ResponsiveContainer width="100%" height={120}>
         <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 4, left: 0 }}>
@@ -199,8 +205,9 @@ function TinyLineChart({
             tickLine={false}
             axisLine={false}
             tickFormatter={yFormat}
-            width={40}
+            width={yWidth}
             tickCount={4}
+            domain={['auto', 'auto']}
           />
           <Tooltip
             cursor={{ stroke: '#e2e8f0', strokeWidth: 1 }}
@@ -230,6 +237,7 @@ function TinyLineChart({
             stroke={color}
             strokeWidth={2}
             dot={false}
+            isAnimationActive={false}
             activeDot={{ r: 4, fill: color, strokeWidth: 0 }}
           />
         </LineChart>
@@ -248,8 +256,10 @@ function FieldStepper({
   onChange: (v: number) => void
   hint?: string | null; color: string
 }) {
-  const dec = () => onChange(Math.max(min, parseFloat((value - step).toFixed(6))))
-  const inc = () => onChange(Math.min(max, parseFloat((value + step).toFixed(6))))
+  const atMin = value <= min
+  const atMax = value >= max
+  const dec = () => { if (!atMin) onChange(Math.max(min, parseFloat((value - step).toFixed(6)))) }
+  const inc = () => { if (!atMax) onChange(Math.min(max, parseFloat((value + step).toFixed(6)))) }
 
   return (
     <div className="flex items-center justify-between gap-2">
@@ -260,10 +270,15 @@ function FieldStepper({
       <div className="flex items-center gap-0.5 shrink-0">
         <button
           onClick={dec}
+          disabled={atMin}
           aria-label={`Decrease ${label}`}
-          className="w-9 h-9 flex items-center justify-center rounded-full"
+          className="w-9 h-9 flex items-center justify-center rounded-full disabled:cursor-not-allowed"
         >
-          <span className="w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center text-[13px] font-bold text-slate-600 shadow-sm hover:bg-slate-50 transition-colors select-none">
+          <span className={`w-6 h-6 rounded-full border flex items-center justify-center text-[13px] font-bold shadow-sm select-none transition-colors ${
+            atMin
+              ? 'border-slate-100 bg-slate-50 text-slate-300'
+              : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+          }`}>
             −
           </span>
         </button>
@@ -275,10 +290,15 @@ function FieldStepper({
         </span>
         <button
           onClick={inc}
+          disabled={atMax}
           aria-label={`Increase ${label}`}
-          className="w-9 h-9 flex items-center justify-center rounded-full"
+          className="w-9 h-9 flex items-center justify-center rounded-full disabled:cursor-not-allowed"
         >
-          <span className="w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center text-[13px] font-bold text-slate-600 shadow-sm hover:bg-slate-50 transition-colors select-none">
+          <span className={`w-6 h-6 rounded-full border flex items-center justify-center text-[13px] font-bold shadow-sm select-none transition-colors ${
+            atMax
+              ? 'border-slate-100 bg-slate-50 text-slate-300'
+              : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+          }`}>
             +
           </span>
         </button>
@@ -416,7 +436,11 @@ export default function ValuationMethodCards({
   )
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-5">
+    <div
+      className="bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-5"
+      role="region"
+      aria-label="Valuation models"
+    >
 
       {/* Header */}
       <div className="flex items-center justify-between gap-4 mb-4">
@@ -488,7 +512,7 @@ export default function ValuationMethodCards({
                       <cfg.Icon size={13} className={cfg.iconText} />
                     </div>
                   )}
-                  <span className={`text-sm font-bold ${hasValue ? 'text-slate-800' : 'text-slate-400'}`}>
+                  <span className={`text-sm font-bold truncate ${hasValue ? 'text-slate-800' : 'text-slate-400'}`}>
                     {m.method}
                   </span>
                 </div>
@@ -505,7 +529,7 @@ export default function ValuationMethodCards({
               </div>
 
               {/* Fair value */}
-              <div>
+              <div aria-live="polite" aria-atomic="true">
                 <p className="text-[10px] text-slate-500 mb-0.5">Fair Value</p>
                 <div className="flex items-baseline gap-2 flex-wrap">
                   <span className="text-2xl font-bold tabular-nums text-slate-900 leading-none">

@@ -225,17 +225,30 @@ export default function PeerValuationChart({ ticker, isFinancialSector = false }
 
   // Ghost card for no-data states — keeps layout stable and signals the feature exists
   if (error || !data || data.peers.length === 0) {
+    const friendlyError = error === 'Failed to fetch peer data'
+      ? 'Unable to load peer data right now. Try refreshing.'
+      : (error ?? 'No comparable peers found for this stock on Yahoo Finance.')
     return (
       <div className={cn(CARD, 'flex items-center gap-3 py-5')}>
         <div className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
           <Info className="w-3.5 h-3.5 text-slate-300" />
         </div>
-        <div>
+        <div className="flex-1 min-w-0">
           <p className="text-[12px] font-semibold text-slate-500">Peer comparison unavailable</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">
-            {error ?? 'No comparable peers found for this stock on Yahoo Finance.'}
+          <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+            {friendlyError}
           </p>
         </div>
+        {error && (
+          <button
+            type="button"
+            onClick={load}
+            aria-label="Retry loading peer data"
+            className="text-slate-300 hover:text-slate-500 transition-colors shrink-0"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
     )
   }
