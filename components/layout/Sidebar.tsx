@@ -87,9 +87,29 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="fixed left-0 top-[52px] bottom-0 w-[220px] z-30 hidden lg:flex flex-col border-r border-[#E3E6E0]"
+      className="fixed left-0 top-0 bottom-0 w-[220px] z-30 hidden lg:flex flex-col border-r border-[#E3E6E0]"
       style={{ background: '#FBFAF7' }}
     >
+      {/* Logo lockup */}
+      <div className="px-4 py-3 border-b border-[#E3E6E0]" style={{ height: '52px', display: 'flex', alignItems: 'center' }}>
+        <Link href={session ? '/analyze' : '/'} className="flex items-center gap-2.5 group" aria-label="insic home">
+          <Image
+            src="/logos/insic-app-icon.png"
+            alt="insic icon"
+            width={28}
+            height={28}
+            className="shrink-0 h-7 w-7 object-contain rounded-[6px]"
+          />
+          <Image
+            src="/logos/insic-header.png"
+            alt="insic"
+            width={72}
+            height={22}
+            className="shrink-0 h-[22px] w-auto object-contain opacity-90 group-hover:opacity-100 transition-opacity"
+          />
+        </Link>
+      </div>
+
       {/* Navigation */}
       <nav className="flex-1 px-2.5 pt-4 pb-2 overflow-y-auto custom-scrollbar">
 

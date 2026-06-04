@@ -304,14 +304,24 @@ export default function TopBar() {
         }}
       >
         {/* ── Column 1: Logo ── */}
-        <div className={cn('flex items-center', !stockNav && 'hidden sm:flex')}>
+        <div className="flex items-center">
           <Link href={session ? '/analyze' : '/'} className="flex items-center gap-2 shrink-0 group" aria-label="insic home">
+            {/* Mobile: app icon mark only */}
+            <Image
+              src="/logos/insic-app-icon.png"
+              alt="insic"
+              width={28}
+              height={28}
+              className="sm:hidden shrink-0 h-7 w-7 object-contain rounded-[6px]"
+              priority
+            />
+            {/* Desktop: full wordmark header */}
             <Image
               src="/logos/insic-header.png"
               alt="insic"
               width={88}
               height={28}
-              className="shrink-0 h-7 w-auto object-contain"
+              className="hidden sm:block shrink-0 h-7 w-auto object-contain"
               priority
             />
           </Link>
