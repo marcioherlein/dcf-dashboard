@@ -1,37 +1,30 @@
 'use client'
 import { useRef } from 'react'
 import { motion, useInView, useReducedMotion } from 'motion/react'
-import { Database, BarChart3, SlidersHorizontal } from 'lucide-react'
+import { Eye, LayoutGrid, Database, TrendingUp } from 'lucide-react'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
-const CARDS = [
+const FEATURES = [
+  {
+    Icon: Eye,
+    title: 'Transparent assumptions',
+    body: 'See every driver that impacts value.',
+  },
+  {
+    Icon: LayoutGrid,
+    title: 'Multiple valuation methods',
+    body: 'DCF, Reverse DCF, and multiples.',
+  },
   {
     Icon: Database,
-    iconColor: '#2563EB',
-    iconBg: '#EFF6FF',
-    title: 'Public data sources.',
-    body: 'Financials and estimates from trusted providers like FRED, Yahoo Finance, and company filings.',
-    chips: ['FRED', 'Yahoo Finance', 'SEC'],
-    chipStyle: { bg: '#F8FAFC', text: '#475569', border: '#E2E8F0' },
+    title: 'Public data sources',
+    body: 'Financials and estimates from trusted providers.',
   },
   {
-    Icon: BarChart3,
-    iconColor: '#7C3AED',
-    iconBg: '#F5F3FF',
-    title: 'Multiple valuation methods.',
-    body: 'DCF, Reverse DCF, and Multiples working together to triangulate fair value.',
-    chips: ['DCF', 'Reverse DCF', 'Multiples'],
-    chipStyle: { bg: '#F5F3FF', text: '#6D28D9', border: '#DDD6FE' },
-  },
-  {
-    Icon: SlidersHorizontal,
-    iconColor: '#059669',
-    iconBg: '#ECFDF3',
-    title: 'Adjust every assumption.',
-    body: 'Change growth, margins, WACC, and terminal value. See how fair value responds in real time.',
-    chips: ['Growth', 'Margins', 'WACC', 'Terminal Rate'],
-    chipStyle: { bg: '#ECFDF3', text: '#047857', border: '#BBF7D0' },
+    Icon: TrendingUp,
+    title: 'Sensitivity & scenarios',
+    body: 'See how outcomes change when assumptions change.',
   },
 ]
 
@@ -41,93 +34,49 @@ export default function TransparencySection() {
   const reduced = useReducedMotion()
 
   return (
-    <section ref={ref} className="overflow-x-hidden" style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
+    <section ref={ref} className="overflow-x-hidden" style={{ background: '#F8F7F2', borderBottom: '1px solid #E3E6E0' }}>
+      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-14 sm:py-20">
 
-        {/* Heading — scale zoom */}
+        {/* Header */}
         <motion.div
-          className="text-center mb-10 sm:mb-14"
-          initial={reduced !== false ? {} : { opacity: 0, scale: 0.92, y: 20 }}
-          animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
-          transition={{ duration: 0.65, ease: EASE }}
+          className="flex items-start gap-4 mb-10"
+          initial={reduced ? {} : { opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.55, ease: EASE }}
         >
-          <h2
-            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] text-slate-900 [text-wrap:balance]"
-            style={{
-              fontWeight: 700,
-              lineHeight: 1.1,
-              letterSpacing: '-0.025em',
-              marginBottom: '16px',
-            }}
-          >
-            No black boxes. Every assumption is yours.
-          </h2>
-          <p
-            className="text-base sm:text-[17px] text-slate-600 mx-auto"
-            style={{ lineHeight: 1.6, maxWidth: '540px' }}
-          >
-            We believe investors deserve the same tools and transparency institutions
-            use. Every model, source, and assumption is visible and adjustable.
-          </p>
+          <div className="w-10 h-10 rounded-[10px] bg-[#EEF4DD] flex items-center justify-center shrink-0 mt-0.5">
+            <svg className="w-5 h-5 text-[#5F790B]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-[26px] sm:text-[32px] font-bold text-[#0A1424] leading-tight" style={{ letterSpacing: '-0.025em' }}>
+              No black boxes.<br />Every assumption is yours.
+            </h2>
+            <p className="text-[14px] text-[#536174] mt-1.5 leading-relaxed max-w-[480px]">
+              We believe investors deserve transparency in how fair value is derived.
+            </p>
+          </div>
         </motion.div>
 
-        {/* Cards — horizontal scroll carousel on mobile, stagger zoom on desktop */}
-        <div className="-mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto snap-x snap-mandatory pb-4 sm:pb-0 sm:overflow-visible">
-          <div className="flex gap-4 w-max sm:w-auto sm:grid sm:grid-cols-3 sm:gap-6">
-            {CARDS.map(({ Icon, iconColor, iconBg, title, body, chips, chipStyle }, i) => (
-              <motion.div
-                key={title}
-                initial={reduced !== false ? {} : { opacity: 0, scale: 0.92, y: 28 }}
-                animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
-                transition={{ duration: 0.62, ease: EASE, delay: 0.12 + i * 0.10 }}
-                className="snap-start flex flex-col rounded-[20px] bg-white border p-6 sm:p-7 hover:-translate-y-0.5 transition-transform w-[80vw] max-w-[300px] sm:w-auto sm:max-w-none"
-                style={{
-                  borderColor: '#E6ECF5',
-                  boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 6px 20px rgba(15,23,42,0.05)',
-                }}
-              >
-                {/* Icon */}
-                <div
-                  className="flex items-center justify-center rounded-xl mb-5 shrink-0"
-                  style={{ width: '44px', height: '44px', background: iconBg }}
-                  aria-hidden="true"
-                >
-                  <Icon size={20} color={iconColor} />
-                </div>
-
-                <h3
-                  style={{
-                    fontSize: '18px',
-                    fontWeight: 700,
-                    color: '#0F172A',
-                    marginBottom: '10px',
-                    letterSpacing: '-0.015em',
-                  }}
-                >
-                  {title}
-                </h3>
-                <p
-                  className="text-base"
-                  style={{ lineHeight: 1.6, color: '#475569', marginBottom: '20px', flexGrow: 1 }}
-                >
-                  {body}
-                </p>
-
-                {/* Chips */}
-                <div className="flex flex-wrap gap-2">
-                  {chips.map(chip => (
-                    <span
-                      key={chip}
-                      className="rounded-full border px-3 py-1 text-[12px] font-semibold"
-                      style={{ background: chipStyle.bg, color: chipStyle.text, borderColor: chipStyle.border }}
-                    >
-                      {chip}
-                    </span>
-                  ))}
-                </div>
-              </motion.div>
-            ))}
-          </div>
+        {/* 2×2 feature grid */}
+        <div className="grid grid-cols-2 gap-4 sm:gap-6">
+          {FEATURES.map(({ Icon, title, body }, i) => (
+            <motion.div
+              key={title}
+              initial={reduced ? {} : { opacity: 0, y: 20 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.50, ease: EASE, delay: 0.08 + i * 0.08 }}
+              className="rounded-[16px] border border-[#E3E6E0] bg-white p-5 sm:p-6"
+              style={{ boxShadow: '0 4px 16px rgba(6,16,31,0.05)' }}
+            >
+              <div className="w-9 h-9 rounded-[10px] bg-[#F8F7F2] border border-[#E3E6E0] flex items-center justify-center mb-3">
+                <Icon size={16} className="text-[#5F790B]" strokeWidth={1.8} />
+              </div>
+              <h3 className="text-[14px] sm:text-[15px] font-bold text-[#0A1424] mb-1.5 leading-snug">{title}</h3>
+              <p className="text-[12px] sm:text-[13px] text-[#536174] leading-relaxed">{body}</p>
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>

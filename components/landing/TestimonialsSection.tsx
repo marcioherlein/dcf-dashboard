@@ -1,31 +1,15 @@
 'use client'
 import { useRef } from 'react'
 import { motion, useInView, useReducedMotion } from 'motion/react'
+import { Users, Check } from 'lucide-react'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
-const QUOTES = [
-  {
-    text: "The Reverse DCF gave me a framework to see exactly what growth rate any stock is pricing in — before I decide whether to buy.",
-    name: 'Michael T.',
-    role: 'Self-Directed Investor',
-    initial: 'M',
-    color: '#2563EB',
-  },
-  {
-    text: "I love how fast it is. I can go from idea to verdict in under a minute and focus my time on the best opportunities.",
-    name: 'Sarah L.',
-    role: 'Portfolio Manager',
-    initial: 'S',
-    color: '#7C3AED',
-  },
-  {
-    text: "Finally, a tool that shows what the market is assuming. It's become essential to my investment process.",
-    name: 'David K.',
-    role: 'Independent Analyst',
-    initial: 'D',
-    color: '#059669',
-  },
+const VALUES = [
+  'Focus on long-term intrinsic value',
+  'Ignore noise. Follow the process.',
+  'Make better decisions with clarity',
+  'Save, compare, and track your ideas',
 ]
 
 export default function TestimonialsSection() {
@@ -34,91 +18,74 @@ export default function TestimonialsSection() {
   const reduced = useReducedMotion()
 
   return (
-    <section
-      ref={ref}
-      className="overflow-x-hidden"
-      style={{ background: '#050D1F', borderBottom: '1px solid rgba(255,255,255,0.07)' }}
-    >
-      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
+    <section ref={ref} className="overflow-x-hidden" style={{ background: '#FFFFFF', borderBottom: '1px solid #E3E6E0' }}>
+      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-14 sm:py-20">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-12 items-start">
 
-        {/* Heading */}
-        <motion.div
-          className="text-center mb-10 sm:mb-12"
-          initial={reduced !== false ? {} : { opacity: 0, scale: 0.92, y: 20 }}
-          animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
-          transition={{ duration: 0.65, ease: EASE }}
-        >
-          <h2
-            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] [text-wrap:balance]"
-            style={{
-              fontWeight: 700,
-              lineHeight: 1.1,
-              letterSpacing: '-0.025em',
-              color: '#F8FAFC',
-            }}
+          {/* Left: section header + value list */}
+          <motion.div
+            initial={reduced ? {} : { opacity: 0, y: 16 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.55, ease: EASE }}
           >
-            Built for people who do their own research.
-          </h2>
-        </motion.div>
+            <div className="flex items-start gap-4 mb-6">
+              <div className="w-10 h-10 rounded-[10px] bg-[#EEF4DD] flex items-center justify-center shrink-0 mt-0.5">
+                <Users size={18} className="text-[#5F790B]" strokeWidth={1.8} />
+              </div>
+              <div>
+                <h2 className="text-[26px] sm:text-[30px] font-bold text-[#0A1424] leading-tight" style={{ letterSpacing: '-0.025em' }}>
+                  Built for investors<br />who do their<br />own research
+                </h2>
+              </div>
+            </div>
 
-        {/* Cards — staggered zoom from below */}
-        <div className="-mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto snap-x snap-mandatory pb-4 sm:pb-0 sm:overflow-visible">
-          <div className="flex gap-4 w-max sm:w-auto sm:grid sm:grid-cols-3 sm:gap-6">
-            {QUOTES.map((q, i) => (
-              <motion.div
-                key={i}
-                initial={reduced !== false ? {} : { opacity: 0, scale: 0.90, y: 32 }}
-                animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
-                transition={{ duration: 0.65, ease: EASE, delay: 0.10 + i * 0.12 }}
-                className="snap-start rounded-[20px] border p-6 sm:p-7 flex flex-col w-[82vw] max-w-[320px] sm:w-auto sm:max-w-none"
-                style={{
-                  background: 'rgba(255,255,255,0.05)',
-                  borderColor: 'rgba(255,255,255,0.10)',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.2), 0 6px 20px rgba(0,0,0,0.18)',
-                }}
-              >
-                {/* Quote mark */}
-                <svg width="24" height="18" viewBox="0 0 24 18" fill="none" className="mb-5 shrink-0" aria-hidden="true">
-                  <path
-                    d="M0 18V10.5C0 4.7 3.8 1.2 11.3 0l1 2C8.2 3 6.3 5 6 8h4.5V18H0zm13.5 0V10.5C13.5 4.7 17.3 1.2 24.8 0l1 2c-4.1 1-6 3-6.3 6H24V18H13.5z"
-                    fill="rgba(191,219,254,0.35)"
-                  />
-                </svg>
-
-                <p
-                  className="text-base"
-                  style={{ lineHeight: 1.6, color: '#CBD5E1', flexGrow: 1, marginBottom: '24px' }}
+            <div className="space-y-3">
+              {VALUES.map((v, i) => (
+                <motion.div
+                  key={v}
+                  initial={reduced ? {} : { opacity: 0, x: -12 }}
+                  animate={inView ? { opacity: 1, x: 0 } : {}}
+                  transition={{ duration: 0.4, ease: EASE, delay: 0.12 + i * 0.07 }}
+                  className="flex items-center gap-3"
                 >
-                  &ldquo;{q.text}&rdquo;
-                </p>
+                  <div className="w-5 h-5 rounded-full bg-[#EEF4DD] flex items-center justify-center shrink-0">
+                    <Check size={11} className="text-[#5F790B]" strokeWidth={2.5} />
+                  </div>
+                  <span className="text-[14px] text-[#0A1424] font-medium">{v}</span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
 
-                <div className="flex items-center gap-3">
-                  <div
-                    className="flex items-center justify-center rounded-full text-white font-bold shrink-0"
-                    style={{ width: '38px', height: '38px', background: q.color, fontSize: '14px' }}
-                    aria-label={q.name}
-                  >
-                    {q.initial}
-                  </div>
-                  <div>
-                    <p style={{ fontSize: '14px', fontWeight: 650, color: '#F1F5F9' }}>{q.name}</p>
-                    <p style={{ fontSize: '12px', color: '#94A3B8' }}>{q.role}</p>
-                  </div>
+          {/* Right: testimonial card */}
+          <motion.div
+            initial={reduced ? {} : { opacity: 0, y: 20 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.55, ease: EASE, delay: 0.14 }}
+          >
+            <div
+              className="rounded-[16px] border border-[#E3E6E0] bg-[#FBFAF7] p-6"
+              style={{ boxShadow: '0 4px 16px rgba(6,16,31,0.05)' }}
+            >
+              <p className="text-[14px] sm:text-[15px] text-[#0A1424] leading-relaxed mb-5" style={{ fontStyle: 'italic' }}>
+                &ldquo;Finally, a tool that shows me what the market is pricing in and lets me test my own assumptions.&rdquo;
+              </p>
+              <div className="flex items-center gap-3">
+                {/* Avatar placeholder */}
+                <div className="w-10 h-10 rounded-full bg-[#E3E6E0] flex items-center justify-center shrink-0 overflow-hidden">
+                  <svg viewBox="0 0 24 24" className="w-6 h-6 text-[#8A96A8]" fill="currentColor">
+                    <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5.33 0-8 2.67-8 4v1h16v-1c0-1.33-2.67-4-8-4z"/>
+                  </svg>
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
+                <div>
+                  <p className="text-[13px] font-semibold text-[#0A1424]">Michael T.</p>
+                  <p className="text-[12px] text-[#8A96A8]">Individual Investor</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
 
-        <motion.p
-          className="text-center mt-8 text-[12px]"
-          style={{ color: '#94A3B8' }}
-          initial={reduced !== false ? {} : { opacity: 0 }}
-          animate={inView ? { opacity: 1 } : {}}
-          transition={{ duration: 0.5, delay: 0.5 }}
-        >
-          Representative testimonials. Individual results vary.
-        </motion.p>
+        </div>
       </div>
     </section>
   )

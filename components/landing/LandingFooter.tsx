@@ -1,100 +1,127 @@
 import Link from 'next/link'
 import Image from 'next/image'
 
+const NAV_COLS = [
+  {
+    items: [
+      { label: 'Product', href: '/analyze' },
+      { label: 'Pricing', href: '/pricing' },
+      { label: 'About', href: '/about' },
+      { label: 'Blog', href: '/blog' },
+      { label: 'Help', href: '/help' },
+    ],
+  },
+  {
+    items: [
+      { label: 'Privacy', href: '/privacy' },
+      { label: 'Terms', href: '/terms' },
+    ],
+  },
+]
+
 export default function LandingFooter() {
   return (
-    <footer style={{ background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
-      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-8 sm:py-12">
-        {/* Top row — single column on mobile */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-8 mb-8 sm:mb-10">
-          {/* Brand */}
-          <div className="max-w-xs">
-            <Link href="/" className="flex items-center gap-2.5 mb-3 group active:scale-95 transition-transform">
+    <footer style={{ background: '#0A1424', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-10 sm:py-14">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-8">
+
+          {/* Brand column */}
+          <div className="max-w-[240px]">
+            <Link href="/" className="flex items-center gap-2.5 mb-3 group" aria-label="insic home">
               <Image
-                src="/logos/logo-transparent.png"
-                alt="insic"
-                width={30}
-                height={30}
-                className="transition-transform duration-200 group-hover:scale-105"
+                src="/logos/insic-app-icon.png"
+                alt="insic icon"
+                width={28}
+                height={28}
+                className="h-7 w-7 object-contain rounded-[6px] shrink-0"
               />
-              <span
-                className="font-black text-[17px]"
-                style={{
-                  letterSpacing: '-0.04em',
-                  background: 'linear-gradient(135deg, #0F172A 20%, #1E40AF 65%, #2563EB 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                insic
-              </span>
+              <span className="text-[18px] font-bold text-white" style={{ letterSpacing: '-0.03em' }}>insic</span>
             </Link>
-            <p className="text-sm text-slate-500 leading-relaxed">
-              The disciplined valuation process for serious self-directed investors.
+            <p className="text-[13px] text-[#536174] leading-relaxed mb-5">
+              Invest with a process, not a story.
             </p>
+
+            {/* Social icons */}
+            <div className="flex items-center gap-3">
+              {[
+                {
+                  label: 'Twitter / X',
+                  href: 'https://twitter.com',
+                  icon: (
+                    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.258 5.63L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/>
+                    </svg>
+                  ),
+                },
+                {
+                  label: 'LinkedIn',
+                  href: 'https://linkedin.com',
+                  icon: (
+                    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                  ),
+                },
+                {
+                  label: 'YouTube',
+                  href: 'https://youtube.com',
+                  icon: (
+                    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+                      <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                  ),
+                },
+              ].map(s => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={s.label}
+                  className="w-8 h-8 rounded-full border border-[rgba(255,255,255,0.12)] flex items-center justify-center text-[#536174] hover:text-white hover:border-[rgba(255,255,255,0.28)] transition-colors"
+                >
+                  {s.icon}
+                </a>
+              ))}
+            </div>
           </div>
 
-          {/* Links — wrapping row on mobile */}
-          <div className="flex flex-wrap gap-x-8 gap-y-6">
-            <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Product</p>
-              <div className="flex flex-col gap-2">
-                {[
-                  { label: 'Markets', href: '/markets' },
-                  { label: 'Analyze', href: '/analyze' },
-                  { label: 'Pricing', href: '/pricing' },
-                ].map(l => (
-                  <Link key={l.label} href={l.href} className="text-sm text-slate-500 hover:text-slate-800 transition-colors py-1" style={{ minHeight: '36px', display: 'flex', alignItems: 'center' }}>
-                    {l.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Account</p>
-              <div className="flex flex-col gap-2">
-                {[
-                  { label: 'Portfolio', href: '/monitor' },
-                  { label: 'Saved', href: '/valuations' },
-                  { label: 'AI', href: '/ai-stack' },
-                ].map(l => (
-                  <Link key={l.label} href={l.href} className="text-sm text-slate-500 hover:text-slate-800 transition-colors py-1" style={{ minHeight: '36px', display: 'flex', alignItems: 'center' }}>
-                    {l.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Legal</p>
-              <div className="flex flex-col gap-2">
-                {[
-                  { label: 'Terms', href: '/terms' },
-                  { label: 'Privacy', href: '/privacy' },
-                  { label: 'Contact', href: 'mailto:hello@insic.app' },
-                ].map(l => (
-                  <a key={l.label} href={l.href} className="text-sm text-slate-500 hover:text-slate-800 transition-colors py-1" style={{ minHeight: '36px', display: 'flex', alignItems: 'center' }}>
-                    {l.label}
-                  </a>
-                ))}
-              </div>
-            </div>
+          {/* Nav columns */}
+          <div className="flex gap-12 sm:gap-16">
+            {/* Main nav */}
+            <nav className="flex flex-col gap-2.5">
+              {NAV_COLS[0].items.map(item => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="text-[13px] text-[#536174] hover:text-white transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+            {/* Legal nav */}
+            <nav className="flex flex-col gap-2.5">
+              {NAV_COLS[1].items.map(item => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="text-[13px] text-[#536174] hover:text-white transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="border-t border-slate-200 pt-6">
-          {/* Disclaimer */}
-          <p className="text-[12px] text-slate-400 leading-relaxed max-w-3xl mb-3">
-            <strong className="text-slate-500">Not financial advice.</strong>{' '}
-            All content — DCF models, fair value estimates, health scores, and scenario analyses — is provided
-            for informational and educational purposes only. Model outputs are based on publicly available data
-            and mathematical assumptions; they are not recommendations to buy, sell, or hold any security.
-            Always consult a qualified financial advisor before making investment decisions.
+        {/* Bottom bar */}
+        <div className="mt-10 pt-6 border-t border-[rgba(255,255,255,0.07)]">
+          <p className="text-[11px] text-[#536174] leading-relaxed">
+            Not financial advice. See Terms.
           </p>
-          <p className="text-[12px] text-slate-400">
-            Data sourced from Yahoo Finance, FRED, and Damodaran&apos;s research. &nbsp;
-            © {new Date().getFullYear()} insic. All rights reserved.
+          <p className="text-[11px] text-[#536174] mt-1">
+            © 2025 insic. All rights reserved.
           </p>
         </div>
       </div>

@@ -1,347 +1,292 @@
 'use client'
-import Link from 'next/link'
-import { Shield } from 'lucide-react'
+import { signIn, useSession } from 'next-auth/react'
 import { motion, useReducedMotion } from 'motion/react'
-import HeroSearch from './HeroSearch'
-import { SummaryMockScreen, ValuationMockScreen } from './ProductScreenshots'
+import { Play } from 'lucide-react'
+import Link from 'next/link'
+
+const EASE = [0.16, 1, 0.3, 1] as const
+
+// Inline product mockup card — mirrors the design screenshot
+function ProductMockCard() {
+  return (
+    <div
+      className="relative w-full rounded-[20px] border border-[#E3E6E0] bg-white overflow-hidden"
+      style={{ boxShadow: '0 16px 48px rgba(6,16,31,0.10)' }}
+    >
+      {/* Stock header row */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#E3E6E0] bg-[#FBFAF7]">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-full bg-[#F8F7F2] border border-[#E3E6E0] flex items-center justify-center">
+            <svg viewBox="0 0 16 16" className="w-3.5 h-3.5"><path d="M8 2a6 6 0 100 12A6 6 0 008 2z" fill="#0A1424" opacity=".15"/><circle cx="8" cy="8" r="2.5" fill="#0A1424"/></svg>
+          </div>
+          <span className="text-[12px] font-bold text-[#0A1424]">AAPL</span>
+          <span className="text-[11px] text-[#536174]">Apple Inc.</span>
+        </div>
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-[13px] font-bold tabular-nums text-[#0A1424]">$183.42</span>
+          <span className="text-[11px] font-semibold text-[#11875D] tabular-nums">+1.25%</span>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-[#E3E6E0] px-4 gap-4">
+        {['Overview', 'Valuation', 'Financials', 'Risks', 'News'].map((t, i) => (
+          <span key={t} className={`text-[11px] py-2.5 font-medium border-b-2 -mb-px ${i === 0 ? 'border-[#5F790B] text-[#0A1424]' : 'border-transparent text-[#8A96A8]'}`}>{t}</span>
+        ))}
+      </div>
+
+      {/* Verdict */}
+      <div className="mx-4 mt-3 mb-2 rounded-[12px] border border-[#BFD2A1] bg-[#F6FAEA] px-4 py-3">
+        <p className="text-[9px] font-bold uppercase tracking-[0.08em] text-[#5F790B] mb-1">INSIC VERDICT</p>
+        <p className="text-[14px] font-bold text-[#0A1424]">AAPL looks <span className="text-[#5F790B]">Undervalued</span></p>
+        <div className="flex items-center gap-2 mt-1.5">
+          <span className="text-[10px] font-semibold text-[#11875D] bg-[#E8F7EF] border border-[#A7D7C0] rounded-full px-2 py-0.5">High confidence</span>
+          <span className="text-[10px] text-[#536174]">4 of 4 models</span>
+        </div>
+      </div>
+
+      {/* Metrics row */}
+      <div className="grid grid-cols-3 gap-0 mx-4 mb-3">
+        {[
+          { label: 'Fair Value', val: '$226.80', cls: 'text-[#5F790B]' },
+          { label: 'Current Price', val: '$183.42', cls: 'text-[#0A1424]' },
+          { label: 'Upside', val: '+23.6%', cls: 'text-[#11875D]' },
+        ].map(m => (
+          <div key={m.label} className="text-center">
+            <p className="text-[9px] text-[#8A96A8] mb-0.5">{m.label}</p>
+            <p className={`text-[13px] font-bold tabular-nums ${m.cls}`}>{m.val}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Scenario range bar */}
+      <div className="mx-4 mb-3">
+        <p className="text-[9px] text-[#8A96A8] mb-1.5">Scenario range</p>
+        <div className="relative h-1.5 rounded-full bg-gradient-to-r from-[#F0B8B8] via-[#E3E6E0] to-[#BFD2A1]">
+          <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-[#5F790B] shadow-sm" style={{ left: '42%' }} />
+        </div>
+        <div className="flex justify-between mt-1">
+          <span className="text-[9px] text-[#8A96A8]">$150.10 Bear</span>
+          <span className="text-[9px] font-semibold text-[#5F790B]">$226.60 Base</span>
+          <span className="text-[9px] text-[#8A96A8]">$305.40 Bull</span>
+        </div>
+      </div>
+
+      {/* Mini price chart */}
+      <div className="mx-4 mb-3">
+        <div className="flex items-center gap-3 mb-1.5">
+          {[['Price', '#0A1424', '—'], ['Fair Value (Base)', '#5F790B', '—'], ['Analyst Target', '#2563EB', '- -']].map(([l, c, s]) => (
+            <span key={l} className="flex items-center gap-1 text-[9px] text-[#536174]">
+              <span style={{ display: 'inline-block', width: 12, height: 1.5, background: c, opacity: s === '- -' ? 0.7 : 1 }} />
+              {l}
+            </span>
+          ))}
+        </div>
+        <svg viewBox="0 0 260 70" className="w-full" style={{ height: 56 }}>
+          <path d="M0,55 C20,52 40,48 60,45 C80,42 90,38 110,32 C130,26 150,28 170,24 C190,20 210,16 230,14 C245,12 255,10 260,10" stroke="#0A1424" strokeWidth="1.5" fill="none"/>
+          <path d="M0,42 L260,28" stroke="#5F790B" strokeWidth="1.5" fill="none"/>
+          <path d="M0,36 L260,36" stroke="#2563EB" strokeWidth="1" fill="none" strokeDasharray="4 3"/>
+          <text x="2" y="68" fontSize="7" fill="#8A96A8">Jul</text>
+          <text x="65" y="68" fontSize="7" fill="#8A96A8">Oct</text>
+          <text x="120" y="68" fontSize="7" fill="#8A96A8">2025</text>
+          <text x="175" y="68" fontSize="7" fill="#8A96A8">Apr</text>
+          <text x="230" y="68" fontSize="7" fill="#8A96A8">Jul</text>
+        </svg>
+      </div>
+
+      {/* Market implied CAGR */}
+      <div className="mx-4 mb-4 rounded-[10px] border border-[#E3E6E0] bg-[#FBFAF7] px-3 py-2.5">
+        <p className="text-[9px] text-[#536174] mb-1">Market-implied 5Y revenue CAGR at today&apos;s price</p>
+        <div className="flex items-center justify-between">
+          <span className="text-[15px] font-bold tabular-nums text-[#0A1424]">12.1%</span>
+          <span className="text-[10px] font-semibold bg-[#FFF4DA] text-[#B56A00] border border-[#F3D391] rounded-full px-2 py-0.5">Moderate</span>
+        </div>
+        <div className="relative mt-2 h-1 rounded-full bg-[#E3E6E0]">
+          <div className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white border-2 border-[#5F790B]" style={{ left: '38%' }} />
+        </div>
+        <div className="flex justify-between mt-1">
+          {['Conservative\n<8%', 'Moderate\n8–15%', 'Aggressive\n15–25%', 'Very Aggressive\n>25%'].map(l => (
+            <span key={l} className="text-[8px] text-[#8A96A8] text-center leading-tight" style={{ whiteSpace: 'pre-line' }}>{l}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function LandingHero() {
-  const reducedMotion = useReducedMotion()
+  const { data: session } = useSession()
+  const reduced = useReducedMotion()
 
   return (
     <section
-      className="relative overflow-x-hidden"
+      className="overflow-x-hidden"
       style={{
-        paddingTop: 'max(76px, 10vh)',
-        paddingBottom: 'clamp(64px, 9vh, 96px)',
-        background: '#050D1F',
+        paddingTop: 'max(72px, calc(60px + 2vh))',
+        paddingBottom: 'clamp(48px, 7vh, 80px)',
+        background: '#F8F7F2',
       }}
     >
-      {/* Subtle dot grid — dark adaptation + scroll-driven parallax */}
-      <div
-        className="hero-dot-grid absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px)',
-          backgroundSize: '32px 32px',
-        }}
-        aria-hidden="true"
-      />
+      <div className="mx-auto px-4 sm:px-6" style={{ maxWidth: '1200px' }}>
+        <div className="grid items-center grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
 
-      {/* DCF scenario fan — abstract projection tree at low opacity */}
-      <svg
-        className="absolute pointer-events-none"
-        style={{
-          right: 0,
-          top: 0,
-          width: '62%',
-          height: '100%',
-          opacity: 0.10,
-          zIndex: 1,
-        }}
-        viewBox="0 0 700 500"
-        fill="none"
-        preserveAspectRatio="xMidYMid meet"
-        aria-hidden="true"
-      >
-        {/* Bull scenario — curves upward */}
-        <path
-          d="M 60,250 C 220,248 380,110 640,72"
-          stroke="#7C9A19" strokeWidth="1" fill="none"
-        />
-        {/* Base scenario — straight across */}
-        <path
-          d="M 60,250 L 640,250"
-          stroke="#7C9A19" strokeWidth="1.25" fill="none"
-        />
-        {/* Bear scenario — curves downward */}
-        <path
-          d="M 60,250 C 220,252 380,390 640,428"
-          stroke="#7C9A19" strokeWidth="1" fill="none"
-        />
-
-        {/* Root node */}
-        <circle cx="60"  cy="250" r="4"   fill="#7C9A19" />
-
-        {/* Year 1 measurement nodes */}
-        <circle cx="190" cy="234" r="2.5" fill="#7C9A19" />
-        <circle cx="190" cy="250" r="2.5" fill="#7C9A19" />
-        <circle cx="190" cy="266" r="2.5" fill="#7C9A19" />
-
-        {/* Year 2 vertical tick */}
-        <line x1="320" y1="162" x2="320" y2="338" stroke="#7C9A19" strokeWidth="0.6" strokeDasharray="3 6" />
-        <circle cx="320" cy="175" r="2.5" fill="#7C9A19" />
-        <circle cx="320" cy="250" r="2.5" fill="#7C9A19" />
-        <circle cx="320" cy="325" r="2.5" fill="#7C9A19" />
-
-        {/* Year 4 vertical tick */}
-        <line x1="510" y1="110" x2="510" y2="390" stroke="#7C9A19" strokeWidth="0.6" strokeDasharray="3 6" />
-        <circle cx="510" cy="123" r="2.5" fill="#7C9A19" />
-        <circle cx="510" cy="250" r="2.5" fill="#7C9A19" />
-        <circle cx="510" cy="377" r="2.5" fill="#7C9A19" />
-
-        {/* Terminal value bracket */}
-        <line x1="640" y1="72"  x2="640" y2="428" stroke="#7C9A19" strokeWidth="0.8" />
-        <line x1="630" y1="72"  x2="650" y2="72"  stroke="#7C9A19" strokeWidth="0.8" />
-        <line x1="630" y1="250" x2="650" y2="250" stroke="#7C9A19" strokeWidth="0.8" />
-        <line x1="630" y1="428" x2="650" y2="428" stroke="#7C9A19" strokeWidth="0.8" />
-        <circle cx="640" cy="72"  r="3.5" fill="#7C9A19" />
-        <circle cx="640" cy="250" r="4"   fill="#5F790B" />
-        <circle cx="640" cy="428" r="3.5" fill="#7C9A19" />
-
-        {/* Horizontal dotted "fair value" range lines extending from terminal */}
-        <line x1="644" y1="72"  x2="690" y2="72"  stroke="#7C9A19" strokeWidth="0.6" strokeDasharray="3 4" />
-        <line x1="644" y1="250" x2="690" y2="250" stroke="#5F790B" strokeWidth="0.6" strokeDasharray="3 4" />
-        <line x1="644" y1="428" x2="690" y2="428" stroke="#7C9A19" strokeWidth="0.6" strokeDasharray="3 4" />
-      </svg>
-
-      {/* Breathing Blueprint Blue aurora — animates behind screenshots */}
-      <motion.div
-        className="absolute pointer-events-none"
-        style={{
-          right: '-5%',
-          top: '5%',
-          width: '58%',
-          height: '88%',
-          background: 'radial-gradient(ellipse at 50% 40%, rgba(95,121,11,0.18) 0%, transparent 65%)',
-          filter: 'blur(52px)',
-        }}
-        animate={
-          reducedMotion
-            ? {}
-            : {
-                x: [0, 32, -22, 0],
-                y: [0, -22, 16, 0],
-                opacity: [0.85, 1, 0.9, 0.85],
-              }
-        }
-        transition={
-          reducedMotion
-            ? {}
-            : {
-                duration: 9,
-                repeat: Infinity,
-                ease: 'easeInOut',
-                repeatType: 'mirror',
-              }
-        }
-        aria-hidden="true"
-      />
-
-      {/* Secondary ambient cyan glow — left side depth */}
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          left: '-12%',
-          top: '25%',
-          width: '45%',
-          height: '55%',
-          background:
-            'radial-gradient(ellipse at 40% 50%, rgba(6,182,212,0.07) 0%, transparent 70%)',
-          filter: 'blur(64px)',
-        }}
-        aria-hidden="true"
-      />
-
-      {/* Hero-specific styles */}
-      <style>{`
-        .hero-outline-cta {
-          background: rgba(255,255,255,0.05);
-          border-color: rgba(255,255,255,0.15);
-          color: #CBD5E1;
-        }
-        .hero-outline-cta:hover {
-          background: rgba(255,255,255,0.09);
-          border-color: rgba(255,255,255,0.28);
-          color: #F1F5F9;
-        }
-      `}</style>
-
-      <div
-        className="relative mx-auto px-4 sm:px-6"
-        style={{ maxWidth: '1280px' }}
-      >
-        <div
-          className="grid items-center grid-cols-1 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.25fr)]"
-          style={{ gap: '40px' }}
-        >
           {/* ── Left: Copy ── */}
-          <div className="min-w-0 text-center lg:text-left">
+          <div className="text-left">
 
             {/* Badge */}
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={reduced ? {} : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
-              className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 mb-6"
+              transition={{ duration: 0.4, ease: EASE }}
+              className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 mb-5"
               style={{
-                background: 'rgba(95,121,11,0.18)',
-                border: '1px solid rgba(95,121,11,0.40)',
+                background: 'rgba(95,121,11,0.10)',
+                border: '1px solid rgba(95,121,11,0.25)',
               }}
             >
-              <Shield size={12} className="text-[#7C9A19]" />
-              <span
-                className="text-[12px] font-bold text-[#EEF4DD]"
-                style={{ letterSpacing: '0.02em' }}
-              >
-                Built for self-directed investors
+              <div className="w-1.5 h-1.5 rounded-full bg-[#5F790B]" />
+              <span className="text-[12px] font-semibold text-[#5F790B]" style={{ letterSpacing: '0.01em' }}>
+                Institutional-quality valuation tools for individual investors
               </span>
             </motion.div>
 
-            {/* Headline — blueprint-to-sky gradient */}
+            {/* Headline */}
             <motion.h1
-              initial={{ opacity: 0, y: 18 }}
+              initial={reduced ? {} : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, ease: 'easeOut', delay: 0.08 }}
-              className="text-[36px] sm:text-[52px] lg:text-[clamp(44px,5.5vw,68px)]"
-              style={{
-                fontWeight: 700,
-                lineHeight: 1.05,
-                letterSpacing: '-0.04em',
-                marginBottom: '20px',
-                color: '#F8F7F2',
-                textWrap: 'balance',
-              } as React.CSSProperties}
+              transition={{ duration: 0.55, ease: EASE, delay: 0.06 }}
+              className="text-[40px] sm:text-[52px] lg:text-[clamp(42px,4.5vw,60px)] font-bold text-[#0A1424]"
+              style={{ lineHeight: 1.05, letterSpacing: '-0.035em', marginBottom: '16px' }}
             >
-              Invest with a process,
-              <br />not a story.
+              Invest with<br />
+              a process,<br />
+              <span style={{ color: '#5F790B' }}>not a story.</span>
             </motion.h1>
 
-            {/* Subheadline */}
+            {/* Sub-copy */}
             <motion.p
-              initial={{ opacity: 0, y: 16 }}
+              initial={reduced ? {} : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: 'easeOut', delay: 0.16 }}
-              className="text-base sm:text-lg mx-auto lg:mx-0"
-              style={{
-                fontWeight: 400,
-                lineHeight: 1.55,
-                color: '#94A3B8',
-                marginBottom: '32px',
-                maxWidth: '540px',
-                textWrap: 'pretty',
-              } as React.CSSProperties}
+              transition={{ duration: 0.5, ease: EASE, delay: 0.14 }}
+              className="text-[16px] text-[#536174] leading-relaxed mb-8"
+              style={{ maxWidth: '440px' }}
             >
-              insic shows you what today&apos;s stock price already assumes
-              about growth, margins, and execution — so you can decide with
-              confidence, not hope.
+              insic helps you value businesses through fair value estimates,
+              market-implied expectations, and transparent assumptions — so you
+              can understand what has to be true before you invest.
             </motion.p>
-
-            {/* Search */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: 'easeOut', delay: 0.24 }}
-              className="mb-8"
-            >
-              <HeroSearch dark />
-            </motion.div>
 
             {/* CTAs */}
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
+              initial={reduced ? {} : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: 'easeOut', delay: 0.32 }}
-              className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3"
+              transition={{ duration: 0.4, ease: EASE, delay: 0.22 }}
+              className="flex flex-col sm:flex-row gap-3 mb-8"
             >
-              {/* Primary CTA — olive with pulse glow */}
-              <div className="relative w-full sm:w-auto">
-                <motion.div
-                  className="absolute inset-0 rounded-xl pointer-events-none"
-                  animate={
-                    reducedMotion
-                      ? {}
-                      : {
-                          boxShadow: [
-                            '0 0 14px rgba(95,121,11,0.28)',
-                            '0 0 32px rgba(95,121,11,0.50)',
-                            '0 0 14px rgba(95,121,11,0.28)',
-                          ],
-                        }
-                  }
-                  transition={
-                    reducedMotion
-                      ? {}
-                      : { duration: 2.8, repeat: Infinity, ease: 'easeInOut' }
-                  }
-                />
+              {session ? (
                 <Link
                   href="/analyze"
-                  className="relative w-full sm:w-auto inline-flex items-center justify-center rounded-[10px] px-5 py-3 text-[15px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
-                  style={{
-                    background: '#5F790B',
-                    boxShadow: '0 8px 24px rgba(95,121,11,0.28)',
-                    fontWeight: 650,
-                    minHeight: '44px',
-                  }}
+                  className="inline-flex items-center justify-center rounded-[10px] px-6 py-3.5 text-[15px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
+                  style={{ background: '#5F790B', boxShadow: '0 4px 16px rgba(95,121,11,0.28)', minHeight: '52px' }}
                 >
-                  Get started free
+                  Start analyzing for free
                 </Link>
-              </div>
-
-              {/* Secondary CTA — dark glass */}
-              <Link
-                href="/stock/NVDA"
-                className="hero-outline-cta w-full sm:w-auto inline-flex items-center justify-center rounded-xl border px-5 py-3 text-[15px] font-semibold transition-all active:scale-95"
-                style={{
-                  fontWeight: 650,
-                  minHeight: '44px',
-                }}
+              ) : (
+                <button
+                  onClick={() => signIn('google')}
+                  className="inline-flex items-center justify-center rounded-[10px] px-6 py-3.5 text-[15px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
+                  style={{ background: '#5F790B', boxShadow: '0 4px 16px rgba(95,121,11,0.28)', minHeight: '52px' }}
+                >
+                  Start analyzing for free
+                </button>
+              )}
+              <a
+                href="#how-it-works"
+                className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-[#CBD1C4] bg-white px-6 py-3.5 text-[15px] font-semibold text-[#0A1424] hover:bg-[#F6FAEA] hover:border-[#5F790B] transition-colors"
+                style={{ minHeight: '52px' }}
               >
-                Explore sample valuation
-              </Link>
+                <Play size={13} className="text-[#5F790B]" fill="#5F790B" />
+                See how it works
+              </a>
+            </motion.div>
+
+            {/* Social proof row */}
+            <motion.div
+              initial={reduced ? {} : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4, delay: 0.34 }}
+              className="flex items-center gap-3"
+            >
+              <div className="flex -space-x-2">
+                {['bg-[#CBD1C4]', 'bg-[#B6BFCC]', 'bg-[#8A96A8]'].map((c, i) => (
+                  <div key={i} className={`w-8 h-8 rounded-full border-2 border-white ${c} flex items-center justify-center`}>
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 text-white" fill="currentColor"><path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5.33 0-8 2.67-8 4v1h16v-1c0-1.33-2.67-4-8-4z"/></svg>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="flex">
+                  {[1,2,3,4,5].map(s => (
+                    <svg key={s} className="w-3.5 h-3.5 text-[#5F790B]" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                  ))}
+                </div>
+                <span className="text-[12px] text-[#536174]">Trusted by investors who do their own research</span>
+              </div>
             </motion.div>
           </div>
 
-          {/* ── Right: Screenshots (desktop only) ── */}
-          <div
-            className="relative hidden lg:block min-w-0"
-            style={{ minHeight: '480px' }}
+          {/* ── Right: Product card ── */}
+          <motion.div
+            initial={reduced ? {} : { opacity: 0, x: 32, y: 8 }}
+            animate={{ opacity: 1, x: 0, y: 0 }}
+            transition={{ type: 'spring', stiffness: 60, damping: 22, delay: 0.15 }}
+            className="w-full max-w-[420px] mx-auto lg:mx-0 lg:max-w-none"
           >
-            {/* Main screenshot — spring physics entrance */}
-            <motion.div
-              initial={{ opacity: 0, x: 44, y: 10 }}
-              animate={{ opacity: 1, x: 0, y: 0 }}
-              transition={{
-                type: 'spring',
-                stiffness: 55,
-                damping: 22,
-                delay: 0.18,
-              }}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: '6%',
-                zIndex: 2,
-              }}
-            >
-              <SummaryMockScreen />
-            </motion.div>
+            <ProductMockCard />
+          </motion.div>
 
-            {/* Secondary screenshot — heavier spring, lower stiffness */}
-            <motion.div
-              initial={{ opacity: 0, x: 44, y: 20 }}
-              animate={{ opacity: 1, x: 0, y: 0 }}
-              transition={{
-                type: 'spring',
-                stiffness: 42,
-                damping: 20,
-                delay: 0.36,
-              }}
-              style={{
-                position: 'absolute',
-                bottom: '-40px',
-                right: 0,
-                left: '12%',
-                zIndex: 3,
-              }}
-            >
-              <ValuationMockScreen />
-            </motion.div>
+        </div>
+      </div>
 
-            {/* Invisible spacer to set container height */}
-            <div style={{ height: '600px' }} />
+      {/* "What the market is pricing in" teaser below hero */}
+      <div className="mt-12 mx-auto px-4 sm:px-6" style={{ maxWidth: '1200px' }}>
+        <div className="rounded-[16px] border border-[#E3E6E0] bg-white p-5 sm:p-6" style={{ boxShadow: '0 4px 16px rgba(6,16,31,0.05)' }}>
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-9 h-9 rounded-[10px] bg-[#EEF4DD] flex items-center justify-center shrink-0">
+              <svg className="w-4.5 h-4.5 text-[#5F790B]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-[16px] font-bold text-[#0A1424]">What the market is pricing in</h2>
+              <p className="text-[13px] text-[#536174] mt-0.5">
+                See the growth and profitability the market is expecting over the coming years.
+              </p>
+            </div>
           </div>
+
+          {/* Example: AAPL market pricing table */}
+          <p className="text-[11px] font-semibold text-[#8A96A8] mb-2 uppercase tracking-[0.06em]">Example: Apple Inc. (AAPL)</p>
+          <div className="divide-y divide-[#F3F2EC]">
+            {[
+              ['Implied 5Y Revenue CAGR', '12.1%', ''],
+              ['3Y Historical CAGR', '6.7%', ''],
+              ['Analyst Estimate (5Y CAGR)', '9.3%', ''],
+              ['Market Interpretation', 'Moderate', 'badge'],
+            ].map(([label, val, type]) => (
+              <div key={label} className="flex items-center justify-between py-2">
+                <span className="text-[13px] text-[#536174]">{label}</span>
+                {type === 'badge' ? (
+                  <span className="text-[11px] font-semibold bg-[#FFF4DA] text-[#B56A00] border border-[#F3D391] rounded-full px-2.5 py-0.5">{val}</span>
+                ) : (
+                  <span className="text-[13px] font-semibold tabular-nums text-[#0A1424]">{val}</span>
+                )}
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-[12px] text-[#8A96A8] leading-relaxed">
+            At today&apos;s price, the market implies 12.1% annual revenue growth over the next 5 years.
+          </p>
         </div>
       </div>
     </section>

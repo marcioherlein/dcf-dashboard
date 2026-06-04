@@ -1,145 +1,134 @@
 'use client'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { Check } from 'lucide-react'
+import { useState } from 'react'
 import { signIn } from 'next-auth/react'
+import { Check } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
-const FREE_ITEMS = [
-  '5 stock analyses per month',
-  'Access to key metrics',
-  'Reverse DCF summary',
-  'Watchlist & alerts',
-  'Basic assumptions',
+const FREE_FEATURES = [
+  'Stock analysis (any ticker)',
+  'Fair value summary',
+  'Market-implied expectations',
+  'Essential financials',
+  '3 saved analyses',
 ]
 
-const PRO_ITEMS = [
+const PRO_FEATURES = [
   'Everything in Free',
-  'Unlimited valuations',
-  'Full valuation deep-dives',
-  'Custom assumptions',
-  'Export & portfolio tools',
-  'Fair value email alerts',
-  'Scenario builder',
-  'Sensitivity table',
+  'Full valuation models (DCF, RDCF, Multiples)',
+  'Sensitivity tables & scenarios',
+  'Unlimited saved analyses',
+  'PDF export',
+  'Portfolio & watchlists',
+  'Priority support',
 ]
 
 export default function PricingSection() {
-  const router = useRouter()
+  const [annual, setAnnual] = useState(true)
+
+  const monthlyPrice  = 17
+  const annualMonthly = 11.33
+  const annualTotal   = 136
 
   return (
-    <section className="overflow-x-hidden" style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-      <div className="mx-auto max-w-[900px] px-4 sm:px-6 py-16 sm:py-24">
-        {/* Heading */}
-        <div className="text-center mb-10 sm:mb-12">
-          <h2
-            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] text-slate-900 [text-wrap:balance]"
-            style={{
-              fontWeight: 700,
-              lineHeight: 1.1,
-              letterSpacing: '-0.025em',
-              marginBottom: '12px',
-            }}
-          >
-            Start free. Upgrade when you&apos;re ready to scale.
+    <section className="overflow-x-hidden" style={{ background: '#F8F7F2', borderBottom: '1px solid #E3E6E0' }}>
+      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-14 sm:py-20">
+
+        {/* Header */}
+        <div className="text-center mb-10">
+          <h2 className="text-[28px] sm:text-[36px] font-bold text-[#0A1424] leading-tight mb-3" style={{ letterSpacing: '-0.025em' }}>
+            Simple pricing.<br />Everything you need.
           </h2>
-          <p className="text-base text-slate-600">
-            Simple, transparent pricing. No credit card required.
-          </p>
-        </div>
 
-        {/* Cards — single column on mobile, 2 cols on sm+ */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {/* Free */}
-          <div
-            className="rounded-[20px] bg-white border p-6 sm:p-8"
-            style={{
-              borderColor: '#E6ECF5',
-              boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 6px 20px rgba(15,23,42,0.05)',
-            }}
-          >
-            <div className="mb-6">
-              <p style={{ fontSize: '20px', fontWeight: 700, color: '#0F172A', marginBottom: '6px' }}>Free</p>
-              <div className="flex items-baseline gap-1">
-                <span style={{ fontSize: '36px', fontWeight: 700, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>$0</span>
-                <span style={{ fontSize: '14px', color: '#64748B' }}>/mo</span>
-              </div>
-              <p className="text-base" style={{ color: '#475569', marginTop: '6px' }}>
-                No account needed to start. Always free.
-              </p>
-            </div>
-
-            <ul className="space-y-3 mb-8">
-              {FREE_ITEMS.map(item => (
-                <li key={item} className="flex items-start gap-3 text-base text-slate-600">
-                  <Check size={15} className="text-emerald-500 shrink-0 mt-0.5" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-
+          {/* Toggle */}
+          <div className="inline-flex items-center gap-1 rounded-full bg-white border border-[#E3E6E0] p-1 mt-4" style={{ boxShadow: '0 2px 8px rgba(6,16,31,0.06)' }}>
             <button
-              onClick={() => router.push('/stock/AAPL')}
-              className="w-full rounded-xl py-3.5 text-base font-semibold text-slate-700 border border-slate-300 hover:border-slate-400 hover:bg-slate-50 transition-all active:scale-95"
-              style={{ minHeight: '44px' }}
+              onClick={() => setAnnual(false)}
+              className={cn(
+                'rounded-full px-5 py-2 text-[13.5px] font-semibold transition-colors min-h-[40px]',
+                !annual ? 'bg-[#5F790B] text-white' : 'text-[#536174] hover:text-[#0A1424]',
+              )}
             >
-              Get started
+              Monthly
+            </button>
+            <button
+              onClick={() => setAnnual(true)}
+              className={cn(
+                'rounded-full px-5 py-2 text-[13.5px] font-semibold transition-colors flex items-center gap-2 min-h-[40px]',
+                annual ? 'bg-[#5F790B] text-white' : 'text-[#536174] hover:text-[#0A1424]',
+              )}
+            >
+              Annual
+              <span className={cn(
+                'text-[10px] font-bold rounded-full px-2 py-0.5',
+                annual ? 'bg-white text-[#5F790B]' : 'bg-[#EEF4DD] text-[#5F790B]',
+              )}>
+                Save 33%
+              </span>
             </button>
           </div>
+        </div>
 
-          {/* Pro — most popular stays highlighted */}
-          <div
-            className="relative rounded-[20px] border p-6 sm:p-8"
-            style={{
-              background: 'linear-gradient(160deg, #EFF6FF 0%, #F5F3FF 100%)',
-              borderColor: '#BFDBFE',
-              boxShadow: '0 1px 2px rgba(37,99,235,0.06), 0 12px 36px rgba(37,99,235,0.12)',
-            }}
-          >
-            {/* Most popular badge */}
-            <div
-              className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full px-4 py-1.5 text-[11px] font-bold text-white uppercase tracking-wider"
-              style={{ background: '#2563EB', boxShadow: '0 4px 12px rgba(37,99,235,0.35)' }}
-            >
-              Most popular
+        {/* Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-[680px] mx-auto">
+
+          {/* Free */}
+          <div className="rounded-[20px] border border-[#E3E6E0] bg-white p-6 flex flex-col" style={{ boxShadow: '0 4px 16px rgba(6,16,31,0.05)' }}>
+            <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#8A96A8] mb-3">Free</p>
+            <div className="flex items-baseline gap-1 mb-1">
+              <span className="text-[44px] font-bold text-[#0A1424] leading-none tabular-nums">$0</span>
+              <span className="text-[13px] text-[#8A96A8] font-medium">/month</span>
             </div>
-
-            <div className="mb-6">
-              <p style={{ fontSize: '20px', fontWeight: 700, color: '#0F172A', marginBottom: '6px' }}>Pro</p>
-              <div className="flex items-baseline gap-1">
-                <span style={{ fontSize: '36px', fontWeight: 700, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>$17</span>
-                <span style={{ fontSize: '14px', color: '#64748B' }}>/mo</span>
-              </div>
-              <p className="text-base" style={{ color: '#475569', marginTop: '6px' }}>
-                For investors who do serious research.
-              </p>
-            </div>
-
-            <ul className="space-y-3 mb-8">
-              {PRO_ITEMS.map(item => (
-                <li key={item} className="flex items-start gap-3 text-base text-slate-700">
-                  <Check size={15} className="text-blue-500 shrink-0 mt-0.5" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-
+            <p className="text-[12px] text-[#536174] mb-5">No credit card. No time limit. Just analysis.</p>
             <button
               onClick={() => signIn('google')}
-              className="w-full rounded-xl py-3.5 text-base font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
-              style={{
-                background: '#2563EB',
-                boxShadow: '0 6px 16px rgba(37,99,235,0.28)',
-                minHeight: '44px',
-              }}
+              className="w-full rounded-[10px] border border-[#CBD1C4] py-3 text-[13.5px] font-semibold text-[#0A1424] hover:bg-[#F6FAEA] hover:border-[#5F790B] transition-colors mb-5 min-h-[48px]"
             >
-              Start Pro plan
+              Get started for free
             </button>
+            <ul className="space-y-2.5 flex-1">
+              {FREE_FEATURES.map(f => (
+                <li key={f} className="flex items-start gap-2.5">
+                  <Check size={14} className="text-[#5F790B] shrink-0 mt-0.5" strokeWidth={2.5} />
+                  <span className="text-[13px] text-[#0A1424] leading-snug">{f}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Pro */}
+          <div className="rounded-[20px] border border-[#BFD2A1] bg-white p-6 flex flex-col relative" style={{ boxShadow: '0 4px 20px rgba(95,121,11,0.12)' }}>
+            <div className="absolute top-4 right-4 rounded-full bg-[#5F790B] text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1">
+              MOST POPULAR
+            </div>
+            <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#5F790B] mb-3">Pro</p>
+            <div className="flex items-baseline gap-1 mb-1">
+              <span className="text-[44px] font-bold text-[#0A1424] leading-none tabular-nums">
+                ${annual ? annualMonthly.toFixed(2) : monthlyPrice}
+              </span>
+              <span className="text-[13px] text-[#8A96A8] font-medium">/month</span>
+            </div>
+            {annual && (
+              <p className="text-[12px] text-[#536174] mb-1">Billed as ${annualTotal}/year</p>
+            )}
+            <p className="text-[12px] text-[#536174] mb-5">For investors who want deeper research.</p>
+            <button
+              onClick={() => signIn('google')}
+              className="w-full rounded-[10px] py-3 text-[13.5px] font-bold text-white transition-all hover:-translate-y-px active:scale-95 mb-5 min-h-[48px]"
+              style={{ background: '#5F790B', boxShadow: '0 4px 12px rgba(95,121,11,0.22)' }}
+            >
+              Start Pro →
+            </button>
+            <p className="text-center text-[11px] text-[#8A96A8] mb-4">Cancel anytime.</p>
+            <ul className="space-y-2.5 flex-1">
+              {PRO_FEATURES.map(f => (
+                <li key={f} className="flex items-start gap-2.5">
+                  <Check size={14} className="text-[#5F790B] shrink-0 mt-0.5" strokeWidth={2.5} />
+                  <span className="text-[13px] text-[#0A1424] leading-snug">{f}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
-
-        <p className="text-center mt-6 text-[12px] text-slate-400">
-          Annual plan available at <Link href="/pricing" className="text-blue-600 hover:underline">$136/yr</Link> — save 33%.
-        </p>
       </div>
     </section>
   )
