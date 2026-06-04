@@ -39,9 +39,9 @@ export default function LandingNavbar() {
         }}
       >
         <div className="mx-auto max-w-[1280px] px-4 sm:px-6 h-full flex items-center gap-8">
-          {/* Logo — use the new header asset */}
-          <Link href="/" className="flex items-center shrink-0 group" aria-label="insic home">
-            <InsicLogo variant="horizontal" className="h-8 w-auto" />
+          {/* Logo */}
+          <Link href="/" className="flex items-center shrink-0 leading-none" aria-label="insic home">
+            <InsicLogo variant="horizontal" className="h-7 w-auto block" />
           </Link>
 
           {/* Center nav */}

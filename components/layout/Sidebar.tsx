@@ -93,8 +93,8 @@ export default function Sidebar() {
     >
       {/* Logo lockup */}
       <div className="px-4 border-b border-[#E3E6E0]" style={{ height: '52px', display: 'flex', alignItems: 'center' }}>
-        <Link href={session ? '/analyze' : '/'} className="flex items-center" aria-label="insic home">
-          <InsicLogo variant="horizontal" className="h-7 w-auto" />
+        <Link href={session ? '/analyze' : '/'} className="flex items-center leading-none" aria-label="insic home">
+          <InsicLogo variant="horizontal" className="h-7 w-auto block" />
         </Link>
       </div>
 

@@ -306,9 +306,9 @@ export default function TopBar() {
       >
         {/* ── Column 1: Logo ── */}
         <div className="flex items-center">
-          <Link href={session ? '/analyze' : '/'} className="flex items-center shrink-0 group" aria-label="insic home">
+          <Link href={session ? '/analyze' : '/'} className="flex items-center leading-none shrink-0" aria-label="insic home">
             {/* Mobile: mark only */}
-            <InsicLogo variant="mark" className="sm:hidden h-7 w-auto" />
+            <InsicLogo variant="mark" className="sm:hidden h-7 w-auto block" />
             {/* Desktop: full horizontal */}
             <InsicLogo variant="horizontal" className="hidden sm:block h-7 w-auto" />
           </Link>
