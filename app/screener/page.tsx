@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { motion, useReducedMotion } from 'motion/react'
 import {
   SlidersHorizontal, ArrowUpDown, ArrowUp, ArrowDown,
