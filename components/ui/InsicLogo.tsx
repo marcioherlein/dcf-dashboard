@@ -57,11 +57,16 @@ export function InsicAppIcon({ size = 40, className, style }: InsicAppIconProps)
       style={style}
       aria-hidden="true"
     >
-      {/* Rounded-rect white card */}
-      <rect x="20" y="20" width="216" height="216" rx="54" fill="#FFFFFF" />
+      <defs>
+        <filter id="icon-shadow" x="-10%" y="-10%" width="120%" height="120%">
+          <feDropShadow dx="0" dy="1" stdDeviation="3" floodColor="#06101F" floodOpacity="0.13" />
+        </filter>
+      </defs>
+      {/* Rounded-rect white card with subtle shadow */}
+      <rect x="20" y="20" width="216" height="216" rx="54" fill="#FFFFFF" filter="url(#icon-shadow)" />
       {/* Olive dot */}
       <circle cx="127.6" cy="78.2" r="12.15" fill="#5F790B" />
-      {/* 5 navy bars — exact geometry from insic-app-icon.svg */}
+      {/* 5 navy bars */}
       <rect x="101.95" y="107.9"  width="51.3" height="9.45" rx="1.69" fill="#06101F" />
       <rect x="101.95" y="126.8"  width="51.3" height="9.45" rx="1.69" fill="#06101F" />
       <rect x="101.95" y="145.7"  width="62.1" height="9.45" rx="1.69" fill="#06101F" />
@@ -157,11 +162,6 @@ function InsicWordmark({
   style?: React.CSSProperties;
 }) {
   const { vbW, vbH, baseline, cx0, cx3, cy, tr } = WORDMARK[size];
-  const arcH = tr * 4.0;
-  const midX = (cx0 + cx3) / 2;
-  const arcPeakY = cy - arcH;
-  const arcD = `M ${cx0} ${cy} Q ${midX} ${arcPeakY} ${cx3} ${cy}`;
-  const strokeW = tr * 0.6;
 
   return (
     <svg
@@ -184,9 +184,7 @@ function InsicWordmark({
       >
         insic
       </text>
-      {/* Arc connecting the two i tittles */}
-      <path d={arcD} stroke="#5F790B" strokeWidth={strokeW} fill="none" strokeLinecap="round" />
-      {/* Olive tittle dots */}
+      {/* Olive tittle dots — drawn on top of the navy text tittles */}
       <circle cx={cx0} cy={cy} r={tr} fill="#5F790B" />
       <circle cx={cx3} cy={cy} r={tr} fill="#5F790B" />
     </svg>
