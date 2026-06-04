@@ -42,18 +42,150 @@ function AnimatedPath({ d, stroke, strokeWidth, delay = 0, animate: shouldAnimat
   )
 }
 
-// ── Typewriter "tab" indicator cycles through tabs ───────────────────────────
-function LiveTabIndicator() {
-  const tabs = ['Overview', 'Valuation', 'Financials', 'Risks', 'News']
-  const [active, setActive] = useState(0)
+// ── Click ripple ─────────────────────────────────────────────────────────────
+function ClickRipple({ x, y, visible }: { x: number; y: number; visible: boolean }) {
+  return (
+    <motion.div
+      className="pointer-events-none absolute rounded-full border border-[#5F790B]"
+      style={{ left: x - 12, top: y - 12, width: 24, height: 24, zIndex: 20 }}
+      initial={{ scale: 0, opacity: 0.8 }}
+      animate={visible ? { scale: 2.2, opacity: 0 } : { scale: 0, opacity: 0 }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+    />
+  )
+}
+
+// ── SVG cursor ───────────────────────────────────────────────────────────────
+function DemoCursor({ x, y, clicking }: { x: number; y: number; clicking: boolean }) {
+  return (
+    <motion.div
+      className="pointer-events-none absolute z-30"
+      style={{
+        left: x,
+        top: y,
+        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.28))',
+        transition: 'left 0.55s cubic-bezier(0.16,1,0.3,1), top 0.55s cubic-bezier(0.16,1,0.3,1)',
+      }}
+      animate={{ scale: clicking ? 0.85 : 1 }}
+      transition={{ duration: 0.12 }}
+    >
+      <svg width="18" height="21" viewBox="0 0 18 21" fill="none">
+        <path d="M0 0L0 16.5L4.5 12.5L8 19.5L10 18.5L6.5 11.5L12 11.5L0 0Z" fill="white" />
+        <path d="M0 0L0 16.5L4.5 12.5L8 19.5L10 18.5L6.5 11.5L12 11.5L0 0Z" stroke="#0A1424" strokeWidth="1.2" strokeLinejoin="round" />
+      </svg>
+    </motion.div>
+  )
+}
+
+// ── Demo orchestration ────────────────────────────────────────────────────────
+// Positions are relative to the card's top-left, in px (approximate layout coords)
+// Card is ~320px wide. Key targets:
+//   Search bar: x≈140, y≈14 (in header zone)
+//   "Valuation" tab: x≈110, y≈50
+//   "Overview" tab: x≈32, y≈50
+//   Verdict card: x≈180, y≈110
+
+type DemoStep =
+  | { kind: 'move'; x: number; y: number; duration: number }
+  | { kind: 'click'; duration: number }
+  | { kind: 'pause'; duration: number }
+  | { kind: 'type'; text: string; duration: number }
+
+const DEMO_SEQUENCE: DemoStep[] = [
+  { kind: 'move',  x: -20, y: -20, duration: 0 },      // start off-card
+  { kind: 'pause', duration: 600 },
+  { kind: 'move',  x: 190, y: 12,  duration: 600 },     // move to header ticker area
+  { kind: 'pause', duration: 300 },
+  { kind: 'click', duration: 200 },
+  { kind: 'pause', duration: 400 },
+  { kind: 'move',  x: 108, y: 48,  duration: 500 },     // move to Valuation tab
+  { kind: 'pause', duration: 300 },
+  { kind: 'click', duration: 200 },
+  { kind: 'pause', duration: 600 },
+  { kind: 'move',  x: 200, y: 105, duration: 700 },     // hover over verdict card
+  { kind: 'pause', duration: 800 },
+  { kind: 'move',  x: 240, y: 200, duration: 600 },     // move to fair value area
+  { kind: 'pause', duration: 500 },
+  { kind: 'move',  x: 30,  y: 48,  duration: 700 },     // move to Overview tab
+  { kind: 'pause', duration: 300 },
+  { kind: 'click', duration: 200 },
+  { kind: 'pause', duration: 500 },
+  { kind: 'move',  x: -20, y: -20, duration: 400 },     // exit
+  { kind: 'pause', duration: 1200 },
+]
+
+function useDemoOrchestration(active: boolean, reduced: boolean | null) {
+  const [cx, setCx] = useState(-20)
+  const [cy, setCy] = useState(-20)
+  const [clicking, setClicking] = useState(false)
+  const [clickPos, setClickPos] = useState({ x: 0, y: 0 })
+  const [rippleKey, setRippleKey] = useState(0)
+  const [activeTab, setActiveTab] = useState(0)
+  const [hoverTab, setHoverTab] = useState<number | null>(null)
+  const [rippleVisible, setRippleVisible] = useState(false)
+
+  // Derive hoverTab from cursor position
+  useEffect(() => {
+    if (cy > 35 && cy < 65) {
+      if (cx > 0 && cx < 60) setHoverTab(0)
+      else if (cx >= 60 && cx < 150) setHoverTab(1)
+      else setHoverTab(null)
+    } else {
+      setHoverTab(null)
+    }
+  }, [cx, cy])
 
   useEffect(() => {
-    const cycle = [0, 1800, 2800, 3600, 4400]
-    const timers = cycle.map((t, i) =>
-      setTimeout(() => setActive(i), t)
-    )
-    return () => timers.forEach(clearTimeout)
-  }, [])
+    if (!active || reduced) return
+
+    let cancelled = false
+    const timers: ReturnType<typeof setTimeout>[] = []
+
+    function scheduleStep(steps: DemoStep[], currentX: number, currentY: number, offset: number): void {
+      if (steps.length === 0) {
+        const t = setTimeout(() => {
+          if (!cancelled) scheduleStep(DEMO_SEQUENCE, -20, -20, 0)
+        }, offset)
+        timers.push(t)
+        return
+      }
+      const [step, ...rest] = steps
+      if (step.kind === 'move') {
+        const t = setTimeout(() => {
+          if (cancelled) return
+          setCx(step.x); setCy(step.y)
+          scheduleStep(rest, step.x, step.y, step.duration)
+        }, offset)
+        timers.push(t)
+      } else if (step.kind === 'click') {
+        const t = setTimeout(() => {
+          if (cancelled) return
+          setClicking(true)
+          setClickPos({ x: currentX, y: currentY })
+          setRippleVisible(true)
+          setRippleKey(k => k + 1)
+          if (currentX > 80 && currentX < 150 && currentY < 65) setActiveTab(1)
+          if (currentX < 60 && currentY < 65) setActiveTab(0)
+          setTimeout(() => { if (!cancelled) setClicking(false) }, 150)
+          setTimeout(() => { if (!cancelled) setRippleVisible(false) }, 500)
+          scheduleStep(rest, currentX, currentY, step.duration)
+        }, offset)
+        timers.push(t)
+      } else if (step.kind === 'pause') {
+        scheduleStep(rest, currentX, currentY, offset + step.duration)
+      }
+    }
+
+    scheduleStep(DEMO_SEQUENCE, -20, -20, 0)
+    return () => { cancelled = true; timers.forEach(clearTimeout) }
+  }, [active, reduced])
+
+  return { cx, cy, clicking, clickPos, rippleKey, rippleVisible, activeTab, hoverTab }
+}
+
+// ── Tab bar that syncs with demo cursor ──────────────────────────────────────
+function LiveTabIndicator({ activeTab, hoverTab }: { activeTab: number; hoverTab: number | null }) {
+  const tabs = ['Overview', 'Valuation', 'Financials', 'Risks', 'News']
 
   return (
     <div className="flex border-b border-[#E3E6E0] px-4 gap-4">
@@ -62,8 +194,10 @@ function LiveTabIndicator() {
           key={t}
           className="text-[11px] py-2.5 font-medium border-b-2 -mb-px transition-all duration-300"
           style={{
-            borderColor: i === active ? '#5F790B' : 'transparent',
-            color: i === active ? '#0A1424' : '#8A96A8',
+            borderColor: i === activeTab ? '#5F790B' : 'transparent',
+            color: i === activeTab ? '#0A1424' : i === hoverTab ? '#536174' : '#8A96A8',
+            background: i === hoverTab && i !== activeTab ? 'rgba(95,121,11,0.06)' : 'transparent',
+            borderRadius: i === hoverTab ? '4px 4px 0 0' : undefined,
           }}
         >
           {t}
@@ -81,6 +215,9 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
   const [cagrVisible, setCagrVisible] = useState(false)
   const [barDrawn, setBarDrawn] = useState(false)
 
+  const { cx, cy, clicking, clickPos, rippleKey, rippleVisible, activeTab, hoverTab } =
+    useDemoOrchestration(inView, reduced)
+
   useEffect(() => {
     if (!inView || reduced) {
       setVerdictVisible(true); setMetricsVisible(true)
@@ -97,9 +234,20 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
 
   return (
     <div
-      className="relative w-full rounded-[20px] border border-[#E3E6E0] bg-white overflow-hidden"
-      style={{ boxShadow: '0 16px 48px rgba(6,16,31,0.12), 0 4px 16px rgba(6,16,31,0.06)' }}
+      className="relative w-full rounded-[20px] border border-[#E3E6E0] bg-white"
+      style={{ boxShadow: '0 16px 48px rgba(6,16,31,0.12), 0 4px 16px rgba(6,16,31,0.06)', overflow: 'visible' }}
     >
+      {/* Cursor overlay — rendered outside overflow:hidden so it can sit above the card */}
+      {!reduced && inView && (
+        <>
+          <DemoCursor x={cx} y={cy} clicking={clicking} />
+          <ClickRipple key={rippleKey} x={clickPos.x} y={clickPos.y} visible={rippleVisible} />
+        </>
+      )}
+
+      {/* Inner clip — needed for rounded corners on content */}
+      <div className="rounded-[20px] overflow-hidden">
+
       {/* Stock header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#E3E6E0] bg-[#FBFAF7]">
         <div className="flex items-center gap-2">
@@ -122,7 +270,7 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
       </div>
 
       {/* Animated tabs */}
-      <LiveTabIndicator />
+      <LiveTabIndicator activeTab={activeTab} hoverTab={hoverTab} />
 
       {/* Verdict — slides in */}
       <motion.div
@@ -275,6 +423,8 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
           ))}
         </div>
       </motion.div>
+
+      </div>{/* end inner clip */}
     </div>
   )
 }
