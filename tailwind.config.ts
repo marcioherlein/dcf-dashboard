@@ -10,7 +10,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ── shadcn/ui CSS variable tokens (Tailwind v3) ───────────────────────
+        // ── shadcn/ui CSS variable bridge ──────────────────────────────────
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         border:     'hsl(var(--border))',
@@ -24,33 +24,65 @@ const config: Config = {
         destructive:{ DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
         primary:    { DEFAULT: 'hsl(var(--primary))',     foreground: 'hsl(var(--primary-foreground))' },
 
-        // ── Warm cream palette ────────────────────────────────────────────────
-        cream: { DEFAULT: '#F9F5EF', dark: '#F0EBE3' },
-        'amber-gold': '#F59E0B',
+        // ── insic Brand: Ink palette ──────────────────────────────────────
+        ink: {
+          950: '#06101F',
+          900: '#0A1424',
+          800: '#111C2E',
+          700: '#1B2A3D',
+        },
 
-        // ── Financial semantic tokens ─────────────────────────────────────────
-        up:           '#059669',  // emerald-600 (deeper for light bg)
-        down:         '#DC2626',  // red-600
-        warn:         '#D97706',  // amber-600
-        'accent-blue':'#2563EB',  // blue-600
+        // ── insic Brand: Olive (primary brand accent) ─────────────────────
+        olive: {
+          700: '#5F790B',
+          600: '#6F8F12',
+          500: '#7C9A19',
+          100: '#EEF4DD',
+          50:  '#F6FAEA',
+        },
 
-        // ── Dark nav / hero palette (kept for TopBar, BottomNav, hero) ────────
-        'deep':          '#050D1F',
-        'mid':           '#0A1628',
-        'raised':        '#0E1F36',
-        'neon':          '#3B82F6',
-        'neon-light':    '#60A5FA',
-        'neon-cyan':     '#06B6D4',
+        // ── insic Brand: Warm neutral surfaces ────────────────────────────
+        'bg-warm':     '#F8F7F2',
+        'bg-soft':     '#F3F2EC',
+        'surface':     '#FFFFFF',
+        'surface-subtle': '#FBFAF7',
+        'border-warm': '#E3E6E0',
+        'border-strong-warm': '#CBD1C4',
 
-        // ── Clairo brand palette ──────────────────────────────────────────────
-        'brand-navy':         '#2563EB',
-        'brand-emerald':      '#059669',
-        'brand-gold':         '#D97706',
-        'brand-gold-decor':   '#D97706',
-        'brand-red':          '#DC2626',
-        'brand-surface':      '#F1F5F9',
+        // ── insic Brand: Text hierarchy ───────────────────────────────────
+        'text-ink':       '#0A1424',
+        'text-secondary': '#536174',
+        'text-muted':     '#8A96A8',
+        'text-faint':     '#B6BFCC',
 
-        // ── Legacy MDM3 tokens (Header/Sidebar — keep until refactored) ───────
+        // ── Supporting blue (secondary actions, links) ────────────────────
+        'brand-blue': {
+          600: '#2563EB',
+          100: '#EAF1FF',
+          50:  '#F4F7FF',
+        },
+
+        // ── Financial semantic colors ─────────────────────────────────────
+        // Use ONLY for financial meaning — not as general decoration
+        up:   '#11875D',   // positive / undervalued
+        down: '#D83B3B',   // negative / overvalued
+        warn: '#B56A00',   // uncertain / warning
+        'up-soft':   '#E8F7EF',
+        'down-soft': '#FCEAEA',
+        'warn-soft': '#FFF4DA',
+
+        // Legacy accent-blue alias (avoid new usage; prefer brand-blue)
+        'accent-blue': '#2563EB',
+
+        // ── Dark nav / hero ────────────────────────────────────────────────
+        deep:   '#06101F',
+        mid:    '#0A1424',
+        raised: '#111C2E',
+
+        // ── Warm cream surface (landing) ──────────────────────────────────
+        cream: { DEFAULT: '#F8F7F2', dark: '#F0EBE3' },
+
+        // ── Legacy MDM3 tokens — kept until fully migrated ────────────────
         "on-primary":               "#ffffff",
         "on-primary-container":     "#7999dc",
         "primary-container":        "#002f6c",
@@ -65,7 +97,6 @@ const config: Config = {
         "tertiary-container":       "#412e00",
         "tertiary-fixed":           "#ffdfa0",
         "tertiary-fixed-dim":       "#fbbc00",
-        surface:                    "#fbf9f8",
         "surface-dim":              "#dbd9d9",
         "surface-bright":           "#fbf9f8",
         "surface-container-lowest": "#ffffff",
@@ -85,42 +116,73 @@ const config: Config = {
         "error-container":          "#ffdad6",
         "on-error":                 "#ffffff",
         "on-error-container":       "#93000a",
+
+        // Kept for legacy chart/landing references
+        'brand-navy':         '#2563EB',
+        'brand-emerald':      '#11875D',
+        'brand-gold':         '#B56A00',
+        'brand-gold-decor':   '#B56A00',
+        'brand-red':          '#D83B3B',
+        'brand-surface':      '#F8F7F2',
+        'neon':               '#3B82F6',
+        'neon-light':         '#60A5FA',
+        'neon-cyan':          '#06B6D4',
+        // Old amber-gold alias
+        'amber-gold':         '#B56A00',
       },
+
       fontFamily: {
-        display:  ["var(--font-display)", "Space Grotesk", "system-ui", "sans-serif"],
-        headline: ["var(--font-display)", "Space Grotesk", "system-ui", "sans-serif"],
-        body:     ["var(--font-sans)",    "Inter",          "system-ui", "sans-serif"],
-        label:    ["var(--font-sans)",    "Inter",          "system-ui", "sans-serif"],
-        sans:     ["var(--font-sans)",    "Inter",          "system-ui", "sans-serif"],
+        // Inter is the primary UI font across all app surfaces
+        display:  ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
+        headline: ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
+        body:     ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
+        label:    ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
+        sans:     ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
         mono:     ["var(--font-mono)", "DM Mono", "IBM Plex Mono", "Courier New", "monospace"],
+        // Serif — only for landing hero headline if desired
+        serif:    ["Georgia", "Times New Roman", "serif"],
       },
+
       fontSize: {
-        'display':  ['clamp(2rem, 5.5vw, 4.25rem)', { lineHeight: '1.05', fontWeight: '700', letterSpacing: '-0.04em' }],
-        'hero':     ['1.75rem',   { lineHeight: '1.2',  fontWeight: '800', letterSpacing: '-0.02em' }],
-        'heading':  ['1.25rem',   { lineHeight: '1.3',  fontWeight: '700' }],
-        'subhead':  ['1rem',      { lineHeight: '1.4',  fontWeight: '600' }],
-        'label':    ['0.6875rem', { lineHeight: '1.4',  fontWeight: '700', letterSpacing: '0.06em' }],
-        'micro':    ['0.6875rem', { lineHeight: '1.4',  fontWeight: '400' }],
+        // Landing hero (64px desktop, scales down)
+        'display': ['clamp(2.375rem, 5.5vw, 4rem)', { lineHeight: '1.02', fontWeight: '700', letterSpacing: '-0.035em' }],
+        // Page titles
+        'hero':    ['2rem',   { lineHeight: '1.2',  fontWeight: '700', letterSpacing: '-0.025em' }],
+        // Section titles
+        'heading': ['1.5rem', { lineHeight: '1.3',  fontWeight: '700', letterSpacing: '-0.018em' }],
+        // Card titles
+        'subhead': ['1rem',   { lineHeight: '1.5',  fontWeight: '650' }],
+        // Labels
+        'label':   ['0.6875rem', { lineHeight: '1.4', fontWeight: '700', letterSpacing: '0.08em' }],
+        'micro':   ['0.6875rem', { lineHeight: '1.4', fontWeight: '400' }],
       },
+
       borderRadius: {
-        DEFAULT: "0.5rem",
-        sm:      "0.25rem",
-        md:      "0.5rem",
-        lg:      "0.5rem",
-        xl:      "0.75rem",
-        "2xl":   "1rem",
+        // 8px spacing system
+        DEFAULT: "0.5rem",     // 8px — small controls
+        sm:      "0.25rem",    // 4px
+        md:      "0.625rem",   // 10px — inputs, buttons
+        lg:      "0.75rem",    // 12px
+        xl:      "1rem",       // 16px — cards
+        "2xl":   "1.25rem",    // 20px — hero/product cards
+        "3xl":   "1.375rem",   // 22px — app icon containers
         full:    "9999px",
       },
+
       boxShadow: {
-        card:        "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
-        "card-md":   "0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)",
-        float:       "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)",
-        nav:         "0 2px 12px rgba(0,0,0,0.4)",
-        "glow-sm":   "0 0 12px rgba(37,99,235,0.2), 0 0 4px rgba(37,99,235,0.1)",
-        "glow-md":   "0 0 24px rgba(37,99,235,0.3), 0 0 8px rgba(37,99,235,0.12)",
-        "glow-lg":   "0 0 40px rgba(37,99,235,0.4), 0 0 16px rgba(37,99,235,0.18)",
-        "glow-cyan": "0 0 20px rgba(6,182,212,0.35), 0 0 6px rgba(6,182,212,0.18)",
+        // insic shadow scale — restrained, ink-toned
+        card:        "0 8px 24px rgba(6, 16, 31, 0.06)",
+        "card-md":   "0 12px 32px rgba(6, 16, 31, 0.09)",
+        float:       "0 16px 48px rgba(6, 16, 31, 0.14), 0 4px 12px rgba(6, 16, 31, 0.07)",
+        nav:         "0 4px 20px rgba(6, 16, 31, 0.08)",
+        // Olive glow variants (CTAs, selected states)
+        "glow-sm":   "0 0 12px rgba(95, 121, 11, 0.18), 0 0 4px rgba(95, 121, 11, 0.09)",
+        "glow-md":   "0 0 24px rgba(95, 121, 11, 0.25), 0 0 8px rgba(95, 121, 11, 0.10)",
+        "glow-lg":   "0 0 40px rgba(95, 121, 11, 0.32), 0 0 16px rgba(95, 121, 11, 0.14)",
+        // Blue glow — kept for blue-accent elements
+        "glow-cyan": "0 0 20px rgba(37, 99, 235, 0.20), 0 0 6px rgba(37, 99, 235, 0.10)",
       },
+
       animation: {
         'glow-pulse':    'glow-pulse 2.5s ease-in-out infinite',
         'float':         'float 4s ease-in-out infinite',
@@ -128,6 +190,24 @@ const config: Config = {
         'float-delay':   'float 4s ease-in-out 1.2s infinite',
         'border-rotate': 'border-rotate 4s linear infinite',
         'scan-line':     'scan-line 4s ease-in-out infinite',
+      },
+
+      spacing: {
+        // 8px base grid — key steps surfaced as named tokens
+        '0.5': '0.125rem',  // 2px
+        '1':   '0.25rem',   // 4px
+        '1.5': '0.375rem',  // 6px
+        '2':   '0.5rem',    // 8px
+        '3':   '0.75rem',   // 12px
+        '4':   '1rem',      // 16px
+        '5':   '1.25rem',   // 20px
+        '6':   '1.5rem',    // 24px
+        '8':   '2rem',      // 32px
+        '10':  '2.5rem',    // 40px
+        '12':  '3rem',      // 48px
+        '16':  '4rem',      // 64px
+        '20':  '5rem',      // 80px
+        '24':  '6rem',      // 96px
       },
     },
   },

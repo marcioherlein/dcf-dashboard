@@ -12,19 +12,19 @@ import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const PRIMARY_NAV: Array<{ href: string; label: string; icon: LucideIcon; match: (p: string) => boolean }> = [
-  { href: '/analyze',               label: 'Analyze',       icon: TrendingUp,       match: (p) => p === '/analyze' || p.startsWith('/stock') },
+  { href: '/analyze',               label: 'Analyze',       icon: TrendingUp,        match: (p) => p === '/analyze' || p.startsWith('/stock') },
   { href: '/screener',              label: 'Screener',      icon: SlidersHorizontal, match: (p) => p.startsWith('/screener') },
-  { href: '/valuations',            label: 'My Valuations', icon: Bookmark,         match: (p) => p.startsWith('/valuations') },
-  { href: '/etf',                   label: 'ETF Tracker',   icon: PieChart,         match: (p) => p.startsWith('/etf') },
-  { href: '/monitor?tab=portfolio', label: 'Portfolio',     icon: Briefcase,        match: (p) => p.startsWith('/monitor') },
-  { href: '/markets',               label: 'Markets',       icon: Globe,            match: (p) => p.startsWith('/markets') },
+  { href: '/valuations',            label: 'My Valuations', icon: Bookmark,          match: (p) => p.startsWith('/valuations') },
+  { href: '/etf',                   label: 'ETF Tracker',   icon: PieChart,          match: (p) => p.startsWith('/etf') },
+  { href: '/monitor?tab=portfolio', label: 'Portfolio',     icon: Briefcase,         match: (p) => p.startsWith('/monitor') },
+  { href: '/markets',               label: 'Markets',       icon: Globe,             match: (p) => p.startsWith('/markets') },
 ]
 
 const UTILITY_NAV: Array<{ href: string; label: string; icon: LucideIcon; match: (p: string) => boolean }> = [
-  { href: '/ai-stack', label: 'AI Stack',     icon: Sparkles,   match: (p) => p.startsWith('/ai-stack') },
-  { href: '/alerts',   label: 'Alerts',       icon: Bell,       match: (p) => p.startsWith('/alerts') },
-  { href: '/settings', label: 'Settings',     icon: Settings,   match: (p) => p.startsWith('/settings') },
-  { href: '/help',     label: 'Help',         icon: HelpCircle, match: (p) => p.startsWith('/help') },
+  { href: '/ai-stack', label: 'AI Stack',  icon: Sparkles,   match: (p) => p.startsWith('/ai-stack') },
+  { href: '/alerts',   label: 'Alerts',    icon: Bell,       match: (p) => p.startsWith('/alerts') },
+  { href: '/settings', label: 'Settings',  icon: Settings,   match: (p) => p.startsWith('/settings') },
+  { href: '/help',     label: 'Help',      icon: HelpCircle, match: (p) => p.startsWith('/help') },
 ]
 
 function NavItem({
@@ -36,32 +36,31 @@ function NavItem({
   return (
     <motion.div
       custom={index}
-      initial={reduced ? false : { opacity: 0, x: -10 }}
+      initial={reduced ? false : { opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{
-        delay: index * 0.03,
-        duration: 0.24,
-        ease: [0.16, 1, 0.3, 1],
-      }}
+      transition={{ delay: index * 0.025, duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
     >
       <Link
         href={href}
         className={cn(
-          'group relative flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] transition-colors duration-150',
+          'group relative flex items-center gap-2.5 px-3 py-2 rounded-[10px] text-[13.5px] font-medium transition-colors duration-120',
           active
-            ? 'bg-blue-50 text-[#1D4ED8] font-[600]'
-            : 'text-slate-500 font-medium hover:bg-slate-100/80 hover:text-slate-900',
+            ? 'bg-[#EEF4DD] text-[#0A1424]'
+            : 'text-[#536174] hover:bg-[#F1F5E8] hover:text-[#0A1424]',
         )}
       >
+        {/* Olive left indicator for active state */}
         {active && (
-          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[18px] rounded-r-full bg-blue-600" />
+          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[18px] rounded-r-full bg-[#5F790B]" />
         )}
         <Icon
-          size={15}
-          strokeWidth={active ? 2.3 : 1.8}
+          size={16}
+          strokeWidth={active ? 2.2 : 1.7}
           className={cn(
-            'shrink-0 transition-colors duration-150',
-            active ? 'text-[#2563EB]' : 'text-slate-400 group-hover:text-slate-600',
+            'shrink-0 transition-colors duration-120',
+            active
+              ? 'text-[#5F790B]'
+              : 'text-[#8A96A8] group-hover:text-[#5F790B]',
           )}
         />
         <span className="truncate">{label}</span>
@@ -70,8 +69,12 @@ function NavItem({
   )
 }
 
-function NavDivider() {
-  return <div className="mx-3 border-t border-slate-100" />
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#8A96A8]">
+      {children}
+    </p>
+  )
 }
 
 export default function Sidebar() {
@@ -83,15 +86,15 @@ export default function Sidebar() {
     ?.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase() ?? '?'
 
   return (
-    <aside className="fixed left-0 top-[52px] bottom-0 w-[220px] z-30 hidden lg:flex flex-col border-r border-slate-200/80"
-      style={{ background: '#F8FAFC' }}
+    <aside
+      className="fixed left-0 top-[52px] bottom-0 w-[220px] z-30 hidden lg:flex flex-col border-r border-[#E3E6E0]"
+      style={{ background: '#FBFAF7' }}
     >
-      {/* Nav items */}
-      <nav className="flex-1 px-2 pt-3 pb-2 overflow-y-auto custom-scrollbar">
+      {/* Navigation */}
+      <nav className="flex-1 px-2.5 pt-4 pb-2 overflow-y-auto custom-scrollbar">
 
-        {/* Primary nav */}
-        <p className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">Workspace</p>
-        <div className="flex flex-col gap-0.5">
+        <SectionLabel>Workspace</SectionLabel>
+        <div className="flex flex-col gap-0.5 mb-4">
           {PRIMARY_NAV.map(({ href, label, icon, match }, i) => (
             <NavItem
               key={href}
@@ -104,13 +107,9 @@ export default function Sidebar() {
           ))}
         </div>
 
-        {/* Divider */}
-        <div className="my-3">
-          <NavDivider />
-        </div>
+        <div className="mx-3 mb-3 border-t border-[#E3E6E0]" />
 
-        {/* Utility nav */}
-        <p className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">Account</p>
+        <SectionLabel>Account</SectionLabel>
         <div className="flex flex-col gap-0.5">
           {UTILITY_NAV.map(({ href, label, icon, match }, i) => (
             <NavItem
@@ -127,10 +126,10 @@ export default function Sidebar() {
 
       {/* User profile footer */}
       <motion.div
-        className="px-3 py-4 border-t border-slate-200/60"
+        className="px-3 py-3.5 border-t border-[#E3E6E0]"
         initial={reduced ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: (PRIMARY_NAV.length + UTILITY_NAV.length) * 0.03 + 0.06, duration: 0.28 }}
+        transition={{ delay: (PRIMARY_NAV.length + UTILITY_NAV.length) * 0.025 + 0.06, duration: 0.24 }}
       >
         {session ? (
           <div className="flex items-center gap-2.5">
@@ -140,18 +139,20 @@ export default function Sidebar() {
                 alt={session.user.name ?? ''}
                 width={32}
                 height={32}
-                className="rounded-full ring-2 ring-slate-200/80 shrink-0"
+                className="rounded-full ring-2 ring-[#E3E6E0] shrink-0"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-[#2563EB] flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-full bg-[#5F790B] flex items-center justify-center shrink-0">
                 <span className="text-[11px] font-bold text-white leading-none">{initials}</span>
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-[12px] font-[600] text-slate-800 truncate leading-tight">{session.user?.name ?? 'User'}</p>
+              <p className="text-[12px] font-semibold text-[#0A1424] truncate leading-tight">
+                {session.user?.name ?? 'User'}
+              </p>
               <button
                 onClick={() => signOut()}
-                className="text-[11px] text-slate-400 hover:text-slate-700 transition-colors leading-tight"
+                className="text-[11px] text-[#8A96A8] hover:text-[#536174] transition-colors leading-tight"
               >
                 Sign out
               </button>
@@ -160,7 +161,7 @@ export default function Sidebar() {
         ) : (
           <button
             onClick={() => signIn('google')}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] px-3 py-2.5 text-[12px] font-semibold text-white transition-colors"
+            className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-[#5F790B] hover:bg-[#526A08] active:bg-[#4A5E07] px-3 py-2.5 text-[12.5px] font-semibold text-white transition-colors"
           >
             Sign in
           </button>

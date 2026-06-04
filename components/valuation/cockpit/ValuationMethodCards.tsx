@@ -72,54 +72,61 @@ const METHOD_CFG: Record<string, {
   chartHex: string
   Icon: IconComp
 }> = {
+  // Forward P/E — blue (secondary/informational)
   forward_pe: {
-    iconBg: 'bg-blue-100', iconText: 'text-blue-600',
-    barBg: 'bg-blue-500', valueBg: 'bg-blue-50', valueText: 'text-blue-700',
-    chartHex: '#3b82f6',
+    iconBg: 'bg-[#EAF1FF]', iconText: 'text-[#2563EB]',
+    barBg: 'bg-[#2563EB]', valueBg: 'bg-[#F4F7FF]', valueText: 'text-[#2563EB]',
+    chartHex: '#2563EB',
     Icon: TrendingUp as IconComp,
   },
+  // EV/EBITDA — ink-tinted blue
   ev_ebitda: {
-    iconBg: 'bg-indigo-100', iconText: 'text-indigo-600',
-    barBg: 'bg-indigo-400', valueBg: 'bg-indigo-50', valueText: 'text-indigo-700',
-    chartHex: '#6366f1',
+    iconBg: 'bg-[#EEF4DD]', iconText: 'text-[#5F790B]',
+    barBg: 'bg-[#6F8F12]', valueBg: 'bg-[#F6FAEA]', valueText: 'text-[#5F790B]',
+    chartHex: '#6F8F12',
     Icon: BarChart2 as IconComp,
   },
+  // Revenue multiple — neutral blue
   revenue_multiple: {
-    iconBg: 'bg-purple-100', iconText: 'text-purple-600',
-    barBg: 'bg-purple-500', valueBg: 'bg-purple-50', valueText: 'text-purple-700',
-    chartHex: '#a855f7',
+    iconBg: 'bg-[#EAF1FF]', iconText: 'text-[#2563EB]',
+    barBg: 'bg-[#2563EB]', valueBg: 'bg-[#F4F7FF]', valueText: 'text-[#1D4ED8]',
+    chartHex: '#1D4ED8',
     Icon: BarChart as IconComp,
   },
+  // Price-to-book — warm amber (distinct from olive)
   price_to_book: {
-    iconBg: 'bg-indigo-100', iconText: 'text-indigo-600',
-    barBg: 'bg-indigo-400', valueBg: 'bg-indigo-50', valueText: 'text-indigo-700',
-    chartHex: '#6366f1',
+    iconBg: 'bg-[#FFF4DA]', iconText: 'text-[#B56A00]',
+    barBg: 'bg-[#B56A00]', valueBg: 'bg-[#FFF4DA]', valueText: 'text-[#B56A00]',
+    chartHex: '#B56A00',
     Icon: BookOpen as IconComp,
   },
+  // P/FFO — warm amber/orange
   p_ffo: {
-    iconBg: 'bg-orange-100', iconText: 'text-orange-600',
-    barBg: 'bg-orange-400', valueBg: 'bg-orange-50', valueText: 'text-orange-700',
-    chartHex: '#f97316',
+    iconBg: 'bg-[#FFF4DA]', iconText: 'text-[#B56A00]',
+    barBg: 'bg-[#B56A00]', valueBg: 'bg-[#FFF4DA]', valueText: 'text-[#B56A00]',
+    chartHex: '#B56A00',
     Icon: Building2 as IconComp,
   },
+  // DDM — positive green
   ddm: {
-    iconBg: 'bg-teal-100', iconText: 'text-teal-600',
-    barBg: 'bg-teal-400', valueBg: 'bg-teal-50', valueText: 'text-teal-700',
-    chartHex: '#14b8a6',
+    iconBg: 'bg-[#E8F7EF]', iconText: 'text-[#11875D]',
+    barBg: 'bg-[#11875D]', valueBg: 'bg-[#E8F7EF]', valueText: 'text-[#11875D]',
+    chartHex: '#11875D',
     Icon: Coins as IconComp,
   },
+  // Core DCF — olive (brand primary, most trusted model)
   core_dcf: {
-    iconBg: 'bg-emerald-100', iconText: 'text-emerald-600',
-    barBg: 'bg-emerald-500', valueBg: 'bg-emerald-50', valueText: 'text-emerald-700',
-    chartHex: '#10b981',
+    iconBg: 'bg-[#EEF4DD]', iconText: 'text-[#5F790B]',
+    barBg: 'bg-[#5F790B]', valueBg: 'bg-[#F6FAEA]', valueText: 'text-[#5F790B]',
+    chartHex: '#5F790B',
     Icon: Target as IconComp,
   },
 }
 
 const CONFIDENCE_CHIP = {
-  high:   { bg: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700', label: 'High confidence'   },
-  medium: { bg: 'bg-amber-50 border-amber-200',     text: 'text-amber-700',   label: 'Medium confidence' },
-  low:    { bg: 'bg-slate-100 border-slate-200',    text: 'text-slate-500',   label: 'Low confidence'    },
+  high:   { bg: 'bg-[#E8F7EF] border-[#A7D7C0]', text: 'text-[#11875D]', label: 'High confidence'   },
+  medium: { bg: 'bg-[#FFF4DA] border-[#F3D391]', text: 'text-[#B56A00]', label: 'Medium confidence' },
+  low:    { bg: 'bg-[#F1F5F9] border-[#CBD1C4]', text: 'text-[#536174]', label: 'Low confidence'    },
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -599,7 +606,7 @@ export default function ValuationMethodCards({
                   <DcfDriverRow fcfMargin={fcfMargin} ttmEbitdaDollars={ttmEbitdaDollars} />
                   <button
                     onClick={onScrollToFullDCF}
-                    className="w-full text-[11px] font-[650] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg py-2 hover:bg-emerald-100 transition-colors"
+                    className="w-full text-[11px] font-[650] text-[#5F790B] bg-[#F6FAEA] border border-[#BFD2A1] rounded-lg py-2 hover:bg-[#EEF4DD] transition-colors"
                   >
                     Edit assumptions in Full DCF ↓
                   </button>

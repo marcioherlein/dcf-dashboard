@@ -6,14 +6,16 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Sparkles, Bell, Settings, HelpCircle, PieChart, X, Globe, Bookmark, LayoutDashboard, SlidersHorizontal } from 'lucide-react'
 
-/* ── Left-2 + Right-2 nav items (center Analyze is rendered separately) ── */
 const LEFT_NAV = [
   {
     href: '/markets',
     label: 'Markets',
     match: (p: string) => p.startsWith('/markets'),
     icon: (active: boolean) => (
-      <Globe className={cn('w-5 h-5', active ? 'text-blue-600' : 'text-slate-400')} strokeWidth={active ? 2 : 1.5} />
+      <Globe
+        className={cn('w-5 h-5', active ? 'text-[#5F790B]' : 'text-[#8A96A8]')}
+        strokeWidth={active ? 2 : 1.5}
+      />
     ),
   },
   {
@@ -21,7 +23,10 @@ const LEFT_NAV = [
     label: 'Screener',
     match: (p: string) => p.startsWith('/screener'),
     icon: (active: boolean) => (
-      <SlidersHorizontal className={cn('w-5 h-5', active ? 'text-blue-600' : 'text-slate-400')} strokeWidth={active ? 2 : 1.5} />
+      <SlidersHorizontal
+        className={cn('w-5 h-5', active ? 'text-[#5F790B]' : 'text-[#8A96A8]')}
+        strokeWidth={active ? 2 : 1.5}
+      />
     ),
   },
 ]
@@ -32,7 +37,10 @@ const RIGHT_NAV = [
     label: 'ETFs',
     match: (p: string) => p.startsWith('/etf'),
     icon: (active: boolean) => (
-      <PieChart className={cn('w-5 h-5', active ? 'text-blue-600' : 'text-slate-400')} strokeWidth={active ? 2 : 1.5} />
+      <PieChart
+        className={cn('w-5 h-5', active ? 'text-[#5F790B]' : 'text-[#8A96A8]')}
+        strokeWidth={active ? 2 : 1.5}
+      />
     ),
   },
 ]
@@ -63,7 +71,7 @@ export default function BottomNav() {
         {icon(active)}
         <span className={cn(
           'text-[11px] font-medium',
-          active ? 'text-blue-600' : 'text-slate-400'
+          active ? 'text-[#5F790B]' : 'text-[#8A96A8]',
         )}>
           {label}
         </span>
@@ -76,7 +84,7 @@ export default function BottomNav() {
       {/* More drawer backdrop */}
       {moreOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/20 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/15 lg:hidden"
           onClick={() => setMoreOpen(false)}
         />
       )}
@@ -84,18 +92,16 @@ export default function BottomNav() {
       {/* More drawer panel */}
       <div
         className={cn(
-          'fixed left-0 right-0 z-50 lg:hidden bg-white rounded-t-2xl shadow-xl border-t border-slate-200 transition-transform duration-200',
+          'fixed left-0 right-0 z-50 lg:hidden bg-white rounded-t-2xl shadow-xl border-t border-[#E3E6E0] transition-transform duration-200',
           moreOpen ? 'translate-y-0' : 'translate-y-full',
         )}
-        style={{
-          bottom: 'calc(56px + env(safe-area-inset-bottom))',
-        }}
+        style={{ bottom: 'calc(56px + env(safe-area-inset-bottom))' }}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-          <span className="text-sm font-semibold text-slate-800">More</span>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[#E3E6E0]">
+          <span className="text-sm font-semibold text-[#0A1424]">More</span>
           <button
             onClick={() => setMoreOpen(false)}
-            className="text-slate-400 hover:text-slate-600 p-1 -mr-1"
+            className="text-[#8A96A8] hover:text-[#536174] p-1 -mr-1"
           >
             <X size={16} />
           </button>
@@ -109,11 +115,15 @@ export default function BottomNav() {
                 href={href}
                 onClick={() => setMoreOpen(false)}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors',
-                  active ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'
+                  'flex items-center gap-3 px-3 py-3 rounded-xl text-[14px] font-medium transition-colors',
+                  active ? 'bg-[#EEF4DD] text-[#0A1424]' : 'text-[#536174] hover:bg-[#F6FAEA]',
                 )}
               >
-                <Icon size={18} className={active ? 'text-blue-500' : 'text-slate-400'} strokeWidth={active ? 2.2 : 1.8} />
+                <Icon
+                  size={18}
+                  className={active ? 'text-[#5F790B]' : 'text-[#8A96A8]'}
+                  strokeWidth={active ? 2.2 : 1.8}
+                />
                 {label}
               </Link>
             )
@@ -129,21 +139,20 @@ export default function BottomNav() {
       >
         <div className="flex items-end justify-around min-h-[56px]">
 
-          {/* Left 2 */}
           {LEFT_NAV.map((item) => (
             <NavItem key={item.href} {...item} />
           ))}
 
-          {/* Center: Analyze */}
+          {/* Center: Analyze — olive accent */}
           <Link
             href="/analyze"
             className="flex flex-col items-center justify-end gap-1 flex-1 pb-2 active:scale-95 transition-transform min-w-[60px]"
           >
             <div className={cn(
-              'w-12 h-12 rounded-full flex items-center justify-center -mt-5 ring-4 ring-white shadow-lg',
+              'w-12 h-12 rounded-full flex items-center justify-center -mt-5 ring-4 ring-white shadow-card',
               isCenterActive
-                ? 'bg-gradient-to-br from-blue-500 to-blue-700'
-                : 'bg-blue-600'
+                ? 'bg-[#5F790B]'
+                : 'bg-[#5F790B] opacity-90',
             )}>
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 114.5 4.5a7.5 7.5 0 0112.15 12.15z" />
@@ -151,13 +160,12 @@ export default function BottomNav() {
             </div>
             <span className={cn(
               'text-[10px] font-medium',
-              isCenterActive ? 'text-blue-600' : 'text-slate-400'
+              isCenterActive ? 'text-[#5F790B]' : 'text-[#8A96A8]',
             )}>
               Analyze
             </span>
           </Link>
 
-          {/* Right: ETFs */}
           {RIGHT_NAV.map((item) => (
             <NavItem key={item.href} {...item} />
           ))}
@@ -165,12 +173,10 @@ export default function BottomNav() {
           {/* More button */}
           <button
             onClick={() => setMoreOpen((v) => !v)}
-            className={cn(
-              'flex flex-col items-center justify-center gap-0.5 flex-1 py-2 active:scale-95 transition-transform min-w-[60px]',
-            )}
+            className="flex flex-col items-center justify-center gap-0.5 flex-1 py-2 active:scale-95 transition-transform min-w-[60px]"
           >
             <svg
-              className={cn('w-5 h-5', isMoreActive || moreOpen ? 'text-blue-600' : 'text-slate-400')}
+              className={cn('w-5 h-5', isMoreActive || moreOpen ? 'text-[#5F790B]' : 'text-[#8A96A8]')}
               fill="none" viewBox="0 0 24 24"
             >
               <circle cx="5" cy="12" r="1.5" fill="currentColor" />
@@ -179,7 +185,7 @@ export default function BottomNav() {
             </svg>
             <span className={cn(
               'text-[11px] font-medium',
-              isMoreActive || moreOpen ? 'text-blue-600' : 'text-slate-400'
+              isMoreActive || moreOpen ? 'text-[#5F790B]' : 'text-[#8A96A8]',
             )}>
               More
             </span>

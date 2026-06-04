@@ -2,17 +2,29 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "./providers";
 import AppShell from "@/components/layout/AppShell";
-import { Inter, Space_Grotesk, DM_Mono } from "next/font/google";
+import { Inter, DM_Mono } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip"
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
-const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-display', weight: ['400', '500', '600', '700'] });
-const dmMono = DM_Mono({ subsets: ['latin'], variable: '--font-mono', weight: ['400', '500'] });
+// Inter is the primary UI font for all app and dashboard surfaces.
+// Space Grotesk is intentionally removed — Inter provides the editorial
+// clarity needed without the "SaaS template" associations.
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+  preload: true,
+});
+const dmMono = DM_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  weight: ['400', '500'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
-  title: "Insic — Know if a stock is worth buying",
-  description: "Know if a stock is worth buying — before you buy. DCF-based fair value, plain-English health grades, and interactive scenario modeling. Free.",
+  title: "insic — Invest with a process, not a story",
+  description: "Fair value estimates, market-implied expectations, and transparent assumptions — so you can understand what has to be true before you invest. Free.",
 };
 
 export const viewport = {
@@ -27,9 +39,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn("font-sans", inter.variable, spaceGrotesk.variable, dmMono.variable)}>
+    <html lang="en" className={cn("font-sans", inter.variable, dmMono.variable)}>
       <head>
-        <meta name="theme-color" content="#F1F5F9" />
+        {/* Warm off-white theme color matches --color-bg */}
+        <meta name="theme-color" content="#F8F7F2" />
       </head>
       <body className="antialiased bg-background">
         <Providers>
@@ -37,7 +50,7 @@ export default function RootLayout({
             <AppShell>{children}</AppShell>
           </TooltipProvider>
         </Providers>
-</body>
+      </body>
     </html>
   );
 }

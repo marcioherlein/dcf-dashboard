@@ -6,10 +6,10 @@ import { useSession, signIn } from 'next-auth/react'
 import { Menu, X } from 'lucide-react'
 
 const NAV_LINKS = [
-  { label: 'Product', href: '/analyze' },
-  { label: 'How it works', href: '#how-it-works' },
-  { label: 'Pricing', href: '/pricing' },
-  { label: 'Markets', href: '/markets' },
+  { label: 'Product',       href: '/analyze'      },
+  { label: 'How it works',  href: '#how-it-works' },
+  { label: 'Pricing',       href: '/pricing'      },
+  { label: 'Markets',       href: '/markets'      },
 ]
 
 export default function LandingNavbar() {
@@ -29,66 +29,35 @@ export default function LandingNavbar() {
         className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
         style={{
           height: '60px',
-          background: 'rgba(255,255,255,0.97)',
+          background: 'rgba(248, 247, 242, 0.97)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           borderBottom: scrolled
-            ? '1px solid rgba(226,232,240,0.9)'
-            : '1px solid rgba(226,232,240,0.5)',
-          boxShadow: scrolled ? '0 1px 12px rgba(15,23,42,0.08)' : 'none',
+            ? '1px solid #E3E6E0'
+            : '1px solid rgba(227, 230, 224, 0.5)',
+          boxShadow: scrolled ? '0 4px 20px rgba(6, 16, 31, 0.07)' : 'none',
         }}
       >
         <div className="mx-auto max-w-[1280px] px-4 sm:px-6 h-full flex items-center gap-8">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 shrink-0 group">
+          {/* Logo — use the new header asset */}
+          <Link href="/" className="flex items-center shrink-0 group" aria-label="insic home">
             <Image
-              src="/logos/logo-transparent.png"
+              src="/logos/insic-header.png"
               alt="insic"
-              width={40}
-              height={40}
-              className="transition-transform duration-200 group-hover:scale-105"
+              width={96}
+              height={32}
+              className="h-8 w-auto object-contain transition-opacity group-hover:opacity-80"
+              priority
             />
-            <div className="flex flex-col leading-none">
-              <span
-                className="font-bold text-[19px] sm:text-[23px]"
-                style={{
-                  fontFamily: 'var(--font-display, "Space Grotesk"), system-ui, sans-serif',
-                  letterSpacing: '-0.048em',
-                  lineHeight: 1.08,
-                  background: 'linear-gradient(135deg, #2563EB 0%, #06B6D4 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                insic
-              </span>
-              <span
-                className="hidden sm:block text-[8px] font-semibold tracking-[0.16em] uppercase mt-0.5"
-                style={{ color: '#94A3B8', fontFamily: 'var(--font-sans, Inter), system-ui, sans-serif' }}
-              >
-                Valuation Intelligence
-              </span>
-            </div>
           </Link>
 
           {/* Center nav */}
-          <nav className="hidden lg:flex items-center gap-9 flex-1 justify-center">
+          <nav className="hidden lg:flex items-center gap-8 flex-1 justify-center">
             {NAV_LINKS.map(link => (
               <Link
                 key={link.label}
                 href={link.href}
-                className="text-[14px] font-medium transition-colors duration-150"
-                style={{
-                  fontWeight: 500,
-                  color: '#334155',
-                }}
-                onMouseEnter={e => {
-                  ;(e.currentTarget as HTMLAnchorElement).style.color = '#2563EB'
-                }}
-                onMouseLeave={e => {
-                  ;(e.currentTarget as HTMLAnchorElement).style.color = '#334155'
-                }}
+                className="text-[14px] font-medium transition-colors duration-150 text-[#536174] hover:text-[#0A1424]"
               >
                 {link.label}
               </Link>
@@ -100,14 +69,8 @@ export default function LandingNavbar() {
             {session ? (
               <Link
                 href="/analyze"
-                className="hidden sm:inline-flex items-center rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
-                style={{
-                  background: '#2563EB',
-                  boxShadow: '0 4px 12px rgba(37,99,235,0.25)',
-                  fontSize: '13px',
-                  fontWeight: 650,
-                  minHeight: '44px',
-                }}
+                className="hidden sm:inline-flex items-center rounded-[10px] px-4 py-2.5 text-[13.5px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95 min-h-[44px]"
+                style={{ background: '#5F790B', boxShadow: '0 4px 12px rgba(95, 121, 11, 0.22)' }}
               >
                 Go to app
               </Link>
@@ -115,48 +78,20 @@ export default function LandingNavbar() {
               <>
                 <button
                   onClick={() => signIn('google')}
-                  className="hidden sm:block text-[13px] font-medium transition-colors min-h-[44px] px-2"
-                  style={{ color: '#334155' }}
-                  onMouseEnter={e => {
-                    ;(e.currentTarget as HTMLButtonElement).style.color = '#0F172A'
-                  }}
-                  onMouseLeave={e => {
-                    ;(e.currentTarget as HTMLButtonElement).style.color = '#334155'
-                  }}
+                  className="hidden sm:block text-[13px] font-medium text-[#536174] hover:text-[#0A1424] transition-colors min-h-[44px] px-2"
                 >
                   Sign in
                 </button>
                 <Link
                   href="/analyze"
-                  className="hidden lg:inline-flex items-center rounded-xl border px-4 py-2.5 text-[13px] font-semibold transition-all active:scale-95"
-                  style={{
-                    borderColor: '#BFDBFE',
-                    background: 'white',
-                    color: '#1D4ED8',
-                    minHeight: '44px',
-                  }}
-                  onMouseEnter={e => {
-                    const el = e.currentTarget as HTMLAnchorElement
-                    el.style.background = '#EFF6FF'
-                    el.style.borderColor = '#93C5FD'
-                  }}
-                  onMouseLeave={e => {
-                    const el = e.currentTarget as HTMLAnchorElement
-                    el.style.background = 'white'
-                    el.style.borderColor = '#BFDBFE'
-                  }}
+                  className="hidden lg:inline-flex items-center rounded-[10px] border border-[#CBD1C4] bg-white px-4 py-2.5 text-[13.5px] font-semibold text-[#0A1424] hover:bg-[#F6FAEA] hover:border-[#5F790B] transition-colors min-h-[44px]"
                 >
                   Analyze a stock
                 </Link>
                 <button
                   onClick={() => signIn('google')}
-                  className="hidden sm:inline-flex items-center rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
-                  style={{
-                    background: '#2563EB',
-                    boxShadow: '0 6px 16px rgba(37,99,235,0.22)',
-                    fontSize: '13px',
-                    minHeight: '44px',
-                  }}
+                  className="hidden sm:inline-flex items-center rounded-[10px] px-4 py-2.5 text-[13.5px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95 min-h-[44px]"
+                  style={{ background: '#5F790B', boxShadow: '0 4px 12px rgba(95, 121, 11, 0.22)' }}
                 >
                   Get started free
                 </button>
@@ -166,19 +101,8 @@ export default function LandingNavbar() {
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileOpen(v => !v)}
-              className="lg:hidden flex items-center justify-center rounded-lg transition-colors active:scale-95"
+              className="lg:hidden flex items-center justify-center w-11 h-11 rounded-[10px] text-[#536174] hover:bg-[#F3F2EC] hover:text-[#0A1424] transition-colors active:scale-95"
               aria-label="Toggle menu"
-              style={{
-                width: '44px',
-                height: '44px',
-                color: '#334155',
-              }}
-              onMouseEnter={e => {
-                ;(e.currentTarget as HTMLButtonElement).style.background = '#F1F5F9'
-              }}
-              onMouseLeave={e => {
-                ;(e.currentTarget as HTMLButtonElement).style.background = 'transparent'
-              }}
             >
               {mobileOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -189,57 +113,32 @@ export default function LandingNavbar() {
       {/* Mobile menu */}
       {mobileOpen && (
         <div
-          className="fixed top-[60px] left-0 right-0 z-40 backdrop-blur-xl border-b shadow-lg lg:hidden"
+          className="fixed top-[60px] left-0 right-0 z-40 border-b shadow-card lg:hidden"
           style={{
             padding: '16px 16px 20px',
-            background: 'rgba(255,255,255,0.97)',
-            borderColor: '#E2E8F0',
+            background: '#F8F7F2',
+            borderColor: '#E3E6E0',
           }}
         >
-          <nav className="flex flex-col gap-1">
+          <nav className="flex flex-col gap-0.5">
             {NAV_LINKS.map(link => (
               <Link
                 key={link.label}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
-                className="py-3 px-4 rounded-xl text-[16px] font-medium transition-colors active:scale-95"
-                style={{
-                  minHeight: '44px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  color: '#334155',
-                }}
-                onMouseEnter={e => {
-                  const el = e.currentTarget as HTMLAnchorElement
-                  el.style.color = '#2563EB'
-                  el.style.background = '#F8FAFC'
-                }}
-                onMouseLeave={e => {
-                  const el = e.currentTarget as HTMLAnchorElement
-                  el.style.color = '#334155'
-                  el.style.background = 'transparent'
-                }}
+                className="flex items-center py-3 px-4 rounded-[10px] text-[15px] font-medium text-[#536174] hover:bg-[#EEF4DD] hover:text-[#0A1424] transition-colors min-h-[44px] active:scale-95"
               >
                 {link.label}
               </Link>
             ))}
           </nav>
-          <div
-            className="mt-4 pt-4 border-t flex flex-col gap-3"
-            style={{ borderColor: '#F1F5F9' }}
-          >
+          <div className="mt-4 pt-4 border-t border-[#E3E6E0] flex flex-col gap-3">
             {session ? (
               <Link
                 href="/analyze"
                 onClick={() => setMobileOpen(false)}
-                className="w-full text-center rounded-xl py-3.5 text-[15px] font-semibold text-white active:scale-95 transition-all"
-                style={{
-                  background: '#2563EB',
-                  minHeight: '44px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
+                className="w-full text-center rounded-[10px] py-3.5 text-[15px] font-semibold text-white active:scale-95 transition-all min-h-[44px] flex items-center justify-center"
+                style={{ background: '#5F790B' }}
               >
                 Go to app
               </Link>
@@ -247,20 +146,14 @@ export default function LandingNavbar() {
               <>
                 <button
                   onClick={() => { setMobileOpen(false); signIn('google') }}
-                  className="w-full text-center rounded-xl py-3.5 text-[15px] font-semibold text-white active:scale-95 transition-all"
-                  style={{ background: '#2563EB', minHeight: '44px' }}
+                  className="w-full text-center rounded-[10px] py-3.5 text-[15px] font-semibold text-white active:scale-95 transition-all min-h-[44px]"
+                  style={{ background: '#5F790B' }}
                 >
                   Get started free
                 </button>
                 <button
                   onClick={() => { setMobileOpen(false); signIn('google') }}
-                  className="w-full text-center rounded-xl py-3.5 text-[15px] font-semibold active:scale-95 transition-all"
-                  style={{
-                    minHeight: '44px',
-                    color: '#334155',
-                    border: '1px solid #E2E8F0',
-                    background: 'transparent',
-                  }}
+                  className="w-full text-center rounded-[10px] py-3.5 text-[15px] font-semibold text-[#536174] border border-[#E3E6E0] hover:bg-[#F3F2EC] transition-colors active:scale-95 min-h-[44px]"
                 >
                   Sign in
                 </button>

@@ -46,52 +46,52 @@ export default function LandingHero() {
         {/* Bull scenario — curves upward */}
         <path
           d="M 60,250 C 220,248 380,110 640,72"
-          stroke="#2563EB" strokeWidth="1" fill="none"
+          stroke="#7C9A19" strokeWidth="1" fill="none"
         />
         {/* Base scenario — straight across */}
         <path
           d="M 60,250 L 640,250"
-          stroke="#2563EB" strokeWidth="1.25" fill="none"
+          stroke="#7C9A19" strokeWidth="1.25" fill="none"
         />
         {/* Bear scenario — curves downward */}
         <path
           d="M 60,250 C 220,252 380,390 640,428"
-          stroke="#2563EB" strokeWidth="1" fill="none"
+          stroke="#7C9A19" strokeWidth="1" fill="none"
         />
 
         {/* Root node */}
-        <circle cx="60"  cy="250" r="4"   fill="#2563EB" />
+        <circle cx="60"  cy="250" r="4"   fill="#7C9A19" />
 
         {/* Year 1 measurement nodes */}
-        <circle cx="190" cy="234" r="2.5" fill="#2563EB" />
-        <circle cx="190" cy="250" r="2.5" fill="#2563EB" />
-        <circle cx="190" cy="266" r="2.5" fill="#2563EB" />
+        <circle cx="190" cy="234" r="2.5" fill="#7C9A19" />
+        <circle cx="190" cy="250" r="2.5" fill="#7C9A19" />
+        <circle cx="190" cy="266" r="2.5" fill="#7C9A19" />
 
         {/* Year 2 vertical tick */}
-        <line x1="320" y1="162" x2="320" y2="338" stroke="#2563EB" strokeWidth="0.6" strokeDasharray="3 6" />
-        <circle cx="320" cy="175" r="2.5" fill="#2563EB" />
-        <circle cx="320" cy="250" r="2.5" fill="#2563EB" />
-        <circle cx="320" cy="325" r="2.5" fill="#2563EB" />
+        <line x1="320" y1="162" x2="320" y2="338" stroke="#7C9A19" strokeWidth="0.6" strokeDasharray="3 6" />
+        <circle cx="320" cy="175" r="2.5" fill="#7C9A19" />
+        <circle cx="320" cy="250" r="2.5" fill="#7C9A19" />
+        <circle cx="320" cy="325" r="2.5" fill="#7C9A19" />
 
         {/* Year 4 vertical tick */}
-        <line x1="510" y1="110" x2="510" y2="390" stroke="#2563EB" strokeWidth="0.6" strokeDasharray="3 6" />
-        <circle cx="510" cy="123" r="2.5" fill="#2563EB" />
-        <circle cx="510" cy="250" r="2.5" fill="#2563EB" />
-        <circle cx="510" cy="377" r="2.5" fill="#2563EB" />
+        <line x1="510" y1="110" x2="510" y2="390" stroke="#7C9A19" strokeWidth="0.6" strokeDasharray="3 6" />
+        <circle cx="510" cy="123" r="2.5" fill="#7C9A19" />
+        <circle cx="510" cy="250" r="2.5" fill="#7C9A19" />
+        <circle cx="510" cy="377" r="2.5" fill="#7C9A19" />
 
         {/* Terminal value bracket */}
-        <line x1="640" y1="72"  x2="640" y2="428" stroke="#2563EB" strokeWidth="0.8" />
-        <line x1="630" y1="72"  x2="650" y2="72"  stroke="#2563EB" strokeWidth="0.8" />
-        <line x1="630" y1="250" x2="650" y2="250" stroke="#2563EB" strokeWidth="0.8" />
-        <line x1="630" y1="428" x2="650" y2="428" stroke="#2563EB" strokeWidth="0.8" />
-        <circle cx="640" cy="72"  r="3.5" fill="#2563EB" />
-        <circle cx="640" cy="250" r="4"   fill="#2563EB" />
-        <circle cx="640" cy="428" r="3.5" fill="#2563EB" />
+        <line x1="640" y1="72"  x2="640" y2="428" stroke="#7C9A19" strokeWidth="0.8" />
+        <line x1="630" y1="72"  x2="650" y2="72"  stroke="#7C9A19" strokeWidth="0.8" />
+        <line x1="630" y1="250" x2="650" y2="250" stroke="#7C9A19" strokeWidth="0.8" />
+        <line x1="630" y1="428" x2="650" y2="428" stroke="#7C9A19" strokeWidth="0.8" />
+        <circle cx="640" cy="72"  r="3.5" fill="#7C9A19" />
+        <circle cx="640" cy="250" r="4"   fill="#5F790B" />
+        <circle cx="640" cy="428" r="3.5" fill="#7C9A19" />
 
         {/* Horizontal dotted "fair value" range lines extending from terminal */}
-        <line x1="644" y1="72"  x2="690" y2="72"  stroke="#2563EB" strokeWidth="0.6" strokeDasharray="3 4" />
-        <line x1="644" y1="250" x2="690" y2="250" stroke="#2563EB" strokeWidth="0.6" strokeDasharray="3 4" />
-        <line x1="644" y1="428" x2="690" y2="428" stroke="#2563EB" strokeWidth="0.6" strokeDasharray="3 4" />
+        <line x1="644" y1="72"  x2="690" y2="72"  stroke="#7C9A19" strokeWidth="0.6" strokeDasharray="3 4" />
+        <line x1="644" y1="250" x2="690" y2="250" stroke="#5F790B" strokeWidth="0.6" strokeDasharray="3 4" />
+        <line x1="644" y1="428" x2="690" y2="428" stroke="#7C9A19" strokeWidth="0.6" strokeDasharray="3 4" />
       </svg>
 
       {/* Breathing Blueprint Blue aurora — animates behind screenshots */}
@@ -102,7 +102,7 @@ export default function LandingHero() {
           top: '5%',
           width: '58%',
           height: '88%',
-          background: 'radial-gradient(ellipse at 50% 40%, rgba(37,99,235,0.22) 0%, transparent 65%)',
+          background: 'radial-gradient(ellipse at 50% 40%, rgba(95,121,11,0.18) 0%, transparent 65%)',
           filter: 'blur(52px)',
         }}
         animate={
@@ -174,13 +174,13 @@ export default function LandingHero() {
               transition={{ duration: 0.4, ease: 'easeOut' }}
               className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 mb-6"
               style={{
-                background: 'rgba(37,99,235,0.15)',
-                border: '1px solid rgba(37,99,235,0.38)',
+                background: 'rgba(95,121,11,0.18)',
+                border: '1px solid rgba(95,121,11,0.40)',
               }}
             >
-              <Shield size={12} className="text-blue-400" />
+              <Shield size={12} className="text-[#7C9A19]" />
               <span
-                className="text-[12px] font-bold text-blue-300"
+                className="text-[12px] font-bold text-[#EEF4DD]"
                 style={{ letterSpacing: '0.02em' }}
               >
                 Built for self-directed investors
@@ -198,10 +198,7 @@ export default function LandingHero() {
                 lineHeight: 1.05,
                 letterSpacing: '-0.04em',
                 marginBottom: '20px',
-                background: 'linear-gradient(135deg, #F8FAFC 0%, #BFDBFE 55%, #93C5FD 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
+                color: '#F8F7F2',
                 textWrap: 'balance',
               } as React.CSSProperties}
             >
@@ -246,7 +243,7 @@ export default function LandingHero() {
               transition={{ duration: 0.4, ease: 'easeOut', delay: 0.32 }}
               className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3"
             >
-              {/* Primary CTA — Blueprint Blue with breathing glow */}
+              {/* Primary CTA — olive with pulse glow */}
               <div className="relative w-full sm:w-auto">
                 <motion.div
                   className="absolute inset-0 rounded-xl pointer-events-none"
@@ -255,9 +252,9 @@ export default function LandingHero() {
                       ? {}
                       : {
                           boxShadow: [
-                            '0 0 16px rgba(37,99,235,0.32)',
-                            '0 0 36px rgba(37,99,235,0.56)',
-                            '0 0 16px rgba(37,99,235,0.32)',
+                            '0 0 14px rgba(95,121,11,0.28)',
+                            '0 0 32px rgba(95,121,11,0.50)',
+                            '0 0 14px rgba(95,121,11,0.28)',
                           ],
                         }
                   }
@@ -269,10 +266,10 @@ export default function LandingHero() {
                 />
                 <Link
                   href="/analyze"
-                  className="relative w-full sm:w-auto inline-flex items-center justify-center rounded-xl px-5 py-3 text-[15px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
+                  className="relative w-full sm:w-auto inline-flex items-center justify-center rounded-[10px] px-5 py-3 text-[15px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
                   style={{
-                    background: '#2563EB',
-                    boxShadow: '0 8px 24px rgba(37,99,235,0.30)',
+                    background: '#5F790B',
+                    boxShadow: '0 8px 24px rgba(95,121,11,0.28)',
                     fontWeight: 650,
                     minHeight: '44px',
                   }}

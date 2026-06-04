@@ -28,7 +28,7 @@ export default function AppShellClient({ children }: { children: React.ReactNode
 
   return (
     <StockNavProvider>
-      <div className="min-h-dvh lqg-bg">
+      <div className="min-h-dvh insic-bg">
         <Suspense fallback={<header className="fixed top-0 left-0 right-0 h-[52px] glass-nav border-b z-40" />}>
           <TopBar />
         </Suspense>

@@ -350,9 +350,15 @@ export function extractFCFInputs(financials: any, foreignCurrency = false): {
   // Larger revenue bases make it mechanically harder to sustain high growth.
   // These caps are informed by Damodaran's observation that only ~1% of companies
   // sustain >25% revenue growth beyond a 5-year window.
+  //
+  // Financial sector cap: 12% for mature banks/insurers whose growth is deposit-driven.
+  // Exception: high-growth fintechs (neobanks, digital lending) in the financial sector
+  // genuinely grow at 25–40%+ — applying the bank cap here structurally undervalues them.
+  // Detect via analyst estimate: if analyst1y > 18%, treat as growth fintech, not bank.
+  const isHighGrowthFinancial = isFinancialSector && (analyst1y > 0.18 || (historicalCagr3y ?? 0) > 0.18)
   const revB = rawRevM / 1000  // revenue in USD billions
   let sizeCap: number
-  if (isFinancialSector)    sizeCap = 0.12
+  if (isFinancialSector && !isHighGrowthFinancial) sizeCap = 0.12  // mature bank / insurer
   else if (foreignCurrency) sizeCap = 0.18
   else if (revB > 50)       sizeCap = 0.22  // mega-cap ($50B+ revenue)
   else if (revB > 10)       sizeCap = 0.28  // large-cap

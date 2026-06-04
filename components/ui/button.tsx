@@ -1,38 +1,56 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
-
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-[10px] border border-transparent bg-clip-padding text-sm font-semibold whitespace-nowrap transition-all outline-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(95,121,11,0.55)] active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-blue-400 shadow-glow-sm [a]:hover:bg-primary/80",
+        // Olive — primary brand CTA. Use for core actions: analyze, save, upgrade.
+        default:
+          "bg-[#5F790B] text-white hover:bg-[#526A08] active:bg-[#4A5E07] shadow-sm",
+        // White surface with warm border — secondary actions
         outline:
-          "border-[rgba(59,130,246,0.3)] bg-transparent text-slate-200 hover:bg-white/5 hover:border-[rgba(59,130,246,0.5)] hover:text-white aria-expanded:bg-white/5",
+          "border-[#CBD1C4] bg-white text-[#0A1424] hover:bg-[#F6FAEA] hover:border-[#5F790B]",
+        // Subtle tinted — tertiary/low-emphasis
         secondary:
-          "bg-[rgba(59,130,246,0.1)] border-[rgba(59,130,246,0.2)] text-blue-300 hover:bg-[rgba(59,130,246,0.2)] aria-expanded:bg-[rgba(59,130,246,0.2)]",
+          "bg-[#F8F7F2] border-[#E3E6E0] text-[#536174] hover:bg-[#EEF4DD] hover:text-[#0A1424]",
+        // Ghost — icon buttons, inline actions
         ghost:
-          "text-slate-400 hover:bg-white/5 hover:text-white aria-expanded:bg-white/5 aria-expanded:text-white",
-        glass:
-          "glass-card border-[rgba(59,130,246,0.2)] text-slate-200 hover:border-[rgba(59,130,246,0.5)] hover:text-white hover:shadow-glow-sm",
+          "text-[#536174] hover:bg-[#F3F2EC] hover:text-[#0A1424]",
+        // Blue — secondary/info actions (links, saves, navigation)
+        blue:
+          "bg-[#2563EB] text-white hover:bg-[#1D4ED8] active:bg-[#1E40AF] shadow-sm",
+        // Destructive — red, only for irreversible actions
         destructive:
-          "bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20 focus-visible:border-red-500/40 focus-visible:ring-red-500/20",
-        link: "text-blue-400 underline-offset-4 hover:underline hover:text-blue-300",
+          "bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8] hover:bg-[#F8D0D0]",
+        // Text link style
+        link:
+          "text-[#5F790B] underline-offset-4 hover:underline hover:text-[#526A08]",
+        // Dark ink surface (for use on light pages with ink card backgrounds)
+        ink:
+          "bg-[#0A1424] text-white hover:bg-[#111C2E] shadow-sm",
+        // Legacy dark glass — kept for landing/dark hero sections
+        glass:
+          "bg-[rgba(255,255,255,0.08)] border-[rgba(255,255,255,0.15)] text-white hover:bg-[rgba(255,255,255,0.14)] hover:border-[rgba(255,255,255,0.25)]",
       },
       size: {
-        default:
-          "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
-        lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        icon: "size-8",
-        "icon-xs":
-          "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm":
-          "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
-        "icon-lg": "size-9",
+        // Landing page buttons (44px)
+        landing: "h-11 gap-2 px-5 text-[14px]",
+        // App buttons (40px)
+        default: "h-10 gap-1.5 px-4 text-[13.5px]",
+        // Compact (36px) — inside cards, toolbars
+        sm:   "h-9 gap-1 rounded-[9px] px-3.5 text-[13px]",
+        // Extra small (32px)
+        xs:   "h-8 gap-1 rounded-[8px] px-3 text-[12.5px]",
+        // Tiny (28px) — chips, inline
+        xxs:  "h-7 gap-0.5 rounded-[8px] px-2.5 text-[12px]",
+        // Icon buttons
+        icon:    "size-10 rounded-[10px]",
+        "icon-sm": "size-9 rounded-[9px]",
+        "icon-xs": "size-8 rounded-[8px]",
+        lg: "h-11 gap-2 px-5 text-[14px]",
       },
     },
     defaultVariants: {

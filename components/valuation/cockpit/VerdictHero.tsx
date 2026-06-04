@@ -19,12 +19,12 @@ interface Props {
   starRating?: StarRatingResult | null
 }
 
-// Tailwind color classes derived from VERDICT_DISPLAY hex values
+// Tailwind color classes derived from insic brand palette
 const VERDICT_TAILWIND: Record<CockpitOutput['verdict'], string> = {
-  'Undervalued':       'text-emerald-600',
+  'Undervalued':       'text-[#5F790B]',
   'Fairly Valued':     'text-[#2563EB]',
-  'Overvalued':        'text-red-600',
-  'Insufficient Data': 'text-slate-500',
+  'Overvalued':        'text-[#D83B3B]',
+  'Insufficient Data': 'text-[#64748B]',
 }
 
 const CONVICTION_LABEL: Record<string, string> = {
@@ -67,10 +67,10 @@ function ScenarioSlider({
       </div>
 
       {/* Track */}
-      <div className="relative h-2 rounded-full bg-gradient-to-r from-red-200 via-slate-200 to-emerald-200">
-        {/* Base case dot */}
+      <div className="relative h-2 rounded-full bg-gradient-to-r from-[#F0B8B8] via-[#E3E6E0] to-[#BFD2A1]">
+        {/* Base case dot — olive */}
         <div
-          className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border-2 border-[#2563EB] shadow-sm z-10"
+          className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border-2 border-[#5F790B] shadow-sm z-10"
           style={{ left: `${basePct}%`, transform: 'translate(-50%, -50%)' }}
           title={`Base: ${fmtPrice(base, currency)}`}
         />

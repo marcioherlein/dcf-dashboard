@@ -40,23 +40,23 @@ const POPULAR_CHIPS = ['NVDA', 'MELI', 'MSFT', 'AAPL', 'AMZN', 'GOOGL', 'TSLA', 
 function statusBadge(zone: string | null): { label: string; cls: string } | null {
   if (!zone) return null
   if (zone.toLowerCase().includes('under'))
-    return { label: zone, cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
+    return { label: zone, cls: 'bg-[#F6FAEA] text-[#5F790B] border-[#BFD2A1]' }
   if (zone.toLowerCase().includes('fair'))
-    return { label: zone, cls: 'bg-amber-50 text-amber-700 border-amber-200' }
-  return { label: zone, cls: 'bg-red-50 text-red-600 border-red-200' }
+    return { label: zone, cls: 'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]' }
+  return { label: zone, cls: 'bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]' }
 }
 
 function expectationCls(exp: string) {
-  if (exp === 'Conservative') return 'bg-emerald-50 text-emerald-700 border-emerald-200'
-  if (exp === 'Moderate')     return 'bg-amber-50 text-amber-700 border-amber-200'
-  return 'bg-red-50 text-red-600 border-red-200'
+  if (exp === 'Conservative') return 'bg-[#F6FAEA] text-[#5F790B] border-[#BFD2A1]'
+  if (exp === 'Moderate')     return 'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]'
+  return 'bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]'
 }
 
 function cagrBarColor(pct: number, type: 'implied' | 'historical') {
-  if (type === 'historical') return 'bg-blue-400'
-  if (pct <= 15) return 'bg-emerald-500'
-  if (pct <= 30) return 'bg-amber-500'
-  return 'bg-red-500'
+  if (type === 'historical') return 'bg-[#2563EB]'
+  if (pct <= 15) return 'bg-[#5F790B]'
+  if (pct <= 30) return 'bg-[#B56A00]'
+  return 'bg-[#D83B3B]'
 }
 
 const BAR_SCALE = 2.2
@@ -159,16 +159,16 @@ function SearchHero() {
     <div className="glass-card-light rounded-2xl px-6 py-6 sm:px-8 sm:py-7">
       {/* Headline + subtitle */}
       <div className="mb-5">
-        <h1 className="text-[28px] font-black sm:text-[32px] text-slate-900 leading-tight tracking-tight" style={{ textWrap: 'balance' }}>
+        <h1 className="text-[28px] font-bold sm:text-[32px] text-[#0A1424] leading-tight tracking-tight" style={{ textWrap: 'balance' }}>
           What do you want to analyze today?
         </h1>
-        <p className="mt-2 text-[14px] text-slate-600 leading-relaxed">
+        <p className="mt-2 text-[14px] text-[#536174] leading-relaxed">
           Search any company to see intrinsic value, market-implied growth, business quality, and valuation risk.{' '}
           <button
             type="button"
             onClick={() => setShowExplainer(v => !v)}
             aria-expanded={showExplainer}
-            className="text-blue-600 hover:text-blue-700 font-medium transition-colors hover:underline underline-offset-2"
+            className="text-[#5F790B] hover:text-[#526A08] font-medium transition-colors hover:underline underline-offset-2"
           >
             How to read this
           </button>
@@ -184,25 +184,25 @@ function SearchHero() {
               transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
               className="overflow-hidden"
             >
-              <div className="mt-3 rounded-xl bg-slate-50 border border-slate-200 p-4 text-[12px] leading-relaxed text-slate-700">
-                <p className="font-semibold text-[13px] text-slate-800 mb-2">What Insic measures</p>
-                <p>Every stock price implies a 5-year revenue growth rate the market is betting on. Insic calls this the <strong>implied CAGR</strong> and compares it to the company&apos;s 3-year historical growth rate. The gap is where the signal lives.</p>
+              <div className="mt-3 rounded-xl bg-[#FBFAF7] border border-[#E3E6E0] p-4 text-[12px] leading-relaxed text-[#536174]">
+                <p className="font-semibold text-[13px] text-[#0A1424] mb-2">What insic measures</p>
+                <p>Every stock price implies a 5-year revenue growth rate the market is betting on. insic calls this the <strong>implied CAGR</strong> and compares it to the company&apos;s 3-year historical growth rate. The gap is where the signal lives.</p>
                 <div className="mt-3 space-y-2">
-                  <p className="font-semibold text-slate-700 mb-1">Expectation labels:</p>
+                  <p className="font-semibold text-[#0A1424] mb-1">Expectation labels:</p>
                   <div className="flex items-start gap-2.5">
-                    <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-emerald-50 text-emerald-700 border-emerald-200">Conservative</span>
-                    <span className="text-slate-600">Implied growth is well below historical. Market is pricing in a slowdown or headwinds.</span>
+                    <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-[#F6FAEA] text-[#5F790B] border-[#BFD2A1]">Conservative</span>
+                    <span className="text-[#536174]">Implied growth is well below historical. Market is pricing in a slowdown or headwinds.</span>
                   </div>
                   <div className="flex items-start gap-2.5">
-                    <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-amber-50 text-amber-700 border-amber-200">Moderate</span>
-                    <span className="text-slate-600">Implied growth roughly matches historical. Expectations are broadly in line with the past.</span>
+                    <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]">Moderate</span>
+                    <span className="text-[#536174]">Implied growth roughly matches historical. Expectations are broadly in line with the past.</span>
                   </div>
                   <div className="flex items-start gap-2.5">
-                    <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-red-50 text-red-600 border-red-200">Aggressive</span>
-                    <span className="text-slate-600">Implied growth significantly exceeds historical. Market is betting on a major acceleration.</span>
+                    <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]">Aggressive</span>
+                    <span className="text-[#536174]">Implied growth significantly exceeds historical. Market is betting on a major acceleration.</span>
                   </div>
                 </div>
-                <p className="mt-3 text-slate-400 text-[11px]">Intrinsic value is a DCF-based model estimate. All outputs are not financial advice.</p>
+                <p className="mt-3 text-[#8A96A8] text-[11px]">Intrinsic value is a DCF-based model estimate. All outputs are not financial advice.</p>
               </div>
             </motion.div>
           )}
@@ -212,15 +212,15 @@ function SearchHero() {
       {/* Search input */}
       <div className="relative" ref={searchRef}>
         <div className={cn(
-          'flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5 transition-all bg-white',
+          'flex items-center gap-2.5 rounded-[10px] border px-3.5 py-2.5 transition-all bg-white',
           open || query
-            ? 'border-blue-400 ring-2 ring-blue-100'
-            : 'border-slate-200 hover:border-slate-300',
+            ? 'border-[#5F790B] ring-2 ring-[rgba(95,121,11,0.10)]'
+            : 'border-[#E3E6E0] hover:border-[#CBD1C4]',
         )}>
           {loading ? (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-blue-500 shrink-0" />
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#E3E6E0] border-t-[#5F790B] shrink-0" />
           ) : (
-            <Search size={15} className="text-slate-400 shrink-0" />
+            <Search size={15} className="text-[#8A96A8] shrink-0" />
           )}
           <input
             ref={inputRef}
@@ -236,17 +236,17 @@ function SearchHero() {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKey}
             placeholder="Search ticker or company name, e.g. NVDA, MercadoLibre…"
-            className="flex-1 min-w-0 bg-transparent text-[16px] text-slate-800 placeholder-slate-400 focus:outline-none"
+            className="flex-1 min-w-0 bg-transparent text-[16px] text-[#0A1424] placeholder-[#8A96A8] focus:outline-none"
           />
           {!query && (
-            <kbd className="shrink-0 hidden sm:flex items-center rounded border border-slate-200 px-1.5 py-0.5 text-[10px] text-slate-400 font-mono leading-tight select-none">
+            <kbd className="shrink-0 hidden sm:flex items-center rounded border border-[#E3E6E0] px-1.5 py-0.5 text-[10px] text-[#8A96A8] font-mono leading-tight select-none">
               /
             </kbd>
           )}
           <button
             onClick={() => query.trim() && select(query.trim().toUpperCase())}
             disabled={!query.trim()}
-            className="shrink-0 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 transition-all px-4 py-1.5 text-[13px] font-semibold text-white min-h-[44px]"
+            className="shrink-0 rounded-[10px] bg-[#5F790B] hover:bg-[#526A08] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 transition-all px-4 py-1.5 text-[13px] font-semibold text-white min-h-[44px]"
           >
             Analyze
           </button>
@@ -289,7 +289,7 @@ function SearchHero() {
                     <span className="text-[12px] text-slate-500 truncate block">{r.longname ?? r.shortname}</span>
                   </div>
                   {r.quoteType && (
-                    <span className="shrink-0 text-[11px] font-medium text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
+                    <span className="shrink-0 text-[11px] font-semibold text-[#5F790B] bg-[#EEF4DD] border border-[#BFD2A1] px-2 py-0.5 rounded-md">
                       {r.quoteType === 'EQUITY' ? 'Equity' : r.quoteType === 'ETF' ? 'ETF' : r.quoteType}
                     </span>
                   )}
@@ -302,20 +302,20 @@ function SearchHero() {
 
       {/* Popular ticker chips */}
       <div className="mt-3 flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-1">
-        <span className="text-[11px] font-semibold text-slate-500 shrink-0 mr-0.5">Popular:</span>
+        <span className="text-[11px] font-semibold text-[#536174] shrink-0 mr-0.5">Popular:</span>
         {POPULAR_CHIPS.map((t) => (
           <Link
             key={t}
             href={`/stock/${t}`}
-            className="text-[12px] font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 hover:scale-105 active:scale-95 border border-blue-200 rounded-full px-3 py-1 transition-all whitespace-nowrap shrink-0 min-h-[32px] flex items-center"
+            className="text-[12px] font-semibold text-[#5F790B] bg-[#EEF4DD] hover:bg-[#E5F0CC] active:bg-[#D4E8A8] hover:scale-105 active:scale-95 border border-[#BFD2A1] rounded-full px-3 py-1 transition-all whitespace-nowrap shrink-0 min-h-[32px] flex items-center"
           >
             {t}
           </Link>
         ))}
-        <span className="text-slate-200 shrink-0">|</span>
+        <span className="text-[#E3E6E0] shrink-0">|</span>
         <Link
           href="/screener"
-          className="text-[12px] font-semibold text-slate-500 hover:text-blue-600 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-full px-3 py-1 transition-all whitespace-nowrap shrink-0 min-h-[32px] flex items-center gap-1.5"
+          className="text-[12px] font-semibold text-[#536174] hover:text-[#5F790B] bg-white hover:bg-[#F6FAEA] border border-[#E3E6E0] hover:border-[#BFD2A1] rounded-full px-3 py-1 transition-all whitespace-nowrap shrink-0 min-h-[32px] flex items-center gap-1.5"
         >
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 9m0 0L21 12.75M17.25 9v12" />
@@ -378,7 +378,7 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
         {/* Row 1: ticker + ETF badge | status badge */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2 gap-2">
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded-md px-2 py-0.5 font-mono leading-tight">
+            <span className="text-[11px] font-bold text-[#5F790B] bg-[#EEF4DD] border border-[#BFD2A1] rounded-md px-2 py-0.5 font-mono leading-tight">
               {q.ticker}
             </span>
           </div>
@@ -390,17 +390,17 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
         </div>
 
         {/* Row 2: company name */}
-        <p className="px-4 text-[13px] font-semibold text-slate-800 leading-tight">
+        <p className="px-4 text-[13px] font-semibold text-[#0A1424] leading-tight">
           {q.name}
         </p>
 
         {/* Row 3: price + sparkline */}
         <div className="flex items-center justify-between px-4 mt-3 gap-3">
           <div className="flex items-baseline gap-1.5">
-            <span className="text-[19px] font-bold text-slate-900 tabular-nums leading-none">
+            <span className="text-[19px] font-bold text-[#0A1424] tabular-nums leading-none">
               {q.price != null ? fmtPrice(q.price) : '—'}
             </span>
-            <span className={cn('text-[12px] font-semibold tabular-nums', up ? 'text-emerald-600' : 'text-red-600')}>
+            <span className={cn('text-[12px] font-semibold tabular-nums', up ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
               {q.changePct != null ? fmtPct(q.changePct / 100) : '—'}
             </span>
           </div>
@@ -433,12 +433,12 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
               <button
                 type="button"
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRetryKey(k => k + 1) }}
-                className="text-[11px] text-blue-500 hover:text-blue-700 transition-colors"
+                className="text-[11px] text-[#5F790B] hover:text-[#526A08] transition-colors"
               >
                 Retry ↺
               </button>
             ) : fairValue != null ? (
-              <p className={cn('text-[14px] font-bold tabular-nums', (upsidePct ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600')}>
+              <p className={cn('text-[14px] font-bold tabular-nums', (upsidePct ?? 0) >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
                 {fmtPrice(fairValue)}
               </p>
             ) : (
@@ -486,16 +486,16 @@ function PopularAnalysesSection({
     <section>
       <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
         <div className="min-w-0">
-          <h2 className="text-[15px] font-bold text-slate-900">Popular analyses</h2>
-          <p className="text-[12px] text-slate-500 mt-0.5">Top holdings from SPY · QQQ · DIA — no duplicates</p>
+          <h2 className="text-[15px] font-bold text-[#0A1424]">Popular analyses</h2>
+          <p className="text-[12px] text-[#536174] mt-0.5">Top holdings from SPY · QQQ · DIA — no duplicates</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           {dataStale && (
-            <span className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-0.5 whitespace-nowrap">
+            <span className="text-[11px] text-[#B56A00] bg-[#FFF4DA] border border-[#F3D391] rounded-full px-2.5 py-0.5 whitespace-nowrap">
               Cached · live prices unavailable
             </span>
           )}
-          <Link href="/markets" className="text-[12px] font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 whitespace-nowrap">
+          <Link href="/markets" className="text-[12px] font-medium text-[#5F790B] hover:text-[#526A08] flex items-center gap-1 whitespace-nowrap">
             View all <ChevronRight size={13} />
           </Link>
         </div>
@@ -553,12 +553,12 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
   return (
     <section className="glass-card-light rounded-2xl overflow-hidden">
       {/* Card header */}
-      <div className="flex items-center justify-between gap-3 px-5 pt-5 pb-4 border-b border-slate-100">
+      <div className="flex items-center justify-between gap-3 px-5 pt-5 pb-4 border-b border-[#E3E6E0]">
         <div>
-          <h2 className="text-[15px] font-bold text-slate-900">What the market is pricing in</h2>
-          <p className="text-[12px] text-slate-500 mt-0.5">Market-implied 5Y revenue growth vs. historical 3Y growth · model estimates</p>
+          <h2 className="text-[15px] font-bold text-[#0A1424]">What the market is pricing in</h2>
+          <p className="text-[12px] text-[#536174] mt-0.5">Market-implied 5Y revenue growth vs. historical 3Y growth · model estimates</p>
         </div>
-        <Link href="/markets" className="text-[12px] font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 whitespace-nowrap">
+        <Link href="/markets" className="text-[12px] font-medium text-[#5F790B] hover:text-[#526A08] flex items-center gap-1 whitespace-nowrap">
           View full <ChevronRight size={13} />
         </Link>
       </div>
@@ -584,17 +584,17 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
             <span className="text-[11px] font-semibold text-slate-500 hidden sm:block">Interpretation</span>
           </div>
 
-          <div ref={tableRef} className="divide-y divide-slate-50">
+          <div ref={tableRef} className="divide-y divide-[#F3F2EC]">
             {rowData.map((q, rowIndex) => (
               <Link
                 key={q.ticker}
                 href={`/stock/${q.ticker}`}
-                className="grid grid-cols-[150px_1fr_1fr_110px] sm:grid-cols-[170px_1fr_1fr_110px_minmax(0,200px)] gap-x-4 px-5 py-3 items-center hover:bg-slate-50 transition-colors"
+                className="grid grid-cols-[150px_1fr_1fr_110px] sm:grid-cols-[170px_1fr_1fr_110px_minmax(0,200px)] gap-x-4 px-5 py-3 items-center hover:bg-[#FBFAF7] transition-colors"
               >
                 {/* Stock */}
                 <div className="min-w-0">
-                  <span className="text-[12px] font-bold text-slate-800 font-mono">{q.ticker}</span>
-                  <span className="text-[11px] text-slate-500 ml-1.5 hidden sm:inline truncate">{q.shortName}</span>
+                  <span className="text-[12px] font-bold text-[#0A1424] font-mono">{q.ticker}</span>
+                  <span className="text-[11px] text-[#536174] ml-1.5 hidden sm:inline truncate">{q.shortName}</span>
                 </div>
 
                 {/* Implied CAGR bar */}
@@ -608,7 +608,7 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
                       transition={{ duration: 0.5, delay: rowIndex * 0.038, ease: [0.16, 1, 0.3, 1] }}
                     />
                   </div>
-                  <span className="text-[12px] font-semibold text-slate-700 tabular-nums whitespace-nowrap">
+                  <span className="text-[12px] font-semibold text-[#0A1424] tabular-nums whitespace-nowrap">
                     {q.impliedCagr > 0 ? '+' : ''}{q.impliedCagr}%
                   </span>
                 </div>
@@ -617,14 +617,14 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
                 <div className="flex items-center gap-2">
                   <div className="overflow-hidden" style={{ width: `${q.histBarW}px` }}>
                     <motion.div
-                      className="h-2 bg-blue-400 rounded-full w-full"
+                      className="h-2 bg-[#2563EB] rounded-full w-full opacity-60"
                       style={{ transformOrigin: 'left' }}
                       initial={reduced ? {} : { scaleX: 0 }}
                       animate={reduced ? {} : { scaleX: inView ? 1 : 0 }}
                       transition={{ duration: 0.5, delay: rowIndex * 0.038 + 0.08, ease: [0.16, 1, 0.3, 1] }}
                     />
                   </div>
-                  <span className="text-[12px] font-semibold text-slate-700 tabular-nums whitespace-nowrap">
+                  <span className="text-[12px] font-semibold text-[#0A1424] tabular-nums whitespace-nowrap">
                     {q.historicalCagr3y}%
                   </span>
                 </div>
@@ -636,7 +636,7 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
 
                 {/* Interpretation — desktop only */}
                 <span
-                  className="text-[11px] text-slate-500 hidden sm:block leading-relaxed line-clamp-2"
+                  className="text-[11px] text-[#536174] hidden sm:block leading-relaxed line-clamp-2"
                   title={q.interpretation}
                 >
                   {q.interpretation}
@@ -648,10 +648,10 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
       </div>
 
       {/* Footer with info tooltip */}
-      <div ref={infoRef} className="flex items-center gap-1.5 px-5 py-3 border-t border-slate-100 relative">
+      <div ref={infoRef} className="flex items-center gap-1.5 px-5 py-3 border-t border-[#E3E6E0] relative">
         <button
           onClick={() => setShowInfo((v) => !v)}
-          className="flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-700 transition-colors"
+          className="flex items-center gap-1 text-[11px] text-[#536174] hover:text-[#0A1424] transition-colors"
         >
           <Info size={12} />
           How is this calculated?
@@ -664,16 +664,16 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 4, scale: 0.97 }}
               transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute left-5 bottom-full mb-2 z-20 w-72 max-w-[calc(100vw-40px)] rounded-xl bg-slate-900 text-white text-[11px] leading-relaxed px-3.5 py-3 shadow-lg"
+              className="absolute left-5 bottom-full mb-2 z-20 w-72 max-w-[calc(100vw-40px)] rounded-xl bg-[#0A1424] text-white text-[11px] leading-relaxed px-3.5 py-3 shadow-lg"
             >
               <p className="font-semibold mb-1">Reverse DCF method</p>
-              <p className="text-slate-300">Implied CAGR is the 5-year revenue growth rate that would justify the current stock price, computed via a reverse discounted cash flow model at the company&apos;s estimated WACC.</p>
-              <p className="text-slate-400 mt-1.5">Historical CAGR is from annual revenue filings. Model estimates only — not financial advice.</p>
+              <p className="text-[#8A96A8]">Implied CAGR is the 5-year revenue growth rate that would justify the current stock price, computed via a reverse discounted cash flow model at the company&apos;s estimated WACC.</p>
+              <p className="text-[#536174] mt-1.5">Historical CAGR is from annual revenue filings. Model estimates only — not financial advice.</p>
             </motion.div>
           )}
         </AnimatePresence>
-        <span className="text-slate-200 mx-1">·</span>
-        <span className="text-[11px] text-slate-500">Click any row to open the full analysis</span>
+        <span className="text-[#B6BFCC] mx-1">·</span>
+        <span className="text-[11px] text-[#536174]">Click any row to open the full analysis</span>
       </div>
     </section>
   )
@@ -688,37 +688,37 @@ function QuickActions() {
       title: 'Compare stocks',
       desc: 'Side-by-side valuation, quality, and growth expectations.',
       href: '/compare',
-      iconCls: 'text-violet-600 bg-violet-50',
+      iconCls: 'text-[#2563EB] bg-[#EAF1FF]',
     },
     {
       icon: Bookmark,
       title: 'My Valuations',
       desc: 'Review saved analyses and track conviction over time.',
       href: '/valuations',
-      iconCls: 'text-emerald-600 bg-emerald-50',
+      iconCls: 'text-[#5F790B] bg-[#EEF4DD]',
     },
   ]
 
   return (
     <section>
-      <h2 className="text-[15px] font-bold text-slate-900 mb-3">Go further</h2>
-      <div className="glass-card-light rounded-xl divide-y divide-slate-100/60 overflow-hidden">
+      <h2 className="text-[15px] font-bold text-[#0A1424] mb-3">Go further</h2>
+      <div className="glass-card-light rounded-xl divide-y divide-[#E3E6E0] overflow-hidden">
         {actions.map((a) => {
           const Icon = a.icon
           return (
             <Link
               key={a.title}
               href={a.href}
-              className="flex w-full items-center gap-4 px-5 py-4 text-left hover:bg-slate-50 active:bg-slate-100 transition-colors min-h-[64px] group"
+              className="flex w-full items-center gap-4 px-5 py-4 text-left hover:bg-[#FBFAF7] active:bg-[#F3F2EC] transition-colors min-h-[64px] group"
             >
-              <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0', a.iconCls)}>
+              <div className={cn('w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0', a.iconCls)}>
                 <Icon size={18} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-semibold text-slate-900">{a.title}</p>
-                <p className="text-[12px] text-slate-600 mt-0.5">{a.desc}</p>
+                <p className="text-[14px] font-semibold text-[#0A1424]">{a.title}</p>
+                <p className="text-[12px] text-[#536174] mt-0.5">{a.desc}</p>
               </div>
-              <ChevronRight size={16} className="shrink-0 text-slate-300 group-hover:text-slate-500 group-hover:translate-x-1 transition-all duration-150" />
+              <ChevronRight size={16} className="shrink-0 text-[#B6BFCC] group-hover:text-[#536174] group-hover:translate-x-1 transition-all duration-150" />
             </Link>
           )
         })}
@@ -754,16 +754,16 @@ function RecentlyViewed() {
 
   return (
     <section>
-      <h2 className="text-[15px] font-bold text-slate-900 mb-4">Recently viewed</h2>
+      <h2 className="text-[15px] font-bold text-[#0A1424] mb-4">Recently viewed</h2>
 
       {recent.length === 0 ? (
-        <div className="rounded-xl bg-white border border-slate-200 shadow-sm px-6 py-8 flex flex-col items-center text-center gap-2">
-          <Clock size={22} className="text-slate-300" />
-          <p className="text-[13px] font-medium text-slate-600">No recent analyses yet</p>
-          <p className="text-[12px] text-slate-400">Stocks you open will appear here so you can quickly pick up where you left off.</p>
+        <div className="rounded-xl bg-white border border-[#E3E6E0] shadow-card px-6 py-8 flex flex-col items-center text-center gap-2">
+          <Clock size={22} className="text-[#B6BFCC]" />
+          <p className="text-[13px] font-medium text-[#536174]">No recent analyses yet</p>
+          <p className="text-[12px] text-[#8A96A8]">Stocks you open will appear here so you can quickly pick up where you left off.</p>
           <button
             onClick={() => document.getElementById('analyze-search-input')?.focus()}
-            className="mt-2 text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+            className="mt-2 text-[12px] font-semibold text-[#5F790B] hover:text-[#526A08] transition-colors"
           >
             Search your first stock →
           </button>
@@ -783,7 +783,7 @@ function RecentlyViewed() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -10, scale: 0.96 }}
                   transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                  className="group flex items-center justify-between gap-3 rounded-xl bg-white border border-slate-200 shadow-sm px-4 py-3 min-h-[56px]"
+                  className="group flex items-center justify-between gap-3 rounded-xl bg-white border border-[#E3E6E0] shadow-card px-4 py-3 min-h-[56px]"
                 >
                   <button
                     onClick={() => router.push(`/stock/${r.ticker}`)}
@@ -791,19 +791,19 @@ function RecentlyViewed() {
                   >
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[13px] font-bold text-blue-700 font-mono">{r.ticker}</span>
-                        <span className={cn('text-[11px] font-semibold tabular-nums', up ? 'text-emerald-600' : 'text-red-600')}>
+                        <span className="text-[13px] font-bold text-[#5F790B] font-mono">{r.ticker}</span>
+                        <span className={cn('text-[11px] font-semibold tabular-nums', up ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
                           {fmtPct((r.changePct ?? 0) / 100)}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-500 truncate mt-0.5">{r.name}</p>
+                      <p className="text-[11px] text-[#536174] truncate mt-0.5">{r.name}</p>
                     </div>
-                    <span className="ml-auto text-[14px] font-bold text-slate-900 tabular-nums shrink-0">{fmtPrice(r.price)}</span>
+                    <span className="ml-auto text-[14px] font-bold text-[#0A1424] tabular-nums shrink-0">{fmtPrice(r.price)}</span>
                   </button>
                   <button
                     onClick={() => removeItem(r.ticker)}
                     aria-label={`Remove ${r.ticker} from history`}
-                    className="shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md text-slate-300 hover:text-slate-500 hover:bg-slate-100 transition-colors"
+                    className="shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md text-[#B6BFCC] hover:text-[#536174] hover:bg-[#F3F2EC] transition-colors"
                   >
                     <X size={13} />
                   </button>
@@ -826,16 +826,16 @@ function RecentlyViewed() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.85 }}
                   transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                  className="group relative flex-shrink-0 w-[160px] rounded-xl bg-white border border-slate-200 shadow-sm hover:border-blue-200 hover:shadow-md transition-all"
+                  className="group relative flex-shrink-0 w-[160px] rounded-xl bg-white border border-[#E3E6E0] shadow-card hover:border-[#BFD2A1] hover:shadow-card-md transition-all"
                 >
                   <button
                     onClick={() => router.push(`/stock/${r.ticker}`)}
                     className="w-full p-3 text-left"
                   >
-                    <span className="text-[12px] font-bold text-blue-700 font-mono block">{r.ticker}</span>
-                    <p className="text-[11px] text-slate-500 truncate mt-0.5 mb-2">{r.name}</p>
-                    <p className="text-[15px] font-bold text-slate-900 tabular-nums">{fmtPrice(r.price)}</p>
-                    <p className={cn('text-[11px] font-semibold tabular-nums mt-0.5', up ? 'text-emerald-600' : 'text-red-600')}>
+                    <span className="text-[12px] font-bold text-[#5F790B] font-mono block">{r.ticker}</span>
+                    <p className="text-[11px] text-[#536174] truncate mt-0.5 mb-2">{r.name}</p>
+                    <p className="text-[15px] font-bold text-[#0A1424] tabular-nums">{fmtPrice(r.price)}</p>
+                    <p className={cn('text-[11px] font-semibold tabular-nums mt-0.5', up ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
                       {fmtPct((r.changePct ?? 0) / 100)}
                     </p>
                   </button>
