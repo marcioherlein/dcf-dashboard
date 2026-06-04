@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { signIn } from 'next-auth/react'
 import { Check, X, Zap, Shield, TrendingUp, BarChart2, Bell, FileText, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { InsicLogo } from '@/components/ui/InsicLogo'
 
 const FREE_FEATURES = [
   { text: 'Unlimited stock analysis (any ticker)',       included: true  },
@@ -94,15 +94,9 @@ export default function PricingPage() {
 
       {/* Breadcrumb header */}
       <div className="bg-white border-b border-[#E3E6E0] px-6 py-3 flex items-center gap-3">
-        <Link href="/" className="flex items-center gap-2 shrink-0 group" aria-label="insic home">
-          <Image
-            src="/logos/insic-header.png"
-            alt="insic"
-            width={72}
-            height={24}
-            className="h-6 w-auto object-contain"
-          />
-        </Link>
+        <Link href="/" className="flex items-center shrink-0 group" aria-label="insic home">
+            <InsicLogo variant="horizontal" className="h-6 w-auto" />
+          </Link>
         <span className="text-[#B6BFCC]">·</span>
         <span className="text-[13px] text-[#8A96A8]">Pricing</span>
       </div>

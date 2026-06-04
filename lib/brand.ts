@@ -3,8 +3,8 @@
 // Change here → both the page and every share card update.
 
 export const SITE_URL = 'insic.app'
-export const LOGO_URL = '/logos/insic-header.png'
-export const LOGO_MARK_URL = '/logos/insic-app-icon.png'
+export const LOGO_URL = '/brand/insic-logo-horizontal-on-dark.png'
+export const LOGO_MARK_URL = '/brand/insic-mark.png'
 
 // insic brand palette — olive is the primary accent
 export const BRAND = {

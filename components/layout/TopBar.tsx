@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils'
 import { slideDown } from '@/lib/motion'
 import { useStockNav } from '@/contexts/StockNavContext'
 import type { TabId } from '@/components/stock/TabNav'
+import { InsicLogo } from '@/components/ui/InsicLogo'
 
 const STOCK_TABS: Array<{ id: TabId; label: string }> = [
   { id: 'overview',   label: 'Overview'   },
@@ -305,25 +306,11 @@ export default function TopBar() {
       >
         {/* ── Column 1: Logo ── */}
         <div className="flex items-center">
-          <Link href={session ? '/analyze' : '/'} className="flex items-center gap-2 shrink-0 group" aria-label="insic home">
-            {/* Mobile: app icon mark only */}
-            <Image
-              src="/logos/insic-app-icon.png"
-              alt="insic"
-              width={28}
-              height={28}
-              className="sm:hidden shrink-0 h-7 w-7 object-contain rounded-[6px]"
-              priority
-            />
-            {/* Desktop: full wordmark header */}
-            <Image
-              src="/logos/insic-header.png"
-              alt="insic"
-              width={88}
-              height={28}
-              className="hidden sm:block shrink-0 h-7 w-auto object-contain"
-              priority
-            />
+          <Link href={session ? '/analyze' : '/'} className="flex items-center shrink-0 group" aria-label="insic home">
+            {/* Mobile: mark only */}
+            <InsicLogo variant="mark" className="sm:hidden h-7 w-auto" />
+            {/* Desktop: full horizontal */}
+            <InsicLogo variant="horizontal" className="hidden sm:block h-7 w-auto" />
           </Link>
         </div>
 

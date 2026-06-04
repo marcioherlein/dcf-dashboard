@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
 
   // Logo — resolved to absolute URL for edge runtime fetch
   const baseUrl  = `${req.nextUrl.protocol}//${req.nextUrl.host}`
-  const logoUrl  = `${baseUrl}/brand/logo-horizontal-reversed.png`
+  const logoUrl  = `${baseUrl}/brand/insic-logo-horizontal-on-dark.png`
 
   let logoData: string | null = null
   try {

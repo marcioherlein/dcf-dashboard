@@ -1,9 +1,9 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useSession, signIn } from 'next-auth/react'
 import { Menu, X } from 'lucide-react'
+import { InsicLogo } from '@/components/ui/InsicLogo'
 
 const NAV_LINKS = [
   { label: 'Product',       href: '/analyze'      },
@@ -41,14 +41,7 @@ export default function LandingNavbar() {
         <div className="mx-auto max-w-[1280px] px-4 sm:px-6 h-full flex items-center gap-8">
           {/* Logo — use the new header asset */}
           <Link href="/" className="flex items-center shrink-0 group" aria-label="insic home">
-            <Image
-              src="/logos/insic-header.png"
-              alt="insic"
-              width={96}
-              height={32}
-              className="h-8 w-auto object-contain transition-opacity group-hover:opacity-80"
-              priority
-            />
+            <InsicLogo variant="horizontal" className="h-8 w-auto" />
           </Link>
 
           {/* Center nav */}
