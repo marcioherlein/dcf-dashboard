@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   const bearRaw    = p.get('bear') ? parseFloat(p.get('bear')!) : null
   const bullRaw    = p.get('bull') ? parseFloat(p.get('bull')!) : null
   const currency   = p.get('currency') ?? 'USD'
-  const verdict    = (p.get('verdict') ?? 'Insufficient Data') as VerdictKey
+  const verdict    = ((p.get('verdict') ?? 'Insufficient Data').replace(/\+/g, ' ')) as VerdictKey
   const conviction = p.get('conviction') ?? ''
 
   // Guard NaN from null/missing params

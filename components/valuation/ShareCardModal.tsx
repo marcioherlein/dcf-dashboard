@@ -197,7 +197,6 @@ export default function ShareCardModal({ open, onClose, ticker, companyName, out
               src={previewUrl}
               alt={`${ticker} valuation card preview`}
               className={cn('w-full h-full object-cover transition-opacity duration-300', imgLoading || imgError ? 'opacity-0' : 'opacity-100')}
-              loading="lazy"
               onLoad={() => { setImgLoading(false); setImgError(false) }}
               onError={() => { setImgLoading(false); setImgError(true) }}
             />
