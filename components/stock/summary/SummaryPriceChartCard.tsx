@@ -3,7 +3,6 @@
 import dynamic from 'next/dynamic'
 import { fmtPrice, fmtLargeCurrency } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
-import InfoTooltip from '@/components/ui/InfoTooltip'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -30,20 +29,6 @@ const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
 
 const CARD = 'bg-white border border-[#E6ECF5] rounded-[20px] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]'
 
-// ─── Legend item ──────────────────────────────────────────────────────────────
-
-function LegendItem({ color, label, dashed }: { color: string; label: string; dashed?: boolean }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <div
-        className="w-6 h-0 border-t-2"
-        style={{ borderColor: color, borderStyle: dashed ? 'dashed' : 'solid' }}
-      />
-      <span className="text-[11px] text-[#64748B]">{label}</span>
-    </div>
-  )
-}
-
 // ─── Footer metric ────────────────────────────────────────────────────────────
 
 function FooterMetric({ label, value }: { label: string; value: string }) {
@@ -69,23 +54,10 @@ export default function SummaryPriceChartCard({
   currency,
 }: SummaryPriceChartCardProps) {
   return (
-    <div className={cn(CARD, 'flex flex-col p-5 gap-3')}>
+    <div className={cn(CARD, 'flex flex-col overflow-hidden')}>
 
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <p className="text-[14px] font-[750] text-[#0F172A]">Price Chart</p>
-        <div className="flex items-center gap-3 flex-wrap">
-          <LegendItem color="#10b981" label="Price" />
-          <div className="flex items-center gap-1.5">
-            <LegendItem color="#8b5cf6" dashed label="Cockpit Estimate" />
-            <InfoTooltip content="Blended fair value from four methods: Forward P/E, EV/EBITDA, Revenue Multiple, and Core DCF. Weights vary by company type." />
-          </div>
-          <LegendItem color="#F59E0B" dashed label="Analyst Target" />
-        </div>
-      </div>
-
-      {/* Chart */}
-      <div className="flex-1 min-h-[155px]">
+      {/* Chart — PriceChart renders its own header with title + legend */}
+      <div className="flex-1 min-h-[220px]">
         <PriceChart
           ticker={ticker}
           isDark={false}
@@ -96,7 +68,7 @@ export default function SummaryPriceChartCard({
       </div>
 
       {/* Footer metrics */}
-      <div className="border-t border-[#E6ECF5] mt-2">
+      <div className="border-t border-[#E6ECF5]">
         <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#E6ECF5]">
           <FooterMetric label="52W Low"    value={fmtPrice(low52, currency)} />
           <FooterMetric label="52W High"   value={fmtPrice(high52, currency)} />
