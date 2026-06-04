@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { InsicLogo } from '@/components/ui/InsicLogo'
+import { InsicLogoLockup } from '@/components/ui/InsicLogo'
 
 const PRIMARY_NAV: Array<{ href: string; label: string; icon: LucideIcon; match: (p: string) => boolean }> = [
   { href: '/analyze',               label: 'Analyze',       icon: TrendingUp,        match: (p) => p === '/analyze' || p.startsWith('/stock') },
@@ -93,7 +93,7 @@ export default function Sidebar() {
       {/* Logo lockup */}
       <div className="px-4 border-b border-[#E3E6E0]" style={{ height: '52px', display: 'flex', alignItems: 'center' }}>
         <Link href={session ? '/analyze' : '/'} className="flex items-center leading-none" aria-label="insic home">
-          <InsicLogo variant="horizontal" className="h-7 w-auto block" />
+          <InsicLogoLockup size="md" />
         </Link>
       </div>
 

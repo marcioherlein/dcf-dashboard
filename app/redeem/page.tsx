@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession, signIn } from 'next-auth/react'
 import { CheckCircle, ArrowRight } from 'lucide-react'
-import { InsicLogo } from '@/components/ui/InsicLogo'
+import { InsicLogoLockup } from '@/components/ui/InsicLogo'
 
 export default function RedeemPage() {
   const { data: session, status } = useSession()
@@ -42,7 +42,7 @@ export default function RedeemPage() {
 
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <InsicLogo variant="horizontal" className="h-8 w-auto" />
+          <InsicLogoLockup size="md" />
         </div>
 
         {!session && status !== 'loading' ? (

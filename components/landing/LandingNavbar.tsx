@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSession, signIn } from 'next-auth/react'
 import { Menu, X } from 'lucide-react'
-import { InsicLogo } from '@/components/ui/InsicLogo'
+import { InsicLogoLockup } from '@/components/ui/InsicLogo'
 import { motion, AnimatePresence } from 'motion/react'
 
 const NAV_LINKS = [
@@ -46,7 +46,7 @@ export default function LandingNavbar() {
             {/* ── Col 1: Logo — left edge ── */}
             <div className="flex items-center">
               <Link href="/" aria-label="insic home" className="flex items-center" style={{ lineHeight: 0 }}>
-                <InsicLogo variant="horizontal" className="block w-auto" style={{ height: '40px' }} />
+                <InsicLogoLockup size="lg" />
               </Link>
             </div>
 

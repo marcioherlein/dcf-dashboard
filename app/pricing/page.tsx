@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import { Check, X, Zap, Shield, TrendingUp, BarChart2, Bell, FileText, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { InsicLogo } from '@/components/ui/InsicLogo'
+import { InsicLogoLockup } from '@/components/ui/InsicLogo'
 
 const FREE_FEATURES = [
   { text: 'Unlimited stock analysis (any ticker)',       included: true  },
@@ -83,11 +83,7 @@ const FAQS = [
 ]
 
 export default function PricingPage() {
-  const [annual, setAnnual] = useState(true)
-
-  const monthlyPrice  = 17
-  const annualMonthly = 11.33
-  const annualTotal   = 136
+  const monthlyPrice = 17
 
   return (
     <div className="min-h-screen" style={{ background: '#F8F7F2' }}>
@@ -95,7 +91,7 @@ export default function PricingPage() {
       {/* Breadcrumb header */}
       <div className="bg-white border-b border-[#E3E6E0] px-6 py-3 flex items-center gap-3">
         <Link href="/" className="flex items-center shrink-0 group" aria-label="insic home">
-            <InsicLogo variant="horizontal" className="h-6 w-auto" />
+            <InsicLogoLockup size="sm" />
           </Link>
         <span className="text-[#B6BFCC]">·</span>
         <span className="text-[13px] text-[#8A96A8]">Pricing</span>
@@ -116,42 +112,6 @@ export default function PricingPage() {
           <p className="mt-4 text-[17px] text-[#536174] max-w-xl mx-auto leading-relaxed">
             Start free. Upgrade when you want more depth.
           </p>
-
-          {/* Billing toggle */}
-          <div className="mt-8 flex justify-center">
-            <div className="inline-flex items-center gap-1 rounded-full bg-white border border-[#E3E6E0] p-1 shadow-card">
-              <button
-                onClick={() => setAnnual(false)}
-                className={cn(
-                  'rounded-full px-5 py-2.5 text-[13.5px] font-semibold transition-colors min-h-[44px]',
-                  !annual
-                    ? 'bg-[#0A1424] text-white'
-                    : 'text-[#536174] hover:text-[#0A1424]',
-                )}
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setAnnual(true)}
-                className={cn(
-                  'rounded-full px-5 py-2.5 text-[13.5px] font-semibold transition-colors flex items-center gap-2 min-h-[44px]',
-                  annual
-                    ? 'bg-[#0A1424] text-white'
-                    : 'text-[#536174] hover:text-[#0A1424]',
-                )}
-              >
-                Annual
-                <span className={cn(
-                  'text-[10px] font-bold rounded-full px-2 py-0.5',
-                  annual
-                    ? 'bg-[#5F790B] text-white'
-                    : 'bg-[#EEF4DD] text-[#5F790B]',
-                )}>
-                  Save 33%
-                </span>
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Pricing cards */}
@@ -204,33 +164,20 @@ export default function PricingPage() {
 
             <div className="mb-6">
               <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#EEF4DD] mb-3">Pro</p>
-              {annual ? (
-                <div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-[48px] font-bold text-white leading-none tabular-nums">
-                      ${annualMonthly.toFixed(2)}
-                    </span>
-                    <span className="text-[#8A96A8] text-[14px] font-medium">/ month</span>
-                  </div>
-                  <p className="text-[#8A96A8] text-[13px] mt-1">
-                    Billed as ${annualTotal}/year · Save ${(monthlyPrice * 12 - annualTotal).toFixed(0)}/year
-                  </p>
-                </div>
-              ) : (
-                <div className="flex items-baseline gap-1">
-                  <span className="text-[48px] font-bold text-white leading-none tabular-nums">${monthlyPrice}</span>
-                  <span className="text-[#8A96A8] text-[14px] font-medium">/ month</span>
-                </div>
-              )}
+              <div className="flex items-baseline gap-1">
+                <span className="text-[48px] font-bold text-white leading-none tabular-nums">${monthlyPrice}</span>
+                <span className="text-[#8A96A8] text-[14px] font-medium">/ month</span>
+              </div>
               <p className="text-[#536174] text-[13px] mt-2">Cancel anytime. No contracts.</p>
             </div>
 
             <button
-              onClick={() => signIn('google')}
-              className="w-full rounded-[10px] bg-[#5F790B] hover:bg-[#526A08] active:bg-[#4A5E07] py-3.5 text-[13.5px] font-bold text-white transition-colors mb-3 min-h-[48px] shadow-sm"
+              disabled
+              className="w-full rounded-[10px] bg-[#536174] py-3.5 text-[13.5px] font-bold text-white mb-1 min-h-[48px] shadow-sm opacity-70 cursor-not-allowed"
             >
-              Start Pro — {annual ? `$${annualTotal}/year` : `$${monthlyPrice}/month`} →
+              Coming soon
             </button>
+            <p className="text-center text-[12px] text-[#536174] mb-3">Payments launching soon — stay tuned.</p>
             <p className="text-center text-[12px] text-[#536174] mb-6">
               Have a code?{' '}
               <a href="/redeem" className="text-[#EEF4DD] hover:underline font-semibold">Redeem it here</a>
