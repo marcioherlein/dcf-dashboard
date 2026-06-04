@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Sparkles, Bell, Settings, HelpCircle, PieChart, X, Globe, Bookmark, LayoutDashboard } from 'lucide-react'
+import { Sparkles, Bell, Settings, HelpCircle, PieChart, X, Globe, Bookmark, LayoutDashboard, SlidersHorizontal } from 'lucide-react'
 
 /* ── Left-2 + Right-2 nav items (center Analyze is rendered separately) ── */
 const LEFT_NAV = [
@@ -17,11 +17,11 @@ const LEFT_NAV = [
     ),
   },
   {
-    href: '/valuations',
-    label: 'My Saves',
-    match: (p: string) => p.startsWith('/valuations'),
+    href: '/screener',
+    label: 'Screener',
+    match: (p: string) => p.startsWith('/screener'),
     icon: (active: boolean) => (
-      <Bookmark className={cn('w-5 h-5', active ? 'text-blue-600' : 'text-slate-400')} strokeWidth={active ? 2 : 1.5} />
+      <SlidersHorizontal className={cn('w-5 h-5', active ? 'text-blue-600' : 'text-slate-400')} strokeWidth={active ? 2 : 1.5} />
     ),
   },
 ]
@@ -38,11 +38,12 @@ const RIGHT_NAV = [
 ]
 
 const MORE_ITEMS = [
-  { href: '/ai-stack',          label: 'AI Stack',          icon: Sparkles       },
+  { href: '/valuations',            label: 'My Valuations',       icon: Bookmark        },
+  { href: '/ai-stack',              label: 'AI Stack',            icon: Sparkles        },
   { href: '/monitor?tab=portfolio', label: 'Monitor / Portfolio', icon: LayoutDashboard },
-  { href: '/alerts',            label: 'Alerts',            icon: Bell           },
-  { href: '/settings',          label: 'Settings',          icon: Settings       },
-  { href: '/help',              label: 'Help & Support',    icon: HelpCircle     },
+  { href: '/alerts',                label: 'Alerts',              icon: Bell            },
+  { href: '/settings',              label: 'Settings',            icon: Settings        },
+  { href: '/help',                  label: 'Help & Support',      icon: HelpCircle      },
 ]
 
 export default function BottomNav() {

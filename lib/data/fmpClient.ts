@@ -189,6 +189,50 @@ export async function getFmpAnalystEstimates(ticker: string): Promise<FmpAnalyst
   }
 }
 
+// ── Screener ──────────────────────────────────────────────────────────────────
+
+export interface FmpScreenerResult {
+  symbol: string
+  companyName: string
+  marketCap: number | null
+  sector: string | null
+  industry: string | null
+  beta: number | null
+  price: number | null
+  lastAnnualDividend: number | null
+  volume: number | null
+  exchange: string | null
+  exchangeShortName: string | null
+  country: string | null
+  isEtf: boolean
+  isActivelyTrading: boolean
+}
+
+export interface FmpScreenerParams {
+  exchange?: 'NYSE' | 'NASDAQ'
+  sector?: string
+  marketCapMoreThan?: number
+  marketCapLowerThan?: number
+  betaMoreThan?: number
+  betaLowerThan?: number
+  priceMoreThan?: number
+  priceLowerThan?: number
+  dividendMoreThan?: number
+  isEtf?: boolean
+  isActivelyTrading?: boolean
+  limit?: number
+}
+
+export async function getFmpScreener(params: FmpScreenerParams = {}): Promise<FmpScreenerResult[]> {
+  const query: Record<string, string | number> = { isEtf: 'false', isActivelyTrading: 'true', limit: params.limit ?? 200 }
+  if (params.exchange)            query.exchange = params.exchange
+  if (params.sector)              query.sector = params.sector
+  if (params.marketCapMoreThan)   query.marketCapMoreThan = params.marketCapMoreThan
+  if (params.marketCapLowerThan)  query.marketCapLowerThan = params.marketCapLowerThan
+  if (params.dividendMoreThan !== undefined) query.dividendMoreThan = params.dividendMoreThan
+  return get<FmpScreenerResult[]>('/stock-screener', query)
+}
+
 /**
  * Fetch all FMP data for a ticker in parallel.
  * Falls back gracefully — if FMP is unavailable, all fields are null/empty.

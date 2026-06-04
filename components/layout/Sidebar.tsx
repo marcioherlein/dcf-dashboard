@@ -6,17 +6,18 @@ import Image from 'next/image'
 import { motion, useReducedMotion } from 'motion/react'
 import {
   TrendingUp, Bookmark, Briefcase, Globe,
-  Sparkles, Bell, Settings, HelpCircle, PieChart,
+  Sparkles, Bell, Settings, HelpCircle, PieChart, SlidersHorizontal,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const PRIMARY_NAV: Array<{ href: string; label: string; icon: LucideIcon; match: (p: string) => boolean }> = [
-  { href: '/analyze',               label: 'Analyze',       icon: TrendingUp, match: (p) => p === '/analyze' || p.startsWith('/stock') },
-  { href: '/valuations',            label: 'My Valuations', icon: Bookmark,   match: (p) => p.startsWith('/valuations') },
-  { href: '/etf',                   label: 'ETF Tracker',   icon: PieChart,   match: (p) => p.startsWith('/etf') },
-  { href: '/monitor?tab=portfolio', label: 'Portfolio',     icon: Briefcase,  match: (p) => p.startsWith('/monitor') },
-  { href: '/markets',               label: 'Markets',       icon: Globe,      match: (p) => p.startsWith('/markets') },
+  { href: '/analyze',               label: 'Analyze',       icon: TrendingUp,       match: (p) => p === '/analyze' || p.startsWith('/stock') },
+  { href: '/screener',              label: 'Screener',      icon: SlidersHorizontal, match: (p) => p.startsWith('/screener') },
+  { href: '/valuations',            label: 'My Valuations', icon: Bookmark,         match: (p) => p.startsWith('/valuations') },
+  { href: '/etf',                   label: 'ETF Tracker',   icon: PieChart,         match: (p) => p.startsWith('/etf') },
+  { href: '/monitor?tab=portfolio', label: 'Portfolio',     icon: Briefcase,        match: (p) => p.startsWith('/monitor') },
+  { href: '/markets',               label: 'Markets',       icon: Globe,            match: (p) => p.startsWith('/markets') },
 ]
 
 const UTILITY_NAV: Array<{ href: string; label: string; icon: LucideIcon; match: (p: string) => boolean }> = [

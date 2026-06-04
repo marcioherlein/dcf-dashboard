@@ -312,6 +312,16 @@ function SearchHero() {
             {t}
           </Link>
         ))}
+        <span className="text-slate-200 shrink-0">|</span>
+        <Link
+          href="/screener"
+          className="text-[12px] font-semibold text-slate-500 hover:text-blue-600 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-full px-3 py-1 transition-all whitespace-nowrap shrink-0 min-h-[32px] flex items-center gap-1.5"
+        >
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 9m0 0L21 12.75M17.25 9v12" />
+          </svg>
+          Screener
+        </Link>
       </div>
     </div>
   )
