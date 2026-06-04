@@ -135,7 +135,7 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
   if (!rows.some(r => r.isProjected)) {
     const nYears = apiData?.growthModel === 'three-stage' ? 7 : 5
     const projectionCagr = cagrOverride !== undefined ? cagrOverride : cagr
-    rows = [...rows, ...buildProjectedRows(rows, projectionCagr, nYears, isFinancialSectorEarly)]
+    rows = [...rows, ...buildProjectedRows(rows, projectionCagr, nYears, isFinancialSectorEarly, companyTypeEarly)]
   }
 
   // Base FCF: prefer TTM FCF from statements (raw dollars → millions)
@@ -238,7 +238,7 @@ function computeMedian(values: (number | null)[]): number | null {
   return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
 }
 
-function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears: number, isFinancialSector = false): ModellingRow[] {
+function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears: number, isFinancialSector = false, companyType: ModellingInput['companyType'] = 'standard'): ModellingRow[] {
   const annualRows = historicalRows.filter(r => r.year !== 'TTM' && !r.isProjected)
   const recent = annualRows.slice(-3)
   if (recent.length === 0) return []
@@ -384,7 +384,34 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
       dna   = 0  // no physical asset D&A for financial companies; credit provisions are in EBIT
       ebitda = ebit  // ebitda ≈ ebit when dna = 0
     } else {
-      ebit = medianEbitMargin != null ? revenue * medianEbitMargin : null
+      // For growth/startup companies where EBIT is negative but FCF is positive,
+      // the EBIT distortion comes from SBC being routed through the EBIT bridge.
+      // Yahoo includes SBC in the EBITDA → EBIT gap, making EBIT look worse than
+      // the actual cash generation. ZETA: EBIT -13%, FCF +3%, SBC ~22% of revenue.
+      //
+      // Fix: when medianEbitMargin < 0 AND medianFcfMargin > 0 (i.e. real cash
+      // generation exists despite accounting losses), ramp EBIT toward a target
+      // profitability level using the FCF margin as the trajectory anchor:
+      //   - EBIT in year 1 = max(medianEbitMargin, medianFcfMargin × 0.5)
+      //   - EBIT converges linearly over nYears toward sector-typical margin or
+      //     medianFcfMargin (whichever is higher), capped at 40%.
+      // This models the natural SBC % decline as revenue scales, without fabricating
+      // profitability the business hasn't earned yet.
+      const isSBCDistorted = (medianEbitMargin != null && medianEbitMargin < -0.02) &&
+        (medianFcfMargin != null && medianFcfMargin > 0) &&
+        (companyType === 'growth' || companyType === 'startup')
+
+      let effectiveEbitMargin = medianEbitMargin
+      if (isSBCDistorted && medianFcfMargin != null && medianEbitMargin != null) {
+        // Sector-typical EBIT target for scaled SaaS/tech: 20-25%
+        // Use the higher of FCF margin × 2 or 20%, capped at 35%
+        const targetEbitMargin = Math.min(0.35, Math.max(0.20, medianFcfMargin * 2))
+        // Linear interpolation from current (negative) EBIT to target over nYears
+        const t = (i + 1) / nYears  // 0 → 1 over the projection period
+        effectiveEbitMargin = medianEbitMargin + t * (targetEbitMargin - medianEbitMargin)
+      }
+
+      ebit = effectiveEbitMargin != null ? revenue * effectiveEbitMargin : null
       dna = medianDnaPct != null ? revenue * medianDnaPct : null
       // ebitda: prefer ebit+dna; fall back to EBITDA margin so UFCF engine can derive D&A
       ebitda = (ebit != null && dna != null)
@@ -417,7 +444,9 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
       eps: null,
       capex: -(revenue * medianCapexPct),
       operatingCF: null,
-      freeCashFlow: medianFcfMargin != null && medianCapexPct === 0 ? revenue * medianFcfMargin : null,
+      freeCashFlow: (medianFcfMargin != null && medianEbitMargin != null && medianEbitMargin < -0.02 && medianFcfMargin > 0)
+        ? revenue * medianFcfMargin  // SBC-distorted company: use FCF margin as UFCF fallback
+        : (medianFcfMargin != null && medianCapexPct === 0 ? revenue * medianFcfMargin : null),
       dividendsPaid: null,
       financingCF: null,
       cash: projCash,
