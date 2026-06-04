@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getFmpBundle, type FmpIncomeStatement, type FmpBalanceSheet, type FmpCashFlowStatement } from '@/lib/data/fmpClient'
+import { getFmpBundle, getFmpSecFilings, getFmpTopInstitutionalOwners, type FmpIncomeStatement, type FmpBalanceSheet, type FmpCashFlowStatement } from '@/lib/data/fmpClient'
 import { getFinancials, getQuote, getHistorical, getSPYHistorical, getFXRate, getPeerQuotes, getAnnualBalanceSheet, getAnnualCashFlow, getAnnualIncomeStatement } from '@/lib/data/yahooClient'
 import { calculateBeta } from '@/lib/dcf/calculateBeta'
 import { calculateWACC, extractWACCInputs } from '@/lib/dcf/calculateWACC'
@@ -32,6 +32,11 @@ export async function GET(req: NextRequest) {
     const annualCFRows = await getAnnualCashFlow(ticker).catch(() => [])
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const annualISRows: any[] = await getAnnualIncomeStatement(ticker).catch(() => [])
+    // Non-blocking enrichment data (SEC filings + institutional holders)
+    const [secFilingsRaw, institutionalHoldersRaw] = await Promise.all([
+      getFmpSecFilings(ticker, 8),
+      getFmpTopInstitutionalOwners(ticker),
+    ])
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const fin = financials as any
@@ -1405,6 +1410,24 @@ export async function GET(req: NextRequest) {
       })),
       earningsSurprises,
       analystRatingTrend,
+      secFilings: secFilingsRaw
+        .filter(f => ['10-K', '10-Q', '8-K', 'DEF 14A'].includes(f.type))
+        .slice(0, 8)
+        .map(f => ({
+          type: f.type,
+          date: f.fillingDate,
+          link: f.finalLink || f.link,
+        })),
+      institutionalHolders: institutionalHoldersRaw
+        .slice(0, 10)
+        .map(h => ({
+          name: h.investorName,
+          shares: h.sharesNumber,
+          weight: h.weight,
+          weightChange: h.changeInWeightPercentage,
+          isNew: h.isNew,
+          isSoldOut: h.isSoldOut,
+        })),
       providerStatus: {
         fmp: {
           ok: hasFmp,

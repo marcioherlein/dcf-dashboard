@@ -233,6 +233,58 @@ export async function getFmpScreener(params: FmpScreenerParams = {}): Promise<Fm
   return get<FmpScreenerResult[]>('/stock-screener', query)
 }
 
+// ── SEC Filings ───────────────────────────────────────────────────────────────
+
+export interface FmpSecFiling {
+  symbol: string
+  fillingDate: string      // e.g. "2024-11-01"
+  acceptedDate: string
+  cik: string
+  type: string             // "10-K", "10-Q", "8-K", etc.
+  link: string             // Direct SEC EDGAR link
+  finalLink: string        // Direct filing document link
+}
+
+export async function getFmpSecFilings(ticker: string, limit = 8): Promise<FmpSecFiling[]> {
+  try {
+    return await get<FmpSecFiling[]>('/sec_filings', { symbol: ticker, limit })
+  } catch {
+    return []
+  }
+}
+
+// ── Institutional Ownership ───────────────────────────────────────────────────
+
+export interface FmpInstitutionalOwnership {
+  date: string
+  cik: string
+  filingDate: string
+  investorName: string
+  symbol: string
+  securityName: string
+  typeOfSecurity: string
+  sharesNumber: number
+  putCallShare: string
+  investmentDiscretionType: string
+  industryTitle: string
+  weight: number
+  lastWeight: number
+  changeInWeightPercentage: number
+  isNew: boolean
+  isSoldOut: boolean
+}
+
+export async function getFmpTopInstitutionalOwners(ticker: string): Promise<FmpInstitutionalOwnership[]> {
+  try {
+    return await get<FmpInstitutionalOwnership[]>('/institutional-ownership/institutional-holders/symbol', {
+      symbol: ticker,
+      limit: 10,
+    })
+  } catch {
+    return []
+  }
+}
+
 /**
  * Fetch all FMP data for a ticker in parallel.
  * Falls back gracefully — if FMP is unavailable, all fields are null/empty.

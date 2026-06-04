@@ -2134,6 +2134,94 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 <InsiderTransactionsWidget ticker={financialsData.ticker} />
               </div>
             )}
+
+            {/* Top Institutional Holders */}
+            {(() => {
+              const holders: Array<{
+                name: string; shares: number; weight: number
+                weightChange: number; isNew: boolean; isSoldOut: boolean
+              }> = financialsData?.institutionalHolders ?? []
+              if (holders.length === 0) return null
+              const fmtShares = (v: number) => v >= 1e9 ? `${(v / 1e9).toFixed(2)}B` : v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v.toLocaleString()
+              return (
+                <div>
+                  <p className="text-[13px] font-semibold text-slate-700 mb-3">Top Institutional Holders</p>
+                  <div className="rounded-xl border border-slate-200 overflow-hidden">
+                    <table className="w-full text-[12px]">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-200">
+                          <th className="px-4 py-2 text-left font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Institution</th>
+                          <th className="px-4 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Shares</th>
+                          <th className="px-3 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Weight</th>
+                          <th className="px-3 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Change</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 bg-white">
+                        {holders.map((h, i) => {
+                          const up = h.weightChange > 0.5
+                          const dn = h.weightChange < -0.5
+                          return (
+                            <tr key={i} className="hover:bg-slate-50/60 transition-colors">
+                              <td className="px-4 py-3 text-slate-700 font-medium">
+                                <span className="truncate block max-w-[180px] sm:max-w-none">{h.name}</span>
+                                {h.isNew && <span className="text-[10px] font-semibold text-blue-600 ml-0 mt-0.5 block">New position</span>}
+                                {h.isSoldOut && <span className="text-[10px] font-semibold text-red-600 ml-0 mt-0.5 block">Sold out</span>}
+                              </td>
+                              <td className="px-4 py-3 text-right tabular-nums font-mono text-slate-600">{fmtShares(h.shares)}</td>
+                              <td className="px-3 py-3 text-right tabular-nums font-mono text-slate-600">{(h.weight * 100).toFixed(2)}%</td>
+                              <td className="px-3 py-3 text-right tabular-nums font-mono">
+                                <span className={`text-[11px] font-semibold ${up ? 'text-emerald-600' : dn ? 'text-red-600' : 'text-slate-400'}`}>
+                                  {h.weightChange > 0 ? '+' : ''}{(h.weightChange).toFixed(1)}%
+                                </span>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1.5">Source: 13F filings · Weight = % of institution portfolio · Change = weight shift vs prior quarter</p>
+                </div>
+              )
+            })()}
+
+            {/* SEC Filings */}
+            {(() => {
+              const filings: Array<{ type: string; date: string; link: string }> = financialsData?.secFilings ?? []
+              if (filings.length === 0) return null
+              const typeStyle = (t: string) =>
+                t === '10-K' ? 'bg-blue-50 text-blue-700 border-blue-200'
+                : t === '10-Q' ? 'bg-violet-50 text-violet-700 border-violet-200'
+                : t === 'DEF 14A' ? 'bg-amber-50 text-amber-700 border-amber-200'
+                : 'bg-slate-100 text-slate-600 border-slate-200'
+              return (
+                <div>
+                  <p className="text-[13px] font-semibold text-slate-700 mb-3">SEC Filings</p>
+                  <div className="rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
+                    {filings.map((f, i) => (
+                      <a
+                        key={i}
+                        href={f.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 px-4 py-3 bg-white hover:bg-slate-50 transition-colors group"
+                      >
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border shrink-0 ${typeStyle(f.type)}`}>
+                          {f.type}
+                        </span>
+                        <span className="text-[12px] text-slate-500 tabular-nums">
+                          {new Date(f.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                        <svg className="w-3 h-3 text-slate-300 group-hover:text-blue-500 transition-colors ml-auto shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                        </svg>
+                      </a>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1.5">Direct links to SEC EDGAR filings · 10-K = annual report · 10-Q = quarterly · DEF 14A = proxy statement</p>
+                </div>
+              )
+            })()}
           </div>
         )
       })()}
