@@ -1,6 +1,9 @@
 import * as React from "react";
 
-// ─── Standalone mark SVG (geometry only) ─────────────────────────────────────
+// ─── Mark SVG — exact geometry from insic-app-icon.svg ───────────────────────
+// Source viewBox 256×256, content centred within a 216×216 inset.
+// We expose the mark alone (no rounded-rect background) in a 124×160 viewport
+// for use in the lockup (aspect ratio preserved from the original design).
 
 type MarkProps = {
   className?: string;
@@ -21,13 +24,49 @@ function InsicMark({ className, style, mono = false, title = "insic" }: MarkProp
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
+      {title && <title>{title}</title>}
       <circle cx="62.6" cy="24.2" r="12.15" fill={olive} />
       <rect x="36.95" y="53.9"  width="51.3" height="9.45" rx="1.69" fill={ink} />
       <rect x="36.95" y="72.8"  width="51.3" height="9.45" rx="1.69" fill={ink} />
       <rect x="36.95" y="91.7"  width="62.1" height="9.45" rx="1.69" fill={ink} />
       <rect x="36.95" y="110.6" width="56.7" height="9.45" rx="1.69" fill={ink} />
       <rect x="36.95" y="129.5" width="45.9" height="9.45" rx="1.69" fill={ink} />
-      {title && <title>{title}</title>}
+    </svg>
+  );
+}
+
+// ─── App icon SVG — rounded-rect background + mark, matches generated PNGs ───
+// Use this for <link rel="icon"> contexts or anywhere you want the full icon
+// tile. Matches the geometry of the PIL-rendered insic-app-icon-*.png files.
+
+export type InsicAppIconProps = {
+  size?: number;
+  className?: string;
+  style?: React.CSSProperties;
+};
+
+export function InsicAppIcon({ size = 40, className, style }: InsicAppIconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 256 256"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      style={style}
+      aria-hidden="true"
+    >
+      {/* Rounded-rect white card */}
+      <rect x="20" y="20" width="216" height="216" rx="54" fill="#FFFFFF" />
+      {/* Olive dot */}
+      <circle cx="127.6" cy="78.2" r="12.15" fill="#5F790B" />
+      {/* 5 navy bars — exact geometry from insic-app-icon.svg */}
+      <rect x="101.95" y="107.9"  width="51.3" height="9.45" rx="1.69" fill="#06101F" />
+      <rect x="101.95" y="126.8"  width="51.3" height="9.45" rx="1.69" fill="#06101F" />
+      <rect x="101.95" y="145.7"  width="62.1" height="9.45" rx="1.69" fill="#06101F" />
+      <rect x="101.95" y="164.6"  width="56.7" height="9.45" rx="1.69" fill="#06101F" />
+      <rect x="101.95" y="183.5"  width="45.9" height="9.45" rx="1.69" fill="#06101F" />
     </svg>
   );
 }
