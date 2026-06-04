@@ -156,7 +156,12 @@ function InsicWordmark({
   ink: string;
   style?: React.CSSProperties;
 }) {
-  const { fs, vbW, vbH, baseline, cx0, cx3, cy, tr } = WORDMARK[size];
+  const { vbW, vbH, baseline, cx0, cx3, cy, tr } = WORDMARK[size];
+  const arcH = tr * 4.0;
+  const midX = (cx0 + cx3) / 2;
+  const arcPeakY = cy - arcH;
+  const arcD = `M ${cx0} ${cy} Q ${midX} ${arcPeakY} ${cx3} ${cy}`;
+  const strokeW = tr * 0.6;
 
   return (
     <svg
@@ -170,16 +175,18 @@ function InsicWordmark({
         y={baseline}
         style={{
           fontFamily: "var(--font-sans, Inter, ui-sans-serif, sans-serif)",
-          fontSize: fs,
+          fontSize: vbH,
           fontWeight: 760,
-          letterSpacing: `${-0.045 * fs}px`,
+          letterSpacing: `${-0.045 * vbH}px`,
           fill: ink,
           dominantBaseline: "auto",
         }}
       >
         insic
       </text>
-      {/* Olive tittle overlay — drawn on top of the text */}
+      {/* Arc connecting the two i tittles */}
+      <path d={arcD} stroke="#5F790B" strokeWidth={strokeW} fill="none" strokeLinecap="round" />
+      {/* Olive tittle dots */}
       <circle cx={cx0} cy={cy} r={tr} fill="#5F790B" />
       <circle cx={cx3} cy={cy} r={tr} fill="#5F790B" />
     </svg>
@@ -223,7 +230,7 @@ export function InsicLogoLockup({
   const markW = Math.round(markH * 124 / 160);
   const dark  = on === "dark";
   const ink   = dark ? "#FFFFFF" : "#06101F";
-  const { vbW, vbH, fs } = WORDMARK[wSize];
+  const { vbW, vbH } = WORDMARK[wSize];
 
   return (
     <span

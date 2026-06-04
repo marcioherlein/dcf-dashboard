@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 import { slideDown } from '@/lib/motion'
 import { useStockNav } from '@/contexts/StockNavContext'
 import type { TabId } from '@/components/stock/TabNav'
-import { InsicLogo, InsicLogoLockup, InsicAppIcon } from '@/components/ui/InsicLogo'
+import { InsicLogoLockup, InsicAppIcon } from '@/components/ui/InsicLogo'
 
 const STOCK_TABS: Array<{ id: TabId; label: string }> = [
   { id: 'overview',   label: 'Overview'   },
