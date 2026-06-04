@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { X, Download, Share2, Check, Twitter, Instagram } from 'lucide-react'
+import { X, Download, Share2, Check, Twitter, Instagram, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { CockpitOutput } from '@/lib/valuation/cockpit'
 
@@ -35,6 +35,8 @@ export default function ShareCardModal({ open, onClose, ticker, companyName, out
   const [format, setFormat] = useState<Format>('landscape')
   const [copying, setCopying] = useState(false)
   const [downloading, setDownloading] = useState(false)
+  const [imgLoading, setImgLoading] = useState(true)
+  const [imgError, setImgError] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   // Base params shared across both formats
@@ -54,6 +56,12 @@ export default function ShareCardModal({ open, onClose, ticker, companyName, out
   const landscapeUrl = buildUrl('/api/og', baseParams)
   const squareUrl    = buildUrl('/api/og/square', baseParams)
   const previewUrl   = format === 'landscape' ? landscapeUrl : squareUrl
+
+  // Reset image state when URL changes
+  useEffect(() => {
+    setImgLoading(true)
+    setImgError(false)
+  }, [previewUrl])
 
   // Native dialog open/close
   useEffect(() => {
@@ -170,14 +178,28 @@ export default function ShareCardModal({ open, onClose, ticker, companyName, out
 
         {/* Preview */}
         <div className="px-5 pt-3 pb-4">
-          <div className={cn('w-full rounded-xl overflow-hidden border border-slate-100 bg-slate-50', aspectClass)}>
+          <div className={cn('w-full rounded-xl overflow-hidden border border-slate-100 bg-slate-50 relative', aspectClass)}>
+            {/* Loading skeleton */}
+            {imgLoading && !imgError && (
+              <div className="absolute inset-0 bg-slate-100 animate-pulse rounded-xl" />
+            )}
+            {/* Error state */}
+            {imgError && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-slate-50">
+                <AlertCircle size={20} className="text-slate-300" />
+                <p className="text-[12px] text-slate-400">Preview unavailable</p>
+                <p className="text-[11px] text-slate-300">The image will still download correctly</p>
+              </div>
+            )}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               key={previewUrl}
               src={previewUrl}
               alt={`${ticker} valuation card preview`}
-              className="w-full h-full object-cover"
+              className={cn('w-full h-full object-cover transition-opacity duration-300', imgLoading || imgError ? 'opacity-0' : 'opacity-100')}
               loading="lazy"
+              onLoad={() => { setImgLoading(false); setImgError(false) }}
+              onError={() => { setImgLoading(false); setImgError(true) }}
             />
           </div>
         </div>

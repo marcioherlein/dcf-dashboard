@@ -16,14 +16,21 @@ export async function GET(req: NextRequest) {
   const p          = req.nextUrl.searchParams
   const ticker     = (p.get('ticker') ?? 'TICKER').toUpperCase()
   const name       = p.get('name') ?? ''
-  const price      = parseFloat(p.get('price')    ?? '0')
-  const fv         = parseFloat(p.get('fv')        ?? '0')
-  const upside     = parseFloat(p.get('upside')    ?? '0')
-  const bear       = p.get('bear') ? parseFloat(p.get('bear')!) : null
-  const bull       = p.get('bull') ? parseFloat(p.get('bull')!) : null
+  const priceRaw   = parseFloat(p.get('price')    ?? '0')
+  const fvRaw      = parseFloat(p.get('fv')        ?? '0')
+  const upsideRaw  = parseFloat(p.get('upside')    ?? '0')
+  const bearRaw    = p.get('bear') ? parseFloat(p.get('bear')!) : null
+  const bullRaw    = p.get('bull') ? parseFloat(p.get('bull')!) : null
   const currency   = p.get('currency') ?? 'USD'
   const verdict    = (p.get('verdict') ?? 'Insufficient Data') as VerdictKey
   const conviction = p.get('conviction') ?? ''
+
+  // Guard NaN from null/missing params
+  const price  = isNaN(priceRaw)  ? 0 : priceRaw
+  const fv     = isNaN(fvRaw)     ? 0 : fvRaw
+  const upside = isNaN(upsideRaw) ? 0 : upsideRaw
+  const bear   = bearRaw != null && !isNaN(bearRaw) ? bearRaw : null
+  const bull   = bullRaw != null && !isNaN(bullRaw) ? bullRaw : null
 
   const vd         = VERDICT_DISPLAY[verdict] ?? VERDICT_DISPLAY['Insufficient Data']
   const isUp       = upside >= 0
