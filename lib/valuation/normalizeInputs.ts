@@ -100,7 +100,16 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
   // which is called before the main return block.
   const companyTypeEarly: ModellingInput['companyType'] = vm.companyType ?? 'standard'
   const FINANCIAL_TYPES_EARLY: Set<string> = new Set(['financial', 'fintech', 'bdc', 'mreeit'])
-  const isFinancialSectorEarly = FINANCIAL_TYPES_EARLY.has(companyTypeEarly)
+  // Also detect fintech-hybrid companies classified under non-financial Yahoo sectors.
+  // MELI is "Consumer Cyclical / Internet Retail" but has Mercado Pago as >40% of revenue.
+  // Its NWC includes consumer credit receivables and merchant payables that are quasi-financial
+  // and blow up the NWC delta the same way a bank's deposit/loan book does.
+  // Detect via the same fintech industry regex used elsewhere in the codebase.
+  const FINTECH_INDUSTRY_RE_NWC = /fintech|neobank|digital.?bank|payment|credit.?service|consumer.?finance|insurtech|internet.*retail.*payment|mercado/i
+  const sectorForNWC = (apiData?.quote?.sector ?? '').toLowerCase()
+  const industryForNWC = (apiData?.quote?.industry ?? '').toLowerCase()
+  const isFintechHybridForNWC = FINTECH_INDUSTRY_RE_NWC.test(sectorForNWC + ' ' + industryForNWC)
+  const isFinancialSectorEarly = FINANCIAL_TYPES_EARLY.has(companyTypeEarly) || isFintechHybridForNWC
 
   // Build rows: prefer statements data if available, fall back to financialStatements
   let rows: ModellingRow[]
@@ -376,6 +385,10 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
     let ebit: number | null
     let dna: number | null
     let ebitda: number | null
+    // Hoist cyclical trough detection outside the if/else so it's available for freeCashFlow below
+    const isCyclicalTrough = !isFinancialSector &&
+      (medianEbitMargin != null && medianEbitMargin < -0.02) &&
+      (ttmEbitMargin != null && ttmEbitMargin > 0.01)
     if (isFinancialSector) {
       // Back-compute EBIT from net margin so NOPAT = netIncome (via ebit × (1-taxRate) = netMargin × rev)
       const taxR = medianTaxRate ?? 0.21
@@ -397,18 +410,31 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
       //     medianFcfMargin (whichever is higher), capped at 40%.
       // This models the natural SBC % decline as revenue scales, without fabricating
       // profitability the business hasn't earned yet.
+      // Case 1 — SBC distortion (ZETA, SNAP): growth/startup with negative median EBIT but positive FCF.
+      // SBC inflates the EBIT drag; the company is cash-flow positive today.
       const isSBCDistorted = (medianEbitMargin != null && medianEbitMargin < -0.02) &&
         (medianFcfMargin != null && medianFcfMargin > 0) &&
         (companyType === 'growth' || companyType === 'startup')
 
+      // Case 2 — Cyclical trough (MU, XOM in downcycles): median EBIT negative due to
+      // loss years in the lookback window, but the TTM EBIT is positive (company has
+      // recovered). Using the trough-distorted median projects permanent losses for a
+      // business that is currently profitable. Fix: when ttmEbitMargin > 0 AND
+      // medianEbitMargin < -0.02, use ttmEbitMargin as the base for projections.
+      // Applies to all non-financial companyTypes (standard, growth, dividend, startup).
+      // (isCyclicalTrough is hoisted above the if/else block)
+
       let effectiveEbitMargin = medianEbitMargin
       if (isSBCDistorted && medianFcfMargin != null && medianEbitMargin != null) {
-        // Sector-typical EBIT target for scaled SaaS/tech: 20-25%
-        // Use the higher of FCF margin × 2 or 20%, capped at 35%
+        // Ramp from current (negative) EBIT to sector-typical target over nYears.
+        // Models the natural SBC % decline as revenue scales.
         const targetEbitMargin = Math.min(0.35, Math.max(0.20, medianFcfMargin * 2))
-        // Linear interpolation from current (negative) EBIT to target over nYears
-        const t = (i + 1) / nYears  // 0 → 1 over the projection period
+        const t = (i + 1) / nYears
         effectiveEbitMargin = medianEbitMargin + t * (targetEbitMargin - medianEbitMargin)
+      } else if (isCyclicalTrough && ttmEbitMargin != null) {
+        // Use TTM EBIT margin as the projection base — the trough year is behind us.
+        // Apply a small haircut (10%) for conservatism vs. peak cycle.
+        effectiveEbitMargin = ttmEbitMargin * 0.90
       }
 
       ebit = effectiveEbitMargin != null ? revenue * effectiveEbitMargin : null
@@ -445,7 +471,9 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
       capex: -(revenue * medianCapexPct),
       operatingCF: null,
       freeCashFlow: (medianFcfMargin != null && medianEbitMargin != null && medianEbitMargin < -0.02 && medianFcfMargin > 0)
-        ? revenue * medianFcfMargin  // SBC-distorted company: use FCF margin as UFCF fallback
+        ? revenue * medianFcfMargin  // SBC-distorted: use FCF margin as UFCF fallback
+        : (isCyclicalTrough && ttmEbitMargin != null && medianFcfMargin != null && medianFcfMargin > 0)
+        ? revenue * medianFcfMargin  // cyclical trough recovered: FCF fallback
         : (medianFcfMargin != null && medianCapexPct === 0 ? revenue * medianFcfMargin : null),
       dividendsPaid: null,
       financingCF: null,

@@ -28,9 +28,14 @@ function computePBValuation(
 
   // Justified P/B = (ROE − g) / (Ke − g): theoretically correct for financial companies.
   // High-ROE fintechs (ROE ~20%) justify P/B 3–5×; mature banks (ROE ~12%) justify P/B ~1.3×.
+  //
+  // g must be the long-run nominal growth rate — identical to the DCF terminalG.
+  // Using wacc − 0.02 produced g ~7% for BBVA (WACC 9%), which is 2–3× the realistic
+  // long-run growth for a European bank (2–3%). That inflated justified P/B from ~1.4× to ~2.9×.
   const roe = snapshot.roe ?? null
   const ke  = assumptions.ke ?? assumptions.wacc * 1.2  // fallback: ke ≈ 120% of wacc
-  const g   = Math.max(0.01, assumptions.wacc - 0.02)
+  const g   = Math.max(0.01, Math.min(assumptions.terminalG, assumptions.wacc - 0.01))
+  // terminalG is the correct long-run growth rate (set by user/model, typically 2–4%).
   const justifiedPB = roe != null && roe > 0 && ke > g && ke > 0
     ? Math.max(0.8, Math.min(10, (roe - g) / (ke - g)))
     : null

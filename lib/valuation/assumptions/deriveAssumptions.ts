@@ -110,7 +110,10 @@ function deriveNetMargin(
     projectedMargin = Math.max(0.01, last * 0.30 + targetMargin * 0.70)
     reason = `high-growth SaaS convergence: ${pct(last)} trailing × 30% + ${pct(targetMargin)} target × 70% → ${pct(projectedMargin)}`
   } else {
-    projectedMargin = Math.max(0.01, Math.min(0.50, last + improvement))
+    projectedMargin = Math.max(0.01, Math.min(0.70, last + improvement))
+    // 70% cap: allows ultra-high-margin businesses (NVDA at 55%, Visa at 52%) to project
+    // their actual margins forward. The old 50% cap was silently suppressing NVDA's real
+    // earnings power in the Forward P/E model.
     reason = isHighGrowth && hasMoat ? `high growth + moat (+3%)`
            : isHighGrowth            ? `improving trend (+1.5%)`
            : hasMoat                 ? `strong gross margin (+1.5%)`
@@ -141,7 +144,14 @@ export function blendExitMultiple(
   if (currentMultiple != null && currentMultiple > 0 && currentMultiple < 500) {
     let blended = currentMultiple * 0.55 + discountedSector * 0.35
     blended = Math.min(blended, currentMultiple * 2.5) // cap at 2.5× current (stops wild sector pull-up)
-    blended = Math.max(blended, sectorMedian * 0.40)   // floor at 40% of sector (stops collapse)
+    // Floor: when the current multiple is below 40% of sector median (e.g. DELL at 0.7×
+    // EV/Revenue vs 2.0× sector), anchoring the floor to the sector median overstates
+    // fair value by 40–100%. Instead, use the current multiple as the floor when it is
+    // below the sector median — this preserves the structure of low-multiple businesses.
+    const sectorFloor = currentMultiple < sectorMedian * 0.40
+      ? currentMultiple * 0.90  // stay close to actual for structurally low-multiple companies
+      : sectorMedian * 0.40     // normal floor for companies near sector median
+    blended = Math.max(blended, sectorFloor)
     return { blended: Math.round(blended * 2) / 2, geoDiscount }
   }
 
@@ -232,9 +242,13 @@ function deriveExitPE(
     }
   }
 
-  // Phase 2: AI semiconductor premium — high-CAGR semis trade at 30–40×, not the 26× sector median
+  // Phase 2: AI semiconductor premium — high-CAGR semis trade at 30–40×, not the 26× sector median.
+  // Uses the higher of historicalCagr3y and analystEstimate1y so that cyclical semis (MU) where
+  // the 3-year historical CAGR was suppressed by a trough year but analysts signal strong growth
+  // (HBM/AI DRAM thesis) correctly receive the premium.
+  const analystCagrForSemi = data?.cagrAnalysis?.analystEstimate1y ?? 0
   const isAISemi = (industry ?? '').toLowerCase().includes('semiconductor') &&
-    (data?.cagrAnalysis?.historicalCagr3y ?? 0) > 0.25
+    (Math.max(data?.cagrAnalysis?.historicalCagr3y ?? 0, analystCagrForSemi) > 0.25)
   if (isAISemi && finalPE < 32) {
     finalPE = 32
     floorNote += ` [AI semi premium applied: floor 32×]`

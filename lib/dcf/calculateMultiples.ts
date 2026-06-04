@@ -38,12 +38,18 @@ const INDUSTRY_MEDIANS: Record<string, { pe: number; evEbitda: number; pb: numbe
   'Semiconductor Equipment & Materials': { pe: 26, evEbitda: 18, pb: 5.0, ps: 7.0, evRevenue: 8.0 },
   'AI Semiconductors':                 { pe: 40, evEbitda: 30, pb: 15.0, ps: 14.0, evRevenue: 15.0 },
   'Internet Content & Information':    { pe: 24, evEbitda: 16, pb: 6.0, ps: 5.5, evRevenue: 6.0 },
-  'Internet Retail':                   { pe: 35, evEbitda: 22, pb: 8.5, ps: 3.5, evRevenue: 3.8 },
+  // Internet Retail: elevated multiples reflect the blended cloud/advertising/marketplace model
+  // (AMZN trades at ~3–4× EV/Revenue; SHOP at ~10×; MELI at ~5–6×). Pure e-commerce like EBAY
+  // trades at 1–2×. The median of this peer set has shifted up as AWS and advertising dominate.
+  'Internet Retail':                   { pe: 35, evEbitda: 25, pb: 8.5, ps: 3.5, evRevenue: 4.5 },
+  'Internet Commerce':                 { pe: 35, evEbitda: 25, pb: 8.5, ps: 3.5, evRevenue: 4.5 },
   'Consumer Electronics':              { pe: 28, evEbitda: 18, pb: 7.0, ps: 3.5, evRevenue: 3.5 },
   'Electronic Components':             { pe: 20, evEbitda: 14, pb: 4.5, ps: 2.5, evRevenue: 2.8 },
   'IT Services':                       { pe: 22, evEbitda: 14, pb: 5.0, ps: 2.8, evRevenue: 3.0 },
   'Information Technology Services':   { pe: 22, evEbitda: 14, pb: 5.0, ps: 2.8, evRevenue: 3.0 },
-  'Computer Hardware':                 { pe: 18, evEbitda: 12, pb: 4.0, ps: 1.8, evRevenue: 2.0 },
+  // Computer Hardware: DELL, HPQ, HPE trade at 0.5–1.0× EV/Revenue (low-margin assembled hardware).
+  // Apple (at 8×) is an outlier that inflates the sector. Using 1.2× better represents the median.
+  'Computer Hardware':                 { pe: 18, evEbitda: 12, pb: 4.0, ps: 1.8, evRevenue: 1.2 },
   'Communication Equipment':           { pe: 18, evEbitda: 12, pb: 3.5, ps: 2.5, evRevenue: 2.8 },
   'Data Center REITs':                 { pe: 30, evEbitda: 28, pb: 5.0, ps: 9.0, evRevenue: 10.0, pFfo: 28 },
   // Financial
