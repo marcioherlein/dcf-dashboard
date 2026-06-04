@@ -160,9 +160,11 @@ export function extractFCFInputs(financials: any, foreignCurrency = false): {
 
   if (isFinancialSector) {
     // Banks/fintechs: OCF is distorted by loan disbursements and client fund flows.
-    // Use normalized net income × haircut as the distributable earnings proxy.
+    // Use normalized net income × 0.80 haircut as the distributable earnings proxy.
+    // 0.80 matches the cockpitBuilders.ts financial FCF guard (reinvestRate=0.20),
+    // ensuring the Full DCF Table and Cockpit Core DCF use consistent baseFCF.
     if (normalizedNetIncomeM > 0) {
-      baseFCF = normalizedNetIncomeM * 0.85
+      baseFCF = normalizedNetIncomeM * 0.80
       isNegativeFCF = rawFCF <= 0  // flag for UI, but don't block the model
     } else if (rawFCF > 0) {
       baseFCF = rawFCF

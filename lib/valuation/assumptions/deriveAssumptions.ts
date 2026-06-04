@@ -246,12 +246,16 @@ function deriveExitPE(
   // Uses the higher of historicalCagr3y and analystEstimate1y so that cyclical semis (MU) where
   // the 3-year historical CAGR was suppressed by a trough year but analysts signal strong growth
   // (HBM/AI DRAM thesis) correctly receive the premium.
+  //
+  // Floor raised from 32× to 38× to reflect the AI Semiconductors table entry (pe=40×) that
+  // Yahoo's 'Semiconductors' industry classification can never reach. NVDA, TSM, and AI-exposed
+  // semis realistically exit at 35-45×, not 28-32× like mature chip makers.
   const analystCagrForSemi = data?.cagrAnalysis?.analystEstimate1y ?? 0
   const isAISemi = (industry ?? '').toLowerCase().includes('semiconductor') &&
     (Math.max(data?.cagrAnalysis?.historicalCagr3y ?? 0, analystCagrForSemi) > 0.25)
-  if (isAISemi && finalPE < 32) {
-    finalPE = 32
-    floorNote += ` [AI semi premium applied: floor 32×]`
+  if (isAISemi && finalPE < 38) {
+    finalPE = 38
+    floorNote += ` [AI semi premium applied: floor 38×]`
   }
 
   const evidence = currentPE != null && currentPE > 0
@@ -266,14 +270,28 @@ function deriveExitPE(
 function deriveDilution(
   sector: string | null,
   netMargin: number | null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data?: any,
 ): { rate: number; evidence: string; source: AssumptionSource } {
   const sec = sector ?? ''
   const isTech = ['Technology', 'Communication Services', 'Healthcare'].includes(sec)
 
+  // Net buyback detection: if the company is buying back shares faster than it issues SBC,
+  // effective dilution is 0% (we don't model negative dilution since the model uses
+  // futureShares = shares × (1+rate)^n which doesn't handle rate < 0 cleanly).
+  // Proxy: mega-cap tech with net margin > 25% are canonical net-buyback companies (AAPL, GOOGL).
+  // Using 0% rather than +1% correctly stops the model from inflating future share counts.
+  const isMegaCapNetBuyback = isTech &&
+    (netMargin != null && netMargin > 0.25) &&
+    ((data?.businessProfile?.revenueM ?? 0) > 100_000)  // revenue > $100B proxy for mega-cap
+
   let rate: number
   let reason: string
-  if (isTech) {
-    if (netMargin != null && netMargin > 0.20) { rate = 0.010; reason = 'tech, profitable → ~1.0%/yr (buybacks offset)' }
+  if (isMegaCapNetBuyback) {
+    rate = 0.0  // net buybacks offset SBC — share count flat to declining
+    reason = 'mega-cap tech, net margin >25% → net buyback program; 0% dilution assumed'
+  } else if (isTech) {
+    if (netMargin != null && netMargin > 0.20) { rate = 0.010; reason = 'tech, profitable → ~1.0%/yr (buybacks partially offset SBC)' }
     else if (netMargin != null && netMargin > 0.10) { rate = 0.020; reason = 'tech, moderate margin → ~2.0%/yr' }
     else { rate = 0.030; reason = 'tech, growth stage → ~3.0%/yr (stock-based comp)' }
   } else {
@@ -404,7 +422,7 @@ export function deriveForwardPEAssumptions(data: {
     .filter(r => !r.isProjected && r.netIncome != null && r.revenue != null && r.revenue! > 0)
     .map(r => r.netIncome! / r.revenue!).slice(-1)[0] ?? null
   const peDerived       = deriveExitPE(sector, industry, data.quote?.peRatio ?? null, crp, trailingMargin, data)
-  const dilutionDerived = deriveDilution(sector, marginDerived.margin)
+  const dilutionDerived = deriveDilution(sector, marginDerived.margin, data)
   const waccEvidence    = deriveWACCEvidence(data.wacc?.inputs ?? {}, wacc)
   const ltmRev          = ltmRevenue(incomeRows)
   const currentPE       = data.quote?.peRatio ?? null
@@ -487,7 +505,7 @@ export function deriveRevenueMultipleAssumptions(data: {
 
   const cagrDerived     = deriveCagr(data.cagrAnalysis, SECTOR_CAGR[sector ?? ''] ?? 0.07)
   const marginDerived   = deriveNetMargin(incomeRows, cagrDerived.cagr)
-  const dilutionDerived = deriveDilution(sector, marginDerived.margin)
+  const dilutionDerived = deriveDilution(sector, marginDerived.margin, data)
   const waccEvidence    = deriveWACCEvidence(data.wacc?.inputs ?? {}, wacc)
   const ltmRev          = ltmRevenue(incomeRows)
 

@@ -248,16 +248,26 @@ export function seedAssumptions(apiData: ApiData): ValuationAssumptions {
   const industryMeds = getIndustryMultiples(industry ?? '', sector ?? '')
   const exitPFFOMultiple: number = industryMeds.pFfo ?? 16
 
-  // P/B target for financial companies: blend current market P/B (55%) with sector default (45%).
-  // Exception: when ROE is high (>25%) the justified P/B formula produces a meaningfully
-  // higher multiple than the sector median — in that case let justified P/B dominate.
+  // P/B target for financial companies.
+  // Priority: industry-level lookup (Banks—Diversified → 1.2×) before broad sector fallback
+  // (Financial Services → 1.8×). Without this, BAC/JPM get 1.8× anchor even though they
+  // are pure banks that trade at 1.0–1.4× book. The broad Financial Services default of 1.8×
+  // is correct for fintech and diversified financial platforms, not commercial banks.
+  const INDUSTRY_PB: Record<string, number> = {
+    'Banks—Diversified':  1.2,
+    'Banks—Regional':     1.1,
+    'Banks - Diversified': 1.2,
+    'Banks - Regional':   1.1,
+    'Mortgage Finance':   1.1,
+  }
   const FINANCIAL_SECTORS_PB: Record<string, number> = {
     'Financial Services': 1.8,
     'Banks': 1.2,
     'Insurance': 1.4,
     'Financial': 1.5,
   }
-  const sectorDefaultPB = FINANCIAL_SECTORS_PB[sector ?? ''] ?? null
+  // Industry takes priority over sector for bank-specific lookups
+  const sectorDefaultPB = INDUSTRY_PB[industry ?? ''] ?? FINANCIAL_SECTORS_PB[sector ?? ''] ?? null
   let priceToBookMultiple: number | undefined = sectorDefaultPB ?? undefined
   if (sectorDefaultPB != null) {
     const bsRows2: Array<{ isProjected?: boolean; totalEquity?: number | null }> =

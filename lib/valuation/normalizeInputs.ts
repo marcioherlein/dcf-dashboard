@@ -532,7 +532,7 @@ function buildRowsFromStatements(
       capex:        toM(row.capitalExpenditure ?? row.purchaseOfPPE ?? row.capitalExpenditures),
       operatingCF:  toM(row.operatingCashFlow ?? row.cashFlowFromContinuingOperatingActivities),
       freeCashFlow: toM(row.freeCashFlow),
-      dna:          toM(row.depreciationAndAmortization ?? row.reconciledDepreciation ?? row.depreciationAmortizationDepletion),
+      dna:          toM(row.depreciationAndAmortization ?? row.reconciledDepreciation ?? row.depreciationAmortizationDepletion ?? row.amortizationOfIntangibles),
       dividendsPaid: toM(row.cashDividendsPaid ?? row.dividendsPaid ?? row.paymentOfDividends),
       financingCF:  toM(row.financingCashFlow ?? row.cashFlowFromContinuingFinancingActivities),
       fiscalDate:   (existing.fiscalDate ?? row.endDate) ?? null,
