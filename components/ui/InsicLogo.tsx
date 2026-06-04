@@ -1,7 +1,6 @@
 import * as React from "react";
-import Image from "next/image";
 
-// ─── Standalone mark (SVG, geometry only) ────────────────────────────────────
+// ─── Standalone mark SVG (geometry only) ─────────────────────────────────────
 
 type MarkProps = {
   className?: string;
@@ -11,8 +10,8 @@ type MarkProps = {
 };
 
 function InsicMark({ className, style, mono = false, title = "insic" }: MarkProps) {
-  const olive = mono ? "currentColor" : "#5F790B";
-  const ink   = mono ? "currentColor" : "#06101F";
+  const olive = mono ? "#FFFFFF" : "#5F790B";
+  const ink   = mono ? "#FFFFFF" : "#06101F";
   return (
     <svg
       className={className}
@@ -20,64 +19,153 @@ function InsicMark({ className, style, mono = false, title = "insic" }: MarkProp
       viewBox="0 0 124 160"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      role="img"
-      aria-label={title || undefined}
-      aria-hidden={!title ? true : undefined}
+      aria-hidden="true"
     >
-      {title && <title>{title}</title>}
       <circle cx="62.6" cy="24.2" r="12.15" fill={olive} />
       <rect x="36.95" y="53.9"  width="51.3" height="9.45" rx="1.69" fill={ink} />
       <rect x="36.95" y="72.8"  width="51.3" height="9.45" rx="1.69" fill={ink} />
       <rect x="36.95" y="91.7"  width="62.1" height="9.45" rx="1.69" fill={ink} />
       <rect x="36.95" y="110.6" width="56.7" height="9.45" rx="1.69" fill={ink} />
       <rect x="36.95" y="129.5" width="45.9" height="9.45" rx="1.69" fill={ink} />
+      {title && <title>{title}</title>}
+    </svg>
+  );
+}
+
+// ─── Wordmark SVG — live Inter text + olive tittle overlay ───────────────────
+//
+// WHY INLINE SVG TEXT:
+//   Pre-baked PNGs were exported without Inter — tittle dots are rectangular
+//   (system fallback). Inline SVG <text> in the DOM inherits the CSS-loaded
+//   Inter Variable, giving the correct circular tittle dots and letterforms.
+//
+// OLIVE TITTLE OVERLAY:
+//   SVG <text> is monochromatic. We paint the tittles olive by measuring exact
+//   glyph positions (Inter UPM 2816, tittle bbox 268cx / rows 1490–1820) and
+//   drawing olive <circle> elements on top of the matching text glyphs.
+//
+// Inter UPM metrics used:
+//   ascender   = 2728   cap-height  = 1456
+//   descender  = -688   i-advance   = 556
+//   n-advance  = 1260   s-advance   = 1012   c-advance = 1016
+//   tittle-cx  = 268 (from glyph origin)
+//   tittle-cy  = (1820+1490)/2 = 1655 above baseline
+//   tittle-r   = (1820-1490)/2 = 165 units
+
+// Precomputed positions at the three sizes, letter-spacing -0.045em:
+// viewBox is sized to exactly fit the text (width × fs), positioned at origin.
+
+type WordmarkSize = "sm" | "md" | "lg";
+
+// font-size, and precomputed i-dot cx values (in the SVG coordinate space
+// where 1 unit = 1px, text baseline at y = ascender/UPM × fs)
+const WORDMARK: Record<WordmarkSize, {
+  fs: number;
+  vbW: number;   // viewBox width (≈ total text advance)
+  vbH: number;   // viewBox height = fs (line-height 1)
+  baseline: number;  // y of text baseline
+  cx0: number;   // first i tittle cx
+  cx3: number;   // second i tittle cx
+  cy: number;    // tittle center y
+  tr: number;    // tittle radius (enlarged 40% vs mathematical for visibility)
+}> = (() => {
+  const UPM   = 2816;
+  const LS_EM = -0.045;
+  const ADV   = { i: 556, n: 1260, s: 1012, c: 1016 };
+  const T_CX  = 268;
+  const T_CY_U = (1820 + 1490) / 2;  // 1655 above baseline
+  const T_R_U  = (1820 - 1490) / 2;  // 165 units
+  const ASC_U = 2728;
+
+  const result: Record<WordmarkSize, ReturnType<typeof compute>> = {} as never;
+
+  function compute(fs: number) {
+    const scale  = fs / UPM;
+    const ls_px  = LS_EM * fs;
+    let x = 0;
+    const starts: number[] = [];
+    for (const ch of ["i", "n", "s", "i", "c"] as const) {
+      starts.push(x);
+      x += ADV[ch] * scale + ls_px;
+    }
+    const totalW = x - ls_px;  // remove trailing ls
+    const baseline = (ASC_U / UPM) * fs;
+    return {
+      fs,
+      vbW: Math.ceil(totalW + 0.5),
+      vbH: fs,
+      baseline,
+      cx0: starts[0] + T_CX * scale,
+      cx3: starts[3] + T_CX * scale,
+      cy:  baseline - T_CY_U * scale,
+      tr:  T_R_U * scale * 1.4,  // 40% larger for visual weight at small sizes
+    };
+  }
+
+  result.sm = compute(18);
+  result.md = compute(20);
+  result.lg = compute(24);
+  return result;
+})();
+
+function InsicWordmark({
+  size,
+  ink,
+  style,
+}: {
+  size: WordmarkSize;
+  ink: string;
+  style?: React.CSSProperties;
+}) {
+  const { fs, vbW, vbH, baseline, cx0, cx3, cy, tr } = WORDMARK[size];
+
+  return (
+    <svg
+      viewBox={`0 0 ${vbW} ${vbH}`}
+      style={{ display: "block", overflow: "visible", ...style }}
+      aria-hidden="true"
+    >
+      {/* Text in Inter — inherits CSS-loaded font from the DOM */}
+      <text
+        x="0"
+        y={baseline}
+        style={{
+          fontFamily: "var(--font-sans, Inter, ui-sans-serif, sans-serif)",
+          fontSize: fs,
+          fontWeight: 760,
+          letterSpacing: `${-0.045 * fs}px`,
+          fill: ink,
+          dominantBaseline: "auto",
+        }}
+      >
+        insic
+      </text>
+      {/* Olive tittle overlay — drawn on top of the text */}
+      <circle cx={cx0} cy={cy} r={tr} fill="#5F790B" />
+      <circle cx={cx3} cy={cy} r={tr} fill="#5F790B" />
     </svg>
   );
 }
 
 // ─── Logo lockup ─────────────────────────────────────────────────────────────
 //
-// WHY SPLIT MARK + WORDMARK:
-//   The combined horizontal PNG has the olive dot baked above the wordmark.
-//   The full PNG bounding box is dot-top → wordmark-bottom, so the wordmark
-//   occupies only 46% of the render height. At header sizes (26–32px) the
-//   wordmark cap height is only ~11px — far too small.
+// ALIGNMENT MATH (mark bars 54–139 in 160px viewBox, center = 60.3% of markH):
+//   bars_center = 0.6031 × markH
+//   cap_center from span top (with line-height:1) = 0.7103 × fs
+//   translateY = bars_center − cap_center
 //
-//   Fix: render the SVG mark independently and the wordmark PNG independently,
-//   each sized to their actual content, aligned with flex-start + translateY.
-//
-// GEOMETRY (from pixel measurement of insic-wordmark-cropped.png, 158×55):
-//   Wordmark content spans rows 3–51 within the 55px crop (3px padding each side).
-//   Cap height of 'insic' (no descenders) ≈ full 49px content ≈ 89% of crop height.
-//
-// GEOMETRY (mark SVG viewBox 0 0 124 160):
-//   Bars span y=53.9–139 (85/160 = 53% of height).
-//   Bars center = y=96.5 → 60.3% of mark height.
-//
-// At size "md" (mark rendered at 38px tall):
-//   bars_center = 22.9px from SVG top
-//   dot_bottom  =  8.6px            → dot sits clearly above wordmark
-//   wordmark rendered at 27px tall
-//   cap_center_from_word_top ≈ 13.5px
-//   translateY = 22.9 - 13.5 = 9px  → aligns cap-center to bars-center
+// Size table — markH chosen so mark bars ≈ Inter cap-height at that fs.
 
 export type LogoSize = "sm" | "md" | "lg";
 
-// All sizes: { markH, wordH, translateY, gap }
-// markH  = rendered height of SVG mark (chosen so bars ≈ wordH)
-// wordH  = rendered height of wordmark PNG
-// translateY = px to shift wordmark down so cap aligns with bars center
-// ty = bars_center - stem_center_within_word
-// Measured from actual pixel rows: stem rows 15-50 in the 55px canvas,
-// bars rows 53.9-138.95 in the 160px SVG viewBox.
-const SIZES: Record<LogoSize, { markH: number; wordH: number; ty: number; gap: number }> = {
-  sm: { markH: 26, wordH: 19, ty: 4,  gap: 6 },
-  md: { markH: 38, wordH: 27, ty: 7,  gap: 8 },
-  lg: { markH: 47, wordH: 34, ty: 8,  gap: 10 },
+const SIZES: Record<LogoSize, { markH: number; wSize: WordmarkSize; ty: number; gap: number }> = {
+  //  bars_ctr = 0.6031×36=21.7  cap_ctr = 0.7103×18=12.8  ty=8.9≈9
+  sm: { markH: 36, wSize: "sm", ty: 9,  gap: 6 },
+  //  bars_ctr = 0.6031×38=22.9  cap_ctr = 0.7103×20=14.2  ty=8.7≈9
+  md: { markH: 38, wSize: "md", ty: 9,  gap: 8 },
+  //  bars_ctr = 0.6031×44=26.5  cap_ctr = 0.7103×24=17.0  ty=9.5≈10
+  lg: { markH: 44, wSize: "lg", ty: 10, gap: 9 },
 };
-
-// Wordmark PNG (insic-wordmark-cropped.png): 158×55 → aspect 2.873
-const WORD_ASPECT = 158 / 55;
 
 export type InsicLogoLockupProps = {
   size?: LogoSize;
@@ -92,16 +180,11 @@ export function InsicLogoLockup({
   className,
   style,
 }: InsicLogoLockupProps) {
-  const { markH, wordH, ty, gap } = SIZES[size];
+  const { markH, wSize, ty, gap } = SIZES[size];
   const markW = Math.round(markH * 124 / 160);
-  const wordW = Math.round(wordH * WORD_ASPECT);
-  const dark = on === "dark";
-
-  // SVG mark: for dark mode we use the white/mono variant rendered as SVG
-  // Wordmark PNG: separate light/dark crops
-  const wordSrc = dark
-    ? "/brand/insic-wordmark-white-cropped.png"
-    : "/brand/insic-wordmark-cropped.png";
+  const dark  = on === "dark";
+  const ink   = dark ? "#FFFFFF" : "#06101F";
+  const { vbW, vbH, fs } = WORDMARK[wSize];
 
   return (
     <span
@@ -117,24 +200,16 @@ export function InsicLogoLockup({
       role="img"
       aria-label="insic"
     >
-      {/* Mark — SVG, sized so bars height ≈ wordmark height */}
       <InsicMark
         style={{ width: markW, height: markH, flexShrink: 0, display: "block" }}
         mono={dark}
-        title=""
       />
-      {/* Wordmark PNG — shifted down so cap-center aligns to bars-center */}
-      <Image
-        src={wordSrc}
-        alt=""
-        aria-hidden
-        width={158}
-        height={55}
-        priority
+      <InsicWordmark
+        size={wSize}
+        ink={ink}
         style={{
-          height: wordH,
-          width: wordW,
-          display: "block",
+          width: vbW,
+          height: vbH,
           flexShrink: 0,
           transform: `translateY(${ty}px)`,
         }}
@@ -161,7 +236,14 @@ export function InsicLogo({
   title = "insic",
 }: InsicLogoProps) {
   if (variant === "mark") {
-    return <InsicMark className={className} style={style} mono={mono} title={title} />;
+    return (
+      <InsicMark
+        className={className}
+        style={style}
+        mono={mono}
+        title={title}
+      />
+    );
   }
   return (
     <InsicLogoLockup
