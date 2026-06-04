@@ -60,10 +60,10 @@ function buildSummary(result: MCResult, currentPrice: number, currency: string):
 // ── Histogram ────────────────────────────────────────────────────────────────
 
 function Histogram({
-  histogram, p10, p25, p50, p75, p90, currentPrice, adjustedP50, currency,
+  histogram, p10, p25, p75, p90, currentPrice, adjustedP50, currency,
 }: {
   histogram: MCResult['histogram']
-  p10: number; p25: number; p50: number; p75: number; p90: number
+  p10: number; p25: number; p75: number; p90: number
   currentPrice: number; adjustedP50: number; currency: string
 }) {
   if (!histogram.length) return null
@@ -127,9 +127,9 @@ function Histogram({
 // ── Percentile strip ──────────────────────────────────────────────────────────
 
 function PercentileStrip({
-  p10, p25, p50, p75, p90, adjustedP50, cvarDiscount, currentPrice, currency,
+  p10, p25, p75, p90, adjustedP50, cvarDiscount, currentPrice, currency,
 }: {
-  p10: number; p25: number; p50: number; p75: number; p90: number
+  p10: number; p25: number; p75: number; p90: number
   adjustedP50: number; cvarDiscount: number
   currentPrice: number; currency: string
 }) {
@@ -412,7 +412,7 @@ export default function MonteCarloPanel({
               {/* Histogram */}
               <Histogram
                 histogram={result.histogram}
-                p10={result.p10} p25={result.p25} p50={result.p50}
+                p10={result.p10} p25={result.p25}
                 p75={result.p75} p90={result.p90}
                 currentPrice={currentPrice}
                 adjustedP50={result.adjustedP50}
@@ -421,7 +421,7 @@ export default function MonteCarloPanel({
 
               {/* Percentile strip */}
               <PercentileStrip
-                p10={result.p10} p25={result.p25} p50={result.p50}
+                p10={result.p10} p25={result.p25}
                 p75={result.p75} p90={result.p90}
                 adjustedP50={result.adjustedP50}
                 cvarDiscount={result.cvarDiscount}

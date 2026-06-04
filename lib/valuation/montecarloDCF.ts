@@ -347,7 +347,6 @@ export function runMonteCarlo(inputs: MCInputs): MCResult {
         for (let k = t + 1; k <= numYears; k++) {
           cont += pathFCF[p][k] / pathDF[p][k]
         }
-        const termPortion = (pathFCF[p][0] - contValues[p]) // approximate: use stored total minus already-summed
         contValues[p] = Math.max(0, cont + (pathFCF[p][0]))
       }
 
