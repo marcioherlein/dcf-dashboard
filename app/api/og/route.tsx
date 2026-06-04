@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
   const bearPx = bear != null && bull != null && bull > bear
     ? 0
     : null
-  const bullPx = bearPx != null ? TRACK_W : null
+  const _bullPx = bearPx != null ? TRACK_W : null
   const fvRange = (bear != null && bull != null && bull > bear) ? bull - bear : null
   const basePx = fvRange && fvRange > 0 && fv > 0
     ? Math.max(8, Math.min(TRACK_W - 8, ((fv - bear!) / fvRange) * TRACK_W))
