@@ -28,9 +28,7 @@ export default function LandingFooter() {
           {/* Brand column */}
           <div className="max-w-[240px]">
             <Link href="/" className="flex items-center gap-2 mb-3 group" aria-label="insic home">
-              <span className="text-white">
-                <InsicLogo variant="horizontal" className="h-7 w-auto" />
-              </span>
+              <InsicLogo variant="horizontal" className="h-7 w-auto brightness-0 invert" />
             </Link>
             <p className="text-[13px] text-[#536174] leading-relaxed mb-5">
               Invest with a process, not a story.

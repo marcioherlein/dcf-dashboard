@@ -1,4 +1,5 @@
 import * as React from "react";
+import Image from "next/image";
 
 type InsicLogoProps = {
   variant?: "horizontal" | "mark" | "wordmark";
@@ -15,11 +16,8 @@ export function InsicLogo({
   style,
   title = "insic",
 }: InsicLogoProps) {
-  const ink = "currentColor";
   const olive = mono ? "currentColor" : "#5F790B";
-
-  // No explicit width/height attributes — viewBox + CSS controls size.
-  // This lets `height: 40px; width: auto` scale proportionally in any context.
+  const ink = "currentColor";
 
   if (variant === "mark") {
     return (
@@ -44,51 +42,37 @@ export function InsicLogo({
   }
 
   if (variant === "wordmark") {
+    // 230×100 viewBox — wordmark only, no mark icon
+    const src = mono
+      ? "/brand/insic-wordmark.png"
+      : "/brand/insic-wordmark.png";
     return (
-      <svg
+      <Image
+        src={src}
+        alt={title}
+        width={230}
+        height={100}
         className={className}
-        style={style}
-        viewBox="0 0 230 100"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        role="img"
-        aria-label={title}
-      >
-        <title>{title}</title>
-        <text
-          x="10" y="70"
-          fontFamily="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
-          fontSize="62" fontWeight="760" letterSpacing="-2.5"
-          fill={ink}
-        >insic</text>
-      </svg>
+        style={{ width: "auto", ...style }}
+        priority
+      />
     );
   }
 
-  // horizontal — viewBox 0 0 340 120 → aspect ratio 17:6
+  // horizontal — mark + wordmark side by side (340×120 → 17:6)
+  const src = mono
+    ? "/brand/insic-logo-horizontal-mono.png"
+    : "/brand/insic-logo-horizontal.png";
+
   return (
-    <svg
+    <Image
+      src={src}
+      alt={title}
+      width={340}
+      height={120}
       className={className}
-      style={style}
-      viewBox="0 0 340 120"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      role="img"
-      aria-label={title}
-    >
-      <title>{title}</title>
-      <circle cx="54" cy="27" r="9" fill={olive} />
-      <rect x="35" y="49" width="38" height="7" rx="1.25" fill={ink} />
-      <rect x="35" y="63" width="38" height="7" rx="1.25" fill={ink} />
-      <rect x="35" y="77" width="46" height="7" rx="1.25" fill={ink} />
-      <rect x="35" y="91" width="42" height="7" rx="1.25" fill={ink} />
-      <rect x="35" y="105" width="34" height="7" rx="1.25" fill={ink} />
-      <text
-        x="104" y="75"
-        fontFamily="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
-        fontSize="62" fontWeight="760" letterSpacing="-2.5"
-        fill={ink}
-      >insic</text>
-    </svg>
+      style={{ width: "auto", ...style }}
+      priority
+    />
   );
 }
