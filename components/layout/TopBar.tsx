@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import Image from 'next/image'
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
-import { ChevronLeft, Bookmark } from 'lucide-react'
+import { ChevronLeft, Bookmark, Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { slideDown } from '@/lib/motion'
 import { useStockNav } from '@/contexts/StockNavContext'
@@ -91,9 +91,23 @@ export default function TopBar() {
   const [open, setOpen]       = useState(false)
   const [loading, setLoading] = useState(false)
   const [unsupportedError, setUnsupportedError] = useState<string | null>(null)
+  const [isPro, setIsPro]     = useState(false)
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+  const mobileSearchRef = useRef<HTMLInputElement>(null)
   const reduced   = useReducedMotion()
   const debounce  = useRef<ReturnType<typeof setTimeout>>()
   const searchRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!session?.user?.email) return
+    fetch('/api/user/plan').then(r => r.json()).then(d => setIsPro(d?.plan === 'pro')).catch(() => {})
+  }, [session?.user?.email])
+
+  async function openBillingPortal() {
+    const res = await fetch('/api/lemonsqueezy/portal', { method: 'POST' })
+    const { url } = await res.json()
+    if (url) window.location.href = url
+  }
 
   useEffect(() => {
     if (query.length < 1) { setResults([]); setOpen(false); setUnsupportedError(null); return }
@@ -142,44 +156,80 @@ export default function TopBar() {
       {/* ── Mobile two-row stock header (hidden on sm+) ── */}
       {stockNav && (
         <div className="sm:hidden flex flex-col" style={{ height: '88px' }}>
-          {/* Row 1: back + identity + save icon */}
+          {/* Row 1: back + identity + save + search icons */}
           <div className="h-[52px] flex items-center justify-between px-3 gap-2">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <button
-                onClick={() => router.push('/analyze')}
-                aria-label="Back to Analyze"
-                className="text-slate-400 hover:text-blue-600 transition-colors shrink-0 p-1 -ml-1"
-              >
-                <ChevronLeft size={16} strokeWidth={2.5} />
-              </button>
-              <CompanyLogo ticker={stockNav.ticker} />
-              <span className="font-bold text-[14px] text-slate-900 tracking-tight shrink-0">
-                {stockNav.ticker}
-              </span>
-              {stockNav.price != null && (
-                <div className="flex items-baseline gap-1 min-w-0">
-                  <span className="font-semibold text-[13px] text-slate-800 tabular-nums">
-                    {stockNav.currency}{stockNav.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {mobileSearchOpen ? (
+              /* Search overlay mode */
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <Search size={14} className="text-slate-400 shrink-0" />
+                <input
+                  ref={mobileSearchRef}
+                  type="text"
+                  value={query}
+                  onChange={e => { setQuery(e.target.value); setUnsupportedError(null) }}
+                  onKeyDown={e => { if (e.key === 'Enter' && query.trim()) { handleSubmit(query); setMobileSearchOpen(false) } if (e.key === 'Escape') { setMobileSearchOpen(false); setQuery(''); setOpen(false) } }}
+                  placeholder="Search ticker…"
+                  className="flex-1 text-[14px] bg-transparent text-slate-900 placeholder-slate-400 focus:outline-none"
+                  autoFocus
+                />
+                <button
+                  onClick={() => { setMobileSearchOpen(false); setQuery(''); setOpen(false) }}
+                  className="p-1 text-slate-400 hover:text-slate-700 shrink-0"
+                  aria-label="Close search"
+                >
+                  <X size={15} />
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <button
+                    onClick={() => router.push('/analyze')}
+                    aria-label="Back to Analyze"
+                    className="text-slate-400 hover:text-blue-600 transition-colors shrink-0 p-1 -ml-1"
+                  >
+                    <ChevronLeft size={16} strokeWidth={2.5} />
+                  </button>
+                  <CompanyLogo ticker={stockNav.ticker} />
+                  <span className="font-bold text-[14px] text-slate-900 tracking-tight shrink-0">
+                    {stockNav.ticker}
                   </span>
-                  {stockNav.changePct != null && (
-                    <span className={cn(
-                      'text-[11px] font-medium tabular-nums',
-                      stockNav.changePct >= 0 ? 'text-emerald-600' : 'text-red-500',
-                    )}>
-                      {stockNav.changePct >= 0 ? '+' : ''}{stockNav.changePct.toFixed(2)}%
-                    </span>
+                  {stockNav.price != null && (
+                    <div className="flex items-baseline gap-1 min-w-0">
+                      <span className="font-semibold text-[13px] text-slate-800 tabular-nums">
+                        {stockNav.currency}{stockNav.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                      {stockNav.changePct != null && (
+                        <span className={cn(
+                          'text-[11px] font-medium tabular-nums',
+                          stockNav.changePct >= 0 ? 'text-emerald-600' : 'text-red-500',
+                        )}>
+                          {stockNav.changePct >= 0 ? '+' : ''}{stockNav.changePct.toFixed(2)}%
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
-            {/* Save icon only (no text label on mobile) */}
-            <button
-              onClick={() => onSaveRef.current?.()}
-              className="shrink-0 p-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
-              aria-label="Save analysis"
-            >
-              <Bookmark size={18} strokeWidth={2} />
-            </button>
+                <div className="flex items-center gap-1 shrink-0">
+                  {/* Search icon — opens inline search */}
+                  <button
+                    onClick={() => { setMobileSearchOpen(true); setTimeout(() => mobileSearchRef.current?.focus(), 50) }}
+                    className="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                    aria-label="Search for a stock"
+                  >
+                    <Search size={16} strokeWidth={2} />
+                  </button>
+                  {/* Save icon */}
+                  <button
+                    onClick={() => onSaveRef.current?.()}
+                    className="p-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+                    aria-label="Save analysis"
+                  >
+                    <Bookmark size={18} strokeWidth={2} />
+                  </button>
+                </div>
+              </>
+            )}
           </div>
           {/* Row 2: scrollable tabs */}
           <div className="h-9 border-t border-slate-100 flex overflow-x-auto scrollbar-hide px-1" role="tablist" style={{ overscrollBehaviorX: 'contain' }}>
@@ -202,6 +252,25 @@ export default function TopBar() {
               )
             })}
           </div>
+          {/* Mobile search results dropdown */}
+          {mobileSearchOpen && open && results.length > 0 && (
+            <div className="absolute top-[88px] left-0 right-0 z-50 bg-white border-b border-slate-200 shadow-lg">
+              {results.slice(0, 6).map(r => (
+                <button
+                  key={r.symbol}
+                  onClick={() => { if (!r.supported) return; select(r.symbol); setMobileSearchOpen(false) }}
+                  className={cn(
+                    'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors',
+                    r.supported ? 'hover:bg-blue-50' : 'opacity-40 cursor-not-allowed',
+                  )}
+                >
+                  <span className="font-mono font-bold text-[13px] text-slate-900 w-14 shrink-0">{r.symbol}</span>
+                  <span className="text-[12px] text-slate-500 truncate flex-1">{r.longname ?? r.shortname}</span>
+                  <span className="text-[10px] text-slate-400 shrink-0">{r.exchDisp ?? r.exchange}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -439,6 +508,14 @@ export default function TopBar() {
                 image={session.user?.image ?? null}
                 name={session.user?.name ?? null}
               />
+              {isPro && (
+                <button
+                  onClick={openBillingPortal}
+                  className="text-[12px] text-slate-400 hover:text-slate-700 transition-colors whitespace-nowrap hidden sm:block"
+                >
+                  Manage billing
+                </button>
+              )}
               <button
                 onClick={() => signOut()}
                 className="text-[12px] text-slate-400 hover:text-slate-700 transition-colors whitespace-nowrap hidden sm:block"

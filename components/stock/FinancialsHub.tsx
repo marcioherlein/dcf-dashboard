@@ -382,7 +382,14 @@ function toM(v: unknown): number | null {
 
 export default function FinancialsHub({ statementsData, financialsData, currency = '$', reportingCurrency, highlight, initialSubTab }: Props) {
   const [subTab, setSubTab] = useState<SubTab>(initialSubTab ?? 'statements')
-  const [analyticsPeriod, setAnalyticsPeriod] = useState<'annual' | 'quarterly'>('annual')
+  const [analyticsPeriod, setAnalyticsPeriod] = useState<'annual' | 'quarterly'>(() => {
+    try { return (sessionStorage.getItem('fin_period') as 'annual' | 'quarterly') ?? 'annual' } catch { return 'annual' }
+  })
+
+  const handlePeriodChange = (p: 'annual' | 'quarterly') => {
+    setAnalyticsPeriod(p)
+    try { sessionStorage.setItem('fin_period', p) } catch {}
+  }
 
   // When a navigation highlight arrives from Valuation Lab, switch to Statements sub-tab
   const highlightKey = highlight ? `${highlight.rowKey}:${highlight.statement}` : null
@@ -641,13 +648,13 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         {['growth', 'profitability', 'solvency'].includes(subTab) && (
           <div className="flex rounded-lg overflow-hidden border border-slate-200 text-[11px] shrink-0 ml-3">
             <button
-              onClick={() => setAnalyticsPeriod('annual')}
+              onClick={() => handlePeriodChange('annual')}
               className={`px-2.5 py-1.5 transition-colors ${analyticsPeriod === 'annual' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-slate-400 hover:bg-slate-50'}`}
             >
               Annual
             </button>
             <button
-              onClick={() => setAnalyticsPeriod('quarterly')}
+              onClick={() => handlePeriodChange('quarterly')}
               className={`px-2.5 py-1.5 border-l border-slate-200 transition-colors ${analyticsPeriod === 'quarterly' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-slate-400 hover:bg-slate-50'}`}
             >
               Quarterly

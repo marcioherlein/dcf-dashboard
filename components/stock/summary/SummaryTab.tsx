@@ -289,6 +289,7 @@ export default function SummaryTab({
           onViewDetails={onViewRisks}
         />
         <NextStepsCard
+          ticker={ticker}
           onViewValuation={onViewValuation}
           onViewAssumptions={onViewAssumptions}
           onViewRisks={onViewRisks}

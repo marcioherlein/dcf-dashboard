@@ -3,19 +3,23 @@
 import {
   Compass,
   ArrowRight,
+  GitCompareArrows,
 } from 'lucide-react'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 const CARD =
   'bg-white border border-[#E6ECF5] rounded-[18px] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]'
 
 interface NextStepsCardProps {
+  ticker: string
   onViewValuation: () => void
   onViewAssumptions: () => void
   onViewRisks: () => void
 }
 
 export default function NextStepsCard({
+  ticker,
   onViewValuation,
   onViewAssumptions,
 }: NextStepsCardProps) {
@@ -47,6 +51,13 @@ export default function NextStepsCard({
         >
           Review assumptions
         </button>
+        <Link
+          href={`/compare?a=${ticker}`}
+          className="w-full h-10 rounded-[10px] bg-white border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 text-[13px] font-medium transition-colors flex items-center justify-center gap-1.5"
+        >
+          <GitCompareArrows size={14} className="text-slate-400" />
+          Compare with another stock
+        </Link>
       </div>
     </div>
   )
