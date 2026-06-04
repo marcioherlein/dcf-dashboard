@@ -96,6 +96,12 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
   // FX rate (local-currency → quote-currency). 1 for USD companies; ~0.031 for TSM (TWD→USD).
   const fxRate: number = apiData?.providerStatus?.fx?.rate ?? 1
 
+  // Compute companyType and isFinancialSector early — needed by buildProjectedRows
+  // which is called before the main return block.
+  const companyTypeEarly: ModellingInput['companyType'] = vm.companyType ?? 'standard'
+  const FINANCIAL_TYPES_EARLY: Set<string> = new Set(['financial', 'fintech', 'bdc', 'mreeit'])
+  const isFinancialSectorEarly = FINANCIAL_TYPES_EARLY.has(companyTypeEarly)
+
   // Build rows: prefer statements data if available, fall back to financialStatements
   let rows: ModellingRow[]
   if (statementsData?.annual?.incomeStatement?.length) {
@@ -129,7 +135,7 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
   if (!rows.some(r => r.isProjected)) {
     const nYears = apiData?.growthModel === 'three-stage' ? 7 : 5
     const projectionCagr = cagrOverride !== undefined ? cagrOverride : cagr
-    rows = [...rows, ...buildProjectedRows(rows, projectionCagr, nYears)]
+    rows = [...rows, ...buildProjectedRows(rows, projectionCagr, nYears, isFinancialSectorEarly)]
   }
 
   // Base FCF: prefer TTM FCF from statements (raw dollars → millions)
@@ -170,8 +176,10 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
     sharesOutstanding = mcap / qprice / 1e6
   }
 
-  const companyType: ModellingInput['companyType'] = vm.companyType ?? 'standard'
-  const isFinancialSector = companyType === 'financial'
+  const companyType: ModellingInput['companyType'] = companyTypeEarly
+  // Include fintech in financial sector guard — both use earnings-based projections
+  const _FINANCIAL_TYPES: Set<string> = new Set(['financial', 'fintech', 'bdc', 'mreeit'])
+  const isFinancialSector = isFinancialSectorEarly
 
   // Derive effective tax rate from statement rows (3Y median of taxRateForCalcs)
   // This overrides the WACC default (often 0.21) which may be wrong for non-US companies.
@@ -230,7 +238,7 @@ function computeMedian(values: (number | null)[]): number | null {
   return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
 }
 
-function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears: number): ModellingRow[] {
+function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears: number, isFinancialSector = false): ModellingRow[] {
   const annualRows = historicalRows.filter(r => r.year !== 'TTM' && !r.isProjected)
   const recent = annualRows.slice(-3)
   if (recent.length === 0) return []
@@ -304,11 +312,18 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
 
   // NWC delta as % of revenue change — used to project NWC for each forecast year
   // so UFCF gets a non-zero ΔNWC instead of defaulting to 0.
+  //
+  // Financial/fintech companies: NWC from balance sheet includes customer deposits
+  // (current liabilities) and loan receivables (current assets). As the company grows,
+  // both sides scale together but the net NWC swing is enormous and not an operating
+  // working capital concept. For NU, this was producing -73% NWC/ΔRevenue, destroying
+  // UFCF in projected years. Zero it out for financial companies — their "working capital"
+  // management is captured by the net interest margin in EBIT/NOPAT, not in NWC changes.
   const deriveNwc = (r: ModellingRow): number | null => {
     if (r.totalCurrentAssets == null || r.cash == null || r.totalCurrentLiabilities == null) return null
     return (r.totalCurrentAssets - r.cash) - r.totalCurrentLiabilities
   }
-  const nwcDeltaRevRatios = recent.map((r, i) => {
+  const nwcDeltaRevRatios = isFinancialSector ? [] : recent.map((r, i) => {
     if (i === 0) return null
     const prev = recent[i - 1]
     const nwcCurr = deriveNwc(r)
@@ -348,12 +363,34 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
   let prevNwc = lastNwc
   for (let i = 0; i < nYears; i++) {
     const revenue = baseRevenue * Math.pow(1 + cagr, i + 1)
-    const ebit = medianEbitMargin != null ? revenue * medianEbitMargin : null
-    const dna = medianDnaPct != null ? revenue * medianDnaPct : null
-    // ebitda: prefer ebit+dna; fall back to EBITDA margin so UFCF engine can derive D&A
-    const ebitda = (ebit != null && dna != null)
-      ? ebit + dna
-      : (medianEbitdaMargin != null ? revenue * medianEbitdaMargin : null)
+
+    // Financial/fintech companies: EBIT from operating income is structurally wrong.
+    // Yahoo's operatingIncome for banks/fintechs deducts credit loss provisions as an
+    // operating expense, producing deeply negative EBIT (NU shows −37% EBIT margin
+    // while actually earning 17% net margin). For financial companies, derive projected
+    // EBIT from net income margin (which is the real earnings base) divided by
+    // (1 − taxRate) to produce a consistent NOPAT bridge.
+    // D&A is set to 0 because for financial companies there are no physical assets to
+    // depreciate — the "D&A" in Yahoo's data includes credit provisions and intangible
+    // amortization that are already embedded in net income, not addbacks.
+    let ebit: number | null
+    let dna: number | null
+    let ebitda: number | null
+    if (isFinancialSector) {
+      // Back-compute EBIT from net margin so NOPAT = netIncome (via ebit × (1-taxRate) = netMargin × rev)
+      const taxR = medianTaxRate ?? 0.21
+      const netM = medianNetMargin ?? 0
+      ebit  = revenue * netM / Math.max(0.01, 1 - taxR)  // ebit × (1 − t) = netIncome → ebit = NI / (1−t)
+      dna   = 0  // no physical asset D&A for financial companies; credit provisions are in EBIT
+      ebitda = ebit  // ebitda ≈ ebit when dna = 0
+    } else {
+      ebit = medianEbitMargin != null ? revenue * medianEbitMargin : null
+      dna = medianDnaPct != null ? revenue * medianDnaPct : null
+      // ebitda: prefer ebit+dna; fall back to EBITDA margin so UFCF engine can derive D&A
+      ebitda = (ebit != null && dna != null)
+        ? ebit + dna
+        : (medianEbitdaMargin != null ? revenue * medianEbitdaMargin : null)
+    }
 
     // Project NWC level for this year; encode as BS fields so deriveNWC() picks it up.
     // totalCurrentAssets = nwc, cash = 0, totalCurrentLiabilities = 0 → deriveNWC = nwc.
