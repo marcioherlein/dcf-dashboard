@@ -196,13 +196,22 @@ function deriveExitPE(
   const geoStr = geoDiscount < 0.99 ? ` (geo-discounted ${(geoDiscount * 100).toFixed(0)}%)` : ''
   const capNote = shouldCapPE ? ` [capped from ${companyPEStr} — thin margin inflates current P/E]` : ''
 
-  // Phase 1: Fintech floor — prevents blend from anchoring to traditional bank/credit P/Es (18×)
+  // Phase 1: Fintech floor — prevents blend from anchoring to traditional bank/credit P/Es (10–14×)
+  // Triggered two ways:
+  //   (a) Industry name matches fintech/neobank pattern (e.g. "Credit Services", "Consumer Finance")
+  //   (b) Financial sector company with CAGR > 20% — Yahoo labels neobanks "Banks - Regional"
+  //       but their growth trajectory is fundamentally different from a mature bank
   const isFintechIndustry = FINTECH_INDUSTRY_RE.test(industry ?? '')
+  const isHighGrowthFinancial =
+    (sector ?? '').toLowerCase().includes('financ') &&
+    (data?.cagrAnalysis?.blended ?? data?.cagrAnalysis?.analystEstimate1y ?? 0) > 0.20
   let finalPE = blended
   let floorNote = ''
-  if (isFintechIndustry && finalPE < 22) {
+  if ((isFintechIndustry || isHighGrowthFinancial) && finalPE < 22) {
     finalPE = 22
-    floorNote = ` [fintech floor applied: 22×]`
+    floorNote = isHighGrowthFinancial && !isFintechIndustry
+      ? ` [high-growth fintech floor: 22× — ${((data?.cagrAnalysis?.blended ?? 0) * 100).toFixed(0)}% CAGR in financial sector]`
+      : ` [fintech floor applied: 22×]`
   }
 
   // Phase 2: AI semiconductor premium — high-CAGR semis trade at 30–40×, not the 26× sector median

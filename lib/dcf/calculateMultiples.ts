@@ -238,8 +238,16 @@ export const PEER_TICKERS: Record<string, string[]> = {
 }
 
 function getMedians(industry: string, sector: string) {
+  // Yahoo Finance returns industry names with regular hyphens ("Banks - Regional")
+  // but Damodaran table uses em-dashes ("Banks—Regional"). Normalize both directions.
+  const normalizeKey = (s: string) => s.replace(/\s*[-—]\s*/g, '—')
+  const normalizedIndustry = normalizeKey(industry)
+
   if (INDUSTRY_MEDIANS[industry]) {
     return { medians: INDUSTRY_MEDIANS[industry], source: 'industry-median' as BenchmarkSource }
+  }
+  if (normalizedIndustry !== industry && INDUSTRY_MEDIANS[normalizedIndustry]) {
+    return { medians: INDUSTRY_MEDIANS[normalizedIndustry], source: 'industry-median' as BenchmarkSource }
   }
   if (SECTOR_MEDIANS[sector]) {
     return { medians: SECTOR_MEDIANS[sector], source: 'sector-fallback' as BenchmarkSource }

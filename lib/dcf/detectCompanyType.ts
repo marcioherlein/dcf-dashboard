@@ -36,6 +36,12 @@ export function detectCompanyType(input: {
     if (/capital market|alternative asset|private equity|asset management/i.test(industry) &&
         !(/bank|insurance|credit|lending/i.test(industry))) return 'alt_asset'
 
+    // 1d. High-growth financial companies (neobanks, digital lenders, fintech platforms) —
+    // Yahoo often labels them "Banks - Regional" or "Credit Services" despite 25%+ revenue CAGR.
+    // Growth-stage digital finance is fundamentally different from a mature regional bank:
+    // it should use fintech exit multiples (25–35×) not bank multiples (10–14×).
+    if ((historicalCagr3y ?? 0) > 0.20 || (analystEstimate1y ?? 0) > 0.20) return 'fintech'
+
     return 'financial'
   }
 

@@ -73,18 +73,49 @@ function auditExitPE(apiData: ApiData, assumptions: ValuationAssumptions): Audit
     return ok(key, label, current, companyType === 'reit' ? 'Not applicable (REIT — uses P/FFO)' : 'Excluded (pre-revenue)', 'medium')
   }
 
-  // Get analyst forward EPS for +1Y period
+  const sector = apiData.quote?.sector ?? ''
+  const industry = apiData.quote?.industry ?? ''
+  const { pe: sectorPE } = getIndustryMultiples(industry, sector)
+  const price: number = apiData.quote?.price ?? 0
+  const cagr: number = assumptions.cagr ?? 0
+
+  // Get analyst forward EPS — prefer +2Y for high-growth companies (earnings are ramping)
+  // because +1Y forward P/E on nascent profitability is compressed and misleading
   const estimates: any[] = apiData.analystForwardEstimates ?? []
   const fwd1y = estimates.find((e: any) => e.period === '+1y')
-  const fwdEPS: number | null = fwd1y?.eps?.avg ?? null
-  const numAnalysts: number = fwd1y?.eps?.analysts ?? 0
-  const price: number = apiData.quote?.price ?? 0
+  const fwd2y = estimates.find((e: any) => e.period === '+2y')
+
+  const isHighGrowth = cagr > 0.20
+  // For high-growth companies, use 2Y forward P/E when available (more representative)
+  const fwdEntry = isHighGrowth && fwd2y?.eps?.avg != null && fwd2y.eps.avg > 0 ? fwd2y : fwd1y
+  const fwdEPS: number | null = fwdEntry?.eps?.avg ?? null
+  const numAnalysts: number = fwdEntry?.eps?.analysts ?? 0
+  const periodLabel = fwdEntry === fwd2y ? '+2Y' : '+1Y'
+
+  // Sector mismatch check — is exit P/E appropriate for this company type?
+  // High-growth financial companies (neobanks) misclassified as "Banks" get PE=12×
+  // which is 2–3× below where they should trade
+  const isFinancialSector = (sector ?? '').toLowerCase().includes('financ')
+  const isBankIndustry = /bank/i.test(industry ?? '')
+  const isGrowthFinancial = isFinancialSector && cagr > 0.20
+
+  if (isGrowthFinancial && isBankIndustry && current < 20) {
+    // Fintech misclassified as bank — exit P/E anchored to wrong peer set
+    return {
+      key, label, currentValue: current, severity: 'warn',
+      signal: `Bank multiple for growth fintech (${sectorPE}× sector)`,
+      reason: `Industry "${industry}" maps to bank sector medians (P/E ~${sectorPE}×), but ` +
+        `this company has ${(cagr * 100).toFixed(0)}% CAGR — far above mature bank norms. ` +
+        `High-growth digital finance companies (NU, StoneCo, MELI) exit at 25–35× earnings, ` +
+        `not bank multiples. Suggested exit: 28× (conservative growth fintech).`,
+      suggestedValue: 28,
+      confidence: numAnalysts >= 5 ? 'high' : 'medium',
+      benchmark: { label: 'Bank sector median', value: sectorPE },
+    }
+  }
 
   if (fwdEPS == null || fwdEPS <= 0 || numAnalysts < 3 || price <= 0) {
     // Fall back to sector median check
-    const sector = apiData.quote?.sector ?? ''
-    const industry = apiData.quote?.industry ?? ''
-    const { pe: sectorPE } = getIndustryMultiples(industry, sector)
     if (sectorPE > 0 && current < sectorPE * 0.50) {
       return {
         key, label, currentValue: current, severity: 'warn',
@@ -101,38 +132,38 @@ function auditExitPE(apiData: ApiData, assumptions: ValuationAssumptions): Audit
   const impliedFwdPE = price / fwdEPS
   const ratio = current / impliedFwdPE
   const confidence: AuditResult['confidence'] = numAnalysts >= 10 ? 'high' : 'medium'
+  const benchLabel = `Analyst-implied ${periodLabel} fwd P/E`
 
   if (ratio < 0.55) {
-    // Model exit P/E is less than 55% of market's implied 1-year P/E — very likely wrong sector
     const suggested = Math.round(impliedFwdPE * 0.85)
     return {
       key, label, currentValue: current, severity: 'warn',
-      signal: `Well below forward P/E (${impliedFwdPE.toFixed(0)}×)`,
-      reason: `${numAnalysts} analysts price ${times(impliedFwdPE)} forward P/E today. ` +
+      signal: `Well below ${periodLabel} forward P/E (${impliedFwdPE.toFixed(0)}×)`,
+      reason: `${numAnalysts} analysts price ${times(impliedFwdPE)} ${periodLabel} forward P/E. ` +
         `The model exits at ${current.toFixed(0)}× — likely because the sector lookup matched ` +
-        `a mature peer group. A 5-year exit of ${suggested}× (15% discount to today's forward) ` +
+        `a mature peer group. A 5-year exit of ${suggested}× (15% discount to ${periodLabel} forward) ` +
         `is more consistent with this company's earnings trajectory.`,
       suggestedValue: suggested,
       confidence,
-      benchmark: { label: `Analyst-implied fwd P/E`, value: Math.round(impliedFwdPE * 10) / 10 },
+      benchmark: { label: benchLabel, value: Math.round(impliedFwdPE * 10) / 10 },
     }
   }
 
   if (ratio > 1.80) {
     return {
       key, label, currentValue: current, severity: 'warn',
-      signal: `Aggressive vs. forward P/E (${impliedFwdPE.toFixed(0)}×)`,
+      signal: `Aggressive vs. ${periodLabel} forward P/E (${impliedFwdPE.toFixed(0)}×)`,
       reason: `Exit P/E of ${current.toFixed(0)}× implies significant multiple expansion from ` +
-        `today's forward P/E of ${impliedFwdPE.toFixed(0)}×. This requires the company to re-rate ` +
+        `the ${periodLabel} forward P/E of ${impliedFwdPE.toFixed(0)}×. This requires the company to re-rate ` +
         `upward — possible for compounders but adds forecast risk.`,
       confidence,
-      benchmark: { label: 'Analyst-implied fwd P/E', value: Math.round(impliedFwdPE * 10) / 10 },
+      benchmark: { label: benchLabel, value: Math.round(impliedFwdPE * 10) / 10 },
     }
   }
 
   return {
-    ...ok(key, label, current, `Consistent with forward P/E (${impliedFwdPE.toFixed(0)}×)`, confidence),
-    benchmark: { label: 'Analyst-implied fwd P/E', value: Math.round(impliedFwdPE * 10) / 10 },
+    ...ok(key, label, current, `Consistent with ${periodLabel} forward P/E (${impliedFwdPE.toFixed(0)}×)`, confidence),
+    benchmark: { label: benchLabel, value: Math.round(impliedFwdPE * 10) / 10 },
   }
 }
 

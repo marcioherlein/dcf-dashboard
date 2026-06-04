@@ -29,11 +29,19 @@ describe('detectCompanyType', () => {
     expect(detectCompanyType({ ...baseInput, sector: 'Financials', industry: 'Regional Banks' })).toBe('financial')
   })
 
-  it('detects financial sector even when CAGR > 20%', () => {
-    // financial check is priority 1 — should not fall through to 'growth'
+  it('promotes high-CAGR financial company to fintech (not left as financial)', () => {
+    // A financial company with 35% CAGR is a growth fintech (NU, StoneCo) — not a mature bank
     expect(detectCompanyType({
       ...baseInput, sector: 'Financial Services', industry: 'Fintech',
       historicalCagr3y: 0.35, analystEstimate1y: 0.40,
+    })).toBe('fintech')
+  })
+
+  it('keeps low-CAGR financial company as financial (mature bank)', () => {
+    // A bank with 5% CAGR should remain 'financial'
+    expect(detectCompanyType({
+      ...baseInput, sector: 'Financial Services', industry: 'Banks—Diversified',
+      historicalCagr3y: 0.05, analystEstimate1y: 0.06,
     })).toBe('financial')
   })
 
