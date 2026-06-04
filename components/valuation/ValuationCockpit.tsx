@@ -23,6 +23,8 @@ import SensitivityMatrix from './SensitivityMatrix'
 import SaveToWatchlistDialog from '@/components/watchlist/SaveToWatchlistDialog'
 import type { WatchlistSavePayload } from '@/components/watchlist/SaveToWatchlistDialog'
 import { fmtPrice } from '@/lib/formatters'
+import AssumptionHealthPanel from './cockpit/AssumptionHealthPanel'
+import type { AssumptionAudit } from '@/lib/valuation/assumptionAuditor'
 
 const ModellingWorkspace = dynamic(
   () => import('@/components/modelling/ModellingWorkspace'),
@@ -365,6 +367,16 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
 
       {/* Collapsible guidance at top */}
       <GuidanceStrip />
+
+      {/* Assumption Health Panel — cross-validates model assumptions against independent signals */}
+      {apiData.assumptionAudit && (
+        <AssumptionHealthPanel
+          audit={apiData.assumptionAudit as AssumptionAudit}
+          assumptions={assumptions}
+          onChange={handleAssumptionChange}
+          analystForwardPE={apiData.analystForwardPE ?? null}
+        />
+      )}
 
       {/* Valuation Models — inline assumption editing + mini historical charts */}
       <div ref={assumptionsPanelRef} id="assumptions-panel">

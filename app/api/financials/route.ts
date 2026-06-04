@@ -13,6 +13,8 @@ import { calculateFCFE } from '@/lib/dcf/calculateFCFE'
 import { calculateMultiples, PEER_TICKERS } from '@/lib/dcf/calculateMultiples'
 import { calculatePiotroski, calculateAltman, calculateBeneish, calculateROIC } from '@/lib/dcf/calculateScores'
 import { getCRPByCountry } from '@/lib/dcf/countryRiskPremium'
+import { runAssumptionAudit } from '@/lib/valuation/assumptionAuditor'
+import { seedAssumptions } from '@/lib/valuation/cockpitBuilders'
 
 export async function GET(req: NextRequest) {
   const ticker = req.nextUrl.searchParams.get('ticker')?.toUpperCase()
@@ -1336,6 +1338,40 @@ export async function GET(req: NextRequest) {
       strongSell:(r.strongSell ?? 0) as number,
     }))
 
+    // ── Assumption audit — cross-validates seeded assumptions against independent signals ──
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const _auditBundle: Record<string, any> = {
+      quote: {
+        price: currentPrice,
+        sector: profile.sector ?? q.sector ?? '',
+        industry: profile.industry ?? '',
+        country: fin.summaryProfile?.country ?? null,
+      },
+      wacc: { ...waccResult, crp, inputs: waccInputs },
+      cagrAnalysis,
+      businessProfile: {
+        netMargin: (fd.profitMargins ?? null) as number | null,
+        revenueM: rawRevMLocal * fxRate,
+      },
+      ratiosQuarterly: fmp.ratiosQuarterly,
+      analystForwardEstimates,
+      peerComps: livePeers,
+      scores,
+      fairValue: { debt: rawDebtM, cash: cashM, sharesOutstanding: sharesM },
+      valuationMethods,
+    }
+    const _seededAssumptions = seedAssumptions(_auditBundle)
+    const assumptionAudit = runAssumptionAudit(_auditBundle, _seededAssumptions)
+
+    // Analyst-implied forward P/E = currentPrice / next-year consensus EPS
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const _fwd1y = analystForwardEstimates.find((e: any) => e.period === '+1y')
+    const _fwdEPS: number | null = _fwd1y?.eps?.avg ?? null
+    const analystForwardPE: number | null =
+      _fwdEPS != null && _fwdEPS > 0 && currentPrice > 0
+        ? Math.round((currentPrice / _fwdEPS) * 10) / 10
+        : null
+
     return NextResponse.json({
       ticker,
       quote: {
@@ -1400,6 +1436,8 @@ export async function GET(req: NextRequest) {
       limitedHistory,
       historyYears,
       analystForwardEstimates,
+      analystForwardPE,
+      assumptionAudit,
       peerComps: livePeers.map(p => ({
         ticker:       p.ticker,
         trailingPE:   p.trailingPE,
