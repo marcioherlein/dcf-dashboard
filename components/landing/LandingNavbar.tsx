@@ -45,16 +45,15 @@ export default function LandingNavbar() {
               transition: 'box-shadow 0.3s ease',
             }}
           >
-            {/* Logo — big and prominent */}
-            <Link href="/" className="flex items-center leading-none shrink-0 group" aria-label="insic home">
-            <InsicLogo
-                variant="horizontal"
-                className="block h-10 w-auto"
-              />
-            </Link>
+            {/* Logo — left, takes up flex-1 */}
+            <div className="flex items-center flex-1">
+              <Link href="/" className="flex items-center leading-none group" aria-label="insic home">
+                <InsicLogo variant="horizontal" className="block h-10 w-auto" />
+              </Link>
+            </div>
 
-            {/* Center nav links */}
-            <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
+            {/* Center nav links — truly centered */}
+            <nav className="hidden lg:flex items-center gap-1 shrink-0">
               {NAV_LINKS.map(link => (
                 <Link
                   key={link.label}
@@ -66,8 +65,8 @@ export default function LandingNavbar() {
               ))}
             </nav>
 
-            {/* Right CTA */}
-            <div className="ml-auto flex items-center gap-3 shrink-0">
+            {/* Right CTA — flex-1, right-aligned to mirror logo side */}
+            <div className="flex items-center gap-3 flex-1 justify-end">
               {session ? (
                 <Link
                   href="/analyze"
