@@ -158,6 +158,14 @@ interface FinancialsData {
   vetoReasons?: string[]
   limitedHistory?: boolean
   historyYears?: number
+  peerComps?: Array<{
+    ticker: string
+    trailingPE: number | null
+    priceToBook: number | null
+    priceToSales: number | null
+    evToEbitda: number | null
+    evToRevenue: number | null
+  }>
 }
 
 export default function StockPage() {
@@ -609,7 +617,21 @@ function StockPageBody() {
                 >
                   <TabErrorBoundary tabName="Valuation">
                   {data.canComputeDCF === false ? (
-                    <ValuationNotAvailableCard vetoReasons={data.vetoReasons ?? []} ticker={ticker} />
+                    <ValuationNotAvailableCard
+                      vetoReasons={data.vetoReasons ?? []}
+                      ticker={ticker}
+                      currentPrice={data.quote?.price ?? null}
+                      analystTargetMean={data.quote?.analystTargetMean ?? null}
+                      analystTargetLow={data.quote?.analystTargetLow ?? null}
+                      analystTargetHigh={data.quote?.analystTargetHigh ?? null}
+                      evToRevenue={(data.businessProfile as unknown as Record<string, unknown>)?.evToRevenue as number | null ?? null}
+                      priceToSales={(data.businessProfile as unknown as Record<string, unknown>)?.priceToSales as number | null ?? null}
+                      priceToBook={(data.businessProfile as unknown as Record<string, unknown>)?.priceToBook as number | null ?? null}
+                      trailingPE={data.quote?.peRatio ?? null}
+                      multiplesBlendedFV={data.valuationMethods?.models?.multiples?.blendedFairValue ?? null}
+                      peerComps={data.peerComps ?? []}
+                      currency={data.quote?.currency ?? 'USD'}
+                    />
                   ) : (
                     <ValuationCockpit
                       apiData={data}
