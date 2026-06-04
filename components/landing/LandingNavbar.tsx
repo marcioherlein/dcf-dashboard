@@ -30,11 +30,9 @@ export default function LandingNavbar() {
       <header className="fixed top-0 left-0 right-0 z-50 px-3 sm:px-5 pt-3 pointer-events-none">
         <div className="mx-auto pointer-events-auto" style={{ maxWidth: '1280px' }}>
           <div
-            className="h-[72px] px-6 sm:px-8 rounded-2xl"
+            className="grid items-center h-[72px] px-6 sm:px-8 rounded-2xl"
             style={{
-              display: 'grid',
               gridTemplateColumns: '1fr auto 1fr',
-              alignItems: 'center',
               background: 'rgba(255,255,255,0.97)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
@@ -45,32 +43,28 @@ export default function LandingNavbar() {
               transition: 'box-shadow 0.3s ease',
             }}
           >
-            {/* ── Column 1: Logo — left-aligned ── */}
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <Link href="/" aria-label="insic home" style={{ display: 'flex', alignItems: 'center', lineHeight: 0 }}>
-                <InsicLogo
-                  variant="horizontal"
-                  className="block w-auto"
-                  style={{ height: '44px' }}
-                />
+            {/* ── Col 1: Logo — left edge ── */}
+            <div className="flex items-center">
+              <Link href="/" aria-label="insic home" className="flex items-center" style={{ lineHeight: 0 }}>
+                <InsicLogo variant="horizontal" className="block w-auto" style={{ height: '40px' }} />
               </Link>
             </div>
 
-            {/* ── Column 2: Nav links — mathematically centered ── */}
+            {/* ── Col 2: Nav — dead center of the bar ── */}
             <nav className="hidden lg:flex items-center gap-0.5">
               {NAV_LINKS.map(link => (
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="px-4 py-2 rounded-[8px] text-[14.5px] font-medium text-[#536174] hover:text-[#0A1424] hover:bg-[#F3F2EC] transition-all duration-150 whitespace-nowrap"
+                  className="px-4 py-2 rounded-lg text-[14.5px] font-medium text-[#536174] hover:text-[#0A1424] hover:bg-[#F3F2EC] transition-all duration-150 whitespace-nowrap"
                 >
                   {link.label}
                 </Link>
               ))}
             </nav>
 
-            {/* ── Column 3: CTA — right-aligned ── */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '12px' }}>
+            {/* ── Col 3: CTA — right edge ── */}
+            <div className="flex items-center justify-end gap-3">
               {session ? (
                 <Link
                   href="/analyze"
@@ -90,18 +84,16 @@ export default function LandingNavbar() {
                   </button>
                   <button
                     onClick={() => signIn('google')}
-                    className="hidden sm:inline-flex items-center justify-center rounded-[10px] px-7 py-2.5 text-[14px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95 whitespace-nowrap"
+                    className="hidden sm:inline-flex items-center justify-center rounded-[10px] px-7 text-[14px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95 whitespace-nowrap"
                     style={{ background: '#5F790B', boxShadow: '0 4px 12px rgba(95,121,11,0.25)', minHeight: '44px' }}
                   >
                     Get started
                   </button>
                 </>
               )}
-
-              {/* Mobile hamburger */}
               <button
                 onClick={() => setMobileOpen(v => !v)}
-                className="lg:hidden flex items-center justify-center w-10 h-10 rounded-[8px] text-[#536174] hover:bg-[#F3F2EC] hover:text-[#0A1424] transition-colors"
+                className="lg:hidden flex items-center justify-center w-10 h-10 rounded-lg text-[#536174] hover:bg-[#F3F2EC] hover:text-[#0A1424] transition-colors"
                 aria-label="Toggle menu"
               >
                 {mobileOpen ? <X size={20} /> : <Menu size={20} />}
