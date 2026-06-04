@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { DrumRollPicker } from '@/components/ui/DrumRollPicker'
 import type { ValuationAssumptions } from '@/lib/valuation/cockpit'
 import {
   BarChart as RBarChart, Bar, XAxis, YAxis, Cell,
@@ -254,6 +255,7 @@ function AssumptionRowExpanded({
   const ctxLabel  = getContextLabel(value, field, stats, ttmVal, effectiveTypicals)
 
   const sliderPct = Math.max(0, Math.min(100, ((value - field.min) / (field.max - field.min)) * 100))
+  const _sliderPct = sliderPct // suppressed — kept for potential future use
   const delta = value - defaultValue
   const deltaDisplay = isDirty
     ? (delta >= 0 ? '+' : '') + (field.unit === '%' ? (delta * 100).toFixed(1) + 'pp' : delta.toFixed(1) + '×')
@@ -311,36 +313,47 @@ function AssumptionRowExpanded({
   return (
     <div className="px-4 pb-4 pt-2 border-l-2 ml-3 flex flex-col gap-3" style={{ borderColor: color }}>
 
-      {/* Value + steppers */}
-      <div className="flex items-center gap-2">
-        <button onClick={() => onChange(clamp(value - field.step))} className="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all text-sm font-bold select-none shrink-0" aria-label={`Decrease ${field.label}`}>−</button>
-        <div className="flex-1 text-center">
-          {isEditing ? (
-            <input type="number" value={editRaw} onChange={e => setEditRaw(e.target.value)} onBlur={commitEdit} onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') setIsEditing(false) }} autoFocus className="text-[20px] font-[800] tabular-nums text-center w-full border-b-2 border-blue-400 outline-none bg-transparent text-slate-900 leading-none" aria-label={`Enter ${field.label} value`} />
-          ) : (
-            <button onClick={startEdit} className="text-[22px] font-[800] tabular-nums leading-none tracking-tight text-slate-900 w-full cursor-text hover:text-slate-600 transition-colors" title="Click to type a value directly" aria-label={`${field.label}: ${fmtVal(value, field.unit)}. Click to type.`}>
-              {fmtVal(value, field.unit)}
-            </button>
-          )}
-          {!isEditing && isDirty && (
-            <div className={`text-[10px] font-[600] tabular-nums mt-0.5 ${delta > 0 ? 'text-emerald-500' : 'text-red-400'}`}>{deltaDisplay} vs default</div>
-          )}
-        </div>
-        <button onClick={() => onChange(clamp(value + field.step))} className="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all text-sm font-bold select-none shrink-0" aria-label={`Increase ${field.label}`}>+</button>
-      </div>
+      {/* Drum roll picker */}
+      <DrumRollPicker
+        value={value}
+        min={field.min}
+        max={field.max}
+        step={field.step}
+        color={color}
+        format={(v) => fmtVal(v, field.unit)}
+        onChange={onChange}
+        label={field.label}
+      />
 
-      {/* Slider */}
-      <div className="flex flex-col gap-1">
-        <div className="relative flex items-center" style={{ height: 20 }}>
-          <div className="absolute w-full h-[4px] bg-slate-100 rounded-full" />
-          <div className="absolute h-[4px] rounded-full" style={{ width: `${sliderPct}%`, background: color, opacity: 0.7 }} />
-          <div className="absolute w-[14px] h-[14px] rounded-full ring-2 ring-white shadow-md pointer-events-none z-[2]" style={{ left: `${sliderPct}%`, transform: 'translateX(-50%)', background: color }} />
-          <input type="range" min={field.min} max={field.max} step={field.step} value={value} onChange={e => onChange(parseFloat(e.target.value))} className="absolute inset-0 w-full opacity-0 cursor-pointer" aria-label={field.label} />
+      {/* Delta vs default — shown below picker when dirty */}
+      {isDirty && (
+        <div className={`text-[10px] font-[600] tabular-nums text-center -mt-1 ${delta > 0 ? 'text-emerald-500' : 'text-red-400'}`}>
+          {deltaDisplay} vs default
         </div>
-        <div className="flex justify-between px-0.5">
-          <span className="text-[9px] text-slate-400 tabular-nums">{fmtVal(field.min, field.unit)}</span>
-          <span className="text-[9px] text-slate-400 tabular-nums">{fmtVal(field.max, field.unit)}</span>
-        </div>
+      )}
+
+      {/* Steppers */}
+      <div className="flex items-center justify-between gap-2">
+        <button onClick={() => onChange(clamp(value - field.step))} className="flex-1 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all text-sm font-bold select-none" aria-label={`Decrease ${field.label}`}>−</button>
+        <button
+          onClick={startEdit}
+          className="flex-1 h-8 text-[13px] font-[700] tabular-nums text-center border border-slate-200 rounded-lg bg-white hover:bg-slate-50 transition-colors text-slate-600"
+          title="Click to type a value directly"
+          aria-label={`${field.label}: ${fmtVal(value, field.unit)}. Click to type.`}
+        >
+          {isEditing ? (
+            <input
+              type="number" value={editRaw}
+              onChange={e => setEditRaw(e.target.value)}
+              onBlur={commitEdit}
+              onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') setIsEditing(false) }}
+              autoFocus
+              className="text-[13px] font-[700] tabular-nums text-center w-full border-none outline-none bg-transparent text-slate-900"
+              aria-label={`Enter ${field.label} value`}
+            />
+          ) : fmtVal(value, field.unit)}
+        </button>
+        <button onClick={() => onChange(clamp(value + field.step))} className="flex-1 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all text-sm font-bold select-none" aria-label={`Increase ${field.label}`}>+</button>
       </div>
 
       {/* WACC signal */}
