@@ -899,7 +899,14 @@ export async function GET(req: NextRequest) {
               operatingIncome: ebitRaw != null ? ebitRaw / 1e6 * fxRate : null,
               ebitda: ebitdaRaw != null ? ebitdaRaw / 1e6 * fxRate : null,
               netIncome: s.netIncome != null ? (s.netIncome as number) / 1e6 * fxRate : null,
-              eps: s.dilutedEps != null ? (s.dilutedEps as number) : null,
+              // Yahoo incomeStatementHistory omits dilutedEps — derive from netIncome / shares when missing
+              eps: (() => {
+                if (s.dilutedEps != null) return (s.dilutedEps as number)
+                const ni = s.netIncome as number | null
+                const sh = (fin.defaultKeyStatistics?.sharesOutstanding as number | undefined) ?? 0
+                if (ni != null && ni !== 0 && sh > 0) return ni / sh  // raw dollars: ni is in full $, sh is full shares
+                return null
+              })(),
               operatingMargin: null as number | null,
               taxRate: taxRawYahoo != null ? Math.max(0.05, Math.min(0.40, taxRawYahoo)) : null,
               fiscalDate: s.endDate ? new Date(s.endDate).toISOString().split('T')[0] : null,
@@ -1282,6 +1289,60 @@ export async function GET(req: NextRequest) {
       })
       .filter(r => r.pe != null || r.evEbitda != null || r.evRevenue != null)
 
+    // Yahoo-derived historical multiples — computed from price history + income statement rows.
+    // This is the FMP-independent fallback: sH is always available (Yahoo), isHistoricalRows
+    // has a Yahoo fallback (incomeStatementHistory). When FMP quota is exhausted historicalMultiples
+    // will be empty, but this series will still have data.
+    //
+    // Method: find the closing price nearest to each fiscal year-end, then compute:
+    //   P/E  = price / annual EPS   (diluted)
+    //   P/S  = market cap / revenue = (price × shares) / revenue
+    //   EV/Rev ≈ P/S (simplified — omits net debt; sufficient for trend chart)
+    const priceOnDate = (dateStr: string): number | null => {
+      if (!sH.length || !dateStr) return null
+      const target = new Date(dateStr).getTime()
+      let best: { date: string; close: number } | null = null
+      let bestDiff = Infinity
+      for (const p of sH) {
+        const diff = Math.abs(new Date(p.date).getTime() - target)
+        if (diff < bestDiff) { bestDiff = diff; best = p }
+      }
+      // Reject if nearest price is more than 30 trading days away (~45 calendar days)
+      return best && bestDiff < 45 * 86400_000 ? best.close : null
+    }
+
+    // sharesOutstanding in millions (already computed above)
+    const sharesForRatio = (fin.defaultKeyStatistics?.sharesOutstanding as number | null | undefined) != null
+      ? (fin.defaultKeyStatistics.sharesOutstanding as number) / 1e6
+      : null
+
+    const historicalMultiplesYahoo = isHistoricalRows
+      .filter(r => !r.isProjected && r.year && r.year.length === 4)
+      .map(r => {
+        const price = priceOnDate(r.fiscalDate ?? `${r.year}-12-31`)
+        const eps   = (r.eps ?? null) as number | null
+        const revM  = (r.revenue ?? null) as number | null
+
+        const pe = (price != null && eps != null && eps > 0)
+          ? clamp(price / eps, 1, 500)
+          : null
+
+        // EV/Revenue ≈ market cap / revenue (simplified, no net-debt adjustment)
+        const evRevenue = (price != null && sharesForRatio != null && revM != null && revM > 0)
+          ? clamp((price * sharesForRatio) / revM, 0.1, 100)
+          : null
+
+        return { fiscalYear: r.year, date: r.fiscalDate ?? `${r.year}-12-31`, pe, evEbitda: null as number | null, evRevenue, ps: null as number | null }
+      })
+      .filter(r => r.pe != null || r.evRevenue != null)
+
+    // Merge: FMP rows take precedence (more accurate); fill gaps from Yahoo-derived rows
+    const fmpFYSet = new Set(historicalMultiples.map(r => r.fiscalYear))
+    const mergedHistoricalMultiples = [
+      ...historicalMultiples,
+      ...historicalMultiplesYahoo.filter(r => !fmpFYSet.has(r.fiscalYear)),
+    ].sort((a, b) => a.fiscalYear.localeCompare(b.fiscalYear))
+
     // Historical FCF for DCF table context (last 3 years)
     const historicalFCF: { year: number; cashFlow: number }[] = cfHistoricalRows
       .filter((r) => r.freeCashFlow != null && !r.isProjected)
@@ -1425,7 +1486,7 @@ export async function GET(req: NextRequest) {
       holdingReturns,
       valuationMethods,
       financialStatements,
-      historicalMultiples,
+      historicalMultiples: mergedHistoricalMultiples,
       keyMetricsQuarterly: fmp.keyMetricsQuarterly,
       incomeStatementQuarterly: fmp.incomeStatementQuarterly,
       ratiosQuarterly: fmp.ratiosQuarterly,
