@@ -573,8 +573,42 @@ export function buildMCInputs(
     ? (cashRaw + snapshot.cashM) / snapshot.sharesM
     : null
 
+  // For financial/fintech companies, operating CF includes customer deposit flows and
+  // credit portfolio expansion — both funding items, not earnings power. Using it as
+  // baseFCF inflates the MC distribution by 5-8×. Use net income × (1 − reinvestmentRate)
+  // as a proxy for equity FCF (FCFE) instead, which is the correct cash flow concept for
+  // a bank or neobank.
+  const companyType = apiData.valuationMethods?.companyType ?? snapshot.companyType ?? 'standard'
+  const FINANCIAL_TYPES = new Set(['financial', 'fintech', 'bdc', 'mreeit', 'reit'])
+  const isFinancialType = FINANCIAL_TYPES.has(companyType)
+  const FINANCIAL_SECTOR_RE = /financ|bank|insur/i
+  const isFinancialSector = FINANCIAL_SECTOR_RE.test(snapshot.sector ?? '')
+
+  let effectiveBaseFCF = snapshot.baseFCF
+  if (isFinancialType || isFinancialSector) {
+    // Net income from quarterly data (sum of last 4 quarters, already in $M in netIncomeDollars)
+    const niM = snapshot.netIncomeDollars != null
+      ? snapshot.netIncomeDollars / 1e6  // netIncomeDollars is in raw $, convert to $M
+      : null
+    // Reinvestment rate: fintech high-growth ~30%, mature financial ~15%
+    const reinvestRate = assumptions.cagr > 0.20 ? 0.30 : 0.15
+    if (niM != null && niM > 0) {
+      effectiveBaseFCF = niM * (1 - reinvestRate)
+    }
+    // Sanity: if the original baseFCF is within 3× of the earnings-based estimate, keep original
+    // (handles cases where Yahoo correctly reports FCF for this company)
+    if (niM != null && niM > 0 && snapshot.baseFCF > 0) {
+      const earningsBased = niM * (1 - reinvestRate)
+      if (snapshot.baseFCF > earningsBased * 3) {
+        effectiveBaseFCF = earningsBased  // original is inflated, use earnings-based
+      } else {
+        effectiveBaseFCF = snapshot.baseFCF  // original looks reasonable, keep it
+      }
+    }
+  }
+
   return {
-    baseFCF:          snapshot.baseFCF,
+    baseFCF:          effectiveBaseFCF,
     wacc:             assumptions.wacc,
     cagr:             assumptions.cagr,
     netMargin:        assumptions.netMargin,

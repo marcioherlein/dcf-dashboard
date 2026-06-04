@@ -202,16 +202,34 @@ function deriveExitPE(
   //   (b) Financial sector company with CAGR > 20% — Yahoo labels neobanks "Banks - Regional"
   //       but their growth trajectory is fundamentally different from a mature bank
   const isFintechIndustry = FINTECH_INDUSTRY_RE.test(industry ?? '')
+  const historicalCagr = data?.cagrAnalysis?.historicalCagr3y ?? 0
+  const blendedCagr    = data?.cagrAnalysis?.blended ?? data?.cagrAnalysis?.analystEstimate1y ?? 0
+  const effectiveCagrForPE = Math.max(historicalCagr, blendedCagr)
   const isHighGrowthFinancial =
     (sector ?? '').toLowerCase().includes('financ') &&
-    (data?.cagrAnalysis?.blended ?? data?.cagrAnalysis?.analystEstimate1y ?? 0) > 0.20
+    effectiveCagrForPE > 0.20
   let finalPE = blended
   let floorNote = ''
   if ((isFintechIndustry || isHighGrowthFinancial) && finalPE < 22) {
     finalPE = 22
     floorNote = isHighGrowthFinancial && !isFintechIndustry
-      ? ` [high-growth fintech floor: 22× — ${((data?.cagrAnalysis?.blended ?? 0) * 100).toFixed(0)}% CAGR in financial sector]`
+      ? ` [high-growth fintech floor: 22× — ${(effectiveCagrForPE * 100).toFixed(0)}% CAGR in financial sector]`
       : ` [fintech floor applied: 22×]`
+  }
+
+  // Phase 1b: Growth premium for high-CAGR fintechs/neobanks.
+  // The sector median P/E (22× floor) prices a mature digital bank. A company growing
+  // 30%+ for 3+ years with expanding margins deserves a growth premium on exit multiple.
+  // Formula: premium = min(15, (CAGR - 0.20) × 50) — adds up to 15× for 50%+ CAGR names.
+  // Only applies when CAGR > 25% and the company is fintech/high-growth financial.
+  // Rationale: StoneCo at maturity 20×, Nubank at maturity with 35%+ CAGR → 30-35×.
+  if ((isFintechIndustry || isHighGrowthFinancial) && effectiveCagrForPE > 0.25) {
+    const growthPremium = Math.min(15, (effectiveCagrForPE - 0.20) * 50)
+    const premiumPE = Math.max(finalPE, sectorPE + growthPremium)
+    if (premiumPE > finalPE) {
+      floorNote += ` [growth premium +${growthPremium.toFixed(0)}× for ${(effectiveCagrForPE * 100).toFixed(0)}% CAGR]`
+      finalPE = premiumPE
+    }
   }
 
   // Phase 2: AI semiconductor premium — high-CAGR semis trade at 30–40×, not the 26× sector median

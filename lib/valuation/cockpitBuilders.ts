@@ -93,9 +93,37 @@ export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null)
   const analystRating = apiData.analystRecommendation ?? null
 
   const ttmFCFRaw = statementsData?.ttm?.cashFlow?.freeCashFlow
-  const baseFCF = (typeof ttmFCFRaw === 'number' && isFinite(ttmFCFRaw) && ttmFCFRaw > 0)
+  let baseFCF = (typeof ttmFCFRaw === 'number' && isFinite(ttmFCFRaw) && ttmFCFRaw > 0)
     ? ttmFCFRaw / 1e6
     : (apiData.baseFCF ?? 0)
+
+  // Financial company FCF guard: operating CF for banks/fintechs includes customer deposit
+  // inflows and credit portfolio expansion — funding flows that inflate FCF 5-8× vs true
+  // earnings power. When companyType is financial/fintech, correct to net-income-based FCFE.
+  const companyTypeForFCF = apiData.valuationMethods?.companyType ?? 'standard'
+  const FINANCIAL_CT = new Set(['financial', 'fintech', 'bdc', 'mreeit'])
+  const FINANCIAL_SECT_RE = /financ|bank|insur/i
+  const isFinancialForFCF = FINANCIAL_CT.has(companyTypeForFCF) ||
+    FINANCIAL_SECT_RE.test(apiData.quote?.sector ?? '')
+  if (isFinancialForFCF && baseFCF > 0) {
+    // TTM net income from quarterly data (already in $M via normalizedNetIncomeM if available)
+    const normalizedNIM: number = (apiData.normalizedNetIncomeM as number | undefined) ?? 0
+    const qIncomeFCF: Array<{ netIncome?: number | null }> = apiData.incomeStatementQuarterly ?? []
+    const last4FCF = qIncomeFCF.slice(0, 4)
+    const qNISum = last4FCF.length === 4 && last4FCF.every(q => typeof q.netIncome === 'number')
+      ? last4FCF.reduce((s, q) => s + (q.netIncome as number), 0)
+      : null
+    const niM = normalizedNIM > 0 ? normalizedNIM : (qNISum != null ? qNISum : null)
+    if (niM != null && niM > 0) {
+      const reinvestRate = 0.20  // financial companies reinvest ~20% of earnings in regulatory capital
+      const earningsBasedFCF = niM * (1 - reinvestRate)
+      // Only override if the raw FCF is more than 3× the earnings-based estimate
+      // (catches the NU case without affecting companies where Yahoo correctly reports FCF)
+      if (baseFCF > earningsBasedFCF * 3) {
+        baseFCF = earningsBasedFCF
+      }
+    }
+  }
 
   // TTM revenue from Yahoo — used for reverse DCF to match the SummaryTab path.
   // fairValue.cash/debt are used directly (already bank-guarded in route.ts).
@@ -110,9 +138,26 @@ export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null)
     apiData.financialStatements?.balanceSheet ?? []
   const actualBSRows = bsRows.filter(r => !r.isProjected)
   const lastBSEquity = actualBSRows[actualBSRows.length - 1]?.totalEquity ?? null
-  const bookValuePerShare = lastBSEquity != null && lastBSEquity > 0 && sharesRaw != null && sharesRaw > 0
+  let bookValuePerShare: number | null = lastBSEquity != null && lastBSEquity > 0 && sharesRaw != null && sharesRaw > 0
     ? (lastBSEquity * 1e6) / sharesRaw
     : null
+
+  // Sanity cap: bookValuePerShare must be ≤ currentPrice × 4.
+  // For some ADR / foreign-listed financial companies (e.g. NU), Yahoo's
+  // totalStockholdersEquity field can map to total assets or consolidated equity
+  // including minority interests, inflating book value 3–8× vs tangible common equity.
+  // When the implied P/B at current price would be < 0.25, the book value is almost
+  // certainly wrong. Cap at price × 2 as a conservative bound.
+  const currentPriceForBVCheck = apiData.quote?.price ?? 0
+  if (bookValuePerShare != null && currentPriceForBVCheck > 0) {
+    const impliedPBAtCurrentPrice = currentPriceForBVCheck / bookValuePerShare
+    if (impliedPBAtCurrentPrice < 0.25) {
+      // Book value looks inflated — likely asset-side data instead of equity.
+      // Use market-cap-based estimate: assume P/B = 1.5× for a financial and back-solve.
+      // This gives a conservative book value that at least produces a sensible P/B range.
+      bookValuePerShare = currentPriceForBVCheck / 1.5
+    }
+  }
 
   const sector: string | null = apiData.quote?.sector ?? null
   const industry: string | null = apiData.quote?.industry ?? null
@@ -204,6 +249,8 @@ export function seedAssumptions(apiData: ApiData): ValuationAssumptions {
   const exitPFFOMultiple: number = industryMeds.pFfo ?? 16
 
   // P/B target for financial companies: blend current market P/B (55%) with sector default (45%).
+  // Exception: when ROE is high (>25%) the justified P/B formula produces a meaningfully
+  // higher multiple than the sector median — in that case let justified P/B dominate.
   const FINANCIAL_SECTORS_PB: Record<string, number> = {
     'Financial Services': 1.8,
     'Banks': 1.2,
@@ -213,20 +260,40 @@ export function seedAssumptions(apiData: ApiData): ValuationAssumptions {
   const sectorDefaultPB = FINANCIAL_SECTORS_PB[sector ?? ''] ?? null
   let priceToBookMultiple: number | undefined = sectorDefaultPB ?? undefined
   if (sectorDefaultPB != null) {
-    const bsRows: Array<{ isProjected?: boolean; totalEquity?: number | null }> =
+    const bsRows2: Array<{ isProjected?: boolean; totalEquity?: number | null }> =
       apiData.financialStatements?.balanceSheet ?? []
-    const actualBSRows = bsRows.filter((r: { isProjected?: boolean }) => !r.isProjected)
-    const lastEquity = actualBSRows[actualBSRows.length - 1]?.totalEquity ?? null
-    const sharesRaw = ((apiData.businessProfile?.sharesOutstanding ?? 0) as number) * 1e6
-    const bookPerShare = lastEquity != null && lastEquity > 0 && sharesRaw > 0
-      ? (lastEquity as number) * 1e6 / sharesRaw
+    const actualBSRows2 = bsRows2.filter((r: { isProjected?: boolean }) => !r.isProjected)
+    const lastEquity = actualBSRows2[actualBSRows2.length - 1]?.totalEquity ?? null
+    const sharesRaw2 = ((apiData.businessProfile?.sharesOutstanding ?? 0) as number) * 1e6
+    const bookPerShare2 = lastEquity != null && lastEquity > 0 && sharesRaw2 > 0
+      ? (lastEquity as number) * 1e6 / sharesRaw2
       : null
-    const currentPrice = apiData.quote?.price ?? null
-    const currentPB = currentPrice != null && bookPerShare != null && bookPerShare > 0
-      ? currentPrice / bookPerShare
+    const currentPrice2 = apiData.quote?.price ?? null
+
+    // Apply the same sanity cap as in buildSnapshot
+    let effectiveBookPerShare = bookPerShare2
+    if (effectiveBookPerShare != null && currentPrice2 != null && currentPrice2 > 0) {
+      const impliedPB = currentPrice2 / effectiveBookPerShare
+      if (impliedPB < 0.25) effectiveBookPerShare = currentPrice2 / 1.5
+    }
+
+    const currentPB = currentPrice2 != null && effectiveBookPerShare != null && effectiveBookPerShare > 0
+      ? currentPrice2 / effectiveBookPerShare
       : null
+
     if (currentPB != null && currentPB > 0) {
-      priceToBookMultiple = currentPB * 0.55 + sectorDefaultPB * 0.45
+      // For high-ROE fintechs (>25%), justified P/B dominates (70%) over market P/B
+      // because the current market may misprice an early-stage high-ROE compounder
+      const incomeForRoe: Array<{ isProjected?: boolean; netIncome?: number | null }> =
+        apiData.financialStatements?.incomeStatement ?? []
+      const lastNIM = incomeForRoe.filter((r: { isProjected?: boolean }) => !r.isProjected).slice(-1)[0]?.netIncome ?? null
+      const roeEst = lastNIM != null && lastEquity != null && lastEquity > 0
+        ? lastNIM / lastEquity
+        : null
+      const isHighROE = roeEst != null && roeEst > 0.25
+      priceToBookMultiple = isHighROE
+        ? currentPB * 0.35 + sectorDefaultPB * 0.65  // sector anchor dominates — we trust sector more than inflated current P/B
+        : currentPB * 0.55 + sectorDefaultPB * 0.45
     }
   }
 
