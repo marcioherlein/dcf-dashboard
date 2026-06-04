@@ -1,9 +1,8 @@
 import * as React from "react";
 
-// ─── Mark SVG — exact geometry from insic-app-icon.svg ───────────────────────
-// Source viewBox 256×256, content centred within a 216×216 inset.
-// We expose the mark alone (no rounded-rect background) in a 124×160 viewport
-// for use in the lockup (aspect ratio preserved from the original design).
+// ─── Mark SVG — geometry pixel-measured from chosen icon PNG ─────────────────
+// Source: 437529c9-…-2.png (1254×1254), normalized to 256×256 viewBox.
+// InsicMark clips to mark-only viewport (dot + bars, no card background).
 
 type MarkProps = {
   className?: string;
@@ -15,29 +14,29 @@ type MarkProps = {
 function InsicMark({ className, style, mono = false, title = "insic" }: MarkProps) {
   const olive = mono ? "#FFFFFF" : "#5F790B";
   const ink   = mono ? "#FFFFFF" : "#06101F";
+  // Tight viewport: dot top=68.8, bars bottom=173.3 → height=104.5, center x≈127.7
+  // ViewBox: x=93 y=68 w=70 h=106  (content + small padding)
   return (
     <svg
       className={className}
       style={style}
-      viewBox="0 0 124 160"
+      viewBox="93 68 70 106"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
       {title && <title>{title}</title>}
-      <circle cx="62.6" cy="24.2" r="12.15" fill={olive} />
-      <rect x="36.95" y="53.9"  width="51.3" height="9.45" rx="1.69" fill={ink} />
-      <rect x="36.95" y="72.8"  width="51.3" height="9.45" rx="1.69" fill={ink} />
-      <rect x="36.95" y="91.7"  width="62.1" height="9.45" rx="1.69" fill={ink} />
-      <rect x="36.95" y="110.6" width="56.7" height="9.45" rx="1.69" fill={ink} />
-      <rect x="36.95" y="129.5" width="45.9" height="9.45" rx="1.69" fill={ink} />
+      <circle cx="127.7" cy="79.9"  r="11.1"  fill={olive} />
+      <rect   x="110.4"  y="102.5" width="34.7" height="9.4" rx="1.69" fill={ink} />
+      <rect   x="110.4"  y="118.2" width="28.4" height="9.4" rx="1.69" fill={ink} />
+      <rect   x="110.4"  y="133.7" width="37.2" height="9.2" rx="1.65" fill={ink} />
+      <rect   x="110.4"  y="149.2" width="36.3" height="9.2" rx="1.65" fill={ink} />
+      <rect   x="110.4"  y="164.1" width="28.4" height="9.2" rx="1.65" fill={ink} />
     </svg>
   );
 }
 
-// ─── App icon SVG — rounded-rect background + mark, matches generated PNGs ───
-// Use this for <link rel="icon"> contexts or anywhere you want the full icon
-// tile. Matches the geometry of the PIL-rendered insic-app-icon-*.png files.
+// ─── App icon SVG — rounded-rect card + mark, matches the chosen PNG ─────────
 
 export type InsicAppIconProps = {
   size?: number;
@@ -58,20 +57,20 @@ export function InsicAppIcon({ size = 40, className, style }: InsicAppIconProps)
       aria-hidden="true"
     >
       <defs>
-        <filter id="icon-shadow" x="-10%" y="-10%" width="120%" height="120%">
-          <feDropShadow dx="0" dy="1" stdDeviation="3" floodColor="#06101F" floodOpacity="0.13" />
+        <filter id="icon-shadow" x="-15%" y="-15%" width="130%" height="130%">
+          <feDropShadow dx="0" dy="2" stdDeviation="5" floodColor="#06101F" floodOpacity="0.14" />
         </filter>
       </defs>
-      {/* Rounded-rect white card with subtle shadow */}
-      <rect x="20" y="20" width="216" height="216" rx="54" fill="#FFFFFF" filter="url(#icon-shadow)" />
+      {/* Rounded-rect white card — inset 53px, rx=54 matches source */}
+      <rect x="53" y="53" width="150" height="150" rx="38" fill="#FFFFFF" filter="url(#icon-shadow)" />
       {/* Olive dot */}
-      <circle cx="127.6" cy="78.2" r="12.15" fill="#5F790B" />
-      {/* 5 navy bars */}
-      <rect x="101.95" y="107.9"  width="51.3" height="9.45" rx="1.69" fill="#06101F" />
-      <rect x="101.95" y="126.8"  width="51.3" height="9.45" rx="1.69" fill="#06101F" />
-      <rect x="101.95" y="145.7"  width="62.1" height="9.45" rx="1.69" fill="#06101F" />
-      <rect x="101.95" y="164.6"  width="56.7" height="9.45" rx="1.69" fill="#06101F" />
-      <rect x="101.95" y="183.5"  width="45.9" height="9.45" rx="1.69" fill="#06101F" />
+      <circle cx="127.7" cy="79.9"  r="11.1"  fill="#5F790B" />
+      {/* 5 navy bars — pixel-measured from 437529c9 PNG */}
+      <rect x="110.4" y="102.5" width="34.7" height="9.4" rx="1.69" fill="#06101F" />
+      <rect x="110.4" y="118.2" width="28.4" height="9.4" rx="1.69" fill="#06101F" />
+      <rect x="110.4" y="133.7" width="37.2" height="9.2" rx="1.65" fill="#06101F" />
+      <rect x="110.4" y="149.2" width="36.3" height="9.2" rx="1.65" fill="#06101F" />
+      <rect x="110.4" y="164.1" width="28.4" height="9.2" rx="1.65" fill="#06101F" />
     </svg>
   );
 }
@@ -193,22 +192,21 @@ function InsicWordmark({
 
 // ─── Logo lockup ─────────────────────────────────────────────────────────────
 //
-// ALIGNMENT MATH (mark bars 54–139 in 160px viewBox, center = 60.3% of markH):
-//   bars_center = 0.6031 × markH
-//   cap_center from span top (with line-height:1) = 0.7103 × fs
-//   translateY = bars_center − cap_center
+// Mark viewBox "93 68 70 106": bars span rows 34.5–105.3 (66.9% of 106),
+// bars center at 69.9 (65.9% of 106). Dot bottom at 23.0/106 of markH.
 //
-// Size table — markH chosen so mark bars ≈ Inter cap-height at that fs.
+// markH sized so dot has ≥2px clearance above translateY (text top).
+// Iterate: clearance = ty − (23/106 × markH) ≥ 2.
 
 export type LogoSize = "sm" | "md" | "lg";
 
 const SIZES: Record<LogoSize, { markH: number; wSize: WordmarkSize; ty: number; gap: number }> = {
-  //  bars_ctr = 0.6031×36=21.7  cap_ctr = 0.7103×18=12.8  ty=8.9≈9
-  sm: { markH: 36, wSize: "sm", ty: 9,  gap: 6 },
-  //  bars_ctr = 0.6031×38=22.9  cap_ctr = 0.7103×20=14.2  ty=8.7≈9
-  md: { markH: 38, wSize: "md", ty: 9,  gap: 8 },
-  //  bars_ctr = 0.6031×44=26.5  cap_ctr = 0.7103×24=17.0  ty=9.5≈10
-  lg: { markH: 44, wSize: "lg", ty: 10, gap: 9 },
+  // sm: markH=34 markW=22 ty=10  dot_bot=7.4 clearance=2.6px
+  sm: { markH: 34, wSize: "sm", ty: 10, gap: 7  },
+  // md: markH=36 markW=24 ty=10  dot_bot=7.8 clearance=2.2px
+  md: { markH: 36, wSize: "md", ty: 10, gap: 8  },
+  // lg: markH=44 markW=29 ty=12  dot_bot=9.5 clearance=2.5px
+  lg: { markH: 44, wSize: "lg", ty: 12, gap: 10 },
 };
 
 export type InsicLogoLockupProps = {
