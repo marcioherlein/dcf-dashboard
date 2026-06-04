@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getFmpScreener, type FmpScreenerResult } from '@/lib/data/fmpClient'
+import { SCREENER_UNIVERSE } from '@/lib/data/screenerUniverse'
 
-// Screener results cached 30 minutes — data doesn't change that often and this
-// is an expensive query (up to 200 tickers).
-export const revalidate = 1800
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const YahooFinance = require('yahoo-finance2').default
+const yf = new YahooFinance({ suppressNotices: ['ripHistorical', 'yahooSurvey'] })
+
+// Server-side cache — avoid re-fetching 200 quotes on every request within the TTL
+let _cache: { data: ScreenerStock[]; ts: number } | null = null
+const CACHE_TTL = 15 * 60 * 1000 // 15 minutes
 
 export interface ScreenerStock {
   ticker: string
@@ -14,101 +18,105 @@ export interface ScreenerStock {
   marketCap: number | null
   beta: number | null
   dividendYield: number | null
-  exchange: string | null
+  exchange: 'NYSE' | 'NASDAQ' | null
+  trailingPE: number | null
 }
 
-// FMP's sector names to normalize against
-const ALLOWED_SECTORS = new Set([
-  'Technology',
-  'Healthcare',
-  'Financial Services',
-  'Consumer Cyclical',
-  'Consumer Defensive',
-  'Communication Services',
-  'Industrials',
-  'Energy',
-  'Basic Materials',
-  'Real Estate',
-  'Utilities',
-])
+// Market cap tier boundaries
+const CAP_BOUNDS: Record<string, { min?: number; max?: number }> = {
+  mega:  { min: 200e9 },
+  large: { min: 10e9,  max: 200e9 },
+  mid:   { min: 2e9,   max: 10e9  },
+  small: { min: 300e6, max: 2e9   },
+}
 
-function toScreenerStock(r: FmpScreenerResult): ScreenerStock {
-  // Compute dividend yield: lastAnnualDividend / price
-  const divYield =
-    r.lastAnnualDividend != null && r.lastAnnualDividend > 0 && r.price != null && r.price > 0
-      ? r.lastAnnualDividend / r.price
-      : null
+async function fetchAllQuotes(): Promise<ScreenerStock[]> {
+  const now = Date.now()
+  if (_cache && now - _cache.ts < CACHE_TTL) return _cache.data
 
-  return {
-    ticker: r.symbol,
-    name: r.companyName,
-    sector: r.sector ?? null,
-    industry: r.industry ?? null,
-    price: r.price ?? null,
-    marketCap: r.marketCap ?? null,
-    beta: r.beta ?? null,
-    dividendYield: divYield,
-    exchange: r.exchangeShortName ?? r.exchange ?? null,
+  const tickers = SCREENER_UNIVERSE.map(t => t.ticker)
+  const metaMap = new Map(SCREENER_UNIVERSE.map(t => [t.ticker, t]))
+
+  // Batch in groups of 100 to stay within Yahoo limits
+  const BATCH = 100
+  const batches: string[][] = []
+  for (let i = 0; i < tickers.length; i += BATCH) batches.push(tickers.slice(i, i + BATCH))
+
+  // Fields to request — explicit list avoids the schema validation error for unknown fields
+  const QUOTE_FIELDS = [
+    'regularMarketPrice', 'marketCap', 'trailingPE', 'dividendYield',
+    'beta', 'exchange', 'longName', 'shortName',
+  ] as const
+
+  const results: ScreenerStock[] = []
+  for (const batch of batches) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const quotes: any[] = await yf.quote(batch, { fields: QUOTE_FIELDS }, { validateResult: false })
+      for (const q of (Array.isArray(quotes) ? quotes : [])) {
+        const meta = metaMap.get(q.symbol)
+        if (!meta) continue
+
+        const divYield = (q.dividendYield != null && q.dividendYield > 0)
+          ? q.dividendYield / 100  // Yahoo returns e.g. 0.35 meaning 0.35% → store as 0.0035
+          : null
+
+        results.push({
+          ticker:       q.symbol,
+          name:         q.longName ?? q.shortName ?? meta.name,
+          sector:       meta.sector,
+          industry:     null,
+          price:        q.regularMarketPrice ?? null,
+          marketCap:    q.marketCap ?? null,
+          beta:         q.beta ?? null,
+          dividendYield: divYield,
+          exchange:     meta.exchange,
+          trailingPE:   q.trailingPE ?? null,
+        })
+      }
+    } catch (err) {
+      console.error('[screener] batch quote error:', err)
+    }
   }
+
+  // Sort by market cap desc
+  results.sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0))
+  _cache = { data: results, ts: now }
+  return results
 }
 
 export async function GET(req: NextRequest) {
   const params = req.nextUrl.searchParams
-
   const sector    = params.get('sector') || undefined
-  const capTier   = params.get('capTier') || undefined   // mega | large | mid | small
-  const dividends = params.get('dividends') === '1'      // dividend payers only
-  const exchange  = (params.get('exchange') as 'NYSE' | 'NASDAQ' | undefined) || undefined
-
-  // Market cap bounds by tier
-  let marketCapMoreThan: number | undefined
-  let marketCapLowerThan: number | undefined
-  if (capTier === 'mega')  { marketCapMoreThan = 200_000_000_000 }
-  if (capTier === 'large') { marketCapMoreThan = 10_000_000_000;  marketCapLowerThan = 200_000_000_000 }
-  if (capTier === 'mid')   { marketCapMoreThan = 2_000_000_000;   marketCapLowerThan = 10_000_000_000 }
-  if (capTier === 'small') { marketCapLowerThan = 2_000_000_000;  marketCapMoreThan = 300_000_000 }
+  const capTier   = params.get('capTier') || undefined
+  const dividends = params.get('dividends') === '1'
+  const exchange  = params.get('exchange') || undefined
 
   try {
-    // Run two queries in parallel when no exchange filter — NYSE + NASDAQ combined
-    const exchanges: Array<'NYSE' | 'NASDAQ'> = exchange
-      ? [exchange]
-      : ['NYSE', 'NASDAQ']
+    const all = await fetchAllQuotes()
 
-    const results = await Promise.all(
-      exchanges.map(ex =>
-        getFmpScreener({
-          exchange: ex,
-          sector: sector && ALLOWED_SECTORS.has(sector) ? sector : undefined,
-          marketCapMoreThan,
-          marketCapLowerThan,
-          dividendMoreThan: dividends ? 0 : undefined,
-          limit: 200,
-        }).catch(() => [] as FmpScreenerResult[])
-      )
-    )
+    let filtered = all
+    if (sector)              filtered = filtered.filter(s => s.sector === sector)
+    if (exchange && exchange !== 'all') filtered = filtered.filter(s => s.exchange === exchange)
+    if (dividends)           filtered = filtered.filter(s => s.dividendYield != null && s.dividendYield > 0)
 
-    const combined = results.flat()
-
-    // Deduplicate by ticker (NYSE + NASDAQ can overlap for dual-listed stocks)
-    const seen = new Set<string>()
-    const deduped: ScreenerStock[] = []
-    for (const r of combined) {
-      if (!seen.has(r.symbol) && r.isActivelyTrading && !r.isEtf) {
-        seen.add(r.symbol)
-        deduped.push(toScreenerStock(r))
-      }
+    if (capTier && CAP_BOUNDS[capTier]) {
+      const { min, max } = CAP_BOUNDS[capTier]
+      filtered = filtered.filter(s => {
+        if (s.marketCap == null) return false
+        if (min != null && s.marketCap < min) return false
+        if (max != null && s.marketCap >= max) return false
+        return true
+      })
     }
 
-    // Sort by market cap descending (largest first) as default
-    deduped.sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0))
-
-    return NextResponse.json(deduped, {
-      headers: { 'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=3600' },
+    return NextResponse.json(filtered, {
+      headers: { 'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=1800' },
     })
   } catch (err) {
     console.error('[/api/screener]', err)
     return NextResponse.json(
-      { error: 'Screener data unavailable. FMP may be temporarily down.' },
+      { error: 'Screener data unavailable. Please try again in a moment.' },
       { status: 503 }
     )
   }

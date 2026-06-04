@@ -42,7 +42,7 @@ const EXCHANGES = [
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type SortKey = 'name' | 'marketCap' | 'price' | 'beta' | 'dividendYield' | 'sector'
+type SortKey = 'name' | 'marketCap' | 'price' | 'beta' | 'dividendYield' | 'sector' | 'trailingPE'
 type SortDir = 'asc' | 'desc'
 
 interface Filters {
@@ -90,8 +90,9 @@ function SkeletonRow({ index }: { index: number }) {
       </td>
       <td className="px-4 py-3.5"><div className="h-3.5 bg-slate-100 rounded w-20 ml-auto" /></td>
       <td className="px-4 py-3.5"><div className="h-3.5 bg-slate-100 rounded w-16 ml-auto" /></td>
-      <td className="px-4 py-3.5"><div className="h-3.5 bg-slate-100 rounded w-10 ml-auto" /></td>
-      <td className="px-4 py-3.5"><div className="h-3.5 bg-slate-100 rounded w-12 ml-auto" /></td>
+      <td className="px-4 py-3.5 hidden sm:table-cell"><div className="h-3.5 bg-slate-100 rounded w-12 ml-auto" /></td>
+      <td className="px-4 py-3.5 hidden sm:table-cell"><div className="h-3.5 bg-slate-100 rounded w-10 ml-auto" /></td>
+      <td className="px-4 py-3.5 hidden md:table-cell"><div className="h-3.5 bg-slate-100 rounded w-12 ml-auto" /></td>
       <td className="px-4 py-3.5 hidden lg:table-cell"><div className="h-3.5 bg-slate-100 rounded w-24 ml-auto" /></td>
     </tr>
   )
@@ -228,12 +229,13 @@ export default function ScreenerPage() {
     return [...result].sort((a, b) => {
       let va: number | string | null
       let vb: number | string | null
-      if (sortKey === 'name')          { va = a.name;          vb = b.name }
-      else if (sortKey === 'sector')   { va = a.sector ?? '';  vb = b.sector ?? '' }
-      else if (sortKey === 'marketCap'){ va = a.marketCap;     vb = b.marketCap }
-      else if (sortKey === 'price')    { va = a.price;         vb = b.price }
-      else if (sortKey === 'beta')     { va = a.beta;          vb = b.beta }
-      else                             { va = a.dividendYield; vb = b.dividendYield }
+      if (sortKey === 'name')           { va = a.name;          vb = b.name }
+      else if (sortKey === 'sector')    { va = a.sector ?? '';  vb = b.sector ?? '' }
+      else if (sortKey === 'marketCap') { va = a.marketCap;     vb = b.marketCap }
+      else if (sortKey === 'price')     { va = a.price;         vb = b.price }
+      else if (sortKey === 'beta')      { va = a.beta;          vb = b.beta }
+      else if (sortKey === 'trailingPE'){ va = (a as any).trailingPE; vb = (b as any).trailingPE }
+      else                              { va = a.dividendYield; vb = b.dividendYield }
 
       if (typeof va === 'string' && typeof vb === 'string') {
         return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va)
@@ -431,9 +433,10 @@ export default function ScreenerPage() {
                       </span>
                     </th>
                     <SortTh label="Market Cap" sortKey="marketCap" active={sortKey === 'marketCap'} dir={sortDir} onClick={toggleSort} />
-                    <SortTh label="Price"      sortKey="price"     active={sortKey === 'price'}     dir={sortDir} onClick={toggleSort} />
-                    <SortTh label="Beta"       sortKey="beta"      active={sortKey === 'beta'}       dir={sortDir} onClick={toggleSort} />
-                    <SortTh label="Div. Yield" sortKey="dividendYield" active={sortKey === 'dividendYield'} dir={sortDir} onClick={toggleSort} />
+                    <SortTh label="Price"      sortKey="price"     active={sortKey === 'price'}     dir={sortDir} onClick={toggleSort} className="hidden sm:table-cell" />
+                    <SortTh label="P/E"        sortKey="trailingPE" active={sortKey === 'trailingPE'} dir={sortDir} onClick={toggleSort} className="hidden sm:table-cell" />
+                    <SortTh label="Beta"       sortKey="beta"      active={sortKey === 'beta'}       dir={sortDir} onClick={toggleSort} className="hidden md:table-cell" />
+                    <SortTh label="Div. Yield" sortKey="dividendYield" active={sortKey === 'dividendYield'} dir={sortDir} onClick={toggleSort} className="hidden md:table-cell" />
                     <SortTh label="Sector" sortKey="sector" active={sortKey === 'sector'} dir={sortDir} onClick={toggleSort} className="hidden lg:table-cell text-left" />
                   </tr>
                 </thead>
@@ -444,7 +447,7 @@ export default function ScreenerPage() {
 
                   {!loading && displayed.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-5 py-14 text-center">
+                      <td colSpan={7} className="px-5 py-14 text-center">
                         <p className="text-[14px] font-medium text-slate-700 mb-1">No stocks match your filters</p>
                         <p className="text-[13px] text-slate-400 mb-4">Try broadening your sector, cap tier, or removing the dividend filter.</p>
                         <button
@@ -490,12 +493,24 @@ export default function ScreenerPage() {
                       </td>
 
                       {/* Price */}
-                      <td className="px-4 py-3.5 text-right">
+                      <td className="px-4 py-3.5 text-right hidden sm:table-cell">
                         <span className="text-[13px] font-mono text-slate-700 tabular-nums">{fmtPrice(stock.price)}</span>
                       </td>
 
+                      {/* P/E */}
+                      <td className="px-4 py-3.5 text-right hidden sm:table-cell">
+                        <span className={`text-[13px] font-mono tabular-nums ${
+                          (stock as any).trailingPE == null ? 'text-slate-400' :
+                          (stock as any).trailingPE > 40 ? 'text-orange-600' :
+                          (stock as any).trailingPE < 15 ? 'text-emerald-600' :
+                          'text-slate-700'
+                        }`}>
+                          {(stock as any).trailingPE != null ? `${(stock as any).trailingPE.toFixed(1)}×` : '—'}
+                        </span>
+                      </td>
+
                       {/* Beta */}
-                      <td className="px-4 py-3.5 text-right">
+                      <td className="px-4 py-3.5 text-right hidden md:table-cell">
                         <span className={`text-[13px] font-mono tabular-nums ${
                           stock.beta == null ? 'text-slate-400' :
                           stock.beta > 1.5 ? 'text-orange-600' :
@@ -507,7 +522,7 @@ export default function ScreenerPage() {
                       </td>
 
                       {/* Dividend yield */}
-                      <td className="px-4 py-3.5 text-right">
+                      <td className="px-4 py-3.5 text-right hidden md:table-cell">
                         <span className={`text-[13px] font-mono tabular-nums ${
                           stock.dividendYield != null && stock.dividendYield > 0
                             ? 'text-emerald-700 font-semibold'

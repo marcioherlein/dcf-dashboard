@@ -22,6 +22,7 @@ export default function NextStepsCard({
   ticker,
   onViewValuation,
   onViewAssumptions,
+  onViewRisks,
 }: NextStepsCardProps) {
   return (
     <div className={cn(CARD, 'p-5 flex flex-col gap-4')}>
@@ -50,6 +51,12 @@ export default function NextStepsCard({
           className="w-full h-11 rounded-[10px] bg-white border border-[#2563EB] text-[#2563EB] hover:bg-[#EFF6FF] text-[14px] font-[650] transition-colors"
         >
           Review assumptions
+        </button>
+        <button
+          onClick={onViewRisks}
+          className="w-full h-10 rounded-[10px] bg-white border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 text-[13px] font-medium transition-colors"
+        >
+          Risks &amp; health scores
         </button>
         <Link
           href={`/compare?a=${ticker}`}
