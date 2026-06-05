@@ -57,12 +57,10 @@ jobs:
 
       - name: Post to X
         env:
-          MODE:             ${{ env.MODE }}
-          TICKER:           ${{ env.TICKER }}
-          DRY_RUN:          ${{ env.DRY_RUN }}
-          APP_URL:          ${{ secrets.APP_URL || 'https://www.intrinsico.app' }}
-          X_API_KEY:        ${{ secrets.X_API_KEY }}
-          X_API_SECRET:     ${{ secrets.X_API_SECRET }}
-          X_ACCESS_TOKEN:   ${{ secrets.X_ACCESS_TOKEN }}
-          X_ACCESS_SECRET:  ${{ secrets.X_ACCESS_SECRET }}
+          MODE:               ${{ env.MODE }}
+          TICKER:             ${{ env.TICKER }}
+          DRY_RUN:            ${{ env.DRY_RUN }}
+          APP_URL:            https://insic.app
+          BUFFER_API_KEY:     ${{ secrets.BUFFER_API_KEY }}
+          BUFFER_CHANNEL_ID:  ${{ secrets.BUFFER_CHANNEL_ID }}
         run: node scripts/x-post.mjs

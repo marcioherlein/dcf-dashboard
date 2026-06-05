@@ -1,5 +1,5 @@
 /**
- * X (Twitter) automated posting script
+ * X (Twitter) automated posting script — posts via Buffer API (GraphQL)
  *
  * Modes (set via MODE env var):
  *   earnings  — "Earnings Tomorrow" preview for stocks reporting next trading day
@@ -7,34 +7,61 @@
  *   news      — Top financial news headline + brief take
  *
  * Usage:
- *   MODE=earnings APP_URL=... X_API_KEY=... node scripts/x-post.mjs
- *   MODE=dcf      TICKER=AAPL APP_URL=... node scripts/x-post.mjs
- *   MODE=news      node scripts/x-post.mjs
+ *   MODE=dcf TICKER=AAPL APP_URL=... BUFFER_API_KEY=... BUFFER_CHANNEL_ID=... node scripts/x-post.mjs
  */
 
-import { TwitterApi } from 'twitter-api-v2'
 import yahooFinance from 'yahoo-finance2'
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const MODE    = process.env.MODE    || 'dcf'
-const TICKER  = process.env.TICKER  || ''
-const APP_URL = (process.env.APP_URL || 'https://www.intrinsico.app').replace(/\/$/, '')
-const DRY_RUN = process.env.DRY_RUN === 'true'
+const MODE              = process.env.MODE              || 'dcf'
+const TICKER            = process.env.TICKER            || ''
+const APP_URL           = (process.env.APP_URL          || 'https://insic.app').replace(/\/$/, '')
+const DRY_RUN           = process.env.DRY_RUN           === 'true'
+const BUFFER_API_KEY    = process.env.BUFFER_API_KEY    || ''
+const BUFFER_CHANNEL_ID = process.env.BUFFER_CHANNEL_ID || ''
 
-// X API credentials (Twitter API v2 OAuth 1.0a) — only initialised when actually posting
-let rwClient = null
-function getXClient() {
-  if (!rwClient) {
-    const xClient = new TwitterApi({
-      appKey:      process.env.X_API_KEY,
-      appSecret:   process.env.X_API_SECRET,
-      accessToken: process.env.X_ACCESS_TOKEN,
-      accessSecret: process.env.X_ACCESS_SECRET,
-    })
-    rwClient = xClient.readWrite
+// ─── Buffer API ───────────────────────────────────────────────────────────────
+
+async function post(text) {
+  if (DRY_RUN) {
+    console.log('--- DRY RUN ---')
+    console.log(text)
+    console.log(`Length: ${text.length}`)
+    return
   }
-  return rwClient
+  const res = await fetch('https://api.buffer.com', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${BUFFER_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      query: `mutation {
+        createPost(input: {
+          channelId: "${BUFFER_CHANNEL_ID}"
+          text: ${JSON.stringify(text)}
+          schedulingType: automatic
+          mode: shareNow
+        }) {
+          ... on PostActionSuccess { post { id status } }
+          ... on InvalidInputError { message }
+          ... on UnauthorizedError { message }
+          ... on LimitReachedError { message }
+          ... on RestProxyError    { message code }
+          ... on UnexpectedError   { message }
+        }
+      }`,
+    }),
+  })
+  const json = await res.json()
+  const result = json?.data?.createPost
+  if (result?.post?.status === 'sent' || result?.post?.status === 'buffer') {
+    console.log(`Posted — Buffer post ID: ${result.post.id}`)
+  } else {
+    const msg = result?.message ?? JSON.stringify(json)
+    throw new Error(`Buffer post failed: ${msg}`)
+  }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -68,22 +95,6 @@ async function fetchValuation(ticker) {
     throw new Error(`API returned ${res.status} for ${ticker}: ${body.slice(0, 200)}`)
   }
   return res.json()
-}
-
-async function post(text) {
-  if (DRY_RUN) {
-    console.log('--- DRY RUN ---')
-    console.log(text)
-    console.log(`Length: ${text.length}`)
-    return
-  }
-  try {
-    const tweet = await getXClient().v2.tweet(text)
-    console.log(`Posted: https://twitter.com/i/web/status/${tweet.data.id}`)
-  } catch (err) {
-    const detail = err.data ? JSON.stringify(err.data) : err.message
-    throw new Error(`Request failed with code ${err.code ?? err.status ?? '?'}: ${detail}`)
-  }
 }
 
 // ─── Mode: earnings ───────────────────────────────────────────────────────────
