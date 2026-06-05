@@ -5,17 +5,15 @@ import { SummaryMockScreen, ValuationMockScreen } from './ProductScreenshots'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
+// Trimmed to 3 most essential bullets per panel
 const SUMMARY_BULLETS = [
-  { label: 'Current Price', desc: 'Live market data' },
+  { label: 'Investment Verdict', desc: 'Undervalued / Fairly Valued / Overvalued' },
   { label: 'Intrinsic Value', desc: 'Blended fair value estimate' },
-  { label: 'Investment Verdict', desc: 'Overvalued / Undervalued / Fair' },
-  { label: 'Reverse DCF', desc: 'Implied annual growth rate' },
-  { label: 'Business Quality', desc: 'A/B/C graded signals' },
+  { label: 'Reverse DCF', desc: 'The growth rate the current price implies' },
 ]
 
 const VALUATION_BULLETS = [
   { label: 'Blended Fair Value', desc: 'vs. current price' },
-  { label: 'Model Breakdown', desc: 'DCF + Multiples with weights' },
   { label: 'Scenario Range', desc: 'Bear / Base / Bull outcomes' },
   { label: 'Editable Assumptions', desc: 'Growth, margins, WACC, terminal rate' },
 ]
@@ -27,6 +25,7 @@ function AnimatedPanel({
   dotColor,
   title,
   subtitle,
+  pullQuote,
   bullets,
   screenshot,
 }: {
@@ -36,6 +35,7 @@ function AnimatedPanel({
   dotColor: string
   title: string
   subtitle: string
+  pullQuote: string
   bullets: { label: string; desc: string }[]
   screenshot: React.ReactNode
 }) {
@@ -57,7 +57,7 @@ function AnimatedPanel({
       </motion.div>
 
       {/* Bullet list — staggered x slide */}
-      <div className="space-y-2 mb-6">
+      <div className="space-y-2 mb-5">
         {bullets.map((item, i) => (
           <motion.div
             key={item.label}
@@ -67,7 +67,7 @@ function AnimatedPanel({
             className="flex items-start gap-3"
           >
             <div
-              className="mt-0.5 rounded-full shrink-0"
+              className="rounded-full shrink-0"
               style={{ width: '6px', height: '6px', background: dotColor, marginTop: '7px' }}
             />
             <div>
@@ -77,6 +77,17 @@ function AnimatedPanel({
           </motion.div>
         ))}
       </div>
+
+      {/* Pull-quote — user-outcome sentence */}
+      <motion.p
+        className="text-[13px] italic mb-6"
+        style={{ color: '#8A96A8', borderLeft: '2px solid #E3E6E0', paddingLeft: '12px' }}
+        initial={reduced !== false ? {} : { opacity: 0 }}
+        animate={inView ? { opacity: 1 } : {}}
+        transition={{ duration: 0.4, ease: EASE, delay: delay + 0.28 }}
+      >
+        {pullQuote}
+      </motion.p>
 
       {/* Screenshot — Apple-style zoom in from below */}
       <motion.div
@@ -97,10 +108,10 @@ export default function ProductDeepDiveSection() {
   const reduced = useReducedMotion()
 
   return (
-    <section ref={ref} className="overflow-x-hidden" style={{ background: 'white', borderBottom: '1px solid #E2E8F0' }}>
+    <section ref={ref} className="overflow-x-hidden" style={{ background: 'white', borderBottom: '1px solid #E3E6E0' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
 
-        {/* Heading — scale zoom */}
+        {/* Heading */}
         <motion.div
           className="text-center mb-10 sm:mb-16"
           initial={reduced !== false ? {} : { opacity: 0, scale: 0.92, y: 20 }}
@@ -136,6 +147,7 @@ export default function ProductDeepDiveSection() {
             dotColor="#2563EB"
             title="Summary at a glance"
             subtitle="One screen. Price, verdict, implied growth, and quality scores."
+            pullQuote="You know whether the stock is cheap before reading a single analyst note."
             bullets={SUMMARY_BULLETS}
             screenshot={<SummaryMockScreen />}
           />
@@ -143,9 +155,10 @@ export default function ProductDeepDiveSection() {
             inView={inView}
             reduced={reduced}
             delay={0.20}
-            dotColor="#7C3AED"
-            title="Valuation Deep Dive"
+            dotColor="#5F790B"
+            title="Valuation deep dive"
             subtitle="Bull, base, and bear scenarios. Model weights. Editable assumptions."
+            pullQuote="Change one number and see how far the fair value moves. No spreadsheet needed."
             bullets={VALUATION_BULLETS}
             screenshot={<ValuationMockScreen />}
           />

@@ -16,11 +16,19 @@ const FREE_FEATURES = [
 const PRO_FEATURES = [
   'Everything in Free',
   'Full valuation models (DCF, RDCF, Multiples)',
-  'Sensitivity tables & scenarios',
+  'Sensitivity tables and scenarios',
   'Unlimited saved analyses',
   'PDF export',
-  'Portfolio & watchlists',
+  'Portfolio and watchlists',
   'Priority support',
+]
+
+// Four features that differentiate Pro — shown as a quick-diff strip on mobile
+const PRO_DIFF = [
+  'Sensitivity tables',
+  'Unlimited saves',
+  'PDF export',
+  'Price alerts',
 ]
 
 export default function PricingSection() {
@@ -79,7 +87,7 @@ export default function PricingSection() {
               <span className="text-[44px] font-bold text-[#0A1424] leading-none tabular-nums">$0</span>
               <span className="text-[13px] text-[#8A96A8] font-medium">/month</span>
             </div>
-            <p className="text-[12px] text-[#536174] mb-5">No credit card. No time limit. Just analysis.</p>
+            <p className="text-[12px] text-[#536174] mb-5">No credit card required. Free plan never expires.</p>
             <button
               onClick={() => signIn('google')}
               className="w-full rounded-[10px] border border-[#CBD1C4] py-3 text-[13.5px] font-semibold text-[#0A1424] hover:bg-[#F6FAEA] hover:border-[#5F790B] transition-colors mb-5 min-h-[48px]"
@@ -131,8 +139,19 @@ export default function PricingSection() {
           </div>
         </div>
 
+        {/* Pro-only quick-diff strip — helps mobile users see what they get without scanning both cards */}
+        <div className="mt-5 max-w-[680px] mx-auto rounded-[14px] border border-[#BFD2A1] bg-[#F6FAEA] px-5 py-3.5 flex flex-wrap items-center gap-3">
+          <span className="text-[12px] font-bold text-[#5F790B] shrink-0">Pro adds:</span>
+          {PRO_DIFF.map(f => (
+            <span key={f} className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#0A1424] bg-white border border-[#BFD2A1] rounded-full px-3 py-1">
+              <Check size={11} className="text-[#5F790B] shrink-0" strokeWidth={2.5} />
+              {f}
+            </span>
+          ))}
+        </div>
+
         {/* Full comparison link */}
-        <div className="text-center mt-6">
+        <div className="text-center mt-5">
           <Link
             href="/pricing"
             className="text-[13px] font-medium text-[#5F790B] hover:text-[#526A08] hover:underline underline-offset-2 transition-colors"

@@ -669,9 +669,7 @@ export default function LandingHero() {
               className="text-[16px] text-[#36455A] leading-relaxed mb-8"
               style={{ maxWidth: '440px' }}
             >
-              insic helps you value businesses through fair value estimates,
-              market-implied expectations, and transparent assumptions — so you
-              can understand what has to be true before you invest.
+              insic computes a fair value estimate for any stock and shows you what growth rate the current price implies — so you can judge whether the market is right before you commit capital.
             </motion.p>
 
             {/* CTAs */}

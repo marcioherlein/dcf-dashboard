@@ -55,6 +55,11 @@
     scroll-behavior: smooth;
     overflow-x: hidden;
   }
+  /* Anchor scroll offset: compensates for 72px fixed navbar + 16px breathing room */
+  #how-it-works,
+  #pricing {
+    scroll-margin-top: 88px;
+  }
   @media (max-width: 767px) {
     input, select, textarea { font-size: max(16px, 1em); }
   }

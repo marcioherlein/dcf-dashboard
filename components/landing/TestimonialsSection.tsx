@@ -101,7 +101,7 @@ export default function TestimonialsSection() {
               }}
               transition={{
                 duration: 5,
-                repeat: Infinity,
+                repeat: 3,
                 ease: 'easeInOut',
                 repeatType: 'loop',
               }}

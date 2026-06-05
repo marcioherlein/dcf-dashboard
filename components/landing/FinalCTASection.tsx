@@ -19,6 +19,7 @@ export default function FinalCTASection() {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [fetchError, setFetchError] = useState(false)
+  const [noResults, setNoResults] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
   const debounce = useRef<ReturnType<typeof setTimeout>>()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -27,14 +28,31 @@ export default function FinalCTASection() {
   const reduced = useReducedMotion()
 
   useEffect(() => {
-    if (query.length < 1) { setResults([]); setOpen(false); setFetchError(false); return }
+    if (query.length < 1) {
+      setResults([])
+      setOpen(false)
+      setFetchError(false)
+      setNoResults(false)
+      return
+    }
     clearTimeout(debounce.current)
     setFetchError(false)
+    setNoResults(false)
     debounce.current = setTimeout(() => {
       setLoading(true)
       fetch(`/api/search?q=${encodeURIComponent(query)}`)
         .then(r => r.json())
-        .then(d => { setResults(d); setOpen(d.length > 0); setLoading(false) })
+        .then((d: SearchResult[]) => {
+          setResults(d)
+          setLoading(false)
+          if (d.length > 0) {
+            setOpen(true)
+            setNoResults(false)
+          } else {
+            setOpen(false)
+            setNoResults(true)
+          }
+        })
         .catch(() => { setLoading(false); setResults([]); setFetchError(true) })
     }, 300)
     return () => clearTimeout(debounce.current)
@@ -53,8 +71,29 @@ export default function FinalCTASection() {
   }, [open])
 
   const select = (symbol: string) => {
-    setOpen(false); setQuery('')
+    setOpen(false); setQuery(''); setNoResults(false)
     router.push(`/stock/${symbol}`)
+  }
+
+  const handleSubmit = () => {
+    const trimmed = query.trim().toUpperCase()
+    if (!trimmed) return
+    // If there are results and one is active, navigate to it
+    if (activeIndex >= 0 && results[activeIndex]) {
+      select(results[activeIndex].symbol)
+      return
+    }
+    // If results loaded and have content, navigate to the first match or exact match
+    const exact = results.find(r => r.symbol === trimmed)
+    if (exact) { select(exact.symbol); return }
+    if (results.length > 0) { select(results[0].symbol); return }
+    // No results loaded yet — navigate anyway (API will return an error if invalid)
+    // but only if it looks like a plausible ticker (1-5 uppercase letters/digits)
+    if (/^[A-Z0-9]{1,5}$/.test(trimmed)) {
+      select(trimmed)
+    } else {
+      setNoResults(true)
+    }
   }
 
   return (
@@ -94,7 +133,7 @@ export default function FinalCTASection() {
               style={{
                 height: '56px',
                 padding: '0 16px',
-                borderColor: open ? 'rgba(95,121,11,0.55)' : 'rgba(255,255,255,0.10)',
+                borderColor: open ? 'rgba(95,121,11,0.55)' : noResults ? 'rgba(184,69,69,0.45)' : 'rgba(255,255,255,0.10)',
                 boxShadow: open
                   ? '0 0 0 3px rgba(95,121,11,0.12), 0 2px 8px rgba(6,16,31,0.18)'
                   : '0 2px 8px rgba(6,16,31,0.14)',
@@ -107,7 +146,7 @@ export default function FinalCTASection() {
               <input
                 type="text"
                 value={query}
-                onChange={e => { setQuery(e.target.value); setFetchError(false) }}
+                onChange={e => { setQuery(e.target.value); setFetchError(false); setNoResults(false) }}
                 onKeyDown={e => {
                   if (e.key === 'ArrowDown') {
                     e.preventDefault()
@@ -116,13 +155,12 @@ export default function FinalCTASection() {
                     e.preventDefault()
                     setActiveIndex(i => Math.max(i - 1, -1))
                   } else if (e.key === 'Escape') {
-                    setOpen(false)
+                    setOpen(false); setNoResults(false)
                   } else if (e.key === 'Enter') {
-                    if (activeIndex >= 0 && results[activeIndex]) select(results[activeIndex].symbol)
-                    else if (query.trim()) select(query.trim().toUpperCase())
+                    handleSubmit()
                   }
                 }}
-                placeholder="Search any ticker — NVDA, AAPL, MELI..."
+                placeholder="Search any US ticker — NVDA, AAPL, MELI..."
                 className="flex-1 bg-transparent text-[16px] text-[#F8F7F2] placeholder-[#536174] focus:outline-none"
                 style={{ fontWeight: 500 }}
                 role="combobox"
@@ -133,7 +171,7 @@ export default function FinalCTASection() {
                 aria-label="Search for a stock ticker"
               />
               <button
-                onClick={() => { if (query.trim()) select(query.trim().toUpperCase()) }}
+                onClick={handleSubmit}
                 className="shrink-0 rounded-[10px] px-4 text-[13px] font-bold text-white transition-all hover:-translate-y-px active:scale-95 flex items-center gap-1.5"
                 style={{
                   background: '#5F790B',
@@ -146,6 +184,7 @@ export default function FinalCTASection() {
               </button>
             </div>
 
+            {/* Search results dropdown */}
             {open && results.length > 0 && (
               <div
                 id="cta-search-listbox"
@@ -175,6 +214,23 @@ export default function FinalCTASection() {
               </div>
             )}
 
+            {/* No results state */}
+            {noResults && !open && !fetchError && query.length > 0 && (
+              <div
+                className="absolute left-0 right-0 top-full mt-2 rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#111C2E] px-4 py-3 z-50 text-left"
+                role="status"
+                aria-live="polite"
+                style={{ boxShadow: '0 4px 16px rgba(6,16,31,0.24)' }}
+              >
+                <p className="text-[13px] text-[#8A96A8] leading-snug">
+                  No results for &ldquo;{query}&rdquo;.{' '}
+                  <span className="text-[#B6BFCC]">Try NVDA, AAPL, or MELI.</span>
+                </p>
+                <p className="text-[11px] text-[#536174] mt-1">insic covers NYSE and NASDAQ-listed stocks.</p>
+              </div>
+            )}
+
+            {/* Fetch error state */}
             {fetchError && !open && (
               <div
                 className="absolute left-0 right-0 top-full mt-2 rounded-xl border border-[#F0B8B8] bg-[#FCEAEA] px-4 py-2.5 z-50 flex items-center gap-2"
@@ -191,7 +247,7 @@ export default function FinalCTASection() {
 
           {/* Trust bullets */}
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 flex-wrap">
-            {['No signup required', 'Results in seconds', 'Cancel anytime'].map(b => (
+            {['Free to analyze', 'No credit card required', 'Results in seconds'].map(b => (
               <span key={b} className="flex items-center gap-1.5 text-[13px] text-[#8A96A8]">
                 <span
                   className="flex items-center justify-center rounded-full shrink-0"
