@@ -3,6 +3,7 @@
 import { cn } from '@/lib/utils'
 import { fmtPctAbs } from '@/lib/formatters'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
+import { scoreColor, scoreBarColor } from '@/lib/data/etfScore'
 
 interface ETFMetrics {
   peRatio: number | null
@@ -48,22 +49,14 @@ function pbColor(v: number | null): string {
 }
 
 function ScoreGauge({ score, label }: { score: number; label: string }) {
-  const color =
-    score >= 70 ? 'bg-emerald-500' :
-    score >= 50 ? 'bg-blue-500' :
-    score >= 30 ? 'bg-amber-400' :
-    'bg-red-400'
-  const textColor =
-    score >= 70 ? 'text-emerald-600' :
-    score >= 50 ? 'text-blue-600' :
-    score >= 30 ? 'text-amber-600' :
-    'text-red-500'
+  const barColor = scoreBarColor(score)
+  const textColor = scoreColor(score)
   const badgeTextColor = score >= 30 && score < 50 ? 'text-amber-900' : 'text-white'
 
   return (
     <div className="flex flex-col items-center gap-2">
       <div className={cn('text-4xl font-black font-mono', textColor)}>{score}</div>
-      <div className={cn('text-xs font-semibold px-2 py-0.5 rounded-full', color, badgeTextColor)}>{label}</div>
+      <div className={cn('text-xs font-semibold px-2 py-0.5 rounded-full', barColor, badgeTextColor)}>{label}</div>
       <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mt-1">
         <div
           role="progressbar"
@@ -71,7 +64,7 @@ function ScoreGauge({ score, label }: { score: number; label: string }) {
           aria-valuemin={0}
           aria-valuemax={100}
           aria-label="Value Score"
-          className={cn('h-full rounded-full transition-all', color)}
+          className={cn('h-full rounded-full transition-all', barColor)}
           style={{ width: `${score}%` }}
         />
       </div>

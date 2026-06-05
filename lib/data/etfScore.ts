@@ -78,3 +78,10 @@ export function scoreBadge(score: number): string {
   if (score >= 30) return 'bg-amber-100 text-amber-700'
   return 'bg-red-100 text-red-600'
 }
+
+export function scoreBarColor(score: number): string {
+  if (score >= 70) return 'bg-emerald-500'
+  if (score >= 50) return 'bg-blue-500'
+  if (score >= 30) return 'bg-amber-400'
+  return 'bg-red-400'
+}

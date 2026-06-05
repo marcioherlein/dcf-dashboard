@@ -81,7 +81,7 @@ export function ETFSearchBar() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search ETF — SPY, QQQ, VTI, SCHD…"
-          className="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-200 bg-white text-[16px] text-slate-800 placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+          className="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-200 bg-white text-[16px] text-slate-800 placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5F790B] focus:border-transparent transition-all"
         />
         {query && (
           <button

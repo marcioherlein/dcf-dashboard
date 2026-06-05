@@ -161,18 +161,17 @@ export default function ETFTrackerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F1F5F9]">
+    <div className="min-h-screen bg-[#F8F7F2]">
 
       {/* ── Page header ─────────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-slate-200 px-4 sm:px-8 pt-6 pb-5">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-[#5F790B] flex items-center justify-center shrink-0">
               <PieChart size={16} className="text-white" />
             </div>
             <h1
               className="text-2xl font-bold tracking-tight text-slate-900"
-              style={{ fontFamily: 'Space Grotesk, system-ui, sans-serif' }}
             >
               ETF Tracker
             </h1>
@@ -196,7 +195,7 @@ export default function ETFTrackerPage() {
             <p className="text-sm text-slate-500">{batchError}</p>
             <button
               onClick={() => { setBatchFetched(false); fetchBatch() }}
-              className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-500 transition-colors"
+              className="flex items-center gap-1.5 text-sm font-semibold text-[#5F790B] hover:text-[#6F8F12] transition-colors"
             >
               <RefreshCw size={13} /> Retry
             </button>
@@ -210,12 +209,11 @@ export default function ETFTrackerPage() {
           <div className="flex items-center gap-3 mb-5">
             <h2
               className="text-lg font-bold text-slate-900"
-              style={{ fontFamily: 'Space Grotesk, system-ui, sans-serif' }}
             >
               My Watchlist
             </h2>
             {watchlist.length > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-700">
+              <span className="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-full text-[11px] font-bold bg-[#EEF4DD] text-[#5F790B]">
                 {watchlist.length}
               </span>
             )}
@@ -259,7 +257,7 @@ export default function ETFTrackerPage() {
                     <button
                       key={t}
                       onClick={() => handleQuickAdd(t)}
-                      className="px-4 py-2 rounded-lg border border-slate-200 bg-white text-[13px] font-semibold text-slate-600 hover:border-blue-200 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                      className="px-4 py-2 min-h-[44px] rounded-lg border border-slate-200 bg-white text-[13px] font-semibold text-slate-600 hover:border-[#BFD2A1] hover:text-[#5F790B] hover:bg-[#F6FAEA] transition-colors"
                     >
                       + {t}
                     </button>
@@ -271,7 +269,7 @@ export default function ETFTrackerPage() {
         </section>
 
         {/* ── Universe: sectors, geographies, styles, rankings ────────────── */}
-        <div className="border-t border-slate-200 pt-10">
+        <div className="border-t border-slate-200">
           <ETFUniverseSection
             data={batchData}
             watchlist={watchlist}

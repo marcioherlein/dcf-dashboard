@@ -58,7 +58,7 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
             {/* Header row */}
             <div className="relative z-10 flex items-start justify-between gap-1 mb-2">
               <Link href={`/etf/${meta.ticker}`} tabIndex={0} className="min-w-0 flex-1">
-                <span className="block font-mono font-black text-[14px] text-slate-900 leading-none group-hover:text-blue-600 transition-colors">
+                <span className="block font-mono font-black text-[14px] text-slate-900 leading-none group-hover:text-[#5F790B] transition-colors">
                   {meta.ticker}
                 </span>
                 <span className="block text-[11px] text-slate-500 mt-0.5 leading-tight truncate">
@@ -68,10 +68,10 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(meta.ticker) }}
                 className={cn(
-                  'relative z-20 shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 focus-visible:outline-none',
+                  'relative z-20 shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-1 focus-visible:outline-none',
                   isWatchlisted
                     ? 'bg-emerald-100 text-emerald-700'
-                    : 'bg-white/80 text-slate-400 hover:bg-blue-50 hover:text-blue-600 border border-slate-200 hover:border-blue-200',
+                    : 'bg-white/80 text-slate-400 hover:bg-[#F6FAEA] hover:text-[#5F790B] border border-slate-200 hover:border-[#BFD2A1]',
                 )}
                 aria-label={isWatchlisted ? `${meta.ticker} is in your watchlist` : `Add ${meta.ticker} to watchlist`}
               >

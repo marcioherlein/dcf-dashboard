@@ -23,8 +23,8 @@ type FilterGroup = 'all' | ETFGroup
 function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
   if (col !== sortKey) return <ChevronsUpDown size={11} className="text-slate-300" />
   return sortDir === 'desc'
-    ? <ChevronDown size={11} className="text-blue-500" />
-    : <ChevronUp size={11} className="text-blue-500" />
+    ? <ChevronDown size={11} className="text-[#5F790B]" />
+    : <ChevronUp size={11} className="text-[#5F790B]" />
 }
 
 function Leaderboard({
@@ -88,7 +88,7 @@ function Leaderboard({
   return (
     <section>
       <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
-        <h2 className="text-lg font-bold text-slate-900" style={{ fontFamily: 'Space Grotesk, system-ui, sans-serif' }}>
+        <h2 className="text-lg font-bold text-slate-900">
           Rankings
         </h2>
         <div className="flex gap-1.5 flex-wrap">
@@ -97,10 +97,10 @@ function Leaderboard({
               key={f.id}
               onClick={() => setFilter(f.id)}
               className={cn(
-                'px-3 py-1.5 rounded-full text-[12px] font-semibold transition-colors border',
+                'px-3 py-2.5 rounded-full text-[12px] font-semibold transition-colors border',
                 filter === f.id
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white text-slate-500 border-slate-200 hover:border-blue-200 hover:text-blue-600',
+                  ? 'bg-[#5F790B] text-white border-[#5F790B]'
+                  : 'bg-white text-slate-500 border-slate-200 hover:border-[#BFD2A1] hover:text-[#5F790B]',
               )}
             >
               {f.label}
@@ -194,10 +194,10 @@ function Leaderboard({
                         onClick={() => onAdd(meta.ticker)}
                         aria-label={watchlistedTickers.has(meta.ticker) ? `${meta.ticker} in watchlist` : `Add ${meta.ticker} to watchlist`}
                         className={cn(
-                          'min-w-[32px] min-h-[32px] flex items-center justify-center rounded-lg transition-all',
+                          'min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all',
                           watchlistedTickers.has(meta.ticker)
                             ? 'bg-emerald-50 text-emerald-600'
-                            : 'bg-slate-100 text-slate-400 hover:bg-blue-50 hover:text-blue-600',
+                            : 'bg-slate-100 text-slate-400 hover:bg-[#F6FAEA] hover:text-[#5F790B]',
                         )}
                       >
                         {watchlistedTickers.has(meta.ticker) ? <Check size={12} /> : <Plus size={12} />}
@@ -252,7 +252,7 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
       {/* Sectors */}
       <section>
         <div className="mb-3">
-          <h2 className="text-lg font-bold text-slate-900" style={{ fontFamily: 'Space Grotesk, system-ui, sans-serif' }}>
+          <h2 className="text-lg font-bold text-slate-900">
             Sectors
           </h2>
           <p className="text-[13px] text-slate-400 mt-0.5">US SPDR sector ETFs (GICS)</p>
@@ -269,7 +269,7 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
       {/* Geographies */}
       <section>
         <div className="mb-3">
-          <h2 className="text-lg font-bold text-slate-900" style={{ fontFamily: 'Space Grotesk, system-ui, sans-serif' }}>
+          <h2 className="text-lg font-bold text-slate-900">
             Geographies
           </h2>
           <p className="text-[13px] text-slate-400 mt-0.5">Regional and country exposure</p>
@@ -286,7 +286,7 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
       {/* Styles */}
       <section>
         <div className="mb-3">
-          <h2 className="text-lg font-bold text-slate-900" style={{ fontFamily: 'Space Grotesk, system-ui, sans-serif' }}>
+          <h2 className="text-lg font-bold text-slate-900">
             Styles
           </h2>
           <p className="text-[13px] text-slate-400 mt-0.5">Factor tilts and smart beta</p>
