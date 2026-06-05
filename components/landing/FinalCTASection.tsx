@@ -101,8 +101,8 @@ export default function FinalCTASection() {
               }}
             >
               {loading
-                ? <div className="h-4 w-4 rounded-full border-2 border-[#536174] border-t-[#7C9A19] animate-spin shrink-0" />
-                : <Search size={18} className="text-[#536174] shrink-0" />
+                ? <div className="h-4 w-4 rounded-full border-2 border-[#8A96A8] border-t-[#7C9A19] animate-spin shrink-0" />
+                : <Search size={18} className="text-[#8A96A8] shrink-0" />
               }
               <input
                 type="text"
