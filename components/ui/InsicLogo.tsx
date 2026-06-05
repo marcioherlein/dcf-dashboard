@@ -95,53 +95,35 @@ export function InsicAppIcon({ size = 40, className, style }: InsicAppIconProps)
 //   tittle-cy  = (1820+1490)/2 = 1655 above baseline
 //   tittle-r   = (1820-1490)/2 = 165 units
 
-// Precomputed positions at the three sizes, letter-spacing -0.045em:
-// viewBox is sized to exactly fit the text (width × fs), positioned at origin.
+// Precomputed positions at the three sizes, letter-spacing -0.045em.
+// viewBox sized to exactly fit the text advance width.
 
 type WordmarkSize = "sm" | "md" | "lg";
 
-// font-size, and precomputed i-dot cx values (in the SVG coordinate space
-// where 1 unit = 1px, text baseline at y = ascender/UPM × fs)
 const WORDMARK: Record<WordmarkSize, {
-  fs: number;
-  vbW: number;   // viewBox width (≈ total text advance)
-  vbH: number;   // viewBox height = fs (line-height 1)
-  baseline: number;  // y of text baseline
-  cx0: number;   // first i tittle cx
-  cx3: number;   // second i tittle cx
-  cy: number;    // tittle center y
-  tr: number;    // tittle radius (enlarged 40% vs mathematical for visibility)
+  vbW: number;
+  vbH: number;
+  baseline: number;
 }> = (() => {
   const UPM   = 2816;
   const LS_EM = -0.045;
   const ADV   = { i: 556, n: 1260, s: 1012, c: 1016 };
-  const T_CX  = 268;
-  const T_CY_U = (1820 + 1490) / 2;  // 1655 above baseline
-  const T_R_U  = (1820 - 1490) / 2;  // 165 units
   const ASC_U = 2728;
 
   const result: Record<WordmarkSize, ReturnType<typeof compute>> = {} as never;
 
   function compute(fs: number) {
-    const scale  = fs / UPM;
-    const ls_px  = LS_EM * fs;
+    const scale = fs / UPM;
+    const ls_px = LS_EM * fs;
     let x = 0;
-    const starts: number[] = [];
     for (const ch of ["i", "n", "s", "i", "c"] as const) {
-      starts.push(x);
       x += ADV[ch] * scale + ls_px;
     }
-    const totalW = x - ls_px;  // remove trailing ls
-    const baseline = (ASC_U / UPM) * fs;
+    const totalW = x - ls_px;
     return {
-      fs,
       vbW: Math.ceil(totalW + 0.5),
       vbH: fs,
-      baseline,
-      cx0: starts[0] + T_CX * scale,
-      cx3: starts[3] + T_CX * scale,
-      cy:  baseline - T_CY_U * scale,
-      tr:  T_R_U * scale * 1.4,  // 40% larger for visual weight at small sizes
+      baseline: (ASC_U / UPM) * fs,
     };
   }
 
@@ -160,7 +142,7 @@ function InsicWordmark({
   ink: string;
   style?: React.CSSProperties;
 }) {
-  const { vbW, vbH, baseline, cx0, cx3, cy, tr } = WORDMARK[size];
+  const { vbW, vbH, baseline } = WORDMARK[size];
 
   return (
     <svg
@@ -168,7 +150,6 @@ function InsicWordmark({
       style={{ display: "block", overflow: "visible", ...style }}
       aria-hidden="true"
     >
-      {/* Text in Inter — inherits CSS-loaded font from the DOM */}
       <text
         x="0"
         y={baseline}
@@ -183,9 +164,6 @@ function InsicWordmark({
       >
         insic
       </text>
-      {/* Olive tittle dots — drawn on top of the navy text tittles */}
-      <circle cx={cx0} cy={cy} r={tr} fill="#5F790B" />
-      <circle cx={cx3} cy={cy} r={tr} fill="#5F790B" />
     </svg>
   );
 }
