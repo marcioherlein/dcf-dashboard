@@ -152,7 +152,7 @@ async function runEarnings() {
     upsideLine,
     alsoLine,
     '',
-    `Full valuation → ${APP_URL}/?ticker=${ticker}`,
+    `Full valuation → ${APP_URL}/stock/${ticker}`,
     '#Earnings #Stocks #DCF',
   ].filter(Boolean)
 
@@ -208,7 +208,7 @@ async function runDcf() {
     `WACC: ${pct(wacc, false)} · CAGR est: ${pct(cagr, false)} · Terminal g: ${pct(tg, false)}`,
     `Rating: ${grade} ${label}${sector ? ` · ${sector}` : ''}`,
     '',
-    `Full model → ${APP_URL}/?ticker=${ticker}`,
+    `Full model → ${APP_URL}/stock/${ticker}`,
     '#DCF #Valuation #Stocks',
   ]
 
