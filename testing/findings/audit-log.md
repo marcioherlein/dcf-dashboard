@@ -123,8 +123,8 @@ blended << TTM by >3pp, flag as capex-understatement for this company.
 ### Finding 6: taxRate = null in all historical IS rows — FMP field not populating
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** ALL 28 AUDITED TICKERS — 100% reproduction rate across every stock audited
-**Run count:** 28
+**Ticker / Context:** ALL 33 AUDITED TICKERS — 100% reproduction rate
+**Run count:** 33
 **Status:** integrated — 100% reproduction rate; taxRate field is never populated in FMP income statement rows
 
 **Observed:** All 5 MSFT historical IS rows have `taxRate: null`. `buildProjectedRows` falls back to
@@ -161,12 +161,12 @@ is not firing. State the median NI%, TTM NI%, and what the model is projecting v
 
 ---
 
-### Finding 8: PLTR exit P/E of 107× dominated by speculative current multiple
+### Finding 8: Exit P/E inflated by speculative multiples — no guard for profitable high-P/E stocks
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** PLTR — current P/E=155×, sector=32×, blended exitPE=107×
-**Run count:** 1
-**Status:** new
+**Ticker / Context:** PLTR (P/E=155×, exitPE=107×); AMD (P/E=156×, exitPE=106.5×); ARM (P/E=394×, exitPE=252×)
+**Run count:** 3
+**Status:** integrated — check updated in Phase 2B with all three examples; DDOG correctly excluded (nm<15%)
 
 **Observed:** For companies trading at P/E > 3× sector median, the 55% weight on current P/E dominates
 the blend and produces an exit multiple that assumes the speculative premium persists at exit.
@@ -291,9 +291,9 @@ Ensure F4 check note clarifies that ratio > 1.50 for capital-intensive non-finan
 ### Finding 13: deriveNetMargin 'last' picks oldest year — auditBundle IS rows are newest-first
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** SHOP (FY2021 warrant 63.2% -> 55% cap); WDAY (FY2024 GAAP gain 19.0% -> 22%)
-**Run count:** 2
-**Status:** integrated — check added to Phase 2E Net Margin section; fix: sort withBoth by year ascending
+**Ticker / Context:** SHOP (FY2021 warrant 63.2%->55%cap); WDAY (FY2024 19.0%->22%); DDOG (FY2024 6.8%->isHighGrowthSaaS->14.7%)
+**Run count:** 3
+**Status:** integrated — confirmed systemic: 3 independent tickers across 3 different margin paths
 
 **Observed:** SHOP's FY2021 net margin was 63.2% due to warrant fair value adjustments (a one-time non-cash
 gain), not operating earnings. This row is included in the 5-year `withBoth` set used by `deriveNetMargin`.
@@ -370,12 +370,12 @@ vs `app/api/og/square/route.tsx:168–177` (square Blended — has olive bg)
 **Suggested check to add:** In Phase 2C visual inspection, verify the Blended entry in the Model
 Consensus panel has a visually distinct olive-tinted background in BOTH landscape and square cards.
 
-### Finding 15: TY (closed-end fund) classified as alt_asset — model produces FV=0.45 vs price=34.65
+### Finding 15: Closed-end funds classified as alt_asset — DCF near-zero, model misapplied
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** TY (Tri-Continental Corp) — closed-end investment fund, alt_asset type, FV=$0.45/sh
-**Run count:** 1
-**Status:** new
+**Ticker / Context:** TY (Tri-Continental Corp, FV=$0.45 vs $34.65); GAB (Gabelli Equity Trust, FV=$0.90 vs $5.53)
+**Run count:** 2
+**Status:** integrated — check added to Phase 1A companyType section
 
 **Observed:** TY is Tri-Continental Corporation, a closed-end investment fund (ticker NYSE:TY).
 It is classified as `alt_asset` because sector=Financial Services, industry=Asset Management, and the

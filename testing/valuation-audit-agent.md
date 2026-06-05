@@ -108,6 +108,7 @@ State:
 - Whether this classification is financially correct for this company. If not, which type should it be and why?
 - Any edge cases where this company straddles two types (e.g. MELI = growth + fintech hybrid, BABA = standard but China risk-discounted)
 
+- **[Finding 15 — integrated]** When `companyType = alt_asset` and `businessProfile.revenueM < 100`, flag potential closed-end fund misclassification. Closed-end funds (TY=Tri-Continental, GAB=Gabelli Equity Trust) are classified `alt_asset` via the `asset management` regex but their DCF is meaningless (baseFCF ≈ management-fee income, not investment returns). Check `quote.quoteType` — closed-end funds may return `CEF`. FCFF FV will be near-zero; triangulation via multiples is the only useful anchor.
 ### 1B. COCKPIT_WEIGHTS for this companyType
 
 State the active weight table:
@@ -159,7 +160,7 @@ For each seeded assumption, state the actual computed value for this ticker, the
 - Does the AI semi premium fire (38×, gated at revenueM≥100)? Should it?
 - Does the growth premium fire (CAGR>25% + fintech/high-growth-financial)? What value does it add?
 - Is the final `exitPE` financially sensible for this company's maturity and growth stage?
-- **[Finding 8 — integrated]** Compute `currentPE / sectorPE`. If ratio > 3× and company is profitable (net margin > 15%), flag that blended exitPE embeds speculative premium. Check whether `exitPE > sectorPE × 2.5` — if so, the speculative-fade guard should fire but doesn't (e.g. PLTR: 155×/32× = 4.8× → blended 107× embeds AI speculation at exit).
+- **[Finding 8 — integrated]** Compute `currentPE / sectorPE`. If ratio > 3× and company is profitable (net margin > 15%), flag that blended exitPE embeds speculative premium. Check whether `exitPE > sectorPE × 2.5` — if so, the speculative-fade guard should fire but doesn't. Confirmed: PLTR (155×/32× = 4.8×→107×), AMD (156×/28× = 5.6×→106.5×), ARM (394×/28× = 14.1×→252×). Note: TSLA is handled separately by F11 (isAutoIndustry carve-out); DDOG (P/E=600× but netMargin=3.7%<15%) correctly does NOT trigger F8.
 - **[Finding 10 — integrated]** For `Financial Services / Credit Services` companyType (V, MA), verify that `financial` classification is appropriate. Check `businessProfile.fcfMargin` — if > 25%, this is likely a pure payment network (Visa, Mastercard) with no credit risk, classified `financial` via the `credit` keyword regex. P/B and LFCF anchors work reasonably; note as classification edge case. Both V and MA stay `financial` because `historicalCagr3y < 0.20` — the `fintech` fast-lane doesn't apply at current growth rates.
 - **[Finding 11 — integrated]** For Auto Manufacturers, check `exitPE > sectorPE × 20` (e.g. >200× when sectorPE=10). If so, the `isAutoIndustry` carve-out is granting immunity to speculative P/E inflation. The carve-out correctly exempts OEMs from the thin-margin cap for structural reasons, but inadvertently allows arbitrary P/E multiples to pass through uncapped. (e.g. TSLA: P/E=357×, thin-margin cap blocked by isAutoIndustry → exitPE=222×).
 
