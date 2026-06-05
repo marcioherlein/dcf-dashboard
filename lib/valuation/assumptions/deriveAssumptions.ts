@@ -114,10 +114,10 @@ function deriveNetMargin(
     projectedMargin = Math.max(0.01, last * 0.30 + targetMargin * 0.70)
     reason = `high-growth SaaS convergence: ${pct(last)} trailing × 30% + ${pct(targetMargin)} target × 70% → ${pct(projectedMargin)}`
   } else {
-    projectedMargin = Math.max(0.01, Math.min(0.70, last + improvement))
-    // 70% cap: allows ultra-high-margin businesses (NVDA at 55%, Visa at 52%) to project
-    // their actual margins forward. The old 50% cap was silently suppressing NVDA's real
-    // earnings power in the Forward P/E model.
+    projectedMargin = Math.max(0.01, Math.min(0.55, last + improvement))
+    // 55% ceiling: no public company at scale sustains net margin above 55%.
+    // NVDA peaked near 56% in a cyclical peak; Visa/Mastercard ~52%. The old 70% cap
+    // allowed one-time-gain years to anchor margin projections absurdly high.
     reason = isHighGrowth && hasMoat ? `high growth + moat (+3%)`
            : isHighGrowth            ? `improving trend (+1.5%)`
            : hasMoat                 ? `strong gross margin (+1.5%)`
@@ -146,7 +146,11 @@ export function blendExitMultiple(
   const discountedSector = sectorMedian * geoDiscount
 
   if (currentMultiple != null && currentMultiple > 0 && currentMultiple < 500) {
-    let blended = currentMultiple * 0.55 + discountedSector * 0.35
+    // Weights: 55% current + 35% geo-discounted sector = 90% of combined signal.
+    // Normalized to 100%: current×(55/90) + sector×(35/90) = current×0.611 + sector×0.389.
+    // The old 0.55+0.35=0.90 biased all blended multiples ~5% downward by silently discarding
+    // 10% of the signal. Fixed to sum to 1.0 while preserving the 55:35 = 11:7 ratio.
+    let blended = currentMultiple * (55/90) + discountedSector * (35/90)
     blended = Math.min(blended, currentMultiple * 2.5) // cap at 2.5× current (stops wild sector pull-up)
     // Floor: when the current multiple is below 40% of sector median (e.g. DELL at 0.7×
     // EV/Revenue vs 2.0× sector), anchoring the floor to the sector median overstates

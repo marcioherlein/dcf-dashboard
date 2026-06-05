@@ -94,9 +94,12 @@ const INDUSTRY_MEDIANS: Record<string, { pe: number; evEbitda: number; pb: numbe
   'Specialty Retail':                  { pe: 18, evEbitda: 12, pb: 5.0, ps: 1.5, evRevenue: 1.8 },
   'Apparel Retail':                    { pe: 16, evEbitda: 11, pb: 4.5, ps: 1.2, evRevenue: 1.4 },
   'Apparel Manufacturing':             { pe: 18, evEbitda: 12, pb: 4.0, ps: 2.0, evRevenue: 2.2 },
-  // Luxury Goods: Hermès, LVMH, Kering, Richemont — pricing power + scarcity premium justify premium multiples
-  'Luxury Goods':                      { pe: 42, evEbitda: 28, pb: 8.0, ps: 5.0, evRevenue: 8.0 },
-  'Luxury':                            { pe: 42, evEbitda: 28, pb: 8.0, ps: 5.0, evRevenue: 8.0 },
+  // Luxury Goods: sector median ~22-25× P/E (Chinese demand slowdown 2024-2026 compressed multiples).
+  // Hermès trades at 50-55× (outlier); LVMH ~18-20×; Kering ~12×; Tapestry ~12×.
+  // evRevenue: sector median ~3-4×; Hermès is 15×+ but is an extreme outlier.
+  // Previously used pe:42 and evRevenue:8 which reflected Hermès, not the peer median.
+  'Luxury Goods':                      { pe: 25, evEbitda: 18, pb: 6.0, ps: 4.0, evRevenue: 4.0 },
+  'Luxury':                            { pe: 25, evEbitda: 18, pb: 6.0, ps: 4.0, evRevenue: 4.0 },
   'Household & Personal Products':     { pe: 22, evEbitda: 15, pb: 5.0, ps: 2.8, evRevenue: 3.2 },
   'Packaged Foods':                    { pe: 20, evEbitda: 14, pb: 4.5, ps: 2.0, evRevenue: 2.2 },
   'Personal Services':                 { pe: 20, evEbitda: 13, pb: 5.0, ps: 2.0, evRevenue: 2.2 },
@@ -152,6 +155,19 @@ const INDUSTRY_MEDIANS: Record<string, { pe: number; evEbitda: number; pb: numbe
   'Silver Royalty':                    { pe: 32, evEbitda: 22, pb: 3.0, ps: 10.0, evRevenue: 11.0 },
   'Copper':                            { pe: 14, evEbitda: 8,  pb: 1.8, ps: 3.0, evRevenue: 3.5 },
   'Silver':                            { pe: 20, evEbitda: 11, pb: 2.2, ps: 4.5, evRevenue: 5.0 },
+  // Critical minerals — formerly routed to 'default' (pe:20, evEbitda:14) which was wrong
+  // Uranium: supply-constrained; Cameco/Kazatomprom trade at 40-60× P/E
+  'Uranium':                           { pe: 45, evEbitda: 25, pb: 2.5, ps: 8.0, evRevenue: 8.0 },
+  // Coal: structurally declining; ARCH/BTU trade at 5-8× P/E
+  'Coal':                              { pe: 6,  evEbitda: 4,  pb: 1.0, ps: 0.5, evRevenue: 0.8 },
+  // Lithium: high-growth battery materials; ALB/SQM/Arcadium trade at 12-20× through cycle
+  'Lithium':                           { pe: 16, evEbitda: 10, pb: 2.0, ps: 3.0, evRevenue: 3.5 },
+  // Rare earths and other industrial metals
+  'Rare Earth Metals':                 { pe: 20, evEbitda: 12, pb: 2.0, ps: 4.0, evRevenue: 4.5 },
+  'Other Industrial Metals & Mining':  { pe: 14, evEbitda: 8,  pb: 1.5, ps: 2.0, evRevenue: 2.5 },
+  'Nickel':                            { pe: 12, evEbitda: 7,  pb: 1.4, ps: 2.0, evRevenue: 2.2 },
+  'Potash':                            { pe: 13, evEbitda: 8,  pb: 1.6, ps: 1.5, evRevenue: 1.8 },
+  'Agricultural Inputs':               { pe: 13, evEbitda: 8,  pb: 1.6, ps: 1.5, evRevenue: 1.8 },
   'default':                           { pe: 20, evEbitda: 14, pb: 3.0, ps: 2.5, evRevenue: 3.0 },
 }
 

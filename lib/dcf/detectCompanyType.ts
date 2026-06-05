@@ -4,6 +4,9 @@ const MINING_INDUSTRIES = new Set([
   'Gold', 'Silver', 'Copper', 'Coal', 'Uranium',
   'Other Precious Metals & Mining', 'Aluminum', 'Steel',
   'Bitcoin Mining', 'Crypto Mining', 'Digital Mining', 'Blockchain Infrastructure',
+  // Critical minerals — frequently missing from legacy sets
+  'Lithium', 'Nickel', 'Cobalt', 'Potash', 'Iron Ore',
+  'Rare Earth Metals', 'Other Industrial Metals & Mining',
 ])
 
 export function detectCompanyType(input: {
@@ -34,8 +37,11 @@ export function detectCompanyType(input: {
     if (/business development|BDC/i.test(industry)) return 'bdc'
 
     // 1c. Alt-asset managers (Blackstone, KKR, Apollo, Ares): fee-related earnings model
+    // Exclusion: major investment banks (Goldman Sachs, Morgan Stanley) have industry=
+    // "Capital Markets" which matches this regex but they are banks, not alt-asset managers.
+    // Added exclusion for "investment banking" and standalone "securities" industry strings.
     if (/capital market|alternative asset|private equity|asset management/i.test(industry) &&
-        !(/bank|insurance|credit|lending/i.test(industry))) return 'alt_asset'
+        !(/bank|insurance|credit|lending|investment.?bank|securities.?brokerage/i.test(industry))) return 'alt_asset'
 
     // 1d. High-growth financial companies (neobanks, digital lenders, fintech platforms) —
     // Yahoo often labels them "Banks - Regional" or "Credit Services" despite 25%+ revenue CAGR.
@@ -47,7 +53,13 @@ export function detectCompanyType(input: {
   }
 
   // 1b. REIT: P/FFO is the standard method; P/E is distorted by real estate depreciation
-  // Mortgage REITs are routed to 'mreeit' above (financial sector check fires first)
+  // Mortgage REITs: must be checked BEFORE the general REIT check because mREITs in the
+  // Real Estate sector (sector='Real Estate', not Financial Services) would otherwise route
+  // to `reit` instead of `mreeit`. The financial-block mreeit check (line 31) only fires
+  // when the financial regex matches — which requires 'financ/bank/etc' in the haystack.
+  // A company with sector='Real Estate' and industry='REIT—Mortgage' never enters that block.
+  if (/REIT.*mortgage|mortgage.*REIT|mREIT/i.test(industry)) return 'mreeit'
+
   if (/REIT/i.test(industry) || (sector === 'Real Estate' && !/services/i.test(industry))) {
     return 'reit'
   }
@@ -82,7 +94,11 @@ export function detectCompanyType(input: {
   if (/MLP|master limited partnership|royalty trust|income trust/i.test(industry)) {
     return 'dividend'
   }
-  if ((dividendYield ?? 0) > 0.01 && (payoutRatio ?? 0) > 0.20) {
+  // Thresholds raised from 1%/20% to 2.5%/35%: the lower values classify any company
+  // with a token dividend (Microsoft historically at 0.8-1.1%) as a dividend stock,
+  // applying DDM weighting that is inappropriate for growth-oriented businesses.
+  // 2.5% yield + 35% payout matches the analyst definition of a meaningful income stock.
+  if ((dividendYield ?? 0) > 0.025 && (payoutRatio ?? 0) > 0.35) {
     return 'dividend'
   }
 

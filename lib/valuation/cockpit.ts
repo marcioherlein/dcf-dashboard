@@ -34,8 +34,10 @@ function computePBValuation(
   // long-run growth for a European bank (2–3%). That inflated justified P/B from ~1.4× to ~2.9×.
   const roe = snapshot.roe ?? null
   const ke  = assumptions.ke ?? assumptions.wacc * 1.2  // fallback: ke ≈ 120% of wacc
-  const g   = Math.max(0.01, Math.min(assumptions.terminalG, assumptions.wacc - 0.01))
-  // terminalG is the correct long-run growth rate (set by user/model, typically 2–4%).
+  const g   = Math.max(0.01, Math.min(assumptions.terminalG, assumptions.wacc - 0.02))
+  // 200bps minimum spread (wacc-0.02): consistent with the DCF path (line 308).
+  // The old 100bps minimum was too tight — at ke=9.5% and g=9%, the justified P/B
+  // denominator (ke-g)=0.005 made the formula extremely sensitive to small input changes.
   const justifiedPB = roe != null && roe > 0 && ke > g && ke > 0
     ? Math.max(0.8, Math.min(10, (roe - g) / (ke - g)))
     : null
@@ -201,7 +203,10 @@ function getEffectiveWeights(snapshot: CockpitSnapshot): MethodWeights {
     : companyType
 
   const base = COCKPIT_WEIGHTS[effectiveType] ?? COCKPIT_WEIGHTS.standard
-  const isGrowthType = effectiveType === 'growth' || effectiveType === 'startup'
+  // Also include fintech: loss-making fintechs (AFRM, HOOD) with negative EBITDA carry
+  // the full 25% EV/EBITDA weight with no reduction, despite P/B being the adaptive method.
+  // Including fintech in isGrowthType ensures the EBITDA margin guard fires for them too.
+  const isGrowthType = effectiveType === 'growth' || effectiveType === 'startup' || effectiveType === 'fintech'
   if (!isGrowthType) return base
   const revDollars    = snapshot.ltvRevenueDollars
   const ebitdaDollars = snapshot.ttmEbitdaDollars
@@ -216,11 +221,20 @@ function getEffectiveWeights(snapshot: CockpitSnapshot): MethodWeights {
 
 // Dynamic terminal growth fade — scales with initial CAGR so high-growth companies
 // aren't unfairly penalised by fading to a 4% terminal rate that's too low for their stage.
-function dynamicTerminalFade(cagr: number, terminalG: number): number {
-  if (cagr > 0.35) return 0.12
-  if (cagr > 0.25) return 0.08
-  if (cagr > 0.15) return 0.06
-  return terminalG  // stable/mature companies: use user-set terminalG
+// Dynamic terminal growth fade for the Forward P/E method.
+// After a high-growth period, the company's terminal revenue growth converges toward GDP.
+// These rates represent an intermediate plateau, not the final terminal steady-state.
+//
+// BUG GUARD: the fade rates must be capped at (ke - 200bps) to prevent the Gordon Growth
+// denominator in computeForwardPE from going to zero or negative. 12% > WACC for any tech
+// stock with WACC ≤ 12%. The function now accepts wacc/ke so it can enforce a safe spread.
+function dynamicTerminalFade(cagr: number, terminalG: number, ke?: number): number {
+  const keSafe = ke ?? 0.12
+  const maxSafe = Math.max(terminalG, Math.min(keSafe - 0.02, 0.10))  // cap at min(ke-200bps, 10%)
+  if (cagr > 0.35) return Math.min(0.08, maxSafe)  // was 0.12 — no public company terminal at 12%
+  if (cagr > 0.25) return Math.min(0.07, maxSafe)  // was 0.08
+  if (cagr > 0.15) return Math.min(0.05, maxSafe)  // was 0.06
+  return terminalG  // stable/mature: use user-set terminalG
 }
 
 // Fix 1+2+3: runs all 4 methods at given assumptions and returns weighted blended fair value.
@@ -240,7 +254,7 @@ export function computeBlendedFV(
 
   // Phase 1: use Ke (cost of equity) to discount equity-level P/E estimate; apply dynamic fade
   const ke = assumptions.ke ?? assumptions.wacc
-  const termFade = dynamicTerminalFade(assumptions.cagr, assumptions.terminalG)
+  const termFade = dynamicTerminalFade(assumptions.cagr, assumptions.terminalG, assumptions.ke ?? assumptions.wacc * 1.2)
 
   // Pre-revenue biotech exclusion: exitPE === 0 signals the method should be skipped
   const fwdPEValue: number | null = assumptions.exitPE <= 0 ? null : (() => {
@@ -547,7 +561,7 @@ export function computeCockpitOutput(
 
   const revenueBase = snapshot.ttmRevenueDollars ?? snapshot.ltvRevenueDollars
   const ke = assumptions.ke ?? assumptions.wacc
-  const termFade = dynamicTerminalFade(assumptions.cagr, assumptions.terminalG)
+  const termFade = dynamicTerminalFade(assumptions.cagr, assumptions.terminalG, assumptions.ke ?? assumptions.wacc * 1.2)
 
   // 1. Forward P/E (Phase 1: discount at Ke, dynamic terminal fade)
   // Pre-revenue biotech: exitPE === 0 means skip this method entirely
