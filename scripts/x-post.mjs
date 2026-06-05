@@ -22,14 +22,20 @@ const TICKER  = process.env.TICKER  || ''
 const APP_URL = (process.env.APP_URL || 'https://www.intrinsico.app').replace(/\/$/, '')
 const DRY_RUN = process.env.DRY_RUN === 'true'
 
-// X API credentials (Twitter API v2 OAuth 1.0a)
-const xClient = new TwitterApi({
-  appKey:            process.env.X_API_KEY,
-  appSecret:         process.env.X_API_SECRET,
-  accessToken:       process.env.X_ACCESS_TOKEN,
-  accessSecret:      process.env.X_ACCESS_SECRET,
-})
-const rwClient = xClient.readWrite
+// X API credentials (Twitter API v2 OAuth 1.0a) — only initialised when actually posting
+let rwClient = null
+function getXClient() {
+  if (!rwClient) {
+    const xClient = new TwitterApi({
+      appKey:      process.env.X_API_KEY,
+      appSecret:   process.env.X_API_SECRET,
+      accessToken: process.env.X_ACCESS_TOKEN,
+      accessSecret: process.env.X_ACCESS_SECRET,
+    })
+    rwClient = xClient.readWrite
+  }
+  return rwClient
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -71,7 +77,7 @@ async function post(text) {
     console.log(`Length: ${text.length}`)
     return
   }
-  const tweet = await rwClient.v2.tweet(text)
+  const tweet = await getXClient().v2.tweet(text)
   console.log(`Posted: https://twitter.com/i/web/status/${tweet.data.id}`)
 }
 
@@ -184,31 +190,97 @@ async function runDcf() {
   console.log(`Fetching DCF for ${ticker}...`)
   const data = await fetchValuation(ticker)
 
-  const name    = data.businessProfile?.description?.split('.')[0]?.slice(0, 60) ?? ticker
-  const price   = data.quote?.price
-  const fair    = data.valuationMethods?.triangulatedFairValue
-  const upside  = data.valuationMethods?.triangulatedUpsidePct
-  const wacc    = data.wacc?.wacc
-  const cagr    = data.cagr
-  const tg      = data.terminalG
-  const grade   = data.ratings?.overall?.grade ?? ''
-  const label   = data.ratings?.overall?.label ?? ''
-  const sector  = data.quote?.sector ?? ''
+  const price      = data.quote?.price
+  const fair       = data.valuationMethods?.triangulatedFairValue
+  const upside     = data.valuationMethods?.triangulatedUpsidePct
+  const cagr       = data.cagr
+  const grade      = data.ratings?.overall?.grade ?? ''
+  const label      = data.ratings?.overall?.label ?? ''
+  const sector     = data.quote?.sector ?? ''
+
+  // Business quality signals
+  const grossMargin  = data.businessProfile?.grossMargin
+  const netMargin    = data.businessProfile?.netMargin
+  const fcfMargin    = data.businessProfile?.fcfMargin
+  const roic         = data.scores?.roic?.roic
+  const roicSpread   = data.scores?.roic?.spread   // ROIC - WACC: positive = value creation
+  const piotroski    = data.scores?.piotroski?.score
+
+  // Growth signals
+  const hist3y       = data.cagrAnalysis?.historicalCagr3y
+  const analyst1y    = data.cagrAnalysis?.analystEstimate1y
+  const numAnalysts  = data.cagrAnalysis?.numAnalysts ?? 0
+
+  // Analyst consensus
+  const recommendation = data.analystRecommendation ?? ''
+  const analystTarget  = data.quote?.analystTargetMean
+  const forwardPE      = data.analystForwardPE
+
+  // Price performance vs SPY
+  const stock1y = data.holdingReturns?.stock1y
+  const spy1y   = data.holdingReturns?.spy1y
+  const stock5y = data.holdingReturns?.stock5y
+
+  // EPS beat streak
+  const surprises = data.earningsSurprises ?? []
+  const beatCount = surprises.filter(s => (s.surprisePercent ?? 0) > 0).length
 
   if (!price || !fair) throw new Error(`No price/fair value data for ${ticker}`)
 
   const verdictEmoji = upside > 0.15 ? '🟢' : upside > 0 ? '🟡' : '🔴'
   const verdictText  = upside > 0.15 ? 'Undervalued' : upside > -0.05 ? 'Fairly valued' : 'Overvalued'
 
+  // ── Build insight lines (pick the 2 most interesting signals) ──
+
+  const insights = []
+
+  // 1. Growth narrative
+  if (analyst1y != null && numAnalysts >= 3) {
+    const growthVerb = analyst1y >= 0.20 ? 'accelerating' : analyst1y >= 0.08 ? 'growing' : 'slowing'
+    insights.push(`Revenue ${growthVerb} at ${pct(analyst1y, false)}/yr (${numAnalysts} analysts) · model uses ${pct(cagr, false)}`)
+  } else if (hist3y != null) {
+    insights.push(`3Y revenue CAGR: ${pct(hist3y, false)} · model assumes ${pct(cagr, false)} going forward`)
+  }
+
+  // 2. Profitability / moat signal
+  if (roicSpread != null && roicSpread > 0.05) {
+    insights.push(`ROIC ${pct(roic, false)} vs WACC — ${pct(roicSpread, false)} value spread (creating value)`)
+  } else if (grossMargin != null && grossMargin > 0.50) {
+    insights.push(`Gross margin: ${pct(grossMargin, false)} · Net margin: ${netMargin != null ? pct(netMargin, false) : 'N/A'}`)
+  } else if (fcfMargin != null && fcfMargin > 0.15) {
+    insights.push(`FCF margin: ${pct(fcfMargin, false)} — cash-generative business`)
+  }
+
+  // 3. Analyst consensus angle (only if not already 2 insights)
+  if (insights.length < 2 && analystTarget && forwardPE) {
+    const recLabel = recommendation === 'strong_buy' ? 'Strong Buy'
+      : recommendation === 'buy' ? 'Buy'
+      : recommendation === 'hold' ? 'Hold'
+      : recommendation === 'sell' ? 'Sell' : null
+    if (recLabel) insights.push(`Wall St: ${recLabel} · target ${fmt(analystTarget)} · fwd P/E ${forwardPE}×`)
+  }
+
+  // 4. Performance vs SPY fallback
+  if (insights.length < 2 && stock1y != null && spy1y != null) {
+    const vsSpyStr = stock1y > spy1y
+      ? `+${((stock1y - spy1y) * 100).toFixed(0)}pp ahead of S&P 500`
+      : `${((stock1y - spy1y) * 100).toFixed(0)}pp vs S&P 500`
+    insights.push(`1Y return: ${pct(stock1y)} (${vsSpyStr})`)
+  }
+
+  // 5. EPS beats fallback
+  if (insights.length < 2 && beatCount >= 3) {
+    insights.push(`Beat EPS estimates ${beatCount} of last ${surprises.length} quarters`)
+  }
+
+  // ── Assemble tweet ──
   const lines = [
-    `${verdictEmoji} $${ticker} — DCF Snapshot`,
-    `Current: ${fmt(price)} · Fair Value: ${fmt(fair)}`,
-    `Implied upside: ${pct(upside)} (${verdictText})`,
+    `${verdictEmoji} $${ticker} — ${verdictText}`,
+    `Price: ${fmt(price)} · Fair Value: ${fmt(fair)} · Upside: ${pct(upside)}`,
     '',
-    `WACC: ${pct(wacc, false)} · CAGR est: ${pct(cagr, false)} · Terminal g: ${pct(tg, false)}`,
-    `Rating: ${grade} ${label}${sector ? ` · ${sector}` : ''}`,
+    ...insights.slice(0, 2),
     '',
-    `Full model → ${APP_URL}/stock/${ticker}`,
+    `${grade} ${label} · ${sector} · insic.app/stock/${ticker}`,
     '#DCF #Valuation #Stocks',
   ]
 
