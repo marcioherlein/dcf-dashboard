@@ -80,8 +80,8 @@ non-null. If all UFCF = null but netIncome is positive, the EBIT fallback is not
 ### Finding 4: baseFCF sourced from Yahoo fd.freeCashflow (stale/unreliable for large-caps)
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** MSFT (0.52x), UBER (0.67x), NVDA (0.48x), NEE (2.30x) — genuine stale Yahoo; JPM/V = financial false positives; NEE shows F4 upper-bound variant (OCF >> FCF for high-capex utilities)
-**Run count:** 4
+**Ticker / Context:** MSFT (0.52x), UBER (0.67x), NVDA (0.48x), NEE (2.30x), XOM (0.49x), SO (-2.00x), INTC (-1.21x) — Yahoo fd.freeCashflow stale for non-financial companies; negative ratio = actual FCF is negative while Yahoo returns stale positive value
+**Run count:** 7
 **Status:** integrated — check added to Phase 3 UFCF section; NOTE: exclude financial/fintech companyTypes from ratio check (NI-based baseFCF is intentionally different from reported FCF/OCF)
 
 **Observed:** `extractFCFInputs` sets `baseFCF = fd.freeCashflow / 1e6` (Yahoo financialData TTM field).
@@ -123,8 +123,8 @@ blended << TTM by >3pp, flag as capex-understatement for this company.
 ### Finding 6: taxRate = null in all historical IS rows — FMP field not populating
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** ALL 17 AUDITED TICKERS — 100% reproduction rate (NOW, MSFT, MU, ADBE, UBER, PLTR, ASML, NVDA, AMZN, COST, JPM, V, AMD, TSLA, MA, GS, NEE)
-**Run count:** 17
+**Ticker / Context:** ALL 22 AUDITED TICKERS — 100% reproduction rate across every stock audited
+**Run count:** 22
 **Status:** integrated — 100% reproduction rate; taxRate field is never populated in FMP income statement rows
 
 **Observed:** All 5 MSFT historical IS rows have `taxRate: null`. `buildProjectedRows` falls back to
@@ -264,12 +264,12 @@ isAutoIndustry carve-out is allowing a speculative P/E to flow through uncapped.
 
 ---
 
-### Finding 12: NEE (utility) baseFCF inflated 2.3× — Yahoo fd.freeCashflow is OCF-only for high-capex companies
+### Finding 12: NEE/SO (utility) baseFCF inflated — Yahoo fd.freeCashflow ignores full capex for regulated utilities
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** NEE — baseFCF=$7,398M vs actual FY2025 FCF=$3,211M (ratio=2.30×)
-**Run count:** 1
-**Status:** new
+**Ticker / Context:** NEE (2.30×), SO (ratio=-2.00× actual FCF is negative) — Yahoo fd.freeCashflow ignores capital-intensive capex
+**Run count:** 2
+**Status:** integrated — F4 check updated to cover negative-ratio and >1.50 utility variants
 
 **Observed:** For capital-intensive utilities like NEE (capex ~34% of revenue), Yahoo's
 `fd.freeCashflow` returns a value significantly higher than OCF − capex. NEE FY2025 OCF ≈ $9,000M,
@@ -285,5 +285,54 @@ The ratio > 1.50 upper-bound trigger should flag this.
 **Suggested check to add:** F4 check already covers this (ratio=2.30× > 1.50 threshold triggers flag).
 Ensure F4 check note clarifies that ratio > 1.50 for capital-intensive non-financial companies
 (high-capex utilities, oil/gas, mining) is also a Yahoo FCF inflation symptom, not just a ramp.
+
+---
+
+### Finding 13: SHOP netMarginAudit=55% — one-time gain year (FY2021 warrant) distorts deriveNetMargin 'last'
+**Agent:** audit-valuation
+**Date:** 2026-06-05
+**Ticker / Context:** SHOP — FY2021 NI%=63.2% (warrant fair value gain), trailing NI%=10.7%, audit shows 55%
+**Run count:** 1
+**Status:** new
+
+**Observed:** SHOP's FY2021 net margin was 63.2% due to warrant fair value adjustments (a one-time non-cash
+gain), not operating earnings. This row is included in the 5-year `withBoth` set used by `deriveNetMargin`.
+The `assumptionAudit.netMargin` result shows 0.55 (55% cap hit), indicating that `last` in `deriveNetMargin`
+is being resolved to the FY2021 value (63.2%) rather than FY2025 (10.7%). The exact mechanism is unclear
+from API data alone (rows appear oldest-first in the response), but the output is unambiguously wrong:
+55% exit margin is projected instead of ~12.2%, inflating the SHOP forward P/E fair value.
+**Expected:** deriveNetMargin should filter out years where NI% is an obvious outlier (e.g. >50% in a
+non-financial company with GM < 80%) or use a TTM/trailing anchor from `businessProfile.netMargin` as a
+sanity check ceiling. A one-time gain year should not determine the projected exit margin.
+**File / location:** `lib/valuation/assumptions/deriveAssumptions.ts` `deriveNetMargin` ~line 80
+and `lib/valuation/cockpitBuilders.ts` `seedAssumptions` — the ordering of incomeRows passed to deriveNetMargin
+**Suggested check to add:** In Phase 2E, verify `netMarginAudit` ≤ `businessProfile.netMargin × 3`. If
+`netMarginAudit` is > 40% for a non-financial company with trailing NI < 20%, flag that a one-time gain year
+(warrant fair value, asset sale, deferred tax reversal) may be inflating the projected exit margin. Compare
+`assumptionAudit.netMargin` vs `businessProfile.netMargin` directly — a ratio > 3× signals this issue.
+
+---
+
+### Finding 14: MELI grossProfit exactly 49.47% for 4 consecutive years — FMP rounding/stale data
+**Agent:** audit-valuation
+**Date:** 2026-06-05
+**Ticker / Context:** MELI — gp%=49.47% for all 4 historical years (constant to 2 decimal places)
+**Run count:** 1
+**Status:** new
+
+**Observed:** MELI's grossProfit/revenue = 49.47% for FY2022, FY2023, FY2024, and FY2025 (identical to
+two decimal places). Real gross margins fluctuate annually, especially for a high-growth fintech-hybrid
+operating across multiple LatAm markets with volatile currency mixes. This pattern suggests FMP is
+returning the same gross profit value for all years, or the grossProfit field is computed from a
+single blended rate rather than annual statements. Unlike the F1 finding (grossProfit = revenue for
+SaaS tickers), this affects the isHighGrowthSaaS check — MELI's lastGM=49.47% is < 60%, so the
+SaaS convergence path correctly doesn't fire. But the constant value signals data quality issues.
+**Expected:** Annual gross margins should vary year-to-year. For MELI: FY2022 actual ~48%, FY2023 ~50%,
+FY2024 ~52%, FY2025 ~53% based on actual filings.
+**File / location:** `app/api/financials/route.ts` income statement construction — check if FMP's
+`grossProfit` field for MELI is static or derived from a single gross margin ratio.
+**Suggested check to add:** In Phase 1 Data Quality, flag when all historical grossProfit/revenue values
+are identical to 2+ decimal places (excluding the F1 case of >97%). This indicates stale or blended-rate
+gross profit data from FMP that may affect margin convergence paths.
 
 ---
