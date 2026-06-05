@@ -80,8 +80,8 @@ non-null. If all UFCF = null but netIncome is positive, the EBIT fallback is not
 ### Finding 4: baseFCF sourced from Yahoo fd.freeCashflow (stale/unreliable for large-caps)
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** MSFT (0.52x), UBER (0.67x), NVDA (0.48x) — genuine stale Yahoo data; JPM (0.45x) = false positive (financial type uses NI×0.80, not fd.freeCashflow)
-**Run count:** 3
+**Ticker / Context:** MSFT (0.52x), UBER (0.67x), NVDA (0.48x), NEE (2.30x) — genuine stale Yahoo; JPM/V = financial false positives; NEE shows F4 upper-bound variant (OCF >> FCF for high-capex utilities)
+**Run count:** 4
 **Status:** integrated — check added to Phase 3 UFCF section; NOTE: exclude financial/fintech companyTypes from ratio check (NI-based baseFCF is intentionally different from reported FCF/OCF)
 
 **Observed:** `extractFCFInputs` sets `baseFCF = fd.freeCashflow / 1e6` (Yahoo financialData TTM field).
@@ -123,8 +123,8 @@ blended << TTM by >3pp, flag as capex-understatement for this company.
 ### Finding 6: taxRate = null in all historical IS rows — FMP field not populating
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** NOW, MSFT, MU, ADBE, UBER, PLTR, ASML, NVDA, AMZN, COST, JPM, V — ALL NULL (12/12 audited tickers)
-**Run count:** 12
+**Ticker / Context:** ALL 17 AUDITED TICKERS — 100% reproduction rate (NOW, MSFT, MU, ADBE, UBER, PLTR, ASML, NVDA, AMZN, COST, JPM, V, AMD, TSLA, MA, GS, NEE)
+**Run count:** 17
 **Status:** integrated — 100% reproduction rate; taxRate field is never populated in FMP income statement rows
 
 **Observed:** All 5 MSFT historical IS rows have `taxRate: null`. `buildProjectedRows` falls back to
@@ -185,12 +185,12 @@ and company is profitable, flag that blended exitPE embeds speculative premium. 
 
 ---
 
-### Finding 9: JPM FCFF FV $952/sh vs P/B-anchored $223/sh — FCFF is directionally wrong for banks but weight-managed
+### Finding 9: JPM/GS FCFF FV massively inflated for banks/alt-asset managers — wrong model, weight-managed
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** JPM — FCFF model yields $952/sh (EV=$970B); P/B model yields ~$223/sh; Triangulated=$484/sh
-**Run count:** 1
-**Status:** new
+**Ticker / Context:** JPM FCFF=$952/sh (triWt=5%); GS FCFF=$4735/sh (triWt=10%); both use NI as enterprise FCF
+**Run count:** 2
+**Status:** integrated — check added to Phase 3 LFCF Net Income section
 
 **Observed:** For `financial` companyType, FCFF uses `baseFCF = NI × (1−reinvestRate)` as if it
 were an enterprise-level unlevered cash flow. For JPM with NI=$57B and WACC=9.07%, the Gordon
@@ -210,12 +210,12 @@ The triangulation weight of 5% limits impact, but the panel value is misleading.
 
 ---
 
-### Finding 10: V classified as `financial` but operates as a pure payment network (no credit risk)
+### Finding 10: V/MA classified as `financial` but operate as pure payment networks (no credit risk)
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** V — Credit Services, matched by 'credit' in financial regex, CAGR 12% < 20%
-**Run count:** 1
-**Status:** new
+**Ticker / Context:** V — Credit Services (CAGR 12%); MA — Credit Services (CAGR 12%) — both identical pattern
+**Run count:** 2
+**Status:** integrated — check added to Phase 2B Exit P/E section with F10 + F11
 
 **Observed:** Visa is classified as `financial` because `industry='Credit Services'` matches the
 regex `credit` in `detectCompanyType.ts`. However, Visa takes no credit risk, has no loan book, and
@@ -235,5 +235,55 @@ At current classification, the P/B and LFCF anchors actually work well for Visa,
 **Suggested check to add:** For Financial Services / Credit Services companyType, check
 `businessProfile.fcfMargin`. If > 25%, note that this may be a payment network (V, MA)
 classified as financial — verify P/B is appropriate and LFCF dominance is justified.
+
+---
+
+### Finding 11: TSLA exitPE=222× — isAutoIndustry carve-out bypasses speculative P/E guard
+**Agent:** audit-valuation
+**Date:** 2026-06-05
+**Ticker / Context:** TSLA — P/E=357×, sectorPE=10, exitPE=222×
+**Run count:** 1
+**Status:** new
+
+**Observed:** TSLA P/E=357× with Auto Manufacturers sectorPE=10. The thin-margin cap
+(`isThinMargin && isPEElevated && !isAutoIndustry`) would normally cap effectivePE to
+`sectorPE×1.5 = 15` (since trailing NI%=4%<10% = isThinMargin, and 357>10×2=20 = isPEElevated).
+However `!isAutoIndustry = false` because `'Auto Manufacturers'` matches the `isAutoIndustry` regex —
+designed to exempt TSLA/GM/F from the thin-margin cap since auto OEMs have structurally thin margins.
+Result: effectivePE = 357, blend = 357×(55/90) + 10×(35/90) = 222×. An exit P/E of 222× for a
+car manufacturer is absurd regardless of growth story.
+The auto carve-out was correct for capital-structure reasons (OEMs have intentionally thin GAAP margins)
+but it inadvertently grants total immunity to speculative P/E inflation for all Auto industry stocks.
+**Expected:** The `isAutoIndustry` carve-out should only exempt the thin-margin P/E cap, not override
+an absolute ceiling for speculative premiums. A separate hard cap (e.g. `sectorPE × 20` = 200×)
+should be enforced independently of the auto carve-out.
+**File / location:** `lib/valuation/assumptions/deriveAssumptions.ts` `deriveExitPE` ~line 203
+**Suggested check to add:** For Auto Manufacturers, verify exitPE ≤ sectorPE × 25 (e.g. ≤250× for
+sector=10). If exitPE > sectorPE × 20 AND industry matches Auto Manufacturers, flag that the
+isAutoIndustry carve-out is allowing a speculative P/E to flow through uncapped.
+
+---
+
+### Finding 12: NEE (utility) baseFCF inflated 2.3× — Yahoo fd.freeCashflow is OCF-only for high-capex companies
+**Agent:** audit-valuation
+**Date:** 2026-06-05
+**Ticker / Context:** NEE — baseFCF=$7,398M vs actual FY2025 FCF=$3,211M (ratio=2.30×)
+**Run count:** 1
+**Status:** new
+
+**Observed:** For capital-intensive utilities like NEE (capex ~34% of revenue), Yahoo's
+`fd.freeCashflow` returns a value significantly higher than OCF − capex. NEE FY2025 OCF ≈ $9,000M,
+capex ≈ $9,300M → actual FCF = $3,211M (near zero to negative). But `fd.freeCashflow = $7,398M`
+suggests Yahoo is either using a partial period, or is computing FCF without netting all capex.
+This inflates `baseFCF` by 2.30×, affecting the FCFF DCF seed. The FCF margin ceiling
+(`businessProfile.fcfMargin = 0.35` for non-tech) is set to the ceiling value, suggesting
+the cap was involved in limiting it further — yet the final baseFCF is still 2.30× actual.
+For NEE, the DDM anchor (FV $97) is appropriate and less affected, but the FCFF FV ($80) is wrong.
+**Expected:** Same fix as F4: prefer most recent FMP annual FCF or TTM from statementsData.
+The ratio > 1.50 upper-bound trigger should flag this.
+**File / location:** Same as Finding 4: `lib/dcf/projectCashFlows.ts` `extractFCFInputs` ~line 160
+**Suggested check to add:** F4 check already covers this (ratio=2.30× > 1.50 threshold triggers flag).
+Ensure F4 check note clarifies that ratio > 1.50 for capital-intensive non-financial companies
+(high-capex utilities, oil/gas, mining) is also a Yahoo FCF inflation symptom, not just a ramp.
 
 ---

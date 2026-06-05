@@ -160,6 +160,8 @@ For each seeded assumption, state the actual computed value for this ticker, the
 - Does the growth premium fire (CAGR>25% + fintech/high-growth-financial)? What value does it add?
 - Is the final `exitPE` financially sensible for this company's maturity and growth stage?
 - **[Finding 8 — integrated]** Compute `currentPE / sectorPE`. If ratio > 3× and company is profitable (net margin > 15%), flag that blended exitPE embeds speculative premium. Check whether `exitPE > sectorPE × 2.5` — if so, the speculative-fade guard should fire but doesn't (e.g. PLTR: 155×/32× = 4.8× → blended 107× embeds AI speculation at exit).
+- **[Finding 10 — integrated]** For `Financial Services / Credit Services` companyType (V, MA), verify that `financial` classification is appropriate. Check `businessProfile.fcfMargin` — if > 25%, this is likely a pure payment network (Visa, Mastercard) with no credit risk, classified `financial` via the `credit` keyword regex. P/B and LFCF anchors work reasonably; note as classification edge case. Both V and MA stay `financial` because `historicalCagr3y < 0.20` — the `fintech` fast-lane doesn't apply at current growth rates.
+- **[Finding 11 — integrated]** For Auto Manufacturers, check `exitPE > sectorPE × 20` (e.g. >200× when sectorPE=10). If so, the `isAutoIndustry` carve-out is granting immunity to speculative P/E inflation. The carve-out correctly exempts OEMs from the thin-margin cap for structural reasons, but inadvertently allows arbitrary P/E multiples to pass through uncapped. (e.g. TSLA: P/E=357×, thin-margin cap blocked by isAutoIndustry → exitPE=222×).
 
 ### 2C. Exit EV/EBITDA (exitMultiple)
 
@@ -288,6 +290,7 @@ For each row, answer:
 - For financial companies: NI is the anchor concept (not EBIT). Is the medianNetMargin derived correctly from the actual income statement (NI / total banking revenue)?
 - For companies with volatile NI (MU with FY2023 losses, DIS with COVID years): does the TTM-weighted median correctly override the trough?
 - **[Finding 7 — integrated]** When EBIT=null, check median NI% vs TTM NI%. If TTM NI% is more than 2× the median NI% AND median NI% < 10%, the cyclical trough is silently distorting the median without triggering the override guard (which requires `medianNetMargin < 0`). State median NI%, TTM NI%, and the projected NI% to identify if the model is anchoring to a recovery year instead of the current trajectory. (e.g. MU: median=3.1%, TTM=22.8% — model projects 3.1% instead of ~20.5%).
+- **[Finding 9 — integrated]** For `financial`, `fintech`, `alt_asset`, `bdc`, `mreeit` companyTypes: verify that `valuationMethods.models.fcff.fairValue` is NOT used as a primary anchor. If FCFF FV > 2× current price for these types, flag it as directionally wrong (NI or baseFCFE misused as enterprise FCF). The triangulation weights (5% for financial, 10% for alt_asset) limit the damage but the panel value is misleading. Confirmed: JPM FCFF=$952 (+205% vs $312 price), GS FCFF=$4735 (+357% vs $1036 price).
 
 **D&A, CapEx, ΔNWC** — same sources as UFCF. Cross-check that they are identical.
 

@@ -38,7 +38,7 @@ function CompanyLogo({ ticker }: { ticker: string }) {
   if (failed) {
     return (
       <div className="w-6 h-6 rounded-full bg-[#EEF4DD] border border-[#CBD1C4] flex items-center justify-center shrink-0">
-        <span className="text-[9px] font-bold text-[#5F790B] leading-none">{initials}</span>
+        <span className="text-[10px] font-bold text-[#5F790B] leading-none">{initials}</span>
       </div>
     )
   }

@@ -53,9 +53,14 @@
     font-family: var(--font-sans, 'Inter'), system-ui, -apple-system, sans-serif;
     scroll-padding-top: 100px;
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
   @media (max-width: 767px) {
     input, select, textarea { font-size: max(16px, 1em); }
+  }
+  /* iOS Retina legibility floor — text-[9px] renders ~6.75pt on 3x screens */
+  @media (max-width: 767px) {
+    .text-\[9px\] { font-size: 10px; }
   }
 }
 
