@@ -48,10 +48,10 @@ function AnimatedPanel({
         animate={inView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.55, ease: EASE, delay }}
       >
-        <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#0A1424', letterSpacing: '-0.015em', marginBottom: '8px' }}>
+        <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#111111', letterSpacing: '-0.015em', marginBottom: '8px' }}>
           {title}
         </h3>
-        <p className="text-base" style={{ color: '#36455A', lineHeight: 1.6 }}>
+        <p className="text-base" style={{ color: '#555555', lineHeight: 1.6 }}>
           {subtitle}
         </p>
       </motion.div>
@@ -71,8 +71,8 @@ function AnimatedPanel({
               style={{ width: '6px', height: '6px', background: dotColor, marginTop: '7px' }}
             />
             <div>
-              <span className="text-sm font-semibold" style={{ color: '#0A1424' }}>{item.label}</span>
-              <span className="text-sm ml-1.5" style={{ color: '#536174' }}>{item.desc}</span>
+              <span className="text-sm font-semibold" style={{ color: '#111111' }}>{item.label}</span>
+              <span className="text-sm ml-1.5" style={{ color: '#6B6B6B' }}>{item.desc}</span>
             </div>
           </motion.div>
         ))}
@@ -81,7 +81,7 @@ function AnimatedPanel({
       {/* Pull-quote — user-outcome sentence */}
       <motion.p
         className="text-[13px] italic mb-6"
-        style={{ color: '#8A96A8', borderLeft: '2px solid #E3E6E0', paddingLeft: '12px' }}
+        style={{ color: '#9B9B9B', borderLeft: '2px solid #E5E5E5', paddingLeft: '12px' }}
         initial={reduced !== false ? {} : { opacity: 0 }}
         animate={inView ? { opacity: 1 } : {}}
         transition={{ duration: 0.4, ease: EASE, delay: delay + 0.28 }}
@@ -108,7 +108,7 @@ export default function ProductDeepDiveSection() {
   const reduced = useReducedMotion()
 
   return (
-    <section ref={ref} className="overflow-x-hidden" style={{ background: 'white', borderBottom: '1px solid #E3E6E0' }}>
+    <section ref={ref} className="overflow-x-hidden" style={{ background: 'white', borderBottom: '1px solid #E5E5E5' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
 
         {/* Heading */}
@@ -119,7 +119,7 @@ export default function ProductDeepDiveSection() {
           transition={{ duration: 0.65, ease: EASE }}
         >
           <h2
-            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] text-[#0A1424] [text-wrap:balance]"
+            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] text-[#111111] [text-wrap:balance]"
             style={{
               fontWeight: 700,
               lineHeight: 1.1,
@@ -131,7 +131,7 @@ export default function ProductDeepDiveSection() {
           </h2>
           <p
             className="text-base sm:text-[17px] mx-auto"
-            style={{ color: '#36455A', lineHeight: 1.6, maxWidth: '560px' }}
+            style={{ color: '#555555', lineHeight: 1.6, maxWidth: '560px' }}
           >
             insic turns valuation into a structured workflow: price, intrinsic
             value, reverse DCF, business quality, risks, and assumptions.

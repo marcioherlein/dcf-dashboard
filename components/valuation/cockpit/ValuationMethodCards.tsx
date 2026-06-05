@@ -126,7 +126,7 @@ const METHOD_CFG: Record<string, {
 const CONFIDENCE_CHIP = {
   high:   { bg: 'bg-[#E8F7EF] border-[#A7D7C0]', text: 'text-[#11875D]', label: 'High confidence'   },
   medium: { bg: 'bg-[#FFF4DA] border-[#F3D391]', text: 'text-[#B56A00]', label: 'Medium confidence' },
-  low:    { bg: 'bg-[#F1F5F9] border-[#CBD1C4]', text: 'text-[#536174]', label: 'Low confidence'    },
+  low:    { bg: 'bg-[#F1F5F9] border-[#C8C8C8]', text: 'text-[#6B6B6B]', label: 'Low confidence'    },
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

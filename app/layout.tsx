@@ -42,8 +42,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("font-sans", inter.variable, dmMono.variable)}>
       <head>
-        {/* Warm off-white theme color matches --color-bg */}
-        <meta name="theme-color" content="#F8F7F2" />
+        {/* White theme color matches --color-bg */}
+        <meta name="theme-color" content="#FFFFFF" />
       </head>
       <body className="antialiased bg-background">
         <Providers>

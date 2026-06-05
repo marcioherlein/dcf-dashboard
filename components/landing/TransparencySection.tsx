@@ -26,12 +26,12 @@ const FEATURES = [
   },
   {
     Icon: Database,
-    iconColor: '#536174',
-    iconBg: '#F8F7F2',
+    iconColor: '#6B6B6B',
+    iconBg: '#FFFFFF',
     title: 'Public data sources',
     body: 'Financials and estimates from trusted providers.',
     chips: ['FRED', 'Yahoo Finance', 'SEC'],
-    chipStyle: { bg: '#F3F2EC', text: '#536174', border: '#E3E6E0' },
+    chipStyle: { bg: '#F5F5F5', text: '#6B6B6B', border: '#E5E5E5' },
   },
   {
     Icon: TrendingUp,
@@ -50,7 +50,7 @@ export default function TransparencySection() {
   const reduced = useReducedMotion()
 
   return (
-    <section ref={ref} className="overflow-x-hidden" style={{ background: '#F8F7F2', borderBottom: '1px solid #E3E6E0' }}>
+    <section ref={ref} className="overflow-x-hidden" style={{ background: '#FFFFFF', borderBottom: '1px solid #E5E5E5' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-14 sm:py-20">
 
         {/* Header — scale zoom, matches the original pattern */}
@@ -61,12 +61,12 @@ export default function TransparencySection() {
           transition={{ duration: 0.65, ease: EASE }}
         >
           <h2
-            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] text-[#0A1424]"
+            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] text-[#111111]"
             style={{ fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.025em', marginBottom: '12px', textWrap: 'balance' }}
           >
             No black boxes. Every assumption is yours.
           </h2>
-          <p className="text-[15px] sm:text-[17px] text-[#36455A] mx-auto leading-relaxed" style={{ maxWidth: '520px' }}>
+          <p className="text-[15px] sm:text-[17px] text-[#555555] mx-auto leading-relaxed" style={{ maxWidth: '520px' }}>
             We believe investors deserve transparency in how fair value is derived.
             Every model, source, and assumption is visible and adjustable.
           </p>
@@ -82,7 +82,7 @@ export default function TransparencySection() {
                 animate={inView ? { opacity: 1, scale: 1 } : {}}
                 transition={{ duration: 0.5, ease: [0.34, 1, 0.64, 1], delay: 0.1 + i * 0.08 }}
                 whileHover={reduced ? {} : { y: -3, boxShadow: '0 12px 32px rgba(6,16,31,0.09)' }}
-                className="snap-start flex flex-col rounded-[18px] bg-white border border-[#E3E6E0] p-6 transition-shadow w-[72vw] max-w-[280px] sm:w-auto sm:max-w-none"
+                className="snap-start flex flex-col rounded-[18px] bg-white border border-[#E5E5E5] p-6 transition-shadow w-[72vw] max-w-[280px] sm:w-auto sm:max-w-none"
                 style={{ boxShadow: '0 4px 16px rgba(6,16,31,0.05)' }}
               >
                 {/* Icon */}
@@ -94,10 +94,10 @@ export default function TransparencySection() {
                   <Icon size={18} color={iconColor} strokeWidth={1.8} />
                 </div>
 
-                <h3 className="text-[15px] font-bold text-[#0A1424] mb-2 leading-snug" style={{ letterSpacing: '-0.01em' }}>
+                <h3 className="text-[15px] font-bold text-[#111111] mb-2 leading-snug" style={{ letterSpacing: '-0.01em' }}>
                   {title}
                 </h3>
-                <p className="text-[13px] text-[#36455A] leading-relaxed mb-4 flex-1">
+                <p className="text-[13px] text-[#555555] leading-relaxed mb-4 flex-1">
                   {body}
                 </p>
 

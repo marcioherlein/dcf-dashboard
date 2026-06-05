@@ -40,7 +40,7 @@ export default function TestimonialsSection() {
   const reduced = useReducedMotion()
 
   return (
-    <section ref={ref} className="overflow-x-hidden" style={{ background: '#FFFFFF', borderBottom: '1px solid #E3E6E0' }}>
+    <section ref={ref} className="overflow-x-hidden" style={{ background: '#FFFFFF', borderBottom: '1px solid #E5E5E5' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-14 sm:py-20">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 sm:gap-16 items-center">
 
@@ -60,7 +60,7 @@ export default function TestimonialsSection() {
                 <Users size={18} className="text-[#5F790B]" strokeWidth={1.8} />
               </motion.div>
               <div>
-                <h2 className="text-[26px] sm:text-[32px] font-bold text-[#0A1424] leading-tight" style={{ letterSpacing: '-0.025em', textWrap: 'balance' }}>
+                <h2 className="text-[26px] sm:text-[32px] font-bold text-[#111111] leading-tight" style={{ letterSpacing: '-0.025em', textWrap: 'balance' }}>
                   Built for investors who do their own research
                 </h2>
               </div>
@@ -81,7 +81,7 @@ export default function TestimonialsSection() {
                       reduced={reduced}
                     />
                   </div>
-                  <span className="text-[14px] sm:text-[15px] text-[#0A1424] font-medium leading-snug">{v}</span>
+                  <span className="text-[14px] sm:text-[15px] text-[#111111] font-medium leading-snug">{v}</span>
                 </motion.div>
               ))}
             </div>
@@ -94,7 +94,7 @@ export default function TestimonialsSection() {
             transition={{ duration: 0.65, ease: EASE, delay: 0.2 }}
           >
             <motion.div
-              className="rounded-[18px] border border-[#E3E6E0] bg-[#FBFAF7] p-6 sm:p-8 relative"
+              className="rounded-[18px] border border-[#E5E5E5] bg-[#FAFAFA] p-6 sm:p-8 relative"
               style={{ boxShadow: '0 8px 32px rgba(6,16,31,0.07)' }}
               animate={reduced ? {} : {
                 y: [0, -6, 0],
@@ -114,7 +114,7 @@ export default function TestimonialsSection() {
                 <span className="text-[#5F790B] font-bold text-[14px]" style={{ lineHeight: 1 }}>&ldquo;</span>
               </div>
 
-              <p className="text-[15px] sm:text-[16px] text-[#0A1424] leading-relaxed mb-6 pt-2">
+              <p className="text-[15px] sm:text-[16px] text-[#111111] leading-relaxed mb-6 pt-2">
                 Finally, a tool that shows me what the market is pricing in and lets me test my own assumptions.
               </p>
               <div className="flex items-center gap-3">
@@ -122,8 +122,8 @@ export default function TestimonialsSection() {
                   <span className="text-[13px] font-bold text-white leading-none">MT</span>
                 </div>
                 <div>
-                  <p className="text-[13px] font-semibold text-[#0A1424]">Michael T.</p>
-                  <p className="text-[12px] text-[#8A96A8]">Self-directed investor</p>
+                  <p className="text-[13px] font-semibold text-[#111111]">Michael T.</p>
+                  <p className="text-[12px] text-[#9B9B9B]">Self-directed investor</p>
                 </div>
               </div>
             </motion.div>

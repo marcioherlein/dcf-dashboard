@@ -86,15 +86,15 @@ export default function PricingPage() {
   const monthlyPrice = 17
 
   return (
-    <div className="min-h-dvh" style={{ background: '#F8F7F2' }}>
+    <div className="min-h-dvh" style={{ background: '#FFFFFF' }}>
 
       {/* Breadcrumb header */}
-      <div className="bg-white border-b border-[#E3E6E0] px-6 py-3 flex items-center gap-3">
+      <div className="bg-white border-b border-[#E5E5E5] px-6 py-3 flex items-center gap-3">
         <Link href="/" className="flex items-center shrink-0 group" aria-label="insic home">
             <InsicLogoLockup size="sm" />
           </Link>
-        <span className="text-[#B6BFCC]">·</span>
-        <span className="text-[13px] text-[#8A96A8]">Pricing</span>
+        <span className="text-[#C4C4C4]">·</span>
+        <span className="text-[13px] text-[#9B9B9B]">Pricing</span>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -105,11 +105,11 @@ export default function PricingPage() {
             <Zap size={11} />
             Institutional-quality valuation tools for individual investors
           </div>
-          <h1 className="text-[32px] sm:text-[40px] font-bold text-[#0A1424] tracking-tight leading-[1.1]">
+          <h1 className="text-[32px] sm:text-[40px] font-bold text-[#111111] tracking-tight leading-[1.1]">
             Invest with a process,{' '}
             <span className="text-[#5F790B]">not a story.</span>
           </h1>
-          <p className="mt-4 text-[17px] text-[#536174] max-w-xl mx-auto leading-relaxed">
+          <p className="mt-4 text-[17px] text-[#6B6B6B] max-w-xl mx-auto leading-relaxed">
             Start free. Upgrade when you want more depth.
           </p>
         </div>
@@ -118,19 +118,19 @@ export default function PricingPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
 
           {/* Free card */}
-          <div className="rounded-[20px] bg-white border border-[#E3E6E0] p-8 flex flex-col shadow-card">
+          <div className="rounded-[20px] bg-white border border-[#E5E5E5] p-8 flex flex-col shadow-card">
             <div className="mb-6">
-              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#8A96A8] mb-3">Free</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#9B9B9B] mb-3">Free</p>
               <div className="flex items-baseline gap-1">
-                <span className="text-[48px] font-bold text-[#0A1424] leading-none tabular-nums">$0</span>
-                <span className="text-[#8A96A8] text-[14px] font-medium">/ month</span>
+                <span className="text-[48px] font-bold text-[#111111] leading-none tabular-nums">$0</span>
+                <span className="text-[#9B9B9B] text-[14px] font-medium">/ month</span>
               </div>
-              <p className="text-[13px] text-[#536174] mt-2">No credit card. No time limit. Just analysis.</p>
+              <p className="text-[13px] text-[#6B6B6B] mt-2">No credit card. No time limit. Just analysis.</p>
             </div>
 
             <button
               onClick={() => signIn('google')}
-              className="w-full rounded-[10px] border-2 border-[#CBD1C4] py-3.5 text-[13.5px] font-semibold text-[#0A1424] hover:border-[#5F790B] hover:bg-[#F6FAEA] transition-colors mb-8 min-h-[48px]"
+              className="w-full rounded-[10px] border-2 border-[#C8C8C8] py-3.5 text-[13.5px] font-semibold text-[#111111] hover:border-[#5F790B] hover:bg-[#F6FAEA] transition-colors mb-8 min-h-[48px]"
             >
               Get started free →
             </button>
@@ -140,11 +140,11 @@ export default function PricingPage() {
                 <li key={i} className="flex items-start gap-3">
                   {f.included
                     ? <Check size={15} className="text-[#11875D] shrink-0 mt-0.5" strokeWidth={2.5} />
-                    : <X size={15} className="text-[#CBD1C4] shrink-0 mt-0.5" strokeWidth={2} />
+                    : <X size={15} className="text-[#C8C8C8] shrink-0 mt-0.5" strokeWidth={2} />
                   }
                   <span className={cn(
                     'text-[13.5px] leading-snug',
-                    f.included ? 'text-[#0A1424]' : 'text-[#B6BFCC]',
+                    f.included ? 'text-[#111111]' : 'text-[#C4C4C4]',
                   )}>
                     {f.text}
                   </span>
@@ -156,7 +156,7 @@ export default function PricingPage() {
           {/* Pro card — ink background with olive accents */}
           <div
             className="rounded-[20px] p-8 flex flex-col relative overflow-hidden"
-            style={{ background: '#0A1424' }}
+            style={{ background: '#111111' }}
           >
             <div className="absolute top-5 right-5 rounded-full bg-[#5F790B] text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1">
               Most Popular
@@ -166,9 +166,9 @@ export default function PricingPage() {
               <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#EEF4DD] mb-3">Pro</p>
               <div className="flex items-baseline gap-1">
                 <span className="text-[48px] font-bold text-white leading-none tabular-nums">${monthlyPrice}</span>
-                <span className="text-[#8A96A8] text-[14px] font-medium">/ month</span>
+                <span className="text-[#9B9B9B] text-[14px] font-medium">/ month</span>
               </div>
-              <p className="text-[#536174] text-[13px] mt-2">Cancel anytime. No contracts.</p>
+              <p className="text-[#6B6B6B] text-[13px] mt-2">Cancel anytime. No contracts.</p>
             </div>
 
             <a
@@ -177,7 +177,7 @@ export default function PricingPage() {
             >
               Get early access →
             </a>
-            <p className="text-center text-[12px] text-[#536174] mb-3">Have an access code? Redeem it to unlock Pro.</p>
+            <p className="text-center text-[12px] text-[#6B6B6B] mb-3">Have an access code? Redeem it to unlock Pro.</p>
 
             <ul className="space-y-3 flex-1">
               {PRO_FEATURES.map((f, i) => {
@@ -185,7 +185,7 @@ export default function PricingPage() {
                 return (
                   <li key={i} className="flex items-start gap-3">
                     <Icon size={14} className="text-[#7C9A19] shrink-0 mt-0.5" strokeWidth={2} />
-                    <span className="text-[13.5px] text-[#B6BFCC] leading-snug">{f.text}</span>
+                    <span className="text-[13.5px] text-[#C4C4C4] leading-snug">{f.text}</span>
                   </li>
                 )
               })}
@@ -194,53 +194,53 @@ export default function PricingPage() {
         </div>
 
         {/* Data sources / trust bar */}
-        <div className="rounded-[16px] bg-white border border-[#E3E6E0] px-6 sm:px-8 py-6 mb-16 text-center shadow-card">
-          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#8A96A8] mb-4">Powered by public data</p>
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] font-medium text-[#536174]">
+        <div className="rounded-[16px] bg-white border border-[#E5E5E5] px-6 sm:px-8 py-6 mb-16 text-center shadow-card">
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#9B9B9B] mb-4">Powered by public data</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] font-medium text-[#6B6B6B]">
             <span>Yahoo Finance</span>
-            <span className="hidden sm:inline text-[#E3E6E0]">·</span>
+            <span className="hidden sm:inline text-[#E5E5E5]">·</span>
             <span>Financial Modeling Prep</span>
-            <span className="hidden sm:inline text-[#E3E6E0]">·</span>
+            <span className="hidden sm:inline text-[#E5E5E5]">·</span>
             <span>FRED (Federal Reserve)</span>
-            <span className="hidden sm:inline text-[#E3E6E0]">·</span>
+            <span className="hidden sm:inline text-[#E5E5E5]">·</span>
             <span>Damodaran (NYU Stern)</span>
           </div>
-          <p className="mt-4 text-[11px] text-[#8A96A8] max-w-lg mx-auto leading-relaxed">
+          <p className="mt-4 text-[11px] text-[#9B9B9B] max-w-lg mx-auto leading-relaxed">
             Not financial advice. Fair value estimates are model outputs based on public data and stated assumptions — not guarantees of future returns.
           </p>
         </div>
 
         {/* Feature comparison table */}
         <div className="mb-16">
-          <h2 className="text-[22px] sm:text-[26px] font-bold text-[#0A1424] text-center mb-8 tracking-tight">
+          <h2 className="text-[22px] sm:text-[26px] font-bold text-[#111111] text-center mb-8 tracking-tight">
             Full feature comparison
           </h2>
 
           {/* Mobile: card-per-tier */}
           <div className="sm:hidden space-y-4">
             {(['Free', 'Pro'] as const).map((tier) => (
-              <div key={tier} className="rounded-[16px] bg-white border border-[#E3E6E0] overflow-hidden shadow-card">
-                <div className="px-5 py-3 border-b border-[#E3E6E0] bg-[#FBFAF7]">
+              <div key={tier} className="rounded-[16px] bg-white border border-[#E5E5E5] overflow-hidden shadow-card">
+                <div className="px-5 py-3 border-b border-[#E5E5E5] bg-[#FAFAFA]">
                   <span className={cn(
                     'text-[10px] font-bold uppercase tracking-[0.08em]',
-                    tier === 'Pro' ? 'text-[#5F790B]' : 'text-[#8A96A8]',
+                    tier === 'Pro' ? 'text-[#5F790B]' : 'text-[#9B9B9B]',
                   )}>{tier}</span>
                 </div>
-                <ul className="divide-y divide-[#F3F2EC]">
+                <ul className="divide-y divide-[#F5F5F5]">
                   {COMPARISON_ROWS.map((row, i) => {
                     const val = tier === 'Free' ? row.free : row.pro
                     return (
                       <li key={i} className="flex items-center justify-between px-5 py-3 gap-3">
-                        <span className="text-[13px] text-[#0A1424] leading-snug">{row.label}</span>
+                        <span className="text-[13px] text-[#111111] leading-snug">{row.label}</span>
                         <span className="shrink-0">
                           {val === true  && <Check size={15} className="text-[#11875D]" strokeWidth={2.5} />}
-                          {val === false && <X    size={15} className="text-[#CBD1C4]" strokeWidth={2} />}
+                          {val === false && <X    size={15} className="text-[#C8C8C8]" strokeWidth={2} />}
                           {typeof val === 'string' && (
                             <span className={cn(
                               'text-[11px] font-bold rounded-full px-2 py-0.5',
                               tier === 'Pro'
                                 ? 'text-[#5F790B] bg-[#EEF4DD]'
-                                : 'text-[#536174] bg-[#F3F2EC]',
+                                : 'text-[#6B6B6B] bg-[#F5F5F5]',
                             )}>{val}</span>
                           )}
                         </span>
@@ -253,32 +253,32 @@ export default function PricingPage() {
           </div>
 
           {/* Desktop: comparison table */}
-          <div className="hidden sm:block rounded-[16px] bg-white border border-[#E3E6E0] overflow-hidden shadow-card">
+          <div className="hidden sm:block rounded-[16px] bg-white border border-[#E5E5E5] overflow-hidden shadow-card">
             <table className="w-full text-[13px]">
               <thead>
-                <tr className="border-b border-[#E3E6E0] bg-[#FBFAF7]">
-                  <th className="text-left px-6 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#8A96A8] w-1/2">Feature</th>
-                  <th className="text-center px-4 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#8A96A8]">Free</th>
+                <tr className="border-b border-[#E5E5E5] bg-[#FAFAFA]">
+                  <th className="text-left px-6 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#9B9B9B] w-1/2">Feature</th>
+                  <th className="text-center px-4 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#9B9B9B]">Free</th>
                   <th className="text-center px-4 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#5F790B]">Pro</th>
                 </tr>
               </thead>
               <tbody>
                 {COMPARISON_ROWS.map((row, i) => (
                   <tr key={i} className={cn(
-                    'border-b border-[#F3F2EC] last:border-0',
-                    i % 2 === 0 ? 'bg-white' : 'bg-[#FBFAF7]',
+                    'border-b border-[#F5F5F5] last:border-0',
+                    i % 2 === 0 ? 'bg-white' : 'bg-[#FAFAFA]',
                   )}>
-                    <td className="px-6 py-3 text-[#0A1424]">{row.label}</td>
+                    <td className="px-6 py-3 text-[#111111]">{row.label}</td>
                     <td className="px-4 py-3 text-center">
                       {row.free === true  && <Check size={15} className="text-[#11875D] mx-auto" strokeWidth={2.5} />}
-                      {row.free === false && <X    size={15} className="text-[#CBD1C4] mx-auto" strokeWidth={2} />}
+                      {row.free === false && <X    size={15} className="text-[#C8C8C8] mx-auto" strokeWidth={2} />}
                       {typeof row.free === 'string' && (
-                        <span className="text-[11px] font-bold text-[#536174] bg-[#F3F2EC] rounded-full px-2 py-0.5">{row.free}</span>
+                        <span className="text-[11px] font-bold text-[#6B6B6B] bg-[#F5F5F5] rounded-full px-2 py-0.5">{row.free}</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
                       {row.pro === true  && <Check size={15} className="text-[#11875D] mx-auto" strokeWidth={2.5} />}
-                      {row.pro === false && <X    size={15} className="text-[#CBD1C4] mx-auto" strokeWidth={2} />}
+                      {row.pro === false && <X    size={15} className="text-[#C8C8C8] mx-auto" strokeWidth={2} />}
                       {typeof row.pro === 'string' && (
                         <span className="text-[11px] font-bold text-[#5F790B] bg-[#EEF4DD] rounded-full px-2 py-0.5">{row.pro}</span>
                       )}
@@ -292,7 +292,7 @@ export default function PricingPage() {
 
         {/* FAQ */}
         <div className="mb-16">
-          <h2 className="text-[22px] sm:text-[26px] font-bold text-[#0A1424] text-center mb-8 tracking-tight">
+          <h2 className="text-[22px] sm:text-[26px] font-bold text-[#111111] text-center mb-8 tracking-tight">
             Frequently asked questions
           </h2>
           <div className="space-y-3 max-w-2xl mx-auto">
@@ -303,11 +303,11 @@ export default function PricingPage() {
         </div>
 
         {/* Final CTA */}
-        <div className="rounded-[20px] p-8 sm:p-10 text-center" style={{ background: '#0A1424' }}>
+        <div className="rounded-[20px] p-8 sm:p-10 text-center" style={{ background: '#111111' }}>
           <h2 className="text-[22px] sm:text-[26px] font-bold text-white mb-3 tracking-tight">
             Know what has to be true before you buy.
           </h2>
-          <p className="text-[#8A96A8] mb-7 text-[14px]">
+          <p className="text-[#9B9B9B] mb-7 text-[14px]">
             A first-pass valuation in seconds. Go deeper when it matters.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -333,20 +333,20 @@ export default function PricingPage() {
 function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="rounded-[12px] bg-white border border-[#E3E6E0] overflow-hidden">
+    <div className="rounded-[12px] bg-white border border-[#E5E5E5] overflow-hidden">
       <button
         onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-[#FBFAF7] transition-colors min-h-[52px]"
+        className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-[#FAFAFA] transition-colors min-h-[52px]"
       >
-        <span className="text-[14px] font-semibold text-[#0A1424] text-balance">{q}</span>
-        <span className={cn('text-[#8A96A8] transition-transform shrink-0 ml-4', open && 'rotate-180')}>
+        <span className="text-[14px] font-semibold text-[#111111] text-balance">{q}</span>
+        <span className={cn('text-[#9B9B9B] transition-transform shrink-0 ml-4', open && 'rotate-180')}>
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
         </span>
       </button>
       {open && (
-        <div className="px-5 pb-5 text-[13.5px] text-[#536174] leading-relaxed border-t border-[#E3E6E0]">
+        <div className="px-5 pb-5 text-[13.5px] text-[#6B6B6B] leading-relaxed border-t border-[#E5E5E5]">
           <div className="pt-3">{a}</div>
         </div>
       )}

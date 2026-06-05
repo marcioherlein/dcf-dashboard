@@ -40,12 +40,12 @@ export default function PaywallModal({ gate, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative w-full max-w-sm bg-white border border-[#E3E6E0] rounded-2xl shadow-2xl p-8"
+        className="relative w-full max-w-sm bg-white border border-[#E5E5E5] rounded-2xl shadow-2xl p-8"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-[#8A96A8] hover:text-[#536174] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-[#F3F2EC]"
+          className="absolute top-4 right-4 text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-[#F5F5F5]"
           aria-label="Close"
         >
           <X size={18} />
@@ -56,16 +56,16 @@ export default function PaywallModal({ gate, onClose }: Props) {
           <Lock className="h-7 w-7 text-[#5F790B]" />
         </div>
 
-        <h2 id={titleId} className="text-lg font-bold text-[#0A1424] leading-snug">
+        <h2 id={titleId} className="text-lg font-bold text-[#111111] leading-snug">
           {config.label} is a Pro feature
         </h2>
-        <p className="mt-2 text-sm text-[#536174] leading-relaxed">
+        <p className="mt-2 text-sm text-[#6B6B6B] leading-relaxed">
           {config.description}
         </p>
 
         <ul className="mt-5 space-y-3">
           {PRO_BULLETS.map(({ Icon, text }, i) => (
-            <li key={i} className="flex items-center gap-3 text-sm text-[#0A1424]">
+            <li key={i} className="flex items-center gap-3 text-sm text-[#111111]">
               <div className="w-7 h-7 rounded-lg bg-[#EEF4DD] flex items-center justify-center shrink-0">
                 <Icon size={14} className="text-[#5F790B]" />
               </div>
@@ -85,7 +85,7 @@ export default function PaywallModal({ gate, onClose }: Props) {
 
         <button
           onClick={onClose}
-          className="mt-3 w-full text-center text-[12px] text-[#8A96A8] hover:text-[#536174] transition-colors"
+          className="mt-3 w-full text-center text-[12px] text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors"
         >
           Maybe later
         </button>

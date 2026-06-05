@@ -185,14 +185,14 @@ export default function InvestorVerdictCard({
           <span className={cn('text-[12px] font-semibold px-2.5 py-1 rounded-full border tabular-nums', verdict.verdictBadge)}>
             {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(1)}% vs fair value
           </span>
-          <span className="text-[12px] text-[#536174] tabular-nums">
+          <span className="text-[12px] text-[#6B6B6B] tabular-nums">
             FV {sym}{fairValue.toFixed(2)}
           </span>
         </div>
       </div>
 
       {/* Plain English summary + margin of safety */}
-      <p className="text-[13px] text-[#536174] leading-relaxed">{summary}</p>
+      <p className="text-[13px] text-[#6B6B6B] leading-relaxed">{summary}</p>
       <p className={cn('text-[13px] font-medium leading-tight',
         decision === 'BUY' ? 'text-[#11875D]' : decision === 'WATCH' ? 'text-[#B56A00]' : 'text-[#D83B3B]'
       )}>
@@ -229,7 +229,7 @@ export default function InvestorVerdictCard({
           </Tooltip>
         )}
         {growthModel && (
-          <span className="text-[12px] text-[#536174] px-2.5 py-1 rounded-full border border-[#E3E6E0] bg-white min-h-[32px] flex items-center">
+          <span className="text-[12px] text-[#6B6B6B] px-2.5 py-1 rounded-full border border-[#E5E5E5] bg-white min-h-[32px] flex items-center">
             {growthModel === 'three-stage' ? '3-stage DCF' : '2-stage DCF'}
           </span>
         )}
@@ -261,7 +261,7 @@ export default function InvestorVerdictCard({
       )}
 
       {/* Disclaimer */}
-      <p className="text-[11px] text-[#8A96A8] leading-tight border-t border-[#E3E6E0]/70 pt-2">
+      <p className="text-[11px] text-[#9B9B9B] leading-tight border-t border-[#E5E5E5]/70 pt-2">
         Model-based estimate, not financial advice. Treat as one input alongside your own research.
       </p>
     </div>

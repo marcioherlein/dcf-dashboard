@@ -36,7 +36,7 @@ export default function HowItWorksSection() {
       ref={ref}
       id="how-it-works"
       className="overflow-x-hidden"
-      style={{ background: '#FFFFFF', borderBottom: '1px solid #E3E6E0' }}
+      style={{ background: '#FFFFFF', borderBottom: '1px solid #E5E5E5' }}
     >
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-12 sm:py-20">
 
@@ -47,10 +47,10 @@ export default function HowItWorksSection() {
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.55, ease: EASE }}
         >
-          <h2 className="text-[24px] sm:text-[32px] font-bold text-[#0A1424] leading-tight" style={{ letterSpacing: '-0.025em' }}>
+          <h2 className="text-[24px] sm:text-[32px] font-bold text-[#111111] leading-tight" style={{ letterSpacing: '-0.025em' }}>
             A first-pass valuation in seconds.
           </h2>
-          <p className="text-[14px] text-[#536174] mt-2 leading-relaxed max-w-md">
+          <p className="text-[14px] text-[#6B6B6B] mt-2 leading-relaxed max-w-md">
             Go from searching a ticker to a clear valuation summary in three simple steps.
           </p>
         </motion.div>
@@ -66,7 +66,7 @@ export default function HowItWorksSection() {
                 left: 'calc(16.7% + 20px)',
                 right: 'calc(16.7% + 20px)',
                 height: '1px',
-                background: '#E3E6E0',
+                background: '#E5E5E5',
                 transformOrigin: 'left center',
               }}
               initial={reduced ? {} : { scaleX: 0 }}
@@ -102,13 +102,13 @@ export default function HowItWorksSection() {
                 </motion.div>
 
                 {/* Icon tile */}
-                <div className="w-10 h-10 rounded-[10px] bg-[#F8F7F2] border border-[#E3E6E0] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-[10px] bg-[#FFFFFF] border border-[#E5E5E5] flex items-center justify-center">
                   <Icon size={17} className="text-[#5F790B]" strokeWidth={1.8} />
                 </div>
 
                 <div>
-                  <h3 className="text-[15px] font-bold text-[#0A1424] mb-1.5 leading-snug">{title}</h3>
-                  <p className="text-[13px] text-[#536174] leading-relaxed">{body}</p>
+                  <h3 className="text-[15px] font-bold text-[#111111] mb-1.5 leading-snug">{title}</h3>
+                  <p className="text-[13px] text-[#6B6B6B] leading-relaxed">{body}</p>
                 </div>
               </motion.div>
             ))}
@@ -142,7 +142,7 @@ export default function HowItWorksSection() {
                 {i < STEPS.length - 1 && (
                   <motion.div
                     className="w-px flex-1 mt-2"
-                    style={{ background: '#E3E6E0', minHeight: 32 }}
+                    style={{ background: '#E5E5E5', minHeight: 32 }}
                     initial={reduced ? {} : { scaleY: 0, originY: 0 }}
                     animate={inView ? { scaleY: 1 } : {}}
                     transition={{ duration: 0.5, ease: EASE, delay: 0.3 + i * 0.1 }}
@@ -157,9 +157,9 @@ export default function HowItWorksSection() {
                   <div className="w-8 h-8 rounded-[8px] bg-[#EEF4DD] flex items-center justify-center shrink-0">
                     <Icon size={15} className="text-[#5F790B]" strokeWidth={1.8} />
                   </div>
-                  <h3 className="text-[15px] font-bold text-[#0A1424] leading-snug">{title}</h3>
+                  <h3 className="text-[15px] font-bold text-[#111111] leading-snug">{title}</h3>
                 </div>
-                <p className="text-[13px] text-[#536174] leading-relaxed">{body}</p>
+                <p className="text-[13px] text-[#6B6B6B] leading-relaxed">{body}</p>
               </div>
             </motion.div>
           ))}

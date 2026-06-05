@@ -97,7 +97,7 @@ export default function FinalCTASection() {
   }
 
   return (
-    <section ref={sectionRef} className="overflow-x-hidden" style={{ background: '#F8F7F2', borderBottom: '1px solid #E3E6E0' }}>
+    <section ref={sectionRef} className="overflow-x-hidden" style={{ background: '#FFFFFF', borderBottom: '1px solid #E5E5E5' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
         <motion.div
           className="rounded-[20px] text-center px-5 sm:px-8 py-10 sm:py-14"
@@ -105,7 +105,7 @@ export default function FinalCTASection() {
           animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
           transition={{ duration: 0.70, ease: EASE }}
           style={{
-            background: '#0A1424',
+            background: '#111111',
             border: '1px solid rgba(255,255,255,0.07)',
             boxShadow: '0 16px 48px rgba(6, 16, 31, 0.24)',
           }}
@@ -116,20 +116,20 @@ export default function FinalCTASection() {
               fontWeight: 700,
               lineHeight: 1.1,
               letterSpacing: '-0.03em',
-              color: '#F8F7F2',
+              color: '#FFFFFF',
               marginBottom: '14px',
             }}
           >
             Know what has to be true before you buy.
           </h2>
-          <p className="text-base sm:text-[17px]" style={{ color: '#8A96A8', lineHeight: 1.55, marginBottom: '28px' }}>
+          <p className="text-base sm:text-[17px]" style={{ color: '#9B9B9B', lineHeight: 1.55, marginBottom: '28px' }}>
             A first-pass valuation in seconds. Go deeper when it matters.
           </p>
 
           {/* Search */}
           <div ref={containerRef} className="relative mx-auto w-full" style={{ maxWidth: '480px' }}>
             <div
-              className="flex items-center gap-3 rounded-[14px] border bg-[#111C2E] transition-all"
+              className="flex items-center gap-3 rounded-[14px] border bg-[#1C1C1C] transition-all"
               style={{
                 height: '56px',
                 padding: '0 16px',
@@ -140,8 +140,8 @@ export default function FinalCTASection() {
               }}
             >
               {loading
-                ? <div className="h-4 w-4 rounded-full border-2 border-[#8A96A8] border-t-[#7C9A19] animate-spin shrink-0" />
-                : <Search size={18} className="text-[#8A96A8] shrink-0" />
+                ? <div className="h-4 w-4 rounded-full border-2 border-[#9B9B9B] border-t-[#7C9A19] animate-spin shrink-0" />
+                : <Search size={18} className="text-[#9B9B9B] shrink-0" />
               }
               <input
                 type="text"
@@ -161,7 +161,7 @@ export default function FinalCTASection() {
                   }
                 }}
                 placeholder="Search any US ticker — NVDA, AAPL, MELI..."
-                className="flex-1 bg-transparent text-[16px] text-[#F8F7F2] placeholder-[#536174] focus:outline-none"
+                className="flex-1 bg-transparent text-[16px] text-[#FFFFFF] placeholder-[#6B6B6B] focus:outline-none"
                 style={{ fontWeight: 500 }}
                 role="combobox"
                 aria-autocomplete="list"
@@ -188,7 +188,7 @@ export default function FinalCTASection() {
             {open && results.length > 0 && (
               <div
                 id="cta-search-listbox"
-                className="absolute left-0 right-0 top-full mt-2 bg-[#111C2E] rounded-xl border border-[rgba(255,255,255,0.10)] overflow-hidden z-50 text-left"
+                className="absolute left-0 right-0 top-full mt-2 bg-[#1C1C1C] rounded-xl border border-[rgba(255,255,255,0.10)] overflow-hidden z-50 text-left"
                 style={{ boxShadow: '0 16px 40px rgba(6,16,31,0.28)' }}
                 role="listbox"
               >
@@ -207,8 +207,8 @@ export default function FinalCTASection() {
                     onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(95,121,11,0.10)' }}
                     onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = i === activeIndex ? 'rgba(95,121,11,0.15)' : 'transparent' }}
                   >
-                    <span className="text-[14px] font-bold text-[#F8F7F2] w-14 shrink-0">{r.symbol}</span>
-                    <span className="text-[13px] text-[#8A96A8] truncate">{r.longname ?? r.shortname}</span>
+                    <span className="text-[14px] font-bold text-[#FFFFFF] w-14 shrink-0">{r.symbol}</span>
+                    <span className="text-[13px] text-[#9B9B9B] truncate">{r.longname ?? r.shortname}</span>
                   </button>
                 ))}
               </div>
@@ -217,16 +217,16 @@ export default function FinalCTASection() {
             {/* No results state */}
             {noResults && !open && !fetchError && query.length > 0 && (
               <div
-                className="absolute left-0 right-0 top-full mt-2 rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#111C2E] px-4 py-3 z-50 text-left"
+                className="absolute left-0 right-0 top-full mt-2 rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#1C1C1C] px-4 py-3 z-50 text-left"
                 role="status"
                 aria-live="polite"
                 style={{ boxShadow: '0 4px 16px rgba(6,16,31,0.24)' }}
               >
-                <p className="text-[13px] text-[#8A96A8] leading-snug">
+                <p className="text-[13px] text-[#9B9B9B] leading-snug">
                   No results for &ldquo;{query}&rdquo;.{' '}
-                  <span className="text-[#B6BFCC]">Try NVDA, AAPL, or MELI.</span>
+                  <span className="text-[#C4C4C4]">Try NVDA, AAPL, or MELI.</span>
                 </p>
-                <p className="text-[11px] text-[#536174] mt-1">insic covers NYSE and NASDAQ-listed stocks.</p>
+                <p className="text-[11px] text-[#6B6B6B] mt-1">insic covers NYSE and NASDAQ-listed stocks.</p>
               </div>
             )}
 
@@ -248,7 +248,7 @@ export default function FinalCTASection() {
           {/* Trust bullets */}
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 flex-wrap">
             {['Free to analyze', 'No credit card required', 'Results in seconds'].map(b => (
-              <span key={b} className="flex items-center gap-1.5 text-[13px] text-[#8A96A8]">
+              <span key={b} className="flex items-center gap-1.5 text-[13px] text-[#9B9B9B]">
                 <span
                   className="flex items-center justify-center rounded-full shrink-0"
                   style={{ width: '16px', height: '16px', background: 'rgba(95,121,11,0.20)' }}

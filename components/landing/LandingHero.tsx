@@ -46,14 +46,14 @@ const TABS = ['Overview', 'Valuation', 'Financials', 'Risks', 'News'] as const
 
 function LiveTabIndicator({ activeTab }: { activeTab: number }) {
   return (
-    <div className="flex border-b border-[#E3E6E0] px-4 gap-0">
+    <div className="flex border-b border-[#E5E5E5] px-4 gap-0">
       {TABS.map((t, i) => {
         const active = i === activeTab
         return (
           <span
             key={t}
             className="relative text-[11px] py-2.5 px-3 font-medium transition-colors duration-300"
-            style={{ color: active ? '#0A1424' : '#8A96A8' }}
+            style={{ color: active ? '#111111' : '#9B9B9B' }}
           >
             {t}
             <span
@@ -98,14 +98,14 @@ function BrowserChrome({ children }: { children: React.ReactNode }) {
           className="flex-1 mx-3 rounded-md flex items-center px-3 gap-1.5"
           style={{ height: '22px', background: '#E8E7E3', border: '0.5px solid rgba(0,0,0,0.1)' }}
         >
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#8A96A8" strokeWidth={2.5} className="shrink-0">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#9B9B9B" strokeWidth={2.5} className="shrink-0">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
-          <span className="text-[10px] text-[#8A96A8] font-medium tracking-tight">insic.app/stock/AAPL</span>
+          <span className="text-[10px] text-[#9B9B9B] font-medium tracking-tight">insic.app/stock/AAPL</span>
         </div>
       </div>
       {/* Content */}
-      <div style={{ background: '#F8F7F2' }}>
+      <div style={{ background: '#FFFFFF' }}>
         {children}
       </div>
     </div>
@@ -163,16 +163,16 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
       {/* App top bar */}
       <div
         className="flex items-center justify-between px-4"
-        style={{ height: '44px', borderBottom: '1px solid #E3E6E0', background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(12px)' }}
+        style={{ height: '44px', borderBottom: '1px solid #E5E5E5', background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(12px)' }}
       >
         {/* Logo */}
-        <span className="font-bold text-[13px] tracking-tight" style={{ color: '#0A1424', letterSpacing: '-0.03em' }}>insic</span>
+        <span className="font-bold text-[13px] tracking-tight" style={{ color: '#111111', letterSpacing: '-0.03em' }}>insic</span>
         {/* Search mock */}
-        <div className="flex items-center gap-1.5 rounded-[8px] px-2.5 py-1.5" style={{ background: '#F1EFE9', border: '1px solid #E3E6E0' }}>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#8A96A8" strokeWidth={2.5}>
+        <div className="flex items-center gap-1.5 rounded-[8px] px-2.5 py-1.5" style={{ background: '#F1EFE9', border: '1px solid #E5E5E5' }}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9B9B9B" strokeWidth={2.5}>
             <circle cx="11" cy="11" r="8" /><path strokeLinecap="round" d="m21 21-4.35-4.35" />
           </svg>
-          <span className="text-[10px] text-[#8A96A8]">Search tickers…</span>
+          <span className="text-[10px] text-[#9B9B9B]">Search tickers…</span>
         </div>
         {/* Avatar */}
         <div className="w-6 h-6 rounded-full bg-[#5F790B] flex items-center justify-center">
@@ -181,16 +181,16 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
       </div>
 
       {/* Stock header */}
-      <div className="flex items-center justify-between px-4 py-3" style={{ background: '#FBFAF7', borderBottom: '1px solid #E3E6E0' }}>
+      <div className="flex items-center justify-between px-4 py-3" style={{ background: '#FAFAFA', borderBottom: '1px solid #E5E5E5' }}>
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-[#F0F0F0] border border-[#E3E6E0] flex items-center justify-center text-[10px] font-bold text-[#0A1424]">A</div>
+          <div className="w-7 h-7 rounded-full bg-[#F0F0F0] border border-[#E5E5E5] flex items-center justify-center text-[10px] font-bold text-[#111111]">A</div>
           <div>
-            <span className="text-[13px] font-bold text-[#0A1424] mr-1.5">AAPL</span>
-            <span className="text-[11px] text-[#8A96A8]">Apple Inc.</span>
+            <span className="text-[13px] font-bold text-[#111111] mr-1.5">AAPL</span>
+            <span className="text-[11px] text-[#9B9B9B]">Apple Inc.</span>
           </div>
         </div>
         <div className="flex items-baseline gap-1.5">
-          <span className="text-[14px] font-bold tabular-nums text-[#0A1424]">$183.42</span>
+          <span className="text-[14px] font-bold tabular-nums text-[#111111]">$183.42</span>
           <motion.span
             className="text-[11px] font-semibold tabular-nums"
             style={{ color: '#11875D' }}
@@ -220,7 +220,7 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
           transition={{ duration: 0.5, ease: EASE }}
         >
           <p className="text-[8.5px] font-bold uppercase tracking-[0.1em] text-[#5F790B] mb-1.5">INSIC VERDICT</p>
-          <p className="text-[15px] font-bold text-[#0A1424] leading-snug">
+          <p className="text-[15px] font-bold text-[#111111] leading-snug">
             AAPL looks{' '}
             <motion.span
               style={{ color: '#5F790B' }}
@@ -242,7 +242,7 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
               High confidence
             </motion.span>
             <motion.span
-              className="text-[9.5px] text-[#8A96A8]"
+              className="text-[9.5px] text-[#9B9B9B]"
               initial={{ opacity: 0 }}
               animate={verdictVisible ? { opacity: 1 } : {}}
               transition={{ delay: 0.44, duration: 0.35 }}
@@ -256,7 +256,7 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
         <div className="grid grid-cols-3 mx-4 mb-3 rounded-[10px] overflow-hidden" style={{ border: '1px solid #E8E6E0' }}>
           {[
             { label: 'Fair Value', val: '$226.80', color: '#5F790B', bg: '#F6FAEA', delay: 0 },
-            { label: 'Current Price', val: '$183.42', color: '#0A1424', bg: '#FBFAF7', delay: 0.07 },
+            { label: 'Current Price', val: '$183.42', color: '#111111', bg: '#FAFAFA', delay: 0.07 },
             { label: 'Upside', val: '+23.6%', color: '#11875D', bg: '#F6FAEA', delay: 0.14 },
           ].map((m, i) => (
             <motion.div
@@ -267,7 +267,7 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
               animate={metricsVisible ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: m.delay, duration: 0.4, ease: EASE }}
             >
-              <p className="text-[8px] text-[#8A96A8] uppercase tracking-wider mb-0.5">{m.label}</p>
+              <p className="text-[8px] text-[#9B9B9B] uppercase tracking-wider mb-0.5">{m.label}</p>
               <p className="text-[13px] font-bold tabular-nums" style={{ color: m.color }}>{m.val}</p>
             </motion.div>
           ))}
@@ -280,8 +280,8 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
           animate={metricsVisible ? { opacity: 1 } : {}}
           transition={{ delay: 0.25, duration: 0.4 }}
         >
-          <p className="text-[8.5px] text-[#8A96A8] mb-1.5">Scenario range</p>
-          <div className="relative h-2 rounded-full overflow-hidden" style={{ background: 'linear-gradient(to right, #F0B8B8 0%, #E3E6E0 42%, #BFD2A1 100%)' }}>
+          <p className="text-[8.5px] text-[#9B9B9B] mb-1.5">Scenario range</p>
+          <div className="relative h-2 rounded-full overflow-hidden" style={{ background: 'linear-gradient(to right, #F0B8B8 0%, #E5E5E5 42%, #BFD2A1 100%)' }}>
             <motion.div
               className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-sm"
               style={{ left: '42%', border: '2px solid #5F790B' }}
@@ -291,9 +291,9 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
             />
           </div>
           <div className="flex justify-between mt-1">
-            <span className="text-[8px] text-[#8A96A8]">$150.10 Bear</span>
+            <span className="text-[8px] text-[#9B9B9B]">$150.10 Bear</span>
             <span className="text-[8px] font-semibold text-[#5F790B]">$226.60 Base</span>
-            <span className="text-[8px] text-[#8A96A8]">$305.40 Bull</span>
+            <span className="text-[8px] text-[#9B9B9B]">$305.40 Bull</span>
           </div>
         </motion.div>
 
@@ -305,20 +305,20 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
           transition={{ duration: 0.4, ease: EASE }}
         >
           <div className="flex items-center gap-4 mb-2">
-            {[['Price', '#0A1424'], ['Fair Value', '#5F790B'], ['Analyst Target', '#2563EB']].map(([l, c]) => (
-              <span key={l} className="flex items-center gap-1.5 text-[8.5px] text-[#8A96A8]">
+            {[['Price', '#111111'], ['Fair Value', '#5F790B'], ['Analyst Target', '#2563EB']].map(([l, c]) => (
+              <span key={l} className="flex items-center gap-1.5 text-[8.5px] text-[#9B9B9B]">
                 <span style={{ display: 'inline-block', width: 14, height: 2, background: c, borderRadius: 1 }} />
                 {l}
               </span>
             ))}
           </div>
-          <div className="rounded-[8px] overflow-hidden" style={{ background: '#FBFAF7', border: '1px solid #E8E6E0', padding: '8px 8px 4px' }}>
+          <div className="rounded-[8px] overflow-hidden" style={{ background: '#FAFAFA', border: '1px solid #E8E6E0', padding: '8px 8px 4px' }}>
             <svg viewBox="0 0 260 64" className="w-full" style={{ height: 52, display: 'block' }}>
               {/* Area fill under price line */}
               <defs>
                 <linearGradient id="priceGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#0A1424" stopOpacity="0.08" />
-                  <stop offset="100%" stopColor="#0A1424" stopOpacity="0" />
+                  <stop offset="0%" stopColor="#111111" stopOpacity="0.08" />
+                  <stop offset="100%" stopColor="#111111" stopOpacity="0" />
                 </linearGradient>
               </defs>
               <path
@@ -329,7 +329,7 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
               />
               <AnimatedPath
                 d="M0,52 C20,49 40,45 60,42 C80,39 90,35 110,29 C130,23 150,25 170,21 C190,17 210,13 230,11 C245,9 255,7 260,7"
-                stroke="#0A1424"
+                stroke="#111111"
                 strokeWidth={1.5}
                 animate={chartVisible && !reduced}
               />
@@ -354,15 +354,15 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
         {/* CAGR card */}
         <motion.div
           className="mx-4 mb-4 rounded-[10px] px-3 py-2.5"
-          style={{ border: '1px solid #E3E6E0', background: '#FBFAF7' }}
+          style={{ border: '1px solid #E5E5E5', background: '#FAFAFA' }}
           initial={{ opacity: 0, y: 10 }}
           animate={cagrVisible ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, ease: EASE }}
         >
-          <p className="text-[8.5px] text-[#8A96A8] mb-1.5">Market-implied 5Y revenue CAGR at today&apos;s price</p>
+          <p className="text-[8.5px] text-[#9B9B9B] mb-1.5">Market-implied 5Y revenue CAGR at today&apos;s price</p>
           <div className="flex items-center justify-between">
             <motion.span
-              className="text-[17px] font-bold tabular-nums text-[#0A1424]"
+              className="text-[17px] font-bold tabular-nums text-[#111111]"
               initial={{ opacity: 0 }}
               animate={cagrVisible ? { opacity: 1 } : {}}
               transition={{ delay: 0.15, duration: 0.5 }}
@@ -379,7 +379,7 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
               Moderate
             </motion.span>
           </div>
-          <div className="relative mt-2 h-1 rounded-full overflow-hidden" style={{ background: '#E3E6E0' }}>
+          <div className="relative mt-2 h-1 rounded-full overflow-hidden" style={{ background: '#E5E5E5' }}>
             <motion.div
               className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white"
               style={{ border: '2px solid #5F790B' }}
@@ -451,7 +451,7 @@ function CAGRBar({ reduced }: { reduced: boolean | null }) {
       </div>
 
       {/* Zone labels */}
-      <div className="flex text-[10px] text-[#8A96A8]">
+      <div className="flex text-[10px] text-[#9B9B9B]">
         {zones.map((z, i) => (
           <div key={z.label} className="flex flex-col items-center leading-tight" style={{ width: `${z.width}%` }}>
             <span className={i === 1 ? 'font-semibold text-[#5F790B]' : ''}>{z.label}</span>
@@ -474,11 +474,11 @@ function MarketTeaserSection({ reduced }: { reduced: boolean | null }) {
       transition={{ duration: 0.6, ease: EASE }}
     >
       <div
-        className="rounded-[20px] border border-[#E3E6E0] bg-white overflow-hidden"
+        className="rounded-[20px] border border-[#E5E5E5] bg-white overflow-hidden"
         style={{ boxShadow: '0 8px 32px rgba(6,16,31,0.07)' }}
       >
         {/* Header */}
-        <div className="flex items-start gap-3 px-6 pt-6 pb-4 border-b border-[#F3F2EC]">
+        <div className="flex items-start gap-3 px-6 pt-6 pb-4 border-b border-[#F5F5F5]">
           <motion.div
             className="w-10 h-10 rounded-[10px] bg-[#EEF4DD] flex items-center justify-center shrink-0 mt-0.5"
             whileInView={reduced ? {} : { scale: [0.8, 1.12, 1] }}
@@ -490,32 +490,32 @@ function MarketTeaserSection({ reduced }: { reduced: boolean | null }) {
             </svg>
           </motion.div>
           <div>
-            <h2 className="text-[17px] font-bold text-[#0A1424] leading-tight">What the market is pricing in</h2>
-            <p className="text-[13px] text-[#536174] mt-1 leading-relaxed">
+            <h2 className="text-[17px] font-bold text-[#111111] leading-tight">What the market is pricing in</h2>
+            <p className="text-[13px] text-[#6B6B6B] mt-1 leading-relaxed">
               See the growth and profitability the market expects over the coming years.
             </p>
           </div>
         </div>
 
         {/* Body: two-column on desktop */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#F3F2EC]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#F5F5F5]">
 
           {/* Left: data rows */}
           <div className="px-6 py-5">
-            <p className="text-[11px] font-bold text-[#8A96A8] mb-4 tracking-[0.05em]">Example: Apple Inc. (AAPL)</p>
+            <p className="text-[11px] font-bold text-[#9B9B9B] mb-4 tracking-[0.05em]">Example: Apple Inc. (AAPL)</p>
 
             <div className="space-y-0">
               {TEASER_ROWS.map(({ label, val, type, i }) => (
                 <motion.div
                   key={label}
-                  className="flex items-center justify-between py-3 border-b border-[#F3F2EC] last:border-0"
+                  className="flex items-center justify-between py-3 border-b border-[#F5F5F5] last:border-0"
                   // Hardened: visible by default, animates in on scroll
                   initial={reduced ? {} : { opacity: 0, x: -14 }}
                   whileInView={reduced ? {} : { opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: '-30px' }}
                   transition={{ delay: i * 0.08, duration: 0.4, ease: EASE }}
                 >
-                  <span className={`text-[13px] leading-snug ${type === 'hero' ? 'font-semibold text-[#0A1424]' : 'text-[#536174]'}`}>
+                  <span className={`text-[13px] leading-snug ${type === 'hero' ? 'font-semibold text-[#111111]' : 'text-[#6B6B6B]'}`}>
                     {label}
                   </span>
                   {type === 'badge' ? (
@@ -531,7 +531,7 @@ function MarketTeaserSection({ reduced }: { reduced: boolean | null }) {
                   ) : type === 'hero' ? (
                     <span className="text-[18px] font-bold tabular-nums text-[#5F790B] shrink-0">{val}</span>
                   ) : (
-                    <span className="text-[13px] font-semibold tabular-nums text-[#0A1424] shrink-0">{val}</span>
+                    <span className="text-[13px] font-semibold tabular-nums text-[#111111] shrink-0">{val}</span>
                   )}
                 </motion.div>
               ))}
@@ -540,12 +540,12 @@ function MarketTeaserSection({ reduced }: { reduced: boolean | null }) {
 
           {/* Right: spectrum + summary */}
           <div className="px-6 py-5">
-            <p className="text-[11px] font-bold text-[#8A96A8] mb-4 tracking-[0.05em]">Growth spectrum</p>
+            <p className="text-[11px] font-bold text-[#9B9B9B] mb-4 tracking-[0.05em]">Growth spectrum</p>
 
             {/* Big callout number */}
             <div className="flex items-baseline gap-2 mb-1">
               <motion.span
-                className="text-[40px] font-bold tabular-nums text-[#0A1424] leading-none"
+                className="text-[40px] font-bold tabular-nums text-[#111111] leading-none"
                 initial={reduced ? {} : { opacity: 0, y: 8 }}
                 whileInView={reduced ? {} : { opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -553,14 +553,14 @@ function MarketTeaserSection({ reduced }: { reduced: boolean | null }) {
               >
                 12.1%
               </motion.span>
-              <span className="text-[13px] text-[#536174]">implied annually</span>
+              <span className="text-[13px] text-[#6B6B6B]">implied annually</span>
             </div>
-            <p className="text-[12px] text-[#8A96A8] mb-1">vs. 6.7% historical track record</p>
+            <p className="text-[12px] text-[#9B9B9B] mb-1">vs. 6.7% historical track record</p>
 
             <CAGRBar reduced={reduced} />
 
             <motion.p
-              className="mt-4 text-[12px] text-[#536174] leading-relaxed"
+              className="mt-4 text-[12px] text-[#6B6B6B] leading-relaxed"
               initial={reduced ? {} : { opacity: 0 }}
               whileInView={reduced ? {} : { opacity: 1 }}
               viewport={{ once: true }}
@@ -598,7 +598,7 @@ export default function LandingHero() {
       style={{
         paddingTop: 'max(96px, calc(80px + 2vh))',
         paddingBottom: 'clamp(24px, 3vh, 48px)',
-        background: '#F8F7F2',
+        background: '#FFFFFF',
       }}
     >
       {/* Subtle radial olive aurora — behind content */}
@@ -653,7 +653,7 @@ export default function LandingHero() {
                   className="font-bold block"
                   style={{
                     fontSize: 'clamp(32px, 9.5vw, 60px)',
-                    color: plain ? '#0A1424' : '#5F790B',
+                    color: plain ? '#111111' : '#5F790B',
                   }}
                 >
                   {text}
@@ -666,7 +666,7 @@ export default function LandingHero() {
               initial={reduced ? {} : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: EASE, delay: 0.32 }}
-              className="text-[16px] text-[#36455A] leading-relaxed mb-8"
+              className="text-[16px] text-[#555555] leading-relaxed mb-8"
               style={{ maxWidth: '440px' }}
             >
               insic computes a fair value estimate for any stock and shows you what growth rate the current price implies — so you can judge whether the market is right before you commit capital.
@@ -701,7 +701,7 @@ export default function LandingHero() {
               )}
               <a
                 href="#how-it-works"
-                className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-[#CBD1C4] bg-white px-6 py-3.5 text-[15px] font-semibold text-[#0A1424] hover:bg-[#F6FAEA] hover:border-[#5F790B] transition-colors"
+                className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-[#C8C8C8] bg-white px-6 py-3.5 text-[15px] font-semibold text-[#111111] hover:bg-[#F6FAEA] hover:border-[#5F790B] transition-colors"
                 style={{ minHeight: '52px' }}
               >
                 <Play size={13} className="text-[#5F790B]" fill="#5F790B" />
@@ -717,7 +717,7 @@ export default function LandingHero() {
               className="flex items-center gap-3"
             >
               <div className="flex -space-x-2">
-                {['#CBD1C4', '#B6BFCC', '#8A96A8'].map((bg, i) => (
+                {['#C8C8C8', '#C4C4C4', '#9B9B9B'].map((bg, i) => (
                   <div key={i} className="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center" style={{ background: bg }}>
                     <svg viewBox="0 0 24 24" className="w-4 h-4 text-white" fill="currentColor"><path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5.33 0-8 2.67-8 4v1h16v-1c0-1.33-2.67-4-8-4z"/></svg>
                   </div>
@@ -729,7 +729,7 @@ export default function LandingHero() {
                     <svg key={s} className="w-3.5 h-3.5" fill="#5F790B" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                   ))}
                 </div>
-                <span className="text-[12px] text-[#36455A]">Trusted by investors who do their own research</span>
+                <span className="text-[12px] text-[#555555]">Trusted by investors who do their own research</span>
               </div>
             </motion.div>
           </div>

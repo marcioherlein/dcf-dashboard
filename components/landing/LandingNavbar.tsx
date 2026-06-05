@@ -56,7 +56,7 @@ export default function LandingNavbar() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="px-4 py-2 rounded-lg text-[14.5px] font-medium text-[#536174] hover:text-[#0A1424] hover:bg-[#F3F2EC] transition-all duration-150 whitespace-nowrap"
+                  className="px-4 py-2 rounded-lg text-[14.5px] font-medium text-[#6B6B6B] hover:text-[#111111] hover:bg-[#F5F5F5] transition-all duration-150 whitespace-nowrap"
                 >
                   {link.label}
                 </Link>
@@ -77,7 +77,7 @@ export default function LandingNavbar() {
                 <>
                   <button
                     onClick={() => signIn('google')}
-                    className="hidden sm:block text-[14px] font-medium text-[#536174] hover:text-[#0A1424] transition-colors px-3 whitespace-nowrap"
+                    className="hidden sm:block text-[14px] font-medium text-[#6B6B6B] hover:text-[#111111] transition-colors px-3 whitespace-nowrap"
                     style={{ minHeight: '44px' }}
                   >
                     Sign in
@@ -93,7 +93,7 @@ export default function LandingNavbar() {
               )}
               <button
                 onClick={() => setMobileOpen(v => !v)}
-                className="lg:hidden flex items-center justify-center w-10 h-10 rounded-lg text-[#536174] hover:bg-[#F3F2EC] hover:text-[#0A1424] transition-colors"
+                className="lg:hidden flex items-center justify-center w-10 h-10 rounded-lg text-[#6B6B6B] hover:bg-[#F5F5F5] hover:text-[#111111] transition-colors"
                 aria-label="Toggle menu"
                 aria-expanded={mobileOpen}
                 aria-controls="mobile-nav-menu"
@@ -115,7 +115,7 @@ export default function LandingNavbar() {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="fixed left-3 right-3 z-40 lg:hidden rounded-2xl overflow-hidden"
-            style={{ top: 'calc(5.5rem + env(safe-area-inset-top, 0px))', background: 'rgba(255,255,255,0.98)', border: '1px solid #E3E6E0', boxShadow: '0 16px 40px rgba(6,16,31,0.14)' }}
+            style={{ top: 'calc(5.5rem + env(safe-area-inset-top, 0px))', background: 'rgba(255,255,255,0.98)', border: '1px solid #E5E5E5', boxShadow: '0 16px 40px rgba(6,16,31,0.14)' }}
           >
             <nav className="flex flex-col p-3 gap-0.5">
               {NAV_LINKS.map(link => (
@@ -123,7 +123,7 @@ export default function LandingNavbar() {
                   key={link.label}
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center py-3 px-4 rounded-[10px] text-[15px] font-medium text-[#536174] hover:bg-[#EEF4DD] hover:text-[#0A1424] transition-colors"
+                  className="flex items-center py-3 px-4 rounded-[10px] text-[15px] font-medium text-[#6B6B6B] hover:bg-[#EEF4DD] hover:text-[#111111] transition-colors"
                   style={{ minHeight: '44px' }}
                 >
                   {link.label}
@@ -151,7 +151,7 @@ export default function LandingNavbar() {
                   </button>
                   <button
                     onClick={() => { setMobileOpen(false); signIn('google') }}
-                    className="w-full rounded-[10px] py-3.5 text-[15px] font-semibold text-[#536174] border border-[#E3E6E0] hover:bg-[#F3F2EC] transition-colors"
+                    className="w-full rounded-[10px] py-3.5 text-[15px] font-semibold text-[#6B6B6B] border border-[#E5E5E5] hover:bg-[#F5F5F5] transition-colors"
                     style={{ minHeight: '48px' }}
                   >
                     Sign in

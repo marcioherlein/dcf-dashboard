@@ -26,10 +26,10 @@ const config: Config = {
 
         // ── insic Brand: Ink palette ──────────────────────────────────────
         ink: {
-          950: '#06101F',
-          900: '#0A1424',
-          800: '#111C2E',
-          700: '#1B2A3D',
+          950: '#0A0A0A',
+          900: '#111111',
+          800: '#1C1C1C',
+          700: '#2A2A2A',
         },
 
         // ── insic Brand: Olive (primary brand accent) ─────────────────────
@@ -41,20 +41,20 @@ const config: Config = {
           50:  '#F6FAEA',
         },
 
-        // ── insic Brand: Warm neutral surfaces ────────────────────────────
-        'bg-warm':     '#F8F7F2',
-        'bg-soft':     '#F3F2EC',
+        // ── insic Brand: Neutral surfaces ─────────────────────────────────
+        'bg-warm':     '#FFFFFF',
+        'bg-soft':     '#F5F5F5',
         'surface':     '#FFFFFF',
-        'surface-subtle': '#FBFAF7',
-        'border-warm': '#E3E6E0',
-        'border-strong-warm': '#CBD1C4',
+        'surface-subtle': '#FAFAFA',
+        'border-warm': '#E5E5E5',
+        'border-strong-warm': '#C8C8C8',
 
         // ── insic Brand: Text hierarchy ───────────────────────────────────
-        'text-ink':       '#0A1424',
-        'text-secondary': '#536174',           // safe on white (#FFFFFF) ≥4.5:1
-        'text-secondary-bg': '#36455A',        // safe on cream (#F8F7F2) ≥4.5:1
-        'text-muted':     '#8A96A8',
-        'text-faint':     '#B6BFCC',
+        'text-ink':       '#111111',
+        'text-secondary': '#6B6B6B',           // safe on white (#FFFFFF) ≥4.5:1
+        'text-secondary-bg': '#555555',        // safe on white ≥4.5:1
+        'text-muted':     '#9B9B9B',
+        'text-faint':     '#C4C4C4',
 
         // ── Supporting blue (secondary actions, links) ────────────────────
         'brand-blue': {
@@ -76,12 +76,12 @@ const config: Config = {
         'accent-blue': '#2563EB',
 
         // ── Dark nav / hero ────────────────────────────────────────────────
-        deep:   '#06101F',
-        mid:    '#0A1424',
-        raised: '#111C2E',
+        deep:   '#000000',
+        mid:    '#111111',
+        raised: '#1C1C1C',
 
-        // ── Warm cream surface (landing) ──────────────────────────────────
-        cream: { DEFAULT: '#F8F7F2', dark: '#F0EBE3' },
+        // ── Neutral surface (landing) ──────────────────────────────────────
+        cream: { DEFAULT: '#FFFFFF', dark: '#F5F5F5' },
 
         // ── Legacy MDM3 tokens — kept until fully migrated ────────────────
         "on-primary":               "#ffffff",
@@ -124,7 +124,7 @@ const config: Config = {
         'brand-gold':         '#B56A00',
         'brand-gold-decor':   '#B56A00',
         'brand-red':          '#D83B3B',
-        'brand-surface':      '#F8F7F2',
+        'brand-surface':      '#FFFFFF',
         'neon':               '#3B82F6',
         'neon-light':         '#60A5FA',
         'neon-cyan':          '#06B6D4',
@@ -171,11 +171,11 @@ const config: Config = {
       },
 
       boxShadow: {
-        // insic shadow scale — restrained, ink-toned
-        card:        "0 8px 24px rgba(6, 16, 31, 0.06)",
-        "card-md":   "0 12px 32px rgba(6, 16, 31, 0.09)",
-        float:       "0 16px 48px rgba(6, 16, 31, 0.14), 0 4px 12px rgba(6, 16, 31, 0.07)",
-        nav:         "0 4px 20px rgba(6, 16, 31, 0.08)",
+        // insic shadow scale — restrained, pure black
+        card:        "0 8px 24px rgba(0, 0, 0, 0.06)",
+        "card-md":   "0 12px 32px rgba(0, 0, 0, 0.09)",
+        float:       "0 16px 48px rgba(0, 0, 0, 0.14), 0 4px 12px rgba(0, 0, 0, 0.07)",
+        nav:         "0 4px 20px rgba(0, 0, 0, 0.08)",
         // Olive glow variants (CTAs, selected states)
         "glow-sm":   "0 0 12px rgba(95, 121, 11, 0.18), 0 0 4px rgba(95, 121, 11, 0.09)",
         "glow-md":   "0 0 24px rgba(95, 121, 11, 0.25), 0 0 8px rgba(95, 121, 11, 0.10)",

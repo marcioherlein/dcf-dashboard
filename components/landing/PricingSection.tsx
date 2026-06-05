@@ -39,22 +39,22 @@ export default function PricingSection() {
   const annualTotal   = 136
 
   return (
-    <section id="pricing" className="overflow-x-hidden" style={{ background: '#F8F7F2', borderBottom: '1px solid #E3E6E0' }}>
+    <section id="pricing" className="overflow-x-hidden" style={{ background: '#FFFFFF', borderBottom: '1px solid #E5E5E5' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-14 sm:py-20">
 
         {/* Header */}
         <div className="text-center mb-10">
-          <h2 className="text-[28px] sm:text-[36px] font-bold text-[#0A1424] leading-tight mb-3" style={{ letterSpacing: '-0.025em' }}>
+          <h2 className="text-[28px] sm:text-[36px] font-bold text-[#111111] leading-tight mb-3" style={{ letterSpacing: '-0.025em' }}>
             Simple pricing.<br />Everything you need.
           </h2>
 
           {/* Toggle */}
-          <div className="inline-flex items-center gap-1 rounded-full bg-white border border-[#E3E6E0] p-1 mt-4" style={{ boxShadow: '0 2px 8px rgba(6,16,31,0.06)' }}>
+          <div className="inline-flex items-center gap-1 rounded-full bg-white border border-[#E5E5E5] p-1 mt-4" style={{ boxShadow: '0 2px 8px rgba(6,16,31,0.06)' }}>
             <button
               onClick={() => setAnnual(false)}
               className={cn(
                 'rounded-full px-5 py-2 text-[13.5px] font-semibold transition-colors min-h-[40px]',
-                !annual ? 'bg-[#5F790B] text-white' : 'text-[#536174] hover:text-[#0A1424]',
+                !annual ? 'bg-[#5F790B] text-white' : 'text-[#6B6B6B] hover:text-[#111111]',
               )}
             >
               Monthly
@@ -63,7 +63,7 @@ export default function PricingSection() {
               onClick={() => setAnnual(true)}
               className={cn(
                 'rounded-full px-5 py-2 text-[13.5px] font-semibold transition-colors flex items-center gap-2 min-h-[40px]',
-                annual ? 'bg-[#5F790B] text-white' : 'text-[#536174] hover:text-[#0A1424]',
+                annual ? 'bg-[#5F790B] text-white' : 'text-[#6B6B6B] hover:text-[#111111]',
               )}
             >
               Annual
@@ -81,16 +81,16 @@ export default function PricingSection() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-[680px] mx-auto">
 
           {/* Free */}
-          <div className="rounded-[20px] border border-[#E3E6E0] bg-white p-6 flex flex-col" style={{ boxShadow: '0 4px 16px rgba(6,16,31,0.05)' }}>
-            <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#8A96A8] mb-3">Free</p>
+          <div className="rounded-[20px] border border-[#E5E5E5] bg-white p-6 flex flex-col" style={{ boxShadow: '0 4px 16px rgba(6,16,31,0.05)' }}>
+            <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#9B9B9B] mb-3">Free</p>
             <div className="flex items-baseline gap-1 mb-1">
-              <span className="text-[44px] font-bold text-[#0A1424] leading-none tabular-nums">$0</span>
-              <span className="text-[13px] text-[#8A96A8] font-medium">/month</span>
+              <span className="text-[44px] font-bold text-[#111111] leading-none tabular-nums">$0</span>
+              <span className="text-[13px] text-[#9B9B9B] font-medium">/month</span>
             </div>
-            <p className="text-[12px] text-[#536174] mb-5">No credit card required. Free plan never expires.</p>
+            <p className="text-[12px] text-[#6B6B6B] mb-5">No credit card required. Free plan never expires.</p>
             <button
               onClick={() => signIn('google')}
-              className="w-full rounded-[10px] border border-[#CBD1C4] py-3 text-[13.5px] font-semibold text-[#0A1424] hover:bg-[#F6FAEA] hover:border-[#5F790B] transition-colors mb-5 min-h-[48px]"
+              className="w-full rounded-[10px] border border-[#C8C8C8] py-3 text-[13.5px] font-semibold text-[#111111] hover:bg-[#F6FAEA] hover:border-[#5F790B] transition-colors mb-5 min-h-[48px]"
             >
               Get started for free
             </button>
@@ -98,7 +98,7 @@ export default function PricingSection() {
               {FREE_FEATURES.map(f => (
                 <li key={f} className="flex items-start gap-2.5">
                   <Check size={14} className="text-[#5F790B] shrink-0 mt-0.5" strokeWidth={2.5} />
-                  <span className="text-[13px] text-[#0A1424] leading-snug">{f}</span>
+                  <span className="text-[13px] text-[#111111] leading-snug">{f}</span>
                 </li>
               ))}
             </ul>
@@ -111,15 +111,15 @@ export default function PricingSection() {
             </div>
             <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#5F790B] mb-3">Pro</p>
             <div className="flex items-baseline gap-1 mb-1">
-              <span className="text-[44px] font-bold text-[#0A1424] leading-none tabular-nums">
+              <span className="text-[44px] font-bold text-[#111111] leading-none tabular-nums">
                 ${annual ? annualMonthly.toFixed(2) : monthlyPrice}
               </span>
-              <span className="text-[13px] text-[#8A96A8] font-medium">/month</span>
+              <span className="text-[13px] text-[#9B9B9B] font-medium">/month</span>
             </div>
             {annual && (
-              <p className="text-[12px] text-[#536174] mb-1">Billed as ${annualTotal}/year</p>
+              <p className="text-[12px] text-[#6B6B6B] mb-1">Billed as ${annualTotal}/year</p>
             )}
-            <p className="text-[12px] text-[#536174] mb-5">For investors who want deeper research.</p>
+            <p className="text-[12px] text-[#6B6B6B] mb-5">For investors who want deeper research.</p>
             <button
               onClick={() => signIn('google')}
               className="w-full rounded-[10px] py-3 text-[13.5px] font-bold text-white transition-all hover:-translate-y-px active:scale-95 mb-5 min-h-[48px]"
@@ -127,12 +127,12 @@ export default function PricingSection() {
             >
               Start Pro →
             </button>
-            <p className="text-center text-[11px] text-[#8A96A8] mb-4">Cancel anytime.</p>
+            <p className="text-center text-[11px] text-[#9B9B9B] mb-4">Cancel anytime.</p>
             <ul className="space-y-2.5 flex-1">
               {PRO_FEATURES.map(f => (
                 <li key={f} className="flex items-start gap-2.5">
                   <Check size={14} className="text-[#5F790B] shrink-0 mt-0.5" strokeWidth={2.5} />
-                  <span className="text-[13px] text-[#0A1424] leading-snug">{f}</span>
+                  <span className="text-[13px] text-[#111111] leading-snug">{f}</span>
                 </li>
               ))}
             </ul>
@@ -143,7 +143,7 @@ export default function PricingSection() {
         <div className="mt-5 max-w-[680px] mx-auto rounded-[14px] border border-[#BFD2A1] bg-[#F6FAEA] px-5 py-3.5 flex flex-wrap items-center gap-3">
           <span className="text-[12px] font-bold text-[#5F790B] shrink-0">Pro adds:</span>
           {PRO_DIFF.map(f => (
-            <span key={f} className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#0A1424] bg-white border border-[#BFD2A1] rounded-full px-3 py-1">
+            <span key={f} className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#111111] bg-white border border-[#BFD2A1] rounded-full px-3 py-1">
               <Check size={11} className="text-[#5F790B] shrink-0" strokeWidth={2.5} />
               {f}
             </span>

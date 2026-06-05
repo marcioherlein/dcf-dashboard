@@ -12,10 +12,10 @@ export const BRAND = {
   olive600:       '#6F8F12',
   olive100:       '#EEF4DD',
   olive50:        '#F6FAEA',
-  ink900:         '#0A1424',
-  ink800:         '#111C2E',
-  bgWarm:         '#F8F7F2',
-  border:         '#E3E6E0',
+  ink900:         '#111111',
+  ink800:         '#1C1C1C',
+  bgWarm:         '#FFFFFF',
+  border:         '#E5E5E5',
   positive:       '#11875D',
   positiveSoft:   '#E8F7EF',
   negative:       '#D83B3B',
@@ -28,9 +28,9 @@ export const BRAND = {
 
 export const VERDICT_DISPLAY = {
   'Undervalued':       { word: 'Attractive',    colorHex: BRAND.olive700,  bgHex: BRAND.olive50,      borderHex: '#BFD2A1' },
-  'Fairly Valued':     { word: 'Fairly Priced', colorHex: BRAND.blue600,   bgHex: '#F6F8FC',           borderHex: '#C9D5E8' },
+  'Fairly Valued':     { word: 'Fairly Priced', colorHex: BRAND.blue600,   bgHex: '#F5F5F5',           borderHex: '#D1D1D1' },
   'Overvalued':        { word: 'Expensive',     colorHex: BRAND.negative,  bgHex: BRAND.negativeSoft, borderHex: '#F0B8B8' },
-  'Insufficient Data': { word: 'Inconclusive',  colorHex: '#64748B',       bgHex: '#F1F5F9',          borderHex: '#CBD1C4' },
+  'Insufficient Data': { word: 'Inconclusive',  colorHex: '#64748B',       bgHex: '#F5F5F5',          borderHex: '#C8C8C8' },
 } as const
 
 export type VerdictKey = keyof typeof VERDICT_DISPLAY

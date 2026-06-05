@@ -13,7 +13,7 @@
 
 export const CHART_COLORS = {
   // Primary data series
-  marketPrice:    '#0A1424',   // ink-900 — market price line
+  marketPrice:    '#111111',   // near-black — market price line
   fairValue:      '#5F790B',   // olive-700 — intrinsic / fair value
   analystTarget:  '#2563EB',   // blue-600 — analyst price target (dashed)
 
@@ -31,7 +31,7 @@ export const CHART_COLORS = {
 
   // Neutral / benchmarks
   benchmark:      '#94A3B8',
-  peer:           '#CBD1C4',
+  peer:           '#C8C8C8',
 
   // Up / down (price changes)
   up:             '#11875D',
@@ -39,12 +39,12 @@ export const CHART_COLORS = {
   warn:           '#B56A00',
 
   // Chart chrome
-  grid:           '#E8ECE3',
-  axisText:       '#8A96A8',
-  axisTitle:      '#536174',
-  tooltipBorder:  '#E3E6E0',
+  grid:           '#E5E5E5',
+  axisText:       '#9B9B9B',
+  axisTitle:      '#6B6B6B',
+  tooltipBorder:  '#E5E5E5',
   tooltipBg:      '#FFFFFF',
-  crosshair:      '#CBD1C4',
+  crosshair:      '#C8C8C8',
   refLine:        '#B56A00',   // amber — reference lines (e.g. consensus target)
 } as const
 
@@ -74,9 +74,9 @@ export const chartTooltipStyle: React.CSSProperties = {
   borderRadius:  '10px',
   fontSize:      '12px',
   fontFamily:    'var(--font-sans, Inter), system-ui, sans-serif',
-  boxShadow:     '0 8px 24px rgba(6, 16, 31, 0.09)',
+  boxShadow:     '0 8px 24px rgba(0, 0, 0, 0.09)',
   padding:       '8px 12px',
-  color:         '#0A1424',
+  color:         '#111111',
 }
 
 export const chartTooltipLabelStyle: React.CSSProperties = {
@@ -87,7 +87,7 @@ export const chartTooltipLabelStyle: React.CSSProperties = {
 }
 
 export const chartTooltipItemStyle: React.CSSProperties = {
-  color:   '#0A1424',
+  color:   '#111111',
   padding: '1px 0',
   fontSize: '12px',
 }
@@ -122,12 +122,12 @@ export const CHART_BAR_RADIUS: [number, number, number, number] = [4, 4, 0, 0]
 export function sensitivityCellStyle(upsidePct: number): React.CSSProperties {
   const abs = Math.abs(upsidePct)
   if (upsidePct > 40)  return { background: '#11875D', color: '#FFFFFF' }
-  if (upsidePct > 20)  return { background: '#BFD2A1', color: '#0A1424' }
-  if (upsidePct > 5)   return { background: '#EEF4DD', color: '#0A1424' }
-  if (upsidePct > -5)  return { background: '#F8F7F2', color: '#536174' }   // near fair value
-  if (upsidePct > -20) return { background: '#FCEAEA', color: '#0A1424' }
+  if (upsidePct > 20)  return { background: '#BFD2A1', color: '#111111' }
+  if (upsidePct > 5)   return { background: '#EEF4DD', color: '#111111' }
+  if (upsidePct > -5)  return { background: '#F5F5F5', color: '#6B6B6B' }   // near fair value
+  if (upsidePct > -20) return { background: '#FCEAEA', color: '#111111' }
   if (abs > 0)         return { background: '#D83B3B', color: '#FFFFFF' }
-  return { background: '#F1F5F9', color: '#536174' }
+  return { background: '#F5F5F5', color: '#6B6B6B' }
 }
 
 // ── Convenient grouped export ─────────────────────────────────────────────────

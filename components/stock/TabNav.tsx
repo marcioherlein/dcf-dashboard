@@ -69,15 +69,15 @@ export default function TabNav({ activeTab, onChange }: Props) {
                 className={cn(
                   'relative flex items-center gap-1.5 px-4 py-3.5 whitespace-nowrap transition-colors border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.55)] focus-visible:ring-offset-2',
                   primary ? 'text-[13px] font-medium' : 'text-[12px] font-normal',
-                  isFirstSecondary ? 'ml-2 pl-5 border-l border-[#E3E6E0]' : '',
+                  isFirstSecondary ? 'ml-2 pl-5 border-l border-[#E5E5E5]' : '',
                   active
                     ? 'border-transparent text-[#5F790B] bg-[#F6FAEA]'
-                    : 'border-transparent text-[#536174] hover:text-[#0A1424] hover:border-[#CBD1C4]',
+                    : 'border-transparent text-[#6B6B6B] hover:text-[#111111] hover:border-[#C8C8C8]',
                 )}
               >
                 <Icon
                   size={primary ? 14 : 13}
-                  className={cn('shrink-0', active ? 'text-[#5F790B]' : 'text-[#8A96A8]')}
+                  className={cn('shrink-0', active ? 'text-[#5F790B]' : 'text-[#9B9B9B]')}
                 />
                 {label}
 

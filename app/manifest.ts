@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Invest with a process, not a story.',
     start_url: '/',
     display: 'standalone',
-    theme_color: '#06101F',
-    background_color: '#F8F7F2',
+    theme_color: '#000000',
+    background_color: '#FFFFFF',
     icons: [
       {
         src: '/insic-app-icon-192.png',

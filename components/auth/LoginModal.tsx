@@ -55,12 +55,12 @@ export default function LoginModal({ onClose, intent, headline }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative w-full max-w-sm bg-white border border-[#E3E6E0] rounded-2xl shadow-2xl p-8 text-center"
+        className="relative w-full max-w-sm bg-white border border-[#E5E5E5] rounded-2xl shadow-2xl p-8 text-center"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-[#8A96A8] hover:text-[#536174] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-[#F3F2EC]"
+          className="absolute top-4 right-4 text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-[#F5F5F5]"
           aria-label="Close"
         >
           <X size={18} />
@@ -73,17 +73,17 @@ export default function LoginModal({ onClose, intent, headline }: Props) {
           </svg>
         </div>
 
-        <h2 id={titleId} className="text-lg font-bold text-[#0A1424] leading-snug">
+        <h2 id={titleId} className="text-lg font-bold text-[#111111] leading-snug">
           {displayHeadline}
         </h2>
-        <p className="mt-2 text-sm text-[#536174] leading-relaxed">
+        <p className="mt-2 text-sm text-[#6B6B6B] leading-relaxed">
           {displaySub}
         </p>
 
         <button
           ref={ctaRef}
           onClick={handleSignIn}
-          className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl border border-[#E3E6E0] bg-white py-3 px-4 text-sm font-semibold text-[#0A1424] shadow-sm hover:bg-[#F6FAEA] hover:border-[#BFD2A1] active:scale-[0.98] transition-all"
+          className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl border border-[#E5E5E5] bg-white py-3 px-4 text-sm font-semibold text-[#111111] shadow-sm hover:bg-[#F6FAEA] hover:border-[#BFD2A1] active:scale-[0.98] transition-all"
         >
           <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -94,7 +94,7 @@ export default function LoginModal({ onClose, intent, headline }: Props) {
           Continue with Google
         </button>
 
-        <p className="mt-5 text-[11px] text-[#8A96A8]">
+        <p className="mt-5 text-[11px] text-[#9B9B9B]">
           insic is free during beta. No credit card required.
         </p>
       </div>

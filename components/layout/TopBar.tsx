@@ -37,7 +37,7 @@ function CompanyLogo({ ticker }: { ticker: string }) {
 
   if (failed) {
     return (
-      <div className="w-6 h-6 rounded-full bg-[#EEF4DD] border border-[#CBD1C4] flex items-center justify-center shrink-0">
+      <div className="w-6 h-6 rounded-full bg-[#EEF4DD] border border-[#C8C8C8] flex items-center justify-center shrink-0">
         <span className="text-[10px] font-bold text-[#5F790B] leading-none">{initials}</span>
       </div>
     )
@@ -49,7 +49,7 @@ function CompanyLogo({ ticker }: { ticker: string }) {
       alt={ticker}
       width={24}
       height={24}
-      className="rounded-full border border-[#E3E6E0] shrink-0 object-cover"
+      className="rounded-full border border-[#E5E5E5] shrink-0 object-cover"
       onError={() => setFailed(true)}
     />
   )
@@ -67,14 +67,14 @@ function UserAvatar({ image, name }: { image: string | null; name: string | null
         alt={name ?? ''}
         width={28}
         height={28}
-        className="rounded-full ring-2 ring-[#E3E6E0] shrink-0"
+        className="rounded-full ring-2 ring-[#E5E5E5] shrink-0"
       />
     )
   }
 
   return (
     <div
-      className="w-7 h-7 rounded-full ring-2 ring-[#E3E6E0] bg-[#5F790B] flex items-center justify-center shrink-0"
+      className="w-7 h-7 rounded-full ring-2 ring-[#E5E5E5] bg-[#5F790B] flex items-center justify-center shrink-0"
       aria-label={name ?? undefined}
     >
       <span className="text-[10px] font-bold text-white leading-none">{initials}</span>
@@ -165,7 +165,7 @@ export default function TopBar() {
           <div className="h-[52px] flex items-center justify-between px-3 gap-2">
             {mobileSearchOpen ? (
               <div className="flex items-center gap-2 flex-1 min-w-0">
-                <Search size={14} className="text-[#8A96A8] shrink-0" />
+                <Search size={14} className="text-[#9B9B9B] shrink-0" />
                 <input
                   ref={mobileSearchRef}
                   type="text"
@@ -176,7 +176,7 @@ export default function TopBar() {
                     if (e.key === 'Escape') { setMobileSearchOpen(false); setQuery(''); setOpen(false) }
                   }}
                   placeholder="Search ticker…"
-                  className="flex-1 text-[16px] bg-transparent text-[#0A1424] placeholder-[#8A96A8] focus:outline-none"
+                  className="flex-1 text-[16px] bg-transparent text-[#111111] placeholder-[#9B9B9B] focus:outline-none"
                   autoFocus
                   autoCorrect="off"
                   autoCapitalize="characters"
@@ -184,7 +184,7 @@ export default function TopBar() {
                 />
                 <button
                   onClick={() => { setMobileSearchOpen(false); setQuery(''); setOpen(false) }}
-                  className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[#8A96A8] hover:text-[#536174] shrink-0"
+                  className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[#9B9B9B] hover:text-[#6B6B6B] shrink-0"
                   aria-label="Close search"
                 >
                   <X size={15} />
@@ -196,17 +196,17 @@ export default function TopBar() {
                   <button
                     onClick={() => router.push('/analyze')}
                     aria-label="Back to Analyze"
-                    className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg -ml-2 text-[#8A96A8] hover:text-[#5F790B] transition-colors shrink-0"
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg -ml-2 text-[#9B9B9B] hover:text-[#5F790B] transition-colors shrink-0"
                   >
                     <ChevronLeft size={16} strokeWidth={2.5} />
                   </button>
                   <CompanyLogo ticker={stockNav.ticker} />
-                  <span className="font-bold text-[14px] text-[#0A1424] tracking-tight shrink-0">
+                  <span className="font-bold text-[14px] text-[#111111] tracking-tight shrink-0">
                     {stockNav.ticker}
                   </span>
                   {stockNav.price != null && (
                     <div className="flex items-center gap-1 min-w-0 flex-wrap">
-                      <span className="font-semibold text-[13px] text-[#0A1424] tabular-nums">
+                      <span className="font-semibold text-[13px] text-[#111111] tabular-nums">
                         {stockNav.currency}{stockNav.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                       {stockNav.changePct != null && (
@@ -235,7 +235,7 @@ export default function TopBar() {
                 <div className="flex items-center gap-1 shrink-0">
                   <button
                     onClick={() => { setMobileSearchOpen(true); setTimeout(() => mobileSearchRef.current?.focus(), 50) }}
-                    className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-[10px] text-[#8A96A8] hover:text-[#5F790B] hover:bg-[#F6FAEA] transition-colors"
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-[10px] text-[#9B9B9B] hover:text-[#5F790B] hover:bg-[#F6FAEA] transition-colors"
                     aria-label="Search for a stock"
                   >
                     <Search size={16} strokeWidth={2} />
@@ -253,7 +253,7 @@ export default function TopBar() {
           </div>
           {/* Row 2: scrollable tabs */}
           <div
-            className="h-[44px] border-t border-[#E3E6E0] flex overflow-x-auto scrollbar-hide px-1"
+            className="h-[44px] border-t border-[#E5E5E5] flex overflow-x-auto scrollbar-hide px-1"
             role="tablist"
             style={{ overscrollBehaviorX: 'contain' }}
           >
@@ -267,7 +267,7 @@ export default function TopBar() {
                   onClick={() => onTabChangeRef.current?.(id)}
                   className={cn(
                     'relative flex items-center px-3 text-[12px] font-medium whitespace-nowrap transition-colors shrink-0 h-full',
-                    active ? 'text-[#5F790B]' : 'text-[#536174]',
+                    active ? 'text-[#5F790B]' : 'text-[#6B6B6B]',
                   )}
                 >
                   {label}
@@ -278,7 +278,7 @@ export default function TopBar() {
           </div>
           {/* Mobile search results dropdown */}
           {mobileSearchOpen && open && results.length > 0 && (
-            <div className="absolute left-0 right-0 z-50 bg-white border-b border-[#E3E6E0] shadow-lg" style={{ top: 'calc(96px + env(safe-area-inset-top, 0px))' }}>
+            <div className="absolute left-0 right-0 z-50 bg-white border-b border-[#E5E5E5] shadow-lg" style={{ top: 'calc(96px + env(safe-area-inset-top, 0px))' }}>
               {results.slice(0, 6).map(r => (
                 <button
                   key={r.symbol}
@@ -288,9 +288,9 @@ export default function TopBar() {
                     r.supported ? 'hover:bg-[#F6FAEA]' : 'opacity-40 cursor-not-allowed',
                   )}
                 >
-                  <span className="font-mono font-bold text-[13px] text-[#0A1424] w-14 shrink-0">{r.symbol}</span>
-                  <span className="text-[12px] text-[#536174] truncate flex-1">{r.longname ?? r.shortname}</span>
-                  <span className="text-[10px] text-[#8A96A8] shrink-0">{r.exchDisp ?? r.exchange}</span>
+                  <span className="font-mono font-bold text-[13px] text-[#111111] w-14 shrink-0">{r.symbol}</span>
+                  <span className="text-[12px] text-[#6B6B6B] truncate flex-1">{r.longname ?? r.shortname}</span>
+                  <span className="text-[10px] text-[#9B9B9B] shrink-0">{r.exchDisp ?? r.exchange}</span>
                 </button>
               ))}
             </div>
@@ -327,21 +327,21 @@ export default function TopBar() {
         {stockNav ? (
           <div className="flex items-center min-w-0 gap-0">
             {/* Identity + price */}
-            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pr-2 sm:pr-4 border-r border-[#E3E6E0] mr-1">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pr-2 sm:pr-4 border-r border-[#E5E5E5] mr-1">
               <button
                 onClick={() => router.push('/analyze')}
                 aria-label="Back to Analyze"
-                className="text-[#8A96A8] hover:text-[#5F790B] transition-colors shrink-0"
+                className="text-[#9B9B9B] hover:text-[#5F790B] transition-colors shrink-0"
               >
                 <ChevronLeft size={15} strokeWidth={2.5} />
               </button>
               <CompanyLogo ticker={stockNav.ticker} />
-              <span className="font-bold text-[13px] text-[#0A1424] tracking-tight shrink-0">
+              <span className="font-bold text-[13px] text-[#111111] tracking-tight shrink-0">
                 {stockNav.ticker}
               </span>
               {stockNav.price != null && (
                 <div className="flex items-baseline gap-1 shrink-0 flex-wrap">
-                  <span className="font-semibold text-[13px] text-[#0A1424] tabular-nums">
+                  <span className="font-semibold text-[13px] text-[#111111] tabular-nums">
                     {stockNav.currency}{stockNav.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                   {stockNav.changePct != null && (
@@ -399,7 +399,7 @@ export default function TopBar() {
                     onClick={() => onTabChangeRef.current?.(id)}
                     className={cn(
                       'relative flex items-center gap-1.5 px-3 sm:px-3.5 text-[13px] font-medium whitespace-nowrap transition-colors shrink-0 h-[52px]',
-                      active ? 'text-[#0A1424]' : 'text-[#536174] hover:text-[#0A1424]',
+                      active ? 'text-[#111111]' : 'text-[#6B6B6B] hover:text-[#111111]',
                     )}
                   >
                     {label}
@@ -421,14 +421,14 @@ export default function TopBar() {
                   background: 'rgba(255, 255, 255, 0.80)',
                   backdropFilter: 'blur(10px)',
                   WebkitBackdropFilter: 'blur(10px)',
-                  borderColor: open ? 'rgba(95, 121, 11, 0.45)' : '#E3E6E0',
+                  borderColor: open ? 'rgba(95, 121, 11, 0.45)' : '#E5E5E5',
                   boxShadow: open ? '0 0 0 3px rgba(95, 121, 11, 0.09)' : 'none',
                 }}
               >
                 {loading ? (
-                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#E3E6E0] border-t-[#5F790B] shrink-0" />
+                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#E5E5E5] border-t-[#5F790B] shrink-0" />
                 ) : (
-                  <Search size={14} className={searchError ? 'text-[#D83B3B] shrink-0' : 'text-[#8A96A8] shrink-0'} />
+                  <Search size={14} className={searchError ? 'text-[#D83B3B] shrink-0' : 'text-[#9B9B9B] shrink-0'} />
                 )}
                 <input
                   type="text"
@@ -455,7 +455,7 @@ export default function TopBar() {
                     }
                   }}
                   placeholder="Search ticker or company…"
-                  className="flex-1 min-w-0 bg-transparent text-[16px] sm:text-[13px] text-[#0A1424] placeholder-[#8A96A8] focus:outline-none"
+                  className="flex-1 min-w-0 bg-transparent text-[16px] sm:text-[13px] text-[#111111] placeholder-[#9B9B9B] focus:outline-none"
                   autoCorrect="off"
                   autoCapitalize="characters"
                   spellCheck={false}
@@ -493,7 +493,7 @@ export default function TopBar() {
                           variants={reduced ? {} : { hidden: { opacity: 0, x: -6 }, visible: { opacity: 1, x: 0, transition: { duration: 0.16 } } }}
                           onClick={() => r.supported ? select(r.symbol) : undefined}
                           disabled={!r.supported}
-                          className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left border-b border-[#E3E6E0] last:border-b-0 transition-colors ${
+                          className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left border-b border-[#E5E5E5] last:border-b-0 transition-colors ${
                             idx === activeIdx ? 'bg-[#F6FAEA]' : ''
                           } ${
                             r.supported
@@ -503,12 +503,12 @@ export default function TopBar() {
                         >
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 mb-0.5">
-                              <span className="text-[14px] font-bold text-[#0A1424] font-mono">{r.symbol}</span>
+                              <span className="text-[14px] font-bold text-[#111111] font-mono">{r.symbol}</span>
                               {r.exchange && r.supported && (
-                                <span className="text-[10px] text-[#8A96A8] font-medium uppercase">{r.exchange}</span>
+                                <span className="text-[10px] text-[#9B9B9B] font-medium uppercase">{r.exchange}</span>
                               )}
                             </div>
-                            <span className="text-[12px] text-[#536174] truncate block">{r.longname ?? r.shortname}</span>
+                            <span className="text-[12px] text-[#6B6B6B] truncate block">{r.longname ?? r.shortname}</span>
                           </div>
                           {r.supported ? (
                             r.quoteType && (
@@ -517,7 +517,7 @@ export default function TopBar() {
                               </span>
                             )
                           ) : (
-                            <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[#F8F7F2] text-[#8A96A8] border border-[#E3E6E0] whitespace-nowrap">
+                            <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[#FFFFFF] text-[#9B9B9B] border border-[#E5E5E5] whitespace-nowrap">
                               Not available — {r.exchDisp ?? r.exchange}
                             </span>
                           )}
@@ -565,14 +565,14 @@ export default function TopBar() {
               {isPro && (
                 <button
                   onClick={openBillingPortal}
-                  className="text-[12px] text-[#8A96A8] hover:text-[#536174] transition-colors whitespace-nowrap hidden sm:block"
+                  className="text-[12px] text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors whitespace-nowrap hidden sm:block"
                 >
                   Billing
                 </button>
               )}
               <button
                 onClick={() => signOut()}
-                className="text-[12px] text-[#8A96A8] hover:text-[#536174] transition-colors whitespace-nowrap hidden sm:block"
+                className="text-[12px] text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors whitespace-nowrap hidden sm:block"
               >
                 Sign out
               </button>
@@ -587,7 +587,7 @@ export default function TopBar() {
               </button>
               <button
                 onClick={() => signIn('google')}
-                className="text-[12.5px] text-[#536174] hover:text-[#0A1424] transition-colors whitespace-nowrap hidden md:block"
+                className="text-[12.5px] text-[#6B6B6B] hover:text-[#111111] transition-colors whitespace-nowrap hidden md:block"
               >
                 Sign in
               </button>

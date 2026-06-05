@@ -12,13 +12,13 @@ const buttonVariants = cva(
           "bg-[#5F790B] text-white hover:bg-[#526A08] active:bg-[#4A5E07] shadow-sm",
         // White surface with warm border — secondary actions
         outline:
-          "border-[#CBD1C4] bg-white text-[#0A1424] hover:bg-[#F6FAEA] hover:border-[#5F790B]",
+          "border-[#C8C8C8] bg-white text-[#111111] hover:bg-[#F6FAEA] hover:border-[#5F790B]",
         // Subtle tinted — tertiary/low-emphasis
         secondary:
-          "bg-[#F8F7F2] border-[#E3E6E0] text-[#536174] hover:bg-[#EEF4DD] hover:text-[#0A1424]",
+          "bg-[#FFFFFF] border-[#E5E5E5] text-[#6B6B6B] hover:bg-[#EEF4DD] hover:text-[#111111]",
         // Ghost — icon buttons, inline actions
         ghost:
-          "text-[#536174] hover:bg-[#F3F2EC] hover:text-[#0A1424]",
+          "text-[#6B6B6B] hover:bg-[#F5F5F5] hover:text-[#111111]",
         // Blue — secondary/info actions (links, saves, navigation)
         blue:
           "bg-[#2563EB] text-white hover:bg-[#1D4ED8] active:bg-[#1E40AF] shadow-sm",
@@ -30,7 +30,7 @@ const buttonVariants = cva(
           "text-[#5F790B] underline-offset-4 hover:underline hover:text-[#526A08]",
         // Dark ink surface (for use on light pages with ink card backgrounds)
         ink:
-          "bg-[#0A1424] text-white hover:bg-[#111C2E] shadow-sm",
+          "bg-[#111111] text-white hover:bg-[#1C1C1C] shadow-sm",
         // Legacy dark glass — kept for landing/dark hero sections
         glass:
           "bg-[rgba(255,255,255,0.08)] border-[rgba(255,255,255,0.15)] text-white hover:bg-[rgba(255,255,255,0.14)] hover:border-[rgba(255,255,255,0.25)]",

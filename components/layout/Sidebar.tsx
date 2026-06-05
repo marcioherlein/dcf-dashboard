@@ -46,8 +46,8 @@ function NavItem({
         className={cn(
           'group relative flex items-center gap-2.5 px-3 py-2 rounded-[10px] text-[13.5px] font-medium transition-colors duration-120',
           active
-            ? 'bg-[#EEF4DD] text-[#0A1424]'
-            : 'text-[#536174] hover:bg-[#F1F5E8] hover:text-[#0A1424]',
+            ? 'bg-[#EEF4DD] text-[#111111]'
+            : 'text-[#6B6B6B] hover:bg-[#F1F5E8] hover:text-[#111111]',
         )}
       >
         {/* Olive left indicator for active state */}
@@ -61,7 +61,7 @@ function NavItem({
             'shrink-0 transition-colors duration-120',
             active
               ? 'text-[#5F790B]'
-              : 'text-[#8A96A8] group-hover:text-[#5F790B]',
+              : 'text-[#9B9B9B] group-hover:text-[#5F790B]',
           )}
         />
         <span className="truncate">{label}</span>
@@ -72,7 +72,7 @@ function NavItem({
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#8A96A8]">
+    <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#9B9B9B]">
       {children}
     </p>
   )
@@ -88,11 +88,11 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="fixed left-0 top-0 bottom-0 w-[220px] z-30 hidden lg:flex flex-col border-r border-[#E3E6E0]"
-      style={{ background: '#FBFAF7' }}
+      className="fixed left-0 top-0 bottom-0 w-[220px] z-30 hidden lg:flex flex-col border-r border-[#E5E5E5]"
+      style={{ background: '#FAFAFA' }}
     >
       {/* Logo lockup */}
-      <div className="px-4 border-b border-[#E3E6E0]" style={{ height: '52px', display: 'flex', alignItems: 'center' }}>
+      <div className="px-4 border-b border-[#E5E5E5]" style={{ height: '52px', display: 'flex', alignItems: 'center' }}>
         <Link href={session ? '/analyze' : '/'} className="flex items-center leading-none" aria-label="insic home">
           <InsicLogoLockup size="md" />
         </Link>
@@ -115,7 +115,7 @@ export default function Sidebar() {
           ))}
         </div>
 
-        <div className="mx-3 mb-3 border-t border-[#E3E6E0]" />
+        <div className="mx-3 mb-3 border-t border-[#E5E5E5]" />
 
         <SectionLabel>Account</SectionLabel>
         <div className="flex flex-col gap-0.5">
@@ -134,7 +134,7 @@ export default function Sidebar() {
 
       {/* User profile footer */}
       <motion.div
-        className="px-3 py-3.5 border-t border-[#E3E6E0]"
+        className="px-3 py-3.5 border-t border-[#E5E5E5]"
         initial={reduced ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: (PRIMARY_NAV.length + UTILITY_NAV.length) * 0.025 + 0.06, duration: 0.24 }}
@@ -147,7 +147,7 @@ export default function Sidebar() {
                 alt={session.user.name ?? ''}
                 width={32}
                 height={32}
-                className="rounded-full ring-2 ring-[#E3E6E0] shrink-0"
+                className="rounded-full ring-2 ring-[#E5E5E5] shrink-0"
               />
             ) : (
               <div className="w-8 h-8 rounded-full bg-[#5F790B] flex items-center justify-center shrink-0">
@@ -155,12 +155,12 @@ export default function Sidebar() {
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-[12px] font-semibold text-[#0A1424] truncate leading-tight">
+              <p className="text-[12px] font-semibold text-[#111111] truncate leading-tight">
                 {session.user?.name ?? 'User'}
               </p>
               <button
                 onClick={() => signOut()}
-                className="min-h-[44px] flex items-center px-2 text-[11px] text-[#8A96A8] hover:text-[#536174] transition-colors leading-tight"
+                className="min-h-[44px] flex items-center px-2 text-[11px] text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors leading-tight"
               >
                 Sign out
               </button>

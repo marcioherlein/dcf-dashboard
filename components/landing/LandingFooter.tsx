@@ -23,7 +23,7 @@ const NAV_COLS = [
 
 export default function LandingFooter() {
   return (
-    <footer style={{ background: '#0A1424', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+    <footer style={{ background: '#111111', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-10 sm:py-14">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-8">
 
@@ -32,7 +32,7 @@ export default function LandingFooter() {
             <Link href="/" className="flex items-center gap-2 mb-3 group" aria-label="insic home">
               <InsicLogoLockup size="md" on="dark" />
             </Link>
-            <p className="text-[13px] text-[#8A96A8] leading-relaxed mb-5">
+            <p className="text-[13px] text-[#9B9B9B] leading-relaxed mb-5">
               Invest with a process, not a story.
             </p>
 
@@ -73,7 +73,7 @@ export default function LandingFooter() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={s.label}
-                  className="w-8 h-8 rounded-full border border-[rgba(255,255,255,0.12)] flex items-center justify-center text-[#8A96A8] hover:text-white hover:border-[rgba(255,255,255,0.28)] transition-colors"
+                  className="w-8 h-8 rounded-full border border-[rgba(255,255,255,0.12)] flex items-center justify-center text-[#9B9B9B] hover:text-white hover:border-[rgba(255,255,255,0.28)] transition-colors"
                 >
                   {s.icon}
                 </a>
@@ -89,7 +89,7 @@ export default function LandingFooter() {
                   <Link
                     key={item.label}
                     href={item.href}
-                    className="text-[13px] text-[#8A96A8] hover:text-white transition-colors"
+                    className="text-[13px] text-[#9B9B9B] hover:text-white transition-colors"
                   >
                     {item.label}
                   </Link>
@@ -101,10 +101,10 @@ export default function LandingFooter() {
 
         {/* Bottom bar */}
         <div className="mt-10 pt-6 border-t border-[rgba(255,255,255,0.07)]">
-          <p className="text-[11px] text-[#8A96A8] leading-relaxed">
+          <p className="text-[11px] text-[#9B9B9B] leading-relaxed">
             Not financial advice. See Terms.
           </p>
-          <p className="text-[11px] text-[#8A96A8] mt-1">
+          <p className="text-[11px] text-[#9B9B9B] mt-1">
             © {new Date().getFullYear()} insic. All rights reserved.
           </p>
         </div>

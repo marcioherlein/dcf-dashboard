@@ -13,7 +13,7 @@ const LEFT_NAV = [
     match: (p: string) => p.startsWith('/markets'),
     icon: (active: boolean) => (
       <Globe
-        className={cn('w-5 h-5', active ? 'text-[#5F790B]' : 'text-[#8A96A8]')}
+        className={cn('w-5 h-5', active ? 'text-[#5F790B]' : 'text-[#9B9B9B]')}
         strokeWidth={active ? 2 : 1.5}
       />
     ),
@@ -24,7 +24,7 @@ const LEFT_NAV = [
     match: (p: string) => p.startsWith('/screener'),
     icon: (active: boolean) => (
       <SlidersHorizontal
-        className={cn('w-5 h-5', active ? 'text-[#5F790B]' : 'text-[#8A96A8]')}
+        className={cn('w-5 h-5', active ? 'text-[#5F790B]' : 'text-[#9B9B9B]')}
         strokeWidth={active ? 2 : 1.5}
       />
     ),
@@ -38,7 +38,7 @@ const RIGHT_NAV = [
     match: (p: string) => p.startsWith('/etf'),
     icon: (active: boolean) => (
       <PieChart
-        className={cn('w-5 h-5', active ? 'text-[#5F790B]' : 'text-[#8A96A8]')}
+        className={cn('w-5 h-5', active ? 'text-[#5F790B]' : 'text-[#9B9B9B]')}
         strokeWidth={active ? 2 : 1.5}
       />
     ),
@@ -71,7 +71,7 @@ export default function BottomNav() {
         {icon(active)}
         <span className={cn(
           'text-[11px] font-medium',
-          active ? 'text-[#5F790B]' : 'text-[#8A96A8]',
+          active ? 'text-[#5F790B]' : 'text-[#9B9B9B]',
         )}>
           {label}
         </span>
@@ -92,16 +92,16 @@ export default function BottomNav() {
       {/* More drawer panel */}
       <div
         className={cn(
-          'fixed left-0 right-0 z-50 lg:hidden bg-white rounded-t-2xl shadow-xl border-t border-[#E3E6E0] transition-transform duration-200',
+          'fixed left-0 right-0 z-50 lg:hidden bg-white rounded-t-2xl shadow-xl border-t border-[#E5E5E5] transition-transform duration-200',
           moreOpen ? 'translate-y-0' : 'translate-y-full',
         )}
         style={{ bottom: 'calc(56px + env(safe-area-inset-bottom))' }}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#E3E6E0]">
-          <span className="text-sm font-semibold text-[#0A1424]">More</span>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[#E5E5E5]">
+          <span className="text-sm font-semibold text-[#111111]">More</span>
           <button
             onClick={() => setMoreOpen(false)}
-            className="text-[#8A96A8] hover:text-[#536174] p-2 -mr-1 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-[#F3F2EC] transition-colors"
+            className="text-[#9B9B9B] hover:text-[#6B6B6B] p-2 -mr-1 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-[#F5F5F5] transition-colors"
             aria-label="Close menu"
           >
             <X size={16} />
@@ -117,12 +117,12 @@ export default function BottomNav() {
                 onClick={() => setMoreOpen(false)}
                 className={cn(
                   'flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl text-[14px] font-medium transition-colors',
-                  active ? 'bg-[#EEF4DD] text-[#0A1424]' : 'text-[#536174] hover:bg-[#F6FAEA]',
+                  active ? 'bg-[#EEF4DD] text-[#111111]' : 'text-[#6B6B6B] hover:bg-[#F6FAEA]',
                 )}
               >
                 <Icon
                   size={18}
-                  className={active ? 'text-[#5F790B]' : 'text-[#8A96A8]'}
+                  className={active ? 'text-[#5F790B]' : 'text-[#9B9B9B]'}
                   strokeWidth={active ? 2.2 : 1.8}
                 />
                 {label}
@@ -161,7 +161,7 @@ export default function BottomNav() {
             </div>
             <span className={cn(
               'text-[10px] font-medium',
-              isCenterActive ? 'text-[#5F790B]' : 'text-[#8A96A8]',
+              isCenterActive ? 'text-[#5F790B]' : 'text-[#9B9B9B]',
             )}>
               Analyze
             </span>
@@ -177,7 +177,7 @@ export default function BottomNav() {
             className="flex flex-col items-center justify-center gap-0.5 flex-1 py-2 active:scale-95 transition-transform min-w-[60px]"
           >
             <svg
-              className={cn('w-5 h-5', isMoreActive || moreOpen ? 'text-[#5F790B]' : 'text-[#8A96A8]')}
+              className={cn('w-5 h-5', isMoreActive || moreOpen ? 'text-[#5F790B]' : 'text-[#9B9B9B]')}
               fill="none" viewBox="0 0 24 24"
             >
               <circle cx="5" cy="12" r="1.5" fill="currentColor" />
@@ -186,7 +186,7 @@ export default function BottomNav() {
             </svg>
             <span className={cn(
               'text-[11px] font-medium',
-              isMoreActive || moreOpen ? 'text-[#5F790B]' : 'text-[#8A96A8]',
+              isMoreActive || moreOpen ? 'text-[#5F790B]' : 'text-[#9B9B9B]',
             )}>
               More
             </span>

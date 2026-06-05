@@ -13,7 +13,7 @@ type MarkProps = {
 
 function InsicMark({ className, style, mono = false, title = "insic" }: MarkProps) {
   const olive = mono ? "#FFFFFF" : "#5F790B";
-  const ink   = mono ? "#FFFFFF" : "#06101F";
+  const ink   = mono ? "#FFFFFF" : "#000000";
   return (
     <svg
       className={className}
@@ -80,7 +80,7 @@ export function InsicLogoLockup({
   style,
 }: InsicLogoLockupProps) {
   const { iconSize, fontSize, gap } = LOCKUP_SIZES[size];
-  const textColor = on === "dark" ? "#FFFFFF" : "#06101F";
+  const textColor = on === "dark" ? "#FFFFFF" : "#000000";
 
   return (
     <span

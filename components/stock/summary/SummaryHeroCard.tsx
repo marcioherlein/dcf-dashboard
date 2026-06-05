@@ -91,7 +91,7 @@ export default function SummaryHeroCard({
 
         {/* ── Headline block ── */}
         <div className="flex flex-col gap-1.5">
-          <p className="text-[26px] sm:text-[30px] font-[800] text-[#0A1424] leading-tight tracking-tight [text-wrap:balance]">
+          <p className="text-[26px] sm:text-[30px] font-[800] text-[#111111] leading-tight tracking-tight [text-wrap:balance]">
             {ticker} looks{' '}
             <span className={verdict.headingClass}>{verdict.word}</span>
           </p>
@@ -106,28 +106,28 @@ export default function SummaryHeroCard({
         </div>
 
         {/* ── Description ── */}
-        <p className="text-[14px] text-[#536174] leading-relaxed">
+        <p className="text-[14px] text-[#6B6B6B] leading-relaxed">
           {description}
         </p>
 
         {/* ── Primary metrics ── */}
         <div className="flex flex-wrap items-end gap-5">
           <div>
-            <p className="text-[11px] text-[#8A96A8] mb-0.5">Fair value</p>
-            <p className="text-[26px] font-[750] text-[#0A1424] tabular-nums leading-none">
+            <p className="text-[11px] text-[#9B9B9B] mb-0.5">Fair value</p>
+            <p className="text-[26px] font-[750] text-[#111111] tabular-nums leading-none">
               {fairValue != null ? fmtPrice(fairValue, currency) : '—'}
             </p>
           </div>
-          <div className="w-px h-7 bg-[#E3E6E0] self-end mb-0.5 shrink-0" />
+          <div className="w-px h-7 bg-[#E5E5E5] self-end mb-0.5 shrink-0" />
           <div>
-            <p className="text-[11px] text-[#8A96A8] mb-0.5">vs current price</p>
+            <p className="text-[11px] text-[#9B9B9B] mb-0.5">vs current price</p>
             <p className={cn('text-[26px] font-[750] leading-none tabular-nums', verdict.upsideClass)}>
               {upsideDisplay}
             </p>
           </div>
         </div>
         {ratio != null && (
-          <p className="text-[12px] text-[#536174]">
+          <p className="text-[12px] text-[#6B6B6B]">
             You pay{' '}
             <span className={cn('font-[700]', ratio < 1 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
               ${ratio.toFixed(2)}
@@ -151,13 +151,13 @@ export default function SummaryHeroCard({
         {/* ── Key strengths ── */}
         {badgeDrivers.length > 0 && (
           <div>
-            <p className="text-[11px] text-[#8A96A8] mb-2">Key strengths</p>
+            <p className="text-[11px] text-[#9B9B9B] mb-2">Key strengths</p>
             <div className="flex flex-wrap gap-1.5">
               {badgeDrivers.map((label, i) => (
                 <span
                   key={i}
                   title={drivers.filter(d => POSITIVE_RE.test(d))[i]}
-                  className="text-[12px] font-[600] text-[#0A1424] bg-white border border-[#E3E6E0] rounded-full px-3 py-1 leading-tight"
+                  className="text-[12px] font-[600] text-[#111111] bg-white border border-[#E5E5E5] rounded-full px-3 py-1 leading-tight"
                 >
                   {label}
                 </span>
