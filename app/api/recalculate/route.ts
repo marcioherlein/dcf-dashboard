@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { projectCashFlows } from '@/lib/dcf/projectCashFlows'
 import { calculateFairValue, buildScenarios } from '@/lib/dcf/calculateFairValue'
 import { VALUATION_CONFIG } from '@/config/valuation.config'
+import { rateLimit } from '@/lib/rateLimit'
 
 // Stateless recalculation endpoint.
 // The client passes all base DCF inputs plus any overrides (CAGR, WACC, terminal g).
 // We run the DCF math server-side and return updated fair value + scenarios.
 // No Yahoo Finance calls — all inputs come from the client's already-loaded data.
 export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, 10, 60000, 'recalculate')
+  if (limited) return limited
+
   const p = req.nextUrl.searchParams
 
   const baseFCF      = parseFloat(p.get('baseFCF') ?? '')
@@ -25,7 +29,9 @@ export async function GET(req: NextRequest) {
   const waccOverride     = parseFloat(p.get('waccOverride') ?? '')
   const terminalGOverride = parseFloat(p.get('terminalGOverride') ?? '')
 
-  if ([baseFCF, baseCAGR, baseWACC, baseTerminalG, sharesM, currentPrice].some(isNaN)) {
+  const isFiniteNum = (v: number) => isFinite(v) && !isNaN(v)
+
+  if ([baseFCF, baseCAGR, baseWACC, baseTerminalG, sharesM, currentPrice].some(v => !isFiniteNum(v))) {
     return NextResponse.json({ error: 'Missing required numeric parameters' }, { status: 400 })
   }
 

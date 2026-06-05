@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { rateLimit } from '@/lib/rateLimit'
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const YahooFinance = require('yahoo-finance2').default
 const yf = new YahooFinance({ suppressNotices: ['ripHistorical', 'yahooSurvey'] })
@@ -74,6 +77,12 @@ function sumQuarters(quarters: any[], sumKeys: string[], avgKeys: string[]): Rec
 }
 
 export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, 3, 60_000, 'statements')
+  if (limited) return limited
+
+  const session = await getServerSession(authOptions)
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const ticker = req.nextUrl.searchParams.get('ticker')?.toUpperCase()
   if (!ticker) return NextResponse.json({ error: 'ticker required' }, { status: 400 })
 

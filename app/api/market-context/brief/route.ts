@@ -1,10 +1,19 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase'
 import Anthropic from '@anthropic-ai/sdk'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { rateLimit } from '@/lib/rateLimit'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, 5, 300_000, 'market-context-brief') // 5 per 5 min
+  if (limited) return limited
+
+  const session = await getServerSession(authOptions)
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   try {
     const body = await req.json()
     const { signals, pulse } = body as {

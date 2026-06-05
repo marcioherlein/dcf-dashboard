@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit } from '@/lib/rateLimit'
 import { STRATEGY_UNIVERSE, StrategyRow } from '@/lib/strategies/types'
 
 export const maxDuration = 60
@@ -35,7 +36,10 @@ function assignRanks(rows: { ticker: string; value: number | null }[], ascending
 
 // ─── GET handler ──────────────────────────────────────────────────────────────
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, 2, 600_000, 'strategies') // 2 per 10 min — very heavy
+  if (limited) return limited
+
   const tickers = STRATEGY_UNIVERSE.map(t => t.ticker)
 
   const now = new Date()

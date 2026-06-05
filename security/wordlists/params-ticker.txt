@@ -1,0 +1,32 @@
+# SQLi / injection probes for ticker param
+'
+''
+`
+"
+"'
+' OR '1'='1
+' OR 1=1--
+'; DROP TABLE users--
+UNION SELECT NULL--
+../
+../../etc/passwd
+<script>alert(1)</script>
+<img src=x onerror=alert(1)>
+${7*7}
+{{7*7}}
+;ls
+|id
+&&id
+`id`
+%00
+\x00
+null
+undefined
+NaN
+0
+-1
+999999999
+# Real tickers for control/baseline
+AAPL
+MSFT
+TSLA

@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { rateLimit } from '@/lib/rateLimit'
 import { getFmpBundle, getFmpSecFilings, getFmpTopInstitutionalOwners, type FmpIncomeStatement, type FmpBalanceSheet, type FmpCashFlowStatement } from '@/lib/data/fmpClient'
 import { getFinancials, getQuote, getHistorical, getSPYHistorical, getFXRate, getPeerQuotes, getAnnualBalanceSheet, getAnnualCashFlow, getAnnualIncomeStatement } from '@/lib/data/yahooClient'
 import { calculateBeta } from '@/lib/dcf/calculateBeta'
@@ -17,6 +20,12 @@ import { runAssumptionAudit } from '@/lib/valuation/assumptionAuditor'
 import { seedAssumptions } from '@/lib/valuation/cockpitBuilders'
 
 export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, 3, 60_000, 'financials')
+  if (limited) return limited
+
+  const session = await getServerSession(authOptions)
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const ticker = req.nextUrl.searchParams.get('ticker')?.toUpperCase()
   if (!ticker) return NextResponse.json({ error: 'ticker required' }, { status: 400 })
 

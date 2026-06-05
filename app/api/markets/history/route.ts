@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getHistorical } from '@/lib/data/yahooClient'
 import type { HistoricalPeriod } from '@/lib/data/yahooClient'
+import { rateLimit } from '@/lib/rateLimit'
 
 export const revalidate = 300
 
@@ -22,6 +23,9 @@ export interface HistoryPoint {
 }
 
 export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, 5, 60000, 'markets-history')
+  if (limited) return limited
+
   const symbol = req.nextUrl.searchParams.get('symbol')
   const periodParam = (req.nextUrl.searchParams.get('period') ?? '1Y').toUpperCase()
 

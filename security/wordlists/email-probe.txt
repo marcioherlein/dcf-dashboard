@@ -1,0 +1,4 @@
+test@test.com
+a@a.com
+admin@insic.app
+test@insic.app

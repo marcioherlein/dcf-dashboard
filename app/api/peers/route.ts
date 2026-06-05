@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getRecommendedPeers, getQuoteSummaryForPeer } from '@/lib/data/yahooClient'
+import { rateLimit } from '@/lib/rateLimit'
 
 export interface PeerData {
   ticker: string
@@ -50,6 +51,9 @@ async function fetchPeerData(ticker: string): Promise<PeerData | null> {
 }
 
 export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, 3, 60000, 'peers')
+  if (limited) return limited
+
   const ticker = req.nextUrl.searchParams.get('ticker')?.toUpperCase()
   if (!ticker) return NextResponse.json({ error: 'ticker required' }, { status: 400 })
 

@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit } from '@/lib/rateLimit'
 
 export const revalidate = 3600  // 1 hour
 
@@ -57,7 +58,10 @@ function formatTime(t: string): string {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, 5, 60_000, 'economic-calendar')
+  if (limited) return limited
+
   const now = new Date()
   const from = now.toISOString().split('T')[0]
   const to = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]

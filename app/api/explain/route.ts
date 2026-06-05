@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { rateLimit } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 30
@@ -9,6 +12,11 @@ const cache = new Map<string, { text: string; ts: number }>()
 const CACHE_TTL_MS = 4 * 60 * 60 * 1000 // 4 hours
 
 export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, 5, 60_000, 'explain')
+  if (limited) return limited
+
+  const session = await getServerSession(authOptions)
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const ticker     = req.nextUrl.searchParams.get('ticker')?.toUpperCase()
   const fairValue  = parseFloat(req.nextUrl.searchParams.get('fv') ?? '')
   const price      = parseFloat(req.nextUrl.searchParams.get('price') ?? '')

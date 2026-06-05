@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit } from '@/lib/rateLimit'
 import { ALL_INSTRUMENTS, BENCHMARK_TICKERS, type Instrument } from '@/lib/factor/instruments'
 import { getCedear } from '@/lib/factor/cedearMap'
 import {
@@ -120,6 +121,9 @@ async function batchFetch<T>(
 // ── Main handler ──────────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, 2, 300000, 'factor-ranking')
+  if (limited) return limited
+
   const market = req.nextUrl.searchParams.get('market') ?? 'all'
   const topN   = parseInt(req.nextUrl.searchParams.get('topN') ?? '0') || 0
   const onlyCedear = req.nextUrl.searchParams.get('cedear') === '1'

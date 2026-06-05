@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit } from '@/lib/rateLimit'
 import { get2YTreasury, getHYSpread } from '@/lib/data/fredClient'
 import { createServiceClient } from '@/lib/supabase'
 import {
@@ -40,7 +41,10 @@ function computeMomentum(sectorPrices: number[], spxPrices: number[]): number {
   return rs1 - rs2
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, 3, 60_000, 'market-context')
+  if (limited) return limited
+
   try {
     const period2 = new Date()
     const period1 = new Date()

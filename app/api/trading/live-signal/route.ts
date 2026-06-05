@@ -24,6 +24,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit } from '@/lib/rateLimit'
 import { computePairwiseRatios, pairwiseConfidenceModifier } from '@/lib/rv/pairwise-ratio';
 
 export const dynamic = 'force-dynamic'
@@ -118,6 +119,9 @@ function extractFund(q: any) {
 }
 
 export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, 2, 300000, 'trading-signal')
+  if (limited) return limited
+
   try {
     const { searchParams } = new URL(req.url);
     const lookback        = Math.min(parseInt(searchParams.get('lookback') ?? '20'), 60);

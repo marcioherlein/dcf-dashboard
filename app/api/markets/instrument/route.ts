@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getInstrumentMeta } from '@/lib/markets/instrumentMeta'
+import { rateLimit } from '@/lib/rateLimit'
 
 export const revalidate = 60
 
@@ -37,6 +38,9 @@ export interface InstrumentDetail {
 }
 
 export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, 5, 60000, 'markets-inst')
+  if (limited) return limited
+
   const symbol = req.nextUrl.searchParams.get('symbol')
   if (!symbol) return NextResponse.json({ error: 'symbol is required' }, { status: 400 })
 

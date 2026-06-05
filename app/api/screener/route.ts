@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { SCREENER_UNIVERSE } from '@/lib/data/screenerUniverse'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
+import { rateLimit } from '@/lib/rateLimit'
 const YahooFinance = require('yahoo-finance2').default
 const yf = new YahooFinance({ suppressNotices: ['ripHistorical', 'yahooSurvey'] })
 
@@ -86,6 +87,9 @@ async function fetchAllQuotes(): Promise<ScreenerStock[]> {
 }
 
 export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, 2, 300000, 'screener')
+  if (limited) return limited
+
   const params = req.nextUrl.searchParams
   const sector    = params.get('sector') || undefined
   const capTier   = params.get('capTier') || undefined

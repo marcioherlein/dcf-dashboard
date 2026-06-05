@@ -1,18 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { rateLimit } from '@/lib/rateLimit'
 
-function getClient() {
+function getAnonClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!url || !key) return null
   return createClient(url, key)
 }
 
-export async function GET(req: NextRequest) {
-  const ticker = req.nextUrl.searchParams.get('ticker')?.toUpperCase()?.trim()
-  if (!ticker) return NextResponse.json({ error: 'ticker required' }, { status: 400 })
+const TICKER_RE = /^[A-Z0-9.]{1,10}$/
 
-  const client = getClient()
+export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, 5, 60_000, 'etf-score-history')
+  if (limited) return limited
+
+  const ticker = req.nextUrl.searchParams.get('ticker')?.toUpperCase()?.trim()
+  if (!ticker || !TICKER_RE.test(ticker)) return NextResponse.json({ error: 'ticker required' }, { status: 400 })
+
+  const client = getAnonClient()
   if (!client) return NextResponse.json([], { status: 200 })
 
   try {
@@ -35,13 +41,21 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, 2, 60_000, 'etf-score-history-post')
+  if (limited) return limited
+
   const body = await req.json().catch(() => null)
   if (!body) return NextResponse.json({ error: 'invalid body' }, { status: 400 })
 
   const { ticker, score, peRatio, pbRatio, yieldVal, expenseRatio } = body
-  if (!ticker || typeof score !== 'number') return NextResponse.json({ error: 'missing fields' }, { status: 400 })
+  if (!ticker || typeof score !== 'number' || !isFinite(score) || score < 0 || score > 100) {
+    return NextResponse.json({ error: 'missing or invalid fields' }, { status: 400 })
+  }
+  if (!TICKER_RE.test(String(ticker).toUpperCase())) {
+    return NextResponse.json({ error: 'invalid ticker' }, { status: 400 })
+  }
 
-  const client = getClient()
+  const client = getAnonClient()
   if (!client) return NextResponse.json({ ok: false })
 
   try {

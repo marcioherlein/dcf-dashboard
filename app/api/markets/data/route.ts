@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit } from '@/lib/rateLimit'
 import { getYieldCurve } from '@/lib/data/fredClient'
 import type { YieldCurvePoint } from '@/lib/data/fredClient'
 
@@ -220,7 +221,10 @@ function toInstrument(sym: { symbol: string; name: string }, q: any): MarketInst
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, 3, 60_000, 'markets-data')
+  if (limited) return limited
+
   try {
     const symbols = INSTRUMENTS.map(i => i.symbol)
 

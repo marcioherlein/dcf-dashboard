@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
+import { rateLimit } from '@/lib/rateLimit'
 const YahooFinance = require('yahoo-finance2').default
 const yf = new YahooFinance({ suppressNotices: ['ripHistorical', 'yahooSurvey'] })
 
 // Returns normalized price series for the stock AND SPY, both rebased to 100
 // at the start of the selected period, so they're directly comparable.
 export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, 5, 60000, 'price-history')
+  if (limited) return limited
+
   const ticker = req.nextUrl.searchParams.get('ticker')?.toUpperCase()
   if (!ticker) return NextResponse.json({ error: 'ticker required' }, { status: 400 })
 
