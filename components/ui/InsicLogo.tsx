@@ -1,8 +1,9 @@
 import * as React from "react";
+import Image from "next/image";
 
-// ─── Mark SVG — geometry pixel-measured from chosen icon PNG ─────────────────
-// Source: 437529c9-…-2.png (1254×1254), normalized to 256×256 viewBox.
-// InsicMark clips to mark-only viewport (dot + bars, no card background).
+// ─── Mark SVG ────────────────────────────────────────────────────────────────
+// Used only for mono/dark contexts (footer, dark surfaces) and the legacy API.
+// The lockup uses the PNG icon (includes white card background) in light mode.
 
 type MarkProps = {
   className?: string;
@@ -14,8 +15,6 @@ type MarkProps = {
 function InsicMark({ className, style, mono = false, title = "insic" }: MarkProps) {
   const olive = mono ? "#FFFFFF" : "#5F790B";
   const ink   = mono ? "#FFFFFF" : "#06101F";
-  // Tight viewport: dot top=68.8, bars bottom=173.3 → height=104.5, center x≈127.7
-  // ViewBox: x=93 y=68 w=70 h=106  (content + small padding)
   return (
     <svg
       className={className}
@@ -36,7 +35,8 @@ function InsicMark({ className, style, mono = false, title = "insic" }: MarkProp
   );
 }
 
-// ─── App icon SVG — rounded-rect card + mark, matches the chosen PNG ─────────
+// ─── App icon ─────────────────────────────────────────────────────────────────
+// Displays the PNG icon (white card + olive dot + bars) at a given pixel size.
 
 export type InsicAppIconProps = {
   size?: number;
@@ -46,145 +46,39 @@ export type InsicAppIconProps = {
 
 export function InsicAppIcon({ size = 40, className, style }: InsicAppIconProps) {
   return (
-    <svg
+    <Image
+      src="/logos/insic-icon.png"
+      alt="insic"
       width={size}
       height={size}
-      viewBox="0 0 256 256"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
       className={className}
-      style={style}
-      aria-hidden="true"
-    >
-      <defs>
-        <filter id="icon-shadow" x="-15%" y="-15%" width="130%" height="130%">
-          <feDropShadow dx="0" dy="2" stdDeviation="5" floodColor="#06101F" floodOpacity="0.14" />
-        </filter>
-      </defs>
-      {/* Rounded-rect white card — inset 53px, rx=54 matches source */}
-      <rect x="53" y="53" width="150" height="150" rx="38" fill="#FFFFFF" filter="url(#icon-shadow)" />
-      {/* Olive dot */}
-      <circle cx="127.7" cy="79.9"  r="11.1"  fill="#5F790B" />
-      {/* 5 navy bars — pixel-measured from 437529c9 PNG */}
-      <rect x="110.4" y="102.5" width="34.7" height="9.4" rx="1.69" fill="#06101F" />
-      <rect x="110.4" y="118.2" width="28.4" height="9.4" rx="1.69" fill="#06101F" />
-      <rect x="110.4" y="133.7" width="37.2" height="9.2" rx="1.65" fill="#06101F" />
-      <rect x="110.4" y="149.2" width="36.3" height="9.2" rx="1.65" fill="#06101F" />
-      <rect x="110.4" y="164.1" width="28.4" height="9.2" rx="1.65" fill="#06101F" />
-    </svg>
-  );
-}
-
-// ─── Wordmark SVG — live Inter text + olive tittle overlay ───────────────────
-//
-// WHY INLINE SVG TEXT:
-//   Pre-baked PNGs were exported without Inter — tittle dots are rectangular
-//   (system fallback). Inline SVG <text> in the DOM inherits the CSS-loaded
-//   Inter Variable, giving the correct circular tittle dots and letterforms.
-//
-// OLIVE TITTLE OVERLAY:
-//   SVG <text> is monochromatic. We paint the tittles olive by measuring exact
-//   glyph positions (Inter UPM 2816, tittle bbox 268cx / rows 1490–1820) and
-//   drawing olive <circle> elements on top of the matching text glyphs.
-//
-// Inter UPM metrics used:
-//   ascender   = 2728   cap-height  = 1456
-//   descender  = -688   i-advance   = 556
-//   n-advance  = 1260   s-advance   = 1012   c-advance = 1016
-//   tittle-cx  = 268 (from glyph origin)
-//   tittle-cy  = (1820+1490)/2 = 1655 above baseline
-//   tittle-r   = (1820-1490)/2 = 165 units
-
-// Precomputed positions at the three sizes, letter-spacing -0.045em.
-// viewBox sized to exactly fit the text advance width.
-
-type WordmarkSize = "sm" | "md" | "lg";
-
-const WORDMARK: Record<WordmarkSize, {
-  vbW: number;
-  vbH: number;
-  baseline: number;
-}> = (() => {
-  const UPM   = 2816;
-  const LS_EM = -0.045;
-  const ADV   = { i: 556, n: 1260, s: 1012, c: 1016 };
-  const ASC_U = 2728;
-
-  const result: Record<WordmarkSize, ReturnType<typeof compute>> = {} as never;
-
-  function compute(fs: number) {
-    const scale = fs / UPM;
-    const ls_px = LS_EM * fs;
-    let x = 0;
-    for (const ch of ["i", "n", "s", "i", "c"] as const) {
-      x += ADV[ch] * scale + ls_px;
-    }
-    const totalW = x - ls_px;
-    return {
-      vbW: Math.ceil(totalW + 0.5),
-      vbH: fs,
-      baseline: (ASC_U / UPM) * fs,
-    };
-  }
-
-  result.sm = compute(18);
-  result.md = compute(20);
-  result.lg = compute(24);
-  return result;
-})();
-
-function InsicWordmark({
-  size,
-  ink,
-  style,
-}: {
-  size: WordmarkSize;
-  ink: string;
-  style?: React.CSSProperties;
-}) {
-  const { vbW, vbH, baseline } = WORDMARK[size];
-
-  return (
-    <svg
-      viewBox={`0 0 ${vbW} ${vbH}`}
-      style={{ display: "block", overflow: "visible", ...style }}
-      aria-hidden="true"
-    >
-      <text
-        x="0"
-        y={baseline}
-        style={{
-          fontFamily: "var(--font-sans, Inter, ui-sans-serif, sans-serif)",
-          fontSize: vbH,
-          fontWeight: 760,
-          letterSpacing: `${-0.045 * vbH}px`,
-          fill: ink,
-          dominantBaseline: "auto",
-        }}
-      >
-        insic
-      </text>
-    </svg>
+      style={{
+        // borderRadius clips the cream bg exactly at the card edge (card inset ≈ 21% of PNG)
+        borderRadius: Math.round(size * 0.21),
+        display: "block",
+        ...style,
+      }}
+    />
   );
 }
 
 // ─── Logo lockup ─────────────────────────────────────────────────────────────
 //
-// Mark viewBox "93 68 70 106": bars span rows 34.5–105.3 (66.9% of 106),
-// bars center at 69.9 (65.9% of 106). Dot bottom at 23.0/106 of markH.
+// Light mode: PNG icon (white card, olive dot, bars) + Inter wordmark.
+// Dark mode:  Mono SVG mark (all-white) + white wordmark.
 //
-// markH sized so dot has ≥2px clearance above translateY (text top).
-// Iterate: clearance = ty − (23/106 × markH) ≥ 2.
+// alignItems: "center" replaces the old translateY hack. With lineHeight: 1 on
+// the wordmark span, both elements' geometric centers align naturally.
 
 export type LogoSize = "sm" | "md" | "lg";
 
-const SIZES: Record<LogoSize, { markH: number; wSize: WordmarkSize; ty: number; gap: number }> = {
-  // sm: markH=30 markW=23 ty=11  dot_bot=6.5 clearance=4.5px  (bars center at ~19.8px, wm center at ~9px)
-  sm: { markH: 30, wSize: "sm", ty: 11, gap: 6  },
-  // md: markH=33 markW=25 ty=12  dot_bot=7.2 clearance=4.8px  (bars center at ~21.7px, wm center at ~10px)
-  md: { markH: 33, wSize: "md", ty: 12, gap: 7  },
-  // lg: markH=40 markW=31 ty=14  dot_bot=8.7 clearance=5.3px  (bars center at ~26.4px, wm center at ~12px)
-  lg: { markH: 40, wSize: "lg", ty: 14, gap: 9  },
+const LOCKUP_SIZES: Record<LogoSize, { iconSize: number; fontSize: number; gap: number }> = {
+  // sm: 22px icon  / 15px type  — pricing page, tight contexts
+  sm: { iconSize: 22, fontSize: 15, gap: 5 },
+  // md: 26px icon  / 17px type  — app sidebar, TopBar, auth pages
+  md: { iconSize: 26, fontSize: 17, gap: 6 },
+  // lg: 30px icon  / 20px type  — landing navbar
+  lg: { iconSize: 30, fontSize: 20, gap: 7 },
 };
 
 export type InsicLogoLockupProps = {
@@ -200,46 +94,66 @@ export function InsicLogoLockup({
   className,
   style,
 }: InsicLogoLockupProps) {
-  const { markH, wSize, ty, gap } = SIZES[size];
-  const markW = Math.round(markH * 124 / 160);
-  const dark  = on === "dark";
-  const ink   = dark ? "#FFFFFF" : "#06101F";
-  const { vbW, vbH } = WORDMARK[wSize];
+  const { iconSize, fontSize, gap } = LOCKUP_SIZES[size];
+  const dark = on === "dark";
+  const ink  = dark ? "#FFFFFF" : "#06101F";
 
   return (
     <span
       className={className}
       style={{
         display: "inline-flex",
-        alignItems: "flex-start",
+        alignItems: "center",
         gap,
-        lineHeight: 0,
+        lineHeight: 1,
         userSelect: "none",
         ...style,
       }}
       role="img"
       aria-label="insic"
     >
-      <InsicMark
+      {dark ? (
+        // Dark surfaces: SVG mark renders in mono white, no card background needed
+        <InsicMark
+          style={{
+            // Mark viewBox is 70×106; scale so height matches icon slot
+            width: Math.round(iconSize * 70 / 106),
+            height: iconSize,
+            flexShrink: 0,
+            display: "block",
+          }}
+          mono={true}
+        />
+      ) : (
+        // Light surfaces: PNG icon shows the full white-card app icon
+        <Image
+          src="/logos/insic-icon.png"
+          alt=""
+          width={iconSize}
+          height={iconSize}
+          aria-hidden="true"
+          style={{
+            borderRadius: Math.round(iconSize * 0.21),
+            display: "block",
+            flexShrink: 0,
+            filter: "drop-shadow(0 1px 4px rgba(6,16,31,0.10))",
+          }}
+        />
+      )}
+      <span
         style={{
-          width: markW,
-          height: markH,
-          flexShrink: 0,
+          fontFamily: "var(--font-sans, Inter, ui-sans-serif, sans-serif)",
+          fontSize: `${fontSize}px`,
+          fontWeight: 760,
+          letterSpacing: `${(-0.045 * fontSize).toFixed(2)}px`,
+          color: ink,
+          lineHeight: 1,
           display: "block",
-          filter: dark ? "none" : "drop-shadow(0 1.5px 5px rgba(6,16,31,0.09))",
-        }}
-        mono={dark}
-      />
-      <InsicWordmark
-        size={wSize}
-        ink={ink}
-        style={{
-          width: vbW,
-          height: vbH,
           flexShrink: 0,
-          transform: `translateY(${ty}px)`,
         }}
-      />
+      >
+        insic
+      </span>
     </span>
   );
 }
