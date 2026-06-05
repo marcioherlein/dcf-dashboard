@@ -80,9 +80,9 @@ non-null. If all UFCF = null but netIncome is positive, the EBIT fallback is not
 ### Finding 4: baseFCF sourced from Yahoo fd.freeCashflow (stale/unreliable for large-caps)
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** MSFT — baseFCF=$37,011M vs actual FY2025 FCF=$71,611M (52% understatement); confirmed UBER ratio=0.67x
-**Run count:** 2
-**Status:** integrated — check added to Phase 3 UFCF section of template
+**Ticker / Context:** MSFT (0.52x), UBER (0.67x), NVDA (0.48x) — genuine stale Yahoo data; JPM (0.45x) = false positive (financial type uses NI×0.80, not fd.freeCashflow)
+**Run count:** 3
+**Status:** integrated — check added to Phase 3 UFCF section; NOTE: exclude financial/fintech companyTypes from ratio check (NI-based baseFCF is intentionally different from reported FCF/OCF)
 
 **Observed:** `extractFCFInputs` sets `baseFCF = fd.freeCashflow / 1e6` (Yahoo financialData TTM field).
 For MSFT this returns $37,011M — exactly 52% of the actual reported FY2025 FCF of $71,611M.
@@ -103,9 +103,9 @@ reported FCF. Check `historicalFCF` array (last entry) as the ground truth.
 ### Finding 5: Monotonically rising CapEx/D&A not captured by 3Y-median blend
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** MSFT — CapEx% 13.3%→18.1%→22.9% (Azure AI); D&A% 6.5%→9.1%→12.1%
-**Run count:** 1
-**Status:** new
+**Ticker / Context:** MSFT — CapEx% 13.3%→18.1%→22.9% (Azure AI); AMZN — CapEx% 13.0%→18.4% (AWS AI buildout)
+**Run count:** 2
+**Status:** integrated — check added to Phase 3 CapEx section; F4 check also updated to exclude financial types
 
 **Observed:** `buildProjectedRows` blends `medianCapexPct = median(3Y) × 0.60 + TTM × 0.40`.
 When capex is monotonically rising (MSFT: 13.3%→18.1%→22.9%), the 3Y median (18.1%) anchors
@@ -123,9 +123,9 @@ blended << TTM by >3pp, flag as capex-understatement for this company.
 ### Finding 6: taxRate = null in all historical IS rows — FMP field not populating
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** MSFT, MU, ADBE, UBER, PLTR, ASML — ALL NULL across every audited ticker
-**Run count:** 7
-**Status:** integrated — systemic; check added to Phase 3 Tax Rate section of template
+**Ticker / Context:** NOW, MSFT, MU, ADBE, UBER, PLTR, ASML, NVDA, AMZN, COST, JPM, V — ALL NULL (12/12 audited tickers)
+**Run count:** 12
+**Status:** integrated — 100% reproduction rate; taxRate field is never populated in FMP income statement rows
 
 **Observed:** All 5 MSFT historical IS rows have `taxRate: null`. `buildProjectedRows` falls back to
 `waccInputs.taxRate = 0.21`. MSFT actual effective rate ~18-19%. Overestimates taxes ~2pp of EBIT,
@@ -182,5 +182,58 @@ prevents the exit multiple from embedding today's AI speculation premium into th
 **Suggested check to add:** In Phase 2B Exit P/E audit: compute `currentPE / sectorPE`. If ratio > 3×
 and company is profitable, flag that blended exitPE embeds speculative premium. Check whether
 `exitPE > sectorPE × 2.5` — if so, the speculative-fade guard should fire but doesn't.
+
+---
+
+### Finding 9: JPM FCFF FV $952/sh vs P/B-anchored $223/sh — FCFF is directionally wrong for banks but weight-managed
+**Agent:** audit-valuation
+**Date:** 2026-06-05
+**Ticker / Context:** JPM — FCFF model yields $952/sh (EV=$970B); P/B model yields ~$223/sh; Triangulated=$484/sh
+**Run count:** 1
+**Status:** new
+
+**Observed:** For `financial` companyType, FCFF uses `baseFCF = NI × (1−reinvestRate)` as if it
+were an enterprise-level unlevered cash flow. For JPM with NI=$57B and WACC=9.07%, the Gordon
+Growth terminal value inflates EV to ~$970B — much higher than the $840B market cap.
+The correct model for a bank is P/B + FCFE (equity-level), not FCFF (enterprise-level).
+At FCFF weight of 5% in the triangulation, the $952 adds only ~$48 to the blended result —
+acceptable but the FCFF panel creates confusion by showing a wildly wrong directional number.
+**Expected:** FCFF should return null (or be explicitly excluded from the method panel) when
+`companyType = financial`. Using NI as a substitute for unlevered enterprise FCF is conceptually
+incorrect even though the 5% weight limits the damage.
+**File / location:** `lib/dcf/projectCashFlows.ts` `extractFCFInputs` financial branch (~line 161);
+`lib/valuation/valuationMethods.ts` or the route FCFF computation for financial types
+**Suggested check to add:** In Phase 3 for financial companies, verify that the FCFF FV shown in
+`valuationMethods.models.fcff` is NOT used as a primary anchor. If FCFF FV is > 2× current price
+for a financial company, flag it as directionally wrong (NI-based FCFF inflating enterprise value).
+The triangulation weight of 5% limits impact, but the panel value is misleading.
+
+---
+
+### Finding 10: V classified as `financial` but operates as a pure payment network (no credit risk)
+**Agent:** audit-valuation
+**Date:** 2026-06-05
+**Ticker / Context:** V — Credit Services, matched by 'credit' in financial regex, CAGR 12% < 20%
+**Run count:** 1
+**Status:** new
+
+**Observed:** Visa is classified as `financial` because `industry='Credit Services'` matches the
+regex `credit` in `detectCompanyType.ts`. However, Visa takes no credit risk, has no loan book, and
+earns pure transaction fees — it is economically a high-margin tech platform, not a bank.
+The `fintech` threshold (historicalCagr3y > 0.20 OR analyst1y > 0.20) requires 20%+ CAGR, which
+Visa at 12% CAGR doesn't meet. As a result:
+- P/B method is the adaptive anchor (BVPS=$19.93, justified P/B=8.28×, FV/sh=$306 vs $322 price — reasonable)
+- EV/EBITDA excluded (financial type zeroes this out)
+- Revenue multiple zero-weighted
+- LFCF dominates DCF blend (90%)
+Visa's economic model is far closer to `standard` or `growth` than `financial`.
+At current classification, the P/B and LFCF anchors actually work well for Visa, and overall FV
+($285-306) is in the right ballpark vs price ($322), so this is a low-severity classification edge case.
+**Expected:** Add a carve-out: when `industry` contains 'Credit Services' AND `fcfMargin > 25%`
+(pure network economics, no credit provision drag), classify as `standard` or `growth` not `financial`.
+**File / location:** `lib/dcf/detectCompanyType.ts` financial regex ~line 32
+**Suggested check to add:** For Financial Services / Credit Services companyType, check
+`businessProfile.fcfMargin`. If > 25%, note that this may be a payment network (V, MA)
+classified as financial — verify P/B is appropriate and LFCF dominance is justified.
 
 ---

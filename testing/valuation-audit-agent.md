@@ -262,6 +262,7 @@ For each row, answer:
 - For capital-intensive companies (TSM spending 35% of revenue): does the blended median accurately capture current capex intensity?
 - For asset-light companies (SOFI, NU, DUOL): is capex genuinely near-zero or is there meaningful capex that Yahoo reports differently (e.g. capitalized software)?
 - For financial companies: CapEx = 0 in projections. Should NU/SOFI have technology infrastructure capex modeled?
+- **[Finding 5 — integrated]** Check whether capex% is monotonically rising over 3 historical years. If yes, verify blended rate is closer to TTM than median — if blended << TTM by >3pp, flag as capex-understatement. Confirmed on MSFT (Azure AI: 13.3%→18.1%→22.9%, blended 20.0% vs TTM 22.9%) and AMZN (AWS AI: 13.0%→18.4%, rising). Both hyperscalers show median anchoring too low during AI infrastructure buildout phases. Same logic applies to D&A when it tracks capex cycles.
 
 **ΔNWC $M / ΔNWC % Revenue Change**
 - Source: `avgNwcDeltaRevRatio × revenueChange`, where NWC = (currentAssets − cash) − currentLiabilities.
@@ -274,7 +275,7 @@ For each row, answer:
 - Formula: `NOPAT + D&A + CapEx − ΔNWC` (capex is stored negative).
 - Is the `freeCashFlow` fallback (`when ufcf < 0 AND fcfOverride > 0`) firing for this company? Should it?
 - State the actual UFCF margin for each of the first 3 projected years and assess whether it's plausible.
-- **[Finding 4 — integrated]** Compute `baseFCF / historicalFCF[-1]` (last entry in the `historicalFCF` array). If ratio < 0.70 or > 1.50, flag as stale-FCF suspect — Yahoo `fd.freeCashflow` likely diverges from actual reported FCF. Confirmed on MSFT (0.52×) and UBER (0.67×). Note: ratio > 1.50 for fast-ramping cyclicals (MU) is correct since TTM FCF exceeds prior annual — distinguish by checking FCF trend direction.
+- **[Finding 4 — integrated]** Compute `baseFCF / historicalFCF[-1]` (last entry in the `historicalFCF` array). If ratio < 0.70 or > 1.50, flag as stale-FCF suspect — Yahoo `fd.freeCashflow` likely diverges from actual reported FCF. Confirmed on MSFT (0.52×), UBER (0.67×), NVDA (0.48×). **Exception: skip this check when `companyType` is `financial`, `fintech`, `bdc`, or `mreeit`** — for those types `baseFCF = NI × (1−reinvestRate)`, which is intentionally different from reported OCF/FCF; a low ratio is expected and correct. Note: ratio > 1.50 for fast-ramping cyclicals (MU FY2026 TTM) is also correct — distinguish stale data from genuine TTM ramp by checking the FCF trend direction.
 
 **PV of UFCF**
 - Discount rate: WACC. Confirm the year index is correct (year 1 is discounted at WACC^1, year 5 at WACC^5).
