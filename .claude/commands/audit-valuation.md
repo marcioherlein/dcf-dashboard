@@ -159,6 +159,7 @@ For each seeded assumption, state the actual computed value for this ticker, the
 - Does the AI semi premium fire (38×, gated at revenueM≥100)? Should it?
 - Does the growth premium fire (CAGR>25% + fintech/high-growth-financial)? What value does it add?
 - Is the final `exitPE` financially sensible for this company's maturity and growth stage?
+- **[Finding 8 — integrated]** Compute `currentPE / sectorPE`. If ratio > 3× and company is profitable (net margin > 15%), flag that blended exitPE embeds speculative premium. Check whether `exitPE > sectorPE × 2.5` — if so, the speculative-fade guard should fire but doesn't (e.g. PLTR: 155×/32× = 4.8× → blended 107× embeds AI speculation at exit).
 
 ### 2C. Exit EV/EBITDA (exitMultiple)
 
@@ -240,6 +241,7 @@ For each row, answer:
 
 **Tax Rate**
 - Source: median of last 3 annual effective tax rates from `incomeStatement.taxRate`.
+- **[Finding 6 — integrated — systemic]** Check whether all historical `taxRate` values are null. This occurs for every FMP-sourced ticker (confirmed across 7/7 audited tickers: NOW, MSFT, MU, ADBE, UBER, PLTR, ASML). When all null, the model falls back to `waccInputs.taxRate = 0.21`. Report the company's known effective tax rate and compute the NOPAT impact if the fallback over-taxes (e.g. MSFT ~18-19% effective rate loses ~2pp, ~$2-3B/yr NOPAT).
 - For companies with multi-year net operating loss carryforwards (SATL, NBIS, early-stage AAOI): the effective rate may be 0% historically but statutory rate applies once profitable. Is the model using the right rate in projected years?
 - For foreign-domiciled companies (RMS in France: ~25%, TSM in Taiwan: ~15%, BABA in China: ~25%): is the tax rate pulled correctly from the financial statements?
 
@@ -272,6 +274,7 @@ For each row, answer:
 - Formula: `NOPAT + D&A + CapEx − ΔNWC` (capex is stored negative).
 - Is the `freeCashFlow` fallback (`when ufcf < 0 AND fcfOverride > 0`) firing for this company? Should it?
 - State the actual UFCF margin for each of the first 3 projected years and assess whether it's plausible.
+- **[Finding 4 — integrated]** Compute `baseFCF / historicalFCF[-1]` (last entry in the `historicalFCF` array). If ratio < 0.70 or > 1.50, flag as stale-FCF suspect — Yahoo `fd.freeCashflow` likely diverges from actual reported FCF. Confirmed on MSFT (0.52×) and UBER (0.67×). Note: ratio > 1.50 for fast-ramping cyclicals (MU) is correct since TTM FCF exceeds prior annual — distinguish by checking FCF trend direction.
 
 **PV of UFCF**
 - Discount rate: WACC. Confirm the year index is correct (year 1 is discounted at WACC^1, year 5 at WACC^5).
@@ -283,6 +286,7 @@ For each row, answer:
 - Source: `medianNetMargin × revenue` for projected rows.
 - For financial companies: NI is the anchor concept (not EBIT). Is the medianNetMargin derived correctly from the actual income statement (NI / total banking revenue)?
 - For companies with volatile NI (MU with FY2023 losses, DIS with COVID years): does the TTM-weighted median correctly override the trough?
+- **[Finding 7 — integrated]** When EBIT=null, check median NI% vs TTM NI%. If TTM NI% is more than 2× the median NI% AND median NI% < 10%, the cyclical trough is silently distorting the median without triggering the override guard (which requires `medianNetMargin < 0`). State median NI%, TTM NI%, and the projected NI% to identify if the model is anchoring to a recovery year instead of the current trajectory. (e.g. MU: median=3.1%, TTM=22.8% — model projects 3.1% instead of ~20.5%).
 
 **D&A, CapEx, ΔNWC** — same sources as UFCF. Cross-check that they are identical.
 

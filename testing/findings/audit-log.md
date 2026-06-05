@@ -80,9 +80,9 @@ non-null. If all UFCF = null but netIncome is positive, the EBIT fallback is not
 ### Finding 4: baseFCF sourced from Yahoo fd.freeCashflow (stale/unreliable for large-caps)
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** MSFT — baseFCF=$37,011M vs actual FY2025 FCF=$71,611M (52% understatement)
-**Run count:** 1
-**Status:** new
+**Ticker / Context:** MSFT — baseFCF=$37,011M vs actual FY2025 FCF=$71,611M (52% understatement); confirmed UBER ratio=0.67x
+**Run count:** 2
+**Status:** integrated — check added to Phase 3 UFCF section of template
 
 **Observed:** `extractFCFInputs` sets `baseFCF = fd.freeCashflow / 1e6` (Yahoo financialData TTM field).
 For MSFT this returns $37,011M — exactly 52% of the actual reported FY2025 FCF of $71,611M.
@@ -123,9 +123,9 @@ blended << TTM by >3pp, flag as capex-understatement for this company.
 ### Finding 6: taxRate = null in all historical IS rows — FMP field not populating
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** MSFT — effective tax ~18-19%, model uses 21% fallback
-**Run count:** 1
-**Status:** new
+**Ticker / Context:** MSFT, MU, ADBE, UBER, PLTR, ASML — ALL NULL across every audited ticker
+**Run count:** 7
+**Status:** integrated — systemic; check added to Phase 3 Tax Rate section of template
 
 **Observed:** All 5 MSFT historical IS rows have `taxRate: null`. `buildProjectedRows` falls back to
 `waccInputs.taxRate = 0.21`. MSFT actual effective rate ~18-19%. Overestimates taxes ~2pp of EBIT,
@@ -135,5 +135,52 @@ understating NOPAT by ~$2-3B/yr.
 **Suggested check to add:** In Phase 3 Tax Rate audit: if all historical `taxRate` values are null, the
 21% fallback is firing. Report whether the company's known effective rate differs from 21%, and the
 resulting NOPAT impact.
+
+---
+
+### Finding 7: MU cyclical trough silent — EBIT=null + median NI positive but trough-distorted
+**Agent:** audit-valuation
+**Date:** 2026-06-05
+**Ticker / Context:** MU (Micron Technology) — FY2023 loss (-37.5% NI%) distorts 3-year median to 3.1%; TTM=22.8%
+**Run count:** 1
+**Status:** new
+
+**Observed:** With EBIT=null rows, `isCyclicalTrough` cannot evaluate (condition requires `medianEbitMargin < -0.02`).
+The EBIT null fallback fires and uses `medianNetMargin`. For MU, the 3-year NI% values are [-37.5%, 3.1%, 22.8%],
+giving a median of 3.1% — the trough-recovery year. The TTM value of 22.8% is never used.
+The NI-level cyclical trough override (line ~496 normalizeInputs.ts) only fires when `medianNetMargin < 0`,
+which does not apply here (3.1% > 0). Result: model projects NI at 3.1% instead of 20.5% (TTM×0.90),
+understating NOPAT by ~7× in projected years.
+**Expected:** A median-vs-TTM check should fire at the NI level too: when TTM NI% is more than 2× the
+median NI% and median NI% < 10%, apply the TTM-based projection (same logic as cyclical trough EBIT guard).
+**File / location:** `lib/valuation/normalizeInputs.ts` `buildProjectedRows` ~line 328 (medianNetMargin blend)
+and ~line 496 (NI cyclical override — condition `medianNetMargin < 0` too narrow)
+**Suggested check to add:** In Phase 3 Net Income audit: when EBIT=null, check whether the median NI% is
+more than 2pp below TTM NI%. If so, the trough is distorting the median and the cyclical NI override
+is not firing. State the median NI%, TTM NI%, and what the model is projecting vs. the TTM anchor.
+
+---
+
+### Finding 8: PLTR exit P/E of 107× dominated by speculative current multiple
+**Agent:** audit-valuation
+**Date:** 2026-06-05
+**Ticker / Context:** PLTR — current P/E=155×, sector=32×, blended exitPE=107×
+**Run count:** 1
+**Status:** new
+
+**Observed:** For companies trading at P/E > 3× sector median, the 55% weight on current P/E dominates
+the blend and produces an exit multiple that assumes the speculative premium persists at exit.
+PLTR: 155×(55/90) + 32×(35/90) = 107×. A 107× exit P/E in Year 5 for a maturing AI platform
+is implausible — mature software platforms typically exit at 40–80×.
+The existing thin-margin cap (`isThinMargin && isPEElevated`) does NOT apply here because PLTR
+has a 36% net margin — thick margins. No second guard catches ultra-elevated P/Es for profitable,
+high-multiple companies.
+**Expected:** A "speculative premium fade" guard: when `currentPE > sectorPE × 3` AND the company
+is profitable (net margin > 15%), cap the exit P/E at `min(blended, sectorPE × 2.5)`. This
+prevents the exit multiple from embedding today's AI speculation premium into the terminal value.
+**File / location:** `lib/valuation/assumptions/deriveAssumptions.ts` `deriveExitPE` ~line 206
+**Suggested check to add:** In Phase 2B Exit P/E audit: compute `currentPE / sectorPE`. If ratio > 3×
+and company is profitable, flag that blended exitPE embeds speculative premium. Check whether
+`exitPE > sectorPE × 2.5` — if so, the speculative-fade guard should fire but doesn't.
 
 ---
