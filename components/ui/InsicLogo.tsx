@@ -1,9 +1,10 @@
 import * as React from "react";
 import Image from "next/image";
 
-// ─── Mark SVG ────────────────────────────────────────────────────────────────
-// Used only for mono/dark contexts (footer, dark surfaces) and the legacy API.
-// The lockup uses the PNG icon (includes white card background) in light mode.
+// ─── Mark SVG — olive dot + navy bars, transparent background ────────────────
+// ViewBox "93 68 70 106": dot + 5 bars, no card background.
+// Used everywhere in the lockup. PNG (with white card) is only for app-icon
+// contexts (favicon, splash screen, og-image).
 
 type MarkProps = {
   className?: string;
@@ -35,8 +36,9 @@ function InsicMark({ className, style, mono = false, title = "insic" }: MarkProp
   );
 }
 
-// ─── App icon ─────────────────────────────────────────────────────────────────
-// Displays the PNG icon (white card + olive dot + bars) at a given pixel size.
+// ─── App icon — PNG with white card, for non-UI contexts ─────────────────────
+// Use only where a white-carded tile is appropriate: og-image, favicon, splash.
+// Never use inside the navbar or sidebar — it puts a white box on the bg.
 
 export type InsicAppIconProps = {
   size?: number;
@@ -52,34 +54,21 @@ export function InsicAppIcon({ size = 40, className, style }: InsicAppIconProps)
       width={size}
       height={size}
       className={className}
-      style={{
-        // borderRadius clips the cream bg exactly at the card edge (card inset ≈ 21% of PNG)
-        borderRadius: Math.round(size * 0.21),
-        display: "block",
-        ...style,
-      }}
+      style={{ borderRadius: Math.round(size * 0.21), display: "block", ...style }}
     />
   );
 }
 
 // ─── Logo lockup ─────────────────────────────────────────────────────────────
-//
-// Light mode: PNG icon (white card, olive dot, bars) + Inter wordmark.
-// Dark mode:  Mono SVG mark (all-white) + white wordmark.
-//
-// alignItems: "center" replaces the old translateY hack. With lineHeight: 1 on
-// the wordmark span, both elements' geometric centers align naturally.
+// SVG mark on transparent background — works on any surface color.
+// ViewBox aspect ratio is 70:106 ≈ 0.66, so markW = markH × (70/106).
 
 export type LogoSize = "sm" | "md" | "lg";
 
-// Lockup is the PNG icon only — no wordmark text.
-// sm: app contexts (sidebar, topbar)
-// md: app contexts (wider)
-// lg: landing navbar (bigger)
-const LOCKUP_SIZES: Record<LogoSize, { iconSize: number }> = {
-  sm: { iconSize: 28 },
-  md: { iconSize: 32 },
-  lg: { iconSize: 44 },
+const LOCKUP_SIZES: Record<LogoSize, { markH: number }> = {
+  sm: { markH: 28 },   // app sidebar, auth pages
+  md: { markH: 32 },   // app topbar
+  lg: { markH: 44 },   // landing navbar
 };
 
 export type InsicLogoLockupProps = {
@@ -95,8 +84,8 @@ export function InsicLogoLockup({
   className,
   style,
 }: InsicLogoLockupProps) {
-  const { iconSize } = LOCKUP_SIZES[size];
-  const dark = on === "dark";
+  const { markH } = LOCKUP_SIZES[size];
+  const markW = Math.round(markH * 70 / 106);
 
   return (
     <span
@@ -105,29 +94,10 @@ export function InsicLogoLockup({
       role="img"
       aria-label="insic"
     >
-      {dark ? (
-        <InsicMark
-          style={{
-            width: Math.round(iconSize * 70 / 106),
-            height: iconSize,
-            flexShrink: 0,
-            display: "block",
-          }}
-          mono={true}
-        />
-      ) : (
-        <Image
-          src="/logos/insic-icon.png"
-          alt="insic"
-          width={iconSize}
-          height={iconSize}
-          style={{
-            borderRadius: Math.round(iconSize * 0.21),
-            display: "block",
-            filter: "drop-shadow(0 1px 4px rgba(6,16,31,0.10))",
-          }}
-        />
-      )}
+      <InsicMark
+        mono={on === "dark"}
+        style={{ width: markW, height: markH, display: "block", flexShrink: 0 }}
+      />
     </span>
   );
 }
@@ -150,21 +120,9 @@ export function InsicLogo({
   title = "insic",
 }: InsicLogoProps) {
   if (variant === "mark") {
-    return (
-      <InsicMark
-        className={className}
-        style={style}
-        mono={mono}
-        title={title}
-      />
-    );
+    return <InsicMark className={className} style={style} mono={mono} title={title} />;
   }
   return (
-    <InsicLogoLockup
-      size="md"
-      on={mono ? "dark" : "light"}
-      className={className}
-      style={style}
-    />
+    <InsicLogoLockup size="md" on={mono ? "dark" : "light"} className={className} style={style} />
   );
 }
