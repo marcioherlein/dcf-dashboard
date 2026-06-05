@@ -87,7 +87,7 @@ function AssumptionRow({
       <div className="flex items-center gap-2">
         <span className="text-slate-300">{label}</span>
         <SourceBadge source={source} />
-        <span className="hidden group-hover:block text-slate-400 text-[9px]" title={sourceLabel}>
+        <span className="hidden group-hover:block text-slate-400 text-[10px]" title={sourceLabel}>
           {sourceLabel.slice(0, 40)}{sourceLabel.length > 40 ? '…' : ''}
         </span>
       </div>

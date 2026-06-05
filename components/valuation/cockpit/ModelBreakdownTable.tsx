@@ -57,7 +57,7 @@ export default function ModelBreakdownTable({ methods, currentPrice: _currentPri
                     {Math.round(m.weight * 100)}%
                   </td>
                   <td className="py-2.5 pr-3">
-                    <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full border ${CONFIDENCE_BADGE[m.confidence]}`}>
+                    <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full border ${CONFIDENCE_BADGE[m.confidence]}`}>
                       {m.confidence}
                     </span>
                   </td>

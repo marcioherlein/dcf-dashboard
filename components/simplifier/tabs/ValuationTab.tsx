@@ -306,14 +306,14 @@ export default function ValuationTab({
         {/* Mobile fair value strip */}
         <div className="flex items-center gap-4 mt-3 sm:hidden">
           <div>
-            <p className="text-[9px] text-[#6B6A72] uppercase tracking-wider">{triangulatedFV != null ? 'Blended' : 'DCF'} Fair Value</p>
+            <p className="text-[10px] text-[#6B6A72] uppercase tracking-wider">{triangulatedFV != null ? 'Blended' : 'DCF'} Fair Value</p>
             <p className={`text-base font-bold font-mono ${zone.color}`}>
               {primaryFV != null ? money(primaryFV) : '—'}
             </p>
           </div>
           {primaryUpside != null && (
             <div>
-              <p className="text-[9px] text-[#6B6A72] uppercase tracking-wider">Upside</p>
+              <p className="text-[10px] text-[#6B6A72] uppercase tracking-wider">Upside</p>
               <p className={`text-base font-semibold font-mono ${zone.color}`}>
                 {sign(primaryUpside)}{pct(primaryUpside)}
               </p>

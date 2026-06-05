@@ -438,7 +438,7 @@ function RevenueCAGRChart({
           </span>
         </div>
       )}
-      <p className="text-[9px] text-[#94A3B8] mt-0.5">Source: annual financial statements</p>
+      <p className="text-[10px] text-[#94A3B8] mt-0.5">Source: annual financial statements</p>
     </div>
   )
 }

@@ -272,7 +272,7 @@ function FieldStepper({
     <div className="flex items-center justify-between gap-2">
       <div className="min-w-0">
         <p className="text-[10px] text-slate-500 leading-none">{label}</p>
-        {hint && <p className="text-[9px] text-slate-400 mt-0.5 tabular-nums">{hint}</p>}
+        {hint && <p className="text-[11px] text-slate-400 mt-0.5 tabular-nums">{hint}</p>}
       </div>
       <div className="flex items-center gap-0.5 shrink-0">
         <button
@@ -572,7 +572,7 @@ export default function ValuationMethodCards({
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-[10px] font-[600] text-slate-400">Assumptions</p>
                     {fields.some(f => ['exitPE', 'exitMultiple', 'revenueMultiple', 'priceToBookMultiple'].includes(String(f.key))) && (
-                      <span className="text-[9px] text-slate-300">Damodaran Jan 2025</span>
+                      <span className="text-[10px] text-slate-300">Damodaran Jan 2025</span>
                     )}
                   </div>
                   {fields.map(f => {

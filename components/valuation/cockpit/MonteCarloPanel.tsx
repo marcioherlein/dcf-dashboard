@@ -100,7 +100,7 @@ function Histogram({
       </div>
 
       {/* X-axis */}
-      <div className="flex justify-between text-[9px] text-slate-400 font-mono tabular-nums">
+      <div className="flex justify-between text-[11px] text-slate-400 font-mono tabular-nums">
         <span>{fmtPrice(histogram[0]?.lo ?? 0, currency)}</span>
         <span>{fmtPrice(histogram[Math.floor(histogram.length / 2)]?.lo ?? 0, currency)}</span>
         <span>{fmtPrice(histogram[histogram.length - 1]?.hi ?? 0, currency)}</span>
@@ -116,7 +116,7 @@ function Histogram({
         ].map(({ color, label }) => (
           <div key={label} className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: color }} />
-            <span className="text-[9px] text-slate-500">{label}</span>
+            <span className="text-[11px] text-slate-500">{label}</span>
           </div>
         ))}
       </div>
@@ -146,12 +146,12 @@ function PercentileStrip({
         const upside = currentPrice > 0 ? (value - currentPrice) / currentPrice : null
         return (
           <div key={label} className="bg-white px-2 py-2.5 flex flex-col items-center gap-0.5">
-            <span className="text-[9px] font-[700] text-slate-400 uppercase tracking-wide">{label}</span>
+            <span className="text-[11px] font-[700] text-slate-400 uppercase tracking-wide">{label}</span>
             <span className={cn('text-[13px] font-[800] tabular-nums leading-tight', color)}>
               {fmtPrice(value, currency)}
             </span>
             {upside != null && (
-              <span className={cn('text-[9px] font-[650] tabular-nums', upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
+              <span className={cn('text-[11px] font-[650] tabular-nums', upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
                 {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(0)}%
               </span>
             )}
@@ -182,9 +182,9 @@ function RegimeBar({ probs }: { probs: [number, number, number] }) {
         <div className="h-full bg-[#5F790B]/50" style={{ width: `${bull*100}%` }} />
       </div>
       <div className="flex justify-between mt-1">
-        <span className="text-[9px] font-[650] text-[#D83B3B] tabular-nums">Bear {(bear*100).toFixed(0)}%</span>
-        <span className="text-[9px] font-[650] text-slate-500 tabular-nums">Base {(base*100).toFixed(0)}%</span>
-        <span className="text-[9px] font-[650] text-[#5F790B] tabular-nums">Bull {(bull*100).toFixed(0)}%</span>
+        <span className="text-[11px] font-[650] text-[#D83B3B] tabular-nums">Bear {(bear*100).toFixed(0)}%</span>
+        <span className="text-[11px] font-[650] text-slate-500 tabular-nums">Base {(base*100).toFixed(0)}%</span>
+        <span className="text-[11px] font-[650] text-[#5F790B] tabular-nums">Bull {(bull*100).toFixed(0)}%</span>
       </div>
     </div>
   )
@@ -298,7 +298,7 @@ export default function MonteCarloPanel({
         {/* Method label */}
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="text-[13px] font-[700] text-slate-800 truncate">Monte Carlo DCF</span>
-          <span className="shrink-0 px-1.5 py-0.5 text-[9px] font-[700] uppercase tracking-wide bg-amber-100 text-amber-700 border border-amber-200 rounded-full">
+          <span className="shrink-0 px-1.5 py-0.5 text-[10px] font-[700] uppercase tracking-wide bg-amber-100 text-amber-700 border border-amber-200 rounded-full">
             Beta
           </span>
           <InfoTooltip
@@ -441,7 +441,7 @@ export default function MonteCarloPanel({
                     />
                   </div>
                   <CvarDots ratio={result.cvarRatio} />
-                  <p className="text-[9px] text-slate-400 tabular-nums">
+                  <p className="text-[11px] text-slate-400 tabular-nums">
                     CVaR ratio {result.cvarRatio.toFixed(2)}
                     {result.cvarDiscount > 0.001 && (
                       <span className="text-orange-500 ml-1">· −{(result.cvarDiscount*100).toFixed(0)}% applied to P50</span>
@@ -459,7 +459,7 @@ export default function MonteCarloPanel({
               {(result.abandonmentOptionValue > 0.001 || result.expansionOptionValue > 0.001) && (
                 <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
-                    <p className="text-[9px] font-[650] text-slate-400 uppercase tracking-wide mb-1">
+                    <p className="text-[11px] font-[650] text-slate-400 uppercase tracking-wide mb-1">
                       Abandonment option
                       <InfoTooltip text="Value of the right to liquidate the firm at cash value if cumulative FCF turns deeply negative. Computed via Longstaff-Schwartz backward induction." side="top" />
                     </p>
@@ -468,10 +468,10 @@ export default function MonteCarloPanel({
                         ? '+' + fmtPrice(result.abandonmentOptionValue, currency)
                         : '—'}
                     </p>
-                    <p className="text-[9px] text-slate-400 mt-0.5">per share</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">per share</p>
                   </div>
                   <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
-                    <p className="text-[9px] font-[650] text-slate-400 uppercase tracking-wide mb-1">
+                    <p className="text-[11px] font-[650] text-slate-400 uppercase tracking-wide mb-1">
                       Expansion option
                       <InfoTooltip text="Value of deploying additional capex for 2 extra FCF years when year-3+ CAGR beats the historical P75. Captures compounder optionality." side="top" />
                     </p>
@@ -480,7 +480,7 @@ export default function MonteCarloPanel({
                         ? '+' + fmtPrice(result.expansionOptionValue, currency)
                         : '—'}
                     </p>
-                    <p className="text-[9px] text-slate-400 mt-0.5">per share</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">per share</p>
                   </div>
                 </div>
               )}
@@ -488,7 +488,7 @@ export default function MonteCarloPanel({
               {/* Calibration details */}
               <details className="group">
                 <summary className="flex items-center gap-1.5 cursor-pointer list-none text-[10px] font-[650] text-slate-400 hover:text-slate-600 transition-colors select-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-400 rounded">
-                  <span className="text-[9px] group-open:rotate-90 transition-transform inline-block">▶</span>
+                  <span className="text-[10px] group-open:rotate-90 transition-transform inline-block">▶</span>
                   Calibration details
                 </summary>
                 <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -503,14 +503,14 @@ export default function MonteCarloPanel({
                     { label: 'Std deviation',   value: fmtPrice(result.stdDev, currency) },
                   ].map(({ label, value }) => (
                     <div key={label} className="rounded-lg border border-slate-100 bg-white px-2.5 py-1.5">
-                      <p className="text-[9px] text-slate-400">{label}</p>
+                      <p className="text-[11px] text-slate-400">{label}</p>
                       <p className="text-[11px] font-[650] text-slate-600 mt-0.5 tabular-nums">{value}</p>
                     </div>
                   ))}
                 </div>
               </details>
 
-              <p className="text-[9px] text-slate-400 leading-relaxed border-t border-slate-100 pt-3">
+              <p className="text-[11px] text-slate-400 leading-relaxed border-t border-slate-100 pt-3">
                 Beta model — exploratory analysis only. P50 is CVaR-adjusted and shown as this method&apos;s fair value estimate. Real option values are informational; they are not added to the point estimate. Not financial advice.
               </p>
             </>

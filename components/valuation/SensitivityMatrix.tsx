@@ -101,7 +101,7 @@ function CellDetail({
             {fieldX.shortLabel} {fieldX.format(xv)}
           </span>
           {isBase && (
-            <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[9px] font-bold rounded-full tracking-wide uppercase">
+            <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full tracking-wide uppercase">
               Base
             </span>
           )}
@@ -162,17 +162,17 @@ function CellDetail({
                   : 'bg-white border border-slate-100',
               )}
             >
-              <p className="text-[9px] text-slate-400 leading-tight">{f.shortLabel}</p>
+              <p className="text-[11px] text-slate-400 leading-tight">{f.shortLabel}</p>
               <p className={cn('text-[13px] font-[750] tabular-nums leading-snug', isVaried ? 'text-blue-700' : 'text-slate-700')}>
                 {f.format(val)}
               </p>
               {isVaried && hasDelta && (
-                <p className={cn('text-[9px] tabular-nums font-[600]', delta > 0 ? 'text-emerald-600' : 'text-red-500')}>
+                <p className={cn('text-[11px] tabular-nums font-[600]', delta > 0 ? 'text-emerald-600' : 'text-red-500')}>
                   {delta > 0 ? '+' : ''}{f.unit === '%' ? (delta * 100).toFixed(1) + 'pp' : delta.toFixed(1) + '×'} vs base
                 </p>
               )}
               {(!isVaried || !hasDelta) && (
-                <p className="text-[9px] text-slate-300 tabular-nums">base</p>
+                <p className="text-[11px] text-slate-300 tabular-nums">base</p>
               )}
             </div>
           )
@@ -351,8 +351,8 @@ export default function SensitivityMatrix({
             <tr>
               <th colSpan={2} className="pr-2 pb-2 text-right">
                 <div className="flex flex-col items-end gap-0.5">
-                  <span className="text-[9px] font-[700] text-blue-400 uppercase tracking-wide">{fieldY.shortLabel} ↓</span>
-                  <span className="text-[9px] font-[700] text-violet-400 uppercase tracking-wide">{fieldX.shortLabel} →</span>
+                  <span className="text-[11px] font-[700] text-blue-400 uppercase tracking-wide">{fieldY.shortLabel} ↓</span>
+                  <span className="text-[11px] font-[700] text-violet-400 uppercase tracking-wide">{fieldX.shortLabel} →</span>
                 </div>
               </th>
               {xVals.map((xv, xi) => (
@@ -361,7 +361,7 @@ export default function SensitivityMatrix({
                     {fieldX.format(xv)}
                   </div>
                   {xi === histXIdx && histX != null && (
-                    <div className="text-[9px] text-slate-400 leading-none mt-0.5">hist</div>
+                    <div className="text-[10px] text-slate-400 leading-none mt-0.5">hist</div>
                   )}
                 </th>
               ))}
@@ -395,7 +395,7 @@ export default function SensitivityMatrix({
                     {fieldY.format(yv)}
                   </div>
                   {yi === histYIdx && histY != null && (
-                    <div className="text-[9px] text-slate-400 leading-none">hist</div>
+                    <div className="text-[10px] text-slate-400 leading-none">hist</div>
                   )}
                 </td>
 
@@ -477,16 +477,16 @@ export default function SensitivityMatrix({
           ].map(({ bg, label }) => (
             <div key={label} className="flex items-center gap-1">
               <div className={cn('w-3 h-3 rounded-sm', bg)} />
-              <span className="text-[9px] text-slate-500">{label}</span>
+              <span className="text-[11px] text-slate-500">{label}</span>
             </div>
           ))}
           <div className="flex items-center gap-1 ml-1">
             <div className="w-3 h-3 rounded-sm ring-2 ring-blue-500" />
-            <span className="text-[9px] text-slate-500">base</span>
+            <span className="text-[11px] text-slate-500">base</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-sm ring-2 ring-slate-900" />
-            <span className="text-[9px] text-slate-500">selected</span>
+            <span className="text-[11px] text-slate-500">selected</span>
           </div>
         </div>
 

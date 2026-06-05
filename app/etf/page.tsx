@@ -161,7 +161,7 @@ export default function ETFTrackerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F7F2]">
+    <div className="min-h-dvh bg-[#F8F7F2]">
 
       {/* ── Page header ─────────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-slate-200 px-4 sm:px-8 pt-6 pb-5">

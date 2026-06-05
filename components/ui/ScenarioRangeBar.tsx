@@ -61,13 +61,13 @@ export default function ScenarioRangeBar({
         />
       </div>
 
-      <div className="flex items-center justify-between text-[9px] text-slate-500 px-1">
+      <div className="flex items-center justify-between text-[10px] text-slate-500 px-1">
         <span className="text-red-400 font-[600]">{fmtShort(bear, currency)}</span>
         <span className="text-blue-600 font-[700]">{fmtShort(base, currency)}</span>
         <span className="text-emerald-500 font-[600]">{fmtShort(bull, currency)}</span>
       </div>
 
-      <div className="flex items-center gap-3 text-[9px] text-slate-500 px-1">
+      <div className="flex items-center gap-3 text-[10px] text-slate-500 px-1">
         <div className="flex items-center gap-1">
           <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
           <span>Bear</span>

@@ -569,7 +569,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
             style={{ height: subPanel === 'rsi' ? 80 : 0, overflow: 'hidden' }}
           />
           <div className="flex items-center justify-center mt-0.5">
-            <span className="text-[9px] text-slate-400 font-medium tracking-wide">
+            <span className="text-[10px] text-slate-400 font-medium tracking-wide">
               {subPanel === 'volume' ? 'VOLUME' : 'RSI (14)'}
             </span>
           </div>

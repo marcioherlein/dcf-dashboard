@@ -86,7 +86,7 @@ export default function PricingPage() {
   const monthlyPrice = 17
 
   return (
-    <div className="min-h-screen" style={{ background: '#F8F7F2' }}>
+    <div className="min-h-dvh" style={{ background: '#F8F7F2' }}>
 
       {/* Breadcrumb header */}
       <div className="bg-white border-b border-[#E3E6E0] px-6 py-3 flex items-center gap-3">

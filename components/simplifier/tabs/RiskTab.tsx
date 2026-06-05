@@ -74,7 +74,7 @@ export default function RiskTab({
         <div className="grid grid-cols-3 gap-2 mt-3 sm:hidden">
           {riskMetrics.map(m => (
             <div key={m.label} className="text-center">
-              <p className="text-[9px] text-[#6B6A72] uppercase tracking-wider">{m.label}</p>
+              <p className="text-[10px] text-[#6B6A72] uppercase tracking-wider">{m.label}</p>
               <p className={`text-xs font-semibold font-mono ${m.color}`}>{m.value}</p>
             </div>
           ))}

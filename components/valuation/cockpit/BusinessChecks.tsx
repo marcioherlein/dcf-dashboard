@@ -90,7 +90,7 @@ function CheckCard({
         <div className="flex flex-wrap gap-x-4 gap-y-1 pt-0.5 border-t border-slate-100">
           {metrics.map(m => (
             <div key={m.label}>
-              <p className="text-[9px] text-slate-400 leading-none mb-0.5">{m.label}</p>
+              <p className="text-[11px] text-slate-400 leading-none mb-0.5">{m.label}</p>
               <p className="text-[11px] font-[650] text-slate-700 tabular-nums">{m.value}</p>
             </div>
           ))}

@@ -127,7 +127,7 @@ function CategoryBadge({ category }: { category: StrategyRow['category'] }) {
     'BYMA':     'bg-emerald-100 text-emerald-700',
   }
   return (
-    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${styles[category] ?? 'bg-slate-100 text-slate-500'}`}>
+    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${styles[category] ?? 'bg-slate-100 text-slate-500'}`}>
       {category}
     </span>
   )

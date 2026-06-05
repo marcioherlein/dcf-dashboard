@@ -98,7 +98,7 @@ export default function SimplifierTickerPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F7F6F1] flex items-center justify-center">
+      <div className="min-h-dvh bg-[#F7F6F1] flex items-center justify-center">
         <div className="flex items-center gap-2 text-[#6B6A72] text-sm">
           <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
@@ -111,7 +111,7 @@ export default function SimplifierTickerPage() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-[#F7F6F1] flex flex-col items-center justify-center gap-4">
+      <div className="min-h-dvh bg-[#F7F6F1] flex flex-col items-center justify-center gap-4">
         <p className="text-[#cf222e] text-sm">{error || 'Failed to load data'}</p>
         <button onClick={() => router.back()} className="text-[#1f6feb] text-sm hover:underline">Go back</button>
       </div>
@@ -132,7 +132,7 @@ export default function SimplifierTickerPage() {
   const description = (data as any).quote?.longBusinessSummary ?? ''
 
   return (
-    <div className="min-h-screen bg-[#F7F6F1]">
+    <div className="min-h-dvh bg-[#F7F6F1]">
       <div className="max-w-3xl mx-auto px-4 py-4 sm:py-6 pb-20 sm:pb-6">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-xs text-[#6B6A72] mb-4 sm:mb-5">

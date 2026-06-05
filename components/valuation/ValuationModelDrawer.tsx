@@ -126,7 +126,7 @@ export function AssumptionInputRow({ assumption, displayValue, onChange, isOverr
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-[12px] font-medium text-[#c8c8c8]">{label}</span>
-          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${badgeClass}`}>
+          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${badgeClass}`}>
             {badgeText}
           </span>
         </div>

@@ -818,7 +818,7 @@ export default function AIStackPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-[52px]">
+    <div className="min-h-dvh bg-slate-50 pt-[52px]">
 
       {/* Valuation assumptions modal */}
       {valModal?.valAssumptions && (
@@ -1043,16 +1043,16 @@ export default function AIStackPage() {
                         </Link>
                         <div className="flex items-center gap-1 mt-0.5 flex-wrap">
                           {row.exchange && (
-                            <span className="text-[9px] font-medium text-slate-400 bg-slate-100 px-1 py-0.5 rounded">
+                            <span className="text-[10px] font-medium text-slate-400 bg-slate-100 px-1 py-0.5 rounded">
                               {row.exchange}
                             </span>
                           )}
                           {row.financialCurrency !== 'USD' && (
-                            <span className="text-[9px] font-medium text-amber-600 bg-amber-50 px-1 py-0.5 rounded" title={`Financials reported in ${row.financialCurrency}, converted to USD via live FX rate`}>
+                            <span className="text-[10px] font-medium text-amber-600 bg-amber-50 px-1 py-0.5 rounded" title={`Financials reported in ${row.financialCurrency}, converted to USD via live FX rate`}>
                               ADR·{row.financialCurrency}→$
                             </span>
                           )}
-                          {isError && <span className="text-[9px] text-red-400">no data</span>}
+                          {isError && <span className="text-[10px] text-red-400">no data</span>}
                         </div>
                       </td>
                       <td className="sticky left-[116px] bg-white z-10 px-3 py-2 border-r border-slate-100">

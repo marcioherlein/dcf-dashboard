@@ -77,7 +77,7 @@ export default function ValuationMethodCard({
             {abbr}
           </span>
           {isRecommended && (
-            <span className="bg-blue-100 text-blue-700 text-[9px] font-bold uppercase tracking-widest rounded-full px-2 py-0.5 border border-blue-300">
+            <span className="bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-widest rounded-full px-2 py-0.5 border border-blue-300">
               Recommended
             </span>
           )}

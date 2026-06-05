@@ -90,7 +90,7 @@ export default function ManagementTab({
         <div className="grid grid-cols-3 gap-2 mt-3 sm:hidden">
           {metrics.map(m => (
             <div key={m.label} className="text-center">
-              <p className="text-[9px] text-[#6B6A72] uppercase tracking-wider">{m.label}</p>
+              <p className="text-[10px] text-[#6B6A72] uppercase tracking-wider">{m.label}</p>
               <p className={`text-xs font-semibold font-mono ${m.label === 'Beneish M' ? beneishColor : 'text-[#2D2C31]'}`}>
                 {m.value != null ? m.value : <NABadge reason={m.naReason ?? 'no-data'} size="sm" />}
               </p>
@@ -138,7 +138,7 @@ export default function ManagementTab({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {criteria.map((c, i) => (
               <div key={i} className="flex items-center gap-2">
-                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${c.pass ? 'bg-[#EEF4FF] text-[#1f6feb]' : 'bg-[#FEE2E2] text-[#cf222e]'}`}>
+                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${c.pass ? 'bg-[#EEF4FF] text-[#1f6feb]' : 'bg-[#FEE2E2] text-[#cf222e]'}`}>
                   {c.pass ? '✓' : '✗'}
                 </span>
                 <span className="text-xs text-[#2D2C31]">{c.name}</span>

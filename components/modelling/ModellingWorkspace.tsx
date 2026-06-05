@@ -199,7 +199,7 @@ function ModellingApproach({
 
         {/* Cash Flow Mode */}
         <div className="bg-white/[0.04] rounded-xl p-3 flex flex-col gap-2">
-          <p className="text-[9px] font-[700] text-white/40 uppercase tracking-widest">Cash Flow</p>
+          <p className="text-[10px] font-[700] text-white/40 uppercase tracking-widest">Cash Flow</p>
           <div className="relative">
             <select
               aria-label="Cash flow mode"
@@ -213,7 +213,7 @@ function ModellingApproach({
             </select>
             <SelectCaret />
           </div>
-          <p className="text-[9px] text-white/30 leading-relaxed">
+          <p className="text-[10px] text-white/30 leading-relaxed">
             {isLfcf
               ? 'Cash after debt payments. Discounted by cost of equity — no bridge needed.'
               : 'Cash before interest. Discounted by WACC. Cash added, debt subtracted at end.'}
@@ -222,7 +222,7 @@ function ModellingApproach({
 
         {/* Terminal Value */}
         <div className="bg-white/[0.04] rounded-xl p-3 flex flex-col gap-2">
-          <p className="text-[9px] font-[700] text-white/40 uppercase tracking-widest">Terminal Value</p>
+          <p className="text-[10px] font-[700] text-white/40 uppercase tracking-widest">Terminal Value</p>
           <div className="relative">
             <select
               aria-label="Terminal value method"
@@ -236,7 +236,7 @@ function ModellingApproach({
             </select>
             <SelectCaret />
           </div>
-          <p className="text-[9px] text-white/30 leading-relaxed">
+          <p className="text-[10px] text-white/30 leading-relaxed">
             {terminalMethod === 'multiple'
               ? 'Company is sold at an EV/EBITDA multiple after the projection period.'
               : 'Business generates cash at the terminal growth rate indefinitely.'}
@@ -245,7 +245,7 @@ function ModellingApproach({
 
         {/* Discount Rate */}
         <div className="bg-white/[0.04] rounded-xl p-3 flex flex-col gap-2">
-          <p className="text-[9px] font-[700] text-white/40 uppercase tracking-widest">
+          <p className="text-[10px] font-[700] text-white/40 uppercase tracking-widest">
             {isLfcf ? 'Cost of Equity' : 'Discount Rate (WACC)'}
           </p>
           {!isLfcf ? (
@@ -268,7 +268,7 @@ function ModellingApproach({
               <span className="text-[10px] text-white/30 ml-1 font-[500]">CAPM</span>
             </p>
           )}
-          <div className="text-[9px] leading-relaxed">
+          <div className="text-[10px] leading-relaxed">
             {!cockpitDiverged ? (
               <span className="text-emerald-400/80">● Linked to cockpit</span>
             ) : (
@@ -283,14 +283,14 @@ function ModellingApproach({
               </span>
             )}
           </div>
-          <p className="text-[9px] text-white/25 leading-relaxed">
+          <p className="text-[10px] text-white/25 leading-relaxed">
             Required return for investors. Higher rate → lower valuation.
           </p>
         </div>
 
         {/* Revenue Growth */}
         <div className="bg-white/[0.04] rounded-xl p-3 flex flex-col gap-2">
-          <p className="text-[9px] font-[700] text-white/40 uppercase tracking-widest">Revenue Growth</p>
+          <p className="text-[10px] font-[700] text-white/40 uppercase tracking-widest">Revenue Growth</p>
           <div className="relative">
             <select
               aria-label="Revenue growth mode"
@@ -307,7 +307,7 @@ function ModellingApproach({
           </div>
           {growthMode === 'cagr' && (
             <div className="flex items-center gap-1.5">
-              <span className="text-[9px] text-white/40 shrink-0">CAGR</span>
+              <span className="text-[10px] text-white/40 shrink-0">CAGR</span>
               <input
                 type="number"
                 step={0.5}
@@ -321,10 +321,10 @@ function ModellingApproach({
                 className="flex-1 min-w-0 bg-[#0d1829] text-[12px] font-[600] text-white/80 rounded-lg px-2 py-1 border border-white/[0.12] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus:border-blue-500/50 tabular-nums"
                 style={{ fontSize: '16px' }}
               />
-              <span className="text-[9px] text-white/40 shrink-0">%/yr</span>
+              <span className="text-[10px] text-white/40 shrink-0">%/yr</span>
             </div>
           )}
-          <p className="text-[9px] text-white/30 leading-relaxed">
+          <p className="text-[10px] text-white/30 leading-relaxed">
             {growthMode === 'analyst'
               ? 'Blends analyst consensus with historical CAGR weighted by company type.'
               : growthMode === 'cagr'

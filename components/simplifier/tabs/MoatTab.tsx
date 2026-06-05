@@ -173,7 +173,7 @@ export default function MoatTab({
         <div className="grid grid-cols-3 gap-2 mt-3 sm:hidden">
           {metrics.map(m => (
             <div key={m.label} className="text-center">
-              <p className="text-[9px] text-[#6B6A72] uppercase tracking-wider">{m.label}</p>
+              <p className="text-[10px] text-[#6B6A72] uppercase tracking-wider">{m.label}</p>
               <p className="text-xs font-semibold font-mono text-[#2D2C31]">
                 {m.value != null ? m.value : <NABadge reason={m.naReason ?? 'no-data'} size="sm" />}
               </p>
@@ -209,9 +209,9 @@ export default function MoatTab({
             ))}
           </div>
           <div className="flex justify-between mt-1">
-            <span className="text-[9px] text-[#6B6A72]">None</span>
-            <span className="text-[9px] text-[#6B6A72]">Narrow</span>
-            <span className="text-[9px] text-[#6B6A72]">Wide</span>
+            <span className="text-[10px] text-[#6B6A72]">None</span>
+            <span className="text-[10px] text-[#6B6A72]">Narrow</span>
+            <span className="text-[10px] text-[#6B6A72]">Wide</span>
           </div>
         </div>
 

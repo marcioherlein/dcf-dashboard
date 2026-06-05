@@ -146,7 +146,7 @@ export default function SensitivityTable({
             <div className="flex items-end mb-1.5">
               {/* Corner: WACC label */}
               <div className="shrink-0 text-right pr-3 w-[64px] sm:w-[90px]">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">WACC ↓</span>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">WACC ↓</span>
               </div>
 
               {/* CAGR column headers */}
@@ -166,7 +166,7 @@ export default function SensitivityTable({
                         {abs.toFixed(0)}%
                       </div>
                       <div className={cn(
-                        'text-[9px] leading-none',
+                        'text-[10px] leading-none',
                         isBase ? 'text-blue-400' : 'text-slate-400'
                       )}>
                         {cd === 0 ? 'base' : `${cd > 0 ? '+' : ''}${(cd * 100).toFixed(0)}pp`}
@@ -181,7 +181,7 @@ export default function SensitivityTable({
             <div className="flex items-start mb-2">
               <div className="shrink-0 w-[64px] sm:w-[90px]" />
               <div className="flex-1 text-center">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Revenue CAGR →</span>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Revenue CAGR →</span>
               </div>
             </div>
 
@@ -200,7 +200,7 @@ export default function SensitivityTable({
                       {absWacc.toFixed(1)}%
                     </div>
                     <div className={cn(
-                      'text-[9px] leading-none',
+                      'text-[10px] leading-none',
                       isBaseRow ? 'text-blue-400' : 'text-slate-400'
                     )}>
                       {wd === 0 ? 'base' : `${wd > 0 ? '+' : ''}${(wd * 100).toFixed(1)}pp`}
@@ -229,7 +229,7 @@ export default function SensitivityTable({
                               <div className="text-[10px] font-bold font-mono leading-tight">
                                 {fmt(cell.fv, sym)}
                               </div>
-                              <div className="text-[9px] leading-none opacity-85">
+                              <div className="text-[10px] leading-none opacity-85">
                                 {cell.upside >= 0 ? '+' : ''}{(cell.upside * 100).toFixed(0)}%
                               </div>
                             </>
@@ -246,7 +246,7 @@ export default function SensitivityTable({
 
             {/* Legend */}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-4 pt-3 border-t border-[#222]">
-              <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">Upside vs current price:</span>
+              <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Upside vs current price:</span>
               {[
                 { cls: 'bg-red-600',     label: '< −30%'     },
                 { cls: 'bg-orange-400',  label: '−15% to −30%' },
@@ -258,12 +258,12 @@ export default function SensitivityTable({
               ].map(({ cls, label }) => (
                 <span key={label} className="flex items-center gap-1">
                   <span className={cn('w-2.5 h-2.5 rounded-sm flex-shrink-0', cls)} />
-                  <span className="text-[9px] text-slate-400">{label}</span>
+                  <span className="text-[11px] text-slate-400">{label}</span>
                 </span>
               ))}
             </div>
 
-            <p className="text-[9px] text-slate-400 mt-2">
+            <p className="text-[11px] text-slate-400 mt-2">
               {terminalMethod === 'multiple'
                 ? `Terminal value via FCF × ${exitMultiple.toFixed(1)}× exit multiple on final projected year FCF.`
                 : 'Computed via Gordon Growth Model on projected terminal FCF.'

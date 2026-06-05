@@ -15,7 +15,7 @@ function MonitorContent() {
   const tab          = searchParams.get('tab') ?? 'monitor'
 
   return (
-    <div className="min-h-screen bg-[#F8FAFB]">
+    <div className="min-h-dvh bg-[#F8FAFB]">
       {/* Tab bar */}
       <div className="sticky z-30 bg-white border-b border-slate-200" style={{ top: 'calc(52px + env(safe-area-inset-top, 0px))' }}>
         <div className="px-4 sm:px-6">
@@ -33,7 +33,7 @@ function MonitorContent() {
               >
                 {t.label}
                 {t.wip && (
-                  <span className="text-[9px] font-bold uppercase tracking-wide text-amber-600 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded-full leading-none">
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-amber-600 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded-full leading-none">
                     In Progress
                   </span>
                 )}
@@ -69,7 +69,7 @@ function MonitorContent() {
 
 export default function MonitorPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+    <Suspense fallback={<div className="min-h-dvh bg-background" />}>
       <MonitorContent />
     </Suspense>
   )

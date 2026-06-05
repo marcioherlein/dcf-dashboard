@@ -45,7 +45,7 @@ function MetricPill({ label, value }: { label: string; value: number | null }) {
       : 'bg-surface-container text-on-surface-variant'
   void good
   return (
-    <span className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[9px] font-medium ${cls}`}>
+    <span className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium ${cls}`}>
       {label} <strong>{typeof value === 'number' && !isNaN(value) ? `${value > 0 && isGood ? '+' : ''}${value.toFixed(1)}%` : '—'}</strong>
     </span>
   )
@@ -195,7 +195,7 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
 
                   {/* Market */}
                   <td className="px-3 py-3">
-                    <span className={`text-[9px] font-bold uppercase tracking-wide rounded px-1.5 py-0.5 ${MARKET_COLORS[row.market] ?? 'bg-surface-container text-on-surface-variant'}`}>
+                    <span className={`text-[10px] font-bold uppercase tracking-wide rounded px-1.5 py-0.5 ${MARKET_COLORS[row.market] ?? 'bg-surface-container text-on-surface-variant'}`}>
                       {row.market}
                     </span>
                   </td>
@@ -203,7 +203,7 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
                   {/* Price */}
                   <td className="px-3 py-3 tabular-nums text-sm font-semibold text-on-surface">
                     ${row.price < 10 ? row.price.toFixed(3) : row.price < 100 ? row.price.toFixed(2) : row.price.toFixed(0)}
-                    {!normalizeUSD && row.currency === 'ARS' && <span className="text-[9px] text-on-surface-variant ml-0.5">ARS</span>}
+                    {!normalizeUSD && row.currency === 'ARS' && <span className="text-[10px] text-on-surface-variant ml-0.5">ARS</span>}
                   </td>
 
                   {/* 1D % */}
@@ -257,12 +257,12 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
                   <td className="px-3 py-3">
                     <div className="flex flex-wrap gap-1">
                       {row.isCedear && (
-                        <span className="text-[9px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 bg-secondary-container/40 text-on-secondary-container">
+                        <span className="text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 bg-secondary-container/40 text-on-secondary-container">
                           CEDEAR
                         </span>
                       )}
                       {row.assetType === 'future' && (
-                        <span className="text-[9px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 bg-tertiary-fixed/40 text-on-tertiary-fixed-variant">
+                        <span className="text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 bg-tertiary-fixed/40 text-on-tertiary-fixed-variant">
                           FUT
                         </span>
                       )}

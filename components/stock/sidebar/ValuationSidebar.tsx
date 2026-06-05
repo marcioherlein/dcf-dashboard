@@ -144,7 +144,7 @@ function TrendBars({ points, unit }: { points: TrendPoint[]; unit: 'percent' | '
         return (
           <div key={p.year} className="flex flex-col items-center gap-1 flex-1 min-w-0">
             <span className={cn(
-              'text-[9px] tabular-nums leading-none truncate w-full text-center',
+              'text-[10px] tabular-nums leading-none truncate w-full text-center',
               isLast ? 'font-semibold text-slate-800' : 'text-slate-400',
             )}>
               {fmt(p.value!)}
@@ -158,7 +158,7 @@ function TrendBars({ points, unit }: { points: TrendPoint[]; unit: 'percent' | '
               )}
               style={{ height: `${barPx}px` }}
             />
-            <span className="text-[9px] text-slate-400 leading-none">{p.year.slice(-2)}</span>
+            <span className="text-[10px] text-slate-400 leading-none">{p.year.slice(-2)}</span>
           </div>
         )
       })}
@@ -181,7 +181,7 @@ function ThreeCol({ a, b, c }: { a: ColDef; b: ColDef; c: ColDef }) {
     <div className="grid grid-cols-3 divide-x divide-slate-100 -mx-5 px-5">
       {[a, b, c].map(col => (
         <div key={col.label} className="flex flex-col items-center px-1 py-2 gap-0.5">
-          <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 text-center leading-tight">{col.label}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center leading-tight">{col.label}</p>
           <p className={cn('text-base font-bold tabular-nums', colValColor(col.highlight))}>
             {col.value ?? '—'}
           </p>
@@ -196,7 +196,7 @@ function TwoCol({ a, b }: { a: ColDef; b: ColDef }) {
     <div className="grid grid-cols-2 divide-x divide-slate-100 -mx-5 px-5">
       {[a, b].map(col => (
         <div key={col.label} className="flex flex-col items-center px-1 py-2 gap-0.5">
-          <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 text-center leading-tight">{col.label}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center leading-tight">{col.label}</p>
           <p className={cn('text-base font-bold tabular-nums', colValColor(col.highlight))}>
             {col.value ?? '—'}
           </p>
@@ -296,7 +296,7 @@ function DefaultView({
               />
             )}
           </div>
-          <div className="flex justify-between text-[9px] text-slate-400 tabular-nums">
+          <div className="flex justify-between text-[10px] text-slate-400 tabular-nums">
             <span>{sym}{minFV.toFixed(0)}</span>
             <span className="text-slate-500 font-medium">{sym}{currentPrice.toFixed(0)} now</span>
             <span>{sym}{maxFV.toFixed(0)}</span>
@@ -337,7 +337,7 @@ function DefaultView({
               { label: 'Bull', fv: scenarios.bull.fairValue, cls: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
             ].map(({ label, fv, cls }) => (
               <div key={label} className={cn('flex-1 rounded-lg border px-2 py-2 text-center', cls)}>
-                <p className="text-[9px] font-bold uppercase tracking-wider opacity-70">{label}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider opacity-70">{label}</p>
                 <p className="text-[11px] font-bold tabular-nums mt-0.5">
                   {fv != null ? `${sym}${fv.toFixed(0)}` : '—'}
                 </p>
@@ -518,7 +518,7 @@ function EVEBITDAContext({
         {companyActual != null && (
           <p className="text-[10px] text-slate-500 leading-snug mt-2.5">{premiumText()}</p>
         )}
-        <p className="text-[9px] text-slate-400 mt-2 leading-snug">
+        <p className="text-[10px] text-slate-400 mt-2 leading-snug">
           <span className="font-medium">Benchmark: </span>{sourceLabel}
         </p>
       </Card>

@@ -157,7 +157,7 @@ export default function RevenueEarningsChart({ statementsData, currency = 'USD' 
                 </div>
 
                 {/* year label */}
-                <span className={`text-[8px] sm:text-[9px] leading-none mt-0.5 ${p.isTTM ? 'text-slate-300 font-semibold' : 'text-slate-400'}`}>
+                <span className={`text-[8px] sm:text-[10px] leading-none mt-0.5 ${p.isTTM ? 'text-slate-300 font-semibold' : 'text-slate-400'}`}>
                   {p.year}
                 </span>
               </div>

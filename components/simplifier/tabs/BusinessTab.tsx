@@ -75,7 +75,7 @@ function QualSlider({
           style={{ left: `calc(${(position / 2) * 100}% - 7px)`, background: color }}
         />
       </div>
-      <div className="flex justify-between text-[9px] text-[#6B6A72]">
+      <div className="flex justify-between text-[10px] text-[#6B6A72]">
         <span>{leftLabel}</span>
         <span>{rightLabel}</span>
       </div>
@@ -214,7 +214,7 @@ export default function BusinessTab({
         <div className="grid grid-cols-4 gap-2 mt-3 sm:hidden">
           {metrics.map(m => (
             <div key={m.label} className="text-center">
-              <p className="text-[9px] text-[#6B6A72] uppercase tracking-wider">{m.label}</p>
+              <p className="text-[10px] text-[#6B6A72] uppercase tracking-wider">{m.label}</p>
               <p className="text-xs font-semibold font-mono text-[#2D2C31]">{m.value}</p>
             </div>
           ))}
@@ -239,12 +239,12 @@ export default function BusinessTab({
                   }}
                 />
                 {/* Phase label */}
-                <p className="text-[9px] font-semibold" style={{ color: h.phase.color }}>{h.phase.label}</p>
+                <p className="text-[10px] font-semibold" style={{ color: h.phase.color }}>{h.phase.label}</p>
                 {/* Year */}
-                <p className="text-[9px] text-[#6B6A72]">{h.year}</p>
+                <p className="text-[10px] text-[#6B6A72]">{h.year}</p>
                 {/* YoY % */}
                 {h.growth != null && (
-                  <p className="text-[9px] font-mono" style={{ color: h.phase.color }}>
+                  <p className="text-[10px] font-mono" style={{ color: h.phase.color }}>
                     {h.growth >= 0 ? '+' : ''}{(h.growth * 100).toFixed(0)}%
                   </p>
                 )}

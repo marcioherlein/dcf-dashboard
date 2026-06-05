@@ -125,14 +125,14 @@ function BarSparkline({ data, colorFn, label }: {
                 )}
                 style={{ height: barH }}
               />
-              <span className={cn('text-[9px]', isProj ? 'text-slate-400' : 'text-slate-500')}>
+              <span className={cn('text-[10px]', isProj ? 'text-slate-400' : 'text-slate-500')}>
                 {d.year.slice(-2)}
               </span>
             </div>
           )
         })}
       </div>
-      <div className="flex justify-between mt-0.5 text-[9px] text-slate-500 tabular-nums">
+      <div className="flex justify-between mt-0.5 text-[10px] text-slate-500 tabular-nums">
         {data.map(d => (
           <span key={d.year} className={d.isProjected ? 'text-slate-400' : ''}>{fmtM(d.value)}</span>
         ))}
@@ -173,14 +173,14 @@ function RevenueBarChart({ rows }: { rows: IncomeRow[] }) {
                 )}
                 style={{ height: barH }}
               />
-              <span className={cn('text-[9px]', isProj ? 'text-slate-400' : 'text-slate-500')}>
+              <span className={cn('text-[10px]', isProj ? 'text-slate-400' : 'text-slate-500')}>
                 {r.year.slice(-2)}
               </span>
             </div>
           )
         })}
       </div>
-      <div className="flex justify-between mt-0.5 text-[9px] text-slate-500 tabular-nums">
+      <div className="flex justify-between mt-0.5 text-[10px] text-slate-500 tabular-nums">
         {all.map(r => (
           <span key={r.year} className={r.isProjected ? 'text-slate-400' : ''}>
             {fmtM(r.revenue!)}

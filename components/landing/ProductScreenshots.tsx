@@ -173,7 +173,7 @@ export function SummaryMockScreen() {
         >
           <div className="flex items-center justify-between mb-2">
             <p className="text-[10px] font-[700] text-[#0F172A]">What the market is pricing in</p>
-            <span className="text-[9px] font-[600] text-[#64748B]">Reverse DCF ⓘ</span>
+            <span className="text-[10px] font-[600] text-[#64748B]">Reverse DCF ⓘ</span>
           </div>
 
           {/* Chips */}
@@ -181,7 +181,7 @@ export function SummaryMockScreen() {
             {['Conservative', 'Moderate', 'Aggressive', 'Very Aggressive'].map((chip, i) => (
               <span
                 key={chip}
-                className="rounded-full px-1.5 py-0.5 text-[9px] font-[600] border"
+                className="rounded-full px-1.5 py-0.5 text-[10px] font-[600] border"
                 style={i === 0
                   ? { background: '#ECFDF3', borderColor: '#BBF7D0', color: '#047857' }
                   : { background: '#F8FAFC', borderColor: '#E2E8F0', color: '#94A3B8' }}
@@ -194,12 +194,12 @@ export function SummaryMockScreen() {
           <div className="flex gap-3">
             {/* Left: big CAGR number */}
             <div className="flex-none min-w-0">
-              <p className="text-[9px] font-[650] text-[#64748B] mb-0.5">Implied 5Y Revenue CAGR</p>
+              <p className="text-[10px] font-[650] text-[#64748B] mb-0.5">Implied 5Y Revenue CAGR</p>
               <p className="text-[22px] font-[800] leading-none text-[#047857]" style={{ fontVariantNumeric: 'tabular-nums' }}>
                 <Counter target={11.3} decimals={1} inView={inView} reduced={reduced} delay={0.5} />%
               </p>
               <div className="mt-2">
-                <p className="text-[9px] font-[650] text-[#64748B] mb-0.5">3Y Historical CAGR</p>
+                <p className="text-[10px] font-[650] text-[#64748B] mb-0.5">3Y Historical CAGR</p>
                 <p className="text-[12px] font-[700] text-[#334155]" style={{ fontVariantNumeric: 'tabular-nums' }}>
                   <Counter target={14.2} decimals={1} inView={inView} reduced={reduced} delay={0.6} />% ↗
                 </p>
@@ -213,9 +213,9 @@ export function SummaryMockScreen() {
                   <div className="flex items-center justify-between mb-0.5">
                     <div className="flex items-center gap-1 min-w-0">
                       <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: row.dot }} />
-                      <span className="text-[9px] text-[#64748B] truncate">{row.label}</span>
+                      <span className="text-[10px] text-[#64748B] truncate">{row.label}</span>
                     </div>
-                    <span className="text-[9px] font-[700] text-[#334155] ml-1 shrink-0" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                    <span className="text-[10px] font-[700] text-[#334155] ml-1 shrink-0" style={{ fontVariantNumeric: 'tabular-nums' }}>
                       {row.val}
                     </span>
                   </div>
@@ -233,7 +233,7 @@ export function SummaryMockScreen() {
             animate={inView ? { opacity: 1 } : {}}
             transition={{ duration: 0.4, delay: 0.95 }}
           >
-            <p className="text-[9px] text-[#334155] leading-relaxed">
+            <p className="text-[10px] text-[#334155] leading-relaxed">
               The market assumes <strong>11.3%</strong> — 2.9pp below the 3-year track record of 14.2%.
             </p>
           </motion.div>
@@ -326,7 +326,7 @@ export function ValuationMockScreen() {
             className="bg-white px-3 py-2.5 flex flex-col gap-0.5"
             style={cell.accent ? { borderTop: '2px solid #2563EB' } : {}}
           >
-            <p className="text-[9px] font-[650] text-[#64748B]">{cell.label}</p>
+            <p className="text-[10px] font-[650] text-[#64748B]">{cell.label}</p>
             <p
               className="text-[13px] font-[750] leading-none"
               style={{ color: cell.valueColor ?? '#0F172A', fontVariantNumeric: 'tabular-nums' }}
@@ -337,7 +337,7 @@ export function ValuationMockScreen() {
                   ? <>+<Counter target={14.8} decimals={1} inView={inView} reduced={reduced} delay={0.45} />%</>
                   : cell.value}
             </p>
-            <p className="text-[9px]" style={{ color: cell.subColor ?? '#64748B' }}>{cell.sub}</p>
+            <p className="text-[10px]" style={{ color: cell.subColor ?? '#64748B' }}>{cell.sub}</p>
           </div>
         ))}
       </motion.div>
@@ -360,7 +360,7 @@ export function ValuationMockScreen() {
           >
             Undervalued
           </span>
-          <p className="text-[9px] text-[#64748B] mt-1.5">High conviction · 4 of 4 models</p>
+          <p className="text-[10px] text-[#64748B] mt-1.5">High conviction · 4 of 4 models</p>
         </motion.div>
 
         {/* Model range bar */}
@@ -372,7 +372,7 @@ export function ValuationMockScreen() {
           transition={{ duration: 0.4, ease: EASE, delay: 0.28 }}
         >
           <p className="text-[10px] font-[650] text-[#64748B] mb-2">Model Range</p>
-          <div className="flex justify-between text-[9px] text-[#64748B] mb-1.5 tabular-nums">
+          <div className="flex justify-between text-[10px] text-[#64748B] mb-1.5 tabular-nums">
             <span>$380.21</span><span>$512.40</span>
           </div>
           <div className="relative h-3 bg-[#F1F5F9] rounded-full">
@@ -390,7 +390,7 @@ export function ValuationMockScreen() {
               transition={reduced ? { duration: 0 } : { duration: 0.85, ease: EASE, delay: 0.45 }}
             />
           </div>
-          <p className="text-[9px] text-[#64748B] mt-1.5 tabular-nums">Current $388.20</p>
+          <p className="text-[10px] text-[#64748B] mt-1.5 tabular-nums">Current $388.20</p>
         </motion.div>
 
         {/* Effective blend weights */}
@@ -406,7 +406,7 @@ export function ValuationMockScreen() {
             {methods.map((m, i) => (
               <div key={m.label} className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full shrink-0" style={{ background: m.fill }} />
-                <span className="text-[9px] text-[#475569] flex-1 min-w-0">{m.label}</span>
+                <span className="text-[10px] text-[#475569] flex-1 min-w-0">{m.label}</span>
                 <div className="w-16 h-1.5 bg-[#F1F5F9] rounded-full overflow-hidden shrink-0">
                   <motion.div
                     className="h-full rounded-full"
@@ -416,7 +416,7 @@ export function ValuationMockScreen() {
                     transition={reduced ? { duration: 0 } : { duration: 0.9, ease: EASE, delay: 0.4 + i * 0.08 }}
                   />
                 </div>
-                <span className="text-[9px] font-[650] text-[#64748B] w-5 text-right shrink-0" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                <span className="text-[10px] font-[650] text-[#64748B] w-5 text-right shrink-0" style={{ fontVariantNumeric: 'tabular-nums' }}>
                   {m.pct}%
                 </span>
               </div>

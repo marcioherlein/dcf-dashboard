@@ -79,7 +79,7 @@ export function ETFComparisonTable({ profiles }: Props) {
                       >
                         {raw != null ? m.format(raw) : <span className="text-slate-300">—</span>}
                         {isScore && raw != null && (
-                          <span className="block text-[9px] font-semibold text-slate-400 mt-0.5">{scoreLabel(raw as number)}</span>
+                          <span className="block text-[10px] font-semibold text-slate-400 mt-0.5">{scoreLabel(raw as number)}</span>
                         )}
                       </td>
                     )

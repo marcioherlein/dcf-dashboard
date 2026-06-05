@@ -88,7 +88,7 @@ function ConfidenceBadge({ level }: { level: ConfidenceLevel }) {
     low:    { label: 'Low Confidence',    bg: 'bg-red-50',     text: 'text-red-700',     border: 'border-red-200'     },
   }[level]
   return (
-    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border uppercase tracking-wider shrink-0 ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border uppercase tracking-wider shrink-0 ${cfg.bg} ${cfg.text} ${cfg.border}`}>
       {cfg.label}
     </span>
   )
@@ -446,7 +446,7 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
                           {s.label}
                         </p>
                         {s.sublabel && (
-                          <p className={cn('text-[9px] mt-0.5 leading-tight', isImplied ? 'text-blue-500' : 'text-slate-400')}>
+                          <p className={cn('text-[11px] mt-0.5 leading-tight', isImplied ? 'text-blue-500' : 'text-slate-400')}>
                             {s.sublabel}
                           </p>
                         )}
@@ -457,8 +457,8 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
                             {s.fvPerShare != null ? fmtPrice(s.fvPerShare, currency) : '—'}
                           </p>
                           {isImplied
-                            ? <p className="text-[9px] text-blue-500 mt-0.5">= market price</p>
-                            : <p className={cn('text-[9px] mt-0.5', isCheap ? 'text-emerald-500' : isExpensive ? 'text-red-500' : 'text-slate-400')}>
+                            ? <p className="text-[11px] text-blue-500 mt-0.5">= market price</p>
+                            : <p className={cn('text-[11px] mt-0.5', isCheap ? 'text-emerald-500' : isExpensive ? 'text-red-500' : 'text-slate-400')}>
                                 {s.fvPerShare != null ? (isCheap ? 'undervalued' : isExpensive ? 'overvalued' : 'near fair') : ''}
                               </p>
                           }
@@ -689,7 +689,7 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                     )}
                     {/* Source badge */}
                     <span className={cn(
-                      'text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider',
+                      'text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider',
                       isOverridden
                         ? 'bg-blue-100 text-blue-700'
                         : a.source === 'analyst_estimate'
@@ -707,7 +707,7 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                   <div className="flex items-center gap-1.5 shrink-0">
                     {heat.level !== 'neutral' && (
                       <span className={cn(
-                        'text-[9px] font-semibold px-1.5 py-0.5 rounded-full border',
+                        'text-[10px] font-semibold px-1.5 py-0.5 rounded-full border',
                         heat.level === 'green' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
                         heat.level === 'amber' ? 'bg-amber-50  border-amber-200  text-amber-700'  :
                                                  'bg-red-50    border-red-200    text-red-700',
@@ -948,7 +948,7 @@ function MethodAccordion({
                   <ol className="space-y-1.5">
                     {guide.map((step, i) => (
                       <li key={i} className="flex items-start gap-2">
-                        <span className="shrink-0 w-4 h-4 rounded-full bg-blue-100 text-blue-700 text-[9px] font-bold flex items-center justify-center mt-0.5">
+                        <span className="shrink-0 w-4 h-4 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold flex items-center justify-center mt-0.5">
                           {i + 1}
                         </span>
                         <span className="text-[11px] text-slate-600 leading-snug">{step}</span>
@@ -1468,7 +1468,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
             <div>
               <div className="flex items-center gap-2">
                 <p className="text-sm font-semibold text-slate-800">Sanity Checks — Multiples</p>
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 uppercase tracking-wider">3 models</span>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 uppercase tracking-wider">3 models</span>
               </div>
               <p className="text-[11px] text-slate-500 mt-0.5">Forward P/E · EV/EBITDA · Revenue Multiple — how the market prices peers. Best used as a cross-check against DCF results.</p>
             </div>

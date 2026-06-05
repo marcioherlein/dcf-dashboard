@@ -116,14 +116,14 @@ export default function RisksSidebar({ ratings, scores, ownership }: Props) {
             <div className="flex flex-wrap gap-1.5">
               {altman && (
                 <div className={cn('flex flex-col items-center px-3 py-1.5 rounded-lg border', altmanColor)}>
-                  <span className="text-[9px] text-current opacity-70 uppercase tracking-wider">Altman Z</span>
+                  <span className="text-[10px] text-current opacity-70 uppercase tracking-wider">Altman Z</span>
                   <span className="text-xs font-bold">{altman.zScore.toFixed(1)}</span>
-                  <span className="text-[9px] font-semibold">{altman.zone}</span>
+                  <span className="text-[10px] font-semibold">{altman.zone}</span>
                 </div>
               )}
               {beneish && (
                 <div className={cn('flex flex-col items-center px-3 py-1.5 rounded-lg border', beneishColor)}>
-                  <span className="text-[9px] text-current opacity-70 uppercase tracking-wider">Beneish</span>
+                  <span className="text-[10px] text-current opacity-70 uppercase tracking-wider">Beneish</span>
                   <span className="text-xs font-bold">{beneish.flag}</span>
                 </div>
               )}

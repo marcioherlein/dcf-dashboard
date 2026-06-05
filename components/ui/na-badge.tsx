@@ -35,7 +35,7 @@ export function NABadge({ reason = 'no-data', className, size = 'xs' }: NABadgeP
       title={label}
       className={cn(
         'inline-flex items-center rounded px-1 font-mono font-semibold text-slate-400 bg-slate-100 border border-slate-200 cursor-help',
-        size === 'xs' ? 'text-[9px] py-px' : 'text-[11px] py-0.5',
+        size === 'xs' ? 'text-[10px] py-px' : 'text-[11px] py-0.5',
         className,
       )}
     >

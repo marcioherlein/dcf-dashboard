@@ -109,9 +109,9 @@ export default function PriceVsFairValueCard({
         )}
       </div>
       <div className="flex justify-between mt-1">
-        <span className="text-[9px] text-[#64748B]">0×</span>
-        <span className="text-[9px] text-[#3B82F6] font-[650]">1× Fair</span>
-        <span className="text-[9px] text-[#64748B]">2.5×</span>
+        <span className="text-[10px] text-[#64748B]">0×</span>
+        <span className="text-[10px] text-[#3B82F6] font-[650]">1× Fair</span>
+        <span className="text-[10px] text-[#64748B]">2.5×</span>
       </div>
 
       {/* Interpretation sentence */}

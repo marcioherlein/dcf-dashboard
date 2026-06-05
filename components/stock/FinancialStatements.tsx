@@ -95,7 +95,7 @@ function YearHeader({ year, isProjected }: { year: string; isProjected: boolean 
       isProjected ? 'text-violet-500' : 'text-slate-500'
     }`}>
       {year}
-      {isProjected && <span className="ml-1 text-[9px] opacity-60">proj</span>}
+      {isProjected && <span className="ml-1 text-[10px] opacity-60">proj</span>}
     </th>
   )
 }

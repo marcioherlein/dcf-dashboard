@@ -161,8 +161,8 @@ export default function WarrenTable({ instruments }: Props) {
                     <div className="flex flex-col gap-0.5">
                       <span className="text-xs font-bold text-slate-100 leading-none">{inst.displayTicker}</span>
                       <div className="flex items-center gap-1">
-                        <span className={`text-[9px] font-semibold px-1 rounded ${marketBadgeColor(inst.market)}`}>{inst.market}</span>
-                        {inst.isCedear && <span className="text-[9px] text-amber-600">CEDEAR</span>}
+                        <span className={`text-[10px] font-semibold px-1 rounded ${marketBadgeColor(inst.market)}`}>{inst.market}</span>
+                        {inst.isCedear && <span className="text-[10px] text-amber-600">CEDEAR</span>}
                       </div>
                     </div>
                   </td>
