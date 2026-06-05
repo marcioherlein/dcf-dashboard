@@ -27,7 +27,7 @@ export default function AuthBanner() {
   if (!visible || session?.user) return null
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[200] flex items-center justify-between gap-4 bg-blue-600 px-4 py-2.5 text-sm text-white sm:px-6">
+    <div className="fixed top-0 left-0 right-0 z-[200] flex items-center justify-between gap-4 bg-blue-600 px-4 py-2.5 pt-[calc(env(safe-area-inset-top,0px)+10px)] text-sm text-white sm:px-6">
       <span className="leading-snug">
         <strong>Save this analysis</strong> — sign in to keep your research in one place.
       </span>
@@ -43,7 +43,7 @@ export default function AuthBanner() {
             setVisible(false)
             try { sessionStorage.setItem(DISMISSED_KEY, '1') } catch {}
           }}
-          className="p-2 text-blue-200 hover:text-white transition-colors"
+          className="min-w-[44px] min-h-[44px] flex items-center justify-center text-blue-200 hover:text-white transition-colors"
           aria-label="Dismiss"
         >
           <X size={16} />

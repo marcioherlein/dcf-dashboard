@@ -156,7 +156,7 @@ export default function HistoricalMultiplesChart({
             <button
               key={m.key}
               onClick={() => setActive(m.key)}
-              className="px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all"
+              className="px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all min-h-[44px] flex items-center"
               style={active === m.key
                 ? { background: 'white', color: m.hex, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
                 : { color: '#94a3b8' }

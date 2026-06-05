@@ -25,6 +25,7 @@ const dmMono = DM_Mono({
 export const metadata: Metadata = {
   title: "insic — Invest with a process, not a story",
   description: "Fair value estimates, market-implied expectations, and transparent assumptions — so you can understand what has to be true before you invest. Free.",
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'insic' },
 };
 
 export const viewport = {

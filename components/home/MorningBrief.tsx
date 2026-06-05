@@ -82,7 +82,7 @@ export default function MorningBrief() {
               <button
                 onClick={handleUpdate}
                 disabled={generating}
-                className="flex items-center gap-1.5 rounded-xl border border-outline-variant/30 bg-surface-container px-3 py-1.5 text-xs font-semibold text-on-surface-variant transition-all hover:border-outline-variant hover:bg-surface-container-high hover:text-on-surface disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex items-center gap-1.5 rounded-xl border border-outline-variant/30 bg-surface-container px-3 py-2.5 text-xs font-semibold text-on-surface-variant transition-all hover:border-outline-variant hover:bg-surface-container-high hover:text-on-surface disabled:cursor-not-allowed disabled:opacity-40 min-h-[44px]"
               >
                 {generating ? (
                   <>

@@ -306,7 +306,9 @@ export default function ScreenerPage() {
                   onChange={e => setSearchQ(e.target.value)}
                   placeholder="Ticker or name…"
                   aria-label="Search by ticker or company name"
-                  className="w-full pl-8 pr-3 py-2 text-[13px] border border-slate-200 rounded-lg bg-white text-slate-800 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                  autoCapitalize="characters"
+                  autoCorrect="off"
+                  className="w-full pl-8 pr-3 py-2 text-[16px] border border-slate-200 rounded-lg bg-white text-slate-800 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
                 />
               </div>
 

@@ -54,13 +54,13 @@ export default function NextStepsCard({
         </button>
         <button
           onClick={onViewRisks}
-          className="w-full h-10 rounded-[10px] bg-white border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 text-[13px] font-medium transition-colors"
+          className="w-full h-11 rounded-[10px] bg-white border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 text-[13px] font-medium transition-colors"
         >
           Risks &amp; health scores
         </button>
         <Link
           href={`/compare?a=${ticker}`}
-          className="w-full h-10 rounded-[10px] bg-white border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 text-[13px] font-medium transition-colors flex items-center justify-center gap-1.5"
+          className="w-full h-11 rounded-[10px] bg-white border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 text-[13px] font-medium transition-colors flex items-center justify-center gap-1.5"
         >
           <GitCompareArrows size={14} className="text-slate-400" />
           Compare with another stock

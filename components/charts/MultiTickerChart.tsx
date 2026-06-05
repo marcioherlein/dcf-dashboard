@@ -58,7 +58,7 @@ function TickerTag({ ticker, color, onRemove, canRemove }: {
       {canRemove && (
         <button
           onClick={onRemove}
-          className="hover:opacity-60 transition-opacity leading-none"
+          className="hover:opacity-60 transition-opacity leading-none -mx-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
           style={{ color }}
         >
           ×

@@ -559,7 +559,7 @@ export default function StrategiesPage() {
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
                 className={[
-                  'px-3 py-1 rounded-full text-[12px] font-semibold border transition-colors shrink-0 min-h-[36px]',
+                  'px-3 py-1 rounded-full text-[12px] font-semibold border transition-colors shrink-0 min-h-[44px]',
                   activeCategory === cat
                     ? cat === 'All'     ? 'bg-slate-800 text-white border-slate-800'
                     : cat === 'AI Stack'? 'bg-blue-600 text-white border-blue-600'
@@ -638,7 +638,7 @@ function TabBtn({ active, onClick, label }: { active: boolean; onClick: () => vo
     <button
       onClick={onClick}
       className={[
-        'px-3.5 py-1.5 rounded-lg text-[13px] font-medium transition-colors shrink-0 min-h-[36px]',
+        'px-3.5 py-1.5 rounded-lg text-[13px] font-medium transition-colors shrink-0 min-h-[44px]',
         active
           ? 'bg-blue-600 text-white'
           : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50',

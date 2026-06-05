@@ -413,7 +413,7 @@ export default function SensitivityMatrix({
                         aria-pressed={isSelected}
                         aria-label={`Scenario: ${fieldY.shortLabel} ${fieldY.format(yv)}, ${fieldX.shortLabel} ${fieldX.format(xVals[xi])}`}
                         className={cn(
-                          'w-full flex flex-col items-center justify-center rounded-lg h-[36px] sm:h-[44px] transition-all cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-1',
+                          'w-full flex flex-col items-center justify-center rounded-lg h-[44px] transition-all cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-1',
                           colors.bg,
                           isBase && !isSelected && 'ring-2 ring-blue-500 ring-offset-1',
                           isSelected ? 'ring-2 ring-slate-900 ring-offset-2 motion-safe:scale-105 z-10 relative shadow-md' : 'motion-safe:hover:brightness-95 motion-safe:hover:scale-[1.03]',

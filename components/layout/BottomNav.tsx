@@ -116,7 +116,7 @@ export default function BottomNav() {
                 href={href}
                 onClick={() => setMoreOpen(false)}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-3 rounded-xl text-[14px] font-medium transition-colors',
+                  'flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl text-[14px] font-medium transition-colors',
                   active ? 'bg-[#EEF4DD] text-[#0A1424]' : 'text-[#536174] hover:bg-[#F6FAEA]',
                 )}
               >

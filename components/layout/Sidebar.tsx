@@ -160,7 +160,7 @@ export default function Sidebar() {
               </p>
               <button
                 onClick={() => signOut()}
-                className="text-[11px] text-[#8A96A8] hover:text-[#536174] transition-colors leading-tight"
+                className="min-h-[44px] flex items-center px-2 text-[11px] text-[#8A96A8] hover:text-[#536174] transition-colors leading-tight"
               >
                 Sign out
               </button>

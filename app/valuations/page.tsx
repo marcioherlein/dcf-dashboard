@@ -456,7 +456,7 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
             key={p}
             onClick={() => onPage(p)}
             className={cn(
-              'min-w-[32px] h-8 rounded-lg text-[12px] font-semibold border transition-colors',
+              'min-w-[44px] h-[44px] rounded-lg text-[12px] font-semibold border transition-colors',
               p === page
                 ? 'bg-[#2563EB] border-[#2563EB] text-white'
                 : 'border-[#DDE6F2] text-[#334155] hover:bg-slate-50',

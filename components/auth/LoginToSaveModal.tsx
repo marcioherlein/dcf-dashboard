@@ -28,7 +28,7 @@ export default function LoginToSaveModal({ ticker, companyName, fairValue, upsid
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <h2 className="text-[16px] font-bold text-slate-900">Sign in to save this analysis</h2>
-          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
+          <button onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
             <X size={16} strokeWidth={2.5} />
           </button>
         </div>

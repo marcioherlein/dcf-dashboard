@@ -156,7 +156,7 @@ export default function HeroSearch({ dark = false }: Props) {
               background: '#2563EB',
               boxShadow: '0 3px 10px rgba(37,99,235,0.28)',
               fontWeight: 650,
-              minHeight: '36px',
+              minHeight: '44px',
             }}
             aria-label="Analyze stock"
           >
@@ -272,7 +272,7 @@ export default function HeroSearch({ dark = false }: Props) {
             }`}
             style={{
               fontVariantNumeric: 'tabular-nums',
-              minHeight: '36px',
+              minHeight: '44px',
               background: dark ? 'rgba(255,255,255,0.04)' : undefined,
             }}
           >

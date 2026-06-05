@@ -215,7 +215,7 @@ export default function AssumptionHealthPanel({ audit, assumptions, onChange, an
             <div className="pt-1 border-t border-slate-100 mt-2">
               <button
                 onClick={applyAll}
-                className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                className="min-h-[44px] flex items-center px-2 text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
               >
                 Apply all suggestions →
               </button>

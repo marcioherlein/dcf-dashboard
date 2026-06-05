@@ -117,7 +117,7 @@ export default function Portfolio() {
           </div>
           <div className="flex items-center gap-3">
             {error && <p className="text-xs text-red-400">{error}</p>}
-            <label className="cursor-pointer rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/70 hover:bg-white/10 transition-all">
+            <label className="cursor-pointer rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-semibold text-white/70 hover:bg-white/10 transition-all min-h-[44px] flex items-center">
               {uploading ? 'Uploading…' : positions ? '↺ Update Excel' : '↑ Upload Excel'}
               <input
                 ref={fileRef}

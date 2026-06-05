@@ -235,14 +235,14 @@ export default function TopBar() {
                 <div className="flex items-center gap-1 shrink-0">
                   <button
                     onClick={() => { setMobileSearchOpen(true); setTimeout(() => mobileSearchRef.current?.focus(), 50) }}
-                    className="p-2 rounded-[10px] text-[#8A96A8] hover:text-[#5F790B] hover:bg-[#F6FAEA] transition-colors"
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-[10px] text-[#8A96A8] hover:text-[#5F790B] hover:bg-[#F6FAEA] transition-colors"
                     aria-label="Search for a stock"
                   >
                     <Search size={16} strokeWidth={2} />
                   </button>
                   <button
                     onClick={() => onSaveRef.current?.()}
-                    className="p-2 rounded-[10px] text-[#5F790B] hover:bg-[#F6FAEA] transition-colors"
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-[10px] text-[#5F790B] hover:bg-[#F6FAEA] transition-colors"
                     aria-label="Save analysis"
                   >
                     <Bookmark size={18} strokeWidth={2} />
@@ -581,7 +581,7 @@ export default function TopBar() {
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={() => signIn('google')}
-                className="text-[12.5px] text-white px-3.5 py-1.5 rounded-[10px] transition-colors font-semibold bg-[#5F790B] hover:bg-[#526A08] active:bg-[#4A5E07] shadow-sm whitespace-nowrap"
+                className="text-[12.5px] text-white px-3.5 py-2.5 min-h-[44px] rounded-[10px] transition-colors font-semibold bg-[#5F790B] hover:bg-[#526A08] active:bg-[#4A5E07] shadow-sm whitespace-nowrap"
               >
                 Get started free
               </button>

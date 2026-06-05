@@ -131,7 +131,7 @@ export default function NormalizedPerfChart() {
                 key={p}
                 onClick={() => setPeriod(p)}
                 className={cn(
-                  'px-2 py-0.5 text-[11px] font-semibold rounded transition-colors',
+                  'px-2 py-0.5 min-h-[44px] flex items-center text-[11px] font-semibold rounded transition-colors',
                   period === p ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
                 )}
               >
@@ -151,7 +151,7 @@ export default function NormalizedPerfChart() {
                 <button
                   onClick={() => toggleSeries(s.symbol)}
                   className={cn(
-                    'flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-all',
+                    'flex items-center gap-1.5 px-2 py-0.5 min-h-[44px] rounded-full text-[11px] font-semibold border transition-all',
                     isOn
                       ? 'border-transparent text-white'
                       : 'border-slate-200 bg-transparent text-slate-400 opacity-50'
@@ -168,7 +168,7 @@ export default function NormalizedPerfChart() {
                 {isCustom && (
                   <button
                     onClick={() => removeCustomSymbol(s.symbol)}
-                    className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-slate-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-slate-600 text-white flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                   >
                     <X size={8} />
                   </button>
@@ -187,7 +187,7 @@ export default function NormalizedPerfChart() {
                 value={addValue}
                 onChange={e => setAddValue(e.target.value.toUpperCase())}
                 placeholder="AAPL"
-                className="w-20 px-2 py-0.5 text-[11px] rounded-full border border-blue-300 bg-white text-slate-700 outline-none focus:border-blue-500"
+                className="w-20 px-2 py-0.5 text-[16px] rounded-full border border-blue-300 bg-white text-slate-700 outline-none focus:border-blue-500"
               />
               <button type="submit" className="text-[11px] font-semibold text-blue-600 hover:text-blue-500">Add</button>
               <button type="button" onClick={() => setShowAddInput(false)} className="text-[11px] text-slate-400 hover:text-slate-600">✕</button>
