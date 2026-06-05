@@ -77,8 +77,13 @@ async function post(text) {
     console.log(`Length: ${text.length}`)
     return
   }
-  const tweet = await getXClient().v2.tweet(text)
-  console.log(`Posted: https://twitter.com/i/web/status/${tweet.data.id}`)
+  try {
+    const tweet = await getXClient().v2.tweet(text)
+    console.log(`Posted: https://twitter.com/i/web/status/${tweet.data.id}`)
+  } catch (err) {
+    const detail = err.data ? JSON.stringify(err.data) : err.message
+    throw new Error(`Request failed with code ${err.code ?? err.status ?? '?'}: ${detail}`)
+  }
 }
 
 // ─── Mode: earnings ───────────────────────────────────────────────────────────
