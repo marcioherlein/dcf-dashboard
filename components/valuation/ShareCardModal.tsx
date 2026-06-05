@@ -39,6 +39,15 @@ export default function ShareCardModal({ open, onClose, ticker, companyName, out
   const [imgError, setImgError] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
 
+  // Serialize top-3 valid methods for the model consensus panel
+  const methodsParam = (() => {
+    const valid = output.methods
+      .filter(m => m.fairValue != null && m.fairValue > 0)
+      .slice(0, 3)
+      .map(m => ({ label: m.method, fv: m.fairValue as number }))
+    return valid.length > 0 ? encodeURIComponent(JSON.stringify(valid)) : undefined
+  })()
+
   // Base params shared across both formats
   const baseParams = {
     ticker,
@@ -51,6 +60,9 @@ export default function ShareCardModal({ open, onClose, ticker, companyName, out
     currency,
     verdict: output.verdict,
     conviction: CONVICTION_MAP[output.divergence.overallConfidence] ?? '',
+    methods: methodsParam,
+    mig: output.marketImpliedGrowth ?? undefined,
+    migAssumed: output.scenarios.base.cagr ?? undefined,
   }
 
   const landscapeUrl = buildUrl('/api/og', baseParams)
