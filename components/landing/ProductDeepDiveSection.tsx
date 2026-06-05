@@ -48,10 +48,10 @@ function AnimatedPanel({
         animate={inView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.55, ease: EASE, delay }}
       >
-        <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#0F172A', letterSpacing: '-0.015em', marginBottom: '8px' }}>
+        <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#0A1424', letterSpacing: '-0.015em', marginBottom: '8px' }}>
           {title}
         </h3>
-        <p className="text-base" style={{ color: '#64748B', lineHeight: 1.6 }}>
+        <p className="text-base" style={{ color: '#36455A', lineHeight: 1.6 }}>
           {subtitle}
         </p>
       </motion.div>
@@ -71,8 +71,8 @@ function AnimatedPanel({
               style={{ width: '6px', height: '6px', background: dotColor, marginTop: '7px' }}
             />
             <div>
-              <span className="text-sm font-semibold" style={{ color: '#0F172A' }}>{item.label}</span>
-              <span className="text-sm ml-1.5" style={{ color: '#64748B' }}>{item.desc}</span>
+              <span className="text-sm font-semibold" style={{ color: '#0A1424' }}>{item.label}</span>
+              <span className="text-sm ml-1.5" style={{ color: '#536174' }}>{item.desc}</span>
             </div>
           </motion.div>
         ))}
@@ -108,7 +108,7 @@ export default function ProductDeepDiveSection() {
           transition={{ duration: 0.65, ease: EASE }}
         >
           <h2
-            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] text-slate-900 [text-wrap:balance]"
+            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] text-[#0A1424] [text-wrap:balance]"
             style={{
               fontWeight: 700,
               lineHeight: 1.1,
@@ -119,8 +119,8 @@ export default function ProductDeepDiveSection() {
             Everything you need. Nothing you don&apos;t.
           </h2>
           <p
-            className="text-base sm:text-[17px] text-slate-600 mx-auto"
-            style={{ lineHeight: 1.6, maxWidth: '560px' }}
+            className="text-base sm:text-[17px] mx-auto"
+            style={{ color: '#36455A', lineHeight: 1.6, maxWidth: '560px' }}
           >
             insic turns valuation into a structured workflow: price, intrinsic
             value, reverse DCF, business quality, risks, and assumptions.

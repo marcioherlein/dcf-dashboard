@@ -46,8 +46,8 @@ export default function TestimonialsSection() {
 
           {/* Left: header + animated value list */}
           <motion.div
-            initial={reduced ? {} : { opacity: 0, y: 20 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
+            initial={reduced ? {} : { opacity: 0, x: -24 }}
+            animate={inView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, ease: EASE }}
           >
             <div className="flex items-start gap-4 mb-8">
@@ -118,14 +118,12 @@ export default function TestimonialsSection() {
                 Finally, a tool that shows me what the market is pricing in and lets me test my own assumptions.
               </p>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#E3E6E0] flex items-center justify-center shrink-0 overflow-hidden">
-                  <svg viewBox="0 0 24 24" className="w-6 h-6 text-[#8A96A8]" fill="currentColor">
-                    <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5.33 0-8 2.67-8 4v1h16v-1c0-1.33-2.67-4-8-4z"/>
-                  </svg>
+                <div className="w-10 h-10 rounded-full bg-[#5F790B] flex items-center justify-center shrink-0">
+                  <span className="text-[13px] font-bold text-white leading-none">MT</span>
                 </div>
                 <div>
                   <p className="text-[13px] font-semibold text-[#0A1424]">Michael T.</p>
-                  <p className="text-[12px] text-[#8A96A8]">Individual Investor</p>
+                  <p className="text-[12px] text-[#8A96A8]">Self-directed investor</p>
                 </div>
               </div>
             </motion.div>

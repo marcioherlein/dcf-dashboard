@@ -47,14 +47,6 @@ export default function HowItWorksSection() {
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.55, ease: EASE }}
         >
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-[8px] bg-[#EEF4DD] flex items-center justify-center shrink-0">
-              <svg className="w-4 h-4 text-[#5F790B]" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M13 3L4 14h7l-1 7 9-11h-7l1-7z"/>
-              </svg>
-            </div>
-            <span className="text-[12px] font-bold text-[#5F790B] uppercase tracking-[0.07em]">How it works</span>
-          </div>
           <h2 className="text-[24px] sm:text-[32px] font-bold text-[#0A1424] leading-tight" style={{ letterSpacing: '-0.025em' }}>
             A first-pass valuation in seconds.
           </h2>
@@ -86,8 +78,8 @@ export default function HowItWorksSection() {
             {STEPS.map(({ n, Icon, title, body }, i) => (
               <motion.div
                 key={i}
-                initial={reduced ? {} : { opacity: 0, y: 24 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
+                initial={reduced ? {} : { opacity: 0, x: i === 0 ? -20 : i === 2 ? 20 : 0, y: i === 1 ? 16 : 0 }}
+                animate={inView ? { opacity: 1, x: 0, y: 0 } : {}}
                 transition={{ duration: 0.52, ease: EASE, delay: 0.14 + i * 0.1 }}
                 className="flex flex-col gap-4"
               >

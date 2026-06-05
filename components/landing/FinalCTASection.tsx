@@ -134,15 +134,15 @@ export default function FinalCTASection() {
               />
               <button
                 onClick={() => { if (query.trim()) select(query.trim().toUpperCase()) }}
-                className="shrink-0 rounded-[10px] px-4 py-2.5 text-[13px] font-bold text-white transition-all hover:-translate-y-px active:scale-95"
+                className="shrink-0 rounded-[10px] px-4 text-[13px] font-bold text-white transition-all hover:-translate-y-px active:scale-95 flex items-center gap-1.5"
                 style={{
                   background: '#5F790B',
                   boxShadow: '0 3px 10px rgba(95,121,11,0.28)',
-                  minHeight: '36px',
+                  minHeight: '44px',
                 }}
                 aria-label="Analyze stock"
               >
-                <Search size={16} />
+                Analyze →
               </button>
             </div>
 
@@ -192,7 +192,7 @@ export default function FinalCTASection() {
           {/* Trust bullets */}
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 flex-wrap">
             {['No signup required', 'Results in seconds', 'Cancel anytime'].map(b => (
-              <span key={b} className="flex items-center gap-1.5 text-[13px] text-[#536174]">
+              <span key={b} className="flex items-center gap-1.5 text-[13px] text-[#8A96A8]">
                 <span
                   className="flex items-center justify-center rounded-full shrink-0"
                   style={{ width: '16px', height: '16px', background: 'rgba(95,121,11,0.20)' }}

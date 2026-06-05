@@ -66,57 +66,51 @@ export default function TransparencySection() {
           >
             No black boxes. Every assumption is yours.
           </h2>
-          <p className="text-[15px] sm:text-[17px] text-[#536174] mx-auto leading-relaxed" style={{ maxWidth: '520px' }}>
+          <p className="text-[15px] sm:text-[17px] text-[#36455A] mx-auto leading-relaxed" style={{ maxWidth: '520px' }}>
             We believe investors deserve transparency in how fair value is derived.
             Every model, source, and assumption is visible and adjustable.
           </p>
         </motion.div>
 
-        {/* 2×2 card grid — horizontal scroll on mobile, stagger zoom on desktop */}
+        {/* 2×2 card grid — horizontal scroll on mobile, stagger reveal on desktop */}
         <div className="-mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto snap-x snap-mandatory pb-4 sm:pb-0 sm:overflow-visible">
           <div className="flex gap-4 w-max sm:w-auto sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-5">
             {FEATURES.map(({ Icon, iconColor, iconBg, title, body, chips, chipStyle }, i) => (
               <motion.div
                 key={title}
-                initial={reduced ? {} : { opacity: 0, scale: 0.92, y: 24 }}
-                animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
-                transition={{ duration: 0.58, ease: EASE, delay: 0.12 + i * 0.09 }}
+                initial={reduced ? {} : { opacity: 0, scale: 0.94 }}
+                animate={inView ? { opacity: 1, scale: 1 } : {}}
+                transition={{ duration: 0.5, ease: [0.34, 1, 0.64, 1], delay: 0.1 + i * 0.08 }}
                 whileHover={reduced ? {} : { y: -3, boxShadow: '0 12px 32px rgba(6,16,31,0.09)' }}
                 className="snap-start flex flex-col rounded-[18px] bg-white border border-[#E3E6E0] p-6 transition-shadow w-[72vw] max-w-[280px] sm:w-auto sm:max-w-none"
                 style={{ boxShadow: '0 4px 16px rgba(6,16,31,0.05)' }}
               >
                 {/* Icon */}
-                <motion.div
+                <div
                   className="flex items-center justify-center rounded-[10px] mb-5 shrink-0"
                   style={{ width: '42px', height: '42px', background: iconBg }}
-                  initial={reduced ? {} : { scale: 0.6, opacity: 0 }}
-                  animate={inView ? { scale: 1, opacity: 1 } : {}}
-                  transition={{ duration: 0.38, ease: EASE, delay: 0.24 + i * 0.09 }}
                   aria-hidden="true"
                 >
                   <Icon size={18} color={iconColor} strokeWidth={1.8} />
-                </motion.div>
+                </div>
 
                 <h3 className="text-[15px] font-bold text-[#0A1424] mb-2 leading-snug" style={{ letterSpacing: '-0.01em' }}>
                   {title}
                 </h3>
-                <p className="text-[13px] text-[#536174] leading-relaxed mb-4 flex-1">
+                <p className="text-[13px] text-[#36455A] leading-relaxed mb-4 flex-1">
                   {body}
                 </p>
 
                 {/* Chips */}
                 <div className="flex flex-wrap gap-1.5">
-                  {chips.map((chip, ci) => (
-                    <motion.span
+                  {chips.map((chip) => (
+                    <span
                       key={chip}
                       className="rounded-full border px-2.5 py-0.5 text-[11px] font-semibold"
                       style={{ background: chipStyle.bg, color: chipStyle.text, borderColor: chipStyle.border }}
-                      initial={reduced ? {} : { opacity: 0, scale: 0.8 }}
-                      animate={inView ? { opacity: 1, scale: 1 } : {}}
-                      transition={{ duration: 0.3, ease: EASE, delay: 0.38 + i * 0.09 + ci * 0.06 }}
                     >
                       {chip}
-                    </motion.span>
+                    </span>
                   ))}
                 </div>
               </motion.div>

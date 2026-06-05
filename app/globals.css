@@ -85,7 +85,8 @@
 
   /* Text hierarchy */
   --color-text-primary:    #0A1424;
-  --color-text-secondary:  #536174;
+  --color-text-secondary:  #536174;   /* safe on white (#FFFFFF) ≥4.5:1 */
+  --color-text-secondary-on-bg: #36455A; /* safe on cream (#F8F7F2) ≥4.5:1 */
   --color-text-muted:      #8A96A8;
   --color-text-faint:      #B6BFCC;
 

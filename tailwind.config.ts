@@ -51,7 +51,8 @@ const config: Config = {
 
         // ── insic Brand: Text hierarchy ───────────────────────────────────
         'text-ink':       '#0A1424',
-        'text-secondary': '#536174',
+        'text-secondary': '#536174',           // safe on white (#FFFFFF) ≥4.5:1
+        'text-secondary-bg': '#36455A',        // safe on cream (#F8F7F2) ≥4.5:1
         'text-muted':     '#8A96A8',
         'text-faint':     '#B6BFCC',
 
