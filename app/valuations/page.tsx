@@ -169,6 +169,7 @@ function FilterSelect({ label, value, options, onChange }: {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="appearance-none pl-3 pr-7 py-2 text-[12px] font-semibold text-[#334155] bg-white border border-[#DDE6F2] rounded-xl cursor-pointer hover:border-blue-300 focus:outline-none focus:border-blue-400 transition-colors min-h-[40px]"
+        style={{ fontSize: '16px' }}
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>{label}: {o.label}</option>

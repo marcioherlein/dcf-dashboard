@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
+import Link from 'next/link'
 import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -30,7 +31,7 @@ export default function PricingSection() {
   const annualTotal   = 136
 
   return (
-    <section className="overflow-x-hidden" style={{ background: '#F8F7F2', borderBottom: '1px solid #E3E6E0' }}>
+    <section id="pricing" className="overflow-x-hidden" style={{ background: '#F8F7F2', borderBottom: '1px solid #E3E6E0' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-14 sm:py-20">
 
         {/* Header */}
@@ -128,6 +129,16 @@ export default function PricingSection() {
               ))}
             </ul>
           </div>
+        </div>
+
+        {/* Full comparison link */}
+        <div className="text-center mt-6">
+          <Link
+            href="/pricing"
+            className="text-[13px] font-medium text-[#5F790B] hover:text-[#526A08] hover:underline underline-offset-2 transition-colors"
+          >
+            See full feature comparison →
+          </Link>
         </div>
       </div>
     </section>

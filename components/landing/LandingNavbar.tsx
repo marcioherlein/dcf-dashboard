@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'motion/react'
 const NAV_LINKS = [
   { label: 'Product',      href: '/analyze'      },
   { label: 'How it works', href: '#how-it-works' },
-  { label: 'Pricing',      href: '/pricing'      },
+  { label: 'Pricing',      href: '#pricing'      },
   { label: 'Markets',      href: '/markets'      },
 ]
 
@@ -95,6 +95,8 @@ export default function LandingNavbar() {
                 onClick={() => setMobileOpen(v => !v)}
                 className="lg:hidden flex items-center justify-center w-10 h-10 rounded-lg text-[#536174] hover:bg-[#F3F2EC] hover:text-[#0A1424] transition-colors"
                 aria-label="Toggle menu"
+                aria-expanded={mobileOpen}
+                aria-controls="mobile-nav-menu"
               >
                 {mobileOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
@@ -107,6 +109,7 @@ export default function LandingNavbar() {
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
+            id="mobile-nav-menu"
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}

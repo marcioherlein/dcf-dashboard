@@ -240,7 +240,7 @@ export default function FactorRankingPage() {
       )}
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col">
         {loading && (
           <div className="flex items-center justify-center h-40 text-slate-400 text-sm">
             <svg className="animate-spin w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

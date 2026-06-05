@@ -200,7 +200,7 @@ export default function MarketMonitor() {
 
   return (
     <>
-      <div className="min-h-screen bg-[#F8FAFB]">
+      <div className="min-h-dvh bg-[#F8FAFB]">
 
         {/* Page header */}
         <div className="px-4 sm:px-6 py-4 border-b border-slate-200 bg-white flex items-center justify-between gap-3">

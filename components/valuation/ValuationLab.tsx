@@ -244,7 +244,7 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
   const canShowMath = projectionData != null && sensitivityScenarios.length > 0
 
   return (
-    <div className="card rounded-xl overflow-hidden">
+    <div className="card rounded-xl">
 
       {/* ① Three-column hero */}
       <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-200">

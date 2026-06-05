@@ -166,7 +166,7 @@ export default function TradingPage() {
   }));
 
   return (
-    <div className="min-h-screen bg-[#F8FAFB] px-4 py-6">
+    <div className="min-h-dvh bg-[#F8FAFB] px-4 py-6">
       <div className="space-y-5">
 
         {/* Header */}

@@ -3,6 +3,7 @@ import { InsicLogoLockup } from '@/components/ui/InsicLogo'
 
 const NAV_COLS = [
   {
+    label: 'Site links',
     items: [
       { label: 'Product', href: '/analyze' },
       { label: 'Pricing', href: '/pricing' },
@@ -12,6 +13,7 @@ const NAV_COLS = [
     ],
   },
   {
+    label: 'Legal',
     items: [
       { label: 'Privacy', href: '/privacy' },
       { label: 'Terms', href: '/terms' },
@@ -30,7 +32,7 @@ export default function LandingFooter() {
             <Link href="/" className="flex items-center gap-2 mb-3 group" aria-label="insic home">
               <InsicLogoLockup size="md" on="dark" />
             </Link>
-            <p className="text-[13px] text-[#536174] leading-relaxed mb-5">
+            <p className="text-[13px] text-[#8A96A8] leading-relaxed mb-5">
               Invest with a process, not a story.
             </p>
 
@@ -71,7 +73,7 @@ export default function LandingFooter() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={s.label}
-                  className="w-8 h-8 rounded-full border border-[rgba(255,255,255,0.12)] flex items-center justify-center text-[#536174] hover:text-white hover:border-[rgba(255,255,255,0.28)] transition-colors"
+                  className="w-8 h-8 rounded-full border border-[rgba(255,255,255,0.12)] flex items-center justify-center text-[#8A96A8] hover:text-white hover:border-[rgba(255,255,255,0.28)] transition-colors"
                 >
                   {s.icon}
                 </a>
@@ -81,40 +83,29 @@ export default function LandingFooter() {
 
           {/* Nav columns */}
           <div className="flex gap-12 sm:gap-16">
-            {/* Main nav */}
-            <nav className="flex flex-col gap-2.5">
-              {NAV_COLS[0].items.map(item => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="text-[13px] text-[#536174] hover:text-white transition-colors"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-            {/* Legal nav */}
-            <nav className="flex flex-col gap-2.5">
-              {NAV_COLS[1].items.map(item => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="text-[13px] text-[#536174] hover:text-white transition-colors"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+            {NAV_COLS.map(col => (
+              <nav key={col.label} aria-label={col.label} className="flex flex-col gap-2.5">
+                {col.items.map(item => (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className="text-[13px] text-[#8A96A8] hover:text-white transition-colors"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+            ))}
           </div>
         </div>
 
         {/* Bottom bar */}
         <div className="mt-10 pt-6 border-t border-[rgba(255,255,255,0.07)]">
-          <p className="text-[11px] text-[#536174] leading-relaxed">
+          <p className="text-[11px] text-[#8A96A8] leading-relaxed">
             Not financial advice. See Terms.
           </p>
-          <p className="text-[11px] text-[#536174] mt-1">
-            © 2025 insic. All rights reserved.
+          <p className="text-[11px] text-[#8A96A8] mt-1">
+            © {new Date().getFullYear()} insic. All rights reserved.
           </p>
         </div>
       </div>

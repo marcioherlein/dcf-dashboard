@@ -650,8 +650,11 @@ export default function LandingHero() {
                   initial={reduced ? {} : { opacity: 0, y: 20, filter: 'blur(4px)' }}
                   animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                   transition={{ duration: 0.6, ease: EASE, delay }}
-                  className="text-[40px] sm:text-[52px] lg:text-[clamp(42px,4.5vw,60px)] font-bold block"
-                  style={{ color: plain ? '#0A1424' : '#5F790B' }}
+                  className="font-bold block"
+                  style={{
+                    fontSize: 'clamp(32px, 9.5vw, 60px)',
+                    color: plain ? '#0A1424' : '#5F790B',
+                  }}
                 >
                   {text}
                 </motion.div>
