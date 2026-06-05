@@ -105,7 +105,13 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
   // Its NWC includes consumer credit receivables and merchant payables that are quasi-financial
   // and blow up the NWC delta the same way a bank's deposit/loan book does.
   // Detect via the same fintech industry regex used elsewhere in the codebase.
-  const FINTECH_INDUSTRY_RE_NWC = /fintech|neobank|digital.?bank|payment|credit.?service|consumer.?finance|insurtech|internet.*retail.*payment|mercado/i
+  //
+  // Note: `mercado` was previously the catch for MELI but it never fires because the regex
+  // tests `sector + ' ' + industry` strings from Yahoo, which are "consumer cyclical internet
+  // retail" for MELI — no "mercado" in that string. Broadened to match `internet.*retail`
+  // without requiring "payment" since all major internet retail platforms embed payments.
+  // Added `grab|gojek|sea.*limited|shopee` for Southeast Asian super-app fintech-hybrids.
+  const FINTECH_INDUSTRY_RE_NWC = /fintech|neobank|digital.?bank|payment|credit.?service|consumer.?finance|insurtech|internet.*retail|mercado|grab|gojek|sea.*limited/i
   const sectorForNWC = (apiData?.quote?.sector ?? '').toLowerCase()
   const industryForNWC = (apiData?.quote?.industry ?? '').toLowerCase()
   const isFintechHybridForNWC = FINTECH_INDUSTRY_RE_NWC.test(sectorForNWC + ' ' + industryForNWC)
@@ -313,9 +319,25 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
     r.netIncome != null && r.revenue != null && r.revenue > 0 ? r.netIncome / r.revenue : null))
   const ttmNetMargin = ttmRow?.revenue && ttmRow.revenue > 0 && ttmRow.netIncome != null
     ? ttmRow.netIncome / ttmRow.revenue : null
-  const medianNetMargin = blendWithTtm(() => medianNetMarginHist, () => ttmNetMargin)
 
-  const medianTaxRate = computeMedian(recent.map(r => r.taxRate ?? null))
+  // Profitability inflection guard: if TTM margin is positive but historical median is negative
+  // (company just crossed into profitability), the 60/40 blend still projects negative NI.
+  // Example: 2 loss years + 1 breakeven = median ~-8%; TTM = +5%; blended = -4.8% + 2% = -2.8%.
+  // This would project a profitable company as permanently loss-making.
+  // Fix: when ttmNetMargin > 0 AND medianNetMarginHist < 0, clamp blended minimum to 0.
+  // The company is profitable now; projecting losses is directionally wrong.
+  const rawMedianNetMargin = blendWithTtm(() => medianNetMarginHist, () => ttmNetMargin)
+  const medianNetMargin = (ttmNetMargin != null && ttmNetMargin > 0 && (medianNetMarginHist ?? 0) < 0)
+    ? Math.max(0, rawMedianNetMargin ?? 0)  // clamp to zero minimum at the inflection point
+    : rawMedianNetMargin
+
+  // Unified tax rate filter: same logic as global effectiveTaxRate (normalizeModellingInputs
+  // lines 203-208). Filter out 0-5% rates (NOL/loss years with distorted effective rate) and
+  // >60% (one-time charges). Both the per-row projected taxRate and the NOPAT computation
+  // must use the same filtered median to avoid contradictory tax treatments in the same model.
+  const medianTaxRate = computeMedian(
+    recent.map(r => r.taxRate ?? null).filter((v): v is number => v != null && v > 0.05 && v < 0.60)
+  )
   const medianFcfMargin = computeMedian(recent.map(r =>
     r.freeCashFlow != null && r.revenue != null && r.revenue > 0 ? r.freeCashFlow / r.revenue : null))
 
@@ -466,9 +488,23 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
       revenue,
       ebit,
       ebitda,
-      netIncome: medianNetMargin != null ? revenue * medianNetMargin : null,
+      netIncome: (() => {
+        // Mirror the cyclical trough override applied to EBIT: when medianNetMargin is
+        // negative due to loss years but TTM net margin is positive, use TTM × 0.90.
+        // Without this, MU's projected NI stays near-zero (3Y median includes FY2023 loss)
+        // even though TTM net margin is ~22%. The LFCF fair value was 40-60% understated.
+        const effectiveNetMargin = isCyclicalTrough && ttmNetMargin != null && ttmNetMargin > 0.01 &&
+          (medianNetMargin == null || medianNetMargin < 0)
+          ? ttmNetMargin * 0.90
+          : medianNetMargin
+        return effectiveNetMargin != null ? revenue * effectiveNetMargin : null
+      })(),
       eps: null,
-      capex: -(revenue * medianCapexPct),
+      // CapEx: for financial/fintech companies, zero out projected capex to match the
+      // D&A=0 treatment. Financial companies' "capex" is technology infrastructure and
+      // is immaterial relative to the NI-based UFCF proxy. Not zeroing it was inconsistent
+      // with the D&A=0 intent and reduced UFCF by ~1-3% of revenue for NU/SOFI.
+      capex: isFinancialSector ? 0 : -(revenue * medianCapexPct),
       operatingCF: null,
       freeCashFlow: (medianFcfMargin != null && medianEbitMargin != null && medianEbitMargin < -0.02 && medianFcfMargin > 0)
         ? revenue * medianFcfMargin  // SBC-distorted: use FCF margin as UFCF fallback

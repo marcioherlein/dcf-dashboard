@@ -117,8 +117,20 @@ export function computeUFCFTerminalValues(
     // terminalG >= wacc — perpetuity formula undefined; caller should show error
   }
 
-  const exitMultipleTV = terminalFCF * exitMultiple
-  const exitMultipleTVDiscounted = exitMultipleTV / Math.pow(1 + wacc, projectedRows.length)
+  // Exit multiple terminal value: TV = lastProjectedEBITDA × exitMultiple (EV/EBITDA).
+  // The multiple is an EV/EBITDA multiple — it must be applied to EBITDA, not to UFCF.
+  // Using UFCF (net of taxes, capex, NWC) with an EV/EBITDA multiple understates TV by 2-3×
+  // because UFCF ≈ EBITDA × (1-t) − net capex − ΔNWC, which is materially smaller than EBITDA.
+  // Fallback: if terminal-year EBITDA is null or non-positive, fall back to UFCF × multiple
+  // (last resort — produces a conservative estimate but at least the math is declared).
+  const terminalEBITDA = lastRow.ebitda
+  const exitMultipleTVBase = (terminalEBITDA != null && terminalEBITDA > 0)
+    ? terminalEBITDA
+    : (terminalFCF > 0 ? terminalFCF : null)  // fallback: only if UFCF is positive
+  const exitMultipleTV = exitMultipleTVBase != null ? exitMultipleTVBase * exitMultiple : null
+  const exitMultipleTVDiscounted = exitMultipleTV != null
+    ? exitMultipleTV / Math.pow(1 + wacc, projectedRows.length)
+    : null
 
   return { perpetuityTV, exitMultipleTV, perpetuityTVDiscounted, exitMultipleTVDiscounted }
 }

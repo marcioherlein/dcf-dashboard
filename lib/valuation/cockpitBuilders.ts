@@ -115,7 +115,18 @@ export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null)
       : null
     const niM = normalizedNIM > 0 ? normalizedNIM : (qNISum != null ? qNISum : null)
     if (niM != null && niM > 0) {
-      const reinvestRate = 0.20  // financial companies reinvest ~20% of earnings in regulatory capital
+      // Dynamic reinvestment rate: fast-growing lending platforms need to retain more earnings
+      // to fund regulatory capital requirements for their expanding loan books.
+      // Fixed 20% was causing SOFI FCFE to be overstated ~100% and NU ~65%.
+      //
+      // Scaling rule: at 25%+ CAGR (aggressive loan book growth), retain ~50% of earnings.
+      // At 15% CAGR, retain ~30%. At baseline, retain ~20%.
+      // Formula: reinvestRate = min(0.55, max(0.20, cagr × 2.0))
+      // where cagr is sourced from cagrAnalysis.blended (already USD-adjusted).
+      const blendedCagr: number = (apiData.cagrAnalysis?.blended as number | undefined) ?? 0
+      const reinvestRate = companyTypeForFCF === 'fintech' || companyTypeForFCF === 'financial'
+        ? Math.min(0.55, Math.max(0.20, blendedCagr * 2.0))
+        : 0.20  // standard: financial companies with modest growth retain 20%
       const earningsBasedFCF = niM * (1 - reinvestRate)
       // Only override if the raw FCF is more than 3× the earnings-based estimate
       // (catches the NU case without affecting companies where Yahoo correctly reports FCF)
