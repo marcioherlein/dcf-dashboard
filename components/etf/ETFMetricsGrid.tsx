@@ -26,10 +26,13 @@ function fmt(v: number | null, decimals = 1): string {
   return v.toFixed(decimals) + 'x'
 }
 
-function MetricRow({ label, value, color }: { label: string; value: string; color?: string }) {
+function MetricRow({ label, value, color, tooltip }: { label: string; value: string; color?: string; tooltip?: string }) {
   return (
     <div className="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0">
-      <span className="text-[12px] text-slate-500">{label}</span>
+      <div className="flex items-center gap-1">
+        <span className="text-[12px] text-slate-500">{label}</span>
+        {tooltip && <InfoTooltip text={tooltip} side="top" />}
+      </div>
       <span className={cn('text-[12px] font-semibold font-mono', color ?? 'text-slate-800')}>{value}</span>
     </div>
   )
@@ -84,10 +87,10 @@ export function ETFMetricsGrid({ metrics }: { metrics: ETFMetrics }) {
           <p className="text-sm font-semibold text-slate-600">Basket valuation</p>
           <InfoTooltip text="Weighted average ratios of the ETF's underlying holdings, not the ETF's own trading price." />
         </div>
-        <MetricRow label="P/E ratio" value={fmt(metrics.peRatio)} color={peColor(metrics.peRatio)} />
-        <MetricRow label="P/B ratio" value={fmt(metrics.pbRatio)} color={pbColor(metrics.pbRatio)} />
-        <MetricRow label="P/S ratio" value={fmt(metrics.psRatio)} />
-        <MetricRow label="P/CF ratio" value={fmt(metrics.pcfRatio)} />
+        <MetricRow label="P/E ratio" value={fmt(metrics.peRatio)} color={peColor(metrics.peRatio)} tooltip="Price-to-Earnings: basket weighted average. Lower = more earnings per dollar paid." />
+        <MetricRow label="P/B ratio" value={fmt(metrics.pbRatio)} color={pbColor(metrics.pbRatio)} tooltip="Price-to-Book: how much you pay vs. net assets. Below 1.5x is institutional value territory." />
+        <MetricRow label="P/S ratio" value={fmt(metrics.psRatio)} tooltip="Price-to-Sales: basket price relative to revenue. Not included in the Value Score." />
+        <MetricRow label="P/CF ratio" value={fmt(metrics.pcfRatio)} tooltip="Price-to-Cash Flow: price relative to operating cash generation. Not included in the Value Score." />
       </div>
 
       {/* Value Score */}

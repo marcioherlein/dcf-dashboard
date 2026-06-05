@@ -24,8 +24,8 @@ export function ETFOnboardBanner() {
     <div className="relative glass-card-light rounded-xl border border-[#BFD2A1] bg-[#F6FAEA]/60 p-4 pr-10">
       <p className="text-sm font-semibold text-slate-700 mb-1">How the Value Score works</p>
       <p className="text-sm text-slate-500 leading-relaxed">
-        Each ETF is scored 0–100 based on four inputs: P/E ratio (30 pts), P/B ratio (25 pts), trailing yield (25 pts), and an expense ratio penalty (up to 20 pts deducted).
-        A score of 70+ means the basket is deeply valued relative to historical norms. Scores update from Yahoo Finance data.
+        Each ETF is scored 0–100 across four inputs, totalling up to 100: P/E ratio (30 pts), P/B ratio (25 pts), trailing yield (25 pts), minus an expense ratio penalty (up to 20 pts).
+        A score of 70+ means the basket trades at a deep discount on these measures. Scores update daily from Yahoo Finance.
       </p>
       <button
         onClick={dismiss}

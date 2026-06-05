@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { fmtPctAbs } from '@/lib/formatters'
 import { computeETFScore, scoreColor, scoreLabel, scoreBadge } from '@/lib/data/etfScore'
 import { Sparkline, SparklineSkeleton } from '@/components/ui/Sparkline'
+import { InfoTooltip } from '@/components/ui/info-tooltip'
 import type { ETFEntry } from '@/lib/data/etfTypes'
 
 interface Props {
@@ -92,7 +93,7 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
           </span>
         </div>
 
-        {/* Stacked bar + legend */}
+        {/* Stacked bar only — title attrs on segments carry the breakdown */}
         <div className="flex-1 pt-1.5">
           <div className="flex h-2.5 rounded-full overflow-hidden gap-px bg-slate-100">
             {barSegments.map((s) => s.width > 0 && (
@@ -104,15 +105,10 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
               />
             ))}
           </div>
-          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-2">
-            <span className="text-[10px] text-blue-500 font-medium">P/E +{breakdown.pe}</span>
-            <span className="text-[10px] text-indigo-400 font-medium">P/B +{breakdown.pb}</span>
-            <span className="text-[10px] text-emerald-500 font-medium">Yield +{breakdown.yieldPts}</span>
-            {breakdown.expensePenalty > 0 && (
-              <span className="text-[10px] text-red-400 font-medium">Exp. −{breakdown.expensePenalty}</span>
-            )}
+          <div className="flex items-center gap-1 mt-1.5">
+            <p className="text-[10px] text-slate-400">Score breakdown / 100</p>
+            <InfoTooltip text="P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio (up to −20 pts) = 0–100. 70+ = Deep Value." side="top" />
           </div>
-          <p className="text-[10px] text-slate-400 mt-1">Score breakdown / 100</p>
         </div>
       </div>
 

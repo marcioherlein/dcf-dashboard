@@ -264,6 +264,9 @@ export default function ETFTrackerPage() {
                   ))}
                 </div>
               )}
+              <p className="text-[12px] text-slate-400 mt-4">
+                Or browse sectors, geographies, and styles below ↓
+              </p>
             </div>
           )}
         </section>

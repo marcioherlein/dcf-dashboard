@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import { Plus, Check, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -36,9 +36,22 @@ function Leaderboard({
   watchlistedTickers: Set<string>
   onAdd: (ticker: string) => void
 }) {
-  const [filter, setFilter]   = useState<FilterGroup>('all')
-  const [sortKey, setSortKey] = useState<SortKey>('valueScore')
-  const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [filter, setFilter]   = useState<FilterGroup>(() => {
+    if (typeof window === 'undefined') return 'all'
+    return (localStorage.getItem('etf_lb_filter') as FilterGroup) ?? 'all'
+  })
+  const [sortKey, setSortKey] = useState<SortKey>(() => {
+    if (typeof window === 'undefined') return 'valueScore'
+    return (localStorage.getItem('etf_lb_sort_key') as SortKey) ?? 'valueScore'
+  })
+  const [sortDir, setSortDir] = useState<SortDir>(() => {
+    if (typeof window === 'undefined') return 'desc'
+    return (localStorage.getItem('etf_lb_sort_dir') as SortDir) ?? 'desc'
+  })
+
+  useEffect(() => { localStorage.setItem('etf_lb_filter', filter) }, [filter])
+  useEffect(() => { localStorage.setItem('etf_lb_sort_key', sortKey) }, [sortKey])
+  useEffect(() => { localStorage.setItem('etf_lb_sort_dir', sortDir) }, [sortDir])
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir((d) => (d === 'desc' ? 'asc' : 'desc'))

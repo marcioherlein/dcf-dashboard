@@ -54,7 +54,7 @@ export function ETFMarketPulse({ data, loading }: Props) {
       )}
 
       {cheapestSector && (
-        <Chip label="Cheapest sector">
+        <Chip label="Best value sector">
           <span className="font-mono text-[17px] font-bold text-slate-900">{cheapestSector.meta.ticker}</span>
           <span className={cn('text-[11px] font-semibold', scoreColor(cheapestSector.score ?? 0))}>
             {cheapestSector.score} · {scoreLabel(cheapestSector.score ?? 0)}
