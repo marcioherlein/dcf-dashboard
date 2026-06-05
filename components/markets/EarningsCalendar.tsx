@@ -83,7 +83,7 @@ export default function EarningsCalendar() {
           <div className="overflow-x-auto">
           <div style={{ minWidth: '480px' }}>
           {/* Column headers */}
-          <div className="px-4 py-1.5 border-b border-slate-100 bg-slate-50/70 grid gap-2 text-[9px] font-bold uppercase tracking-wider text-slate-400"
+          <div className="px-4 py-1.5 border-b border-slate-100 bg-slate-50/70 grid gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-400"
             style={{ gridTemplateColumns: '3.5rem 1fr 4.5rem 4rem auto' }}>
             <span>Ticker</span>
             <span>Company</span>
@@ -117,7 +117,7 @@ export default function EarningsCalendar() {
                         {e.ticker}
                       </span>
                       <p className="text-[11.5px] font-semibold text-slate-700 truncate group-hover:text-slate-900">{e.company}</p>
-                      <span className={`inline-flex items-center justify-center text-[9px] font-bold px-2 py-0.5 rounded-full border ${IMPORTANCE_BADGE[importance]}`}>
+                      <span className={`inline-flex items-center justify-center text-[10px] font-bold px-2 py-0.5 rounded-full border ${IMPORTANCE_BADGE[importance]}`}>
                         {importance}
                       </span>
                       <p className="text-[11px] font-semibold text-slate-700 tabular-nums font-mono text-right">{fmtEPS(e.epsEstimate)}</p>

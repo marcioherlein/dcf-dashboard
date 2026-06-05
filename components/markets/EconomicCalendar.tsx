@@ -75,7 +75,7 @@ export default function EconomicCalendar() {
           <div className="overflow-x-auto">
           <div style={{ minWidth: '480px' }}>
           {/* Column headers */}
-          <div className="px-4 py-1.5 border-b border-slate-100 bg-slate-50/70 grid gap-2 text-[9px] font-bold uppercase tracking-wider text-slate-400"
+          <div className="px-4 py-1.5 border-b border-slate-100 bg-slate-50/70 grid gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-400"
             style={{ gridTemplateColumns: '5rem 1fr 4.5rem 3rem 3rem 3rem' }}>
             <span>Time</span>
             <span>Event</span>
@@ -106,7 +106,7 @@ export default function EconomicCalendar() {
                       <p className="text-[11.5px] font-semibold text-slate-800 leading-tight truncate">{e.event}</p>
                     </div>
                     {/* Importance */}
-                    <span className={`inline-flex items-center justify-center text-[9px] font-bold px-2 py-0.5 rounded-full border ${IMPACT_BADGE[e.impact] ?? IMPACT_BADGE.Low}`}>
+                    <span className={`inline-flex items-center justify-center text-[10px] font-bold px-2 py-0.5 rounded-full border ${IMPACT_BADGE[e.impact] ?? IMPACT_BADGE.Low}`}>
                       {e.impact}
                     </span>
                     {/* Actual */}
@@ -131,7 +131,7 @@ export default function EconomicCalendar() {
           </div>
 
           <div className="px-4 py-2.5 border-t border-slate-100 flex items-center justify-between">
-            <p className="text-[9px] text-slate-400">All times in ET</p>
+            <p className="text-[11px] text-slate-400">All times in ET</p>
             <a
               href="https://financialmodelingprep.com/financial-calendars"
               target="_blank"

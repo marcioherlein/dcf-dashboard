@@ -146,7 +146,7 @@ function BarChart({ sparkPoints, inputVal, color, unit, referenceLines = [] }: {
   if (bars.length === 0) {
     return (
       <div className="flex items-center justify-center h-[86px]">
-        <span className="text-[9px] text-slate-300">No historical data</span>
+        <span className="text-[11px] text-slate-300">No historical data</span>
       </div>
     )
   }
@@ -215,7 +215,7 @@ function BarChart({ sparkPoints, inputVal, color, unit, referenceLines = [] }: {
       {/* Legend row — outside the cage, no overflow risk */}
       <div className="flex items-center gap-3 flex-wrap mt-1 px-0.5">
         {allLines.map((l, i) => (
-          <span key={i} className="flex items-center gap-1 text-[9px]" style={{ color: l.color }}>
+          <span key={i} className="flex items-center gap-1 text-[11px]" style={{ color: l.color }}>
             <svg width="12" height="4" aria-hidden="true">
               <line x1="0" y1="2" x2="12" y2="2" stroke={l.color} strokeWidth={'isInput' in l ? 1.5 : 1} strokeDasharray={l.dash} />
             </svg>
@@ -470,7 +470,7 @@ function AssumptionRowCollapsed({
       <div className="flex flex-col min-w-0 w-[140px] shrink-0">
         <span className={cn('text-[12px] font-[650] leading-tight', isDirty ? 'text-blue-700' : 'text-slate-700')}>
           {field.label}
-          {isDirty && <span className="ml-1 text-[9px] text-blue-500">●</span>}
+          {isDirty && <span className="ml-1 text-[10px] text-blue-500">●</span>}
         </span>
         <span className="text-[10px] text-slate-400 leading-tight mt-0.5 truncate">{field.subLabel}</span>
       </div>
@@ -529,7 +529,7 @@ function LargestChangesBar({ assumptions, defaults, sensitivity }: {
             <div key={c.key} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${mc.tagBg}`}>
               <span className={`text-[10px] font-bold ${mc.tagText}`}>{c.label}</span>
               {c.impactFmt && <span className={`text-[10px] font-bold tabular-nums ${c.netImpact >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{c.impactFmt}</span>}
-              <span className="text-[9px] text-slate-500 tabular-nums">{c.deltaFmt}</span>
+              <span className="text-[10px] text-slate-500 tabular-nums">{c.deltaFmt}</span>
             </div>
           )
         })}

@@ -64,7 +64,7 @@ function chip(label: string, tone: 'green' | 'red' | 'amber' | 'blue' | 'gray') 
     gray:  'bg-slate-100 text-slate-500 border-slate-200',
   }[tone]
   return (
-    <span className={cn('text-[9px] font-bold px-1.5 py-0.5 rounded-full border whitespace-nowrap', cls)}>
+    <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded-full border whitespace-nowrap', cls)}>
       {label}
     </span>
   )

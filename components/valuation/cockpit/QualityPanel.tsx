@@ -118,7 +118,7 @@ function MoatGauge({ roic, roicSpread, wacc }: { roic: number | null; roicSpread
       </div>
 
       {/* Labels */}
-      <div className="flex items-center justify-between text-[9px] text-slate-500">
+      <div className="flex items-center justify-between text-[11px] text-slate-500">
         <span>0%</span>
         <div className="flex items-center gap-3">
           <span>WACC {(wacc * 100).toFixed(1)}%</span>

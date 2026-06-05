@@ -28,8 +28,8 @@ export default function SectorRotation({ sectors }: Props) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-full">
       <div className="px-4 py-2.5 border-b border-slate-100">
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Sector Rotation</span>
-        <p className="text-[10px] text-slate-400 mt-0.5">Relative strength score vs S&P 500 — last 40 trading days</p>
+        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Sector Rotation</span>
+        <p className="text-[11px] text-slate-400 mt-0.5">Relative strength score vs S&P 500 — last 40 trading days</p>
       </div>
       <div className="px-4 py-3 grid grid-cols-1 xl:grid-cols-[1fr_auto] gap-4">
         {/* Chart */}
@@ -56,16 +56,16 @@ export default function SectorRotation({ sectors }: Props) {
         {/* Leaders / Laggards */}
         <div className="xl:w-36 flex xl:flex-col gap-3">
           <div className="flex-1 xl:flex-none">
-            <p className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 mb-1.5">Top Leaders</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 mb-1.5">Top Leaders</p>
             <div className="space-y-1">
               {top3.map((d, i) => (
                 <div key={d.sector} className="flex items-center gap-1.5">
-                  <span className="text-[9px] font-bold text-emerald-600 w-3 shrink-0">{i + 1}</span>
+                  <span className="text-[11px] font-bold text-emerald-600 w-3 shrink-0">{i + 1}</span>
                   <span className={cn(
                     'text-[10px] font-semibold truncate flex-1',
                     d.tone === 'positive' ? 'text-emerald-700' : 'text-slate-500'
                   )}>{d.sector}</span>
-                  <span className="text-[9px] font-bold tabular-nums text-emerald-600 shrink-0">
+                  <span className="text-[11px] font-bold tabular-nums text-emerald-600 shrink-0">
                     +{d.momentum.toFixed(2)}
                   </span>
                 </div>
@@ -74,16 +74,16 @@ export default function SectorRotation({ sectors }: Props) {
           </div>
 
           <div className="flex-1 xl:flex-none">
-            <p className="text-[9px] font-bold uppercase tracking-wider text-red-500 mb-1.5">Top Laggards</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-red-500 mb-1.5">Top Laggards</p>
             <div className="space-y-1">
               {bottom3.map((d, i) => (
                 <div key={d.sector} className="flex items-center gap-1.5">
-                  <span className="text-[9px] font-bold text-red-400 w-3 shrink-0">{i + 1}</span>
+                  <span className="text-[11px] font-bold text-red-400 w-3 shrink-0">{i + 1}</span>
                   <span className={cn(
                     'text-[10px] font-semibold truncate flex-1',
                     d.tone === 'negative' ? 'text-red-700' : 'text-slate-500'
                   )}>{d.sector}</span>
-                  <span className="text-[9px] font-bold tabular-nums text-red-500 shrink-0">
+                  <span className="text-[11px] font-bold tabular-nums text-red-500 shrink-0">
                     {d.momentum.toFixed(2)}
                   </span>
                 </div>
@@ -93,7 +93,7 @@ export default function SectorRotation({ sectors }: Props) {
         </div>
       </div>
       <div className="px-4 pb-3 border-t border-slate-50 pt-2">
-        <p className="text-[9px] text-slate-400">RS score = relative outperformance ratio vs S&P 500. Not a % return.</p>
+        <p className="text-[11px] text-slate-400">RS score = relative outperformance ratio vs S&P 500. Not a % return.</p>
       </div>
     </div>
   )

@@ -35,7 +35,7 @@ export default function KeyAssumptions({ assumptions, defaults, onViewAll }: Pro
             <div key={f.key} className="flex items-center justify-between">
               <span className={`text-[11px] font-semibold ${isDirty ? 'text-blue-700' : 'text-slate-600'}`}>
                 {f.label}
-                {isDirty && <span className="ml-1 text-[9px] text-blue-500">●</span>}
+                {isDirty && <span className="ml-1 text-[10px] text-blue-500">●</span>}
               </span>
               <span className="text-[13px] font-bold tabular-nums text-slate-800">
                 {fmt(val, f.unit)}

@@ -49,7 +49,7 @@ function EPVCard({ data, currency, currentPrice }: Props) {
       title="No-growth Floor (EPV)"
       subtitle="Greenwald — what the company earns if growth stops"
       badge={epv.isNormalized || epv.isCyclical ? (
-        <span className="text-[9px] font-[600] px-1.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 shrink-0">
+        <span className="text-[10px] font-[600] px-1.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 shrink-0">
           {epv.isNormalized ? 'Normalized' : 'Cyclical'}
         </span>
       ) : undefined}
@@ -101,7 +101,7 @@ function OwnerEarningsCard({ data, currency, currentPrice }: Props) {
       title="Capital Intensity"
       subtitle="How much of reported earnings is real cash for shareholders"
       badge={oe.isNormalized || oe.isCyclical ? (
-        <span className="text-[9px] font-[600] px-1.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 shrink-0">
+        <span className="text-[10px] font-[600] px-1.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 shrink-0">
           {oe.isNormalized ? 'Normalized' : 'Cyclical'}
         </span>
       ) : undefined}
@@ -111,17 +111,17 @@ function OwnerEarningsCard({ data, currency, currentPrice }: Props) {
           {/* NI vs Owner Earnings bar comparison */}
           {oe.ownerEarningsM != null && ni != null && (
             <div className="bg-slate-50 rounded-lg px-3 py-2.5 space-y-2">
-              <p className="text-[9px] font-[700] text-slate-500 uppercase tracking-wide">Net Income vs Owner Earnings</p>
+              <p className="text-[11px] font-[700] text-slate-500 uppercase tracking-wide">Net Income vs Owner Earnings</p>
               {[
                 { label: 'Net Income', value: ni, cls: 'bg-slate-400', pct: 1 },
                 { label: 'Owner Earnings', value: oe.ownerEarningsM, cls: oe.isAssetLight ? 'bg-emerald-400' : oe.isCapitalIntensive ? 'bg-amber-400' : 'bg-slate-400', pct: oe.ownerEarningsToNetIncomeRatio ?? 0.8 },
               ].map(row => (
                 <div key={row.label} className="flex items-center gap-2">
-                  <span className="text-[9px] text-slate-500 w-[90px] shrink-0">{row.label}</span>
+                  <span className="text-[11px] text-slate-500 w-[90px] shrink-0">{row.label}</span>
                   <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
                     <div className={`h-full rounded-full ${row.cls}`} style={{ width: `${Math.min(100, Math.max(0, row.pct * 100))}%` }} />
                   </div>
-                  <span className="text-[9px] font-[600] tabular-nums text-slate-700 w-[48px] text-right shrink-0">
+                  <span className="text-[11px] font-[600] tabular-nums text-slate-700 w-[48px] text-right shrink-0">
                     {row.value >= 1000 ? `$${(row.value / 1000).toFixed(1)}B` : `$${row.value.toFixed(0)}M`}
                   </span>
                 </div>
@@ -130,7 +130,7 @@ function OwnerEarningsCard({ data, currency, currentPrice }: Props) {
           )}
 
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <span className={`self-start text-[9px] font-[700] uppercase tracking-wide px-2 py-0.5 rounded-full border ${intensityColor}`}>
+            <span className={`self-start text-[10px] font-[700] uppercase tracking-wide px-2 py-0.5 rounded-full border ${intensityColor}`}>
               {oe.capitalIntensityLabel}
             </span>
             {oe.ownerEarningsYield != null && currentPrice > 0 && (
@@ -178,7 +178,7 @@ function DDMCard({ data, currency }: Props) {
 
           {ddm.dividendPerShare != null && (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-50 self-start">
-              <span className="text-[9px] font-[600] text-teal-600">Annual dividend</span>
+              <span className="text-[10px] font-[600] text-teal-600">Annual dividend</span>
               <span className="text-[10px] font-[700] tabular-nums text-teal-700">{currency}{ddm.dividendPerShare.toFixed(2)}/yr</span>
             </div>
           )}

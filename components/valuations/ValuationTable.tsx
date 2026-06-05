@@ -421,15 +421,15 @@ function MobileValuationCard({ entry, sparklines, onDelete, onTagUpdate, onGroup
 
         <div className="grid grid-cols-3 gap-3 mt-4">
           <div>
-            <p className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold mb-0.5">Price</p>
+            <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-0.5">Price</p>
             <p className="text-[14px] font-bold text-slate-900 tabular-nums">{fmtPrice(entry.snapshot.price, 'USD')}</p>
           </div>
           <div>
-            <p className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold mb-0.5">Fair Value</p>
+            <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-0.5">Fair Value</p>
             <p className="text-[14px] font-bold text-slate-600 tabular-nums">{fmtPrice(entry.snapshot.fairValue, 'USD')}</p>
           </div>
           <div>
-            <p className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold mb-0.5">Upside</p>
+            <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-0.5">Upside</p>
             <p className={cn('text-[14px] font-bold tabular-nums', upside == null ? 'text-slate-300' : upside >= 0 ? 'text-emerald-600' : 'text-red-600')}>
               {upside != null ? `${upside >= 0 ? '+' : ''}${(upside * 100).toFixed(1)}%` : '—'}
             </p>

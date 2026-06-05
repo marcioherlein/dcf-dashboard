@@ -83,9 +83,9 @@ function SentimentGauge({ score }: { score: number }) {
 function StatBadge({ label, value, valueClass, sub }: { label: string; value: string; valueClass: string; sub?: string }) {
   return (
     <div className="flex-1 rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5 text-center">
-      <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1">{label}</p>
+      <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">{label}</p>
       <p className={cn('text-[14px] font-bold tabular-nums leading-none', valueClass)}>{value}</p>
-      {sub && <p className="text-[9px] text-slate-400 mt-0.5">{sub}</p>}
+      {sub && <p className="text-[11px] text-slate-400 mt-0.5">{sub}</p>}
     </div>
   )
 }
@@ -105,7 +105,7 @@ export default function MarketPulse({ pulse }: Props) {
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-full">
       <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between">
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Market Pulse</span>
+        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Market Pulse</span>
         <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full border', sentimentColor(sentimentLabel))}>
           {sentimentLabel}
         </span>

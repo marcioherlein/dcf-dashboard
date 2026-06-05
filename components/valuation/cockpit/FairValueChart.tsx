@@ -76,7 +76,7 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
             <span className="text-[11px] font-bold tabular-nums text-slate-800 bg-white px-0.5 leading-tight">
               {fmtPrice(currentPrice, currency)}
             </span>
-            <span className="text-[9px] font-semibold text-slate-500 leading-tight">
+            <span className="text-[11px] font-semibold text-slate-500 leading-tight">
               Current
             </span>
           </div>
@@ -105,7 +105,7 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
                 >
                   {LABEL[m.id] ?? m.method}
                 </span>
-                <span className={`text-[9px] font-semibold leading-none ${
+                <span className={`text-[11px] font-semibold leading-none ${
                   !hasVal ? 'text-slate-300'
                   : m.confidence === 'high'   ? 'text-emerald-500'
                   : m.confidence === 'medium' ? 'text-amber-500'

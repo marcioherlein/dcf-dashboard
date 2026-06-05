@@ -109,7 +109,7 @@ export default function ValuationContext({ valuation }: Props) {
                   ))}
                 </div>
               </div>
-              <p className="text-[9px] text-slate-400 mt-2">10Y range: 11.3× – 26.4×</p>
+              <p className="text-[11px] text-slate-400 mt-2">10Y range: 11.3× – 26.4×</p>
             </>
           ) : (
             <>
@@ -154,7 +154,7 @@ export default function ValuationContext({ valuation }: Props) {
                   ))}
                 </div>
               </div>
-              <p className="text-[9px] text-slate-400 mt-2">ERP = 1 / Forward P/E − 10Y yield. Positive = stocks offer premium vs bonds.</p>
+              <p className="text-[11px] text-slate-400 mt-2">ERP = 1 / Forward P/E − 10Y yield. Positive = stocks offer premium vs bonds.</p>
             </>
           ) : (
             <>

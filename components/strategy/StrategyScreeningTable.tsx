@@ -233,7 +233,7 @@ export default function StrategyScreeningTable({
                       {currencySymbol}{r.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                     {tp.entryZone.waitForPullback && (
-                      <span className="ml-1 text-[9px] text-tertiary-fixed-dim font-bold">⚠</span>
+                      <span className="ml-1 text-[10px] text-tertiary-fixed-dim font-bold">⚠</span>
                     )}
                   </td>
 

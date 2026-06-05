@@ -42,8 +42,8 @@ export default function MacroSignals({ signals }: Props) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-full flex flex-col">
       <div className="px-4 py-2.5 border-b border-slate-100">
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Macro Environment</span>
-        <p className="text-[10px] text-slate-400 mt-0.5">Key signals that influence discount rates, risk appetite, and valuations.</p>
+        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Macro Environment</span>
+        <p className="text-[11px] text-slate-400 mt-0.5">Key signals that influence discount rates, risk appetite, and valuations.</p>
       </div>
 
       <div className="p-3 flex-1">
@@ -56,14 +56,14 @@ export default function MacroSignals({ signals }: Props) {
                   <div className={cn('w-6 h-6 rounded-lg flex items-center justify-center shrink-0', bg)}>
                     {icon}
                   </div>
-                  <p className="text-[9px] font-bold text-slate-500 leading-tight uppercase tracking-wider truncate">{sig.label}</p>
+                  <p className="text-[11px] font-bold text-slate-500 leading-tight uppercase tracking-wider truncate">{sig.label}</p>
                 </div>
                 <p className={cn('text-[16px] font-bold tabular-nums leading-none', toneValueClass(sig.tone))}>
                   {sig.value}
                 </p>
-                {sig.sub && <p className="text-[9px] text-slate-400 mt-0.5">{sig.sub}</p>}
+                {sig.sub && <p className="text-[11px] text-slate-400 mt-0.5">{sig.sub}</p>}
                 <span className={cn(
-                  'inline-flex items-center self-start mt-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full border uppercase tracking-wider',
+                  'inline-flex items-center self-start mt-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full border uppercase tracking-wider',
                   toneBadgeClass(sig.tone)
                 )}>
                   {sig.regimeLabel}

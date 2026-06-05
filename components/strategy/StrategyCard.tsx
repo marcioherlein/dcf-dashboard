@@ -31,7 +31,7 @@ function MiniFactorBar({ name, score }: { name: string; score: number }) {
 
   return (
     <div className="flex flex-col items-center gap-1 min-w-0">
-      <span className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider">{abbrev}</span>
+      <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">{abbrev}</span>
       <div className="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
         <div className={`${color} h-full rounded-full transition-all`} style={{ width: `${score}%` }} />
       </div>
@@ -112,7 +112,7 @@ export default function StrategyCard({ report, onSelect, selected }: StrategyCar
           </div>
           <div className="text-right shrink-0">
             <div className="text-xl font-extrabold text-primary leading-none">{report.finalScore.toFixed(1)}</div>
-            <div className="text-[9px] text-on-surface-variant font-semibold uppercase">score</div>
+            <div className="text-[10px] text-on-surface-variant font-semibold uppercase">score</div>
           </div>
         </div>
 
@@ -121,7 +121,7 @@ export default function StrategyCard({ report, onSelect, selected }: StrategyCar
           <div className="flex items-center gap-2">
             <span className="font-extrabold text-base text-primary">{report.displayTicker}</span>
             {report.isCedear && (
-              <span className="px-1.5 py-0.5 bg-tertiary-fixed/30 text-on-tertiary-fixed-variant text-[9px] font-bold rounded uppercase">CEDEAR</span>
+              <span className="px-1.5 py-0.5 bg-tertiary-fixed/30 text-on-tertiary-fixed-variant text-[10px] font-bold rounded uppercase">CEDEAR</span>
             )}
             <span className="text-xs text-on-surface-variant">
               #{report.marketRank} {report.market}
@@ -185,7 +185,7 @@ export default function StrategyCard({ report, onSelect, selected }: StrategyCar
             {tradePlan.riskRewardRatio.toFixed(1)}×
           </span>
           {tradePlan.poorRiskReward && (
-            <span className="text-[9px] text-on-error-container font-bold">Poor</span>
+            <span className="text-[10px] text-on-error-container font-bold">Poor</span>
           )}
         </div>
         <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-surface-container rounded-lg">
