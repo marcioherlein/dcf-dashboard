@@ -915,6 +915,26 @@ export async function GET(req: NextRequest) {
           })
         })()
 
+    // Sanitize grossProfit rows where the data source emitted grossProfit ≈ revenue (100% GM).
+    // This occurs when FMP's grossProfit field maps to totalRevenue for certain SaaS tickers
+    // (e.g. ServiceNow), or when Yahoo's grossProfit field is absent and falls back to revenue.
+    // Guard: if every non-null grossProfit row is within 3% of revenue, the field is corrupt.
+    // Fix: replace with businessProfile.grossMargin (sourced from Yahoo financialData.grossMargins
+    // and FMP ratios — the most reliable single-number gross margin available).
+    const grossProfitRows = isHistoricalRows.filter(r => r.grossProfit != null && r.revenue != null && r.revenue > 0)
+    const allGPLooksLikeRevenue = grossProfitRows.length > 0 &&
+      grossProfitRows.every(r => r.grossProfit! / r.revenue! > 0.97)
+    const bpGrossMargin: number | null = (businessProfile.grossMargin != null && businessProfile.grossMargin > 0 && businessProfile.grossMargin < 0.97)
+      ? (businessProfile.grossMargin as number)
+      : null
+    if (allGPLooksLikeRevenue && bpGrossMargin != null) {
+      for (const r of isHistoricalRows) {
+        if (r.revenue != null) r.grossProfit = Math.round(r.revenue * bpGrossMargin)
+      }
+      // Also fix avgGrossMarginRatio used for projected rows
+      avgGrossMarginRatio = bpGrossMargin
+    }
+
     // Last actual effective tax rate and fiscal month/day for projected IS rows
     const lastActualTaxRate = [...isHistoricalRows].reverse().find(r => r.taxRate != null)?.taxRate ?? waccInputs.taxRate
     const lastIsFiscalDate = isHistoricalRows[isHistoricalRows.length - 1]?.fiscalDate ?? null
@@ -1407,6 +1427,10 @@ export async function GET(req: NextRequest) {
         sector: profile.sector ?? q.sector ?? '',
         industry: profile.industry ?? '',
         country: fin.summaryProfile?.country ?? null,
+        // peRatio is required by deriveExitPE to blend current P/E with sector median.
+        // Without it the function falls through to sector-median-only (38× for software),
+        // producing an exitPE that ignores the actual current multiple (e.g. 71× for NOW).
+        peRatio: q.trailingPE ?? null,
       },
       wacc: { ...waccResult, crp, inputs: waccInputs },
       cagrAnalysis,
@@ -1420,6 +1444,10 @@ export async function GET(req: NextRequest) {
       scores,
       fairValue: { debt: rawDebtM, cash: cashM, sharesOutstanding: sharesM },
       valuationMethods,
+      // financialStatements gives deriveNetMargin access to grossProfit rows for the
+      // isHighGrowthSaaS boundary check. Without this, the gross margin check uses null
+      // and the SaaS convergence branch never fires for companies like NOW.
+      financialStatements: { incomeStatement },
     }
     const _seededAssumptions = seedAssumptions(_auditBundle)
     const assumptionAudit = runAssumptionAudit(_auditBundle, _seededAssumptions)

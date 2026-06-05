@@ -460,6 +460,17 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
       }
 
       ebit = effectiveEbitMargin != null ? revenue * effectiveEbitMargin : null
+
+      // EBIT null fallback: when Yahoo provides no operatingIncome/ebit for this company
+      // (common for certain SaaS tickers like NOW, CRM), medianEbitMargin stays null and
+      // every projected UFCF row collapses to null NOPAT. Fix: back-compute EBIT from the
+      // net margin, identical to the financial-branch formula but applied as a fallback
+      // so the UFCF model degrades gracefully instead of producing null rows.
+      // Only fires when ebit is still null after all other branches.
+      if (ebit == null && medianNetMargin != null && medianNetMargin > 0) {
+        const taxR = medianTaxRate ?? 0.21
+        ebit = revenue * medianNetMargin / Math.max(0.01, 1 - taxR)
+      }
       dna = medianDnaPct != null ? revenue * medianDnaPct : null
       // ebitda: prefer ebit+dna; fall back to EBITDA margin so UFCF engine can derive D&A
       ebitda = (ebit != null && dna != null)
