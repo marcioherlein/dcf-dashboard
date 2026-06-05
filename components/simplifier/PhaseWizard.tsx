@@ -147,7 +147,7 @@ export default function PhaseWizard({ autoMap, financialsMeta, initialEntry, onS
       </div>
 
       {/* Navigation — sticky bottom bar on mobile */}
-      <div className="fixed bottom-0 left-0 right-0 sm:relative sm:bottom-auto bg-[#0d1117] sm:bg-transparent border-t border-[#21262d] sm:border-0 px-4 py-3 flex items-center justify-between z-30"
+      <div className="fixed bottom-0 left-0 right-0 sm:relative sm:bottom-auto bg-[#0d1117] sm:bg-transparent border-t border-[#21262d] sm:border-0 px-4 py-3 flex items-center justify-between z-[55]"
         style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
       >
         <button

@@ -278,7 +278,7 @@ export default function TopBar() {
           </div>
           {/* Mobile search results dropdown */}
           {mobileSearchOpen && open && results.length > 0 && (
-            <div className="absolute top-[96px] left-0 right-0 z-50 bg-white border-b border-[#E3E6E0] shadow-lg">
+            <div className="absolute left-0 right-0 z-50 bg-white border-b border-[#E3E6E0] shadow-lg" style={{ top: 'calc(96px + env(safe-area-inset-top, 0px))' }}>
               {results.slice(0, 6).map(r => (
                 <button
                   key={r.symbol}

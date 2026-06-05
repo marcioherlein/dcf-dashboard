@@ -27,7 +27,7 @@ export default function ScreenerChart({ ticker, displayTicker, name, price, chan
 
       {/* Panel */}
       <div
-        className="w-[520px] bg-[#080F1E] border-l border-white/10 flex flex-col h-full overflow-y-auto shadow-card-md"
+        className="w-full lg:w-[520px] bg-[#080F1E] border-l border-white/10 flex flex-col h-full overflow-y-auto shadow-card-md"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -44,7 +44,7 @@ export default function ScreenerChart({ ticker, displayTicker, name, price, chan
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-200 transition-colors mt-0.5 text-lg leading-none"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-200 transition-colors"
           >
             ×
           </button>

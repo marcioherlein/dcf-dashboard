@@ -17,7 +17,7 @@ function MonitorContent() {
   return (
     <div className="min-h-screen bg-[#F8FAFB]">
       {/* Tab bar */}
-      <div className="sticky top-[52px] z-30 bg-white border-b border-slate-200">
+      <div className="sticky z-30 bg-white border-b border-slate-200" style={{ top: 'calc(52px + env(safe-area-inset-top, 0px))' }}>
         <div className="px-4 sm:px-6">
           <div className="flex gap-0 overflow-x-auto">
             {TABS.map((t) => (

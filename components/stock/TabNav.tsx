@@ -49,7 +49,7 @@ export default function TabNav({ activeTab, onChange }: Props) {
     <div
       role="tablist"
       aria-label="Stock sections"
-      className="sticky top-[52px] z-20 glass-toolbar"
+      className="sticky z-20 glass-toolbar" style={{ top: "calc(52px + env(safe-area-inset-top, 0px))" }}
       onKeyDown={handleKeyDown}
     >
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">

@@ -334,10 +334,10 @@ function AssumptionRowExpanded({
 
       {/* Steppers */}
       <div className="flex items-center justify-between gap-2">
-        <button onClick={() => onChange(clamp(value - field.step))} className="flex-1 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all text-sm font-bold select-none" aria-label={`Decrease ${field.label}`}>−</button>
+        <button onClick={() => onChange(clamp(value - field.step))} className="flex-1 h-11 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all text-sm font-bold select-none" aria-label={`Decrease ${field.label}`}>−</button>
         <button
           onClick={startEdit}
-          className="flex-1 h-8 text-[13px] font-[700] tabular-nums text-center border border-slate-200 rounded-lg bg-white hover:bg-slate-50 transition-colors text-slate-600"
+          className="flex-1 h-11 text-[13px] font-[700] tabular-nums text-center border border-slate-200 rounded-lg bg-white hover:bg-slate-50 transition-colors text-slate-600"
           title="Click to type a value directly"
           aria-label={`${field.label}: ${fmtVal(value, field.unit)}. Click to type.`}
         >
@@ -353,7 +353,7 @@ function AssumptionRowExpanded({
             />
           ) : fmtVal(value, field.unit)}
         </button>
-        <button onClick={() => onChange(clamp(value + field.step))} className="flex-1 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all text-sm font-bold select-none" aria-label={`Increase ${field.label}`}>+</button>
+        <button onClick={() => onChange(clamp(value + field.step))} className="flex-1 h-11 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all text-sm font-bold select-none" aria-label={`Increase ${field.label}`}>+</button>
       </div>
 
       {/* WACC signal */}

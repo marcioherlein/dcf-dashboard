@@ -1044,7 +1044,7 @@ export default function ForecastTable({
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="bg-[#080F1E] rounded-xl overflow-hidden">
+    <div className="bg-[#080F1E] rounded-xl">
       {/* Header bar */}
       <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-white/10 bg-white/5 flex-wrap gap-3">
         <div className="flex items-center gap-3 flex-wrap">

@@ -27,7 +27,7 @@ export function ETFHoldingsTable({ holdings }: Props) {
   const maxWeight = Math.max(...holdings.map((h) => h.weight ?? 0), 0.001)
 
   return (
-    <div className="glass-card-light rounded-xl overflow-hidden">
+    <div className="glass-card-light rounded-xl">
       <div className="px-4 py-3 border-b border-slate-200/60">
         <p className="text-sm font-semibold text-slate-700">Top Holdings</p>
       </div>

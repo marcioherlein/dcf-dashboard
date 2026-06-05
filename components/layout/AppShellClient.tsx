@@ -11,7 +11,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   return (
     <main
       className="pb-safe-nav lg:pb-6 lg:pl-[220px]"
-      style={{ paddingTop: stockNav ? 'calc(88px + env(safe-area-inset-top, 0px))' : 'calc(52px + env(safe-area-inset-top, 0px))' }}
+      style={{ paddingTop: stockNav ? 'calc(96px + env(safe-area-inset-top, 0px))' : 'calc(52px + env(safe-area-inset-top, 0px))' }}
     >
       {children}
     </main>
@@ -28,7 +28,7 @@ export default function AppShellClient({ children }: { children: React.ReactNode
   return (
     <StockNavProvider>
       <div className="min-h-dvh insic-bg">
-        <Suspense fallback={<header className="fixed top-0 left-0 right-0 h-[52px] glass-nav border-b z-40" />}>
+        <Suspense fallback={<header className="fixed top-0 left-0 right-0 min-h-[52px] pt-safe glass-toolbar border-b z-40" />}>
           <TopBar />
         </Suspense>
         <Sidebar />

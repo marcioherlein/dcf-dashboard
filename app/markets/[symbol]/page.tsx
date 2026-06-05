@@ -65,7 +65,7 @@ function Skeleton({ className }: { className?: string }) {
 
 function PageSkeleton() {
   return (
-    <div className="min-h-screen bg-[#050D1F] pt-[52px]">
+    <div className="min-h-dvh bg-[#050D1F]">
       <div className="max-w-[900px] mx-auto px-4 py-6 space-y-4">
         <Skeleton className="h-5 w-28" />
         <div className="rounded-xl bg-white/5 border border-white/10 p-6 space-y-3">
@@ -169,7 +169,7 @@ export default function InstrumentDetailPage() {
 
   if (error || !detail) {
     return (
-      <div className="min-h-screen bg-[#050D1F] pt-[52px]">
+      <div className="min-h-dvh bg-[#050D1F]">
         <div className="max-w-[900px] mx-auto px-4 py-6">
           <Link href="/markets" className="inline-flex items-center gap-1.5 text-[13px] text-slate-400 hover:text-slate-100 transition-colors mb-4 min-h-[44px]">
             <ArrowLeft className="w-4 h-4" /> Back to Markets
@@ -187,7 +187,7 @@ export default function InstrumentDetailPage() {
   const priceDecimals = detail.type === 'fx' || (detail.price != null && detail.price < 5) ? 4 : 2
 
   return (
-    <div className="min-h-screen bg-[#050D1F] pt-[52px]">
+    <div className="min-h-dvh bg-[#050D1F]">
       <div className="max-w-[900px] mx-auto px-4 py-4 sm:py-6 space-y-4">
 
         {/* Back link */}
