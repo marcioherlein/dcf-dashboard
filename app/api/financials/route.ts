@@ -24,7 +24,15 @@ export async function GET(req: NextRequest) {
   if (limited) return limited
 
   const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session) {
+    // Dev-only bypass: allows audit scripts to call the route without a browser session.
+    // Gated by AUDIT_DEV_KEY env var — never set in production.
+    const devKey = req.headers.get('x-audit-dev-key')
+    const allowedKey = process.env.AUDIT_DEV_KEY
+    if (!allowedKey || devKey !== allowedKey) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+  }
 
   const ticker = req.nextUrl.searchParams.get('ticker')?.toUpperCase()
   if (!ticker) return NextResponse.json({ error: 'ticker required' }, { status: 400 })

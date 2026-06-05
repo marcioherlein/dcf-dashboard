@@ -123,8 +123,8 @@ blended << TTM by >3pp, flag as capex-understatement for this company.
 ### Finding 6: taxRate = null in all historical IS rows — FMP field not populating
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** ALL 22 AUDITED TICKERS — 100% reproduction rate across every stock audited
-**Run count:** 22
+**Ticker / Context:** ALL 28 AUDITED TICKERS — 100% reproduction rate across every stock audited
+**Run count:** 28
 **Status:** integrated — 100% reproduction rate; taxRate field is never populated in FMP income statement rows
 
 **Observed:** All 5 MSFT historical IS rows have `taxRate: null`. `buildProjectedRows` falls back to
@@ -138,12 +138,12 @@ resulting NOPAT impact.
 
 ---
 
-### Finding 7: MU cyclical trough silent — EBIT=null + median NI positive but trough-distorted
+### Finding 7: Cyclical/recovery trough silent — EBIT=null + median NI positive but trough-distorted
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** MU (Micron Technology) — FY2023 loss (-37.5% NI%) distorts 3-year median to 3.1%; TTM=22.8%
-**Run count:** 1
-**Status:** new
+**Ticker / Context:** MU (median 3.1% vs TTM 22.8%); LYFT (median 0.4% vs TTM 45.0% deferred tax gain)
+**Run count:** 2
+**Status:** integrated — check added to Phase 3 LFCF Net Income section (F7 + LYFT one-time gain variant)
 
 **Observed:** With EBIT=null rows, `isCyclicalTrough` cannot evaluate (condition requires `medianEbitMargin < -0.02`).
 The EBIT null fallback fires and uses `medianNetMargin`. For MU, the 3-year NI% values are [-37.5%, 3.1%, 22.8%],
@@ -288,12 +288,12 @@ Ensure F4 check note clarifies that ratio > 1.50 for capital-intensive non-finan
 
 ---
 
-### Finding 13: SHOP netMarginAudit=55% — one-time gain year (FY2021 warrant) distorts deriveNetMargin 'last'
+### Finding 13: deriveNetMargin 'last' picks oldest year — auditBundle IS rows are newest-first
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** SHOP — FY2021 NI%=63.2% (warrant fair value gain), trailing NI%=10.7%, audit shows 55%
-**Run count:** 1
-**Status:** new
+**Ticker / Context:** SHOP (FY2021 warrant 63.2% -> 55% cap); WDAY (FY2024 GAAP gain 19.0% -> 22%)
+**Run count:** 2
+**Status:** integrated — check added to Phase 2E Net Margin section; fix: sort withBoth by year ascending
 
 **Observed:** SHOP's FY2021 net margin was 63.2% due to warrant fair value adjustments (a one-time non-cash
 gain), not operating earnings. This row is included in the 5-year `withBoth` set used by `deriveNetMargin`.
@@ -334,5 +334,61 @@ FY2024 ~52%, FY2025 ~53% based on actual filings.
 **Suggested check to add:** In Phase 1 Data Quality, flag when all historical grossProfit/revenue values
 are identical to 2+ decimal places (excluding the F1 case of >97%). This indicates stale or blended-rate
 gross profit data from FMP that may affect margin convergence paths.
+
+---
+
+### Finding 15: MIG callout whitespace collapse — spaces stripped around inline spans
+**Agent:** audit-og
+**Date:** 2026-06-05
+**Ticker / Context:** MSFT — reproduced on both landscape and square cards
+**Run count:** 1
+**Status:** integrated — fixed via flex-row approach in both routes
+**Status:** integrated
+
+**Observed:** MIG callout renders as "Market prices in8.2% revenue CAGR— model assumes 14.0%".
+The space before the percentage span ("in ") and the space before the em-dash (" —") are both collapsed.
+Code is `Market prices in <span ...>{value}% revenue CAGR</span> — model assumes <span ...>`.
+**Expected:** "Market prices in 8.2% revenue CAGR — model assumes 14.0%" with spaces preserved.
+**File / location:** `app/api/og/route.tsx:159–161`, `app/api/og/square/route.tsx:185–187`
+**Suggested check to add:** In Phase 2C visual inspection, read MIG callout text and verify spaces are preserved around inline spans — look for "in%" (no space) or "CAGR—" (no space before dash) as the failure signal.
+
+### Finding 16: Landscape Blended row lacks olive tint — inconsistency with square card
+**Agent:** audit-og
+**Date:** 2026-06-05
+**Ticker / Context:** MSFT — landscape vs square visual comparison
+**Run count:** 1
+**Status:** integrated — olive-tinted tile added to landscape Blended card
+
+**Observed:** The landscape Model Consensus panel renders the Blended result as a plain text row
+(`borderTop` divider, label + value only — no background, no olive tint).
+The square card renders Blended as a full card tile with `background: ${BRAND.olive700}12` olive tint,
+matching the audit checklist expectation.
+**Expected:** Blended entry should have olive tint in both formats to visually distinguish it from
+the individual method cards.
+**File / location:** `app/api/og/route.tsx:191–196` (landscape Blended — no olive bg)
+vs `app/api/og/square/route.tsx:168–177` (square Blended — has olive bg)
+**Suggested check to add:** In Phase 2C visual inspection, verify the Blended entry in the Model
+Consensus panel has a visually distinct olive-tinted background in BOTH landscape and square cards.
+
+### Finding 15: TY (closed-end fund) classified as alt_asset — model produces FV=0.45 vs price=34.65
+**Agent:** audit-valuation
+**Date:** 2026-06-05
+**Ticker / Context:** TY (Tri-Continental Corp) — closed-end investment fund, alt_asset type, FV=$0.45/sh
+**Run count:** 1
+**Status:** new
+
+**Observed:** TY is Tri-Continental Corporation, a closed-end investment fund (ticker NYSE:TY).
+It is classified as `alt_asset` because sector=Financial Services, industry=Asset Management, and the
+alt_asset carve-out fires. FCFF uses baseFCF≈$1M (near-zero operating income of a fund paying expenses)
+producing FV=$0.45/share vs current price $34.65 (-99% upside). The model is misapplied — TY holds a
+portfolio of equities and its "fair value" is the NAV of holdings, not a DCF of fund operating cash flows.
+The `etf` companyType (which returns NAV-not-applicable) or a P/NAV approach would be appropriate.
+**Expected:** Closed-end funds should return `etf` type or be excluded. The `alt_asset` regex
+(`capital market|alternative asset|private equity|asset management`) catches legitimate alt-asset managers
+(BX, KKR, Apollo) but also catches closed-end funds and ETF-like vehicles with the same industry label.
+**File / location:** `lib/dcf/detectCompanyType.ts` ~line 43 (alt_asset carve-out)
+**Suggested check to add:** When companyType=alt_asset and `revenueM < 100` (tiny "revenue" = fees on tiny AUM),
+flag that this may be a closed-end fund or micro alt-asset vehicle. DCF output will be near-zero and triangulated
+FV will be unreliable. Check `quote.quoteType` — closed-end funds often return 'CEF' not 'EQUITY'.
 
 ---
