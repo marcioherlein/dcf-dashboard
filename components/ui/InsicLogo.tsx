@@ -179,12 +179,12 @@ function InsicWordmark({
 export type LogoSize = "sm" | "md" | "lg";
 
 const SIZES: Record<LogoSize, { markH: number; wSize: WordmarkSize; ty: number; gap: number }> = {
-  // sm: markH=34 markW=22 ty=10  dot_bot=7.4 clearance=2.6px
-  sm: { markH: 34, wSize: "sm", ty: 10, gap: 7  },
-  // md: markH=36 markW=24 ty=10  dot_bot=7.8 clearance=2.2px
-  md: { markH: 36, wSize: "md", ty: 10, gap: 8  },
-  // lg: markH=44 markW=29 ty=12  dot_bot=9.5 clearance=2.5px
-  lg: { markH: 44, wSize: "lg", ty: 12, gap: 10 },
+  // sm: markH=30 markW=23 ty=11  dot_bot=6.5 clearance=4.5px  (bars center at ~19.8px, wm center at ~9px)
+  sm: { markH: 30, wSize: "sm", ty: 11, gap: 6  },
+  // md: markH=33 markW=25 ty=12  dot_bot=7.2 clearance=4.8px  (bars center at ~21.7px, wm center at ~10px)
+  md: { markH: 33, wSize: "md", ty: 12, gap: 7  },
+  // lg: markH=40 markW=31 ty=14  dot_bot=8.7 clearance=5.3px  (bars center at ~26.4px, wm center at ~12px)
+  lg: { markH: 40, wSize: "lg", ty: 14, gap: 9  },
 };
 
 export type InsicLogoLockupProps = {
@@ -221,7 +221,13 @@ export function InsicLogoLockup({
       aria-label="insic"
     >
       <InsicMark
-        style={{ width: markW, height: markH, flexShrink: 0, display: "block" }}
+        style={{
+          width: markW,
+          height: markH,
+          flexShrink: 0,
+          display: "block",
+          filter: dark ? "none" : "drop-shadow(0 1.5px 5px rgba(6,16,31,0.09))",
+        }}
         mono={dark}
       />
       <InsicWordmark
