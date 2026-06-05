@@ -50,8 +50,17 @@ function pct(n, signed = true) {
 
 async function fetchValuation(ticker) {
   const url = `${APP_URL}/api/financials?ticker=${ticker}`
-  const res  = await fetch(url)
-  if (!res.ok) throw new Error(`API returned ${res.status} for ${ticker}`)
+  console.log(`Fetching: ${url}`)
+  let res
+  try {
+    res = await fetch(url, { signal: AbortSignal.timeout(30000) })
+  } catch (err) {
+    throw new Error(`Network error fetching ${url}: ${err.message}`)
+  }
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    throw new Error(`API returned ${res.status} for ${ticker}: ${body.slice(0, 200)}`)
+  }
   return res.json()
 }
 
