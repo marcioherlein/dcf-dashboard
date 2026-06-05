@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { ImageResponse } from '@vercel/og'
 import { NextRequest } from 'next/server'
-import { VERDICT_DISPLAY, SITE_URL, type VerdictKey } from '@/lib/brand'
+import { VERDICT_DISPLAY, SITE_URL, BRAND, type VerdictKey } from '@/lib/brand'
 
 export const runtime = 'edge'
 
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
   const vd       = VERDICT_DISPLAY[verdict] ?? VERDICT_DISPLAY['Insufficient Data']
   const isUp     = (upside ?? 0) >= 0
   const upsideStr = upside != null ? `${isUp ? '+' : ''}${(upside * 100).toFixed(1)}%` : null
-  const upsideColor = upside == null ? '#64748B' : isUp ? '#10B981' : '#EF4444'
+  const upsideColor = upside == null ? '#64748B' : isUp ? BRAND.positive : BRAND.negative
 
   const baseUrl = `${req.nextUrl.protocol}//${req.nextUrl.host}`
   let logoData: string | null = null
@@ -83,13 +83,13 @@ export async function GET(req: NextRequest) {
 
   return new ImageResponse(
     (
-      <div style={{ display: 'flex', flexDirection: 'column', width: 1080, height: 1080, background: 'linear-gradient(155deg,#050D1F 0%,#0A1628 50%,#091525 100%)', padding: '56px 72px 48px', fontFamily: 'system-ui,-apple-system,sans-serif', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', width: 1080, height: 1080, background: `linear-gradient(155deg,${BRAND.ink900} 0%,${BRAND.ink800} 50%,#091525 100%)`, padding: '56px 72px 48px', fontFamily: 'system-ui,-apple-system,sans-serif', position: 'relative', overflow: 'hidden' }}>
 
         {/* Dot grid */}
-        <div style={{ display: 'flex', position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundImage: 'radial-gradient(rgba(37,99,235,0.065) 1px,transparent 1px)', backgroundSize: '32px 32px' }} />
+        <div style={{ display: 'flex', position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundImage: `radial-gradient(rgba(95,121,11,0.08) 1px,transparent 1px)`, backgroundSize: '32px 32px' }} />
 
         {/* Glows */}
-        <div style={{ display: 'flex', position: 'absolute', top: -160, right: -100, width: 600, height: 600, background: 'radial-gradient(circle,rgba(37,99,235,0.12) 0%,transparent 70%)' }} />
+        <div style={{ display: 'flex', position: 'absolute', top: -160, right: -100, width: 600, height: 600, background: `radial-gradient(circle,rgba(95,121,11,0.09) 0%,transparent 70%)` }} />
         <div style={{ display: 'flex', position: 'absolute', bottom: -100, left: -60, width: 420, height: 420, background: `radial-gradient(circle,${vd.colorHex}18 0%,transparent 70%)` }} />
 
         {/* Accent bar */}
@@ -100,16 +100,16 @@ export async function GET(req: NextRequest) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {logoData
               ? <img src={logoData} style={{ width: 32, height: 32, objectFit: 'contain' }} alt="insic" />
-              : <div style={{ display: 'flex', width: 32, height: 32, borderRadius: 8, background: '#2563EB', alignItems: 'center', justifyContent: 'center' }}>
+              : <div style={{ display: 'flex', width: 32, height: 32, borderRadius: 8, background: BRAND.olive700, alignItems: 'center', justifyContent: 'center' }}>
                   <span style={{ color: 'white', fontSize: 16, fontWeight: 800 }}>I</span>
                 </div>
             }
             <span style={{ color: '#64748B', fontSize: 13, fontWeight: 600, letterSpacing: '0.04em' }}>INSIC</span>
           </div>
           {conviction
-            ? <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(37,99,235,0.12)', border: '1px solid rgba(37,99,235,0.22)', borderRadius: 9999, padding: '6px 16px' }}>
-                <div style={{ display: 'flex', width: 6, height: 6, borderRadius: '50%', background: '#3B82F6' }} />
-                <span style={{ color: '#93C5FD', fontSize: 12, fontWeight: 600 }}>{conviction}</span>
+            ? <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: `${BRAND.olive700}18`, border: `1px solid ${BRAND.olive700}40`, borderRadius: 9999, padding: '6px 16px' }}>
+                <div style={{ display: 'flex', width: 6, height: 6, borderRadius: '50%', background: BRAND.olive700 }} />
+                <span style={{ color: BRAND.olive100, fontSize: 12, fontWeight: 600 }}>{conviction}</span>
               </div>
             : <div style={{ display: 'flex' }} />
           }
@@ -140,7 +140,7 @@ export async function GET(req: NextRequest) {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, paddingLeft: 24 }}>
             <span style={{ color: '#475569', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.09em' }}>{upsideStr != null && !isUp ? 'Downside' : 'Upside'}</span>
-            <div style={{ display: 'flex', alignItems: 'center', background: upsideStr == null ? 'rgba(100,116,139,0.15)' : isUp ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', borderRadius: 10, padding: '4px 12px 4px 10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', background: upsideStr == null ? 'rgba(100,116,139,0.15)' : isUp ? `${BRAND.positive}22` : `${BRAND.negative}22`, borderRadius: 10, padding: '4px 12px 4px 10px' }}>
               <span style={{ color: upsideColor, fontSize: 44, fontWeight: 800, letterSpacing: '-0.02em' }}>{upsideStr ?? '—'}</span>
             </div>
           </div>
@@ -154,7 +154,7 @@ export async function GET(req: NextRequest) {
               {methods.map((m, i) => {
                 const methodUpside = price > 0 ? (m.fv - price) / price : null
                 const mUp = (methodUpside ?? 0) >= 0
-                const mColor = methodUpside == null ? '#64748B' : mUp ? '#10B981' : '#EF4444'
+                const mColor = methodUpside == null ? '#64748B' : mUp ? BRAND.positive : BRAND.negative
                 return (
                   <div key={i} style={{ display: 'flex', flexDirection: 'column', flex: 1, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '14px 18px', gap: 6 }}>
                     <span style={{ color: '#64748B', fontSize: 11, fontWeight: 600 }}>{m.label}</span>
@@ -166,7 +166,7 @@ export async function GET(req: NextRequest) {
                 )
               })}
               {fv != null && (
-                <div style={{ display: 'flex', flexDirection: 'column', flex: 1, background: 'rgba(37,99,235,0.07)', border: '1px solid rgba(37,99,235,0.20)', borderRadius: 12, padding: '14px 18px', gap: 6 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', flex: 1, background: `${BRAND.olive700}12`, border: `1px solid ${BRAND.olive700}30`, borderRadius: 12, padding: '14px 18px', gap: 6 }}>
                   <span style={{ color: '#64748B', fontSize: 11, fontWeight: 600 }}>Blended</span>
                   <span style={{ color: 'white', fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em' }}>{fmt(fv, currency)}</span>
                   {upside != null && (
@@ -180,9 +180,9 @@ export async function GET(req: NextRequest) {
 
         {/* ── MIG CALLOUT ── */}
         {hasMIG && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 40, background: 'rgba(37,99,235,0.08)', border: '1px solid rgba(37,99,235,0.18)', borderRadius: 10, padding: '12px 16px' }}>
-            <div style={{ display: 'flex', width: 4, height: 30, borderRadius: 2, background: '#3B82F6', flexShrink: 0 }} />
-            <span style={{ color: '#93C5FD', fontSize: 12, lineHeight: 1.4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 40, background: `${BRAND.olive700}14`, border: `1px solid ${BRAND.olive700}30`, borderRadius: 10, padding: '12px 16px' }}>
+            <div style={{ display: 'flex', width: 4, height: 30, borderRadius: 2, background: BRAND.olive700, flexShrink: 0 }} />
+            <span style={{ color: BRAND.olive100, fontSize: 12, lineHeight: 1.4 }}>
               Market prices in <span style={{ color: 'white', fontWeight: 700 }}>{(mig! * 100).toFixed(1)}% revenue CAGR</span> — model assumes <span style={{ color: vd.colorHex, fontWeight: 700 }}>{(migA! * 100).toFixed(1)}%</span>
             </span>
           </div>
@@ -192,15 +192,15 @@ export async function GET(req: NextRequest) {
         {hasScenBar && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 40 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', width: TRACK_W }}>
-              <span style={{ color: '#EF4444', fontSize: 11, fontWeight: 600 }}>Bear {fmt(bear!, currency)}</span>
-              <span style={{ color: '#93C5FD', fontSize: 11, fontWeight: 700 }}>Base {fv != null ? fmt(fv, currency) : '—'}</span>
-              <span style={{ color: '#10B981', fontSize: 11, fontWeight: 600 }}>Bull {fmt(bull!, currency)}</span>
+              <span style={{ color: BRAND.negative, fontSize: 11, fontWeight: 600 }}>Bear {fmt(bear!, currency)}</span>
+              <span style={{ color: BRAND.olive100, fontSize: 11, fontWeight: 700 }}>Base {fv != null ? fmt(fv, currency) : '—'}</span>
+              <span style={{ color: BRAND.positive, fontSize: 11, fontWeight: 600 }}>Bull {fmt(bull!, currency)}</span>
             </div>
-            <div style={{ display: 'flex', position: 'relative', height: 8, borderRadius: 9999, background: 'linear-gradient(to right,rgba(239,68,68,0.45),rgba(100,116,139,0.25),rgba(16,185,129,0.45))', width: TRACK_W }}>
+            <div style={{ display: 'flex', position: 'relative', height: 8, borderRadius: 9999, background: `linear-gradient(to right,${BRAND.negative}60,rgba(100,116,139,0.25),${BRAND.positive}60)`, width: TRACK_W }}>
               {pricePx != null && (
                 <div style={{ display: 'flex', position: 'absolute', top: -4, left: pricePx - 5, width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '8px solid #94A3B8' }} />
               )}
-              <div style={{ display: 'flex', position: 'absolute', top: -5, left: basePx! - 9, width: 18, height: 18, borderRadius: '50%', background: 'white', border: '3px solid #2563EB' }} />
+              <div style={{ display: 'flex', position: 'absolute', top: -5, left: basePx! - 9, width: 18, height: 18, borderRadius: '50%', background: 'white', border: `3px solid ${BRAND.olive700}` }} />
             </div>
             {pricePx != null && (
               <div style={{ display: 'flex', position: 'relative', width: TRACK_W, height: 14 }}>
@@ -211,7 +211,7 @@ export async function GET(req: NextRequest) {
         )}
 
         {/* ── FOOTER ── */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'absolute', bottom: 48, left: 72, right: 72, paddingTop: 16, borderTop: '1px solid rgba(37,99,235,0.10)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'absolute', bottom: 48, left: 72, right: 72, paddingTop: 16, borderTop: `1px solid ${BRAND.olive700}20` }}>
           <span style={{ color: '#334155', fontSize: 11 }}>Not financial advice · model output only</span>
           <span style={{ color: '#334155', fontSize: 11 }}>{SITE_URL} · {dateStr}</span>
         </div>

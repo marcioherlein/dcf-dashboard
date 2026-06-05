@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { ImageResponse } from '@vercel/og'
 import { NextRequest } from 'next/server'
-import { VERDICT_DISPLAY, SITE_URL, type VerdictKey } from '@/lib/brand'
+import { VERDICT_DISPLAY, SITE_URL, BRAND, type VerdictKey } from '@/lib/brand'
 
 export const runtime = 'edge'
 
@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
   const vd       = VERDICT_DISPLAY[verdict] ?? VERDICT_DISPLAY['Insufficient Data']
   const isUp     = (upside ?? 0) >= 0
   const upsideStr = upside != null ? `${isUp ? '+' : ''}${(upside * 100).toFixed(1)}%` : null
-  const upsideColor = upside == null ? '#64748B' : isUp ? '#10B981' : '#EF4444'
+  const upsideColor = upside == null ? '#64748B' : isUp ? BRAND.positive : BRAND.negative
 
   const baseUrl = `${req.nextUrl.protocol}//${req.nextUrl.host}`
   let logoData: string | null = null
@@ -85,13 +85,13 @@ export async function GET(req: NextRequest) {
 
   return new ImageResponse(
     (
-      <div style={{ display: 'flex', flexDirection: 'column', width: 1200, height: 630, background: 'linear-gradient(145deg,#050D1F 0%,#0A1628 55%,#091525 100%)', padding: '44px 64px 36px', fontFamily: 'system-ui,-apple-system,sans-serif', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', width: 1200, height: 630, background: `linear-gradient(145deg,${BRAND.ink900} 0%,${BRAND.ink800} 55%,#091525 100%)`, padding: '44px 64px 36px', fontFamily: 'system-ui,-apple-system,sans-serif', position: 'relative', overflow: 'hidden' }}>
 
         {/* Dot grid */}
-        <div style={{ display: 'flex', position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundImage: 'radial-gradient(rgba(37,99,235,0.065) 1px,transparent 1px)', backgroundSize: '28px 28px' }} />
+        <div style={{ display: 'flex', position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundImage: `radial-gradient(rgba(95,121,11,0.08) 1px,transparent 1px)`, backgroundSize: '28px 28px' }} />
 
         {/* Glow */}
-        <div style={{ display: 'flex', position: 'absolute', top: -140, right: -80, width: 520, height: 520, background: 'radial-gradient(circle,rgba(37,99,235,0.11) 0%,transparent 70%)' }} />
+        <div style={{ display: 'flex', position: 'absolute', top: -140, right: -80, width: 520, height: 520, background: `radial-gradient(circle,rgba(95,121,11,0.10) 0%,transparent 70%)` }} />
         <div style={{ display: 'flex', position: 'absolute', bottom: -120, left: -60, width: 400, height: 400, background: `radial-gradient(circle,${vd.colorHex}18 0%,transparent 70%)` }} />
 
         {/* Verdict color accent bar */}
@@ -101,12 +101,12 @@ export async function GET(req: NextRequest) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, position: 'relative' }}>
           {logoData
             ? <img src={logoData} style={{ height: 22, objectFit: 'contain' }} alt="insic" />
-            : <span style={{ color: '#2563EB', fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em' }}>insic</span>
+            : <span style={{ color: BRAND.olive700, fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em' }}>insic</span>
           }
           {conviction
-            ? <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(37,99,235,0.12)', border: '1px solid rgba(37,99,235,0.22)', borderRadius: 9999, padding: '5px 14px' }}>
-                <div style={{ display: 'flex', width: 6, height: 6, borderRadius: '50%', background: '#3B82F6' }} />
-                <span style={{ color: '#93C5FD', fontSize: 11, fontWeight: 600 }}>{conviction}</span>
+            ? <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: `${BRAND.olive700}18`, border: `1px solid ${BRAND.olive700}40`, borderRadius: 9999, padding: '5px 14px' }}>
+                <div style={{ display: 'flex', width: 6, height: 6, borderRadius: '50%', background: BRAND.olive700 }} />
+                <span style={{ color: BRAND.olive100, fontSize: 11, fontWeight: 600 }}>{conviction}</span>
               </div>
             : <div style={{ display: 'flex' }} />
           }
@@ -146,7 +146,7 @@ export async function GET(req: NextRequest) {
               {/* Upside badge */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingLeft: 20 }}>
                 <span style={{ color: '#475569', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.09em' }}>{upsideStr != null && !isUp ? 'Downside' : 'Upside'}</span>
-                <div style={{ display: 'flex', alignItems: 'center', background: upsideStr == null ? 'rgba(100,116,139,0.15)' : isUp ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', borderRadius: 8, padding: '3px 10px 3px 8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', background: upsideStr == null ? 'rgba(100,116,139,0.15)' : isUp ? `${BRAND.positive}22` : `${BRAND.negative}22`, borderRadius: 8, padding: '3px 10px 3px 8px' }}>
                   <span style={{ color: upsideColor, fontSize: 30, fontWeight: 800, letterSpacing: '-0.02em' }}>{upsideStr ?? '—'}</span>
                 </div>
               </div>
@@ -154,9 +154,9 @@ export async function GET(req: NextRequest) {
 
             {/* MIG callout */}
             {hasMIG
-              ? <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14, background: 'rgba(37,99,235,0.08)', border: '1px solid rgba(37,99,235,0.18)', borderRadius: 8, padding: '7px 12px' }}>
-                  <div style={{ display: 'flex', width: 4, height: 28, borderRadius: 2, background: '#3B82F6', flexShrink: 0 }} />
-                  <span style={{ color: '#93C5FD', fontSize: 11, lineHeight: 1.4 }}>
+              ? <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14, background: `${BRAND.olive700}14`, border: `1px solid ${BRAND.olive700}30`, borderRadius: 8, padding: '7px 12px' }}>
+                  <div style={{ display: 'flex', width: 4, height: 28, borderRadius: 2, background: BRAND.olive700, flexShrink: 0 }} />
+                  <span style={{ color: BRAND.olive100, fontSize: 11, lineHeight: 1.4 }}>
                     Market prices in <span style={{ color: 'white', fontWeight: 700 }}>{(mig! * 100).toFixed(1)}% revenue CAGR</span> — model assumes <span style={{ color: vd.colorHex, fontWeight: 700 }}>{(migA! * 100).toFixed(1)}%</span>
                   </span>
                 </div>
@@ -173,7 +173,7 @@ export async function GET(req: NextRequest) {
                 {methods.map((m, i) => {
                   const methodUpside = price > 0 ? (m.fv - price) / price : null
                   const mUp = (methodUpside ?? 0) >= 0
-                  const mColor = methodUpside == null ? '#64748B' : mUp ? '#10B981' : '#EF4444'
+                  const mColor = methodUpside == null ? '#64748B' : mUp ? BRAND.positive : BRAND.negative
                   return (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 14px' }}>
                       <span style={{ color: '#94A3B8', fontSize: 12, fontWeight: 600 }}>{m.label}</span>
@@ -203,18 +203,18 @@ export async function GET(req: NextRequest) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 20, position: 'relative' }}>
             {/* Labels */}
             <div style={{ display: 'flex', justifyContent: 'space-between', width: TRACK_W }}>
-              <span style={{ color: '#EF4444', fontSize: 10, fontWeight: 600 }}>Bear {fmt(bear!, currency)}</span>
-              <span style={{ color: '#93C5FD', fontSize: 10, fontWeight: 700 }}>Base {fv != null ? fmt(fv, currency) : '—'}</span>
-              <span style={{ color: '#10B981', fontSize: 10, fontWeight: 600 }}>Bull {fmt(bull!, currency)}</span>
+              <span style={{ color: BRAND.negative, fontSize: 10, fontWeight: 600 }}>Bear {fmt(bear!, currency)}</span>
+              <span style={{ color: BRAND.olive100, fontSize: 10, fontWeight: 700 }}>Base {fv != null ? fmt(fv, currency) : '—'}</span>
+              <span style={{ color: BRAND.positive, fontSize: 10, fontWeight: 600 }}>Bull {fmt(bull!, currency)}</span>
             </div>
             {/* Track */}
-            <div style={{ display: 'flex', position: 'relative', height: 7, borderRadius: 9999, background: 'linear-gradient(to right,rgba(239,68,68,0.45),rgba(100,116,139,0.25),rgba(16,185,129,0.45))', width: TRACK_W }}>
+            <div style={{ display: 'flex', position: 'relative', height: 7, borderRadius: 9999, background: `linear-gradient(to right,${BRAND.negative}60,rgba(100,116,139,0.25),${BRAND.positive}60)`, width: TRACK_W }}>
               {/* Current price tick */}
               {pricePx != null && (
                 <div style={{ display: 'flex', position: 'absolute', top: -4, left: pricePx - 6, width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '8px solid #94A3B8' }} />
               )}
               {/* Fair value dot */}
-              <div style={{ display: 'flex', position: 'absolute', top: -5, left: basePx! - 8, width: 17, height: 17, borderRadius: '50%', background: 'white', border: '3px solid #2563EB' }} />
+              <div style={{ display: 'flex', position: 'absolute', top: -5, left: basePx! - 8, width: 17, height: 17, borderRadius: '50%', background: 'white', border: `3px solid ${BRAND.olive700}` }} />
             </div>
             {/* Price label under tick */}
             {pricePx != null && (
@@ -226,7 +226,7 @@ export async function GET(req: NextRequest) {
         )}
 
         {/* ── FOOTER ── */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 14, marginTop: hasScenBar ? 6 : 16, borderTop: '1px solid rgba(37,99,235,0.10)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 14, marginTop: hasScenBar ? 6 : 16, borderTop: `1px solid ${BRAND.olive700}20` }}>
           <span style={{ color: '#334155', fontSize: 10 }}>Not financial advice · model output only</span>
           <span style={{ color: '#334155', fontSize: 10 }}>{SITE_URL} · {dateStr}</span>
         </div>
