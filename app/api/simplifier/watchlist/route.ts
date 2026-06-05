@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase'
 import type { WatchlistEntry, ListTag } from '@/lib/simplifier/types'
 
 const TABLE = 'simplifier_watchlist'
 
-export async function GET(req: NextRequest) {
-  const userEmail = req.nextUrl.searchParams.get('user')
-  if (!userEmail) return NextResponse.json([], { status: 400 })
+export async function GET() {
+  const session = await getServerSession(authOptions)
+  const userEmail = session?.user?.email
+  if (!userEmail) return NextResponse.json([], { status: 401 })
 
   try {
     const client = createServiceClient()
@@ -24,11 +27,15 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions)
+  const userEmail = session?.user?.email
+  if (!userEmail) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   try {
-    const body = await req.json() as { userEmail: string; entry: WatchlistEntry }
-    const { userEmail, entry } = body
-    if (!userEmail || !entry?.ticker) {
-      return NextResponse.json({ error: 'userEmail and entry.ticker required' }, { status: 400 })
+    const body = await req.json() as { entry: WatchlistEntry }
+    const { entry } = body
+    if (!entry?.ticker) {
+      return NextResponse.json({ error: 'entry.ticker required' }, { status: 400 })
     }
 
     const client = createServiceClient()
@@ -62,10 +69,13 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const userEmail = req.nextUrl.searchParams.get('user')
-  const ticker    = req.nextUrl.searchParams.get('ticker')?.toUpperCase()
-  if (!userEmail || !ticker) {
-    return NextResponse.json({ error: 'user and ticker required' }, { status: 400 })
+  const session = await getServerSession(authOptions)
+  const userEmail = session?.user?.email
+  if (!userEmail) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const ticker = req.nextUrl.searchParams.get('ticker')?.toUpperCase()
+  if (!ticker) {
+    return NextResponse.json({ error: 'ticker required' }, { status: 400 })
   }
 
   try {
@@ -84,11 +94,15 @@ export async function DELETE(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const session = await getServerSession(authOptions)
+  const userEmail = session?.user?.email
+  if (!userEmail) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   try {
-    const body = await req.json() as { userEmail: string; ticker: string; listTag: ListTag }
-    const { userEmail, ticker, listTag } = body
-    if (!userEmail || !ticker) {
-      return NextResponse.json({ error: 'userEmail and ticker required' }, { status: 400 })
+    const body = await req.json() as { ticker: string; listTag: ListTag }
+    const { ticker, listTag } = body
+    if (!ticker) {
+      return NextResponse.json({ error: 'ticker required' }, { status: 400 })
     }
 
     const client = createServiceClient()

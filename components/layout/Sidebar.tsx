@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { motion, useReducedMotion } from 'motion/react'
 import {
   TrendingUp, Bookmark, Briefcase, Globe,
-  Bell, Settings, HelpCircle, PieChart, SlidersHorizontal,
+  Bell, Settings, HelpCircle, PieChart, SlidersHorizontal, ClipboardList,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -15,6 +15,7 @@ import { InsicLogoLockup } from '@/components/ui/InsicLogo'
 const PRIMARY_NAV: Array<{ href: string; label: string; icon: LucideIcon; match: (p: string) => boolean }> = [
   { href: '/analyze',               label: 'Analyze',       icon: TrendingUp,        match: (p) => p === '/analyze' || p.startsWith('/stock') },
   { href: '/screener',              label: 'Screener',      icon: SlidersHorizontal, match: (p) => p.startsWith('/screener') },
+  { href: '/simplifier',            label: 'Simplifier',    icon: ClipboardList,     match: (p) => p.startsWith('/simplifier') },
   { href: '/valuations',            label: 'My Valuations', icon: Bookmark,          match: (p) => p.startsWith('/valuations') },
   { href: '/etf',                   label: 'ETF Tracker',   icon: PieChart,          match: (p) => p.startsWith('/etf') },
   { href: '/monitor?tab=portfolio', label: 'Portfolio',     icon: Briefcase,         match: (p) => p.startsWith('/monitor') },

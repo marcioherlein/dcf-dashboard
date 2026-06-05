@@ -114,23 +114,23 @@ export default function StockUpgradeWall({ ticker, companyName, price, currency,
         </div>
 
         <button
-          onClick={() => router.push('/pricing')}
-          className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-[14px] py-3 transition-colors shadow-sm"
+          disabled
+          className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-300 text-slate-500 font-semibold text-[14px] py-3 cursor-not-allowed"
         >
-          Start Pro — $17/month
+          Coming soon — Pro plan launching shortly
         </button>
 
         <div className="flex items-center justify-center gap-4 text-[12px]">
           <button
             onClick={() => router.push('/redeem')}
-            className="text-blue-600 hover:underline font-medium"
+            className="min-h-[44px] px-3 inline-flex items-center text-blue-600 hover:underline font-medium"
           >
             Have a code?
           </button>
           <span className="text-slate-300">·</span>
           <button
             onClick={() => router.back()}
-            className="text-slate-500 hover:text-slate-700"
+            className="min-h-[44px] px-3 inline-flex items-center text-slate-500 hover:text-slate-700"
           >
             Go back
           </button>

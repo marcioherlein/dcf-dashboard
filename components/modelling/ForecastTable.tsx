@@ -191,6 +191,7 @@ function GrowthEditCell({ growthPct, prevRevenue, year, isProjected, onEdit }: G
           <input
             autoFocus
             className="w-16 border-2 border-blue-500 bg-[#0A1628] px-1.5 py-0.5 text-right text-xs text-blue-300 focus:outline-none rounded font-semibold"
+            style={{ fontSize: '16px' }}
             value={draft}
             onChange={e => setDraft(e.target.value)}
             onKeyDown={e => {
@@ -895,6 +896,7 @@ export default function ForecastTable({
                 >−</button>
                 <input
                   className="w-16 border border-white/10 bg-[#0A1628] px-2 py-2 text-center text-[14px] font-bold text-slate-100 rounded-lg focus:border-blue-400 focus:outline-none min-h-[44px]"
+                  style={{ fontSize: '16px' }}
                   value={exitMultipleDraft ?? Math.max(1, td.exitMultiple).toFixed(1)}
                   onChange={e => setExitMultipleDraft(e.target.value)}
                   onBlur={() => {
@@ -932,6 +934,7 @@ export default function ForecastTable({
                 >−</button>
                 <input
                   className="w-16 border border-white/10 bg-[#0A1628] px-2 py-2 text-center text-[14px] font-bold text-slate-100 rounded-lg focus:border-blue-400 focus:outline-none min-h-[44px]"
+                  style={{ fontSize: '16px' }}
                   value={terminalGDraft ?? (td.terminalG * 100).toFixed(1)}
                   onChange={e => setTerminalGDraft(e.target.value)}
                   onBlur={() => {

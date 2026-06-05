@@ -56,11 +56,11 @@ export default function SimplifierPage() {
     : entries.filter(e => e.listTag === activeTab)
 
   return (
-    <div className="min-h-screen bg-[#F7F6F1]">
+    <div className="min-h-dvh bg-[#F7F6F1]">
       <div className="max-w-7xl mx-auto px-4 py-4 sm:py-8">
 
         {/* ── Top header card ─────────────────────────────────────────── */}
-        <div className="rounded-2xl border border-[#E8E6E0] bg-white shadow-sm mb-4 overflow-hidden">
+        <div className="rounded-2xl border border-[#E8E6E0] bg-white shadow-sm mb-4">
 
           {/* Brand + CTA */}
           <div className="px-4 sm:px-6 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-[#E8E6E0]">

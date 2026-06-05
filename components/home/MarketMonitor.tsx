@@ -107,7 +107,7 @@ function ChartPanel({ item, onClose }: { item: MarketItem; onClose: () => void }
 
         {/* Footer CTA — only for equity groups */}
         {isEquity && (
-          <div className="px-5 py-3 border-t border-slate-200">
+          <div className="px-5 pt-3 border-t border-slate-200" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}>
             <Link
               href={`/stock/${item.ticker}`}
               className="flex items-center justify-center gap-2 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
@@ -251,7 +251,7 @@ export default function MarketMonitor() {
 
         {/* Group filter pills */}
         {!loading && (
-          <div className="px-4 sm:px-6 py-3 border-b border-slate-200 bg-white flex overflow-x-auto gap-1.5 [-webkit-overflow-scrolling:touch]">
+          <div className="px-4 sm:px-6 py-3 border-b border-slate-200 bg-white flex overflow-x-auto gap-1.5">
             <button
               onClick={() => setActiveGroup(null)}
               className={[
@@ -290,7 +290,7 @@ export default function MarketMonitor() {
 
         {/* Top mover banner */}
         {!loading && topMover && (
-          <div className="px-4 sm:px-6 py-2 border-b border-slate-200 bg-white flex items-center gap-3 overflow-x-auto [-webkit-overflow-scrolling:touch]">
+          <div className="px-4 sm:px-6 py-2 border-b border-slate-200 bg-white flex items-center gap-3 overflow-x-auto">
             <span className="text-[11px] text-slate-400 uppercase tracking-wider font-medium">Top mover</span>
             <span className="text-[12px] font-semibold text-slate-800">{topMover.label}</span>
             <span className="text-[12px] font-semibold" style={{ color: topMover.changePct >= 0 ? '#059669' : '#DC2626' }}>

@@ -118,7 +118,7 @@ function TickerSearch({ onAdd, isDark, disabled }: {
           onKeyDown={e => { if (e.key === 'Enter' && query.trim()) select(query.trim()) }}
           placeholder={disabled ? 'Max 10' : 'Add ticker…'}
           className="bg-transparent w-20 focus:w-28 focus:outline-none transition-all"
-          style={{ color: txt, fontSize: 11, fontWeight: 500 }}
+          style={{ color: txt, fontSize: '16px', fontWeight: 500 }}
         />
         {busy && (
           <div className="h-2.5 w-2.5 animate-spin rounded-full border"
@@ -362,7 +362,7 @@ export default function MultiTickerChart({
               key={p.value}
               onClick={() => setPeriod(p.value)}
               className={[
-                'px-2 py-0.5 rounded text-[10px] font-semibold transition-colors whitespace-nowrap',
+                'px-2 py-2.5 min-h-[44px] rounded text-[10px] font-semibold transition-colors whitespace-nowrap',
                 period === p.value
                   ? 'bg-indigo-500 text-white'
                   : 'text-white/30 hover:text-white/70 hover:bg-white/8',
@@ -383,7 +383,7 @@ export default function MultiTickerChart({
                 key={m}
                 onClick={() => setMetric(m)}
                 className={[
-                  'px-3 py-0.5 text-[10px] font-semibold transition-colors whitespace-nowrap',
+                  'px-3 py-2.5 min-h-[44px] text-[10px] font-semibold transition-colors whitespace-nowrap',
                   metric === m
                     ? 'bg-white/15 text-white'
                     : 'text-white/30 hover:bg-white/8',

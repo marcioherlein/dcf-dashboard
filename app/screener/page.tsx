@@ -263,7 +263,7 @@ export default function ScreenerPage() {
     filters.capTier !== 'all' || filters.exchange !== 'all' || filters.dividendsOnly
 
   return (
-    <div className="min-h-screen" style={{ background: '#F1F5F9' }}>
+    <div className="min-h-dvh" style={{ background: '#F1F5F9' }}>
       {/* Page header */}
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
@@ -316,7 +316,7 @@ export default function ScreenerPage() {
                   <button
                     key={ex.id}
                     onClick={() => setFilters(f => ({ ...f, exchange: ex.id }))}
-                    className={`px-3 py-2 border-r border-slate-200 last:border-r-0 transition-colors whitespace-nowrap ${
+                    className={`px-3 py-2.5 min-h-[44px] border-r border-slate-200 last:border-r-0 transition-colors whitespace-nowrap ${
                       filters.exchange === ex.id
                         ? 'bg-blue-50 text-blue-600 font-semibold'
                         : 'text-slate-500 hover:bg-slate-50'
@@ -330,7 +330,7 @@ export default function ScreenerPage() {
               {/* Dividend toggle */}
               <button
                 onClick={() => setFilters(f => ({ ...f, dividendsOnly: !f.dividendsOnly }))}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-[12px] font-medium transition-colors shrink-0 ${
+                className={`flex items-center gap-2 px-3 py-2.5 min-h-[44px] rounded-lg border text-[12px] font-medium transition-colors shrink-0 ${
                   filters.dividendsOnly
                     ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
                     : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'
@@ -381,7 +381,7 @@ export default function ScreenerPage() {
                       key={t.id}
                       onClick={() => setFilters(f => ({ ...f, capTier: t.id }))}
                       title={t.sub || undefined}
-                      className={`px-3 py-2 text-[12px] border-r border-slate-200 last:border-r-0 transition-colors whitespace-nowrap ${
+                      className={`px-3 py-2.5 min-h-[44px] text-[12px] border-r border-slate-200 last:border-r-0 transition-colors whitespace-nowrap ${
                         filters.capTier === t.id
                           ? 'bg-blue-50 text-blue-600 font-semibold'
                           : 'text-slate-500 hover:bg-slate-50'
@@ -398,7 +398,7 @@ export default function ScreenerPage() {
         </div>
 
         {/* ── Results table ───────────────────────────────────────────────────── */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
 
           {/* Error state */}
           {error && (

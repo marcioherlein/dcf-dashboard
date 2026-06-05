@@ -508,7 +508,7 @@ function RisksGridCard({ ratings, cagrAnalysis, onViewRisks, panel }: {
         ))}
       </ul>
       {onViewRisks && (
-        <button onClick={onViewRisks} className="text-[13px] font-medium text-blue-600 hover:text-blue-700 transition-colors">
+        <button onClick={onViewRisks} className="text-[13px] font-medium text-[#5F790B] hover:text-[#526A08] transition-colors">
           View all risks →
         </button>
       )}

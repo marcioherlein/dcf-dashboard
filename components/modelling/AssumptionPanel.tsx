@@ -61,6 +61,7 @@ function AssumptionRow({
         <input
           autoFocus
           className="w-20 rounded border border-blue-400 bg-blue-50 px-2 py-0.5 text-right font-mono text-xs text-blue-700 focus:outline-none"
+          style={{ fontSize: '16px' }}
           value={draft}
           onChange={e => setDraft(e.target.value)}
           onKeyDown={e => {

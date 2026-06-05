@@ -262,12 +262,12 @@ function SearchHero() {
               variants={reduced ? {} : slideDown}
               initial="hidden" animate="visible" exit="exit"
               style={{ originY: 0 }}
-              className="absolute left-0 right-0 top-full mt-1 z-50 rounded-xl bg-white border border-slate-200 shadow-lg overflow-hidden max-h-72 overflow-y-auto"
+              className="absolute left-0 right-0 top-full mt-1 z-50 rounded-xl bg-white border border-[#E3E6E0] shadow-lg overflow-hidden max-h-72 overflow-y-auto"
             >
               {results.length === 0 ? (
                 <div className="px-4 py-6 text-center">
-                  <p className="text-[12px] text-slate-500">No results for &ldquo;{query}&rdquo;</p>
-                  <p className="text-[11px] text-slate-400 mt-1">Try the full ticker symbol, e.g. MELI, NVDA</p>
+                  <p className="text-[12px] text-[#536174]">No results for &ldquo;{query}&rdquo;</p>
+                  <p className="text-[11px] text-[#8A96A8] mt-1">Try the full ticker symbol, e.g. MELI, NVDA</p>
                 </div>
               ) : results.map((r, idx) => (
                 <button
@@ -277,16 +277,16 @@ function SearchHero() {
                   key={r.symbol}
                   onClick={() => select(r.symbol)}
                   className={cn(
-                    'flex w-full items-center justify-between gap-3 px-4 py-3 text-left border-b border-slate-100 last:border-b-0 transition-colors min-h-[48px]',
-                    idx === activeIdx ? 'bg-slate-50' : 'hover:bg-slate-50',
+                    'flex w-full items-center justify-between gap-3 px-4 py-3 text-left border-b border-[#E3E6E0] last:border-b-0 transition-colors min-h-[48px]',
+                    idx === activeIdx ? 'bg-[#FBFAF7]' : 'hover:bg-[#FBFAF7]',
                   )}
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-[13px] font-bold text-slate-800 font-mono">{r.symbol}</span>
-                      {r.exchange && <span className="text-[11px] text-slate-500 uppercase">{r.exchange}</span>}
+                      <span className="text-[13px] font-bold text-[#0A1424] font-mono">{r.symbol}</span>
+                      {r.exchange && <span className="text-[11px] text-[#8A96A8] uppercase">{r.exchange}</span>}
                     </div>
-                    <span className="text-[12px] text-slate-500 truncate block">{r.longname ?? r.shortname}</span>
+                    <span className="text-[12px] text-[#536174] truncate block">{r.longname ?? r.shortname}</span>
                   </div>
                   {r.quoteType && (
                     <span className="shrink-0 text-[11px] font-semibold text-[#5F790B] bg-[#EEF4DD] border border-[#BFD2A1] px-2 py-0.5 rounded-md">
@@ -412,23 +412,24 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
         </div>
 
         {/* Divider */}
-        <div className="mx-4 mt-3 border-t border-slate-100" />
+        <div className="mx-4 mt-3 border-t border-[#E3E6E0]" />
 
         {/* Row 4: intrinsic value + upside */}
         <div className="flex items-end justify-between px-4 py-3 mt-auto gap-3">
           <div>
-            <p className="flex items-center gap-1 text-[11px] font-medium text-slate-500 mb-0.5">
+            <p className="flex items-center gap-1 text-[11px] font-medium text-[#536174] mb-0.5">
               Intrinsic value
-              <span
+              <button
+                type="button"
                 aria-label="DCF-based fair value estimate using market-implied growth and WACC inputs"
                 title="DCF-based fair value estimate using market-implied growth and WACC inputs"
-                className="cursor-help inline-flex items-center"
+                className="cursor-help inline-flex items-center p-0.5 -m-0.5 rounded"
               >
-                <Info size={11} className="text-slate-300" />
-              </span>
+                <Info size={11} className="text-[#B6BFCC]" />
+              </button>
             </p>
             {fvLoading ? (
-              <div className="h-4 w-14 rounded bg-slate-100 animate-pulse mt-0.5" />
+              <div className="h-4 w-14 rounded bg-[#F3F2EC] animate-pulse mt-0.5" />
             ) : fvError ? (
               <button
                 type="button"
@@ -442,13 +443,13 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
                 {fmtPrice(fairValue)}
               </p>
             ) : (
-              <p className="text-[12px] text-slate-400">No model yet</p>
+              <p className="text-[12px] text-[#8A96A8]">No model yet</p>
             )}
           </div>
           {upsidePct != null && (
             <div className="text-right shrink-0">
-              <p className="text-[11px] font-medium text-slate-500 mb-0.5">Upside</p>
-              <p className={cn('text-[14px] font-bold tabular-nums', upsidePct >= 0 ? 'text-emerald-600' : 'text-red-600')}>
+              <p className="text-[11px] font-medium text-[#536174] mb-0.5">Upside</p>
+              <p className={cn('text-[14px] font-bold tabular-nums', upsidePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
                 {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
               </p>
             </div>
@@ -457,9 +458,9 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
 
         {/* Row 5: market implies footer */}
         <div className="px-4 pb-3 -mt-1">
-          <p className="text-[11px] text-slate-500">
+          <p className="text-[11px] text-[#536174]">
             Market implies{' '}
-            <span className="font-semibold text-slate-600">
+            <span className="font-semibold text-[#0A1424]">
               {q.impliedCagr > 0 ? '+' : ''}{q.impliedCagr}%
             </span>
             {' '}5Y revenue CAGR
@@ -551,7 +552,7 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
   }, [showInfo])
 
   return (
-    <section className="glass-card-light rounded-2xl overflow-hidden">
+    <section className="glass-card-light rounded-2xl">
       {/* Card header */}
       <div className="flex items-center justify-between gap-3 px-5 pt-5 pb-4 border-b border-[#E3E6E0]">
         <div>
@@ -567,21 +568,21 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
       <div className="overflow-x-auto scrollbar-hide">
         <div className="min-w-[520px]">
           {/* Sticky column headers */}
-          <div className="sticky top-0 z-10 bg-white grid grid-cols-[150px_1fr_1fr_110px] sm:grid-cols-[170px_1fr_1fr_110px_minmax(0,200px)] gap-x-4 px-5 py-2.5 border-b border-slate-100">
-            <span className="text-[11px] font-semibold text-slate-500">Stock</span>
-            <span className="text-[11px] font-semibold text-slate-500">Implied 5Y CAGR</span>
-            <span className="text-[11px] font-semibold text-slate-500">3Y Historical</span>
-            <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-500">
+          <div className="sticky top-0 z-10 bg-white grid grid-cols-[150px_1fr_1fr_110px] sm:grid-cols-[170px_1fr_1fr_110px_minmax(0,200px)] gap-x-4 px-5 py-2.5 border-b border-[#E3E6E0]">
+            <span className="text-[11px] font-semibold text-[#536174]">Stock</span>
+            <span className="text-[11px] font-semibold text-[#536174]">Implied 5Y CAGR</span>
+            <span className="text-[11px] font-semibold text-[#536174]">3Y Historical</span>
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-[#536174]">
               Expectation
               <button
                 type="button"
                 aria-label="Conservative = implied well below historical (slowdown priced in); Moderate = roughly in line with history; Aggressive = implied significantly above historical (acceleration priced in)"
-                className="cursor-help text-slate-300 hover:text-slate-500 transition-colors"
+                className="cursor-help text-[#B6BFCC] hover:text-[#536174] transition-colors"
               >
                 <Info size={10} />
               </button>
             </span>
-            <span className="text-[11px] font-semibold text-slate-500 hidden sm:block">Interpretation</span>
+            <span className="text-[11px] font-semibold text-[#536174] hidden sm:block">Interpretation</span>
           </div>
 
           <div ref={tableRef} className="divide-y divide-[#F3F2EC]">
@@ -842,7 +843,7 @@ function RecentlyViewed() {
                   <button
                     onClick={() => removeItem(r.ticker)}
                     aria-label={`Remove ${r.ticker} from history`}
-                    className="absolute top-1 right-1 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-md text-slate-300 hover:text-slate-600 hover:bg-slate-100 transition-all"
+                    className="absolute top-1 right-1 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-md text-[#B6BFCC] hover:text-[#536174] hover:bg-[#F3F2EC] transition-all"
                   >
                     <X size={12} />
                   </button>
@@ -892,7 +893,7 @@ function AnalyzePageInner() {
   }, [])
 
   return (
-    <div className="min-h-screen p-4 lg:p-6">
+    <div className="min-h-dvh p-4 lg:p-6">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-lg focus:text-sm focus:font-semibold focus:outline-none focus:shadow-lg"
@@ -901,11 +902,22 @@ function AnalyzePageInner() {
       </a>
 
       {showUpgradeToast && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-emerald-600 text-white text-sm font-medium px-5 py-3 rounded-xl shadow-lg">
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[#11875D] text-white text-sm font-medium px-5 py-3 rounded-xl shadow-lg"
+        >
           <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
           </svg>
           Welcome to Pro — unlimited stock analysis is now unlocked.
+          <button
+            onClick={() => setShowUpgradeToast(false)}
+            aria-label="Dismiss"
+            className="ml-1 p-0.5 rounded hover:bg-white/20 transition-colors shrink-0"
+          >
+            <X size={14} />
+          </button>
         </div>
       )}
       <div id="main-content" className="space-y-8" tabIndex={-1}>

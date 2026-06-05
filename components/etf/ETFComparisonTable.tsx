@@ -44,7 +44,7 @@ export function ETFComparisonTable({ profiles }: Props) {
   if (profiles.length === 0) return null
 
   return (
-    <div className="glass-card-light rounded-xl overflow-hidden">
+    <div className="glass-card-light rounded-xl">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>

@@ -467,7 +467,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
         <div className="flex gap-1">
           {PERIODS.map(p => (
             <button key={p} onClick={() => setPeriod(p)}
-              className={`rounded-lg px-3 py-1 text-xs font-medium transition ${period === p ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'}`}>
+              className={`rounded-lg px-3 py-2.5 min-h-[44px] text-xs font-medium transition ${period === p ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'}`}>
               {PERIOD_LABELS[p]}
             </button>
           ))}
@@ -524,14 +524,14 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
             const on = activeMA.has(ind.key)
             return (
               <button key={ind.key} onClick={() => toggleMA(ind.key)}
-                className={`rounded px-2 py-0.5 text-[10px] font-semibold transition border ${on ? 'opacity-100' : 'opacity-30'}`}
+                className={`rounded px-2 py-2.5 min-h-[44px] text-[10px] font-semibold transition border ${on ? 'opacity-100' : 'opacity-30'}`}
                 style={{ borderColor: ind.color, color: on ? ind.color : 'rgba(100,116,139,0.5)', background: on ? `${ind.color}18` : 'transparent' }}>
                 {ind.label}
               </button>
             )
           })}
           <button onClick={() => setShowBB(v => !v)}
-            className={`rounded px-2 py-0.5 text-[10px] font-semibold transition border ${showBB ? 'opacity-100' : 'opacity-30'}`}
+            className={`rounded px-2 py-2.5 min-h-[44px] text-[10px] font-semibold transition border ${showBB ? 'opacity-100' : 'opacity-30'}`}
             style={{ borderColor: '#a78bfa', color: showBB ? '#a78bfa' : 'rgba(100,116,139,0.5)', background: showBB ? '#a78bfa18' : 'transparent' }}>
             BB (20,2)
           </button>

@@ -25,7 +25,7 @@ interface SimplifierTabBarProps {
 
 export default function SimplifierTabBar({ activeTab, answers, onTabChange }: SimplifierTabBarProps) {
   return (
-    <div className="border-b border-[#E8E6E0] bg-white sticky top-0 z-20">
+    <div className="border-b border-[#E8E6E0] bg-white sticky top-[52px] z-20">
       <div className="flex overflow-x-auto scrollbar-hide">
         {TABS.map((tab) => {
           const phase = tab.phaseId != null ? PHASES.find((p) => p.id === tab.phaseId) : null

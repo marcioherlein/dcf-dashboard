@@ -623,7 +623,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
 
   return (
     <>
-    <div className="rounded-xl card overflow-hidden">
+    <div className="rounded-xl card">
       {/* Sub-tab nav — scrollable on mobile */}
       <div className="flex items-center justify-between px-2 sm:px-5 pt-4 pb-0 border-b border-slate-100 overflow-x-auto scrollbar-none">
         <div role="tablist" className="flex gap-0 min-w-max">

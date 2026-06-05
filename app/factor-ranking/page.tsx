@@ -111,7 +111,7 @@ export default function FactorRankingPage() {
   ]
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F8FAFB]">
+    <div className="flex flex-col min-h-dvh bg-[#F8FAFB]">
 
       {/* Ticker Marquee */}
       <TickerMarquee instruments={results} />
@@ -251,7 +251,7 @@ export default function FactorRankingPage() {
         )}
 
         {!loading && activeView === 'table' && (
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1">
             <WarrenTable instruments={filtered} />
           </div>
         )}

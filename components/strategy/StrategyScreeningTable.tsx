@@ -129,7 +129,7 @@ export default function StrategyScreeningTable({
   return (
     <div className="flex flex-col">
       {/* Filters */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-outline-variant/10 bg-surface-container-lowest overflow-x-auto [-webkit-overflow-scrolling:touch]">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-outline-variant/10 bg-surface-container-lowest overflow-x-auto overscroll-x-contain">
         <div className="flex gap-1 shrink-0">
           {(['all', 'STRONG_BUY', 'BUY', 'HOLD', 'AVOID', 'SHORT_CANDIDATE'] as const).map((r) => (
             <button

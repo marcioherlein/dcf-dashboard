@@ -446,7 +446,7 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
           onClick={() => onPage(page - 1)}
           disabled={page === 1}
           aria-label="Previous page"
-          className="p-1.5 rounded-lg border border-[#DDE6F2] text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-[#DDE6F2] text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronLeft size={14} />
         </button>
@@ -468,7 +468,7 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
           onClick={() => onPage(page + 1)}
           disabled={page === totalPages}
           aria-label="Next page"
-          className="p-1.5 rounded-lg border border-[#DDE6F2] text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-[#DDE6F2] text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronRight size={14} />
         </button>
@@ -481,6 +481,7 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
             value={pageSize}
             onChange={(e) => { onPageSize(Number(e.target.value)); onPage(1) }}
             className="appearance-none pl-2.5 pr-6 py-1 text-[12px] font-semibold text-[#334155] bg-white border border-[#DDE6F2] rounded-lg cursor-pointer focus:outline-none"
+            style={{ fontSize: '16px' }}
           >
             {PAGE_SIZE_OPTIONS.map((s) => (
               <option key={s} value={s}>{s} / page</option>
@@ -497,7 +498,7 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
 
 function LoginWall() {
   return (
-    <div className="min-h-screen bg-[#F1F5F9] flex items-center justify-center px-4">
+    <div className="min-h-dvh bg-[#F1F5F9] flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white border border-[#E6ECF5] rounded-2xl shadow-sm p-8 text-center">
         <div className="mx-auto mb-5 w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center">
           <Bookmark size={24} className="text-blue-500" />
@@ -652,7 +653,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
   const hasFilters = filterUpside !== 'all' || filterConfidence !== 'all' || !!searchQuery.trim()
 
   return (
-    <div className="min-h-screen bg-[#F1F5F9] px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <div className="min-h-dvh bg-[#F1F5F9] px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 
       {/* Page header */}
       <div className="flex items-start justify-between gap-4 mb-5">
@@ -762,6 +763,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
                       onKeyDown={(e) => { if (e.key === 'Escape') { setGroupInputOpen(false); setGroupInputValue('') } }}
                       placeholder="Group name"
                       className="w-32 px-2.5 py-1.5 text-[12px] text-slate-800 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100"
+                      style={{ fontSize: '16px' }}
                     />
                     <button type="submit" className="text-[12px] font-semibold text-blue-600 hover:text-blue-700 px-2 py-1.5 min-h-[34px]">Add</button>
                     <button type="button" onClick={() => { setGroupInputOpen(false); setGroupInputValue('') }} className="text-[12px] text-slate-400 hover:text-slate-600 px-1.5 py-1.5 min-h-[34px]">Cancel</button>
@@ -879,7 +881,7 @@ export default function ValuationsPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-[#F1F5F9] px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="min-h-dvh bg-[#F1F5F9] px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div className="space-y-4">
           <div className="h-10 w-48 bg-white border border-[#E6ECF5] rounded-xl animate-pulse" />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

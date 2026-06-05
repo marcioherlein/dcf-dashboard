@@ -101,7 +101,7 @@ export default function SensitivityTable({
   const noData = baseFCF === 0 || sharesM === 0
 
   return (
-    <div className="rounded-xl bg-[#0d1117] border border-[#222] overflow-hidden">
+    <div className="rounded-xl bg-[#0d1117] border border-[#222] isolate">
       <div className="px-5 py-4 border-b border-[#222] flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h3 className="text-[13px] font-bold text-white">Sensitivity Analysis</h3>

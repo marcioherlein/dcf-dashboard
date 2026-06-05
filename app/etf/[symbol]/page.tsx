@@ -82,7 +82,7 @@ export default function ETFDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F1F5F9] px-4 sm:px-8 py-4 sm:py-8">
+      <div className="min-h-dvh bg-[#F1F5F9] px-4 sm:px-8 py-4 sm:py-8">
         <div className="max-w-6xl mx-auto space-y-4">
           <div className="h-8 w-32 bg-slate-200 rounded animate-pulse" />
           <div className="h-40 bg-white rounded-2xl border border-slate-200 animate-pulse" />
@@ -98,7 +98,7 @@ export default function ETFDetailPage() {
 
   if (error || !profile) {
     return (
-      <div className="min-h-screen bg-[#F1F5F9] px-4 sm:px-8 py-4 sm:py-8">
+      <div className="min-h-dvh bg-[#F1F5F9] px-4 sm:px-8 py-4 sm:py-8">
         <div className="max-w-6xl mx-auto">
           <Link href="/etf" className="inline-flex items-center gap-1.5 text-[14px] text-slate-500 hover:text-slate-700 mb-6 min-h-[44px]">
             <ArrowLeft size={14} /> ETF Tracker
@@ -112,7 +112,7 @@ export default function ETFDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F1F5F9]">
+    <div className="min-h-dvh bg-[#F1F5F9]">
       <div className="px-4 sm:px-8 py-6 sm:py-8 max-w-6xl mx-auto space-y-5">
         <Link href="/etf" className="inline-flex items-center gap-1.5 text-[14px] text-slate-500 hover:text-slate-700 min-h-[44px]">
           <ArrowLeft size={14} /> ETF Tracker

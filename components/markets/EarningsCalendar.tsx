@@ -80,6 +80,8 @@ export default function EarningsCalendar() {
         </div>
       ) : (
         <>
+          <div className="overflow-x-auto">
+          <div style={{ minWidth: '480px' }}>
           {/* Column headers */}
           <div className="px-4 py-1.5 border-b border-slate-100 bg-slate-50/70 grid gap-2 text-[9px] font-bold uppercase tracking-wider text-slate-400"
             style={{ gridTemplateColumns: '3.5rem 1fr 4.5rem 4rem auto' }}>
@@ -125,6 +127,8 @@ export default function EarningsCalendar() {
                 })}
               </div>
             ))}
+          </div>
+          </div>
           </div>
 
           {items.length > PREVIEW_COUNT && (

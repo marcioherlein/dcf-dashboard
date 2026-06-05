@@ -142,7 +142,7 @@ export default function SimplifierTickerPage() {
         </div>
 
         {/* Tab-based analysis */}
-        <div className="rounded-2xl border border-[#E8E6E0] bg-white overflow-hidden shadow-sm">
+        <div className="rounded-2xl border border-[#E8E6E0] bg-white shadow-sm">
           <SimplifierTabs
             ticker={upperTicker}
             companyName={companyName}

@@ -459,7 +459,7 @@ export default function ValuationMethodCards({
           {canUndo && (
             <button
               onClick={onUndo}
-              className="flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
+              className="flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-700 px-2.5 py-2.5 min-h-[44px] rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
               aria-label="Undo last change"
             >
               <Undo2 size={11} />
@@ -468,7 +468,7 @@ export default function ValuationMethodCards({
           )}
           <button
             onClick={onReset}
-            className="flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
+            className="flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-700 px-2.5 py-2.5 min-h-[44px] rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
             aria-label="Reset to defaults"
           >
             <RotateCcw size={11} />

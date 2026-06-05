@@ -540,7 +540,7 @@ export default function StrategiesPage() {
   const activeDef = STRATEGIES.find(s => s.id === activeStrategy) ?? null
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-[52px]">
+    <div className="min-h-dvh bg-slate-50">
       <div className="px-4 py-6">
         {/* Header */}
         <div className="mb-5">
@@ -551,7 +551,7 @@ export default function StrategiesPage() {
         </div>
 
         {/* Category filter */}
-        <div className="flex gap-2 mb-4 overflow-x-auto [-webkit-overflow-scrolling:touch]">
+        <div className="flex gap-2 mb-4 overflow-x-auto overscroll-x-contain">
           {(['All', 'AI Stack', 'CEDEAR', 'BYMA'] as const).map(cat => {
             const count = cat === 'All' ? rows.length : rows.filter(r => r.category === cat).length
             return (
@@ -575,7 +575,7 @@ export default function StrategiesPage() {
         </div>
 
         {/* Strategy tabs */}
-        <div className="flex gap-1 overflow-x-auto [-webkit-overflow-scrolling:touch] mb-5 bg-white border border-slate-200 rounded-xl p-1">
+        <div className="flex gap-1 overflow-x-auto overscroll-x-contain mb-5 bg-white border border-slate-200 rounded-xl p-1">
           <TabBtn
             active={activeStrategy === 'consensus'}
             onClick={() => setActiveStrategy('consensus')}

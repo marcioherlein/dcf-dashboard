@@ -40,7 +40,8 @@ export async function POST(req: NextRequest) {
 
   const { id: userId, plan } = userRow as { id: string; plan: string | null }
 
-  if (plan === 'pro') {
+  // BETA: all logged-in users get full access
+  if (plan === 'pro' || process.env.NEXT_PUBLIC_BETA_MODE === 'true') {
     return NextResponse.json({ allowed: true, isPro: true, viewCount: 0, limit: FREE_LIMIT })
   }
 

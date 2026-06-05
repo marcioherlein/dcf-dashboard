@@ -111,7 +111,7 @@ export default function InstrumentPriceChart({ symbol, currency = 'USD' }: Props
               key={p}
               onClick={() => setPeriod(p)}
               className={cn(
-                'px-2 py-0.5 text-[11px] font-semibold rounded transition-colors',
+                'px-2 py-2.5 min-h-[44px] text-[11px] font-semibold rounded transition-colors',
                 period === p
                   ? 'bg-blue-100 text-blue-700'
                   : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100',

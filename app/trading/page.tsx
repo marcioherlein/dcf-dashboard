@@ -217,6 +217,7 @@ export default function TradingPage() {
                   type="number" min={0} value={holdings[t]}
                   onChange={(e) => setHoldings((prev) => ({ ...prev, [t]: e.target.value }))}
                   className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-blue-400"
+                  style={{ fontSize: '16px' }}
                   placeholder="shares"
                 />
                 {prices?.ars[t] && parseInt(holdings[t]) > 0 && (
@@ -497,7 +498,8 @@ export default function TradingPage() {
             <label className="block">
               <div className="text-[11px] text-slate-400 mb-1 uppercase font-medium">Lookback (days)</div>
               <select value={lookback} onChange={(e) => setLookback(parseInt(e.target.value))}
-                className="bg-slate-50 border border-slate-200 text-slate-800 text-xs px-2 py-1.5 rounded-lg focus:outline-none focus:border-blue-400">
+                className="bg-slate-50 border border-slate-200 text-slate-800 text-xs px-2 py-1.5 rounded-lg focus:outline-none focus:border-blue-400"
+                style={{ fontSize: '16px' }}>
                 <option value={10}>10</option>
                 <option value={20}>20</option>
                 <option value={30}>30</option>
@@ -507,7 +509,8 @@ export default function TradingPage() {
             <label className="block">
               <div className="text-[11px] text-slate-400 mb-1 uppercase font-medium">Z Entry</div>
               <select value={zEntry} onChange={(e) => setZEntry(parseFloat(e.target.value))}
-                className="bg-slate-50 border border-slate-200 text-slate-800 text-xs px-2 py-1.5 rounded-lg focus:outline-none focus:border-blue-400">
+                className="bg-slate-50 border border-slate-200 text-slate-800 text-xs px-2 py-1.5 rounded-lg focus:outline-none focus:border-blue-400"
+                style={{ fontSize: '16px' }}>
                 <option value={0.75}>0.75</option>
                 <option value={1.0}>1.0</option>
                 <option value={1.25}>1.25</option>
@@ -517,7 +520,8 @@ export default function TradingPage() {
             <label className="block">
               <div className="text-[11px] text-slate-400 mb-1 uppercase font-medium">Cocos fee (bps/side)</div>
               <input type="number" value={costBps} onChange={(e) => setCostBps(parseFloat(e.target.value))}
-                className="bg-slate-50 border border-slate-200 text-slate-800 text-xs px-2 py-1.5 rounded-lg focus:outline-none focus:border-blue-400 w-20" />
+                className="bg-slate-50 border border-slate-200 text-slate-800 text-xs px-2 py-1.5 rounded-lg focus:outline-none focus:border-blue-400 w-20"
+                style={{ fontSize: '16px' }} />
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={valuationGate} onChange={(e) => setValuationGate(e.target.checked)}

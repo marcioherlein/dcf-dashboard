@@ -206,6 +206,7 @@ function ModellingApproach({
               value={isLfcf ? 'lfcf' : 'ufcf'}
               onChange={e => onModeChange(e.target.value === 'lfcf')}
               className={selectCls}
+              style={{ fontSize: '16px' }}
             >
               <option value="ufcf">UFCF — Enterprise</option>
               <option value="lfcf">LFCF — Equity</option>
@@ -228,6 +229,7 @@ function ModellingApproach({
               value={terminalMethod}
               onChange={e => onTerminalMethodChange(e.target.value as 'perpetuity' | 'multiple')}
               className={selectCls}
+              style={{ fontSize: '16px' }}
             >
               <option value="multiple">Exit Multiple</option>
               <option value="perpetuity">Perpetuity Growth</option>
@@ -295,6 +297,7 @@ function ModellingApproach({
               value={growthMode}
               onChange={e => onGrowthModeChange(e.target.value as typeof growthMode)}
               className={selectCls}
+              style={{ fontSize: '16px' }}
             >
               <option value="analyst">Analyst blend</option>
               <option value="cagr">Flat CAGR</option>
@@ -316,6 +319,7 @@ function ModellingApproach({
                   if (!isNaN(v)) onFlatCagrChange(v)
                 }}
                 className="flex-1 min-w-0 bg-[#0d1829] text-[12px] font-[600] text-white/80 rounded-lg px-2 py-1 border border-white/[0.12] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus:border-blue-500/50 tabular-nums"
+                style={{ fontSize: '16px' }}
               />
               <span className="text-[9px] text-white/40 shrink-0">%/yr</span>
             </div>
@@ -706,7 +710,7 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
   }, [derivedFV])
 
   return (
-    <div className="bg-[#080F1E] rounded-xl overflow-hidden border border-white/10">
+    <div className="bg-[#080F1E] rounded-xl border border-white/10">
       <DataQualityWarnings
         terminalGError={tvUFCF.guardError}
         financialCurrencyNote={baseInput.financialCurrencyNote}

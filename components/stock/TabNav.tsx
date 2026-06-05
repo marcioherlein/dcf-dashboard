@@ -67,24 +67,24 @@ export default function TabNav({ activeTab, onChange }: Props) {
                 tabIndex={active ? 0 : -1}
                 onClick={() => onChange(id)}
                 className={cn(
-                  'relative flex items-center gap-1.5 px-4 py-3.5 whitespace-nowrap transition-colors border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
+                  'relative flex items-center gap-1.5 px-4 py-3.5 whitespace-nowrap transition-colors border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.55)] focus-visible:ring-offset-2',
                   primary ? 'text-[13px] font-medium' : 'text-[12px] font-normal',
-                  isFirstSecondary ? 'ml-2 pl-5 border-l border-slate-200' : '',
+                  isFirstSecondary ? 'ml-2 pl-5 border-l border-[#E3E6E0]' : '',
                   active
-                    ? 'border-transparent text-blue-600 bg-blue-50/60'
-                    : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300',
+                    ? 'border-transparent text-[#5F790B] bg-[#F6FAEA]'
+                    : 'border-transparent text-[#536174] hover:text-[#0A1424] hover:border-[#CBD1C4]',
                 )}
               >
                 <Icon
                   size={primary ? 14 : 13}
-                  className={cn('shrink-0', active ? 'text-blue-600' : 'text-slate-400')}
+                  className={cn('shrink-0', active ? 'text-[#5F790B]' : 'text-[#8A96A8]')}
                 />
                 {label}
 
                 {active && (
                   <motion.span
                     layoutId="tab-indicator"
-                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-600 rounded-full"
+                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#5F790B] rounded-full"
                     transition={reduced ? { duration: 0 } : { type: 'spring', duration: 0.35, bounce: 0.15 }}
                   />
                 )}

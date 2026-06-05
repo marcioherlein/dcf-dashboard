@@ -27,7 +27,7 @@ export default function LandingNavbar() {
   return (
     <>
       {/* ── Floating navbar ───────────────────────────────────────────────── */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-3 sm:px-5 pt-3 pointer-events-none">
+      <header className="fixed top-0 left-0 right-0 z-50 px-3 sm:px-5 pointer-events-none" style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top, 0px))' }}>
         <div className="mx-auto pointer-events-auto" style={{ maxWidth: '1280px' }}>
           <div
             className="grid items-center h-[72px] px-6 sm:px-8 rounded-2xl"
@@ -111,12 +111,8 @@ export default function LandingNavbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed top-[88px] left-3 right-3 z-40 lg:hidden rounded-2xl overflow-hidden"
-            style={{
-              background: 'rgba(255,255,255,0.98)',
-              border: '1px solid #E3E6E0',
-              boxShadow: '0 16px 40px rgba(6,16,31,0.14)',
-            }}
+            className="fixed left-3 right-3 z-40 lg:hidden rounded-2xl overflow-hidden"
+            style={{ top: 'calc(5.5rem + env(safe-area-inset-top, 0px))', background: 'rgba(255,255,255,0.98)', border: '1px solid #E3E6E0', boxShadow: '0 16px 40px rgba(6,16,31,0.14)' }}
           >
             <nav className="flex flex-col p-3 gap-0.5">
               {NAV_LINKS.map(link => (

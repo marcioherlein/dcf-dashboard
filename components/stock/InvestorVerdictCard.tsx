@@ -2,6 +2,7 @@
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import type { PiotroskiResult, AltmanResult, BeneishResult, ROICResult } from '@/lib/dcf/calculateScores'
+import { deriveVerdict } from '@/lib/stock/verdict'
 
 interface Ratings {
   profitability: { grade: string }
@@ -84,12 +85,6 @@ function overallQuality(ratings: Ratings): 'Strong' | 'Solid' | 'Mixed' | 'Weak'
   return 'Weak'
 }
 
-function verdictFromUpside(upside: number): 'undervalued' | 'fairly-valued' | 'overvalued' {
-  if (upside >= 0.10) return 'undervalued'
-  if (upside >= -0.10) return 'fairly-valued'
-  return 'overvalued'
-}
-
 type Decision = 'BUY' | 'WATCH' | 'AVOID'
 
 function decisionFromUpside(upside: number): { decision: Decision; note: string } {
@@ -100,9 +95,9 @@ function decisionFromUpside(upside: number): { decision: Decision; note: string 
 }
 
 const DECISION_COLORS: Record<Decision, string> = {
-  BUY:   'bg-emerald-100 border-emerald-300 text-emerald-800',
-  WATCH: 'bg-amber-100 border-amber-300 text-amber-800',
-  AVOID: 'bg-red-100 border-red-300 text-red-800',
+  BUY:   'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]',
+  WATCH: 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]',
+  AVOID: 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]',
 }
 
 function plainEnglishSummary(
@@ -113,9 +108,10 @@ function plainEnglishSummary(
   quality: 'Strong' | 'Solid' | 'Mixed' | 'Weak' | null,
 ): string {
   const pricePer1 = fairValue > 0 ? (price / fairValue).toFixed(2) : null
-  const verdict = verdictFromUpside(upside)
+  const isUnder = upside >= 0.10
+  const isFair  = upside >= -0.10
 
-  if (verdict === 'undervalued') {
+  if (isUnder) {
     const value = pricePer1 != null
       ? `You're paying roughly ${sym}${pricePer1} for every ${sym}1.00 of estimated value — `
       : ''
@@ -125,7 +121,7 @@ function plainEnglishSummary(
     return `${value}the model sees meaningful upside from here, ${quality_note}`
   }
 
-  if (verdict === 'fairly-valued') {
+  if (isFair) {
     return `The stock is trading close to the model's fair value estimate. You're paying roughly what the company appears to be worth today — no significant discount or premium.`
   }
 
@@ -133,44 +129,17 @@ function plainEnglishSummary(
   return `The stock appears to be trading about ${pctAbove}% above its estimated fair value. The market may be pricing in growth that the model doesn't yet see, or the stock may need time to grow into its valuation.`
 }
 
-const VERDICT_CONFIG = {
-  'undervalued': {
-    label: 'Looks Undervalued',
-    bg: 'bg-emerald-50 border-emerald-200',
-    dot: 'bg-emerald-500',
-    text: 'text-emerald-700',
-    badge: 'bg-emerald-50 border-emerald-200 text-emerald-700',
-    divider: 'border-emerald-100',
-  },
-  'fairly-valued': {
-    label: 'Fairly Valued',
-    bg: 'bg-blue-50 border-blue-200',
-    dot: 'bg-blue-500',
-    text: 'text-blue-700',
-    badge: 'bg-blue-50 border-blue-200 text-blue-700',
-    divider: 'border-blue-100',
-  },
-  'overvalued': {
-    label: 'Looks Overvalued',
-    bg: 'bg-amber-50 border-amber-200',
-    dot: 'bg-amber-500',
-    text: 'text-amber-700',
-    badge: 'bg-amber-50 border-amber-200 text-amber-700',
-    divider: 'border-amber-100',
-  },
-}
-
 const QUALITY_COLOR: Record<string, string> = {
-  Strong: 'text-emerald-700 bg-emerald-50 border-emerald-200',
-  Solid:  'text-blue-700 bg-blue-50 border-blue-200',
-  Mixed:  'text-amber-700 bg-amber-50 border-amber-200',
-  Weak:   'text-red-700 bg-red-50 border-red-200',
+  Strong: 'text-[#11875D] bg-[#E8F7EF] border-[#A3D9BE]',
+  Solid:  'text-[#2563EB] bg-[#EAF1FF] border-[#BFDBFE]',
+  Mixed:  'text-[#B56A00] bg-[#FFF4DA] border-[#F3D391]',
+  Weak:   'text-[#D83B3B] bg-[#FCEAEA] border-[#F0B8B8]',
 }
 
 const CONFIDENCE_COLOR: Record<string, string> = {
-  High:   'text-emerald-700 bg-emerald-50 border-emerald-200',
-  Medium: 'text-amber-700 bg-amber-50 border-amber-200',
-  Low:    'text-slate-500 bg-slate-50 border-slate-200',
+  High:   'text-[#11875D] bg-[#E8F7EF] border-[#A3D9BE]',
+  Medium: 'text-[#B56A00] bg-[#FFF4DA] border-[#F3D391]',
+  Low:    'text-[#D83B3B] bg-[#FCEAEA] border-[#F0B8B8]',
 }
 
 export default function InvestorVerdictCard({
@@ -179,50 +148,54 @@ export default function InvestorVerdictCard({
   if (upside == null || fairValue == null) return null
 
   const sym = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$' : currency
-  const verdict = verdictFromUpside(upside)
-  const config  = VERDICT_CONFIG[verdict]
-  const quality = ratings ? overallQuality(ratings) : null
+  const verdict  = deriveVerdict(upside, fairValue)
+  const quality  = ratings ? overallQuality(ratings) : null
 
   const recNorm = (analystRecommendation ?? '').toLowerCase()
   const isBuy   = recNorm.includes('buy') || recNorm === 'strong_buy' || recNorm === 'strongbuy'
   const isSell  = recNorm.includes('sell') || recNorm.includes('underperform') || recNorm.includes('underweight')
   const analystLabel = isBuy ? 'Analysts: Buy' : isSell ? 'Analysts: Sell' : 'Analysts: Hold'
   const analystColor = isBuy
-    ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+    ? 'text-[#11875D] bg-[#E8F7EF] border-[#A3D9BE]'
     : isSell
-    ? 'text-red-700 bg-red-50 border-red-200'
-    : 'text-amber-700 bg-amber-50 border-amber-200'
+    ? 'text-[#D83B3B] bg-[#FCEAEA] border-[#F0B8B8]'
+    : 'text-[#B56A00] bg-[#FFF4DA] border-[#F3D391]'
 
   const summary = plainEnglishSummary(upside, price, fairValue, sym, quality)
   const flags = scores ? extractRedFlags(scores) : null
   const { decision, note } = decisionFromUpside(upside)
 
   return (
-    <div className={cn('rounded-xl border px-4 sm:px-5 py-4 space-y-3', config.bg)}>
+    <div className={cn('rounded-xl border px-4 sm:px-5 py-4 space-y-3', verdict.verdictBg)}>
       {/* Header row */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={cn('w-2 h-2 rounded-full shrink-0', config.dot)} />
-          <span className={cn('text-sm font-bold tracking-wide', config.text)}>
-            {config.label}
+          <span className={cn('w-2 h-2 rounded-full shrink-0', verdict.verdictDot)} />
+          <span className={cn('text-sm font-bold tracking-wide', verdict.verdictText)}>
+            {verdict.key === 'attractive' ? 'Looks Attractive' :
+             verdict.key === 'undervalued' ? 'Looks Undervalued' :
+             verdict.key === 'fairly-valued' ? 'Fairly Valued' :
+             'Looks Overvalued'}
           </span>
           <span className={cn('text-[12px] font-bold px-3 py-1 rounded-full border min-h-[32px] flex items-center', DECISION_COLORS[decision])}>
             {decision}
           </span>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className={cn('text-[12px] font-semibold px-2.5 py-1 rounded-full border tabular-nums', config.badge)}>
+          <span className={cn('text-[12px] font-semibold px-2.5 py-1 rounded-full border tabular-nums', verdict.verdictBadge)}>
             {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(1)}% vs fair value
           </span>
-          <span className="text-[12px] text-slate-500 tabular-nums">
+          <span className="text-[12px] text-[#536174] tabular-nums">
             FV {sym}{fairValue.toFixed(2)}
           </span>
         </div>
       </div>
 
       {/* Plain English summary + margin of safety */}
-      <p className="text-[13px] text-slate-600 leading-relaxed">{summary}</p>
-      <p className={cn('text-[13px] font-medium leading-tight', decision === 'BUY' ? 'text-emerald-700' : decision === 'WATCH' ? 'text-amber-700' : 'text-red-700')}>
+      <p className="text-[13px] text-[#536174] leading-relaxed">{summary}</p>
+      <p className={cn('text-[13px] font-medium leading-tight',
+        decision === 'BUY' ? 'text-[#11875D]' : decision === 'WATCH' ? 'text-[#B56A00]' : 'text-[#D83B3B]'
+      )}>
         {note}.
       </p>
 
@@ -256,7 +229,7 @@ export default function InvestorVerdictCard({
           </Tooltip>
         )}
         {growthModel && (
-          <span className="text-[12px] text-slate-500 px-2.5 py-1 rounded-full border border-slate-200 bg-white min-h-[32px] flex items-center">
+          <span className="text-[12px] text-[#536174] px-2.5 py-1 rounded-full border border-[#E3E6E0] bg-white min-h-[32px] flex items-center">
             {growthModel === 'three-stage' ? '3-stage DCF' : '2-stage DCF'}
           </span>
         )}
@@ -264,9 +237,9 @@ export default function InvestorVerdictCard({
 
       {/* Red flags row */}
       {flags !== null && (
-        <div className={cn('flex flex-wrap gap-1.5 pt-0.5 border-t', config.divider)}>
+        <div className={cn('flex flex-wrap gap-1.5 pt-0.5 border-t', verdict.verdictDivider)}>
           {flags.length === 0 ? (
-            <span className="text-[12px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 min-h-[32px] flex items-center">
+            <span className="text-[12px] font-semibold px-2.5 py-1 rounded-full bg-[#E8F7EF] border border-[#A3D9BE] text-[#11875D] min-h-[32px] flex items-center">
               ✓ No major red flags
             </span>
           ) : (
@@ -276,8 +249,8 @@ export default function InvestorVerdictCard({
                 className={cn(
                   'text-[12px] font-semibold px-2.5 py-1 rounded-full border min-h-[32px] flex items-center',
                   flag.level === 'danger'
-                    ? 'bg-red-50 border-red-200 text-red-700'
-                    : 'bg-amber-50 border-amber-200 text-amber-700',
+                    ? 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]'
+                    : 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]',
                 )}
               >
                 ⚠ {flag.label}
@@ -288,7 +261,7 @@ export default function InvestorVerdictCard({
       )}
 
       {/* Disclaimer */}
-      <p className="text-[11px] text-slate-400 leading-tight border-t border-slate-200/70 pt-2">
+      <p className="text-[11px] text-[#8A96A8] leading-tight border-t border-[#E3E6E0]/70 pt-2">
         Model-based estimate, not financial advice. Treat as one input alongside your own research.
       </p>
     </div>

@@ -145,7 +145,7 @@ export default function ComparePage() {
     : '#059669'
 
   return (
-    <div className="min-h-screen bg-[#F8FAFB]">
+    <div className="min-h-dvh bg-[#F8FAFB]">
       {/* Header */}
       <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-200 bg-white">
         <h1 className="text-sm sm:text-base font-semibold text-slate-900">Multi-Ticker Comparison</h1>

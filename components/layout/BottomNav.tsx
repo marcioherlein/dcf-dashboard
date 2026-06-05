@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Bell, Settings, HelpCircle, PieChart, X, Globe, Bookmark, LayoutDashboard, SlidersHorizontal } from 'lucide-react'
+import { Bell, Settings, HelpCircle, PieChart, X, Globe, Bookmark, LayoutDashboard, SlidersHorizontal, ClipboardList } from 'lucide-react'
 
 const LEFT_NAV = [
   {
@@ -46,11 +46,12 @@ const RIGHT_NAV = [
 ]
 
 const MORE_ITEMS = [
-  { href: '/valuations',            label: 'My Valuations',       icon: Bookmark        },
-  { href: '/monitor?tab=portfolio', label: 'Monitor / Portfolio', icon: LayoutDashboard },
-  { href: '/alerts',                label: 'Alerts',              icon: Bell            },
-  { href: '/settings',              label: 'Settings',            icon: Settings        },
-  { href: '/help',                  label: 'Help & Support',      icon: HelpCircle      },
+  { href: '/simplifier',             label: 'Simplifier',          icon: ClipboardList   },
+  { href: '/valuations',             label: 'My Valuations',       icon: Bookmark        },
+  { href: '/monitor?tab=portfolio',  label: 'Monitor / Portfolio', icon: LayoutDashboard },
+  { href: '/alerts',                 label: 'Alerts',              icon: Bell            },
+  { href: '/settings',               label: 'Settings',            icon: Settings        },
+  { href: '/help',                   label: 'Help & Support',      icon: HelpCircle      },
 ]
 
 export default function BottomNav() {
@@ -100,7 +101,8 @@ export default function BottomNav() {
           <span className="text-sm font-semibold text-[#0A1424]">More</span>
           <button
             onClick={() => setMoreOpen(false)}
-            className="text-[#8A96A8] hover:text-[#536174] p-1 -mr-1"
+            className="text-[#8A96A8] hover:text-[#536174] p-2 -mr-1 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-[#F3F2EC] transition-colors"
+            aria-label="Close menu"
           >
             <X size={16} />
           </button>

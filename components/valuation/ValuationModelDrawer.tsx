@@ -147,6 +147,7 @@ export function AssumptionInputRow({ assumption, displayValue, onChange, isOverr
             min={unit === '%' ? String((min ?? -100) * 100) : String(min ?? undefined)}
             max={unit === '%' ? String((max ?? 100) * 100) : String(max ?? undefined)}
             className="w-20 text-right border border-[#333] rounded-md px-2 py-0.5 text-[12px] font-mono focus:outline-none focus:border-[#4a9eff] bg-[#1a1a1a] text-[#e2e2e2]"
+            style={{ fontSize: '16px' }}
           />
           {suffix && <span className="text-[#666] text-[11px]">{suffix}</span>}
         </div>
@@ -304,7 +305,7 @@ export default function ValuationModelDrawer({
             </div>
             <button
               onClick={onClose}
-              className="text-[#666] hover:text-[#e2e2e2] text-2xl leading-none ml-2"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[#666] hover:text-[#e2e2e2] text-2xl leading-none ml-2"
             >
               ×
             </button>

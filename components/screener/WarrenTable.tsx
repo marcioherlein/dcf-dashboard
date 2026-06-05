@@ -229,7 +229,7 @@ export default function WarrenTable({ instruments }: Props) {
           <span>{total} instruments</span>
           <div className="flex items-center gap-2">
             <button
-              className="px-2 py-0.5 rounded bg-white/8 hover:bg-white/15 disabled:opacity-40 text-slate-600 min-h-[36px] min-w-[60px]"
+              className="px-2 py-0.5 rounded bg-white/8 hover:bg-white/15 disabled:opacity-40 text-slate-600 min-h-[44px] min-w-[44px] flex items-center justify-center"
               disabled={page === 0}
               onClick={() => setPage((p) => p - 1)}
             >
@@ -237,7 +237,7 @@ export default function WarrenTable({ instruments }: Props) {
             </button>
             <span>{page + 1} / {Math.ceil(total / PAGE_SIZE)}</span>
             <button
-              className="px-2 py-0.5 rounded bg-white/8 hover:bg-white/15 disabled:opacity-40 text-slate-600 min-h-[36px] min-w-[60px]"
+              className="px-2 py-0.5 rounded bg-white/8 hover:bg-white/15 disabled:opacity-40 text-slate-600 min-h-[44px] min-w-[44px] flex items-center justify-center"
               disabled={(page + 1) * PAGE_SIZE >= total}
               onClick={() => setPage((p) => p + 1)}
             >

@@ -108,7 +108,7 @@ export default function StrategyPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-dvh bg-background">
       {/* Page header */}
       <header className="bg-primary px-4 sm:px-8 py-4 sm:py-6 shrink-0">
         <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -136,7 +136,7 @@ export default function StrategyPage() {
         </div>
 
         {/* Market filter */}
-        <div className="flex gap-2 mt-4 sm:mt-5 overflow-x-auto [-webkit-overflow-scrolling:touch]">
+        <div className="flex gap-2 mt-4 sm:mt-5 overflow-x-auto overscroll-x-contain">
           {MARKETS.map((m) => (
             <button
               key={m.key}
@@ -155,7 +155,7 @@ export default function StrategyPage() {
 
       {/* Stats bar */}
       {!loading && reports.length > 0 && (
-        <div className="bg-surface-container-lowest border-b border-outline-variant/10 px-4 sm:px-8 py-3 flex items-center gap-4 sm:gap-6 overflow-x-auto [-webkit-overflow-scrolling:touch] shrink-0">
+        <div className="bg-surface-container-lowest border-b border-outline-variant/10 px-4 sm:px-8 py-3 flex items-center gap-4 sm:gap-6 overflow-x-auto overscroll-x-contain shrink-0">
           <StatChip label="Strong Buy" value={stats.strongBuy} color="text-secondary" />
           <StatChip label="Buy"        value={stats.buy}       color="text-on-primary-fixed-variant" />
           <StatChip label="Hold"       value={stats.hold}      color="text-on-surface-variant" />
@@ -194,7 +194,7 @@ export default function StrategyPage() {
               </div>
             )
           ) : view === 'table' ? (
-            <div className="bg-surface-container-lowest rounded-xl m-6 shadow-sm overflow-hidden border border-outline-variant/10">
+            <div className="bg-surface-container-lowest rounded-xl m-6 shadow-sm border border-outline-variant/10">
               <StrategyScreeningTable
                 reports={reports}
                 onSelect={(r) => setSelected((prev) => prev?.ticker === r.ticker ? null : r)}
@@ -224,7 +224,7 @@ export default function StrategyPage() {
 
         {/* Right: detail panel */}
         {selected && (
-          <aside className="absolute inset-0 lg:static lg:w-[380px] lg:inset-auto lg:shrink-0 border-l border-outline-variant/10 overflow-y-auto bg-surface-container-lowest z-10">
+          <aside className="absolute inset-0 lg:static lg:w-[380px] lg:inset-auto lg:shrink-0 border-l border-outline-variant/10 overflow-y-auto pb-safe-nav bg-surface-container-lowest z-10">
             <div className="sticky top-0 bg-surface-container-lowest z-10 flex items-center justify-between px-5 py-3 border-b border-outline-variant/10">
               <div>
                 <span className="font-extrabold text-primary">{selected.displayTicker}</span>
@@ -232,7 +232,7 @@ export default function StrategyPage() {
               </div>
               <button
                 onClick={() => setSelected(null)}
-                className="text-on-surface-variant hover:text-on-surface transition-colors"
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors"
               >
                 <span className="material-symbols-outlined text-xl">close</span>
               </button>

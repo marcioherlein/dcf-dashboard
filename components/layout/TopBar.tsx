@@ -91,6 +91,8 @@ export default function TopBar() {
   const [results, setResults] = useState<SearchResult[]>([])
   const [open, setOpen]       = useState(false)
   const [loading, setLoading] = useState(false)
+  const [searchError, setSearchError] = useState(false)
+  const [activeIdx, setActiveIdx] = useState(-1)
   const [unsupportedError, setUnsupportedError] = useState<string | null>(null)
   const [isPro, setIsPro]     = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
@@ -98,6 +100,7 @@ export default function TopBar() {
   const reduced   = useReducedMotion()
   const debounce  = useRef<ReturnType<typeof setTimeout>>()
   const searchRef = useRef<HTMLDivElement>(null)
+  const topbarListboxId = 'topbar-search-listbox'
 
   useEffect(() => {
     if (!session?.user?.email) return
@@ -111,14 +114,15 @@ export default function TopBar() {
   }
 
   useEffect(() => {
-    if (query.length < 1) { setResults([]); setOpen(false); setUnsupportedError(null); return }
+    if (query.length < 1) { setResults([]); setOpen(false); setUnsupportedError(null); setSearchError(false); return }
     clearTimeout(debounce.current)
     debounce.current = setTimeout(() => {
       setLoading(true)
+      setSearchError(false)
       fetch(`/api/search?q=${encodeURIComponent(query)}`)
         .then(r => r.json())
-        .then(d => { setResults(d); setOpen(d.length > 0); setLoading(false) })
-        .catch(() => setLoading(false))
+        .then(d => { setResults(d); setOpen(d.length > 0); setLoading(false); setActiveIdx(-1) })
+        .catch(() => { setLoading(false); setSearchError(true) })
     }, 300)
   }, [query])
 
@@ -156,7 +160,7 @@ export default function TopBar() {
 
       {/* ── Mobile two-row stock header (hidden on sm+) ── */}
       {stockNav && (
-        <div className="sm:hidden flex flex-col" style={{ height: '88px' }}>
+        <div className="sm:hidden flex flex-col" style={{ height: '96px' }}>
           {/* Row 1: back + identity + save + search icons */}
           <div className="h-[52px] flex items-center justify-between px-3 gap-2">
             {mobileSearchOpen ? (
@@ -172,12 +176,15 @@ export default function TopBar() {
                     if (e.key === 'Escape') { setMobileSearchOpen(false); setQuery(''); setOpen(false) }
                   }}
                   placeholder="Search ticker…"
-                  className="flex-1 text-[14px] bg-transparent text-[#0A1424] placeholder-[#8A96A8] focus:outline-none"
+                  className="flex-1 text-[16px] bg-transparent text-[#0A1424] placeholder-[#8A96A8] focus:outline-none"
                   autoFocus
+                  autoCorrect="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
                 />
                 <button
                   onClick={() => { setMobileSearchOpen(false); setQuery(''); setOpen(false) }}
-                  className="p-1 text-[#8A96A8] hover:text-[#536174] shrink-0"
+                  className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[#8A96A8] hover:text-[#536174] shrink-0"
                   aria-label="Close search"
                 >
                   <X size={15} />
@@ -189,7 +196,7 @@ export default function TopBar() {
                   <button
                     onClick={() => router.push('/analyze')}
                     aria-label="Back to Analyze"
-                    className="text-[#8A96A8] hover:text-[#5F790B] transition-colors shrink-0 p-1 -ml-1"
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg -ml-2 text-[#8A96A8] hover:text-[#5F790B] transition-colors shrink-0"
                   >
                     <ChevronLeft size={16} strokeWidth={2.5} />
                   </button>
@@ -246,7 +253,7 @@ export default function TopBar() {
           </div>
           {/* Row 2: scrollable tabs */}
           <div
-            className="h-9 border-t border-[#E3E6E0] flex overflow-x-auto scrollbar-hide px-1"
+            className="h-[44px] border-t border-[#E3E6E0] flex overflow-x-auto scrollbar-hide px-1"
             role="tablist"
             style={{ overscrollBehaviorX: 'contain' }}
           >
@@ -271,7 +278,7 @@ export default function TopBar() {
           </div>
           {/* Mobile search results dropdown */}
           {mobileSearchOpen && open && results.length > 0 && (
-            <div className="absolute top-[88px] left-0 right-0 z-50 bg-white border-b border-[#E3E6E0] shadow-lg">
+            <div className="absolute top-[96px] left-0 right-0 z-50 bg-white border-b border-[#E3E6E0] shadow-lg">
               {results.slice(0, 6).map(r => (
                 <button
                   key={r.symbol}
@@ -421,22 +428,50 @@ export default function TopBar() {
                 {loading ? (
                   <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#E3E6E0] border-t-[#5F790B] shrink-0" />
                 ) : (
-                  <Search size={14} className="text-[#8A96A8] shrink-0" />
+                  <Search size={14} className={searchError ? 'text-[#D83B3B] shrink-0' : 'text-[#8A96A8] shrink-0'} />
                 )}
                 <input
                   type="text"
+                  role="combobox"
+                  aria-expanded={open}
+                  aria-haspopup="listbox"
+                  aria-autocomplete="list"
+                  aria-controls={open ? topbarListboxId : undefined}
+                  aria-activedescendant={activeIdx >= 0 ? `topbar-result-${activeIdx}` : undefined}
                   value={query}
-                  onChange={e => { setQuery(e.target.value); setUnsupportedError(null) }}
-                  onKeyDown={e => { if (e.key === 'Enter' && query.trim()) handleSubmit(query) }}
+                  onChange={e => { setQuery(e.target.value); setUnsupportedError(null); setSearchError(false) }}
+                  onKeyDown={e => {
+                    if (e.key === 'Escape') { setOpen(false); setActiveIdx(-1); return }
+                    if (e.key === 'ArrowDown') {
+                      e.preventDefault()
+                      if (!open && results.length > 0) setOpen(true)
+                      setActiveIdx(prev => Math.min(prev + 1, results.length - 1))
+                      return
+                    }
+                    if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx(prev => Math.max(prev - 1, -1)); return }
+                    if (e.key === 'Enter') {
+                      if (activeIdx >= 0 && results[activeIdx]?.supported) { select(results[activeIdx].symbol) }
+                      else if (query.trim()) { handleSubmit(query) }
+                    }
+                  }}
                   placeholder="Search ticker or company…"
-                  className="flex-1 min-w-0 bg-transparent text-[13px] text-[#0A1424] placeholder-[#8A96A8] focus:outline-none"
+                  className="flex-1 min-w-0 bg-transparent text-[16px] sm:text-[13px] text-[#0A1424] placeholder-[#8A96A8] focus:outline-none"
+                  autoCorrect="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
                 />
+                {searchError && !open && (
+                  <span className="text-[11px] text-[#D83B3B] shrink-0 whitespace-nowrap">Search unavailable</span>
+                )}
               </div>
 
               <AnimatePresence>
                 {open && (
                   <motion.div
                     key="search-dropdown"
+                    id={topbarListboxId}
+                    role="listbox"
+                    aria-label="Search suggestions"
                     variants={reduced ? {} : slideDown}
                     initial="hidden"
                     animate="visible"
@@ -449,13 +484,18 @@ export default function TopBar() {
                       initial="hidden"
                       animate="visible"
                     >
-                      {results.map(r => (
+                      {results.map((r, idx) => (
                         <motion.button
                           key={r.symbol}
+                          id={`topbar-result-${idx}`}
+                          role="option"
+                          aria-selected={idx === activeIdx}
                           variants={reduced ? {} : { hidden: { opacity: 0, x: -6 }, visible: { opacity: 1, x: 0, transition: { duration: 0.16 } } }}
                           onClick={() => r.supported ? select(r.symbol) : undefined}
                           disabled={!r.supported}
                           className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left border-b border-[#E3E6E0] last:border-b-0 transition-colors ${
+                            idx === activeIdx ? 'bg-[#F6FAEA]' : ''
+                          } ${
                             r.supported
                               ? 'hover:bg-[#F6FAEA] cursor-pointer'
                               : 'opacity-40 cursor-not-allowed'

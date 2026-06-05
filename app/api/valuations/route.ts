@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { saveValuation, getValuations } from '@/lib/data/supabaseClient'
+import { saveValuation } from '@/lib/data/supabaseClient'
 import { createClient } from '@supabase/supabase-js'
 
 const FREE_SAVE_LIMIT = 3
@@ -14,11 +14,31 @@ function getServiceClient() {
 }
 
 export async function GET(req: NextRequest) {
+  const session = await getServerSession(authOptions)
+  const userEmail = session?.user?.email
+  if (!userEmail) return NextResponse.json([], { status: 401 })
+
   const ticker = req.nextUrl.searchParams.get('ticker')?.toUpperCase()
   if (!ticker) return NextResponse.json([], { status: 400 })
+
   try {
-    const data = await getValuations(ticker)
-    return NextResponse.json(data)
+    const sb = getServiceClient()
+    if (!sb) return NextResponse.json([])
+
+    // Look up user id from email
+    const { data: userRow } = await sb.from('users').select('id').eq('email', userEmail).single()
+    if (!userRow) return NextResponse.json([])
+
+    const { data, error } = await sb
+      .from('valuations')
+      .select('*')
+      .eq('ticker', ticker)
+      .eq('user_id', (userRow as { id: string }).id)
+      .order('saved_at', { ascending: false })
+      .limit(20)
+
+    if (error) return NextResponse.json({ error: String(error) }, { status: 500 })
+    return NextResponse.json(data ?? [])
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
@@ -28,6 +48,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     const userEmail = session?.user?.email ?? null
+    if (!userEmail) return NextResponse.json({ error: 'Login required to save valuations' }, { status: 401 })
 
     // Check Pro plan and save limit for logged-in users
     if (userEmail) {

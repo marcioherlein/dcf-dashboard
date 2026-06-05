@@ -61,6 +61,9 @@
 
 /* ── insic CSS Custom Properties ────────────────────────────────────────────── */
 :root {
+  /* Safe area inset top (for iOS notch / Dynamic Island) */
+  --sat: env(safe-area-inset-top, 0px);
+
   /* Brand ink (dark navy backgrounds) */
   --color-ink-950: #06101F;
   --color-ink-900: #0A1424;
@@ -275,6 +278,7 @@ h3 {
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     border-bottom: 1px solid var(--color-border);
     box-shadow: 0 4px 20px rgba(6, 16, 31, 0.06);
+    padding-top: env(safe-area-inset-top, 0px);
   }
 
   /* Dark/hero navigation (landing page only) */

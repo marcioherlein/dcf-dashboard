@@ -51,7 +51,7 @@ export default function AssumptionSlider({
         </div>
       </div>
 
-      <div className="relative">
+      <div className="relative py-3">
         <input
           type="range"
           min={min}
