@@ -310,7 +310,7 @@ export default function TopBar() {
             {/* Mobile: app icon tile */}
             <InsicAppIcon size={32} className="sm:hidden" />
             {/* Desktop: full lockup */}
-            <span className="hidden sm:block">
+            <span className="hidden sm:block" style={{ filter: 'drop-shadow(0 1px 3px rgba(6,16,31,0.12))' }}>
               <InsicLogoLockup size="md" />
             </span>
           </Link>
