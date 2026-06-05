@@ -48,13 +48,14 @@ const DynamicChart = dynamic(
 export function ETFValuationHistory({ ticker }: Props) {
   const [data, setData] = useState<ScorePoint[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     if (!ticker) return
     fetch(`/api/etf/score-history?ticker=${encodeURIComponent(ticker)}`)
       .then((r) => r.ok ? r.json() : [])
       .then((d: ScorePoint[]) => { setData(d); setLoading(false) })
-      .catch(() => { setData([]); setLoading(false) })
+      .catch(() => { setData([]); setError(true); setLoading(false) })
   }, [ticker])
 
   if (loading) {
@@ -71,10 +72,21 @@ export function ETFValuationHistory({ ticker }: Props) {
       <p className="text-sm font-semibold text-slate-700 mb-3">Value Score History</p>
       {data.length < 7 ? (
         <div className="h-[140px] flex flex-col items-center justify-center gap-2 rounded-lg bg-slate-50 border border-dashed border-slate-200">
-          <p className="text-sm text-slate-500 font-semibold">Building history…</p>
-          <p className="text-xs text-slate-400 text-center max-w-xs">
-            Value Score history populates as more users view this ETF. Check back in a few days.
-          </p>
+          {error ? (
+            <>
+              <p className="text-sm text-slate-500 font-semibold">Score history unavailable.</p>
+              <p className="text-xs text-slate-400 text-center max-w-xs">
+                Check back later.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-slate-500 font-semibold">Building history…</p>
+              <p className="text-xs text-slate-400 text-center max-w-xs">
+                Score history is building — more data points appear each day this ETF is tracked.
+              </p>
+            </>
+          )}
         </div>
       ) : (
         <DynamicChart data={data} />

@@ -72,7 +72,7 @@ export function ETFComparisonChart({ symbols }: Props) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (symbols.length === 0) return
+    if (symbols.length === 0) { setLoading(false); return }
     setLoading(true)
     Promise.allSettled(
       symbols.map((ticker) =>

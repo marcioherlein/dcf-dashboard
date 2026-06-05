@@ -59,7 +59,7 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
         <button
           onClick={() => onDelete(entry.ticker)}
           aria-label={`Remove ${entry.ticker} from watchlist`}
-          className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-300 hover:text-red-400 hover:bg-red-50 transition-colors border border-transparent hover:border-red-100 focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-1 focus-visible:outline-none"
+          className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors border border-transparent hover:border-red-100 focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-1 focus-visible:outline-none"
         >
           <Trash2 size={14} />
         </button>
@@ -73,7 +73,7 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
           <Sparkline prices={sparklineData} up={sparkUp} className="w-full h-12" width={400} height={48} />
         ) : (
           <div className="w-full h-12 flex items-center justify-center">
-            <span className="text-[11px] text-slate-300">No chart data available</span>
+            <span className="text-[11px] text-slate-400">No chart data</span>
           </div>
         )}
       </div>
