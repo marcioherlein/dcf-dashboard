@@ -56,16 +56,14 @@ export function InsicAppIcon({ size = 40, className, style }: InsicAppIconProps)
 }
 
 // ─── Logo lockup ─────────────────────────────────────────────────────────────
-// Renders the beige card app icon. The PNG has a transparent outer area with
-// a beige rounded-square inside; border-radius 22% clips the PNG to show only
-// the beige card (no white bounding box).
+// Icon + "insic" wordmark. Font matches brand spec: Inter 760 weight, -0.04em tracking.
 
 export type LogoSize = "sm" | "md" | "lg";
 
-const LOCKUP_SIZES: Record<LogoSize, { size: number }> = {
-  sm: { size: 28 },   // app sidebar, auth pages
-  md: { size: 32 },   // app topbar
-  lg: { size: 40 },   // landing navbar
+const LOCKUP_SIZES: Record<LogoSize, { iconSize: number; fontSize: number; gap: number }> = {
+  sm: { iconSize: 24, fontSize: 15, gap: 7  },
+  md: { iconSize: 28, fontSize: 17, gap: 8  },
+  lg: { iconSize: 34, fontSize: 21, gap: 10 },
 };
 
 export type InsicLogoLockupProps = {
@@ -77,26 +75,40 @@ export type InsicLogoLockupProps = {
 
 export function InsicLogoLockup({
   size = "md",
-  on: _on = "light",
+  on = "light",
   className,
   style,
 }: InsicLogoLockupProps) {
-  const { size: iconSize } = LOCKUP_SIZES[size];
+  const { iconSize, fontSize, gap } = LOCKUP_SIZES[size];
+  const textColor = on === "dark" ? "#FFFFFF" : "#06101F";
 
   return (
     <span
       className={className}
-      style={{ display: "inline-flex", lineHeight: 0, userSelect: "none", ...style }}
+      style={{ display: "inline-flex", alignItems: "center", gap, lineHeight: 1, userSelect: "none", ...style }}
       role="img"
       aria-label="insic"
     >
       <Image
         src="/logos/insic-app-icon-cropped.png"
-        alt="insic"
+        alt=""
+        aria-hidden="true"
         width={iconSize}
         height={iconSize}
         style={{ display: "block", flexShrink: 0 }}
       />
+      <span
+        style={{
+          fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+          fontWeight: 760,
+          fontSize,
+          letterSpacing: "-0.04em",
+          color: textColor,
+          lineHeight: 1,
+        }}
+      >
+        insic
+      </span>
     </span>
   );
 }
