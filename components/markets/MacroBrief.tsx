@@ -77,7 +77,7 @@ export default function MacroBrief({ macroBrief, briefCachedAt, signals, pulse }
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Link
                     href="/pricing"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-colors shadow-lg"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-olive-700 hover:bg-olive-500 text-white text-xs font-bold transition-colors shadow-lg"
                   >
                     <Lock size={11} /> Unlock full brief — Pro
                   </Link>
@@ -93,14 +93,14 @@ export default function MacroBrief({ macroBrief, briefCachedAt, signals, pulse }
             <button
               onClick={generate}
               disabled={loading}
-              className="shrink-0 text-xs font-semibold text-white px-3 py-2.5 min-h-[44px] rounded-lg transition-colors disabled:opacity-50 bg-blue-600 hover:bg-blue-500"
+              className="shrink-0 text-xs font-semibold text-white px-3 py-2.5 min-h-[44px] rounded-lg transition-colors disabled:opacity-50 bg-olive-700 hover:bg-olive-500"
             >
               {loading ? 'Generating…' : 'Generate'}
             </button>
           ) : (
             <Link
               href="/pricing"
-              className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-500 transition-colors"
+              className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-olive-700 hover:text-blue-500 transition-colors"
             >
               <Lock size={11} /> Upgrade for full brief
             </Link>

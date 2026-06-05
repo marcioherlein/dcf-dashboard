@@ -53,7 +53,7 @@ function getVerdict(entry: WatchlistEntry): 'Undervalued' | 'Fair Value' | 'Over
 
 function tagInfo(tag: ListTag): { label: string; cls: string; dot: string } | null {
   if (!tag) return null
-  if (tag === 'buy')   return { label: 'High Conviction', cls: 'bg-blue-50 text-blue-700 border-blue-200',   dot: 'bg-blue-500' }
+  if (tag === 'buy')   return { label: 'High Conviction', cls: 'bg-blue-50 text-blue-700 border-blue-200',   dot: 'bg-olive-500' }
   if (tag === 'watch') return { label: 'Watch',            cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' }
   if (tag === 'pass')  return { label: 'Avoid',            cls: 'bg-red-50 text-red-600 border-red-200',       dot: 'bg-red-400' }
   return null
@@ -122,7 +122,7 @@ function ExpandedNotePanel({ entry, onNoteSave, onClose }: {
         <div className="bg-[#F0F7FF] border-t border-blue-100 px-5 py-4 flex gap-4 items-start">
           {/* Icon */}
           <div className="shrink-0 w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center mt-0.5">
-            <svg className="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-3.5 h-3.5 text-olive-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h6m-6 4h10M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" />
             </svg>
           </div>
@@ -141,21 +141,21 @@ function ExpandedNotePanel({ entry, onNoteSave, onClose }: {
               onChange={(e) => { setText(e.target.value); setEdited(true) }}
               rows={2}
               placeholder="Write your thesis, key reasons, or what to watch for…"
-              className="w-full text-[13px] text-slate-700 bg-white border border-blue-200 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 resize-none placeholder-slate-300"
+              className="w-full text-[13px] text-slate-700 bg-white border border-blue-200 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-olive-100 resize-none placeholder-slate-300"
             />
             <div className="flex items-center gap-3 mt-2">
               {edited && (
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="text-[12px] font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
+                  className="text-[12px] font-semibold text-white bg-olive-700 hover:bg-olive-600 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
                 >
                   {saving ? 'Saving…' : 'Save note'}
                 </button>
               )}
               <Link
                 href={`/stock/${entry.ticker}`}
-                className="text-[12px] font-semibold text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1"
+                className="text-[12px] font-semibold text-olive-700 hover:text-blue-800 transition-colors flex items-center gap-1"
               >
                 View full analysis
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -289,7 +289,7 @@ function ActionsMenu({ entry, groups, onDelete, onTagUpdate, onGroupUpdate }: {
                 {newGroup.trim() && (
                   <button
                     onClick={() => { onGroupUpdate(newGroup.trim()); close() }}
-                    className="text-[11px] text-blue-600 font-semibold hover:text-blue-700"
+                    className="text-[11px] text-olive-700 font-semibold hover:text-blue-700"
                   >
                     Add
                   </button>
@@ -397,7 +397,7 @@ function MobileValuationCard({ entry, sparklines, onDelete, onTagUpdate, onGroup
             <StockLogo ticker={entry.ticker} />
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <Link href={`/stock/${entry.ticker}`} className="text-[15px] font-bold text-slate-900 font-mono hover:text-blue-600 transition-colors">
+                <Link href={`/stock/${entry.ticker}`} className="text-[15px] font-bold text-slate-900 font-mono hover:text-olive-700 transition-colors">
                   {entry.ticker}
                 </Link>
                 {tInfo && (
@@ -443,7 +443,7 @@ function MobileValuationCard({ entry, sparklines, onDelete, onTagUpdate, onGroup
           <span className="text-[11px] text-slate-400">{relativeDate(entry.updatedAt)}</span>
           <button
             onClick={() => setExpanded((v) => !v)}
-            className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+            className="text-[11px] font-semibold text-olive-700 hover:text-blue-800 transition-colors"
           >
             {expanded ? 'Hide note' : 'Show note'}
           </button>
@@ -490,12 +490,12 @@ function NoteEditorMobile({ entry, onNoteSave }: {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="text-[12px] font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
+            className="text-[12px] font-semibold text-white bg-olive-700 hover:bg-olive-600 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
           >
             {saving ? 'Saving…' : 'Save'}
           </button>
         )}
-        <Link href={`/stock/${entry.ticker}`} className="text-[12px] font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+        <Link href={`/stock/${entry.ticker}`} className="text-[12px] font-semibold text-olive-700 hover:text-blue-800 transition-colors">
           View full analysis →
         </Link>
       </div>
@@ -614,7 +614,7 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                           <div className="min-w-0">
                             <Link
                               href={`/stock/${entry.ticker}`}
-                              className="text-[14px] font-bold font-mono text-[#0F172A] hover:text-blue-600 transition-colors leading-tight block"
+                              className="text-[14px] font-bold font-mono text-[#0F172A] hover:text-olive-700 transition-colors leading-tight block"
                             >
                               {entry.ticker}
                             </Link>

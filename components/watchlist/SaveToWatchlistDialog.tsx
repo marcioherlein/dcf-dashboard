@@ -248,7 +248,7 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
             <button
               onClick={handleSave}
               disabled={status === 'saving'}
-              className="flex-1 rounded-lg bg-blue-600 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-60 transition-colors flex items-center justify-center gap-1.5"
+              className="flex-1 rounded-lg bg-olive-700 py-2 text-sm font-semibold text-white hover:bg-olive-500 disabled:opacity-60 transition-colors flex items-center justify-center gap-1.5"
             >
               {status === 'saving'
                 ? <><Loader2 size={14} className="animate-spin" /> Saving…</>

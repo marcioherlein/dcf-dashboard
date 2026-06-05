@@ -66,7 +66,7 @@ export default function ScreenerChart({ ticker, displayTicker, name, price, chan
         <div className="px-5 py-3 border-t border-white/10">
           <a
             href={`/stock/${ticker}`}
-            className="flex items-center justify-center gap-2 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors"
+            className="flex items-center justify-center gap-2 w-full py-2 bg-olive-700 hover:bg-olive-600 text-white text-xs font-semibold rounded-lg transition-colors"
           >
             Open Full Analysis →
           </a>

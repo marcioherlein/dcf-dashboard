@@ -597,7 +597,7 @@ export default function LandingHero() {
       className="overflow-x-hidden relative"
       style={{
         paddingTop: 'max(96px, calc(80px + 2vh))',
-        paddingBottom: 'clamp(48px, 7vh, 80px)',
+        paddingBottom: 'clamp(24px, 3vh, 48px)',
         background: '#F8F7F2',
       }}
     >
@@ -612,7 +612,7 @@ export default function LandingHero() {
       />
 
       <div className="relative mx-auto px-4 sm:px-6" style={{ maxWidth: '1200px', zIndex: 1 }}>
-        <div className="grid items-start grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
+        <div className="grid items-center grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
 
           {/* ── Left: Copy ── */}
           <div className="text-left">

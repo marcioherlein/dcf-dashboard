@@ -11,8 +11,8 @@ const CONCEPTS = [
     icon: Target,
     label: 'Fair Value',
     desc: 'DCF model estimate of intrinsic worth per share',
-    iconBg: 'bg-blue-50',
-    iconColor: 'text-blue-600',
+    iconBg: 'bg-olive-50',
+    iconColor: 'text-olive-700',
   },
   {
     icon: TrendingUp,
@@ -82,7 +82,7 @@ export default function StockOrientationStrip() {
             {/* Dismiss */}
             <button
               onClick={dismiss}
-              className="shrink-0 flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors mt-0.5 whitespace-nowrap"
+              className="shrink-0 flex items-center gap-1 text-[11px] font-semibold text-olive-700 hover:text-olive-600 transition-colors mt-0.5 whitespace-nowrap"
               aria-label="Dismiss orientation"
             >
               Got it

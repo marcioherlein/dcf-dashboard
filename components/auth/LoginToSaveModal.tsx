@@ -72,7 +72,7 @@ export default function LoginToSaveModal({ ticker, companyName, fairValue, upsid
               } catch {}
               signIn('google', { callbackUrl: window.location.href })
             }}
-            className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-[14px] py-3 transition-colors shadow-sm"
+            className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-olive-700 hover:bg-olive-600 active:bg-olive-700 text-white font-semibold text-[14px] py-3 transition-colors shadow-sm"
           >
             <svg viewBox="0 0 24 24" className="w-4 h-4" aria-hidden="true">
               <path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

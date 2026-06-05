@@ -132,7 +132,7 @@ export default function NormalizedPerfChart() {
                 onClick={() => setPeriod(p)}
                 className={cn(
                   'px-2 py-0.5 min-h-[44px] flex items-center text-[11px] font-semibold rounded transition-colors',
-                  period === p ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                  period === p ? 'bg-olive-700 text-white' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
                 )}
               >
                 {p}
@@ -189,7 +189,7 @@ export default function NormalizedPerfChart() {
                 placeholder="AAPL"
                 className="w-20 px-2 py-0.5 text-[16px] rounded-full border border-blue-300 bg-white text-slate-700 outline-none focus:border-blue-500"
               />
-              <button type="submit" className="text-[11px] font-semibold text-blue-600 hover:text-blue-500">Add</button>
+              <button type="submit" className="text-[11px] font-semibold text-olive-700 hover:text-blue-500">Add</button>
               <button type="button" onClick={() => setShowAddInput(false)} className="text-[11px] text-slate-400 hover:text-slate-600">✕</button>
             </form>
           ) : (

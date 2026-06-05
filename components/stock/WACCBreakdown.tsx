@@ -79,7 +79,7 @@ export default function WACCBreakdown({ wacc, onWACCChange }: Props) {
         <button
           onClick={() => onWACCChange?.(parseFloat(overrideWACC) / 100)}
           disabled={!overrideWACC}
-          className="rounded-lg bg-blue-600 px-3 py-1.5 min-h-[44px] text-xs font-medium text-white transition hover:bg-blue-500 disabled:opacity-40"
+          className="rounded-lg bg-olive-700 px-3 py-1.5 min-h-[44px] text-xs font-medium text-white transition hover:bg-olive-500 disabled:opacity-40"
         >
           Apply
         </button>

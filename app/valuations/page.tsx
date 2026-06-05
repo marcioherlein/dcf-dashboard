@@ -143,7 +143,7 @@ function SegmentTabs({ active, counts, onSelect }: {
             {count > 0 && (
               <span className={cn(
                 'text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center',
-                isActive ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600',
+                isActive ? 'bg-olive-100 text-olive-700' : 'bg-slate-100 text-slate-600',
               )}>
                 {count}
               </span>
@@ -238,7 +238,7 @@ function SortDropdown({ current, dir, onSort }: {
               }}
               className={cn(
                 'w-full flex items-center justify-between px-3.5 py-2 text-[13px] transition-colors',
-                current === key ? 'text-blue-600 bg-blue-50 font-semibold' : 'text-slate-700 hover:bg-slate-50',
+                current === key ? 'text-olive-700 bg-olive-50 font-semibold' : 'text-slate-700 hover:bg-slate-50',
               )}
             >
               {label}
@@ -499,10 +499,10 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
 
 function LoginWall() {
   return (
-    <div className="min-h-dvh bg-[#F1F5F9] flex items-center justify-center px-4">
+    <div className="min-h-dvh bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white border border-[#E6ECF5] rounded-2xl shadow-sm p-8 text-center">
-        <div className="mx-auto mb-5 w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center">
-          <Bookmark size={24} className="text-blue-500" />
+        <div className="mx-auto mb-5 w-14 h-14 rounded-2xl bg-olive-100 border border-olive-100 flex items-center justify-center">
+          <Bookmark size={24} className="text-olive-700" />
         </div>
         <h1 className="text-[22px] font-extrabold text-[#0F172A] tracking-tight">My Valuations</h1>
         <p className="mt-2 text-[14px] text-slate-500 leading-relaxed max-w-xs mx-auto">
@@ -510,7 +510,7 @@ function LoginWall() {
         </p>
         <button
           onClick={() => signIn('google', { callbackUrl: '/valuations' })}
-          className="mt-6 w-full flex items-center justify-center gap-3 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white py-3 px-4 text-[14px] font-semibold transition-colors"
+          className="mt-6 w-full flex items-center justify-center gap-3 rounded-xl bg-olive-700 hover:bg-olive-600 text-white py-3 px-4 text-[14px] font-semibold transition-colors"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff" fillOpacity=".9"/>
@@ -654,7 +654,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
   const hasFilters = filterUpside !== 'all' || filterConfidence !== 'all' || !!searchQuery.trim()
 
   return (
-    <div className="min-h-dvh bg-[#F1F5F9] px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <div className="min-h-dvh bg-background px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 
       {/* Page header */}
       <div className="flex items-start justify-between gap-4 mb-5">
@@ -882,7 +882,7 @@ export default function ValuationsPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-dvh bg-[#F1F5F9] px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="min-h-dvh bg-background px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div className="space-y-4">
           <div className="h-10 w-48 bg-white border border-[#E6ECF5] rounded-xl animate-pulse" />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

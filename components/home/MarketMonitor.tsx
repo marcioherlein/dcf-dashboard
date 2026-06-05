@@ -110,7 +110,7 @@ function ChartPanel({ item, onClose }: { item: MarketItem; onClose: () => void }
           <div className="px-5 pt-3 border-t border-slate-200" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}>
             <Link
               href={`/stock/${item.ticker}`}
-              className="flex items-center justify-center gap-2 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+              className="flex items-center justify-center gap-2 w-full py-2 bg-olive-700 hover:bg-olive-600 text-white text-sm font-medium rounded-lg transition-colors"
             >
               Open Full Analysis →
             </Link>
@@ -257,7 +257,7 @@ export default function MarketMonitor() {
               className={[
                 'px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors shrink-0 min-h-[36px]',
                 activeGroup === null
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-olive-700 text-white'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
               ].join(' ')}
             >
@@ -276,7 +276,7 @@ export default function MarketMonitor() {
                   className={[
                     'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors shrink-0 min-h-[36px]',
                     activeGroup === g.name
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-olive-700 text-white'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
                   ].join(' ')}
                 >

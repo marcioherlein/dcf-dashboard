@@ -171,17 +171,13 @@ export default function PricingPage() {
               <p className="text-[#536174] text-[13px] mt-2">Cancel anytime. No contracts.</p>
             </div>
 
-            <button
-              disabled
-              className="w-full rounded-[10px] bg-[#536174] py-3.5 text-[13.5px] font-bold text-white mb-1 min-h-[48px] shadow-sm opacity-70 cursor-not-allowed"
+            <a
+              href="/redeem"
+              className="w-full flex items-center justify-center rounded-[10px] bg-olive-700 hover:bg-olive-600 py-3.5 text-[13.5px] font-bold text-white mb-1 min-h-[48px] shadow-sm transition-colors"
             >
-              Coming soon
-            </button>
-            <p className="text-center text-[12px] text-[#536174] mb-3">Payments launching soon — stay tuned.</p>
-            <p className="text-center text-[12px] text-[#536174] mb-6">
-              Have a code?{' '}
-              <a href="/redeem" className="text-[#EEF4DD] hover:underline font-semibold">Redeem it here</a>
-            </p>
+              Get early access →
+            </a>
+            <p className="text-center text-[12px] text-[#536174] mb-3">Have an access code? Redeem it to unlock Pro.</p>
 
             <ul className="space-y-3 flex-1">
               {PRO_FEATURES.map((f, i) => {

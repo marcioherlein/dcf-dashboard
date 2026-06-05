@@ -118,7 +118,7 @@ export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, up
         )}
         <button
           onClick={onViewRisks}
-          className="mt-3.5 min-h-[44px] flex items-center text-[13px] font-medium text-blue-600 hover:text-blue-700 transition-colors"
+          className="mt-3.5 min-h-[44px] flex items-center text-[13px] font-medium text-olive-700 hover:text-blue-700 transition-colors"
         >
           View full risk analysis →
         </button>
@@ -143,14 +143,14 @@ export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, up
             onClick={onViewValuation}
             className={cn(
               'w-full rounded-[12px] py-3 min-h-[44px] text-[14px] font-semibold text-white transition-all',
-              'bg-blue-600 hover:bg-blue-700 active:scale-95 shadow-sm'
+              'bg-olive-700 hover:bg-olive-600 active:scale-95 shadow-sm'
             )}
           >
             View valuation →
           </button>
           <button
             onClick={onViewValuation}
-            className="w-full rounded-[12px] py-3 min-h-[44px] text-[14px] font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 transition-colors"
+            className="w-full rounded-[12px] py-3 min-h-[44px] text-[14px] font-semibold text-olive-700 border border-blue-200 bg-blue-50 hover:bg-blue-100 transition-colors"
           >
             Review assumptions
           </button>

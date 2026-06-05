@@ -66,7 +66,7 @@ export default function SimplifierPage() {
           <div className="px-4 sm:px-6 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-[#E8E6E0]">
             <div className="flex items-center gap-2.5">
               {/* Checkmark icon */}
-              <div className="w-8 h-8 rounded-lg bg-[#1f6feb] flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-olive-700 flex items-center justify-center shrink-0">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="white">
                   <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/>
                 </svg>
@@ -74,7 +74,7 @@ export default function SimplifierPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-[15px] font-bold text-[#2D2C31]">Stock Simplifier</h1>
-                  <span className="text-[10px] font-semibold text-[#1f6feb] bg-[#EEF4FF] px-1.5 py-0.5 rounded border border-[#DCE6F5]">BETA</span>
+                  <span className="text-[10px] font-semibold text-olive-700 bg-olive-50 px-1.5 py-0.5 rounded border border-olive-100">BETA</span>
                 </div>
                 <p className="text-[#6B6A72] text-xs mt-0.5">My Watch Lists</p>
               </div>

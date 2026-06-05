@@ -1,6 +1,6 @@
 'use client'
 import { signIn } from 'next-auth/react'
-import { Check } from 'lucide-react'
+import { Check, Lock } from 'lucide-react'
 
 interface Props {
   ticker: string
@@ -38,13 +38,13 @@ export default function StockLoginWall({ ticker, companyName, price, currency, f
 
       {/* Teaser card */}
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-4">
+        <div className="bg-gradient-to-r from-olive-700 to-olive-600 px-5 py-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-blue-100 text-[11px] font-semibold uppercase tracking-wider mb-0.5">{ticker}</p>
+              <p className="text-white/70 text-[11px] font-semibold uppercase tracking-wider mb-0.5">{ticker}</p>
               <h2 className="text-white font-bold text-[17px] leading-tight">{companyName}</h2>
               {price != null && (
-                <p className="text-blue-100 text-[14px] font-medium mt-0.5">
+                <p className="text-white/80 text-[14px] font-medium mt-0.5">
                   {fmt(price, currency)}
                 </p>
               )}
@@ -75,15 +75,20 @@ export default function StockLoginWall({ ticker, companyName, price, currency, f
           {scenarios && (
             <div className="grid grid-cols-3 gap-2">
               {(['bear', 'base', 'bull'] as const).map(s => (
-                <div key={s} className={`rounded-lg border px-3 py-2 text-center ${
+                <div key={s} className={`rounded-lg border px-3 py-2 text-center relative overflow-hidden ${
                   s === 'bull' ? 'border-emerald-100 bg-emerald-50' :
                   s === 'bear' ? 'border-red-100 bg-red-50' :
-                  'border-blue-100 bg-blue-50'
+                  'border-slate-100 bg-slate-50'
                 }`}>
                   <p className={`text-[10px] font-semibold uppercase tracking-wide mb-0.5 ${
-                    s === 'bull' ? 'text-emerald-600' : s === 'bear' ? 'text-red-500' : 'text-blue-600'
+                    s === 'bull' ? 'text-emerald-600' : s === 'bear' ? 'text-red-500' : 'text-slate-500'
                   }`}>{s}</p>
-                  <p className="text-[13px] font-bold text-slate-800 tabular-nums blur-sm select-none">{fmt(scenarios[s].fairValue, currency)}</p>
+                  <div className="relative flex items-center justify-center gap-1">
+                    <Lock size={10} className="text-slate-400 shrink-0" />
+                    <p className="text-[13px] font-bold text-slate-300 tabular-nums select-none">
+                      {fmt(scenarios[s].fairValue, currency).replace(/\d/g, '•')}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -109,7 +114,7 @@ export default function StockLoginWall({ ticker, companyName, price, currency, f
 
         <button
           onClick={() => signIn('google', { callbackUrl: window.location.href })}
-          className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-[14px] py-3 transition-colors shadow-sm"
+          className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-olive-700 hover:bg-olive-600 active:bg-olive-700 text-white font-semibold text-[14px] py-3 transition-colors shadow-sm"
         >
           <svg viewBox="0 0 24 24" className="w-4 h-4" aria-hidden="true">
             <path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

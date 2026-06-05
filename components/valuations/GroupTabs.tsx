@@ -94,7 +94,7 @@ export function GroupTabs({ groups, active, counts, totalCount, onSelect, onNewG
           {draft.trim() && (
             <button
               onClick={submit}
-              className="px-3 py-1.5 bg-blue-600 text-white text-[12px] font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-3 py-1.5 bg-olive-700 text-white text-[12px] font-semibold rounded-lg hover:bg-olive-600 transition-colors"
             >
               Add
             </button>

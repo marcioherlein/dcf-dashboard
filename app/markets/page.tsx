@@ -61,15 +61,15 @@ function SectionHeader({ title, subtitle, right }: { title: string; subtitle?: s
   const reduced = useReducedMotion()
 
   return (
-    <div ref={ref} className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-2">
+    <div ref={ref} className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-2 border-b border-slate-200 pb-3">
       <div
         style={{
           clipPath: reduced ? 'none' : inView ? 'inset(0 0% 0 0)' : 'inset(0 100% 0 0)',
           transition: reduced ? 'none' : 'clip-path 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
-        <h2 className="text-[15px] font-bold text-slate-900">{title}</h2>
-        {subtitle && <p className="text-[12px] text-slate-600 mt-0.5">{subtitle}</p>}
+        <h2 className="text-[16px] font-extrabold text-slate-900 tracking-tight">{title}</h2>
+        {subtitle && <p className="text-[12px] text-slate-500 mt-0.5">{subtitle}</p>}
       </div>
       {right && <div className="shrink-0">{right}</div>}
     </div>
@@ -145,14 +145,14 @@ export default function MarketsPage() {
   })
 
   return (
-    <div className="min-h-dvh bg-slate-100">
+    <div className="min-h-dvh bg-background">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-lg focus:text-sm focus:font-semibold focus:outline-none focus:shadow-lg"
       >
         Skip to content
       </a>
-      <div id="main-content" className="max-w-[1440px] mx-auto px-4 sm:px-6 py-5 sm:py-7 space-y-8" tabIndex={-1}>
+      <div id="main-content" className="max-w-[1440px] mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-12" tabIndex={-1}>
 
         {err && (
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-600 flex items-center justify-between">
@@ -328,7 +328,7 @@ export default function MarketsPage() {
                   href="https://finance.yahoo.com/calendar"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                  className="flex items-center gap-1 text-[11px] font-semibold text-olive-700 hover:text-olive-600 transition-colors"
                 >
                   View full calendars
                   <ExternalLink size={11} />
@@ -372,7 +372,7 @@ export default function MarketsPage() {
                   href="https://finance.yahoo.com/news"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                  className="flex items-center gap-1 text-[11px] font-semibold text-olive-700 hover:text-olive-600 transition-colors"
                 >
                   View all news
                   <ExternalLink size={11} />

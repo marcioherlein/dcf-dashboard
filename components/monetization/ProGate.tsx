@@ -29,7 +29,7 @@ export default function ProGate({ gate, children, placeholder }: ProGateProps) {
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[2px] rounded-xl">
           <div className="flex flex-col items-center gap-3 px-6 text-center">
             <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center">
-              <Lock size={16} className="text-blue-600" />
+              <Lock size={16} className="text-olive-700" />
             </div>
             <div>
               <p className="text-sm font-semibold text-slate-800">{config.label}</p>
@@ -37,7 +37,7 @@ export default function ProGate({ gate, children, placeholder }: ProGateProps) {
             </div>
             <button
               onClick={() => setModalOpen(true)}
-              className="mt-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors"
+              className="mt-1 px-4 py-2 rounded-lg bg-olive-700 hover:bg-olive-600 text-white text-xs font-bold transition-colors"
             >
               Unlock with Pro
             </button>

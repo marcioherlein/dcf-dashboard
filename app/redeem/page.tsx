@@ -51,7 +51,7 @@ export default function RedeemPage() {
             <p className="text-[14px] text-slate-500">Sign in first to activate your Pro access.</p>
             <button
               onClick={() => signIn('google', { callbackUrl: '/redeem' })}
-              className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[14px] py-3 transition-colors"
+              className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-olive-700 hover:bg-olive-600 text-white font-semibold text-[14px] py-3 transition-colors"
             >
               <svg viewBox="0 0 24 24" className="w-4 h-4" aria-hidden="true">
                 <path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -73,7 +73,7 @@ export default function RedeemPage() {
             </div>
             <button
               onClick={() => router.push('/analyze')}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[14px] py-3 transition-colors"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-olive-700 hover:bg-olive-600 text-white font-semibold text-[14px] py-3 transition-colors"
             >
               Go to app
               <ArrowRight size={15} strokeWidth={2.5} />
@@ -93,7 +93,7 @@ export default function RedeemPage() {
                 onChange={e => { setCode(e.target.value.toUpperCase()); setError('') }}
                 onKeyDown={e => { if (e.key === 'Enter') handleRedeem() }}
                 placeholder="e.g. INSIC2024"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] font-mono font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all uppercase tracking-wider"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] font-mono font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-olive-100 transition-all uppercase tracking-wider"
               />
 
               {error && (
@@ -103,7 +103,7 @@ export default function RedeemPage() {
               <button
                 onClick={handleRedeem}
                 disabled={loading || !code.trim()}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-[14px] py-3 transition-colors"
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-olive-700 hover:bg-olive-600 active:bg-olive-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-[14px] py-3 transition-colors"
               >
                 {loading ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -113,7 +113,7 @@ export default function RedeemPage() {
 
             <p className="text-center text-[12px] text-slate-400">
               Need a code?{' '}
-              <a href="/pricing" className="text-blue-600 hover:underline">See pricing</a>
+              <a href="/pricing" className="text-olive-700 hover:underline">See pricing</a>
             </p>
           </div>
         )}

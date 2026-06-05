@@ -36,14 +36,14 @@ export function WizardSteps({ steps, current, className }: WizardStepsProps) {
               <div className={cn(
                 'flex items-center justify-center w-7 h-7 rounded-full border-2 text-xs font-bold transition-all',
                 done   && 'bg-emerald-500 border-emerald-500 text-white',
-                active && 'bg-blue-600 border-blue-600 text-white ring-4 ring-blue-100',
+                active && 'bg-olive-700 border-olive-700 text-white ring-4 ring-olive-100',
                 future && 'bg-white border-slate-300 text-slate-400',
               )}>
                 {done ? <Check size={13} strokeWidth={3} /> : num}
               </div>
               <span className={cn(
                 'text-[10px] font-medium whitespace-nowrap hidden sm:block',
-                active ? 'text-blue-600' : done ? 'text-emerald-600' : 'text-slate-400'
+                active ? 'text-olive-700' : done ? 'text-emerald-600' : 'text-slate-400'
               )}>
                 {step.label}
               </span>

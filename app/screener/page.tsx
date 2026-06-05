@@ -114,8 +114,8 @@ function SortTh({
         {label}
         {active
           ? dir === 'desc'
-            ? <ArrowDown size={11} className="text-blue-600 shrink-0" />
-            : <ArrowUp size={11} className="text-blue-600 shrink-0" />
+            ? <ArrowDown size={11} className="text-olive-700 shrink-0" />
+            : <ArrowUp size={11} className="text-olive-700 shrink-0" />
           : <ArrowUpDown size={10} className="text-slate-300 shrink-0" />}
       </span>
     </th>
@@ -271,7 +271,7 @@ export default function ScreenerPage() {
             <div>
               <div className="flex items-center gap-2.5 mb-1">
                 <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                  <SlidersHorizontal size={14} className="text-blue-600" />
+                  <SlidersHorizontal size={14} className="text-olive-700" />
                 </div>
                 <h1 className="text-[22px] font-bold text-slate-900 tracking-tight">Stock Screener</h1>
               </div>
@@ -320,7 +320,7 @@ export default function ScreenerPage() {
                     onClick={() => setFilters(f => ({ ...f, exchange: ex.id }))}
                     className={`px-3 py-2.5 min-h-[44px] border-r border-slate-200 last:border-r-0 transition-colors whitespace-nowrap ${
                       filters.exchange === ex.id
-                        ? 'bg-blue-50 text-blue-600 font-semibold'
+                        ? 'bg-blue-50 text-olive-700 font-semibold'
                         : 'text-slate-500 hover:bg-slate-50'
                     }`}
                   >
@@ -385,7 +385,7 @@ export default function ScreenerPage() {
                       title={t.sub || undefined}
                       className={`px-3 py-2.5 min-h-[44px] text-[12px] border-r border-slate-200 last:border-r-0 transition-colors whitespace-nowrap ${
                         filters.capTier === t.id
-                          ? 'bg-blue-50 text-blue-600 font-semibold'
+                          ? 'bg-blue-50 text-olive-700 font-semibold'
                           : 'text-slate-500 hover:bg-slate-50'
                       }`}
                     >
@@ -409,7 +409,7 @@ export default function ScreenerPage() {
               <p className="text-[13px] text-slate-500 mb-4">{error}</p>
               <button
                 onClick={() => fetchStocks(filters)}
-                className="px-4 py-2 text-[13px] font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 text-[13px] font-semibold rounded-lg bg-olive-700 text-white hover:bg-olive-600 transition-colors"
               >
                 Try again
               </button>
@@ -430,7 +430,7 @@ export default function ScreenerPage() {
                       <span className="inline-flex items-center gap-1">
                         Company
                         {sortKey === 'name'
-                          ? sortDir === 'desc' ? <ArrowDown size={11} className="text-blue-600" /> : <ArrowUp size={11} className="text-blue-600" />
+                          ? sortDir === 'desc' ? <ArrowDown size={11} className="text-olive-700" /> : <ArrowUp size={11} className="text-olive-700" />
                           : <ArrowUpDown size={10} className="text-slate-300" />}
                       </span>
                     </th>
@@ -454,7 +454,7 @@ export default function ScreenerPage() {
                         <p className="text-[13px] text-slate-400 mb-4">Try broadening your sector, cap tier, or removing the dividend filter.</p>
                         <button
                           onClick={resetFilters}
-                          className="text-[13px] font-semibold text-blue-600 hover:underline"
+                          className="text-[13px] font-semibold text-olive-700 hover:underline"
                         >
                           Reset filters
                         </button>
@@ -470,7 +470,7 @@ export default function ScreenerPage() {
                           initial={reduced ? false : { opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ duration: 0.15, delay: Math.min(i * 0.012, 0.18) }}
-                          className="border-b border-slate-100 hover:bg-blue-50/40 cursor-pointer transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
+                          className={`border-b border-slate-100 hover:bg-olive-50/60 cursor-pointer transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-olive-700 ${i % 2 === 1 ? 'bg-slate-50/50' : ''}`}
                           onClick={() => router.push(`/stock/${stock.ticker}`)}
                           role="row"
                           tabIndex={0}
@@ -478,9 +478,9 @@ export default function ScreenerPage() {
                           aria-label={`${stock.name} (${stock.ticker}) — open full analysis`}
                         >
                       {/* Company */}
-                      <td className="sticky left-0 z-10 bg-white group-hover:bg-blue-50/40 transition-colors px-4 py-3.5">
+                      <td className="sticky left-0 z-10 bg-inherit group-hover:bg-olive-50/60 transition-colors px-4 py-3.5">
                         <div className="flex flex-col gap-0.5">
-                          <span className="text-[13px] font-bold text-slate-900 font-mono tracking-tight group-hover:text-blue-700 transition-colors">
+                          <span className="text-[13px] font-bold text-slate-900 font-mono tracking-tight group-hover:text-olive-700 transition-colors">
                             {stock.ticker}
                           </span>
                           <span className="text-[11.5px] text-slate-500 truncate max-w-[170px]">
