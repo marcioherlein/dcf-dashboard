@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { rateLimit } from '@/lib/rateLimit'
+import { rateLimit as _rateLimit } from '@/lib/rateLimit'
 
 export const revalidate = 120
 

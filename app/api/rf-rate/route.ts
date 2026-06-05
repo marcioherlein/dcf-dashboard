@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getRfRate } from '@/lib/data/fredClient'
-import { rateLimit } from '@/lib/rateLimit'
+import { rateLimit as _rateLimit } from '@/lib/rateLimit'
 
 export async function GET() {
   const rate = await getRfRate()

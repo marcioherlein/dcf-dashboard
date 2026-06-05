@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit } from '@/lib/rateLimit'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-import { rateLimit } from '@/lib/rateLimit'
 const YahooFinance = require('yahoo-finance2').default
 const yf = new YahooFinance({ suppressNotices: ['ripHistorical', 'yahooSurvey'] })
 

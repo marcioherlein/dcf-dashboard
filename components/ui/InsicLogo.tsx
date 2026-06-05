@@ -2,9 +2,7 @@ import * as React from "react";
 import Image from "next/image";
 
 // ─── Mark SVG — olive dot + navy bars, transparent background ────────────────
-// ViewBox "93 68 70 106": dot + 5 bars, no card background.
-// Used everywhere in the lockup. PNG (with white card) is only for app-icon
-// contexts (favicon, splash screen, og-image).
+// Kept for the legacy InsicLogo variant="mark" API.
 
 type MarkProps = {
   className?: string;
@@ -36,9 +34,7 @@ function InsicMark({ className, style, mono = false, title = "insic" }: MarkProp
   );
 }
 
-// ─── App icon — PNG with white card, for non-UI contexts ─────────────────────
-// Use only where a white-carded tile is appropriate: og-image, favicon, splash.
-// Never use inside the navbar or sidebar — it puts a white box on the bg.
+// ─── App icon — beige card tile, clips PNG corners via border-radius ──────────
 
 export type InsicAppIconProps = {
   size?: number;
@@ -49,26 +45,27 @@ export type InsicAppIconProps = {
 export function InsicAppIcon({ size = 40, className, style }: InsicAppIconProps) {
   return (
     <Image
-      src="/logos/insic-icon.png"
+      src="/logos/insic-app-icon-cropped.png"
       alt="insic"
       width={size}
       height={size}
       className={className}
-      style={{ borderRadius: Math.round(size * 0.21), display: "block", ...style }}
+      style={{ display: "block", ...style }}
     />
   );
 }
 
 // ─── Logo lockup ─────────────────────────────────────────────────────────────
-// SVG mark on transparent background — works on any surface color.
-// ViewBox aspect ratio is 70:106 ≈ 0.66, so markW = markH × (70/106).
+// Renders the beige card app icon. The PNG has a transparent outer area with
+// a beige rounded-square inside; border-radius 22% clips the PNG to show only
+// the beige card (no white bounding box).
 
 export type LogoSize = "sm" | "md" | "lg";
 
-const LOCKUP_SIZES: Record<LogoSize, { markH: number }> = {
-  sm: { markH: 28 },   // app sidebar, auth pages
-  md: { markH: 32 },   // app topbar
-  lg: { markH: 44 },   // landing navbar
+const LOCKUP_SIZES: Record<LogoSize, { size: number }> = {
+  sm: { size: 28 },   // app sidebar, auth pages
+  md: { size: 32 },   // app topbar
+  lg: { size: 40 },   // landing navbar
 };
 
 export type InsicLogoLockupProps = {
@@ -80,12 +77,11 @@ export type InsicLogoLockupProps = {
 
 export function InsicLogoLockup({
   size = "md",
-  on = "light",
+  on: _on = "light",
   className,
   style,
 }: InsicLogoLockupProps) {
-  const { markH } = LOCKUP_SIZES[size];
-  const markW = Math.round(markH * 70 / 106);
+  const { size: iconSize } = LOCKUP_SIZES[size];
 
   return (
     <span
@@ -94,9 +90,12 @@ export function InsicLogoLockup({
       role="img"
       aria-label="insic"
     >
-      <InsicMark
-        mono={on === "dark"}
-        style={{ width: markW, height: markH, display: "block", flexShrink: 0 }}
+      <Image
+        src="/logos/insic-app-icon-cropped.png"
+        alt="insic"
+        width={iconSize}
+        height={iconSize}
+        style={{ display: "block", flexShrink: 0 }}
       />
     </span>
   );
