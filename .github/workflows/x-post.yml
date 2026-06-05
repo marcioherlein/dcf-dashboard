@@ -1,0 +1,68 @@
+name: X Auto-Post
+
+on:
+  schedule:
+    - cron: '0 12 * * 1-5'   # 9:00 AM ART (UTC-3) Mon–Fri — Earnings preview
+    - cron: '0 15 * * 1-5'   # 12:00 PM ART (UTC-3) Mon–Fri — DCF snapshot
+    - cron: '0 19 * * 1-5'   # 4:00 PM ART (UTC-3) Mon–Fri — News post
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Post mode: earnings | dcf | news'
+        required: true
+        default: 'dcf'
+        type: choice
+        options: [earnings, dcf, news]
+      ticker:
+        description: 'Ticker override (dcf mode only)'
+        required: false
+      dry_run:
+        description: 'Dry run (print tweet without posting)'
+        required: false
+        default: 'false'
+        type: choice
+        options: ['true', 'false']
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: scripts
+
+      # Determine mode from schedule time or workflow_dispatch input
+      - name: Set mode from schedule
+        id: set-mode
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "MODE=${{ github.event.inputs.mode }}" >> $GITHUB_ENV
+            echo "TICKER=${{ github.event.inputs.ticker }}" >> $GITHUB_ENV
+            echo "DRY_RUN=${{ github.event.inputs.dry_run }}" >> $GITHUB_ENV
+          else
+            HOUR=$(TZ=UTC date +%H)
+            if   [ "$HOUR" = "12" ]; then echo "MODE=earnings" >> $GITHUB_ENV
+            elif [ "$HOUR" = "15" ]; then echo "MODE=dcf"      >> $GITHUB_ENV
+            else                           echo "MODE=news"     >> $GITHUB_ENV
+            fi
+            echo "DRY_RUN=false" >> $GITHUB_ENV
+          fi
+
+      - name: Post to X
+        env:
+          MODE:             ${{ env.MODE }}
+          TICKER:           ${{ env.TICKER }}
+          DRY_RUN:          ${{ env.DRY_RUN }}
+          APP_URL:          ${{ secrets.APP_URL || 'https://www.intrinsico.app' }}
+          X_API_KEY:        ${{ secrets.X_API_KEY }}
+          X_API_SECRET:     ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN:   ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET:  ${{ secrets.X_ACCESS_SECRET }}
+        run: node scripts/x-post.mjs
