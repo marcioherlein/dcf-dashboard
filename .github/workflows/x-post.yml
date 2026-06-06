@@ -2,24 +2,25 @@ name: X Auto-Post
 
 on:
   schedule:
-    - cron: '0 12 * * 1-5'   # 9:00 AM ART (UTC-3) Mon–Fri — Earnings preview
-    - cron: '0 15 * * 1-5'   # 12:00 PM ART (UTC-3) Mon–Fri — DCF snapshot
-    - cron: '0 19 * * 1-5'   # 4:00 PM ART (UTC-3) Mon–Fri — News post
+    - cron: '0 13 * * 2-4'   # 10:00 AM ART (UTC-3) Tue–Thu — Earnings preview
+    - cron: '0 15 * * 2-4'   # 12:00 PM ART (UTC-3) Tue–Thu — DCF snapshot
+    - cron: '0 17 * * 2-4'   # 02:00 PM ART (UTC-3) Tue–Thu — Macro event/calendar
+    - cron: '0 18 * * 2-4'   # 03:00 PM ART (UTC-3) Tue–Thu — News headline
   workflow_dispatch:
     inputs:
       mode:
-        description: 'Post mode: earnings | dcf | news'
+        description: 'Post mode: earnings | dcf | macro | news'
         required: true
         default: 'dcf'
         type: choice
-        options: [earnings, dcf, news]
+        options: [earnings, dcf, macro, news]
       ticker:
         description: 'Ticker override (dcf mode only)'
         required: false
       dry_run:
         description: 'Dry run (print tweet without posting)'
         required: false
-        default: 'false'
+        default: 'true'
         type: choice
         options: ['true', 'false']
 
@@ -38,19 +39,19 @@ jobs:
         run: npm install
         working-directory: scripts
 
-      # Determine mode from schedule time or workflow_dispatch input
       - name: Set mode from schedule
         id: set-mode
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "MODE=${{ github.event.inputs.mode }}" >> $GITHUB_ENV
+            echo "MODE=${{ github.event.inputs.mode }}"   >> $GITHUB_ENV
             echo "TICKER=${{ github.event.inputs.ticker }}" >> $GITHUB_ENV
             echo "DRY_RUN=${{ github.event.inputs.dry_run }}" >> $GITHUB_ENV
           else
             HOUR=$(TZ=UTC date +%H)
-            if   [ "$HOUR" = "12" ]; then echo "MODE=earnings" >> $GITHUB_ENV
+            if   [ "$HOUR" = "13" ]; then echo "MODE=earnings" >> $GITHUB_ENV
             elif [ "$HOUR" = "15" ]; then echo "MODE=dcf"      >> $GITHUB_ENV
-            else                           echo "MODE=news"     >> $GITHUB_ENV
+            elif [ "$HOUR" = "17" ]; then echo "MODE=macro"    >> $GITHUB_ENV
+            else                          echo "MODE=news"     >> $GITHUB_ENV
             fi
             echo "DRY_RUN=false" >> $GITHUB_ENV
           fi
@@ -63,4 +64,5 @@ jobs:
           APP_URL:            https://insic.app
           BUFFER_API_KEY:     ${{ secrets.BUFFER_API_KEY }}
           BUFFER_CHANNEL_ID:  ${{ secrets.BUFFER_CHANNEL_ID }}
+          ALPHA_VANTAGE_KEY:  ${{ secrets.ALPHA_VANTAGE_KEY }}
         run: node scripts/x-post.mjs

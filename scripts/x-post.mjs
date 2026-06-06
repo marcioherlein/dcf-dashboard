@@ -5,6 +5,7 @@
  *   earnings  — "Earnings Tomorrow" preview for stocks reporting next trading day
  *   dcf       — DCF fair value snapshot for one featured stock
  *   news      — Top financial news headline + brief take
+ *   macro     — Economic event alert (CPI, NFP, Fed rate) or upcoming macro calendar
  *
  * Usage:
  *   MODE=dcf TICKER=AAPL APP_URL=... BUFFER_API_KEY=... BUFFER_CHANNEL_ID=... node scripts/x-post.mjs
@@ -14,12 +15,13 @@ import yahooFinance from 'yahoo-finance2'
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const MODE              = process.env.MODE              || 'dcf'
-const TICKER            = process.env.TICKER            || ''
-const APP_URL           = (process.env.APP_URL          || 'https://insic.app').replace(/\/$/, '')
-const DRY_RUN           = process.env.DRY_RUN           === 'true'
-const BUFFER_API_KEY    = process.env.BUFFER_API_KEY    || ''
-const BUFFER_CHANNEL_ID = process.env.BUFFER_CHANNEL_ID || ''
+const MODE                = process.env.MODE                || 'dcf'
+const TICKER              = process.env.TICKER              || ''
+const APP_URL             = (process.env.APP_URL            || 'https://insic.app').replace(/\/$/, '')
+const DRY_RUN             = process.env.DRY_RUN             === 'true'
+const BUFFER_API_KEY      = process.env.BUFFER_API_KEY      || ''
+const BUFFER_CHANNEL_ID   = process.env.BUFFER_CHANNEL_ID   || ''
+const ALPHA_VANTAGE_KEY   = process.env.ALPHA_VANTAGE_KEY   || 'demo'
 
 // ─── Buffer API ───────────────────────────────────────────────────────────────
 
@@ -344,9 +346,200 @@ async function runNews() {
   await post(lines.join('\n'))
 }
 
+// ─── Macro calendar — known FOMC/CPI/NFP dates ───────────────────────────────
+// Hardcoded 2025-2026 dates (UTC). Update annually.
+// Sources: federalreserve.gov, bls.gov release calendars.
+const MACRO_CALENDAR = [
+  // FOMC meetings
+  { date: '2026-01-29', type: 'FOMC',  label: 'FOMC Rate Decision' },
+  { date: '2026-03-19', type: 'FOMC',  label: 'FOMC Rate Decision' },
+  { date: '2026-05-07', type: 'FOMC',  label: 'FOMC Rate Decision' },
+  { date: '2026-06-18', type: 'FOMC',  label: 'FOMC Rate Decision' },
+  { date: '2026-07-30', type: 'FOMC',  label: 'FOMC Rate Decision' },
+  { date: '2026-09-17', type: 'FOMC',  label: 'FOMC Rate Decision' },
+  { date: '2026-11-05', type: 'FOMC',  label: 'FOMC Rate Decision' },
+  { date: '2026-12-16', type: 'FOMC',  label: 'FOMC Rate Decision' },
+  // CPI releases (BLS, ~2nd week of month)
+  { date: '2026-01-15', type: 'CPI',   label: 'CPI Inflation Report' },
+  { date: '2026-02-12', type: 'CPI',   label: 'CPI Inflation Report' },
+  { date: '2026-03-12', type: 'CPI',   label: 'CPI Inflation Report' },
+  { date: '2026-04-10', type: 'CPI',   label: 'CPI Inflation Report' },
+  { date: '2026-05-13', type: 'CPI',   label: 'CPI Inflation Report' },
+  { date: '2026-06-11', type: 'CPI',   label: 'CPI Inflation Report' },
+  { date: '2026-07-15', type: 'CPI',   label: 'CPI Inflation Report' },
+  { date: '2026-08-12', type: 'CPI',   label: 'CPI Inflation Report' },
+  { date: '2026-09-11', type: 'CPI',   label: 'CPI Inflation Report' },
+  { date: '2026-10-14', type: 'CPI',   label: 'CPI Inflation Report' },
+  { date: '2026-11-12', type: 'CPI',   label: 'CPI Inflation Report' },
+  { date: '2026-12-11', type: 'CPI',   label: 'CPI Inflation Report' },
+  // NFP releases (BLS, 1st Friday of month)
+  { date: '2026-01-09', type: 'NFP',   label: 'Jobs Report (NFP)' },
+  { date: '2026-02-06', type: 'NFP',   label: 'Jobs Report (NFP)' },
+  { date: '2026-03-06', type: 'NFP',   label: 'Jobs Report (NFP)' },
+  { date: '2026-04-03', type: 'NFP',   label: 'Jobs Report (NFP)' },
+  { date: '2026-05-08', type: 'NFP',   label: 'Jobs Report (NFP)' },
+  { date: '2026-06-05', type: 'NFP',   label: 'Jobs Report (NFP)' },
+  { date: '2026-07-10', type: 'NFP',   label: 'Jobs Report (NFP)' },
+  { date: '2026-08-07', type: 'NFP',   label: 'Jobs Report (NFP)' },
+  { date: '2026-09-04', type: 'NFP',   label: 'Jobs Report (NFP)' },
+  { date: '2026-10-02', type: 'NFP',   label: 'Jobs Report (NFP)' },
+  { date: '2026-11-06', type: 'NFP',   label: 'Jobs Report (NFP)' },
+  { date: '2026-12-04', type: 'NFP',   label: 'Jobs Report (NFP)' },
+]
+
+// ─── Alpha Vantage helpers ─────────────────────────────────────────────────────
+
+async function fetchAlphaVantage(fn, params = {}) {
+  const url = new URL('https://www.alphavantage.co/query')
+  url.searchParams.set('function', fn)
+  url.searchParams.set('apikey', ALPHA_VANTAGE_KEY)
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v)
+  const res = await fetch(url.toString(), { signal: AbortSignal.timeout(15000) })
+  if (!res.ok) throw new Error(`Alpha Vantage ${fn} returned ${res.status}`)
+  const json = await res.json()
+  if (json['Note'] || json['Information']) throw new Error(`Alpha Vantage rate limit hit`)
+  return json
+}
+
+// Returns the two most recent data points for a series: { latest, previous }
+function latestTwo(data) {
+  const entries = Object.entries(data).sort((a, b) => b[0].localeCompare(a[0]))
+  if (entries.length < 2) return null
+  return {
+    latestDate:  entries[0][0],
+    latestVal:   parseFloat(entries[0][1]),
+    previousVal: parseFloat(entries[1][1]),
+  }
+}
+
+// ─── Mode: macro ──────────────────────────────────────────────────────────────
+// Posts either:
+//   - A preview tweet the day BEFORE a known FOMC/CPI/NFP event
+//   - A recap tweet the day OF the event using latest Alpha Vantage data
+//   - A generic "market pulse" if no event is today/tomorrow
+
+async function runMacro() {
+  const todayUtc    = new Date().toISOString().split('T')[0]
+  const tomorrowUtc = new Date(Date.now() + 86400000).toISOString().split('T')[0]
+
+  const todayEvent    = MACRO_CALENDAR.find(e => e.date === todayUtc)
+  const tomorrowEvent = MACRO_CALENDAR.find(e => e.date === tomorrowUtc)
+
+  // ── RECAP: event is today — fetch live data and post results ──
+  if (todayEvent) {
+    console.log(`Macro event today: ${todayEvent.label}`)
+    let lines = []
+
+    if (todayEvent.type === 'CPI') {
+      const data = await fetchAlphaVantage('CPI', { interval: 'monthly' })
+      const d = latestTwo(data.data ?? {})
+      if (!d) throw new Error('No CPI data from Alpha Vantage')
+      const chg = d.latestVal - d.previousVal
+      const emoji = chg > 0.2 ? '🔴' : chg < -0.1 ? '🟢' : '🟡'
+      lines = [
+        `${emoji} CPI Inflation — ${d.latestDate}`,
+        `Index: ${d.latestVal.toFixed(1)} (prev: ${d.previousVal.toFixed(1)})`,
+        `MoM change: ${chg >= 0 ? '+' : ''}${chg.toFixed(2)} pts`,
+        '',
+        chg > 0.3 ? 'Above expectations — pressure on Fed to stay higher for longer.' :
+        chg < 0   ? 'Cooling inflation — builds case for rate cuts ahead.' :
+        'In-line print — Fed likely on hold near-term.',
+        '',
+        `Full macro context → ${APP_URL}`,
+        '#CPI #Inflation #Fed #Macro',
+      ]
+    } else if (todayEvent.type === 'NFP') {
+      const data = await fetchAlphaVantage('NONFARM_PAYROLL')
+      const d = latestTwo(data.data ?? {})
+      if (!d) throw new Error('No NFP data from Alpha Vantage')
+      const chgK = Math.round(d.latestVal - d.previousVal)
+      const emoji = d.latestVal > 200 ? '🟢' : d.latestVal > 100 ? '🟡' : '🔴'
+      lines = [
+        `${emoji} Jobs Report (NFP) — ${d.latestDate}`,
+        `Nonfarm Payrolls: ${d.latestVal.toFixed(0)}K jobs`,
+        `MoM change: ${chgK >= 0 ? '+' : ''}${chgK}K`,
+        '',
+        d.latestVal > 250 ? 'Strong labor market — Fed less likely to cut soon.' :
+        d.latestVal < 100 ? 'Weak jobs print — rate cut expectations rising.' :
+        'Solid but cooling labor market.',
+        '',
+        `Full macro context → ${APP_URL}`,
+        '#NFP #JobsReport #Fed #Macro',
+      ]
+    } else if (todayEvent.type === 'FOMC') {
+      const data = await fetchAlphaVantage('FEDERAL_FUNDS_RATE', { interval: 'monthly' })
+      const d = latestTwo(data.data ?? {})
+      if (!d) throw new Error('No Fed Funds data from Alpha Vantage')
+      const chg = d.latestVal - d.previousVal
+      const emoji = chg > 0 ? '🔴' : chg < 0 ? '🟢' : '⚪'
+      const action = chg > 0 ? `Hiked +${(chg * 100).toFixed(0)}bps` : chg < 0 ? `Cut ${(chg * 100).toFixed(0)}bps` : 'Held rates'
+      lines = [
+        `${emoji} FOMC Decision — Fed ${action}`,
+        `Fed Funds Rate: ${d.latestVal.toFixed(2)}% (prev: ${d.previousVal.toFixed(2)}%)`,
+        '',
+        chg > 0 ? 'Higher rates → discount rates up → headwind for growth stocks. Check your DCF.' :
+        chg < 0 ? 'Rate cut → lower WACC → DCF fair values improve. Run the model.' :
+        'No change — market expected this. Watch guidance for next meeting signal.',
+        '',
+        `Recalculate valuations → ${APP_URL}`,
+        '#FOMC #Fed #InterestRates #Macro',
+      ]
+    }
+
+    await post(lines.join('\n'))
+    return
+  }
+
+  // ── PREVIEW: event is tomorrow ──
+  if (tomorrowEvent) {
+    console.log(`Macro event tomorrow: ${tomorrowEvent.label}`)
+    const typeEmoji = { CPI: '📊', NFP: '💼', FOMC: '🏦' }
+    const context = {
+      CPI:  'CPI measures consumer price inflation. A hot print = Fed stays higher longer. A cool print = rate cuts come closer.',
+      NFP:  'Nonfarm Payrolls measure US job creation. Strong jobs = Fed on hold. Weak jobs = rate cut pressure builds.',
+      FOMC: 'The Fed announces its rate decision. Changes in rates directly affect WACC — and therefore every DCF fair value.',
+    }
+    const lines = [
+      `${typeEmoji[tomorrowEvent.type] ?? '📅'} ${tomorrowEvent.label} — Tomorrow`,
+      '',
+      context[tomorrowEvent.type] ?? '',
+      '',
+      `What to watch: how does it change valuations? → ${APP_URL}`,
+      `#${tomorrowEvent.type} #Macro #FedWatch`,
+    ]
+    await post(lines.join('\n'))
+    return
+  }
+
+  // ── MARKET PULSE: no specific event — post next upcoming event as reminder ──
+  const upcoming = MACRO_CALENDAR
+    .filter(e => e.date > todayUtc)
+    .sort((a, b) => a.date.localeCompare(b.date))[0]
+
+  if (!upcoming) {
+    console.log('No upcoming macro events found — skipping')
+    return
+  }
+
+  const daysAway = Math.round((new Date(upcoming.date) - new Date(todayUtc)) / 86400000)
+  const typeEmoji = { CPI: '📊', NFP: '💼', FOMC: '🏦' }
+  const lines = [
+    `${typeEmoji[upcoming.type] ?? '📅'} Next macro event: ${upcoming.label}`,
+    `📅 ${upcoming.date} — ${daysAway} days away`,
+    '',
+    `${upcoming.type === 'FOMC' ? 'Rate decisions move WACC and DCF fair values.' :
+       upcoming.type === 'CPI'  ? 'Inflation data shapes Fed policy and discount rates.' :
+       'Jobs data influences Fed rate expectations.'}`,
+    '',
+    `Monitor valuations → ${APP_URL}`,
+    `#${upcoming.type} #Macro #FedWatch`,
+  ]
+  await post(lines.join('\n'))
+}
+
 // ─── Entry point ──────────────────────────────────────────────────────────────
 
-const MODES = { earnings: runEarnings, dcf: runDcf, news: runNews }
+const MODES = { earnings: runEarnings, dcf: runDcf, news: runNews, macro: runMacro }
 
 if (!MODES[MODE]) {
   console.error(`Unknown MODE="${MODE}". Use: earnings | dcf | news`)
