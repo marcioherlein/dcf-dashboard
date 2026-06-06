@@ -103,9 +103,9 @@ reported FCF. Check `historicalFCF` array (last entry) as the ground truth.
 ### Finding 5: Monotonically rising CapEx/D&A not captured by 3Y-median blend
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** MSFT — CapEx% 13.3%→18.1%→22.9% (Azure AI); AMZN — CapEx% 13.0%→18.4% (AWS AI buildout)
-**Run count:** 2
-**Status:** integrated — check added to Phase 3 CapEx section; F4 check also updated to exclude financial types
+**Ticker / Context:** MSFT (Azure AI), AMZN (AWS), GOOGL (4.6pp gap), META (7.2pp gap Reality Labs) — AI infra capex surge is systemic
+**Run count:** 4
+**Status:** integrated — 4 major AI infrastructure companies confirmed
 
 **Observed:** `buildProjectedRows` blends `medianCapexPct = median(3Y) × 0.60 + TTM × 0.40`.
 When capex is monotonically rising (MSFT: 13.3%→18.1%→22.9%), the 3Y median (18.1%) anchors
@@ -123,8 +123,8 @@ blended << TTM by >3pp, flag as capex-understatement for this company.
 ### Finding 6: taxRate = null in all historical IS rows — FMP field not populating
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** ALL 33 AUDITED TICKERS — 100% reproduction rate
-**Run count:** 33
+**Ticker / Context:** ALL 53 AUDITED TICKERS — 100% reproduction rate (taxRate=null for every FMP-sourced company)
+**Run count:** 53
 **Status:** integrated — 100% reproduction rate; taxRate field is never populated in FMP income statement rows
 
 **Observed:** All 5 MSFT historical IS rows have `taxRate: null`. `buildProjectedRows` falls back to
@@ -141,9 +141,9 @@ resulting NOPAT impact.
 ### Finding 7: Cyclical/recovery trough silent — EBIT=null + median NI positive but trough-distorted
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** MU (median 3.1% vs TTM 22.8%); LYFT (median 0.4% vs TTM 45.0% deferred tax gain)
-**Run count:** 2
-**Status:** integrated — check added to Phase 3 LFCF Net Income section (F7 + LYFT one-time gain variant)
+**Ticker / Context:** MU (cyclical), LYFT (deferred tax), DIS (EBIT=null recovery: med=5.4% vs TTM=13.1%)
+**Run count:** 3
+**Status:** integrated — 3 distinct trigger patterns confirmed
 
 **Observed:** With EBIT=null rows, `isCyclicalTrough` cannot evaluate (condition requires `medianEbitMargin < -0.02`).
 The EBIT null fallback fires and uses `medianNetMargin`. For MU, the 3-year NI% values are [-37.5%, 3.1%, 22.8%],
@@ -291,9 +291,9 @@ Ensure F4 check note clarifies that ratio > 1.50 for capital-intensive non-finan
 ### Finding 13: deriveNetMargin 'last' picks oldest year — auditBundle IS rows are newest-first
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** SHOP (FY2021 warrant 63.2%->55%cap); WDAY (FY2024 19.0%->22%); DDOG (FY2024 6.8%->isHighGrowthSaaS->14.7%)
-**Run count:** 3
-**Status:** integrated — confirmed systemic: 3 independent tickers across 3 different margin paths
+**Ticker / Context:** SHOP, WDAY, DDOG, PANW(4.4x), CELH(2.9x), PFE(2.9x) — 6 tickers confirmed, all sectors
+**Run count:** 6
+**Status:** integrated — systemic; affects any ticker where recent peak-year NI% >> trailing NI%
 
 **Observed:** SHOP's FY2021 net margin was 63.2% due to warrant fair value adjustments (a one-time non-cash
 gain), not operating earnings. This row is included in the 5-year `withBoth` set used by `deriveNetMargin`.
@@ -390,5 +390,32 @@ The `etf` companyType (which returns NAV-not-applicable) or a P/NAV approach wou
 **Suggested check to add:** When companyType=alt_asset and `revenueM < 100` (tiny "revenue" = fees on tiny AUM),
 flag that this may be a closed-end fund or micro alt-asset vehicle. DCF output will be near-zero and triangulated
 FV will be unreliable. Check `quote.quoteType` — closed-end funds often return 'CEF' not 'EQUITY'.
+
+---
+
+### Finding 16: BRK-B P/Book FV = $758,339/share — units error when priceToBook=None
+**Agent:** audit-valuation
+**Date:** 2026-06-06
+**Ticker / Context:** BRK-B — Yahoo returns priceToBook=None; P/Book implied=$758,339/sh vs price $488; tri=$76,562
+**Run count:** 1
+**Status:** new
+
+**Observed:** When Yahoo `priceToBook` is `None` (common for conglomerates like BRK-B, GE, diversified
+financials), the `calculateMultiples.ts` P/Book method falls to an alternative book value calculation
+that produces a wildly wrong result: $758,339/share. BRK-B actual book value ≈ $333/share (totalEquity
+$717B / 2.157B B-share equivalents). The correct fair value from P/B would be ~$461-499/share. The
+$758k FV enters the multiples blend (weight: P/Book applicable=True at ~33% of blended multiples),
+producing multiples blended FV = $253,046 and triangulated FV = $76,562 (156× above actual price).
+Triangulation weight for `financial` type: 30% multiples → adds ~$75,900 to tri vs correct ~$146.
+**Expected:** When Yahoo `priceToBook` is None, the P/B method should either be excluded (applicable=False)
+or use `buildSnapshot.bookValuePerShare` (derived from `totalEquity × 1e6 / sharesRaw`) which correctly
+gives $333/share. The units error likely occurs when a raw equity dollar value is divided by a shares
+count in incorrect units (e.g. equity in full dollars instead of millions).
+**File / location:** `lib/dcf/calculateMultiples.ts` P/Book estimate section; cross-check with
+`lib/valuation/cockpitBuilders.ts` `buildSnapshot` `bookValuePerShare` computation
+**Suggested check to add:** In Phase 4D ratio cross-check: for `financial`/`alt_asset` types, compute
+`price / (totalEquity_M / sharesOutstanding_M)` as the ground-truth P/B. If `multiples.P/Book.impliedFairValue
+> currentPrice × 50`, flag a P/B units error — the calculated book value per share is wrong by orders of
+magnitude. Also flag when `multiples.blendedFairValue > currentPrice × 20` for any non-startup company.
 
 ---

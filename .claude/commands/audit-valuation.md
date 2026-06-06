@@ -10,7 +10,7 @@ If no ticker is provided, the agent must ask:
 
 > "Which stock should I audit? Provide a ticker and I'll run the full valuation model audit against the real computed values for that company."
 
-Once a ticker is given, run all three phases below in order. Every finding must reference actual numbers — not hypotheticals — derived from what the code computes for this specific company.
+Once a ticker is given, run all phases below in order. Every finding must reference actual numbers — not hypotheticals — derived from what the code computes for this specific company.
 
 ---
 
@@ -24,20 +24,15 @@ Read `testing/findings/audit-log.md`. Extract every finding where:
 - `Status: confirmed` (≥ 2 runs) or `Status: integrated`
 - `Agent: audit-valuation`
 
-Treat these as additional checks to run during the audit, even if they are not yet
-written into the phases below. Prior findings are the accumulated institutional memory
-of every previous audit run.
+Treat these as additional checks to run during the audit, even if they are not yet written into the phases below.
 
 **0B. Increment run count for any finding you reproduce**
 
-If you observe the same issue described in a prior finding, update that finding's
-`Run count:` and `Status:` in `testing/findings/audit-log.md` before producing the
-final summary. Use the exact finding number so it stays grep-able.
+If you observe the same issue described in a prior finding, update that finding's `Run count:` and `Status:` in `testing/findings/audit-log.md` before producing the final summary.
 
 **0C. Record new findings at the end of the run**
 
-After completing all phases, write every novel issue found (not already in the log)
-to `testing/findings/audit-log.md` using this format:
+After completing all phases, write every novel issue found to `testing/findings/audit-log.md`:
 
 ```
 ### Finding [N]: [Short title]
@@ -53,47 +48,56 @@ to `testing/findings/audit-log.md` using this format:
 **Suggested check to add:** [exact phrasing for the template]
 ```
 
-To get the next finding number: grep the log for `### Finding` and increment the
-highest number found.
+**0D. Integrate confirmed findings (run count ≥ 2, status: confirmed)**
 
-**0D. Integrate confirmed findings into this template**
+1. Insert check into the right section of `testing/valuation-audit-agent.md`
+2. Update finding status to `integrated`
+3. Overwrite `.claude/commands/audit-valuation.md` with identical content
 
-If any finding in the log has `Run count: 2` or higher and `Status: confirmed`:
-1. Find the right section in this file (`testing/valuation-audit-agent.md`) based
-   on the finding's phase/area
-2. Insert the check (using the finding's `Suggested check to add:` text)
-3. Update the finding's `Status:` from `confirmed` → `integrated`
-4. Re-sync this file to `.claude/commands/audit-valuation.md` by overwriting it with
-   the updated content of `testing/valuation-audit-agent.md`
-
-**0E. Sync to command**
-
-After any write to `testing/valuation-audit-agent.md`, always overwrite
-`.claude/commands/audit-valuation.md` with the identical content so the slash
-command stays current.
+**0E. Sync to command** after any template write.
 
 ---
 
 ## Setup: Data Acquisition
 
-Before auditing anything, fetch real data for the ticker:
+Fetch real data via the dev server:
 
-1. Call `GET /api/financials?ticker={TICKER}` from the local dev server (port 3000). This returns the full `apiData` object the app uses — WACC inputs, cagrAnalysis, businessProfile, financialStatements, valuationMethods, quote, etc.
-2. If the API is not running or times out, read the relevant source files to reconstruct what the data pipeline would produce for this company based on Yahoo Finance field names and the extraction logic in `app/api/financials/route.ts`.
-3. Identify the `companyType` the app assigns to this stock by tracing `detectCompanyType` in `lib/dcf/detectCompanyType.ts` with the actual sector and industry Yahoo returns for this ticker.
+```bash
+AKEY="9ce10b1f696553abb34e44954424a911e324c1e11a516f54"
+curl -s -H "x-audit-dev-key: $AKEY" "http://localhost:3000/api/financials?ticker={TICKER}" > /tmp/{ticker}_fin.json
+```
 
-Read these files in full before starting:
-- `lib/dcf/detectCompanyType.ts`
-- `lib/valuation/cockpit.ts`
-- `lib/valuation/cockpitBuilders.ts`
-- `lib/valuation/assumptions/deriveAssumptions.ts`
-- `lib/dcf/projectCashFlows.ts`
-- `lib/valuation/normalizeInputs.ts`
-- `lib/valuation/unleveredDcf.ts`
-- `lib/dcf/calculateMultiples.ts`
-- `lib/dcf/calculateFCFE.ts`
+Extract key sections: `quote`, `cagrAnalysis`, `wacc`, `fairValue`, `scenarios`, `valuationMethods`, `assumptionAudit`, `financialStatements`, `historicalFCF`, `businessProfile`, `dcf`.
 
-Then invoke `/creating-financial-models` to load the financial modeling framework before evaluating the DCF line structure.
+If the API is down, fall back to reading source files and tracing logic manually.
+
+---
+
+## Phase 0 — Data Quality Pre-Flight
+
+Run these checks before any valuation analysis. Bad input data contaminates everything downstream.
+
+### 0A. grossProfit / revenue ratio
+- Compute `grossProfit / revenue` for each historical IS row.
+- **[Finding 1 — integrated]** If all rows > 97%: FMP is returning totalRevenue as grossProfit. The `bpGrossMargin < 0.97` fix in `route.ts` should have caught it — verify the fix fired by checking `businessProfile.grossMargin`. If `businessProfile.grossMargin > 0.97` (genuinely near-100% GP business like ARM at 97.54%), the fix correctly stays silent; flag the IS rows as approximate but not corrupt.
+- **[Finding 14 — integrated]** If all rows show *identical* GP% to 2 decimal places across 3+ years (e.g. WDAY: 75.76%, LYFT: 35.62%, CVX: 42.42%): FMP is returning a static blended gross margin. Impacts `isHighGrowthSaaS` boundary — if actual GM fluctuates near the 60% threshold, the stale value can flip the margin convergence path.
+
+### 0B. EBIT / operatingIncome availability
+- Are `operatingIncome` values populated in the IS rows? If all null: EBIT-based UFCF model will use the NI fallback — confirm it fires by checking `assumptionAudit.netMargin` vs `businessProfile.netMargin`.
+- **[Finding 3 — integrated]** If EBIT=null AND projected NOPAT rows are all null: the EBIT fallback `ebit = revenue × medianNetMargin / (1−taxRate)` is not firing. This silently collapses the UFCF Full DCF Table.
+
+### 0C. taxRate field population
+- **[Finding 6 — integrated — systemic — 33/33 tickers confirmed]** Check whether all historical `taxRate` values are null. The model always falls back to `waccInputs.taxRate = 0.21`. Report the company's known effective tax rate (check actual financial filings) and the NOPAT impact. For low-tax companies (MSFT ~18-19%, TSM ~15%), the 21% fallback over-taxes by 2-6pp. For high-tax companies (UK/European domiciles ~25-28%), it under-taxes.
+
+### 0D. baseFCF vs historicalFCF ratio
+- **[Finding 4 — integrated]** Compute `baseFCF / historicalFCF[-1]`. Flag if ratio < 0.70 or > 1.50 (non-financial types only — skip for `financial`/`fintech`/`bdc`/`mreeit`/`alt_asset`). Negative ratios (INTC, SO) mean actual FCF is negative while Yahoo returns stale positive. Ratio > 1.50 for utilities (NEE 2.30×, SO) means Yahoo OCF ignores full regulated capex. Ratio > 1.50 for content companies (NFLX 1.73×) means Yahoo adds back content amortization. Fast-ramping cyclicals (MU) can legitimately exceed 1.50× when TTM FCF genuinely exceeds prior annual — verify by checking FCF trend direction.
+
+### 0E. netMargin audit vs businessProfile cross-check
+- **[Finding 13 — integrated]** Compare `assumptionAudit.netMargin` vs `businessProfile.netMargin`. If ratio > 2.5×, the auditBundle IS rows are newest-first — `deriveNetMargin`'s `withBoth[-1]` picks the oldest year instead of the most recent. Root cause: `auditBundle.financialStatements.incomeStatement` is passed newest-first. Confirmed: SHOP (last=FY2021 63.2%→55% cap), WDAY (last=FY2024 19%→22%), DDOG (last=FY2024 6.8%→14.7% via SaaS path). Fix needed: sort `withBoth` by year ascending in `deriveAssumptions.ts`.
+
+### 0F. companyType sanity
+- If `companyType = alt_asset` AND `businessProfile.revenueM < 100`: likely a closed-end fund (TY=Tri-Continental, GAB=Gabelli). **[Finding 15 — integrated]** FCFF will be near-zero; check `quote.quoteType` for `'CEF'`. Triangulated FV from multiples is the only useful number.
+- If `isNegativeFCF = True` but `baseFCF > 0`: Yahoo `fd.freeCashflow` is returning a stale positive value from before the company turned cash-flow-negative (INTC). Flag and note the correct baseFCF from `historicalFCF[-1]`.
 
 ---
 
@@ -102,271 +106,345 @@ Then invoke `/creating-financial-models` to load the financial modeling framewor
 ### 1A. companyType assignment
 
 State:
-- What Yahoo returns for `sector` and `industry` for this ticker
-- Which branch of `detectCompanyType.ts` fires and why
-- The resulting `companyType`
-- Whether this classification is financially correct for this company. If not, which type should it be and why?
-- Any edge cases where this company straddles two types (e.g. MELI = growth + fintech hybrid, BABA = standard but China risk-discounted)
+- Yahoo `sector` and `industry`
+- Which `detectCompanyType.ts` branch fires and why
+- The resulting `companyType` and whether it is financially correct
+- Edge cases (MELI = growth + fintech hybrid; V/MA = financial but pure payment network; TSLA = standard but has auto carve-out on P/E; PLTR/ARM = growth with speculative P/E)
 
-- **[Finding 15 — integrated]** When `companyType = alt_asset` and `businessProfile.revenueM < 100`, flag potential closed-end fund misclassification. Closed-end funds (TY=Tri-Continental, GAB=Gabelli Equity Trust) are classified `alt_asset` via the `asset management` regex but their DCF is meaningless (baseFCF ≈ management-fee income, not investment returns). Check `quote.quoteType` — closed-end funds may return `CEF`. FCFF FV will be near-zero; triangulation via multiples is the only useful anchor.
-### 1B. COCKPIT_WEIGHTS for this companyType
+- **[Finding 15 — integrated]** When `companyType = alt_asset` AND `revenueM < 100`, flag closed-end fund risk. Check `quote.quoteType` — CEFs return 'CEF', not 'EQUITY'. DCF is misapplied; only multiples-based triangulation is reliable.
 
-State the active weight table:
-```
-forward_pe: X%, ev_ebitda: X%, revenue_multiple: X%, core_dcf: X%
-```
+- **[Finding 10 — integrated]** For `Financial Services / Credit Services` (V, MA): verify whether the company takes actual credit risk. If `businessProfile.fcfMargin > 25%`, this is likely a pure payment network misclassified as `financial` via the `credit` keyword. P/B and LFCF anchors work reasonably but note the classification gap.
 
-For each weight:
-- Is this method valid for this company? (e.g. Forward P/E with negative earnings → excluded, P/B for a standard tech company → zero-weighted)
-- Is the weight too high or too low given the company's business model?
-- Does `getEffectiveWeights` modify the base weights (EBITDA margin < 8% reduction, fintech auto-promotion)? Does the modification fire for this stock? Is it correct?
-- Name one stock where this same weight table would produce a wrong answer, and explain why
+### 1B. COCKPIT_WEIGHTS
 
-### 1C. FOUR_MODEL_DCF_WEIGHTS for this companyType
+State the active weight table and evaluate each method's validity. Does `getEffectiveWeights` modify the base (EBITDA margin < 8% → reduce ev_ebitda weight, fintech auto-promote)? Does it fire correctly here?
 
-State the active Full DCF blend:
-```
-ufcfPGM: X%, ufcfEM: X%, lfcfPGM: X%, lfcfEM: X%
-```
+### 1C. FOUR_MODEL_DCF_WEIGHTS
 
-- Is the UFCF vs LFCF split appropriate for this company?
-- For financial/fintech companies: LFCF should dominate. Does it? Is 85-90% LFCF weighting correct?
-- For standard/growth companies: UFCF dominates. Does the exit-multiple vs perpetuity-growth split reflect the company's terminal value uncertainty?
-- What would the blended fair value look like if the weights were wrong (e.g. 50/50 UFCF/LFCF for a bank)?
+State `ufcfPGM / ufcfEM / lfcfPGM / lfcfEM` and assess the UFCF vs LFCF split for this company type.
 
 ---
 
 ## Phase 2 — Pre-set Assumption Audit
 
-For each seeded assumption, state the actual computed value for this ticker, then evaluate it.
+State the actual value for each assumption, then evaluate.
 
 ### 2A. CAGR
 
-- What does `cagrAnalysis.blended` equal for this company?
-- How was it derived? (analyst blend weights, historical blend, convergence discount, size cap — trace the exact path in `extractFCFInputs` in `projectCashFlows.ts`)
-- Is a cyclical sector cap firing (Energy/Basic Materials → 8%)? Should it?
-- Is a financial sector cap firing (mature bank → 12%)? Should it?
-- Is the convergence discount (`excess × 0.75` above 20%) appropriate here, or is this a company where 30%+ CAGR is structurally defensible for 5+ years?
-- Is the foreignCurrency path followed (TSM=TWD, BABA=CNY-underlying, RMS=EUR)? Does it produce a USD-correct CAGR?
-- Is the seeded CAGR in the Cockpit consistent with the CAGR used in the Full DCF Table `normalizeInputs.ts`? If there is a discrepancy, state the values and explain why they differ.
+- What does `cagrAnalysis.blended` equal? Trace: `rawBlended` → convergence discount (excess × 0.75 above 20%) → size cap → final.
+- Analyst weight = 55% (when ≥ 3 analysts); historical 3Y = 15%; fundamental (ROE × retention) = 25%.
+- Energy/Basic Materials → 8% cap. Financial sector → 12% cap (mature banks). Alt-asset → 25% cap.
+- `cagrAnalysis.analystBaseEffect`: if True, analyst 1Y > 150% — base effect distortion, clamped.
+- foreignCurrency path: verify USD-converted CAGR for non-USD reporters (TSM=TWD÷rate, RMS=EUR÷rate). ARS exclusion must only fire for Argentina.
+- Is `cagr` in top-level consistent with `cagrAnalysis.blended`? If not, a `cagrOverride` was applied — state the override value and why.
 
 ### 2B. Exit P/E (exitPE)
 
-- What industry does `getIndustryMultiples` receive, and what `sectorPE` does it return?
-- What is the current TTM P/E from Yahoo, and is it valid (positive, <200×)?
-- What does `blendExitMultiple` return? (55% current + 35% geo-discounted sector)
-- Does the thin-margin cap fire (`isThinMargin && isPEElevated`)? Should it?
-- Does the fintech floor fire (22×)? Should it?
-- Does the AI semi premium fire (38×, gated at revenueM≥100)? Should it?
-- Does the growth premium fire (CAGR>25% + fintech/high-growth-financial)? What value does it add?
-- Is the final `exitPE` financially sensible for this company's maturity and growth stage?
-- **[Finding 8 — integrated]** Compute `currentPE / sectorPE`. If ratio > 3× and company is profitable (net margin > 15%), flag that blended exitPE embeds speculative premium. Check whether `exitPE > sectorPE × 2.5` — if so, the speculative-fade guard should fire but doesn't. Confirmed: PLTR (155×/32× = 4.8×→107×), AMD (156×/28× = 5.6×→106.5×), ARM (394×/28× = 14.1×→252×). Note: TSLA is handled separately by F11 (isAutoIndustry carve-out); DDOG (P/E=600× but netMargin=3.7%<15%) correctly does NOT trigger F8.
-- **[Finding 10 — integrated]** For `Financial Services / Credit Services` companyType (V, MA), verify that `financial` classification is appropriate. Check `businessProfile.fcfMargin` — if > 25%, this is likely a pure payment network (Visa, Mastercard) with no credit risk, classified `financial` via the `credit` keyword regex. P/B and LFCF anchors work reasonably; note as classification edge case. Both V and MA stay `financial` because `historicalCagr3y < 0.20` — the `fintech` fast-lane doesn't apply at current growth rates.
-- **[Finding 11 — integrated]** For Auto Manufacturers, check `exitPE > sectorPE × 20` (e.g. >200× when sectorPE=10). If so, the `isAutoIndustry` carve-out is granting immunity to speculative P/E inflation. The carve-out correctly exempts OEMs from the thin-margin cap for structural reasons, but inadvertently allows arbitrary P/E multiples to pass through uncapped. (e.g. TSLA: P/E=357×, thin-margin cap blocked by isAutoIndustry → exitPE=222×).
+- What industry string is passed to `getIndustryMultiples`? What `sectorPE` comes back? (If industry not found: falls to sector fallback.)
+- Current TTM P/E from Yahoo: valid (positive, < 500)? If null: blend uses sector-only path.
+- Blend: `effectivePE × (55/90) + discountedSector × (35/90)`. Compute manually and verify API value.
+- Thin-margin cap: `isThinMargin (nm < 10%) AND isPEElevated (pe > sectorPE × 2) AND !isAutoIndustry` → effectivePE = min(currentPE, sectorPE × 1.5).
+- Fintech floor (22×). AI semi premium (38×, gated revenueM ≥ 100). Growth premium (CAGR > 25% fintech).
+- **[Finding 8 — integrated]** `currentPE / sectorPE > 3× AND netMargin > 15%` → blended exitPE embeds speculative premium uncapped. Cap should be `sectorPE × 2.5`. Confirmed: PLTR (107×), AMD (106.5×), ARM (252×). DDOG (P/E=600×) correctly excluded — nm=3.7% < 15%.
+- **[Finding 11 — integrated]** Auto Manufacturers (`isAutoIndustry`): check if `exitPE > sectorPE × 20`. The auto carve-out blocks the thin-margin cap entirely. TSLA: P/E=357×, sectorPE=10, exitPE=222× uncapped.
+- Is the final exitPE financially defensible for this company's stage and sector?
 
 ### 2C. Exit EV/EBITDA (exitMultiple)
 
-- What `sectorMedian` does `blendEVEBITDAMultiple` receive?
-- What is the current actual EV/EBITDA from Yahoo?
-- What does the blend produce?
-- Does the low-multiple company floor (`currentMultiple × 0.90` when current < sector × 0.40) fire? Should it?
-- If EBITDA is negative: is the method excluded? (`ttmEbitdaDollars <= 0` guard)
-- Is the exit multiple sensible for a terminal value calculation 5-10 years out?
+- `sectorMedian` from `blendEVEBITDAMultiple`. Current actual EV/EBITDA from Yahoo (or computed from market cap + net debt ÷ EBITDA).
+- Blend formula: same 55/35 structure as P/E.
+- Low-multiple floor: if `currentMultiple < sectorMedian × 0.40`, floor = `currentMultiple × 0.90` (stays near actual for structurally low-multiple companies).
+- EBITDA negative → method excluded (`ttmEbitdaDollars ≤ 0`). Verify in `assumptionAudit` that the method is not silently given zero weight.
+- For financial/fintech: EV/EBITDA is typically excluded or unreliable. P/B replaces it as adaptive method.
+- Is the exit multiple sensible for a 5-10 year terminal value horizon?
 
 ### 2D. EV/Revenue (revenueMultiple)
 
-- What `sectorEVRev` is used?
-- What is the current actual EV/Revenue?
-- What does the blend produce?
-- Is the revenue multiple zero-weighted for this companyType? (financial=0%, utility=0%) If it is non-zero, is that appropriate?
+- `sectorEVRev` from `getIndustryMultiples`. Current actual EV/Revenue from `businessProfile.evToRevenue`.
+- Blend: same 55/35 weighted formula. Verify result matches API value.
+- Zero-weighted for: `financial` (0%), `utility` (0%). If non-zero for these types, flag.
+- For growth SaaS: revenue multiple often > 5×. Is the blended value sensible given current growth rate?
 
 ### 2E. Net Margin (netMargin)
 
-- What is the actual last trailing net margin from `incomeStatement` rows?
-- Which path in `deriveNetMargin` fires? (pre-profit, isHighGrowthSaaS, hasMoat+isHighGrowth, stable)
-- What is the projected exit margin?
-- Is the 70% cap relevant here?
-- Is the isHighGrowthSaaS boundary (cagr>15%, GM>60%, 0<margin<15%) applicable? Does it produce a sensible convergence toward 18%?
-- For financial companies: is the margin derived from NI/revenue correct when "revenue" = NII + fees?
-- **[Finding 13 — integrated]** Compare `assumptionAudit.netMargin` vs `businessProfile.netMargin`. If the ratio is > 2.5×, the auditBundle's incomeStatement rows are likely newest-first, causing `deriveNetMargin` to use the OLDEST year as 'last'. Root cause: `auditBundle.financialStatements.incomeStatement` rows are passed in newest-first order; `withBoth[-1]` = oldest year in the window. Confirmed: SHOP (`last`=FY2021 63.2% → audit 55% cap) and WDAY (`last`=FY2024 19.0% → audit 22%). Fix: `deriveNetMargin` should sort `withBoth` by year ascending before taking `last`.
-- **[Finding 14 — integrated]** Check whether all historical `grossProfit/revenue` values are identical to 2 decimal places (e.g. WDAY: 75.76% for 3 years). This indicates FMP is returning a static blended gross margin rather than annual actuals — confirmed on MELI, WDAY, LLY, CVX, LYFT. The primary impact is on the `isHighGrowthSaaS` check: if actual GM fluctuates near 60%, a stale FMP value can either fire or suppress the SaaS convergence path incorrectly.
+- Trailing net margins by year (from IS rows): compute NI/revenue for each actual year.
+- **[Finding 13 — integrated]** If `assumptionAudit.netMargin / businessProfile.netMargin > 2.5×`: auditBundle IS rows are newest-first — `withBoth[-1]` = oldest year. State which year is being used as 'last' and what the projected margin should be.
+- **[Finding 14 — integrated]** If `grossProfit/revenue` is constant across all years: FMP blended-rate GP. Check whether it's above or below the 60% isHighGrowthSaaS threshold. If near 60%, state whether the actual annual GM (from businessProfile or filings) would change which path fires.
+- Path trace: `last ≤ 0` → pre-profit (GM-based floor). `isHighGrowthSaaS` (CAGR>15%, GM>60%, 0<last<15%) → SaaS convergence: `last×0.30 + 18%×0.70`. `hasMoat+isHighGrowth` → +3pp. `hasMoat only` → +1.5pp. Stable → +0.5pp. Cap: min(0.55, projected).
+- **[Finding 7 — integrated]** When EBIT=null: check `businessProfile.netMargin` vs medianNI%. If `bp.netMargin > 3× medianNI% AND medianNI% < 10%`: median is trough-distorted. Also check TTM NI% — if TTM > 2× median AND median < 10%: one-time gain or cyclical recovery is inflating TTM (LYFT: 45% TTM vs 0.4% median from deferred tax reversal). State what the model projects vs the true operating margin.
+- For financial companies: verify `NI / (NII + fee revenue)` denominator is correct — total revenue not just NII.
+- 55% cap: does it bind? Report if projected > 0.40 for any non-financial company.
 
 ### 2F. WACC and Terminal Growth Rate
 
-- What is the WACC input? (beta, rfRate, ERP, CRP, costOfDebt, debtWeight)
-- Is the CRP non-zero for country-risk stocks (TSM, BABA, PDD, NU, MELI)? What value?
-- Is the terminal growth rate `terminalG` consistent with the long-run nominal growth expectation for this company's primary market?
-- Does `dynamicTerminalFade` modify terminalG for the Full DCF Table terminal value? (cagr>35%→12%, >25%→8%, >15%→6%, else→user value)
-- Is the 200bps minimum WACC-g spread enforced in both the Cockpit and Full DCF paths?
+- WACC inputs: beta, rfRate, ERP, CRP (country risk), costOfDebt, debtToEquity.
+- Ke = rfRate + beta × ERP + CRP. Verify formula matches `wacc.costOfEquity`.
+- CRP non-zero for: Brazil/LatAm (MELI ~1.25%), China (BABA/PDD ~3-4%), India (~2%), Turkey (~5%). Zero for US, Canada, most Western Europe.
+- `terminalG`: matches long-run nominal GDP for primary market. US: 2-3%. EM: 3-5%. Developed non-US: 1.5-2.5%.
+- WACC − terminalG spread ≥ 200bps enforced? State actual spread. If < 200bps: Gordon Growth denominator explodes.
+- `dynamicTerminalFade` in Forward P/E method: CAGR>35%→8% fade, >25%→7%, >15%→5%, else terminalG. Verify max capped at min(ke−200bps, 10%).
+- growthModel: `three-stage` if CAGR > 15% or isNegativeFCF. `two-stage` otherwise. Correct for this company?
+- Ke vs WACC spread: Ke should be ≥ WACC for non-leveraged companies. If Ke ≈ WACC: debt is near-zero (asset-light tech) — correct. If Ke < WACC: data error.
 
-### 2F. Dilution Rate
+### 2G. Dilution Rate
 
-- What rate is seeded? (0% for mega-cap buyback, 1%/2%/3% by tech margin tier)
-- Is it correct for this company's actual share count trajectory?
+- Mega-cap buyback guard: isTech AND netMargin > 25% AND revenueM > $100B → 0% dilution. Does it fire?
+- Tech tiers: margin > 20% → 1%/yr. > 10% → 2%/yr. < 10% → 3%/yr. Non-tech: > 15% → 0.5%/yr, else 1%/yr.
+- Verify against actual share count trajectory: compare `sharesOutstanding` to prior year in BS rows. Is the seeded rate consistent with observed dilution?
 
-### 2G. P/B (if applicable — financial/fintech companyType only)
+### 2H. P/B Multiple (financial/fintech/alt_asset/mreeit companyTypes only)
 
-- What `bookValuePerShare` is used? Does the sanity cap fire (impliedPB < 0.25)?
-- What ROE and Ke feed the justified P/B formula? What is the result?
-- What `sectorDefaultPB` is used from the INDUSTRY_PB / FINANCIAL_SECTORS_PB lookup?
-- What is the blended P/B target? Is it financially defensible for this company's ROE vs cost of equity?
+- `bookValuePerShare` = last actual `totalEquity / sharesOutstanding` (both in millions).
+- Sanity cap: if `currentPrice / bookValuePerShare < 0.25` → book value is likely asset-side data; replaced with `currentPrice / 1.5`.
+- Justified P/B = `(ROE − g) / (Ke − g)` where g = `max(0.01, min(terminalG, wacc − 0.02))`. Compute manually.
+- `sectorDefaultPB`: industry lookup first (Banks—Diversified=1.2×, Banks—Regional=1.1×), then sector fallback (Financial Services=1.8×, Banks=1.2×).
+- Blended P/B = `justifiedPB × 0.60 + marketPB × 0.40` (or `0.35 / 0.65` if high-ROE fintech).
+- Is the blended P/B defensible for this company's ROE vs cost of equity?
 
 ---
 
 ## Phase 3 — Full DCF Table Line-by-Line Audit
 
-Using the actual `buildProjectedRows` output for this ticker, evaluate every row. State the actual values for historical years AND the first 3 projected years.
+Using the actual `buildProjectedRows` output (`financialStatements.incomeStatement` projected rows + `normalizeInputs` logic), audit every line. State: historical TTM + first 3 projected years.
 
-For each row, answer:
-- **(a) Present and correct?** — state the actual formula and verify it against financial modeling theory
-- **(b) Missing when it should exist?** — name the row, explain why it belongs in this model type, and state whether Yahoo/FMP data can populate it
-- **(c) Present but wrong?** — state the actual value vs what it should be
-- **(d) Universal or selective?** — does this row apply to all companies or only certain types? Is the type-guard in the code correct?
+For each row: **(a)** formula correct? **(b)** missing when it should exist? **(c)** present but wrong? **(d)** type-specific guard correct?
 
-### UFCF Model Rows
+### Revenue $M
 
-**Revenue $M**
-- Source: `baseRevenue × (1+cagr)^t`. Is the base revenue the TTM or last annual?
-- Are years 1-3 anchored to analyst consensus projections (from `isProjected=true` rows in `financialStatements.incomeStatement`)? Should they be?
-- For foreign-currency companies: is revenue in USD throughout?
+- Base: `ttmRow?.revenue ?? lastAnnualRow?.revenue`. Is TTM available from `statementsData`? If only annual: revenue starts from last annual, slightly understating Year 1 for fast growers.
+- Projection: `baseRevenue × (1 + cagr)^t`. Three-stage model (CAGR > 15%): constant in years 1-5, linearly fades to terminalG in years 6-10.
+- Analyst-anchored years: are `isProjected=true` rows in IS used to anchor Years 1-3? State the analyst consensus revenue vs model projection.
+- For foreignCurrency companies: revenue in USD throughout? fxRate applied once at source?
+- `priorTtmRevenueM` used for TTM row's YoY growth (avoids short-period artifact where TTM extends only 1-3 months beyond last annual)?
 
-**Revenue % Growth**
-- Derived from sequential revenue rows. Is the displayed growth rate year-over-year or vs TTM?
-- For the TTM row: is `priorTtmRevenueM` used for the YoY comparison (avoiding the short-period artifact)?
+### Revenue % Growth
 
-**EBIT $M / EBIT Margin**
-- Which of the three paths fires for this company?
-  - **Financial branch**: `EBIT = revenue × netMargin / (1 − taxRate)`. D&A=0. NWC=0.
-  - **SBC-distorted branch**: `isSBCDistorted = medianEbit < -2% AND medianFcf > 0 AND type=growth/startup`. EBIT ramps from negative toward min(35%, max(20%, fcfMargin×2)).
-  - **Cyclical-trough branch**: `isCyclicalTrough = medianEbit < -2% AND ttmEbit > 1%`. Uses `ttmEbitMargin × 0.90`.
-  - **Normal branch**: `medianEbitMargin` (3Y historical median blended 60% with 40% TTM weight).
-- Is the firing path correct for this company?
-- State the actual medianEbitMargin, ttmEbitMargin, medianFcfMargin values and which condition triggers.
-- Is EBIT the right earnings concept for UFCF? (Yes — UFCF is pre-financing, so EBIT × (1−t) = NOPAT is correct. But for financial companies the NI-derived EBIT sidesteps the provision distortion — is this the right workaround or should provisions be an explicit line?)
+- YoY sequential. For TTM row: `(ttmRevenue - priorTtmRevenue) / priorTtmRevenue`.
+- If `priorTtmRevenueM` is null: growth displayed as N/A for TTM row — is this correct?
 
-**Tax Rate**
-- Source: median of last 3 annual effective tax rates from `incomeStatement.taxRate`.
-- **[Finding 6 — integrated — systemic]** Check whether all historical `taxRate` values are null. This occurs for every FMP-sourced ticker (confirmed across 7/7 audited tickers: NOW, MSFT, MU, ADBE, UBER, PLTR, ASML). When all null, the model falls back to `waccInputs.taxRate = 0.21`. Report the company's known effective tax rate and compute the NOPAT impact if the fallback over-taxes (e.g. MSFT ~18-19% effective rate loses ~2pp, ~$2-3B/yr NOPAT).
-- For companies with multi-year net operating loss carryforwards (SATL, NBIS, early-stage AAOI): the effective rate may be 0% historically but statutory rate applies once profitable. Is the model using the right rate in projected years?
-- For foreign-domiciled companies (RMS in France: ~25%, TSM in Taiwan: ~15%, BABA in China: ~25%): is the tax rate pulled correctly from the financial statements?
+### EBIT $M / EBIT Margin
 
-**NOPAT $M**
+Four paths — state which fires and verify conditions:
+1. **Financial branch** (`isFinancialSector=true`): `EBIT = revenue × netMargin / (1 − taxRate)`. D&A=0. ΔNWC=0. CapEx=0. Verify each of the three zeroing guards fires correctly.
+2. **SBC-distorted** (`medianEbitMargin < −2% AND medianFcfMargin > 0 AND type ∈ {growth, startup}`): EBIT ramps from `medianEbitMargin` toward `min(35%, max(20%, fcfMargin×2))` over `nYears`.
+3. **Cyclical-trough** (`medianEbitMargin < −2% AND ttmEbitMargin > 1%`): EBIT = `revenue × ttmEbitMargin × 0.90` (haircut for conservatism).
+4. **Normal**: `medianEbitMargin` (3Y median blended 60% with 40% TTM). For null EBIT rows: NI-derived fallback fires.
+
+State: `medianEbitMargin`, `ttmEbitMargin`, `medianFcfMargin`. Is the path correct?
+
+**EBIT null check**: if `operatingIncome = null` for all historical rows: NI fallback `ebit = revenue × medianNetMargin / (1−taxRate)` fires. Verify it produces non-null projected EBIT. **[Finding 3]**
+
+### Tax Rate
+
+- **[Finding 6 — systemic]** All historical `taxRate` = null → fallback = `waccInputs.taxRate = 0.21`. State the company's actual effective rate (check IS row `incomeTaxExpense / incomeBeforeTax` from FMP). Quantify the NOPAT impact: `(0.21 − actualRate) × EBIT × revenue`.
+- For NOL companies (INTC, early-stage lossmakers): effective rate near 0% historically, but statutory (21% US / 25% UK) applies once profitable. Is the model using the right rate?
+- For foreign domicile: France ~25%, Taiwan ~15-20%, Netherlands ~25%, UK ~25%, Ireland ~12.5%. Verify rate against filings.
+
+### NOPAT $M
+
 - Formula: `EBIT × (1 − effectiveTaxRate)`.
-- For the SBC-distorted and cyclical-trough paths: NOPAT is still derived from EBIT. Is that consistent with the financial company path where NOPAT = netIncome?
-- Should NOPAT use the effective tax rate or the statutory rate? State which is used and whether it produces accurate results for this company.
+- Effective vs statutory: model uses the blended historical median (or 21% fallback). For companies with large R&D credits or permanent differences, effective rate can diverge by 5-10pp.
+- For financial branch: NOPAT = netIncome (via ebit/(1-t) × (1-t) = netIncome). Verify the math is consistent.
+- State Year 1, 2, 3 NOPAT. Does the NOPAT margin seem plausible? Compare to TTM NOPAT implied by EBIT × (1−21%).
 
-**D&A $M / D&A % Revenue**
-- Source: `dna` field from cashFlow statement (`depreciationAndAmortization ?? reconciledDepreciation ?? depreciationAmortizationDepletion ?? amortizationOfIntangibles`).
-- For financial companies: D&A = 0 in projections. Is this correct? (Banks do have real D&A on premises/software — is it material for this company?)
-- For content-heavy companies (DIS, NFLX): is content amortization captured in the `dna` field or is it separately reported?
-- For high-acquisition companies (COHR, MELI): does `amortizationOfIntangibles` cover the acquisition-related amortization?
-- Is D&A projected as `medianDnaPct × revenue`? Is this ratio stable for this company or volatile (e.g. TSM's D&A/revenue fluctuates with capex cycles)?
+### D&A $M / D&A % Revenue
 
-**CapEx $M / CapEx % Revenue**
-- Source: `median(3Y capex/revenue) × 60% + TTM capex/revenue × 40%`.
-- For capital-intensive companies (TSM spending 35% of revenue): does the blended median accurately capture current capex intensity?
-- For asset-light companies (SOFI, NU, DUOL): is capex genuinely near-zero or is there meaningful capex that Yahoo reports differently (e.g. capitalized software)?
-- For financial companies: CapEx = 0 in projections. Should NU/SOFI have technology infrastructure capex modeled?
-- **[Finding 5 — integrated]** Check whether capex% is monotonically rising over 3 historical years. If yes, verify blended rate is closer to TTM than median — if blended << TTM by >3pp, flag as capex-understatement. Confirmed on MSFT (Azure AI: 13.3%→18.1%→22.9%, blended 20.0% vs TTM 22.9%) and AMZN (AWS AI: 13.0%→18.4%, rising). Both hyperscalers show median anchoring too low during AI infrastructure buildout phases. Same logic applies to D&A when it tracks capex cycles.
+- Source priority: `depreciationAndAmortization` → `reconciledDepreciation` → `depreciationAmortizationDepletion` → `amortizationOfIntangibles` (from cashFlow statement).
+- Projection: `medianDnaPct` (3Y median blended 60% with TTM 40%).
+- Financial sector: D&A = 0 in projections. Does it correctly zero? Banks have real D&A on premises/software — is it material (typically < 2% of revenue)?
+- Content companies (NFLX, DIS): D&A/revenue may be 30-40%+. Is content amortization captured in the `dna` field or reported separately as "amortization of streaming content assets"? NFLX FY2025: D&A=37% of revenue — is this all captured?
+- Acquisition companies (COHR, MELI): `amortizationOfIntangibles` covers acquisition-related intangibles — is it included in the dna fallback chain?
+- **[Finding 5 — integrated]** Is D&A% monotonically rising? If yes and D&A is driven by capex (MSFT, AMZN), the 3Y-median blend understates future D&A. Flag if TTM D&A% > blended D&A% by >2pp.
 
-**ΔNWC $M / ΔNWC % Revenue Change**
-- Source: `avgNwcDeltaRevRatio × revenueChange`, where NWC = (currentAssets − cash) − currentLiabilities.
-- For financial companies and fintech-hybrids: NWC delta is zeroed. Does the `FINTECH_INDUSTRY_RE_NWC` regex correctly identify this company as a fintech-hybrid?
-- For MELI (Consumer Cyclical, fintech-hybrid): state whether the NWC guard fires and whether it's correct.
-- For companies with large negative working capital (Amazon-like marketplace models with high payables): does a negative ΔNWC correctly boost UFCF?
-- Is the NWC proxy (`totalCurrentAssets − cash − totalCurrentLiabilities`) missing any material components for this company?
+### CapEx $M / CapEx % Revenue
 
-**UFCF $M**
-- Formula: `NOPAT + D&A + CapEx − ΔNWC` (capex is stored negative).
-- Is the `freeCashFlow` fallback (`when ufcf < 0 AND fcfOverride > 0`) firing for this company? Should it?
-- State the actual UFCF margin for each of the first 3 projected years and assess whether it's plausible.
-- **[Finding 4 — integrated]** Compute `baseFCF / historicalFCF[-1]` (last entry in the `historicalFCF` array). If ratio < 0.70 or > 1.50, flag as stale-FCF suspect. Confirmed on MSFT (0.52x), UBER (0.67x), NVDA (0.48x), XOM (0.49x). **Exception: skip for `financial`/`fintech`/`bdc`/`mreeit` types** — NI-based baseFCF is correct and differs from reported OCF. **Negative ratios** (SO: -2.00x, INTC: -1.21x) also signal stale Yahoo data when actual FCF is negative. **Capital-intensive utilities** (NEE, SO) show ratio > 1.50 because Yahoo `fd.freeCashflow` ignores major regulated capex programs. Note: ratio > 1.50 for fast-ramping cyclicals (MU) is correct when TTM genuinely exceeds prior annual — check FCF trend direction. **Finding 12 integrated**: this check covers both the downward (stale positive Yahoo value vs negative actual FCF) and upward (Yahoo OCF-only for utilities) variants.
+- Source: FMP `investmentsInPropertyPlantAndEquipment` (negative convention). Fallback: Yahoo `capitalExpenditures`.
+- Projection: `medianCapexPct (3Y median) × 0.60 + TTM capexPct × 0.40`.
+- **[Finding 5 — integrated]** If capex% monotonically rising: blended median anchors below TTM. Compute the gap. If > 3pp: flag understatement. For AI-infrastructure hyperscalers (MSFT Azure, AMZN AWS), forward guidance often exceeds the blended rate by 5-10pp.
+- Financial/fintech: CapEx = 0 in projections. For tech-heavy neobanks (NU, SOFI): is the zeroing correct? Technology capex is real but typically 1-3% of revenue.
+- Asset-light: is near-zero capex real (DDOG ~4%, CRWD ~8%) or is software development capitalized off-balance-sheet?
 
-**PV of UFCF**
-- Discount rate: WACC. Confirm the year index is correct (year 1 is discounted at WACC^1, year 5 at WACC^5).
-- Is a mid-year convention applied? (Academic UFCF models often use mid-year discounting: divide by WACC^(t−0.5) rather than WACC^t.) State which convention is used and whether it matters for this company.
+### ΔNWC $M / ΔNWC % Revenue Change
 
-### LFCF Model Rows
+- NWC = `(totalCurrentAssets − cash) − totalCurrentLiabilities`.
+- `avgNwcDeltaRevRatio`: average of `(NWC[t] − NWC[t−1]) / |revChange[t]|` over last 3 years.
+- Financial/fintech/mreeit/bdc: ΔNWC = 0. Does `isFinancialSector` flag fire? For MELI: `FINTECH_INDUSTRY_RE_NWC` regex — does `internet.*retail` match the sector+industry string "consumer cyclical internet retail"?
+- Negative ΔNWC/ΔRev (SaaS deferred revenue, marketplace floats): correctly boosts UFCF. Verify sign is economically sensible — is the company accumulating more deferred revenue or payables as revenue grows?
+- Is the NWC proxy missing material components? (e.g. Finance receivables for hybrid companies, lease liabilities)
 
-**Net Income $M / Net Margin**
-- Source: `medianNetMargin × revenue` for projected rows.
-- For financial companies: NI is the anchor concept (not EBIT). Is the medianNetMargin derived correctly from the actual income statement (NI / total banking revenue)?
-- For companies with volatile NI (MU with FY2023 losses, DIS with COVID years): does the TTM-weighted median correctly override the trough?
-- **[Finding 7 — integrated]** When EBIT=null, check median NI% vs TTM NI%. If TTM NI% is more than 2× the median NI% AND median NI% < 10%, the trough (or one-time-gain) is silently distorting the median without triggering the guard (which requires `medianNetMargin < 0`). State median NI%, TTM NI%, and the projected NI% to identify if the model anchors to a trough/recovery year. ALSO applies when TTM is inflated by a one-time gain (LYFT: deferred tax reversal FY2025 gave 45% NI% vs operating median 0.4% — model projects 0.4% instead of ~5-8%). Check `businessProfile.netMargin` vs the median: if bp.netMargin > 3× medianNI% and medianNI% < 10%, the median is being dragged down by loss years while TTM (and businessProfile) reflect true current profitability.
-- **[Finding 9 — integrated]** For `financial`, `fintech`, `alt_asset`, `bdc`, `mreeit` companyTypes: verify that `valuationMethods.models.fcff.fairValue` is NOT used as a primary anchor. If FCFF FV > 2× current price for these types, flag it as directionally wrong (NI or baseFCFE misused as enterprise FCF). The triangulation weights (5% for financial, 10% for alt_asset) limit the damage but the panel value is misleading. Confirmed: JPM FCFF=$952 (+205% vs $312 price), GS FCFF=$4735 (+357% vs $1036 price).
+### UFCF $M
 
-**D&A, CapEx, ΔNWC** — same sources as UFCF. Cross-check that they are identical.
+- Formula: `NOPAT + D&A − |CapEx| − ΔNWC` (capex stored negative, subtracted).
+- FCF fallback: `freeCashFlow` override fires when `ufcf < 0 AND freeCashFlow > 0`. Is it firing? Should it?
+- UFCF margin for Years 1, 2, 3: state actual values and assess plausibility. Compare to TTM FCF margin from `businessProfile.fcfMargin`.
+- **[Finding 4 — integrated]** `baseFCF / historicalFCF[-1]` ratio check. Stale Yahoo data confirmed for: MSFT (0.52×), UBER (0.67×), NVDA (0.48×), XOM (0.49×), NFLX (1.73×). Skip for financial types.
+
+### PV of UFCF
+
+- Discount rate: WACC. End-of-year convention: year t discounted by `(1 + WACC)^t`.
+- Verify Year 1: `CF[1] / (1+WACC)^1`. Spot-check Year 5.
+- Mid-year convention not applied (would add ~`sqrt(1+WACC)/1` ≈ 4-6% uplift). State the convention and whether it matters for this company's terminal value weight.
+- Terminal value %: `terminalValueDiscounted / (sumPV + terminalValueDiscounted)`. If > 75%: flag as sensitivity risk — small changes in terminalG or WACC dominate the valuation.
+
+### LFCF / FCFE Model Rows
+
+**Net Income $M**
+- Projected via `medianNetMargin × revenue`.
+- **[Finding 7 — integrated]** EBIT=null + trough distortion: check TTM NI% vs median. Also one-time gain direction: LYFT TTM=45% vs median=0.4% from deferred tax reversal. `businessProfile.netMargin` is the best reality check.
+- For volatile NI companies (MU FY2023 loss, DIS COVID years): does the TTM-weighted 60/40 blend correctly anchor toward current reality?
+
+**D&A, CapEx, ΔNWC** — must be identical to UFCF. Cross-check all three.
 
 **Net Debt Repayment $M**
-- Source: `prevLongTermDebt − currentLongTermDebt`. Positive = net paydown, negative = net new borrowing.
-- Is this the right concept for FCFE? (Academically: FCFE = NI + D&A − CapEx − ΔNWC + net new borrowing, i.e. net debt issued, not repaid. The sign convention matters.)
-- For companies issuing debt to fund growth (UBER early years, BABA buybacks funded by debt): does the model correctly add back net new borrowing or subtract repayment?
-- For banks (JPM/BAC): long-term debt changes are liability management decisions, not capex-like. Does including longTermDebt changes in FCFE produce meaningful output for a bank?
-- For financial companies (NU/SOFI): is net debt repayment zeroed out (since the NI-derived FCFE already embeds the financing structure)?
+- `prevLongTermDebt − currentLongTermDebt`. Positive = net paydown (reduces FCFE). Negative = net new borrowing (adds to FCFE).
+- Sign convention: FCFE = NI + D&A − CapEx − ΔNWC **+ net new borrowing** (net debt repayment subtracted). Verify the sign is consistent.
+- For banks (JPM/BAC): LTD changes are liability management, not FCFE-relevant. Is the line zeroed for financial types?
+- For growth issuers (UBER, MELI): adding back net new debt correctly lifts FCFE. Does the model handle this?
 
-**LFCF $M**
-- Formula: `NetIncome + D&A + CapEx − ΔNWC − NetDebtRepayment`.
-- Is this the academically correct FCFE formula for this company?
-- Discount rate: costOfEquity (Ke), not WACC. Confirm Ke is being used.
-- State the actual LFCF for the first 3 projected years and whether the margin is plausible.
+**LFCF $M and Discount Rate**
+- Formula: `NI + D&A − |CapEx| − ΔNWC − NetDebtRepayment`.
+- Discount rate: `costOfEquity (Ke)`, NOT WACC. Verify Ke is used in the LFCF DCF arm.
+- State Year 1, 2, 3 LFCF margins. Compare to NI margin — difference = non-cash items and debt dynamics.
 
-### Terminal Value
+### Terminal Value — Both Arms
 
 **Perpetuity Growth Model (PGM)**
-- Formula: `lastProjectedFCF × (1 + g) / (rate − g)` where rate = WACC (UFCF) or Ke (LFCF).
-- What value is `g` set to? Is it `terminalG` or the dynamically faded value?
-- Is the 200bps minimum spread enforced? What are the actual values of g and rate?
-- What % of total fair value does terminal value represent? If >70%, flag this as a structural sensitivity concern.
+- `lastProjectedFCF × (1 + g) / (rate − g)`. Rate = WACC (UFCF) or Ke (LFCF).
+- g = `terminalG` (after dynamicTerminalFade applied). State actual g and rate values. WACC − g ≥ 200bps?
+- TV% of total EV — flag if > 75%.
 
 **Exit Multiple (EM)**
-- For UFCF: `lastProjectedEBITDA × exitMultiple`. Is `lastProjectedEBITDA` the year-N projected value or TTM? It should be the projected terminal-year value.
-- For LFCF: `lastProjectedEarnings × exitPE`. Same question.
-- Is the same `exitMultiple` and `exitPE` used here as in the Cockpit methods? Should the terminal-year multiple be different from the 5-year-exit multiple?
+- UFCF: `lastProjectedEBITDA × exitMultiple`. Is `lastProjectedEBITDA` the terminal-year projected value (correct) or TTM (wrong)?
+- LFCF: `lastProjectedEarnings × exitPE`. Same terminal-year check.
+- Are the same `exitMultiple` and `exitPE` used in both the Cockpit Snapshot and the Full DCF Table? They should be. If they differ, state the discrepancy.
 
 ---
 
-## Phase 4 — Missing Lines Evaluation
+## Phase 4 — Historical Financial Statement Audit
 
-For each potentially missing line below, evaluate for THIS specific ticker:
+Audit the raw financial statements for data quality issues. State the actual values.
 
-| Candidate Line | Applicable to this stock? | Why or why not | Yahoo/FMP field available? | Impact if added | Recommendation |
+### 4A. Income Statement Audit
+
+For each historical year (all actuals):
+
+| Year | Revenue $M | GP% | EBIT% | NI% | taxRate | EPS |
+|------|------------|-----|-------|-----|---------|-----|
+| (fill in) | | | | | | |
+
+Check:
+- **Revenue trend**: growing, shrinking, volatile? Does CAGR blended match the observable trajectory?
+- **Gross margin stability**: constant (F14 signal) or naturally varying? For SaaS/IP companies: near-100% GP is correct.
+- **EBIT margin trend**: is EBIT becoming more or less efficient? For companies with EBIT=null: note which years it's missing and why.
+- **Net margin vs EBIT margin gap**: large gap = significant interest expense, taxes, or one-time items. For LYFT FY2025: NI%=45% >> EBIT% → one-time tax gain. Flag these.
+- **EPS trend**: consistent with NI trend? Large divergence = share issuance/buybacks.
+- **Projected rows**: do the projected IS rows (years 1-5) use correct analyst consensus revenue? Are projected NI rows simply `revenue × avgNetMarginRatio`? State the ratio used and whether it matches trailing margins.
+
+### 4B. Cash Flow Statement Audit
+
+For each historical year:
+
+| Year | OCF $M | CapEx $M | FCF $M | D&A $M | FCF/OCF% | CapEx/Rev% | D&A/Rev% |
+|------|--------|----------|--------|--------|----------|------------|----------|
+| (fill in) | | | | | | | |
+
+Check:
+- **OCF vs NI divergence**: large positive gap (OCF >> NI) = healthy (D&A addbacks, working capital). Large negative gap (OCF << NI) = accrual earnings, possible earnings quality concern.
+- **FCF trend**: is FCF ramping, stable, or declining? Does it match baseFCF / historicalFCF?
+- **D&A/Rev%**: stable (SaaS ~2-5%, standard ~5-10%), rising with capex (MSFT 12%+), very high for content (NFLX 37%). Flag anomalies.
+- **CapEx/Rev%**: matches phase of investment cycle? Capital-intensive companies (TSM 35%, NEE 34%) vs asset-light (DDOG 4%).
+- **Negative FCF with positive OCF**: capex surge phase (AMZN FY2025: OCF 139B, capex 132B → FCF 7B). Note whether model correctly captures the capex intensity.
+- **Projected CF rows**: do projected FCF = projected OCF − avgCapex? Are D&A projections in the CF projected rows consistent with IS D&A projections?
+
+### 4C. Balance Sheet Audit
+
+For each historical year:
+
+| Year | Cash $M | TCA $M | TCA−Cash $M | LTD $M | TCL $M | NWC $M | Equity $M | LTD/Equity |
+|------|---------|--------|-------------|--------|--------|--------|-----------|------------|
+| (fill in) | | | | | | | | |
+
+Check:
+- **Cash trend**: growing (FCF generation), shrinking (buybacks/dividends/losses), or volatile?
+- **NWC trend**: becoming more negative (SaaS deferred revenue growth) or positive (receivables buildup)? Delta NWC/Delta Revenue ratio — state for each year.
+- **LTD/Equity leverage**: rising leverage (possible acquisition) vs declining (deleveraging). For financial companies: LTD changes are funding decisions — flag if using LTD changes in FCFE.
+- **Equity trend**: growing from retained earnings (healthy) vs declining (buybacks exceeding earnings, impairments)?
+- **Projected BS rows**: do projected cash balances = prior cash + projected FCF − dividends? Are LTD projections flat (most companies) or changing?
+
+### 4D. Pre-set Ratio Cross-Check
+
+From `assumptionAudit.results`, state every seeded assumption and verify it matches the observable financials:
+
+| Assumption | API value | Manual calc from statements | Match? | If not: root cause |
+|---|---|---|---|---|
+| CAGR | `cagrAnalysis.blended` | Compute from IS revenue rows | | |
+| Net Margin | `assumptionAudit.netMargin` | `is_[-1].netIncome / is_[-1].revenue` | | |
+| WACC | `wacc.wacc` | `Ke × weightEquity + Kd × (1−t) × weightDebt` | | |
+| Exit P/E | `assumptionAudit.exitPE` | `currentPE × (55/90) + sectorPE × (35/90)` | | |
+| Exit EV/EBITDA | seeded | `currentEVEBITDA × (55/90) + sectorMedian × (35/90)` | | |
+| EV/Revenue | seeded | `currentEVRev × (55/90) + sectorEVRev × (35/90)` | | |
+| D&A % | used in projections | median(dna/rev for last 3 CF rows) | | |
+| CapEx % | used in projections | median(capex/rev for last 3 CF rows) × 0.60 + TTM × 0.40 | | |
+| NWC δ/ΔRev | used in projections | avg((NWC[t]−NWC[t−1]) / |rev[t]−rev[t−1]|) | | |
+
+
+**[Finding 16 — new]** P/Book units error when Yahoo `priceToBook=None`: Compute ground-truth P/B = `price / (totalEquity_M / sharesOutstanding_M)`. If `multiples.P/Book.impliedFairValue > currentPrice × 50` for any company, flag a P/B units error in `calculateMultiples.ts`. Also flag when `multiples.blendedFairValue > currentPrice × 20` for any non-startup — this signals one method has an astronomical value contaminating the blend. Confirmed: BRK-B P/Book=None → implied=$758,339/sh → multiples blended=$253,046 → tri=$76,562 (156× overvalued).
+
+---
+
+## Phase 5 — Missing Lines Evaluation
+
+| Candidate Line | Applicable? | Why / why not | Yahoo/FMP field | Impact | Recommendation |
 |---|---|---|---|---|---|
-| Interest income (net interest income) | | | | | |
+| Interest income (NII) | | | | | |
 | Interest expense | | | | | |
 | Provision for credit losses | | | | | |
-| SBC as explicit addback (not embedded in D&A) | | | | | |
-| Change in deferred revenue (SaaS companies) | | | | | |
-| Reinvestment in loan book / credit portfolio | | | | | |
-| Minority interest / non-controlling interest | | | | | |
-| Maintenance CapEx vs Growth CapEx split | | | | | |
-| R&D capitalization (for research-intensive startups) | | | | | |
-| Change in short-term debt (FCFE adjustment) | | | | | |
+| SBC as explicit addback | | | | | |
+| Change in deferred revenue | | | | | |
+| Reinvestment in loan book | | | | | |
+| Minority interest / NCI | | | | | |
+| Maintenance vs Growth CapEx split | | | | | |
+| R&D capitalization | | | | | |
+| Short-term debt change (FCFE adj) | | | | | |
+| Content spend (NFLX/DIS) | | | | | |
+| Lease obligations (CAPEX vs ROU) | | | | | |
 
-For each row where "Applicable = Yes": state the exact Yahoo Finance or FMP field name that would populate it, and whether that field is already fetched in `app/api/financials/route.ts` or `app/api/statements/route.ts`.
+For each Applicable=Yes: state the exact FMP/Yahoo field name and whether it's already fetched in `route.ts`.
 
 ---
 
-## Phase 5 — Guard Coverage Check
+## Phase 6 — Guard Coverage Check
 
-For each guard/fix that has been implemented in the codebase, verify it fires (or correctly does not fire) for this specific stock:
+Verify each guard fires (or correctly does not) for this ticker:
 
-| Guard | File / Line | Expected behavior for this stock | Actual behavior | Correct? |
+| Guard | Location | Expected | Actual | Correct? |
 |---|---|---|---|---|
-| Financial FCF guard (baseFCF = NI × 0.80) | cockpitBuilders.ts ~line 103 | Fires if companyType ∈ {financial, fintech} AND rawFCF > earningsBased × 3 | | |
-| Financial EBIT (NI-derived) in buildProjectedRows | normalizeInputs.ts ~line 392 | Fires if isFinancialSector = true | | |
-| NWC zeroed for financials | normalizeInputs.ts ~line 335 | isFinancialSector = true → empty array | | |
-| Fintech-hybrid NWC guard (MELI, etc.) | normalizeInputs.ts ~line 112 | FINTECH_INDUSTRY_RE_NWC fires on sector+industry | | |
-| SBC-distorted EBIT ramp | normalizeInputs.ts ~line 415 | medianEbit < -2% AND medianFcf > 0 AND growth/startup | | |
-| Cyclical trough override | normalizeInputs.ts ~line 389 | medianEbit < -2% AND ttmEbit > 1% | | |
-| AI semi premium 38× (revenue ≥ 100M gate) | deriveAssumptions.ts ~line 253 | Semi industry AND max(hist,analyst) > 25% AND rev ≥ 100 | | |
-| Net margin cap 70% | deriveAssumptions.ts ~line 113 | min(0.70, ...) | | |
-| P/B justified formula uses terminalG | cockpit.ts ~line 37 | g = max(0.01, min(terminalG, wacc-0.01)) | | |
-| P/B sanity cap (impliedPB < 0.25) | cockpitBuilders.ts ~line 175 | bookValue corrected to price/1.5 | | |
-| Bank P/B industry lookup | cockpitBuilders.ts ~line 254 | Banks—Diversified → 1.2× before sector fallback | | |
-| Energy CAGR cap 8% | projectCashFlows.ts ~line 384, normalizeInputs.ts ~line 637 | Fires if Energy or Basic Materials | | |
-| Mega-cap buyback 0% dilution | deriveAssumptions.ts ~line 285 | tech, margin > 25%, rev > $100B | | |
-| Crypto mining type detection | detectCompanyType.ts ~line 65 | Fires on bitcoin/crypto/blockchain in haystack | | |
-| Luxury Goods multiples | calculateMultiples.ts | Fires on 'Luxury Goods' industry | | |
+| Financial FCF guard (NI×0.80) | cockpitBuilders.ts ~103 | type ∈ {financial,fintech} AND rawFCF > earningsBased×3 | | |
+| Financial EBIT (NI-derived) | normalizeInputs.ts ~392 | isFinancialSector=true | | |
+| NWC zeroed for financials | normalizeInputs.ts ~335 | isFinancialSector=true → [] | | |
+| Fintech-hybrid NWC (MELI) | normalizeInputs.ts ~112 | FINTECH_INDUSTRY_RE_NWC fires | | |
+| SBC-distorted EBIT ramp | normalizeInputs.ts ~415 | medianEbit<-2% AND medianFcf>0 AND growth/startup | | |
+| Cyclical trough override | normalizeInputs.ts ~389 | medianEbit<-2% AND ttmEbit>1% | | |
+| EBIT null → NI fallback | normalizeInputs.ts ~462 | ebit=null AND medianNetMargin>0 → NI-derived | | |
+| AI semi premium 38× | deriveAssumptions.ts ~253 | Semiconductors AND CAGR>25% AND rev≥100M | | |
+| Thin-margin P/E cap | deriveAssumptions.ts ~204 | nm<10% AND pe>sectorPE×2 AND !isAutoIndustry | | |
+| Auto industry P/E carve-out | deriveAssumptions.ts ~203 | isAutoIndustry=true → cap disabled | | |
+| Speculative P/E (F8) | deriveAssumptions.ts ~206 | pe/sector>3× AND nm>15% → no guard (known gap) | | |
+| Net margin cap 55% | deriveAssumptions.ts ~117 | min(0.55, projected) | | |
+| isHighGrowthSaaS convergence | deriveAssumptions.ts ~109 | CAGR>15% AND GM>60% AND 0<last<15% | | |
+| P/B justified formula | cockpit.ts ~37 | g=max(0.01,min(terminalG,wacc-0.02)) | | |
+| P/B sanity cap (<0.25) | cockpitBuilders.ts ~175 | price/1.5 corrective | | |
+| Bank P/B industry lookup | cockpitBuilders.ts ~254 | Banks—Diversified→1.2× before fallback | | |
+| Energy CAGR cap 8% | projectCashFlows.ts ~384 | sector∈{Energy,Basic Materials} | | |
+| Financial CAGR cap 12% | projectCashFlows.ts | mature bank, CAGR>12% | | |
+| Mega-cap buyback 0% dilution | deriveAssumptions.ts ~285 | isTech AND nm>25% AND rev>$100B | | |
+| Convergence discount >20% CAGR | projectCashFlows.ts | (blended−0.20)×0.75 applied | | |
+| Profitability inflection NI guard | normalizeInputs.ts ~330 | ttmNetMargin>0 AND medianNetMarginHist<0 → clamp 0 | | |
+| Crypto/mining type detection | detectCompanyType.ts ~65 | bitcoin/crypto/blockchain in haystack | | |
+| Luxury Goods multiples | calculateMultiples.ts | 'Luxury Goods' industry → pe:42× | | |
+| FCF margin ceiling (tech 45%, other 35%) | route.ts ~294 | baseFCF/rev > ceiling → cap to ceiling | | |
+| Market-cap yield cap (30%) | route.ts ~132 | baseFCF/marketCapM > 0.30 → cap to 15% | | |
+| grossProfit sanitizer (F1 fix) | route.ts ~917 | all GP/rev>97% AND bpGM<0.97 → rewrite | | |
 
 ---
 
@@ -375,97 +453,111 @@ For each guard/fix that has been implemented in the codebase, verify it fires (o
 ### Summary header (always first)
 ```
 TICKER: [TICKER]
-companyType: [type]  
-CAGR seeded: X%
-Exit P/E: X×  
+companyType: [type]
+CAGR seeded: X%  (raw blended: X%, cap applied: X%)
+Exit P/E: X×  (currentPE: X×, sector: X×, path: [blend/cap/floor/premium])
 Exit EV/EBITDA: X×
 EV/Revenue: X×
-Net margin (exit): X%
-WACC: X% / Ke: X% / terminalG: X%
-Blended FV: $X
-Current price: $X
-Upside: X%
+Net margin (exit): X%  (trailing: X%, path: [stable/SaaS/pre-profit])
+WACC: X% / Ke: X% / terminalG: X% / spread: Xbps
+baseFCF: $XM / lastHistFCF: $XM / ratio: X.XXx [ok / F4-flag]
+taxRate: [null/X%] / fallback: [21% / actual X%]
+TV% of EV: X% [flag if >75%]
+Blended FV (FCFF DCF): $X
+Triangulated FV: $X
+Current price: $X / Upside: X%
 
+Data quality flags: [F1/F4/F6/F13/F14 etc. — list every fired]
 Guards fired: [list]
 Guards NOT fired but should: [list]
-Critical issues: [list]
+Critical issues: [numbered, priority order]
 ```
 
 ### Per-assumption table
-| Assumption | Value for [TICKER] | Correct? | Issue if any | Severity |
+| Assumption | API value | Manual check | Match? | Severity |
 
 ### Per-row table (Full DCF)
-| Row | Historical TTM | Year 1E | Year 2E | Year 3E | Formula path | Correct? | Issue |
+| Row | Historical TTM | Year 1E | Year 2E | Year 3E | Path | Correct? | Issue |
 
-### Missing lines table
-(as specified in Phase 4)
+### Historical financial table (Phase 4A–4C)
+Inline tables as specified in Phase 4.
 
-### Guard coverage table
-(as specified in Phase 5)
+### Missing lines table (Phase 5)
+Inline table as specified.
+
+### Guard coverage table (Phase 6)
+Inline table as specified.
 
 ### Prioritized fix list
-For each issue found, rank by severity and specify:
-- File + function + line
-- What input triggers it
-- Wrong output vs correct output
-- Recommended fix (one sentence)
+Rank by severity:
+- **File + function + line**
+- **Trigger**: what input causes it
+- **Wrong → Correct**: actual values
+- **Fix**: one sentence
 
 ---
 
 ## Calibration Reference — Known Issues by Stock Type
 
-Use these known patterns to cross-check your findings:
-
 **Financial / Fintech (NU, SOFI, JPM, BAC):**
-- D&A should be 0 in projections (credit provisions are in EBIT, not addbacks)
-- NWC must be zeroed (deposits and loan book are not operating working capital)
-- LFCF should dominate the 4-model blend (85-90%)
-- baseFCF guard must fire when raw OCF includes deposit inflows
-- P/B anchor: Banks—Diversified → 1.2×, Credit Services → 1.8×
+- D&A = 0, NWC = 0 in projections. LFCF dominates (85-90%). P/B is adaptive method.
+- Financial FCF guard (NI × 0.80) must fire when raw OCF includes deposit flows.
+- FCFF FV is directionally wrong (NI misused as enterprise FCF) — weight-managed at 5%. **[F9]**
+- P/B anchor: Banks—Diversified → 1.2×, Credit Services → 1.8×, Banks—Regional → 1.1×.
+- CRP non-zero for LatAm/EM-domiciled fintechs (NU: CRP~1.25%).
 
 **Cyclical semiconductors (MU):**
-- Cyclical trough guard must fire when FY2023 losses drag median EBIT negative
-- AI semi premium must fire (revenueM ≥ 100 AND analyst CAGR > 25%)
-- 3-year CAGR median includes the trough year — verify override fires
+- Cyclical trough guard must fire when median EBIT < −2%.
+- AI semi premium (38×) must fire for Semiconductors with CAGR > 25% and revenueM ≥ 100.
+- EBIT null: NI-derived fallback fires. Watch for F7: trough-distorted median (MU median=3.1% vs TTM=22.8%).
 
-**Foreign ADR with USD reporting (BABA, PDD):**
-- foreignCurrency flag may be false even for Chinese companies if Yahoo reports in USD
-- CRP should be non-zero (~3-4% for China)
-- CAGR blending should give appropriate weight to analyst estimates vs potentially-stale history
+**Foreign ADR non-USD (TSM=TWD, RMS=EUR, ASML=EUR):**
+- foreignCurrency=true. fxRate applied to all financial figures. CRP=0 for Netherlands (AAA).
+- CAGR: 35% historical / 50% analyst weights (not the old 0% historical).
+- ARS exclusion must NOT fire (only Argentina inflation).
 
-**Foreign ADR with non-USD reporting (TSM=TWD, RMS=EUR):**
-- foreignCurrency=true, historicalCagr3y computed from USD-converted revenues
-- ARS exclusion must not fire (only Argentina)
-- CAGR blend weights: 35% historical / 50% analyst (not the old 0% historical)
+**Foreign ADR USD-reporting (BABA, PDD):**
+- foreignCurrency may be false even for Chinese companies.
+- CRP non-zero (~3-4% for China VIE structure). WACC has CRP added.
 
-**Pre-revenue / deep-loss startups (SATL, NBIS, POET):**
-- Forward P/E: exitPE from sector median (no AI semi premium without revenueM ≥ 100)
-- EBITDA may be negative → ev_ebitda method excluded, weight redistributed to revenue_multiple
-- Revenue multiple dominates (45-52% of blend after redistribution)
-- Full DCF: negative EBIT with negative FCF → no SBC/trough guard fires → normal median used → all projected rows negative → DCF near-zero (correct behavior, not a bug)
+**High-P/E profitable tech (PLTR, AMD, ARM):**
+- F8 guard gap: exitPE = currentPE×(55/90) + sectorPE×(35/90). For pe/sector > 3× with nm > 15%: exitPE embeds speculative premium. No automatic cap.
+- Correct check: `exitPE ≤ sectorPE × 2.5` — flag if exceeded.
 
-**SBC-heavy growth (ZETA, DUOL, UBER early years):**
-- SBC-distorted branch must fire (medianEbit < -2%, medianFcf > 0, growth/startup type)
-- UFCF FCF floor must fire in early ramp years (ufcf < 0 AND fcfOverride > 0)
-- isHighGrowthSaaS boundary at last < 15% (not 10%) — DUOL at 12% margin should use SaaS convergence
+**SBC-heavy growth (ZETA, DUOL, SNAP early):**
+- SBC-distorted EBIT ramp must fire (medianEbit<-2%, medianFcf>0, growth/startup).
+- isHighGrowthSaaS: last < 15% (raised from 10%).
+- F13 risk: if historical IS includes early-stage years with huge GAAP gains (warrant fair value), deriveNetMargin 'last' may be the oldest year.
 
-**Bitcoin mining (IREN, MARA, RIOT):**
-- Must detect as 'mining' type (not Technology)
-- Uses Bitcoin Mining multiples (pe:12×, evEbitda:8×, evRevenue:3×)
-- 8% CAGR cap applies (Energy/cyclical sector treatment)
-- UFCF is highly volatile — the model will show extreme swings based on BTC price embedded in revenue. Flag this explicitly.
+**Pre-revenue startups (SATL, NBIS):**
+- exitPE = sector median (no AI premium without revenueM ≥ 100).
+- EBITDA negative → ev_ebitda excluded → weight redistributed to revenue_multiple.
+- Near-zero DCF output is correct, not a bug.
 
-**Luxury goods (RMS/Hermès):**
-- Luxury Goods industry entry must be found: pe:42×, evEbitda:28×, evRevenue:8×
-- foreignCurrency=true (EUR), fxRate applied throughout
-- Net margin ~40%+ — 70% cap does not bind, correct
+**Capital-intensive non-financial (NEE, SO, TSM, XOM):**
+- F4 upper-bound: Yahoo FCF ignores regulated capex (utilities 2.30×) or uses OCF-only (NFLX 1.73×).
+- D&A/Rev can be 20-40% — is the medianDnaPct blend tracking the trend?
+- CapEx/Rev > 20%: verify monotonic-capex check (F5).
+
+**Content companies (NFLX, DIS):**
+- D&A includes content amortization (~37% of NFLX revenue). Verify `dna` field captures it.
+- FCF ≠ OCF − capex for NFLX: Yahoo FCF adds back partial content amortization.
+- baseFCF/histFCF ratio check mandatory (NFLX 1.73× confirmed).
+
+**Auto OEMs (TSLA, GM, F, TM):**
+- isAutoIndustry carve-out blocks thin-margin P/E cap entirely. **[F11]**
+- Check if `exitPE > sectorPE × 20` for speculative names (TSLA: 222×).
+
+**Closed-end funds (TY, GAB):**
+- alt_asset type misapplied. **[F15]** FCFF near-zero. Check `quote.quoteType = 'CEF'`.
+- Triangulation via multiples only reliable number.
 
 ---
 
 ## Notes for the Agent
 
-- Never evaluate assumptions in the abstract. Every statement must be grounded in the actual value the code produces for the specific ticker.
-- If a guard is supposed to fire but you cannot confirm from the API whether it does, trace the exact condition in the code and state what the API would need to return for it to fire. Then assess probability based on the company's known financials.
-- When evaluating "is this line missing," consider whether the absence silently distorts another line (e.g. missing SBC addback may be compensated by inflated D&A from the EBIT-EBITDA gap) — trace whether the compensation is correct or coincidental.
-- Flag the percentage of total fair value represented by terminal value. If it exceeds 75%, note this as a model sensitivity risk regardless of other correctness.
-- The six stocks used to calibrate these guards (SOFI, NU, TSM, BABA, SATL, MU) were each used to discover a specific class of bug. If the ticker being audited shares characteristics with one of these (e.g. a new Asian fintech ADR), explicitly check whether the same class of bug applies.
+- Every number stated must come from the actual API response or source code trace — no hypotheticals.
+- taxRate is null for every FMP-sourced ticker (33/33 confirmed). Always check and report the fallback impact.
+- Terminal value > 75% of EV is always a sensitivity flag, regardless of other correctness.
+- F13 (deriveNetMargin newest-first ordering) affects any company with a peak-year NI% that's significantly above the most recent year. Check proactively for warrant gains, asset sales, deferred tax reversals.
+- The six calibration stocks (SOFI, NU, TSM, BABA, SATL, MU) each exposed a specific class of bug. Use them as a mental checklist against similar companies.
