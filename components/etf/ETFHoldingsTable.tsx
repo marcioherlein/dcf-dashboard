@@ -47,7 +47,7 @@ export function ETFHoldingsTable({ holdings }: Props) {
               <tr key={h.symbol} className="border-b border-[#F4F3EF] last:border-0 hover:bg-[#F4F3EF]/60 transition-colors group">
                 <td className="px-4 py-2.5 text-xs text-[#8A95A6] font-mono">{h.rank}</td>
                 <td className="px-4 py-2.5">
-                  <span className="font-black font-mono text-[#06101F] text-xs">{h.symbol}</span>
+                  <span className="font-black font-sans text-[#06101F] text-xs">{h.symbol}</span>
                 </td>
                 <td className="px-4 py-2.5 text-xs text-[#566174] max-w-[200px] truncate">{h.name}</td>
                 <td className="px-4 py-2.5 text-right">

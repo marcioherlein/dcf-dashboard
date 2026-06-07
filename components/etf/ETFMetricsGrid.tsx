@@ -58,7 +58,7 @@ function ScoreGauge({ score, label }: { score: number; label: string }) {
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <div className={cn('text-4xl font-black font-mono', textColor)}>{score}</div>
+      <div className={cn('text-4xl font-black font-sans', textColor)}>{score}</div>
       <div className={cn('text-xs font-semibold px-2 py-0.5 rounded-full', barColor, badgeTextColor)}>{label}</div>
       <div className="w-full h-2 bg-[#F4F3EF] rounded-full overflow-hidden mt-1">
         <div

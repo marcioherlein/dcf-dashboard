@@ -58,7 +58,7 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
             {/* Header row */}
             <div className="relative z-10 flex items-start justify-between gap-1 mb-2">
               <Link href={`/etf/${meta.ticker}`} tabIndex={0} className="min-w-0 flex-1">
-                <span className="block font-mono font-black text-[14px] text-[#06101F] leading-none group-hover:text-olive-700 transition-colors">
+                <span className="block font-sans font-black text-[14px] text-[#06101F] leading-none group-hover:text-olive-700 transition-colors">
                   {meta.ticker}
                 </span>
                 <span className="block text-[11px] text-[#566174] mt-0.5 leading-tight truncate">
@@ -83,7 +83,7 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
             <div className="relative z-10 flex items-center gap-1.5 mb-2">
               {score != null ? (
                 <>
-                  <span className={cn('font-mono font-black text-[22px] leading-none', scoreColor(score))}>
+                  <span className={cn('font-sans font-black text-[22px] leading-none', scoreColor(score))}>
                     {score}
                   </span>
                   <span className={cn('text-[10px] font-semibold px-1.5 py-0.5 rounded-full', scoreBadge(score))}>
