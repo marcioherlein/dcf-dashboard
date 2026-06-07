@@ -46,22 +46,24 @@ interface Props {
 // ─── Sankey design tokens ─────────────────────────────────────────────────────
 
 const NODE_FILL: Record<string, string> = {
-  'Revenue':             '#2563EB',
-  'Cost of Revenue':     '#DC2626',
+  'Revenue':             '#566174',   // neutral — it's not a profit or cost
+  'Cost of Revenue':     '#E05252',
   'Gross Profit':        '#059669',
-  'Operating Expenses':  '#DC2626',
+  'Operating Expenses':  '#E05252',
   'Operating Income':    '#059669',
-  'Tax & Other':         '#8A95A6',
+  'Tax & Other':         '#A3ABBA',
   'Net Income':          '#059669',
+  'Net Loss':            '#E05252',
 }
 
 const LINK_FILL: Record<string, string> = {
-  'Cost of Revenue':    'rgba(220,38,38,0.11)',
-  'Gross Profit':       'rgba(5,150,105,0.10)',
-  'Operating Expenses': 'rgba(220,38,38,0.11)',
-  'Operating Income':   'rgba(5,150,105,0.10)',
-  'Tax & Other':        'rgba(148,163,184,0.14)',
-  'Net Income':         'rgba(5,150,105,0.16)',
+  'Cost of Revenue':    'rgba(224,82,82,0.10)',
+  'Gross Profit':       'rgba(5,150,105,0.09)',
+  'Operating Expenses': 'rgba(224,82,82,0.10)',
+  'Operating Income':   'rgba(5,150,105,0.09)',
+  'Tax & Other':        'rgba(163,171,186,0.13)',
+  'Net Income':         'rgba(5,150,105,0.14)',
+  'Net Loss':           'rgba(224,82,82,0.10)',
 }
 
 const PROFIT_NODES = new Set(['Gross Profit', 'Operating Income', 'Net Income'])
@@ -242,47 +244,118 @@ function RevenueView({ statementsData, currency }: { statementsData: AnyRecord; 
 
 function IncomeFlowView({ statementsData, currency }: { statementsData: AnyRecord; currency: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [chartWidth, setChartWidth] = useState(640)
+  const [chartWidth, setChartWidth] = useState(0)
   const fin = statementsData?.financialCurrency ?? currency
   const sym = currSym(fin)
-  const ttm: AnyRecord | null = statementsData?.ttm?.incomeStatement ?? null
+
+  // Use TTM if available, else most-recent annual row
+  const ttm: AnyRecord | null =
+    statementsData?.ttm?.incomeStatement ??
+    (statementsData?.annual?.incomeStatement?.slice(-1)[0] ?? null)
 
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
+    // Measure immediately then observe changes
+    setChartWidth(el.getBoundingClientRect().width)
     const obs = new ResizeObserver(([entry]) => setChartWidth(entry.contentRect.width))
     obs.observe(el)
     return () => obs.disconnect()
   }, [])
 
-  const { nodes, links, revenue } = useMemo(() => {
-    if (!ttm) return { nodes: [], links: [], revenue: 0 }
-    const revenue = Math.max(0, ttm.totalRevenue ?? 0)
-    if (!revenue) return { nodes: [], links: [], revenue: 0 }
+  const { nodes, links, revenue, hasNegativeNI } = useMemo(() => {
+    if (!ttm) return { nodes: [], links: [], revenue: 0, hasNegativeNI: false }
 
-    const grossProfit = Math.min(revenue, Math.max(0, ttm.grossProfit ?? 0))
-    const cogs        = revenue - grossProfit
-    const opIncome    = Math.max(0, Math.min(grossProfit, ttm.operatingIncome ?? 0))
-    const opEx        = grossProfit - opIncome
-    const clampedNI   = Math.max(0, Math.min(opIncome, ttm.netIncome ?? 0))
-    const taxOther    = opIncome - clampedNI
+    const revenue = Math.max(0, ttm.totalRevenue ?? ttm.operatingRevenue ?? 0)
+    if (!revenue) return { nodes: [], links: [], revenue: 0, hasNegativeNI: false }
+
+    // Derive gross profit: prefer direct field, fallback to revenue - cogs
+    const rawGP   = ttm.grossProfit ?? null
+    const rawCOGS = ttm.costOfRevenue ?? null
+    let grossProfit: number
+    let cogs: number
+    if (rawGP != null && rawGP > 0) {
+      grossProfit = Math.min(revenue, rawGP)
+      cogs        = revenue - grossProfit
+    } else if (rawCOGS != null && rawCOGS > 0) {
+      cogs        = Math.min(revenue, rawCOGS)
+      grossProfit = revenue - cogs
+    } else {
+      // No COGS/GP data — show revenue → operating income directly
+      grossProfit = revenue
+      cogs        = 0
+    }
+
+    // Operating income — can legitimately be null when not reported
+    const rawOpIncome = ttm.operatingIncome ?? ttm.ebit ?? null
+    const opIncome    = rawOpIncome != null
+      ? Math.min(grossProfit, Math.max(0, rawOpIncome))
+      : null
+    const opEx = opIncome != null ? grossProfit - opIncome : null
+
+    // Net income — allow negative (net loss)
+    const rawNI    = ttm.netIncome ?? ttm.netIncomeCommonStockholders ?? null
+    const netIncome = rawNI != null ? rawNI : null
+    const hasNegativeNI = netIncome != null && netIncome < 0
+
+    // Tax & other: opIncome - NI (only when both positive and NI ≤ opIncome)
+    let taxOther: number | null = null
+    let clampedNI: number | null = null
+    if (opIncome != null && opIncome > 0 && netIncome != null && netIncome > 0) {
+      clampedNI = Math.min(opIncome, netIncome)
+      taxOther  = opIncome - clampedNI
+    } else if (opIncome != null && opIncome > 0 && netIncome != null && netIncome <= 0) {
+      // Loss: opIncome all goes to tax & charges
+      taxOther = opIncome
+    }
 
     const nodes: { name: string }[] = [{ name: 'Revenue' }]
     const links: { source: number; target: number; value: number }[] = []
 
-    if (cogs > 0) { links.push({ source: 0, target: nodes.length, value: cogs }); nodes.push({ name: 'Cost of Revenue' }) }
+    if (cogs > 0) {
+      links.push({ source: 0, target: nodes.length, value: cogs })
+      nodes.push({ name: 'Cost of Revenue' })
+    }
     if (grossProfit > 0) {
       const gpIdx = nodes.length
-      links.push({ source: 0, target: gpIdx, value: grossProfit }); nodes.push({ name: 'Gross Profit' })
-      if (opEx > 0) { links.push({ source: gpIdx, target: nodes.length, value: opEx }); nodes.push({ name: 'Operating Expenses' }) }
-      if (opIncome > 0) {
+      links.push({ source: 0, target: gpIdx, value: grossProfit })
+      nodes.push({ name: 'Gross Profit' })
+
+      if (opEx != null && opEx > 0) {
+        links.push({ source: gpIdx, target: nodes.length, value: opEx })
+        nodes.push({ name: 'Operating Expenses' })
+      }
+      if (opIncome != null && opIncome > 0) {
         const opIdx = nodes.length
-        links.push({ source: gpIdx, target: opIdx, value: opIncome }); nodes.push({ name: 'Operating Income' })
-        if (taxOther > 0) { links.push({ source: opIdx, target: nodes.length, value: taxOther }); nodes.push({ name: 'Tax & Other' }) }
-        if (clampedNI > 0) { links.push({ source: opIdx, target: nodes.length, value: clampedNI }); nodes.push({ name: 'Net Income' }) }
+        links.push({ source: gpIdx, target: opIdx, value: opIncome })
+        nodes.push({ name: 'Operating Income' })
+
+        if (taxOther != null && taxOther > 0) {
+          links.push({ source: opIdx, target: nodes.length, value: taxOther })
+          nodes.push({ name: 'Tax & Other' })
+        }
+        if (clampedNI != null && clampedNI > 0) {
+          links.push({ source: opIdx, target: nodes.length, value: clampedNI })
+          nodes.push({ name: 'Net Income' })
+        } else if (hasNegativeNI && taxOther != null && taxOther > 0) {
+          // No Net Income node — loss shown via Tax & Other absorbing everything
+        }
+      } else if (opIncome == null && netIncome != null && netIncome > 0) {
+        // No opIncome data: link GP → NI directly
+        const niClamped = Math.min(grossProfit, netIncome)
+        if (niClamped > 0) {
+          links.push({ source: gpIdx, target: nodes.length, value: niClamped })
+          nodes.push({ name: 'Net Income' })
+          const remainder = grossProfit - niClamped
+          if (remainder > revenue * 0.01) {
+            links.push({ source: gpIdx, target: nodes.length, value: remainder })
+            nodes.push({ name: 'Tax & Other' })
+          }
+        }
       }
     }
-    return { nodes, links, revenue }
+
+    return { nodes, links, revenue, hasNegativeNI }
   }, [ttm])
 
   const leafSet = useMemo(() => {
@@ -298,46 +371,70 @@ function IncomeFlowView({ statementsData, currency }: { statementsData: AnyRecor
     )
   }
 
-  const isNarrow = chartWidth < 540
-  const margin = isNarrow ? { top: 20, right: 120, bottom: 20, left: 120 } : { top: 24, right: 152, bottom: 24, left: 152 }
-  const chartHeight = isNarrow ? 260 : 300
+  // Don't render until measured to avoid 0-width chart
+  if (chartWidth < 20) {
+    return (
+      <div className="bg-white" ref={containerRef} style={{ minHeight: 260 }} />
+    )
+  }
+
+  const isNarrow = chartWidth < 500
+  // Generous margins so labels don't clip on the left edge
+  const leftMargin  = isNarrow ? 100 : 140
+  const rightMargin = isNarrow ? 110 : 148
+  const margin      = { top: 20, right: rightMargin, bottom: 20, left: leftMargin }
+  const chartHeight = isNarrow ? 240 : 288
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const CustomNode = ({ x, y, width, height, index, payload }: any) => {
     const name: string  = payload?.name  ?? ''
     const value: number = payload?.value ?? 0
     if (!name || value <= 0) return null
+
     const fill      = NODE_FILL[name] ?? '#566174'
     const isRevenue = name === 'Revenue'
     const isLeaf    = leafSet.has(index as number)
-    const fullLabel = !isNarrow || isRevenue || isLeaf
     const pct       = Math.round((value / revenue) * 100)
     const isProfit  = PROFIT_NODES.has(name)
     const pctLabel  = isRevenue ? null : isProfit ? `${pct}% margin` : `${pct}% of rev`
-    const gap       = 10
-    const labelX    = isRevenue ? x - gap : x + width + gap
+    const gap       = 8
+
+    // Revenue label goes left; all others go right — clip guard ensures no negative x
+    const labelX    = isRevenue
+      ? Math.max(gap, x - gap)
+      : x + width + gap
     const anchor    = isRevenue ? 'end' : 'start'
-    const showName  = height >= 14 && (!isNarrow || isRevenue || isLeaf)
-    const showValue = fullLabel && height >= 26
-    const showPct   = fullLabel && height >= 38
+
+    // Height thresholds for label tiers
+    const h         = Math.max(height, 1)
+    const showName  = h >= 12
+    const showValue = h >= 22
+    const showPct   = h >= 34 && pctLabel != null
+
+    const nameY  = showValue ? y + h / 2 - 10 : y + h / 2 - 1
+    const valY   = showPct   ? y + h / 2 + 2  : y + h / 2 + 5
+    const pctY   = y + h / 2 + 16
+
     return (
       <g>
-        <rect x={x} y={y} width={width} height={Math.max(height, 2)} rx={3} ry={3} fill={fill} />
+        <rect x={x} y={y} width={width} height={Math.max(h, 2)} rx={3} ry={3} fill={fill} />
         {showName && (
-          <text x={labelX} y={y + height / 2 - (showValue ? 9 : 0)} textAnchor={anchor} dominantBaseline="middle"
-            fontFamily="Inter, system-ui, sans-serif" fontSize={11} fontWeight={600} fill="#566174">
+          <text x={labelX} y={nameY} textAnchor={anchor} dominantBaseline="middle"
+            fontFamily="Inter, system-ui, sans-serif" fontSize={isNarrow ? 10 : 11}
+            fontWeight={600} fill="#566174">
             {name}
           </text>
         )}
         {showValue && (
-          <text x={labelX} y={y + height / 2 + (showPct ? 4 : 5)} textAnchor={anchor} dominantBaseline="middle"
-            fontFamily="DM Mono, IBM Plex Mono, monospace" fontSize={11} fill="#06101F">
+          <text x={labelX} y={valY} textAnchor={anchor} dominantBaseline="middle"
+            fontFamily="DM Mono, IBM Plex Mono, Consolas, monospace"
+            fontSize={isNarrow ? 10 : 11} fill="#06101F">
             {fmtFlow(value, sym)}
           </text>
         )}
-        {showPct && pctLabel && (
-          <text x={labelX} y={y + height / 2 + 18} textAnchor={anchor} dominantBaseline="middle"
-            fontFamily="Inter, system-ui, sans-serif" fontSize={10} fill="#566174">
+        {showPct && (
+          <text x={labelX} y={pctY} textAnchor={anchor} dominantBaseline="middle"
+            fontFamily="Inter, system-ui, sans-serif" fontSize={10} fill="#8A95A6">
             {pctLabel}
           </text>
         )}
@@ -348,23 +445,44 @@ function IncomeFlowView({ statementsData, currency }: { statementsData: AnyRecor
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const CustomLink = ({ sourceX, sourceControlX, targetX, targetControlX, sourceRelativeY, targetRelativeY, linkWidth, payload }: any) => {
     const tgtName: string = payload?.target?.name ?? ''
-    const fill = LINK_FILL[tgtName] ?? 'rgba(148,163,184,0.14)'
+    const fill = LINK_FILL[tgtName] ?? 'rgba(148,163,184,0.12)'
     const sy0 = sourceRelativeY, ty0 = targetRelativeY
     const sy1 = sourceRelativeY + linkWidth, ty1 = targetRelativeY + linkWidth
-    const d = [`M${sourceX},${sy0}`, `C${sourceControlX},${sy0} ${targetControlX},${ty0} ${targetX},${ty0}`,
-               `L${targetX},${ty1}`, `C${targetControlX},${ty1} ${sourceControlX},${sy1} ${sourceX},${sy1}`, 'Z'].join(' ')
+    const d = [
+      `M${sourceX},${sy0}`,
+      `C${sourceControlX},${sy0} ${targetControlX},${ty0} ${targetX},${ty0}`,
+      `L${targetX},${ty1}`,
+      `C${targetControlX},${ty1} ${sourceControlX},${sy1} ${sourceX},${sy1}`,
+      'Z',
+    ].join(' ')
     return <path d={d} fill={fill} stroke="none" />
   }
 
   return (
     <div className="bg-white" ref={containerRef}>
       {chartWidth > 0 && (
-        <SankeyChart
-          width={chartWidth} height={chartHeight}
-          data={{ nodes, links }}
-          nodePadding={isNarrow ? 18 : 24} nodeWidth={8}
-          margin={margin} node={CustomNode} link={CustomLink} iterations={64}
-        />
+        <>
+          <SankeyChart
+            width={chartWidth} height={chartHeight}
+            data={{ nodes, links }}
+            nodePadding={isNarrow ? 16 : 20}
+            nodeWidth={7}
+            margin={margin}
+            node={CustomNode}
+            link={CustomLink}
+            iterations={32}
+          />
+          {hasNegativeNI && (
+            <p className="px-4 pb-3 text-[10px] text-[#E05252]">
+              Net loss period — negative net income not shown in flow
+            </p>
+          )}
+          {!statementsData?.ttm?.incomeStatement && (
+            <p className="px-4 pb-3 text-[10px] text-[#9B9B9B]">
+              Showing most recent annual period
+            </p>
+          )}
+        </>
       )}
     </div>
   )
