@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
+import { Search, Users, BarChart3, Mail, ChevronRight, CheckCircle, AlertCircle } from 'lucide-react'
 
 const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? 'marcioherlein@gmail.com')
   .split(',').map(e => e.trim())
@@ -40,23 +41,65 @@ function shortDate(iso: string | null): string {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+function UserAvatar({ email }: { email: string }) {
+  const initial = email[0].toUpperCase()
+  const hue = email.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360
+  return (
+    <div
+      className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0 select-none"
+      style={{ backgroundColor: `hsl(${hue}, 38%, 46%)` }}
+      aria-hidden="true"
+    >
+      {initial}
+    </div>
+  )
+}
+
+function TableSkeleton({ rows = 8, cols = 5 }: { rows?: number; cols?: number }) {
+  const widths = ['w-44', 'w-12', 'w-16', 'w-8', 'w-20']
+  return (
+    <tbody className="divide-y divide-[#E5E5E5]">
+      {Array.from({ length: rows }).map((_, i) => (
+        <tr key={i}>
+          {Array.from({ length: cols }).map((_, j) => (
+            <td key={j} className="px-4 py-3">
+              <div className={`h-3 rounded-full bg-[#F0F0F0] animate-pulse ${widths[j] ?? 'w-16'}`} />
+            </td>
+          ))}
+        </tr>
+      ))}
+    </tbody>
+  )
+}
+
 type Tab = 'users' | 'analytics' | 'broadcast'
+
+const TABS: { id: Tab; label: string; Icon: React.ElementType }[] = [
+  { id: 'users',     label: 'Users',     Icon: Users     },
+  { id: 'analytics', label: 'Analytics', Icon: BarChart3 },
+  { id: 'broadcast', label: 'Broadcast', Icon: Mail      },
+]
+
+// ── Shared input class ────────────────────────────────────────────────────────
+const INPUT_CLS =
+  'w-full px-3 py-2.5 text-sm bg-white border border-[#E5E5E5] rounded-lg text-[#111111] ' +
+  'placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#5F790B]/20 ' +
+  'focus:border-[#5F790B] transition-colors'
 
 export default function AdminPage() {
   const { data: session, status } = useSession()
-  const [tab, setTab] = useState<Tab>('users')
-  const [users, setUsers] = useState<AdminUser[]>([])
-  const [stats, setStats] = useState<Stats | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
+  const [tab, setTab]             = useState<Tab>('users')
+  const [users, setUsers]         = useState<AdminUser[]>([])
+  const [stats, setStats]         = useState<Stats | null>(null)
+  const [loading, setLoading]     = useState(true)
+  const [search, setSearch]       = useState('')
 
-  // Broadcast state
-  const [subject, setSubject] = useState('')
-  const [message, setMessage] = useState('')
-  const [audience, setAudience] = useState<'all' | 'free' | 'pro'>('all')
-  const [sending, setSending] = useState(false)
+  const [subject, setSubject]                 = useState('')
+  const [message, setMessage]                 = useState('')
+  const [audience, setAudience]               = useState<'all' | 'free' | 'pro'>('all')
+  const [sending, setSending]                 = useState(false)
   const [broadcastResult, setBroadcastResult] = useState<{ ok?: boolean; sent?: number; error?: string } | null>(null)
-  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmOpen, setConfirmOpen]         = useState(false)
 
   const isAdmin = ADMIN_EMAILS.includes(session?.user?.email ?? '')
 
@@ -74,22 +117,25 @@ export default function AdminPage() {
 
   if (status === 'loading') {
     return (
-      <div className="flex items-center justify-center h-64 text-slate-400 text-sm">
-        Loading…
+      <div className="flex items-center justify-center h-64">
+        <div className="h-4 w-4 rounded-full border-2 border-[#E5E5E5] border-t-[#5F790B] animate-spin" />
       </div>
     )
   }
 
   if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-slate-400 text-sm">Access denied.</p>
+      <div className="flex flex-col items-center justify-center h-64 gap-2">
+        <p className="text-sm font-medium text-[#111111]">Access denied</p>
+        <p className="text-xs text-[#9B9B9B]">This page is restricted to admin accounts.</p>
       </div>
     )
   }
 
   const filtered = users.filter(u =>
-    !search || u.email.toLowerCase().includes(search.toLowerCase()) || (u.name ?? '').toLowerCase().includes(search.toLowerCase())
+    !search ||
+    u.email.toLowerCase().includes(search.toLowerCase()) ||
+    (u.name ?? '').toLowerCase().includes(search.toLowerCase())
   )
 
   const recipientCount = audience === 'all'
@@ -101,7 +147,7 @@ export default function AdminPage() {
     setBroadcastResult(null)
     setConfirmOpen(false)
     try {
-      const res = await fetch('/api/admin/broadcast', {
+      const res  = await fetch('/api/admin/broadcast', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subject, message, audience }),
@@ -115,230 +161,354 @@ export default function AdminPage() {
     }
   }
 
+  const conversionRate = stats && stats.totalUsers > 0
+    ? Math.round((stats.proUsers / stats.totalUsers) * 100)
+    : 0
+
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-slate-100">Admin</h1>
-        <span className="text-xs text-slate-500">{session?.user?.email}</span>
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+
+      {/* ── Page header ─────────────────────────────────────────────────── */}
+      <div className="flex items-start justify-between mb-8 gap-4">
+        <div>
+          <h1 className="text-base font-semibold text-[#111111] tracking-tight">Admin</h1>
+          <p className="text-xs text-[#9B9B9B] mt-0.5">{session?.user?.email}</p>
+        </div>
+        {!loading && stats && (
+          <div className="flex items-center gap-3 text-xs text-[#6B6B6B] pt-1">
+            <span>
+              <span className="font-semibold text-[#111111] tabular-nums">{stats.totalUsers.toLocaleString()}</span>
+              {' '}users
+            </span>
+            <span className="text-[#E5E5E5] select-none">·</span>
+            <span>
+              <span className="font-semibold text-[#111111] tabular-nums">{stats.mau.toLocaleString()}</span>
+              {' '}this month
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-6 border-b border-slate-700/50 pb-0">
-        {(['users', 'analytics', 'broadcast'] as Tab[]).map(t => (
+      {/* ── Tabs ────────────────────────────────────────────────────────── */}
+      <div className="flex gap-0 mb-6 border-b border-[#E5E5E5]">
+        {TABS.map(({ id, label, Icon }) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-medium capitalize rounded-t transition-colors ${
-              tab === t
-                ? 'text-blue-400 border-b-2 border-blue-400 -mb-px'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
+            key={id}
+            onClick={() => setTab(id)}
+            className={[
+              'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors -mb-px',
+              tab === id
+                ? 'text-[#5F790B] border-b-2 border-[#5F790B]'
+                : 'text-[#6B6B6B] hover:text-[#111111] border-b-2 border-transparent',
+            ].join(' ')}
           >
-            {t}
+            <Icon size={14} strokeWidth={tab === id ? 2.2 : 1.8} />
+            {label}
           </button>
         ))}
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center h-40 text-slate-400 text-sm">Loading data…</div>
-      ) : (
-        <>
-          {/* USERS TAB */}
-          {tab === 'users' && (
+      {/* ── USERS TAB ───────────────────────────────────────────────────── */}
+      {tab === 'users' && (
+        <div>
+          <div className="flex items-center justify-between mb-4 gap-3">
+            <div className="relative w-72">
+              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] pointer-events-none" />
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search by email or name…"
+                className="w-full pl-8 pr-3 py-2 text-sm bg-white border border-[#E5E5E5] rounded-lg text-[#111111] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#5F790B]/20 focus:border-[#5F790B] transition-colors"
+              />
+            </div>
+            {!loading && (
+              <span className="text-xs text-[#9B9B9B] shrink-0 tabular-nums">
+                {filtered.length.toLocaleString()} {filtered.length === 1 ? 'user' : 'users'}
+              </span>
+            )}
+          </div>
+
+          <div className="rounded-xl border border-[#E5E5E5] overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-[#FAFAFA] border-b border-[#E5E5E5]">
+                  <th className="px-4 py-3 text-xs font-semibold text-[#6B6B6B] text-left">User</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-[#6B6B6B] text-left">Plan</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-[#6B6B6B] text-left">Last seen</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-[#6B6B6B] text-right">Views / mo.</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-[#6B6B6B] text-left">Joined</th>
+                </tr>
+              </thead>
+              {loading ? (
+                <TableSkeleton rows={8} cols={5} />
+              ) : (
+                <tbody className="divide-y divide-[#E5E5E5]">
+                  {filtered.map(u => (
+                    <tr key={u.id} className="hover:bg-[#FAFAFA] transition-colors">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <UserAvatar email={u.email} />
+                          <div className="min-w-0">
+                            <div className="text-[13px] font-medium text-[#111111] truncate max-w-[200px]">
+                              {u.email}
+                            </div>
+                            {u.name && (
+                              <div className="text-xs text-[#9B9B9B] mt-0.5 truncate max-w-[200px]">
+                                {u.name}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        {u.plan === 'pro' ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#E8F7EF] text-[#11875D] border border-[#A3D9BE]">
+                            Pro
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#F5F5F5] text-[#6B6B6B] border border-[#E5E5E5]">
+                            Free
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-[13px] text-[#6B6B6B] tabular-nums">
+                        {relativeTime(u.last_seen)}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className={`text-[13px] font-medium tabular-nums ${u.views_this_month > 0 ? 'text-[#111111]' : 'text-[#C4C4C4]'}`}>
+                          {u.views_this_month > 0 ? u.views_this_month.toLocaleString() : '—'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-[#9B9B9B] tabular-nums">
+                        {shortDate(u.created_at)}
+                      </td>
+                    </tr>
+                  ))}
+                  {filtered.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-12 text-center text-[#9B9B9B] text-sm">
+                        {search ? `No users matching "${search}"` : 'No users yet'}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              )}
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── ANALYTICS TAB ───────────────────────────────────────────────── */}
+      {tab === 'analytics' && (
+        loading ? (
+          <div className="space-y-6">
+            <div className="grid grid-cols-3 gap-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="rounded-xl border border-[#E5E5E5] bg-white px-5 py-4">
+                  <div className="h-7 w-16 rounded-md bg-[#F0F0F0] animate-pulse mb-2" />
+                  <div className="h-3 w-24 rounded-full bg-[#F0F0F0] animate-pulse" />
+                </div>
+              ))}
+            </div>
+            <div className="rounded-xl border border-[#E5E5E5] overflow-hidden">
+              <table className="w-full">
+                <TableSkeleton rows={6} cols={3} />
+              </table>
+            </div>
+          </div>
+        ) : !stats ? (
+          <div className="flex items-center justify-center h-40 text-[#9B9B9B] text-sm">
+            No analytics data available
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* KPI cards */}
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                {
+                  label: 'Total users',
+                  value: stats.totalUsers,
+                  sub: 'registered accounts',
+                },
+                {
+                  label: 'Pro subscribers',
+                  value: stats.proUsers,
+                  sub: `${conversionRate}% conversion rate`,
+                },
+                {
+                  label: 'Active this month',
+                  value: stats.mau,
+                  sub: 'unique sessions',
+                },
+              ].map(kpi => (
+                <div
+                  key={kpi.label}
+                  className="rounded-xl border border-[#E5E5E5] bg-white px-5 py-4"
+                >
+                  <div className="text-2xl font-bold text-[#111111] tabular-nums tracking-tight">
+                    {kpi.value.toLocaleString()}
+                  </div>
+                  <div className="text-xs font-semibold text-[#111111] mt-1.5">{kpi.label}</div>
+                  <div className="text-xs text-[#9B9B9B] mt-0.5">{kpi.sub}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Top tickers */}
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <input
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Search by email or name…"
-                  className="w-72 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                <span className="text-xs text-slate-500">{filtered.length} users</span>
-              </div>
-              <div className="overflow-x-auto rounded-xl border border-slate-700/60">
+              <p className="text-xs font-semibold text-[#6B6B6B] mb-3">Top tickers</p>
+              <div className="rounded-xl border border-[#E5E5E5] overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-700/60 text-left">
-                      <th className="px-4 py-3 text-xs font-medium text-slate-400">User</th>
-                      <th className="px-4 py-3 text-xs font-medium text-slate-400">Plan</th>
-                      <th className="px-4 py-3 text-xs font-medium text-slate-400">Last seen</th>
-                      <th className="px-4 py-3 text-xs font-medium text-slate-400">Views / month</th>
-                      <th className="px-4 py-3 text-xs font-medium text-slate-400">Joined</th>
+                    <tr className="bg-[#FAFAFA] border-b border-[#E5E5E5]">
+                      <th className="px-4 py-3 text-xs font-semibold text-[#6B6B6B] text-left w-10">#</th>
+                      <th className="px-4 py-3 text-xs font-semibold text-[#6B6B6B] text-left">Ticker</th>
+                      <th className="px-4 py-3 text-xs font-semibold text-[#6B6B6B] text-right">Views</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {filtered.map(u => (
-                      <tr key={u.id} className="border-b border-slate-800 hover:bg-slate-800/40 transition-colors">
+                  <tbody className="divide-y divide-[#E5E5E5]">
+                    {stats.topTickers.map((t, i) => (
+                      <tr key={t.ticker} className="hover:bg-[#FAFAFA] transition-colors">
+                        <td className="px-4 py-3 text-xs text-[#C4C4C4] tabular-nums">{i + 1}</td>
                         <td className="px-4 py-3">
-                          <div className="font-medium text-slate-100 truncate max-w-xs">{u.email}</div>
-                          {u.name && <div className="text-xs text-slate-500 mt-0.5">{u.name}</div>}
-                        </td>
-                        <td className="px-4 py-3">
-                          {u.plan === 'pro' ? (
-                            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">Pro</span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-700/50 text-slate-400 border border-slate-600/30">Free</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-slate-400">{relativeTime(u.last_seen)}</td>
-                        <td className="px-4 py-3">
-                          <span className={`font-medium ${u.views_this_month > 0 ? 'text-slate-100' : 'text-slate-600'}`}>
-                            {u.views_this_month}
+                          <span className="text-[13px] font-semibold text-[#111111] tracking-tight font-mono">
+                            {t.ticker}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-slate-500 text-xs">{shortDate(u.created_at)}</td>
-                      </tr>
-                    ))}
-                    {filtered.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="px-4 py-8 text-center text-slate-500 text-sm">No users found</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* ANALYTICS TAB */}
-          {tab === 'analytics' && stats && (
-            <div>
-              <div className="grid grid-cols-3 gap-4 mb-8">
-                {[
-                  { label: 'Total users', value: stats.totalUsers },
-                  { label: 'Pro users', value: stats.proUsers },
-                  { label: 'MAU (this month)', value: stats.mau },
-                ].map(kpi => (
-                  <div key={kpi.label} className="rounded-xl border border-slate-700/60 bg-slate-800/40 px-6 py-5">
-                    <div className="text-2xl font-bold text-slate-100">{kpi.value.toLocaleString()}</div>
-                    <div className="text-xs text-slate-400 mt-1">{kpi.label}</div>
-                  </div>
-                ))}
-              </div>
-
-              <h3 className="text-sm font-medium text-slate-300 mb-3">Top tickers (all time)</h3>
-              <div className="rounded-xl border border-slate-700/60 overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-700/60">
-                      <th className="px-4 py-3 text-xs font-medium text-slate-400 text-left w-12">#</th>
-                      <th className="px-4 py-3 text-xs font-medium text-slate-400 text-left">Ticker</th>
-                      <th className="px-4 py-3 text-xs font-medium text-slate-400 text-right">Views</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stats.topTickers.map((t, i) => (
-                      <tr key={t.ticker} className="border-b border-slate-800 last:border-0">
-                        <td className="px-4 py-3 text-slate-500">{i + 1}</td>
-                        <td className="px-4 py-3 font-medium text-slate-100">{t.ticker}</td>
-                        <td className="px-4 py-3 text-slate-400 text-right">{t.views.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-[13px] text-[#6B6B6B] text-right tabular-nums">
+                          {t.views.toLocaleString()}
+                        </td>
                       </tr>
                     ))}
                     {stats.topTickers.length === 0 && (
                       <tr>
-                        <td colSpan={3} className="px-4 py-8 text-center text-slate-500 text-sm">No data yet</td>
+                        <td colSpan={3} className="px-4 py-12 text-center text-[#9B9B9B] text-sm">
+                          No view data yet
+                        </td>
                       </tr>
                     )}
                   </tbody>
                 </table>
               </div>
             </div>
-          )}
+          </div>
+        )
+      )}
 
-          {/* BROADCAST TAB */}
-          {tab === 'broadcast' && (
-            <div className="max-w-2xl">
-              <p className="text-sm text-slate-400 mb-6">
-                Send an email to your users. Messages are sent via Resend from <span className="text-slate-300">team@insic.app</span>.
-              </p>
+      {/* ── BROADCAST TAB ───────────────────────────────────────────────── */}
+      {tab === 'broadcast' && (
+        <div className="max-w-xl space-y-5">
+          <p className="text-sm text-[#6B6B6B]">
+            Send email to your users via Resend from{' '}
+            <span className="font-medium text-[#111111]">team@insic.app</span>.
+          </p>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Audience</label>
-                  <div className="flex gap-3">
-                    {(['all', 'free', 'pro'] as const).map(a => (
-                      <label key={a} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="audience"
-                          value={a}
-                          checked={audience === a}
-                          onChange={() => setAudience(a)}
-                          className="accent-blue-500"
-                        />
-                        <span className="text-sm text-slate-300 capitalize">{a}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-500 mt-1.5">
-                    {recipientCount} recipient{recipientCount !== 1 ? 's' : ''}
-                  </p>
-                </div>
+          {/* Audience */}
+          <div>
+            <label className="block text-xs font-semibold text-[#111111] mb-2">Audience</label>
+            <div className="flex gap-2">
+              {(['all', 'free', 'pro'] as const).map(a => (
+                <button
+                  key={a}
+                  onClick={() => setAudience(a)}
+                  className={[
+                    'px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors capitalize',
+                    audience === a
+                      ? 'bg-[#EEF4DD] text-[#5F790B] border-[#5F790B]/30'
+                      : 'bg-white text-[#6B6B6B] border-[#E5E5E5] hover:border-[#C8C8C8] hover:text-[#111111]',
+                  ].join(' ')}
+                >
+                  {a}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-[#9B9B9B] mt-1.5">
+              <span className="font-semibold text-[#111111] tabular-nums">{recipientCount}</span>
+              {' '}recipient{recipientCount !== 1 ? 's' : ''}
+            </p>
+          </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Subject</label>
-                  <input
-                    value={subject}
-                    onChange={e => setSubject(e.target.value)}
-                    placeholder="What's this email about?"
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                </div>
+          {/* Subject */}
+          <div>
+            <label className="block text-xs font-semibold text-[#111111] mb-1.5">Subject</label>
+            <input
+              value={subject}
+              onChange={e => setSubject(e.target.value)}
+              placeholder="Subject line for this email"
+              className={INPUT_CLS}
+            />
+          </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Message</label>
-                  <textarea
-                    value={message}
-                    onChange={e => setMessage(e.target.value)}
-                    placeholder="Write your message here. Each blank line becomes a paragraph."
-                    rows={8}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-y"
-                  />
-                </div>
+          {/* Message */}
+          <div>
+            <label className="block text-xs font-semibold text-[#111111] mb-1.5">Message</label>
+            <textarea
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              placeholder="Write your message. Each blank line becomes a paragraph."
+              rows={7}
+              className={INPUT_CLS + ' resize-y'}
+            />
+          </div>
 
-                {broadcastResult && (
-                  <div className={`rounded-lg px-4 py-3 text-sm ${broadcastResult.ok ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border border-red-500/20 text-red-400'}`}>
-                    {broadcastResult.ok
-                      ? `Sent to ${broadcastResult.sent} recipient${broadcastResult.sent !== 1 ? 's' : ''}.`
-                      : `Error: ${broadcastResult.error}`}
-                  </div>
-                )}
-
-                {confirmOpen ? (
-                  <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 px-4 py-3">
-                    <p className="text-sm text-amber-300 mb-3">
-                      Send &ldquo;{subject}&rdquo; to <strong>{recipientCount}</strong> {audience === 'all' ? '' : audience + ' '}user{recipientCount !== 1 ? 's' : ''}?
-                    </p>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={sendBroadcast}
-                        disabled={sending}
-                        className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium disabled:opacity-50 transition-colors"
-                      >
-                        {sending ? 'Sending…' : 'Confirm send'}
-                      </button>
-                      <button
-                        onClick={() => setConfirmOpen(false)}
-                        className="px-4 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setConfirmOpen(true)}
-                    disabled={!subject.trim() || !message.trim() || recipientCount === 0 || sending}
-                    className="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Send broadcast
-                  </button>
-                )}
-              </div>
+          {/* Result banner */}
+          {broadcastResult && (
+            <div className={[
+              'flex items-start gap-2.5 rounded-lg border px-4 py-3 text-sm',
+              broadcastResult.ok
+                ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]'
+                : 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]',
+            ].join(' ')}>
+              {broadcastResult.ok
+                ? <CheckCircle size={15} className="mt-0.5 shrink-0" />
+                : <AlertCircle size={15} className="mt-0.5 shrink-0" />}
+              <span>
+                {broadcastResult.ok
+                  ? `Sent to ${broadcastResult.sent} recipient${broadcastResult.sent !== 1 ? 's' : ''}.`
+                  : `Error: ${broadcastResult.error}`}
+              </span>
             </div>
           )}
-        </>
+
+          {/* Confirm step */}
+          {confirmOpen ? (
+            <div className="rounded-lg border border-[#F3D391] bg-[#FFF4DA] px-4 py-4">
+              <p className="text-sm text-[#B56A00] mb-3">
+                Send &ldquo;{subject}&rdquo; to{' '}
+                <strong className="font-semibold">{recipientCount}</strong>
+                {audience !== 'all' && ` ${audience}`}
+                {' '}user{recipientCount !== 1 ? 's' : ''}?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={sendBroadcast}
+                  disabled={sending}
+                  className="px-4 py-2 rounded-lg bg-[#5F790B] hover:bg-[#526A08] text-white text-sm font-semibold disabled:opacity-40 transition-colors min-w-[120px]"
+                >
+                  {sending ? 'Sending…' : 'Confirm send'}
+                </button>
+                <button
+                  onClick={() => setConfirmOpen(false)}
+                  disabled={sending}
+                  className="px-4 py-2 rounded-lg bg-white border border-[#E5E5E5] hover:border-[#C8C8C8] text-[#6B6B6B] text-sm font-medium transition-colors disabled:opacity-40"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmOpen(true)}
+              disabled={!subject.trim() || !message.trim() || recipientCount === 0 || sending}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#5F790B] hover:bg-[#526A08] text-white text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              Review &amp; send
+              <ChevronRight size={14} />
+            </button>
+          )}
+        </div>
       )}
+
     </div>
   )
 }
