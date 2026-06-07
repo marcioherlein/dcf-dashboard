@@ -4,14 +4,13 @@ import { usePathname } from 'next/navigation'
 import TopBar from './TopBar'
 import BottomNav from './BottomNav'
 import Sidebar from './Sidebar'
-import { StockNavProvider, useStockNav } from '@/contexts/StockNavContext'
+import { StockNavProvider } from '@/contexts/StockNavContext'
 
 function AppShellInner({ children }: { children: React.ReactNode }) {
-  const { stockNav } = useStockNav()
   return (
     <main
       className="pb-safe-nav lg:pb-6 lg:pl-[220px]"
-      style={{ paddingTop: stockNav ? 'calc(96px + env(safe-area-inset-top, 0px))' : 'calc(52px + env(safe-area-inset-top, 0px))' }}
+      style={{ paddingTop: 'calc(52px + env(safe-area-inset-top, 0px))' }}
     >
       {children}
     </main>
