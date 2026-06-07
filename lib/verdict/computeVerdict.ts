@@ -78,7 +78,7 @@ export function computeVerdict(inputs: VerdictInputs): VerdictResult {
   const {
     upsidePct, roic, analystRecommendation,
     piotroski, altman, beneish,
-    fcfMargin, grossMargin, netMargin, revenueCAGR,
+    fcfMargin, grossMargin, netMargin, revenueCAGR: _revenueCAGR,
   } = inputs
 
   // ── Dimension 1: Valuation ─────────────────────────────────────────────────
@@ -139,7 +139,7 @@ export function computeVerdict(inputs: VerdictInputs): VerdictResult {
 
   // ── Dimension 3: Financial health ─────────────────────────────────────────
   const leverageFalling = pioC(piotroski, 'leverage')
-  const liquidityRising = pioC(piotroski, 'liquidity')
+  const _liquidityRising = pioC(piotroski, 'liquidity')
 
   const health: VerdictSignal[] = [
     signal(

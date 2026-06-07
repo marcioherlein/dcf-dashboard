@@ -75,7 +75,7 @@ export default function HowItWorksSection() {
               aria-hidden="true"
             />
 
-            {STEPS.map(({ n, Icon, title, body }, i) => (
+            {STEPS.map(({ n, Icon: _Icon, title, body }, i) => (
               <motion.div
                 key={i}
                 initial={reduced ? {} : { opacity: 0, x: i === 0 ? -20 : i === 2 ? 20 : 0, y: i === 1 ? 16 : 0 }}
