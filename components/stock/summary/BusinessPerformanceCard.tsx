@@ -393,7 +393,7 @@ function IncomeFlowView({ statementsData, currency }: { statementsData: AnyRecor
 
     const fill      = NODE_FILL[name] ?? '#566174'
     const isRevenue = name === 'Revenue'
-    const isLeaf    = leafSet.has(index as number)
+    const _isLeaf   = leafSet.has(index as number)
     const pct       = Math.round((value / revenue) * 100)
     const isProfit  = PROFIT_NODES.has(name)
     const pctLabel  = isRevenue ? null : isProfit ? `${pct}% margin` : `${pct}% of rev`
