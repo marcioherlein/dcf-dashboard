@@ -14,9 +14,9 @@ interface Props {
 export function ETFMarketPulse({ data, loading }: Props) {
   if (loading) {
     return (
-      <div className="flex gap-3 flex-wrap">
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-[68px] w-48 rounded-xl border border-[#E3E1DA] bg-[#F4F3EF] motion-safe:animate-pulse" />
+          <div key={i} className="h-[64px] rounded-xl border border-[#E3E1DA] bg-[#F4F3EF] motion-safe:animate-pulse" />
         ))}
       </div>
     )
@@ -45,7 +45,7 @@ export function ETFMarketPulse({ data, loading }: Props) {
     .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0] ?? null
 
   return (
-    <div className="flex gap-3 flex-wrap">
+    <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3">
       {spyPE != null && (
         <Chip label="S&P 500 P/E">
           <span className={cn('font-mono text-[17px] font-bold', spyPEColor)}>{spyPE.toFixed(1)}x</span>
@@ -83,9 +83,9 @@ export function ETFMarketPulse({ data, loading }: Props) {
 
 function Chip({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="glass-card-light rounded-xl px-4 py-3 flex flex-col gap-1 min-w-[152px]">
-      <span className="text-[11px] font-semibold text-[#566174]">{label}</span>
-      <div className="flex items-baseline gap-1.5">{children}</div>
+    <div className="bg-white border border-[#E3E1DA] rounded-xl px-4 py-3 flex flex-col gap-0.5 min-w-0 w-full sm:w-auto sm:min-w-[140px]" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+      <span className="text-[11px] font-[650] text-[#566174] truncate">{label}</span>
+      <div className="flex items-baseline gap-1.5 flex-wrap">{children}</div>
     </div>
   )
 }

@@ -36,14 +36,14 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
 
   // Breakdown bar: 4 stacked segments out of 100 total
   const barSegments = [
-    { width: breakdown.pe,           color: 'bg-[#EAF1FF]0',    title: `P/E +${breakdown.pe}` },
-    { width: breakdown.pb,           color: 'bg-indigo-400',  title: `P/B +${breakdown.pb}` },
-    { width: breakdown.yieldPts,     color: 'bg-[#E8F7EF]0', title: `Yield +${breakdown.yieldPts}` },
-    { width: breakdown.expensePenalty, color: 'bg-[#D83B3B]',   title: `Exp. −${breakdown.expensePenalty}` },
+    { width: breakdown.pe,             color: 'bg-[#D8E6FF]',    title: `P/E +${breakdown.pe}` },
+    { width: breakdown.pb,             color: 'bg-[#BFCFEE]',    title: `P/B +${breakdown.pb}` },
+    { width: breakdown.yieldPts,       color: 'bg-[#11875D]',    title: `Yield +${breakdown.yieldPts}` },
+    { width: breakdown.expensePenalty, color: 'bg-[#D83B3B]',    title: `Exp. −${breakdown.expensePenalty}` },
   ]
 
   return (
-    <div className="flex flex-col gap-4 glass-card-light rounded-2xl p-5 hover:shadow-md transition-all">
+    <div className="flex flex-col gap-4 bg-white border border-[#E3E1DA] rounded-2xl p-5 hover:shadow-md transition-shadow" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
@@ -80,13 +80,14 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
       </div>
 
       {/* Value Score + Breakdown bar */}
-      <div className="flex items-start gap-5">
+      <div className="flex items-start gap-4">
         {/* Number + badge */}
         <div className="shrink-0">
           <div className="flex items-baseline gap-2">
-            <span className={cn('font-mono font-black text-[42px] leading-none', scoreColor(score))}>
+            <span className={cn('font-mono font-black text-[32px] leading-none', scoreColor(score))}>
               {score}
             </span>
+            <span className="text-[11px] text-[#8A95A6] font-medium">/100</span>
           </div>
           <span className={cn('inline-block mt-1 text-[11px] font-semibold px-2 py-0.5 rounded-full', scoreBadge(score))}>
             {scoreLabel(score)}

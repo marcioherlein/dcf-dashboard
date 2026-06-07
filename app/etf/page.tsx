@@ -166,17 +166,15 @@ export default function ETFTrackerPage() {
       {/* ── Page header ─────────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-[#E3E1DA] px-4 sm:px-8 pt-6 pb-5">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-8 h-8 rounded-lg bg-olive-700 flex items-center justify-center shrink-0">
-              <PieChart size={16} className="text-white" />
+          <div className="flex items-center gap-2.5 mb-1">
+            <div className="w-7 h-7 rounded-lg bg-olive-700 flex items-center justify-center shrink-0">
+              <PieChart size={14} className="text-white" />
             </div>
-            <h1
-              className="text-2xl font-bold tracking-tight text-[#06101F]"
-            >
+            <h1 className="text-[20px] font-bold tracking-tight text-[#06101F]">
               ETF Tracker
             </h1>
           </div>
-          <p className="text-[14px] text-[#566174] mb-5 ml-11">
+          <p className="text-[13px] text-[#566174] mb-5 ml-[36px]">
             Value-oriented lens on the ETF universe — basket P/E, P/B, expense ratios, and a Value Score.
           </p>
           <ETFSearchBar />
@@ -206,14 +204,12 @@ export default function ETFTrackerPage() {
 
         {/* ── My Watchlist ──────────────────────────────────────────────────── */}
         <section>
-          <div className="flex items-center gap-3 mb-5">
-            <h2
-              className="text-lg font-bold text-[#06101F]"
-            >
+          <div className="flex items-center gap-2.5 mb-5">
+            <h2 className="text-[13px] font-[650] text-[#566174]">
               My Watchlist
             </h2>
             {watchlist.length > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-full text-[11px] font-bold bg-olive-100 text-olive-700">
+              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold bg-olive-100 text-olive-700">
                 {watchlist.length}
               </span>
             )}
@@ -272,7 +268,7 @@ export default function ETFTrackerPage() {
         </section>
 
         {/* ── Universe: sectors, geographies, styles, rankings ────────────── */}
-        <div className="border-t border-[#E3E1DA]">
+        <div className="border-t border-[#E3E1DA] pt-2">
           <ETFUniverseSection
             data={batchData}
             watchlist={watchlist}

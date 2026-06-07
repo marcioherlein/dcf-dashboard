@@ -59,29 +59,29 @@ export function scoreLabel(score: number): string {
 }
 
 export function scoreColor(score: number): string {
-  if (score >= 70) return 'text-emerald-600'
-  if (score >= 50) return 'text-blue-600'
-  if (score >= 30) return 'text-amber-600'
-  return 'text-red-600'
+  if (score >= 70) return 'text-[#11875D]'
+  if (score >= 50) return 'text-[#2563EB]'
+  if (score >= 30) return 'text-[#B56A00]'
+  return 'text-[#D83B3B]'
 }
 
 export function scoreBgCell(score: number): string {
-  if (score >= 70) return 'bg-emerald-50 border-emerald-200'
-  if (score >= 50) return 'bg-white border-slate-200'
-  if (score >= 30) return 'bg-amber-50 border-amber-200'
-  return 'bg-red-50 border-red-200'
+  if (score >= 70) return 'bg-[#F0FDF4] border-[#BBF7D0]'
+  if (score >= 50) return 'bg-white border-[#E3E1DA]'
+  if (score >= 30) return 'bg-[#FFFBEB] border-[#FDE68A]'
+  return 'bg-[#FEF2F2] border-[#FECACA]'
 }
 
 export function scoreBadge(score: number): string {
-  if (score >= 70) return 'bg-emerald-100 text-emerald-700'
-  if (score >= 50) return 'bg-blue-100 text-blue-700'
-  if (score >= 30) return 'bg-amber-100 text-amber-700'
-  return 'bg-red-100 text-red-600'
+  if (score >= 70) return 'bg-[#DCFCE7] text-[#11875D]'
+  if (score >= 50) return 'bg-[#EAF1FF] text-[#2563EB]'
+  if (score >= 30) return 'bg-[#FFF4DA] text-[#B56A00]'
+  return 'bg-[#FCEAEA] text-[#D83B3B]'
 }
 
 export function scoreBarColor(score: number): string {
-  if (score >= 70) return 'bg-emerald-500'
-  if (score >= 50) return 'bg-blue-500'
-  if (score >= 30) return 'bg-amber-400'
-  return 'bg-red-400'
+  if (score >= 70) return 'bg-[#11875D]'
+  if (score >= 50) return 'bg-[#2563EB]'
+  if (score >= 30) return 'bg-[#B56A00]'
+  return 'bg-[#D83B3B]'
 }

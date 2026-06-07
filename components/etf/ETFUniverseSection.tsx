@@ -101,7 +101,7 @@ function Leaderboard({
   return (
     <section>
       <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
-        <h2 className="text-lg font-bold text-[#06101F]">
+        <h2 className="text-[13px] font-[650] text-[#566174]">
           Rankings
         </h2>
         <div className="flex gap-1.5 flex-wrap">
@@ -265,10 +265,10 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
       {/* Sectors */}
       <section>
         <div className="mb-3">
-          <h2 className="text-lg font-bold text-[#06101F]">
+          <h2 className="text-[13px] font-[650] text-[#566174]">
             Sectors
           </h2>
-          <p className="text-[13px] text-[#8A95A6] mt-0.5">US SPDR sector ETFs (GICS)</p>
+          <p className="text-[12px] text-[#9B9B9B] mt-0.5">US SPDR sector ETFs (GICS)</p>
         </div>
         <ETFHeatmapGrid
           metas={SECTOR_META}
@@ -282,10 +282,10 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
       {/* Geographies */}
       <section>
         <div className="mb-3">
-          <h2 className="text-lg font-bold text-[#06101F]">
+          <h2 className="text-[13px] font-[650] text-[#566174]">
             Geographies
           </h2>
-          <p className="text-[13px] text-[#8A95A6] mt-0.5">Regional and country exposure</p>
+          <p className="text-[12px] text-[#9B9B9B] mt-0.5">Regional and country exposure</p>
         </div>
         <ETFHeatmapGrid
           metas={GEO_META}
@@ -299,10 +299,10 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
       {/* Styles */}
       <section>
         <div className="mb-3">
-          <h2 className="text-lg font-bold text-[#06101F]">
+          <h2 className="text-[13px] font-[650] text-[#566174]">
             Styles
           </h2>
-          <p className="text-[13px] text-[#8A95A6] mt-0.5">Factor tilts and smart beta</p>
+          <p className="text-[12px] text-[#9B9B9B] mt-0.5">Factor tilts and smart beta</p>
         </div>
         <ETFHeatmapGrid
           metas={STYLE_META}
