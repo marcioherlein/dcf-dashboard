@@ -537,12 +537,329 @@ async function runMacro() {
   await post(lines.join('\n'))
 }
 
+// ─── Mode: feature ────────────────────────────────────────────────────────────
+// Daily app education post — rotates through 7 angles (one per day of week).
+// Goal: teach the audience how insic works and drive clicks.
+
+const FEATURE_POSTS = {
+  1: { // Monday
+    lines: [
+      `📐 What is DCF — and why does it matter?`,
+      ``,
+      `DCF (Discounted Cash Flow) estimates what a business is worth today based on the cash it will generate in the future.`,
+      ``,
+      `Price tells you what the market thinks.`,
+      `DCF tells you what the business is actually worth.`,
+      `The gap between the two is your edge.`,
+      ``,
+      `Run a free DCF on any stock → ${APP_URL}`,
+      `#DCF #Investing #StockValuation`,
+    ],
+  },
+  2: { // Tuesday
+    lines: [
+      `📉 WACC — the most important number most investors ignore`,
+      ``,
+      `WACC (Weighted Average Cost of Capital) is the discount rate in a DCF.`,
+      `It represents the minimum return a business must earn to create value.`,
+      ``,
+      `Higher WACC = future cash flows worth less today`,
+      `Lower WACC = future cash flows worth more today`,
+      ``,
+      `When the Fed raises rates, WACC goes up — and fair values drop.`,
+      `That's why rate decisions matter to every stock you own.`,
+      ``,
+      `See WACC live for any stock → ${APP_URL}`,
+      `#WACC #DCF #Investing`,
+    ],
+  },
+  3: { // Wednesday
+    lines: [
+      `📈 How we model growth — and why it matters more than the current price`,
+      ``,
+      `Our model blends three signals:`,
+      `• Historical 3Y revenue CAGR`,
+      `• Analyst forward estimates (weighted by analyst count)`,
+      `• Fundamental growth (ROE × retention rate)`,
+      ``,
+      `Then applies a Damodaran convergence discount — because no company grows fast forever.`,
+      ``,
+      `The growth assumption is the #1 driver of fair value. See it transparently → ${APP_URL}`,
+      `#Valuation #DCF #FinancialModeling`,
+    ],
+  },
+  4: { // Thursday
+    lines: [
+      `🐻 Bear / Base / Bull — why one number isn't enough`,
+      ``,
+      `Every DCF depends on assumptions that could be wrong.`,
+      `That's why we run three scenarios:`,
+      ``,
+      `🐻 Bear — higher WACC, lower growth`,
+      `⚖️  Base — our best estimate`,
+      `🐂 Bull — lower WACC, higher growth`,
+      ``,
+      `The range tells you more than the point estimate.`,
+      `A stock where bear = $80 and bull = $82 is very different from bear = $40, bull = $200.`,
+      ``,
+      `See scenarios for any stock → ${APP_URL}`,
+      `#DCF #Investing #RiskManagement`,
+    ],
+  },
+  5: { // Friday
+    lines: [
+      `🏆 ROIC vs WACC — the real moat test`,
+      ``,
+      `Return on Invested Capital (ROIC) measures how efficiently a company generates profit from capital.`,
+      ``,
+      `ROIC > WACC = value creation (the business earns more than it costs to run)`,
+      `ROIC < WACC = value destruction (even profitable companies can destroy value)`,
+      ``,
+      `This spread is Buffett's moat in a single number.`,
+      ``,
+      `Check ROIC vs WACC for any stock → ${APP_URL}`,
+      `#ROIC #Moat #ValueInvesting`,
+    ],
+  },
+  6: { // Saturday
+    lines: [
+      `⚡ How to research any stock in 60 seconds with insic`,
+      ``,
+      `1. Go to insic.app`,
+      `2. Type any NYSE or NASDAQ ticker`,
+      `3. Get: DCF fair value, WACC, growth model, bear/base/bull scenarios, ROIC, Piotroski score, analyst consensus`,
+      ``,
+      `Everything is transparent — you see every assumption, not just the output.`,
+      ``,
+      `Free. No sign-up required for the first look.`,
+      ``,
+      `Try it now → ${APP_URL}`,
+      `#Investing #StockAnalysis #DCF`,
+    ],
+  },
+  0: { // Sunday
+    lines: [
+      `💡 Fair value ≠ price target`,
+      ``,
+      `Analyst price targets reflect where a stock might go in 12 months.`,
+      `DCF fair value reflects what the business is intrinsically worth today.`,
+      ``,
+      `They're measuring different things.`,
+      `A stock can be at its price target and still be 40% overvalued by DCF.`,
+      `Or well below its target but still expensive.`,
+      ``,
+      `Know the difference before you invest → ${APP_URL}`,
+      `#Investing #ValueInvesting #DCF`,
+    ],
+  },
+}
+
+async function runFeature() {
+  const day = new Date().getDay()
+  const post_content = FEATURE_POSTS[day] ?? FEATURE_POSTS[1]
+  const text = post_content.lines
+    .map(l => l.replace(/\$\{APP_URL\}/g, APP_URL))
+    .join('\n')
+  await post(text)
+}
+
+// ─── Mode: weekly_wrap ────────────────────────────────────────────────────────
+// Saturday — top 3 most interesting DCF verdicts of the week.
+// Picks 1 undervalued + 1 overvalued + 1 from the weekly rotation.
+
+const WEEKLY_PICKS = [
+  ['AAPL', 'MSFT',  'JPM'],
+  ['NVDA', 'GOOGL', 'JNJ'],
+  ['AMZN', 'META',  'V'],
+  ['MSFT', 'AAPL',  'KO'],
+  ['GOOGL','NVDA',  'BAC'],
+]
+
+async function runWeeklyWrap() {
+  const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
+  const tickers = WEEKLY_PICKS[weekOfYear % WEEKLY_PICKS.length]
+
+  console.log(`Weekly wrap tickers: ${tickers.join(', ')}`)
+
+  const results = await Promise.allSettled(tickers.map(t => fetchValuation(t)))
+  const stocks = results
+    .map((r, i) => r.status === 'fulfilled' ? { ticker: tickers[i], data: r.value } : null)
+    .filter(Boolean)
+    .map(({ ticker, data }) => ({
+      ticker,
+      price: data.quote?.price,
+      fair: data.valuationMethods?.triangulatedFairValue,
+      upside: data.valuationMethods?.triangulatedUpsidePct,
+    }))
+    .filter(s => s.price && s.fair)
+
+  if (stocks.length === 0) throw new Error('No valuation data for weekly wrap')
+
+  const lines = [
+    `📊 This week's most interesting valuations`,
+    ``,
+  ]
+
+  for (const s of stocks) {
+    const emoji = s.upside > 0.15 ? '🟢' : s.upside > -0.05 ? '🟡' : '🔴'
+    const verdict = s.upside > 0.15 ? 'undervalued' : s.upside > -0.05 ? 'fairly valued' : 'overvalued'
+    lines.push(`${emoji} $${s.ticker} — ${pct(s.upside)} ${verdict} (FV: ${fmt(s.fair)})`)
+  }
+
+  lines.push(``)
+  lines.push(`Full models → ${APP_URL}`)
+  lines.push(`#Stocks #DCF #Investing #WeeklyWrap`)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: question ───────────────────────────────────────────────────────────
+// Sunday — rotating engagement question to drive replies and impressions.
+
+const QUESTIONS = [
+  [
+    `💭 Which metric do you use most to value a stock?`,
+    ``,
+    `→ P/E ratio`,
+    `→ DCF / intrinsic value`,
+    `→ Analyst price targets`,
+    `→ Revenue growth rate`,
+    ``,
+    `Reply below 👇`,
+    ``,
+    `Run a free DCF on any stock → ${APP_URL}`,
+    `#Investing #Stocks #StockMarket`,
+  ],
+  [
+    `💭 What's your biggest challenge when researching a stock?`,
+    ``,
+    `→ Too much data, don't know what matters`,
+    `→ Don't understand valuation models`,
+    `→ Hard to find reliable free data`,
+    `→ Takes too long`,
+    ``,
+    `Reply below 👇 — we built insic to solve exactly this.`,
+    ``,
+    `${APP_URL}`,
+    `#Investing #Stocks #RetailInvestors`,
+  ],
+  [
+    `💭 Do you think $NVDA is overvalued right now?`,
+    ``,
+    `Our DCF says: 🔴 Overvalued`,
+    `Wall St says: Strong Buy`,
+    ``,
+    `Who's right? Run the model yourself → ${APP_URL}/stock/NVDA`,
+    ``,
+    `#NVDA #Nvidia #DCF #Investing`,
+  ],
+  [
+    `💭 Warren Buffett famously avoids tech stocks he can't value.`,
+    ``,
+    `Do you think DCF works for high-growth tech companies like $AMZN or $MSFT?`,
+    ``,
+    `→ Yes, with adjusted assumptions`,
+    `→ No, different framework needed`,
+    `→ Only for mature tech`,
+    ``,
+    `See how we model it → ${APP_URL}`,
+    `#ValueInvesting #Buffett #DCF`,
+  ],
+]
+
+async function runQuestion() {
+  const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
+  const q = QUESTIONS[weekOfYear % QUESTIONS.length]
+  const text = q.map(l => l.replace(/\$\{APP_URL\}/g, APP_URL)).join('\n')
+  await post(text)
+}
+
+// ─── Mode: dcf_bear ───────────────────────────────────────────────────────────
+// Evening slot — always picks an overvalued or controversial stock.
+// Drives debate and retweets more than bullish takes.
+
+const BEAR_ROTATION = {
+  1: ['NVDA', 'INTC', 'QCOM', 'TXN'],   // Monday: semis
+  2: ['AAPL', 'MSFT', 'GOOGL','META'],   // Tuesday: mega-cap tech
+  3: ['JPM',  'BAC',  'GS',   'V'],      // Wednesday: financials
+  4: ['JNJ',  'MRK',  'ABBV', 'AMGN'],  // Thursday: healthcare
+  5: ['AMZN', 'NFLX', 'COST', 'WMT'],   // Friday: consumer/retail
+  6: ['KO',   'PEP',  'MCD',  'HD'],    // Saturday: defensives
+  0: ['AAPL', 'MSFT', 'NVDA', 'AMZN'],  // Sunday: top 4
+}
+
+async function runDcfBear() {
+  const day = new Date().getDay()
+  const pool = BEAR_ROTATION[day] ?? BEAR_ROTATION[2]
+  const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
+  const ticker = pool[weekOfYear % pool.length]
+
+  console.log(`Fetching bear DCF for ${ticker}...`)
+  const data = await fetchValuation(ticker)
+
+  const price  = data.quote?.price
+  const fair   = data.valuationMethods?.triangulatedFairValue
+  const upside = data.valuationMethods?.triangulatedUpsidePct
+  const cagr   = data.cagr
+  const wacc   = data.wacc?.wacc
+  const grade  = data.ratings?.overall?.grade ?? ''
+  const label  = data.ratings?.overall?.label ?? ''
+  const analyst1y   = data.cagrAnalysis?.analystEstimate1y
+  const numAnalysts = data.cagrAnalysis?.numAnalysts ?? 0
+  const forwardPE   = data.analystForwardPE
+  const recommendation = data.analystRecommendation ?? ''
+
+  if (!price || !fair) throw new Error(`No price/fair value data for ${ticker}`)
+
+  const verdictEmoji = upside > 0.15 ? '🟢' : upside > 0 ? '🟡' : '🔴'
+  const verdictText  = upside > 0.15 ? 'Undervalued' : upside > -0.05 ? 'Fairly valued' : 'Overvalued'
+
+  // Build the contrarian angle
+  const recLabel = recommendation === 'strong_buy' ? 'Strong Buy'
+    : recommendation === 'buy' ? 'Buy'
+    : recommendation === 'hold' ? 'Hold'
+    : recommendation === 'sell' ? 'Sell' : null
+
+  const tensionLine = recLabel && (upside < -0.10)
+    ? `Wall St says: ${recLabel}. Our DCF says: ${verdictText}. Who's right?`
+    : upside < -0.30
+    ? `The model needs ${pct(Math.abs(upside), false)} revenue growth to justify today's price.`
+    : `Price already bakes in a lot of optimism. Model says: ${verdictText}.`
+
+  const growthLine = analyst1y != null && numAnalysts >= 3
+    ? `Analysts expect ${pct(analyst1y, false)}/yr growth · model uses ${pct(cagr, false)} · WACC ${pct(wacc, false)}`
+    : forwardPE ? `Fwd P/E: ${forwardPE}× · model fair value: ${fmt(fair)}`
+    : `DCF fair value: ${fmt(fair)} · current price: ${fmt(price)}`
+
+  const lines = [
+    `${verdictEmoji} $${ticker} — ${verdictText} by DCF`,
+    `Price: ${fmt(price)} · Fair Value: ${fmt(fair)} · Upside: ${pct(upside)}`,
+    ``,
+    tensionLine,
+    growthLine,
+    ``,
+    `${grade} ${label} · Run the full model → ${APP_URL}/stock/${ticker}`,
+    `#DCF #Valuation #${ticker}`,
+  ]
+
+  await post(lines.join('\n'))
+}
+
 // ─── Entry point ──────────────────────────────────────────────────────────────
 
-const MODES = { earnings: runEarnings, dcf: runDcf, news: runNews, macro: runMacro }
+const MODES = {
+  earnings:    runEarnings,
+  dcf:         runDcf,
+  dcf_bear:    runDcfBear,
+  news:        runNews,
+  macro:       runMacro,
+  feature:     runFeature,
+  weekly_wrap: runWeeklyWrap,
+  question:    runQuestion,
+}
 
 if (!MODES[MODE]) {
-  console.error(`Unknown MODE="${MODE}". Use: earnings | dcf | news`)
+  console.error(`Unknown MODE="${MODE}". Use: earnings | dcf | dcf_bear | news | macro | feature | weekly_wrap | question`)
   process.exit(1)
 }
 
