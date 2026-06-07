@@ -125,57 +125,113 @@ function RevenueView({ statementsData, currency }: { statementsData: AnyRecord; 
   }
 
   const maxRev = Math.max(...points.map(p => p.revenue))
+  // Net income has its own scale so bars are readable regardless of margin size
+  const niValues = points.map(p => p.netIncome).filter((v): v is number => v != null)
+  const maxNiAbs = niValues.length > 0 ? Math.max(...niValues.map(Math.abs)) : 0
+
   const latestForMargin = [...points].reverse().find(p => !p.isTTM && p.netIncome != null && p.revenue > 0)
   const latestNetMargin = latestForMargin ? (latestForMargin.netIncome! / latestForMargin.revenue) : null
 
-  return (
-    <div className="bg-white px-4 sm:px-5 pt-4 pb-4">
-      <div className="flex items-end gap-1 sm:gap-1.5" style={{ height: 120 }}>
-        {points.map((p) => {
-          const revH  = (p.revenue / maxRev) * 100
-          const niH   = p.netIncome != null ? (Math.abs(p.netIncome) / maxRev) * 100 : null
-          const niPos = p.netIncome != null && p.netIncome >= 0
-          const alpha = p.isTTM ? 'opacity-60' : ''
+  // Y-axis labels — 3 ticks on the revenue scale
+  const yTicks = [0.5, 1].map(f => ({ pct: f * 100, label: fmtDollars(maxRev * f, sym) }))
 
-          return (
-            <div key={p.year} className={cn('flex-1 min-w-0 flex flex-col items-center gap-0.5', alpha)}>
-              <div className="h-[14px] flex items-end justify-center">
-                {p.yoyRev != null && (
-                  <span className={cn('text-[8px] font-semibold leading-none', p.yoyRev >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
-                    {p.yoyRev >= 0 ? '+' : ''}{(p.yoyRev * 100).toFixed(0)}%
-                  </span>
-                )}
-              </div>
-              <div className="w-full flex gap-0.5 items-end" style={{ height: 88 }}>
-                <div
-                  className="flex-[2] min-w-0 bg-[#EAF1FF]0 rounded-t-sm transition-all"
-                  style={{ height: `${Math.max(2, revH)}%` }}
-                  title={`${p.year} Revenue: ${fmtDollars(p.revenue, sym)}`}
-                />
-                {niH != null ? (
-                  <div
-                    className={cn('flex-1 min-w-0 rounded-t-sm transition-all', niPos ? 'bg-[#11875D]' : 'bg-[#D83B3B]')}
-                    style={{ height: `${Math.max(2, niH)}%` }}
-                    title={`${p.year} Net Income: ${fmtDollars(p.netIncome!, sym)}`}
-                  />
-                ) : (
-                  <div className="flex-1" />
-                )}
-              </div>
-              <span className={cn('text-[8px] sm:text-[10px] leading-none mt-0.5', p.isTTM ? 'text-[#C4C4C4] font-semibold' : 'text-[#9B9B9B]')}>
-                {p.year}
-              </span>
+  return (
+    <div className="bg-white px-4 sm:px-5 pt-3 pb-4">
+      {/* Chart area */}
+      <div className="relative" style={{ height: 148 }}>
+        {/* Y-axis gridlines + labels */}
+        <div className="absolute inset-0 pointer-events-none" style={{ bottom: 20 }}>
+          {yTicks.map(({ pct, label }) => (
+            <div
+              key={pct}
+              className="absolute left-0 right-0 flex items-center"
+              style={{ bottom: `${pct}%` }}
+            >
+              <span className="text-[9px] text-[#C4C4C4] tabular-nums w-8 shrink-0 leading-none">{label}</span>
+              <div className="flex-1 border-t border-dashed border-[#E8E8E8]" />
             </div>
-          )
-        })}
+          ))}
+        </div>
+
+        {/* Bars */}
+        <div className="absolute inset-0 flex items-end gap-1 sm:gap-1.5 pl-9" style={{ paddingBottom: 20 }}>
+          {points.map((p) => {
+            const barAreaH = 128 - 20 // total height minus year label area
+            const revH  = (p.revenue / maxRev) * 100
+            const niH   = p.netIncome != null && maxNiAbs > 0
+              ? (Math.abs(p.netIncome) / maxNiAbs) * 70  // NI bars capped at 70% of bar area height
+              : null
+            const niPos  = p.netIncome != null && p.netIncome >= 0
+            const alpha  = p.isTTM ? 'opacity-60' : ''
+
+            return (
+              <div
+                key={p.year}
+                className={cn('group flex-1 min-w-0 flex flex-col items-center gap-0', alpha)}
+              >
+                {/* YoY growth badge */}
+                <div className="h-[16px] flex items-end justify-center">
+                  {p.yoyRev != null && (
+                    <span className={cn('text-[9px] font-semibold leading-none tabular-nums', p.yoyRev >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
+                      {p.yoyRev >= 0 ? '+' : ''}{(p.yoyRev * 100).toFixed(0)}%
+                    </span>
+                  )}
+                </div>
+
+                {/* Bar pair */}
+                <div className="relative w-full flex gap-[2px] items-end" style={{ height: barAreaH - 16 }}>
+                  {/* Revenue bar */}
+                  <div
+                    className="relative flex-[3] min-w-0 bg-[#D8E6FF] hover:bg-[#BFCFEE] rounded-t-[3px] transition-colors cursor-default"
+                    style={{ height: `${Math.max(3, revH)}%` }}
+                  >
+                    {/* Value label on hover */}
+                    <div className="absolute inset-x-0 -top-5 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      <span className="text-[9px] font-semibold text-[#06101F] bg-white border border-[#E3E1DA] rounded px-1 py-0.5 shadow-sm whitespace-nowrap tabular-nums">
+                        {fmtDollars(p.revenue, sym)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Net income bar — independent scale */}
+                  {niH != null ? (
+                    <div
+                      className={cn(
+                        'relative flex-[2] min-w-0 rounded-t-[3px] transition-colors cursor-default',
+                        niPos ? 'bg-[#11875D] hover:bg-[#0E7053]' : 'bg-[#D83B3B] hover:bg-[#BA2F2F]',
+                      )}
+                      style={{ height: `${Math.max(3, niH)}%` }}
+                    >
+                      {/* Value label on hover */}
+                      <div className="absolute inset-x-0 -top-5 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        <span className="text-[9px] font-semibold text-[#06101F] bg-white border border-[#E3E1DA] rounded px-1 py-0.5 shadow-sm whitespace-nowrap tabular-nums">
+                          {fmtDollars(p.netIncome!, sym)}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex-[2]" />
+                  )}
+                </div>
+
+                {/* Year label */}
+                <span className={cn('text-[9px] sm:text-[10px] leading-none mt-1 tabular-nums', p.isTTM ? 'text-[#9B9B9B] font-semibold' : 'text-[#9B9B9B]')}>
+                  {p.year}
+                </span>
+              </div>
+            )
+          })}
+        </div>
       </div>
+
+      {/* Footnote */}
       {latestNetMargin != null && (
-        <p className="mt-3 text-[10px] text-[#9B9B9B] leading-snug">
+        <p className="mt-1 text-[10px] text-[#9B9B9B] leading-snug">
           {latestForMargin?.year} net margin:{' '}
           <span className={cn('font-semibold', latestNetMargin >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
             {(latestNetMargin * 100).toFixed(1)}%
           </span>
-          {' '}· Net income bars scaled to revenue
+          {' '}· Net income bars use independent scale
         </p>
       )}
     </div>
@@ -353,7 +409,7 @@ export default function BusinessPerformanceCard({ statementsData, currency = 'US
         {activeView === 'revenue' && (
           <div className="hidden sm:flex items-center gap-3 shrink-0">
             <span className="flex items-center gap-1.5 text-[10px] text-[#9B9B9B]">
-              <span className="inline-block w-2 h-2 rounded-sm bg-[#EAF1FF]0" />
+              <span className="inline-block w-2 h-2 rounded-sm bg-[#D8E6FF]" />
               Revenue
             </span>
             <span className="flex items-center gap-1.5 text-[10px] text-[#9B9B9B]">

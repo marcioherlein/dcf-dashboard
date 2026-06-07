@@ -106,7 +106,7 @@ export default function RevenueEarningsChart({ statementsData, currency = 'USD' 
         <p className="text-[12px] font-[650] text-[#566174]">Revenue &amp; Net Income</p>
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1.5 text-[10px] text-[#8A95A6]">
-            <span className="inline-block w-2 h-2 rounded-sm bg-[#EAF1FF]0" />
+            <span className="inline-block w-2 h-2 rounded-sm bg-[#D8E6FF]" />
             Revenue
           </span>
           <span className="flex items-center gap-1.5 text-[10px] text-[#8A95A6]">
@@ -140,7 +140,7 @@ export default function RevenueEarningsChart({ statementsData, currency = 'USD' 
                 <div className="w-full flex gap-0.5 items-end" style={{ height: 88 }}>
                   {/* revenue bar */}
                   <div
-                    className="flex-[2] min-w-0 bg-[#EAF1FF]0 rounded-t-sm transition-all"
+                    className="flex-[2] min-w-0 bg-[#D8E6FF] rounded-t-sm transition-all"
                     style={{ height: `${Math.max(2, revH)}%` }}
                     title={`${p.year} Revenue: ${fmtDollars(p.revenue, sym)}`}
                   />
