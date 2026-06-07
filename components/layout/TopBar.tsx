@@ -302,7 +302,7 @@ export default function TopBar() {
       <div
         className={cn(
           stockNav ? 'hidden sm:grid' : 'grid',
-          'relative px-3 sm:px-4'
+          'relative px-3 sm:px-4 lg:pl-[220px]'
         )}
         style={{
           height: '52px',
@@ -311,12 +311,12 @@ export default function TopBar() {
           gap: '8px',
         }}
       >
-        {/* ── Column 1: Logo ── */}
-        <div className="flex items-center">
+        {/* ── Column 1: Logo — hidden on lg+ (sidebar owns that space) ── */}
+        <div className="flex items-center lg:hidden">
           <Link href={session ? '/analyze' : '/'} className="flex items-center leading-none shrink-0" aria-label="insic home">
             {/* Mobile: app icon tile */}
             <InsicAppIcon size={32} className="sm:hidden" />
-            {/* Desktop: full lockup */}
+            {/* sm–md: full lockup */}
             <span className="hidden sm:block" style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.12))' }}>
               <InsicLogoLockup size="md" />
             </span>
