@@ -79,9 +79,27 @@ export const authOptions: NextAuthOptions = {
       }
       return true
     },
+    async jwt({ token, user }) {
+      // On first sign-in, fetch the user's plan from Supabase and cache it in the token
+      if (user?.email) {
+        try {
+          const sb = serviceClient()
+          const { data } = await sb
+            .from('users')
+            .select('plan')
+            .eq('email', user.email)
+            .maybeSingle()
+          token.plan = data?.plan ?? 'free'
+        } catch {
+          token.plan = 'free'
+        }
+      }
+      return token
+    },
     session({ session, token }) {
       if (session.user && token.sub) {
-        (session.user as { id?: string }).id = token.sub
+        (session.user as { id?: string; plan?: string }).id   = token.sub
+        ;(session.user as { id?: string; plan?: string }).plan = (token.plan as string | undefined) ?? 'free'
       }
       return session
     },

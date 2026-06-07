@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { signIn } from 'next-auth/react'
+import { signIn, useSession } from 'next-auth/react'
 import { Check, X, Zap, Shield, TrendingUp, BarChart2, Bell, FileText, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { InsicLogoLockup } from '@/components/ui/InsicLogo'
@@ -84,6 +84,24 @@ const FAQS = [
 
 export default function PricingPage() {
   const monthlyPrice = 17
+  const { data: session } = useSession()
+  const isPro = (session?.user as { plan?: string } | undefined)?.plan === 'pro'
+  const [upgrading, setUpgrading] = useState(false)
+
+  async function handleUpgrade() {
+    if (!session) {
+      signIn('google', { callbackUrl: '/pricing' })
+      return
+    }
+    setUpgrading(true)
+    try {
+      const res = await fetch('/api/lemonsqueezy/checkout', { method: 'POST' })
+      const json = await res.json()
+      if (json.url) window.location.href = json.url
+    } catch {
+      setUpgrading(false)
+    }
+  }
 
   return (
     <div className="min-h-dvh" style={{ background: '#FFFFFF' }}>
@@ -171,13 +189,20 @@ export default function PricingPage() {
               <p className="text-[#6B6B6B] text-[13px] mt-2">Cancel anytime. No contracts.</p>
             </div>
 
-            <a
-              href="/redeem"
-              className="w-full flex items-center justify-center rounded-[10px] bg-olive-700 hover:bg-olive-600 py-3.5 text-[13.5px] font-bold text-white mb-1 min-h-[48px] shadow-sm transition-colors"
-            >
-              Get early access →
-            </a>
-            <p className="text-center text-[12px] text-[#6B6B6B] mb-3">Have an access code? Redeem it to unlock Pro.</p>
+            {isPro ? (
+              <div className="w-full flex items-center justify-center rounded-[10px] bg-[#5F790B] py-3.5 text-[13.5px] font-bold text-white mb-1 min-h-[48px]">
+                ✓ You&apos;re on Pro
+              </div>
+            ) : (
+              <button
+                onClick={handleUpgrade}
+                disabled={upgrading}
+                className="w-full flex items-center justify-center rounded-[10px] bg-[#5F790B] hover:bg-[#526A08] disabled:opacity-60 py-3.5 text-[13.5px] font-bold text-white mb-1 min-h-[48px] shadow-sm transition-colors"
+              >
+                {upgrading ? 'Redirecting…' : session ? 'Start 7-day free trial →' : 'Sign in to upgrade →'}
+              </button>
+            )}
+            <p className="text-center text-[12px] text-[#6B6B6B] mb-3">7-day free trial · Cancel anytime · No contracts</p>
 
             <ul className="space-y-3 flex-1">
               {PRO_FEATURES.map((f, i) => {
