@@ -430,14 +430,14 @@ function StockPageBody() {
         </div>
       )}
 
-      {/* Session-based soft auth nudge (appears on 2nd+ stock page view) */}
-      <AuthBanner />
-
       <div className="px-4 sm:px-6 lg:px-8 pb-[calc(120px+env(safe-area-inset-bottom,0px))] lg:pb-16">
         {/* First-visit orientation — shown once, then dismissed to localStorage */}
         <div className="pt-4">
           <StockOrientationStrip />
         </div>
+
+        {/* Soft auth nudge — inline, not covering the page (appears on 2nd+ stock view) */}
+        <AuthBanner />
 
         {loading && (
           <div className="pt-5 space-y-4 motion-safe:animate-pulse">
