@@ -96,10 +96,10 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
               )}
             </div>
 
-            {/* Stat row */}
-            <div className="relative z-10 flex items-center gap-2.5 text-[11px]">
+            {/* Stat row — fixed-width P/E column so ER always aligns */}
+            <div className="relative z-10 flex items-center gap-0 text-[11px]">
               {item?.peRatio != null && (
-                <span className="text-[#566174]">
+                <span className="text-[#566174] w-[72px] shrink-0">
                   P/E <span className="font-mono font-semibold text-[#06101F]">{fmtMultiple(item.peRatio)}</span>
                 </span>
               )}
