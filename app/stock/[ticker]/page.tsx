@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import NewsPanel from '@/components/stock/NewsPanel'
 import HealthSection from '@/components/stock/HealthSection'
 import { type TabId } from '@/components/stock/TabNav'
+import TabNav from '@/components/stock/TabNav'
 import StockContextBar from '@/components/stock/StockContextBar'
 import FinancialsHub from '@/components/stock/FinancialsHub'
 import { computeCockpitOutput } from '@/lib/valuation/cockpit'
@@ -411,6 +412,8 @@ function StockPageBody() {
             setSaveDialogOpen(true)
           }}
       />
+
+      <TabNav activeTab={activeTab} onChange={handleTabChange} />
 
       {/* Session-based soft auth nudge (appears on 2nd+ stock page view) */}
       <AuthBanner />
