@@ -696,7 +696,7 @@ function StockPageBody() {
                     <HealthSection
                       ratings={data.ratings}
                       scores={computedScores ?? data.scores}
-                      financialsData={data}
+                      financialsData={{ ...data, scores: computedScores ?? data.scores }}
                       nextEarningsDate={data.quote.nextEarningsDate ?? null}
                     />
                   ) : (
