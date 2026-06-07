@@ -150,13 +150,13 @@ export default function Sidebar() {
                 <span className="text-[11px] font-bold text-white leading-none">{initials}</span>
               </div>
             )}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 flex items-center justify-between gap-1">
               <p className="text-[12px] font-semibold text-[#06101F] truncate leading-tight">
                 {session.user?.name ?? 'User'}
               </p>
               <button
                 onClick={() => signOut()}
-                className="min-h-[44px] flex items-center px-2 text-[11px] text-[#566174] hover:text-[#06101F] hover:bg-[#F4F3EF] rounded-[6px] transition-colors leading-tight"
+                className="shrink-0 text-[11px] text-[#8A95A6] hover:text-[#D83B3B] transition-colors leading-tight px-1 py-1 rounded"
               >
                 Sign out
               </button>
