@@ -845,7 +845,173 @@ async function runDcfBear() {
   await post(lines.join('\n'))
 }
 
-// ─── Entry point ──────────────────────────────────────────────────────────────
+// ─── Mode: etf_pulse ─────────────────────────────────────────────────────────
+// ETF sector snapshot + VIX sentiment — works on weekends too.
+// Uses Alpha Vantage GLOBAL_QUOTE (free, 25 req/day).
+// Rotates between two templates:
+//   A — Broad market (SPY/QQQ/IWM) + VIX fear gauge
+//   B — Sector rotation (XLK/XLF/XLE/XLV best+worst)
+
+async function fetchEtfQuote(symbol) {
+  const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${ALPHA_VANTAGE_KEY}`
+  const res = await fetch(url, { signal: AbortSignal.timeout(10000) })
+  if (!res.ok) throw new Error(`Alpha Vantage GLOBAL_QUOTE ${symbol} returned ${res.status}`)
+  const json = await res.json()
+  if (json['Note'] || json['Information']) throw new Error(`Alpha Vantage rate limit`)
+  const q = json['Global Quote']
+  if (!q || !q['05. price']) throw new Error(`No data for ${symbol}`)
+  return {
+    symbol,
+    price:    parseFloat(q['05. price']),
+    change:   parseFloat(q['09. change']),
+    changePct: parseFloat(q['10. change percent']),
+    prevClose: parseFloat(q['08. previous close']),
+    high:     parseFloat(q['03. high']),
+    low:      parseFloat(q['04. low']),
+    volume:   parseInt(q['06. volume']),
+    date:     q['07. latest trading day'],
+  }
+}
+
+// VIX sentiment label
+function vixSentiment(vix) {
+  if (vix >= 30) return { label: 'Extreme Fear 😱', note: 'Market is pricing in high uncertainty — historically a contrarian buy signal.' }
+  if (vix >= 20) return { label: 'Fear 😰',         note: 'Elevated volatility — investors are nervous.' }
+  if (vix >= 15) return { label: 'Neutral 😐',      note: 'Normal market conditions.' }
+  return            { label: 'Greed 😎',             note: 'Low volatility — complacency is rising. Watch for reversals.' }
+}
+
+const ETF_NAMES = {
+  SPY: 'S&P 500', QQQ: 'Nasdaq 100', IWM: 'Russell 2000',
+  XLK: 'Tech', XLF: 'Financials', XLE: 'Energy',
+  XLV: 'Healthcare', XLU: 'Utilities', XLI: 'Industrials',
+}
+
+async function runEtfPulse() {
+  const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
+  const useTemplate = weekOfYear % 2 === 0 ? 'A' : 'B'
+
+  if (useTemplate === 'A') {
+    // ── Template A: Broad market + VIX ──
+    const spy = await fetchEtfQuote('SPY')
+    await new Promise(r => setTimeout(r, 1500))
+    const qqq = await fetchEtfQuote('QQQ')
+    await new Promise(r => setTimeout(r, 1500))
+    const iwm = await fetchEtfQuote('IWM')
+    await new Promise(r => setTimeout(r, 1500))
+    const vix = await fetchEtfQuote('VIX').catch(() => null)
+
+    const fmtEtf = (q) => {
+      const sign = q.changePct >= 0 ? '+' : ''
+      const emoji = q.changePct >= 1 ? '🟢' : q.changePct <= -1 ? '🔴' : '🟡'
+      return `${emoji} ${ETF_NAMES[q.symbol] ?? q.symbol}: ${sign}${q.changePct.toFixed(2)}% ($${q.price.toFixed(2)})`
+    }
+
+    const sentiment = vix ? vixSentiment(vix.price) : null
+    const lines = [
+      `📊 Market Pulse — ${spy.date}`,
+      ``,
+      fmtEtf(spy),
+      fmtEtf(qqq),
+      fmtEtf(iwm),
+    ]
+    if (sentiment && vix) {
+      lines.push(``)
+      lines.push(`VIX: ${vix.price.toFixed(1)} — ${sentiment.label}`)
+      lines.push(sentiment.note)
+    }
+    lines.push(``)
+    lines.push(`How does this affect your valuations? → ${APP_URL}`)
+    lines.push(`#SPY #QQQ #MarketSentiment #Investing`)
+
+    await post(lines.join('\n'))
+
+  } else {
+    // ── Template B: Sector rotation ──
+    const sectorSymbols = ['XLK', 'XLF', 'XLE', 'XLV']
+    const sectors = []
+    for (const sym of sectorSymbols) {
+      const q = await fetchEtfQuote(sym).catch(() => null)
+      if (q) sectors.push(q)
+      await new Promise(r => setTimeout(r, 1500)) // avoid per-minute rate limit
+    }
+    sectors.sort((a, b) => b.changePct - a.changePct)
+
+    if (sectors.length < 2) throw new Error('Not enough sector ETF data')
+
+    const best  = sectors[0]
+    const worst = sectors[sectors.length - 1]
+
+    const lines = [
+      `🔄 Sector Rotation — ${best.date}`,
+      ``,
+      `🏆 Best: ${ETF_NAMES[best.symbol]} (${best.symbol}) ${best.changePct >= 0 ? '+' : ''}${best.changePct.toFixed(2)}%`,
+      `📉 Worst: ${ETF_NAMES[worst.symbol]} (${worst.symbol}) ${worst.changePct >= 0 ? '+' : ''}${worst.changePct.toFixed(2)}%`,
+      ``,
+    ]
+
+    // Add all sectors sorted
+    for (const s of sectors) {
+      const sign = s.changePct >= 0 ? '+' : ''
+      const dot = s.changePct >= 0.5 ? '🟢' : s.changePct <= -0.5 ? '🔴' : '🟡'
+      lines.push(`${dot} ${ETF_NAMES[s.symbol]}: ${sign}${s.changePct.toFixed(2)}%`)
+    }
+
+    lines.push(``)
+    lines.push(`Money is rotating into ${ETF_NAMES[best.symbol].toLowerCase()} — see which stocks benefit → ${APP_URL}`)
+    lines.push(`#SectorRotation #ETF #StockMarket`)
+
+    await post(lines.join('\n'))
+  }
+}
+
+// ─── Mode: sentiment ─────────────────────────────────────────────────────────
+// Weekend-only: market context + valuation angle.
+// Alternates between a "week in review" narrative and a forward-looking take.
+
+const SENTIMENT_POSTS = [
+  // Week-in-review
+  (spy, vix) => [
+    `🗓️ Weekend Market Recap`,
+    ``,
+    `S&P 500 (SPY): ${spy.changePct >= 0 ? '+' : ''}${spy.changePct.toFixed(2)}% this week`,
+    `VIX: ${vix?.price.toFixed(1) ?? 'N/A'} — ${vix ? vixSentiment(vix.price).label : 'unknown'}`,
+    ``,
+    spy.changePct > 2   ? `Strong week for equities. Worth checking if your positions are still at fair value after the move.` :
+    spy.changePct < -2  ? `Tough week. Market selloffs often create entry opportunities — run the DCF before you buy the dip.` :
+    `Quiet week. Good time to review your valuations while the market is calm.`,
+    ``,
+    `Check your stocks → ${APP_URL}`,
+    `#Weekend #StockMarket #Investing`,
+  ],
+  // Forward-looking
+  (spy, vix) => [
+    `🔭 What to Watch This Week`,
+    ``,
+    `Before markets open Monday:`,
+    `• Re-check your DCF assumptions — did anything change?`,
+    `• Review earnings calendar — any positions reporting?`,
+    `• Check VIX: ${vix?.price.toFixed(1) ?? 'N/A'} — ${vix ? vixSentiment(vix.price).label : ''}`,
+    ``,
+    `A process beats a prediction every time.`,
+    ``,
+    `Build your process → ${APP_URL}`,
+    `#Investing #StockMarket #Mindset`,
+  ],
+]
+
+async function runSentiment() {
+  const spy = await fetchEtfQuote('SPY')
+  await new Promise(r => setTimeout(r, 1500))
+  const vix = await fetchEtfQuote('VIX').catch(() => null)
+
+  const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
+  const template = SENTIMENT_POSTS[weekOfYear % SENTIMENT_POSTS.length]
+  const lines = template(spy, vix)
+  await post(lines.join('\n'))
+}
+
+
 
 const MODES = {
   earnings:    runEarnings,
@@ -856,10 +1022,12 @@ const MODES = {
   feature:     runFeature,
   weekly_wrap: runWeeklyWrap,
   question:    runQuestion,
+  etf_pulse:   runEtfPulse,
+  sentiment:   runSentiment,
 }
 
 if (!MODES[MODE]) {
-  console.error(`Unknown MODE="${MODE}". Use: earnings | dcf | dcf_bear | news | macro | feature | weekly_wrap | question`)
+  console.error(`Unknown MODE="${MODE}". Use: ${Object.keys(MODES).join(' | ')}`)
   process.exit(1)
 }
 
