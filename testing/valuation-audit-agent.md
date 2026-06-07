@@ -123,6 +123,8 @@ State the active weight table and evaluate each method's validity. Does `getEffe
 
 State `ufcfPGM / ufcfEM / lfcfPGM / lfcfEM` and assess the UFCF vs LFCF split for this company type.
 
+
+- **[Finding 17 — new]** For `reit` companyType: verify `valuationMethods.effectiveWeights.multiples > 0`. If it equals 0, all Yahoo multiples (P/E, EV/EBITDA, P/Book) returned null for this REIT, collapsing triangulation to 100% FCFF. The industry-standard P/FFO IS computed in the Cockpit adaptive method but does NOT flow into `triangulatedFairValue`. Cross-reference the Cockpit P/FFO card value against the FCFF-only triangulated number and note the discrepancy. Confirmed across AMT, PLD, SPG, O, WELL.
 ---
 
 ## Phase 2 — Pre-set Assumption Audit

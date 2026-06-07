@@ -123,8 +123,8 @@ blended << TTM by >3pp, flag as capex-understatement for this company.
 ### Finding 6: taxRate = null in all historical IS rows — FMP field not populating
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** ALL 77 AUDITED TICKERS — 100% reproduction rate (taxRate=null for every FMP-sourced company across all sectors)
-**Run count:** 77
+**Ticker / Context:** ALL 97 AUDITED TICKERS — 100% reproduction rate across every sector, size, and geography
+**Run count:** 97
 **Status:** integrated — 100% reproduction rate; taxRate field is never populated in FMP income statement rows
 
 **Observed:** All 5 MSFT historical IS rows have `taxRate: null`. `buildProjectedRows` falls back to
@@ -141,9 +141,9 @@ resulting NOPAT impact.
 ### Finding 7: Cyclical/recovery trough silent — EBIT=null + median NI positive but trough-distorted
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** MU (cyclical), LYFT (deferred tax), DIS (recovery: med=5.4% vs TTM=13.1%), HUBS (recovery: med=0.2% vs TTM=1.5%)
+**Ticker / Context:** MU (cyclical), LYFT (deferred tax), DIS (recovery), HUBS (recovery) — note: NEM and ABT had recoveries but med_ni>10% so F7 doesn't fire (threshold only <10%)
 **Run count:** 4
-**Status:** integrated — 4 instances across cyclical, one-time-gain, and recovery patterns
+**Status:** integrated — 4 confirmed; F7 correctly does NOT fire for companies with median >10% even in recovery
 
 **Observed:** With EBIT=null rows, `isCyclicalTrough` cannot evaluate (condition requires `medianEbitMargin < -0.02`).
 The EBIT null fallback fires and uses `medianNetMargin`. For MU, the 3-year NI% values are [-37.5%, 3.1%, 22.8%],
@@ -291,9 +291,9 @@ Ensure F4 check note clarifies that ratio > 1.50 for capital-intensive non-finan
 ### Finding 13: deriveNetMargin 'last' picks oldest year — auditBundle IS rows are newest-first
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** SHOP, WDAY, DDOG, PANW, CELH, PFE, SMCI(2.8x), DOCU(4.0x, FY2025 gain 35.9%→picked as latest) — 8 confirmed
-**Run count:** 8
-**Status:** integrated — 8 instances across SaaS, AI hardware, enterprise software
+**Ticker / Context:** SHOP, WDAY, DDOG, PANW, CELH, PFE, SMCI, DOCU, MRNA(55%cap from FY2021 44.3%), PLD(55%cap from REIT gains), SPG(FY2025 79.2% NI gains) — 11 confirmed
+**Run count:** 11
+**Status:** integrated — 11 instances; pharma (MRNA COVID boom), REITs (property sale gains), and tech all affected
 
 **Observed:** SHOP's FY2021 net margin was 63.2% due to warrant fair value adjustments (a one-time non-cash
 gain), not operating earnings. This row is included in the 5-year `withBoth` set used by `deriveNetMargin`.
@@ -417,5 +417,29 @@ count in incorrect units (e.g. equity in full dollars instead of millions).
 `price / (totalEquity_M / sharesOutstanding_M)` as the ground-truth P/B. If `multiples.P/Book.impliedFairValue
 > currentPrice × 50`, flag a P/B units error — the calculated book value per share is wrong by orders of
 magnitude. Also flag when `multiples.blendedFairValue > currentPrice × 20` for any non-startup company.
+
+---
+
+### Finding 17: REITs get 100% FCFF triangulation — P/FFO never enters triangulated FV
+**Agent:** audit-valuation
+**Date:** 2026-06-07
+**Ticker / Context:** AMT, PLD, SPG, O, WELL — all REITs show effectiveWeights={fcff:100%, multiples:0%}
+**Run count:** 1
+**Status:** new
+
+**Observed:** For all `reit` companyType companies, `valuationMethods.effectiveWeights` shows
+`{fcff:100%, multiples:0%}`. This is because `calculateMultiples.ts` returns `applicable=False` for
+all standard multiples (P/E, EV/EBITDA, P/Book, P/Sales, EV/Revenue) for REITs — Yahoo returns null
+for these fields. When `mults_blended=null`, `getModelWeights('reit')` effectively gives 100% FCFF.
+The industry-standard REIT metric — **P/FFO** (Price/Funds from Operations) — IS computed in the
+Cockpit's adaptive method (`computePFFO`), but this value is NOT wired into `valuationMethods.models`
+or `triangulatedFairValue`. The Cockpit adaptive P/FFO correctly shows up in the Cockpit card but
+never influences the triangulated fair value displayed to users.
+**Expected:** The P/FFO value from `computePFFO` should flow into the `valuationMethods.models` object
+as `models.pffo` alongside `fcff/fcfe/ddm/multiples`, allowing `triangulatedFairValue` to use the
+correct 70% multiples (P/FFO based) weight for REITs instead of 100% FCFF.
+**File / location:** `app/api/financials/route.ts` — the section building `valuationMethods.models`
+where P/FFO from the Cockpit adaptive method is not surfaced; `lib/valuation/cockpit.ts` `computeCockpitOutput` produces the P/FFO value but it doesn't reach the route's triangulation logic.
+**Suggested check to add:** For `reit` companyType: verify `valuationMethods.effectiveWeights.multiples > 0`. If it's 0 (all multiples inapplicable), flag that P/FFO from the Cockpit is not influencing the triangulated FV. The P/FFO fair value from the Cockpit panel IS computed correctly — note this for the user and cross-reference it against the FCFF-only triangulated number.
 
 ---
