@@ -18,6 +18,7 @@ import { ETFExposureCard } from './ETFExposureCard'
 import PeerValuationChart from './PeerValuationChart'
 import QuickStatsBar from '@/components/stock/QuickStatsBar'
 import HoldingReturns from '@/components/stock/HoldingReturns'
+import InvestmentVerdict from '@/components/stock/InvestmentVerdict'
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -166,6 +167,19 @@ export default function SummaryTab({
       {/* ── Zone 0.7: Financial performance snapshot ─────────────────────── */}
       {statementsData && (
         <FinancialSnapshotBar statementsData={statementsData} currency={currency} currentPrice={price} />
+      )}
+
+      {/* ── Zone 0.9: Investment checklist ───────────────────────────────── */}
+      {scores && (
+        <InvestmentVerdict
+          upsidePct={upsidePct}
+          scores={scores}
+          analystRecommendation={analystRecommendation}
+          fcfMargin={businessProfile?.fcfMargin ?? null}
+          grossMargin={businessProfile?.grossMargin ?? null}
+          netMargin={businessProfile?.netMargin ?? null}
+          revenueCAGR={cagrAnalysis?.historicalCagr3y ?? null}
+        />
       )}
 
       {/* ── Zone 1: Verdict — hero + price chart, equal columns ──────────── */}
