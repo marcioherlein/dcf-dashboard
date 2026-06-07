@@ -39,26 +39,26 @@ function buildWeightExplanation(companyType?: string): string {
 }
 
 const VERDICT_COLORS = {
-  Undervalued:         { text: 'text-emerald-600', bg: 'bg-[#ECFDF3] border-[#BBF7D0]' },
+  Undervalued:         { text: 'text-[#11875D]', bg: 'bg-[#ECFDF3] border-[#BBF7D0]' },
   'Fairly Valued':     { text: 'text-[#2563EB]',   bg: 'bg-[#EFF6FF] border-[#BFDBFE]' },
-  Overvalued:          { text: 'text-red-600',      bg: 'bg-[#FEF2F2] border-[#FECACA]' },
-  'Insufficient Data': { text: 'text-[#64748B]',   bg: 'bg-[#F8FAFC] border-[#E2E8F0]' },
+  Overvalued:          { text: 'text-[#D83B3B]',      bg: 'bg-[#FEF2F2] border-[#FECACA]' },
+  'Insufficient Data': { text: 'text-[#566174]',   bg: 'bg-[#F4F3EF] border-[#E3E1DA]' },
 }
 
 const DIVERGENCE_STYLE = {
-  low:      { text: 'text-emerald-600', bg: 'bg-[#ECFDF3] border-[#BBF7D0]', label: 'Low divergence'      },
+  low:      { text: 'text-[#11875D]', bg: 'bg-[#ECFDF3] border-[#BBF7D0]', label: 'Low divergence'      },
   moderate: { text: 'text-[#D97706]',   bg: 'bg-[#FFFBEB] border-[#FDE68A]', label: 'Moderate divergence' },
-  high:     { text: 'text-red-600',     bg: 'bg-[#FEF2F2] border-[#FECACA]', label: 'High divergence'     },
+  high:     { text: 'text-[#D83B3B]',     bg: 'bg-[#FEF2F2] border-[#FECACA]', label: 'High divergence'     },
 }
 
 const METHOD_FILLS = ['#3B82F6', '#6366F1', '#8B5CF6', '#A855F7']
 
 function Divider() {
-  return <div className="border-t border-[#F1F5F9]" />
+  return <div className="border-t border-[#F4F3EF]" />
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-[11px] font-[650] text-[#64748B] mb-2.5">{children}</p>
+  return <p className="text-[11px] font-[650] text-[#566174] mb-2.5">{children}</p>
 }
 
 function RangeBar({
@@ -87,14 +87,14 @@ function RangeBar({
 
   return (
     <div>
-      <div className="flex justify-between text-[11px] text-[#64748B] mb-1.5 tabular-nums">
+      <div className="flex justify-between text-[11px] text-[#566174] mb-1.5 tabular-nums">
         <span>{fmtPrice(min, currency)}</span>
         <span>{fmtPrice(max, currency)}</span>
       </div>
-      <div className="relative h-3 bg-[#F1F5F9] rounded-full" aria-hidden="true">
+      <div className="relative h-3 bg-[#F4F3EF] rounded-full" aria-hidden="true">
         {currentPct != null && !priceAbove && !priceBelow && (
           <div
-            className="absolute top-0 h-full w-[2px] bg-[#94A3B8] rounded-full"
+            className="absolute top-0 h-full w-[2px] bg-[#8A95A6] rounded-full"
             style={{ left: `${currentPct}%`, transform: 'translateX(-50%)' }}
           />
         )}
@@ -106,19 +106,19 @@ function RangeBar({
         )}
         {priceAbove && (
           <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full pl-1.5 flex items-center gap-0.5">
-            <span className="text-[10px] text-[#94A3B8]">▶</span>
+            <span className="text-[10px] text-[#8A95A6]">▶</span>
           </div>
         )}
         {priceBelow && (
           <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full pr-1.5 flex items-center gap-0.5">
-            <span className="text-[10px] text-[#94A3B8]">◀</span>
+            <span className="text-[10px] text-[#8A95A6]">◀</span>
           </div>
         )}
       </div>
-      <p className="text-[11px] text-[#64748B] mt-1 tabular-nums">
+      <p className="text-[11px] text-[#566174] mt-1 tabular-nums">
         Current {fmtPrice(currentPrice, currency)}
-        {priceAbove && <span className="text-[10px] text-[#94A3B8] ml-1">· above model range</span>}
-        {priceBelow && <span className="text-[10px] text-[#94A3B8] ml-1">· below model range</span>}
+        {priceAbove && <span className="text-[10px] text-[#8A95A6] ml-1">· above model range</span>}
+        {priceBelow && <span className="text-[10px] text-[#8A95A6] ml-1">· below model range</span>}
       </p>
     </div>
   )
@@ -138,12 +138,12 @@ function WeightBars({ methods }: { methods: CockpitMethodResult[] }) {
           <div key={m.id} className="flex items-center gap-2.5">
             <div
               className="w-2 h-2 rounded-full shrink-0"
-              style={{ background: isAvail ? METHOD_FILLS[i] : '#E2E8F0' }}
+              style={{ background: isAvail ? METHOD_FILLS[i] : '#E3E1DA' }}
             />
-            <span className={`text-[11px] flex-1 min-w-0 truncate ${isAvail ? 'text-[#475569]' : 'text-[#CBD5E1]'}`}>
+            <span className={`text-[11px] flex-1 min-w-0 truncate ${isAvail ? 'text-[#566174]' : 'text-[#CDD1C8]'}`}>
               {m.method}
             </span>
-            <div className="w-20 h-1.5 bg-[#F1F5F9] rounded-full overflow-hidden shrink-0">
+            <div className="w-20 h-1.5 bg-[#F4F3EF] rounded-full overflow-hidden shrink-0">
               {isAvail && (
                 <div
                   className="h-full rounded-full motion-safe:transition-[width] duration-300"
@@ -151,7 +151,7 @@ function WeightBars({ methods }: { methods: CockpitMethodResult[] }) {
                 />
               )}
             </div>
-            <span className={`text-[11px] w-7 text-right tabular-nums shrink-0 ${isAvail ? 'text-[#64748B]' : 'text-[#CBD5E1]'}`}>
+            <span className={`text-[11px] w-7 text-right tabular-nums shrink-0 ${isAvail ? 'text-[#566174]' : 'text-[#CDD1C8]'}`}>
               {isAvail ? `${Math.round(effectivePct)}%` : '—'}
             </span>
           </div>
@@ -188,7 +188,7 @@ export default function RightSidebar({
           {output.verdict}
         </span>
 
-        <p className="text-[11px] text-[#64748B] mt-1 flex items-center gap-1">
+        <p className="text-[11px] text-[#566174] mt-1 flex items-center gap-1">
           {convictionLabel} · {validCount} of {output.methods.length} models
           <InfoTooltip text={buildWeightExplanation(companyType)} />
         </p>
@@ -200,11 +200,11 @@ export default function RightSidebar({
           <div className="px-5">
             <SectionLabel>Last change</SectionLabel>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[12px] font-[650] text-[#334155]">
+              <span className="text-[12px] font-[650] text-[#566174]">
                 {lastChange.label} {fmtDelta(lastChange.delta, lastChange.unit)}
               </span>
               {lastChange.fvImpact != null && (
-                <span className={`text-[12px] font-[650] ${lastChange.fvImpact >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                <span className={`text-[12px] font-[650] ${lastChange.fvImpact >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                   → FV {lastChange.fvImpact >= 0 ? '+' : ''}{fmtPrice(lastChange.fvImpact, currency)}
                 </span>
               )}
@@ -262,7 +262,7 @@ export default function RightSidebar({
         <div className="px-5">
           <button
             onClick={onViewFullDCF}
-            className="w-full rounded-[10px] border border-[#E6ECF5] bg-white hover:bg-[#F8FAFC] text-[#475569] hover:text-[#0F172A] text-[13px] font-[650] py-2.5 px-4 transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
+            className="w-full rounded-[10px] border border-[#E6ECF5] bg-white hover:bg-[#F4F3EF] text-[#566174] hover:text-[#06101F] text-[13px] font-[650] py-2.5 px-4 transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
           >
             View Year-by-Year DCF
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -273,7 +273,7 @@ export default function RightSidebar({
       )}
 
       <div className="px-5 pb-5">
-        <p className="text-[11px] text-[#64748B] leading-relaxed pt-3 border-t border-[#F1F5F9]">
+        <p className="text-[11px] text-[#566174] leading-relaxed pt-3 border-t border-[#F4F3EF]">
           {(() => {
             const activeNames = output.methods.filter(m => m.fairValue != null && m.fairValue > 0).map(m => m.method)
             return activeNames.length > 0

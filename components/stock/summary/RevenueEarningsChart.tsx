@@ -100,17 +100,17 @@ export default function RevenueEarningsChart({ statementsData, currency = 'USD' 
     : null
 
   return (
-    <div className="rounded-2xl overflow-hidden border border-slate-100 shadow-card">
+    <div className="rounded-2xl overflow-hidden border border-[#E3E1DA] shadow-card">
       {/* header */}
-      <div className="px-4 sm:px-5 py-3 bg-white border-b border-slate-100 flex items-center justify-between">
-        <p className="text-[12px] font-[650] text-slate-500">Revenue &amp; Net Income</p>
+      <div className="px-4 sm:px-5 py-3 bg-white border-b border-[#E3E1DA] flex items-center justify-between">
+        <p className="text-[12px] font-[650] text-[#566174]">Revenue &amp; Net Income</p>
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1.5 text-[10px] text-slate-400">
-            <span className="inline-block w-2 h-2 rounded-sm bg-blue-500" />
+          <span className="flex items-center gap-1.5 text-[10px] text-[#8A95A6]">
+            <span className="inline-block w-2 h-2 rounded-sm bg-[#EAF1FF]0" />
             Revenue
           </span>
-          <span className="flex items-center gap-1.5 text-[10px] text-slate-400">
-            <span className="inline-block w-2 h-2 rounded-sm bg-emerald-400" />
+          <span className="flex items-center gap-1.5 text-[10px] text-[#8A95A6]">
+            <span className="inline-block w-2 h-2 rounded-sm bg-[#11875D]" />
             Net Income
           </span>
         </div>
@@ -130,7 +130,7 @@ export default function RevenueEarningsChart({ statementsData, currency = 'USD' 
                 {/* YoY growth badge */}
                 <div className="h-[14px] flex items-end justify-center">
                   {p.yoyRev != null && (
-                    <span className={`text-[8px] font-semibold leading-none ${p.yoyRev >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                    <span className={`text-[8px] font-semibold leading-none ${p.yoyRev >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                       {p.yoyRev >= 0 ? '+' : ''}{(p.yoyRev * 100).toFixed(0)}%
                     </span>
                   )}
@@ -140,14 +140,14 @@ export default function RevenueEarningsChart({ statementsData, currency = 'USD' 
                 <div className="w-full flex gap-0.5 items-end" style={{ height: 88 }}>
                   {/* revenue bar */}
                   <div
-                    className="flex-[2] min-w-0 bg-blue-500 rounded-t-sm transition-all"
+                    className="flex-[2] min-w-0 bg-[#EAF1FF]0 rounded-t-sm transition-all"
                     style={{ height: `${Math.max(2, revH)}%` }}
                     title={`${p.year} Revenue: ${fmtDollars(p.revenue, sym)}`}
                   />
                   {/* net income bar */}
                   {niH != null ? (
                     <div
-                      className={`flex-1 min-w-0 rounded-t-sm transition-all ${niPos ? 'bg-emerald-400' : 'bg-red-400'}`}
+                      className={`flex-1 min-w-0 rounded-t-sm transition-all ${niPos ? 'bg-[#11875D]' : 'bg-[#D83B3B]'}`}
                       style={{ height: `${Math.max(2, niH)}%` }}
                       title={`${p.year} Net Income: ${fmtDollars(p.netIncome!, sym)}`}
                     />
@@ -157,7 +157,7 @@ export default function RevenueEarningsChart({ statementsData, currency = 'USD' 
                 </div>
 
                 {/* year label */}
-                <span className={`text-[8px] sm:text-[10px] leading-none mt-0.5 ${p.isTTM ? 'text-slate-300 font-semibold' : 'text-slate-400'}`}>
+                <span className={`text-[8px] sm:text-[10px] leading-none mt-0.5 ${p.isTTM ? 'text-[#8A95A6] font-semibold' : 'text-[#8A95A6]'}`}>
                   {p.year}
                 </span>
               </div>
@@ -167,9 +167,9 @@ export default function RevenueEarningsChart({ statementsData, currency = 'USD' 
 
         {/* footnote: latest net margin */}
         {latestNetMargin != null && (
-          <p className="mt-2 text-[10px] text-slate-400 leading-snug">
+          <p className="mt-2 text-[10px] text-[#8A95A6] leading-snug">
             {latestForMargin?.year} net margin:{' '}
-            <span className={`font-semibold ${latestNetMargin >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+            <span className={`font-semibold ${latestNetMargin >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
               {(latestNetMargin * 100).toFixed(1)}%
             </span>
             &nbsp;·&nbsp;Net income bars scaled to revenue

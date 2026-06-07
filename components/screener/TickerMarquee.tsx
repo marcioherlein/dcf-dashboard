@@ -16,7 +16,7 @@ export default function TickerMarquee({ instruments }: Props) {
   if (instruments.length === 0) {
     return (
       <div className="h-9 bg-[#080F1E] border-b border-white/10 flex items-center px-4">
-        <span className="text-slate-400 text-xs">Loading market data…</span>
+        <span className="text-[#8A95A6] text-xs">Loading market data…</span>
       </div>
     )
   }
@@ -35,10 +35,10 @@ export default function TickerMarquee({ instruments }: Props) {
           return (
             <span
               key={`${inst.ticker}-${idx}`}
-              className="inline-flex items-center gap-1.5 px-4 border-r border-slate-100 text-xs whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 px-4 border-r border-[#E3E1DA] text-xs whitespace-nowrap"
             >
-              <span className="font-semibold text-slate-100">{inst.displayTicker}</span>
-              <span className="text-slate-400">{formatPrice(inst.price, inst.currency)}</span>
+              <span className="font-semibold text-[#E3E1DA]">{inst.displayTicker}</span>
+              <span className="text-[#8A95A6]">{formatPrice(inst.price, inst.currency)}</span>
               <span style={{ color: changeColor }} className="font-semibold">
                 {arrow} {Math.abs(inst.change1DPct).toFixed(2)}%
               </span>

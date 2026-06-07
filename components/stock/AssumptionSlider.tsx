@@ -33,8 +33,8 @@ export default function AssumptionSlider({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-semibold text-slate-100">{label}</p>
-          <p className="text-xs text-slate-400">{description}</p>
+          <p className="text-sm font-semibold text-[#E3E1DA]">{label}</p>
+          <p className="text-xs text-[#8A95A6]">{description}</p>
         </div>
         <div className="flex items-center gap-2">
           {isOverridden && (
@@ -45,7 +45,7 @@ export default function AssumptionSlider({
               Reset
             </button>
           )}
-          <span className={`text-base font-bold tabular-nums min-w-[52px] text-right ${isOverridden ? 'text-olive-600' : 'text-slate-100'}`}>
+          <span className={`text-base font-bold tabular-nums min-w-[52px] text-right ${isOverridden ? 'text-olive-600' : 'text-[#E3E1DA]'}`}>
             {toDisplay(value, unit)}
           </span>
         </div>
@@ -60,7 +60,7 @@ export default function AssumptionSlider({
           value={value}
           onChange={(e) => onChange(parseFloat(e.target.value))}
           className="w-full h-1.5 appearance-none rounded-full cursor-pointer
-            bg-slate-100
+            bg-[#F4F3EF]
             [&::-webkit-slider-thumb]:appearance-none
             [&::-webkit-slider-thumb]:w-5
             [&::-webkit-slider-thumb]:h-5
@@ -79,7 +79,7 @@ export default function AssumptionSlider({
             [&::-moz-range-thumb]:border-olive-600
             [&::-moz-range-thumb]:shadow-md"
           style={{
-            background: `linear-gradient(to right, #5F790B ${pct}%, #e2e8f0 ${pct}%)`,
+            background: `linear-gradient(to right, #5F790B ${pct}%, #E3E1DA ${pct}%)`,
           }}
         />
       </div>
@@ -95,15 +95,15 @@ export default function AssumptionSlider({
                 className="absolute flex flex-col items-center"
                 style={{ left: `${mPct}%`, transform: 'translateX(-50%)' }}
               >
-                <div className="w-px h-2 bg-slate-300" />
-                <span className="text-[10px] text-slate-400 whitespace-nowrap">{m.label}</span>
+                <div className="w-px h-2 bg-[#CDD1C8]" />
+                <span className="text-[10px] text-[#8A95A6] whitespace-nowrap">{m.label}</span>
               </div>
             )
           })}
         </div>
       )}
 
-      <div className="flex justify-between text-[10px] text-slate-300 -mt-1">
+      <div className="flex justify-between text-[10px] text-[#8A95A6] -mt-1">
         <span>{toDisplay(min, unit)}</span>
         <span>{toDisplay(max, unit)}</span>
       </div>

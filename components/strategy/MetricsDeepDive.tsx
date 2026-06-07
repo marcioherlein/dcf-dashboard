@@ -105,7 +105,7 @@ function FactorSection({ factor, rawMetrics }: FactorSectionProps) {
           <div className="w-20 h-1.5 bg-surface-container rounded-full overflow-hidden">
             <div className={`${scoreBg} h-full rounded-full`} style={{ width: `${factor.score}%` }} />
           </div>
-          <span className={`text-sm font-extrabold w-8 text-right ${scoreColor}`}>
+          <span className={`text-sm font-bold w-8 text-right ${scoreColor}`}>
             {Math.round(factor.score)}
           </span>
           <span className={`text-on-surface-variant transition-transform ${open ? 'rotate-180' : ''}`} style={{ fontSize: 16, fontFamily: 'Material Symbols Outlined' }}>
@@ -153,7 +153,7 @@ interface MetricsDeepDiveProps {
 export default function MetricsDeepDive({ factorAlignment, keyMetrics }: MetricsDeepDiveProps) {
   return (
     <div className="space-y-2">
-      <h4 className="text-xs font-extrabold text-on-surface-variant uppercase tracking-widest mb-3">
+      <h4 className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">
         Factor Deep Dive
       </h4>
       {factorAlignment.map((f) => (

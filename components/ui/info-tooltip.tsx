@@ -8,7 +8,7 @@ interface Props {
   maxWidth?: string
 }
 
-export function InfoTooltip({ text, side = 'top', maxWidth = '220px' }: Props) {
+export function InfoTooltip({ text, side = 'top', maxWidth = '240px' }: Props) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -16,12 +16,15 @@ export function InfoTooltip({ text, side = 'top', maxWidth = '220px' }: Props) {
       <Tooltip open={open} onOpenChange={setOpen}>
         <TooltipTrigger
           onClick={() => setOpen(o => !o)}
-          className="relative inline-flex items-center justify-center w-3.5 h-3.5 rounded-full text-[10px] text-slate-500 border border-slate-700 cursor-default select-none hover:text-slate-300 hover:border-slate-500 transition-colors shrink-0 after:absolute after:inset-[-13px] after:content-['']"
+          className="relative inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold text-[#8A95A6] border border-[#E3E1DA] cursor-default select-none hover:text-[#5F790B] hover:border-[#5F790B] transition-colors shrink-0 after:absolute after:inset-[-13px] after:content-['']"
           aria-label="More information"
         >
           i
         </TooltipTrigger>
-        <TooltipContent side={side} className="bg-[#0d1b2e] border border-[rgba(59,130,246,0.25)] text-slate-200 shadow-xl">
+        <TooltipContent
+          side={side}
+          className="bg-[#0A1424] border border-white/10 text-white shadow-xl"
+        >
           <p className="text-[11px] leading-snug" style={{ maxWidth }}>{text}</p>
         </TooltipContent>
       </Tooltip>

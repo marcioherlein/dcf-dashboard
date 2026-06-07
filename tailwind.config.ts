@@ -26,34 +26,34 @@ const config: Config = {
 
         // ── insic Brand: Ink palette ──────────────────────────────────────
         ink: {
-          950: '#0A0A0A',
-          900: '#111111',
-          800: '#1C1C1C',
-          700: '#2A2A2A',
+          950: "#06101F",
+          900: "#0A1424",
+          800: "#111C2E",
+          700: "#1E2430",
         },
 
         // ── insic Brand: Olive (primary brand accent) ─────────────────────
         olive: {
-          700: '#5F790B',
-          600: '#6F8F12',
-          500: '#7C9A19',
-          100: '#EEF4DD',
-          50:  '#F6FAEA',
+          700: "#536B08",
+          600: "#5F790B",
+          500: "#718E14",
+          100: "#EDF3DD",
+          50:  "#F6F9EC",
         },
 
-        // ── insic Brand: Neutral surfaces ─────────────────────────────────
-        'bg-warm':     '#FFFFFF',
-        'bg-soft':     '#F5F5F5',
+        // ── insic Brand: Neutral surfaces (warm off-white) ────────────────
+        'bg-warm':     '#FAF9F6',
+        'bg-soft':     '#F4F3EF',
         'surface':     '#FFFFFF',
-        'surface-subtle': '#FAFAFA',
-        'border-warm': '#E5E5E5',
-        'border-strong-warm': '#C8C8C8',
+        'surface-subtle': '#FBFAF7',
+        'border-warm': '#E3E1DA',
+        'border-strong-warm': '#CDD1C8',
 
         // ── insic Brand: Text hierarchy ───────────────────────────────────
-        'text-ink':       '#111111',
-        'text-secondary': '#6B6B6B',           // safe on white (#FFFFFF) ≥4.5:1
-        'text-secondary-bg': '#555555',        // safe on white ≥4.5:1
-        'text-muted':     '#9B9B9B',
+        'text-ink':       '#06101F',
+        'text-secondary': '#566174',
+        'text-secondary-bg': '#566174',
+        'text-muted':     '#8A95A6',
         'text-faint':     '#C4C4C4',
 
         // ── Supporting blue (secondary actions, links) ────────────────────
@@ -76,60 +76,20 @@ const config: Config = {
         'accent-blue': '#2563EB',
 
         // ── Dark nav / hero ────────────────────────────────────────────────
-        deep:   '#000000',
-        mid:    '#111111',
-        raised: '#1C1C1C',
+        deep:   '#06101F',
+        mid:    '#0A1424',
+        raised: '#111C2E',
 
         // ── Neutral surface (landing) ──────────────────────────────────────
-        cream: { DEFAULT: '#FFFFFF', dark: '#F5F5F5' },
+        cream: { DEFAULT: '#FAF9F6', dark: '#F4F3EF' },
 
-        // ── Legacy MDM3 tokens — kept until fully migrated ────────────────
-        "on-primary":               "#ffffff",
-        "on-primary-container":     "#7999dc",
-        "primary-container":        "#002f6c",
-        "primary-fixed":            "#d8e2ff",
-        "primary-fixed-dim":        "#aec6ff",
-        "on-primary-fixed":         "#001a42",
-        "on-primary-fixed-variant": "#224583",
-        "secondary-container":      "#75f8b3",
-        "on-secondary":             "#ffffff",
-        "on-secondary-container":   "#007147",
-        tertiary:                   "#271a00",
-        "tertiary-container":       "#412e00",
-        "tertiary-fixed":           "#ffdfa0",
-        "tertiary-fixed-dim":       "#fbbc00",
-        "surface-dim":              "#dbd9d9",
-        "surface-bright":           "#fbf9f8",
-        "surface-container-lowest": "#ffffff",
-        "surface-container-low":    "#f5f3f3",
-        "surface-container":        "#efeded",
-        "surface-container-high":   "#eae8e7",
-        "surface-container-highest":"#e4e2e2",
-        "surface-variant":          "#e4e2e2",
-        "on-surface":               "#1b1c1c",
-        "on-surface-variant":       "#434750",
-        "inverse-surface":          "#303030",
-        "inverse-on-surface":       "#f2f0f0",
-        outline:                    "#747781",
-        "outline-variant":          "#c4c6d2",
-        "on-background":            "#1b1c1c",
-        error:                      "#ba1a1a",
-        "error-container":          "#ffdad6",
-        "on-error":                 "#ffffff",
-        "on-error-container":       "#93000a",
-
-        // Kept for legacy chart/landing references
-        'brand-navy':         '#2563EB',
-        'brand-emerald':      '#11875D',
-        'brand-gold':         '#B56A00',
-        'brand-gold-decor':   '#B56A00',
-        'brand-red':          '#D83B3B',
-        'brand-surface':      '#FFFFFF',
-        'neon':               '#3B82F6',
-        'neon-light':         '#60A5FA',
-        'neon-cyan':          '#06B6D4',
-        // Old amber-gold alias
-        'amber-gold':         '#B56A00',
+        // ── Legacy brand aliases (kept for chart/landing references) ─────
+        'brand-navy':    '#2563EB',
+        'brand-emerald': '#11875D',
+        'brand-gold':    '#B56A00',
+        'brand-red':     '#D83B3B',
+        'brand-surface': '#FFFFFF',
+        'amber-gold':    '#B56A00',
       },
 
       fontFamily: {

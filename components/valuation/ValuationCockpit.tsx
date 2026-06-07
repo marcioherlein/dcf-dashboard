@@ -29,7 +29,7 @@ import type { AssumptionAudit } from '@/lib/valuation/assumptionAuditor'
 
 const ModellingWorkspace = dynamic(
   () => import('@/components/modelling/ModellingWorkspace'),
-  { ssr: false, loading: () => <div className="h-64 animate-pulse rounded-xl bg-slate-100" /> }
+  { ssr: false, loading: () => <div className="h-64 animate-pulse rounded-xl bg-[#F4F3EF]" /> }
 )
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -357,9 +357,9 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
       />
 
       {limitedHistory && (
-        <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-          <span className="text-amber-500 shrink-0 text-xs mt-0.5">⚠</span>
-          <p className="text-[11px] text-amber-800 leading-relaxed">
+        <div className="flex items-start gap-2 bg-[#FFF4DA] border border-[#F3D391] rounded-xl px-4 py-3">
+          <span className="text-[#B56A00] shrink-0 text-xs mt-0.5">⚠</span>
+          <p className="text-[11px] text-[#854D0E] leading-relaxed">
             <span className="font-[700]">Limited history ({historyYears} year{historyYears !== 1 ? 's' : ''} of data).</span>{' '}
             Projections draw on pre-IPO S-1 financials and analyst consensus. Exit multiple models are more reliable than growth-stage DCF here — treat them as primary.
           </p>
@@ -467,10 +467,10 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
 
       {/* Evidence tier — collapsed by default; decision surface above this fold */}
       <details className="group" id="model_evidence">
-        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E6ECF5] shadow-sm px-4 sm:px-5 py-3.5 hover:bg-[#F8FAFC] transition-colors select-none">
-          <span className="text-slate-400 text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
-          <span className="text-sm font-[650] text-slate-700">Model Evidence</span>
-          <span className="ml-auto text-xs text-slate-400 hidden sm:inline">Fair value chart · divergence analysis · value investing metrics</span>
+        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E6ECF5] shadow-sm px-4 sm:px-5 py-3.5 hover:bg-[#F4F3EF] transition-colors select-none">
+          <span className="text-[#8A95A6] text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
+          <span className="text-sm font-[650] text-[#06101F]">Model Evidence</span>
+          <span className="ml-auto text-xs text-[#8A95A6] hidden sm:inline">Fair value chart · divergence analysis · value investing metrics</span>
         </summary>
         <div className="mt-2 flex flex-col gap-3">
           <ValueInvestingPanel
@@ -490,21 +490,21 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
 
       {/* Full DCF Model — blue header, more visible */}
       <details ref={fullDcfRef} className="group" id="full_dcf">
-        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-blue-100 shadow-sm px-4 sm:px-5 py-3.5 hover:bg-blue-50 transition-colors select-none">
-          <span className="text-blue-400 text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
-          <span className="text-sm font-[650] text-blue-600">
+        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-blue-100 shadow-sm px-4 sm:px-5 py-3.5 hover:bg-[#EAF1FF] transition-colors select-none">
+          <span className="text-[#2563EB] text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
+          <span className="text-sm font-[650] text-[#2563EB]">
             Full DCF Model — Year-by-Year Projections
           </span>
           {liveDcfFV != null && (
-            <span className="ml-1 text-[12px] font-[700] tabular-nums text-blue-500">
+            <span className="ml-1 text-[12px] font-[700] tabular-nums text-[#2563EB]">
               {fmtPrice(liveDcfFV, currency)}
             </span>
           )}
-          <span className="ml-auto text-xs text-slate-400 hidden sm:inline">DCF-only estimate · distinct from top blended value</span>
+          <span className="ml-auto text-xs text-[#8A95A6] hidden sm:inline">DCF-only estimate · distinct from top blended value</span>
         </summary>
         <div className="mt-2">
           {/* Best-viewed-on-desktop note for mobile */}
-          <p className="sm:hidden text-[11px] text-slate-400 text-center py-2 px-4">
+          <p className="sm:hidden text-[11px] text-[#8A95A6] text-center py-2 px-4">
             Best experienced on a wider screen — scroll horizontally to view all columns.
           </p>
           <ModellingWorkspace

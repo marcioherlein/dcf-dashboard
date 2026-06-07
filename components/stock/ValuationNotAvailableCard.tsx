@@ -79,7 +79,7 @@ function fmtPrice(v: number, currency = 'USD'): string {
 }
 
 function updownColor(pct: number): string {
-  return pct >= 0 ? 'text-emerald-700' : 'text-red-600'
+  return pct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'
 }
 
 export default function ValuationNotAvailableCard({
@@ -141,25 +141,25 @@ export default function ValuationNotAvailableCard({
     <div className="flex flex-col gap-4">
 
       {/* ── Veto notice (compact) ── */}
-      <div className="rounded-xl border border-amber-200 bg-amber-50/60 px-5 py-4 flex flex-col gap-2">
+      <div className="rounded-xl border border-[#F3D391] bg-[#FFF4DA]/60 px-5 py-4 flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <span className="text-amber-500 text-base" aria-hidden="true">⚠</span>
-          <p className="text-sm font-semibold text-amber-800">DCF valuation not available for {ticker}</p>
+          <span className="text-[#B56A00] text-base" aria-hidden="true">⚠</span>
+          <p className="text-sm font-semibold text-[#854D0E]">DCF valuation not available for {ticker}</p>
         </div>
         <ul className="space-y-0.5">
           {vetoReasons.map((r, i) => (
-            <li key={i} className="text-xs text-amber-700 leading-relaxed">• {r}</li>
+            <li key={i} className="text-xs text-[#B56A00] leading-relaxed">• {r}</li>
           ))}
         </ul>
-        <p className="text-[11px] text-slate-500 border-t border-amber-100 pt-2">{disclaimer}</p>
+        <p className="text-[11px] text-[#566174] border-t border-amber-100 pt-2">{disclaimer}</p>
       </div>
 
       {/* ── Multiples-based estimate ── */}
       {(hasMultiplesFV || hasAnalystTarget) && (
         <div className="rounded-xl border border-[#E6ECF5] bg-white px-5 py-4 flex flex-col gap-4">
           <div>
-            <p className="text-[13px] font-[700] text-[#0F172A] mb-0.5">Market-based estimates</p>
-            <p className="text-[12px] text-[#64748B]">
+            <p className="text-[13px] font-[700] text-[#06101F] mb-0.5">Market-based estimates</p>
+            <p className="text-[12px] text-[#566174]">
               Without sufficient revenue history for DCF, comparable multiples and analyst consensus provide the best valuation anchors.
             </p>
           </div>
@@ -167,9 +167,9 @@ export default function ValuationNotAvailableCard({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Multiples blended FV */}
             {hasMultiplesFV && currentPrice != null && currentPrice > 0 && (
-              <div className="rounded-lg border border-[#E6ECF5] bg-[#F8FAFC] px-4 py-3 flex flex-col gap-1">
-                <p className="text-[11px] text-[#64748B] font-[500] uppercase tracking-wide">Multiples estimate</p>
-                <p className="text-[22px] font-[750] text-[#0F172A] leading-none">
+              <div className="rounded-lg border border-[#E6ECF5] bg-[#F4F3EF] px-4 py-3 flex flex-col gap-1">
+                <p className="text-[11px] text-[#566174] font-[500] uppercase tracking-wide">Multiples estimate</p>
+                <p className="text-[22px] font-[750] text-[#06101F] leading-none">
                   {fmtPrice(multiplesBlendedFV!, currency)}
                 </p>
                 {multUpsidePct != null && (
@@ -177,7 +177,7 @@ export default function ValuationNotAvailableCard({
                     {multUpsidePct >= 0 ? '+' : ''}{(multUpsidePct * 100).toFixed(1)}% vs current price
                   </p>
                 )}
-                <p className="text-[11px] text-[#94A3B8] mt-0.5">
+                <p className="text-[11px] text-[#8A95A6] mt-0.5">
                   Blended EV/Revenue, P/S, and P/B against sector peers
                 </p>
               </div>
@@ -185,9 +185,9 @@ export default function ValuationNotAvailableCard({
 
             {/* Analyst consensus */}
             {hasAnalystTarget && currentPrice != null && currentPrice > 0 && (
-              <div className="rounded-lg border border-[#E6ECF5] bg-[#F8FAFC] px-4 py-3 flex flex-col gap-1">
-                <p className="text-[11px] text-[#64748B] font-[500] uppercase tracking-wide">Analyst consensus target</p>
-                <p className="text-[22px] font-[750] text-[#0F172A] leading-none">
+              <div className="rounded-lg border border-[#E6ECF5] bg-[#F4F3EF] px-4 py-3 flex flex-col gap-1">
+                <p className="text-[11px] text-[#566174] font-[500] uppercase tracking-wide">Analyst consensus target</p>
+                <p className="text-[22px] font-[750] text-[#06101F] leading-none">
                   {fmtPrice(analystTargetMean!, currency)}
                 </p>
                 {analystUpsidePct != null && (
@@ -196,7 +196,7 @@ export default function ValuationNotAvailableCard({
                   </p>
                 )}
                 {analystTargetLow != null && analystTargetHigh != null && (
-                  <p className="text-[11px] text-[#94A3B8] mt-0.5">
+                  <p className="text-[11px] text-[#8A95A6] mt-0.5">
                     Range: {fmtPrice(analystTargetLow, currency)} – {fmtPrice(analystTargetHigh, currency)}
                   </p>
                 )}
@@ -217,29 +217,29 @@ export default function ValuationNotAvailableCard({
               const highPct  = ((analystTargetHigh - lo) / range) * 100
               return (
                 <div className="flex flex-col gap-1.5">
-                  <p className="text-[11px] text-[#64748B] font-[500]">Analyst target range</p>
+                  <p className="text-[11px] text-[#566174] font-[500]">Analyst target range</p>
                   <div className="relative h-5 flex items-center">
                     {/* Track */}
                     <div className="absolute inset-0 h-1.5 top-1/2 -translate-y-1/2 rounded-full bg-[#E6ECF5]" />
                     {/* Range fill */}
                     <div
-                      className="absolute h-1.5 top-1/2 -translate-y-1/2 rounded-full bg-blue-100"
+                      className="absolute h-1.5 top-1/2 -translate-y-1/2 rounded-full bg-[#EAF1FF]"
                       style={{ left: `${lowPct}%`, width: `${highPct - lowPct}%` }}
                     />
                     {/* Low tick */}
-                    <div className="absolute w-0.5 h-3 bg-blue-300 top-1/2 -translate-y-1/2 rounded-full" style={{ left: `${lowPct}%` }} />
+                    <div className="absolute w-0.5 h-3 bg-[#93B4F5] top-1/2 -translate-y-1/2 rounded-full" style={{ left: `${lowPct}%` }} />
                     {/* High tick */}
-                    <div className="absolute w-0.5 h-3 bg-blue-300 top-1/2 -translate-y-1/2 rounded-full" style={{ left: `${highPct}%` }} />
+                    <div className="absolute w-0.5 h-3 bg-[#93B4F5] top-1/2 -translate-y-1/2 rounded-full" style={{ left: `${highPct}%` }} />
                     {/* Mean dot */}
-                    <div className="absolute w-2.5 h-2.5 rounded-full bg-blue-500 border-2 border-white shadow-sm top-1/2 -translate-y-1/2 -translate-x-1/2" style={{ left: `${meanPct}%` }} />
+                    <div className="absolute w-2.5 h-2.5 rounded-full bg-[#EAF1FF]0 border-2 border-white shadow-sm top-1/2 -translate-y-1/2 -translate-x-1/2" style={{ left: `${meanPct}%` }} />
                     {/* Current price marker */}
-                    <div className="absolute w-2.5 h-2.5 rounded-full bg-[#0F172A] border-2 border-white shadow-sm top-1/2 -translate-y-1/2 -translate-x-1/2" style={{ left: `${pricePct}%` }} />
+                    <div className="absolute w-2.5 h-2.5 rounded-full bg-[#06101F] border-2 border-white shadow-sm top-1/2 -translate-y-1/2 -translate-x-1/2" style={{ left: `${pricePct}%` }} />
                   </div>
-                  <div className="flex justify-between text-[10px] text-[#94A3B8]">
+                  <div className="flex justify-between text-[10px] text-[#8A95A6]">
                     <span>{fmtPrice(analystTargetLow, currency)}</span>
                     <span className="flex gap-3">
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#0F172A] inline-block" />Current</span>
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />Mean target</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#06101F] inline-block" />Current</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#EAF1FF]0 inline-block" />Mean target</span>
                     </span>
                     <span>{fmtPrice(analystTargetHigh, currency)}</span>
                   </div>
@@ -254,14 +254,14 @@ export default function ValuationNotAvailableCard({
       {multiples.length > 0 && (
         <div className="rounded-xl border border-[#E6ECF5] bg-white px-5 py-4 flex flex-col gap-3">
           <div>
-            <p className="text-[13px] font-[700] text-[#0F172A] mb-0.5">Current trading multiples</p>
-            <p className="text-[12px] text-[#64748B]">How the market is pricing {ticker} today relative to its fundamentals.</p>
+            <p className="text-[13px] font-[700] text-[#06101F] mb-0.5">Current trading multiples</p>
+            <p className="text-[12px] text-[#566174]">How the market is pricing {ticker} today relative to its fundamentals.</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {multiples.map(m => (
-              <div key={m.label} className="rounded-md border border-[#E6ECF5] bg-[#F8FAFC] px-3 py-2.5 flex flex-col gap-0.5">
-                <p className="text-[11px] text-[#64748B] font-[500]">{m.label}</p>
-                <p className="text-[17px] font-[700] text-[#0F172A] leading-none">{fmt(m.value)}×</p>
+              <div key={m.label} className="rounded-md border border-[#E6ECF5] bg-[#F4F3EF] px-3 py-2.5 flex flex-col gap-0.5">
+                <p className="text-[11px] text-[#566174] font-[500]">{m.label}</p>
+                <p className="text-[17px] font-[700] text-[#06101F] leading-none">{fmt(m.value)}×</p>
               </div>
             ))}
           </div>
@@ -269,20 +269,20 @@ export default function ValuationNotAvailableCard({
           {/* Peer comparison */}
           {validPeers.length > 0 && (
             <div className="flex flex-col gap-2 mt-1">
-              <p className="text-[11px] text-[#64748B] font-[500]">Peer EV/Revenue comparison</p>
+              <p className="text-[11px] text-[#566174] font-[500]">Peer EV/Revenue comparison</p>
               <div className="flex flex-wrap gap-2">
                 {validPeers.slice(0, 6).map(p => (
-                  <div key={p.ticker} className="rounded-sm border border-[#E6ECF5] bg-[#F8FAFC] px-2.5 py-1.5 flex items-center gap-1.5">
-                    <span className="text-[11px] font-[650] text-[#334155]">{p.ticker}</span>
+                  <div key={p.ticker} className="rounded-sm border border-[#E6ECF5] bg-[#F4F3EF] px-2.5 py-1.5 flex items-center gap-1.5">
+                    <span className="text-[11px] font-[650] text-[#566174]">{p.ticker}</span>
                     {p.evToRevenue != null && (
-                      <span className="text-[11px] text-[#64748B]">{fmt(p.evToRevenue)}×</span>
+                      <span className="text-[11px] text-[#566174]">{fmt(p.evToRevenue)}×</span>
                     )}
                   </div>
                 ))}
                 {evToRevenue != null && (
-                  <div className="rounded-sm border border-[#0F172A] bg-[#0F172A] px-2.5 py-1.5 flex items-center gap-1.5">
+                  <div className="rounded-sm border border-[#06101F] bg-[#06101F] px-2.5 py-1.5 flex items-center gap-1.5">
                     <span className="text-[11px] font-[650] text-white">{ticker}</span>
-                    <span className="text-[11px] text-slate-300">{fmt(evToRevenue)}×</span>
+                    <span className="text-[11px] text-[#8A95A6]">{fmt(evToRevenue)}×</span>
                   </div>
                 )}
               </div>
@@ -295,11 +295,11 @@ export default function ValuationNotAvailableCard({
       {methods && (
         <div className="rounded-xl border border-[#E6ECF5] bg-white px-5 py-4 flex flex-col gap-4">
           <div>
-            <p className="text-[13px] font-[700] text-[#0F172A] mb-1">
+            <p className="text-[13px] font-[700] text-[#06101F] mb-1">
               {reit ? 'REIT valuation approaches' : bank ? 'Financial sector valuation approaches' : 'Relevant valuation approaches for this sector'}
             </p>
             {sectionLabel && (
-              <p className="text-[12px] text-[#64748B] leading-relaxed">{sectionLabel}</p>
+              <p className="text-[12px] text-[#566174] leading-relaxed">{sectionLabel}</p>
             )}
           </div>
           <div className="flex flex-col gap-3">
@@ -309,8 +309,8 @@ export default function ValuationNotAvailableCard({
                   <span className="text-[10px] font-[700] text-[#2563EB]">{i + 1}</span>
                 </div>
                 <div>
-                  <p className="text-[13px] font-[650] text-[#0F172A]">{m.name}</p>
-                  <p className="text-[12px] text-[#64748B] mt-0.5 leading-relaxed">{m.why}</p>
+                  <p className="text-[13px] font-[650] text-[#06101F]">{m.name}</p>
+                  <p className="text-[12px] text-[#566174] mt-0.5 leading-relaxed">{m.why}</p>
                 </div>
               </div>
             ))}
@@ -319,27 +319,27 @@ export default function ValuationNotAvailableCard({
       )}
 
       {/* ── Redirect to other tabs ── */}
-      <div className="rounded-xl border border-[#E6ECF5] bg-[#F8FAFC] px-5 py-4">
-        <p className="text-[12px] font-[650] text-[#475569] mb-2">Available on other tabs</p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[12px] text-[#64748B]">
+      <div className="rounded-xl border border-[#E6ECF5] bg-[#F4F3EF] px-5 py-4">
+        <p className="text-[12px] font-[650] text-[#566174] mb-2">Available on other tabs</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[12px] text-[#566174]">
           <div className="flex items-start gap-2">
             <span className="text-[#2563EB] mt-0.5" aria-hidden="true">→</span>
             <div>
-              <p className="font-[600] text-[#334155]">Overview</p>
+              <p className="font-[600] text-[#566174]">Overview</p>
               <p>Business quality, growth metrics, fundamentals grid, analyst consensus</p>
             </div>
           </div>
           <div className="flex items-start gap-2">
             <span className="text-[#2563EB] mt-0.5" aria-hidden="true">→</span>
             <div>
-              <p className="font-[600] text-[#334155]">Financials</p>
+              <p className="font-[600] text-[#566174]">Financials</p>
               <p>Full income statement, balance sheet, cash flow, and quarterly data</p>
             </div>
           </div>
           <div className="flex items-start gap-2">
             <span className="text-[#2563EB] mt-0.5" aria-hidden="true">→</span>
             <div>
-              <p className="font-[600] text-[#334155]">Risks &amp; Signals</p>
+              <p className="font-[600] text-[#566174]">Risks &amp; Signals</p>
               <p>Piotroski F-score, Altman Z-score, and financial health indicators</p>
             </div>
           </div>

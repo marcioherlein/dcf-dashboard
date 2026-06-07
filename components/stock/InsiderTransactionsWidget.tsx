@@ -63,14 +63,14 @@ export default function InsiderTransactionsWidget({ ticker }: { ticker: string }
   if (loading) {
     return (
       <div className="space-y-2 motion-safe:animate-pulse">
-        {[1, 2, 3].map(i => <div key={i} className="h-12 rounded-lg bg-slate-100" />)}
+        {[1, 2, 3].map(i => <div key={i} className="h-12 rounded-lg bg-[#F4F3EF]" />)}
       </div>
     )
   }
 
   if (error || transactions.length === 0) {
     return (
-      <p className="text-[12px] text-slate-400 text-center py-4">
+      <p className="text-[12px] text-[#8A95A6] text-center py-4">
         No insider transaction data available.
       </p>
     )
@@ -85,21 +85,21 @@ export default function InsiderTransactionsWidget({ ticker }: { ticker: string }
       {(buyCount > 0 || sellCount > 0) && (
         <div className="flex items-center gap-3 text-[11px]">
           {buyCount > 0 && (
-            <span className="px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 font-semibold">
+            <span className="px-2 py-0.5 rounded-md bg-[#E8F7EF] border border-[#A3D9BE] text-[#11875D] font-semibold">
               {buyCount} buy{buyCount !== 1 ? 's' : ''}
             </span>
           )}
           {sellCount > 0 && (
-            <span className="px-2 py-0.5 rounded-md bg-red-50 border border-red-200 text-red-600 font-semibold">
+            <span className="px-2 py-0.5 rounded-md bg-[#FCEAEA] border border-[#F0B8B8] text-[#D83B3B] font-semibold">
               {sellCount} sell{sellCount !== 1 ? 's' : ''}
             </span>
           )}
-          <span className="text-slate-400">last {transactions.length} filings</span>
+          <span className="text-[#8A95A6]">last {transactions.length} filings</span>
         </div>
       )}
 
       {/* Transaction rows */}
-      <div className="rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
+      <div className="rounded-xl border border-[#E3E1DA] overflow-hidden divide-y divide-[#E3E1DA]">
         {transactions.slice(0, 8).map((t, i) => {
           const desc = t.transactionDescription ?? ''
           const buy = isBuy(desc)
@@ -110,29 +110,29 @@ export default function InsiderTransactionsWidget({ ticker }: { ticker: string }
           return (
             <div key={i} className="flex items-center gap-3 px-4 py-3 bg-white">
               {/* Direction indicator */}
-              <div className={`w-1.5 h-8 rounded-full shrink-0 ${buy ? 'bg-emerald-400' : sell ? 'bg-red-400' : 'bg-slate-300'}`} />
+              <div className={`w-1.5 h-8 rounded-full shrink-0 ${buy ? 'bg-[#11875D]' : sell ? 'bg-[#D83B3B]' : 'bg-[#CDD1C8]'}`} />
 
               <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-semibold text-slate-800 truncate">{t.filerName ?? '—'}</p>
-                <p className="text-[11px] text-slate-400 truncate">{desc}</p>
+                <p className="text-[12px] font-semibold text-[#06101F] truncate">{t.filerName ?? '—'}</p>
+                <p className="text-[11px] text-[#8A95A6] truncate">{desc}</p>
               </div>
 
               <div className="text-right shrink-0">
                 {sharesRaw != null && (
-                  <p className="text-[12px] font-semibold text-slate-700 tabular-nums">
+                  <p className="text-[12px] font-semibold text-[#06101F] tabular-nums">
                     {fmtShares(Math.abs(sharesRaw))} shares
                   </p>
                 )}
                 {valueRaw != null && Math.abs(valueRaw) > 0 && (
-                  <p className="text-[11px] text-slate-400 tabular-nums">{fmt(valueRaw)}</p>
+                  <p className="text-[11px] text-[#8A95A6] tabular-nums">{fmt(valueRaw)}</p>
                 )}
-                <p className="text-[10px] text-slate-400">{parseDate(t.startDate)}</p>
+                <p className="text-[10px] text-[#8A95A6]">{parseDate(t.startDate)}</p>
               </div>
             </div>
           )
         })}
       </div>
-      <p className="text-[10px] text-slate-400">Source: SEC Form 4 filings via Yahoo Finance. Typically reported within 2 business days of transaction.</p>
+      <p className="text-[10px] text-[#8A95A6]">Source: SEC Form 4 filings via Yahoo Finance. Typically reported within 2 business days of transaction.</p>
     </div>
   )
 }

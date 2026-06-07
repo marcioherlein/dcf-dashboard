@@ -4,15 +4,15 @@ import { Calendar, ExternalLink } from 'lucide-react'
 import type { EconomicEvent } from '@/app/api/markets/economic-calendar/route'
 
 const IMPACT_DOT: Record<string, string> = {
-  High:   'bg-red-500',
-  Medium: 'bg-amber-400',
-  Low:    'bg-slate-300',
+  High:   'bg-[#D83B3B]',
+  Medium: 'bg-[#B56A00]',
+  Low:    'bg-[#8A95A6]',
 }
 
 const IMPACT_BADGE: Record<string, string> = {
-  High:   'bg-red-50 text-red-700 border-red-200',
-  Medium: 'bg-amber-50 text-amber-700 border-amber-200',
-  Low:    'bg-slate-100 text-slate-500 border-slate-200',
+  High:   'bg-[#FCEAEA] text-[#D83B3B] border-[#E3E1DA]',
+  Medium: 'bg-[#FFF4DA] text-[#B56A00] border-[#E3E1DA]',
+  Low:    'bg-[#E3E1DA] text-[#566174] border-[#E3E1DA]',
 }
 
 function fmtDate(iso: string): string {
@@ -49,33 +49,33 @@ export default function EconomicCalendar() {
   }, {})
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2">
-        <Calendar size={13} className="text-slate-500" />
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Economic Calendar</span>
-        <span className="ml-auto text-[10px] text-slate-400">Next 14 days · US only</span>
+    <div className="bg-white rounded-xl border border-[#E3E1DA] shadow-sm overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-[#E3E1DA] flex items-center gap-2">
+        <Calendar size={13} className="text-[#566174]" />
+        <span className="text-[10px] font-bold text-[#566174] uppercase tracking-wider">Economic Calendar</span>
+        <span className="ml-auto text-[10px] text-[#8A95A6]">Next 14 days · US only</span>
       </div>
 
       {loading ? (
         <div className="p-4 space-y-2">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-8 rounded bg-slate-100 motion-safe:animate-pulse" />
+            <div key={i} className="h-8 rounded bg-[#E3E1DA] motion-safe:animate-pulse" />
           ))}
         </div>
       ) : events.length === 0 ? (
         <div className="px-6 py-8 flex flex-col items-center gap-2 text-center">
-          <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center">
-            <Calendar size={16} className="text-slate-400" />
+          <div className="w-9 h-9 rounded-full bg-[#E3E1DA] flex items-center justify-center">
+            <Calendar size={16} className="text-[#8A95A6]" />
           </div>
-          <p className="text-[12px] font-semibold text-slate-500">No high-impact U.S. events</p>
-          <p className="text-[11px] text-slate-400 max-w-[220px] leading-snug">No scheduled economic releases in the next 14 days, or data is unavailable.</p>
+          <p className="text-[12px] font-semibold text-[#566174]">No high-impact U.S. events</p>
+          <p className="text-[11px] text-[#8A95A6] max-w-[220px] leading-snug">No scheduled economic releases in the next 14 days, or data is unavailable.</p>
         </div>
       ) : (
         <>
           <div className="overflow-x-auto">
           <div style={{ minWidth: '480px' }}>
           {/* Column headers */}
-          <div className="px-4 py-1.5 border-b border-slate-100 bg-slate-50/70 grid gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-400"
+          <div className="px-4 py-1.5 border-b border-[#E3E1DA] bg-[#F4F3EF]/70 grid gap-2 text-[11px] font-bold uppercase tracking-wider text-[#8A95A6]"
             style={{ gridTemplateColumns: '5rem 1fr 4.5rem 3rem 3rem 3rem' }}>
             <span>Time</span>
             <span>Event</span>
@@ -85,12 +85,12 @@ export default function EconomicCalendar() {
             <span className="text-right">Prior</span>
           </div>
 
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-[#E3E1DA]">
             {Object.entries(byDate).map(([date, dayEvents]) => (
               <div key={date}>
                 {/* Date group header */}
-                <div className="px-4 py-1.5 bg-slate-50/50 border-b border-slate-100">
-                  <span className="text-[10px] font-bold text-slate-600">{fmtDate(date)}</span>
+                <div className="px-4 py-1.5 bg-[#F4F3EF]/50 border-b border-[#E3E1DA]">
+                  <span className="text-[10px] font-bold text-[#566174]">{fmtDate(date)}</span>
                 </div>
                 {dayEvents.map((e, i) => (
                   <div
@@ -99,26 +99,26 @@ export default function EconomicCalendar() {
                     style={{ gridTemplateColumns: '5rem 1fr 4.5rem 3rem 3rem 3rem' }}
                   >
                     {/* Time */}
-                    <p className="text-[10px] font-mono text-slate-500 shrink-0">{fmtTime(e.time)}</p>
+                    <p className="text-[10px] font-mono text-[#566174] shrink-0">{fmtTime(e.time)}</p>
                     {/* Event */}
                     <div className="min-w-0 flex items-center gap-1.5">
-                      <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${IMPACT_DOT[e.impact] ?? 'bg-slate-300'}`} />
-                      <p className="text-[11.5px] font-semibold text-slate-800 leading-tight truncate">{e.event}</p>
+                      <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${IMPACT_DOT[e.impact] ?? 'bg-[#8A95A6]'}`} />
+                      <p className="text-[11.5px] font-semibold text-[#06101F] leading-tight truncate">{e.event}</p>
                     </div>
                     {/* Importance */}
                     <span className={`inline-flex items-center justify-center text-[10px] font-bold px-2 py-0.5 rounded-full border ${IMPACT_BADGE[e.impact] ?? IMPACT_BADGE.Low}`}>
                       {e.impact}
                     </span>
                     {/* Actual */}
-                    <span className="text-[11px] font-semibold text-slate-700 tabular-nums text-right">
+                    <span className="text-[11px] font-semibold text-[#06101F] tabular-nums text-right">
                       {e.actual ?? '—'}
                     </span>
                     {/* Estimate */}
-                    <span className="text-[11px] text-slate-500 tabular-nums text-right">
+                    <span className="text-[11px] text-[#566174] tabular-nums text-right">
                       {e.estimate ?? '—'}
                     </span>
                     {/* Prior */}
-                    <span className="text-[11px] text-slate-400 tabular-nums text-right">
+                    <span className="text-[11px] text-[#8A95A6] tabular-nums text-right">
                       {e.previous ?? '—'}
                     </span>
                   </div>
@@ -130,13 +130,13 @@ export default function EconomicCalendar() {
           </div>
           </div>
 
-          <div className="px-4 py-2.5 border-t border-slate-100 flex items-center justify-between">
-            <p className="text-[11px] text-slate-400">All times in ET</p>
+          <div className="px-4 py-2.5 border-t border-[#E3E1DA] flex items-center justify-between">
+            <p className="text-[11px] text-[#8A95A6]">All times in ET</p>
             <a
               href="https://financialmodelingprep.com/financial-calendars"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+              className="flex items-center gap-1 text-[11px] font-semibold text-[#2563EB] hover:text-[#2563EB] transition-colors"
             >
               View full economic calendar
               <ExternalLink size={10} />

@@ -58,7 +58,7 @@ function SortHeader({
 }) {
   return (
     <th
-      className={`px-4 py-3 text-[10px] font-extrabold uppercase tracking-widest cursor-pointer select-none whitespace-nowrap ${right ? 'text-right' : 'text-left'} ${active ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
+      className={`px-4 py-3 text-[10px] font-bold uppercase tracking-widest cursor-pointer select-none whitespace-nowrap ${right ? 'text-right' : 'text-left'} ${active ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
       onClick={() => onSort(sortKey)}
     >
       {label}{active ? (dir === 'asc' ? ' ↑' : ' ↓') : ''}
@@ -173,11 +173,11 @@ export default function StrategyScreeningTable({
               <SortHeader label="Signal"      sortKey="recommendation" active={sortKey === 'recommendation'} dir={sortDir} onSort={handleSort} />
               <SortHeader label="Conviction"  sortKey="conviction"     active={sortKey === 'conviction'}     dir={sortDir} onSort={handleSort} />
               <SortHeader label="Score"       sortKey="finalScore"     active={sortKey === 'finalScore'}     dir={sortDir} onSort={handleSort} right />
-              <th className="px-4 py-3 text-left text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Entry</th>
+              <th className="px-4 py-3 text-left text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Entry</th>
               <SortHeader label="Target %"   sortKey="targetPct"      active={sortKey === 'targetPct'}      dir={sortDir} onSort={handleSort} right />
               <SortHeader label="Stop %"     sortKey="stopPct"        active={sortKey === 'stopPct'}        dir={sortDir} onSort={handleSort} right />
               <SortHeader label="R/R"        sortKey="rr"             active={sortKey === 'rr'}             dir={sortDir} onSort={handleSort} right />
-              <th className="px-4 py-3 text-left text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Horizon</th>
+              <th className="px-4 py-3 text-left text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Horizon</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant/10">
@@ -200,7 +200,7 @@ export default function StrategyScreeningTable({
                   {/* Ticker */}
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <span className="font-extrabold text-sm text-primary">{r.displayTicker}</span>
+                      <span className="font-bold text-sm text-primary">{r.displayTicker}</span>
                       {r.isCedear && (
                         <span className="px-1 py-0.5 bg-tertiary-fixed/30 text-on-tertiary-fixed-variant text-[8px] font-bold rounded uppercase">C</span>
                       )}
@@ -210,7 +210,7 @@ export default function StrategyScreeningTable({
 
                   {/* Signal */}
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${REC_PILL[tp.recommendation]}`}>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${REC_PILL[tp.recommendation]}`}>
                       {REC_LABELS[tp.recommendation]}
                     </span>
                   </td>
@@ -224,7 +224,7 @@ export default function StrategyScreeningTable({
 
                   {/* Score */}
                   <td className="px-4 py-3 text-right">
-                    <span className="text-sm font-extrabold text-primary">{r.finalScore.toFixed(1)}</span>
+                    <span className="text-sm font-bold text-primary">{r.finalScore.toFixed(1)}</span>
                   </td>
 
                   {/* Entry */}
@@ -259,7 +259,7 @@ export default function StrategyScreeningTable({
 
                   {/* R/R */}
                   <td className="px-4 py-3 text-right">
-                    <span className={`text-sm font-extrabold ${tp.poorRiskReward ? 'text-on-surface-variant' : 'text-secondary'}`}>
+                    <span className={`text-sm font-bold ${tp.poorRiskReward ? 'text-on-surface-variant' : 'text-secondary'}`}>
                       {tp.riskRewardRatio.toFixed(1)}×
                     </span>
                   </td>

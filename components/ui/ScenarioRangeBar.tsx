@@ -31,57 +31,57 @@ export default function ScenarioRangeBar({
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-[10px] font-[600] text-slate-500">{label}</p>
+      <p className="text-[10px] font-[600] text-[#566174]">{label}</p>
 
-      <div className="relative h-2 bg-slate-100 rounded-full mx-1" aria-hidden="true">
+      <div className="relative h-2 bg-[#F4F3EF] rounded-full mx-1" aria-hidden="true">
         {/* Range fill bear → bull */}
         <div
-          className="absolute top-0 h-full bg-blue-100 rounded-full"
+          className="absolute top-0 h-full bg-[#EAF1FF] rounded-full"
           style={{ left: `${bearP}%`, width: `${bullP - bearP}%` }}
         />
         {/* Bear */}
         <div
-          className="absolute w-1.5 h-1.5 rounded-full bg-red-400 top-1/2 -translate-y-1/2 -translate-x-1/2"
+          className="absolute w-1.5 h-1.5 rounded-full bg-[#D83B3B] top-1/2 -translate-y-1/2 -translate-x-1/2"
           style={{ left: `${bearP}%` }}
         />
         {/* Base / blended */}
         <div
-          className="absolute w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-sm top-1/2 -translate-y-1/2 -translate-x-1/2"
+          className="absolute w-3 h-3 rounded-full bg-[#EAF1FF]0 border-2 border-white shadow-sm top-1/2 -translate-y-1/2 -translate-x-1/2"
           style={{ left: `${baseP}%` }}
         />
         {/* Bull */}
         <div
-          className="absolute w-1.5 h-1.5 rounded-full bg-emerald-400 top-1/2 -translate-y-1/2 -translate-x-1/2"
+          className="absolute w-1.5 h-1.5 rounded-full bg-[#11875D] top-1/2 -translate-y-1/2 -translate-x-1/2"
           style={{ left: `${bullP}%` }}
         />
         {/* Price tick */}
         <div
-          className="absolute w-0.5 h-4 bg-slate-500 top-1/2 -translate-y-1/2 -translate-x-1/2"
+          className="absolute w-0.5 h-4 bg-[#F4F3EF]0 top-1/2 -translate-y-1/2 -translate-x-1/2"
           style={{ left: `${priceP}%` }}
         />
       </div>
 
-      <div className="flex items-center justify-between text-[10px] text-slate-500 px-1">
+      <div className="flex items-center justify-between text-[10px] text-[#566174] px-1">
         <span className="text-red-400 font-[600]">{fmtShort(bear, currency)}</span>
-        <span className="text-blue-600 font-[700]">{fmtShort(base, currency)}</span>
-        <span className="text-emerald-500 font-[600]">{fmtShort(bull, currency)}</span>
+        <span className="text-[#2563EB] font-[700]">{fmtShort(base, currency)}</span>
+        <span className="text-[#11875D] font-[600]">{fmtShort(bull, currency)}</span>
       </div>
 
-      <div className="flex items-center gap-3 text-[10px] text-slate-500 px-1">
+      <div className="flex items-center gap-3 text-[10px] text-[#566174] px-1">
         <div className="flex items-center gap-1">
-          <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
+          <div className="w-1.5 h-1.5 rounded-full bg-[#D83B3B]" />
           <span>Bear</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full bg-blue-500" />
+          <div className="w-2 h-2 rounded-full bg-[#EAF1FF]0" />
           <span>Base</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <div className="w-1.5 h-1.5 rounded-full bg-[#11875D]" />
           <span>Bull</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-0.5 h-3 bg-slate-500" />
+          <div className="w-0.5 h-3 bg-[#F4F3EF]0" />
           <span>Price</span>
         </div>
       </div>

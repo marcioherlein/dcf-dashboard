@@ -29,10 +29,10 @@ const DynamicChart = dynamic(
                 <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#94a3b8' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-            <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+            <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#8A95A6' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+            <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: '#8A95A6' }} axisLine={false} tickLine={false} />
             <Tooltip
-              contentStyle={{ background: '#0d1b2e', border: '1px solid rgba(59,130,246,0.25)', borderRadius: '8px', fontSize: '11px', color: '#e2e8f0' }}
+              contentStyle={{ background: '#0d1b2e', border: '1px solid rgba(59,130,246,0.25)', borderRadius: '8px', fontSize: '11px', color: '#E3E1DA' }}
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               formatter={(v: any) => [String(v), 'Value Score']}
             />
@@ -42,7 +42,7 @@ const DynamicChart = dynamic(
       )
     }
   }),
-  { ssr: false, loading: () => <div className="h-[140px] rounded-lg bg-slate-100 motion-safe:animate-pulse" /> },
+  { ssr: false, loading: () => <div className="h-[140px] rounded-lg bg-[#F4F3EF] motion-safe:animate-pulse" /> },
 )
 
 export function ETFValuationHistory({ ticker }: Props) {
@@ -61,28 +61,28 @@ export function ETFValuationHistory({ ticker }: Props) {
   if (loading) {
     return (
       <div className="glass-card-light rounded-xl p-4">
-        <p className="text-sm font-semibold text-slate-700 mb-3">Value Score History</p>
-        <div className="h-[140px] bg-slate-100 rounded-lg motion-safe:animate-pulse" />
+        <p className="text-sm font-semibold text-[#06101F] mb-3">Value Score History</p>
+        <div className="h-[140px] bg-[#F4F3EF] rounded-lg motion-safe:animate-pulse" />
       </div>
     )
   }
 
   return (
     <div className="glass-card-light rounded-xl p-4">
-      <p className="text-sm font-semibold text-slate-700 mb-3">Value Score History</p>
+      <p className="text-sm font-semibold text-[#06101F] mb-3">Value Score History</p>
       {data.length < 7 ? (
-        <div className="h-[140px] flex flex-col items-center justify-center gap-2 rounded-lg bg-slate-50 border border-dashed border-slate-200">
+        <div className="h-[140px] flex flex-col items-center justify-center gap-2 rounded-lg bg-[#F4F3EF] border border-dashed border-[#E3E1DA]">
           {error ? (
             <>
-              <p className="text-sm text-slate-500 font-semibold">Score history unavailable.</p>
-              <p className="text-xs text-slate-400 text-center max-w-xs">
+              <p className="text-sm text-[#566174] font-semibold">Score history unavailable.</p>
+              <p className="text-xs text-[#8A95A6] text-center max-w-xs">
                 Check back later.
               </p>
             </>
           ) : (
             <>
-              <p className="text-sm text-slate-500 font-semibold">Building history…</p>
-              <p className="text-xs text-slate-400 text-center max-w-xs">
+              <p className="text-sm text-[#566174] font-semibold">Building history…</p>
+              <p className="text-xs text-[#8A95A6] text-center max-w-xs">
                 Score history is building — more data points appear each day this ETF is tracked.
               </p>
             </>

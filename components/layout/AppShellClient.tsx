@@ -9,7 +9,7 @@ import { StockNavProvider } from '@/contexts/StockNavContext'
 function AppShellInner({ children }: { children: React.ReactNode }) {
   return (
     <main
-      className="pb-safe-nav lg:pb-6 lg:pl-[220px]"
+      className="pb-safe-nav lg:pb-6 lg:pl-[240px]"
       style={{ paddingTop: 'calc(52px + env(safe-area-inset-top, 0px))' }}
     >
       {children}

@@ -50,17 +50,17 @@ function deriveRiskLevel(ratings: StockRatings): { label: string; color: string;
   if (isElevated) return {
     label: 'Elevated',
     color: 'red',
-    badgeClass: 'bg-red-50 text-red-700 border border-red-200',
+    badgeClass: 'bg-[#FCEAEA] text-[#D83B3B] border border-[#F0B8B8]',
   }
   if (isModerate) return {
     label: 'Moderate',
     color: 'amber',
-    badgeClass: 'bg-amber-50 text-amber-700 border border-amber-200',
+    badgeClass: 'bg-[#FFF4DA] text-[#B56A00] border border-[#F3D391]',
   }
   return {
     label: 'Low',
     color: 'emerald',
-    badgeClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    badgeClass: 'bg-[#E8F7EF] text-[#11875D] border border-[#A3D9BE]',
   }
 }
 
@@ -105,16 +105,16 @@ export default function RisksCard({ ratings, cagrAnalysis, onViewRisks }: RisksC
   const bullets = buildBullets(ratings, cagrAnalysis)
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl px-4 py-4 sm:p-5 shadow-sm">
+    <div className="bg-white border border-[#E3E1DA] rounded-2xl px-4 py-4 sm:p-5 shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <AlertTriangle size={15} className={cn(
-            risk.color === 'red'    ? 'text-red-500'   :
-            risk.color === 'amber'  ? 'text-amber-500' :
-            'text-emerald-500'
+            risk.color === 'red'    ? 'text-[#D83B3B]'   :
+            risk.color === 'amber'  ? 'text-[#B56A00]' :
+            'text-[#11875D]'
           )} />
-          <p className="text-[14px] font-semibold text-slate-800">Risks to Thesis</p>
+          <p className="text-[14px] font-semibold text-[#06101F]">Risks to Thesis</p>
         </div>
         <span className={cn('text-[12px] font-semibold px-2.5 py-1 rounded-full', risk.badgeClass)}>
           {risk.label}
@@ -127,11 +127,11 @@ export default function RisksCard({ ratings, cagrAnalysis, onViewRisks }: RisksC
           <li key={i} className="flex items-start gap-2.5 py-0.5">
             <span className={cn(
               'mt-[7px] w-1.5 h-1.5 rounded-full shrink-0',
-              risk.color === 'red'   ? 'bg-red-400'   :
-              risk.color === 'amber' ? 'bg-amber-400' :
-              'bg-emerald-400'
+              risk.color === 'red'   ? 'bg-[#D83B3B]'   :
+              risk.color === 'amber' ? 'bg-[#B56A00]' :
+              'bg-[#11875D]'
             )} />
-            <span className="text-[13px] text-slate-600 leading-snug">{b}</span>
+            <span className="text-[13px] text-[#566174] leading-snug">{b}</span>
           </li>
         ))}
       </ul>
@@ -139,7 +139,7 @@ export default function RisksCard({ ratings, cagrAnalysis, onViewRisks }: RisksC
       {/* CTA */}
       <button
         onClick={onViewRisks}
-        className="text-[13px] font-semibold text-blue-600 hover:text-blue-700 transition-colors min-h-[44px] flex items-center"
+        className="text-[13px] font-semibold text-[#2563EB] hover:text-[#2563EB] transition-colors min-h-[44px] flex items-center"
       >
         View all risks →
       </button>

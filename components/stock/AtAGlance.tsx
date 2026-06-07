@@ -69,11 +69,11 @@ export default function AtAGlance({
       {/* 52-week range */}
       {rangePosition != null && (
         <div>
-          <div className="flex justify-between text-[12px] text-slate-500 mb-1.5">
+          <div className="flex justify-between text-[12px] text-[#566174] mb-1.5">
             <span>52w Low {fmtPrice(low52, currency)}</span>
             <span>52w High {fmtPrice(high52, currency)}</span>
           </div>
-          <div className="relative h-2 rounded-full bg-slate-200">
+          <div className="relative h-2 rounded-full bg-[#E3E1DA]">
             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-red-400/70 via-amber-400/70 to-emerald-500/80" />
             <div
               className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-blue-600 shadow-sm"
@@ -85,14 +85,14 @@ export default function AtAGlance({
 
       {/* Sector / country pills */}
       <div className="flex gap-1.5 flex-wrap">
-        {sector  && <span className="rounded-md bg-slate-100 border border-slate-200 text-slate-700 px-2.5 py-1.5 text-[12px] font-medium min-h-[32px] flex items-center">{sector}</span>}
-        {country && <span className="rounded-md bg-slate-100 border border-slate-200 text-slate-700 px-2.5 py-1.5 text-[12px] font-medium min-h-[32px] flex items-center">{country}</span>}
+        {sector  && <span className="rounded-md bg-[#F4F3EF] border border-[#E3E1DA] text-[#06101F] px-2.5 py-1.5 text-[12px] font-medium min-h-[32px] flex items-center">{sector}</span>}
+        {country && <span className="rounded-md bg-[#F4F3EF] border border-[#E3E1DA] text-[#06101F] px-2.5 py-1.5 text-[12px] font-medium min-h-[32px] flex items-center">{country}</span>}
       </div>
 
       {/* TTM Multiples */}
       {showMultiples && (
-        <div className="pt-3 border-t border-slate-200">
-          <p className="text-[12px] font-semibold text-slate-600 mb-2">TTM Multiples</p>
+        <div className="pt-3 border-t border-[#E3E1DA]">
+          <p className="text-[12px] font-semibold text-[#566174] mb-2">TTM Multiples</p>
           <div className="flex flex-wrap gap-2">
             <MetricChip label="P/E"       value={fmtMultiple(pe)}       tooltip="Price-to-Earnings: how much you're paying for each dollar of profit. Lower = cheaper relative to earnings. Compare to sector peers for context." />
             <MetricChip label="EV/EBITDA" value={fmtMultiple(evEbitda)} tooltip="Enterprise Value to EBITDA: compares the company's total value (including debt) to its operating earnings. Useful for comparing companies with different debt levels." />

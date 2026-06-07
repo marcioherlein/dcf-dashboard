@@ -84,10 +84,10 @@ function buildCompareData(aRaw: OHLCV[], bRaw: OHLCV[]): { points: ComparePoint[
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 function StatCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-card">
-      <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400 mb-1">{label}</p>
-      <p className="text-base font-bold tabular-nums" style={{ color: color ?? '#0f172a' }}>{value}</p>
-      {sub && <p className="text-[10px] text-slate-400 mt-0.5">{sub}</p>}
+    <div className="bg-white border border-[#E3E1DA] rounded-xl p-3 shadow-card">
+      <p className="text-[10px] font-medium uppercase tracking-wider text-[#8A95A6] mb-1">{label}</p>
+      <p className="text-base font-bold tabular-nums" style={{ color: color ?? '#06101F' }}>{value}</p>
+      {sub && <p className="text-[10px] text-[#8A95A6] mt-0.5">{sub}</p>}
     </div>
   )
 }
@@ -101,10 +101,10 @@ function RatioTooltip({ active, payload, label, mean, color }: {
   const v = payload[0]?.value as number
   const pct = ((v - mean) / mean) * 100
   return (
-    <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs shadow-card-md">
-      <div className="text-slate-400 mb-1">{label}</div>
+    <div className="bg-white border border-[#E3E1DA] rounded-lg px-3 py-2 text-xs shadow-card-md">
+      <div className="text-[#8A95A6] mb-1">{label}</div>
       <div className="font-semibold tabular-nums" style={{ color }}>{v.toFixed(4)}</div>
-      <div className="text-[10px] mt-0.5" style={{ color: pct >= 0 ? '#059669' : '#DC2626' }}>
+      <div className="text-[10px] mt-0.5" style={{ color: pct >= 0 ? '#11875D' : '#D83B3B' }}>
         {pct >= 0 ? '+' : ''}{pct.toFixed(1)}% vs mean
       </div>
     </div>
@@ -134,22 +134,22 @@ export default function ComparePage() {
   const points = pairData?.points ?? []
   const ratioMean = stats?.meanRatio ?? 1
 
-  const correlationColor = !stats ? '#94a3b8'
-    : stats.correlation >= 0.8 ? '#059669'
-    : stats.correlation >= 0.5 ? '#D97706'
-    : '#DC2626'
+  const correlationColor = !stats ? '#8A95A6'
+    : stats.correlation >= 0.8 ? '#11875D'
+    : stats.correlation >= 0.5 ? '#B56A00'
+    : '#D83B3B'
 
-  const zScoreColor = !stats ? '#94a3b8'
-    : Math.abs(stats.ratioZScore) >= 2 ? '#DC2626'
-    : Math.abs(stats.ratioZScore) >= 1 ? '#D97706'
-    : '#059669'
+  const zScoreColor = !stats ? '#8A95A6'
+    : Math.abs(stats.ratioZScore) >= 2 ? '#D83B3B'
+    : Math.abs(stats.ratioZScore) >= 1 ? '#B56A00'
+    : '#11875D'
 
   return (
-    <div className="min-h-dvh bg-[#F8FAFB]">
+    <div className="min-h-dvh bg-[#F4F3EF]">
       {/* Header */}
-      <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-200 bg-white">
-        <h1 className="text-sm sm:text-base font-semibold text-slate-900">Multi-Ticker Comparison</h1>
-        <p className="text-[12px] sm:text-[13px] text-slate-500 mt-0.5">
+      <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-[#E3E1DA] bg-white">
+        <h1 className="text-sm sm:text-base font-semibold text-[#06101F]">Multi-Ticker Comparison</h1>
+        <p className="text-[12px] sm:text-[13px] text-[#566174] mt-0.5">
           Add tickers via the search tag · Compare indexed performance · Pairs analysis for first two tickers
         </p>
       </div>
@@ -174,12 +174,12 @@ export default function ComparePage() {
             <StatCard
               label={`${tickerA} return`}
               value={`${stats.aReturn >= 0 ? '+' : ''}${stats.aReturn.toFixed(1)}%`}
-              color={stats.aReturn >= 0 ? '#059669' : '#DC2626'}
+              color={stats.aReturn >= 0 ? '#11875D' : '#D83B3B'}
             />
             <StatCard
               label={`${tickerB} return`}
               value={`${stats.bReturn >= 0 ? '+' : ''}${stats.bReturn.toFixed(1)}%`}
-              color={stats.bReturn >= 0 ? '#059669' : '#DC2626'}
+              color={stats.bReturn >= 0 ? '#11875D' : '#D83B3B'}
             />
             <StatCard
               label="Outperformer"
@@ -217,8 +217,8 @@ export default function ComparePage() {
             <div className={[
               'flex items-start gap-3 px-4 py-3 rounded-lg border text-sm',
               Math.abs(stats.ratioZScore) >= 2
-                ? 'bg-red-50 border-red-200 text-red-700'
-                : 'bg-amber-50 border-amber-200 text-amber-700',
+                ? 'bg-[#FCEAEA] border-[#D83B3B]/30 text-[#D83B3B]'
+                : 'bg-[#FFF4DA] border-[#B56A00]/30 text-[#B56A00]',
             ].join(' ')}>
               <span className="text-base shrink-0">{Math.abs(stats.ratioZScore) >= 2 ? '🔴' : '🟡'}</span>
               <div>
@@ -245,18 +245,18 @@ export default function ComparePage() {
               { label: `${tickerA} / ${tickerB} Ratio`, dataKey: 'ratio', color: COLOR_A, mean: ratioMean },
               { label: `${tickerB} / ${tickerA} Ratio`, dataKey: 'ratioInv', color: COLOR_B, mean: 1 / ratioMean },
             ].map(({ label, dataKey, color, mean }) => (
-              <div key={dataKey} className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5">
+              <div key={dataKey} className="bg-white rounded-xl border border-[#E3E1DA] p-4 sm:p-5">
                 <div className="flex items-center gap-3 mb-4">
                   <span className="text-[12px] font-semibold uppercase tracking-wider" style={{ color }}>{label}</span>
-                  <div className="flex-1 h-px bg-slate-100" />
+                  <div className="flex-1 h-px bg-[#F4F3EF]" />
                 </div>
                 <div className="h-52">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={points} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="2 4" stroke="#f1f5f9" vertical={false} />
-                      <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                      <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} width={48} tickFormatter={v => v.toFixed(3)} domain={['auto', 'auto']} />
-                      <ReferenceLine y={mean} stroke="#D97706" strokeDasharray="4 3" strokeWidth={1.5} label={{ value: 'mean', position: 'right', fontSize: 9, fill: '#D97706' }} />
+                      <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#8A95A6' }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                      <YAxis tick={{ fontSize: 10, fill: '#8A95A6' }} tickLine={false} axisLine={false} width={48} tickFormatter={v => v.toFixed(3)} domain={['auto', 'auto']} />
+                      <ReferenceLine y={mean} stroke="#B56A00" strokeDasharray="4 3" strokeWidth={1.5} label={{ value: 'mean', position: 'right', fontSize: 9, fill: '#B56A00' }} />
                       <Tooltip content={<RatioTooltip mean={mean} color={color} />} />
                       <Line type="monotone" dataKey={dataKey} stroke={color} strokeWidth={1.5} dot={false} isAnimationActive={false} />
                     </LineChart>
@@ -267,12 +267,12 @@ export default function ComparePage() {
           </div>
 
           {/* Pairs trading explainer */}
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 sm:p-5">
-            <p className="text-[11px] font-semibold text-blue-700 uppercase tracking-wider mb-3">How to read this</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-[12px] text-slate-600 leading-relaxed">
-              <div><span className="text-slate-800 font-semibold">Indexed chart</span><br />Both prices rebased to 100. Widening gap = divergence. Correlated names usually mean-revert.</div>
-              <div><span className="text-slate-800 font-semibold">Ratio chart</span><br />A/B rising = A outperforming. A/B above mean = A historically expensive vs B. Mean-reversion: short A, long B.</div>
-              <div><span className="text-slate-800 font-semibold">Z-score signal</span><br />|Z| &gt; 2σ = statistically extreme. High correlation + extreme Z = strongest pairs signal. Not investment advice.</div>
+          <div className="bg-[#EAF1FF] border border-[#EAF1FF] rounded-xl p-4 sm:p-5">
+            <p className="text-[11px] font-semibold text-[#2563EB] uppercase tracking-wider mb-3">How to read this</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-[12px] text-[#566174] leading-relaxed">
+              <div><span className="text-[#06101F] font-semibold">Indexed chart</span><br />Both prices rebased to 100. Widening gap = divergence. Correlated names usually mean-revert.</div>
+              <div><span className="text-[#06101F] font-semibold">Ratio chart</span><br />A/B rising = A outperforming. A/B above mean = A historically expensive vs B. Mean-reversion: short A, long B.</div>
+              <div><span className="text-[#06101F] font-semibold">Z-score signal</span><br />|Z| &gt; 2σ = statistically extreme. High correlation + extreme Z = strongest pairs signal. Not investment advice.</div>
             </div>
           </div>
 
@@ -282,7 +282,7 @@ export default function ComparePage() {
               <Link
                 key={t}
                 href={`/stock/${t}`}
-                className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg bg-white border border-slate-200 text-sm font-medium text-slate-700 hover:border-indigo-300 hover:text-indigo-600 transition-colors"
+                className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg bg-white border border-[#E3E1DA] text-sm font-medium text-[#566174] hover:border-indigo-300 hover:text-indigo-600 transition-colors"
               >
                 <span style={{ color: ['#818cf8', '#34d399', '#fb923c', '#f472b6'][i] }}>▶</span>
                 {' '}Full analysis: {t}
@@ -295,7 +295,7 @@ export default function ComparePage() {
       {/* Hint when only 1 ticker */}
       {chartTickers.length < 2 && (
         <div className="flex flex-col items-center justify-center py-16 gap-2 px-4 text-center">
-          <p className="text-sm text-slate-400">Add a second ticker above to see pairs analysis</p>
+          <p className="text-sm text-[#8A95A6]">Add a second ticker above to see pairs analysis</p>
         </div>
       )}
     </div>

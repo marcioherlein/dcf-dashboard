@@ -22,17 +22,17 @@ interface ChipProps {
 function Chip({ label, tooltip, children }: ChipProps) {
   return (
     <div className="flex items-center gap-1.5 min-w-0">
-      <span className="text-[10px] font-[700] text-slate-400 uppercase tracking-wide whitespace-nowrap flex items-center gap-0.5">
+      <span className="text-[10px] font-[700] text-[#8A95A6] uppercase tracking-wide whitespace-nowrap flex items-center gap-0.5">
         {label}
         <InfoTooltip text={tooltip} />
       </span>
-      <span className="text-[11px] font-[650] text-slate-700 whitespace-nowrap">{children}</span>
+      <span className="text-[11px] font-[650] text-[#06101F] whitespace-nowrap">{children}</span>
     </div>
   )
 }
 
 function Divider() {
-  return <span className="text-slate-200 text-[10px] select-none hidden sm:inline">·</span>
+  return <span className="text-[#CDD1C8] text-[10px] select-none hidden sm:inline">·</span>
 }
 
 export default function CrossCheckStrip({
@@ -59,13 +59,13 @@ export default function CrossCheckStrip({
             <span>
               {fmtPrice(epvPerShare, currency)}
               {growthPremiumPct != null && growthPremiumPct > 0 && currentPrice > 0 && (
-                <span className="text-[10px] text-amber-600 font-[600] ml-1">
+                <span className="text-[10px] text-[#B56A00] font-[600] ml-1">
                   ({(growthPremiumPct * 100).toFixed(0)}% priced as growth)
                 </span>
               )}
             </span>
           ) : (
-            <span className="text-slate-300">—</span>
+            <span className="text-[#8A95A6]">—</span>
           )}
         </Chip>
 
@@ -77,11 +77,11 @@ export default function CrossCheckStrip({
           tooltip="Free cash flow as a percentage of market price — like a savings rate. Higher is better. Compare to the risk-free rate below."
         >
           {fcfYield != null ? (
-            <span className={fcfYield >= 0.04 ? 'text-emerald-600' : fcfYield >= 0.02 ? 'text-amber-600' : 'text-red-500'}>
+            <span className={fcfYield >= 0.04 ? 'text-[#11875D]' : fcfYield >= 0.02 ? 'text-[#B56A00]' : 'text-[#D83B3B]'}>
               {(fcfYield * 100).toFixed(1)}%
             </span>
           ) : (
-            <span className="text-slate-300">—</span>
+            <span className="text-[#8A95A6]">—</span>
           )}
         </Chip>
 
@@ -93,7 +93,7 @@ export default function CrossCheckStrip({
               label="vs treasury"
               tooltip="Spread between FCF yield and the 10-year US Treasury yield. Positive means you earn more than a risk-free bond. Negative means you'd do better in a bond."
             >
-              <span className={fcfVsRfr > 0 ? 'text-emerald-600' : 'text-red-500'}>
+              <span className={fcfVsRfr > 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}>
                 {fcfVsRfr >= 0 ? '+' : ''}{(fcfVsRfr * 100).toFixed(1)}pp
               </span>
             </Chip>
@@ -109,14 +109,14 @@ export default function CrossCheckStrip({
         >
           {capitalIntensityLabel != null ? (
             <span className={
-              capitalIntensityLabel.toLowerCase().includes('light') ? 'text-emerald-600' :
-              capitalIntensityLabel.toLowerCase().includes('intensive') ? 'text-amber-600' :
-              'text-slate-600'
+              capitalIntensityLabel.toLowerCase().includes('light') ? 'text-[#11875D]' :
+              capitalIntensityLabel.toLowerCase().includes('intensive') ? 'text-[#B56A00]' :
+              'text-[#566174]'
             }>
               {capitalIntensityLabel}
             </span>
           ) : (
-            <span className="text-slate-300">—</span>
+            <span className="text-[#8A95A6]">—</span>
           )}
         </Chip>
 

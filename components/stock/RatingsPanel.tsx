@@ -7,32 +7,32 @@ const colorMap: Record<string, {
   bg: string; text: string; border: string; bar: string; badge: string
 }> = {
   emerald: {
-    bg:     'bg-emerald-50',
-    text:   'text-emerald-700',
-    border: 'border-emerald-200',
-    bar:    'bg-emerald-500',
-    badge:  'bg-emerald-100 text-emerald-700',
+    bg:     'bg-[#E8F7EF]',
+    text:   'text-[#11875D]',
+    border: 'border-[#A3D9BE]',
+    bar:    'bg-[#E8F7EF]0',
+    badge:  'bg-[#E8F7EF] text-[#11875D]',
   },
   green: {
-    bg:     'bg-green-50',
-    text:   'text-green-700',
+    bg:     'bg-[#E8F7EF]',
+    text:   'text-[#11875D]',
     border: 'border-green-200',
-    bar:    'bg-green-500',
-    badge:  'bg-green-100 text-green-700',
+    bar:    'bg-[#E8F7EF]0',
+    badge:  'bg-[#E8F7EF] text-[#11875D]',
   },
   blue: {
-    bg:     'bg-blue-50',
-    text:   'text-blue-700',
-    border: 'border-blue-200',
-    bar:    'bg-blue-500',
-    badge:  'bg-blue-100 text-blue-700',
+    bg:     'bg-[#EAF1FF]',
+    text:   'text-[#2563EB]',
+    border: 'border-[#93B4F5]',
+    bar:    'bg-[#EAF1FF]0',
+    badge:  'bg-[#EAF1FF] text-[#2563EB]',
   },
   amber: {
-    bg:     'bg-amber-50',
-    text:   'text-amber-700',
-    border: 'border-amber-200',
-    bar:    'bg-amber-400',
-    badge:  'bg-amber-100 text-amber-700',
+    bg:     'bg-[#FFF4DA]',
+    text:   'text-[#B56A00]',
+    border: 'border-[#F3D391]',
+    bar:    'bg-[#B56A00]',
+    badge:  'bg-[#FFF4DA] text-[#B56A00]',
   },
   orange: {
     bg:     'bg-orange-50',
@@ -42,18 +42,18 @@ const colorMap: Record<string, {
     badge:  'bg-orange-100 text-orange-700',
   },
   red: {
-    bg:     'bg-red-50',
-    text:   'text-red-700',
-    border: 'border-red-200',
-    bar:    'bg-red-500',
-    badge:  'bg-red-100 text-red-700',
+    bg:     'bg-[#FCEAEA]',
+    text:   'text-[#D83B3B]',
+    border: 'border-[#F0B8B8]',
+    bar:    'bg-[#FCEAEA]0',
+    badge:  'bg-[#FCEAEA] text-[#D83B3B]',
   },
 }
 
 function ScoreBar({ score }: { score: number }) {
   const pct = ((score - 1) / 4) * 100
   return (
-    <div className="h-1.5 w-full rounded-full bg-slate-100 flex-1">
+    <div className="h-1.5 w-full rounded-full bg-[#F4F3EF] flex-1">
       <div
         className="h-1.5 rounded-full bg-slate-700 transition-all"
         style={{ width: `${pct}%` }}
@@ -65,15 +65,15 @@ function ScoreBar({ score }: { score: number }) {
 function MetricRow({ name, value, score }: { name: string; value: string; score: number }) {
   const dots = Math.round(score)
   return (
-    <div className="flex items-center justify-between py-2.5 border-b border-slate-100 last:border-0 min-h-[44px] gap-2">
-      <span className="text-[13px] text-slate-500 min-w-0 flex-1">{name}</span>
+    <div className="flex items-center justify-between py-2.5 border-b border-[#E3E1DA] last:border-0 min-h-[44px] gap-2">
+      <span className="text-[13px] text-[#566174] min-w-0 flex-1">{name}</span>
       <div className="flex items-center gap-2 shrink-0">
-        <span className="text-[13px] font-medium text-slate-700 tabular-nums shrink-0">{value}</span>
+        <span className="text-[13px] font-medium text-[#06101F] tabular-nums shrink-0">{value}</span>
         <div className="flex gap-0.5 shrink-0">
           {[1,2,3,4,5].map((i) => (
             <div
               key={i}
-              className={`h-2 w-2 rounded-full ${i <= dots ? 'bg-slate-700' : 'bg-slate-200'}`}
+              className={`h-2 w-2 rounded-full ${i <= dots ? 'bg-slate-700' : 'bg-[#E3E1DA]'}`}
             />
           ))}
         </div>
@@ -88,7 +88,7 @@ function CategoryCard({ title, rating }: { title: string; rating: CategoryRating
     <div className={`rounded-2xl border ${c.border} ${c.bg} px-4 py-4 sm:p-5`}>
       <div className="flex items-start justify-between mb-3 gap-2">
         <div className="min-w-0 flex-1">
-          <p className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">{title}</p>
+          <p className="text-[12px] font-semibold uppercase tracking-wide text-[#566174]">{title}</p>
           <p className={`mt-0.5 text-[14px] font-semibold leading-snug ${c.text}`}>{rating.label}</p>
         </div>
         <div className={`rounded-xl px-3 py-1.5 text-[32px] font-black shrink-0 ${c.badge}`}>
@@ -116,12 +116,12 @@ export default function RatingsPanel({ ratings }: Props) {
     <div className="rounded-xl card px-4 py-4 sm:p-6">
       <div className="flex items-start sm:items-center justify-between mb-5 sm:mb-6 gap-3 flex-wrap">
         <div>
-          <h2 className="text-[15px] font-headline font-semibold text-slate-900">Analysis Ratings</h2>
-          <p className="mt-0.5 text-[12px] text-slate-400">Profitability · Liquidity · Growth · MOAT · Valuation</p>
+          <h2 className="text-[15px] font-headline font-semibold text-[#06101F]">Analysis Ratings</h2>
+          <p className="mt-0.5 text-[12px] text-[#8A95A6]">Profitability · Liquidity · Growth · MOAT · Valuation</p>
         </div>
         <div className={`flex items-center gap-3 rounded-2xl border ${oc.border} ${oc.bg} px-4 py-2.5 min-h-[44px]`}>
           <div>
-            <p className="text-[11px] font-medium text-slate-500">Overall</p>
+            <p className="text-[11px] font-medium text-[#566174]">Overall</p>
             <p className={`text-[13px] font-bold ${oc.text}`}>{ratings.overall.label}</p>
           </div>
           <span className={`text-[32px] font-black ${oc.text}`}>{ratings.overall.grade}</span>

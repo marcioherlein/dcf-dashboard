@@ -16,7 +16,7 @@ interface Props {
 
 // ── Sparkline ──────────────────────────────────────────────────────────────────
 function SparklineSkeleton() {
-  return <div className="h-8 w-full rounded-lg bg-slate-100 motion-safe:animate-pulse" />
+  return <div className="h-8 w-full rounded-lg bg-[#F4F3EF] motion-safe:animate-pulse" />
 }
 
 function Sparkline({ values, positive }: { values: number[]; positive: boolean }) {
@@ -57,11 +57,11 @@ function Sparkline({ values, positive }: { values: number[]; positive: boolean }
 // ── Interpretation chips ─────────────────────────────────────────────────────
 function chip(label: string, tone: 'green' | 'red' | 'amber' | 'blue' | 'gray') {
   const cls = {
-    green: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    red:   'bg-red-50 text-red-700 border-red-200',
-    amber: 'bg-amber-50 text-amber-700 border-amber-200',
-    blue:  'bg-blue-50 text-blue-700 border-blue-200',
-    gray:  'bg-slate-100 text-slate-500 border-slate-200',
+    green: 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]',
+    red:   'bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]',
+    amber: 'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]',
+    blue:  'bg-[#EAF1FF] text-[#2563EB] border-[#93B4F5]',
+    gray:  'bg-[#F4F3EF] text-[#566174] border-[#E3E1DA]',
   }[tone]
   return (
     <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded-full border whitespace-nowrap', cls)}>
@@ -103,14 +103,14 @@ function pct(v: number | null) {
   return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'
 }
 function equityCls(v: number | null) {
-  if (v == null) return 'text-slate-400'
-  return v > 0 ? 'text-emerald-600' : v < 0 ? 'text-red-500' : 'text-slate-500'
+  if (v == null) return 'text-[#8A95A6]'
+  return v > 0 ? 'text-[#11875D]' : v < 0 ? 'text-[#D83B3B]' : 'text-[#566174]'
 }
 function rateCls(v: number | null) {
-  if (v == null) return 'text-slate-400'
-  if (v > 0) return 'text-amber-600'
-  if (v < 0) return 'text-blue-600'
-  return 'text-slate-500'
+  if (v == null) return 'text-[#8A95A6]'
+  if (v > 0) return 'text-[#B56A00]'
+  if (v < 0) return 'text-[#2563EB]'
+  return 'text-[#566174]'
 }
 function fmtPrice(v: number | null, decimals = 2) {
   if (v == null) return '—'
@@ -137,25 +137,25 @@ function IndexCard({ label, value, changePct, sparklineValues, sparkLoading, int
   const changeCls = rateMode ? rateCls(changePct) : equityCls(changePct)
 
   const inner = (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-card px-3 pt-3 pb-3 flex flex-col h-full transition-all hover:shadow-card-md hover:border-slate-300 cursor-pointer">
+    <div className="bg-white rounded-xl border border-[#E3E1DA] shadow-card px-3 pt-3 pb-3 flex flex-col h-full transition-all hover:shadow-card-md hover:border-[#CDD1C8] cursor-pointer">
       {/* Icon + label */}
       <div className="flex items-center gap-2">
         <div className={cn('w-6 h-6 rounded-lg flex items-center justify-center shrink-0', iconBg)}>
           {icon}
         </div>
-        <p className="text-[11px] font-semibold text-slate-600 leading-tight">{label}</p>
+        <p className="text-[11px] font-semibold text-[#566174] leading-tight">{label}</p>
       </div>
       {/* Value */}
-      <p className="text-[20px] font-bold tabular-nums text-slate-900 leading-none mt-2">{value}</p>
+      <p className="text-[20px] font-bold tabular-nums text-[#06101F] leading-none mt-2">{value}</p>
       {/* Change + chip */}
       <div className="flex items-center gap-1.5 mt-1">
         <span className={cn('text-[11px] font-semibold tabular-nums', changeCls)}>
           {pct(changePct)}
         </span>
-        <span className="text-[10px] text-slate-400">Today</span>
+        <span className="text-[10px] text-[#8A95A6]">Today</span>
         <div className="ml-auto">{interpretation}</div>
       </div>
-      {note && <p className="text-[10px] text-slate-400 mt-0.5">{note}</p>}
+      {note && <p className="text-[10px] text-[#8A95A6] mt-0.5">{note}</p>}
       {/* Sparkline — pinned to bottom */}
       <div className="mt-auto pt-2.5 h-9 flex items-end">
         {sparkLoading
@@ -206,8 +206,8 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy }: Prop
       sparklineValues: sparklines?.['^GSPC'] ?? [],
       sparkLoading,
       interpretation: spxChip(spx?.changePct ?? null),
-      icon: <TrendingUp size={14} className="text-blue-600" />,
-      iconBg: 'bg-blue-50',
+      icon: <TrendingUp size={14} className="text-[#2563EB]" />,
+      iconBg: 'bg-[#EAF1FF]',
       href: spx ? `/markets/${encodeURIComponent(spx.symbol)}` : undefined,
     },
     {
@@ -251,8 +251,8 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy }: Prop
       sparklineValues: sparklines?.['^TNX'] ?? [],
       sparkLoading,
       interpretation: tnxChip(tnx?.price ?? null),
-      icon: <Landmark size={14} className="text-amber-600" />,
-      iconBg: 'bg-amber-50',
+      icon: <Landmark size={14} className="text-[#B56A00]" />,
+      iconBg: 'bg-[#FFF4DA]',
       rateMode: true,
       note: 'Discount rate',
     },
@@ -263,8 +263,8 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy }: Prop
       sparklineValues: sparklines?.['DX-Y.NYB'] ?? [],
       sparkLoading,
       interpretation: dxyChip(dxy?.changePct ?? null),
-      icon: <DollarSign size={14} className="text-emerald-600" />,
-      iconBg: 'bg-emerald-50',
+      icon: <DollarSign size={14} className="text-[#11875D]" />,
+      iconBg: 'bg-[#E8F7EF]',
     },
   ]
 

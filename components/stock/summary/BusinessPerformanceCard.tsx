@@ -51,7 +51,7 @@ const NODE_FILL: Record<string, string> = {
   'Gross Profit':        '#059669',
   'Operating Expenses':  '#DC2626',
   'Operating Income':    '#059669',
-  'Tax & Other':         '#94A3B8',
+  'Tax & Other':         '#8A95A6',
   'Net Income':          '#059669',
 }
 
@@ -148,7 +148,7 @@ function RevenueView({ statementsData, currency }: { statementsData: AnyRecord; 
               </div>
               <div className="w-full flex gap-0.5 items-end" style={{ height: 88 }}>
                 <div
-                  className="flex-[2] min-w-0 bg-blue-500 rounded-t-sm transition-all"
+                  className="flex-[2] min-w-0 bg-[#EAF1FF]0 rounded-t-sm transition-all"
                   style={{ height: `${Math.max(2, revH)}%` }}
                   title={`${p.year} Revenue: ${fmtDollars(p.revenue, sym)}`}
                 />
@@ -251,7 +251,7 @@ function IncomeFlowView({ statementsData, currency }: { statementsData: AnyRecor
     const name: string  = payload?.name  ?? ''
     const value: number = payload?.value ?? 0
     if (!name || value <= 0) return null
-    const fill      = NODE_FILL[name] ?? '#64748B'
+    const fill      = NODE_FILL[name] ?? '#566174'
     const isRevenue = name === 'Revenue'
     const isLeaf    = leafSet.has(index as number)
     const fullLabel = !isNarrow || isRevenue || isLeaf
@@ -269,19 +269,19 @@ function IncomeFlowView({ statementsData, currency }: { statementsData: AnyRecor
         <rect x={x} y={y} width={width} height={Math.max(height, 2)} rx={3} ry={3} fill={fill} />
         {showName && (
           <text x={labelX} y={y + height / 2 - (showValue ? 9 : 0)} textAnchor={anchor} dominantBaseline="middle"
-            fontFamily="Inter, system-ui, sans-serif" fontSize={11} fontWeight={600} fill="#334155">
+            fontFamily="Inter, system-ui, sans-serif" fontSize={11} fontWeight={600} fill="#566174">
             {name}
           </text>
         )}
         {showValue && (
           <text x={labelX} y={y + height / 2 + (showPct ? 4 : 5)} textAnchor={anchor} dominantBaseline="middle"
-            fontFamily="DM Mono, IBM Plex Mono, monospace" fontSize={11} fill="#0F172A">
+            fontFamily="DM Mono, IBM Plex Mono, monospace" fontSize={11} fill="#06101F">
             {fmtFlow(value, sym)}
           </text>
         )}
         {showPct && pctLabel && (
           <text x={labelX} y={y + height / 2 + 18} textAnchor={anchor} dominantBaseline="middle"
-            fontFamily="Inter, system-ui, sans-serif" fontSize={10} fill="#64748B">
+            fontFamily="Inter, system-ui, sans-serif" fontSize={10} fill="#566174">
             {pctLabel}
           </text>
         )}
@@ -353,7 +353,7 @@ export default function BusinessPerformanceCard({ statementsData, currency = 'US
         {activeView === 'revenue' && (
           <div className="hidden sm:flex items-center gap-3 shrink-0">
             <span className="flex items-center gap-1.5 text-[10px] text-[#9B9B9B]">
-              <span className="inline-block w-2 h-2 rounded-sm bg-blue-500" />
+              <span className="inline-block w-2 h-2 rounded-sm bg-[#EAF1FF]0" />
               Revenue
             </span>
             <span className="flex items-center gap-1.5 text-[10px] text-[#9B9B9B]">

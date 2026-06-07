@@ -42,28 +42,28 @@ type Signal = 'green' | 'amber' | 'red' | 'slate'
 
 const SIGNAL_STYLES: Record<Signal, { border: string; verdict: string; badge: string; badgeBg: string }> = {
   green: {
-    border: 'border-emerald-200',
-    verdict: 'text-emerald-700',
-    badge: 'text-emerald-700',
-    badgeBg: 'bg-emerald-50 border-emerald-200',
+    border: 'border-[#A3D9BE]',
+    verdict: 'text-[#11875D]',
+    badge: 'text-[#11875D]',
+    badgeBg: 'bg-[#E8F7EF] border-[#A3D9BE]',
   },
   amber: {
-    border: 'border-amber-200',
-    verdict: 'text-amber-700',
-    badge: 'text-amber-700',
-    badgeBg: 'bg-amber-50 border-amber-200',
+    border: 'border-[#F3D391]',
+    verdict: 'text-[#B56A00]',
+    badge: 'text-[#B56A00]',
+    badgeBg: 'bg-[#FFF4DA] border-[#F3D391]',
   },
   red: {
-    border: 'border-red-200',
-    verdict: 'text-red-600',
-    badge: 'text-red-600',
-    badgeBg: 'bg-red-50 border-red-200',
+    border: 'border-[#F0B8B8]',
+    verdict: 'text-[#D83B3B]',
+    badge: 'text-[#D83B3B]',
+    badgeBg: 'bg-[#FCEAEA] border-[#F0B8B8]',
   },
   slate: {
-    border: 'border-slate-200',
-    verdict: 'text-slate-600',
-    badge: 'text-slate-500',
-    badgeBg: 'bg-slate-50 border-slate-200',
+    border: 'border-[#E3E1DA]',
+    verdict: 'text-[#566174]',
+    badge: 'text-[#566174]',
+    badgeBg: 'bg-[#F4F3EF] border-[#E3E1DA]',
   },
 }
 
@@ -79,7 +79,7 @@ function CheckCard({
   const s = SIGNAL_STYLES[signal]
   return (
     <div className={`bg-white rounded-xl border ${s.border} px-4 py-3.5 flex flex-col gap-2.5`}>
-      <p className="text-[10px] text-slate-400 leading-tight">{question}</p>
+      <p className="text-[10px] text-[#8A95A6] leading-tight">{question}</p>
       <div>
         <span className={`inline-flex items-center gap-1 text-[10px] font-[700] px-2 py-0.5 rounded-full border ${s.badge} ${s.badgeBg}`}>
           {badge}
@@ -87,11 +87,11 @@ function CheckCard({
       </div>
       <p className={`text-[12px] font-[650] leading-snug ${s.verdict}`}>{verdict}</p>
       {metrics.length > 0 && (
-        <div className="flex flex-wrap gap-x-4 gap-y-1 pt-0.5 border-t border-slate-100">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 pt-0.5 border-t border-[#E3E1DA]">
           {metrics.map(m => (
             <div key={m.label}>
-              <p className="text-[11px] text-slate-400 leading-none mb-0.5">{m.label}</p>
-              <p className="text-[11px] font-[650] text-slate-700 tabular-nums">{m.value}</p>
+              <p className="text-[11px] text-[#8A95A6] leading-none mb-0.5">{m.label}</p>
+              <p className="text-[11px] font-[650] text-[#06101F] tabular-nums">{m.value}</p>
             </div>
           ))}
         </div>
@@ -103,13 +103,13 @@ function CheckCard({
 // ─── Star rating ──────────────────────────────────────────────────────────────
 
 const STAR_COLOR: Record<number, string> = {
-  5: 'text-emerald-500', 4: 'text-emerald-400',
-  3: 'text-amber-400',   2: 'text-orange-400', 1: 'text-red-500',
+  5: 'text-[#11875D]', 4: 'text-emerald-400',
+  3: 'text-amber-400',   2: 'text-orange-400', 1: 'text-[#D83B3B]',
 }
 
 const UNCERTAINTY_DOT: Record<UncertaintyLevel, string> = {
-  'Low': 'bg-emerald-400', 'Medium': 'bg-amber-400',
-  'High': 'bg-orange-400', 'Very High': 'bg-red-400',
+  'Low': 'bg-[#11875D]', 'Medium': 'bg-[#B56A00]',
+  'High': 'bg-orange-400', 'Very High': 'bg-[#D83B3B]',
 }
 
 function StarRow({ starRating, uncertainty }: { starRating: StarRatingResult | null; uncertainty: UncertaintyLevel | null }) {
@@ -120,18 +120,18 @@ function StarRow({ starRating, uncertainty }: { starRating: StarRatingResult | n
         {Array.from({ length: 5 }, (_, i) => (
           <svg
             key={i}
-            className={`w-3 h-3 ${i < starRating.stars ? STAR_COLOR[starRating.stars] : 'text-slate-200'}`}
+            className={`w-3 h-3 ${i < starRating.stars ? STAR_COLOR[starRating.stars] : 'text-[#CDD1C8]'}`}
             fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"
           >
             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
           </svg>
         ))}
       </div>
-      <span className="text-[11px] font-[650] text-slate-700">{starRating.label}</span>
+      <span className="text-[11px] font-[650] text-[#06101F]">{starRating.label}</span>
       {uncertainty && (
         <div className="flex items-center gap-1">
           <div className={`w-1.5 h-1.5 rounded-full ${UNCERTAINTY_DOT[uncertainty]}`} />
-          <span className="text-[10px] text-slate-500">{uncertainty} uncertainty</span>
+          <span className="text-[10px] text-[#566174]">{uncertainty} uncertainty</span>
         </div>
       )}
     </div>
@@ -366,8 +366,8 @@ export default function BusinessChecks({
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
         <div>
-          <p className="text-[12px] font-[650] text-[#475569]">Independent Checks</p>
-          <p className="text-[11px] text-[#64748B]">Each check asks a different question. Not blended into the fair value.</p>
+          <p className="text-[12px] font-[650] text-[#566174]">Independent Checks</p>
+          <p className="text-[11px] text-[#566174]">Each check asks a different question. Not blended into the fair value.</p>
         </div>
         <StarRow starRating={starRating} uncertainty={uncertainty} />
       </div>
@@ -378,7 +378,7 @@ export default function BusinessChecks({
           {structuralRisk && (
             <a
               href="#model_evidence"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 border border-red-200 text-[10px] font-[700] text-red-600 hover:bg-red-100 transition-colors"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FCEAEA] border border-[#F0B8B8] text-[10px] font-[700] text-[#D83B3B] hover:bg-[#FCEAEA] transition-colors"
               title={structuralRisk}
             >
               <span aria-hidden="true">⚑</span>
@@ -388,7 +388,7 @@ export default function BusinessChecks({
           {countryRisk && (
             <a
               href="#model_evidence"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-[10px] font-[700] text-amber-700 hover:bg-amber-100 transition-colors"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FFF4DA] border border-[#F3D391] text-[10px] font-[700] text-[#B56A00] hover:bg-[#FFF4DA] transition-colors"
               title={countryRisk}
             >
               <span aria-hidden="true">⚠</span>

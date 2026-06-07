@@ -46,17 +46,17 @@ interface Props {
 
 function gradeColors(grade: string): { bg: string; text: string; hex: string } {
   const g = grade.replace('+', '').replace('-', '')
-  if (g === 'A')  return { bg: 'bg-emerald-100 border border-emerald-300', text: 'text-emerald-800', hex: '#059669' }
-  if (g === 'B')  return { bg: 'bg-blue-100 border border-blue-300',       text: 'text-blue-800',   hex: '#2563EB' }
-  if (g === 'C')  return { bg: 'bg-amber-100 border border-amber-300',     text: 'text-amber-800',  hex: '#D97706' }
-  return           { bg: 'bg-red-100 border border-red-300',               text: 'text-red-800',    hex: '#DC2626' }
+  if (g === 'A')  return { bg: 'bg-[#E8F7EF] border border-[#A3D9BE]', text: 'text-[#0D6B46]', hex: '#059669' }
+  if (g === 'B')  return { bg: 'bg-[#EAF1FF] border border-[#93B4F5]',       text: 'text-blue-800',   hex: '#2563EB' }
+  if (g === 'C')  return { bg: 'bg-[#FFF4DA] border border-amber-300',     text: 'text-[#854D0E]',  hex: '#D97706' }
+  return           { bg: 'bg-[#FCEAEA] border border-[#F0B8B8]',               text: 'text-[#991B1B]',    hex: '#DC2626' }
 }
 
 function compactBadgeCls(grade: string): string {
   const g = grade.replace('+', '').replace('-', '')
-  if (g === 'A') return 'bg-emerald-600 text-white'
+  if (g === 'A') return 'bg-[#11875D] text-white'
   if (g === 'B') return 'bg-blue-600 text-white'
-  if (g === 'C') return 'bg-amber-500 text-white'
+  if (g === 'C') return 'bg-[#FFF4DA]0 text-white'
   return 'bg-red-600 text-white'
 }
 
@@ -157,22 +157,22 @@ export default function InvestorGradeCard({
     return (
       <div className="rounded-xl card overflow-hidden">
         <div className="flex items-center gap-3 px-4 py-2.5 flex-wrap">
-          <div className={cn('w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0', compactBadgeCls(grade))}>
+          <div className={cn('w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0', compactBadgeCls(grade))}>
             {grade.replace('+', '').replace('-', '')}
           </div>
-          <span className="font-bold text-sm text-slate-900">{ticker}</span>
-          <span className="text-xs text-slate-500 truncate hidden sm:inline">{companyName}</span>
-          <span className="text-sm font-bold tabular-nums text-slate-900">
+          <span className="font-bold text-sm text-[#06101F]">{ticker}</span>
+          <span className="text-xs text-[#566174] truncate hidden sm:inline">{companyName}</span>
+          <span className="text-sm font-bold tabular-nums text-[#06101F]">
             {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
-          <span className={cn('text-xs font-semibold', up ? 'text-emerald-600' : 'text-red-600')}>
+          <span className={cn('text-xs font-semibold', up ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
             {up ? '+' : ''}{fmtPct(changePct / 100)}
           </span>
           {fairValue != null && upsidePct != null && (
             <>
-              <span className="text-slate-300 hidden sm:inline">|</span>
-              <span className="text-xs text-slate-500 hidden sm:inline">Blended: {currSymbol}{fairValue.toFixed(2)}</span>
-              <span className={cn('text-xs font-bold', upsidePct >= 0 ? 'text-emerald-600' : 'text-red-600')}>
+              <span className="text-[#8A95A6] hidden sm:inline">|</span>
+              <span className="text-xs text-[#566174] hidden sm:inline">Blended: {currSymbol}{fairValue.toFixed(2)}</span>
+              <span className={cn('text-xs font-bold', upsidePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
                 {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
               </span>
               {zone && (
@@ -216,19 +216,19 @@ export default function InvestorGradeCard({
             <div className="flex items-start justify-between gap-2 sm:gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="rounded-md bg-blue-50 border border-blue-200 px-2 py-0.5 text-xs font-bold text-blue-700 tracking-wide">
+                  <span className="rounded-md bg-[#EAF1FF] border border-[#93B4F5] px-2 py-0.5 text-xs font-bold text-[#2563EB] tracking-wide">
                     {ticker}
                   </span>
-                  {sector && <span className="text-[11px] text-slate-500 truncate">{sector}</span>}
+                  {sector && <span className="text-[11px] text-[#566174] truncate">{sector}</span>}
                 </div>
-                <h1 className="mt-1.5 text-[16px] sm:text-lg font-bold text-slate-900 leading-tight truncate max-w-[160px] sm:max-w-none">{companyName}</h1>
-                <p className="mt-0.5 text-[12px] text-slate-500">{gradeLabel} overall</p>
+                <h1 className="mt-1.5 text-[16px] sm:text-lg font-bold text-[#06101F] leading-tight truncate max-w-[160px] sm:max-w-none">{companyName}</h1>
+                <p className="mt-0.5 text-[12px] text-[#566174]">{gradeLabel} overall</p>
               </div>
               <div className="text-right shrink-0">
-                <div className="text-[20px] sm:text-2xl font-extrabold text-slate-900 tabular-nums leading-none">
+                <div className="text-[20px] sm:text-2xl font-bold text-[#06101F] tabular-nums leading-none">
                   {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
-                <div className={cn('mt-1 flex items-center justify-end gap-1 text-sm font-semibold', up ? 'text-emerald-600' : 'text-red-600')}>
+                <div className={cn('mt-1 flex items-center justify-end gap-1 text-sm font-semibold', up ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
                   {up ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
                   <span>{up ? '+' : ''}{change.toFixed(2)}</span>
                   <span className="text-xs opacity-75">({up ? '+' : ''}{fmtPct(changePct / 100)})</span>
@@ -247,15 +247,15 @@ export default function InvestorGradeCard({
                   className={cn(
                     'mt-3 text-[12px] leading-relaxed rounded-lg px-3 py-2',
                     zone === 'Undervalued'
-                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      ? 'bg-[#E8F7EF] text-[#11875D] border border-[#A3D9BE]'
                       : zone === 'Fairly Valued'
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                        : 'bg-red-50 text-red-700 border border-red-200',
+                        ? 'bg-[#EAF1FF] text-[#2563EB] border border-[#93B4F5]'
+                        : 'bg-[#FCEAEA] text-[#D83B3B] border border-[#F0B8B8]',
                   )}
                 >
                   {verdict}
                 </p>
-                <p className="mt-1.5 text-[11px] text-slate-400 px-1">
+                <p className="mt-1.5 text-[11px] text-[#8A95A6] px-1">
                   Preliminary estimate — adjust assumptions in the Valuation tab.
                 </p>
               </motion.div>
@@ -265,13 +265,13 @@ export default function InvestorGradeCard({
       </div>
 
       {/* Fair value visual + actions */}
-      <div className="border-t border-slate-200 px-4 sm:px-5 pb-4 sm:pb-5 pt-4 space-y-4 bg-slate-50">
+      <div className="border-t border-[#E3E1DA] px-4 sm:px-5 pb-4 sm:pb-5 pt-4 space-y-4 bg-[#F4F3EF]">
 
         {/* Alert triggered banner */}
         {alertTriggered && fairValue != null && (
-          <div className="flex items-center gap-2 rounded-xl bg-blue-50 border border-blue-200 px-3 py-2">
-            <Bell size={13} className="text-blue-600 shrink-0" />
-            <p className="text-[11px] text-blue-700 font-medium">
+          <div className="flex items-center gap-2 rounded-xl bg-[#EAF1FF] border border-[#93B4F5] px-3 py-2">
+            <Bell size={13} className="text-[#2563EB] shrink-0" />
+            <p className="text-[11px] text-[#2563EB] font-medium">
               {ticker} is now within 10% of your fair value alert ({fmtPrice(fairValue, currency)})
             </p>
           </div>
@@ -283,8 +283,8 @@ export default function InvestorGradeCard({
             {/* Price vs Fair Value numbers */}
             <div className="flex items-end justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-[11px] font-medium text-slate-500 mb-1">Current Price</p>
-                <p className="text-2xl font-bold text-slate-900 tabular-nums leading-none">
+                <p className="text-[11px] font-medium text-[#566174] mb-1">Current Price</p>
+                <p className="text-2xl font-bold text-[#06101F] tabular-nums leading-none">
                   {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
@@ -295,30 +295,30 @@ export default function InvestorGradeCard({
                   <span className={cn('text-sm font-bold tabular-nums px-3 py-1 rounded-full border whitespace-nowrap', zoneBadgeClass(zone))}>
                     {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
                   </span>
-                  <span className="text-[10px] text-slate-400">{zone}</span>
+                  <span className="text-[10px] text-[#8A95A6]">{zone}</span>
                 </div>
               )}
 
               <div className="text-right min-w-0">
                 <div className="flex items-center justify-end gap-1.5 mb-1">
-                  <p className="text-[11px] font-medium text-slate-500">Fair Value Est.</p>
+                  <p className="text-[11px] font-medium text-[#566174]">Fair Value Est.</p>
                   <button
                     onClick={toggleAlert}
                     title={alertActive ? 'Remove fair value alert' : 'Alert me when price nears fair value'}
                     className={cn(
                       'rounded-md border p-1 transition-colors shrink-0',
                       alertActive
-                        ? 'bg-blue-50 border-blue-300 text-blue-600'
-                        : 'bg-white border-slate-200 text-slate-300 hover:border-blue-300 hover:text-blue-600',
+                        ? 'bg-[#EAF1FF] border-[#93B4F5] text-[#2563EB]'
+                        : 'bg-white border-[#E3E1DA] text-[#8A95A6] hover:border-[#93B4F5] hover:text-[#2563EB]',
                     )}
                   >
                     {alertActive ? <BellOff size={13} /> : <Bell size={13} />}
                   </button>
                 </div>
-                <p className={cn('text-2xl font-bold tabular-nums leading-none', isUndervalued ? 'text-emerald-600' : 'text-red-600')}>
+                <p className={cn('text-2xl font-bold tabular-nums leading-none', isUndervalued ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
                   {currSymbol}{displayFV.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
-                <p className="text-[11px] text-slate-500 mt-1">Blended from multiple models</p>
+                <p className="text-[11px] text-[#566174] mt-1">Blended from multiple models</p>
               </div>
             </div>
 
@@ -326,35 +326,35 @@ export default function InvestorGradeCard({
             {scenarios && (
               <div className="flex items-center justify-between gap-2 px-1">
                 <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-[11px] text-slate-400 uppercase tracking-wide font-medium">Bear</span>
-                  <span className="text-[12px] font-bold text-red-500 tabular-nums">{currSymbol}{scenarios.bear.fairValue.toFixed(2)}</span>
+                  <span className="text-[11px] text-[#8A95A6] uppercase tracking-wide font-medium">Bear</span>
+                  <span className="text-[12px] font-bold text-[#D83B3B] tabular-nums">{currSymbol}{scenarios.bear.fairValue.toFixed(2)}</span>
                 </div>
                 <div className="flex-1 h-px bg-gradient-to-r from-red-200 via-slate-200 to-emerald-200" />
                 <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-[11px] text-slate-400 uppercase tracking-wide font-medium">Base</span>
-                  <span className="text-[12px] font-bold text-blue-600 tabular-nums">{currSymbol}{scenarios.base.fairValue.toFixed(2)}</span>
+                  <span className="text-[11px] text-[#8A95A6] uppercase tracking-wide font-medium">Base</span>
+                  <span className="text-[12px] font-bold text-[#2563EB] tabular-nums">{currSymbol}{scenarios.base.fairValue.toFixed(2)}</span>
                 </div>
                 <div className="flex-1 h-px bg-gradient-to-r from-slate-200 via-emerald-200 to-emerald-200" />
                 <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-[11px] text-slate-400 uppercase tracking-wide font-medium">Bull</span>
-                  <span className="text-[12px] font-bold text-emerald-600 tabular-nums">{currSymbol}{scenarios.bull.fairValue.toFixed(2)}</span>
+                  <span className="text-[11px] text-[#8A95A6] uppercase tracking-wide font-medium">Bull</span>
+                  <span className="text-[12px] font-bold text-[#11875D] tabular-nums">{currSymbol}{scenarios.bull.fairValue.toFixed(2)}</span>
                 </div>
               </div>
             )}
 
             {/* Progress bar: how far current price is toward fair value */}
             <div>
-              <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
+              <div className="h-2 rounded-full bg-[#E3E1DA] overflow-hidden">
                 <motion.div
-                  className={cn('h-full rounded-full', isUndervalued ? 'bg-emerald-500' : 'bg-red-500')}
+                  className={cn('h-full rounded-full', isUndervalued ? 'bg-[#E8F7EF]0' : 'bg-[#FCEAEA]0')}
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min(100, Math.max(4, (price / Math.max(price, fairValue)) * 100))}%` }}
                   transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
                 />
               </div>
               <div className="flex justify-between mt-1">
-                <span className="text-[11px] text-slate-400">Today</span>
-                <span className={cn('text-[11px] font-medium', isUndervalued ? 'text-emerald-600' : 'text-red-600')}>
+                <span className="text-[11px] text-[#8A95A6]">Today</span>
+                <span className={cn('text-[11px] font-medium', isUndervalued ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
                   Fair Value
                 </span>
               </div>
@@ -376,7 +376,7 @@ export default function InvestorGradeCard({
             <button
               onClick={onSave}
               title="Save to Watchlist"
-              className="rounded-xl border border-slate-200 p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+              className="rounded-xl border border-[#E3E1DA] p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-[#8A95A6] hover:border-[#5F790B] hover:text-[#2563EB] hover:bg-[#EAF1FF] transition-colors"
             >
               <Bookmark size={16} />
             </button>
@@ -384,9 +384,9 @@ export default function InvestorGradeCard({
           <button
             onClick={handleShare}
             title="Copy share link"
-            className="rounded-xl border border-slate-200 p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+            className="rounded-xl border border-[#E3E1DA] p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-[#8A95A6] hover:border-[#5F790B] hover:text-[#2563EB] hover:bg-[#EAF1FF] transition-colors"
           >
-            {copied ? <Check size={16} className="text-emerald-600" /> : <Share2 size={16} />}
+            {copied ? <Check size={16} className="text-[#11875D]" /> : <Share2 size={16} />}
           </button>
         </div>
       </div>

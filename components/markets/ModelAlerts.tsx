@@ -7,13 +7,13 @@ interface Props {
 }
 
 function alertBorderClass(severity: ModelAlert['severity']): string {
-  return severity === 'high' ? 'border-red-200 bg-red-50' : 'border-amber-200 bg-amber-50'
+  return severity === 'high' ? 'border-[#E3E1DA] bg-[#FCEAEA]' : 'border-[#E3E1DA] bg-[#FFF4DA]'
 }
 
 function alertBadgeClass(alertType: ModelAlert['alertType']): string {
-  if (alertType === 'ALERT_GORDON_VIOLATION') return 'bg-red-100 text-red-700'
-  if (alertType === 'ALERT_WACC_LOW')         return 'bg-red-100 text-red-700'
-  return 'bg-amber-100 text-amber-700'
+  if (alertType === 'ALERT_GORDON_VIOLATION') return 'bg-[#FCEAEA] text-[#D83B3B]'
+  if (alertType === 'ALERT_WACC_LOW')         return 'bg-[#FCEAEA] text-[#D83B3B]'
+  return 'bg-[#FFF4DA] text-[#B56A00]'
 }
 
 function alertTypeLabel(alertType: ModelAlert['alertType']): string {
@@ -26,29 +26,29 @@ export default function ModelAlerts({ alerts }: Props) {
   if (alerts.length === 0) {
     return (
       <div className="rounded-xl glass-card-light px-4 py-3 flex items-center gap-2">
-        <span className="text-emerald-700 text-sm font-medium">All saved models look healthy given current macro regime.</span>
+        <span className="text-[#11875D] text-sm font-medium">All saved models look healthy given current macro regime.</span>
       </div>
     )
   }
 
   return (
     <div className="rounded-xl glass-card-light overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-slate-200">
-        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Model Fragility Alerts</span>
-        <p className="text-[10px] text-slate-400 mt-0.5">{alerts.length} saved {alerts.length === 1 ? 'valuation' : 'valuations'} may be stale given today&apos;s rates</p>
+      <div className="px-4 py-2.5 border-b border-[#E3E1DA]">
+        <span className="text-[11px] font-bold text-[#566174] uppercase tracking-wider">Model Fragility Alerts</span>
+        <p className="text-[10px] text-[#8A95A6] mt-0.5">{alerts.length} saved {alerts.length === 1 ? 'valuation' : 'valuations'} may be stale given today&apos;s rates</p>
       </div>
-      <div className="divide-y divide-slate-100">
+      <div className="divide-y divide-[#E3E1DA]">
         {alerts.map((a, i) => (
-          <div key={i} className={cn('flex items-start gap-3 px-4 py-3 rounded-lg mx-2 my-1', a.severity === 'high' ? 'bg-red-50/60' : 'bg-amber-50/60', alertBorderClass(a.severity))}>
+          <div key={i} className={cn('flex items-start gap-3 px-4 py-3 rounded-lg mx-2 my-1', a.severity === 'high' ? 'bg-[#FCEAEA]/60' : 'bg-[#FFF4DA]/60', alertBorderClass(a.severity))}>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-bold font-mono text-slate-700 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">{a.ticker}</span>
+                <span className="text-xs font-bold font-mono text-[#06101F] bg-[#E3E1DA] border border-[#E3E1DA] px-1.5 py-0.5 rounded">{a.ticker}</span>
                 <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider', alertBadgeClass(a.alertType))}>
                   {alertTypeLabel(a.alertType)}
                 </span>
-                <span className="text-xs text-slate-500 truncate">{a.company}</span>
+                <span className="text-xs text-[#566174] truncate">{a.company}</span>
               </div>
-              <p className="text-xs text-slate-700 mt-1 leading-relaxed">{a.message}</p>
+              <p className="text-xs text-[#06101F] mt-1 leading-relaxed">{a.message}</p>
             </div>
           </div>
         ))}

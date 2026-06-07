@@ -76,7 +76,7 @@ interface Props {
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">{children}</p>
+  return <p className="text-[10px] font-bold uppercase tracking-wider text-[#8A95A6] mb-2">{children}</p>
 }
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -88,20 +88,20 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
 }
 
 function upsideColor(pct: number): string {
-  if (pct >=  0.15) return 'text-emerald-600'
-  if (pct >=  0.00) return 'text-emerald-500'
-  if (pct >= -0.15) return 'text-amber-600'
-  return 'text-red-600'
+  if (pct >=  0.15) return 'text-[#11875D]'
+  if (pct >=  0.00) return 'text-[#11875D]'
+  if (pct >= -0.15) return 'text-[#B56A00]'
+  return 'text-[#D83B3B]'
 }
 
 type Verdict = 'good' | 'watch' | 'risk' | 'neutral'
 
 function DecisionLabel({ verdict, text }: { verdict: Verdict; text: string }) {
   const cls =
-    verdict === 'good'  ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-    verdict === 'watch' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-    verdict === 'risk'  ? 'bg-red-50 text-red-700 border-red-200' :
-                          'bg-slate-50 text-slate-600 border-slate-200'
+    verdict === 'good'  ? 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]' :
+    verdict === 'watch' ? 'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]' :
+    verdict === 'risk'  ? 'bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]' :
+                          'bg-[#F4F3EF] text-[#566174] border-[#E3E1DA]'
   return (
     <span className={cn('inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border', cls)}>
       {text}
@@ -112,8 +112,8 @@ function DecisionLabel({ verdict, text }: { verdict: Verdict; text: string }) {
 function DefinitionRow({ term, definition }: { term: string; definition: string }) {
   return (
     <div className="flex gap-2">
-      <span className="text-[10px] font-semibold text-slate-700 shrink-0 w-24 leading-snug">{term}</span>
-      <span className="text-[10px] text-slate-500 leading-snug">{definition}</span>
+      <span className="text-[10px] font-semibold text-[#06101F] shrink-0 w-24 leading-snug">{term}</span>
+      <span className="text-[10px] text-[#566174] leading-snug">{definition}</span>
     </div>
   )
 }
@@ -145,7 +145,7 @@ function TrendBars({ points, unit }: { points: TrendPoint[]; unit: 'percent' | '
           <div key={p.year} className="flex flex-col items-center gap-1 flex-1 min-w-0">
             <span className={cn(
               'text-[10px] tabular-nums leading-none truncate w-full text-center',
-              isLast ? 'font-semibold text-slate-800' : 'text-slate-400',
+              isLast ? 'font-semibold text-[#06101F]' : 'text-[#8A95A6]',
             )}>
               {fmt(p.value!)}
             </span>
@@ -153,12 +153,12 @@ function TrendBars({ points, unit }: { points: TrendPoint[]; unit: 'percent' | '
               className={cn(
                 'w-full rounded-sm',
                 isPos
-                  ? isLast ? 'bg-blue-500 opacity-80' : 'bg-blue-400 opacity-50'
-                  : isLast ? 'bg-red-400 opacity-80' : 'bg-red-300 opacity-50',
+                  ? isLast ? 'bg-[#EAF1FF]0 opacity-80' : 'bg-blue-400 opacity-50'
+                  : isLast ? 'bg-[#D83B3B] opacity-80' : 'bg-[#F0B8B8] opacity-50',
               )}
               style={{ height: `${barPx}px` }}
             />
-            <span className="text-[10px] text-slate-400 leading-none">{p.year.slice(-2)}</span>
+            <span className="text-[10px] text-[#8A95A6] leading-none">{p.year.slice(-2)}</span>
           </div>
         )
       })}
@@ -170,18 +170,18 @@ function TrendBars({ points, unit }: { points: TrendPoint[]; unit: 'percent' | '
 interface ColDef { label: string; value: string | null; highlight?: Verdict }
 
 function colValColor(h?: Verdict): string {
-  if (h === 'good')  return 'text-emerald-700'
-  if (h === 'watch') return 'text-amber-700'
-  if (h === 'risk')  return 'text-red-700'
-  return 'text-slate-900'
+  if (h === 'good')  return 'text-[#11875D]'
+  if (h === 'watch') return 'text-[#B56A00]'
+  if (h === 'risk')  return 'text-[#D83B3B]'
+  return 'text-[#06101F]'
 }
 
 function ThreeCol({ a, b, c }: { a: ColDef; b: ColDef; c: ColDef }) {
   return (
-    <div className="grid grid-cols-3 divide-x divide-slate-100 -mx-5 px-5">
+    <div className="grid grid-cols-3 divide-x divide-[#E3E1DA] -mx-5 px-5">
       {[a, b, c].map(col => (
         <div key={col.label} className="flex flex-col items-center px-1 py-2 gap-0.5">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center leading-tight">{col.label}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#8A95A6] text-center leading-tight">{col.label}</p>
           <p className={cn('text-base font-bold tabular-nums', colValColor(col.highlight))}>
             {col.value ?? '—'}
           </p>
@@ -193,10 +193,10 @@ function ThreeCol({ a, b, c }: { a: ColDef; b: ColDef; c: ColDef }) {
 
 function TwoCol({ a, b }: { a: ColDef; b: ColDef }) {
   return (
-    <div className="grid grid-cols-2 divide-x divide-slate-100 -mx-5 px-5">
+    <div className="grid grid-cols-2 divide-x divide-[#E3E1DA] -mx-5 px-5">
       {[a, b].map(col => (
         <div key={col.label} className="flex flex-col items-center px-1 py-2 gap-0.5">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center leading-tight">{col.label}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#8A95A6] text-center leading-tight">{col.label}</p>
           <p className={cn('text-base font-bold tabular-nums', colValColor(col.highlight))}>
             {col.value ?? '—'}
           </p>
@@ -266,7 +266,7 @@ function DefaultView({
         <Card>
           <SectionLabel>Blended Fair Value</SectionLabel>
           <div className="flex items-end justify-between">
-            <span className="text-2xl font-bold text-slate-900 tabular-nums">
+            <span className="text-2xl font-bold text-[#06101F] tabular-nums">
               {sym}{blended.toFixed(2)}
             </span>
             {blendedUpside != null && (
@@ -275,9 +275,9 @@ function DefaultView({
               </span>
             )}
           </div>
-          <p className="text-[10px] text-slate-400 mt-0.5">vs current {sym}{currentPrice.toFixed(2)}</p>
+          <p className="text-[10px] text-[#8A95A6] mt-0.5">vs current {sym}{currentPrice.toFixed(2)}</p>
           {valuationMethods?.rationale && (
-            <p className="text-[10px] text-slate-500 mt-1.5 leading-tight">{valuationMethods.rationale}</p>
+            <p className="text-[10px] text-[#566174] mt-1.5 leading-tight">{valuationMethods.rationale}</p>
           )}
         </Card>
       )}
@@ -296,12 +296,12 @@ function DefaultView({
               />
             )}
           </div>
-          <div className="flex justify-between text-[10px] text-slate-400 tabular-nums">
+          <div className="flex justify-between text-[10px] text-[#8A95A6] tabular-nums">
             <span>{sym}{minFV.toFixed(0)}</span>
-            <span className="text-slate-500 font-medium">{sym}{currentPrice.toFixed(0)} now</span>
+            <span className="text-[#566174] font-medium">{sym}{currentPrice.toFixed(0)} now</span>
             <span>{sym}{maxFV.toFixed(0)}</span>
           </div>
-          <p className="text-[10px] text-slate-400 mt-1.5">Range across valuation methods</p>
+          <p className="text-[10px] text-[#8A95A6] mt-1.5">Range across valuation methods</p>
         </Card>
       )}
 
@@ -318,9 +318,9 @@ function DefaultView({
               <div key={w.label} className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <div className={cn('w-2 h-2 rounded-full', w.color)} />
-                  <span className="text-[11px] text-slate-500">{w.label}</span>
+                  <span className="text-[11px] text-[#566174]">{w.label}</span>
                 </div>
-                <span className="text-[11px] font-semibold text-slate-900 tabular-nums">{w.pct}%</span>
+                <span className="text-[11px] font-semibold text-[#06101F] tabular-nums">{w.pct}%</span>
               </div>
             ))}
           </div>
@@ -332,9 +332,9 @@ function DefaultView({
           <SectionLabel>Scenario Range</SectionLabel>
           <div className="flex gap-1.5">
             {[
-              { label: 'Bear', fv: scenarios.bear.fairValue, cls: 'bg-red-50 border-red-200 text-red-700' },
-              { label: 'Base', fv: scenarios.base.fairValue, cls: 'bg-blue-50 border-blue-200 text-blue-700' },
-              { label: 'Bull', fv: scenarios.bull.fairValue, cls: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+              { label: 'Bear', fv: scenarios.bear.fairValue, cls: 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]' },
+              { label: 'Base', fv: scenarios.base.fairValue, cls: 'bg-[#EAF1FF] border-[#93B4F5] text-[#2563EB]' },
+              { label: 'Bull', fv: scenarios.bull.fairValue, cls: 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' },
             ].map(({ label, fv, cls }) => (
               <div key={label} className={cn('flex-1 rounded-lg border px-2 py-2 text-center', cls)}>
                 <p className="text-[10px] font-bold uppercase tracking-wider opacity-70">{label}</p>
@@ -356,8 +356,8 @@ function DefaultView({
             'Open Full DCF for a deeper cash-flow dive',
           ].map((tip, i) => (
             <div key={i} className="flex gap-2">
-              <span className="text-[10px] text-blue-500 shrink-0 mt-0.5">→</span>
-              <p className="text-[10px] text-slate-600 leading-snug">{tip}</p>
+              <span className="text-[10px] text-[#2563EB] shrink-0 mt-0.5">→</span>
+              <p className="text-[10px] text-[#566174] leading-snug">{tip}</p>
             </div>
           ))}
         </div>
@@ -416,7 +416,7 @@ function ForwardPEContext({
         <Card>
           <SectionLabel>Net Margin Trend (Historical)</SectionLabel>
           <TrendBars points={netMarginPoints} unit="percent" />
-          <p className="text-[10px] text-slate-400 mt-2">Model target shown in accordion above</p>
+          <p className="text-[10px] text-[#8A95A6] mt-2">Model target shown in accordion above</p>
         </Card>
       )}
 
@@ -496,9 +496,9 @@ function EVEBITDAContext({
   return (
     <>
       {isFinancial && (
-        <Card className="border-amber-200 bg-amber-50">
-          <p className="text-[11px] font-semibold text-amber-800 mb-1">Sector Warning</p>
-          <p className="text-[10px] text-amber-700 leading-snug">
+        <Card className="border-[#F3D391] bg-[#FFF4DA]">
+          <p className="text-[11px] font-semibold text-[#854D0E] mb-1">Sector Warning</p>
+          <p className="text-[10px] text-[#B56A00] leading-snug">
             EV/EBITDA is less reliable for financial companies — debt is an operating input, not leverage. Consider P/E or P/Book instead.
           </p>
         </Card>
@@ -516,9 +516,9 @@ function EVEBITDAContext({
           c={{ label: 'Premium / Disc', value: premium != null ? (premium >= 0 ? '+' : '') + (premium * 100).toFixed(0) + '%' : null, highlight: premium != null ? (premium > 0.3 ? 'watch' : premium < -0.3 ? 'good' : 'neutral') : 'neutral' }}
         />
         {companyActual != null && (
-          <p className="text-[10px] text-slate-500 leading-snug mt-2.5">{premiumText()}</p>
+          <p className="text-[10px] text-[#566174] leading-snug mt-2.5">{premiumText()}</p>
         )}
-        <p className="text-[10px] text-slate-400 mt-2 leading-snug">
+        <p className="text-[10px] text-[#8A95A6] mt-2 leading-snug">
           <span className="font-medium">Benchmark: </span>{sourceLabel}
         </p>
       </Card>
@@ -528,7 +528,7 @@ function EVEBITDAContext({
         <Card>
           <SectionLabel>EBITDA Growth (Historical)</SectionLabel>
           <TrendBars points={ebitdaPoints} unit="currency_millions" />
-          <p className="text-[10px] text-slate-400 mt-1.5 leading-snug">
+          <p className="text-[10px] text-[#8A95A6] mt-1.5 leading-snug">
             Rising EBITDA can justify a higher multiple — flat or falling makes the premium harder to defend.
           </p>
         </Card>
@@ -539,8 +539,8 @@ function EVEBITDAContext({
         <Card>
           <SectionLabel>Net Debt Impact</SectionLabel>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] text-slate-600">Net Debt</span>
-            <span className={cn('text-sm font-semibold tabular-nums', netDebt > 0 ? 'text-red-600' : 'text-emerald-600')}>
+            <span className="text-[11px] text-[#566174]">Net Debt</span>
+            <span className={cn('text-sm font-semibold tabular-nums', netDebt > 0 ? 'text-[#D83B3B]' : 'text-[#11875D]')}>
               {netDebt <= 0 ? '(net cash) ' : ''}{fmtLargeCurrency(Math.abs(netDebt) * 1e6)}
             </span>
           </div>
@@ -630,9 +630,9 @@ function RevMultipleContext({
       </Card>
 
       {isUnprofitable && (
-        <Card className="border-amber-200 bg-amber-50">
-          <p className="text-[11px] font-semibold text-amber-800 mb-1">Profitability Warning</p>
-          <p className="text-[10px] text-amber-700 leading-snug">
+        <Card className="border-[#F3D391] bg-[#FFF4DA]">
+          <p className="text-[11px] font-semibold text-[#854D0E] mb-1">Profitability Warning</p>
+          <p className="text-[10px] text-[#B56A00] leading-snug">
             Revenue multiples for unprofitable companies are speculative — there&apos;s no earnings anchor. Treat this as a ceiling estimate.
           </p>
         </Card>
@@ -673,7 +673,7 @@ function ReverseDCFContext({
         <div className="mt-2">
           <DecisionLabel verdict={contextVerdict} text={contextLabel} />
         </div>
-        <p className="text-[10px] text-slate-400 mt-2">
+        <p className="text-[10px] text-[#8A95A6] mt-2">
           Market-implied CAGR shown in the accordion above
         </p>
       </Card>
@@ -692,12 +692,12 @@ function ReverseDCFContext({
         <SectionLabel>Assumptions Used</SectionLabel>
         <div className="flex gap-6">
           <div>
-            <p className="text-[10px] text-slate-500">WACC</p>
-            <p className="text-sm font-semibold tabular-nums text-slate-900">{(wacc.wacc * 100).toFixed(1)}%</p>
+            <p className="text-[10px] text-[#566174]">WACC</p>
+            <p className="text-sm font-semibold tabular-nums text-[#06101F]">{(wacc.wacc * 100).toFixed(1)}%</p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500">Terminal G</p>
-            <p className="text-sm font-semibold tabular-nums text-slate-900">{((terminalG ?? 0.025) * 100).toFixed(1)}%</p>
+            <p className="text-[10px] text-[#566174]">Terminal G</p>
+            <p className="text-sm font-semibold tabular-nums text-[#06101F]">{((terminalG ?? 0.025) * 100).toFixed(1)}%</p>
           </div>
         </div>
       </Card>
@@ -733,11 +733,11 @@ function FullDCFContext({
             { label: 'Risk-Free Rate', value: (wacc.inputs.rfRate * 100).toFixed(2) + '%', tip: 'The yield on long-term government bonds — the baseline "safe" return everything else is measured against.' },
           ].map(({ label, value, tip }) => (
             <div key={label} className="flex items-center justify-between">
-              <span className="text-[11px] text-slate-500 flex items-center gap-1">
+              <span className="text-[11px] text-[#566174] flex items-center gap-1">
                 {label}
                 <InfoTooltip text={tip} side="left" />
               </span>
-              <span className="text-[11px] font-semibold text-slate-900 tabular-nums">{value}</span>
+              <span className="text-[11px] font-semibold text-[#06101F] tabular-nums">{value}</span>
             </div>
           ))}
         </div>
@@ -753,21 +753,21 @@ function FullDCFContext({
       <Card>
         <SectionLabel>Growth Inputs</SectionLabel>
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[11px] text-slate-600">Revenue CAGR (5Y)</span>
-          <span className="text-[11px] font-semibold tabular-nums text-slate-900">
+          <span className="text-[11px] text-[#566174]">Revenue CAGR (5Y)</span>
+          <span className="text-[11px] font-semibold tabular-nums text-[#06101F]">
             {cagr != null ? (cagr * 100).toFixed(1) + '%' : '—'}
           </span>
         </div>
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[11px] text-slate-600">Terminal Growth</span>
-          <span className="text-[11px] font-semibold tabular-nums text-slate-900">{(tG * 100).toFixed(1)}%</span>
+          <span className="text-[11px] text-[#566174]">Terminal Growth</span>
+          <span className="text-[11px] font-semibold tabular-nums text-[#06101F]">{(tG * 100).toFixed(1)}%</span>
         </div>
         <DecisionLabel verdict={termVerdict} text={termLabel} />
       </Card>
 
       <Card>
         <SectionLabel>Sensitivity Note</SectionLabel>
-        <p className="text-[10px] text-slate-500 leading-snug">
+        <p className="text-[10px] text-[#566174] leading-snug">
           DCF fair values are highly sensitive to WACC and terminal growth. A 1% change in WACC typically moves fair value ±15–20%. Use the scenario range as a sanity check.
         </p>
       </Card>

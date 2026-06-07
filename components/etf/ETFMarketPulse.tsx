@@ -16,7 +16,7 @@ export function ETFMarketPulse({ data, loading }: Props) {
     return (
       <div className="flex gap-3 flex-wrap">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-[68px] w-48 rounded-xl border border-slate-200 bg-slate-100 motion-safe:animate-pulse" />
+          <div key={i} className="h-[68px] w-48 rounded-xl border border-[#E3E1DA] bg-[#F4F3EF] motion-safe:animate-pulse" />
         ))}
       </div>
     )
@@ -26,7 +26,7 @@ export function ETFMarketPulse({ data, loading }: Props) {
   if (entries.length === 0) return null
 
   const spyPE = data['SPY']?.peRatio ?? null
-  const spyPEColor = spyPE == null ? '' : spyPE <= 16 ? 'text-emerald-600' : spyPE <= 22 ? 'text-amber-600' : 'text-red-600'
+  const spyPEColor = spyPE == null ? '' : spyPE <= 16 ? 'text-[#11875D]' : spyPE <= 22 ? 'text-[#B56A00]' : 'text-[#D83B3B]'
   const spyPELabel = spyPE == null ? '' : spyPE <= 16 ? 'Cheap' : spyPE <= 22 ? 'Fair' : 'Stretched'
 
   const cheapestSector = SECTOR_META
@@ -55,7 +55,7 @@ export function ETFMarketPulse({ data, loading }: Props) {
 
       {cheapestSector && (
         <Chip label="Best value sector">
-          <span className="font-mono text-[17px] font-bold text-slate-900">{cheapestSector.meta.ticker}</span>
+          <span className="font-mono text-[17px] font-bold text-[#06101F]">{cheapestSector.meta.ticker}</span>
           <span className={cn('text-[11px] font-semibold', scoreColor(cheapestSector.score ?? 0))}>
             {cheapestSector.score} · {scoreLabel(cheapestSector.score ?? 0)}
           </span>
@@ -64,14 +64,14 @@ export function ETFMarketPulse({ data, loading }: Props) {
 
       {topYield && (
         <Chip label="Highest yield">
-          <span className="font-mono text-[17px] font-bold text-slate-900">{topYield.meta.ticker}</span>
-          <span className="text-[11px] font-semibold text-emerald-600">{fmtPctAbs(topYield.yld ?? 0)}</span>
+          <span className="font-mono text-[17px] font-bold text-[#06101F]">{topYield.meta.ticker}</span>
+          <span className="text-[11px] font-semibold text-[#11875D]">{fmtPctAbs(topYield.yld ?? 0)}</span>
         </Chip>
       )}
 
       {bestValue && (
         <Chip label="Best value pick">
-          <span className="font-mono text-[17px] font-bold text-slate-900">{bestValue.meta.ticker}</span>
+          <span className="font-mono text-[17px] font-bold text-[#06101F]">{bestValue.meta.ticker}</span>
           <span className={cn('text-[11px] font-semibold', scoreColor(bestValue.score ?? 0))}>
             {bestValue.score} · {scoreLabel(bestValue.score ?? 0)}
           </span>
@@ -84,7 +84,7 @@ export function ETFMarketPulse({ data, loading }: Props) {
 function Chip({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="glass-card-light rounded-xl px-4 py-3 flex flex-col gap-1 min-w-[152px]">
-      <span className="text-[11px] font-semibold text-slate-500">{label}</span>
+      <span className="text-[11px] font-semibold text-[#566174]">{label}</span>
       <div className="flex items-baseline gap-1.5">{children}</div>
     </div>
   )

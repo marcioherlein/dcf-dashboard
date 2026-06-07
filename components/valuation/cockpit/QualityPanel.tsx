@@ -19,18 +19,18 @@ interface Props {
 }
 
 const UNCERTAINTY_STYLE: Record<UncertaintyLevel, { label: string; dot: string; text: string }> = {
-  'Low':       { label: 'Low uncertainty',       dot: 'bg-emerald-400', text: 'text-emerald-700' },
-  'Medium':    { label: 'Medium uncertainty',     dot: 'bg-amber-400',   text: 'text-amber-700'   },
+  'Low':       { label: 'Low uncertainty',       dot: 'bg-[#11875D]', text: 'text-[#11875D]' },
+  'Medium':    { label: 'Medium uncertainty',     dot: 'bg-[#B56A00]',   text: 'text-[#B56A00]'   },
   'High':      { label: 'High uncertainty',       dot: 'bg-orange-400',  text: 'text-orange-700'  },
-  'Very High': { label: 'Very high uncertainty',  dot: 'bg-red-400',     text: 'text-red-600'     },
+  'Very High': { label: 'Very high uncertainty',  dot: 'bg-[#D83B3B]',     text: 'text-[#D83B3B]'     },
 }
 
 const STAR_COLOR: Record<number, string> = {
-  5: 'text-emerald-500',
+  5: 'text-[#11875D]',
   4: 'text-emerald-400',
   3: 'text-amber-400',
   2: 'text-orange-400',
-  1: 'text-red-500',
+  1: 'text-[#D83B3B]',
 }
 
 function Stars({ count }: { count: number }) {
@@ -39,7 +39,7 @@ function Stars({ count }: { count: number }) {
       {Array.from({ length: 5 }, (_, i) => (
         <svg
           key={i}
-          className={`w-3.5 h-3.5 ${i < count ? STAR_COLOR[count] : 'text-slate-200'}`}
+          className={`w-3.5 h-3.5 ${i < count ? STAR_COLOR[count] : 'text-[#CDD1C8]'}`}
           fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"
         >
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -55,8 +55,8 @@ function MoatGauge({ roic, roicSpread, wacc }: { roic: number | null; roicSpread
   if (roic == null) {
     return (
       <div className="flex flex-col gap-1.5">
-        <p className="text-[10px] font-[600] text-slate-500">ROIC / WACC Spread</p>
-        <p className="text-[11px] text-slate-400">ROIC data unavailable</p>
+        <p className="text-[10px] font-[600] text-[#566174]">ROIC / WACC Spread</p>
+        <p className="text-[11px] text-[#8A95A6]">ROIC data unavailable</p>
       </div>
     )
   }
@@ -77,21 +77,21 @@ function MoatGauge({ roic, roicSpread, wacc }: { roic: number | null; roicSpread
     : 'No moat'
 
   const moatColor = hasPositiveSpread
-    ? (spread > 0.10 ? 'text-emerald-600' : 'text-emerald-500')
-    : 'text-red-500'
+    ? (spread > 0.10 ? 'text-[#11875D]' : 'text-[#11875D]')
+    : 'text-[#D83B3B]'
 
-  const spreadColor = hasPositiveSpread ? 'bg-emerald-100' : 'bg-red-50'
-  const spreadBorderColor = hasPositiveSpread ? 'border-emerald-200' : 'border-red-200'
+  const spreadColor = hasPositiveSpread ? 'bg-[#E8F7EF]' : 'bg-[#FCEAEA]'
+  const spreadBorderColor = hasPositiveSpread ? 'border-[#A3D9BE]' : 'border-[#F0B8B8]'
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <p className="text-[10px] font-[600] text-slate-500">ROIC vs WACC</p>
+        <p className="text-[10px] font-[600] text-[#566174]">ROIC vs WACC</p>
         <span className={`text-[10px] font-[700] ${moatColor}`}>{moatLabel}</span>
       </div>
 
       {/* Visual gauge */}
-      <div className="relative h-2 bg-slate-100 rounded-full overflow-visible">
+      <div className="relative h-2 bg-[#F4F3EF] rounded-full overflow-visible">
         {/* Spread fill from WACC to ROIC */}
         {hasPositiveSpread && (
           <div
@@ -101,24 +101,24 @@ function MoatGauge({ roic, roicSpread, wacc }: { roic: number | null; roicSpread
         )}
         {!hasPositiveSpread && (
           <div
-            className="absolute top-0 h-full bg-red-100 rounded-full"
+            className="absolute top-0 h-full bg-[#FCEAEA] rounded-full"
             style={{ left: `${roicPct}%`, width: `${Math.max(0, waccPct - roicPct)}%` }}
           />
         )}
         {/* WACC marker */}
         <div
-          className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 bg-slate-400 rounded-full"
+          className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 bg-[#8A95A6] rounded-full"
           style={{ left: `${waccPct}%` }}
         />
         {/* ROIC dot */}
         <div
-          className={`absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-white shadow-sm ${hasPositiveSpread ? 'bg-emerald-500' : 'bg-red-400'}`}
+          className={`absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-white shadow-sm ${hasPositiveSpread ? 'bg-[#E8F7EF]0' : 'bg-[#D83B3B]'}`}
           style={{ left: `${roicPct}%`, transform: 'translate(-50%, -50%)' }}
         />
       </div>
 
       {/* Labels */}
-      <div className="flex items-center justify-between text-[11px] text-slate-500">
+      <div className="flex items-center justify-between text-[11px] text-[#566174]">
         <span>0%</span>
         <div className="flex items-center gap-3">
           <span>WACC {(wacc * 100).toFixed(1)}%</span>
@@ -152,7 +152,7 @@ export default function QualityPanel({
           {structuralRisk && (
             <a
               href="#model_evidence"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 border border-red-200 text-[10px] font-[700] text-red-600 hover:bg-red-100 transition-colors"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FCEAEA] border border-[#F0B8B8] text-[10px] font-[700] text-[#D83B3B] hover:bg-[#FCEAEA] transition-colors"
               title={structuralRisk}
             >
               <span>⚑</span>
@@ -162,7 +162,7 @@ export default function QualityPanel({
           {countryRisk && (
             <a
               href="#model_evidence"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-[10px] font-[700] text-amber-700 hover:bg-amber-100 transition-colors"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FFF4DA] border border-[#F3D391] text-[10px] font-[700] text-[#B56A00] hover:bg-[#FFF4DA] transition-colors"
               title={countryRisk}
             >
               <span>⚠</span>
@@ -171,7 +171,7 @@ export default function QualityPanel({
           )}
         </div>
       )}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:divide-x sm:divide-[#F1F5F9]">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:divide-x sm:divide-[#F4F3EF]">
 
         {/* Left: ROIC / WACC moat gauge */}
         <div className="sm:pr-5">
@@ -180,15 +180,15 @@ export default function QualityPanel({
 
         {/* Center: Star rating + conviction */}
         <div className="sm:px-5 flex flex-col gap-2">
-          <p className="text-[10px] font-[600] text-slate-500">Conviction</p>
+          <p className="text-[10px] font-[600] text-[#566174]">Conviction</p>
           {starRating ? (
             <>
               <Stars count={starRating.stars} />
-              <p className="text-[14px] font-[750] text-slate-800 leading-tight">{starRating.label}</p>
-              <p className="text-[10px] text-slate-500">{starRating.description}</p>
+              <p className="text-[14px] font-[750] text-[#06101F] leading-tight">{starRating.label}</p>
+              <p className="text-[10px] text-[#566174]">{starRating.description}</p>
             </>
           ) : (
-            <p className="text-[11px] text-slate-400">Insufficient data</p>
+            <p className="text-[11px] text-[#8A95A6]">Insufficient data</p>
           )}
           {unc && (
             <div className="flex items-center gap-1.5 mt-1">

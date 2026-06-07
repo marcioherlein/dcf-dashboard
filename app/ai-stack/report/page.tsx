@@ -67,7 +67,7 @@ function LayerSection({ layer, rows }: { layer: number; rows: ValuationMetrics[]
       {/* Body */}
       <div style={{ border: `1px solid ${color}40`, borderTop: 'none', borderRadius: '0 0 8px 8px', background: 'white' }}>
         {/* 4 info fields in 2x2 grid */}
-        <div className="report-layer-info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: `1px solid #f1f5f9` }}>
+        <div className="report-layer-info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: `1px solid #F4F3EF` }}>
           {[
             { label: 'What They Do', text: info.what },
             { label: 'Revenue Model', text: info.revenue },
@@ -76,10 +76,10 @@ function LayerSection({ layer, rows }: { layer: number; rows: ValuationMetrics[]
           ].map(({ label, text }, i) => (
             <div key={label} style={{
               padding: '10px 14px',
-              borderRight: i % 2 === 0 ? '1px solid #f1f5f9' : 'none',
-              borderBottom: i < 2 ? '1px solid #f1f5f9' : 'none',
+              borderRight: i % 2 === 0 ? '1px solid #F4F3EF' : 'none',
+              borderBottom: i < 2 ? '1px solid #F4F3EF' : 'none',
             }}>
-              <div style={{ fontSize: '9px', fontWeight: 700, color: '#94a3b8', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '4px' }}>{label}</div>
+              <div style={{ fontSize: '9px', fontWeight: 700, color: '#8A95A6', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '4px' }}>{label}</div>
               <p style={{ fontSize: '11px', color: '#374151', lineHeight: 1.5, margin: 0 }}>{text}</p>
             </div>
           ))}
@@ -88,13 +88,13 @@ function LayerSection({ layer, rows }: { layer: number; rows: ValuationMetrics[]
         {/* Company table */}
         {top.length > 0 && (
           <div style={{ padding: '8px 12px 10px' }}>
-            <div style={{ fontSize: '9px', fontWeight: 700, color: '#94a3b8', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '6px' }}>Top Companies by Value Score</div>
+            <div style={{ fontSize: '9px', fontWeight: 700, color: '#8A95A6', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '6px' }}>Top Companies by Value Score</div>
             <div className="report-table-wrap">
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11.5px' }}>
               <thead>
                 <tr style={{ borderBottom: `2px solid ${color}30` }}>
                   {['Ticker', 'Company', 'Score', 'P/E', 'FCF Yield', 'Gross Mgn', 'Rev Growth'].map(h => (
-                    <th key={h} style={{ padding: '4px 8px', textAlign: h === 'Ticker' || h === 'Company' ? 'left' : 'right', fontSize: '9px', fontWeight: 700, color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{h}</th>
+                    <th key={h} style={{ padding: '4px 8px', textAlign: h === 'Ticker' || h === 'Company' ? 'left' : 'right', fontSize: '9px', fontWeight: 700, color: '#8A95A6', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -110,10 +110,10 @@ function LayerSection({ layer, rows }: { layer: number; rows: ValuationMetrics[]
                         {r.valueScore}
                       </span>
                     </td>
-                    <td style={{ padding: '5px 8px', textAlign: 'right', fontFamily: 'monospace', color: r.pe && r.pe > 0 ? '#1e293b' : '#94a3b8' }}>{fmtNum(r.pe)}</td>
-                    <td style={{ padding: '5px 8px', textAlign: 'right', fontFamily: 'monospace', color: r.fcfYield !== null ? (r.fcfYield >= 0.04 ? '#15803d' : r.fcfYield >= 0 ? '#b45309' : '#dc2626') : '#94a3b8' }}>{fmtPct(r.fcfYield)}</td>
-                    <td style={{ padding: '5px 8px', textAlign: 'right', fontFamily: 'monospace', color: r.grossMargin !== null ? (r.grossMargin >= 0.4 ? '#15803d' : r.grossMargin >= 0.2 ? '#1e293b' : '#b45309') : '#94a3b8' }}>{fmtPctPlain(r.grossMargin)}</td>
-                    <td style={{ padding: '5px 8px', textAlign: 'right', fontFamily: 'monospace', color: r.revenueGrowth !== null ? (r.revenueGrowth >= 0.1 ? '#15803d' : r.revenueGrowth >= 0 ? '#1e293b' : '#dc2626') : '#94a3b8' }}>{fmtPct(r.revenueGrowth)}</td>
+                    <td style={{ padding: '5px 8px', textAlign: 'right', fontFamily: 'monospace', color: r.pe && r.pe > 0 ? '#1e293b' : '#8A95A6' }}>{fmtNum(r.pe)}</td>
+                    <td style={{ padding: '5px 8px', textAlign: 'right', fontFamily: 'monospace', color: r.fcfYield !== null ? (r.fcfYield >= 0.04 ? '#15803d' : r.fcfYield >= 0 ? '#b45309' : '#dc2626') : '#8A95A6' }}>{fmtPct(r.fcfYield)}</td>
+                    <td style={{ padding: '5px 8px', textAlign: 'right', fontFamily: 'monospace', color: r.grossMargin !== null ? (r.grossMargin >= 0.4 ? '#15803d' : r.grossMargin >= 0.2 ? '#1e293b' : '#b45309') : '#8A95A6' }}>{fmtPctPlain(r.grossMargin)}</td>
+                    <td style={{ padding: '5px 8px', textAlign: 'right', fontFamily: 'monospace', color: r.revenueGrowth !== null ? (r.revenueGrowth >= 0.1 ? '#15803d' : r.revenueGrowth >= 0 ? '#1e293b' : '#dc2626') : '#8A95A6' }}>{fmtPct(r.revenueGrowth)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -187,14 +187,14 @@ export default function AIStackReport() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <a href="/ai-stack" style={{ color: '#60a5fa', fontSize: '12px', fontWeight: 500, textDecoration: 'none' }}>← Back to AI Stack</a>
-          <span style={{ color: '#334155' }}>|</span>
-          <span style={{ color: '#94a3b8', fontSize: '12px' }}>Run <code style={{ background: '#1e293b', padding: '2px 6px', borderRadius: '4px', color: '#7dd3fc' }}>npm run export-pdf</code> to save to Desktop</span>
+          <span style={{ color: '#566174' }}>|</span>
+          <span style={{ color: '#8A95A6', fontSize: '12px' }}>Run <code style={{ background: '#1e293b', padding: '2px 6px', borderRadius: '4px', color: '#7dd3fc' }}>npm run export-pdf</code> to save to Desktop</span>
         </div>
         {loading && <span style={{ color: '#60a5fa', fontSize: '12px' }}>⟳ Loading…</span>}
       </div>
 
       {loading && (
-        <div style={{ textAlign: 'center', padding: '80px 20px', color: '#64748b' }}>
+        <div style={{ textAlign: 'center', padding: '80px 20px', color: '#566174' }}>
           <p style={{ fontSize: '16px', fontWeight: 600 }}>Loading data…</p>
         </div>
       )}
@@ -220,7 +220,7 @@ export default function AIStackReport() {
               The AI<br />Infrastructure<br />Stack
             </h1>
             <div style={{ width: '56px', height: '4px', borderRadius: '2px', background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)', margin: '0 auto 28px' }} />
-            <p style={{ fontSize: '17px', color: '#94a3b8', lineHeight: 1.7, maxWidth: '340px', margin: '0 auto 48px' }}>
+            <p style={{ fontSize: '17px', color: '#8A95A6', lineHeight: 1.7, maxWidth: '340px', margin: '0 auto 48px' }}>
               16 infrastructure layers · 125+ public companies<br />
               scored by FCF yield, EV/EBITDA, ROE,<br />gross margin &amp; growth
             </p>
@@ -233,9 +233,9 @@ export default function AIStackReport() {
 
           {/* Scoring key */}
           <div className="report-section" style={{ padding: '32px 32px 24px', pageBreakAfter: 'always', breakAfter: 'page' }}>
-            <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.3em', color: '#64748b', textTransform: 'uppercase', marginBottom: '6px' }}>Methodology</div>
+            <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.3em', color: '#566174', textTransform: 'uppercase', marginBottom: '6px' }}>Methodology</div>
             <h2 style={{ fontSize: '26px', fontWeight: 800, color: '#0f172a', margin: '0 0 12px' }}>How Every Company Is Scored</h2>
-            <p style={{ fontSize: '13px', color: '#64748b', lineHeight: 1.55, margin: '0 0 20px' }}>
+            <p style={{ fontSize: '13px', color: '#566174', lineHeight: 1.55, margin: '0 0 20px' }}>
               Composite 0–100 score from 9 value metrics weighted by their reliability as long-term signals (Buffett, Lynch &amp; Graham).
             </p>
             <div className="report-score-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '20px' }}>
@@ -250,9 +250,9 @@ export default function AIStackReport() {
                 { label: 'Rev Growth 8%', desc: 'Top-line momentum. Business must grow.', color: '#84cc16' },
                 { label: 'Price/Book 5%', desc: 'Asset floor — Graham margin of safety.', color: '#78716c' },
               ].map(f => (
-                <div key={f.label} style={{ background: '#f8fafc', borderRadius: '8px', padding: '10px 12px', border: '1px solid #e2e8f0' }}>
+                <div key={f.label} style={{ background: '#f8fafc', borderRadius: '8px', padding: '10px 12px', border: '1px solid #E3E1DA' }}>
                   <div style={{ fontSize: '12px', fontWeight: 700, color: f.color, marginBottom: '2px' }}>{f.label}</div>
-                  <div style={{ fontSize: '11px', color: '#64748b' }}>{f.desc}</div>
+                  <div style={{ fontSize: '11px', color: '#566174' }}>{f.desc}</div>
                 </div>
               ))}
             </div>
@@ -286,14 +286,14 @@ export default function AIStackReport() {
             <h2 style={{ fontSize: '38px', fontWeight: 800, color: '#f8fafc', lineHeight: 1.1, margin: '0 0 16px' }}>
               Explore the full<br />live dashboard
             </h2>
-            <p style={{ fontSize: '15px', color: '#94a3b8', lineHeight: 1.65, marginBottom: '28px' }}>
+            <p style={{ fontSize: '15px', color: '#8A95A6', lineHeight: 1.65, marginBottom: '28px' }}>
               Real-time value scores, fair value models, and layer analysis.
             </p>
             <div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '10px', padding: '14px 28px', marginBottom: '24px' }}>
               <div style={{ fontSize: '11px', color: '#60a5fa', letterSpacing: '0.15em', fontWeight: 600, marginBottom: '6px' }}>LIVE AT</div>
               <div style={{ fontSize: '17px', color: 'white', fontWeight: 700, fontFamily: 'monospace' }}>insic · /ai-stack</div>
             </div>
-            <p style={{ fontSize: '10px', color: '#475569' }}>Not investment advice. For educational purposes only. Always do your own research.</p>
+            <p style={{ fontSize: '10px', color: '#566174' }}>Not investment advice. For educational purposes only. Always do your own research.</p>
           </div>
 
         </div>

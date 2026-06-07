@@ -95,7 +95,7 @@ export default function ArcGauge({
         y={cy - (label ? 6 : 0)}
         textAnchor="middle"
         dominantBaseline="middle"
-        fill="#1E293B"
+        fill="#06101F"
         fontSize={size * 0.22}
         fontWeight="700"
         fontFamily="'DM Mono', monospace"

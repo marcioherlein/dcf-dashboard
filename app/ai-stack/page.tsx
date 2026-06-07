@@ -92,10 +92,10 @@ const COLUMNS: ColDef[] = [
     key: 'fairValue', label: 'Fair Value', tooltip: 'Click to see assumptions. Forward PE model: 2031 Target Price discounted to today at WACC.',
     fmt: r => r.fairValue ? fmtPrice(r.fairValue) : '—',
     colorFn: r => {
-      if (!r.fairValue || !r.upside) return 'text-slate-400'
-      return r.upside >= 0.20 ? 'text-emerald-600 font-semibold cursor-pointer'
-           : r.upside >= 0    ? 'text-amber-600 cursor-pointer'
-           :                    'text-red-500 cursor-pointer'
+      if (!r.fairValue || !r.upside) return 'text-[#8A95A6]'
+      return r.upside >= 0.20 ? 'text-[#11875D] font-semibold cursor-pointer'
+           : r.upside >= 0    ? 'text-[#B56A00] cursor-pointer'
+           :                    'text-[#D83B3B] cursor-pointer'
     },
     defaultDir: 'desc',
     clickable: true,
@@ -107,10 +107,10 @@ const COLUMNS: ColDef[] = [
       return (r.upside >= 0 ? '+' : '') + (r.upside * 100).toFixed(0) + '%'
     },
     colorFn: r => {
-      if (r.upside === null) return 'text-slate-400'
-      return r.upside >= 0.20 ? 'text-emerald-600 font-semibold cursor-pointer'
-           : r.upside >= 0    ? 'text-amber-600 cursor-pointer'
-           :                    'text-red-500 cursor-pointer'
+      if (r.upside === null) return 'text-[#8A95A6]'
+      return r.upside >= 0.20 ? 'text-[#11875D] font-semibold cursor-pointer'
+           : r.upside >= 0    ? 'text-[#B56A00] cursor-pointer'
+           :                    'text-[#D83B3B] cursor-pointer'
     },
     defaultDir: 'desc',
     clickable: true,
@@ -129,13 +129,13 @@ const COLUMNS: ColDef[] = [
   {
     key: 'change1d', label: '1D%', tooltip: "Today's price change %",
     fmt: r => fmtPct(r.change1d),
-    colorFn: r => r.change1d === null ? 'text-slate-400' : r.change1d >= 0 ? 'text-emerald-600' : 'text-red-500',
+    colorFn: r => r.change1d === null ? 'text-[#8A95A6]' : r.change1d >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]',
     defaultDir: 'desc',
   },
   {
     key: 'change52w', label: '52W%', tooltip: '52-week price performance',
     fmt: r => fmtPct(r.change52w),
-    colorFn: r => r.change52w === null ? 'text-slate-400' : r.change52w >= 0 ? 'text-emerald-600' : 'text-red-500',
+    colorFn: r => r.change52w === null ? 'text-[#8A95A6]' : r.change52w >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]',
     defaultDir: 'desc',
   },
   // ── Valuation Multiples ────────────────────────────────────────────────────
@@ -165,8 +165,8 @@ const COLUMNS: ColDef[] = [
       return fmtNum(r.pfcf)
     },
     colorFn: r => {
-      if (r.pfcf === null) return 'text-slate-400'
-      if (r.pfcf < 0) return 'text-red-500 font-semibold'
+      if (r.pfcf === null) return 'text-[#8A95A6]'
+      if (r.pfcf < 0) return 'text-[#D83B3B] font-semibold'
       return metricColor(r.pfcf, 'pfcf')
     },
     defaultDir: 'asc',
@@ -217,13 +217,13 @@ const COLUMNS: ColDef[] = [
   {
     key: 'freeCashflow', label: 'FCF ($)', tooltip: 'Free cash flow in USD. For ADR companies, converted from reporting currency via live FX rate.',
     fmt: r => fmtCash(r.freeCashflow),
-    colorFn: r => r.freeCashflow === null ? 'text-slate-400' : r.freeCashflow < 0 ? 'text-red-500' : 'text-emerald-600',
+    colorFn: r => r.freeCashflow === null ? 'text-[#8A95A6]' : r.freeCashflow < 0 ? 'text-[#D83B3B]' : 'text-[#11875D]',
     defaultDir: 'desc',
   },
   {
     key: 'operatingCashflow', label: 'Op CF ($)', tooltip: 'Operating cash flow in USD. For ADR companies, converted from reporting currency via live FX rate.',
     fmt: r => fmtCash(r.operatingCashflow),
-    colorFn: r => r.operatingCashflow === null ? 'text-slate-400' : r.operatingCashflow < 0 ? 'text-red-500' : 'text-slate-700',
+    colorFn: r => r.operatingCashflow === null ? 'text-[#8A95A6]' : r.operatingCashflow < 0 ? 'text-[#D83B3B]' : 'text-[#566174]',
     defaultDir: 'desc',
   },
   // ── Profitability ──────────────────────────────────────────────────────────
@@ -274,7 +274,7 @@ const COLUMNS: ColDef[] = [
   {
     key: 'netDebt', label: 'Net Debt ($)', tooltip: 'Total Debt − Cash in USD. Negative = net cash position.',
     fmt: r => fmtCash(r.netDebt),
-    colorFn: r => r.netDebt === null ? 'text-slate-400' : r.netDebt < 0 ? 'text-emerald-600' : r.netDebt < 1e10 ? 'text-slate-700' : 'text-red-500',
+    colorFn: r => r.netDebt === null ? 'text-[#8A95A6]' : r.netDebt < 0 ? 'text-[#11875D]' : r.netDebt < 1e10 ? 'text-[#566174]' : 'text-[#D83B3B]',
     defaultDir: 'asc',
   },
   {
@@ -341,9 +341,9 @@ function NumInput({
         step={step}
         min={min}
         max={max}
-        className="w-20 text-right border border-slate-200 rounded-md px-2 py-0.5 text-[12px] font-mono focus:outline-none focus:border-blue-400 bg-slate-50"
+        className="w-20 text-right border border-[#E3E1DA] rounded-md px-2 py-0.5 text-[12px] font-mono focus:outline-none focus:border-blue-400 bg-[#F4F3EF]"
       />
-      {suffix && <span className="text-slate-400 text-[11px]">{suffix}</span>}
+      {suffix && <span className="text-[#8A95A6] text-[11px]">{suffix}</span>}
     </div>
   )
 }
@@ -392,10 +392,10 @@ function ValuationModal({
   // Guard after all hooks
   if (!a) return null
 
-  const upsideColor = !computed ? '#64748b'
-    : computed.upside >= 0.20 ? '#16a34a'
-    : computed.upside >= 0    ? '#d97706'
-    : '#dc2626'
+  const upsideColor = !computed ? '#566174'
+    : computed.upside >= 0.20 ? '#11875D'
+    : computed.upside >= 0    ? '#B56A00'
+    : '#D83B3B'
 
   const isModified =
     cagr     !== (a.revenueCAGR     * 100).toFixed(1) ||
@@ -422,35 +422,35 @@ function ValuationModal({
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 sticky top-0 bg-white z-10">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E3E1DA] sticky top-0 bg-white z-10">
           <div>
-            <span className="font-bold text-slate-900 font-mono text-lg">{row.ticker}</span>
-            <span className="text-slate-500 text-sm ml-2">{row.name}</span>
+            <span className="font-bold text-[#06101F] font-mono text-lg">{row.ticker}</span>
+            <span className="text-[#566174] text-sm ml-2">{row.name}</span>
             {row.financialCurrency && row.financialCurrency !== 'USD' && (
-              <span className="ml-2 text-[10px] bg-amber-100 text-amber-700 font-semibold px-2 py-0.5 rounded-full">
+              <span className="ml-2 text-[10px] bg-[#FFF4DA] text-[#B56A00] font-semibold px-2 py-0.5 rounded-full">
                 {row.financialCurrency} ADR
               </span>
             )}
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-xl leading-none">×</button>
+          <button onClick={onClose} className="text-[#8A95A6] hover:text-[#566174] text-xl leading-none">×</button>
         </div>
 
         <div className="px-5 py-4 space-y-5 text-[13px]">
 
           {/* Currency note */}
           {a.currencyNote && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-[12px]">
-              <div className="text-amber-700 font-semibold mb-0.5">⚠ ADR Currency Adjustment</div>
-              <div className="text-amber-600">{a.currencyNote}</div>
+            <div className="bg-[#FFF4DA] border border-[#B56A00]/30 rounded-xl px-4 py-3 text-[12px]">
+              <div className="text-[#B56A00] font-semibold mb-0.5">⚠ ADR Currency Adjustment</div>
+              <div className="text-[#B56A00]">{a.currencyNote}</div>
             </div>
           )}
 
           {/* Past Evidence */}
           <div>
-            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+            <div className="text-[11px] font-bold text-[#8A95A6] uppercase tracking-widest mb-2">
               Past Evidence &amp; Derivation
             </div>
-            <div className="bg-slate-50 rounded-xl px-4 py-3 space-y-2">
+            <div className="bg-[#F4F3EF] rounded-xl px-4 py-3 space-y-2">
               {[
                 { label: 'Revenue CAGR',    evidence: a.cagrEvidence },
                 { label: 'Net Margin 2031', evidence: a.marginEvidence },
@@ -459,8 +459,8 @@ function ValuationModal({
                 { label: 'WACC',            evidence: a.waccEvidence },
               ].map(({ label, evidence }) => (
                 <div key={label} className="flex gap-2">
-                  <span className="text-slate-400 w-28 shrink-0 text-[11px] font-medium">{label}</span>
-                  <span className="text-slate-600 text-[11px] leading-relaxed">{evidence}</span>
+                  <span className="text-[#8A95A6] w-28 shrink-0 text-[11px] font-medium">{label}</span>
+                  <span className="text-[#566174] text-[11px] leading-relaxed">{evidence}</span>
                 </div>
               ))}
             </div>
@@ -469,13 +469,13 @@ function ValuationModal({
           {/* Editable Assumptions */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                Assumptions {isModified && <span className="text-blue-500 normal-case ml-1">(modified)</span>}
+              <div className="text-[11px] font-bold text-[#8A95A6] uppercase tracking-widest">
+                Assumptions {isModified && <span className="text-[#2563EB] normal-case ml-1">(modified)</span>}
               </div>
               {isModified && (
                 <button
                   onClick={reset}
-                  className="text-[11px] text-blue-500 hover:text-blue-700 underline"
+                  className="text-[11px] text-[#2563EB] hover:text-[#2563EB] underline"
                 >
                   Reset to model
                 </button>
@@ -484,46 +484,46 @@ function ValuationModal({
             <div className="space-y-2">
               {/* Read-only */}
               <div className="flex items-center justify-between text-[12px]">
-                <span className="text-slate-500">LTM Revenue</span>
-                <span className="font-medium text-slate-800 font-mono">{fmtB(a.ltvRevenue)}</span>
+                <span className="text-[#566174]">LTM Revenue</span>
+                <span className="font-medium text-[#06101F] font-mono">{fmtB(a.ltvRevenue)}</span>
               </div>
               <div className="flex items-center justify-between text-[12px]">
-                <span className="text-slate-500">Shares Outstanding</span>
-                <span className="font-medium text-slate-800 font-mono">{(a.sharesOutstanding / 1e9).toFixed(3)}B</span>
+                <span className="text-[#566174]">Shares Outstanding</span>
+                <span className="font-medium text-[#06101F] font-mono">{(a.sharesOutstanding / 1e9).toFixed(3)}B</span>
               </div>
-              <div className="border-t border-slate-100 pt-2 space-y-2">
+              <div className="border-t border-[#E3E1DA] pt-2 space-y-2">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-slate-700 font-medium">5Y Revenue CAGR</span>
-                    <div className="text-[10px] text-slate-400">Annual revenue growth rate to 2031</div>
+                    <span className="text-[#566174] font-medium">5Y Revenue CAGR</span>
+                    <div className="text-[10px] text-[#8A95A6]">Annual revenue growth rate to 2031</div>
                   </div>
                   <NumInput value={cagr} onChange={setCagr} step="0.5" min="-10" max="100" suffix="%" />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-slate-700 font-medium">Net Margin 2031</span>
-                    <div className="text-[10px] text-slate-400">Projected net profit margin</div>
+                    <span className="text-[#566174] font-medium">Net Margin 2031</span>
+                    <div className="text-[10px] text-[#8A95A6]">Projected net profit margin</div>
                   </div>
                   <NumInput value={margin} onChange={setMargin} step="0.5" min="0" max="80" suffix="%" />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-slate-700 font-medium">Exit P/E 2031</span>
-                    <div className="text-[10px] text-slate-400">Normalized sector multiple at exit</div>
+                    <span className="text-[#566174] font-medium">Exit P/E 2031</span>
+                    <div className="text-[10px] text-[#8A95A6]">Normalized sector multiple at exit</div>
                   </div>
                   <NumInput value={pe} onChange={setPe} step="1" min="5" max="100" suffix="×" />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-slate-700 font-medium">Annual Dilution</span>
-                    <div className="text-[10px] text-slate-400">Stock-based comp / share count growth</div>
+                    <span className="text-[#566174] font-medium">Annual Dilution</span>
+                    <div className="text-[10px] text-[#8A95A6]">Stock-based comp / share count growth</div>
                   </div>
                   <NumInput value={dilution} onChange={setDilution} step="0.5" min="0" max="10" suffix="%" />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-slate-700 font-medium">Discount Rate (WACC)</span>
-                    <div className="text-[10px] text-slate-400">Required return on equity + debt</div>
+                    <span className="text-[#566174] font-medium">Discount Rate (WACC)</span>
+                    <div className="text-[10px] text-[#8A95A6]">Required return on equity + debt</div>
                   </div>
                   <NumInput value={wacc} onChange={setWacc} step="0.5" min="4" max="30" suffix="%" />
                 </div>
@@ -533,16 +533,16 @@ function ValuationModal({
 
           {/* Formula display */}
           {computed && (
-            <div className="bg-slate-50 rounded-xl px-4 py-3">
-              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Formula</div>
-              <div className="text-[11px] font-mono text-slate-600 leading-relaxed">
+            <div className="bg-[#F4F3EF] rounded-xl px-4 py-3">
+              <div className="text-[11px] font-bold text-[#8A95A6] uppercase tracking-widest mb-2">Formula</div>
+              <div className="text-[11px] font-mono text-[#566174] leading-relaxed">
                 {fmtB(a.ltvRevenue)} × (1+{cagr}%)^5 × {margin}% × {pe}×
                 <br />
                 ÷ [{(a.sharesOutstanding / 1e9).toFixed(3)}B × (1+{dilution}%)^5]
                 <br />
-                = <span className="font-semibold text-slate-800">${computed.target.toFixed(0)}</span> target in 2031
+                = <span className="font-semibold text-[#06101F]">${computed.target.toFixed(0)}</span> target in 2031
               </div>
-              <div className="mt-2 text-[11px] text-slate-500">
+              <div className="mt-2 text-[11px] text-[#566174]">
                 Discounted at {wacc}% for 5y → fair value today
               </div>
             </div>
@@ -551,42 +551,42 @@ function ValuationModal({
           {/* Results */}
           {computed && (
             <div className="space-y-1.5">
-              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Results</div>
+              <div className="text-[11px] font-bold text-[#8A95A6] uppercase tracking-widest mb-2">Results</div>
               {[
-                { label: 'Actual Price',     value: fmtPrice(row.price),              color: 'text-slate-800' },
-                { label: '2031 Target',      value: '$' + computed.target.toFixed(0), color: 'text-blue-600' },
-                { label: 'Fair Value Today', value: '$' + computed.fair.toFixed(2),   color: computed.upside >= 0 ? 'text-emerald-700' : 'text-red-600' },
-                { label: '1Y Price Target',  value: '$' + computed.target1y.toFixed(2), color: 'text-blue-700' },
+                { label: 'Actual Price',     value: fmtPrice(row.price),              color: 'text-[#06101F]' },
+                { label: '2031 Target',      value: '$' + computed.target.toFixed(0), color: 'text-[#2563EB]' },
+                { label: 'Fair Value Today', value: '$' + computed.fair.toFixed(2),   color: computed.upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]' },
+                { label: '1Y Price Target',  value: '$' + computed.target1y.toFixed(2), color: 'text-[#2563EB]' },
               ].map(item => (
                 <div key={item.label} className="flex items-center justify-between">
-                  <span className="text-slate-500 font-medium uppercase text-[11px] tracking-wide">{item.label}</span>
+                  <span className="text-[#566174] font-medium uppercase text-[11px] tracking-wide">{item.label}</span>
                   <span className={`font-bold text-[15px] ${item.color}`}>{item.value}</span>
                 </div>
               ))}
-              <div className="border-t border-slate-100 pt-1.5 space-y-1.5">
+              <div className="border-t border-[#E3E1DA] pt-1.5 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500 font-medium uppercase text-[11px] tracking-wide">Potential Upside</span>
+                  <span className="text-[#566174] font-medium uppercase text-[11px] tracking-wide">Potential Upside</span>
                   <span className="font-bold text-[17px]" style={{ color: upsideColor }}>
                     {computed.upside >= 0 ? '+' : ''}{(computed.upside * 100).toFixed(1)}%
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500 font-medium uppercase text-[11px] tracking-wide">Expected Return</span>
+                  <span className="text-[#566174] font-medium uppercase text-[11px] tracking-wide">Expected Return</span>
                   <span className="font-bold text-[15px]" style={{ color: upsideColor }}>
                     {computed.annRet >= 0 ? '+' : ''}{computed.annRet.toFixed(1)}%/yr
                   </span>
                 </div>
                 {row.dividendYield ? (
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-medium uppercase text-[11px] tracking-wide">Dividend Yield</span>
-                    <span className="font-bold text-[13px] text-slate-700">+{(row.dividendYield * 100).toFixed(2)}%/yr</span>
+                    <span className="text-[#566174] font-medium uppercase text-[11px] tracking-wide">Dividend Yield</span>
+                    <span className="font-bold text-[13px] text-[#566174]">+{(row.dividendYield * 100).toFixed(2)}%/yr</span>
                   </div>
                 ) : null}
               </div>
             </div>
           )}
 
-          <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-100">
+          <p className="text-[10px] text-[#8A95A6] pt-1 border-t border-[#E3E1DA]">
             Forward PE model. Modify any assumption above and results update live.
             CAGR mean-reverted from YoY data. WACC: beta + D/MktCap + RF 4.5% + ERP 5.5%.
             Sector PE assumes overvaluations compress by 2031. Not investment advice.
@@ -616,7 +616,7 @@ function LayerInsightCard({ layer }: { layer: number }) {
           >
             L{layer}
           </span>
-          <span className="font-bold text-slate-900 text-[14px]">{info.title}</span>
+          <span className="font-bold text-[#06101F] text-[14px]">{info.title}</span>
         </div>
         <div className="flex gap-2 shrink-0">
           <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border ${MOAT_COLORS[info.moatRating]}`}>
@@ -629,20 +629,20 @@ function LayerInsightCard({ layer }: { layer: number }) {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
         <div>
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">What They Do</div>
-          <p className="text-[12px] text-slate-700 leading-relaxed">{info.what}</p>
+          <div className="text-[10px] font-bold text-[#8A95A6] uppercase tracking-wider mb-1">What They Do</div>
+          <p className="text-[12px] text-[#566174] leading-relaxed">{info.what}</p>
         </div>
         <div>
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Revenue Model</div>
-          <p className="text-[12px] text-slate-700 leading-relaxed">{info.revenue}</p>
+          <div className="text-[10px] font-bold text-[#8A95A6] uppercase tracking-wider mb-1">Revenue Model</div>
+          <p className="text-[12px] text-[#566174] leading-relaxed">{info.revenue}</p>
         </div>
         <div>
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Profitability</div>
-          <p className="text-[12px] text-slate-700 leading-relaxed">{info.profitability}</p>
+          <div className="text-[10px] font-bold text-[#8A95A6] uppercase tracking-wider mb-1">Profitability</div>
+          <p className="text-[12px] text-[#566174] leading-relaxed">{info.profitability}</p>
         </div>
         <div>
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Competitive Moat</div>
-          <p className="text-[12px] text-slate-700 leading-relaxed">{info.moat}</p>
+          <div className="text-[10px] font-bold text-[#8A95A6] uppercase tracking-wider mb-1">Competitive Moat</div>
+          <p className="text-[12px] text-[#566174] leading-relaxed">{info.moat}</p>
         </div>
       </div>
     </div>
@@ -655,14 +655,14 @@ function ScoreBar({ score }: { score: number }) {
   const { color } = getScoreLabel(score)
   const pct = Math.max(0, Math.min(100, score))
   const barColor =
-    score >= 70 ? '#16a34a' :
+    score >= 70 ? '#11875D' :
     score >= 55 ? '#65a30d' :
-    score >= 40 ? '#d97706' :
-    score >= 25 ? '#ea580c' : '#dc2626'
+    score >= 40 ? '#B56A00' :
+    score >= 25 ? '#D83B3B' : '#D83B3B'
 
   return (
     <div className="flex items-center gap-1.5 min-w-[90px]">
-      <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+      <div className="flex-1 h-1.5 bg-[#F4F3EF] rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all"
           style={{ width: `${pct}%`, backgroundColor: barColor }}
@@ -693,10 +693,10 @@ function LayerBadge({ layer, label }: { layer: number; label: string }) {
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 sm:min-w-[130px]">
-      <div className="text-[11px] text-slate-500 font-medium uppercase tracking-wide">{label}</div>
-      <div className="text-xl font-bold text-slate-900 mt-0.5">{value}</div>
-      {sub && <div className="text-[11px] text-slate-400 mt-0.5">{sub}</div>}
+    <div className="bg-white border border-[#E3E1DA] rounded-xl px-4 py-3 sm:min-w-[130px]">
+      <div className="text-[11px] text-[#566174] font-medium uppercase tracking-wide">{label}</div>
+      <div className="text-xl font-bold text-[#06101F] mt-0.5">{value}</div>
+      {sub && <div className="text-[11px] text-[#8A95A6] mt-0.5">{sub}</div>}
     </div>
   )
 }
@@ -813,12 +813,12 @@ export default function AIStackPage() {
   const layers = useMemo(() => Array.from(new Set(data.map(r => r.layer))).sort((a, b) => a - b), [data])
 
   const SortIcon = ({ k }: { k: SortKey }) => {
-    if (sortKey !== k) return <span className="text-slate-300 ml-0.5">↕</span>
-    return <span className="text-blue-500 ml-0.5">{sortDir === 'asc' ? '↑' : '↓'}</span>
+    if (sortKey !== k) return <span className="text-[#8A95A6] ml-0.5">↕</span>
+    return <span className="text-[#2563EB] ml-0.5">{sortDir === 'asc' ? '↑' : '↓'}</span>
   }
 
   return (
-    <div className="min-h-dvh bg-slate-50 pt-[52px]">
+    <div className="min-h-dvh bg-[#F4F3EF] pt-[52px]">
 
       {/* Valuation assumptions modal */}
       {valModal?.valAssumptions && (
@@ -826,19 +826,19 @@ export default function AIStackPage() {
       )}
 
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 sm:py-5">
+      <div className="bg-white border-b border-[#E3E1DA] px-4 sm:px-6 py-4 sm:py-5">
         <div className="max-w-screen-2xl mx-auto">
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div className="min-w-0 flex-1">
-              <h1 className="text-lg sm:text-xl font-bold text-slate-900">
+              <h1 className="text-lg sm:text-xl font-bold text-[#06101F]">
                 The AI Stack — Value Investing Dashboard
               </h1>
-              <p className="text-sm text-slate-500 mt-1">
+              <p className="text-sm text-[#566174] mt-1">
                 {data.length} companies across 16 layers of the AI infrastructure supply chain.
                 <span className="hidden sm:inline"> Live data from Yahoo Finance. Scored by Buffett/Lynch value metrics.</span>
               </p>
               {lastFetch && (
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-[#8A95A6] mt-0.5">
                   Last updated: {lastFetch.toLocaleTimeString()}
                   {' · '}Data cached 30 min
                 </p>
@@ -848,7 +848,7 @@ export default function AIStackPage() {
               <button
                 onClick={fetchData}
                 disabled={loading}
-                className="shrink-0 h-8 px-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
+                className="shrink-0 h-8 px-3 bg-[#2563EB] hover:bg-[#2563EB]/90 disabled:opacity-50 text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
               >
                 {loading ? (
                   <><div className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" /> Fetching…</>
@@ -867,17 +867,17 @@ export default function AIStackPage() {
               <StatCard label="Undervalued" value={stats.undervalued.toString()} sub="score ≥ 70" />
               <div
                 className="col-span-2 sm:col-span-1 bg-white border-2 rounded-xl px-4 py-3 sm:min-w-[130px] cursor-pointer transition-colors"
-                style={{ borderColor: riskAverse ? '#16a34a' : '#e2e8f0', backgroundColor: riskAverse ? '#f0fdf4' : 'white' }}
+                style={{ borderColor: riskAverse ? '#11875D' : '#e2e8f0', backgroundColor: riskAverse ? '#f0fdf4' : 'white' }}
                 onClick={() => setRiskAverse(v => !v)}
                 title="Click to toggle risk-averse filter"
               >
-                <div className="text-[11px] font-medium uppercase tracking-wide" style={{ color: riskAverse ? '#16a34a' : '#64748b' }}>
+                <div className="text-[11px] font-medium uppercase tracking-wide" style={{ color: riskAverse ? '#11875D' : '#566174' }}>
                   {riskAverse ? '🛡 Filter ON' : '🛡 Safe Picks'}
                 </div>
-                <div className="text-xl font-bold mt-0.5" style={{ color: riskAverse ? '#16a34a' : '#0f172a' }}>
+                <div className="text-xl font-bold mt-0.5" style={{ color: riskAverse ? '#11875D' : '#06101F' }}>
                   {stats.safeCount}
                 </div>
-                <div className="text-[11px] mt-0.5" style={{ color: riskAverse ? '#16a34a' : '#94a3b8' }}>
+                <div className="text-[11px] mt-0.5" style={{ color: riskAverse ? '#11875D' : '#8A95A6' }}>
                   {riskAverse ? 'click to clear' : 'pass all criteria'}
                 </div>
               </div>
@@ -886,14 +886,14 @@ export default function AIStackPage() {
                 value={stats.negFcf.toString()}
                 sub="burning cash"
               />
-              <div className="col-span-2 sm:col-span-1 bg-white border border-slate-200 rounded-xl px-4 py-3 sm:min-w-[220px]">
-                <div className="text-[11px] text-slate-500 font-medium uppercase tracking-wide">Top Picks (by score)</div>
+              <div className="col-span-2 sm:col-span-1 bg-white border border-[#E3E1DA] rounded-xl px-4 py-3 sm:min-w-[220px]">
+                <div className="text-[11px] text-[#566174] font-medium uppercase tracking-wide">Top Picks (by score)</div>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {stats.top5.map(r => (
                     <Link
                       key={r.ticker}
                       href={`/stock/${r.ticker}`}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-bold rounded transition-colors"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#E8F7EF] hover:bg-[#E8F7EF] text-[#11875D] text-[11px] font-bold rounded transition-colors"
                     >
                       {r.ticker}
                       <span className="font-normal opacity-70">{r.valueScore}</span>
@@ -907,10 +907,10 @@ export default function AIStackPage() {
       </div>
 
       {/* Controls */}
-      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 sticky top-[52px] z-20">
+      <div className="bg-white border-b border-[#E3E1DA] px-4 sm:px-6 py-3 sticky top-[52px] z-20">
         <div className="max-w-screen-2xl mx-auto flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 focus-within:border-blue-400 transition-colors min-w-0 flex-1 sm:flex-none">
-            <svg className="h-3.5 w-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <div className="flex items-center gap-2 bg-[#F4F3EF] border border-[#E3E1DA] rounded-lg px-3 py-1.5 focus-within:border-blue-400 transition-colors min-w-0 flex-1 sm:flex-none">
+            <svg className="h-3.5 w-3.5 text-[#8A95A6] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
             </svg>
             <input
@@ -918,10 +918,10 @@ export default function AIStackPage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search ticker, company, layer…"
-              className="bg-transparent text-[13px] text-slate-900 placeholder-slate-400 focus:outline-none w-full sm:w-48"
+              className="bg-transparent text-[13px] text-[#06101F] placeholder-slate-400 focus:outline-none w-full sm:w-48"
             />
             {search && (
-              <button onClick={() => setSearch('')} className="text-slate-400 hover:text-slate-600">✕</button>
+              <button onClick={() => setSearch('')} className="text-[#8A95A6] hover:text-[#566174]">✕</button>
             )}
           </div>
 
@@ -929,7 +929,7 @@ export default function AIStackPage() {
             <button
               onClick={() => setLayerFilter(null)}
               className={`h-7 px-2.5 text-[11px] font-medium rounded-md transition-colors ${
-                layerFilter === null ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                layerFilter === null ? 'bg-[#2563EB] text-white' : 'bg-[#F4F3EF] text-[#566174] hover:bg-[#E3E1DA]'
               }`}
             >
               All Layers
@@ -939,7 +939,7 @@ export default function AIStackPage() {
                 key={layer}
                 onClick={() => setLayerFilter(layerFilter === layer ? null : layer)}
                 className={`h-7 px-2 text-[10px] font-medium rounded-md transition-colors ${
-                  layerFilter === layer ? 'text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  layerFilter === layer ? 'text-white' : 'bg-[#F4F3EF] text-[#566174] hover:bg-[#E3E1DA]'
                 }`}
                 style={layerFilter === layer ? { backgroundColor: LAYER_COLORS[layer] } : {}}
               >
@@ -954,15 +954,15 @@ export default function AIStackPage() {
               onClick={() => setRiskAverse(v => !v)}
               className={`h-7 px-3 text-[11px] font-semibold rounded-md border transition-colors flex items-center gap-1.5 ${
                 riskAverse
-                  ? 'bg-emerald-600 border-emerald-600 text-white'
-                  : 'bg-white border-slate-300 text-slate-600 hover:border-emerald-500 hover:text-emerald-600'
+                  ? 'bg-[#11875D] border-[#11875D] text-white'
+                  : 'bg-white border-[#E3E1DA] text-[#566174] hover:border-[#11875D] hover:text-[#11875D]'
               }`}
               title="Show only stocks that pass all 6 risk-averse criteria"
             >
               🛡 Risk-Averse{riskAverse ? ' ✓' : ''}
             </button>
 
-            <div className="text-[12px] text-slate-400">
+            <div className="text-[12px] text-[#8A95A6]">
               {filtered.length} of {data.length} rows
             </div>
           </div>
@@ -972,9 +972,9 @@ export default function AIStackPage() {
         {riskAverse && (
           <div className="max-w-screen-2xl mx-auto mt-0 pb-2 flex gap-2 flex-wrap">
             {RISK_CRITERIA.map(c => (
-              <div key={c.label} className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5 text-[11px]">
-                <span className="text-emerald-600 font-semibold">✓ {c.label}</span>
-                <span className="text-slate-500 hidden sm:inline">— {c.desc}</span>
+              <div key={c.label} className="flex items-center gap-1.5 bg-[#E8F7EF] border border-[#11875D]/30 rounded-lg px-2.5 py-1.5 text-[11px]">
+                <span className="text-[#11875D] font-semibold">✓ {c.label}</span>
+                <span className="text-[#566174] hidden sm:inline">— {c.desc}</span>
               </div>
             ))}
           </div>
@@ -987,24 +987,24 @@ export default function AIStackPage() {
         {layerFilter !== null && <LayerInsightCard layer={layerFilter} />}
 
         {loading && data.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-80 gap-4 text-slate-500">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-blue-500" />
+          <div className="flex flex-col items-center justify-center h-80 gap-4 text-[#566174]">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E3E1DA] border-t-blue-500" />
             <div className="text-sm font-medium">Loading ~125 tickers from Yahoo Finance…</div>
-            <div className="text-xs text-slate-400">First load takes ~15 seconds. Data is cached for 30 minutes.</div>
+            <div className="text-xs text-[#8A95A6]">First load takes ~15 seconds. Data is cached for 30 minutes.</div>
           </div>
         ) : error ? (
-          <div className="flex items-center justify-center h-40 text-red-500 text-sm">{error}</div>
+          <div className="flex items-center justify-center h-40 text-[#D83B3B] text-sm">{error}</div>
         ) : (
-          <div className="relative overflow-auto rounded-xl border border-slate-200 shadow-sm">
+          <div className="relative overflow-auto rounded-xl border border-[#E3E1DA] shadow-sm">
             <table className="w-full text-[12px] border-collapse">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="sticky left-0 bg-slate-50 z-10 text-left px-3 py-2 font-semibold text-slate-500 text-[11px] uppercase tracking-wide w-8 border-r border-slate-200">#</th>
-                  <th className="sticky left-8 bg-slate-50 z-10 text-left px-3 py-2 font-semibold text-slate-500 text-[11px] uppercase tracking-wide min-w-[68px] border-r border-slate-200">Ticker</th>
-                  <th className="sticky left-[116px] bg-slate-50 z-10 text-left px-3 py-2 font-semibold text-slate-500 text-[11px] uppercase tracking-wide min-w-[160px] border-r border-slate-200">Company</th>
-                  <th className="text-left px-3 py-2 font-semibold text-slate-500 text-[11px] uppercase tracking-wide min-w-[100px]">Layer</th>
+                <tr className="bg-[#F4F3EF] border-b border-[#E3E1DA]">
+                  <th className="sticky left-0 bg-[#F4F3EF] z-10 text-left px-3 py-2 font-semibold text-[#566174] text-[11px] uppercase tracking-wide w-8 border-r border-[#E3E1DA]">#</th>
+                  <th className="sticky left-8 bg-[#F4F3EF] z-10 text-left px-3 py-2 font-semibold text-[#566174] text-[11px] uppercase tracking-wide min-w-[68px] border-r border-[#E3E1DA]">Ticker</th>
+                  <th className="sticky left-[116px] bg-[#F4F3EF] z-10 text-left px-3 py-2 font-semibold text-[#566174] text-[11px] uppercase tracking-wide min-w-[160px] border-r border-[#E3E1DA]">Company</th>
+                  <th className="text-left px-3 py-2 font-semibold text-[#566174] text-[11px] uppercase tracking-wide min-w-[100px]">Layer</th>
                   <th
-                    className="text-left px-3 py-2 font-semibold text-slate-500 text-[11px] uppercase tracking-wide cursor-pointer hover:text-blue-600 whitespace-nowrap min-w-[110px]"
+                    className="text-left px-3 py-2 font-semibold text-[#566174] text-[11px] uppercase tracking-wide cursor-pointer hover:text-[#2563EB] whitespace-nowrap min-w-[110px]"
                     onClick={() => handleSort('valueScore', 'desc')}
                     title="Composite value score 0–100"
                   >
@@ -1013,7 +1013,7 @@ export default function AIStackPage() {
                   {COLUMNS.map(col => (
                     <th
                       key={col.key as string}
-                      className="text-right px-3 py-2 font-semibold text-slate-500 text-[11px] uppercase tracking-wide cursor-pointer hover:text-blue-600 whitespace-nowrap"
+                      className="text-right px-3 py-2 font-semibold text-[#566174] text-[11px] uppercase tracking-wide cursor-pointer hover:text-[#2563EB] whitespace-nowrap"
                       onClick={() => handleSort(col.key, col.defaultDir)}
                       title={col.tooltip}
                     >
@@ -1029,38 +1029,38 @@ export default function AIStackPage() {
                   return (
                     <tr
                       key={row.ticker}
-                      className={`border-b border-slate-100 transition-colors ${isError ? 'opacity-40' : 'hover:bg-blue-50/40'}`}
+                      className={`border-b border-[#E3E1DA] transition-colors ${isError ? 'opacity-40' : 'hover:bg-[#EAF1FF]/40'}`}
                     >
-                      <td className="sticky left-0 bg-white z-10 px-3 py-2 text-slate-400 text-[11px] text-center border-r border-slate-100">
+                      <td className="sticky left-0 bg-white z-10 px-3 py-2 text-[#8A95A6] text-[11px] text-center border-r border-[#E3E1DA]">
                         {idx + 1}
                       </td>
-                      <td className="sticky left-8 bg-white z-10 px-3 py-2 border-r border-slate-100">
+                      <td className="sticky left-8 bg-white z-10 px-3 py-2 border-r border-[#E3E1DA]">
                         <Link
                           href={`/stock/${row.ticker}`}
-                          className="font-bold text-blue-600 hover:text-blue-800 transition-colors font-mono text-[12px]"
+                          className="font-bold text-[#2563EB] hover:text-[#2563EB] transition-colors font-mono text-[12px]"
                         >
                           {row.ticker}
                         </Link>
                         <div className="flex items-center gap-1 mt-0.5 flex-wrap">
                           {row.exchange && (
-                            <span className="text-[10px] font-medium text-slate-400 bg-slate-100 px-1 py-0.5 rounded">
+                            <span className="text-[10px] font-medium text-[#8A95A6] bg-[#F4F3EF] px-1 py-0.5 rounded">
                               {row.exchange}
                             </span>
                           )}
                           {row.financialCurrency !== 'USD' && (
-                            <span className="text-[10px] font-medium text-amber-600 bg-amber-50 px-1 py-0.5 rounded" title={`Financials reported in ${row.financialCurrency}, converted to USD via live FX rate`}>
+                            <span className="text-[10px] font-medium text-[#B56A00] bg-[#FFF4DA] px-1 py-0.5 rounded" title={`Financials reported in ${row.financialCurrency}, converted to USD via live FX rate`}>
                               ADR·{row.financialCurrency}→$
                             </span>
                           )}
-                          {isError && <span className="text-[10px] text-red-400">no data</span>}
+                          {isError && <span className="text-[10px] text-[#D83B3B]">no data</span>}
                         </div>
                       </td>
-                      <td className="sticky left-[116px] bg-white z-10 px-3 py-2 border-r border-slate-100">
-                        <div className="text-slate-700 text-[12px] truncate max-w-[155px]" title={row.name}>
+                      <td className="sticky left-[116px] bg-white z-10 px-3 py-2 border-r border-[#E3E1DA]">
+                        <div className="text-[#566174] text-[12px] truncate max-w-[155px]" title={row.name}>
                           {row.name}
                         </div>
                         {row.sublayer && (
-                          <div className="text-[10px] text-slate-400 truncate">{row.sublayer}</div>
+                          <div className="text-[10px] text-[#8A95A6] truncate">{row.sublayer}</div>
                         )}
                       </td>
                       <td className="px-3 py-2">
@@ -1074,7 +1074,7 @@ export default function AIStackPage() {
                       </td>
                       {COLUMNS.map(col => {
                         const val = col.fmt(row)
-                        const colorClass = col.colorFn ? col.colorFn(row) : 'text-slate-700'
+                        const colorClass = col.colorFn ? col.colorFn(row) : 'text-[#566174]'
                         const canClick = col.clickable && row.valAssumptions
                         return (
                           <td
@@ -1092,7 +1092,7 @@ export default function AIStackPage() {
                 })}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={COLUMNS.length + 5} className="text-center py-12 text-slate-400 text-sm">
+                    <td colSpan={COLUMNS.length + 5} className="text-center py-12 text-[#8A95A6] text-sm">
                       No results match your filter.
                     </td>
                   </tr>
@@ -1106,8 +1106,8 @@ export default function AIStackPage() {
       {/* Score legend */}
       {!loading && data.length > 0 && (
         <div className="px-4 sm:px-6 pb-8 max-w-screen-2xl mx-auto">
-          <div className="bg-white border border-slate-200 rounded-xl p-4">
-            <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-3">
+          <div className="bg-white border border-[#E3E1DA] rounded-xl p-4">
+            <h3 className="text-[11px] font-semibold text-[#566174] uppercase tracking-wide mb-3">
               How the Value Score Works (0–100)
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
@@ -1123,33 +1123,33 @@ export default function AIStackPage() {
                 { label: 'Price / Book', weight: '5%',   desc: 'Graham floor. Buy below or near book value. Less meaningful for asset-light tech.' },
               ].map(item => (
                 <div key={item.label} className="text-[11px]">
-                  <div className="font-semibold text-slate-700">{item.label} <span className="text-slate-400 font-normal">({item.weight})</span></div>
-                  <div className="text-slate-500 mt-0.5">{item.desc}</div>
+                  <div className="font-semibold text-[#566174]">{item.label} <span className="text-[#8A95A6] font-normal">({item.weight})</span></div>
+                  <div className="text-[#566174] mt-0.5">{item.desc}</div>
                 </div>
               ))}
             </div>
             <div className="flex gap-4 flex-wrap mb-3">
               {[
-                { score: '70–100', label: 'Undervalued', color: '#16a34a' },
+                { score: '70–100', label: 'Undervalued', color: '#11875D' },
                 { score: '55–70', label: 'Fair Value',   color: '#65a30d' },
-                { score: '40–55', label: 'Fairly Priced', color: '#d97706' },
-                { score: '25–40', label: 'Overvalued',   color: '#ea580c' },
-                { score: '0–25',  label: 'Expensive',    color: '#dc2626' },
+                { score: '40–55', label: 'Fairly Priced', color: '#B56A00' },
+                { score: '25–40', label: 'Overvalued',   color: '#D83B3B' },
+                { score: '0–25',  label: 'Expensive',    color: '#D83B3B' },
               ].map(item => (
                 <div key={item.label} className="flex items-center gap-1.5 text-[11px]">
                   <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                  <span className="font-medium text-slate-700">{item.score}</span>
-                  <span className="text-slate-500">= {item.label}</span>
+                  <span className="font-medium text-[#566174]">{item.score}</span>
+                  <span className="text-[#566174]">= {item.label}</span>
                 </div>
               ))}
             </div>
             <div className="flex gap-4 flex-wrap text-[11px]">
               {[
-                { color: 'text-emerald-600', label: 'Green cell = attractive metric' },
-                { color: 'text-slate-700',   label: 'Neutral' },
-                { color: 'text-amber-600',   label: 'Yellow = watch' },
-                { color: 'text-red-500',     label: 'Red = unfavorable or Neg FCF' },
-                { color: 'text-slate-400',   label: '— = not available from Yahoo Finance' },
+                { color: 'text-[#11875D]', label: 'Green cell = attractive metric' },
+                { color: 'text-[#566174]',   label: 'Neutral' },
+                { color: 'text-[#B56A00]',   label: 'Yellow = watch' },
+                { color: 'text-[#D83B3B]',     label: 'Red = unfavorable or Neg FCF' },
+                { color: 'text-[#8A95A6]',   label: '— = not available from Yahoo Finance' },
               ].map(item => (
                 <div key={item.label} className={`flex items-center gap-1.5 ${item.color}`}>
                   <div className="w-2 h-2 rounded-full bg-current opacity-70" />
@@ -1157,7 +1157,7 @@ export default function AIStackPage() {
                 </div>
               ))}
             </div>
-            <p className="text-[10px] text-slate-400 mt-3">
+            <p className="text-[10px] text-[#8A95A6] mt-3">
               Data: Yahoo Finance (live, cached 30 min). Scores are screening signals — not investment advice.
               Sector context matters: tech companies naturally have higher P/B; REIT D/E looks high but that&#39;s structural.
               A stock may score low due to negative FCF while in a high-growth reinvestment phase — use judgment.

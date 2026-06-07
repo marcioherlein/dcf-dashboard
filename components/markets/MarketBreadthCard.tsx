@@ -44,25 +44,25 @@ export default function MarketBreadthCard({ sectors }: Props) {
   const { tone, badge, text } = getHealthTier()
 
   const BadgeIcon = tone === 'green'
-    ? <CheckCircle size={14} className="text-emerald-500 shrink-0 mt-0.5" />
+    ? <CheckCircle size={14} className="text-[#11875D] shrink-0 mt-0.5" />
     : tone === 'blue'
-    ? <Info size={14} className="text-blue-500 shrink-0 mt-0.5" />
+    ? <Info size={14} className="text-[#2563EB] shrink-0 mt-0.5" />
     : tone === 'amber'
-    ? <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
-    : <XCircle size={14} className="text-red-500 shrink-0 mt-0.5" />
+    ? <AlertCircle size={14} className="text-[#B56A00] shrink-0 mt-0.5" />
+    : <XCircle size={14} className="text-[#D83B3B] shrink-0 mt-0.5" />
 
   const badgeTextCls = {
-    green: 'text-emerald-700',
-    blue:  'text-blue-700',
-    amber: 'text-amber-700',
-    red:   'text-red-700',
+    green: 'text-[#11875D]',
+    blue:  'text-[#2563EB]',
+    amber: 'text-[#B56A00]',
+    red:   'text-[#D83B3B]',
   }[tone]
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-full flex flex-col">
-      <div className="px-4 py-2.5 border-b border-slate-100">
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Market Breadth</span>
-        <p className="text-[10px] text-slate-400 mt-0.5">Advancing vs declining sectors today</p>
+    <div className="bg-white rounded-2xl border border-[#E3E1DA] shadow-sm overflow-hidden h-full flex flex-col">
+      <div className="px-4 py-2.5 border-b border-[#E3E1DA]">
+        <span className="text-[10px] font-bold text-[#566174] uppercase tracking-wider">Market Breadth</span>
+        <p className="text-[10px] text-[#8A95A6] mt-0.5">Advancing vs declining sectors today</p>
       </div>
 
       <div className="px-5 py-4 flex-1 flex flex-col gap-4">
@@ -70,39 +70,39 @@ export default function MarketBreadthCard({ sectors }: Props) {
         {/* Stats: Advancing + Declining */}
         <div className="grid grid-cols-2 gap-3 text-center">
           <div>
-            <p className="text-[28px] font-bold tabular-nums text-emerald-600 leading-none">{advPct}%</p>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-1.5">Advancing</p>
-            <p className="text-[10px] text-slate-500 mt-0.5">{advancing} of {total}</p>
+            <p className="text-[28px] font-bold tabular-nums text-[#11875D] leading-none">{advPct}%</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#8A95A6] mt-1.5">Advancing</p>
+            <p className="text-[10px] text-[#566174] mt-0.5">{advancing} of {total}</p>
           </div>
           <div>
-            <p className="text-[28px] font-bold tabular-nums text-red-500 leading-none">{decPct}%</p>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-1.5">Declining</p>
-            <p className="text-[10px] text-slate-500 mt-0.5">{declining} of {total}</p>
+            <p className="text-[28px] font-bold tabular-nums text-[#D83B3B] leading-none">{decPct}%</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#8A95A6] mt-1.5">Declining</p>
+            <p className="text-[10px] text-[#566174] mt-0.5">{declining} of {total}</p>
           </div>
         </div>
 
         {/* Progress bar */}
         <div className="space-y-1.5">
           <div className="h-2.5 rounded-full overflow-hidden flex">
-            <div className="bg-emerald-500 h-full transition-all" style={{ width: `${advPct}%` }} />
-            <div className="bg-slate-200 h-full transition-all"  style={{ width: `${unchPct}%` }} />
-            <div className="bg-red-400 h-full transition-all"    style={{ width: `${decPct}%` }} />
+            <div className="bg-[#11875D] h-full transition-all" style={{ width: `${advPct}%` }} />
+            <div className="bg-[#E3E1DA] h-full transition-all"  style={{ width: `${unchPct}%` }} />
+            <div className="bg-[#D83B3B] h-full transition-all"    style={{ width: `${decPct}%` }} />
           </div>
-          <p className="text-[10px] text-slate-400">Unchanged: {unchanged} of {total} ({unchPct}%)</p>
+          <p className="text-[10px] text-[#8A95A6]">Unchanged: {unchanged} of {total} ({unchPct}%)</p>
         </div>
 
         {/* Health indicator */}
         <div className={cn(
           'flex items-start gap-2 rounded-xl px-3 py-2.5',
-          tone === 'green' ? 'bg-emerald-50'
-          : tone === 'blue' ? 'bg-blue-50'
-          : tone === 'amber' ? 'bg-amber-50'
-          : 'bg-red-50'
+          tone === 'green' ? 'bg-[#E8F7EF]'
+          : tone === 'blue' ? 'bg-[#EAF1FF]'
+          : tone === 'amber' ? 'bg-[#FFF4DA]'
+          : 'bg-[#FCEAEA]'
         )}>
           {BadgeIcon}
           <div>
             <p className={cn('text-[12px] font-bold leading-tight', badgeTextCls)}>{badge}</p>
-            <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">{text}</p>
+            <p className="text-[11px] text-[#566174] mt-0.5 leading-snug">{text}</p>
           </div>
         </div>
 

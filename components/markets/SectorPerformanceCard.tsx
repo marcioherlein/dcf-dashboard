@@ -32,10 +32,10 @@ export default function SectorPerformanceCard({ sectors }: Props) {
   const visible = showAll ? sorted : sorted.slice(0, 6)
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-full flex flex-col">
-      <div className="px-4 py-2.5 border-b border-slate-100">
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Sector Performance</span>
-        <p className="text-[10px] text-slate-400 mt-0.5">Daily change · S&P 500 sectors</p>
+    <div className="bg-white rounded-2xl border border-[#E3E1DA] shadow-sm overflow-hidden h-full flex flex-col">
+      <div className="px-4 py-2.5 border-b border-[#E3E1DA]">
+        <span className="text-[10px] font-bold text-[#566174] uppercase tracking-wider">Sector Performance</span>
+        <p className="text-[10px] text-[#8A95A6] mt-0.5">Daily change · S&P 500 sectors</p>
       </div>
 
       <div className="px-4 py-3 space-y-2 flex-1">
@@ -46,25 +46,25 @@ export default function SectorPerformanceCard({ sectors }: Props) {
           const name = SECTOR_NAMES[s.symbol] ?? s.name ?? s.symbol
           return (
             <div key={s.symbol} className="flex items-center gap-2">
-              <span className="text-[10px] text-slate-600 w-[88px] shrink-0 truncate">{name}</span>
+              <span className="text-[10px] text-[#566174] w-[88px] shrink-0 truncate">{name}</span>
               <div className="flex-1 relative h-3 flex items-center">
-                <div className="absolute inset-0 rounded-full bg-slate-100" />
-                <div className="absolute top-0 bottom-0 left-1/2 w-px bg-slate-300" />
+                <div className="absolute inset-0 rounded-full bg-[#F4F3EF]" />
+                <div className="absolute top-0 bottom-0 left-1/2 w-px bg-[#CDD1C8]" />
                 {up ? (
                   <div
-                    className="absolute top-0.5 bottom-0.5 rounded-r-full bg-emerald-400"
+                    className="absolute top-0.5 bottom-0.5 rounded-r-full bg-[#11875D]"
                     style={{ left: '50%', width: `${barHalfW}%` }}
                   />
                 ) : (
                   <div
-                    className="absolute top-0.5 bottom-0.5 rounded-l-full bg-red-400"
+                    className="absolute top-0.5 bottom-0.5 rounded-l-full bg-[#D83B3B]"
                     style={{ right: '50%', width: `${barHalfW}%` }}
                   />
                 )}
               </div>
               <span className={cn(
                 'text-[10px] font-semibold tabular-nums w-12 text-right shrink-0',
-                up ? 'text-emerald-600' : 'text-red-500'
+                up ? 'text-[#11875D]' : 'text-[#D83B3B]'
               )}>
                 {p >= 0 ? '+' : ''}{p.toFixed(2)}%
               </span>
@@ -74,10 +74,10 @@ export default function SectorPerformanceCard({ sectors }: Props) {
       </div>
 
       {sorted.length > 6 && (
-        <div className="px-4 pb-3 border-t border-slate-50 pt-2">
+        <div className="px-4 pb-3 border-t border-[#F4F3EF] pt-2">
           <button
             onClick={() => setShowAll(v => !v)}
-            className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors min-h-[44px] flex items-center"
+            className="text-[11px] font-semibold text-[#2563EB] hover:text-[#2563EB] transition-colors min-h-[44px] flex items-center"
           >
             {showAll ? 'Show fewer sectors' : `Show all ${sorted.length} sectors`}
           </button>

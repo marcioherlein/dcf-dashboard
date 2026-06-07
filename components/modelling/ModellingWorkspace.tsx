@@ -168,7 +168,7 @@ function ModellingApproach({
   const cockpitDiverged = cockpitWacc != null && Math.abs(wacc - cockpitWacc) > 0.001
   const displayCagrPct = flatCagrPct ?? baseCagrPct
 
-  const selectCls = "bg-[#0d1829] text-[12px] font-[600] text-white/80 rounded-lg pl-2.5 pr-7 py-1.5 border border-white/[0.12] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus:border-blue-500/50 cursor-pointer w-full appearance-none"
+  const selectCls = "bg-[#0d1829] text-[12px] font-[600] text-white/80 rounded-lg pl-2.5 pr-7 py-1.5 border border-white/[0.12] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus:border-[#5F790B]/50 cursor-pointer w-full appearance-none"
 
   const SelectCaret = () => (
     <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-white/35" width="10" height="6" viewBox="0 0 10 6" aria-hidden="true">
@@ -318,7 +318,7 @@ function ModellingApproach({
                   const v = parseFloat(e.target.value)
                   if (!isNaN(v)) onFlatCagrChange(v)
                 }}
-                className="flex-1 min-w-0 bg-[#0d1829] text-[12px] font-[600] text-white/80 rounded-lg px-2 py-1 border border-white/[0.12] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus:border-blue-500/50 tabular-nums"
+                className="flex-1 min-w-0 bg-[#0d1829] text-[12px] font-[600] text-white/80 rounded-lg px-2 py-1 border border-white/[0.12] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus:border-[#5F790B]/50 tabular-nums"
                 style={{ fontSize: '16px' }}
               />
               <span className="text-[10px] text-white/40 shrink-0">%/yr</span>
@@ -335,7 +335,7 @@ function ModellingApproach({
       </div>
 
       {growthMode === 'manual' && (
-        <p className="mt-3 text-[10px] text-blue-400/70 bg-blue-500/[0.1] rounded-lg px-3 py-2 border border-blue-500/20">
+        <p className="mt-3 text-[10px] text-[#2563EB]/70 bg-[#EAF1FF]0/[0.1] rounded-lg px-3 py-2 border border-blue-500/20">
           Edit mode active — click any revenue cell in the forecast table to set that year&apos;s value directly.
         </p>
       )}
@@ -729,7 +729,7 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
       {delta && (
         <div className={[
           'flex items-center justify-center gap-1.5 py-1.5 text-[12px] font-semibold tabular-nums transition-opacity',
-          delta.amount >= 0 ? 'text-emerald-400 bg-emerald-400/10' : 'text-red-400 bg-red-400/10',
+          delta.amount >= 0 ? 'text-emerald-400 bg-[#11875D]/10' : 'text-red-400 bg-[#D83B3B]/10',
         ].join(' ')}>
           <span>{delta.amount >= 0 ? '▲' : '▼'}</span>
           <span>Fair Value {delta.amount >= 0 ? '+' : ''}{delta.amount.toFixed(2)}</span>

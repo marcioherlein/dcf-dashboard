@@ -121,17 +121,17 @@ export default function FinancialSnapshotBar({ statementsData, currency = 'USD',
   void capexPct
 
   return (
-    <div className="rounded-2xl bg-white border border-slate-100 shadow-card px-4 sm:px-5 py-3">
+    <div className="rounded-2xl bg-white border border-[#E3E1DA] shadow-card px-4 sm:px-5 py-3">
       <div className={`grid gap-x-4 gap-y-2.5 ${stats.length >= 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3'}`}>
         {stats.map((stat) => (
           <div key={stat.label}>
-            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-0.5 truncate">
+            <p className="text-[10px] font-semibold text-[#8A95A6] uppercase tracking-wide mb-0.5 truncate">
               {stat.label}
             </p>
             <div className="flex items-baseline gap-1.5 flex-wrap">
-              <span className="text-[13px] font-bold tabular-nums text-slate-800 leading-tight">{stat.value}</span>
+              <span className="text-[13px] font-bold tabular-nums text-[#06101F] leading-tight">{stat.value}</span>
               {stat.badge && (
-                <span className={`text-[10px] font-semibold tabular-nums ${stat.badgePos ? 'text-emerald-600' : 'text-red-500'}`}>
+                <span className={`text-[10px] font-semibold tabular-nums ${stat.badgePos ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                   {stat.badge}
                 </span>
               )}

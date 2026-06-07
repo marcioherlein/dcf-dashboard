@@ -71,24 +71,24 @@ function ChartPanel({ item, onClose }: { item: MarketItem; onClose: () => void }
     <div className="fixed inset-0 z-50 flex" onClick={onClose}>
       <div className="flex-1 bg-black/30" />
       <div
-        className="w-full sm:w-[520px] bg-white border-l border-slate-200 flex flex-col h-full overflow-y-auto shadow-card-md"
+        className="w-full sm:w-[520px] bg-white border-l border-[#E3E1DA] flex flex-col h-full overflow-y-auto shadow-card-md"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between px-5 py-4 border-b border-slate-200">
+        <div className="flex items-start justify-between px-5 py-4 border-b border-[#E3E1DA]">
           <div>
             <div className="flex items-baseline gap-2">
-              <span className="text-lg font-bold text-slate-900">{item.ticker}</span>
+              <span className="text-lg font-bold text-[#06101F]">{item.ticker}</span>
               <span className="text-sm font-semibold" style={{ color: accentColor }}>
                 {isUp ? '+' : ''}{item.changePct.toFixed(2)}%
               </span>
             </div>
-            <div className="text-[12px] text-slate-500 mt-0.5">{item.label}</div>
-            <div className="text-xl font-bold text-slate-900 mt-1 tabular-nums">{fmtPrice(item.price, item.ticker)}</div>
+            <div className="text-[12px] text-[#566174] mt-0.5">{item.label}</div>
+            <div className="text-xl font-bold text-[#06101F] mt-1 tabular-nums">{fmtPrice(item.price, item.ticker)}</div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-700 transition-colors mt-0.5 text-xl leading-none min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="text-[#8A95A6] hover:text-[#06101F] transition-colors mt-0.5 text-xl leading-none min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             ×
           </button>
@@ -107,7 +107,7 @@ function ChartPanel({ item, onClose }: { item: MarketItem; onClose: () => void }
 
         {/* Footer CTA — only for equity groups */}
         {isEquity && (
-          <div className="px-5 pt-3 border-t border-slate-200" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}>
+          <div className="px-5 pt-3 border-t border-[#E3E1DA]" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}>
             <Link
               href={`/stock/${item.ticker}`}
               className="flex items-center justify-center gap-2 w-full py-2 bg-olive-700 hover:bg-olive-600 text-white text-sm font-medium rounded-lg transition-colors"
@@ -126,7 +126,7 @@ function SkeletonRow() {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
       {[0, 1, 2, 3, 4, 5].map((i) => (
-        <div key={i} className="animate-pulse bg-slate-100 border border-slate-200 rounded-xl h-20" />
+        <div key={i} className="animate-pulse bg-[#F4F3EF] border border-[#E3E1DA] rounded-xl h-20" />
       ))}
     </div>
   )
@@ -140,10 +140,10 @@ function MarketCard({ item, onClick }: { item: MarketItem; onClick: () => void }
   return (
     <button
       onClick={onClick}
-      className="group flex flex-col bg-white border border-slate-200 hover:border-slate-300 hover:shadow-card transition-all rounded-xl p-3 text-left w-full min-h-[80px]"
+      className="group flex flex-col bg-white border border-[#E3E1DA] hover:border-[#CDD1C8] hover:shadow-card transition-all rounded-xl p-3 text-left w-full min-h-[80px]"
     >
       <div className="flex items-start justify-between mb-1 gap-1">
-        <span className="text-[11px] font-medium text-slate-500 truncate leading-none">{item.label}</span>
+        <span className="text-[11px] font-medium text-[#566174] truncate leading-none">{item.label}</span>
         <span
           className="text-[11px] font-semibold shrink-0 leading-none"
           style={{ color: accentColor }}
@@ -151,7 +151,7 @@ function MarketCard({ item, onClick }: { item: MarketItem; onClick: () => void }
           {isUp ? '+' : ''}{item.changePct.toFixed(2)}%
         </span>
       </div>
-      <div className="text-sm font-bold text-slate-900 tabular-nums mb-1">
+      <div className="text-sm font-bold text-[#06101F] tabular-nums mb-1">
         {fmtPrice(item.price, item.ticker)}
       </div>
       <div className="mt-auto">
@@ -200,23 +200,23 @@ export default function MarketMonitor() {
 
   return (
     <>
-      <div className="min-h-dvh bg-[#F8FAFB]">
+      <div className="min-h-dvh bg-[#F4F3EF]">
 
         {/* Page header */}
-        <div className="px-4 sm:px-6 py-4 border-b border-slate-200 bg-white flex items-center justify-between gap-3">
+        <div className="px-4 sm:px-6 py-4 border-b border-[#E3E1DA] bg-white flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-base font-semibold text-slate-900 tracking-tight">Market Monitor</h1>
-            <p className="text-[12px] text-slate-500 mt-0.5 hidden sm:block">
+            <h1 className="text-base font-semibold text-[#06101F] tracking-tight">Market Monitor</h1>
+            <p className="text-[12px] text-[#566174] mt-0.5 hidden sm:block">
               Global markets · Equities · Rates · Commodities · Crypto · FX
-              <span className="ml-2 text-slate-400">· delayed ~15 min</span>
+              <span className="ml-2 text-[#8A95A6]">· delayed ~15 min</span>
             </p>
-            <p className="text-[12px] text-slate-500 mt-0.5 sm:hidden">
+            <p className="text-[12px] text-[#566174] mt-0.5 sm:hidden">
               Global markets · delayed ~15 min
             </p>
           </div>
           <button
             onClick={() => { setLoading(true); fetch('/api/market').then((r) => r.json()).then((d) => { setData(d); setLoading(false) }).catch(() => setLoading(false)) }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#E3E1DA] text-xs font-medium text-[#06101F] hover:bg-[#F4F3EF] transition-colors"
           >
             <svg className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -227,21 +227,21 @@ export default function MarketMonitor() {
 
         {/* KPI summary row */}
         {!loading && allItems.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-slate-200 border-b border-slate-200">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[#E3E1DA] border-b border-[#E3E1DA]">
             <div className="bg-white px-4 py-3">
-              <p className="text-[11px] text-slate-400 uppercase tracking-wide font-medium">Tracked</p>
-              <p className="text-xl font-bold text-slate-900">{allItems.length}</p>
+              <p className="text-[11px] text-[#8A95A6] uppercase tracking-wide font-medium">Tracked</p>
+              <p className="text-xl font-bold text-[#06101F]">{allItems.length}</p>
             </div>
             <div className="bg-white px-4 py-3">
-              <p className="text-[11px] text-slate-400 uppercase tracking-wide font-medium">Advancing</p>
-              <p className="text-xl font-bold text-emerald-600">{advancing}</p>
+              <p className="text-[11px] text-[#8A95A6] uppercase tracking-wide font-medium">Advancing</p>
+              <p className="text-xl font-bold text-[#11875D]">{advancing}</p>
             </div>
             <div className="bg-white px-4 py-3">
-              <p className="text-[11px] text-slate-400 uppercase tracking-wide font-medium">Declining</p>
-              <p className="text-xl font-bold text-red-500">{declining}</p>
+              <p className="text-[11px] text-[#8A95A6] uppercase tracking-wide font-medium">Declining</p>
+              <p className="text-xl font-bold text-[#D83B3B]">{declining}</p>
             </div>
             <div className="bg-white px-4 py-3">
-              <p className="text-[11px] text-slate-400 uppercase tracking-wide font-medium">Avg Δ%</p>
+              <p className="text-[11px] text-[#8A95A6] uppercase tracking-wide font-medium">Avg Δ%</p>
               <p className="text-xl font-bold" style={{ color: avgPct >= 0 ? '#059669' : '#DC2626' }}>
                 {avgPct >= 0 ? '+' : ''}{avgPct.toFixed(2)}%
               </p>
@@ -251,14 +251,14 @@ export default function MarketMonitor() {
 
         {/* Group filter pills */}
         {!loading && (
-          <div className="px-4 sm:px-6 py-3 border-b border-slate-200 bg-white flex overflow-x-auto gap-1.5">
+          <div className="px-4 sm:px-6 py-3 border-b border-[#E3E1DA] bg-white flex overflow-x-auto gap-1.5">
             <button
               onClick={() => setActiveGroup(null)}
               className={[
                 'px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors shrink-0 min-h-[36px]',
                 activeGroup === null
                   ? 'bg-olive-700 text-white'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
+                  : 'bg-[#F4F3EF] text-[#566174] hover:bg-[#E3E1DA]',
               ].join(' ')}
             >
               All
@@ -277,7 +277,7 @@ export default function MarketMonitor() {
                     'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors shrink-0 min-h-[36px]',
                     activeGroup === g.name
                       ? 'bg-olive-700 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
+                      : 'bg-[#F4F3EF] text-[#566174] hover:bg-[#E3E1DA]',
                   ].join(' ')}
                 >
                   <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: accentDot }} />
@@ -290,13 +290,13 @@ export default function MarketMonitor() {
 
         {/* Top mover banner */}
         {!loading && topMover && (
-          <div className="px-4 sm:px-6 py-2 border-b border-slate-200 bg-white flex items-center gap-3 overflow-x-auto">
-            <span className="text-[11px] text-slate-400 uppercase tracking-wider font-medium">Top mover</span>
-            <span className="text-[12px] font-semibold text-slate-800">{topMover.label}</span>
+          <div className="px-4 sm:px-6 py-2 border-b border-[#E3E1DA] bg-white flex items-center gap-3 overflow-x-auto">
+            <span className="text-[11px] text-[#8A95A6] uppercase tracking-wider font-medium">Top mover</span>
+            <span className="text-[12px] font-semibold text-[#06101F]">{topMover.label}</span>
             <span className="text-[12px] font-semibold" style={{ color: topMover.changePct >= 0 ? '#059669' : '#DC2626' }}>
               {topMover.changePct >= 0 ? '+' : ''}{topMover.changePct.toFixed(2)}%
             </span>
-            <span className="text-[12px] text-slate-500 tabular-nums">{fmtPrice(topMover.price, topMover.ticker)}</span>
+            <span className="text-[12px] text-[#566174] tabular-nums">{fmtPrice(topMover.price, topMover.ticker)}</span>
           </div>
         )}
 
@@ -306,7 +306,7 @@ export default function MarketMonitor() {
             <div className="space-y-6">
               {GROUP_ORDER.slice(0, 4).map((g) => (
                 <div key={g}>
-                  <div className="h-3 w-32 bg-slate-100 rounded animate-pulse mb-3" />
+                  <div className="h-3 w-32 bg-[#F4F3EF] rounded animate-pulse mb-3" />
                   <SkeletonRow />
                 </div>
               ))}
@@ -316,11 +316,11 @@ export default function MarketMonitor() {
               <div key={group.name}>
                 {/* Section header */}
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                  <span className="text-[11px] font-semibold text-[#8A95A6] uppercase tracking-wider">
                     {group.label}
                   </span>
-                  <div className="flex-1 h-px bg-slate-200" />
-                  <span className="text-[10px] text-slate-400">{group.items.length} instruments</span>
+                  <div className="flex-1 h-px bg-[#E3E1DA]" />
+                  <span className="text-[10px] text-[#8A95A6]">{group.items.length} instruments</span>
                 </div>
 
                 {/* Cards grid */}
@@ -338,7 +338,7 @@ export default function MarketMonitor() {
           )}
         </div>
 
-        <div className="px-4 sm:px-6 pb-6 text-[11px] text-slate-300">
+        <div className="px-4 sm:px-6 pb-6 text-[11px] text-[#8A95A6]">
           Data via Yahoo Finance · ~15 min delay · Click any card for price history
         </div>
       </div>

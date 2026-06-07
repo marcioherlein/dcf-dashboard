@@ -48,7 +48,7 @@ interface Props {
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">{children}</p>
+  return <p className="text-[10px] font-bold uppercase tracking-wider text-[#8A95A6] mb-2">{children}</p>
 }
 
 function Card({ children }: { children: React.ReactNode }) {
@@ -61,21 +61,21 @@ function Card({ children }: { children: React.ReactNode }) {
 
 function MarginBar({ label, value }: { label: string; value: number | null }) {
   const pct = value != null ? Math.min(100, Math.max(0, value * 100)) : null
-  const color = pct == null ? 'bg-slate-100'
-    : pct >= 30 ? 'bg-emerald-500/70'
-    : pct >= 15 ? 'bg-emerald-400/60'
-    : pct >= 5  ? 'bg-amber-400/60'
-    : 'bg-red-400/60'
+  const color = pct == null ? 'bg-[#F4F3EF]'
+    : pct >= 30 ? 'bg-[#E8F7EF]0/70'
+    : pct >= 15 ? 'bg-[#11875D]/60'
+    : pct >= 5  ? 'bg-[#B56A00]/60'
+    : 'bg-[#D83B3B]/60'
 
   return (
     <div>
       <div className="flex justify-between mb-1">
-        <span className="text-[11px] text-slate-500">{label}</span>
-        <span className="text-[11px] font-semibold text-slate-900 tabular-nums">
+        <span className="text-[11px] text-[#566174]">{label}</span>
+        <span className="text-[11px] font-semibold text-[#06101F] tabular-nums">
           {pct != null ? pct.toFixed(1) + '%' : '—'}
         </span>
       </div>
-      <div className="h-1 rounded-full bg-slate-100">
+      <div className="h-1 rounded-full bg-[#F4F3EF]">
         {pct != null && (
           <div className={cn('h-1 rounded-full transition-all', color)} style={{ width: `${pct}%` }} />
         )}
@@ -121,20 +121,20 @@ function BarSparkline({ data, colorFn, label }: {
                   'w-full rounded-sm',
                   colorFn(d.value),
                   isProj ? 'opacity-25' : isLatest ? 'opacity-90' : 'opacity-50',
-                  isProj ? 'border border-dashed border-slate-300' : '',
+                  isProj ? 'border border-dashed border-[#CDD1C8]' : '',
                 )}
                 style={{ height: barH }}
               />
-              <span className={cn('text-[10px]', isProj ? 'text-slate-400' : 'text-slate-500')}>
+              <span className={cn('text-[10px]', isProj ? 'text-[#8A95A6]' : 'text-[#566174]')}>
                 {d.year.slice(-2)}
               </span>
             </div>
           )
         })}
       </div>
-      <div className="flex justify-between mt-0.5 text-[10px] text-slate-500 tabular-nums">
+      <div className="flex justify-between mt-0.5 text-[10px] text-[#566174] tabular-nums">
         {data.map(d => (
-          <span key={d.year} className={d.isProjected ? 'text-slate-400' : ''}>{fmtM(d.value)}</span>
+          <span key={d.year} className={d.isProjected ? 'text-[#8A95A6]' : ''}>{fmtM(d.value)}</span>
         ))}
       </div>
     </div>
@@ -169,20 +169,20 @@ function RevenueBarChart({ rows }: { rows: IncomeRow[] }) {
               <div
                 className={cn(
                   'w-full rounded-sm',
-                  isProj ? 'bg-blue-200/70' : isLatest ? 'bg-blue-400/70' : 'bg-slate-200',
+                  isProj ? 'bg-blue-200/70' : isLatest ? 'bg-blue-400/70' : 'bg-[#E3E1DA]',
                 )}
                 style={{ height: barH }}
               />
-              <span className={cn('text-[10px]', isProj ? 'text-slate-400' : 'text-slate-500')}>
+              <span className={cn('text-[10px]', isProj ? 'text-[#8A95A6]' : 'text-[#566174]')}>
                 {r.year.slice(-2)}
               </span>
             </div>
           )
         })}
       </div>
-      <div className="flex justify-between mt-0.5 text-[10px] text-slate-500 tabular-nums">
+      <div className="flex justify-between mt-0.5 text-[10px] text-[#566174] tabular-nums">
         {all.map(r => (
-          <span key={r.year} className={r.isProjected ? 'text-slate-400' : ''}>
+          <span key={r.year} className={r.isProjected ? 'text-[#8A95A6]' : ''}>
             {fmtM(r.revenue!)}
           </span>
         ))}
@@ -197,13 +197,13 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
   const beneish   = scores?.beneish
   const roic      = scores?.roic
 
-  const altmanColor = altman?.zone === 'Safe' ? 'text-emerald-600 bg-emerald-50 border-emerald-200'
-    : altman?.zone === 'Distress' ? 'text-red-600 bg-red-50 border-red-200'
-    : 'text-amber-600 bg-amber-50 border-amber-200'
+  const altmanColor = altman?.zone === 'Safe' ? 'text-[#11875D] bg-[#E8F7EF] border-[#A3D9BE]'
+    : altman?.zone === 'Distress' ? 'text-[#D83B3B] bg-[#FCEAEA] border-[#F0B8B8]'
+    : 'text-[#B56A00] bg-[#FFF4DA] border-[#F3D391]'
 
-  const beneishColor = beneish?.flag === 'Clean' ? 'text-emerald-600 bg-emerald-50 border-emerald-200'
-    : beneish?.flag === 'Manipulator' ? 'text-red-600 bg-red-50 border-red-200'
-    : 'text-amber-600 bg-amber-50 border-amber-200'
+  const beneishColor = beneish?.flag === 'Clean' ? 'text-[#11875D] bg-[#E8F7EF] border-[#A3D9BE]'
+    : beneish?.flag === 'Manipulator' ? 'text-[#D83B3B] bg-[#FCEAEA] border-[#F0B8B8]'
+    : 'text-[#B56A00] bg-[#FFF4DA] border-[#F3D391]'
 
   const isRows = financialStatements?.incomeStatement ?? []
   const cfRows = financialStatements?.cashFlow ?? []
@@ -261,7 +261,7 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
         <Card>
           <BarSparkline
             data={ebitData}
-            colorFn={v => v >= 0 ? 'bg-emerald-400' : 'bg-red-400'}
+            colorFn={v => v >= 0 ? 'bg-[#11875D]' : 'bg-[#D83B3B]'}
             label="EBIT (Operating Income)"
           />
         </Card>
@@ -272,7 +272,7 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
         <Card>
           <BarSparkline
             data={niData}
-            colorFn={v => v >= 0 ? 'bg-blue-400' : 'bg-red-400'}
+            colorFn={v => v >= 0 ? 'bg-blue-400' : 'bg-[#D83B3B]'}
             label="Net Income"
           />
         </Card>
@@ -283,7 +283,7 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
         <Card>
           <BarSparkline
             data={fcfData}
-            colorFn={v => v >= 0 ? 'bg-indigo-400' : 'bg-red-400'}
+            colorFn={v => v >= 0 ? 'bg-indigo-400' : 'bg-[#D83B3B]'}
             label="Free Cash Flow"
           />
         </Card>
@@ -297,27 +297,27 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
           <SectionLabel>Capital Returns</SectionLabel>
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] text-slate-500">ROIC</span>
+              <span className="text-[11px] text-[#566174]">ROIC</span>
               <span className={cn(
                 'text-[11px] font-semibold tabular-nums',
-                roic.roic >= 0.15 ? 'text-emerald-600' : roic.roic >= 0.08 ? 'text-amber-600' : 'text-red-600'
+                roic.roic >= 0.15 ? 'text-[#11875D]' : roic.roic >= 0.08 ? 'text-[#B56A00]' : 'text-[#D83B3B]'
               )}>
                 {(roic.roic * 100).toFixed(1)}%
               </span>
             </div>
             {roic.spread != null && (
               <div className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-500">ROIC − WACC spread</span>
+                <span className="text-[11px] text-[#566174]">ROIC − WACC spread</span>
                 <span className={cn(
                   'text-[11px] font-semibold tabular-nums',
-                  roic.spread > 0 ? 'text-emerald-600' : 'text-red-600'
+                  roic.spread > 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'
                 )}>
                   {roic.spread > 0 ? '+' : ''}{(roic.spread * 100).toFixed(1)}%
                 </span>
               </div>
             )}
             {roic.spread != null && (
-              <p className="text-[10px] text-slate-500 leading-tight mt-0.5">
+              <p className="text-[10px] text-[#566174] leading-tight mt-0.5">
                 {roic.spread > 0.05 ? 'Value creation: earning well above cost of capital'
                   : roic.spread > 0 ? 'Modest value creation above cost of capital'
                   : 'Returns below cost of capital — value erosion risk'}
@@ -335,10 +335,10 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
             {piotroski && (
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[11px] text-slate-500">Piotroski F-Score</span>
+                  <span className="text-[11px] text-[#566174]">Piotroski F-Score</span>
                   <span className={cn(
                     'text-[11px] font-bold tabular-nums',
-                    piotroski.score >= 7 ? 'text-emerald-600' : piotroski.score >= 4 ? 'text-amber-600' : 'text-red-600'
+                    piotroski.score >= 7 ? 'text-[#11875D]' : piotroski.score >= 4 ? 'text-[#B56A00]' : 'text-[#D83B3B]'
                   )}>
                     {piotroski.score}/9
                   </span>
@@ -350,8 +350,8 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
                       className={cn(
                         'h-1.5 flex-1 rounded-full',
                         i < piotroski.score
-                          ? piotroski.score >= 7 ? 'bg-emerald-400' : piotroski.score >= 4 ? 'bg-amber-400' : 'bg-red-400'
-                          : 'bg-slate-200'
+                          ? piotroski.score >= 7 ? 'bg-[#11875D]' : piotroski.score >= 4 ? 'bg-[#B56A00]' : 'bg-[#D83B3B]'
+                          : 'bg-[#E3E1DA]'
                       )}
                     />
                   ))}
@@ -385,8 +385,8 @@ export default function FinancialsSidebar({ businessProfile, scores, financialSt
               { label: 'Short Float',   value: ownership.shortPct },
             ].map(({ label, value }) => (
               <div key={label} className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-500">{label}</span>
-                <span className="text-[11px] font-semibold text-slate-900 tabular-nums">
+                <span className="text-[11px] text-[#566174]">{label}</span>
+                <span className="text-[11px] font-semibold text-[#06101F] tabular-nums">
                   {value != null ? (value * 100).toFixed(1) + '%' : '—'}
                 </span>
               </div>

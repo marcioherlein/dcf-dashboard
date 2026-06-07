@@ -1,7 +1,13 @@
 # insic UI Migration Log
 
 **Started:** 2026-06-07  
-**Status:** Gates 1–3 complete. Gate 4 (route migration) in progress.
+**Status:** Gates 1–5 complete. Build passing. All routes migrated.
+
+**Final build status:**
+- TypeScript: ✅ zero errors
+- ESLint: ✅ zero errors (pre-existing `react-hooks/exhaustive-deps` warnings in ValuationLab + ModellingWorkspace unchanged)
+- Next.js build: ✅ 26/26 routes compiled
+- Token migration: 179 files changed, 4387 insertions, 4421 deletions
 
 ---
 

@@ -9,13 +9,13 @@ interface Props {
 
 function bandBarClass(b: { label: string; current?: boolean }): string {
   if (b.current) return 'bg-olive-700 text-white font-bold ring-2 ring-olive-700/30'
-  if (b.label.startsWith('Cheap'))      return 'bg-emerald-50 text-emerald-700'
-  if (b.label.startsWith('Fair'))       return 'bg-slate-100 text-slate-600'
-  if (b.label.startsWith('Elevated'))   return 'bg-amber-50 text-amber-700'
-  if (b.label.startsWith('Attractive')) return 'bg-emerald-50 text-emerald-700'
-  if (b.label.startsWith('Compressed')) return 'bg-amber-50 text-amber-700'
-  if (b.label.startsWith('Negative'))   return 'bg-red-50 text-red-600'
-  return 'bg-red-50 text-red-600'
+  if (b.label.startsWith('Cheap'))      return 'bg-[#E8F7EF] text-[#11875D]'
+  if (b.label.startsWith('Fair'))       return 'bg-[#E3E1DA] text-[#566174]'
+  if (b.label.startsWith('Elevated'))   return 'bg-[#FFF4DA] text-[#B56A00]'
+  if (b.label.startsWith('Attractive')) return 'bg-[#E8F7EF] text-[#11875D]'
+  if (b.label.startsWith('Compressed')) return 'bg-[#FFF4DA] text-[#B56A00]'
+  if (b.label.startsWith('Negative'))   return 'bg-[#FCEAEA] text-[#D83B3B]'
+  return 'bg-[#FCEAEA] text-[#D83B3B]'
 }
 
 function erpLabel(erp: number | null): string {
@@ -28,12 +28,12 @@ function erpLabel(erp: number | null): string {
 }
 
 function erpColor(erp: number | null): string {
-  if (erp == null) return 'text-slate-400'
+  if (erp == null) return 'text-[#8A95A6]'
   const pct = erp * 100
-  if (pct > 3.5) return 'text-emerald-700'
-  if (pct > 2)   return 'text-emerald-600'
-  if (pct > 0)   return 'text-amber-700'
-  return 'text-red-600'
+  if (pct > 3.5) return 'text-[#11875D]'
+  if (pct > 2)   return 'text-[#11875D]'
+  if (pct > 0)   return 'text-[#B56A00]'
+  return 'text-[#D83B3B]'
 }
 
 function peLabel(spyForwardPE: number | null, bands: { label: string; current?: boolean }[]): string {
@@ -76,22 +76,22 @@ export default function ValuationContext({ valuation }: Props) {
   const takeaway  = computeTakeaway(spyForwardPE, erp)
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-slate-100">
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Valuation Context</span>
-        <p className="text-[10px] text-slate-400 mt-0.5">How current market prices compare to historical ranges — and what it means for your DCF.</p>
+    <div className="bg-white rounded-xl border border-[#E3E1DA] shadow-sm overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-[#E3E1DA]">
+        <span className="text-[10px] font-bold text-[#566174] uppercase tracking-wider">Valuation Context</span>
+        <p className="text-[10px] text-[#8A95A6] mt-0.5">How current market prices compare to historical ranges — and what it means for your DCF.</p>
       </div>
 
       {/* Two panels side by side */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+      <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#E3E1DA]">
 
         {/* P/E Panel */}
         <div className="px-5 py-4">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">SPY Forward P/E</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#566174] mb-2">SPY Forward P/E</p>
           {spyForwardPE != null ? (
             <>
-              <p className="text-[26px] font-bold tabular-nums text-emerald-700 leading-none">{spyForwardPE.toFixed(1)}×</p>
-              <p className="text-[11px] text-slate-500 mt-1">{peLabel(spyForwardPE, forwardPEBands)}</p>
+              <p className="text-[26px] font-bold tabular-nums text-[#11875D] leading-none">{spyForwardPE.toFixed(1)}×</p>
+              <p className="text-[11px] text-[#566174] mt-1">{peLabel(spyForwardPE, forwardPEBands)}</p>
               <div className="relative mt-4 mb-1">
                 {peMarker != null && (
                   <div className="absolute -top-3 flex justify-center" style={{ left: `calc(${peMarker}% - 5px)` }}>
@@ -109,13 +109,13 @@ export default function ValuationContext({ valuation }: Props) {
                   ))}
                 </div>
               </div>
-              <p className="text-[11px] text-slate-400 mt-2">10Y range: 11.3× – 26.4×</p>
+              <p className="text-[11px] text-[#8A95A6] mt-2">10Y range: 11.3× – 26.4×</p>
             </>
           ) : (
             <>
-              <p className="text-[26px] font-bold text-slate-300 leading-none">—</p>
-              <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 mt-3">
-                <p className="text-[10px] text-slate-400 leading-snug">Live forward P/E data unavailable. Showing historical band thresholds for reference.</p>
+              <p className="text-[26px] font-bold text-[#8A95A6] leading-none">—</p>
+              <div className="rounded-lg bg-[#F4F3EF] border border-[#E3E1DA] px-3 py-2 mt-3">
+                <p className="text-[10px] text-[#8A95A6] leading-snug">Live forward P/E data unavailable. Showing historical band thresholds for reference.</p>
               </div>
               <div className="grid grid-cols-4 gap-0.5 mt-3 opacity-40">
                 {forwardPEBands.map((b, i) => (
@@ -130,13 +130,13 @@ export default function ValuationContext({ valuation }: Props) {
 
         {/* ERP Panel */}
         <div className="px-5 py-4">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Equity Risk Premium</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#566174] mb-2">Equity Risk Premium</p>
           {erp != null ? (
             <>
               <p className={cn('text-[26px] font-bold tabular-nums leading-none', erpColor(erp))}>
                 {(erp * 100).toFixed(2)}%
               </p>
-              <p className="text-[11px] text-slate-500 mt-1">{erpLabel(erp)}</p>
+              <p className="text-[11px] text-[#566174] mt-1">{erpLabel(erp)}</p>
               <div className="relative mt-4 mb-1">
                 {erpMarker != null && (
                   <div className="absolute -top-3 flex justify-center" style={{ left: `calc(${erpMarker}% - 5px)` }}>
@@ -154,13 +154,13 @@ export default function ValuationContext({ valuation }: Props) {
                   ))}
                 </div>
               </div>
-              <p className="text-[11px] text-slate-400 mt-2">ERP = 1 / Forward P/E − 10Y yield. Positive = stocks offer premium vs bonds.</p>
+              <p className="text-[11px] text-[#8A95A6] mt-2">ERP = 1 / Forward P/E − 10Y yield. Positive = stocks offer premium vs bonds.</p>
             </>
           ) : (
             <>
-              <p className="text-[26px] font-bold text-slate-300 leading-none">—</p>
-              <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 mt-3">
-                <p className="text-[10px] text-slate-400 leading-snug">ERP requires live forward P/E. Showing band thresholds for reference.</p>
+              <p className="text-[26px] font-bold text-[#8A95A6] leading-none">—</p>
+              <div className="rounded-lg bg-[#F4F3EF] border border-[#E3E1DA] px-3 py-2 mt-3">
+                <p className="text-[10px] text-[#8A95A6] leading-snug">ERP requires live forward P/E. Showing band thresholds for reference.</p>
               </div>
               <div className="grid grid-cols-4 gap-0.5 mt-3 opacity-40">
                 {erpBands.map((b, i) => (
@@ -176,9 +176,9 @@ export default function ValuationContext({ valuation }: Props) {
 
       {/* Combined takeaway */}
       {takeaway && (
-        <div className="mx-4 mb-4 flex items-start gap-2 rounded-xl bg-blue-50 border border-blue-100 px-4 py-3">
-          <Info size={13} className="text-blue-500 shrink-0 mt-0.5" />
-          <p className="text-[11px] text-blue-800 leading-snug">
+        <div className="mx-4 mb-4 flex items-start gap-2 rounded-xl bg-[#EAF1FF] border border-[#93B4F5] px-4 py-3">
+          <Info size={13} className="text-[#2563EB] shrink-0 mt-0.5" />
+          <p className="text-[11px] text-[#2563EB] leading-snug">
             <span className="font-bold">Takeaway:</span> {takeaway}
           </p>
         </div>

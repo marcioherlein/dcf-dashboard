@@ -96,9 +96,9 @@ function KpiCard({ icon: Icon, iconCls, label, value, sub }: {
         <Icon size={18} />
       </div>
       <div className="min-w-0">
-        <p className="text-[12px] font-semibold text-slate-600 mb-0.5">{label}</p>
-        <p className="text-[26px] font-extrabold text-[#0F172A] leading-none tabular-nums">{value}</p>
-        {sub && <p className="text-[12px] text-slate-600 mt-1">{sub}</p>}
+        <p className="text-[12px] font-semibold text-[#566174] mb-0.5">{label}</p>
+        <p className="text-[26px] font-bold text-[#06101F] leading-none tabular-nums">{value}</p>
+        {sub && <p className="text-[12px] text-[#566174] mt-1">{sub}</p>}
       </div>
     </div>
   )
@@ -138,14 +138,14 @@ function SegmentTabs({ active, counts, onSelect }: {
               'flex items-center gap-1.5 px-4 py-3 text-[13px] font-semibold whitespace-nowrap border-b-2 transition-colors',
               isActive
                 ? 'text-olive-700 border-olive-700'
-                : 'text-[#475569] border-transparent hover:text-slate-800 hover:border-slate-300',
+                : 'text-[#566174] border-transparent hover:text-[#06101F] hover:border-[#CDD1C8]',
             )}
           >
             {label}
             {count > 0 && (
               <span className={cn(
                 'text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center',
-                isActive ? 'bg-olive-100 text-olive-700' : 'bg-slate-100 text-slate-600',
+                isActive ? 'bg-olive-100 text-olive-700' : 'bg-[#F4F3EF] text-[#566174]',
               )}>
                 {count}
               </span>
@@ -170,14 +170,14 @@ function FilterSelect({ label, value, options, onChange }: {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="appearance-none pl-3 pr-7 py-2 text-[12px] font-semibold text-[#334155] bg-white border border-[#DDE6F2] rounded-xl cursor-pointer hover:border-blue-300 focus:outline-none focus:border-blue-400 transition-colors min-h-[44px]"
+        className="appearance-none pl-3 pr-7 py-2 text-[12px] font-semibold text-[#566174] bg-white border border-[#DDE6F2] rounded-xl cursor-pointer hover:border-[#93B4F5] focus:outline-none focus:border-[#5F790B] transition-colors min-h-[44px]"
         style={{ fontSize: '16px' }}
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>{label}: {o.label}</option>
         ))}
       </select>
-      <ChevronDown size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+      <ChevronDown size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#8A95A6] pointer-events-none" />
     </div>
   )
 }
@@ -217,16 +217,16 @@ function SortDropdown({ current, dir, onSort }: {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="listbox"
-        className="flex items-center gap-2 pl-3 pr-2.5 py-2 text-[12px] font-semibold text-[#334155] bg-white border border-[#DDE6F2] rounded-xl hover:border-blue-300 transition-colors min-h-[44px]"
+        className="flex items-center gap-2 pl-3 pr-2.5 py-2 text-[12px] font-semibold text-[#566174] bg-white border border-[#DDE6F2] rounded-xl hover:border-[#93B4F5] transition-colors min-h-[44px]"
       >
         Sort: {currentLabel}
-        <ChevronDown size={12} className="text-slate-400" />
+        <ChevronDown size={12} className="text-[#8A95A6]" />
       </button>
       {open && (
         <div
           role="listbox"
           aria-label="Sort by"
-          className="absolute right-0 top-9 w-44 bg-white rounded-xl border border-slate-200 shadow-lg z-20 py-1 overflow-hidden"
+          className="absolute right-0 top-9 w-44 bg-white rounded-xl border border-[#E3E1DA] shadow-lg z-20 py-1 overflow-hidden"
           onKeyDown={(e) => { if (e.key === 'Escape') setOpen(false) }}
         >
           {SORT_OPTIONS.map(({ key, label }) => (
@@ -240,12 +240,12 @@ function SortDropdown({ current, dir, onSort }: {
               }}
               className={cn(
                 'w-full flex items-center justify-between px-3.5 py-2 text-[13px] transition-colors',
-                current === key ? 'text-olive-700 bg-olive-50 font-semibold' : 'text-slate-700 hover:bg-slate-50',
+                current === key ? 'text-olive-700 bg-olive-50 font-semibold' : 'text-[#06101F] hover:bg-[#F4F3EF]',
               )}
             >
               {label}
               {current === key && (
-                <span className="text-[11px] text-blue-600">{dir === 'desc' ? '↓' : '↑'}</span>
+                <span className="text-[11px] text-[#2563EB]">{dir === 'desc' ? '↓' : '↑'}</span>
               )}
             </button>
           ))}
@@ -261,21 +261,21 @@ function GridCard({ entry }: { entry: WatchlistEntry }) {
   const verdict     = getVerdict(entry)
   const upside      = entry.snapshot.upsidePct
   const verdictCls  = verdict === 'Undervalued'
-    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+    ? 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]'
     : verdict === 'Overvalued'
-    ? 'bg-red-50 text-red-600 border-red-200'
+    ? 'bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]'
     : verdict === 'Needs Review'
-    ? 'bg-amber-50 text-amber-700 border-amber-200'
-    : 'bg-slate-100 text-slate-600 border-slate-200'
+    ? 'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]'
+    : 'bg-[#F4F3EF] text-[#566174] border-[#E3E1DA]'
 
   return (
-    <div className="bg-white border border-[#E6ECF5] rounded-2xl p-5 flex flex-col gap-3 hover:border-blue-200 hover:shadow-md transition-all">
+    <div className="bg-white border border-[#E6ECF5] rounded-2xl p-5 flex flex-col gap-3 hover:border-[#93B4F5] hover:shadow-md transition-all">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <Link href={`/stock/${entry.ticker}`} className="text-[15px] font-black text-slate-900 font-mono hover:text-blue-600 transition-colors">
+          <Link href={`/stock/${entry.ticker}`} className="text-[15px] font-black text-[#06101F] font-mono hover:text-[#2563EB] transition-colors">
             {entry.ticker}
           </Link>
-          <p className="text-[11px] text-slate-500 mt-0.5 truncate">{entry.companyName}</p>
+          <p className="text-[11px] text-[#566174] mt-0.5 truncate">{entry.companyName}</p>
         </div>
         <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border shrink-0', verdictCls)}>
           {verdict}
@@ -283,31 +283,31 @@ function GridCard({ entry }: { entry: WatchlistEntry }) {
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <div className="bg-slate-50 rounded-xl px-3 py-2.5">
-          <p className="text-[11px] text-slate-500 font-semibold mb-1">Price</p>
-          <p className="text-[13px] font-bold text-slate-800 tabular-nums">
+        <div className="bg-[#F4F3EF] rounded-xl px-3 py-2.5">
+          <p className="text-[11px] text-[#566174] font-semibold mb-1">Price</p>
+          <p className="text-[13px] font-bold text-[#06101F] tabular-nums">
             {entry.snapshot.price != null ? `$${entry.snapshot.price.toFixed(2)}` : '—'}
           </p>
         </div>
-        <div className={cn('rounded-xl px-3 py-2.5', upside != null ? (upside >= 0 ? 'bg-emerald-50' : 'bg-red-50') : 'bg-slate-50')}>
-          <p className="text-[11px] text-slate-500 font-semibold mb-1">Fair Value</p>
-          <p className={cn('text-[13px] font-bold tabular-nums', upside != null ? (upside >= 0 ? 'text-emerald-600' : 'text-red-600') : 'text-slate-400')}>
+        <div className={cn('rounded-xl px-3 py-2.5', upside != null ? (upside >= 0 ? 'bg-[#E8F7EF]' : 'bg-[#FCEAEA]') : 'bg-[#F4F3EF]')}>
+          <p className="text-[11px] text-[#566174] font-semibold mb-1">Fair Value</p>
+          <p className={cn('text-[13px] font-bold tabular-nums', upside != null ? (upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]') : 'text-[#8A95A6]')}>
             {entry.snapshot.fairValue != null ? `$${entry.snapshot.fairValue.toFixed(2)}` : '—'}
           </p>
         </div>
       </div>
 
       {upside != null && (
-        <p className={cn('text-[13px] font-bold tabular-nums', upside >= 0 ? 'text-emerald-600' : 'text-red-500')}>
+        <p className={cn('text-[13px] font-bold tabular-nums', upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
           {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(1)}% {upside >= 0 ? '↗' : '↘'}
         </p>
       )}
 
-      <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-auto">
-        <span className="text-[10px] text-slate-400">
+      <div className="flex items-center justify-between pt-2 border-t border-[#E3E1DA] mt-auto">
+        <span className="text-[10px] text-[#8A95A6]">
           {new Date(entry.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
         </span>
-        <Link href={`/stock/${entry.ticker}`} className="text-[11px] font-bold text-blue-600 hover:text-blue-700 transition-colors">
+        <Link href={`/stock/${entry.ticker}`} className="text-[11px] font-bold text-[#2563EB] hover:text-[#2563EB] transition-colors">
           Reopen →
         </Link>
       </div>
@@ -318,34 +318,34 @@ function GridCard({ entry }: { entry: WatchlistEntry }) {
 // ── Empty State ────────────────────────────────────────────────────────────────
 
 const GHOST_ENTRIES = [
-  { ticker: 'AAPL', company: 'Apple Inc.', price: '$189', fair: '$204', upside: '+7.8%', verdict: 'Undervalued', upCls: 'text-emerald-600', verdictCls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  { ticker: 'NVDA', company: 'NVIDIA Corp.', price: '$875', fair: '$652', upside: '−25.4%', verdict: 'Overvalued', upCls: 'text-red-500', verdictCls: 'bg-red-50 text-red-600 border-red-200' },
-  { ticker: 'MSFT', company: 'Microsoft Corp.', price: '$412', fair: '$440', upside: '+6.8%', verdict: 'Undervalued', upCls: 'text-emerald-600', verdictCls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  { ticker: 'AAPL', company: 'Apple Inc.', price: '$189', fair: '$204', upside: '+7.8%', verdict: 'Undervalued', upCls: 'text-[#11875D]', verdictCls: 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]' },
+  { ticker: 'NVDA', company: 'NVIDIA Corp.', price: '$875', fair: '$652', upside: '−25.4%', verdict: 'Overvalued', upCls: 'text-[#D83B3B]', verdictCls: 'bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]' },
+  { ticker: 'MSFT', company: 'Microsoft Corp.', price: '$412', fair: '$440', upside: '+6.8%', verdict: 'Undervalued', upCls: 'text-[#11875D]', verdictCls: 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]' },
 ]
 
 function EmptyState() {
   return (
     <div className="rounded-2xl bg-white border border-[#E6ECF5] overflow-hidden">
       {/* Ghost preview */}
-      <div className="px-5 pt-6 pb-4 border-b border-[#F1F5F9]">
-        <p className="text-[11px] font-semibold text-slate-400 mb-3">
+      <div className="px-5 pt-6 pb-4 border-b border-[#F4F3EF]">
+        <p className="text-[11px] font-semibold text-[#8A95A6] mb-3">
           Your list will look like this
         </p>
         <div className="space-y-2 opacity-40 pointer-events-none select-none">
           {GHOST_ENTRIES.map((g) => (
             <div
               key={g.ticker}
-              className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3"
+              className="flex items-center justify-between gap-3 rounded-xl border border-[#E3E1DA] px-4 py-3"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <span className="text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5 font-mono shrink-0">
+                <span className="text-[11px] font-bold text-[#2563EB] bg-[#EAF1FF] border border-[#93B4F5] rounded px-1.5 py-0.5 font-mono shrink-0">
                   {g.ticker}
                 </span>
-                <span className="text-[13px] text-slate-700 truncate">{g.company}</span>
+                <span className="text-[13px] text-[#06101F] truncate">{g.company}</span>
               </div>
               <div className="flex items-center gap-4 shrink-0">
-                <span className="text-[12px] text-slate-500 tabular-nums hidden sm:block">{g.price}</span>
-                <span className="text-[13px] font-bold tabular-nums text-slate-800 hidden sm:block">{g.fair}</span>
+                <span className="text-[12px] text-[#566174] tabular-nums hidden sm:block">{g.price}</span>
+                <span className="text-[13px] font-bold tabular-nums text-[#06101F] hidden sm:block">{g.fair}</span>
                 <span className={`text-[12px] font-bold tabular-nums ${g.upCls}`}>{g.upside}</span>
                 <span className={`text-[10px] font-semibold rounded-full px-2 py-0.5 border hidden sm:inline ${g.verdictCls}`}>
                   {g.verdict}
@@ -358,13 +358,13 @@ function EmptyState() {
 
       {/* Activation steps + CTAs */}
       <div className="px-5 py-6 sm:px-8 sm:py-8 flex flex-col items-center text-center gap-5">
-        <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center">
-          <Bookmark size={20} className="text-blue-500" />
+        <div className="w-12 h-12 rounded-2xl bg-[#EAF1FF] border border-blue-100 flex items-center justify-center">
+          <Bookmark size={20} className="text-[#2563EB]" />
         </div>
 
         <div>
-          <h2 className="text-[17px] font-bold text-[#0F172A]">No saved valuations yet</h2>
-          <p className="text-[13px] text-slate-500 mt-1 max-w-xs leading-relaxed">
+          <h2 className="text-[17px] font-bold text-[#06101F]">No saved valuations yet</h2>
+          <p className="text-[13px] text-[#566174] mt-1 max-w-xs leading-relaxed">
             Analyze a stock, then save the result to track fair value and upside over time.
           </p>
         </div>
@@ -378,14 +378,14 @@ function EmptyState() {
           ].map((step, i) => (
             <div key={step.n} className="flex sm:flex-col items-center sm:items-center gap-3 sm:gap-1.5 flex-1 relative py-2 sm:py-0">
               {i < 2 && (
-                <div className="hidden sm:block absolute top-4 left-[calc(50%+12px)] right-0 h-px bg-slate-200" />
+                <div className="hidden sm:block absolute top-4 left-[calc(50%+12px)] right-0 h-px bg-[#E3E1DA]" />
               )}
-              <div className="w-7 h-7 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center shrink-0 z-10">
-                <span className="text-[11px] font-bold text-blue-600">{step.n}</span>
+              <div className="w-7 h-7 rounded-full bg-[#EAF1FF] border border-[#93B4F5] flex items-center justify-center shrink-0 z-10">
+                <span className="text-[11px] font-bold text-[#2563EB]">{step.n}</span>
               </div>
               <div className="sm:text-center">
-                <p className="text-[12px] font-semibold text-slate-800 leading-tight">{step.label}</p>
-                <p className="text-[11px] text-slate-400 leading-snug mt-0.5">{step.sub}</p>
+                <p className="text-[12px] font-semibold text-[#06101F] leading-tight">{step.label}</p>
+                <p className="text-[11px] text-[#8A95A6] leading-snug mt-0.5">{step.sub}</p>
               </div>
             </div>
           ))}
@@ -400,7 +400,7 @@ function EmptyState() {
           </Link>
           <Link
             href="/analyze"
-            className="w-full sm:w-auto rounded-xl border border-[#DDE6F2] text-[#334155] hover:bg-slate-50 px-6 py-3 text-[14px] font-semibold transition-colors min-h-[48px] flex items-center justify-center"
+            className="w-full sm:w-auto rounded-xl border border-[#DDE6F2] text-[#566174] hover:bg-[#F4F3EF] px-6 py-3 text-[14px] font-semibold transition-colors min-h-[48px] flex items-center justify-center"
           >
             Explore popular analyses
           </Link>
@@ -440,7 +440,7 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1 py-1">
-      <p className="text-[12px] text-[#64748B]">
+      <p className="text-[12px] text-[#566174]">
         Showing {start} to {end} of {total} results
       </p>
 
@@ -449,7 +449,7 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
           onClick={() => onPage(page - 1)}
           disabled={page === 1}
           aria-label="Previous page"
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-[#DDE6F2] text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-[#DDE6F2] text-[#566174] hover:bg-[#F4F3EF] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronLeft size={14} />
         </button>
@@ -461,7 +461,7 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
               'min-w-[44px] h-[44px] rounded-lg text-[12px] font-semibold border transition-colors',
               p === page
                 ? 'bg-olive-700 border-olive-700 text-white'
-                : 'border-[#DDE6F2] text-[#334155] hover:bg-slate-50',
+                : 'border-[#DDE6F2] text-[#566174] hover:bg-[#F4F3EF]',
             )}
           >
             {p}
@@ -471,26 +471,26 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
           onClick={() => onPage(page + 1)}
           disabled={page === totalPages}
           aria-label="Next page"
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-[#DDE6F2] text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-[#DDE6F2] text-[#566174] hover:bg-[#F4F3EF] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronRight size={14} />
         </button>
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="text-[12px] text-slate-500">Rows:</span>
+        <span className="text-[12px] text-[#566174]">Rows:</span>
         <div className="relative">
           <select
             value={pageSize}
             onChange={(e) => { onPageSize(Number(e.target.value)); onPage(1) }}
-            className="appearance-none pl-2.5 pr-6 py-1 text-[12px] font-semibold text-[#334155] bg-white border border-[#DDE6F2] rounded-lg cursor-pointer focus:outline-none"
+            className="appearance-none pl-2.5 pr-6 py-1 text-[12px] font-semibold text-[#566174] bg-white border border-[#DDE6F2] rounded-lg cursor-pointer focus:outline-none"
             style={{ fontSize: '16px' }}
           >
             {PAGE_SIZE_OPTIONS.map((s) => (
               <option key={s} value={s}>{s} / page</option>
             ))}
           </select>
-          <ChevronDown size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <ChevronDown size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[#8A95A6] pointer-events-none" />
         </div>
       </div>
     </div>
@@ -506,8 +506,8 @@ function LoginWall() {
         <div className="mx-auto mb-5 w-14 h-14 rounded-2xl bg-olive-100 border border-olive-100 flex items-center justify-center">
           <Bookmark size={24} className="text-olive-700" />
         </div>
-        <h1 className="text-[22px] font-extrabold text-[#0F172A] tracking-tight">My Valuations</h1>
-        <p className="mt-2 text-[14px] text-slate-500 leading-relaxed max-w-xs mx-auto">
+        <h1 className="text-[22px] font-bold text-[#06101F] tracking-tight">My Valuations</h1>
+        <p className="mt-2 text-[14px] text-[#566174] leading-relaxed max-w-xs mx-auto">
           Your saved analyses and watchlist are private. Sign in to access your personal workspace.
         </p>
         <button
@@ -522,7 +522,7 @@ function LoginWall() {
           </svg>
           Continue with Google
         </button>
-        <p className="mt-4 text-[12px] text-slate-400">Free during beta · No credit card required</p>
+        <p className="mt-4 text-[12px] text-[#8A95A6]">Free during beta · No credit card required</p>
       </div>
     </div>
   )
@@ -661,17 +661,17 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
       {/* Page header */}
       <div className="flex items-start justify-between gap-4 mb-5">
         <div>
-          <h1 className="text-[28px] sm:text-[32px] font-extrabold text-[#0F172A] tracking-tight leading-none" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+          <h1 className="text-[28px] sm:text-[32px] font-bold text-[#06101F] tracking-tight leading-none" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
             My Valuations
           </h1>
-          <p className="mt-1.5 text-[14px] text-slate-500">Saved analyses and watchlist ideas</p>
+          <p className="mt-1.5 text-[14px] text-[#566174]">Saved analyses and watchlist ideas</p>
         </div>
-        <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl shrink-0">
+        <div className="flex items-center gap-1 p-1 bg-[#F4F3EF] rounded-xl shrink-0">
           <button
             onClick={() => setView('table')}
             title="Table view"
             aria-label="Table view"
-            className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', view === 'table' ? 'bg-white text-olive-700 shadow-sm' : 'text-slate-400 hover:text-slate-600')}
+            className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', view === 'table' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#8A95A6] hover:text-[#566174]')}
           >
             <List size={16} />
           </button>
@@ -679,7 +679,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
             onClick={() => setView('grid')}
             title="Grid view"
             aria-label="Grid view"
-            className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', view === 'grid' ? 'bg-white text-olive-700 shadow-sm' : 'text-slate-400 hover:text-slate-600')}
+            className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', view === 'grid' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#8A95A6] hover:text-[#566174]')}
           >
             <LayoutGrid size={16} />
           </button>
@@ -691,28 +691,28 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <KpiCard
             icon={Bookmark}
-            iconCls="bg-blue-50 text-blue-600"
+            iconCls="bg-[#EAF1FF] text-[#2563EB]"
             label="Tracked"
             value={kpi.tracked}
             sub="companies"
           />
           <KpiCard
             icon={TrendingUp}
-            iconCls={kpi.avgUpside != null && kpi.avgUpside >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}
+            iconCls={kpi.avgUpside != null && kpi.avgUpside >= 0 ? 'bg-[#E8F7EF] text-[#11875D]' : 'bg-[#FCEAEA] text-[#D83B3B]'}
             label="Avg Upside"
             value={kpi.avgUpside != null ? fmtPct(kpi.avgUpside) : '—'}
             sub="across all"
           />
           <KpiCard
             icon={CheckCircle}
-            iconCls="bg-emerald-50 text-emerald-600"
+            iconCls="bg-[#E8F7EF] text-[#11875D]"
             label="Undervalued"
             value={kpi.undervalued}
             sub="companies"
           />
           <KpiCard
             icon={Clock}
-            iconCls="bg-amber-50 text-amber-600"
+            iconCls="bg-[#FFF4DA] text-[#B56A00]"
             label="Needs Review"
             value={kpi.needsReview}
             sub={kpi.needsReview === 0 ? 'all valuations complete' : 'missing fair value data'}
@@ -765,16 +765,16 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
                       onChange={(e) => setGroupInputValue(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Escape') { setGroupInputOpen(false); setGroupInputValue('') } }}
                       placeholder="Group name"
-                      className="w-32 px-2.5 py-1.5 text-[12px] text-slate-800 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100"
+                      className="w-32 px-2.5 py-1.5 text-[12px] text-[#06101F] border border-[#93B4F5] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100"
                       style={{ fontSize: '16px' }}
                     />
-                    <button type="submit" className="text-[12px] font-semibold text-blue-600 hover:text-blue-700 px-2 py-1.5 min-h-[44px]">Add</button>
-                    <button type="button" onClick={() => { setGroupInputOpen(false); setGroupInputValue('') }} className="text-[12px] text-slate-400 hover:text-slate-600 px-1.5 py-1.5 min-h-[44px]">Cancel</button>
+                    <button type="submit" className="text-[12px] font-semibold text-[#2563EB] hover:text-[#2563EB] px-2 py-1.5 min-h-[44px]">Add</button>
+                    <button type="button" onClick={() => { setGroupInputOpen(false); setGroupInputValue('') }} className="text-[12px] text-[#8A95A6] hover:text-[#566174] px-1.5 py-1.5 min-h-[44px]">Cancel</button>
                   </form>
                 ) : (
                   <button
                     onClick={() => setGroupInputOpen(true)}
-                    className="shrink-0 flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold text-[#2563EB] border border-dashed border-blue-300 bg-white hover:bg-blue-50 rounded-xl transition-colors whitespace-nowrap min-h-[44px]"
+                    className="shrink-0 flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold text-[#2563EB] border border-dashed border-[#93B4F5] bg-white hover:bg-[#EAF1FF] rounded-xl transition-colors whitespace-nowrap min-h-[44px]"
                   >
                     <Plus size={13} />
                     New group
@@ -786,13 +786,13 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
             {/* Search + Sort + Filters */}
             <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 px-4 py-3 border-t border-[#EDF2F7]">
               <div className="relative flex-1 min-w-0 sm:min-w-[180px] sm:max-w-xs">
-                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A95A6] pointer-events-none" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search valuations…"
-                  className="w-full pl-8 pr-3 py-1.5 text-[16px] text-slate-800 bg-white border border-[#DDE6F2] rounded-xl focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
+                  className="w-full pl-8 pr-3 py-1.5 text-[16px] text-[#06101F] bg-white border border-[#DDE6F2] rounded-xl focus:outline-none focus:border-[#5F790B] focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
                 />
               </div>
               <div className="flex items-center gap-2 flex-wrap overflow-x-auto scrollbar-hide pb-0.5">
@@ -824,7 +824,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
                     'flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold border rounded-xl transition-colors min-h-[44px]',
                     hasFilters
                       ? 'bg-olive-50 border-olive-700 text-olive-700'
-                      : 'bg-white border-[#DDE6F2] text-[#334155] hover:border-blue-300',
+                      : 'bg-white border-[#DDE6F2] text-[#566174] hover:border-[#93B4F5]',
                   )}
                   onClick={() => { setFilterUpside('all'); setFilterConfidence('all'); setSearch('') }}
                   title={hasFilters ? 'Clear all filters' : 'Filters'}
@@ -857,7 +857,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
               ))}
               {paginatedEntries.length === 0 && (
                 <div className="col-span-full bg-white border border-[#E6ECF5] rounded-2xl p-10 text-center">
-                  <p className="text-[14px] text-slate-500">No valuations match your filters.</p>
+                  <p className="text-[14px] text-[#566174]">No valuations match your filters.</p>
                 </div>
               )}
             </div>

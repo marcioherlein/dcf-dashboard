@@ -17,16 +17,16 @@ interface Props {
 // ─── Visual config ────────────────────────────────────────────────────────────
 
 const GRADE_CFG = {
-  A: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', dot: 'bg-emerald-500', label: 'Reliable' },
-  B: { bg: 'bg-blue-50',    border: 'border-blue-200',    text: 'text-blue-700',    dot: 'bg-blue-500',    label: 'Good'     },
-  C: { bg: 'bg-amber-50',   border: 'border-amber-200',   text: 'text-amber-700',   dot: 'bg-amber-500',   label: 'Review'   },
-  D: { bg: 'bg-red-50',     border: 'border-red-200',     text: 'text-red-700',     dot: 'bg-red-500',     label: 'Caution'  },
+  A: { bg: 'bg-[#E8F7EF]', border: 'border-[#A3D9BE]', text: 'text-[#11875D]', dot: 'bg-[#E8F7EF]0', label: 'Reliable' },
+  B: { bg: 'bg-[#EAF1FF]',    border: 'border-[#93B4F5]',    text: 'text-[#2563EB]',    dot: 'bg-[#EAF1FF]0',    label: 'Good'     },
+  C: { bg: 'bg-[#FFF4DA]',   border: 'border-[#F3D391]',   text: 'text-[#B56A00]',   dot: 'bg-[#FFF4DA]0',   label: 'Review'   },
+  D: { bg: 'bg-[#FCEAEA]',     border: 'border-[#F0B8B8]',     text: 'text-[#D83B3B]',     dot: 'bg-[#FCEAEA]0',     label: 'Caution'  },
 }
 
 const SEVERITY_CFG = {
-  ok:    { icon: CheckCircle2, color: 'text-emerald-500', rowBg: '',              chipBg: 'bg-emerald-50 border-emerald-200',  chipText: 'text-emerald-700' },
-  warn:  { icon: AlertTriangle, color: 'text-amber-500',  rowBg: 'bg-amber-50/40', chipBg: 'bg-amber-50 border-amber-200',     chipText: 'text-amber-700'  },
-  error: { icon: XCircle,       color: 'text-red-500',    rowBg: 'bg-red-50/40',   chipBg: 'bg-red-50 border-red-200',         chipText: 'text-red-700'    },
+  ok:    { icon: CheckCircle2, color: 'text-[#11875D]', rowBg: '',              chipBg: 'bg-[#E8F7EF] border-[#A3D9BE]',  chipText: 'text-[#11875D]' },
+  warn:  { icon: AlertTriangle, color: 'text-[#B56A00]',  rowBg: 'bg-[#FFF4DA]/40', chipBg: 'bg-[#FFF4DA] border-[#F3D391]',     chipText: 'text-[#B56A00]'  },
+  error: { icon: XCircle,       color: 'text-[#D83B3B]',    rowBg: 'bg-[#FCEAEA]/40',   chipBg: 'bg-[#FCEAEA] border-[#F0B8B8]',         chipText: 'text-[#D83B3B]'    },
 }
 
 function fmt(key: AuditResult['key'], value: number | null): string {
@@ -68,7 +68,7 @@ function AuditRow({
   }
 
   return (
-    <div className={`rounded-lg border ${result.severity !== 'ok' ? 'border-slate-200' : 'border-transparent'} ${cfg.rowBg} overflow-hidden`}>
+    <div className={`rounded-lg border ${result.severity !== 'ok' ? 'border-[#E3E1DA]' : 'border-transparent'} ${cfg.rowBg} overflow-hidden`}>
       <div className="flex items-start gap-2.5 px-3 py-2.5">
         {/* Icon */}
         <Icon size={14} className={`${cfg.color} mt-0.5 shrink-0`} />
@@ -76,9 +76,9 @@ function AuditRow({
         {/* Label + signal */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[12px] font-semibold text-slate-700">{result.label}</span>
+            <span className="text-[12px] font-semibold text-[#06101F]">{result.label}</span>
             {result.currentValue != null && (
-              <span className="text-[11px] text-slate-500">{fmt(result.key, result.currentValue)}</span>
+              <span className="text-[11px] text-[#566174]">{fmt(result.key, result.currentValue)}</span>
             )}
             <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${cfg.chipBg} ${cfg.chipText}`}>
               {result.signal}
@@ -87,14 +87,14 @@ function AuditRow({
 
           {/* Benchmark reference */}
           {result.benchmark && (
-            <p className="text-[10px] text-slate-400 mt-0.5">
+            <p className="text-[10px] text-[#8A95A6] mt-0.5">
               vs. {result.benchmark.label}: {fmt(result.key, result.benchmark.value)}
             </p>
           )}
 
           {/* Expanded reason */}
           {expanded && result.reason && (
-            <p className="text-[11px] text-slate-600 mt-1.5 leading-relaxed">
+            <p className="text-[11px] text-[#566174] mt-1.5 leading-relaxed">
               {result.reason}
             </p>
           )}
@@ -113,7 +113,7 @@ function AuditRow({
           {hasDetail && (
             <button
               onClick={() => setExpanded(e => !e)}
-              className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              className="p-1 rounded text-[#8A95A6] hover:text-[#566174] hover:bg-[#F4F3EF] transition-colors"
             >
               {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
             </button>
@@ -146,15 +146,15 @@ export default function AssumptionHealthPanel({ audit, assumptions, onChange, an
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] overflow-hidden mb-4">
+    <div className="rounded-xl border border-[#E3E1DA] bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] overflow-hidden mb-4">
 
       {/* Header */}
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-2.5 px-4 py-3 hover:bg-slate-50 transition-colors text-left"
+        className="w-full flex items-center gap-2.5 px-4 py-3 hover:bg-[#F4F3EF] transition-colors text-left"
       >
-        <Sparkles size={13} className="text-blue-500 shrink-0" />
-        <span className="text-[12px] font-semibold text-slate-700 flex-1">Assumption Check</span>
+        <Sparkles size={13} className="text-[#2563EB] shrink-0" />
+        <span className="text-[12px] font-semibold text-[#06101F] flex-1">Assumption Check</span>
 
         {/* Grade badge */}
         <div className={`flex items-center gap-1.5 rounded-full border px-2 py-0.5 ${gradeCfg.bg} ${gradeCfg.border}`}>
@@ -166,7 +166,7 @@ export default function AssumptionHealthPanel({ audit, assumptions, onChange, an
 
         {/* Issue counts */}
         {hasIssues && (
-          <span className="text-[10px] text-slate-400">
+          <span className="text-[10px] text-[#8A95A6]">
             {audit.errorCount > 0 && `${audit.errorCount} error${audit.errorCount > 1 ? 's' : ''}`}
             {audit.errorCount > 0 && audit.warnCount > 0 && ', '}
             {audit.warnCount > 0 && `${audit.warnCount} warning${audit.warnCount > 1 ? 's' : ''}`}
@@ -176,14 +176,14 @@ export default function AssumptionHealthPanel({ audit, assumptions, onChange, an
         {/* Analyst fwd P/E badge */}
         {analystForwardPE != null && (
           <span
-            className="text-[10px] text-slate-400 hidden sm:inline cursor-help"
+            className="text-[10px] text-[#8A95A6] hidden sm:inline cursor-help"
             title={`Analyst consensus implies a ${analystForwardPE.toFixed(1)}× 1-year forward P/E based on next-year EPS estimates.`}
           >
             Fwd P/E {analystForwardPE.toFixed(0)}×
           </span>
         )}
 
-        {open ? <ChevronUp size={13} className="text-slate-400 shrink-0" /> : <ChevronDown size={13} className="text-slate-400 shrink-0" />}
+        {open ? <ChevronUp size={13} className="text-[#8A95A6] shrink-0" /> : <ChevronDown size={13} className="text-[#8A95A6] shrink-0" />}
       </button>
 
       {/* Body */}
@@ -200,7 +200,7 @@ export default function AssumptionHealthPanel({ audit, assumptions, onChange, an
               {clean.map(r => (
                 <span
                   key={r.key}
-                  className="inline-flex items-center gap-1 text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5"
+                  className="inline-flex items-center gap-1 text-[10px] text-[#11875D] bg-[#E8F7EF] border border-[#A3D9BE] rounded-full px-2 py-0.5"
                   title={r.signal}
                 >
                   <CheckCircle2 size={9} />
@@ -212,14 +212,14 @@ export default function AssumptionHealthPanel({ audit, assumptions, onChange, an
 
           {/* Apply all button — only if there are suggestions */}
           {issues.some(r => r.suggestedValue != null && r.key !== 'quality') && (
-            <div className="pt-1 border-t border-slate-100 mt-2">
+            <div className="pt-1 border-t border-[#E3E1DA] mt-2">
               <button
                 onClick={applyAll}
-                className="min-h-[44px] flex items-center px-2 text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                className="min-h-[44px] flex items-center px-2 text-[11px] font-semibold text-[#2563EB] hover:text-[#2563EB] transition-colors"
               >
                 Apply all suggestions →
               </button>
-              <span className="text-[10px] text-slate-400 ml-2">Updates the model with suggested values</span>
+              <span className="text-[10px] text-[#8A95A6] ml-2">Updates the model with suggested values</span>
             </div>
           )}
         </div>

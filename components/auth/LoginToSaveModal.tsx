@@ -22,30 +22,30 @@ export default function LoginToSaveModal({ ticker, companyName, fairValue, upsid
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" />
       <div
-        className="relative w-full max-w-sm rounded-2xl bg-white shadow-xl border border-slate-200 overflow-hidden"
+        className="relative w-full max-w-sm rounded-2xl bg-white shadow-xl border border-[#E3E1DA] overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
-          <h2 className="text-[16px] font-bold text-slate-900">Sign in to save this analysis</h2>
-          <button onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
+          <h2 className="text-[16px] font-bold text-[#06101F]">Sign in to save this analysis</h2>
+          <button onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-[#8A95A6] hover:text-[#06101F] hover:bg-[#F4F3EF] transition-colors">
             <X size={16} strokeWidth={2.5} />
           </button>
         </div>
 
         {/* Preview of what gets saved */}
         <div className="px-5 pb-4">
-          <div className="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3 flex items-center justify-between gap-3">
+          <div className="rounded-xl bg-[#F4F3EF] border border-[#E3E1DA] px-4 py-3 flex items-center justify-between gap-3">
             <div>
-              <p className="text-[12px] font-bold text-slate-800 font-mono">{ticker}</p>
-              <p className="text-[12px] text-slate-500 truncate max-w-[160px]">{companyName}</p>
+              <p className="text-[12px] font-bold text-[#06101F] font-mono">{ticker}</p>
+              <p className="text-[12px] text-[#566174] truncate max-w-[160px]">{companyName}</p>
             </div>
             {fairValue != null && (
               <div className="text-right">
-                <p className="text-[11px] text-slate-500">Fair Value</p>
-                <p className="text-[14px] font-bold text-slate-800 tabular-nums">{fmt(fairValue, currency)}</p>
+                <p className="text-[11px] text-[#566174]">Fair Value</p>
+                <p className="text-[14px] font-bold text-[#06101F] tabular-nums">{fmt(fairValue, currency)}</p>
                 {upsidePct != null && (
-                  <p className={`text-[11px] font-semibold ${isUndervalued ? 'text-emerald-600' : 'text-red-500'}`}>
+                  <p className={`text-[11px] font-semibold ${isUndervalued ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                     {isUndervalued ? '+' : ''}{upsidePct.toFixed(1)}%
                   </p>
                 )}
@@ -57,8 +57,8 @@ export default function LoginToSaveModal({ ticker, companyName, fairValue, upsid
         <div className="px-5 pb-2 space-y-1.5">
           {['Save fair value & scenarios', 'Track vs live price', 'Access your valuations anywhere'].map(f => (
             <div key={f} className="flex items-center gap-2">
-              <Check size={13} className="text-emerald-500 shrink-0" strokeWidth={2.5} />
-              <span className="text-[12px] text-slate-600">{f}</span>
+              <Check size={13} className="text-[#11875D] shrink-0" strokeWidth={2.5} />
+              <span className="text-[12px] text-[#566174]">{f}</span>
             </div>
           ))}
         </div>
@@ -82,7 +82,7 @@ export default function LoginToSaveModal({ ticker, companyName, fairValue, upsid
             </svg>
             Continue with Google
           </button>
-          <p className="text-center text-[11px] text-slate-400 mt-2">Free to sign in — no credit card</p>
+          <p className="text-center text-[11px] text-[#8A95A6] mt-2">Free to sign in — no credit card</p>
         </div>
       </div>
     </div>

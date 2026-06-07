@@ -23,7 +23,7 @@ export default function FactorExplanationPanel({
       {/* Drivers (bullish) */}
       {explanation.drivers.length > 0 && (
         <div>
-          <h4 className="text-[10px] font-extrabold text-secondary uppercase tracking-widest mb-2">
+          <h4 className="text-[10px] font-bold text-secondary uppercase tracking-widest mb-2">
             Bullish Drivers
           </h4>
           <ul className="space-y-2">
@@ -42,7 +42,7 @@ export default function FactorExplanationPanel({
       {/* Risks (bearish) */}
       {explanation.risks.length > 0 && (
         <div>
-          <h4 className="text-[10px] font-extrabold text-error uppercase tracking-widest mb-2">
+          <h4 className="text-[10px] font-bold text-error uppercase tracking-widest mb-2">
             Risks / Weaknesses
           </h4>
           <ul className="space-y-2">
@@ -61,7 +61,7 @@ export default function FactorExplanationPanel({
       {/* Watch List */}
       {explanation.watchList.length > 0 && (
         <div>
-          <h4 className="text-[10px] font-extrabold text-on-tertiary-fixed-variant uppercase tracking-widest mb-2">
+          <h4 className="text-[10px] font-bold text-on-tertiary-fixed-variant uppercase tracking-widest mb-2">
             Watch List
           </h4>
           <ul className="space-y-2">
@@ -79,7 +79,7 @@ export default function FactorExplanationPanel({
 
       {/* Trade plan summary */}
       <div className="bg-surface-container-low rounded-xl p-4 space-y-2">
-        <h4 className="text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest mb-3">Trade Plan Summary</h4>
+        <h4 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-3">Trade Plan Summary</h4>
         <div className="grid grid-cols-2 gap-x-4 gap-y-2">
           <div className="flex justify-between">
             <span className="text-[10px] text-on-surface-variant uppercase tracking-wide">Dominant Factor</span>

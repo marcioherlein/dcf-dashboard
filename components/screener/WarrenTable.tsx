@@ -31,8 +31,8 @@ function getCriteria(inst: RankedInstrument) {
 function Dot({ on, label }: { on: boolean; label: string }) {
   return (
     <div className="flex flex-col items-center gap-0.5 w-10">
-      <div className={`w-2 h-2 rounded-full ${on ? 'bg-emerald-500' : 'bg-slate-200'}`} />
-      <span className="text-[8px] text-slate-400 font-medium leading-none">{label}</span>
+      <div className={`w-2 h-2 rounded-full ${on ? 'bg-[#E8F7EF]0' : 'bg-[#E3E1DA]'}`} />
+      <span className="text-[8px] text-[#8A95A6] font-medium leading-none">{label}</span>
     </div>
   )
 }
@@ -81,7 +81,7 @@ export default function WarrenTable({ instruments }: Props) {
     const active = sortKey === id
     return (
       <th
-        className="px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400 cursor-pointer hover:text-slate-700 whitespace-nowrap select-none"
+        className="px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-[#8A95A6] cursor-pointer hover:text-[#06101F] whitespace-nowrap select-none"
         onClick={() => handleSort(id)}
       >
         {label}
@@ -102,11 +102,11 @@ export default function WarrenTable({ instruments }: Props) {
 
   function marketBadgeColor(market: string) {
     switch (market) {
-      case 'MERVAL': return 'bg-blue-500/15 text-blue-400'
-      case 'NYSE':   return 'bg-emerald-50 text-emerald-700'
+      case 'MERVAL': return 'bg-[#EAF1FF]0/15 text-[#2563EB]'
+      case 'NYSE':   return 'bg-[#E8F7EF] text-[#11875D]'
       case 'NASDAQ': return 'bg-violet-50 text-violet-700'
-      case 'ROFEX':  return 'bg-amber-50 text-amber-700'
-      default:       return 'bg-white/8 text-slate-400'
+      case 'ROFEX':  return 'bg-[#FFF4DA] text-[#B56A00]'
+      default:       return 'bg-white/8 text-[#8A95A6]'
     }
   }
 
@@ -127,14 +127,14 @@ export default function WarrenTable({ instruments }: Props) {
       <div className="overflow-auto flex-1 custom-scrollbar">
         <table className="w-full border-collapse min-w-[560px]">
           <thead className="sticky top-0 z-10 bg-[#080F1E]">
-            <tr className="border-b border-slate-200">
-              <th className="px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400 w-8 sticky left-0 bg-[#080F1E] z-20">#</th>
+            <tr className="border-b border-[#E3E1DA]">
+              <th className="px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-[#8A95A6] w-8 sticky left-0 bg-[#080F1E] z-20">#</th>
               <SortHeader label="Ticker" id="rank" />
               <SortHeader label="Score" id="finalScore" />
-              <th className="px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400 w-36">Signal</th>
+              <th className="px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-[#8A95A6] w-36">Signal</th>
               <SortHeader label="1D %" id="change1DPct" />
               <SortHeader label="Criteria" id="criteria" />
-              <th className="px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center w-48">
+              <th className="px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-[#8A95A6] text-center w-48">
                 RS · EMA200 · SMA50 · 52wHI · VOL
               </th>
             </tr>
@@ -150,19 +150,19 @@ export default function WarrenTable({ instruments }: Props) {
               return (
                 <tr
                   key={inst.ticker}
-                  className="border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer"
+                  className="border-b border-[#E3E1DA] hover:bg-[#F4F3EF] transition-colors cursor-pointer"
                   onClick={() => setSelected(inst)}
                 >
                   {/* Rank */}
-                  <td className="px-3 py-2 text-[11px] text-slate-400 sticky left-0 bg-white">{globalRank}</td>
+                  <td className="px-3 py-2 text-[11px] text-[#8A95A6] sticky left-0 bg-white">{globalRank}</td>
 
                   {/* Ticker */}
                   <td className="px-3 py-2">
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-xs font-bold text-slate-100 leading-none">{inst.displayTicker}</span>
+                      <span className="text-xs font-bold text-[#E3E1DA] leading-none">{inst.displayTicker}</span>
                       <div className="flex items-center gap-1">
                         <span className={`text-[10px] font-semibold px-1 rounded ${marketBadgeColor(inst.market)}`}>{inst.market}</span>
-                        {inst.isCedear && <span className="text-[10px] text-amber-600">CEDEAR</span>}
+                        {inst.isCedear && <span className="text-[10px] text-[#B56A00]">CEDEAR</span>}
                       </div>
                     </div>
                   </td>
@@ -201,7 +201,7 @@ export default function WarrenTable({ instruments }: Props) {
 
                   {/* Criteria count */}
                   <td className="px-3 py-2 text-center">
-                    <span className={`text-xs font-bold ${passCount >= 4 ? 'text-emerald-600' : passCount >= 2 ? 'text-amber-600' : 'text-slate-400'}`}>
+                    <span className={`text-xs font-bold ${passCount >= 4 ? 'text-[#11875D]' : passCount >= 2 ? 'text-[#B56A00]' : 'text-[#8A95A6]'}`}>
                       {passCount}/5
                     </span>
                   </td>
@@ -225,11 +225,11 @@ export default function WarrenTable({ instruments }: Props) {
 
       {/* Pagination */}
       {total > PAGE_SIZE && (
-        <div className="flex items-center justify-between px-3 py-2 border-t border-slate-200 text-[11px] text-slate-400">
+        <div className="flex items-center justify-between px-3 py-2 border-t border-[#E3E1DA] text-[11px] text-[#8A95A6]">
           <span>{total} instruments</span>
           <div className="flex items-center gap-2">
             <button
-              className="px-2 py-0.5 rounded bg-white/8 hover:bg-white/15 disabled:opacity-40 text-slate-600 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="px-2 py-0.5 rounded bg-white/8 hover:bg-white/15 disabled:opacity-40 text-[#566174] min-h-[44px] min-w-[44px] flex items-center justify-center"
               disabled={page === 0}
               onClick={() => setPage((p) => p - 1)}
             >
@@ -237,7 +237,7 @@ export default function WarrenTable({ instruments }: Props) {
             </button>
             <span>{page + 1} / {Math.ceil(total / PAGE_SIZE)}</span>
             <button
-              className="px-2 py-0.5 rounded bg-white/8 hover:bg-white/15 disabled:opacity-40 text-slate-600 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="px-2 py-0.5 rounded bg-white/8 hover:bg-white/15 disabled:opacity-40 text-[#566174] min-h-[44px] min-w-[44px] flex items-center justify-center"
               disabled={(page + 1) * PAGE_SIZE >= total}
               onClick={() => setPage((p) => p + 1)}
             >

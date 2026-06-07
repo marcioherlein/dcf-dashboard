@@ -72,9 +72,9 @@ export default function DataQualityWarnings({
     info: 'ℹ',
   }
   const colors = {
-    error:   { bg: 'bg-red-500/10',    border: 'border-red-500/30',   text: 'text-red-300',   icon: 'text-red-400' },
-    warning: { bg: 'bg-amber-500/10',  border: 'border-amber-500/30', text: 'text-amber-300', icon: 'text-amber-400' },
-    info:    { bg: 'bg-blue-500/10',   border: 'border-blue-500/30',  text: 'text-blue-300',  icon: 'text-blue-400' },
+    error:   { bg: 'bg-[#FCEAEA]0/10',    border: 'border-red-500/30',   text: 'text-red-300',   icon: 'text-red-400' },
+    warning: { bg: 'bg-[#FFF4DA]0/10',  border: 'border-amber-500/30', text: 'text-amber-300', icon: 'text-amber-400' },
+    info:    { bg: 'bg-[#EAF1FF]0/10',   border: 'border-blue-500/30',  text: 'text-[#93B4F5]',  icon: 'text-[#2563EB]' },
   }
 
   return (

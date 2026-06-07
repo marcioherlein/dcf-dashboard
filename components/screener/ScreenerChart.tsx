@@ -34,17 +34,17 @@ export default function ScreenerChart({ ticker, displayTicker, name, price, chan
         <div className="flex items-start justify-between px-5 py-4 border-b border-white/10">
           <div>
             <div className="flex items-baseline gap-2">
-              <span className="text-lg font-bold text-slate-100">{displayTicker}</span>
+              <span className="text-lg font-bold text-[#E3E1DA]">{displayTicker}</span>
               <span className="text-sm font-semibold" style={{ color: accentColor }}>
                 {isUp ? '+' : ''}{change1DPct.toFixed(2)}%
               </span>
             </div>
-            <div className="text-[11px] text-slate-400 mt-0.5 truncate max-w-[360px]">{name}</div>
-            <div className="text-xl font-bold text-slate-100 mt-1">{fmtPrice(price)}</div>
+            <div className="text-[11px] text-[#8A95A6] mt-0.5 truncate max-w-[360px]">{name}</div>
+            <div className="text-xl font-bold text-[#E3E1DA] mt-1">{fmtPrice(price)}</div>
           </div>
           <button
             onClick={onClose}
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-200 transition-colors"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-[#8A95A6] hover:text-[#CDD1C8] transition-colors"
           >
             ×
           </button>

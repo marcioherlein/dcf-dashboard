@@ -81,19 +81,19 @@ function fmtDiv(v: number | null): string {
 
 function SkeletonRow({ index }: { index: number }) {
   return (
-    <tr className="border-b border-slate-100 animate-pulse" style={{ animationDelay: `${index * 30}ms` }}>
+    <tr className="border-b border-[#E3E1DA] animate-pulse" style={{ animationDelay: `${index * 30}ms` }}>
       <td className="sticky left-0 z-10 bg-white px-4 py-3.5 w-[220px]">
         <div className="flex flex-col gap-1.5">
-          <div className="h-3.5 bg-slate-200 rounded w-14" />
-          <div className="h-3 bg-slate-100 rounded w-28" />
+          <div className="h-3.5 bg-[#E3E1DA] rounded w-14" />
+          <div className="h-3 bg-[#F4F3EF] rounded w-28" />
         </div>
       </td>
-      <td className="px-4 py-3.5"><div className="h-3.5 bg-slate-100 rounded w-20 ml-auto" /></td>
-      <td className="px-4 py-3.5"><div className="h-3.5 bg-slate-100 rounded w-16 ml-auto" /></td>
-      <td className="px-4 py-3.5 hidden sm:table-cell"><div className="h-3.5 bg-slate-100 rounded w-12 ml-auto" /></td>
-      <td className="px-4 py-3.5 hidden sm:table-cell"><div className="h-3.5 bg-slate-100 rounded w-10 ml-auto" /></td>
-      <td className="px-4 py-3.5 hidden md:table-cell"><div className="h-3.5 bg-slate-100 rounded w-12 ml-auto" /></td>
-      <td className="px-4 py-3.5 hidden lg:table-cell"><div className="h-3.5 bg-slate-100 rounded w-24 ml-auto" /></td>
+      <td className="px-4 py-3.5"><div className="h-3.5 bg-[#F4F3EF] rounded w-20 ml-auto" /></td>
+      <td className="px-4 py-3.5"><div className="h-3.5 bg-[#F4F3EF] rounded w-16 ml-auto" /></td>
+      <td className="px-4 py-3.5 hidden sm:table-cell"><div className="h-3.5 bg-[#F4F3EF] rounded w-12 ml-auto" /></td>
+      <td className="px-4 py-3.5 hidden sm:table-cell"><div className="h-3.5 bg-[#F4F3EF] rounded w-10 ml-auto" /></td>
+      <td className="px-4 py-3.5 hidden md:table-cell"><div className="h-3.5 bg-[#F4F3EF] rounded w-12 ml-auto" /></td>
+      <td className="px-4 py-3.5 hidden lg:table-cell"><div className="h-3.5 bg-[#F4F3EF] rounded w-24 ml-auto" /></td>
     </tr>
   )
 }
@@ -107,7 +107,7 @@ function SortTh({
 }) {
   return (
     <th
-      className={`px-4 py-3 text-right text-[11px] font-semibold text-slate-500 whitespace-nowrap cursor-pointer select-none hover:text-slate-800 transition-colors ${className ?? ''}`}
+      className={`px-4 py-3 text-right text-[11px] font-semibold text-[#566174] whitespace-nowrap cursor-pointer select-none hover:text-[#06101F] transition-colors ${className ?? ''}`}
       onClick={() => onClick(sortKey)}
     >
       <span className="inline-flex items-center justify-end gap-1">
@@ -116,7 +116,7 @@ function SortTh({
           ? dir === 'desc'
             ? <ArrowDown size={11} className="text-olive-700 shrink-0" />
             : <ArrowUp size={11} className="text-olive-700 shrink-0" />
-          : <ArrowUpDown size={10} className="text-slate-300 shrink-0" />}
+          : <ArrowUpDown size={10} className="text-[#8A95A6] shrink-0" />}
       </span>
     </th>
   )
@@ -125,22 +125,22 @@ function SortTh({
 // ─── Sector badge ─────────────────────────────────────────────────────────────
 
 const SECTOR_COLORS: Record<string, string> = {
-  'Technology':             'bg-blue-50 text-blue-700',
-  'Healthcare':             'bg-emerald-50 text-emerald-700',
+  'Technology':             'bg-[#EAF1FF] text-[#2563EB]',
+  'Healthcare':             'bg-[#E8F7EF] text-[#11875D]',
   'Financial Services':     'bg-violet-50 text-violet-700',
   'Consumer Cyclical':      'bg-orange-50 text-orange-700',
-  'Consumer Defensive':     'bg-amber-50 text-amber-700',
+  'Consumer Defensive':     'bg-[#FFF4DA] text-[#B56A00]',
   'Communication Services': 'bg-cyan-50 text-cyan-700',
-  'Industrials':            'bg-slate-100 text-slate-600',
-  'Energy':                 'bg-yellow-50 text-yellow-700',
+  'Industrials':            'bg-[#F4F3EF] text-[#566174]',
+  'Energy':                 'bg-[#FFF4DA] text-[#B56A00]',
   'Basic Materials':        'bg-lime-50 text-lime-700',
   'Real Estate':            'bg-rose-50 text-rose-700',
   'Utilities':              'bg-teal-50 text-teal-700',
 }
 
 function SectorBadge({ sector }: { sector: string | null }) {
-  if (!sector) return <span className="text-slate-400 text-[11px]">—</span>
-  const cls = SECTOR_COLORS[sector] ?? 'bg-slate-100 text-slate-600'
+  if (!sector) return <span className="text-[#8A95A6] text-[11px]">—</span>
+  const cls = SECTOR_COLORS[sector] ?? 'bg-[#F4F3EF] text-[#566174]'
   return (
     <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full ${cls}`}>
       {sector}
@@ -263,24 +263,24 @@ export default function ScreenerPage() {
     filters.capTier !== 'all' || filters.exchange !== 'all' || filters.dividendsOnly
 
   return (
-    <div className="min-h-dvh" style={{ background: '#F1F5F9' }}>
+    <div className="min-h-dvh" style={{ background: '#F4F3EF' }}>
       {/* Page header */}
-      <div className="bg-white border-b border-slate-200">
+      <div className="bg-white border-b border-[#E3E1DA]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <div className="flex items-center gap-2.5 mb-1">
-                <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                <div className="w-7 h-7 rounded-lg bg-[#EAF1FF] flex items-center justify-center shrink-0">
                   <SlidersHorizontal size={14} className="text-olive-700" />
                 </div>
-                <h1 className="text-[22px] font-bold text-slate-900 tracking-tight">Stock Screener</h1>
+                <h1 className="text-[22px] font-bold text-[#06101F] tracking-tight">Stock Screener</h1>
               </div>
-              <p className="text-[13px] text-slate-500 ml-[36px]">
+              <p className="text-[13px] text-[#566174] ml-[36px]">
                 Filter NYSE and NASDAQ stocks by sector, market cap, and dividend. Click any row to open the full analysis.
               </p>
             </div>
             {!loading && !error && (
-              <div className="flex items-center gap-1.5 text-[12px] text-slate-400 mt-1 shrink-0" aria-live="polite" aria-atomic="true">
+              <div className="flex items-center gap-1.5 text-[12px] text-[#8A95A6] mt-1 shrink-0" aria-live="polite" aria-atomic="true">
                 <TrendingUp size={13} />
                 <span className="tabular-nums">{displayed.length.toLocaleString()} stocks</span>
                 {searchQ || hasActiveFilters ? <span>· filtered</span> : <span>· NYSE + NASDAQ</span>}
@@ -293,13 +293,13 @@ export default function ScreenerPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
         {/* ── Filter bar ─────────────────────────────────────────────────────── */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm mb-5">
+        <div className="bg-white rounded-xl border border-[#E3E1DA] shadow-sm mb-5">
           <div className="px-4 sm:px-5 py-4 flex flex-col gap-4">
             {/* Row 1: search + exchange */}
             <div className="flex items-center gap-3 flex-wrap">
               {/* Search */}
               <div className="relative flex-1 min-w-[180px] max-w-[280px]">
-                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A95A6] pointer-events-none" />
                 <input
                   type="text"
                   value={searchQ}
@@ -308,20 +308,20 @@ export default function ScreenerPage() {
                   aria-label="Search by ticker or company name"
                   autoCapitalize="characters"
                   autoCorrect="off"
-                  className="w-full pl-8 pr-3 py-2 text-[16px] border border-slate-200 rounded-lg bg-white text-slate-800 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                  className="w-full pl-8 pr-3 py-2 text-[16px] border border-[#E3E1DA] rounded-lg bg-white text-[#06101F] placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[rgba(95,121,11,0.25)] focus:border-transparent transition-shadow"
                 />
               </div>
 
               {/* Exchange toggle */}
-              <div className="flex rounded-lg overflow-hidden border border-slate-200 text-[12px] shrink-0">
+              <div className="flex rounded-lg overflow-hidden border border-[#E3E1DA] text-[12px] shrink-0">
                 {EXCHANGES.map(ex => (
                   <button
                     key={ex.id}
                     onClick={() => setFilters(f => ({ ...f, exchange: ex.id }))}
-                    className={`px-3 py-2.5 min-h-[44px] border-r border-slate-200 last:border-r-0 transition-colors whitespace-nowrap ${
+                    className={`px-3 py-2.5 min-h-[44px] border-r border-[#E3E1DA] last:border-r-0 transition-colors whitespace-nowrap ${
                       filters.exchange === ex.id
-                        ? 'bg-blue-50 text-olive-700 font-semibold'
-                        : 'text-slate-500 hover:bg-slate-50'
+                        ? 'bg-[#EAF1FF] text-olive-700 font-semibold'
+                        : 'text-[#566174] hover:bg-[#F4F3EF]'
                     }`}
                   >
                     {ex.label}
@@ -334,12 +334,12 @@ export default function ScreenerPage() {
                 onClick={() => setFilters(f => ({ ...f, dividendsOnly: !f.dividendsOnly }))}
                 className={`flex items-center gap-2 px-3 py-2.5 min-h-[44px] rounded-lg border text-[12px] font-medium transition-colors shrink-0 ${
                   filters.dividendsOnly
-                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                    : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'
+                    ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]'
+                    : 'bg-white border-[#E3E1DA] text-[#566174] hover:border-[#CDD1C8] hover:text-[#06101F]'
                 }`}
                 aria-pressed={filters.dividendsOnly}
               >
-                <span className={`w-2 h-2 rounded-full shrink-0 ${filters.dividendsOnly ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                <span className={`w-2 h-2 rounded-full shrink-0 ${filters.dividendsOnly ? 'bg-[#E8F7EF]0' : 'bg-[#CDD1C8]'}`} />
                 Dividends only
               </button>
 
@@ -347,7 +347,7 @@ export default function ScreenerPage() {
               {(hasActiveFilters || searchQ) && (
                 <button
                   onClick={resetFilters}
-                  className="flex items-center gap-1.5 text-[12px] text-slate-400 hover:text-slate-700 transition-colors px-1 shrink-0"
+                  className="flex items-center gap-1.5 text-[12px] text-[#8A95A6] hover:text-[#06101F] transition-colors px-1 shrink-0"
                   aria-label="Reset all filters"
                 >
                   <RotateCcw size={12} />
@@ -360,33 +360,33 @@ export default function ScreenerPage() {
             <div className="flex items-start gap-4 flex-wrap">
               {/* Sector */}
               <div className="flex flex-col gap-1.5">
-                <span className="text-[11px] font-semibold text-slate-400">Sector</span>
+                <span className="text-[11px] font-semibold text-[#8A95A6]">Sector</span>
                 <div className="relative">
                   <select
                     value={filters.sector}
                     onChange={e => setFilters(f => ({ ...f, sector: e.target.value }))}
                     aria-label="Filter by sector"
-                    className="appearance-none pl-3 pr-8 py-2 text-[13px] border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer min-w-[180px]"
+                    className="appearance-none pl-3 pr-8 py-2 text-[13px] border border-[#E3E1DA] rounded-lg bg-white text-[#06101F] focus:outline-none focus:ring-2 focus:ring-[rgba(95,121,11,0.25)] cursor-pointer min-w-[180px]"
                   >
                     {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
-                  <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8A95A6] pointer-events-none" />
                 </div>
               </div>
 
               {/* Market cap tier */}
               <div className="flex flex-col gap-1.5">
-                <span className="text-[11px] font-semibold text-slate-400">Market Cap</span>
-                <div className="flex rounded-lg overflow-hidden border border-slate-200">
+                <span className="text-[11px] font-semibold text-[#8A95A6]">Market Cap</span>
+                <div className="flex rounded-lg overflow-hidden border border-[#E3E1DA]">
                   {CAP_TIERS.map(t => (
                     <button
                       key={t.id}
                       onClick={() => setFilters(f => ({ ...f, capTier: t.id }))}
                       title={t.sub || undefined}
-                      className={`px-3 py-2.5 min-h-[44px] text-[12px] border-r border-slate-200 last:border-r-0 transition-colors whitespace-nowrap ${
+                      className={`px-3 py-2.5 min-h-[44px] text-[12px] border-r border-[#E3E1DA] last:border-r-0 transition-colors whitespace-nowrap ${
                         filters.capTier === t.id
-                          ? 'bg-blue-50 text-olive-700 font-semibold'
-                          : 'text-slate-500 hover:bg-slate-50'
+                          ? 'bg-[#EAF1FF] text-olive-700 font-semibold'
+                          : 'text-[#566174] hover:bg-[#F4F3EF]'
                       }`}
                     >
                       {t.label}
@@ -400,13 +400,13 @@ export default function ScreenerPage() {
         </div>
 
         {/* ── Results table ───────────────────────────────────────────────────── */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+        <div className="bg-white rounded-xl border border-[#E3E1DA] shadow-sm">
 
           {/* Error state */}
           {error && (
             <div className="px-5 py-12 text-center">
-              <p className="text-[14px] font-medium text-slate-700 mb-1">Screener unavailable</p>
-              <p className="text-[13px] text-slate-500 mb-4">{error}</p>
+              <p className="text-[14px] font-medium text-[#06101F] mb-1">Screener unavailable</p>
+              <p className="text-[13px] text-[#566174] mb-4">{error}</p>
               <button
                 onClick={() => fetchStocks(filters)}
                 className="px-4 py-2 text-[13px] font-semibold rounded-lg bg-olive-700 text-white hover:bg-olive-600 transition-colors"
@@ -421,17 +421,17 @@ export default function ScreenerPage() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[640px]">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/60">
+                  <tr className="border-b border-[#E3E1DA] bg-[#F4F3EF]/60">
                     {/* Company — left-aligned, sticky */}
                     <th
-                      className="sticky left-0 z-10 bg-slate-50 px-4 py-3 text-left text-[11px] font-semibold text-slate-500 w-[220px] min-w-[200px] cursor-pointer select-none hover:text-slate-800 transition-colors"
+                      className="sticky left-0 z-10 bg-[#F4F3EF] px-4 py-3 text-left text-[11px] font-semibold text-[#566174] w-[220px] min-w-[200px] cursor-pointer select-none hover:text-[#06101F] transition-colors"
                       onClick={() => toggleSort('name')}
                     >
                       <span className="inline-flex items-center gap-1">
                         Company
                         {sortKey === 'name'
                           ? sortDir === 'desc' ? <ArrowDown size={11} className="text-olive-700" /> : <ArrowUp size={11} className="text-olive-700" />
-                          : <ArrowUpDown size={10} className="text-slate-300" />}
+                          : <ArrowUpDown size={10} className="text-[#8A95A6]" />}
                       </span>
                     </th>
                     <SortTh label="Market Cap" sortKey="marketCap" active={sortKey === 'marketCap'} dir={sortDir} onClick={toggleSort} />
@@ -450,8 +450,8 @@ export default function ScreenerPage() {
                   {!loading && displayed.length === 0 && (
                     <tr>
                       <td colSpan={7} className="px-5 py-14 text-center">
-                        <p className="text-[14px] font-medium text-slate-700 mb-1">No stocks match your filters</p>
-                        <p className="text-[13px] text-slate-400 mb-4">Try broadening your sector, cap tier, or removing the dividend filter.</p>
+                        <p className="text-[14px] font-medium text-[#06101F] mb-1">No stocks match your filters</p>
+                        <p className="text-[13px] text-[#8A95A6] mb-4">Try broadening your sector, cap tier, or removing the dividend filter.</p>
                         <button
                           onClick={resetFilters}
                           className="text-[13px] font-semibold text-olive-700 hover:underline"
@@ -470,7 +470,7 @@ export default function ScreenerPage() {
                           initial={reduced ? false : { opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ duration: 0.15, delay: Math.min(i * 0.012, 0.18) }}
-                          className={`border-b border-slate-100 hover:bg-olive-50/60 cursor-pointer transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-olive-700 ${i % 2 === 1 ? 'bg-slate-50/50' : ''}`}
+                          className={`border-b border-[#E3E1DA] hover:bg-olive-50/60 cursor-pointer transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-olive-700 ${i % 2 === 1 ? 'bg-[#F4F3EF]/50' : ''}`}
                           onClick={() => router.push(`/stock/${stock.ticker}`)}
                           role="row"
                           tabIndex={0}
@@ -480,10 +480,10 @@ export default function ScreenerPage() {
                       {/* Company */}
                       <td className="sticky left-0 z-10 bg-inherit group-hover:bg-olive-50/60 transition-colors px-4 py-3.5">
                         <div className="flex flex-col gap-0.5">
-                          <span className="text-[13px] font-bold text-slate-900 font-mono tracking-tight group-hover:text-olive-700 transition-colors">
+                          <span className="text-[13px] font-bold text-[#06101F] font-mono tracking-tight group-hover:text-olive-700 transition-colors">
                             {stock.ticker}
                           </span>
-                          <span className="text-[11.5px] text-slate-500 truncate max-w-[170px]">
+                          <span className="text-[11.5px] text-[#566174] truncate max-w-[170px]">
                             {stock.name}
                           </span>
                         </div>
@@ -491,21 +491,21 @@ export default function ScreenerPage() {
 
                       {/* Market cap */}
                       <td className="px-4 py-3.5 text-right">
-                        <span className="text-[13px] font-mono text-slate-700 tabular-nums">{fmtCap(stock.marketCap)}</span>
+                        <span className="text-[13px] font-mono text-[#06101F] tabular-nums">{fmtCap(stock.marketCap)}</span>
                       </td>
 
                       {/* Price */}
                       <td className="px-4 py-3.5 text-right hidden sm:table-cell">
-                        <span className="text-[13px] font-mono text-slate-700 tabular-nums">{fmtPrice(stock.price)}</span>
+                        <span className="text-[13px] font-mono text-[#06101F] tabular-nums">{fmtPrice(stock.price)}</span>
                       </td>
 
                       {/* P/E */}
                       <td className="px-4 py-3.5 text-right hidden sm:table-cell">
                         <span className={`text-[13px] font-mono tabular-nums ${
-                          (stock as any).trailingPE == null ? 'text-slate-400' :
+                          (stock as any).trailingPE == null ? 'text-[#8A95A6]' :
                           (stock as any).trailingPE > 40 ? 'text-orange-600' :
-                          (stock as any).trailingPE < 15 ? 'text-emerald-600' :
-                          'text-slate-700'
+                          (stock as any).trailingPE < 15 ? 'text-[#11875D]' :
+                          'text-[#06101F]'
                         }`}>
                           {(stock as any).trailingPE != null ? `${(stock as any).trailingPE.toFixed(1)}×` : '—'}
                         </span>
@@ -514,10 +514,10 @@ export default function ScreenerPage() {
                       {/* Beta */}
                       <td className="px-4 py-3.5 text-right hidden md:table-cell">
                         <span className={`text-[13px] font-mono tabular-nums ${
-                          stock.beta == null ? 'text-slate-400' :
+                          stock.beta == null ? 'text-[#8A95A6]' :
                           stock.beta > 1.5 ? 'text-orange-600' :
-                          stock.beta < 0.7 ? 'text-emerald-600' :
-                          'text-slate-700'
+                          stock.beta < 0.7 ? 'text-[#11875D]' :
+                          'text-[#06101F]'
                         }`}>
                           {fmtBeta(stock.beta)}
                         </span>
@@ -527,8 +527,8 @@ export default function ScreenerPage() {
                       <td className="px-4 py-3.5 text-right hidden md:table-cell">
                         <span className={`text-[13px] font-mono tabular-nums ${
                           stock.dividendYield != null && stock.dividendYield > 0
-                            ? 'text-emerald-700 font-semibold'
-                            : 'text-slate-400'
+                            ? 'text-[#11875D] font-semibold'
+                            : 'text-[#8A95A6]'
                         }`}>
                           {fmtDiv(stock.dividendYield)}
                         </span>
@@ -549,11 +549,11 @@ export default function ScreenerPage() {
 
           {/* Table footer */}
           {!loading && !error && displayed.length > 0 && (
-            <div className="px-4 py-2.5 border-t border-slate-100 flex items-center justify-between">
-              <p className="text-[11px] text-slate-400">
+            <div className="px-4 py-2.5 border-t border-[#E3E1DA] flex items-center justify-between">
+              <p className="text-[11px] text-[#8A95A6]">
                 {displayed.length.toLocaleString()} result{displayed.length !== 1 ? 's' : ''} · Click a row to open the full valuation analysis
               </p>
-              <p className="text-[11px] text-slate-400">Source: FMP · Data refreshed every 30 minutes</p>
+              <p className="text-[11px] text-[#8A95A6]">Source: FMP · Data refreshed every 30 minutes</p>
             </div>
           )}
         </div>

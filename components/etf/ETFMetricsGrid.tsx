@@ -28,39 +28,39 @@ function fmt(v: number | null, decimals = 1): string {
 
 function MetricRow({ label, value, color, tooltip }: { label: string; value: string; color?: string; tooltip?: string }) {
   return (
-    <div className="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0">
+    <div className="flex items-center justify-between py-1.5 border-b border-[#E3E1DA] last:border-0">
       <div className="flex items-center gap-1">
-        <span className="text-[12px] text-slate-500">{label}</span>
+        <span className="text-[12px] text-[#566174]">{label}</span>
         {tooltip && <InfoTooltip text={tooltip} side="top" />}
       </div>
-      <span className={cn('text-[12px] font-semibold font-mono', color ?? 'text-slate-800')}>{value}</span>
+      <span className={cn('text-[12px] font-semibold font-mono', color ?? 'text-[#06101F]')}>{value}</span>
     </div>
   )
 }
 
 function peColor(v: number | null): string {
   if (v == null) return ''
-  if (v <= 15) return 'text-emerald-600'
-  if (v <= 22) return 'text-amber-600'
-  return 'text-red-500'
+  if (v <= 15) return 'text-[#11875D]'
+  if (v <= 22) return 'text-[#B56A00]'
+  return 'text-[#D83B3B]'
 }
 function pbColor(v: number | null): string {
   if (v == null) return ''
-  if (v <= 1.5) return 'text-emerald-600'
-  if (v <= 3) return 'text-amber-600'
-  return 'text-red-500'
+  if (v <= 1.5) return 'text-[#11875D]'
+  if (v <= 3) return 'text-[#B56A00]'
+  return 'text-[#D83B3B]'
 }
 
 function ScoreGauge({ score, label }: { score: number; label: string }) {
   const barColor = scoreBarColor(score)
   const textColor = scoreColor(score)
-  const badgeTextColor = score >= 30 && score < 50 ? 'text-amber-900' : 'text-white'
+  const badgeTextColor = score >= 30 && score < 50 ? 'text-[#713F12]' : 'text-white'
 
   return (
     <div className="flex flex-col items-center gap-2">
       <div className={cn('text-4xl font-black font-mono', textColor)}>{score}</div>
       <div className={cn('text-xs font-semibold px-2 py-0.5 rounded-full', barColor, badgeTextColor)}>{label}</div>
-      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mt-1">
+      <div className="w-full h-2 bg-[#F4F3EF] rounded-full overflow-hidden mt-1">
         <div
           role="progressbar"
           aria-valuenow={score}
@@ -84,7 +84,7 @@ export function ETFMetricsGrid({ metrics }: { metrics: ETFMetrics }) {
       {/* Basket Valuation */}
       <div className="glass-card-light rounded-xl p-4">
         <div className="flex items-center gap-1.5 mb-3">
-          <p className="text-sm font-semibold text-slate-600">Basket valuation</p>
+          <p className="text-sm font-semibold text-[#566174]">Basket valuation</p>
           <InfoTooltip text="Weighted average ratios of the ETF's underlying holdings, not the ETF's own trading price." />
         </div>
         <MetricRow label="P/E ratio" value={fmt(metrics.peRatio)} color={peColor(metrics.peRatio)} tooltip="Price-to-Earnings: basket weighted average. Lower = more earnings per dollar paid." />
@@ -96,21 +96,21 @@ export function ETFMetricsGrid({ metrics }: { metrics: ETFMetrics }) {
       {/* Value Score */}
       <div className="glass-card-light rounded-xl p-4">
         <div className="flex items-center gap-1.5 mb-3">
-          <p className="text-sm font-semibold text-slate-600">Value score</p>
+          <p className="text-sm font-semibold text-[#566174]">Value score</p>
           <InfoTooltip text="Score = P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio penalty (20 pts). 70+ = Deep Value." />
         </div>
         <ScoreGauge score={metrics.valueScore} label={metrics.valueScoreLabel} />
         <div className="mt-3 space-y-1">
-          <div className="flex justify-between text-xs text-slate-500">
+          <div className="flex justify-between text-xs text-[#566174]">
             <span>P/E contribution</span><span className="font-mono">{metrics.scoreBreakdown.pe}/30</span>
           </div>
-          <div className="flex justify-between text-xs text-slate-500">
+          <div className="flex justify-between text-xs text-[#566174]">
             <span>P/B contribution</span><span className="font-mono">{metrics.scoreBreakdown.pb}/25</span>
           </div>
-          <div className="flex justify-between text-xs text-slate-500">
+          <div className="flex justify-between text-xs text-[#566174]">
             <span>Yield contribution</span><span className="font-mono">{metrics.scoreBreakdown.yieldPts}/25</span>
           </div>
-          <div className="flex justify-between text-xs text-slate-500">
+          <div className="flex justify-between text-xs text-[#566174]">
             <span>Expense penalty</span><span className="font-mono text-red-400">−{metrics.scoreBreakdown.expensePenalty}</span>
           </div>
         </div>
@@ -118,7 +118,7 @@ export function ETFMetricsGrid({ metrics }: { metrics: ETFMetrics }) {
 
       {/* Fund Profile */}
       <div className="glass-card-light rounded-xl p-4">
-        <p className="text-sm font-semibold text-slate-600 mb-3">Fund profile</p>
+        <p className="text-sm font-semibold text-[#566174] mb-3">Fund profile</p>
         <MetricRow label="Expense ratio" value={er} />
         <MetricRow label="Issuer" value={metrics.issuer ?? '—'} />
         <MetricRow label="Category" value={metrics.category ?? '—'} />
@@ -127,8 +127,8 @@ export function ETFMetricsGrid({ metrics }: { metrics: ETFMetrics }) {
 
       {/* Income */}
       <div className="glass-card-light rounded-xl p-4">
-        <p className="text-sm font-semibold text-slate-600 mb-3">Income</p>
-        <MetricRow label="Trailing yield" value={yld} color={metrics.yield && metrics.yield > 0.02 ? 'text-emerald-600' : 'text-slate-800'} />
+        <p className="text-sm font-semibold text-[#566174] mb-3">Income</p>
+        <MetricRow label="Trailing yield" value={yld} color={metrics.yield && metrics.yield > 0.02 ? 'text-[#11875D]' : 'text-[#06101F]'} />
         <MetricRow label="Annual dividend" value={metrics.dividendRate != null ? `$${metrics.dividendRate.toFixed(2)}` : '—'} />
       </div>
     </div>

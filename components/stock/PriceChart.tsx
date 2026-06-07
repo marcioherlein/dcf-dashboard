@@ -440,11 +440,11 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-4 pb-2">
         <div className="flex items-center gap-3 flex-wrap">
-          <h2 className="text-sm font-semibold text-slate-900">Price Chart</h2>
+          <h2 className="text-sm font-semibold text-[#06101F]">Price Chart</h2>
           {changePct != null && (
             <span className="flex items-center gap-1">
-              <span className="text-[11px] text-slate-400">{period}</span>
-              <span className={`text-xs font-semibold tabular-nums ${changePct >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+              <span className="text-[11px] text-[#8A95A6]">{period}</span>
+              <span className={`text-xs font-semibold tabular-nums ${changePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                 {changePct >= 0 ? '+' : ''}{changePct.toFixed(2)}%
               </span>
             </span>
@@ -467,7 +467,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
         <div className="flex gap-1">
           {PERIODS.map(p => (
             <button key={p} onClick={() => setPeriod(p)}
-              className={`rounded-lg px-3 py-2.5 min-h-[44px] text-xs font-medium transition ${period === p ? 'bg-olive-100 text-olive-700' : 'text-slate-500 hover:bg-slate-100'}`}>
+              className={`rounded-lg px-3 py-2.5 min-h-[44px] text-xs font-medium transition ${period === p ? 'bg-olive-100 text-olive-700' : 'text-[#566174] hover:bg-[#F4F3EF]'}`}>
               {PERIOD_LABELS[p]}
             </button>
           ))}
@@ -482,7 +482,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
           return (
             <button
               onClick={() => spyOn ? removeCompareTicker('SPY') : addCompareTicker('SPY')}
-              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold border transition-all ${spyOn ? 'bg-[#f9731622] border-[#f97316] text-[#f97316]' : 'border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50'}`}
+              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold border transition-all ${spyOn ? 'bg-[#f9731622] border-[#f97316] text-[#f97316]' : 'border-[#E3E1DA] text-[#566174] hover:border-[#CDD1C8] hover:bg-[#F4F3EF]'}`}
             >
               {spyOn ? <>SPY <span className="opacity-70">×</span></> : 'vs SPY'}
             </button>
@@ -505,13 +505,13 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
               onChange={e => setCompareInput(e.target.value.toUpperCase())}
               onBlur={() => { if (compareInput.trim()) addCompareTicker(compareInput) }}
               placeholder="+ Compare" maxLength={10}
-              className="text-xs bg-transparent border-b border-dashed border-slate-300 focus:outline-none focus:border-blue-500 w-20 py-0.5 placeholder:text-slate-400 text-slate-900"
+              className="text-xs bg-transparent border-b border-dashed border-[#CDD1C8] focus:outline-none focus:border-[#5F790B] w-20 py-0.5 placeholder:text-[#8A95A6] text-[#06101F]"
             />
           </form>
         )}
         {isCompare && (
           <button onClick={() => setCompareMode(p => p === 'price' ? 'percent' : 'price')}
-            className={`ml-auto text-[11px] font-bold px-2.5 py-0.5 rounded-full border transition ${compareMode === 'percent' ? 'bg-olive-700 text-white border-olive-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+            className={`ml-auto text-[11px] font-bold px-2.5 py-0.5 rounded-full border transition ${compareMode === 'percent' ? 'bg-olive-700 text-white border-olive-700' : 'border-[#E3E1DA] text-[#566174] hover:bg-[#F4F3EF]'}`}>
             {compareMode === 'percent' ? '% Return' : '$ Price'}
           </button>
         )}
@@ -538,12 +538,12 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
           <div className="ml-auto flex items-center gap-1">
             {(['volume', 'rsi'] as SubPanel[]).map(sp => (
               <button key={sp} onClick={() => { setSubPanel(sp); setShowSubPanel(true) }}
-                className={`rounded px-2 py-0.5 text-[10px] font-medium transition ${showSubPanel && subPanel === sp ? 'bg-slate-100 text-slate-700' : 'text-slate-400 hover:bg-slate-50'}`}>
+                className={`rounded px-2 py-0.5 text-[10px] font-medium transition ${showSubPanel && subPanel === sp ? 'bg-[#F4F3EF] text-[#06101F]' : 'text-[#8A95A6] hover:bg-[#F4F3EF]'}`}>
                 {sp.toUpperCase()}
               </button>
             ))}
             <button onClick={() => setShowSubPanel(v => !v)}
-              className="rounded px-1.5 py-0.5 text-[10px] text-slate-400 hover:bg-slate-100">
+              className="rounded px-1.5 py-0.5 text-[10px] text-[#8A95A6] hover:bg-[#F4F3EF]">
               {showSubPanel ? '↑' : '↓'}
             </button>
           </div>
@@ -553,11 +553,11 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
       {/* Main chart */}
       <div className="relative px-1">
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-400 z-10">Loading…</div>
+          <div className="absolute inset-0 flex items-center justify-center text-sm text-[#8A95A6] z-10">Loading…</div>
         )}
         <div ref={mainRef} className="w-full" style={{ height: 280 }} />
         <div ref={tooltipRef} className="pointer-events-none absolute z-20 hidden rounded-lg px-2.5 py-2 text-[11px]"
-          style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', minWidth: 120, lineHeight: 1.6 }} />
+          style={{ background: '#FFFFFF', border: '1px solid #E3E1DA', minWidth: 120, lineHeight: 1.6 }} />
       </div>
 
       {/* RSI sub-panel */}
@@ -569,7 +569,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
             style={{ height: subPanel === 'rsi' ? 80 : 0, overflow: 'hidden' }}
           />
           <div className="flex items-center justify-center mt-0.5">
-            <span className="text-[10px] text-slate-400 font-medium tracking-wide">
+            <span className="text-[10px] text-[#8A95A6] font-medium tracking-wide">
               {subPanel === 'volume' ? 'VOLUME' : 'RSI (14)'}
             </span>
           </div>

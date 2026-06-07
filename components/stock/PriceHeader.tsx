@@ -23,9 +23,9 @@ interface Props {
 
 function StatBox({ label, value, className }: { label: string; value: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('rounded-xl bg-slate-50 border border-slate-200 px-4 py-3', className)}>
-      <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">{label}</p>
-      <p className="mt-0.5 text-sm font-semibold font-mono text-slate-900">{value}</p>
+    <div className={cn('rounded-xl bg-[#F4F3EF] border border-[#E3E1DA] px-4 py-3', className)}>
+      <p className="text-[11px] font-medium text-[#566174] uppercase tracking-wide">{label}</p>
+      <p className="mt-0.5 text-sm font-semibold font-mono text-[#06101F]">{value}</p>
     </div>
   )
 }
@@ -42,24 +42,24 @@ export default function PriceHeader({
       <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="rounded-lg bg-blue-50 border border-blue-200 px-2.5 py-1 text-xs font-bold text-blue-700 tracking-wide shrink-0">
+            <span className="rounded-lg bg-[#EAF1FF] border border-[#93B4F5] px-2.5 py-1 text-xs font-bold text-[#2563EB] tracking-wide shrink-0">
               {ticker}
             </span>
             {sector && (
-              <span className="text-micro text-slate-500 truncate">{sector}</span>
+              <span className="text-micro text-[#566174] truncate">{sector}</span>
             )}
           </div>
-          <h1 className="mt-2 text-lg sm:text-xl font-bold text-slate-900 tracking-tight truncate max-w-[200px] sm:max-w-none">
+          <h1 className="mt-2 text-lg sm:text-xl font-bold text-[#06101F] tracking-tight truncate max-w-[200px] sm:max-w-none">
             {companyName}
           </h1>
         </div>
 
         <div className="flex items-start gap-2 sm:gap-3 shrink-0">
           <div className="text-right">
-            <div className="text-[22px] sm:text-3xl font-extrabold text-slate-900 font-mono tabular-nums tracking-tight leading-none">
+            <div className="text-[22px] sm:text-3xl font-bold text-[#06101F] font-mono tabular-nums tracking-tight leading-none">
               {currSymbol}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div className={cn('mt-1 flex items-center justify-end gap-1.5 text-sm font-semibold', up ? 'text-emerald-600' : 'text-red-600')}>
+            <div className={cn('mt-1 flex items-center justify-end gap-1.5 text-sm font-semibold', up ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
               {up ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
               <span>{up ? '+' : ''}{change.toFixed(2)}</span>
               <span className="text-xs opacity-80">({up ? '+' : ''}{fmtPct(changePct / 100)})</span>
@@ -69,7 +69,7 @@ export default function PriceHeader({
             <button
               onClick={onSave}
               title="Save to Watchlist"
-              className="mt-1 rounded-lg border border-slate-200 p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+              className="mt-1 rounded-lg border border-[#E3E1DA] p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-[#8A95A6] hover:border-[#5F790B] hover:text-[#2563EB] hover:bg-[#EAF1FF] transition-colors"
             >
               <Bookmark size={16} />
             </button>

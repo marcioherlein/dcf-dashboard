@@ -35,7 +35,7 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
 
         if (loading) {
           return (
-            <div key={meta.ticker} className="h-[108px] rounded-xl border border-slate-100 bg-slate-50 motion-safe:animate-pulse" />
+            <div key={meta.ticker} className="h-[108px] rounded-xl border border-[#E3E1DA] bg-[#F4F3EF] motion-safe:animate-pulse" />
           )
         }
 
@@ -44,7 +44,7 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
             key={meta.ticker}
             className={cn(
               'group relative rounded-xl border p-3 transition-all hover:shadow-sm',
-              score != null ? scoreBgCell(score) : 'bg-white border-slate-200',
+              score != null ? scoreBgCell(score) : 'bg-white border-[#E3E1DA]',
             )}
           >
             {/* Full-card invisible link — navigates on click anywhere except the button */}
@@ -58,10 +58,10 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
             {/* Header row */}
             <div className="relative z-10 flex items-start justify-between gap-1 mb-2">
               <Link href={`/etf/${meta.ticker}`} tabIndex={0} className="min-w-0 flex-1">
-                <span className="block font-mono font-black text-[14px] text-slate-900 leading-none group-hover:text-olive-700 transition-colors">
+                <span className="block font-mono font-black text-[14px] text-[#06101F] leading-none group-hover:text-olive-700 transition-colors">
                   {meta.ticker}
                 </span>
-                <span className="block text-[11px] text-slate-500 mt-0.5 leading-tight truncate">
+                <span className="block text-[11px] text-[#566174] mt-0.5 leading-tight truncate">
                   {meta.label}
                 </span>
               </Link>
@@ -70,8 +70,8 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
                 className={cn(
                   'relative z-20 shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-olive-700 focus-visible:ring-offset-1 focus-visible:outline-none',
                   isWatchlisted
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'bg-white/80 text-slate-400 hover:bg-olive-50 hover:text-olive-700 border border-slate-200 hover:border-[#BFD2A1]',
+                    ? 'bg-[#E8F7EF] text-[#11875D]'
+                    : 'bg-white/80 text-[#8A95A6] hover:bg-olive-50 hover:text-olive-700 border border-[#E3E1DA] hover:border-[#BFD2A1]',
                 )}
                 aria-label={isWatchlisted ? `${meta.ticker} is in your watchlist` : `Add ${meta.ticker} to watchlist`}
               >
@@ -92,20 +92,20 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
                   <InfoTooltip text="Score = P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio penalty (20 pts). 70+ = Deep Value." side="top" />
                 </>
               ) : (
-                <div className="h-6 w-16 rounded bg-slate-100 motion-safe:animate-pulse" />
+                <div className="h-6 w-16 rounded bg-[#F4F3EF] motion-safe:animate-pulse" />
               )}
             </div>
 
             {/* Stat row */}
             <div className="relative z-10 flex items-center gap-2.5 text-[11px]">
               {item?.peRatio != null && (
-                <span className="text-slate-500">
-                  P/E <span className="font-mono font-semibold text-slate-700">{fmtMultiple(item.peRatio)}</span>
+                <span className="text-[#566174]">
+                  P/E <span className="font-mono font-semibold text-[#06101F]">{fmtMultiple(item.peRatio)}</span>
                 </span>
               )}
               {item?.expenseRatio != null && (
-                <span className="text-slate-500">
-                  ER <span className="font-mono font-semibold text-slate-700">{(item.expenseRatio * 100).toFixed(2)}%</span>
+                <span className="text-[#566174]">
+                  ER <span className="font-mono font-semibold text-[#06101F]">{(item.expenseRatio * 100).toFixed(2)}%</span>
                 </span>
               )}
             </div>

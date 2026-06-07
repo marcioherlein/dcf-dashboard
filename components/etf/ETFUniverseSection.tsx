@@ -21,7 +21,7 @@ type SortDir = 'asc' | 'desc'
 type FilterGroup = 'all' | ETFGroup
 
 function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
-  if (col !== sortKey) return <ChevronsUpDown size={11} className="text-slate-300" />
+  if (col !== sortKey) return <ChevronsUpDown size={11} className="text-[#8A95A6]" />
   return sortDir === 'desc'
     ? <ChevronDown size={11} className="text-olive-700" />
     : <ChevronUp size={11} className="text-olive-700" />
@@ -78,7 +78,7 @@ function Leaderboard({
   const groupBadge: Record<ETFGroup, string> = {
     sector: 'bg-violet-50 text-violet-700 border-violet-200',
     geo:    'bg-sky-50 text-sky-700 border-sky-200',
-    style:  'bg-amber-50 text-amber-700 border-amber-200',
+    style:  'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]',
   }
   const groupLabel: Record<ETFGroup, string> = {
     sector: 'Sector',
@@ -101,7 +101,7 @@ function Leaderboard({
   return (
     <section>
       <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
-        <h2 className="text-lg font-bold text-slate-900">
+        <h2 className="text-lg font-bold text-[#06101F]">
           Rankings
         </h2>
         <div className="flex gap-1.5 flex-wrap">
@@ -113,7 +113,7 @@ function Leaderboard({
                 'px-3 py-2.5 rounded-full text-[12px] font-semibold transition-colors border',
                 filter === f.id
                   ? 'bg-olive-700 text-white border-olive-700'
-                  : 'bg-white text-slate-500 border-slate-200 hover:border-[#BFD2A1] hover:text-olive-700',
+                  : 'bg-white text-[#566174] border-[#E3E1DA] hover:border-[#BFD2A1] hover:text-olive-700',
               )}
             >
               {f.label}
@@ -122,15 +122,15 @@ function Leaderboard({
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-[#E3E1DA] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50">
-                <th scope="col" className="text-left pl-4 pr-3 py-2.5 text-[11px] font-semibold text-slate-500 w-[200px] sticky left-0 bg-slate-50">
+              <tr className="border-b border-[#E3E1DA] bg-[#F4F3EF]">
+                <th scope="col" className="text-left pl-4 pr-3 py-2.5 text-[11px] font-semibold text-[#566174] w-[200px] sticky left-0 bg-[#F4F3EF]">
                   ETF
                 </th>
-                <th scope="col" className="text-left px-3 py-2.5 text-[11px] font-semibold text-slate-500">
+                <th scope="col" className="text-left px-3 py-2.5 text-[11px] font-semibold text-[#566174]">
                   Type
                 </th>
                 {COLS.map((col) => (
@@ -145,7 +145,7 @@ function Leaderboard({
                         : 'none'
                     }
                   >
-                    <span className="inline-flex items-center justify-end gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-700 transition-colors">
+                    <span className="inline-flex items-center justify-end gap-1 text-[11px] font-semibold text-[#566174] hover:text-[#06101F] transition-colors">
                       {col.label}
                       <SortIcon col={col.key} sortKey={sortKey} sortDir={sortDir} />
                     </span>
@@ -154,17 +154,17 @@ function Leaderboard({
                 <th scope="col" className="px-4 py-2.5 w-10" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-[#F4F3EF]">
               {rows.map(({ meta, item }) => {
                 const score = item?.valueScore ?? null
                 return (
-                  <tr key={meta.ticker} className="hover:bg-slate-50 transition-colors group">
-                    <td className="pl-4 pr-3 py-3 sticky left-0 bg-white group-hover:bg-slate-50 transition-colors">
+                  <tr key={meta.ticker} className="hover:bg-[#F4F3EF] transition-colors group">
+                    <td className="pl-4 pr-3 py-3 sticky left-0 bg-white group-hover:bg-[#F4F3EF] transition-colors">
                       <Link href={`/etf/${meta.ticker}`} className="block">
-                        <span className="font-mono font-black text-[13px] text-slate-900 hover:text-blue-600 transition-colors">
+                        <span className="font-mono font-black text-[13px] text-[#06101F] hover:text-[#2563EB] transition-colors">
                           {meta.ticker}
                         </span>
-                        <span className="block text-[11px] text-slate-400 mt-0.5 truncate max-w-[160px]">
+                        <span className="block text-[11px] text-[#8A95A6] mt-0.5 truncate max-w-[160px]">
                           {item?.name ?? meta.label}
                         </span>
                       </Link>
@@ -174,22 +174,22 @@ function Leaderboard({
                         {groupLabel[meta.group]}
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-right font-mono text-[12px] text-slate-700">
-                      {item?.peRatio != null ? fmtMultiple(item.peRatio) : <span className="text-slate-300">—</span>}
+                    <td className="px-3 py-3 text-right font-mono text-[12px] text-[#06101F]">
+                      {item?.peRatio != null ? fmtMultiple(item.peRatio) : <span className="text-[#8A95A6]">—</span>}
                     </td>
-                    <td className="px-3 py-3 text-right font-mono text-[12px] text-slate-700">
-                      {item?.pbRatio != null ? fmtMultiple(item.pbRatio) : <span className="text-slate-300">—</span>}
+                    <td className="px-3 py-3 text-right font-mono text-[12px] text-[#06101F]">
+                      {item?.pbRatio != null ? fmtMultiple(item.pbRatio) : <span className="text-[#8A95A6]">—</span>}
                     </td>
-                    <td className="px-3 py-3 text-right font-mono text-[12px] text-slate-700">
+                    <td className="px-3 py-3 text-right font-mono text-[12px] text-[#06101F]">
                       {item?.expenseRatio != null
                         ? (item.expenseRatio * 100).toFixed(2) + '%'
-                        : <span className="text-slate-300">—</span>}
+                        : <span className="text-[#8A95A6]">—</span>}
                     </td>
-                    <td className="px-3 py-3 text-right font-mono text-[12px] text-slate-700">
-                      {item?.yield != null ? fmtPctAbs(item.yield) : <span className="text-slate-300">—</span>}
+                    <td className="px-3 py-3 text-right font-mono text-[12px] text-[#06101F]">
+                      {item?.yield != null ? fmtPctAbs(item.yield) : <span className="text-[#8A95A6]">—</span>}
                     </td>
-                    <td className="px-3 py-3 text-right font-mono text-[12px] text-slate-700">
-                      {item?.aum != null ? fmtLarge(item.aum) : <span className="text-slate-300">—</span>}
+                    <td className="px-3 py-3 text-right font-mono text-[12px] text-[#06101F]">
+                      {item?.aum != null ? fmtLarge(item.aum) : <span className="text-[#8A95A6]">—</span>}
                     </td>
                     <td className="px-3 py-3 text-right">
                       {score != null ? (
@@ -199,7 +199,7 @@ function Leaderboard({
                           <InfoTooltip text="Score = P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio penalty (20 pts). 70+ = Deep Value." side="top" />
                         </div>
                       ) : (
-                        <span className="text-slate-300">—</span>
+                        <span className="text-[#8A95A6]">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
@@ -209,8 +209,8 @@ function Leaderboard({
                         className={cn(
                           'min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all',
                           watchlistedTickers.has(meta.ticker)
-                            ? 'bg-emerald-50 text-emerald-600'
-                            : 'bg-slate-100 text-slate-400 hover:bg-olive-50 hover:text-olive-700',
+                            ? 'bg-[#E8F7EF] text-[#11875D]'
+                            : 'bg-[#F4F3EF] text-[#8A95A6] hover:bg-olive-50 hover:text-olive-700',
                         )}
                       >
                         {watchlistedTickers.has(meta.ticker) ? <Check size={12} /> : <Plus size={12} />}
@@ -265,10 +265,10 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
       {/* Sectors */}
       <section>
         <div className="mb-3">
-          <h2 className="text-lg font-bold text-slate-900">
+          <h2 className="text-lg font-bold text-[#06101F]">
             Sectors
           </h2>
-          <p className="text-[13px] text-slate-400 mt-0.5">US SPDR sector ETFs (GICS)</p>
+          <p className="text-[13px] text-[#8A95A6] mt-0.5">US SPDR sector ETFs (GICS)</p>
         </div>
         <ETFHeatmapGrid
           metas={SECTOR_META}
@@ -282,10 +282,10 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
       {/* Geographies */}
       <section>
         <div className="mb-3">
-          <h2 className="text-lg font-bold text-slate-900">
+          <h2 className="text-lg font-bold text-[#06101F]">
             Geographies
           </h2>
-          <p className="text-[13px] text-slate-400 mt-0.5">Regional and country exposure</p>
+          <p className="text-[13px] text-[#8A95A6] mt-0.5">Regional and country exposure</p>
         </div>
         <ETFHeatmapGrid
           metas={GEO_META}
@@ -299,10 +299,10 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
       {/* Styles */}
       <section>
         <div className="mb-3">
-          <h2 className="text-lg font-bold text-slate-900">
+          <h2 className="text-lg font-bold text-[#06101F]">
             Styles
           </h2>
-          <p className="text-[13px] text-slate-400 mt-0.5">Factor tilts and smart beta</p>
+          <p className="text-[13px] text-[#8A95A6] mt-0.5">Factor tilts and smart beta</p>
         </div>
         <ETFHeatmapGrid
           metas={STYLE_META}
@@ -314,7 +314,7 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
       </section>
 
       {/* Rankings leaderboard */}
-      <div className="border-t border-slate-200 pt-8">
+      <div className="border-t border-[#E3E1DA] pt-8">
         <Leaderboard data={data} watchlistedTickers={watchlistedTickers} onAdd={handleAdd} />
       </div>
     </div>

@@ -37,7 +37,7 @@ export default function RedeemPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-slate-50 flex items-center justify-center px-4 py-16">
+    <div className="min-h-dvh bg-[#F4F3EF] flex items-center justify-center px-4 py-16">
       <div className="w-full max-w-sm">
 
         {/* Logo */}
@@ -46,9 +46,9 @@ export default function RedeemPage() {
         </div>
 
         {!session && status !== 'loading' ? (
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm px-6 py-8 text-center space-y-4">
-            <h1 className="text-[18px] font-bold text-slate-900">Redeem your Pro code</h1>
-            <p className="text-[14px] text-slate-500">Sign in first to activate your Pro access.</p>
+          <div className="bg-white rounded-2xl border border-[#E3E1DA] shadow-sm px-6 py-8 text-center space-y-4">
+            <h1 className="text-[18px] font-bold text-[#06101F]">Redeem your Pro code</h1>
+            <p className="text-[14px] text-[#566174]">Sign in first to activate your Pro access.</p>
             <button
               onClick={() => signIn('google', { callbackUrl: '/redeem' })}
               className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-olive-700 hover:bg-olive-600 text-white font-semibold text-[14px] py-3 transition-colors"
@@ -63,13 +63,13 @@ export default function RedeemPage() {
             </button>
           </div>
         ) : success ? (
-          <div className="bg-white rounded-2xl border border-emerald-200 shadow-sm px-6 py-8 text-center space-y-5">
+          <div className="bg-white rounded-2xl border border-[#11875D]/30 shadow-sm px-6 py-8 text-center space-y-5">
             <div className="flex justify-center">
-              <CheckCircle size={48} className="text-emerald-500" strokeWidth={1.5} />
+              <CheckCircle size={48} className="text-[#11875D]" strokeWidth={1.5} />
             </div>
             <div>
-              <h1 className="text-[18px] font-bold text-slate-900 mb-1">Pro activated!</h1>
-              <p className="text-[14px] text-slate-500">You now have unlimited access to all analyses.</p>
+              <h1 className="text-[18px] font-bold text-[#06101F] mb-1">Pro activated!</h1>
+              <p className="text-[14px] text-[#566174]">You now have unlimited access to all analyses.</p>
             </div>
             <button
               onClick={() => router.push('/analyze')}
@@ -80,10 +80,10 @@ export default function RedeemPage() {
             </button>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm px-6 py-8 space-y-5">
+          <div className="bg-white rounded-2xl border border-[#E3E1DA] shadow-sm px-6 py-8 space-y-5">
             <div>
-              <h1 className="text-[18px] font-bold text-slate-900 mb-1">Enter your Pro access code</h1>
-              <p className="text-[13px] text-slate-500">Redeem a code for unlimited access to all analyses.</p>
+              <h1 className="text-[18px] font-bold text-[#06101F] mb-1">Enter your Pro access code</h1>
+              <p className="text-[13px] text-[#566174]">Redeem a code for unlimited access to all analyses.</p>
             </div>
 
             <div className="space-y-3">
@@ -93,11 +93,11 @@ export default function RedeemPage() {
                 onChange={e => { setCode(e.target.value.toUpperCase()); setError('') }}
                 onKeyDown={e => { if (e.key === 'Enter') handleRedeem() }}
                 placeholder="e.g. INSIC2024"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] font-mono font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-olive-100 transition-all uppercase tracking-wider"
+                className="w-full rounded-xl border border-[#E3E1DA] bg-[#F4F3EF] px-4 py-3 text-[15px] font-mono font-semibold text-[#06101F] placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-olive-100 transition-all uppercase tracking-wider"
               />
 
               {error && (
-                <p className="text-[12px] text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>
+                <p className="text-[12px] text-[#D83B3B] bg-[#FCEAEA] border border-red-100 rounded-lg px-3 py-2">{error}</p>
               )}
 
               <button
@@ -111,7 +111,7 @@ export default function RedeemPage() {
               </button>
             </div>
 
-            <p className="text-center text-[12px] text-slate-400">
+            <p className="text-center text-[12px] text-[#8A95A6]">
               Need a code?{' '}
               <a href="/pricing" className="text-olive-700 hover:underline">See pricing</a>
             </p>

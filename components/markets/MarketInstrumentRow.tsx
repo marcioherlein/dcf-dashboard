@@ -25,13 +25,13 @@ function fmtPct(v: number | null): string {
 }
 
 function changeCls(v: number | null) {
-  if (v == null) return 'text-slate-400'
-  return v > 0 ? 'text-emerald-600' : v < 0 ? 'text-red-500' : 'text-slate-500'
+  if (v == null) return 'text-[#8A95A6]'
+  return v > 0 ? 'text-[#11875D]' : v < 0 ? 'text-[#D83B3B]' : 'text-[#566174]'
 }
 
 function badgeCls(v: number | null) {
-  if (v == null) return 'bg-slate-100 text-slate-500'
-  return v > 0 ? 'bg-emerald-50 text-emerald-700' : v < 0 ? 'bg-red-50 text-red-600' : 'bg-slate-100 text-slate-500'
+  if (v == null) return 'bg-[#E3E1DA] text-[#566174]'
+  return v > 0 ? 'bg-[#E8F7EF] text-[#11875D]' : v < 0 ? 'bg-[#FCEAEA] text-[#D83B3B]' : 'bg-[#E3E1DA] text-[#566174]'
 }
 
 function displaySymbol(symbol: string): string {
@@ -52,16 +52,16 @@ export default function MarketInstrumentRow({ symbol, name, price, change, chang
       )}
     >
       <div className="min-w-0 pr-2">
-        <div className="text-[13px] font-semibold text-slate-800 leading-tight tracking-tight truncate">
+        <div className="text-[13px] font-semibold text-[#06101F] leading-tight tracking-tight truncate">
           {displaySymbol(symbol)}
         </div>
-        <div className="text-[11px] text-slate-500 leading-tight truncate" title={name}>
+        <div className="text-[11px] text-[#566174] leading-tight truncate" title={name}>
           {name}
         </div>
       </div>
 
       <div className="text-right tabular-nums">
-        <span className="text-[13px] font-semibold text-slate-700 font-mono">
+        <span className="text-[13px] font-semibold text-[#06101F] font-mono">
           {price != null && isFinite(price) ? fmtNum(price, priceDecimals) : <NABadge reason="no-data" />}
         </span>
       </div>

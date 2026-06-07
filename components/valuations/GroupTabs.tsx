@@ -40,14 +40,14 @@ export function GroupTabs({ groups, active, counts, totalCount, onSelect, onNewG
           'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors',
           active === null
             ? 'bg-slate-900 text-white'
-            : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50',
+            : 'bg-white border border-[#E3E1DA] text-[#566174] hover:bg-[#F4F3EF]',
         )}
       >
         All
         <span
           className={cn(
             'text-[11px] px-1.5 py-0.5 rounded-md font-semibold',
-            active === null ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500',
+            active === null ? 'bg-white/20 text-white' : 'bg-[#E3E1DA] text-[#566174]',
           )}
         >
           {totalCount}
@@ -62,14 +62,14 @@ export function GroupTabs({ groups, active, counts, totalCount, onSelect, onNewG
             'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors',
             active === group
               ? 'bg-slate-900 text-white'
-              : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50',
+              : 'bg-white border border-[#E3E1DA] text-[#566174] hover:bg-[#F4F3EF]',
           )}
         >
           {group}
           <span
             className={cn(
               'text-[11px] px-1.5 py-0.5 rounded-md font-semibold',
-              active === group ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500',
+              active === group ? 'bg-white/20 text-white' : 'bg-[#E3E1DA] text-[#566174]',
             )}
           >
             {counts[group] ?? 0}
@@ -89,7 +89,7 @@ export function GroupTabs({ groups, active, counts, totalCount, onSelect, onNewG
               if (e.key === 'Escape') { setAdding(false); setDraft('') }
             }}
             placeholder="Group name…"
-            className="px-3 py-1.5 text-[13px] border border-blue-400 rounded-lg outline-none w-36 bg-white"
+            className="px-3 py-1.5 text-[13px] border border-[#93B4F5] rounded-lg outline-none w-36 bg-white"
           />
           {draft.trim() && (
             <button
@@ -101,7 +101,7 @@ export function GroupTabs({ groups, active, counts, totalCount, onSelect, onNewG
           )}
           <button
             onClick={() => { setAdding(false); setDraft('') }}
-            className="px-2 py-1.5 text-[13px] text-slate-400 hover:text-slate-600 transition-colors"
+            className="px-2 py-1.5 text-[13px] text-[#8A95A6] hover:text-[#566174] transition-colors"
           >
             ✕
           </button>
@@ -109,7 +109,7 @@ export function GroupTabs({ groups, active, counts, totalCount, onSelect, onNewG
       ) : (
         <button
           onClick={() => setAdding(true)}
-          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[13px] font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-50 border border-dashed border-slate-300 transition-colors"
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[13px] font-medium text-[#8A95A6] hover:text-[#566174] hover:bg-[#F4F3EF] border border-dashed border-[#CDD1C8] transition-colors"
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />

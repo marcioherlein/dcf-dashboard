@@ -28,7 +28,7 @@ export default function InfoTooltip({ content, className }: InfoTooltipProps) {
         onMouseLeave={() => setVisible(false)}
         onFocus={() => setVisible(true)}
         onBlur={() => setVisible(false)}
-        className="text-slate-300 hover:text-slate-500 transition-colors focus:outline-none ml-1 shrink-0"
+        className="text-[#8A95A6] hover:text-[#566174] transition-colors focus:outline-none ml-1 shrink-0"
         aria-label="More information"
       >
         <Info size={12} />
@@ -36,13 +36,13 @@ export default function InfoTooltip({ content, className }: InfoTooltipProps) {
       {visible && (
         <div
           className={cn(
-            'absolute left-1/2 -translate-x-1/2 z-50 w-64 rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-lg text-[12px] text-slate-600 leading-relaxed pointer-events-none',
+            'absolute left-1/2 -translate-x-1/2 z-50 w-64 rounded-xl border border-[#E3E1DA] bg-white px-3 py-2.5 shadow-lg text-[12px] text-[#566174] leading-relaxed pointer-events-none',
             above ? 'bottom-full mb-2' : 'top-full mt-2'
           )}
         >
           {content}
           <div className={cn(
-            'absolute left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 border bg-white border-slate-200',
+            'absolute left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 border bg-white border-[#E3E1DA]',
             above ? 'top-full -mt-1.5 border-t-0 border-l-0' : 'bottom-full mb-[-5px] border-b-0 border-r-0'
           )} />
         </div>

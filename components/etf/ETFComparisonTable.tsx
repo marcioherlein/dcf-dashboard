@@ -48,22 +48,22 @@ export function ETFComparisonTable({ profiles }: Props) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200/60 bg-slate-50/60">
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 w-32">Metric</th>
+            <tr className="border-b border-[#E3E1DA]/60 bg-[#F4F3EF]/60">
+              <th className="text-left px-4 py-3 text-xs font-semibold text-[#566174] w-32">Metric</th>
               {profiles.map((p) => (
                 <th key={p.ticker} className="px-4 py-3 text-center">
-                  <span className="font-black font-mono text-slate-900 text-sm">{p.ticker}</span>
-                  <span className="block text-[10px] text-slate-400 mt-0.5 truncate max-w-[120px] mx-auto">{p.name}</span>
+                  <span className="font-black font-mono text-[#06101F] text-sm">{p.ticker}</span>
+                  <span className="block text-[10px] text-[#8A95A6] mt-0.5 truncate max-w-[120px] mx-auto">{p.name}</span>
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-50">
+          <tbody className="divide-y divide-[#F4F3EF]">
             {METRICS.map((m) => {
               const bestIdx = getBestIdx(profiles, m.key, m.bestDir)
               return (
-                <tr key={m.key} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-4 py-3 text-xs font-semibold text-slate-500">{m.label}</td>
+                <tr key={m.key} className="hover:bg-[#F4F3EF]/60 transition-colors">
+                  <td className="px-4 py-3 text-xs font-semibold text-[#566174]">{m.label}</td>
                   {profiles.map((p, i) => {
                     const raw = p[m.key] as number | null
                     const isBest = i === bestIdx && raw != null
@@ -73,13 +73,13 @@ export function ETFComparisonTable({ profiles }: Props) {
                         key={p.ticker}
                         className={cn(
                           'px-4 py-3 text-center font-mono text-xs font-semibold tabular-nums',
-                          isBest && 'bg-emerald-50',
-                          isScore && raw != null ? scoreColor(raw as number) : 'text-slate-700',
+                          isBest && 'bg-[#E8F7EF]',
+                          isScore && raw != null ? scoreColor(raw as number) : 'text-[#06101F]',
                         )}
                       >
-                        {raw != null ? m.format(raw) : <span className="text-slate-300">—</span>}
+                        {raw != null ? m.format(raw) : <span className="text-[#8A95A6]">—</span>}
                         {isScore && raw != null && (
-                          <span className="block text-[10px] font-semibold text-slate-400 mt-0.5">{scoreLabel(raw as number)}</span>
+                          <span className="block text-[10px] font-semibold text-[#8A95A6] mt-0.5">{scoreLabel(raw as number)}</span>
                         )}
                       </td>
                     )

@@ -15,15 +15,15 @@ const SOURCE_LABELS: Record<string, string> = {
   fallback:  'Default',
 }
 const SOURCE_COLORS: Record<string, string> = {
-  analyst:   'bg-blue-100 text-blue-700',
+  analyst:   'bg-[#EAF1FF] text-[#2563EB]',
   '3y_median': 'bg-violet-100 text-violet-700',
-  model:     'bg-white/8 text-slate-300',
-  fallback:  'bg-amber-100 text-amber-700',
+  model:     'bg-white/8 text-[#8A95A6]',
+  fallback:  'bg-[#FFF4DA] text-[#B56A00]',
 }
 
 function SourceBadge({ source }: { source: string }) {
   return (
-    <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${SOURCE_COLORS[source] ?? 'bg-white/8 text-slate-300'}`}>
+    <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${SOURCE_COLORS[source] ?? 'bg-white/8 text-[#8A95A6]'}`}>
       {SOURCE_LABELS[source] ?? source}
     </span>
   )
@@ -44,10 +44,10 @@ function AssumptionRow({
     return (
       <div className="flex items-center justify-between py-1.5 text-xs">
         <div className="flex items-center gap-2">
-          <span className="text-slate-300">{label}</span>
+          <span className="text-[#8A95A6]">{label}</span>
           <SourceBadge source={source} />
         </div>
-        <span className="font-mono text-slate-400">{display}</span>
+        <span className="font-mono text-[#8A95A6]">{display}</span>
       </div>
     )
   }
@@ -56,11 +56,11 @@ function AssumptionRow({
     return (
       <div className="flex items-center justify-between py-1.5 text-xs">
         <div className="flex items-center gap-2">
-          <span className="text-slate-300">{label}</span>
+          <span className="text-[#8A95A6]">{label}</span>
         </div>
         <input
           autoFocus
-          className="w-20 rounded border border-blue-400 bg-blue-50 px-2 py-0.5 text-right font-mono text-xs text-blue-700 focus:outline-none"
+          className="w-20 rounded border border-blue-400 bg-[#EAF1FF] px-2 py-0.5 text-right font-mono text-xs text-[#2563EB] focus:outline-none"
           style={{ fontSize: '16px' }}
           value={draft}
           onChange={e => setDraft(e.target.value)}
@@ -85,15 +85,15 @@ function AssumptionRow({
   return (
     <div className="flex items-center justify-between py-1.5 text-xs group">
       <div className="flex items-center gap-2">
-        <span className="text-slate-300">{label}</span>
+        <span className="text-[#8A95A6]">{label}</span>
         <SourceBadge source={source} />
-        <span className="hidden group-hover:block text-slate-400 text-[10px]" title={sourceLabel}>
+        <span className="hidden group-hover:block text-[#8A95A6] text-[10px]" title={sourceLabel}>
           {sourceLabel.slice(0, 40)}{sourceLabel.length > 40 ? '…' : ''}
         </span>
       </div>
       <button
         onClick={() => { setDraft(pct ? (value * 100).toFixed(1) : value.toFixed(1)); setEditing(true) }}
-        className="font-mono text-slate-800 hover:text-blue-600 hover:underline"
+        className="font-mono text-[#06101F] hover:text-[#2563EB] hover:underline"
         title="Click to edit"
       >
         {display}
@@ -105,8 +105,8 @@ function AssumptionRow({
 export default function AssumptionPanel({ assumptions, onChange }: AssumptionPanelProps) {
   return (
     <div className="rounded-xl glass-card border-[rgba(59,130,246,0.15)] px-5 py-4">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">Assumptions</h3>
-      <div className="divide-y divide-slate-100">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-[#8A95A6] mb-3">Assumptions</h3>
+      <div className="divide-y divide-[#E3E1DA]">
         <AssumptionRow
           label="Revenue CAGR" value={assumptions.cagr.value} source={assumptions.cagr.source}
           sourceLabel={assumptions.cagr.label} editable pct

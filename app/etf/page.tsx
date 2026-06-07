@@ -164,19 +164,19 @@ export default function ETFTrackerPage() {
     <div className="min-h-dvh bg-[#FFFFFF]">
 
       {/* ── Page header ─────────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-slate-200 px-4 sm:px-8 pt-6 pb-5">
+      <div className="bg-white border-b border-[#E3E1DA] px-4 sm:px-8 pt-6 pb-5">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-3 mb-1">
             <div className="w-8 h-8 rounded-lg bg-olive-700 flex items-center justify-center shrink-0">
               <PieChart size={16} className="text-white" />
             </div>
             <h1
-              className="text-2xl font-bold tracking-tight text-slate-900"
+              className="text-2xl font-bold tracking-tight text-[#06101F]"
             >
               ETF Tracker
             </h1>
           </div>
-          <p className="text-[14px] text-slate-500 mb-5 ml-11">
+          <p className="text-[14px] text-[#566174] mb-5 ml-11">
             Value-oriented lens on the ETF universe — basket P/E, P/B, expense ratios, and a Value Score.
           </p>
           <ETFSearchBar />
@@ -192,7 +192,7 @@ export default function ETFTrackerPage() {
         {/* Market Pulse */}
         {batchError ? (
           <div className="glass-card-light rounded-xl p-4 flex items-center justify-between gap-4">
-            <p className="text-sm text-slate-500">{batchError}</p>
+            <p className="text-sm text-[#566174]">{batchError}</p>
             <button
               onClick={() => { setBatchFetched(false); fetchBatch() }}
               className="flex items-center gap-1.5 text-sm font-semibold text-olive-700 hover:text-olive-600 transition-colors"
@@ -208,7 +208,7 @@ export default function ETFTrackerPage() {
         <section>
           <div className="flex items-center gap-3 mb-5">
             <h2
-              className="text-lg font-bold text-slate-900"
+              className="text-lg font-bold text-[#06101F]"
             >
               My Watchlist
             </h2>
@@ -220,13 +220,13 @@ export default function ETFTrackerPage() {
           </div>
 
           {deleteError && (
-            <p className="text-sm text-red-500 mb-3">{deleteError}</p>
+            <p className="text-sm text-[#D83B3B] mb-3">{deleteError}</p>
           )}
 
           {wlLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="h-[340px] bg-slate-100 rounded-2xl border border-slate-200 motion-safe:animate-pulse" />
+                <div key={i} className="h-[340px] bg-[#F4F3EF] rounded-2xl border border-[#E3E1DA] motion-safe:animate-pulse" />
               ))}
             </div>
           ) : watchlist.length > 0 ? (
@@ -244,11 +244,11 @@ export default function ETFTrackerPage() {
             </div>
           ) : (
             <div className="glass-card-light rounded-2xl p-8 flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mb-4">
-                <PieChart size={22} className="text-slate-400" />
+              <div className="w-12 h-12 rounded-xl bg-[#F4F3EF] flex items-center justify-center mb-4">
+                <PieChart size={22} className="text-[#8A95A6]" />
               </div>
-              <h3 className="text-[14px] font-semibold text-slate-700 mb-1">Track ETFs by what they&apos;re actually worth</h3>
-              <p className="text-[13px] text-slate-400 max-w-sm mb-5">
+              <h3 className="text-[14px] font-semibold text-[#06101F] mb-1">Track ETFs by what they&apos;re actually worth</h3>
+              <p className="text-[13px] text-[#8A95A6] max-w-sm mb-5">
                 Search for a ticker above, or browse and add from the sectors, geographies, and styles below.
               </p>
               {Object.keys(batchData).length > 0 && (
@@ -257,14 +257,14 @@ export default function ETFTrackerPage() {
                     <button
                       key={t}
                       onClick={() => handleQuickAdd(t)}
-                      className="px-4 py-2 min-h-[44px] rounded-lg border border-slate-200 bg-white text-[13px] font-semibold text-slate-600 hover:border-[#BFD2A1] hover:text-olive-700 hover:bg-olive-50 transition-colors"
+                      className="px-4 py-2 min-h-[44px] rounded-lg border border-[#E3E1DA] bg-white text-[13px] font-semibold text-[#566174] hover:border-[#BFD2A1] hover:text-olive-700 hover:bg-olive-50 transition-colors"
                     >
                       + {t}
                     </button>
                   ))}
                 </div>
               )}
-              <p className="text-[12px] text-slate-400 mt-4">
+              <p className="text-[12px] text-[#8A95A6] mt-4">
                 Or browse sectors, geographies, and styles below ↓
               </p>
             </div>
@@ -272,7 +272,7 @@ export default function ETFTrackerPage() {
         </section>
 
         {/* ── Universe: sectors, geographies, styles, rankings ────────────── */}
-        <div className="border-t border-slate-200">
+        <div className="border-t border-[#E3E1DA]">
           <ETFUniverseSection
             data={batchData}
             watchlist={watchlist}

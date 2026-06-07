@@ -37,7 +37,7 @@ export default function StockLoginWall({ ticker, companyName, price, currency, f
     <div className="pt-6 pb-16 px-1 max-w-md mx-auto flex flex-col gap-6">
 
       {/* Teaser card */}
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-2xl border border-[#E3E1DA] bg-white shadow-sm overflow-hidden">
         <div className="bg-gradient-to-r from-olive-700 to-olive-600 px-5 py-4">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -59,13 +59,13 @@ export default function StockLoginWall({ ticker, companyName, price, currency, f
 
         <div className="px-5 py-4 space-y-3">
           {fairValue != null && (
-            <div className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 border border-slate-100 px-4 py-3">
+            <div className="flex items-center justify-between gap-2 rounded-xl bg-[#F4F3EF] border border-[#E3E1DA] px-4 py-3">
               <div>
-                <p className="text-[11px] text-slate-500 font-medium">Fair Value</p>
-                <p className="text-[16px] font-bold text-slate-800 tabular-nums">{fmt(fairValue, currency)}</p>
+                <p className="text-[11px] text-[#566174] font-medium">Fair Value</p>
+                <p className="text-[16px] font-bold text-[#06101F] tabular-nums">{fmt(fairValue, currency)}</p>
               </div>
               {upsidePct != null && (
-                <span className={`text-[13px] font-bold px-2.5 py-1 rounded-lg ${isUndervalued ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
+                <span className={`text-[13px] font-bold px-2.5 py-1 rounded-lg ${isUndervalued ? 'bg-[#E8F7EF] text-[#11875D] border border-emerald-100' : 'bg-[#FCEAEA] text-[#D83B3B] border border-red-100'}`}>
                   {isUndervalued ? '+' : ''}{upside.toFixed(1)}% {isUndervalued ? 'upside' : 'downside'}
                 </span>
               )}
@@ -76,16 +76,16 @@ export default function StockLoginWall({ ticker, companyName, price, currency, f
             <div className="grid grid-cols-3 gap-2">
               {(['bear', 'base', 'bull'] as const).map(s => (
                 <div key={s} className={`rounded-lg border px-3 py-2 text-center relative overflow-hidden ${
-                  s === 'bull' ? 'border-emerald-100 bg-emerald-50' :
-                  s === 'bear' ? 'border-red-100 bg-red-50' :
-                  'border-slate-100 bg-slate-50'
+                  s === 'bull' ? 'border-emerald-100 bg-[#E8F7EF]' :
+                  s === 'bear' ? 'border-red-100 bg-[#FCEAEA]' :
+                  'border-[#E3E1DA] bg-[#F4F3EF]'
                 }`}>
                   <p className={`text-[10px] font-semibold uppercase tracking-wide mb-0.5 ${
-                    s === 'bull' ? 'text-emerald-600' : s === 'bear' ? 'text-red-500' : 'text-slate-500'
+                    s === 'bull' ? 'text-[#11875D]' : s === 'bear' ? 'text-[#D83B3B]' : 'text-[#566174]'
                   }`}>{s}</p>
                   <div className="relative flex items-center justify-center gap-1">
-                    <Lock size={10} className="text-slate-400 shrink-0" />
-                    <p className="text-[13px] font-bold text-slate-300 tabular-nums select-none">
+                    <Lock size={10} className="text-[#8A95A6] shrink-0" />
+                    <p className="text-[13px] font-bold text-[#8A95A6] tabular-nums select-none">
                       {fmt(scenarios[s].fairValue, currency).replace(/\d/g, '•')}
                     </p>
                   </div>
@@ -97,17 +97,17 @@ export default function StockLoginWall({ ticker, companyName, price, currency, f
       </div>
 
       {/* Sign in CTA */}
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm px-5 py-5 space-y-4">
+      <div className="rounded-2xl border border-[#E3E1DA] bg-white shadow-sm px-5 py-5 space-y-4">
         <div>
-          <h3 className="text-[16px] font-bold text-slate-900 mb-1">Sign in free to unlock</h3>
-          <p className="text-[13px] text-slate-500">5 free analyses per month — no credit card required</p>
+          <h3 className="text-[16px] font-bold text-[#06101F] mb-1">Sign in free to unlock</h3>
+          <p className="text-[13px] text-[#566174]">5 free analyses per month — no credit card required</p>
         </div>
 
         <ul className="space-y-2">
           {FEATURES.map(f => (
             <li key={f} className="flex items-center gap-2.5">
-              <Check size={14} className="text-emerald-500 shrink-0" strokeWidth={2.5} />
-              <span className="text-[13px] text-slate-700">{f}</span>
+              <Check size={14} className="text-[#11875D] shrink-0" strokeWidth={2.5} />
+              <span className="text-[13px] text-[#06101F]">{f}</span>
             </li>
           ))}
         </ul>
@@ -124,7 +124,7 @@ export default function StockLoginWall({ ticker, companyName, price, currency, f
           </svg>
           Continue with Google
         </button>
-        <p className="text-center text-[11px] text-slate-400">No credit card — free forever</p>
+        <p className="text-center text-[11px] text-[#8A95A6]">No credit card — free forever</p>
       </div>
     </div>
   )

@@ -41,7 +41,7 @@ export default function OverallScoreCard({
   }
 
   return (
-    <div className="rounded-xl border border-[#388bfd]/40 bg-[#0d1117] p-6 print:border-gray-300">
+    <div className="rounded-xl border border-[#388bfd]/40 bg-[#0d1117] p-6 print:border-[#CDD1C8]">
       <div className="flex items-center justify-between mb-5">
         <div>
           <h2 className="text-[#e6edf3] font-semibold text-base">Analysis Complete</h2>

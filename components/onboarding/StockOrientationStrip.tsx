@@ -18,8 +18,8 @@ const CONCEPTS = [
     icon: TrendingUp,
     label: 'Upside %',
     desc: 'How far the current price is from the fair value estimate',
-    iconBg: 'bg-emerald-50',
-    iconColor: 'text-emerald-600',
+    iconBg: 'bg-[#E8F7EF]',
+    iconColor: 'text-[#11875D]',
   },
   {
     icon: BarChart2,
@@ -53,12 +53,12 @@ export default function StockOrientationStrip() {
           animate={reduced ? {} : { opacity: 1, y: 0 }}
           exit={reduced ? {} : { opacity: 0, y: -6 }}
           transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="rounded-xl bg-[#F8FAFC] border border-slate-200 overflow-hidden"
+          className="rounded-xl bg-[#F4F3EF] border border-[#E3E1DA] overflow-hidden"
         >
           <div className="px-4 py-3 flex items-start gap-3">
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-semibold text-slate-500 mb-2.5">
+              <p className="text-[11px] font-semibold text-[#566174] mb-2.5">
                 Three numbers to orient yourself
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
@@ -70,8 +70,8 @@ export default function StockOrientationStrip() {
                         <Icon size={12} className={c.iconColor} />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[12px] font-bold text-slate-800 leading-snug">{c.label}</p>
-                        <p className="text-[11px] text-slate-500 leading-snug mt-0.5">{c.desc}</p>
+                        <p className="text-[12px] font-bold text-[#06101F] leading-snug">{c.label}</p>
+                        <p className="text-[11px] text-[#566174] leading-snug mt-0.5">{c.desc}</p>
                       </div>
                     </div>
                   )

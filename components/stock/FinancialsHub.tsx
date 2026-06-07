@@ -93,15 +93,15 @@ function fmtDays(v: number | null): string {
 }
 
 function growthColor(v: number | null): string {
-  if (v == null) return 'text-slate-400'
-  return v > 0 ? 'text-emerald-600' : v < 0 ? 'text-red-500' : 'text-slate-400'
+  if (v == null) return 'text-[#8A95A6]'
+  return v > 0 ? 'text-[#11875D]' : v < 0 ? 'text-[#D83B3B]' : 'text-[#8A95A6]'
 }
 
 function valColor(v: number | null, positiveIsGood = true): string {
-  if (v == null) return 'text-slate-400'
-  if (v === 0) return 'text-slate-500'
+  if (v == null) return 'text-[#8A95A6]'
+  if (v === 0) return 'text-[#566174]'
   const good = v > 0 ? positiveIsGood : !positiveIsGood
-  return good ? 'text-slate-700' : 'text-red-500'
+  return good ? 'text-[#06101F]' : 'text-[#D83B3B]'
 }
 
 // ── Mini sparkline ─────────────────────────────────────────────────────────────
@@ -118,7 +118,7 @@ function Sparkline({ values, positiveIsGood = true }: { values: (number | null)[
         const h = Math.max(2, (Math.abs(v) / mx) * 14)
         const isPos = v >= 0
         const fill = isPos
-          ? (positiveIsGood ? '#10b981' : '#94a3b8')
+          ? (positiveIsGood ? '#10b981' : '#8A95A6')
           : (positiveIsGood ? '#ef4444' : '#10b981')
         return <rect key={i} x={i * (barW + gap)} y={16 - h} width={barW} height={h} fill={fill} rx={1} opacity={0.75} />
       })}
@@ -154,20 +154,20 @@ function MetricsTable({ columns, rows, hideSparks }: { columns: string[]; rows: 
   const cellColor = (v: number | null, fmt: string, positiveIsGood = true) => {
     if (fmt === 'growth') return growthColor(v)
     if (fmt === 'pct' || fmt === 'x' || fmt === 'days' || fmt === 'score' || fmt === '$M') return valColor(v, positiveIsGood)
-    return 'text-slate-700'
+    return 'text-[#06101F]'
   }
 
   return (
     <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
       <table className="min-w-[480px] w-full border-collapse">
         <thead>
-          <tr className="border-b border-slate-100">
-            <th className="sticky left-0 z-10 bg-white px-3 sm:px-4 py-2 text-left text-[11px] font-semibold text-slate-500 w-40 min-w-[160px] sm:w-56 sm:min-w-[224px]">
+          <tr className="border-b border-[#E3E1DA]">
+            <th className="sticky left-0 z-10 bg-white px-3 sm:px-4 py-2 text-left text-[11px] font-semibold text-[#566174] w-40 min-w-[160px] sm:w-56 sm:min-w-[224px]">
               Metric
             </th>
             {columns.map(col => (
               <th key={col} className={`px-2 sm:px-3 py-2 text-right text-[11px] font-semibold whitespace-nowrap ${
-                col === 'TTM' ? 'text-amber-600 bg-amber-50/40' : 'text-slate-500'
+                col === 'TTM' ? 'text-[#B56A00] bg-[#FFF4DA]/40' : 'text-[#566174]'
               }`}>
                 {col}
               </th>
@@ -178,8 +178,8 @@ function MetricsTable({ columns, rows, hideSparks }: { columns: string[]; rows: 
           {rows.map((row, i) => {
             if (row.isHeader) {
               return (
-                <tr key={i} className="bg-slate-50 border-y border-slate-100">
-                  <td colSpan={columns.length + 1} className="px-3 sm:px-4 py-1.5 text-[11px] font-semibold text-slate-500 bg-slate-50 border-y border-slate-100">
+                <tr key={i} className="bg-[#F4F3EF] border-y border-[#E3E1DA]">
+                  <td colSpan={columns.length + 1} className="px-3 sm:px-4 py-1.5 text-[11px] font-semibold text-[#566174] bg-[#F4F3EF] border-y border-[#E3E1DA]">
                     {row.label}
                   </td>
                 </tr>
@@ -188,14 +188,14 @@ function MetricsTable({ columns, rows, hideSparks }: { columns: string[]; rows: 
 
             const pig = row.positiveIsGood ?? true
             return (
-              <tr key={i} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+              <tr key={i} className="border-b border-[#F4F3EF] hover:bg-[#F4F3EF] transition-colors">
                 <td className={`sticky left-0 z-10 bg-white px-3 sm:px-4 py-2 text-xs whitespace-nowrap ${
-                  row.indent ? 'pl-6 sm:pl-8 text-slate-400' : 'font-medium text-slate-600'
+                  row.indent ? 'pl-6 sm:pl-8 text-[#8A95A6]' : 'font-medium text-[#566174]'
                 }`}>
                   {!hideSparks && <Sparkline values={row.values} positiveIsGood={pig} />}
                   {row.label}
                   {row.positiveIsGood != null && !row.indent && (
-                    <span className="ml-1 text-[10px] text-slate-400 font-normal" aria-label={row.positiveIsGood ? 'higher is better' : 'lower is better'}>
+                    <span className="ml-1 text-[10px] text-[#8A95A6] font-normal" aria-label={row.positiveIsGood ? 'higher is better' : 'lower is better'}>
                       {row.positiveIsGood ? '↑' : '↓'}
                     </span>
                   )}
@@ -203,7 +203,7 @@ function MetricsTable({ columns, rows, hideSparks }: { columns: string[]; rows: 
                 </td>
                 {row.values.map((v, j) => (
                   <td key={j} className={`px-2 sm:px-3 py-2 text-right text-xs tabular-nums font-mono whitespace-nowrap ${
-                    columns[j] === 'TTM' ? 'font-semibold bg-amber-50/30' : ''
+                    columns[j] === 'TTM' ? 'font-semibold bg-[#FFF4DA]/30' : ''
                   } ${cellColor(v, row.fmt, pig)}`}>
                     {formatVal(v, row.fmt)}
                   </td>
@@ -625,7 +625,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
     <>
     <div className="rounded-xl card">
       {/* Sub-tab nav — scrollable on mobile */}
-      <div className="flex items-center justify-between px-2 sm:px-5 pt-4 pb-0 border-b border-slate-100 overflow-x-auto scrollbar-none">
+      <div className="flex items-center justify-between px-2 sm:px-5 pt-4 pb-0 border-b border-[#E3E1DA] overflow-x-auto scrollbar-none">
         <div role="tablist" className="flex gap-0 min-w-max">
           {SUB_TABS.map(({ id, label }) => (
             <button
@@ -637,7 +637,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
               className={`px-3 sm:px-4 py-3 min-h-[44px] text-[12px] sm:text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap ${
                 subTab === id
                   ? 'border-olive-700 text-olive-700'
-                  : 'border-transparent text-slate-500 hover:text-slate-800'
+                  : 'border-transparent text-[#566174] hover:text-[#06101F]'
               }`}
             >
               {label}
@@ -646,16 +646,16 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         </div>
         {/* Annual / Quarterly toggle — only for analytical sub-tabs */}
         {['growth', 'profitability', 'solvency'].includes(subTab) && (
-          <div className="flex rounded-lg overflow-hidden border border-slate-200 text-[11px] shrink-0 ml-3">
+          <div className="flex rounded-lg overflow-hidden border border-[#E3E1DA] text-[11px] shrink-0 ml-3">
             <button
               onClick={() => handlePeriodChange('annual')}
-              className={`px-2.5 py-1.5 transition-colors ${analyticsPeriod === 'annual' ? 'bg-olive-50 text-olive-700 font-semibold' : 'text-slate-400 hover:bg-slate-50'}`}
+              className={`px-2.5 py-1.5 transition-colors ${analyticsPeriod === 'annual' ? 'bg-olive-50 text-olive-700 font-semibold' : 'text-[#8A95A6] hover:bg-[#F4F3EF]'}`}
             >
               Annual
             </button>
             <button
               onClick={() => handlePeriodChange('quarterly')}
-              className={`px-2.5 py-1.5 border-l border-slate-200 transition-colors ${analyticsPeriod === 'quarterly' ? 'bg-olive-50 text-olive-700 font-semibold' : 'text-slate-400 hover:bg-slate-50'}`}
+              className={`px-2.5 py-1.5 border-l border-[#E3E1DA] transition-colors ${analyticsPeriod === 'quarterly' ? 'bg-olive-50 text-olive-700 font-semibold' : 'text-[#8A95A6] hover:bg-[#F4F3EF]'}`}
             >
               Quarterly
             </button>
@@ -664,12 +664,12 @@ export default function FinancialsHub({ statementsData, financialsData, currency
       </div>
 
       {/* Per-tab context strip */}
-      <div className="px-4 sm:px-5 py-2 border-b border-slate-100 bg-slate-50/60">
-        <p className="text-[12px] text-slate-500 leading-snug">{TAB_ANCHORS[subTab]}</p>
+      <div className="px-4 sm:px-5 py-2 border-b border-[#E3E1DA] bg-[#F4F3EF]/60">
+        <p className="text-[12px] text-[#566174] leading-snug">{TAB_ANCHORS[subTab]}</p>
       </div>
 
       {!hasData && (
-        <div className="py-12 text-center text-sm text-slate-400">
+        <div className="py-12 text-center text-sm text-[#8A95A6]">
           Financial data unavailable
         </div>
       )}
@@ -695,11 +695,11 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         let ratingLabel = ''
         let ratingColor = ''
         if (recentCAGR != null) {
-          if (recentCAGR > 0.20)      { ratingLabel = 'Strong Growth';   ratingColor = 'bg-emerald-50 border-emerald-200 text-emerald-700' }
-          else if (recentCAGR > 0.10) { ratingLabel = 'Solid Growth';    ratingColor = 'bg-blue-50 border-blue-200 text-blue-700' }
-          else if (recentCAGR > 0.05) { ratingLabel = 'Moderate Growth'; ratingColor = 'bg-amber-50 border-amber-200 text-amber-700' }
-          else if (recentCAGR > 0)    { ratingLabel = 'Slow Growth';     ratingColor = 'bg-slate-100 border-slate-200 text-slate-600' }
-          else                         { ratingLabel = 'Declining';       ratingColor = 'bg-red-50 border-red-200 text-red-600' }
+          if (recentCAGR > 0.20)      { ratingLabel = 'Strong Growth';   ratingColor = 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' }
+          else if (recentCAGR > 0.10) { ratingLabel = 'Solid Growth';    ratingColor = 'bg-[#EAF1FF] border-[#93B4F5] text-[#2563EB]' }
+          else if (recentCAGR > 0.05) { ratingLabel = 'Moderate Growth'; ratingColor = 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]' }
+          else if (recentCAGR > 0)    { ratingLabel = 'Slow Growth';     ratingColor = 'bg-[#F4F3EF] border-[#E3E1DA] text-[#566174]' }
+          else                         { ratingLabel = 'Declining';       ratingColor = 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]' }
           if (priorCAGR != null && Math.abs(recentCAGR - priorCAGR) > 0.05) {
             ratingLabel += recentCAGR > priorCAGR ? ' · Accelerating' : ' · Decelerating'
           }
@@ -713,7 +713,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         type CagrItem = { label: string; value: string; color: string }
         const cagrItems: CagrItem[] = []
         const cagrColor = (v: number | null) =>
-          v == null ? 'text-slate-400' : v >= 0.15 ? 'text-emerald-600' : v >= 0.05 ? 'text-blue-600' : v >= 0 ? 'text-slate-700' : 'text-red-500'
+          v == null ? 'text-[#8A95A6]' : v >= 0.15 ? 'text-[#11875D]' : v >= 0.05 ? 'text-[#2563EB]' : v >= 0 ? 'text-[#06101F]' : 'text-[#D83B3B]'
         const cagrFmt = (v: number | null) =>
           v == null ? '—' : `${v >= 0 ? '+' : ''}${(v * 100).toFixed(1)}%`
 
@@ -737,11 +737,11 @@ export default function FinancialsHub({ statementsData, financialsData, currency
             {/* CAGR Summary grid */}
             {cagrItems.length > 0 && (
               <div className="px-4 sm:px-5 pb-3">
-                <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-                  <div className="grid grid-cols-3 sm:grid-cols-6 divide-x divide-slate-100">
+                <div className="rounded-xl border border-[#E3E1DA] bg-white overflow-hidden">
+                  <div className="grid grid-cols-3 sm:grid-cols-6 divide-x divide-[#E3E1DA]">
                     {cagrItems.map((item) => (
                       <div key={item.label} className="px-3 py-2.5">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5 truncate">{item.label}</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#8A95A6] mb-0.5 truncate">{item.label}</p>
                         <p className={`text-[15px] font-bold tabular-nums leading-tight ${item.color}`}>{item.value}</p>
                       </div>
                     ))}
@@ -776,13 +776,13 @@ export default function FinancialsHub({ statementsData, financialsData, currency
               const isGrowing  = totalChg > 0.01
 
               return (
-                <div className="px-4 sm:px-5 pb-4 border-t border-slate-100 pt-4">
+                <div className="px-4 sm:px-5 pb-4 border-t border-[#E3E1DA] pt-4">
                   <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                    <p className="text-[13px] font-semibold text-slate-700">Shares Outstanding Trend</p>
+                    <p className="text-[13px] font-semibold text-[#06101F]">Shares Outstanding Trend</p>
                     <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${
-                      isReducing ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
-                      isGrowing  ? 'bg-red-50 border-red-200 text-red-600' :
-                      'bg-slate-100 border-slate-200 text-slate-500'
+                      isReducing ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' :
+                      isGrowing  ? 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]' :
+                      'bg-[#F4F3EF] border-[#E3E1DA] text-[#566174]'
                     }`}>
                       {isReducing ? `Buybacks: ${(totalChg * 100).toFixed(1)}%` :
                        isGrowing  ? `Dilution: +${(totalChg * 100).toFixed(1)}%` : 'Stable'}
@@ -799,22 +799,22 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                       return (
                         <div key={p.year} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-0.5">
                           {yoy != null && (
-                            <span className={`text-[10px] font-semibold leading-none ${isUp ? 'text-red-500' : isDn ? 'text-emerald-600' : 'text-slate-400'}`}>
+                            <span className={`text-[10px] font-semibold leading-none ${isUp ? 'text-[#D83B3B]' : isDn ? 'text-[#11875D]' : 'text-[#8A95A6]'}`}>
                               {isUp ? '+' : isDn ? '' : ''}{(yoy * 100).toFixed(1)}%
                             </span>
                           )}
                           <div className="relative w-full" style={{ height: `${hp}%` }}>
-                            <div className={`w-full h-full rounded-t-sm ${isUp ? 'bg-red-300' : isDn ? 'bg-emerald-400' : 'bg-slate-300'}`}
+                            <div className={`w-full h-full rounded-t-sm ${isUp ? 'bg-[#F0B8B8]' : isDn ? 'bg-[#11875D]' : 'bg-[#CDD1C8]'}`}
                               title={`${p.year}: ${fmtShares(p.sharesM)}`} />
                           </div>
-                          <span className="text-[10px] text-slate-400 truncate max-w-full">{p.year}</span>
+                          <span className="text-[10px] text-[#8A95A6] truncate max-w-full">{p.year}</span>
                         </div>
                       )
                     })}
                   </div>
                   <div className="flex items-center gap-4 mt-1.5">
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Decreasing (buybacks)</span>
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />Increasing (dilution)</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]"><span className="w-2 h-2 rounded-sm bg-[#11875D] inline-block" />Decreasing (buybacks)</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]"><span className="w-2 h-2 rounded-sm bg-[#F0B8B8] inline-block" />Increasing (dilution)</span>
                   </div>
                 </div>
               )
@@ -834,17 +834,17 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 ? (latestEps.eps! - prevEps.eps) / Math.abs(prevEps.eps)
                 : null
               return (
-                <div className="px-4 sm:px-5 pb-4 border-t border-slate-100 pt-4">
+                <div className="px-4 sm:px-5 pb-4 border-t border-[#E3E1DA] pt-4">
                   <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                    <p className="text-[13px] font-semibold text-slate-700">EPS (Diluted) Trend</p>
+                    <p className="text-[13px] font-semibold text-[#06101F]">EPS (Diluted) Trend</p>
                     <div className="flex items-center gap-2">
                       {latestEps.eps != null && (
-                        <span className={`text-[11px] font-semibold tabular-nums ${latestEps.eps >= 0 ? 'text-slate-700' : 'text-red-500'}`}>
+                        <span className={`text-[11px] font-semibold tabular-nums ${latestEps.eps >= 0 ? 'text-[#06101F]' : 'text-[#D83B3B]'}`}>
                           {latestEps.eps >= 0 ? '+' : ''}${latestEps.eps.toFixed(2)}
                         </span>
                       )}
                       {epsGrowth != null && (
-                        <span className={`text-[11px] font-semibold tabular-nums ${epsGrowth >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                        <span className={`text-[11px] font-semibold tabular-nums ${epsGrowth >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                           {epsGrowth >= 0 ? '+' : ''}{(epsGrowth * 100).toFixed(0)}% YoY
                         </span>
                       )}
@@ -860,15 +860,15 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                       return (
                         <div key={p.year} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-0.5">
                           {yoy != null && (
-                            <span className={`text-[10px] font-semibold leading-none ${yoy >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                            <span className={`text-[10px] font-semibold leading-none ${yoy >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                               {yoy >= 0 ? '+' : ''}{(yoy * 100).toFixed(0)}%
                             </span>
                           )}
                           <div className="relative w-full" style={{ height: `${hp}%` }}>
-                            <div className={`w-full h-full rounded-t-sm ${isPos ? 'bg-emerald-500' : 'bg-red-400'}`}
+                            <div className={`w-full h-full rounded-t-sm ${isPos ? 'bg-[#E8F7EF]0' : 'bg-[#D83B3B]'}`}
                               title={`${p.year}: EPS ${isPos ? '+' : ''}$${val.toFixed(2)}`} />
                           </div>
-                          <span className="text-[10px] text-slate-400 truncate max-w-full">{p.year}</span>
+                          <span className="text-[10px] text-[#8A95A6] truncate max-w-full">{p.year}</span>
                         </div>
                       )
                     })}
@@ -905,11 +905,11 @@ export default function FinancialsHub({ statementsData, financialsData, currency
               const creatingValue = spread != null && spread > 0
 
               return (
-                <div className="px-4 sm:px-5 pb-4 border-t border-slate-100 pt-4">
+                <div className="px-4 sm:px-5 pb-4 border-t border-[#E3E1DA] pt-4">
                   <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                    <p className="text-[13px] font-semibold text-slate-700">ROIC vs WACC</p>
+                    <p className="text-[13px] font-semibold text-[#06101F]">ROIC vs WACC</p>
                     {spread != null && (
-                      <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${creatingValue ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-600'}`}>
+                      <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${creatingValue ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' : 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]'}`}>
                         {creatingValue ? 'Creating value' : 'Destroying value'} ({spread >= 0 ? '+' : ''}{(spread * 100).toFixed(1)}% spread)
                       </span>
                     )}
@@ -924,7 +924,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                         style={{ bottom: `${((wacc / maxAbs) * 50 + 50).toFixed(1)}%`, transform: 'translateY(50%)' }}
                       >
                         <div className="flex-1 border-t-2 border-dashed border-amber-400" />
-                        <span className="text-[10px] font-bold text-amber-600 bg-white px-1 shrink-0">
+                        <span className="text-[10px] font-bold text-[#B56A00] bg-white px-1 shrink-0">
                           WACC {(wacc * 100).toFixed(1)}%
                         </span>
                       </div>
@@ -942,7 +942,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                           <div key={p.year} className="relative flex-1 min-w-0 h-full">
                             {/* Bar */}
                             <div
-                              className={`absolute left-1 right-1 rounded-sm transition-colors ${aboveWacc ? 'bg-emerald-400' : 'bg-red-300'}`}
+                              className={`absolute left-1 right-1 rounded-sm transition-colors ${aboveWacc ? 'bg-[#11875D]' : 'bg-[#F0B8B8]'}`}
                               style={{
                                 bottom: `${barBottom}%`,
                                 height: `${Math.max(2, barH)}%`,
@@ -951,7 +951,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                             />
                             {/* Value label above bar */}
                             <span
-                              className={`absolute text-[10px] font-semibold left-0 right-0 text-center leading-none ${aboveWacc ? 'text-emerald-600' : 'text-red-500'}`}
+                              className={`absolute text-[10px] font-semibold left-0 right-0 text-center leading-none ${aboveWacc ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}
                               style={{ bottom: `${barBottom + barH + 1}%` }}
                             >
                               {(val * 100).toFixed(0)}%
@@ -963,17 +963,17 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                     {/* X-axis labels (fixed margin below bars) */}
                     <div className="flex gap-1.5 mt-4">
                       {roicPoints.map((p) => (
-                        <div key={p.year} className="flex-1 text-center text-[10px] text-slate-400">{p.year}</div>
+                        <div key={p.year} className="flex-1 text-center text-[10px] text-[#8A95A6]">{p.year}</div>
                       ))}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4 mt-2">
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />ROIC above WACC</span>
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />ROIC below WACC</span>
-                    {wacc != null && <span className="flex items-center gap-1 text-[10px] text-amber-500"><span className="w-5 border-t-2 border-dashed border-amber-400 inline-block" />WACC</span>}
+                    <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]"><span className="w-2 h-2 rounded-sm bg-[#11875D] inline-block" />ROIC above WACC</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]"><span className="w-2 h-2 rounded-sm bg-[#F0B8B8] inline-block" />ROIC below WACC</span>
+                    {wacc != null && <span className="flex items-center gap-1 text-[10px] text-[#B56A00]"><span className="w-5 border-t-2 border-dashed border-amber-400 inline-block" />WACC</span>}
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1.5 leading-snug">
+                  <p className="text-[10px] text-[#8A95A6] mt-1.5 leading-snug">
                     ROIC above WACC = company creates value for shareholders. Below WACC = capital is being destroyed even if profits appear positive.
                   </p>
                 </div>
@@ -996,11 +996,11 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 return (v < 0 ? '-' : '') + (abs >= 1e3 ? (abs / 1e3).toFixed(1) + 'B' : abs.toFixed(0) + 'M')
               }
               return (
-                <div className="px-4 sm:px-5 pb-4 border-t border-slate-100 pt-4">
+                <div className="px-4 sm:px-5 pb-4 border-t border-[#E3E1DA] pt-4">
                   <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                    <p className="text-[13px] font-semibold text-slate-700">Free Cash Flow Trend</p>
+                    <p className="text-[13px] font-semibold text-[#06101F]">Free Cash Flow Trend</p>
                     {fcfM != null && (
-                      <span className={`text-[11px] font-semibold tabular-nums ${fcfM > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                      <span className={`text-[11px] font-semibold tabular-nums ${fcfM > 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                         FCF margin: {(fcfM * 100).toFixed(1)}%
                       </span>
                     )}
@@ -1015,22 +1015,22 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                       return (
                         <div key={p.year} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-0.5">
                           {yoy != null && (
-                            <span className={`text-[10px] font-semibold leading-none ${yoy >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                            <span className={`text-[10px] font-semibold leading-none ${yoy >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                               {yoy >= 0 ? '+' : ''}{(yoy * 100).toFixed(0)}%
                             </span>
                           )}
                           <div className="relative w-full" style={{ height: `${hp}%` }}>
-                            <div className={`w-full h-full rounded-t-sm ${isPositive ? 'bg-[#059669]' : 'bg-red-300'}`}
+                            <div className={`w-full h-full rounded-t-sm ${isPositive ? 'bg-[#059669]' : 'bg-[#F0B8B8]'}`}
                               title={`${p.year}: FCF ${fmtM(val)}`} />
                           </div>
-                          <span className="text-[10px] text-slate-400 truncate max-w-full">{p.year}</span>
+                          <span className="text-[10px] text-[#8A95A6] truncate max-w-full">{p.year}</span>
                         </div>
                       )
                     })}
                   </div>
                   <div className="flex items-center gap-4 mt-1.5">
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-[#059669] inline-block" />Positive FCF</span>
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />Negative FCF (cash burn)</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]"><span className="w-2 h-2 rounded-sm bg-[#059669] inline-block" />Positive FCF</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]"><span className="w-2 h-2 rounded-sm bg-[#F0B8B8] inline-block" />Negative FCF (cash burn)</span>
                   </div>
                 </div>
               )
@@ -1052,18 +1052,18 @@ export default function FinancialsHub({ statementsData, financialsData, currency
               const maxM = Math.max(...annualMargins.map(p => p.grossM!), 0.01)
               const latestM = annualMargins[annualMargins.length - 1]
               return (
-                <div className="px-4 sm:px-5 pb-4 border-t border-slate-100 pt-4">
+                <div className="px-4 sm:px-5 pb-4 border-t border-[#E3E1DA] pt-4">
                   <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                    <p className="text-[13px] font-semibold text-slate-700">Margin Trend</p>
+                    <p className="text-[13px] font-semibold text-[#06101F]">Margin Trend</p>
                     <div className="flex items-center gap-2.5 text-[10px] tabular-nums flex-wrap">
                       {latestM.grossM != null && (
-                        <span className="text-slate-500">Gross <span className="font-semibold text-blue-600">{(latestM.grossM * 100).toFixed(1)}%</span></span>
+                        <span className="text-[#566174]">Gross <span className="font-semibold text-[#2563EB]">{(latestM.grossM * 100).toFixed(1)}%</span></span>
                       )}
                       {latestM.opM != null && (
-                        <span className="text-slate-500">Op. <span className="font-semibold text-violet-600">{(latestM.opM * 100).toFixed(1)}%</span></span>
+                        <span className="text-[#566174]">Op. <span className="font-semibold text-violet-600">{(latestM.opM * 100).toFixed(1)}%</span></span>
                       )}
                       {latestM.netM != null && (
-                        <span className="text-slate-500">Net <span className={`font-semibold ${latestM.netM >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{(latestM.netM * 100).toFixed(1)}%</span></span>
+                        <span className="text-[#566174]">Net <span className={`font-semibold ${latestM.netM >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>{(latestM.netM * 100).toFixed(1)}%</span></span>
                       )}
                     </div>
                   </div>
@@ -1088,20 +1088,20 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                           {/* Net margin */}
                           {p.netM != null ? (
                             <div
-                              className={`flex-1 min-w-0 rounded-t-sm ${p.netM >= 0 ? 'bg-emerald-400' : 'bg-red-300'}`}
+                              className={`flex-1 min-w-0 rounded-t-sm ${p.netM >= 0 ? 'bg-[#11875D]' : 'bg-[#F0B8B8]'}`}
                               style={{ height: `${Math.max(2, (Math.abs(p.netM) / maxM) * 100)}%` }}
                               title={`${p.year} Net Margin: ${(p.netM * 100).toFixed(1)}%`}
                             />
                           ) : <div className="flex-1" />}
                         </div>
-                        <span className="text-[10px] text-slate-400 truncate max-w-full">{p.year}</span>
+                        <span className="text-[10px] text-[#8A95A6] truncate max-w-full">{p.year}</span>
                       </div>
                     ))}
                   </div>
                   <div className="flex items-center gap-4 mt-1.5 flex-wrap">
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-[#2563EB] inline-block" />Gross</span>
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-violet-400 inline-block" />Operating</span>
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Net</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]"><span className="w-2 h-2 rounded-sm bg-[#2563EB] inline-block" />Gross</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]"><span className="w-2 h-2 rounded-sm bg-violet-400 inline-block" />Operating</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]"><span className="w-2 h-2 rounded-sm bg-[#11875D] inline-block" />Net</span>
                   </div>
                 </div>
               )
@@ -1121,11 +1121,11 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 return p.fcf / p.ocf
               })()
               return (
-                <div className="px-4 sm:px-5 pb-4 border-t border-slate-100 pt-4">
+                <div className="px-4 sm:px-5 pb-4 border-t border-[#E3E1DA] pt-4">
                   <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                    <p className="text-[13px] font-semibold text-slate-700">Cash Generation</p>
+                    <p className="text-[13px] font-semibold text-[#06101F]">Cash Generation</p>
                     {latestConversion != null && (
-                      <span className={`text-[11px] font-semibold tabular-nums ${latestConversion >= 0.7 ? 'text-emerald-600' : latestConversion >= 0.4 ? 'text-amber-600' : 'text-red-500'}`}>
+                      <span className={`text-[11px] font-semibold tabular-nums ${latestConversion >= 0.7 ? 'text-[#11875D]' : latestConversion >= 0.4 ? 'text-[#B56A00]' : 'text-[#D83B3B]'}`}>
                         FCF conversion: {(latestConversion * 100).toFixed(0)}%
                       </span>
                     )}
@@ -1145,21 +1145,21 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                             />
                             {fcfH != null ? (
                               <div
-                                className={`flex-1 min-w-0 rounded-t-sm ${fcfPos ? 'bg-emerald-500' : 'bg-red-400'}`}
+                                className={`flex-1 min-w-0 rounded-t-sm ${fcfPos ? 'bg-[#E8F7EF]0' : 'bg-[#D83B3B]'}`}
                                 style={{ height: `${fcfH}%` }}
                                 title={`${p.year} Free CF: ${currency}${p.fcf!.toFixed(0)}M`}
                               />
                             ) : <div className="flex-1" />}
                           </div>
-                          <span className="text-[10px] text-slate-400 truncate max-w-full">{p.year}</span>
+                          <span className="text-[10px] text-[#8A95A6] truncate max-w-full">{p.year}</span>
                         </div>
                       )
                     })}
                   </div>
                   <div className="flex items-center gap-4 mt-1.5 flex-wrap">
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-[#059669] inline-block" />Operating CF</span>
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-500 inline-block" />Free CF</span>
-                    <span className="text-[10px] text-slate-400">Both scaled to max OCF. FCF conversion = FCF/OCF</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]"><span className="w-2 h-2 rounded-sm bg-[#059669] inline-block" />Operating CF</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]"><span className="w-2 h-2 rounded-sm bg-[#E8F7EF]0 inline-block" />Free CF</span>
+                    <span className="text-[10px] text-[#8A95A6]">Both scaled to max OCF. FCF conversion = FCF/OCF</span>
                   </div>
                 </div>
               )
@@ -1181,13 +1181,13 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         if (nd != null || cov != null) {
           const ndVal = nd ?? Infinity
           const covVal = cov ?? 0
-          if (ndVal < 0)                            { ratingLabel = 'Fortress Balance Sheet'; ratingColor = 'bg-emerald-50 border-emerald-200 text-emerald-700' }
-          else if (ndVal < 1 && covVal > 8)         { ratingLabel = 'Very Strong';            ratingColor = 'bg-emerald-50 border-emerald-200 text-emerald-700' }
-          else if (ndVal < 2 && covVal > 5)         { ratingLabel = 'Strong';                 ratingColor = 'bg-emerald-50 border-emerald-200 text-emerald-700' }
-          else if (ndVal < 3 && covVal > 3)         { ratingLabel = 'Investment Grade';       ratingColor = 'bg-blue-50 border-blue-200 text-blue-700' }
-          else if (ndVal <= 5 && covVal >= 1.5)     { ratingLabel = 'Moderate Leverage';      ratingColor = 'bg-amber-50 border-amber-200 text-amber-700' }
-          else if (ndVal > 7 || covVal < 1)         { ratingLabel = 'Distressed';             ratingColor = 'bg-red-50 border-red-200 text-red-700' }
-          else                                       { ratingLabel = 'High Leverage';          ratingColor = 'bg-red-50 border-red-200 text-red-600' }
+          if (ndVal < 0)                            { ratingLabel = 'Fortress Balance Sheet'; ratingColor = 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' }
+          else if (ndVal < 1 && covVal > 8)         { ratingLabel = 'Very Strong';            ratingColor = 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' }
+          else if (ndVal < 2 && covVal > 5)         { ratingLabel = 'Strong';                 ratingColor = 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' }
+          else if (ndVal < 3 && covVal > 3)         { ratingLabel = 'Investment Grade';       ratingColor = 'bg-[#EAF1FF] border-[#93B4F5] text-[#2563EB]' }
+          else if (ndVal <= 5 && covVal >= 1.5)     { ratingLabel = 'Moderate Leverage';      ratingColor = 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]' }
+          else if (ndVal > 7 || covVal < 1)         { ratingLabel = 'Distressed';             ratingColor = 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]' }
+          else                                       { ratingLabel = 'High Leverage';          ratingColor = 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]' }
         }
 
         return (
@@ -1215,8 +1215,8 @@ export default function FinancialsHub({ statementsData, financialsData, currency
               const addNum = (label: string, v: number | null, thresholds: [number, number], higherIsBetter: boolean) => {
                 if (v == null) return
                 const color = higherIsBetter
-                  ? (v >= thresholds[0] ? 'text-emerald-600' : v >= thresholds[1] ? 'text-blue-600' : 'text-red-500')
-                  : (v <= thresholds[0] ? 'text-emerald-600' : v <= thresholds[1] ? 'text-amber-600' : 'text-red-500')
+                  ? (v >= thresholds[0] ? 'text-[#11875D]' : v >= thresholds[1] ? 'text-[#2563EB]' : 'text-[#D83B3B]')
+                  : (v <= thresholds[0] ? 'text-[#11875D]' : v <= thresholds[1] ? 'text-[#B56A00]' : 'text-[#D83B3B]')
                 items.push({ label, value: xFmt(v) ?? '—', color })
               }
               if (latest) {
@@ -1230,11 +1230,11 @@ export default function FinancialsHub({ statementsData, financialsData, currency
               const cols = items.length <= 3 ? `grid-cols-${items.length}` : items.length <= 4 ? 'grid-cols-4' : 'grid-cols-3 sm:grid-cols-5'
               return (
                 <div className="px-4 sm:px-5 pt-3 pb-2">
-                  <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-                    <div className={`grid ${cols} divide-x divide-slate-100`}>
+                  <div className="rounded-xl border border-[#E3E1DA] bg-white overflow-hidden">
+                    <div className={`grid ${cols} divide-x divide-[#E3E1DA]`}>
                       {items.map((item) => (
                         <div key={item.label} className="px-3 py-2.5">
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5 truncate">{item.label}</p>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-[#8A95A6] mb-0.5 truncate">{item.label}</p>
                           <p className={`text-[15px] font-bold tabular-nums leading-tight ${item.color}`}>{item.value}</p>
                         </div>
                       ))}
@@ -1244,9 +1244,9 @@ export default function FinancialsHub({ statementsData, financialsData, currency
               )
             })()}
 
-            <div className="border-t border-slate-100 px-4 sm:px-5 pt-4 pb-4">
+            <div className="border-t border-[#E3E1DA] px-4 sm:px-5 pt-4 pb-4">
               <MetricsTable columns={cols} rows={solvencyRows} />
-              <p className="text-[10px] text-slate-400 mt-2 px-1">
+              <p className="text-[10px] text-[#8A95A6] mt-2 px-1">
                 Net Debt = Total Debt − Cash &amp; Equivalents. Negative Net Debt means net cash position.
                 Total Liab./Assets includes operating liabilities (deferred revenue, lease obligations).
                 Cash Runway only shown when operating cash flow is negative.
@@ -1278,30 +1278,30 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 const isImproving = trend < -0.05 * maxAbs || (firstND > 0 && lastND < 0)
                 const isWorsening = trend >  0.05 * maxAbs || (firstND < 0 && lastND > 0)
                 return (
-                  <div className="border-t border-slate-100 px-4 sm:px-5 pb-4 pt-4">
+                  <div className="border-t border-[#E3E1DA] px-4 sm:px-5 pb-4 pt-4">
                     <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                      <p className="text-[13px] font-semibold text-slate-700">Net Debt Trend</p>
+                      <p className="text-[13px] font-semibold text-[#06101F]">Net Debt Trend</p>
                       <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${
-                        isImproving ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
-                        isWorsening ? 'bg-red-50 border-red-200 text-red-600' :
-                        'bg-slate-100 border-slate-200 text-slate-500'
+                        isImproving ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' :
+                        isWorsening ? 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]' :
+                        'bg-[#F4F3EF] border-[#E3E1DA] text-[#566174]'
                       }`}>
                         {isImproving ? 'Deleveraging' : isWorsening ? 'Leveraging up' : 'Stable'}
                       </span>
                     </div>
                     <div className={`relative flex items-${hasMix ? 'center' : 'end'} gap-1.5 h-28`}>
                       {hasMix && (
-                        <div className="absolute left-0 right-0 top-1/2 border-t border-dashed border-slate-300 pointer-events-none" />
+                        <div className="absolute left-0 right-0 top-1/2 border-t border-dashed border-[#CDD1C8] pointer-events-none" />
                       )}
                       {ndPoints.map((p) => {
                         const val = p.netDebt!
                         const isNeg = val < 0
                         const pct = (Math.abs(val) / maxAbs) * (hasMix ? 50 : 100)
                         const barH = Math.max(4, pct)
-                        const color = isNeg ? 'bg-emerald-400' : 'bg-slate-400'
+                        const color = isNeg ? 'bg-[#11875D]' : 'bg-[#8A95A6]'
                         return (
                           <div key={p.year} className={`flex flex-col items-center flex-1 min-w-0 h-full ${hasMix ? 'justify-center' : 'justify-end'} gap-0.5`}>
-                            {!hasMix && <span className={`text-[10px] font-semibold leading-none ${isNeg ? 'text-emerald-600' : 'text-slate-500'}`}>{fmtND(val)}</span>}
+                            {!hasMix && <span className={`text-[10px] font-semibold leading-none ${isNeg ? 'text-[#11875D]' : 'text-[#566174]'}`}>{fmtND(val)}</span>}
                             {hasMix ? (
                               <div className="relative w-full flex flex-col items-center" style={{ height: '100%' }}>
                                 {isNeg ? (
@@ -1315,14 +1315,14 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                                 <div className={`w-full h-full rounded-t-sm ${color}`} title={`${p.year}: ${fmtND(val)}`} />
                               </div>
                             )}
-                            <span className="text-[10px] text-slate-400 truncate max-w-full shrink-0">{p.year}</span>
+                            <span className="text-[10px] text-[#8A95A6] truncate max-w-full shrink-0">{p.year}</span>
                           </div>
                         )
                       })}
                     </div>
                     <div className="flex items-center gap-3 mt-2">
-                      <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Net cash (negative debt)</span>
-                      <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-slate-400 inline-block" />Net debt</span>
+                      <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]"><span className="w-2 h-2 rounded-sm bg-[#11875D] inline-block" />Net cash (negative debt)</span>
+                      <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]"><span className="w-2 h-2 rounded-sm bg-[#8A95A6] inline-block" />Net debt</span>
                     </div>
                   </div>
                 )
@@ -1342,29 +1342,29 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 <>
                   {renderNetDebtChart}
                   {showCapRet && (
-                  <div className="border-t border-slate-100 px-4 sm:px-5 pb-4 pt-4">
-                    <p className="text-[13px] font-semibold text-slate-700 mb-3">Capital Returns to Shareholders</p>
-                    <div className="rounded-xl border border-slate-200 overflow-hidden">
+                  <div className="border-t border-[#E3E1DA] px-4 sm:px-5 pb-4 pt-4">
+                    <p className="text-[13px] font-semibold text-[#06101F] mb-3">Capital Returns to Shareholders</p>
+                    <div className="rounded-xl border border-[#E3E1DA] overflow-hidden">
                       <table className="w-full text-[12px]">
                         <thead>
-                          <tr className="bg-slate-50 border-b border-slate-200">
-                            <th className="px-4 py-2 text-left font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Year</th>
-                            {hasBuybacks  && <th className="px-4 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Buybacks</th>}
-                            {hasDividends && <th className="px-4 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Dividends</th>}
-                            <th className="px-4 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Total</th>
+                          <tr className="bg-[#F4F3EF] border-b border-[#E3E1DA]">
+                            <th className="px-4 py-2 text-left font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Year</th>
+                            {hasBuybacks  && <th className="px-4 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Buybacks</th>}
+                            {hasDividends && <th className="px-4 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Dividends</th>}
+                            <th className="px-4 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Total</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 bg-white">
+                        <tbody className="divide-y divide-[#E3E1DA] bg-white">
                           {capRetRows.map((r: any) => {
                             const bb  = (r.buybacks     ?? 0) as number
                             const div = (r.dividendsPaid ?? 0) as number
                             const total = bb + div
                             return (
-                              <tr key={r.year} className="hover:bg-slate-50/60 transition-colors">
-                                <td className="px-4 py-3 font-medium text-slate-700">{r.year}</td>
-                                {hasBuybacks  && <td className="px-4 py-3 text-right tabular-nums text-slate-700">{fmtM(r.buybacks)}</td>}
-                                {hasDividends && <td className="px-4 py-3 text-right tabular-nums text-slate-700">{fmtM(r.dividendsPaid)}</td>}
-                                <td className="px-4 py-3 text-right tabular-nums font-semibold text-slate-900">{total > 0 ? fmtM(total) : '—'}</td>
+                              <tr key={r.year} className="hover:bg-[#F4F3EF]/60 transition-colors">
+                                <td className="px-4 py-3 font-medium text-[#06101F]">{r.year}</td>
+                                {hasBuybacks  && <td className="px-4 py-3 text-right tabular-nums text-[#06101F]">{fmtM(r.buybacks)}</td>}
+                                {hasDividends && <td className="px-4 py-3 text-right tabular-nums text-[#06101F]">{fmtM(r.dividendsPaid)}</td>}
+                                <td className="px-4 py-3 text-right tabular-nums font-semibold text-[#06101F]">{total > 0 ? fmtM(total) : '—'}</td>
                               </tr>
                             )
                           })}
@@ -1391,15 +1391,15 @@ export default function FinancialsHub({ statementsData, financialsData, currency
 
               // Payout ratio assessment
               const payoutLabel = payoutRatio == null ? null
-                : payoutRatio > 0.9 ? { label: 'Unsustainable', cls: 'bg-red-50 border-red-200 text-red-700' }
-                : payoutRatio > 0.7 ? { label: 'High', cls: 'bg-amber-50 border-amber-200 text-amber-700' }
-                : payoutRatio > 0.4 ? { label: 'Healthy', cls: 'bg-emerald-50 border-emerald-200 text-emerald-700' }
-                : { label: 'Conservative', cls: 'bg-blue-50 border-blue-200 text-blue-700' }
+                : payoutRatio > 0.9 ? { label: 'Unsustainable', cls: 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]' }
+                : payoutRatio > 0.7 ? { label: 'High', cls: 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]' }
+                : payoutRatio > 0.4 ? { label: 'Healthy', cls: 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' }
+                : { label: 'Conservative', cls: 'bg-[#EAF1FF] border-[#93B4F5] text-[#2563EB]' }
 
               return (
-                <div className="border-t border-slate-100 px-4 sm:px-5 pb-4 pt-4">
+                <div className="border-t border-[#E3E1DA] px-4 sm:px-5 pb-4 pt-4">
                   <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                    <p className="text-[13px] font-semibold text-slate-700">Dividend Analysis</p>
+                    <p className="text-[13px] font-semibold text-[#06101F]">Dividend Analysis</p>
                     {payoutLabel && (
                       <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${payoutLabel.cls}`}>
                         Payout: {payoutLabel.label}
@@ -1407,16 +1407,16 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                     )}
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
-                    <div className="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5">
-                      <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">Dividend Yield</p>
-                      <p className="text-[18px] font-bold text-emerald-600 tabular-nums">{(divYield * 100).toFixed(2)}%</p>
+                    <div className="rounded-xl bg-[#F4F3EF] border border-[#E3E1DA] px-3 py-2.5">
+                      <p className="text-[10px] text-[#8A95A6] font-semibold uppercase tracking-wide mb-0.5">Dividend Yield</p>
+                      <p className="text-[18px] font-bold text-[#11875D] tabular-nums">{(divYield * 100).toFixed(2)}%</p>
                     </div>
                     {payoutRatio != null && payoutRatio > 0 && (
-                      <div className="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5">
-                        <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">Payout Ratio</p>
-                        <p className="text-[18px] font-bold text-slate-800 tabular-nums">{(payoutRatio * 100).toFixed(0)}%</p>
-                        <div className="h-1 bg-slate-200 rounded-full mt-1">
-                          <div className={`h-full rounded-full ${payoutRatio > 0.9 ? 'bg-red-400' : payoutRatio > 0.7 ? 'bg-amber-400' : 'bg-emerald-400'}`} style={{ width: `${Math.min(100, payoutRatio * 100)}%` }} />
+                      <div className="rounded-xl bg-[#F4F3EF] border border-[#E3E1DA] px-3 py-2.5">
+                        <p className="text-[10px] text-[#8A95A6] font-semibold uppercase tracking-wide mb-0.5">Payout Ratio</p>
+                        <p className="text-[18px] font-bold text-[#06101F] tabular-nums">{(payoutRatio * 100).toFixed(0)}%</p>
+                        <div className="h-1 bg-[#E3E1DA] rounded-full mt-1">
+                          <div className={`h-full rounded-full ${payoutRatio > 0.9 ? 'bg-[#D83B3B]' : payoutRatio > 0.7 ? 'bg-[#B56A00]' : 'bg-[#11875D]'}`} style={{ width: `${Math.min(100, payoutRatio * 100)}%` }} />
                         </div>
                       </div>
                     )}
@@ -1430,8 +1430,8 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                     return (
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <p className="text-[11px] font-medium text-slate-500">Historical Dividends Paid</p>
-                          {isGrowing && <span className="text-[10px] font-semibold text-emerald-600">Growing dividend ↑</span>}
+                          <p className="text-[11px] font-medium text-[#566174]">Historical Dividends Paid</p>
+                          {isGrowing && <span className="text-[10px] font-semibold text-[#11875D]">Growing dividend ↑</span>}
                         </div>
                         <div className="flex items-end gap-1.5 h-20">
                           {divHistory.map((d: { year: string; paid: number }) => {
@@ -1439,9 +1439,9 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                             return (
                               <div key={d.year} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-0.5">
                                 <div className="relative w-full" style={{ height: `${hp}%` }}>
-                                  <div className="w-full h-full rounded-t-sm bg-emerald-400" title={`${d.year}: ${fmtM(d.paid)}`} />
+                                  <div className="w-full h-full rounded-t-sm bg-[#11875D]" title={`${d.year}: ${fmtM(d.paid)}`} />
                                 </div>
-                                <span className="text-[10px] text-slate-400 truncate max-w-full">{d.year}</span>
+                                <span className="text-[10px] text-[#8A95A6] truncate max-w-full">{d.year}</span>
                               </div>
                             )
                           })}
@@ -1469,7 +1469,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         const isBuy  = rawRec.includes('buy') || rawRec === 'strong_buy' || rawRec === 'strongbuy'
         const isSell = rawRec.includes('sell') || rawRec.includes('underperform') || rawRec.includes('underweight')
         const recLabel = isBuy ? 'Buy' : isSell ? 'Sell' : 'Hold'
-        const recBg    = isBuy ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : isSell ? 'bg-red-50 border-red-200 text-red-700' : 'bg-amber-50 border-amber-200 text-amber-700'
+        const recBg    = isBuy ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' : isSell ? 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]' : 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]'
         const targetUpside = q.analystTargetMean > 0 && q.price > 0 ? (q.analystTargetMean - q.price) / q.price : null
         return (
           <div className="px-4 sm:px-5 py-5 space-y-5">
@@ -1508,13 +1508,13 @@ export default function FinancialsHub({ statementsData, financialsData, currency
 
               return (
                 <div>
-                  <p className="text-[13px] font-semibold text-slate-700 mb-4">Quarterly Earnings Momentum</p>
+                  <p className="text-[13px] font-semibold text-[#06101F] mb-4">Quarterly Earnings Momentum</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                     {/* Revenue chart */}
                     {maxRev > 0 && (
                       <div>
-                        <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-2">Revenue</p>
+                        <p className="text-[11px] font-medium text-[#8A95A6] uppercase tracking-wide mb-2">Revenue</p>
                         <div className="flex items-end gap-1 h-28">
                           {sorted.map((r, i) => {
                             const val = revArr[i]
@@ -1524,15 +1524,15 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                             return (
                               <div key={i} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-0.5">
                                 {yoy != null && (
-                                  <span className={`text-[10px] font-semibold leading-none ${positive ? 'text-emerald-600' : 'text-red-500'}`}>
+                                  <span className={`text-[10px] font-semibold leading-none ${positive ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                                     {positive ? '+' : ''}{(yoy * 100).toFixed(0)}%
                                   </span>
                                 )}
                                 <div className="relative w-full" style={{ height: `${hp}%` }}>
-                                  <div className={`w-full h-full rounded-t-sm ${positive ? 'bg-[#2563EB]' : 'bg-slate-300'}`}
+                                  <div className={`w-full h-full rounded-t-sm ${positive ? 'bg-[#2563EB]' : 'bg-[#CDD1C8]'}`}
                                     title={`${quarterLabel(r)}: ${sym}${fmtRevShort(val ?? 0)}`} />
                                 </div>
-                                <span className="text-[10px] text-slate-400 truncate max-w-full">{quarterLabel(r)}</span>
+                                <span className="text-[10px] text-[#8A95A6] truncate max-w-full">{quarterLabel(r)}</span>
                               </div>
                             )
                           })}
@@ -1543,7 +1543,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                     {/* EPS chart */}
                     {maxAbsEps > 0 && (
                       <div>
-                        <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-2">EPS (Diluted)</p>
+                        <p className="text-[11px] font-medium text-[#8A95A6] uppercase tracking-wide mb-2">EPS (Diluted)</p>
                         <div className="flex items-end gap-1 h-28">
                           {sorted.map((r, i) => {
                             const val = epsArr[i]
@@ -1556,23 +1556,23 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                             return (
                               <div key={i} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-0.5">
                                 {beat != null && (
-                                  <span className={`text-[10px] font-bold leading-none ${hasBeat ? 'text-emerald-600' : hasMiss ? 'text-red-500' : 'text-slate-400'}`}>
+                                  <span className={`text-[10px] font-bold leading-none ${hasBeat ? 'text-[#11875D]' : hasMiss ? 'text-[#D83B3B]' : 'text-[#8A95A6]'}`}>
                                     {hasBeat ? '▲' : hasMiss ? '▼' : '—'}
                                   </span>
                                 )}
                                 <div className="relative w-full" style={{ height: `${hp}%` }}>
-                                  <div className={`w-full h-full rounded-t-sm ${hasBeat ? 'bg-emerald-400' : hasMiss ? 'bg-red-300' : isPositive ? 'bg-violet-400' : 'bg-slate-300'}`}
+                                  <div className={`w-full h-full rounded-t-sm ${hasBeat ? 'bg-[#11875D]' : hasMiss ? 'bg-[#F0B8B8]' : isPositive ? 'bg-violet-400' : 'bg-[#CDD1C8]'}`}
                                     title={`${quarterLabel(r)}: ${sym}${val?.toFixed(2) ?? '—'}${beat != null ? ` (${beat > 0 ? '+' : ''}${beat.toFixed(1)}% surprise)` : ''}`} />
                                 </div>
-                                <span className="text-[10px] text-slate-400 truncate max-w-full">{quarterLabel(r)}</span>
+                                <span className="text-[10px] text-[#8A95A6] truncate max-w-full">{quarterLabel(r)}</span>
                               </div>
                             )
                           })}
                         </div>
                         <div className="flex items-center gap-3 mt-1.5">
-                          <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Beat</span>
-                          <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />Miss</span>
-                          <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-violet-400 inline-block" />Positive</span>
+                          <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]"><span className="w-2 h-2 rounded-sm bg-[#11875D] inline-block" />Beat</span>
+                          <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]"><span className="w-2 h-2 rounded-sm bg-[#F0B8B8] inline-block" />Miss</span>
+                          <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]"><span className="w-2 h-2 rounded-sm bg-violet-400 inline-block" />Positive</span>
                         </div>
                       </div>
                     )}
@@ -1584,16 +1584,16 @@ export default function FinancialsHub({ statementsData, financialsData, currency
             {/* A3: show empty state when no coverage */}
             {!hasAnalystCoverage ? (
               <div className="py-8 text-center">
-                <p className="text-sm text-slate-400">No analyst coverage available for this stock.</p>
-                <p className="text-[11px] text-slate-300 mt-1">Coverage is typically unavailable for small-cap or non-US stocks.</p>
+                <p className="text-sm text-[#8A95A6]">No analyst coverage available for this stock.</p>
+                <p className="text-[11px] text-[#8A95A6] mt-1">Coverage is typically unavailable for small-cap or non-US stocks.</p>
               </div>
             ) : (
               <>
                 <div>
-                  <p className="text-[13px] font-semibold text-slate-700 mb-3">Consensus Rating</p>
+                  <p className="text-[13px] font-semibold text-[#06101F] mb-3">Consensus Rating</p>
                   <div className="flex items-center gap-3 mb-2">
                     {rawRec !== '' && <span className={`text-sm font-bold px-4 py-1.5 rounded-full border ${recBg}`}>{recLabel}</span>}
-                    {ca.numAnalysts > 0 && <span className="text-[12px] text-slate-400">{ca.numAnalysts} analysts covering this stock</span>}
+                    {ca.numAnalysts > 0 && <span className="text-[12px] text-[#8A95A6]">{ca.numAnalysts} analysts covering this stock</span>}
                   </div>
                   {/* Rating breakdown stacked bar */}
                   {(() => {
@@ -1605,9 +1605,9 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                     if (total === 0) return null
                     const segments = [
                       { label: 'Strong Buy', count: latest.strongBuy,  color: 'bg-emerald-600' },
-                      { label: 'Buy',        count: latest.buy,        color: 'bg-emerald-400' },
-                      { label: 'Hold',       count: latest.hold,       color: 'bg-amber-400'   },
-                      { label: 'Sell',       count: latest.sell,       color: 'bg-red-400'     },
+                      { label: 'Buy',        count: latest.buy,        color: 'bg-[#11875D]' },
+                      { label: 'Hold',       count: latest.hold,       color: 'bg-[#B56A00]'   },
+                      { label: 'Sell',       count: latest.sell,       color: 'bg-[#D83B3B]'     },
                       { label: 'Strong Sell',count: latest.strongSell, color: 'bg-red-600'     },
                     ].filter(s => s.count > 0)
                     return (
@@ -1624,7 +1624,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                         </div>
                         <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
                           {segments.map(s => (
-                            <span key={s.label} className="flex items-center gap-1 text-[10px] text-slate-500">
+                            <span key={s.label} className="flex items-center gap-1 text-[10px] text-[#566174]">
                               <span className={`inline-block w-2 h-2 rounded-sm ${s.color}`} />
                               {s.label} ({s.count})
                             </span>
@@ -1637,20 +1637,20 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 {/* EPS Growth Estimates */}
                 {(analystEst1y != null || analystEst2y != null) && (
                   <div>
-                    <p className="text-[13px] font-semibold text-slate-700 mb-3">EPS Growth Estimates</p>
-                    <div className="rounded-xl border border-slate-200 overflow-hidden">
+                    <p className="text-[13px] font-semibold text-[#06101F] mb-3">EPS Growth Estimates</p>
+                    <div className="rounded-xl border border-[#E3E1DA] overflow-hidden">
                       {analystEst1y != null && (
-                        <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-100">
-                          <span className="text-[13px] text-slate-500">Next Year</span>
-                          <span className={`text-[15px] font-bold tabular-nums ${analystEst1y >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                        <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-[#E3E1DA]">
+                          <span className="text-[13px] text-[#566174]">Next Year</span>
+                          <span className={`text-[15px] font-bold tabular-nums ${analystEst1y >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                             {analystEst1y >= 0 ? '+' : ''}{(analystEst1y * 100).toFixed(1)}%
                           </span>
                         </div>
                       )}
                       {analystEst2y != null && (
                         <div className="flex items-center justify-between px-4 py-3 bg-white">
-                          <span className="text-[13px] text-slate-500">2-Year Forward</span>
-                          <span className={`text-[15px] font-bold tabular-nums ${analystEst2y >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                          <span className="text-[13px] text-[#566174]">2-Year Forward</span>
+                          <span className={`text-[15px] font-bold tabular-nums ${analystEst2y >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                             {analystEst2y >= 0 ? '+' : ''}{(analystEst2y * 100).toFixed(1)}%
                           </span>
                         </div>
@@ -1660,22 +1660,22 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 )}
                 {q.analystTargetMean > 0 && (
                   <div>
-                    <p className="text-[13px] font-semibold text-slate-700 mb-3">Price Targets</p>
-                    <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 overflow-hidden">
+                    <p className="text-[13px] font-semibold text-[#06101F] mb-3">Price Targets</p>
+                    <div className="divide-y divide-[#E3E1DA] rounded-xl border border-[#E3E1DA] overflow-hidden">
                       {[
                         { label: 'Average Target', val: q.analystTargetMean, upside: targetUpside, highlight: true },
                         { label: 'Low Target',      val: q.analystTargetLow,  upside: q.analystTargetLow  != null && q.price > 0 ? (q.analystTargetLow  - q.price) / q.price : null, highlight: false },
                         { label: 'High Target',     val: q.analystTargetHigh, upside: q.analystTargetHigh != null && q.price > 0 ? (q.analystTargetHigh - q.price) / q.price : null, highlight: false },
                         { label: 'Current Price',   val: q.price,             upside: null, highlight: false },
                       ].filter(r => r.val != null && r.val > 0).map(r => (
-                        <div key={r.label} className={`flex items-center justify-between px-4 py-3 ${r.highlight ? 'bg-blue-50' : 'bg-white'}`}>
-                          <span className={`text-[13px] ${r.highlight ? 'font-semibold text-slate-700' : 'text-slate-500'}`}>{r.label}</span>
+                        <div key={r.label} className={`flex items-center justify-between px-4 py-3 ${r.highlight ? 'bg-[#EAF1FF]' : 'bg-white'}`}>
+                          <span className={`text-[13px] ${r.highlight ? 'font-semibold text-[#06101F]' : 'text-[#566174]'}`}>{r.label}</span>
                           <div className="flex items-center gap-2 tabular-nums">
-                            <span className={`text-[13px] font-bold ${r.highlight ? 'text-slate-900' : 'text-slate-700'}`}>
+                            <span className={`text-[13px] font-bold ${r.highlight ? 'text-[#06101F]' : 'text-[#06101F]'}`}>
                               {sym}{(r.val as number).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                             {r.upside != null && (
-                              <span className={`text-[11px] font-semibold ${r.upside >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                              <span className={`text-[11px] font-semibold ${r.upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                                 {r.upside >= 0 ? '+' : ''}{(r.upside * 100).toFixed(1)}%
                               </span>
                             )}
@@ -1694,16 +1694,16 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                       const pricePct = Math.max(2, Math.min(98, ((q.price - lo) / span) * 100))
                       return (
                         <div className="mt-4">
-                          <p className="text-[12px] font-semibold text-slate-600 mb-2">Target Range</p>
-                          <div className="relative h-2 rounded-full bg-slate-100 overflow-hidden mb-1">
+                          <p className="text-[12px] font-semibold text-[#566174] mb-2">Target Range</p>
+                          <div className="relative h-2 rounded-full bg-[#F4F3EF] overflow-hidden mb-1">
                             <div className="absolute inset-0 bg-gradient-to-r from-slate-300 to-blue-300" />
                             <div className="absolute top-1/2 -translate-y-1/2 w-0.5 h-full bg-blue-600 z-10" style={{ left: `${avgPct}%` }} />
                             <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-slate-800 border-2 border-white shadow z-20" style={{ left: `calc(${pricePct}% - 6px)` }} />
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-[10px] text-slate-400 tabular-nums">{sym}{lo.toFixed(2)} Low</span>
-                            <span className="text-[10px] text-blue-500 tabular-nums">Avg {sym}{avg.toFixed(2)}</span>
-                            <span className="text-[10px] text-slate-400 tabular-nums">High {sym}{hi.toFixed(2)}</span>
+                            <span className="text-[10px] text-[#8A95A6] tabular-nums">{sym}{lo.toFixed(2)} Low</span>
+                            <span className="text-[10px] text-[#2563EB] tabular-nums">Avg {sym}{avg.toFixed(2)}</span>
+                            <span className="text-[10px] text-[#8A95A6] tabular-nums">High {sym}{hi.toFixed(2)}</span>
                           </div>
                         </div>
                       )
@@ -1740,7 +1740,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
 
                   return (
                     <div>
-                      <p className="text-[13px] font-semibold text-slate-700 mb-3">Revenue Forecast</p>
+                      <p className="text-[13px] font-semibold text-[#06101F] mb-3">Revenue Forecast</p>
                       <div className="flex items-end gap-1.5 h-36 px-1">
                         {allBars.map((bar, i) => {
                           const val = bar.value ?? 0
@@ -1749,32 +1749,32 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                           return (
                             <div key={`${bar.year}-${i}`} className="flex flex-col items-center flex-1 min-w-0 h-full justify-end gap-1">
                               {gr != null && (
-                                <span className={`text-[10px] font-semibold ${gr >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                                <span className={`text-[10px] font-semibold ${gr >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                                   {gr >= 0 ? '+' : ''}{(gr * 100).toFixed(0)}%
                                 </span>
                               )}
                               <div className="relative w-full flex items-end" style={{ height: `${heightPct}%` }}>
                                 <div
-                                  className={`w-full rounded-t-sm transition-all ${bar.isProjected ? 'bg-blue-200 border border-dashed border-blue-400' : 'bg-blue-500'}`}
+                                  className={`w-full rounded-t-sm transition-all ${bar.isProjected ? 'bg-blue-200 border border-dashed border-blue-400' : 'bg-[#EAF1FF]0'}`}
                                   style={{ height: '100%' }}
                                   title={`${bar.year}: ${sym}${fmtRev(val)}`}
                                 />
                               </div>
-                              <span className="text-[10px] font-medium text-slate-500 truncate max-w-full">{bar.year}</span>
+                              <span className="text-[10px] font-medium text-[#566174] truncate max-w-full">{bar.year}</span>
                             </div>
                           )
                         })}
                       </div>
                       <div className="flex items-center gap-3 mt-2">
-                        <span className="flex items-center gap-1 text-[10px] text-slate-500"><span className="inline-block w-3 h-2 rounded-sm bg-blue-500" />Actual</span>
-                        <span className="flex items-center gap-1 text-[10px] text-slate-500"><span className="inline-block w-3 h-2 rounded-sm bg-blue-200 border border-dashed border-blue-400" />Estimate</span>
+                        <span className="flex items-center gap-1 text-[10px] text-[#566174]"><span className="inline-block w-3 h-2 rounded-sm bg-[#EAF1FF]0" />Actual</span>
+                        <span className="flex items-center gap-1 text-[10px] text-[#566174]"><span className="inline-block w-3 h-2 rounded-sm bg-blue-200 border border-dashed border-blue-400" />Estimate</span>
                       </div>
                     </div>
                   )
                 })()}
 
                 {/* A6: data source disclosure */}
-                <p className="text-[11px] text-slate-400 leading-relaxed">
+                <p className="text-[11px] text-[#8A95A6] leading-relaxed">
                   Analyst targets represent Wall Street consensus sourced from Yahoo Finance. They may differ from our intrinsic value model, which uses discounted cash flow analysis. Targets are typically 12-month forward estimates.
                 </p>
 
@@ -1800,46 +1800,46 @@ export default function FinancialsHub({ statementsData, financialsData, currency
 
                   return (
                     <div>
-                      <p className="text-[13px] font-semibold text-slate-700 mb-3">Forward Estimates</p>
-                      <div className="rounded-xl border border-slate-200 overflow-hidden">
+                      <p className="text-[13px] font-semibold text-[#06101F] mb-3">Forward Estimates</p>
+                      <div className="rounded-xl border border-[#E3E1DA] overflow-hidden">
                         <table className="w-full text-[12px]">
                           <thead>
-                            <tr className="bg-slate-50 border-b border-slate-200">
-                              <th className="px-4 py-2 text-left font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Period</th>
+                            <tr className="bg-[#F4F3EF] border-b border-[#E3E1DA]">
+                              <th className="px-4 py-2 text-left font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Period</th>
                               {hasRevenue && <>
-                                <th className="px-4 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Rev. Est.</th>
-                                <th className="px-3 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Rev. Growth</th>
+                                <th className="px-4 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Rev. Est.</th>
+                                <th className="px-3 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Rev. Growth</th>
                               </>}
                               {hasEPS && <>
-                                <th className="px-4 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">EPS Est.</th>
-                                <th className="px-3 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">EPS Growth</th>
+                                <th className="px-4 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">EPS Est.</th>
+                                <th className="px-3 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">EPS Growth</th>
                               </>}
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-slate-100 bg-white">
+                          <tbody className="divide-y divide-[#E3E1DA] bg-white">
                             {fwdEst.map(row => {
                               const revGrowth = row.revenue.growth
                               const epsGrowth = row.eps.growth
                               const revAvg = row.revenue.avg
                               const epsAvg = row.eps.avg
                               return (
-                                <tr key={row.period} className="hover:bg-slate-50/60 transition-colors">
-                                  <td className="px-4 py-3 font-semibold text-slate-700">{periodLabel(row.period, row.endDate)}</td>
+                                <tr key={row.period} className="hover:bg-[#F4F3EF]/60 transition-colors">
+                                  <td className="px-4 py-3 font-semibold text-[#06101F]">{periodLabel(row.period, row.endDate)}</td>
                                   {hasRevenue && <>
-                                    <td className="px-4 py-3 text-right tabular-nums font-mono text-slate-800 font-medium">
+                                    <td className="px-4 py-3 text-right tabular-nums font-mono text-[#06101F] font-medium">
                                       {revAvg != null ? (revAvg >= 1e12 ? `${sym}${(revAvg / 1e12).toFixed(2)}T` : revAvg >= 1e9 ? `${sym}${(revAvg / 1e9).toFixed(1)}B` : revAvg >= 1e6 ? `${sym}${(revAvg / 1e6).toFixed(0)}M` : `${sym}${revAvg.toFixed(0)}`) : '—'}
-                                      {row.revenue.analysts != null && <span className="text-[10px] text-slate-400 ml-1">({row.revenue.analysts})</span>}
+                                      {row.revenue.analysts != null && <span className="text-[10px] text-[#8A95A6] ml-1">({row.revenue.analysts})</span>}
                                     </td>
-                                    <td className={`px-3 py-3 text-right tabular-nums text-[12px] font-semibold ${revGrowth == null ? 'text-slate-400' : revGrowth >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                    <td className={`px-3 py-3 text-right tabular-nums text-[12px] font-semibold ${revGrowth == null ? 'text-[#8A95A6]' : revGrowth >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                                       {revGrowth != null ? `${revGrowth >= 0 ? '+' : ''}${(revGrowth * 100).toFixed(1)}%` : '—'}
                                     </td>
                                   </>}
                                   {hasEPS && <>
-                                    <td className="px-4 py-3 text-right tabular-nums font-mono text-slate-800 font-medium">
+                                    <td className="px-4 py-3 text-right tabular-nums font-mono text-[#06101F] font-medium">
                                       {epsAvg != null ? `${sym}${epsAvg.toFixed(2)}` : '—'}
-                                      {row.eps.analysts != null && <span className="text-[10px] text-slate-400 ml-1">({row.eps.analysts})</span>}
+                                      {row.eps.analysts != null && <span className="text-[10px] text-[#8A95A6] ml-1">({row.eps.analysts})</span>}
                                     </td>
-                                    <td className={`px-3 py-3 text-right tabular-nums text-[12px] font-semibold ${epsGrowth == null ? 'text-slate-400' : epsGrowth >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                    <td className={`px-3 py-3 text-right tabular-nums text-[12px] font-semibold ${epsGrowth == null ? 'text-[#8A95A6]' : epsGrowth >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                                       {epsGrowth != null ? `${epsGrowth >= 0 ? '+' : ''}${(epsGrowth * 100).toFixed(1)}%` : '—'}
                                     </td>
                                   </>}
@@ -1849,7 +1849,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                           </tbody>
                         </table>
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-1.5">Number in parentheses = analysts covering this estimate. Low/High ranges available from Yahoo Finance.</p>
+                      <p className="text-[10px] text-[#8A95A6] mt-1.5">Number in parentheses = analysts covering this estimate. Low/High ranges available from Yahoo Finance.</p>
                     </div>
                   )
                 })()}
@@ -1864,18 +1864,18 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                   if (surprises.length === 0) return null
                   return (
                     <div>
-                      <p className="text-[13px] font-semibold text-slate-700 mb-3">EPS Surprise History</p>
-                      <div className="rounded-xl border border-slate-200 overflow-hidden">
+                      <p className="text-[13px] font-semibold text-[#06101F] mb-3">EPS Surprise History</p>
+                      <div className="rounded-xl border border-[#E3E1DA] overflow-hidden">
                         <table className="w-full text-[12px]">
                           <thead>
-                            <tr className="bg-slate-50 border-b border-slate-200">
-                              <th className="px-4 py-2 text-left font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Quarter</th>
-                              <th className="px-4 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Estimated</th>
-                              <th className="px-4 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Actual</th>
-                              <th className="px-3 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Surprise</th>
+                            <tr className="bg-[#F4F3EF] border-b border-[#E3E1DA]">
+                              <th className="px-4 py-2 text-left font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Quarter</th>
+                              <th className="px-4 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Estimated</th>
+                              <th className="px-4 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Actual</th>
+                              <th className="px-3 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Surprise</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-slate-100 bg-white">
+                          <tbody className="divide-y divide-[#E3E1DA] bg-white">
                             {[...surprises].reverse().map((row, idx) => {
                               const beat = row.surprisePercent != null && row.surprisePercent > 0
                               const miss = row.surprisePercent != null && row.surprisePercent < 0
@@ -1883,17 +1883,17 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                                 ? new Date(row.date).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
                                 : (row.quarter ?? '—')
                               return (
-                                <tr key={idx} className="hover:bg-slate-50/60 transition-colors">
-                                  <td className="px-4 py-3 font-medium text-slate-700">{qLabel}</td>
-                                  <td className="px-4 py-3 text-right tabular-nums text-slate-600">
+                                <tr key={idx} className="hover:bg-[#F4F3EF]/60 transition-colors">
+                                  <td className="px-4 py-3 font-medium text-[#06101F]">{qLabel}</td>
+                                  <td className="px-4 py-3 text-right tabular-nums text-[#566174]">
                                     {row.epsEstimate != null ? `${sym}${row.epsEstimate.toFixed(2)}` : '—'}
                                   </td>
-                                  <td className={`px-4 py-3 text-right tabular-nums font-semibold ${beat ? 'text-emerald-600' : miss ? 'text-red-600' : 'text-slate-700'}`}>
+                                  <td className={`px-4 py-3 text-right tabular-nums font-semibold ${beat ? 'text-[#11875D]' : miss ? 'text-[#D83B3B]' : 'text-[#06101F]'}`}>
                                     {row.epsActual != null ? `${sym}${row.epsActual.toFixed(2)}` : '—'}
                                   </td>
                                   <td className="px-3 py-3 text-right tabular-nums">
                                     {row.surprisePercent != null ? (
-                                      <span className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${beat ? 'bg-emerald-50 text-emerald-700' : miss ? 'bg-red-50 text-red-700' : 'bg-slate-100 text-slate-600'}`}>
+                                      <span className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${beat ? 'bg-[#E8F7EF] text-[#11875D]' : miss ? 'bg-[#FCEAEA] text-[#D83B3B]' : 'bg-[#F4F3EF] text-[#566174]'}`}>
                                         {beat ? '+' : ''}{row.surprisePercent.toFixed(1)}%
                                       </span>
                                     ) : '—'}
@@ -1933,20 +1933,20 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                   return (
                     <div>
                       <div className="flex items-baseline justify-between mb-3">
-                        <p className="text-[13px] font-semibold text-slate-700">Relative Valuation</p>
+                        <p className="text-[13px] font-semibold text-[#06101F]">Relative Valuation</p>
                         {allPeers.length > 0 && (
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] text-[#8A95A6]">
                             vs. {allPeers.slice(0, 4).join(', ')}{allPeers.length > 4 ? ` +${allPeers.length - 4}` : ''}
                           </span>
                         )}
                       </div>
-                      <div className="rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
+                      <div className="rounded-xl border border-[#E3E1DA] overflow-hidden divide-y divide-[#E3E1DA]">
                         {/* Header */}
-                        <div className="grid grid-cols-4 px-4 py-2 bg-slate-50">
-                          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Multiple</span>
-                          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide text-right">Current</span>
-                          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide text-right">Median</span>
-                          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide text-right">vs. Peers</span>
+                        <div className="grid grid-cols-4 px-4 py-2 bg-[#F4F3EF]">
+                          <span className="text-[10px] font-semibold text-[#8A95A6] uppercase tracking-wide">Multiple</span>
+                          <span className="text-[10px] font-semibold text-[#8A95A6] uppercase tracking-wide text-right">Current</span>
+                          <span className="text-[10px] font-semibold text-[#8A95A6] uppercase tracking-wide text-right">Median</span>
+                          <span className="text-[10px] font-semibold text-[#8A95A6] uppercase tracking-wide text-right">vs. Peers</span>
                         </div>
                         {applicableEsts.map(e => {
                           const premium = e.sectorMedian > 0 ? (e.actualValue - e.sectorMedian) / e.sectorMedian : null
@@ -1954,29 +1954,29 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                           const isPremium  = premium != null && premium > 0.05
                           return (
                             <div key={e.multiple} className="grid grid-cols-4 px-4 py-3 bg-white items-center">
-                              <span className="text-[12px] font-medium text-slate-700">{e.multiple}</span>
-                              <span className="text-[12px] font-bold text-slate-900 tabular-nums text-right">
+                              <span className="text-[12px] font-medium text-[#06101F]">{e.multiple}</span>
+                              <span className="text-[12px] font-bold text-[#06101F] tabular-nums text-right">
                                 {e.actualValue.toFixed(1)}×
                               </span>
-                              <span className="text-[12px] text-slate-500 tabular-nums text-right">
+                              <span className="text-[12px] text-[#566174] tabular-nums text-right">
                                 {e.sectorMedian.toFixed(1)}×
                               </span>
                               <div className="flex justify-end">
                                 {premium != null ? (
                                   <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
-                                    isDiscount ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                                    isPremium  ? 'bg-red-50 text-red-600 border border-red-200' :
-                                    'bg-slate-100 text-slate-500'
+                                    isDiscount ? 'bg-[#E8F7EF] text-[#11875D] border border-[#A3D9BE]' :
+                                    isPremium  ? 'bg-[#FCEAEA] text-[#D83B3B] border border-[#F0B8B8]' :
+                                    'bg-[#F4F3EF] text-[#566174]'
                                   }`}>
                                     {premium >= 0 ? '+' : ''}{(premium * 100).toFixed(0)}%
                                   </span>
-                                ) : <span className="text-[11px] text-slate-300">—</span>}
+                                ) : <span className="text-[11px] text-[#8A95A6]">—</span>}
                               </div>
                             </div>
                           )
                         })}
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-2">
+                      <p className="text-[10px] text-[#8A95A6] mt-2">
                         {allPeers.length > 0 ? 'Live peer medians' : 'Industry medians (Damodaran 2025)'}
                         . Discount = trading below peers; Premium = trading above.
                       </p>
@@ -1984,34 +1984,34 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                       {/* Per-peer breakdown table */}
                       {peerComps.length >= 2 && (
                         <div className="mt-4">
-                          <p className="text-[12px] font-semibold text-slate-600 mb-2">Peer Comparison</p>
-                          <div className="rounded-xl border border-slate-200 overflow-x-auto">
+                          <p className="text-[12px] font-semibold text-[#566174] mb-2">Peer Comparison</p>
+                          <div className="rounded-xl border border-[#E3E1DA] overflow-x-auto">
                             <table className="w-full text-[11px] min-w-[360px]">
                               <thead>
-                                <tr className="bg-slate-50 border-b border-slate-200">
-                                  <th className="px-3 py-2 text-left font-semibold text-slate-400 uppercase tracking-wide">Ticker</th>
-                                  <th className="px-3 py-2 text-right font-semibold text-slate-400 uppercase tracking-wide">P/E</th>
-                                  <th className="px-3 py-2 text-right font-semibold text-slate-400 uppercase tracking-wide">EV/EBITDA</th>
-                                  <th className="px-3 py-2 text-right font-semibold text-slate-400 uppercase tracking-wide">P/B</th>
-                                  <th className="px-3 py-2 text-right font-semibold text-slate-400 uppercase tracking-wide">P/S</th>
+                                <tr className="bg-[#F4F3EF] border-b border-[#E3E1DA]">
+                                  <th className="px-3 py-2 text-left font-semibold text-[#8A95A6] uppercase tracking-wide">Ticker</th>
+                                  <th className="px-3 py-2 text-right font-semibold text-[#8A95A6] uppercase tracking-wide">P/E</th>
+                                  <th className="px-3 py-2 text-right font-semibold text-[#8A95A6] uppercase tracking-wide">EV/EBITDA</th>
+                                  <th className="px-3 py-2 text-right font-semibold text-[#8A95A6] uppercase tracking-wide">P/B</th>
+                                  <th className="px-3 py-2 text-right font-semibold text-[#8A95A6] uppercase tracking-wide">P/S</th>
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-slate-100 bg-white">
+                              <tbody className="divide-y divide-[#E3E1DA] bg-white">
                                 {/* Current company row */}
-                                <tr className="bg-blue-50/60 font-semibold">
-                                  <td className="px-3 py-2.5 text-blue-700 font-bold">{currTicker} ★</td>
-                                  <td className="px-3 py-2.5 text-right tabular-nums font-mono text-slate-800">{peEst != null ? peEst.toFixed(1) + '×' : '—'}</td>
-                                  <td className="px-3 py-2.5 text-right tabular-nums font-mono text-slate-800">{evEbitdaEst != null ? evEbitdaEst.toFixed(1) + '×' : '—'}</td>
-                                  <td className="px-3 py-2.5 text-right tabular-nums font-mono text-slate-800">{pbEst != null ? pbEst.toFixed(1) + '×' : '—'}</td>
-                                  <td className="px-3 py-2.5 text-right tabular-nums font-mono text-slate-800">{psEst != null ? psEst.toFixed(1) + '×' : '—'}</td>
+                                <tr className="bg-[#EAF1FF]/60 font-semibold">
+                                  <td className="px-3 py-2.5 text-[#2563EB] font-bold">{currTicker} ★</td>
+                                  <td className="px-3 py-2.5 text-right tabular-nums font-mono text-[#06101F]">{peEst != null ? peEst.toFixed(1) + '×' : '—'}</td>
+                                  <td className="px-3 py-2.5 text-right tabular-nums font-mono text-[#06101F]">{evEbitdaEst != null ? evEbitdaEst.toFixed(1) + '×' : '—'}</td>
+                                  <td className="px-3 py-2.5 text-right tabular-nums font-mono text-[#06101F]">{pbEst != null ? pbEst.toFixed(1) + '×' : '—'}</td>
+                                  <td className="px-3 py-2.5 text-right tabular-nums font-mono text-[#06101F]">{psEst != null ? psEst.toFixed(1) + '×' : '—'}</td>
                                 </tr>
                                 {peerComps.map(p => (
-                                  <tr key={p.ticker} className="hover:bg-slate-50/60 transition-colors">
-                                    <td className="px-3 py-2.5 font-mono font-bold text-slate-700">{p.ticker}</td>
-                                    <td className="px-3 py-2.5 text-right tabular-nums text-slate-600">{p.trailingPE != null ? p.trailingPE.toFixed(1) + '×' : '—'}</td>
-                                    <td className="px-3 py-2.5 text-right tabular-nums text-slate-600">{p.evToEbitda != null ? p.evToEbitda.toFixed(1) + '×' : '—'}</td>
-                                    <td className="px-3 py-2.5 text-right tabular-nums text-slate-600">{p.priceToBook != null ? p.priceToBook.toFixed(1) + '×' : '—'}</td>
-                                    <td className="px-3 py-2.5 text-right tabular-nums text-slate-600">{p.priceToSales != null ? p.priceToSales.toFixed(1) + '×' : '—'}</td>
+                                  <tr key={p.ticker} className="hover:bg-[#F4F3EF]/60 transition-colors">
+                                    <td className="px-3 py-2.5 font-mono font-bold text-[#06101F]">{p.ticker}</td>
+                                    <td className="px-3 py-2.5 text-right tabular-nums text-[#566174]">{p.trailingPE != null ? p.trailingPE.toFixed(1) + '×' : '—'}</td>
+                                    <td className="px-3 py-2.5 text-right tabular-nums text-[#566174]">{p.evToEbitda != null ? p.evToEbitda.toFixed(1) + '×' : '—'}</td>
+                                    <td className="px-3 py-2.5 text-right tabular-nums text-[#566174]">{p.priceToBook != null ? p.priceToBook.toFixed(1) + '×' : '—'}</td>
+                                    <td className="px-3 py-2.5 text-right tabular-nums text-[#566174]">{p.priceToSales != null ? p.priceToSales.toFixed(1) + '×' : '—'}</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -2033,7 +2033,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         const ownership = financialsData?.ownership ?? null
         if (!ownership || (ownership.institutionalPct == null && ownership.insiderPct == null)) {
           return (
-            <div className="px-4 sm:px-5 py-8 text-center text-sm text-slate-400">
+            <div className="px-4 sm:px-5 py-8 text-center text-sm text-[#8A95A6]">
               Ownership data unavailable
             </div>
           )
@@ -2055,16 +2055,16 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         const shortPct   = toPercent(ownership.shortPct)
         const shortRatio = ownership.shortRatio ?? null
         const segments = [
-          { label: 'Institutions', pct: inst,    color: 'bg-blue-500',  bar: 'bg-blue-500',  text: 'text-blue-700', bgLight: 'bg-blue-50'   },
-          { label: 'Insiders',     pct: insider,  color: 'bg-amber-500', bar: 'bg-amber-500', text: 'text-amber-700',bgLight: 'bg-amber-50'  },
-          { label: 'Retail / Other', pct: retail, color: 'bg-slate-300', bar: 'bg-slate-300', text: 'text-slate-600',bgLight: 'bg-slate-50'  },
+          { label: 'Institutions', pct: inst,    color: 'bg-[#EAF1FF]0',  bar: 'bg-[#EAF1FF]0',  text: 'text-[#2563EB]', bgLight: 'bg-[#EAF1FF]'   },
+          { label: 'Insiders',     pct: insider,  color: 'bg-[#FFF4DA]0', bar: 'bg-[#FFF4DA]0', text: 'text-[#B56A00]',bgLight: 'bg-[#FFF4DA]'  },
+          { label: 'Retail / Other', pct: retail, color: 'bg-[#CDD1C8]', bar: 'bg-[#CDD1C8]', text: 'text-[#566174]',bgLight: 'bg-[#F4F3EF]'  },
         ]
         return (
           <div className="px-4 sm:px-5 py-5 space-y-5">
             <div>
-              <p className="text-[13px] font-semibold text-slate-700 mb-3">Ownership Breakdown</p>
+              <p className="text-[13px] font-semibold text-[#06101F] mb-3">Ownership Breakdown</p>
               {rawSum > 100 && (
-                <p className="text-[10px] text-amber-600 mb-2">Note: Institutional + Insider sums to {rawSum.toFixed(1)}% — normalized to 100% for display.</p>
+                <p className="text-[10px] text-[#B56A00] mb-2">Note: Institutional + Insider sums to {rawSum.toFixed(1)}% — normalized to 100% for display.</p>
               )}
               <div className="space-y-3">
                 {segments.map(s => (
@@ -2072,64 +2072,64 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         <span className={`w-2.5 h-2.5 rounded-full ${s.color}`} />
-                        <span className="text-[13px] text-slate-600">{s.label}</span>
+                        <span className="text-[13px] text-[#566174]">{s.label}</span>
                       </div>
-                      <span className="text-[13px] font-bold tabular-nums font-mono text-slate-800">{s.pct.toFixed(1)}%</span>
+                      <span className="text-[13px] font-bold tabular-nums font-mono text-[#06101F]">{s.pct.toFixed(1)}%</span>
                     </div>
-                    <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-2.5 bg-[#F4F3EF] rounded-full overflow-hidden">
                       <div className={`h-full rounded-full ${s.bar}`} style={{ width: `${s.pct}%` }} />
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="rounded-xl border border-slate-200 overflow-hidden">
+            <div className="rounded-xl border border-[#E3E1DA] overflow-hidden">
               {segments.map(s => (
-                <div key={s.label} className={`flex items-center justify-between px-4 py-3 border-b border-slate-100 last:border-0 ${s.bgLight}`}>
-                  <span className="text-[13px] text-slate-600">{s.label}</span>
+                <div key={s.label} className={`flex items-center justify-between px-4 py-3 border-b border-[#E3E1DA] last:border-0 ${s.bgLight}`}>
+                  <span className="text-[13px] text-[#566174]">{s.label}</span>
                   <span className={`text-[15px] font-bold tabular-nums ${s.text}`}>{s.pct.toFixed(1)}%</span>
                 </div>
               ))}
               {/* O5: public float */}
               {publicFloat != null && (
-                <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-white">
-                  <span className="text-[13px] text-slate-500">Public Float</span>
-                  <span className="text-[13px] font-semibold text-slate-700 tabular-nums">{fmtShares(publicFloat)} shares</span>
+                <div className="flex items-center justify-between px-4 py-3 border-t border-[#E3E1DA] bg-white">
+                  <span className="text-[13px] text-[#566174]">Public Float</span>
+                  <span className="text-[13px] font-semibold text-[#06101F] tabular-nums">{fmtShares(publicFloat)} shares</span>
                 </div>
               )}
             </div>
             {/* O1: short interest block */}
             {(shortPct != null || shortRatio != null) && (
               <div>
-                <p className="text-[12px] font-semibold text-slate-600 mb-2">Short Interest</p>
-                <div className="rounded-xl border border-slate-200 overflow-hidden">
+                <p className="text-[12px] font-semibold text-[#566174] mb-2">Short Interest</p>
+                <div className="rounded-xl border border-[#E3E1DA] overflow-hidden">
                   {shortPct != null && (
-                    <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-100">
-                      <span className="text-[13px] text-slate-500">Short % of Float</span>
-                      <span className={`text-[13px] font-semibold tabular-nums ${shortPct > 10 ? 'text-red-600' : shortPct > 5 ? 'text-amber-600' : 'text-slate-700'}`}>
+                    <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-[#E3E1DA]">
+                      <span className="text-[13px] text-[#566174]">Short % of Float</span>
+                      <span className={`text-[13px] font-semibold tabular-nums ${shortPct > 10 ? 'text-[#D83B3B]' : shortPct > 5 ? 'text-[#B56A00]' : 'text-[#06101F]'}`}>
                         {shortPct.toFixed(1)}%
                         {/* O3: trend indicator badge */}
-                        {shortPct > 10 && <span className="ml-1 text-[10px] bg-red-100 text-red-600 px-1 py-0.5 rounded">High</span>}
+                        {shortPct > 10 && <span className="ml-1 text-[10px] bg-[#FCEAEA] text-[#D83B3B] px-1 py-0.5 rounded">High</span>}
                       </span>
                     </div>
                   )}
                   {shortRatio != null && (
                     <div className="flex items-center justify-between px-4 py-3 bg-white">
-                      <span className="text-[13px] text-slate-500">Days to Cover</span>
-                      <span className="text-[13px] font-semibold text-slate-700 tabular-nums">{(shortRatio as number).toFixed(1)} days</span>
+                      <span className="text-[13px] text-[#566174]">Days to Cover</span>
+                      <span className="text-[13px] font-semibold text-[#06101F] tabular-nums">{(shortRatio as number).toFixed(1)} days</span>
                     </div>
                   )}
                   {shortPct != null && shortPct > 15 && shortRatio != null && (shortRatio as number) > 5 && (
-                    <div className="flex items-center justify-between px-4 py-3 bg-red-50 border-t border-red-100">
-                      <span className="text-[12px] font-semibold text-red-700">Squeeze Risk</span>
-                      <span className="text-[11px] text-red-600">High short interest + slow coverage</span>
+                    <div className="flex items-center justify-between px-4 py-3 bg-[#FCEAEA] border-t border-red-100">
+                      <span className="text-[12px] font-semibold text-[#D83B3B]">Squeeze Risk</span>
+                      <span className="text-[11px] text-[#D83B3B]">High short interest + slow coverage</span>
                     </div>
                   )}
                 </div>
               </div>
             )}
             {/* O4: data lag disclosure */}
-            <p className="text-[11px] text-slate-400 leading-relaxed">
+            <p className="text-[11px] text-[#8A95A6] leading-relaxed">
               Institutional ownership reflects 13F filings (lag up to 45 days). Insider ownership from most recent proxy statement.
               Short interest reported bi-monthly — may not reflect intraday changes.
             </p>
@@ -2137,7 +2137,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
             {/* Insider Transactions feed */}
             {financialsData?.ticker && (
               <div>
-                <p className="text-[13px] font-semibold text-slate-700 mb-3">Recent Insider Transactions</p>
+                <p className="text-[13px] font-semibold text-[#06101F] mb-3">Recent Insider Transactions</p>
                 <InsiderTransactionsWidget ticker={financialsData.ticker} />
               </div>
             )}
@@ -2152,32 +2152,32 @@ export default function FinancialsHub({ statementsData, financialsData, currency
               const fmtShares = (v: number) => v >= 1e9 ? `${(v / 1e9).toFixed(2)}B` : v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v.toLocaleString()
               return (
                 <div>
-                  <p className="text-[13px] font-semibold text-slate-700 mb-3">Top Institutional Holders</p>
-                  <div className="rounded-xl border border-slate-200 overflow-hidden">
+                  <p className="text-[13px] font-semibold text-[#06101F] mb-3">Top Institutional Holders</p>
+                  <div className="rounded-xl border border-[#E3E1DA] overflow-hidden">
                     <table className="w-full text-[12px]">
                       <thead>
-                        <tr className="bg-slate-50 border-b border-slate-200">
-                          <th className="px-4 py-2 text-left font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Institution</th>
-                          <th className="px-4 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Shares</th>
-                          <th className="px-3 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Weight</th>
-                          <th className="px-3 py-2 text-right font-semibold text-slate-400 text-[10px] uppercase tracking-wide">Change</th>
+                        <tr className="bg-[#F4F3EF] border-b border-[#E3E1DA]">
+                          <th className="px-4 py-2 text-left font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Institution</th>
+                          <th className="px-4 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Shares</th>
+                          <th className="px-3 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Weight</th>
+                          <th className="px-3 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Change</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 bg-white">
+                      <tbody className="divide-y divide-[#E3E1DA] bg-white">
                         {holders.map((h, i) => {
                           const up = h.weightChange > 0.5
                           const dn = h.weightChange < -0.5
                           return (
-                            <tr key={i} className="hover:bg-slate-50/60 transition-colors">
-                              <td className="px-4 py-3 text-slate-700 font-medium">
+                            <tr key={i} className="hover:bg-[#F4F3EF]/60 transition-colors">
+                              <td className="px-4 py-3 text-[#06101F] font-medium">
                                 <span className="truncate block max-w-[180px] sm:max-w-none">{h.name}</span>
-                                {h.isNew && <span className="text-[10px] font-semibold text-blue-600 ml-0 mt-0.5 block">New position</span>}
-                                {h.isSoldOut && <span className="text-[10px] font-semibold text-red-600 ml-0 mt-0.5 block">Sold out</span>}
+                                {h.isNew && <span className="text-[10px] font-semibold text-[#2563EB] ml-0 mt-0.5 block">New position</span>}
+                                {h.isSoldOut && <span className="text-[10px] font-semibold text-[#D83B3B] ml-0 mt-0.5 block">Sold out</span>}
                               </td>
-                              <td className="px-4 py-3 text-right tabular-nums font-mono text-slate-600">{fmtShares(h.shares)}</td>
-                              <td className="px-3 py-3 text-right tabular-nums font-mono text-slate-600">{(h.weight * 100).toFixed(2)}%</td>
+                              <td className="px-4 py-3 text-right tabular-nums font-mono text-[#566174]">{fmtShares(h.shares)}</td>
+                              <td className="px-3 py-3 text-right tabular-nums font-mono text-[#566174]">{(h.weight * 100).toFixed(2)}%</td>
                               <td className="px-3 py-3 text-right tabular-nums font-mono">
-                                <span className={`text-[11px] font-semibold ${up ? 'text-emerald-600' : dn ? 'text-red-600' : 'text-slate-400'}`}>
+                                <span className={`text-[11px] font-semibold ${up ? 'text-[#11875D]' : dn ? 'text-[#D83B3B]' : 'text-[#8A95A6]'}`}>
                                   {h.weightChange > 0 ? '+' : ''}{(h.weightChange).toFixed(1)}%
                                 </span>
                               </td>
@@ -2187,7 +2187,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                       </tbody>
                     </table>
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1.5">Source: 13F filings · Weight = % of institution portfolio · Change = weight shift vs prior quarter</p>
+                  <p className="text-[10px] text-[#8A95A6] mt-1.5">Source: 13F filings · Weight = % of institution portfolio · Change = weight shift vs prior quarter</p>
                 </div>
               )
             })()}
@@ -2197,35 +2197,35 @@ export default function FinancialsHub({ statementsData, financialsData, currency
               const filings: Array<{ type: string; date: string; link: string }> = financialsData?.secFilings ?? []
               if (filings.length === 0) return null
               const typeStyle = (t: string) =>
-                t === '10-K' ? 'bg-blue-50 text-blue-700 border-blue-200'
+                t === '10-K' ? 'bg-[#EAF1FF] text-[#2563EB] border-[#93B4F5]'
                 : t === '10-Q' ? 'bg-violet-50 text-violet-700 border-violet-200'
-                : t === 'DEF 14A' ? 'bg-amber-50 text-amber-700 border-amber-200'
-                : 'bg-slate-100 text-slate-600 border-slate-200'
+                : t === 'DEF 14A' ? 'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]'
+                : 'bg-[#F4F3EF] text-[#566174] border-[#E3E1DA]'
               return (
                 <div>
-                  <p className="text-[13px] font-semibold text-slate-700 mb-3">SEC Filings</p>
-                  <div className="rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
+                  <p className="text-[13px] font-semibold text-[#06101F] mb-3">SEC Filings</p>
+                  <div className="rounded-xl border border-[#E3E1DA] overflow-hidden divide-y divide-[#E3E1DA]">
                     {filings.map((f, i) => (
                       <a
                         key={i}
                         href={f.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-3 px-4 py-3 bg-white hover:bg-slate-50 transition-colors group"
+                        className="flex items-center gap-3 px-4 py-3 bg-white hover:bg-[#F4F3EF] transition-colors group"
                       >
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded border shrink-0 ${typeStyle(f.type)}`}>
                           {f.type}
                         </span>
-                        <span className="text-[12px] text-slate-500 tabular-nums">
+                        <span className="text-[12px] text-[#566174] tabular-nums">
                           {new Date(f.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </span>
-                        <svg className="w-3 h-3 text-slate-300 group-hover:text-blue-500 transition-colors ml-auto shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className="w-3 h-3 text-[#8A95A6] group-hover:text-[#2563EB] transition-colors ml-auto shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                         </svg>
                       </a>
                     ))}
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1.5">Direct links to SEC EDGAR filings · 10-K = annual report · 10-Q = quarterly · DEF 14A = proxy statement</p>
+                  <p className="text-[10px] text-[#8A95A6] mt-1.5">Direct links to SEC EDGAR filings · 10-K = annual report · 10-Q = quarterly · DEF 14A = proxy statement</p>
                 </div>
               )
             })()}

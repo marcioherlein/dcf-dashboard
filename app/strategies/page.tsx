@@ -77,57 +77,57 @@ function fmtPct(v: number | null, decimals = 1): string {
 }
 
 function clr(val: number | null, good: 'high' | 'low'): string {
-  if (val === null) return 'text-slate-400'
+  if (val === null) return 'text-[#8A95A6]'
   const isGood = good === 'high' ? val > 0 : val < 0
   const isBad  = good === 'high' ? val < 0 : val > 0
-  if (isGood) return 'text-emerald-600'
-  if (isBad)  return 'text-red-500'
-  return 'text-slate-600'
+  if (isGood) return 'text-[#11875D]'
+  if (isBad)  return 'text-[#D83B3B]'
+  return 'text-[#566174]'
 }
 
 function rankColor(rank: number | null, total: number): string {
-  if (rank === null) return 'bg-slate-100 text-slate-400'
+  if (rank === null) return 'bg-[#F4F3EF] text-[#8A95A6]'
   const pct = rank / total
-  if (pct <= 0.25) return 'bg-emerald-100 text-emerald-800'
+  if (pct <= 0.25) return 'bg-[#E8F7EF] text-[#11875D]'
   if (pct <= 0.50) return 'bg-sky-100 text-sky-800'
-  if (pct <= 0.75) return 'bg-amber-100 text-amber-700'
-  return 'bg-red-100 text-red-700'
+  if (pct <= 0.75) return 'bg-[#FFF4DA] text-[#B56A00]'
+  return 'bg-[#FCEAEA] text-[#D83B3B]'
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function StrategyHeader({ def }: { def: StrategyDef }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-5 mb-4">
+    <div className="bg-white border border-[#E3E1DA] rounded-xl p-5 mb-4">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
-          <h2 className="text-base font-bold text-slate-900 mb-1">{def.label}</h2>
-          <p className="text-[13px] text-slate-600 leading-relaxed mb-3">{def.description}</p>
+          <h2 className="text-base font-bold text-[#06101F] mb-1">{def.label}</h2>
+          <p className="text-[13px] text-[#566174] leading-relaxed mb-3">{def.description}</p>
           <div className="flex flex-wrap gap-3">
-            <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 flex-1 min-w-[240px]">
-              <div className="text-[10px] font-semibold text-blue-500 uppercase tracking-wide mb-0.5">Formula</div>
-              <code className="text-[12px] text-blue-900 font-mono">{def.formula}</code>
+            <div className="bg-[#EAF1FF] border border-[#EAF1FF] rounded-lg px-3 py-2 flex-1 min-w-[240px]">
+              <div className="text-[10px] font-semibold text-[#2563EB] uppercase tracking-wide mb-0.5">Formula</div>
+              <code className="text-[12px] text-[#2563EB] font-mono">{def.formula}</code>
             </div>
-            <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 flex-1 min-w-[240px]">
-              <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-0.5">Signal Rule</div>
-              <p className="text-[12px] text-slate-700">{def.signal}</p>
+            <div className="bg-[#F4F3EF] border border-[#E3E1DA] rounded-lg px-3 py-2 flex-1 min-w-[240px]">
+              <div className="text-[10px] font-semibold text-[#566174] uppercase tracking-wide mb-0.5">Signal Rule</div>
+              <p className="text-[12px] text-[#566174]">{def.signal}</p>
             </div>
           </div>
         </div>
       </div>
-      <p className="text-[11px] text-slate-400 mt-3">Source: {def.source}</p>
+      <p className="text-[11px] text-[#8A95A6] mt-3">Source: {def.source}</p>
     </div>
   )
 }
 
 function CategoryBadge({ category }: { category: StrategyRow['category'] }) {
   const styles: Record<string, string> = {
-    'AI Stack': 'bg-blue-100 text-blue-700',
+    'AI Stack': 'bg-[#EAF1FF] text-[#2563EB]',
     'CEDEAR':   'bg-violet-100 text-violet-700',
-    'BYMA':     'bg-emerald-100 text-emerald-700',
+    'BYMA':     'bg-[#E8F7EF] text-[#11875D]',
   }
   return (
-    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${styles[category] ?? 'bg-slate-100 text-slate-500'}`}>
+    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${styles[category] ?? 'bg-[#F4F3EF] text-[#566174]'}`}>
       {category}
     </span>
   )
@@ -143,10 +143,10 @@ function RankBadge({ rank, total }: { rank: number | null; total: number }) {
 
 // Signal badge for MA
 function MaSignalBadge({ signal }: { signal: 'golden' | 'death' | null }) {
-  if (!signal) return <span className="text-slate-400 text-[12px]">—</span>
+  if (!signal) return <span className="text-[#8A95A6] text-[12px]">—</span>
   if (signal === 'golden')
-    return <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">★ Golden</span>
-  return <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">✕ Death</span>
+    return <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-[#E8F7EF] text-[#11875D] px-2 py-0.5 rounded-full">★ Golden</span>
+  return <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-[#FCEAEA] text-[#D83B3B] px-2 py-0.5 rounded-full">✕ Death</span>
 }
 
 // ─── Per-strategy tables ──────────────────────────────────────────────────────
@@ -159,14 +159,14 @@ function MomentumTable({ rows }: { rows: StrategyRow[] }) {
   return (
     <table className="w-full text-[13px] min-w-[600px]">
       <thead>
-        <tr className="border-b border-slate-200">
-          <th className="text-left py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Rank</th>
-          <th className="text-left py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Ticker</th>
-          <th className="text-left py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Sector</th>
-          <th className="text-right py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">12-1 Return</th>
-          <th className="text-right py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">1D Change</th>
-          <th className="text-right py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Price</th>
-          <th className="text-center py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Signal</th>
+        <tr className="border-b border-[#E3E1DA]">
+          <th className="text-left py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Rank</th>
+          <th className="text-left py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Ticker</th>
+          <th className="text-left py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Sector</th>
+          <th className="text-right py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">12-1 Return</th>
+          <th className="text-right py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">1D Change</th>
+          <th className="text-right py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Price</th>
+          <th className="text-center py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Signal</th>
         </tr>
       </thead>
       <tbody>
@@ -175,25 +175,25 @@ function MomentumTable({ rows }: { rows: StrategyRow[] }) {
           const pct = (r.momentumRank ?? n) / n
           const signal = pct <= 0.33 ? 'BUY' : pct >= 0.67 ? 'AVOID' : 'NEUTRAL'
           return (
-            <tr key={r.ticker} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+            <tr key={r.ticker} className="border-b border-[#E3E1DA] hover:bg-[#F4F3EF] transition-colors">
               <td className="py-2.5 px-3">
                 <RankBadge rank={r.momentumRank} total={n} />
               </td>
               <td className="py-2.5 px-3">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-blue-700">{r.ticker}</span>
+                  <span className="font-semibold text-[#2563EB]">{r.ticker}</span>
                   <CategoryBadge category={r.category} />
                 </div>
-                <span className="text-[11px] text-slate-400 hidden sm:block">{r.name}</span>
+                <span className="text-[11px] text-[#8A95A6] hidden sm:block">{r.name}</span>
               </td>
-              <td className="py-2.5 px-3 text-slate-500">{r.layer}</td>
+              <td className="py-2.5 px-3 text-[#566174]">{r.layer}</td>
               <td className={`py-2.5 px-3 text-right font-mono font-semibold ${clr(r.momentum12_1, 'high')}`}>
                 {fmtPct(r.momentum12_1)}
               </td>
               <td className={`py-2.5 px-3 text-right font-mono ${clr(r.change1d, 'high')}`}>
                 {fmtPct(r.change1d)}
               </td>
-              <td className="py-2.5 px-3 text-right font-mono text-slate-700">
+              <td className="py-2.5 px-3 text-right font-mono text-[#566174]">
                 {r.price !== null ? `$${r.price.toFixed(2)}` : '—'}
               </td>
               <td className="py-2.5 px-3 text-center">
@@ -215,13 +215,13 @@ function LowVolTable({ rows }: { rows: StrategyRow[] }) {
   return (
     <table className="w-full text-[13px] min-w-[500px]">
       <thead>
-        <tr className="border-b border-slate-200">
-          <th className="text-left py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Rank</th>
-          <th className="text-left py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Ticker</th>
-          <th className="text-left py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Sector</th>
-          <th className="text-right py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Annualized Vol</th>
-          <th className="text-right py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Price</th>
-          <th className="text-center py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Signal</th>
+        <tr className="border-b border-[#E3E1DA]">
+          <th className="text-left py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Rank</th>
+          <th className="text-left py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Ticker</th>
+          <th className="text-left py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Sector</th>
+          <th className="text-right py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Annualized Vol</th>
+          <th className="text-right py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Price</th>
+          <th className="text-center py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Signal</th>
         </tr>
       </thead>
       <tbody>
@@ -230,22 +230,22 @@ function LowVolTable({ rows }: { rows: StrategyRow[] }) {
           const pct = (r.volRank ?? n) / n
           const signal = pct <= 0.33 ? 'BUY' : pct >= 0.67 ? 'AVOID' : 'NEUTRAL'
           return (
-            <tr key={r.ticker} className="border-b border-slate-100 hover:bg-slate-50">
+            <tr key={r.ticker} className="border-b border-[#E3E1DA] hover:bg-[#F4F3EF]">
               <td className="py-2.5 px-3">
                 <RankBadge rank={r.volRank} total={n} />
               </td>
               <td className="py-2.5 px-3">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-blue-700">{r.ticker}</span>
+                  <span className="font-semibold text-[#2563EB]">{r.ticker}</span>
                   <CategoryBadge category={r.category} />
                 </div>
-                <span className="text-[11px] text-slate-400 hidden sm:block">{r.name}</span>
+                <span className="text-[11px] text-[#8A95A6] hidden sm:block">{r.name}</span>
               </td>
-              <td className="py-2.5 px-3 text-slate-500">{r.layer}</td>
-              <td className={`py-2.5 px-3 text-right font-mono font-semibold ${r.vol252 !== null ? (r.vol252 < 0.30 ? 'text-emerald-600' : r.vol252 < 0.50 ? 'text-slate-700' : 'text-red-500') : 'text-slate-400'}`}>
+              <td className="py-2.5 px-3 text-[#566174]">{r.layer}</td>
+              <td className={`py-2.5 px-3 text-right font-mono font-semibold ${r.vol252 !== null ? (r.vol252 < 0.30 ? 'text-[#11875D]' : r.vol252 < 0.50 ? 'text-[#566174]' : 'text-[#D83B3B]') : 'text-[#8A95A6]'}`}>
                 {fmtPct(r.vol252)}
               </td>
-              <td className="py-2.5 px-3 text-right font-mono text-slate-700">
+              <td className="py-2.5 px-3 text-right font-mono text-[#566174]">
                 {r.price !== null ? `$${r.price.toFixed(2)}` : '—'}
               </td>
               <td className="py-2.5 px-3 text-center">
@@ -273,35 +273,35 @@ function MaTable({ rows }: { rows: StrategyRow[] }) {
   return (
     <table className="w-full text-[13px] min-w-[520px]">
       <thead>
-        <tr className="border-b border-slate-200">
-          <th className="text-left py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Ticker</th>
-          <th className="text-left py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Sector</th>
-          <th className="text-center py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">MA Cross</th>
-          <th className="text-right py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">SMA50 vs SMA200</th>
-          <th className="text-right py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Price</th>
-          <th className="text-center py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Signal</th>
+        <tr className="border-b border-[#E3E1DA]">
+          <th className="text-left py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Ticker</th>
+          <th className="text-left py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Sector</th>
+          <th className="text-center py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">MA Cross</th>
+          <th className="text-right py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">SMA50 vs SMA200</th>
+          <th className="text-right py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Price</th>
+          <th className="text-center py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Signal</th>
         </tr>
       </thead>
       <tbody>
         {sorted.map((r) => {
           const signal: 'BUY' | 'AVOID' | 'NEUTRAL' = r.maSignal === 'golden' ? 'BUY' : r.maSignal === 'death' ? 'AVOID' : 'NEUTRAL'
           return (
-            <tr key={r.ticker} className="border-b border-slate-100 hover:bg-slate-50">
+            <tr key={r.ticker} className="border-b border-[#E3E1DA] hover:bg-[#F4F3EF]">
               <td className="py-2.5 px-3">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-blue-700">{r.ticker}</span>
+                  <span className="font-semibold text-[#2563EB]">{r.ticker}</span>
                   <CategoryBadge category={r.category} />
                 </div>
-                <span className="text-[11px] text-slate-400 hidden sm:block">{r.name}</span>
+                <span className="text-[11px] text-[#8A95A6] hidden sm:block">{r.name}</span>
               </td>
-              <td className="py-2.5 px-3 text-slate-500">{r.layer}</td>
+              <td className="py-2.5 px-3 text-[#566174]">{r.layer}</td>
               <td className="py-2.5 px-3 text-center">
                 <MaSignalBadge signal={r.maSignal} />
               </td>
               <td className={`py-2.5 px-3 text-right font-mono font-semibold ${clr(r.maSpread, 'high')}`}>
                 {fmtPct(r.maSpread)}
               </td>
-              <td className="py-2.5 px-3 text-right font-mono text-slate-700">
+              <td className="py-2.5 px-3 text-right font-mono text-[#566174]">
                 {r.price !== null ? `$${r.price.toFixed(2)}` : '—'}
               </td>
               <td className="py-2.5 px-3 text-center">
@@ -323,13 +323,13 @@ function MeanRevTable({ rows }: { rows: StrategyRow[] }) {
   return (
     <table className="w-full text-[13px] min-w-[500px]">
       <thead>
-        <tr className="border-b border-slate-200">
-          <th className="text-left py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Ticker</th>
-          <th className="text-left py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Sector</th>
-          <th className="text-right py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">1M Return</th>
-          <th className="text-right py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Z-Score</th>
-          <th className="text-right py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Price</th>
-          <th className="text-center py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Signal</th>
+        <tr className="border-b border-[#E3E1DA]">
+          <th className="text-left py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Ticker</th>
+          <th className="text-left py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Sector</th>
+          <th className="text-right py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">1M Return</th>
+          <th className="text-right py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Z-Score</th>
+          <th className="text-right py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Price</th>
+          <th className="text-center py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Signal</th>
         </tr>
       </thead>
       <tbody>
@@ -337,22 +337,22 @@ function MeanRevTable({ rows }: { rows: StrategyRow[] }) {
           const z = r.mrZscore
           const signal: 'BUY' | 'AVOID' | 'NEUTRAL' = z !== null ? (z < -1 ? 'BUY' : z > 1 ? 'AVOID' : 'NEUTRAL') : 'NEUTRAL'
           return (
-            <tr key={r.ticker} className="border-b border-slate-100 hover:bg-slate-50">
+            <tr key={r.ticker} className="border-b border-[#E3E1DA] hover:bg-[#F4F3EF]">
               <td className="py-2.5 px-3">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-blue-700">{r.ticker}</span>
+                  <span className="font-semibold text-[#2563EB]">{r.ticker}</span>
                   <CategoryBadge category={r.category} />
                 </div>
-                <span className="text-[11px] text-slate-400 hidden sm:block">{r.name}</span>
+                <span className="text-[11px] text-[#8A95A6] hidden sm:block">{r.name}</span>
               </td>
-              <td className="py-2.5 px-3 text-slate-500">{r.layer}</td>
+              <td className="py-2.5 px-3 text-[#566174]">{r.layer}</td>
               <td className={`py-2.5 px-3 text-right font-mono ${clr(r.return1m, 'high')}`}>
                 {fmtPct(r.return1m)}
               </td>
-              <td className={`py-2.5 px-3 text-right font-mono font-semibold ${z !== null ? (z < -1 ? 'text-emerald-600' : z > 1 ? 'text-red-500' : 'text-slate-600') : 'text-slate-400'}`}>
+              <td className={`py-2.5 px-3 text-right font-mono font-semibold ${z !== null ? (z < -1 ? 'text-[#11875D]' : z > 1 ? 'text-[#D83B3B]' : 'text-[#566174]') : 'text-[#8A95A6]'}`}>
                 {z !== null ? z.toFixed(2) : '—'}
               </td>
-              <td className="py-2.5 px-3 text-right font-mono text-slate-700">
+              <td className="py-2.5 px-3 text-right font-mono text-[#566174]">
                 {r.price !== null ? `$${r.price.toFixed(2)}` : '—'}
               </td>
               <td className="py-2.5 px-3 text-center">
@@ -374,15 +374,15 @@ function ValueTable({ rows }: { rows: StrategyRow[] }) {
   return (
     <table className="w-full text-[13px] min-w-[640px]">
       <thead>
-        <tr className="border-b border-slate-200">
-          <th className="text-left py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Rank</th>
-          <th className="text-left py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Ticker</th>
-          <th className="text-left py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Sector</th>
-          <th className="text-right py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">P/E</th>
-          <th className="text-right py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">P/B</th>
-          <th className="text-right py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">P/S</th>
-          <th className="text-right py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">EV/EBITDA</th>
-          <th className="text-center py-2 px-3 text-[11px] font-semibold text-slate-500 uppercase">Signal</th>
+        <tr className="border-b border-[#E3E1DA]">
+          <th className="text-left py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Rank</th>
+          <th className="text-left py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Ticker</th>
+          <th className="text-left py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Sector</th>
+          <th className="text-right py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">P/E</th>
+          <th className="text-right py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">P/B</th>
+          <th className="text-right py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">P/S</th>
+          <th className="text-right py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">EV/EBITDA</th>
+          <th className="text-center py-2 px-3 text-[11px] font-semibold text-[#566174] uppercase">Signal</th>
         </tr>
       </thead>
       <tbody>
@@ -391,28 +391,28 @@ function ValueTable({ rows }: { rows: StrategyRow[] }) {
           const pct = (r.valueRank ?? n) / n
           const signal = pct <= 0.33 ? 'BUY' : pct >= 0.67 ? 'AVOID' : 'NEUTRAL'
           return (
-            <tr key={r.ticker} className="border-b border-slate-100 hover:bg-slate-50">
+            <tr key={r.ticker} className="border-b border-[#E3E1DA] hover:bg-[#F4F3EF]">
               <td className="py-2.5 px-3">
                 <RankBadge rank={r.valueRank} total={n} />
               </td>
               <td className="py-2.5 px-3">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-blue-700">{r.ticker}</span>
+                  <span className="font-semibold text-[#2563EB]">{r.ticker}</span>
                   <CategoryBadge category={r.category} />
                 </div>
-                <span className="text-[11px] text-slate-400 hidden sm:block">{r.name}</span>
+                <span className="text-[11px] text-[#8A95A6] hidden sm:block">{r.name}</span>
               </td>
-              <td className="py-2.5 px-3 text-slate-500">{r.layer}</td>
-              <td className={`py-2.5 px-3 text-right font-mono ${r.pe !== null ? (r.pe < 20 ? 'text-emerald-600' : r.pe < 40 ? 'text-slate-600' : 'text-red-500') : 'text-slate-400'}`}>
+              <td className="py-2.5 px-3 text-[#566174]">{r.layer}</td>
+              <td className={`py-2.5 px-3 text-right font-mono ${r.pe !== null ? (r.pe < 20 ? 'text-[#11875D]' : r.pe < 40 ? 'text-[#566174]' : 'text-[#D83B3B]') : 'text-[#8A95A6]'}`}>
                 {r.pe !== null ? r.pe.toFixed(1) + 'x' : '—'}
               </td>
-              <td className={`py-2.5 px-3 text-right font-mono ${r.pb !== null ? (r.pb < 3 ? 'text-emerald-600' : r.pb < 8 ? 'text-slate-600' : 'text-red-500') : 'text-slate-400'}`}>
+              <td className={`py-2.5 px-3 text-right font-mono ${r.pb !== null ? (r.pb < 3 ? 'text-[#11875D]' : r.pb < 8 ? 'text-[#566174]' : 'text-[#D83B3B]') : 'text-[#8A95A6]'}`}>
                 {r.pb !== null ? r.pb.toFixed(1) + 'x' : '—'}
               </td>
-              <td className={`py-2.5 px-3 text-right font-mono ${r.ps !== null ? (r.ps < 5 ? 'text-emerald-600' : r.ps < 10 ? 'text-slate-600' : 'text-red-500') : 'text-slate-400'}`}>
+              <td className={`py-2.5 px-3 text-right font-mono ${r.ps !== null ? (r.ps < 5 ? 'text-[#11875D]' : r.ps < 10 ? 'text-[#566174]' : 'text-[#D83B3B]') : 'text-[#8A95A6]'}`}>
                 {r.ps !== null ? r.ps.toFixed(1) + 'x' : '—'}
               </td>
-              <td className={`py-2.5 px-3 text-right font-mono ${r.evEbitda !== null ? (r.evEbitda < 15 ? 'text-emerald-600' : r.evEbitda < 25 ? 'text-slate-600' : 'text-red-500') : 'text-slate-400'}`}>
+              <td className={`py-2.5 px-3 text-right font-mono ${r.evEbitda !== null ? (r.evEbitda < 15 ? 'text-[#11875D]' : r.evEbitda < 25 ? 'text-[#566174]' : 'text-[#D83B3B]') : 'text-[#8A95A6]'}`}>
                 {r.evEbitda !== null ? r.evEbitda.toFixed(1) + 'x' : '—'}
               </td>
               <td className="py-2.5 px-3 text-center">
@@ -428,10 +428,10 @@ function ValueTable({ rows }: { rows: StrategyRow[] }) {
 
 function SignalBadge({ signal }: { signal: 'BUY' | 'AVOID' | 'NEUTRAL' }) {
   if (signal === 'BUY')
-    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700">BUY</span>
+    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#E8F7EF] text-[#11875D]">BUY</span>
   if (signal === 'AVOID')
-    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-100 text-red-700">AVOID</span>
-  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-500">NEUTRAL</span>
+    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FCEAEA] text-[#D83B3B]">AVOID</span>
+  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#F4F3EF] text-[#566174]">NEUTRAL</span>
 }
 
 // ─── Summary consensus bar ────────────────────────────────────────────────────
@@ -476,37 +476,37 @@ function ConsensusSummary({ rows }: { rows: StrategyRow[] }) {
   }).sort((a, b) => b.score - a.score)
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-      <div className="px-5 py-3 border-b border-slate-100">
-        <h3 className="font-semibold text-slate-900 text-[13px]">Cross-Strategy Consensus</h3>
-        <p className="text-[11px] text-slate-500 mt-0.5">How many of the 5 strategies signal BUY vs AVOID for each stock</p>
+    <div className="bg-white border border-[#E3E1DA] rounded-xl overflow-hidden">
+      <div className="px-5 py-3 border-b border-[#E3E1DA]">
+        <h3 className="font-semibold text-[#06101F] text-[13px]">Cross-Strategy Consensus</h3>
+        <p className="text-[11px] text-[#566174] mt-0.5">How many of the 5 strategies signal BUY vs AVOID for each stock</p>
       </div>
-      <div className="divide-y divide-slate-100">
+      <div className="divide-y divide-[#E3E1DA]">
         {consensus.map((c) => (
           <div key={c.ticker} className="flex items-center gap-3 px-4 py-2.5 min-h-[44px]">
-            <span className="w-14 font-semibold text-[13px] text-blue-700 shrink-0">{c.ticker}</span>
-            <span className="text-[11px] text-slate-400 w-24 truncate hidden sm:block">{c.name}</span>
+            <span className="w-14 font-semibold text-[13px] text-[#2563EB] shrink-0">{c.ticker}</span>
+            <span className="text-[11px] text-[#8A95A6] w-24 truncate hidden sm:block">{c.name}</span>
             <div className="flex items-center gap-1.5 flex-1">
-              <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden flex">
+              <div className="flex-1 h-2 bg-[#F4F3EF] rounded-full overflow-hidden flex">
                 <div
-                  className="h-full bg-emerald-500 transition-all"
+                  className="h-full bg-[#E8F7EF]0 transition-all"
                   style={{ width: `${(c.buys / c.total) * 100}%` }}
                 />
                 <div
-                  className="h-full bg-red-400 transition-all"
+                  className="h-full bg-[#D83B3B] transition-all"
                   style={{ width: `${(c.avoids / c.total) * 100}%` }}
                 />
               </div>
-              <span className="text-[11px] text-slate-500 shrink-0 hidden xs:block sm:w-28">
+              <span className="text-[11px] text-[#566174] shrink-0 hidden xs:block sm:w-28">
                 {c.buys} buy · {c.avoids} avoid · {c.total - c.buys - c.avoids} neutral
               </span>
             </div>
             <div className="shrink-0">
-              {c.score >= 0.4 && <span className="text-[11px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">Strong Buy</span>}
+              {c.score >= 0.4 && <span className="text-[11px] font-bold bg-[#E8F7EF] text-[#11875D] px-2 py-0.5 rounded-full">Strong Buy</span>}
               {c.score > 0 && c.score < 0.4 && <span className="text-[11px] font-bold bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full">Buy Lean</span>}
-              {c.score === 0 && <span className="text-[11px] font-bold bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">Mixed</span>}
-              {c.score < 0 && c.score > -0.4 && <span className="text-[11px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Avoid Lean</span>}
-              {c.score <= -0.4 && <span className="text-[11px] font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">Avoid</span>}
+              {c.score === 0 && <span className="text-[11px] font-bold bg-[#F4F3EF] text-[#566174] px-2 py-0.5 rounded-full">Mixed</span>}
+              {c.score < 0 && c.score > -0.4 && <span className="text-[11px] font-bold bg-[#FFF4DA] text-[#B56A00] px-2 py-0.5 rounded-full">Avoid Lean</span>}
+              {c.score <= -0.4 && <span className="text-[11px] font-bold bg-[#FCEAEA] text-[#D83B3B] px-2 py-0.5 rounded-full">Avoid</span>}
             </div>
           </div>
         ))}
@@ -540,12 +540,12 @@ export default function StrategiesPage() {
   const activeDef = STRATEGIES.find(s => s.id === activeStrategy) ?? null
 
   return (
-    <div className="min-h-dvh bg-slate-50">
+    <div className="min-h-dvh bg-[#F4F3EF]">
       <div className="px-4 py-6">
         {/* Header */}
         <div className="mb-5">
-          <h1 className="text-xl font-bold text-slate-900">Quantitative Strategies</h1>
-          <p className="text-[13px] text-slate-500 mt-0.5">
+          <h1 className="text-xl font-bold text-[#06101F]">Quantitative Strategies</h1>
+          <p className="text-[13px] text-[#566174] mt-0.5">
             Academic factor strategies from Kakushadze &amp; Serur (2018) — AI Stack · CEDEARs · BYMA · Daily price data
           </p>
         </div>
@@ -564,8 +564,8 @@ export default function StrategiesPage() {
                     ? cat === 'All'     ? 'bg-slate-800 text-white border-slate-800'
                     : cat === 'AI Stack'? 'bg-blue-600 text-white border-blue-600'
                     : cat === 'CEDEAR'  ? 'bg-violet-600 text-white border-violet-600'
-                    :                    'bg-emerald-600 text-white border-emerald-600'
-                    : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400',
+                    :                    'bg-[#11875D] text-white border-emerald-600'
+                    : 'bg-white text-[#566174] border-[#E3E1DA] hover:border-[#8A95A6]',
                 ].join(' ')}
               >
                 {cat} <span className="opacity-70">({count})</span>
@@ -575,7 +575,7 @@ export default function StrategiesPage() {
         </div>
 
         {/* Strategy tabs */}
-        <div className="flex gap-1 overflow-x-auto overscroll-x-contain mb-5 bg-white border border-slate-200 rounded-xl p-1">
+        <div className="flex gap-1 overflow-x-auto overscroll-x-contain mb-5 bg-white border border-[#E3E1DA] rounded-xl p-1">
           <TabBtn
             active={activeStrategy === 'consensus'}
             onClick={() => setActiveStrategy('consensus')}
@@ -592,14 +592,14 @@ export default function StrategiesPage() {
         </div>
 
         {loading && (
-          <div className="flex items-center justify-center py-24 text-slate-400 text-sm">
-            <div className="w-5 h-5 border-2 border-slate-200 border-t-blue-500 rounded-full animate-spin mr-3" />
+          <div className="flex items-center justify-center py-24 text-[#8A95A6] text-sm">
+            <div className="w-5 h-5 border-2 border-[#E3E1DA] border-t-blue-500 rounded-full animate-spin mr-3" />
             Fetching 14 months of price history for ~80 tickers…
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">{error}</div>
+          <div className="bg-[#FCEAEA] border border-[#D83B3B]/30 rounded-xl px-4 py-3 text-sm text-[#D83B3B]">{error}</div>
         )}
 
         {!loading && !error && (
@@ -609,7 +609,7 @@ export default function StrategiesPage() {
             ) : (
               <>
                 {activeDef && <StrategyHeader def={activeDef} />}
-                <div className="bg-white border border-slate-200 rounded-xl overflow-x-auto">
+                <div className="bg-white border border-[#E3E1DA] rounded-xl overflow-x-auto">
                   {activeStrategy === 'momentum' && <MomentumTable rows={filteredRows} />}
                   {activeStrategy === 'lowvol'   && <LowVolTable rows={filteredRows} />}
                   {activeStrategy === 'ma'       && <MaTable rows={filteredRows} />}
@@ -623,7 +623,7 @@ export default function StrategiesPage() {
 
         {/* Paper attribution */}
         {!loading && (
-          <p className="text-[11px] text-slate-400 mt-6 text-center">
+          <p className="text-[11px] text-[#8A95A6] mt-6 text-center">
             Strategies from: Kakushadze &amp; Serur, &ldquo;151 Trading Strategies&rdquo; (SSRN 3247865, 2018) — Chapter 3: Stocks.
             Signals are illustrative and educational only. Not financial advice.
           </p>
@@ -641,7 +641,7 @@ function TabBtn({ active, onClick, label }: { active: boolean; onClick: () => vo
         'px-3.5 py-1.5 rounded-lg text-[13px] font-medium transition-colors shrink-0 min-h-[44px]',
         active
           ? 'bg-blue-600 text-white'
-          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50',
+          : 'text-[#566174] hover:text-[#06101F] hover:bg-[#F4F3EF]',
       ].join(' ')}
     >
       {label}

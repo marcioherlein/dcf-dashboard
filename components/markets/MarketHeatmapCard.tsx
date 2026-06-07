@@ -35,15 +35,15 @@ const SHORT_NAMES: Record<string, string> = {
 }
 
 function heatColor(changePct: number | null): string {
-  if (changePct == null) return 'bg-slate-100 text-slate-500'
-  if (changePct >=  2.5) return 'bg-emerald-700 text-white'
-  if (changePct >=  1.5) return 'bg-emerald-600 text-white'
-  if (changePct >=  0.5) return 'bg-emerald-400 text-white'
-  if (changePct >=  0)   return 'bg-emerald-100 text-emerald-800'
-  if (changePct >= -0.5) return 'bg-red-100 text-red-800'
-  if (changePct >= -1.5) return 'bg-red-400 text-white'
-  if (changePct >= -2.5) return 'bg-red-500 text-white'
-  return 'bg-red-700 text-white'
+  if (changePct == null) return 'bg-[#F4F3EF] text-[#566174]'
+  if (changePct >=  2.5) return 'bg-[#0D6B46] text-white'
+  if (changePct >=  1.5) return 'bg-[#11875D] text-white'
+  if (changePct >=  0.5) return 'bg-[#11875D] text-white'
+  if (changePct >=  0)   return 'bg-[#E8F7EF] text-[#0D6B46]'
+  if (changePct >= -0.5) return 'bg-[#FCEAEA] text-[#991B1B]'
+  if (changePct >= -1.5) return 'bg-[#D83B3B] text-white'
+  if (changePct >= -2.5) return 'bg-[#FCEAEA]0 text-white'
+  return 'bg-[#991B1B] text-white'
 }
 
 function statusTag(changePct: number | null): { label: string; cls: string } {
@@ -66,15 +66,15 @@ export default function MarketHeatmapCard({ sectors }: Props) {
   )
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-full">
-      <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between">
+    <div className="bg-white rounded-2xl border border-[#E3E1DA] shadow-sm overflow-hidden h-full">
+      <div className="px-4 py-2.5 border-b border-[#E3E1DA] flex items-center justify-between">
         <div>
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Market Heatmap</span>
-          <p className="text-[10px] text-slate-400 mt-0.5">S&P 500 sectors · daily performance</p>
+          <span className="text-[10px] font-bold text-[#566174] uppercase tracking-wider">Market Heatmap</span>
+          <p className="text-[10px] text-[#8A95A6] mt-0.5">S&P 500 sectors · daily performance</p>
         </div>
-        <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-500">
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-500 inline-block" /> Adv.</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-500 inline-block" /> Dec.</span>
+        <div className="flex items-center gap-2 text-[11px] font-semibold text-[#566174]">
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-[#E8F7EF]0 inline-block" /> Adv.</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-[#FCEAEA]0 inline-block" /> Dec.</span>
         </div>
       </div>
 
@@ -113,19 +113,19 @@ export default function MarketHeatmapCard({ sectors }: Props) {
         </div>
 
         <div className="mt-3 flex items-center gap-1 overflow-x-auto scrollbar-hide pb-0.5">
-          <span className="text-[11px] text-slate-400 mr-1">Perf:</span>
+          <span className="text-[11px] text-[#8A95A6] mr-1">Perf:</span>
           {[
-            { label: '–2%+', cls: 'bg-red-700' },
-            { label: '–1%',  cls: 'bg-red-400' },
-            { label: '–½%',  cls: 'bg-red-100' },
-            { label: '0',    cls: 'bg-slate-100' },
-            { label: '+½%',  cls: 'bg-emerald-100' },
-            { label: '+1%',  cls: 'bg-emerald-400' },
+            { label: '–2%+', cls: 'bg-[#991B1B]' },
+            { label: '–1%',  cls: 'bg-[#D83B3B]' },
+            { label: '–½%',  cls: 'bg-[#FCEAEA]' },
+            { label: '0',    cls: 'bg-[#F4F3EF]' },
+            { label: '+½%',  cls: 'bg-[#E8F7EF]' },
+            { label: '+1%',  cls: 'bg-[#11875D]' },
             { label: '+2%+', cls: 'bg-emerald-700' },
           ].map(({ label, cls }) => (
             <div key={label} className="flex flex-col items-center">
               <div className={cn('w-5 h-2.5 rounded-sm', cls)} />
-              <span className="text-[8px] text-slate-400 mt-0.5">{label}</span>
+              <span className="text-[8px] text-[#8A95A6] mt-0.5">{label}</span>
             </div>
           ))}
         </div>

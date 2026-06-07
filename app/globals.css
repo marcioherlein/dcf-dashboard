@@ -11,26 +11,26 @@
 @layer base {
   :root {
     /* ── shadcn/ui CSS variable bridge (Tailwind v3) ─────────────────────── */
-    --background:          0 0% 100%;       /* #FFFFFF pure white */
-    --foreground:          0 0% 7%;         /* #111111 near-black */
+    --background:          39 17% 97%;      /* #FAF9F6 warm off-white */
+    --foreground:          218 73% 7%;      /* #06101F ink-950 */
     --card:                0 0% 100%;       /* #FFFFFF */
-    --card-foreground:     0 0% 7%;
+    --card-foreground:     218 73% 7%;
     --popover:             0 0% 100%;
-    --popover-foreground:  0 0% 7%;
-    --primary:             78 82% 25%;      /* #5F790B olive-700 */
+    --popover-foreground:  218 73% 7%;
+    --primary:             82 80% 23%;      /* #5F790B olive-600 */
     --primary-foreground:  0 0% 100%;
-    --secondary:           0 0% 96%;        /* #F5F5F5 */
-    --secondary-foreground:0 0% 7%;
-    --muted:               0 0% 95%;        /* #F2F2F2 */
-    --muted-foreground:    0 0% 42%;        /* #6B6B6B */
-    --accent:              78 82% 25%;      /* olive-700 */
+    --secondary:           36 14% 95%;      /* #F4F3EF */
+    --secondary-foreground:218 73% 7%;
+    --muted:               36 14% 95%;      /* #F4F3EF */
+    --muted-foreground:    220 15% 40%;     /* #566174 */
+    --accent:              82 80% 23%;      /* olive-600 */
     --accent-foreground:   0 0% 100%;
     --destructive:         0 68% 52%;       /* #D83B3B */
     --destructive-foreground: 0 0% 100%;
-    --border:              0 0% 90%;        /* #E5E5E5 */
-    --input:               0 0% 90%;
-    --ring:                78 82% 25%;      /* olive-700 focus ring */
-    --radius:              0.625rem;        /* 10px base radius */
+    --border:              36 14% 87%;      /* #E3E1DA warm border */
+    --input:               36 14% 87%;
+    --ring:                82 80% 23%;      /* olive-600 focus ring */
+    --radius:              0.625rem;        /* 10px base control radius */
 
     /* ── Chart palette ───────────────────────────────────────────────────── */
     --chart-1: 78 82% 25%;    /* #5F790B olive — primary series */
@@ -74,50 +74,58 @@
   /* Safe area inset top (for iOS notch / Dynamic Island) */
   --sat: env(safe-area-inset-top, 0px);
 
-  /* Brand ink (dark backgrounds) */
-  --color-ink-950: #0A0A0A;
-  --color-ink-900: #111111;
-  --color-ink-800: #1C1C1C;
-  --color-ink-700: #2A2A2A;
+  /* Brand ink (dark backgrounds) — warm ink values */
+  --color-ink-950: #06101F;
+  --color-ink-900: #0A1424;
+  --color-ink-800: #111C2E;
+  --color-ink-700: #1E2430;
 
-  /* Neutral surfaces — clean white */
-  --color-bg:              #FFFFFF;
-  --color-bg-soft:         #F5F5F5;
+  /* Neutral surfaces — warm off-white */
+  --color-bg:              #FAF9F6;
+  --color-bg-soft:         #F4F3EF;
   --color-surface:         #FFFFFF;
-  --color-surface-subtle:  #FAFAFA;
-  --color-border:          #E5E5E5;
-  --color-border-strong:   #C8C8C8;
+  --color-surface-subtle:  #FBFAF7;
+  --color-border:          #E3E1DA;
+  --color-border-strong:   #CDD1C8;
 
   /* Text hierarchy */
-  --color-text-primary:    #111111;
-  --color-text-secondary:  #6B6B6B;   /* safe on white (#FFFFFF) ≥4.5:1 */
-  --color-text-secondary-on-bg: #555555; /* safe on white ≥4.5:1 */
-  --color-text-muted:      #9B9B9B;
+  --color-text-primary:    #06101F;
+  --color-text-secondary:  #566174;   /* 5.2:1 on white — WCAG AA */
+  --color-text-secondary-on-bg: #566174;
+  --color-text-muted:      #8A95A6;
   --color-text-faint:      #C4C4C4;
 
   /* Brand olive — primary CTA, selected nav, fair value accent */
-  --color-olive-700:  #5F790B;
-  --color-olive-600:  #6F8F12;
-  --color-olive-500:  #7C9A19;
-  --color-olive-100:  #EEF4DD;
-  --color-olive-50:   #F6FAEA;
+  --color-olive-700:  #536B08;
+  --color-olive-600:  #5F790B;
+  --color-olive-500:  #718E14;
+  --color-olive-100:  #EDF3DD;
+  --color-olive-50:   #F6F9EC;
 
   /* Supporting blue — secondary actions, links, info */
   --color-blue-600:   #2563EB;
   --color-blue-100:   #EAF1FF;
   --color-blue-50:    #F4F7FF;
 
-  /* Financial semantic — undervalued */
+  /* Financial semantic — positive */
   --color-positive:        #11875D;
   --color-positive-soft:   #E8F7EF;
+  --color-positive-border: #A3D9BE;
 
-  /* Financial semantic — overvalued */
+  /* Financial semantic — negative */
   --color-negative:        #D83B3B;
   --color-negative-soft:   #FCEAEA;
+  --color-negative-border: #F0B8B8;
 
-  /* Financial semantic — uncertain */
+  /* Financial semantic — warning */
   --color-warn:            #B56A00;
   --color-warn-soft:       #FFF4DA;
+  --color-warn-border:     #F3D391;
+
+  /* Financial semantic — informational */
+  --color-info:            #2563EB;
+  --color-info-soft:       #EAF1FF;
+  --color-info-border:     #93B4F5;
 
   /* Neutral grade */
   --color-neutral:         #64748B;
@@ -284,11 +292,11 @@ h3 {
   /* ── Header / TopBar ─────────────────────────────────────────────────────── */
   .glass-toolbar {
     position: relative;
-    background: rgba(255, 255, 255, 0.90);
+    background: rgba(250, 249, 246, 0.92);
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border-bottom: 1px solid #E5E5E5;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid #E3E1DA;
+    box-shadow: 0 1px 0 #E3E1DA;
     padding-top: env(safe-area-inset-top, 0px);
   }
 
@@ -321,11 +329,11 @@ h3 {
   /* Mobile bottom nav */
   .glass-bottom-nav {
     position: relative;
-    background: rgba(255, 255, 255, 0.94);
+    background: rgba(250, 249, 246, 0.96);
     backdrop-filter: blur(32px) saturate(180%);
     -webkit-backdrop-filter: blur(32px) saturate(180%);
-    border-top: 1px solid #E5E5E5;
-    box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.06);
+    border-top: 1px solid #E3E1DA;
+    box-shadow: 0 -1px 0 #E3E1DA;
   }
 
   .glass-accordion-header {

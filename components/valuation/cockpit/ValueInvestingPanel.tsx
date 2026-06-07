@@ -18,8 +18,8 @@ function Card({ title, subtitle, badge, children }: {
     <div className="bg-white rounded-[14px] border border-[#E6ECF5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-[12px] font-[700] text-slate-800">{title}</p>
-          <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">{subtitle}</p>
+          <p className="text-[12px] font-[700] text-[#06101F]">{title}</p>
+          <p className="text-[10px] text-[#566174] mt-0.5 leading-tight">{subtitle}</p>
         </div>
         {badge}
       </div>
@@ -32,7 +32,7 @@ function UpsidePill({ upsidePct }: { upsidePct: number | null }) {
   if (upsidePct == null) return null
   const pos = upsidePct >= 0
   return (
-    <span className={`text-[11px] font-[700] tabular-nums ${pos ? 'text-emerald-600' : 'text-red-500'}`}>
+    <span className={`text-[11px] font-[700] tabular-nums ${pos ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
       {pos ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
     </span>
   )
@@ -49,7 +49,7 @@ function EPVCard({ data, currency, currentPrice }: Props) {
       title="No-growth Floor (EPV)"
       subtitle="Greenwald — what the company earns if growth stops"
       badge={epv.isNormalized || epv.isCyclical ? (
-        <span className="text-[10px] font-[600] px-1.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 shrink-0">
+        <span className="text-[10px] font-[600] px-1.5 py-0.5 rounded-full bg-[#FFF4DA] border border-[#F3D391] text-[#B56A00] shrink-0">
           {epv.isNormalized ? 'Normalized' : 'Cyclical'}
         </span>
       ) : undefined}
@@ -57,26 +57,26 @@ function EPVCard({ data, currency, currentPrice }: Props) {
       {hasValue ? (
         <>
           <div className="flex items-baseline gap-2">
-            <span className="text-[22px] font-[800] tabular-nums leading-none text-slate-900">
+            <span className="text-[22px] font-[800] tabular-nums leading-none text-[#06101F]">
               {fmtPrice(epv.epvPerShare!, currency)}
             </span>
             <UpsidePill upsidePct={epv.upsidePct} />
           </div>
 
           {epv.growthPremiumPct != null && epv.growthPremiumPct > 0 && currentPrice > 0 && (
-            <div className="bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-              <p className="text-[10px] text-amber-800 leading-relaxed">
+            <div className="bg-[#FFF4DA] border border-amber-100 rounded-lg px-3 py-2">
+              <p className="text-[10px] text-[#854D0E] leading-relaxed">
                 <span className="font-[700]">{(epv.growthPremiumPct * 100).toFixed(0)}% of the current price</span> reflects growth expectations beyond what the company already earns today.
               </p>
             </div>
           )}
 
           {epv.growthPremiumPct != null && epv.growthPremiumPct <= 0 && (
-            <p className="text-[10px] text-emerald-700">Stock trades at or below its no-growth value — no growth premium priced in.</p>
+            <p className="text-[10px] text-[#11875D]">Stock trades at or below its no-growth value — no growth premium priced in.</p>
           )}
         </>
       ) : (
-        <p className="text-[12px] text-slate-400 leading-relaxed">{epv.guardErrors[0] ?? 'Data unavailable'}</p>
+        <p className="text-[12px] text-[#8A95A6] leading-relaxed">{epv.guardErrors[0] ?? 'Data unavailable'}</p>
       )}
     </Card>
   )
@@ -88,10 +88,10 @@ function OwnerEarningsCard({ data, currency, currentPrice }: Props) {
   const { ownerEarnings: oe } = data
 
   const intensityColor = oe.isAssetLight
-    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+    ? 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]'
     : oe.isCapitalIntensive
-      ? 'bg-amber-50 text-amber-700 border-amber-200'
-      : 'bg-slate-100 text-slate-600 border-slate-200'
+      ? 'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]'
+      : 'bg-[#F4F3EF] text-[#566174] border-[#E3E1DA]'
 
   const ni = oe.ownerEarningsM != null && oe.ownerEarningsToNetIncomeRatio != null && oe.ownerEarningsToNetIncomeRatio !== 0
     ? oe.ownerEarningsM / oe.ownerEarningsToNetIncomeRatio : null
@@ -101,7 +101,7 @@ function OwnerEarningsCard({ data, currency, currentPrice }: Props) {
       title="Capital Intensity"
       subtitle="How much of reported earnings is real cash for shareholders"
       badge={oe.isNormalized || oe.isCyclical ? (
-        <span className="text-[10px] font-[600] px-1.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 shrink-0">
+        <span className="text-[10px] font-[600] px-1.5 py-0.5 rounded-full bg-[#FFF4DA] border border-[#F3D391] text-[#B56A00] shrink-0">
           {oe.isNormalized ? 'Normalized' : 'Cyclical'}
         </span>
       ) : undefined}
@@ -110,18 +110,18 @@ function OwnerEarningsCard({ data, currency, currentPrice }: Props) {
         <>
           {/* NI vs Owner Earnings bar comparison */}
           {oe.ownerEarningsM != null && ni != null && (
-            <div className="bg-slate-50 rounded-lg px-3 py-2.5 space-y-2">
-              <p className="text-[11px] font-[700] text-slate-500 uppercase tracking-wide">Net Income vs Owner Earnings</p>
+            <div className="bg-[#F4F3EF] rounded-lg px-3 py-2.5 space-y-2">
+              <p className="text-[11px] font-[700] text-[#566174] uppercase tracking-wide">Net Income vs Owner Earnings</p>
               {[
-                { label: 'Net Income', value: ni, cls: 'bg-slate-400', pct: 1 },
-                { label: 'Owner Earnings', value: oe.ownerEarningsM, cls: oe.isAssetLight ? 'bg-emerald-400' : oe.isCapitalIntensive ? 'bg-amber-400' : 'bg-slate-400', pct: oe.ownerEarningsToNetIncomeRatio ?? 0.8 },
+                { label: 'Net Income', value: ni, cls: 'bg-[#8A95A6]', pct: 1 },
+                { label: 'Owner Earnings', value: oe.ownerEarningsM, cls: oe.isAssetLight ? 'bg-[#11875D]' : oe.isCapitalIntensive ? 'bg-[#B56A00]' : 'bg-[#8A95A6]', pct: oe.ownerEarningsToNetIncomeRatio ?? 0.8 },
               ].map(row => (
                 <div key={row.label} className="flex items-center gap-2">
-                  <span className="text-[11px] text-slate-500 w-[90px] shrink-0">{row.label}</span>
-                  <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                  <span className="text-[11px] text-[#566174] w-[90px] shrink-0">{row.label}</span>
+                  <div className="flex-1 h-1.5 bg-[#E3E1DA] rounded-full overflow-hidden">
                     <div className={`h-full rounded-full ${row.cls}`} style={{ width: `${Math.min(100, Math.max(0, row.pct * 100))}%` }} />
                   </div>
-                  <span className="text-[11px] font-[600] tabular-nums text-slate-700 w-[48px] text-right shrink-0">
+                  <span className="text-[11px] font-[600] tabular-nums text-[#06101F] w-[48px] text-right shrink-0">
                     {row.value >= 1000 ? `$${(row.value / 1000).toFixed(1)}B` : `$${row.value.toFixed(0)}M`}
                   </span>
                 </div>
@@ -134,24 +134,24 @@ function OwnerEarningsCard({ data, currency, currentPrice }: Props) {
               {oe.capitalIntensityLabel}
             </span>
             {oe.ownerEarningsYield != null && currentPrice > 0 && (
-              <span className="text-[10px] text-slate-500">
-                Owner earnings yield: <span className="font-[700] tabular-nums text-slate-700">{(oe.ownerEarningsYield * 100).toFixed(1)}%</span>
+              <span className="text-[10px] text-[#566174]">
+                Owner earnings yield: <span className="font-[700] tabular-nums text-[#06101F]">{(oe.ownerEarningsYield * 100).toFixed(1)}%</span>
               </span>
             )}
           </div>
 
-          <div className="flex items-baseline gap-2 pt-1 border-t border-slate-50">
-            <span className="text-[10px] text-slate-500">Fair value (Buffett):</span>
-            <span className="text-[14px] font-[750] tabular-nums text-slate-800">{fmtPrice(oe.ownerEarningsFVPerShare, currency)}</span>
+          <div className="flex items-baseline gap-2 pt-1 border-t border-[#F4F3EF]">
+            <span className="text-[10px] text-[#566174]">Fair value (Buffett):</span>
+            <span className="text-[14px] font-[750] tabular-nums text-[#06101F]">{fmtPrice(oe.ownerEarningsFVPerShare, currency)}</span>
             <UpsidePill upsidePct={oe.upsidePct} />
           </div>
 
-          <p className="text-[10px] text-slate-400">
+          <p className="text-[10px] text-[#8A95A6]">
             Maintenance CapEx assumed at 70% of total CapEx. Asset-light businesses convert more of their earnings into distributable cash.
           </p>
         </>
       ) : (
-        <p className="text-[12px] text-slate-400 leading-relaxed">{oe.guardErrors[0] ?? 'Data unavailable'}</p>
+        <p className="text-[12px] text-[#8A95A6] leading-relaxed">{oe.guardErrors[0] ?? 'Data unavailable'}</p>
       )}
     </Card>
   )
@@ -170,7 +170,7 @@ function DDMCard({ data, currency }: Props) {
       {ddm.isApplicable && ddm.fairValuePerShare != null ? (
         <>
           <div className="flex items-baseline gap-2">
-            <span className="text-[22px] font-[800] tabular-nums leading-none text-slate-900">
+            <span className="text-[22px] font-[800] tabular-nums leading-none text-[#06101F]">
               {fmtPrice(ddm.fairValuePerShare, currency)}
             </span>
             <UpsidePill upsidePct={ddm.upsidePct} />
@@ -183,12 +183,12 @@ function DDMCard({ data, currency }: Props) {
             </div>
           )}
 
-          <p className="text-[10px] text-slate-400 leading-relaxed">
+          <p className="text-[10px] text-[#8A95A6] leading-relaxed">
             Best for stable dividend payers. Assumes dividends grow at the terminal growth rate indefinitely.
           </p>
         </>
       ) : (
-        <p className="text-[12px] text-slate-400 leading-relaxed">{ddm.inapplicabilityReason ?? 'Data unavailable'}</p>
+        <p className="text-[12px] text-[#8A95A6] leading-relaxed">{ddm.inapplicabilityReason ?? 'Data unavailable'}</p>
       )}
     </Card>
   )
@@ -204,8 +204,8 @@ export default function ValueInvestingPanel({ data, currency, currentPrice }: Pr
 
       {/* Header */}
       <div className="mb-4">
-        <p className="text-sm font-[700] text-slate-800 mb-1">Deep-Dive Checks</p>
-        <p className="text-xs text-slate-400">
+        <p className="text-sm font-[700] text-[#06101F] mb-1">Deep-Dive Checks</p>
+        <p className="text-xs text-[#8A95A6]">
           Independent cross-checks that ask different questions than the main models. Not blended into the fair value — each one reveals a different aspect of business quality or value.
         </p>
       </div>
@@ -214,25 +214,25 @@ export default function ValueInvestingPanel({ data, currency, currentPrice }: Pr
       {(normalizedEarningsWarning || countryRiskDisclaimer || structuralRiskDisclaimer) && (
         <div className="flex flex-col gap-1.5 mb-4">
           {normalizedEarningsWarning && (
-            <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-              <span className="text-amber-500 mt-0.5 text-xs shrink-0">⚠</span>
-              <p className="text-[10px] text-amber-800 leading-relaxed">
+            <div className="flex items-start gap-2 bg-[#FFF4DA] border border-[#F3D391] rounded-lg px-3 py-2">
+              <span className="text-[#B56A00] mt-0.5 text-xs shrink-0">⚠</span>
+              <p className="text-[10px] text-[#854D0E] leading-relaxed">
                 <span className="font-[700]">Peak earnings detected.</span> Current earnings appear significantly above 5-year average. Cyclical models automatically use normalized figures.
               </p>
             </div>
           )}
           {countryRiskDisclaimer && (
-            <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-              <span className="text-amber-500 mt-0.5 text-xs shrink-0">⚠</span>
-              <p className="text-[10px] text-amber-800 leading-relaxed">
+            <div className="flex items-start gap-2 bg-[#FFF4DA] border border-[#F3D391] rounded-lg px-3 py-2">
+              <span className="text-[#B56A00] mt-0.5 text-xs shrink-0">⚠</span>
+              <p className="text-[10px] text-[#854D0E] leading-relaxed">
                 <span className="font-[700]">Country risk.</span> {countryRiskDisclaimer}
               </p>
             </div>
           )}
           {structuralRiskDisclaimer && (
-            <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            <div className="flex items-start gap-2 bg-[#FCEAEA] border border-[#F0B8B8] rounded-lg px-3 py-2">
               <span className="text-red-400 mt-0.5 text-xs shrink-0">⚑</span>
-              <p className="text-[10px] text-red-800 leading-relaxed">
+              <p className="text-[10px] text-[#991B1B] leading-relaxed">
                 <span className="font-[700]">Structural risk.</span> {structuralRiskDisclaimer}
               </p>
             </div>

@@ -55,22 +55,22 @@ interface Props {
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('bg-white border border-slate-200 rounded-2xl px-5 py-4 shadow-sm', className)}>
+    <div className={cn('bg-white border border-[#E3E1DA] rounded-2xl px-5 py-4 shadow-sm', className)}>
       {children}
     </div>
   )
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">{children}</p>
+  return <p className="text-[11px] font-semibold uppercase tracking-widest text-[#8A95A6] mb-3">{children}</p>
 }
 
 function MetricRow({ label, value, valueClass, sub }: { label: string; value: string; valueClass?: string; sub?: React.ReactNode }) {
   return (
-    <div className="py-1.5 border-b border-slate-50 last:border-0">
+    <div className="py-1.5 border-b border-[#F4F3EF] last:border-0">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[12px] text-slate-500 truncate">{label}</span>
-        <span className={cn('text-[12px] font-semibold tabular-nums shrink-0 text-slate-800', valueClass)}>
+        <span className="text-[12px] text-[#566174] truncate">{label}</span>
+        <span className={cn('text-[12px] font-semibold tabular-nums shrink-0 text-[#06101F]', valueClass)}>
           {value}
         </span>
       </div>
@@ -90,7 +90,7 @@ function DonutChart({ inst, insider, retail }: { inst: number; insider: number; 
   const segments = [
     { pct: inst,    color: '#3B82F6' },  // blue-500
     { pct: insider, color: '#F59E0B' },  // amber-500
-    { pct: retail,  color: '#CBD5E1' },  // slate-300
+    { pct: retail,  color: '#CDD1C8' },  // slate-300
   ]
 
   let offset = 0
@@ -118,7 +118,7 @@ function DonutChart({ inst, insider, retail }: { inst: number; insider: number; 
   return (
     <svg width={80} height={80} viewBox="0 0 80 80">
       {/* Background ring */}
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#F1F5F9" strokeWidth={10} />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#F4F3EF" strokeWidth={10} />
       {paths}
     </svg>
   )
@@ -144,11 +144,11 @@ export default function OverviewSidebar({
   const isBuy    = recNorm.includes('buy') || recNorm === 'strong_buy' || recNorm === 'strongbuy'
   const isSell   = recNorm.includes('sell') || recNorm.includes('underperform') || recNorm.includes('underweight')
   const recLabel = isBuy ? 'Buy' : isSell ? 'Sell' : 'Hold'
-  const recColor = isBuy ? 'text-emerald-700' : isSell ? 'text-red-700' : 'text-amber-700'
-  const recBg    = isBuy ? 'bg-emerald-50 border-emerald-200' : isSell ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'
+  const recColor = isBuy ? 'text-[#11875D]' : isSell ? 'text-[#D83B3B]' : 'text-[#B56A00]'
+  const recBg    = isBuy ? 'bg-[#E8F7EF] border-[#A3D9BE]' : isSell ? 'bg-[#FCEAEA] border-[#F0B8B8]' : 'bg-[#FFF4DA] border-[#F3D391]'
 
   const targetUpside = analystTargetMean > 0 && price > 0 ? (analystTargetMean - price) / price : null
-  const upsideColor  = targetUpside == null ? '' : targetUpside >= 0 ? 'text-emerald-600' : 'text-red-600'
+  const upsideColor  = targetUpside == null ? '' : targetUpside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'
 
   // ── 52W range position ─────────────────────────────────────────────────────
   const rangeSpan = fiftyTwoWeekHigh - fiftyTwoWeekLow
@@ -168,16 +168,16 @@ export default function OverviewSidebar({
             {recLabel}
           </span>
           {cagrAnalysis?.numAnalysts > 0 && (
-            <span className="text-[11px] text-slate-400">{cagrAnalysis.numAnalysts} analysts</span>
+            <span className="text-[11px] text-[#8A95A6]">{cagrAnalysis.numAnalysts} analysts</span>
           )}
         </div>
 
         {analystTargetMean > 0 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[12px] text-slate-500">Avg. Target Price</span>
+              <span className="text-[12px] text-[#566174]">Avg. Target Price</span>
               <div className="flex items-center gap-1.5">
-                <span className="text-[13px] font-bold text-slate-900 tabular-nums">
+                <span className="text-[13px] font-bold text-[#06101F] tabular-nums">
                   {sym}{analystTargetMean.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
                 {targetUpside != null && (
@@ -189,8 +189,8 @@ export default function OverviewSidebar({
             </div>
             {quote.analystTargetLow != null && quote.analystTargetHigh != null && (
               <div className="flex items-center justify-between">
-                <span className="text-[12px] text-slate-500">Price Target Range</span>
-                <span className="text-[12px] font-semibold text-slate-700 tabular-nums">
+                <span className="text-[12px] text-[#566174]">Price Target Range</span>
+                <span className="text-[12px] font-semibold text-[#06101F] tabular-nums">
                   {sym}{quote.analystTargetLow.toFixed(2)} – {sym}{quote.analystTargetHigh.toFixed(2)}
                 </span>
               </div>
@@ -198,7 +198,7 @@ export default function OverviewSidebar({
           </div>
         )}
 
-        <button onClick={onViewAnalysts} className="mt-3 text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+        <button onClick={onViewAnalysts} className="mt-3 text-[12px] font-semibold text-[#2563EB] hover:text-[#2563EB] transition-colors">
           View analyst estimates →
         </button>
       </Card>
@@ -208,17 +208,17 @@ export default function OverviewSidebar({
         <SectionLabel>Key Snapshot</SectionLabel>
 
         {/* Current price highlight */}
-        <div className="mb-3 pb-2 border-b border-slate-100">
-          <p className="text-[20px] font-bold tabular-nums text-slate-900 leading-none">{sym}{price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+        <div className="mb-3 pb-2 border-b border-[#E3E1DA]">
+          <p className="text-[20px] font-bold tabular-nums text-[#06101F] leading-none">{sym}{price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         </div>
 
         {/* 52W range with dot */}
         {fiftyTwoWeekLow > 0 && fiftyTwoWeekHigh > 0 && (
-          <div className="mb-3 pb-2 border-b border-slate-100">
+          <div className="mb-3 pb-2 border-b border-[#E3E1DA]">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] text-slate-400">52W Range</span>
+              <span className="text-[11px] text-[#8A95A6]">52W Range</span>
             </div>
-            <div className="relative h-1.5 rounded-full overflow-hidden bg-slate-100 mb-1">
+            <div className="relative h-1.5 rounded-full overflow-hidden bg-[#F4F3EF] mb-1">
               <div className="absolute inset-0 bg-gradient-to-r from-slate-300 to-slate-400" />
               <div
                 className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-slate-700 border-2 border-white shadow-sm"
@@ -226,13 +226,13 @@ export default function OverviewSidebar({
               />
             </div>
             <div className="flex justify-between">
-              <span className="text-[10px] text-slate-400 tabular-nums">{sym}{fiftyTwoWeekLow.toFixed(2)}</span>
-              <span className="text-[10px] text-slate-400 tabular-nums">{sym}{fiftyTwoWeekHigh.toFixed(2)}</span>
+              <span className="text-[10px] text-[#8A95A6] tabular-nums">{sym}{fiftyTwoWeekLow.toFixed(2)}</span>
+              <span className="text-[10px] text-[#8A95A6] tabular-nums">{sym}{fiftyTwoWeekHigh.toFixed(2)}</span>
             </div>
           </div>
         )}
 
-        <div className="divide-y divide-slate-50">
+        <div className="divide-y divide-[#F4F3EF]">
           {quote.nextEarningsDate && (
             <MetricRow label="Next Earnings" value={new Date(quote.nextEarningsDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} />
           )}
@@ -265,7 +265,7 @@ export default function OverviewSidebar({
           )}
         </div>
 
-        <button onClick={onViewSnapshot} className="mt-3 text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+        <button onClick={onViewSnapshot} className="mt-3 text-[12px] font-semibold text-[#2563EB] hover:text-[#2563EB] transition-colors">
           View full snapshot →
         </button>
       </Card>
@@ -276,9 +276,9 @@ export default function OverviewSidebar({
         const insider = ownership.insiderPct ?? 0
         const retail  = Math.max(0, 100 - inst - insider)
         const legend = [
-          { label: 'Institutions', pct: inst,    color: 'bg-blue-500'   },
-          { label: 'Insiders',     pct: insider,  color: 'bg-amber-500'  },
-          { label: 'Retail',       pct: retail,   color: 'bg-slate-300'  },
+          { label: 'Institutions', pct: inst,    color: 'bg-[#EAF1FF]0'   },
+          { label: 'Insiders',     pct: insider,  color: 'bg-[#FFF4DA]0'  },
+          { label: 'Retail',       pct: retail,   color: 'bg-[#CDD1C8]'  },
         ]
         return (
           <Card>
@@ -289,13 +289,13 @@ export default function OverviewSidebar({
                 {legend.map(r => (
                   <div key={r.label} className="flex items-center gap-2">
                     <span className={cn('w-2 h-2 rounded-full shrink-0', r.color)} />
-                    <span className="text-[11px] text-slate-500 flex-1 truncate">{r.label}</span>
-                    <span className="text-[11px] font-semibold text-slate-700 tabular-nums">{r.pct.toFixed(1)}%</span>
+                    <span className="text-[11px] text-[#566174] flex-1 truncate">{r.label}</span>
+                    <span className="text-[11px] font-semibold text-[#06101F] tabular-nums">{r.pct.toFixed(1)}%</span>
                   </div>
                 ))}
               </div>
             </div>
-            <button onClick={onViewOwnership} className="mt-3 text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+            <button onClick={onViewOwnership} className="mt-3 text-[12px] font-semibold text-[#2563EB] hover:text-[#2563EB] transition-colors">
               View ownership details →
             </button>
           </Card>

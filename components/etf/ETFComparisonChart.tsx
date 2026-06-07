@@ -40,18 +40,18 @@ const DynamicChart = dynamic(
             <XAxis
               dataKey="date"
               tickFormatter={(v) => String(v).slice(0, 4)}
-              tick={{ fontSize: 10, fill: '#94a3b8' }}
+              tick={{ fontSize: 10, fill: '#8A95A6' }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
-              tick={{ fontSize: 10, fill: '#94a3b8' }}
+              tick={{ fontSize: 10, fill: '#8A95A6' }}
               axisLine={false}
               tickLine={false}
-              label={{ value: 'Indexed to 100', angle: -90, position: 'insideLeft', offset: 16, style: { fontSize: 9, fill: '#94a3b8' } }}
+              label={{ value: 'Indexed to 100', angle: -90, position: 'insideLeft', offset: 16, style: { fontSize: 9, fill: '#8A95A6' } }}
             />
             <Tooltip
-              contentStyle={{ background: '#0d1b2e', border: '1px solid rgba(59,130,246,0.25)', borderRadius: '8px', fontSize: '11px', color: '#e2e8f0' }}
+              contentStyle={{ background: '#0d1b2e', border: '1px solid rgba(59,130,246,0.25)', borderRadius: '8px', fontSize: '11px', color: '#E3E1DA' }}
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               formatter={(v: any) => [String((+v).toFixed(1)), '']}
             />
@@ -64,7 +64,7 @@ const DynamicChart = dynamic(
       )
     }
   }),
-  { ssr: false, loading: () => <div className="h-[260px] rounded-xl bg-slate-100 motion-safe:animate-pulse" /> },
+  { ssr: false, loading: () => <div className="h-[260px] rounded-xl bg-[#F4F3EF] motion-safe:animate-pulse" /> },
 )
 
 export function ETFComparisonChart({ symbols }: Props) {
@@ -99,8 +99,8 @@ export function ETFComparisonChart({ symbols }: Props) {
     })
   }, [symbols])
 
-  if (loading) return <div className="h-[260px] rounded-xl bg-slate-100 motion-safe:animate-pulse" />
-  if (series.length === 0) return <p className="text-sm text-slate-400 py-4">Price history unavailable.</p>
+  if (loading) return <div className="h-[260px] rounded-xl bg-[#F4F3EF] motion-safe:animate-pulse" />
+  if (series.length === 0) return <p className="text-sm text-[#8A95A6] py-4">Price history unavailable.</p>
 
   return <DynamicChart series={series} />
 }

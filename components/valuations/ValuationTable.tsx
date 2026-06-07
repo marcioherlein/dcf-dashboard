@@ -53,17 +53,17 @@ function getVerdict(entry: WatchlistEntry): 'Undervalued' | 'Fair Value' | 'Over
 
 function tagInfo(tag: ListTag): { label: string; cls: string; dot: string } | null {
   if (!tag) return null
-  if (tag === 'buy')   return { label: 'High Conviction', cls: 'bg-blue-50 text-blue-700 border-blue-200',   dot: 'bg-olive-500' }
-  if (tag === 'watch') return { label: 'Watch',            cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' }
-  if (tag === 'pass')  return { label: 'Avoid',            cls: 'bg-red-50 text-red-600 border-red-200',       dot: 'bg-red-400' }
+  if (tag === 'buy')   return { label: 'High Conviction', cls: 'bg-[#EAF1FF] text-[#2563EB] border-[#93B4F5]',   dot: 'bg-olive-500' }
+  if (tag === 'watch') return { label: 'Watch',            cls: 'bg-[#FFF4DA] text-[#B56A00] border-[#E3E1DA]', dot: 'bg-[#B56A00]' }
+  if (tag === 'pass')  return { label: 'Avoid',            cls: 'bg-[#FCEAEA] text-[#D83B3B] border-[#E3E1DA]',       dot: 'bg-[#D83B3B]' }
   return null
 }
 
 function verdictInfo(verdict: ReturnType<typeof getVerdict>): { cls: string } {
-  if (verdict === 'Undervalued')  return { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
-  if (verdict === 'Fair Value')   return { cls: 'bg-slate-100 text-slate-600 border-slate-200' }
-  if (verdict === 'Overvalued')   return { cls: 'bg-red-50 text-red-600 border-red-200' }
-  return { cls: 'bg-amber-50 text-amber-700 border-amber-200' }
+  if (verdict === 'Undervalued')  return { cls: 'bg-[#E8F7EF] text-[#11875D] border-[#CDD1C8]' }
+  if (verdict === 'Fair Value')   return { cls: 'bg-[#E3E1DA] text-[#566174] border-[#E3E1DA]' }
+  if (verdict === 'Overvalued')   return { cls: 'bg-[#FCEAEA] text-[#D83B3B] border-[#E3E1DA]' }
+  return { cls: 'bg-[#FFF4DA] text-[#B56A00] border-[#E3E1DA]' }
 }
 
 function nextTag(tag: ListTag): ListTag {
@@ -79,8 +79,8 @@ function StockLogo({ ticker }: { ticker: string }) {
   const domain = ticker.toLowerCase().replace(/[^a-z0-9]/g, '') + '.com'
   if (failed) {
     return (
-      <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0">
-        <span className="text-[10px] font-bold text-slate-400 uppercase">{ticker.slice(0, 2)}</span>
+      <div className="w-9 h-9 rounded-xl bg-[#E3E1DA] border border-[#E3E1DA] flex items-center justify-center flex-shrink-0">
+        <span className="text-[10px] font-bold text-[#8A95A6] uppercase">{ticker.slice(0, 2)}</span>
       </div>
     )
   }
@@ -91,7 +91,7 @@ function StockLogo({ ticker }: { ticker: string }) {
       alt={ticker}
       width={36}
       height={36}
-      className="rounded-xl w-9 h-9 object-cover flex-shrink-0 border border-slate-100"
+      className="rounded-xl w-9 h-9 object-cover flex-shrink-0 border border-[#E3E1DA]"
       onError={() => setFailed(true)}
     />
   )
@@ -118,21 +118,21 @@ function ExpandedNotePanel({ entry, onNoteSave, onClose }: {
 
   return (
     <tr>
-      <td colSpan={11} className="px-0 py-0 border-b border-blue-100">
-        <div className="bg-[#F0F7FF] border-t border-blue-100 px-5 py-4 flex gap-4 items-start">
+      <td colSpan={11} className="px-0 py-0 border-b border-[#93B4F5]">
+        <div className="bg-[#F0F7FF] border-t border-[#93B4F5] px-5 py-4 flex gap-4 items-start">
           {/* Icon */}
-          <div className="shrink-0 w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center mt-0.5">
+          <div className="shrink-0 w-7 h-7 rounded-lg bg-[#EAF1FF] flex items-center justify-center mt-0.5">
             <svg className="w-3.5 h-3.5 text-olive-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h6m-6 4h10M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" />
             </svg>
           </div>
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-bold text-blue-700 uppercase tracking-wider mb-1.5">Analyst note</p>
+            <p className="text-[11px] font-bold text-[#2563EB] uppercase tracking-wider mb-1.5">Analyst note</p>
             {text.trim() ? (
-              <p className="text-[13px] text-slate-700 leading-relaxed mb-2">{text}</p>
+              <p className="text-[13px] text-[#06101F] leading-relaxed mb-2">{text}</p>
             ) : (
-              <p className="text-[13px] text-slate-400 italic mb-2">
+              <p className="text-[13px] text-[#8A95A6] italic mb-2">
                 No note yet. Add one to remember your thesis.
               </p>
             )}
@@ -141,7 +141,7 @@ function ExpandedNotePanel({ entry, onNoteSave, onClose }: {
               onChange={(e) => { setText(e.target.value); setEdited(true) }}
               rows={2}
               placeholder="Write your thesis, key reasons, or what to watch for…"
-              className="w-full text-[13px] text-slate-700 bg-white border border-blue-200 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-olive-100 resize-none placeholder-slate-300"
+              className="w-full text-[13px] text-[#06101F] bg-white border border-[#93B4F5] rounded-lg px-3 py-2 focus:outline-none focus:border-[#93B4F5] focus:ring-2 focus:ring-olive-100 resize-none placeholder-slate-300"
             />
             <div className="flex items-center gap-3 mt-2">
               {edited && (
@@ -155,7 +155,7 @@ function ExpandedNotePanel({ entry, onNoteSave, onClose }: {
               )}
               <Link
                 href={`/stock/${entry.ticker}`}
-                className="text-[12px] font-semibold text-olive-700 hover:text-blue-800 transition-colors flex items-center gap-1"
+                className="text-[12px] font-semibold text-olive-700 hover:text-[#2563EB] transition-colors flex items-center gap-1"
               >
                 View full analysis
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -164,7 +164,7 @@ function ExpandedNotePanel({ entry, onNoteSave, onClose }: {
               </Link>
               <button
                 onClick={onClose}
-                className="ml-auto text-[12px] text-slate-400 hover:text-slate-600 transition-colors"
+                className="ml-auto text-[12px] text-[#8A95A6] hover:text-[#566174] transition-colors"
               >
                 Close
               </button>
@@ -209,7 +209,7 @@ function ActionsMenu({ entry, groups, onDelete, onTagUpdate, onGroupUpdate }: {
       <button
         onClick={() => { setOpen((v) => !v); setMoveOpen(false) }}
         aria-label="Row actions"
-        className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors sm:opacity-0 sm:group-hover:opacity-100"
+        className="p-2 rounded-lg text-[#8A95A6] hover:text-[#566174] hover:bg-[#E3E1DA] transition-colors sm:opacity-0 sm:group-hover:opacity-100"
       >
         <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
           <circle cx="8" cy="3"  r="1.3" />
@@ -219,48 +219,48 @@ function ActionsMenu({ entry, groups, onDelete, onTagUpdate, onGroupUpdate }: {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-10 w-52 bg-white rounded-xl shadow-xl border border-slate-200 z-40 py-1 overflow-hidden">
+        <div className="absolute right-0 top-10 w-52 bg-white rounded-xl shadow-xl border border-[#E3E1DA] z-40 py-1 overflow-hidden">
           <Link
             href={`/stock/${entry.ticker}`}
-            className="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-700 hover:bg-slate-50"
+            className="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-[#06101F] hover:bg-[#F4F3EF]"
             onClick={close}
           >
-            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-3.5 h-3.5 text-[#8A95A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
             Open analysis
           </Link>
 
           <button
-            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-700 hover:bg-slate-50"
+            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-[#06101F] hover:bg-[#F4F3EF]"
             onClick={() => { onTagUpdate(nextTag(entry.listTag)); close() }}
           >
-            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-3.5 h-3.5 text-[#8A95A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
             </svg>
             Change tag
           </button>
 
           <button
-            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-slate-700 hover:bg-slate-50"
+            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-[#06101F] hover:bg-[#F4F3EF]"
             onClick={() => setMoveOpen((v) => !v)}
           >
-            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-3.5 h-3.5 text-[#8A95A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 12h18M3 17h18" />
             </svg>
             Move to group
-            <svg className="w-3 h-3 ml-auto text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-3 h-3 ml-auto text-[#8A95A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
           </button>
 
           {moveOpen && (
-            <div className="border-t border-slate-100 bg-slate-50/60 py-1">
+            <div className="border-t border-[#E3E1DA] bg-[#F4F3EF]/60 py-1">
               {groups.filter((g) => g !== entry.groupName).map((g) => (
                 <button
                   key={g}
                   onClick={() => { onGroupUpdate(g); close() }}
-                  className="w-full text-left px-5 py-1.5 text-[12px] text-slate-600 hover:bg-white transition-colors"
+                  className="w-full text-left px-5 py-1.5 text-[12px] text-[#566174] hover:bg-white transition-colors"
                 >
                   {g}
                 </button>
@@ -268,7 +268,7 @@ function ActionsMenu({ entry, groups, onDelete, onTagUpdate, onGroupUpdate }: {
               {entry.groupName && (
                 <button
                   onClick={() => { onGroupUpdate(null); close() }}
-                  className="w-full text-left px-5 py-1.5 text-[12px] text-red-500 hover:bg-white transition-colors"
+                  className="w-full text-left px-5 py-1.5 text-[12px] text-[#D83B3B] hover:bg-white transition-colors"
                 >
                   Remove from group
                 </button>
@@ -283,13 +283,13 @@ function ActionsMenu({ entry, groups, onDelete, onTagUpdate, onGroupUpdate }: {
                     if (e.key === 'Escape') setMoveOpen(false)
                   }}
                   placeholder="New group…"
-                  className="flex-1 text-[11px] border border-slate-200 rounded-md px-2 py-1 outline-none focus:border-blue-400 bg-white"
+                  className="flex-1 text-[11px] border border-[#E3E1DA] rounded-md px-2 py-1 outline-none focus:border-[#93B4F5] bg-white"
                   onClick={(e) => e.stopPropagation()}
                 />
                 {newGroup.trim() && (
                   <button
                     onClick={() => { onGroupUpdate(newGroup.trim()); close() }}
-                    className="text-[11px] text-olive-700 font-semibold hover:text-blue-700"
+                    className="text-[11px] text-olive-700 font-semibold hover:text-[#2563EB]"
                   >
                     Add
                   </button>
@@ -298,20 +298,20 @@ function ActionsMenu({ entry, groups, onDelete, onTagUpdate, onGroupUpdate }: {
             </div>
           )}
 
-          <div className="border-t border-slate-100 mt-1 pt-1">
+          <div className="border-t border-[#E3E1DA] mt-1 pt-1">
             {confirm ? (
               <div className="px-3.5 py-2">
-                <p className="text-[12px] text-slate-600 mb-2">Remove this analysis?</p>
+                <p className="text-[12px] text-[#566174] mb-2">Remove this analysis?</p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => { onDelete(); close() }}
-                    className="flex-1 py-1.5 rounded-lg bg-red-600 text-white text-[12px] font-semibold hover:bg-red-700 transition-colors"
+                    className="flex-1 py-1.5 rounded-lg bg-[#D83B3B] text-white text-[12px] font-semibold hover:bg-[#D83B3B] transition-colors"
                   >
                     Remove
                   </button>
                   <button
                     onClick={() => setConfirm(false)}
-                    className="flex-1 py-1.5 rounded-lg border border-slate-200 text-[12px] text-slate-600 hover:bg-slate-50 transition-colors"
+                    className="flex-1 py-1.5 rounded-lg border border-[#E3E1DA] text-[12px] text-[#566174] hover:bg-[#F4F3EF] transition-colors"
                   >
                     Cancel
                   </button>
@@ -320,7 +320,7 @@ function ActionsMenu({ entry, groups, onDelete, onTagUpdate, onGroupUpdate }: {
             ) : (
               <button
                 onClick={() => setConfirm(true)}
-                className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-red-600 hover:bg-red-50"
+                className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] text-[#D83B3B] hover:bg-[#FCEAEA]"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -350,7 +350,7 @@ function Th({ label, sortKey, current, dir, onSort, align = 'right' }: {
     <th
       onClick={() => onSort(sortKey)}
       className={cn(
-        'px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-[0.05em] cursor-pointer select-none hover:text-slate-600 transition-colors whitespace-nowrap',
+        'px-4 py-3 text-[11px] font-bold text-[#8A95A6] uppercase tracking-[0.05em] cursor-pointer select-none hover:text-[#566174] transition-colors whitespace-nowrap',
         align === 'right' ? 'text-right' : 'text-left',
       )}
     >
@@ -390,14 +390,14 @@ function MobileValuationCard({ entry, sparklines, onDelete, onTagUpdate, onGroup
   const tInfo    = tagInfo(entry.listTag)
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+    <div className="bg-white border border-[#E3E1DA] rounded-xl overflow-hidden">
       <div className="px-4 py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <StockLogo ticker={entry.ticker} />
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <Link href={`/stock/${entry.ticker}`} className="text-[15px] font-bold text-slate-900 font-mono hover:text-olive-700 transition-colors">
+                <Link href={`/stock/${entry.ticker}`} className="text-[15px] font-bold text-[#06101F] font-mono hover:text-olive-700 transition-colors">
                   {entry.ticker}
                 </Link>
                 {tInfo && (
@@ -407,7 +407,7 @@ function MobileValuationCard({ entry, sparklines, onDelete, onTagUpdate, onGroup
                   </span>
                 )}
               </div>
-              <p className="text-[12px] text-slate-500 mt-0.5 truncate">{entry.companyName}</p>
+              <p className="text-[12px] text-[#566174] mt-0.5 truncate">{entry.companyName}</p>
             </div>
           </div>
           <ActionsMenu
@@ -421,29 +421,29 @@ function MobileValuationCard({ entry, sparklines, onDelete, onTagUpdate, onGroup
 
         <div className="grid grid-cols-3 gap-3 mt-4">
           <div>
-            <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-0.5">Price</p>
-            <p className="text-[14px] font-bold text-slate-900 tabular-nums">{fmtPrice(entry.snapshot.price, 'USD')}</p>
+            <p className="text-[10px] text-[#8A95A6] uppercase tracking-wider font-semibold mb-0.5">Price</p>
+            <p className="text-[14px] font-bold text-[#06101F] tabular-nums">{fmtPrice(entry.snapshot.price, 'USD')}</p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-0.5">Fair Value</p>
-            <p className="text-[14px] font-bold text-slate-600 tabular-nums">{fmtPrice(entry.snapshot.fairValue, 'USD')}</p>
+            <p className="text-[10px] text-[#8A95A6] uppercase tracking-wider font-semibold mb-0.5">Fair Value</p>
+            <p className="text-[14px] font-bold text-[#566174] tabular-nums">{fmtPrice(entry.snapshot.fairValue, 'USD')}</p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-0.5">Upside</p>
-            <p className={cn('text-[14px] font-bold tabular-nums', upside == null ? 'text-slate-300' : upside >= 0 ? 'text-emerald-600' : 'text-red-600')}>
+            <p className="text-[10px] text-[#8A95A6] uppercase tracking-wider font-semibold mb-0.5">Upside</p>
+            <p className={cn('text-[14px] font-bold tabular-nums', upside == null ? 'text-[#8A95A6]' : upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
               {upside != null ? `${upside >= 0 ? '+' : ''}${(upside * 100).toFixed(1)}%` : '—'}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#E3E1DA]">
           <span className={cn('text-[11px] font-semibold rounded-full px-2.5 py-1 border', vtInfo.cls)}>
             {verdict}
           </span>
-          <span className="text-[11px] text-slate-400">{relativeDate(entry.updatedAt)}</span>
+          <span className="text-[11px] text-[#8A95A6]">{relativeDate(entry.updatedAt)}</span>
           <button
             onClick={() => setExpanded((v) => !v)}
-            className="text-[11px] font-semibold text-olive-700 hover:text-blue-800 transition-colors"
+            className="text-[11px] font-semibold text-olive-700 hover:text-[#2563EB] transition-colors"
           >
             {expanded ? 'Hide note' : 'Show note'}
           </button>
@@ -451,7 +451,7 @@ function MobileValuationCard({ entry, sparklines, onDelete, onTagUpdate, onGroup
       </div>
 
       {expanded && (
-        <div className="bg-[#F0F7FF] border-t border-blue-100 px-4 py-3">
+        <div className="bg-[#F0F7FF] border-t border-[#93B4F5] px-4 py-3">
           <NoteEditorMobile entry={entry} onNoteSave={onNoteSave} />
         </div>
       )}
@@ -477,13 +477,13 @@ function NoteEditorMobile({ entry, onNoteSave }: {
 
   return (
     <div>
-      <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider mb-2">Analyst note</p>
+      <p className="text-[10px] font-bold text-[#2563EB] uppercase tracking-wider mb-2">Analyst note</p>
       <textarea
         value={text}
         onChange={(e) => { setText(e.target.value); setEdited(true) }}
         rows={3}
         placeholder="Write your thesis…"
-        className="w-full text-[13px] text-slate-700 bg-white border border-blue-200 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-400 resize-none placeholder-slate-300"
+        className="w-full text-[13px] text-[#06101F] bg-white border border-[#93B4F5] rounded-lg px-3 py-2 focus:outline-none focus:border-[#93B4F5] resize-none placeholder-slate-300"
       />
       <div className="flex items-center gap-3 mt-1.5">
         {edited && (
@@ -495,7 +495,7 @@ function NoteEditorMobile({ entry, onNoteSave }: {
             {saving ? 'Saving…' : 'Save'}
           </button>
         )}
-        <Link href={`/stock/${entry.ticker}`} className="text-[12px] font-semibold text-olive-700 hover:text-blue-800 transition-colors">
+        <Link href={`/stock/${entry.ticker}`} className="text-[12px] font-semibold text-olive-700 hover:text-[#2563EB] transition-colors">
           View full analysis →
         </Link>
       </div>
@@ -531,9 +531,9 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
 
   if (entries.length === 0) {
     return (
-      <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center">
-        <p className="text-[14px] text-slate-500 font-medium">No valuations match your filters.</p>
-        <p className="text-[12px] text-slate-400 mt-1">Try clearing filters or switching tabs.</p>
+      <div className="bg-white border border-[#E3E1DA] rounded-2xl p-10 text-center">
+        <p className="text-[14px] text-[#566174] font-medium">No valuations match your filters.</p>
+        <p className="text-[12px] text-[#8A95A6] mt-1">Try clearing filters or switching tabs.</p>
       </div>
     )
   }
@@ -545,18 +545,18 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[920px]">
             <thead>
-              <tr className="bg-[#F8FAFC] border-b border-[#E6ECF5]">
+              <tr className="bg-[#F4F3EF] border-b border-[#E6ECF5]">
                 {/* Expand column */}
                 <th className="w-10 px-3 py-3" />
                 <Th label="Ticker & Company" sortKey="ticker"       current={sortKey} dir={sortDir} onSort={handleSort} align="left" />
-                <th className="px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-[0.05em] text-left whitespace-nowrap">Tag</th>
-                <th className="px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-[0.05em] text-center whitespace-nowrap">1M</th>
+                <th className="px-4 py-3 text-[11px] font-bold text-[#8A95A6] uppercase tracking-[0.05em] text-left whitespace-nowrap">Tag</th>
+                <th className="px-4 py-3 text-[11px] font-bold text-[#8A95A6] uppercase tracking-[0.05em] text-center whitespace-nowrap">1M</th>
                 <Th label="Price"      sortKey="price"        current={sortKey} dir={sortDir} onSort={handleSort} />
                 <Th label="Fair Value" sortKey="fairValue"    current={sortKey} dir={sortDir} onSort={handleSort} />
                 <Th label="Upside"     sortKey="upsidePct"    current={sortKey} dir={sortDir} onSort={handleSort} />
-                <th className="px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-[0.05em] text-right whitespace-nowrap">Verdict</th>
+                <th className="px-4 py-3 text-[11px] font-bold text-[#8A95A6] uppercase tracking-[0.05em] text-right whitespace-nowrap">Verdict</th>
                 <Th label="Confidence" sortKey="overallScore" current={sortKey} dir={sortDir} onSort={handleSort} />
-                <th className="hidden lg:table-cell px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-[0.05em] text-right whitespace-nowrap">Since Save</th>
+                <th className="hidden lg:table-cell px-4 py-3 text-[11px] font-bold text-[#8A95A6] uppercase tracking-[0.05em] text-right whitespace-nowrap">Since Save</th>
                 <Th label="Updated"    sortKey="updatedAt"    current={sortKey} dir={sortDir} onSort={handleSort} />
                 <th className="px-3 py-3 w-12" />
               </tr>
@@ -588,7 +588,7 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                       key={entry.ticker}
                       className={cn(
                         'group transition-colors cursor-default',
-                        isExpanded ? 'bg-[#F8FBFF]' : 'hover:bg-[#F8FAFC]',
+                        isExpanded ? 'bg-[#F8FBFF]' : 'hover:bg-[#F4F3EF]',
                       )}
                     >
                       {/* Expand chevron */}
@@ -596,7 +596,7 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                         <button
                           onClick={() => toggleExpand(entry.ticker)}
                           aria-label={isExpanded ? 'Collapse row' : 'Expand row'}
-                          className="text-slate-300 hover:text-blue-500 transition-colors"
+                          className="text-[#8A95A6] hover:text-[#2563EB] transition-colors"
                         >
                           <svg
                             className={cn('w-4 h-4 transition-transform', isExpanded && 'rotate-90')}
@@ -614,11 +614,11 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                           <div className="min-w-0">
                             <Link
                               href={`/stock/${entry.ticker}`}
-                              className="text-[14px] font-bold font-mono text-[#0F172A] hover:text-olive-700 transition-colors leading-tight block"
+                              className="text-[14px] font-bold font-mono text-[#06101F] hover:text-olive-700 transition-colors leading-tight block"
                             >
                               {entry.ticker}
                             </Link>
-                            <p className="text-[12px] text-slate-500 mt-0.5 truncate max-w-[130px]">{entry.companyName}</p>
+                            <p className="text-[12px] text-[#566174] mt-0.5 truncate max-w-[130px]">{entry.companyName}</p>
                           </div>
                         </div>
                       </td>
@@ -631,7 +631,7 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                             {tInfo.label}
                           </span>
                         ) : (
-                          <span className="text-slate-300 text-[12px]">—</span>
+                          <span className="text-[#8A95A6] text-[12px]">—</span>
                         )}
                       </td>
 
@@ -643,7 +643,7 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                           ) : prices && prices.length >= 2 ? (
                             <Sparkline prices={prices} up={up} width={100} height={36} />
                           ) : (
-                            <span className="text-slate-200 text-[11px]">—</span>
+                            <span className="text-[#8A95A6] text-[11px]">—</span>
                           )}
                         </div>
                       </td>
@@ -651,7 +651,7 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                       {/* Price */}
                       <td className="px-4 py-4 text-right whitespace-nowrap">
                         <div>
-                          <p className="text-[14px] font-semibold text-[#0F172A] tabular-nums">
+                          <p className="text-[14px] font-semibold text-[#06101F] tabular-nums">
                             {fmtPrice(entry.snapshot.price, 'USD')}
                           </p>
                           {(() => {
@@ -660,7 +660,7 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                             if (livePrice != null && prevPrice != null && prevPrice > 0) {
                               const d = (livePrice - prevPrice) / prevPrice
                               return (
-                                <p className={cn('text-[11px] tabular-nums font-semibold', d >= 0 ? 'text-emerald-600' : 'text-red-500')}>
+                                <p className={cn('text-[11px] tabular-nums font-semibold', d >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
                                   {d >= 0 ? '+' : ''}{(d * 100).toFixed(2)}%
                                 </p>
                               )
@@ -672,7 +672,7 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
 
                       {/* Fair Value */}
                       <td className="px-4 py-4 text-right whitespace-nowrap">
-                        <p className="text-[14px] font-semibold text-slate-700 tabular-nums">
+                        <p className="text-[14px] font-semibold text-[#06101F] tabular-nums">
                           {fmtPrice(entry.snapshot.fairValue, 'USD')}
                         </p>
                       </td>
@@ -681,16 +681,16 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                       <td className="px-4 py-4 text-right whitespace-nowrap">
                         {upside != null ? (
                           <div>
-                            <p className={cn('text-[14px] font-bold tabular-nums flex items-center justify-end gap-1', upside >= 0 ? 'text-emerald-600' : 'text-red-500')}>
+                            <p className={cn('text-[14px] font-bold tabular-nums flex items-center justify-end gap-1', upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
                               {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(1)}%
                               <span className="text-[12px]">{upside >= 0 ? '↗' : '↘'}</span>
                             </p>
-                            <p className="text-[10px] text-slate-400 font-medium text-right mt-0.5">
+                            <p className="text-[10px] text-[#8A95A6] font-medium text-right mt-0.5">
                               {upside >= 0 ? 'Upside' : 'Downside'}
                             </p>
                           </div>
                         ) : (
-                          <span className="text-slate-300 text-[13px]">—</span>
+                          <span className="text-[#8A95A6] text-[13px]">—</span>
                         )}
                       </td>
 
@@ -712,24 +712,24 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                       <td className="hidden lg:table-cell px-4 py-4 text-right whitespace-nowrap">
                         {priceDelta != null ? (
                           <div>
-                            <p className={cn('text-[13px] font-semibold tabular-nums', priceDelta >= 0 ? 'text-emerald-600' : 'text-red-500')}>
+                            <p className={cn('text-[13px] font-semibold tabular-nums', priceDelta >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
                               {priceDelta >= 0 ? '+' : ''}{(priceDelta * 100).toFixed(1)}% {priceDelta >= 0 ? '↗' : '↘'}
                             </p>
                             {towardFV != null && (
-                              <p className={cn('text-[10px] font-medium mt-0.5', towardFV ? 'text-emerald-500' : 'text-slate-400')}>
+                              <p className={cn('text-[10px] font-medium mt-0.5', towardFV ? 'text-[#11875D]' : 'text-[#8A95A6]')}>
                                 {towardFV ? '↑ Toward FV' : '↓ Away from FV'}
                               </p>
                             )}
                           </div>
                         ) : (
-                          <span className="text-slate-300 text-[12px]">—</span>
+                          <span className="text-[#8A95A6] text-[12px]">—</span>
                         )}
                       </td>
 
                       {/* Updated */}
                       <td className="px-4 py-4 text-right whitespace-nowrap">
                         <span
-                          className="text-[12px] text-slate-500"
+                          className="text-[12px] text-[#566174]"
                           title={new Date(entry.updatedAt).toLocaleString()}
                         >
                           {relativeDate(entry.updatedAt)}

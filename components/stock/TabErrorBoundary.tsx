@@ -28,14 +28,14 @@ export default class TabErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="mt-8 rounded-xl border border-red-200 bg-red-50 px-5 py-6 text-center">
-          <p className="text-sm font-semibold text-red-700 mb-1">
+        <div className="mt-8 rounded-xl border border-[#F0B8B8] bg-[#FCEAEA] px-5 py-6 text-center">
+          <p className="text-sm font-semibold text-[#D83B3B] mb-1">
             Something went wrong in the {this.props.tabName} tab.
           </p>
-          <p className="text-xs text-red-500 mb-3 font-mono break-all">{this.state.message}</p>
+          <p className="text-xs text-[#D83B3B] mb-3 font-mono break-all">{this.state.message}</p>
           <button
             onClick={() => this.setState({ hasError: false, message: '' })}
-            className="text-sm font-medium px-4 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors"
+            className="text-sm font-medium px-4 py-1.5 rounded-lg bg-[#FCEAEA] hover:bg-red-200 text-[#D83B3B] transition-colors"
           >
             Try again
           </button>

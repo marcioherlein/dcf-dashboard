@@ -11,10 +11,10 @@ interface RiskDimension {
 }
 
 const LEVEL_CONFIG = {
-  Low:      { bar: 'bg-emerald-500', text: 'text-emerald-700', bg: 'bg-emerald-50',  border: 'border-emerald-200', dot: 'bg-emerald-500' },
-  Moderate: { bar: 'bg-amber-400',   text: 'text-amber-700',   bg: 'bg-amber-50',    border: 'border-amber-200',   dot: 'bg-amber-400'   },
+  Low:      { bar: 'bg-[#E8F7EF]0', text: 'text-[#11875D]', bg: 'bg-[#E8F7EF]',  border: 'border-[#A3D9BE]', dot: 'bg-[#E8F7EF]0' },
+  Moderate: { bar: 'bg-[#B56A00]',   text: 'text-[#B56A00]',   bg: 'bg-[#FFF4DA]',    border: 'border-[#F3D391]',   dot: 'bg-[#B56A00]'   },
   Elevated: { bar: 'bg-orange-500',  text: 'text-orange-700',  bg: 'bg-orange-50',   border: 'border-orange-200',  dot: 'bg-orange-500'  },
-  High:     { bar: 'bg-red-500',     text: 'text-red-700',     bg: 'bg-red-50',      border: 'border-red-200',     dot: 'bg-red-500'     },
+  High:     { bar: 'bg-[#FCEAEA]0',     text: 'text-[#D83B3B]',     bg: 'bg-[#FCEAEA]',      border: 'border-[#F0B8B8]',     dot: 'bg-[#FCEAEA]0'     },
 }
 
 function level(score: number): 'Low' | 'Moderate' | 'Elevated' | 'High' {
@@ -187,9 +187,9 @@ export default function RiskRadar({ financialsData }: Props) {
     : 'High risk — multiple concerns flagged'
 
   return (
-    <div className="px-4 sm:px-6 py-5 border-t border-slate-100">
+    <div className="px-4 sm:px-6 py-5 border-t border-[#E3E1DA]">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <p className="text-[13px] font-semibold text-slate-700">Risk Profile</p>
+        <p className="text-[13px] font-semibold text-[#06101F]">Risk Profile</p>
         <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${overallConfig.bg} ${overallConfig.border} ${overallConfig.text}`}>
           {overallLabel}
         </span>
@@ -202,7 +202,7 @@ export default function RiskRadar({ financialsData }: Props) {
           return (
             <div key={dim.label} className={`rounded-xl border p-3.5 ${cfg.bg} ${cfg.border}`}>
               <div className="flex items-center justify-between mb-2">
-                <p className="text-[12px] font-semibold text-slate-700">{dim.label}</p>
+                <p className="text-[12px] font-semibold text-[#06101F]">{dim.label}</p>
                 <span className={`text-[10px] font-bold ${cfg.text}`}>{dim.level}</span>
               </div>
               {/* Risk bar */}
@@ -212,7 +212,7 @@ export default function RiskRadar({ financialsData }: Props) {
                   style={{ width: `${Math.max(5, barPct)}%` }}
                 />
               </div>
-              <p className="text-[11px] text-slate-600 leading-snug">{dim.detail}</p>
+              <p className="text-[11px] text-[#566174] leading-snug">{dim.detail}</p>
             </div>
           )
         })}

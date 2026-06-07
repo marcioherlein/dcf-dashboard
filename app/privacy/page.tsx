@@ -6,21 +6,21 @@ const EFFECTIVE_DATE = 'June 1, 2025'
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-dvh bg-slate-50">
+    <div className="min-h-dvh bg-[#F4F3EF]">
       <div className="mx-auto max-w-2xl px-4 sm:px-6 py-12 sm:py-24">
 
         <div className="mb-8">
-          <Link href="/" className="inline-flex items-center min-h-[44px] text-sm text-blue-600 hover:underline">← Back to Insic</Link>
+          <Link href="/" className="inline-flex items-center min-h-[44px] text-sm text-[#2563EB] hover:underline">← Back to Insic</Link>
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">Privacy Policy</h1>
-        <p className="text-sm text-slate-400 mb-8 sm:mb-10">Effective date: {EFFECTIVE_DATE}</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[#06101F] mb-2">Privacy Policy</h1>
+        <p className="text-sm text-[#8A95A6] mb-8 sm:mb-10">Effective date: {EFFECTIVE_DATE}</p>
 
-        <div className="prose prose-slate max-w-none space-y-8 text-sm text-slate-600 leading-relaxed">
+        <div className="prose prose-slate max-w-none space-y-8 text-sm text-[#566174] leading-relaxed">
 
           {/* ── 1 ── */}
           <section>
-            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">1. Overview</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-[#06101F] mb-2 mt-6">1. Overview</h2>
             <p>
               Insic (&quot;we&quot;, &quot;us&quot;) is committed to protecting your privacy. This policy
               explains what data we collect, how we use it, and your rights regarding it.
@@ -30,19 +30,19 @@ export default function PrivacyPage() {
 
           {/* ── 2 ── */}
           <section>
-            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">2. Data We Collect</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-[#06101F] mb-2 mt-6">2. Data We Collect</h2>
             <div className="space-y-4">
               <div>
-                <p className="font-medium text-slate-700">When you sign in with Google:</p>
+                <p className="font-medium text-[#566174]">When you sign in with Google:</p>
                 <ul className="list-disc pl-5 mt-1 space-y-1">
                   <li>Your name and email address</li>
                   <li>Your Google profile picture</li>
                   <li>A unique identifier from Google to link your account</li>
                 </ul>
-                <p className="mt-1 text-slate-500">We do not access your Google contacts, Drive, Gmail, or any other Google service.</p>
+                <p className="mt-1 text-[#566174]">We do not access your Google contacts, Drive, Gmail, or any other Google service.</p>
               </div>
               <div>
-                <p className="font-medium text-slate-700">When you use the Service:</p>
+                <p className="font-medium text-[#566174]">When you use the Service:</p>
                 <ul className="list-disc pl-5 mt-1 space-y-1">
                   <li>Tickers you search and save to your watchlist</li>
                   <li>Valuation models and assumptions you create</li>
@@ -50,7 +50,7 @@ export default function PrivacyPage() {
                 </ul>
               </div>
               <div>
-                <p className="font-medium text-slate-700">Automatically collected:</p>
+                <p className="font-medium text-[#566174]">Automatically collected:</p>
                 <ul className="list-disc pl-5 mt-1 space-y-1">
                   <li>Basic usage analytics (page views, feature usage) — no personal identifiers</li>
                   <li>Server logs (IP address, browser type) for security and debugging — retained for 30 days</li>
@@ -61,7 +61,7 @@ export default function PrivacyPage() {
 
           {/* ── 3 ── */}
           <section>
-            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">3. How We Use Your Data</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-[#06101F] mb-2 mt-6">3. How We Use Your Data</h2>
             <ul className="list-disc pl-5 space-y-1">
               <li>To authenticate you and maintain your account</li>
               <li>To save your watchlist, valuations, and preferences</li>
@@ -78,15 +78,15 @@ export default function PrivacyPage() {
 
           {/* ── 4 ── */}
           <section>
-            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">4. Third-Party Services</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-[#06101F] mb-2 mt-6">4. Third-Party Services</h2>
             <p>We use the following services to operate Insic. Each has its own privacy policy.</p>
-            <div className="mt-3 rounded-xl border border-slate-200 overflow-x-auto">
+            <div className="mt-3 rounded-xl border border-[#E3E1DA] overflow-x-auto">
               <table className="w-full text-xs min-w-[420px]">
-                <thead className="bg-slate-50">
+                <thead className="bg-[#F4F3EF]">
                   <tr>
-                    <th className="text-left px-4 py-2 font-semibold text-slate-600">Service</th>
-                    <th className="text-left px-4 py-2 font-semibold text-slate-600">Purpose</th>
-                    <th className="text-left px-4 py-2 font-semibold text-slate-600">Data shared</th>
+                    <th className="text-left px-4 py-2 font-semibold text-[#566174]">Service</th>
+                    <th className="text-left px-4 py-2 font-semibold text-[#566174]">Purpose</th>
+                    <th className="text-left px-4 py-2 font-semibold text-[#566174]">Data shared</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -98,9 +98,9 @@ export default function PrivacyPage() {
                     ['Yahoo Finance', 'Market data (read only)', 'None — public data fetch'],
                   ].map(([service, purpose, data]) => (
                     <tr key={service} className="bg-white">
-                      <td className="px-4 py-2.5 font-medium text-slate-700">{service}</td>
-                      <td className="px-4 py-2.5 text-slate-500">{purpose}</td>
-                      <td className="px-4 py-2.5 text-slate-500">{data}</td>
+                      <td className="px-4 py-2.5 font-medium text-[#566174]">{service}</td>
+                      <td className="px-4 py-2.5 text-[#566174]">{purpose}</td>
+                      <td className="px-4 py-2.5 text-[#566174]">{data}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -110,7 +110,7 @@ export default function PrivacyPage() {
 
           {/* ── 5 ── */}
           <section>
-            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">5. Email Communications</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-[#06101F] mb-2 mt-6">5. Email Communications</h2>
             <p>
               We send two types of emails:
             </p>
@@ -130,7 +130,7 @@ export default function PrivacyPage() {
 
           {/* ── 6 ── */}
           <section>
-            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">6. Data Retention</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-[#06101F] mb-2 mt-6">6. Data Retention</h2>
             <p>
               We retain your account data for as long as your account is active. If you
               request account deletion, we will permanently delete your personal data
@@ -141,7 +141,7 @@ export default function PrivacyPage() {
 
           {/* ── 7 ── */}
           <section>
-            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">7. Your Rights</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-[#06101F] mb-2 mt-6">7. Your Rights</h2>
             <p>Depending on your location, you may have the right to:</p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
               <li><strong>Access</strong> — request a copy of the data we hold about you</li>
@@ -152,7 +152,7 @@ export default function PrivacyPage() {
             </ul>
             <p className="mt-3">
               To exercise any of these rights, email us at{' '}
-              <a href="mailto:hello@insic.app" className="text-blue-600 hover:underline">
+              <a href="mailto:hello@insic.app" className="text-[#2563EB] hover:underline">
                 hello@insic.app
               </a>.
               We will respond within 30 days.
@@ -161,7 +161,7 @@ export default function PrivacyPage() {
 
           {/* ── 8 ── */}
           <section>
-            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">8. Cookies</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-[#06101F] mb-2 mt-6">8. Cookies</h2>
             <p>
               We use only essential cookies required for authentication (session tokens
               via NextAuth). We do not use advertising cookies or third-party tracking
@@ -171,7 +171,7 @@ export default function PrivacyPage() {
 
           {/* ── 9 ── */}
           <section>
-            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">9. Children&apos;s Privacy</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-[#06101F] mb-2 mt-6">9. Children&apos;s Privacy</h2>
             <p>
               The Service is not directed at children under 18. We do not knowingly
               collect data from anyone under 18. If you believe a minor has created an
@@ -181,7 +181,7 @@ export default function PrivacyPage() {
 
           {/* ── 10 ── */}
           <section>
-            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">10. Changes to This Policy</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-[#06101F] mb-2 mt-6">10. Changes to This Policy</h2>
             <p>
               We may update this policy periodically. We will notify registered users
               by email of material changes. Continued use of the Service after changes
@@ -191,10 +191,10 @@ export default function PrivacyPage() {
 
           {/* ── 11 ── */}
           <section>
-            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2 mt-6">11. Contact</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-[#06101F] mb-2 mt-6">11. Contact</h2>
             <p>
               Privacy questions or requests:{' '}
-              <a href="mailto:hello@insic.app" className="text-blue-600 hover:underline">
+              <a href="mailto:hello@insic.app" className="text-[#2563EB] hover:underline">
                 hello@insic.app
               </a>
             </p>
@@ -202,9 +202,9 @@ export default function PrivacyPage() {
 
         </div>
 
-        <div className="mt-12 pt-8 border-t border-slate-200 flex flex-wrap gap-4 text-sm text-slate-400">
-          <Link href="/terms" className="hover:text-slate-600 transition-colors">Terms of Service</Link>
-          <Link href="/" className="hover:text-slate-600 transition-colors">Back to home</Link>
+        <div className="mt-12 pt-8 border-t border-[#E3E1DA] flex flex-wrap gap-4 text-sm text-[#8A95A6]">
+          <Link href="/terms" className="hover:text-[#566174] transition-colors">Terms of Service</Link>
+          <Link href="/" className="hover:text-[#566174] transition-colors">Back to home</Link>
         </div>
 
       </div>

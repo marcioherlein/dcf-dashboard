@@ -21,10 +21,10 @@ interface Props {
 
 export default function KeyAssumptions({ assumptions, defaults, onViewAll }: Props) {
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-4 flex flex-col h-full">
+    <div className="bg-white rounded-xl border border-[#E3E1DA] shadow-sm px-5 py-4 flex flex-col h-full">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Key Assumptions</p>
-        <span className="text-[10px] text-slate-400">Edit below ↓</span>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-[#8A95A6]">Key Assumptions</p>
+        <span className="text-[10px] text-[#8A95A6]">Edit below ↓</span>
       </div>
 
       <div className="flex flex-col gap-4 flex-1">
@@ -33,11 +33,11 @@ export default function KeyAssumptions({ assumptions, defaults, onViewAll }: Pro
           const isDirty = Math.abs(val - (defaults[f.key] as number)) > 0.00001
           return (
             <div key={f.key} className="flex items-center justify-between">
-              <span className={`text-[11px] font-semibold ${isDirty ? 'text-blue-700' : 'text-slate-600'}`}>
+              <span className={`text-[11px] font-semibold ${isDirty ? 'text-[#2563EB]' : 'text-[#566174]'}`}>
                 {f.label}
-                {isDirty && <span className="ml-1 text-[10px] text-blue-500">●</span>}
+                {isDirty && <span className="ml-1 text-[10px] text-[#2563EB]">●</span>}
               </span>
-              <span className="text-[13px] font-bold tabular-nums text-slate-800">
+              <span className="text-[13px] font-bold tabular-nums text-[#06101F]">
                 {fmt(val, f.unit)}
               </span>
             </div>
@@ -48,7 +48,7 @@ export default function KeyAssumptions({ assumptions, defaults, onViewAll }: Pro
       {onViewAll && (
         <button
           onClick={onViewAll}
-          className="mt-4 text-[10px] font-semibold text-blue-600 hover:text-blue-700 transition-colors text-left"
+          className="mt-4 text-[10px] font-semibold text-[#2563EB] hover:text-[#2563EB] transition-colors text-left"
         >
           Edit all assumptions →
         </button>

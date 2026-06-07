@@ -60,7 +60,7 @@ export default function ReverseDCFSection() {
       ref={ref}
       id="reverse-dcf"
       className="overflow-x-hidden"
-      style={{ background: 'white', borderTop: '1px solid #E2E8F0', borderBottom: '1px solid #E2E8F0' }}
+      style={{ background: 'white', borderTop: '1px solid #E3E1DA', borderBottom: '1px solid #E3E1DA' }}
     >
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
         <div
@@ -74,7 +74,7 @@ export default function ReverseDCFSection() {
             transition={{ duration: 0.68, ease: EASE }}
           >
             <p
-              className="font-semibold mb-3 text-blue-600"
+              className="font-semibold mb-3 text-[#2563EB]"
               style={{ fontSize: '13px' }}
             >
               What is today&apos;s price already betting on?
@@ -85,7 +85,7 @@ export default function ReverseDCFSection() {
                 fontWeight: 700,
                 lineHeight: 1.1,
                 letterSpacing: '-0.025em',
-                color: '#0F172A',
+                color: '#06101F',
                 marginBottom: '20px',
               }}
             >
@@ -95,7 +95,7 @@ export default function ReverseDCFSection() {
               className="text-base"
               style={{
                 lineHeight: 1.6,
-                color: '#475569',
+                color: '#566174',
                 marginBottom: '24px',
                 maxWidth: '420px',
               }}
@@ -107,10 +107,10 @@ export default function ReverseDCFSection() {
               className="text-base"
               style={{
                 lineHeight: 1.6,
-                color: '#64748B',
+                color: '#566174',
                 padding: '16px 20px',
                 borderRadius: '12px',
-                background: '#F8FAFC',
+                background: '#F4F3EF',
                 border: '1px solid #E6ECF5',
                 maxWidth: '420px',
               }}
@@ -141,11 +141,11 @@ export default function ReverseDCFSection() {
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-[14px] font-bold text-slate-800">{stock.ticker}</span>
-                        <span className="text-[11px] text-slate-400 min-w-0 truncate">{stock.company}</span>
+                        <span className="text-[14px] font-bold text-[#06101F]">{stock.ticker}</span>
+                        <span className="text-[11px] text-[#8A95A6] min-w-0 truncate">{stock.company}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[16px] font-bold text-slate-900" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                        <span className="text-[16px] font-bold text-[#06101F]" style={{ fontVariantNumeric: 'tabular-nums' }}>
                           {stock.price}
                         </span>
                         <span
@@ -167,10 +167,10 @@ export default function ReverseDCFSection() {
                   {/* CAGR + sparkline */}
                   <div className="flex items-center gap-4">
                     <div className="shrink-0">
-                      <p className="text-[10px] text-slate-400 mb-0.5">Implied 5Y Revenue CAGR</p>
+                      <p className="text-[10px] text-[#8A95A6] mb-0.5">Implied 5Y Revenue CAGR</p>
                       <p
-                        className="text-[28px] font-extrabold leading-none"
-                        style={{ color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}
+                        className="text-[28px] font-bold leading-none"
+                        style={{ color: '#06101F', fontVariantNumeric: 'tabular-nums' }}
                       >
                         {stock.impliedCAGR}%
                       </p>
@@ -198,8 +198,8 @@ export default function ReverseDCFSection() {
                     </div>
                   </div>
 
-                  <p className="mt-2 text-[12px] text-slate-500">{stock.note}</p>
-                  <p className="mt-2 text-[12px] font-semibold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <p className="mt-2 text-[12px] text-[#566174]">{stock.note}</p>
+                  <p className="mt-2 text-[12px] font-semibold text-[#2563EB] opacity-0 group-hover:opacity-100 transition-opacity">
                     Analyze →
                   </p>
                 </Link>

@@ -79,11 +79,11 @@ export default function FinancialCharts({
 }: Props) {
   const [multipleTab, setMultipleTab] = useState<'pe' | 'evEbitda' | 'evRevenue' | 'ps'>('pe')
 
-  const tickFill   = '#94a3b8'
+  const tickFill   = '#8A95A6'
   const gridStroke = 'rgba(148,163,184,0.08)'
   const tooltipStyle = isDark
-    ? { background: 'rgba(10,22,40,0.95)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, fontSize: 11, color: '#F1F5F9', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }
-    : { background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 8, fontSize: 11, color: '#0F172A', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }
+    ? { background: 'rgba(10,22,40,0.95)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, fontSize: 11, color: '#F4F3EF', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }
+    : { background: '#FFFFFF', border: '1px solid #E3E1DA', borderRadius: 8, fontSize: 11, color: '#06101F', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }
 
   const historicalIS = incomeStatement.filter((r) => !r.isProjected)
   const projectedIS  = incomeStatement.filter((r) => r.isProjected)
@@ -92,7 +92,7 @@ export default function FinancialCharts({
   const CHART_H  = 168
   const show = chartsToShow ?? (['revNI', 'fcf', 'margins', 'ebitda', 'revGrowth', 'fcfGrowth', 'multiples'] as ChartKey[])
   const isSingle = show.length === 1
-  const sectionTitle = 'text-[13px] font-semibold text-slate-700 mb-3'
+  const sectionTitle = 'text-[13px] font-semibold text-[#06101F] mb-3'
   const panel        = 'rounded-xl card p-4 sm:p-5'
 
   // ── Chart 1 data: Revenue & Net Income ──────────────────────────────────────
@@ -221,7 +221,7 @@ export default function FinancialCharts({
         {show.includes('fcf') && (
         <div className={panel}>
           <p className={sectionTitle}>Free Cash Flow <span className="normal-case font-normal">({currency}M)</span></p>
-          <p className="text-[11px] text-slate-500 -mt-2 mb-2">Operating CF + Capex (capex negative) = FCF · Faded = projected</p>
+          <p className="text-[11px] text-[#566174] -mt-2 mb-2">Operating CF + Capex (capex negative) = FCF · Faded = projected</p>
           <ResponsiveContainer width="100%" height={CHART_H}>
             <BarChart data={fcfData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barGap={2}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
@@ -461,7 +461,7 @@ export default function FinancialCharts({
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
               <div className="flex-1">
                 <p className={sectionTitle} style={{ marginBottom: 0 }}>Valuation History — {active.label}</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">{active.description}</p>
+                <p className="text-[10px] text-[#8A95A6] mt-0.5">{active.description}</p>
               </div>
               <div className="overflow-x-auto -mx-5 px-5 sm:mx-0 sm:px-0">
                 <div className="flex items-center gap-1.5 min-w-max">
@@ -472,7 +472,7 @@ export default function FinancialCharts({
                       className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-colors ${
                         multipleTab === t.key
                           ? 'border-transparent text-white'
-                          : 'border-slate-200 text-slate-500 hover:border-slate-300 bg-transparent'
+                          : 'border-[#E3E1DA] text-[#566174] hover:border-[#CDD1C8] bg-transparent'
                       }`}
                       style={multipleTab === t.key ? { background: t.color, borderColor: t.color } : {}}
                     >
@@ -486,15 +486,15 @@ export default function FinancialCharts({
             <div className="flex items-center gap-2 mb-3 flex-wrap">
               {current != null && (
                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                  isBelowAvg ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                  : isAboveAvg ? 'bg-red-50 border-red-200 text-red-700'
-                  : 'bg-slate-100 border-slate-200 text-slate-600'
+                  isBelowAvg ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]'
+                  : isAboveAvg ? 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]'
+                  : 'bg-[#F4F3EF] border-[#E3E1DA] text-[#566174]'
                 }`}>
                   Today: {current.toFixed(1)}×
                   {isBelowAvg ? ' — below historical avg' : isAboveAvg ? ' — above historical avg' : ' — near historical avg'}
                 </span>
               )}
-              <span className="text-[10px] text-slate-400">
+              <span className="text-[10px] text-[#8A95A6]">
                 {values.length}Y avg: {avg.toFixed(1)}×
                 &nbsp;·&nbsp;
                 Range: {Math.min(...values).toFixed(1)}× – {Math.max(...values).toFixed(1)}×
@@ -517,7 +517,7 @@ export default function FinancialCharts({
                 />
                 <ReferenceLine
                   y={avg} stroke="rgba(148,163,184,0.5)" strokeDasharray="4 3"
-                  label={{ value: `Avg ${avg.toFixed(1)}×`, position: 'insideTopRight', fontSize: 9, fill: '#94a3b8' }}
+                  label={{ value: `Avg ${avg.toFixed(1)}×`, position: 'insideTopRight', fontSize: 9, fill: '#8A95A6' }}
                 />
                 {current != null && (
                   <ReferenceLine
@@ -533,7 +533,7 @@ export default function FinancialCharts({
                 />
               </LineChart>
             </ResponsiveContainer>
-          <p className="text-[11px] text-slate-500 mt-2">
+          <p className="text-[11px] text-[#566174] mt-2">
               Historical ratios from annual filings. Dashed lines: historical average and today&apos;s current multiple.
               A low current multiple relative to history may indicate the stock is cheaper than usual.
             </p>
@@ -543,7 +543,7 @@ export default function FinancialCharts({
 
       {/* Footer note */}
       {!chartsToShow && (
-        <p className="text-[11px] text-slate-500">
+        <p className="text-[11px] text-[#566174]">
           Faded bars / dashed lines = DCF model projections &nbsp;·&nbsp; Solid = historical actuals
           {projectedIS.length > 0 && ` · ${historicalIS.length} historical + ${projectedIS.length} projected years`}
         </p>

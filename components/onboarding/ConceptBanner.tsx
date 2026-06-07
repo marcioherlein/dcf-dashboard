@@ -30,9 +30,9 @@ const FALLBACK: ConceptBannerCagr[] = [
 ]
 
 function impliedBarColor(cagr: number): string {
-  if (cagr > 30) return 'bg-red-400'
-  if (cagr > 15) return 'bg-amber-400'
-  return 'bg-emerald-400'
+  if (cagr > 30) return 'bg-[#D83B3B]'
+  if (cagr > 15) return 'bg-[#B56A00]'
+  return 'bg-[#11875D]'
 }
 
 function deriveNote(implied: number, historical: number): string {
@@ -90,20 +90,20 @@ export default function ConceptBanner({ liveData }: ConceptBannerProps) {
           transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
           style={{ overflow: 'hidden' }}
         >
-          <div className="rounded-xl bg-blue-50/40 border border-blue-200">
+          <div className="rounded-xl bg-[#EAF1FF]/40 border border-[#93B4F5]">
             <div className="flex gap-3.5 px-5 py-4">
 
               {/* Icon */}
-              <div className="shrink-0 mt-0.5 w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
-                <Zap size={13} className="text-blue-600" aria-hidden="true" />
+              <div className="shrink-0 mt-0.5 w-7 h-7 rounded-lg bg-[#EAF1FF] border border-blue-100 flex items-center justify-center">
+                <Zap size={13} className="text-[#2563EB]" aria-hidden="true" />
               </div>
 
               {/* Content */}
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold text-slate-900 leading-snug">
+                <p className="text-[13px] font-bold text-[#06101F] leading-snug">
                   What growth rate is the market betting on?
                 </p>
-                <p className="mt-1 text-[12px] text-slate-600 leading-relaxed max-w-xl">
+                <p className="mt-1 text-[12px] text-[#566174] leading-relaxed max-w-xl">
                   Every stock price implies a 5-year revenue growth rate. When that implied rate
                   is far above the company&apos;s historical pace, the market is betting on an
                   acceleration it may not deliver.
@@ -113,7 +113,7 @@ export default function ConceptBanner({ liveData }: ConceptBannerProps) {
                 <div className="mt-3 space-y-1.5" aria-hidden="true">
                   {examples.map((ex) => (
                     <div key={ex.ticker} className="flex items-center gap-2 min-w-0">
-                      <span className="text-[10px] font-mono font-bold text-slate-400 w-9 shrink-0">
+                      <span className="text-[10px] font-mono font-bold text-[#8A95A6] w-9 shrink-0">
                         {ex.ticker}
                       </span>
                       <div className="flex items-center gap-2 flex-wrap">
@@ -122,21 +122,21 @@ export default function ConceptBanner({ liveData }: ConceptBannerProps) {
                             className={`h-1.5 rounded-full ${ex.impliedColor}`}
                             style={{ width: `${ex.impliedW}px` }}
                           />
-                          <span className="text-[10px] font-semibold text-slate-700 tabular-nums whitespace-nowrap">
+                          <span className="text-[10px] font-semibold text-[#06101F] tabular-nums whitespace-nowrap">
                             {ex.implied.toFixed(1)}% implied
                           </span>
                         </div>
-                        <span className="text-[10px] text-slate-300">vs</span>
+                        <span className="text-[10px] text-[#8A95A6]">vs</span>
                         <div className="flex items-center gap-1">
                           <div
-                            className="h-1.5 rounded-full bg-blue-300"
+                            className="h-1.5 rounded-full bg-[#93B4F5]"
                             style={{ width: `${ex.historicalW}px` }}
                           />
-                          <span className="text-[10px] font-semibold text-slate-500 tabular-nums whitespace-nowrap">
+                          <span className="text-[10px] font-semibold text-[#566174] tabular-nums whitespace-nowrap">
                             {ex.historical.toFixed(1)}% historical
                           </span>
                         </div>
-                        <span className="text-[10px] text-slate-400 hidden sm:inline">
+                        <span className="text-[10px] text-[#8A95A6] hidden sm:inline">
                           — {ex.note}
                         </span>
                       </div>
@@ -147,19 +147,19 @@ export default function ConceptBanner({ liveData }: ConceptBannerProps) {
                   <div className="flex items-center gap-3 mt-2.5">
                     <div className="flex items-center gap-1">
                       <div className="flex items-center gap-px">
-                        <div className="w-1.5 h-1.5 rounded-l-full bg-emerald-400" />
-                        <div className="w-1.5 h-1.5 rounded-r-full bg-red-400" />
+                        <div className="w-1.5 h-1.5 rounded-l-full bg-[#11875D]" />
+                        <div className="w-1.5 h-1.5 rounded-r-full bg-[#D83B3B]" />
                       </div>
-                      <span className="text-[10px] text-slate-400">implied 5Y</span>
+                      <span className="text-[10px] text-[#8A95A6]">implied 5Y</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <div className="w-2.5 h-1.5 rounded-full bg-blue-300" />
-                      <span className="text-[10px] text-slate-400">3Y historical</span>
+                      <div className="w-2.5 h-1.5 rounded-full bg-[#93B4F5]" />
+                      <span className="text-[10px] text-[#8A95A6]">3Y historical</span>
                     </div>
                     <Link
                       href="/stock/NVDA"
                       onClick={dismiss}
-                      className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors ml-1"
+                      className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-[#2563EB] hover:text-[#2563EB] transition-colors ml-1"
                     >
                       Open NVDA analysis
                       <ChevronRight size={11} />
@@ -173,7 +173,7 @@ export default function ConceptBanner({ liveData }: ConceptBannerProps) {
                 type="button"
                 onClick={dismiss}
                 aria-label="Dismiss introduction"
-                className="shrink-0 text-slate-300 hover:text-slate-500 active:scale-90 transition-all mt-0.5 min-h-[44px] min-w-[44px] flex items-center justify-center -mr-1"
+                className="shrink-0 text-[#8A95A6] hover:text-[#566174] active:scale-90 transition-all mt-0.5 min-h-[44px] min-w-[44px] flex items-center justify-center -mr-1"
               >
                 <X size={14} aria-hidden="true" />
               </button>

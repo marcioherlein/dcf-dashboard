@@ -64,13 +64,13 @@ function computeCell(
 }
 
 function upside2Color(upside: number): string {
-  if (upside >=  0.30) return 'bg-emerald-600 text-white'
-  if (upside >=  0.15) return 'bg-emerald-500 text-white'
-  if (upside >=  0.05) return 'bg-emerald-200 text-emerald-900'
-  if (upside >= -0.05) return 'bg-white/8 text-slate-300'
-  if (upside >= -0.15) return 'bg-amber-200 text-amber-900'
-  if (upside >= -0.30) return 'bg-orange-400 text-white'
-  return 'bg-red-600 text-white'
+  if (upside >=  0.30) return 'bg-[#11875D] text-white'
+  if (upside >=  0.15) return 'bg-[#11875D] text-white'
+  if (upside >=  0.05) return 'bg-[#E8F7EF] text-[#11875D]'
+  if (upside >= -0.05) return 'bg-white/8 text-[#8A95A6]'
+  if (upside >= -0.15) return 'bg-[#FFF4DA] text-[#B56A00]'
+  if (upside >= -0.30) return 'bg-[#B56A00] text-white'
+  return 'bg-[#D83B3B] text-white'
 }
 
 function fmt(v: number, symbol: string): string {
@@ -105,37 +105,37 @@ export default function SensitivityTable({
       <div className="px-5 py-4 border-b border-[#222] flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h3 className="text-[13px] font-bold text-white">Sensitivity Analysis</h3>
-          <p className="text-[11px] text-slate-400 mt-0.5">
+          <p className="text-[11px] text-[#8A95A6] mt-0.5">
             Fair value at each {isLevered ? 'FCF' : 'Revenue'} CAGR × {isLevered ? 'Cost of Equity' : 'WACC'} combination — base case highlighted
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <span className={cn(
             'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
-            isLevered ? 'bg-purple-900/40 border-purple-700 text-purple-300' : 'bg-blue-900/40 border-blue-700 text-blue-300'
+            isLevered ? 'bg-purple-900/40 border-purple-700 text-purple-300' : 'bg-blue-900/40 border-blue-700 text-[#2563EB]'
           )}>
             {isLevered ? 'Levered (LFCF)' : 'Unlevered (UFCF)'}
           </span>
           <span className={cn(
             'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
-            terminalMethod === 'multiple' ? 'bg-amber-900/40 border-amber-700 text-amber-300' : 'bg-slate-700 border-slate-600 text-slate-200'
+            terminalMethod === 'multiple' ? 'bg-amber-900/40 border-amber-700 text-amber-300' : 'bg-slate-700 border-slate-600 text-[#8A95A6]'
           )}>
             {terminalMethod === 'multiple' ? `Exit ${exitMultiple.toFixed(1)}×` : `g = ${(terminalG * 100).toFixed(1)}%`}
           </span>
-          <span className="text-[10px] text-slate-400 font-mono">{numYears}yr horizon</span>
+          <span className="text-[10px] text-[#8A95A6] font-mono">{numYears}yr horizon</span>
           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-900/40 border-amber-700 text-amber-300">
             Full DCF only
           </span>
         </div>
       </div>
       {currentPrice > 0 && (
-        <p className="text-[10px] text-slate-400 px-5 pb-3">
+        <p className="text-[10px] text-[#8A95A6] px-5 pb-3">
           Sensitivity reflects the Full DCF model. The blended fair value at the top of the page also includes Forward P/E, Revenue Multiple, and other methods.
         </p>
       )}
 
       {noData ? (
-        <div className="px-5 py-10 text-center text-[12px] text-slate-400">
+        <div className="px-5 py-10 text-center text-[12px] text-[#8A95A6]">
           Insufficient FCF data to build sensitivity table for this company.
         </div>
       ) : (
@@ -146,7 +146,7 @@ export default function SensitivityTable({
             <div className="flex items-end mb-1.5">
               {/* Corner: WACC label */}
               <div className="shrink-0 text-right pr-3 w-[64px] sm:w-[90px]">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">WACC ↓</span>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#8A95A6]">WACC ↓</span>
               </div>
 
               {/* CAGR column headers */}
@@ -157,17 +157,17 @@ export default function SensitivityTable({
                   return (
                     <div key={ci} className={cn(
                       'text-center pb-1.5 border-b',
-                      isBase ? 'border-blue-500' : 'border-transparent'
+                      isBase ? 'border-[#2563EB]' : 'border-transparent'
                     )}>
                       <div className={cn(
                         'text-[10px] font-bold font-mono leading-tight',
-                        isBase ? 'text-blue-400' : 'text-slate-300'
+                        isBase ? 'text-[#2563EB]' : 'text-[#8A95A6]'
                       )}>
                         {abs.toFixed(0)}%
                       </div>
                       <div className={cn(
                         'text-[10px] leading-none',
-                        isBase ? 'text-blue-400' : 'text-slate-400'
+                        isBase ? 'text-[#2563EB]' : 'text-[#8A95A6]'
                       )}>
                         {cd === 0 ? 'base' : `${cd > 0 ? '+' : ''}${(cd * 100).toFixed(0)}pp`}
                       </div>
@@ -181,7 +181,7 @@ export default function SensitivityTable({
             <div className="flex items-start mb-2">
               <div className="shrink-0 w-[64px] sm:w-[90px]" />
               <div className="flex-1 text-center">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Revenue CAGR →</span>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-[#8A95A6]">Revenue CAGR →</span>
               </div>
             </div>
 
@@ -195,13 +195,13 @@ export default function SensitivityTable({
                   <div className="shrink-0 pr-3 flex flex-col justify-center text-right w-[64px] sm:w-[90px]">
                     <div className={cn(
                       'text-[10px] font-bold font-mono leading-tight',
-                      isBaseRow ? 'text-blue-400' : 'text-slate-300'
+                      isBaseRow ? 'text-[#2563EB]' : 'text-[#8A95A6]'
                     )}>
                       {absWacc.toFixed(1)}%
                     </div>
                     <div className={cn(
                       'text-[10px] leading-none',
-                      isBaseRow ? 'text-blue-400' : 'text-slate-400'
+                      isBaseRow ? 'text-[#2563EB]' : 'text-[#8A95A6]'
                     )}>
                       {wd === 0 ? 'base' : `${wd > 0 ? '+' : ''}${(wd * 100).toFixed(1)}pp`}
                     </div>
@@ -216,7 +216,7 @@ export default function SensitivityTable({
                           key={ci}
                           className={cn(
                             'rounded-sm py-2 px-0.5 text-center transition-opacity',
-                            cell ? upside2Color(cell.upside) : 'bg-[#1a1a1a] text-slate-400',
+                            cell ? upside2Color(cell.upside) : 'bg-[#1a1a1a] text-[#8A95A6]',
                             isBase && 'ring-2 ring-blue-400 ring-offset-1 ring-offset-[#0d1117] relative z-10',
                           )}
                           title={cell
@@ -246,24 +246,24 @@ export default function SensitivityTable({
 
             {/* Legend */}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-4 pt-3 border-t border-[#222]">
-              <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Upside vs current price:</span>
+              <span className="text-[11px] text-[#8A95A6] font-semibold uppercase tracking-wider">Upside vs current price:</span>
               {[
-                { cls: 'bg-red-600',     label: '< −30%'     },
-                { cls: 'bg-orange-400',  label: '−15% to −30%' },
-                { cls: 'bg-amber-200',   label: '−5% to −15%'  },
-                { cls: 'bg-slate-100',   label: 'Fair ±5%'     },
-                { cls: 'bg-emerald-200', label: '+5% to +15%'  },
-                { cls: 'bg-emerald-500', label: '+15% to +30%' },
-                { cls: 'bg-emerald-600', label: '> +30%'       },
+                { cls: 'bg-[#D83B3B]',     label: '< −30%'     },
+                { cls: 'bg-[#B56A00]',  label: '−15% to −30%' },
+                { cls: 'bg-[#FFF4DA]',   label: '−5% to −15%'  },
+                { cls: 'bg-[#E3E1DA]',   label: 'Fair ±5%'     },
+                { cls: 'bg-[#E8F7EF]', label: '+5% to +15%'  },
+                { cls: 'bg-[#11875D]', label: '+15% to +30%' },
+                { cls: 'bg-[#11875D]', label: '> +30%'       },
               ].map(({ cls, label }) => (
                 <span key={label} className="flex items-center gap-1">
                   <span className={cn('w-2.5 h-2.5 rounded-sm flex-shrink-0', cls)} />
-                  <span className="text-[11px] text-slate-400">{label}</span>
+                  <span className="text-[11px] text-[#8A95A6]">{label}</span>
                 </span>
               ))}
             </div>
 
-            <p className="text-[11px] text-slate-400 mt-2">
+            <p className="text-[11px] text-[#8A95A6] mt-2">
               {terminalMethod === 'multiple'
                 ? `Terminal value via FCF × ${exitMultiple.toFixed(1)}× exit multiple on final projected year FCF.`
                 : 'Computed via Gordon Growth Model on projected terminal FCF.'

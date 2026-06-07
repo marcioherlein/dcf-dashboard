@@ -35,17 +35,17 @@ export default function GuidanceStrip() {
         type="button"
         aria-expanded={open}
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-2 bg-white rounded-[14px] border border-[#E6ECF5] shadow-sm px-4 py-3 hover:bg-[#F8FAFC] transition-colors select-none flex-wrap text-left"
+        className="w-full flex items-center gap-2 bg-white rounded-[14px] border border-[#E6ECF5] shadow-sm px-4 py-3 hover:bg-[#F4F3EF] transition-colors select-none flex-wrap text-left"
       >
         <span
           aria-hidden="true"
           className={cn(
-            'text-[#64748B] text-xs transition-transform duration-200',
+            'text-[#566174] text-xs transition-transform duration-200',
             open ? 'rotate-90' : ''
           )}
         >▶</span>
-        <span className="text-[12px] font-[650] text-[#475569]">How to read this valuation</span>
-        <span className={cn('text-[11px] text-[#64748B] transition-opacity duration-150', open ? 'opacity-0' : 'opacity-100')}>
+        <span className="text-[12px] font-[650] text-[#566174]">How to read this valuation</span>
+        <span className={cn('text-[11px] text-[#566174] transition-opacity duration-150', open ? 'opacity-0' : 'opacity-100')}>
           4-step guide ↓
         </span>
       </button>
@@ -64,8 +64,8 @@ export default function GuidanceStrip() {
                     {s.num}
                   </div>
                   <div>
-                    <p className="text-[13px] font-[650] text-[#0F172A]">{s.title}</p>
-                    <p className="text-[12px] text-[#64748B] mt-0.5 leading-relaxed">{s.body}</p>
+                    <p className="text-[13px] font-[650] text-[#06101F]">{s.title}</p>
+                    <p className="text-[12px] text-[#566174] mt-0.5 leading-relaxed">{s.body}</p>
                   </div>
                 </div>
               ))}

@@ -146,15 +146,15 @@ export default function ShareCardModal({ open, onClose, ticker, companyName, out
       <div className="flex flex-col bg-white rounded-2xl overflow-hidden">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E3E1DA]">
           <div>
-            <p className="text-[13px] font-[700] text-slate-900">Share valuation card</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">Download an image to post on Twitter, Instagram, or WhatsApp</p>
+            <p className="text-[13px] font-[700] text-[#06101F]">Share valuation card</p>
+            <p className="text-[11px] text-[#8A95A6] mt-0.5">Download an image to post on Twitter, Instagram, or WhatsApp</p>
           </div>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="w-11 h-11 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="w-11 h-11 flex items-center justify-center rounded-full text-[#8A95A6] hover:text-[#06101F] hover:bg-[#E3E1DA] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <X size={14} />
           </button>
@@ -168,7 +168,7 @@ export default function ShareCardModal({ open, onClose, ticker, companyName, out
               'flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[12px] font-[600] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
               format === 'landscape'
                 ? 'bg-blue-600 border-blue-600 text-white'
-                : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600'
+                : 'bg-white border-[#E3E1DA] text-[#566174] hover:border-[#93B4F5] hover:text-[#2563EB]'
             )}
           >
             <Twitter size={12} />
@@ -181,7 +181,7 @@ export default function ShareCardModal({ open, onClose, ticker, companyName, out
               'flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[12px] font-[600] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
               format === 'square'
                 ? 'bg-blue-600 border-blue-600 text-white'
-                : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600'
+                : 'bg-white border-[#E3E1DA] text-[#566174] hover:border-[#93B4F5] hover:text-[#2563EB]'
             )}
           >
             <Instagram size={12} />
@@ -192,17 +192,17 @@ export default function ShareCardModal({ open, onClose, ticker, companyName, out
 
         {/* Preview */}
         <div className="px-5 pt-3 pb-4">
-          <div className={cn('w-full rounded-xl overflow-hidden border border-slate-100 bg-slate-50 relative', aspectClass)}>
+          <div className={cn('w-full rounded-xl overflow-hidden border border-[#E3E1DA] bg-[#F4F3EF] relative', aspectClass)}>
             {/* Loading skeleton */}
             {imgLoading && !imgError && (
-              <div className="absolute inset-0 bg-slate-100 animate-pulse rounded-xl" />
+              <div className="absolute inset-0 bg-[#E3E1DA] animate-pulse rounded-xl" />
             )}
             {/* Error state */}
             {imgError && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-slate-50">
-                <AlertCircle size={20} className="text-slate-300" />
-                <p className="text-[12px] text-slate-400">Preview unavailable</p>
-                <p className="text-[11px] text-slate-300">The image will still download correctly</p>
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#F4F3EF]">
+                <AlertCircle size={20} className="text-[#8A95A6]" />
+                <p className="text-[12px] text-[#8A95A6]">Preview unavailable</p>
+                <p className="text-[11px] text-[#8A95A6]">The image will still download correctly</p>
               </div>
             )}
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -229,9 +229,9 @@ export default function ShareCardModal({ open, onClose, ticker, companyName, out
           </button>
           <button
             onClick={handleShare}
-            className="flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-[13px] font-[650] border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
+            className="flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-[13px] font-[650] border border-[#E3E1DA] bg-white text-[#06101F] hover:bg-[#F4F3EF] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
           >
-            {copying ? <Check size={14} className="text-emerald-600" /> : <Share2 size={14} />}
+            {copying ? <Check size={14} className="text-[#11875D]" /> : <Share2 size={14} />}
             {copying ? 'Link copied' : 'Share'}
           </button>
         </div>

@@ -21,12 +21,12 @@ export default function BondYieldsCard({ yieldCurve }: { yieldCurve: YieldCurveP
   const inverted = isInverted(yieldCurve)
   const spread = getSpread(yieldCurve)
   const chartData = yieldCurve.filter(p => p.yield != null).map(p => ({ tenor: p.tenor, yield: p.yield }))
-  const spreadColor = spread == null ? 'text-slate-500' : spread >= 0.5 ? 'text-emerald-700' : spread >= 0 ? 'text-amber-700' : 'text-red-600'
+  const spreadColor = spread == null ? 'text-[#566174]' : spread >= 0.5 ? 'text-[#11875D]' : spread >= 0 ? 'text-[#B56A00]' : 'text-[#D83B3B]'
 
   return (
     <div className="rounded-xl glass-card-light">
-      <div className="px-3 py-2 border-b border-slate-200 flex items-center justify-between">
-        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Government Bonds</span>
+      <div className="px-3 py-2 border-b border-[#E3E1DA] flex items-center justify-between">
+        <span className="text-[11px] font-bold text-[#566174] uppercase tracking-wider">Government Bonds</span>
         <div className="flex items-center gap-2">
           {spread != null && (
             <span className={cn('text-[10px] font-mono font-bold', spreadColor)}>
@@ -36,7 +36,7 @@ export default function BondYieldsCard({ yieldCurve }: { yieldCurve: YieldCurveP
           {hasData && (
             <span className={cn(
               'text-[10px] font-bold px-2 py-0.5 rounded-full',
-              inverted ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'
+              inverted ? 'bg-[#FCEAEA] text-[#D83B3B]' : 'bg-[#E8F7EF] text-[#11875D]'
             )}>
               {inverted ? 'Inverted' : 'Normal'}
             </span>
@@ -62,9 +62,9 @@ export default function BondYieldsCard({ yieldCurve }: { yieldCurve: YieldCurveP
                   if (!active || !payload?.length) return null
                   const d = payload[0]
                   return (
-                    <div className="bg-white/95 border border-slate-200 rounded-lg shadow-sm px-2 py-1 text-[10px]">
-                      <span className="text-slate-500">{d.payload.tenor}: </span>
-                      <span className="font-mono font-bold text-slate-800">{(d.value as number).toFixed(3)}%</span>
+                    <div className="bg-white/95 border border-[#E3E1DA] rounded-lg shadow-sm px-2 py-1 text-[10px]">
+                      <span className="text-[#566174]">{d.payload.tenor}: </span>
+                      <span className="font-mono font-bold text-[#06101F]">{(d.value as number).toFixed(3)}%</span>
                     </div>
                   )
                 }}
@@ -83,14 +83,14 @@ export default function BondYieldsCard({ yieldCurve }: { yieldCurve: YieldCurveP
       )}
 
       {/* Yield table */}
-      <div className="divide-y divide-slate-100">
+      <div className="divide-y divide-[#E3E1DA]">
         {yieldCurve.map(p => (
           <div key={p.tenor} className="px-3 py-1.5 flex items-center justify-between">
             <div>
-              <span className="text-[12px] font-bold text-slate-700">US{p.tenor}</span>
-              <span className="ml-2 text-[10px] text-slate-500">{p.label} Bond Yield</span>
+              <span className="text-[12px] font-bold text-[#06101F]">US{p.tenor}</span>
+              <span className="ml-2 text-[10px] text-[#566174]">{p.label} Bond Yield</span>
             </div>
-            <span className="text-[12px] font-mono font-semibold text-slate-600">
+            <span className="text-[12px] font-mono font-semibold text-[#566174]">
               {p.yield != null ? `${p.yield.toFixed(3)}%` : '—'}
             </span>
           </div>

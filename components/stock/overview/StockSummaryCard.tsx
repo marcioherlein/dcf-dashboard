@@ -222,7 +222,7 @@ export default function StockSummaryCard({
         {ratio != null ? (
           <>
             <div className="flex items-baseline gap-2 mb-1">
-              <span className="text-[30px] sm:text-[28px] font-extrabold tabular-nums text-ink-900 leading-none">{ratio.toFixed(2)}×</span>
+              <span className="text-[30px] sm:text-[28px] font-bold tabular-nums text-ink-900 leading-none">{ratio.toFixed(2)}×</span>
               <span className="text-[11px] text-[#6B6B6B]">Price / Intrinsic</span>
             </div>
             <span className={cn('inline-flex text-[10px] font-bold px-2.5 py-0.5 rounded-full border mb-3', ratioChipClass)}>

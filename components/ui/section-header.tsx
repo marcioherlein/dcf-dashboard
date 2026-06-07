@@ -11,8 +11,8 @@ export function SectionHeader({ title, subtitle, action, className }: SectionHea
   return (
     <div className={cn('flex items-start justify-between gap-4 mb-4', className)}>
       <div>
-        <h2 className="text-subhead text-slate-100">{title}</h2>
-        {subtitle && <p className="text-micro text-slate-500 mt-0.5">{subtitle}</p>}
+        <h2 className="text-[18px] sm:text-[20px] font-bold tracking-tight leading-tight text-[#06101F]">{title}</h2>
+        {subtitle && <p className="text-[13px] text-[#566174] mt-0.5 leading-snug">{subtitle}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
     </div>

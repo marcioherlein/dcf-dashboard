@@ -18,7 +18,7 @@ function getColor(sector: string): string {
   for (const [key, color] of Object.entries(SECTOR_COLORS)) {
     if (sector.toLowerCase().includes(key.toLowerCase())) return color
   }
-  return '#94a3b8'
+  return '#8A95A6'
 }
 
 interface SectorWeight {
@@ -34,8 +34,8 @@ export function ETFSectorAllocation({ sectorWeights }: Props) {
   if (!sectorWeights.length) {
     return (
       <div className="glass-card-light rounded-xl p-4">
-        <p className="text-sm font-semibold text-slate-700 mb-2">Sector Allocation</p>
-        <p className="text-sm text-slate-400">Sector breakdown not available for this ETF.</p>
+        <p className="text-sm font-semibold text-[#06101F] mb-2">Sector Allocation</p>
+        <p className="text-sm text-[#8A95A6]">Sector breakdown not available for this ETF.</p>
       </div>
     )
   }
@@ -44,7 +44,7 @@ export function ETFSectorAllocation({ sectorWeights }: Props) {
 
   return (
     <div className="glass-card-light rounded-xl p-4">
-      <p className="text-sm font-semibold text-slate-700 mb-4">Sector Allocation</p>
+      <p className="text-sm font-semibold text-[#06101F] mb-4">Sector Allocation</p>
 
       {/* Stacked bar */}
       <div className="flex h-3 rounded-full overflow-hidden gap-px mb-4">
@@ -69,9 +69,9 @@ export function ETFSectorAllocation({ sectorWeights }: Props) {
               style={{ backgroundColor: getColor(s.sector) }}
             />
             <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
-              <span className="text-xs text-slate-600 truncate">{s.sector}</span>
+              <span className="text-xs text-[#566174] truncate">{s.sector}</span>
               <div className="flex items-center gap-2 shrink-0">
-                <div className="w-20 h-1 bg-slate-100 rounded-full overflow-hidden hidden sm:block">
+                <div className="w-20 h-1 bg-[#F4F3EF] rounded-full overflow-hidden hidden sm:block">
                   <div
                     className="h-full rounded-full"
                     style={{
@@ -80,7 +80,7 @@ export function ETFSectorAllocation({ sectorWeights }: Props) {
                     }}
                   />
                 </div>
-                <span className="text-xs font-mono font-semibold text-slate-700 w-10 text-right">
+                <span className="text-xs font-mono font-semibold text-[#06101F] w-10 text-right">
                   {(s.weight * 100).toFixed(1)}%
                 </span>
               </div>

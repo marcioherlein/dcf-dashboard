@@ -32,15 +32,15 @@ const ROW_2 = [
 ]
 
 function Dot() {
-  return <span className="text-slate-300 mx-3 select-none">·</span>
+  return <span className="text-[#8A95A6] mx-3 select-none">·</span>
 }
 
 function TickerCell({ ticker, price, change, up }: (typeof ROW_1)[0]) {
   return (
     <span className="flex items-center gap-1.5 shrink-0 font-mono text-[11px]">
-      <span className="font-bold text-slate-500">{ticker}</span>
-      <span className="text-slate-400">{price}</span>
-      <span className={up ? 'text-emerald-500' : 'text-red-400'}>{change}</span>
+      <span className="font-bold text-[#566174]">{ticker}</span>
+      <span className="text-[#8A95A6]">{price}</span>
+      <span className={up ? 'text-[#11875D]' : 'text-[#D83B3B]'}>{change}</span>
       <Dot />
     </span>
   )
@@ -49,9 +49,9 @@ function TickerCell({ ticker, price, change, up }: (typeof ROW_1)[0]) {
 function IndexCell({ label, value, change, up }: (typeof ROW_2)[0]) {
   return (
     <span className="flex items-center gap-1.5 shrink-0 font-mono text-[11px]">
-      <span className="font-semibold text-slate-500">{label}</span>
-      <span className="text-slate-400">{value}</span>
-      <span className={up ? 'text-emerald-500' : 'text-red-400'}>{change}</span>
+      <span className="font-semibold text-[#566174]">{label}</span>
+      <span className="text-[#8A95A6]">{value}</span>
+      <span className={up ? 'text-[#11875D]' : 'text-[#D83B3B]'}>{change}</span>
       <Dot />
     </span>
   )

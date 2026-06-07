@@ -12,11 +12,11 @@ interface FairValueBarProps {
 
 // Fixed zones on a 0–2.5× ratio scale
 const ZONES = [
-  { label: 'Deep Value',  max: 0.70, color: 'bg-emerald-500' },
-  { label: 'Undervalued', max: 0.90, color: 'bg-emerald-400' },
+  { label: 'Deep Value',  max: 0.70, color: 'bg-[#E8F7EF]0' },
+  { label: 'Undervalued', max: 0.90, color: 'bg-[#11875D]' },
   { label: 'Fair Value',  max: 1.10, color: 'bg-blue-400'    },
-  { label: 'Premium',     max: 1.40, color: 'bg-amber-400'   },
-  { label: 'Expensive',   max: 2.50, color: 'bg-red-400'     },
+  { label: 'Premium',     max: 1.40, color: 'bg-[#B56A00]'   },
+  { label: 'Expensive',   max: 2.50, color: 'bg-[#D83B3B]'     },
 ]
 
 function zoneFor(ratio: number) {
@@ -47,30 +47,30 @@ export default function FairValueBar({ price, fairValue, currency, bearCase, bul
   const fvPct = (1.0 / SCALE_MAX) * 100  // 40%
 
   const chipClass = isAbove
-    ? 'text-red-600 bg-red-50 border-red-200'
-    : 'text-emerald-600 bg-emerald-50 border-emerald-200'
+    ? 'text-[#D83B3B] bg-[#FCEAEA] border-[#F0B8B8]'
+    : 'text-[#11875D] bg-[#E8F7EF] border-[#A3D9BE]'
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5">
+    <div className="bg-white border border-[#E3E1DA] rounded-2xl shadow-sm p-4 sm:p-5">
 
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
-          <p className="text-[11px] font-[600] text-[#64748B] mb-0.5">
+          <p className="text-[11px] font-[600] text-[#566174] mb-0.5">
             Price vs Fair Value
           </p>
           <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-[28px] sm:text-[32px] font-extrabold tabular-nums text-slate-900 leading-none">
+            <span className="text-[28px] sm:text-[32px] font-bold tabular-nums text-[#06101F] leading-none">
               {ratio.toFixed(2)}×
             </span>
-            <span className="text-[13px] font-semibold text-slate-500">Price / Intrinsic</span>
+            <span className="text-[13px] font-semibold text-[#566174]">Price / Intrinsic</span>
           </div>
         </div>
         <div className="text-right shrink-0">
           <span className={cn('text-[11px] font-bold px-2.5 py-1 rounded-full border block mb-1', chipClass)}>
             {ratioLabel(ratio)}
           </span>
-          <span className={cn('text-[20px] font-black tabular-nums block', isAbove ? 'text-red-600' : 'text-emerald-600')}>
+          <span className={cn('text-[20px] font-black tabular-nums block', isAbove ? 'text-[#D83B3B]' : 'text-[#11875D]')}>
             {isAbove ? '+' : ''}{diff.toFixed(1)}%
           </span>
         </div>
@@ -81,15 +81,15 @@ export default function FairValueBar({ price, fairValue, currency, bearCase, bul
         {/* Zone segments */}
         <div className="relative h-3 rounded-full overflow-hidden flex">
           {/* Deep Value 0–0.7× = 28% */}
-          <div className="bg-emerald-500 h-full" style={{ width: '28%' }} />
+          <div className="bg-[#E8F7EF]0 h-full" style={{ width: '28%' }} />
           {/* Undervalued 0.7–0.9× = 8% */}
-          <div className="bg-emerald-400 h-full" style={{ width: '8%' }} />
+          <div className="bg-[#11875D] h-full" style={{ width: '8%' }} />
           {/* Fair Value 0.9–1.1× = 8% */}
           <div className="bg-blue-400 h-full" style={{ width: '8%' }} />
           {/* Premium 1.1–1.4× = 12% */}
-          <div className="bg-amber-400 h-full" style={{ width: '12%' }} />
+          <div className="bg-[#B56A00] h-full" style={{ width: '12%' }} />
           {/* Expensive 1.4–2.5× = remaining */}
-          <div className="bg-red-400 h-full flex-1" />
+          <div className="bg-[#D83B3B] h-full flex-1" />
         </div>
 
         {/* Overlays: FV line + price dot */}
@@ -109,9 +109,9 @@ export default function FairValueBar({ price, fairValue, currency, bearCase, bul
 
       {/* ── Axis labels ── */}
       <div className="flex justify-between mt-1.5 mb-3">
-        <span className="text-[11px] text-slate-500">0×</span>
-        <span className="text-[11px] text-blue-500 font-medium">1× FV</span>
-        <span className="text-[11px] text-slate-500">2.5×</span>
+        <span className="text-[11px] text-[#566174]">0×</span>
+        <span className="text-[11px] text-[#2563EB] font-medium">1× FV</span>
+        <span className="text-[11px] text-[#566174]">2.5×</span>
       </div>
 
       {/* ── Zone legend ── */}
@@ -121,32 +121,32 @@ export default function FairValueBar({ price, fairValue, currency, bearCase, bul
             <span className={cn('w-2 h-2 rounded-full shrink-0', z.color)} />
             <span className={cn(
               'text-[11px]',
-              zone.label === z.label ? 'font-bold text-slate-700' : 'text-slate-500'
+              zone.label === z.label ? 'font-bold text-[#06101F]' : 'text-[#566174]'
             )}>{z.label}</span>
           </div>
         ))}
       </div>
 
       {/* ── Price / FV numbers ── */}
-      <div className="flex items-end gap-4 flex-wrap border-t border-slate-100 pt-3">
+      <div className="flex items-end gap-4 flex-wrap border-t border-[#E3E1DA] pt-3">
         <div>
-          <p className="text-[15px] font-bold tabular-nums text-slate-900 leading-none">{fmtPrice(price, currency)}</p>
-          <p className="text-[11px] text-slate-500 mt-0.5">Current Price</p>
+          <p className="text-[15px] font-bold tabular-nums text-[#06101F] leading-none">{fmtPrice(price, currency)}</p>
+          <p className="text-[11px] text-[#566174] mt-0.5">Current Price</p>
         </div>
         <div>
-          <p className="text-[15px] font-bold tabular-nums text-slate-900 leading-none">{fmtPrice(fairValue, currency)}</p>
-          <p className="text-[11px] text-slate-500 mt-0.5">Fair Value (Base)</p>
+          <p className="text-[15px] font-bold tabular-nums text-[#06101F] leading-none">{fmtPrice(fairValue, currency)}</p>
+          <p className="text-[11px] text-[#566174] mt-0.5">Fair Value (Base)</p>
         </div>
         {bearCase != null && (
           <div>
-            <p className="text-[13px] font-semibold tabular-nums text-red-500 leading-none">{fmtPrice(bearCase, currency)}</p>
-            <p className="text-[11px] text-slate-500 mt-0.5">Bear</p>
+            <p className="text-[13px] font-semibold tabular-nums text-[#D83B3B] leading-none">{fmtPrice(bearCase, currency)}</p>
+            <p className="text-[11px] text-[#566174] mt-0.5">Bear</p>
           </div>
         )}
         {bullCase != null && (
           <div>
-            <p className="text-[13px] font-semibold tabular-nums text-emerald-600 leading-none">{fmtPrice(bullCase, currency)}</p>
-            <p className="text-[11px] text-slate-500 mt-0.5">Bull</p>
+            <p className="text-[13px] font-semibold tabular-nums text-[#11875D] leading-none">{fmtPrice(bullCase, currency)}</p>
+            <p className="text-[11px] text-[#566174] mt-0.5">Bull</p>
           </div>
         )}
       </div>

@@ -50,16 +50,16 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
       : null
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-3 sm:px-5 py-4 sm:py-5 w-full min-h-[200px]">
+    <div className="bg-white rounded-xl border border-[#E3E1DA] shadow-sm px-3 sm:px-5 py-4 sm:py-5 w-full min-h-[200px]">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <p className="text-[13px] font-[650] text-[#0F172A]">Fair Value by Method</p>
-        <div className="flex items-center gap-4 text-[10px] text-slate-400">
+        <p className="text-[13px] font-[650] text-[#06101F]">Fair Value by Method</p>
+        <div className="flex items-center gap-4 text-[10px] text-[#8A95A6]">
           <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-[#11875D] shrink-0" />
             Undervalued
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-[#D83B3B] shrink-0" />
             Overvalued
           </span>
         </div>
@@ -73,10 +73,10 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
             className="absolute bottom-0 flex flex-col items-center gap-px -translate-x-1/2"
             style={{ left: `${Math.max(5, Math.min(95, pricePct))}%` }}
           >
-            <span className="text-[11px] font-bold tabular-nums text-slate-800 bg-white px-0.5 leading-tight">
+            <span className="text-[11px] font-bold tabular-nums text-[#06101F] bg-white px-0.5 leading-tight">
               {fmtPrice(currentPrice, currency)}
             </span>
-            <span className="text-[11px] font-semibold text-slate-500 leading-tight">
+            <span className="text-[11px] font-semibold text-[#566174] leading-tight">
               Current
             </span>
           </div>
@@ -100,15 +100,15 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
               <div className={`${LABEL_COL} text-right pr-3 flex flex-col items-end gap-0.5`}>
                 <span
                   className={`text-[11px] font-medium leading-none ${
-                    hasVal ? 'text-slate-600' : 'text-slate-300'
+                    hasVal ? 'text-[#566174]' : 'text-[#8A95A6]'
                   }`}
                 >
                   {LABEL[m.id] ?? m.method}
                 </span>
                 <span className={`text-[11px] font-semibold leading-none ${
-                  !hasVal ? 'text-slate-300'
-                  : m.confidence === 'high'   ? 'text-emerald-500'
-                  : m.confidence === 'medium' ? 'text-amber-500'
+                  !hasVal ? 'text-[#8A95A6]'
+                  : m.confidence === 'high'   ? 'text-[#11875D]'
+                  : m.confidence === 'medium' ? 'text-[#B56A00]'
                   :                             'text-red-400'
                 }`}>
                   {!hasVal ? 'Unavailable' : m.confidence === 'high' ? 'High conf.' : m.confidence === 'medium' ? 'Med. conf.' : 'Low conf.'}
@@ -118,14 +118,14 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
               {/* Track */}
               <div className="flex-1 relative flex items-center h-full">
                 {/* Gray baseline */}
-                <div className="w-full h-[5px] bg-slate-100 rounded-full" />
+                <div className="w-full h-[5px] bg-[#F4F3EF] rounded-full" />
 
                 {hasVal && fv != null && fvPct != null && (
                   <>
                     {/* Colored fill — width animates from 0 on mount */}
                     <div
                       className={`absolute h-[5px] rounded-full transition-[width,left] duration-500 ease-out ${
-                        isUnder ? 'bg-emerald-200' : 'bg-red-100'
+                        isUnder ? 'bg-emerald-200' : 'bg-[#FCEAEA]'
                       }`}
                       style={{
                         left: `${ready ? barLeft : pricePct}%`,
@@ -135,7 +135,7 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
                     {/* Fair value dot */}
                     <motion.div
                       className={`absolute w-[13px] h-[13px] rounded-full ring-[2.5px] ring-white shadow ${
-                        isUnder ? 'bg-emerald-500' : 'bg-red-500'
+                        isUnder ? 'bg-[#E8F7EF]0' : 'bg-[#FCEAEA]0'
                       }`}
                       style={{ left: `${fvPct}%`, transform: 'translateX(-50%)' }}
                       initial={{ scale: 0, opacity: 0 }}
@@ -161,13 +161,13 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
               <div className={`${VALUE_COL} pl-3`}>
                 {hasVal && fv != null ? (
                   <div className="flex flex-col gap-[1px]">
-                    <span className="text-xs font-bold tabular-nums text-slate-900 leading-tight">
+                    <span className="text-xs font-bold tabular-nums text-[#06101F] leading-tight">
                       {fmtPrice(fv, currency)}
                     </span>
                     {m.upsidePct != null && (
                       <span
                         className={`text-[10px] font-semibold tabular-nums leading-tight ${
-                          isUnder ? 'text-emerald-600' : 'text-red-500'
+                          isUnder ? 'text-[#11875D]' : 'text-[#D83B3B]'
                         }`}
                       >
                         {m.upsidePct >= 0 ? '+' : ''}
@@ -176,7 +176,7 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
                     )}
                   </div>
                 ) : (
-                  <span className="text-[10px] text-slate-300">—</span>
+                  <span className="text-[10px] text-[#8A95A6]">—</span>
                 )}
               </div>
             </div>
@@ -191,21 +191,21 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
           return (
             <>
               <div
-                className="border-t border-slate-100 my-0.5 ml-16 sm:ml-[100px]"
+                className="border-t border-[#E3E1DA] my-0.5 ml-16 sm:ml-[100px]"
               />
               <div className="flex items-center h-10">
                 <div className={`${LABEL_COL} text-right pr-3`}>
-                  <span className="text-[10px] font-bold uppercase tracking-wide text-blue-600">
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-[#2563EB]">
                     Blended
                   </span>
                 </div>
 
                 <div className="flex-1 relative flex items-center h-full">
-                  <div className="w-full h-[5px] bg-slate-100 rounded-full" />
+                  <div className="w-full h-[5px] bg-[#F4F3EF] rounded-full" />
 
                   {/* Blue diamond */}
                   <motion.div
-                    className="absolute w-3.5 h-3.5 bg-blue-500 ring-[2.5px] ring-white shadow"
+                    className="absolute w-3.5 h-3.5 bg-[#EAF1FF]0 ring-[2.5px] ring-white shadow"
                     style={{
                       left: `${bPct}%`,
                       transform: 'translateX(-50%) rotate(45deg)',
@@ -229,13 +229,13 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
 
                 <div className={`${VALUE_COL} pl-3`}>
                   <div className="flex flex-col gap-[1px]">
-                    <span className="text-xs font-bold tabular-nums text-blue-600 leading-tight">
+                    <span className="text-xs font-bold tabular-nums text-[#2563EB] leading-tight">
                       {fmtPrice(blendedFairValue, currency)}
                     </span>
                     {bUpside != null && (
                       <span
                         className={`text-[10px] font-semibold tabular-nums leading-tight ${
-                          bIsUnder ? 'text-emerald-600' : 'text-red-500'
+                          bIsUnder ? 'text-[#11875D]' : 'text-[#D83B3B]'
                         }`}
                       >
                         {bUpside >= 0 ? '+' : ''}

@@ -58,32 +58,32 @@ export default function ValuationMethodCard({
         'rounded-xl border cursor-pointer transition-all select-none group card',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
         isActive
-          ? 'border-blue-400'
-          : 'border-slate-200 hover:border-blue-300',
+          ? 'border-[#93B4F5]'
+          : 'border-[#E3E1DA] hover:border-[#93B4F5]',
       )}
     >
       {/* Header strip */}
       <div className={cn(
         'flex items-center justify-between px-4 py-3 rounded-t-xl border-b',
-        isActive ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-100',
+        isActive ? 'bg-[#EAF1FF] border-[#93B4F5]' : 'bg-[#F4F3EF] border-[#E3E1DA]',
       )}>
         <div className="flex items-center gap-2">
           <span className={cn(
             'text-label uppercase tracking-wider font-bold px-2 py-0.5 rounded-md border',
             isActive
-              ? 'bg-blue-100 text-blue-700 border-blue-300'
-              : 'bg-blue-50 text-blue-600 border-blue-200',
+              ? 'bg-[#EAF1FF] text-[#2563EB] border-[#93B4F5]'
+              : 'bg-[#EAF1FF] text-[#2563EB] border-[#93B4F5]',
           )}>
             {abbr}
           </span>
           {isRecommended && (
-            <span className="bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-widest rounded-full px-2 py-0.5 border border-blue-300">
+            <span className="bg-[#EAF1FF] text-[#2563EB] text-[10px] font-bold uppercase tracking-widest rounded-full px-2 py-0.5 border border-[#93B4F5]">
               Recommended
             </span>
           )}
         </div>
         {fv != null && (
-          <span className="text-sm font-bold font-mono text-slate-900">
+          <span className="text-sm font-bold font-mono text-[#06101F]">
             {fmtPrice(fv, currency)}
           </span>
         )}
@@ -91,13 +91,13 @@ export default function ValuationMethodCard({
 
       {/* Body */}
       <div className="px-4 py-3 space-y-2">
-        <div className="text-sm font-semibold text-slate-800">{config.title}</div>
-        <div className="text-micro text-slate-500 leading-relaxed">{bestFor}</div>
+        <div className="text-sm font-semibold text-[#06101F]">{config.title}</div>
+        <div className="text-micro text-[#566174] leading-relaxed">{bestFor}</div>
 
         {upside != null ? (
           <TrendBadge value={upside} size="sm" />
         ) : (
-          <span className="inline-flex items-center gap-1 text-micro text-slate-500">
+          <span className="inline-flex items-center gap-1 text-micro text-[#566174]">
             <Lock size={10} />
             No data available
           </span>
@@ -108,8 +108,8 @@ export default function ValuationMethodCard({
       <div className={cn(
         'flex items-center justify-between px-4 py-2.5 rounded-b-xl border-t text-xs font-medium transition-colors',
         isActive
-          ? 'border-blue-200 bg-blue-50 text-blue-600'
-          : 'border-slate-100 bg-slate-50 text-slate-500 group-hover:text-blue-600',
+          ? 'border-[#93B4F5] bg-[#EAF1FF] text-[#2563EB]'
+          : 'border-[#E3E1DA] bg-[#F4F3EF] text-[#566174] group-hover:text-[#2563EB]',
       )}>
         <span>{isActive ? 'Model open' : 'Open model'}</span>
         <ChevronRight size={14} className={cn('transition-transform', isActive && 'rotate-90')} />

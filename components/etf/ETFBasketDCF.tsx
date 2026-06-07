@@ -65,10 +65,10 @@ export function ETFBasketDCF({ holdings }: Props) {
   if (loading) {
     return (
       <div className="glass-card-light rounded-xl p-4">
-        <p className="text-sm font-semibold text-slate-700 mb-3">Basket DCF Signal</p>
+        <p className="text-sm font-semibold text-[#06101F] mb-3">Basket DCF Signal</p>
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-7 bg-slate-100 rounded motion-safe:animate-pulse" />
+            <div key={i} className="h-7 bg-[#F4F3EF] rounded motion-safe:animate-pulse" />
           ))}
         </div>
       </div>
@@ -83,8 +83,8 @@ export function ETFBasketDCF({ holdings }: Props) {
   if (!userEmail) {
     return (
       <div className="glass-card-light rounded-xl p-4">
-        <p className="text-sm font-semibold text-slate-700 mb-2">Basket DCF Signal</p>
-        <p className="text-sm text-slate-400">Sign in to see DCF upside signals for this ETF&apos;s holdings.</p>
+        <p className="text-sm font-semibold text-[#06101F] mb-2">Basket DCF Signal</p>
+        <p className="text-sm text-[#8A95A6]">Sign in to see DCF upside signals for this ETF&apos;s holdings.</p>
       </div>
     )
   }
@@ -93,16 +93,16 @@ export function ETFBasketDCF({ holdings }: Props) {
     <div className="glass-card-light rounded-xl p-4">
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
-          <p className="text-sm font-semibold text-slate-700">Basket DCF Signal</p>
+          <p className="text-sm font-semibold text-[#06101F]">Basket DCF Signal</p>
           {withDCF.length > 0 && avgUpside !== null ? (
-            <p className="text-xs text-slate-500 mt-0.5">
-              <span className={cn('font-bold', avgUpside > 0 ? 'text-emerald-600' : 'text-red-500')}>
+            <p className="text-xs text-[#566174] mt-0.5">
+              <span className={cn('font-bold', avgUpside > 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
                 {avgUpside > 0 ? '+' : ''}{(avgUpside * 100).toFixed(1)}% avg implied upside
               </span>
               {' '}based on saved DCF models for {withDCF.length} of top {rows.length} holdings ({(portfolioWeight * 100).toFixed(0)}% of basket)
             </p>
           ) : (
-            <p className="text-xs text-slate-400 mt-0.5">No saved DCF models for top {rows.length} holdings yet</p>
+            <p className="text-xs text-[#8A95A6] mt-0.5">No saved DCF models for top {rows.length} holdings yet</p>
           )}
         </div>
       </div>
@@ -112,19 +112,19 @@ export function ETFBasketDCF({ holdings }: Props) {
           <div key={r.holding.symbol} className="flex items-center gap-3">
             <Link
               href={`/stock/${r.holding.symbol}`}
-              className="font-mono font-black text-xs text-slate-800 hover:text-blue-600 transition-colors w-12 shrink-0"
+              className="font-mono font-black text-xs text-[#06101F] hover:text-[#2563EB] transition-colors w-12 shrink-0"
             >
               {r.holding.symbol}
             </Link>
             <div className="flex-1 min-w-0">
-              <span className="text-[10px] text-slate-400 truncate block">{r.holding.name}</span>
+              <span className="text-[10px] text-[#8A95A6] truncate block">{r.holding.name}</span>
             </div>
-            <span className="text-[10px] font-mono text-slate-400 shrink-0 w-10 text-right">
+            <span className="text-[10px] font-mono text-[#8A95A6] shrink-0 w-10 text-right">
               {r.holding.weight != null ? (r.holding.weight * 100).toFixed(1) + '%' : '—'}
             </span>
-            <span className={cn('text-xs font-semibold font-mono shrink-0 w-16 text-right', r.upside == null ? 'text-slate-300' : r.upside > 0 ? 'text-emerald-600' : 'text-red-500')}>
+            <span className={cn('text-xs font-semibold font-mono shrink-0 w-16 text-right', r.upside == null ? 'text-[#8A95A6]' : r.upside > 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
               {r.upside == null ? (
-                <Link href={`/stock/${r.holding.symbol}`} className="text-blue-400 hover:text-blue-600 transition-colors">Run DCF</Link>
+                <Link href={`/stock/${r.holding.symbol}`} className="text-[#2563EB] hover:text-[#2563EB] transition-colors">Run DCF</Link>
               ) : (
                 `${r.upside > 0 ? '+' : ''}${(r.upside * 100).toFixed(1)}%`
               )}

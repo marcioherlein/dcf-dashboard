@@ -65,10 +65,10 @@ function MethodDotsChart({ methods, currentPrice, blendedFV, currency }: {
 
   return (
     <svg viewBox={`0 0 ${W} ${SVG_H}`} width="100%" style={{ display: 'block' }} aria-label="Fair value lollipop chart">
-      <text x={xPrice} y={12} textAnchor="middle" fontSize={9} fontWeight={700} fill="#475569" fontFamily="Inter, system-ui, sans-serif">
+      <text x={xPrice} y={12} textAnchor="middle" fontSize={9} fontWeight={700} fill="#566174" fontFamily="Inter, system-ui, sans-serif">
         {fmtPrice(currentPrice, currency)}
       </text>
-      <text x={xPrice} y={22} textAnchor="middle" fontSize={8} fill="#94a3b8" fontFamily="Inter, system-ui, sans-serif">
+      <text x={xPrice} y={22} textAnchor="middle" fontSize={8} fill="#8A95A6" fontFamily="Inter, system-ui, sans-serif">
         CURRENT
       </text>
       <line
@@ -124,7 +124,7 @@ function MethodDotsChart({ methods, currentPrice, blendedFV, currency }: {
         const blendSign  = blendUp != null && blendUp >= 0 ? '+' : ''
         return (
           <g>
-            <line x1={CHART_L} y1={y - 10} x2={CHART_R} y2={y - 10} stroke="#e2e8f0" strokeWidth={1} />
+            <line x1={CHART_L} y1={y - 10} x2={CHART_R} y2={y - 10} stroke="#E3E1DA" strokeWidth={1} />
             <motion.polygon
               points={`${xBlend},${y - 7} ${xBlend + 6},${y} ${xBlend},${y + 7} ${xBlend - 6},${y}`}
               fill={blendColor}
@@ -156,14 +156,14 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
 
   return (
     <div className="rounded-xl glass-card-light p-5">
-      <p className="text-label uppercase tracking-wider text-slate-400 font-bold mb-4">Fair Value by Method</p>
+      <p className="text-label uppercase tracking-wider text-[#8A95A6] font-bold mb-4">Fair Value by Method</p>
       <MethodDotsChart
         methods={methods}
         currentPrice={currentPrice}
         blendedFV={weightedFV ?? null}
         currency={currency}
       />
-      <p className="text-micro text-slate-500 mt-3">
+      <p className="text-micro text-[#566174] mt-3">
         Dot right of price line = undervalued (emerald). Left = overvalued (red). ◆ = weighted blended estimate.
       </p>
     </div>

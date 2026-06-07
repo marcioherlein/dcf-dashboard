@@ -113,7 +113,7 @@ export default function StrategyPage() {
       <header className="bg-primary px-4 sm:px-8 py-4 sm:py-6 shrink-0">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-on-primary tracking-tight">Strategy Builder</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-on-primary tracking-tight">Strategy Builder</h1>
             <p className="text-sm text-on-primary-container mt-0.5">
               Multi-factor trading signals — entry, exit, conviction &amp; risk/reward
             </p>
@@ -227,7 +227,7 @@ export default function StrategyPage() {
           <aside className="absolute inset-0 lg:static lg:w-[380px] lg:inset-auto lg:shrink-0 border-l border-outline-variant/10 overflow-y-auto pb-safe-nav bg-surface-container-lowest z-10">
             <div className="sticky top-0 bg-surface-container-lowest z-10 flex items-center justify-between px-5 py-3 border-b border-outline-variant/10">
               <div>
-                <span className="font-extrabold text-primary">{selected.displayTicker}</span>
+                <span className="font-bold text-primary">{selected.displayTicker}</span>
                 <span className="text-xs text-on-surface-variant ml-2">{selected.name}</span>
               </div>
               <button
@@ -267,7 +267,7 @@ export default function StrategyPage() {
 function StatChip({ label, value, color }: { label: string; value: number; color: string }) {
   return (
     <div className="flex items-center gap-1.5">
-      <span className={`text-lg font-extrabold ${color}`}>{value}</span>
+      <span className={`text-lg font-bold ${color}`}>{value}</span>
       <span className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wide">{label}</span>
     </div>
   )

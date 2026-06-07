@@ -103,7 +103,7 @@ export default function StrategyCard({ report, onSelect, selected }: StrategyCar
       <div className="p-4 pb-3">
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide ${recCfg.bg} ${recCfg.text}`}>
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${recCfg.bg} ${recCfg.text}`}>
               {recCfg.label}
             </span>
             <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${convCfg.bg} ${convCfg.text}`}>
@@ -111,7 +111,7 @@ export default function StrategyCard({ report, onSelect, selected }: StrategyCar
             </span>
           </div>
           <div className="text-right shrink-0">
-            <div className="text-xl font-extrabold text-primary leading-none">{report.finalScore.toFixed(1)}</div>
+            <div className="text-xl font-bold text-primary leading-none">{report.finalScore.toFixed(1)}</div>
             <div className="text-[10px] text-on-surface-variant font-semibold uppercase">score</div>
           </div>
         </div>
@@ -119,7 +119,7 @@ export default function StrategyCard({ report, onSelect, selected }: StrategyCar
         {/* Ticker + name */}
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-extrabold text-base text-primary">{report.displayTicker}</span>
+            <span className="font-bold text-base text-primary">{report.displayTicker}</span>
             {report.isCedear && (
               <span className="px-1.5 py-0.5 bg-tertiary-fixed/30 text-on-tertiary-fixed-variant text-[10px] font-bold rounded uppercase">CEDEAR</span>
             )}
@@ -137,7 +137,7 @@ export default function StrategyCard({ report, onSelect, selected }: StrategyCar
       {/* Current price */}
       <div className="px-4 pb-2">
         <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-extrabold text-on-surface">
+          <span className="text-2xl font-bold text-on-surface">
             {currencySymbol}{report.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
           <span className={`text-sm font-bold ${report.change1DPct >= 0 ? 'text-secondary' : 'text-error'}`}>
@@ -181,7 +181,7 @@ export default function StrategyCard({ report, onSelect, selected }: StrategyCar
       <div className="px-4 pb-3 flex items-center gap-3">
         <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg ${tradePlan.poorRiskReward ? 'bg-error-container/30' : 'bg-secondary-container/20'}`}>
           <span className="text-[10px] font-bold text-on-surface-variant uppercase">R/R</span>
-          <span className={`text-sm font-extrabold ${tradePlan.poorRiskReward ? 'text-on-error-container' : 'text-secondary'}`}>
+          <span className={`text-sm font-bold ${tradePlan.poorRiskReward ? 'text-on-error-container' : 'text-secondary'}`}>
             {tradePlan.riskRewardRatio.toFixed(1)}×
           </span>
           {tradePlan.poorRiskReward && (

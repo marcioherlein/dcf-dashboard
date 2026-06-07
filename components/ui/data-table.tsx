@@ -42,7 +42,7 @@ export function DataTable<TData>({
       <table className="w-full text-sm">
         <thead>
           {table.getHeaderGroups().map(hg => (
-            <tr key={hg.id} className="border-b border-slate-100">
+            <tr key={hg.id} className="border-b border-[#E3E1DA]">
               {hg.headers.map(header => {
                 const canSort = header.column.getCanSort()
                 const sorted  = header.column.getIsSorted()
@@ -50,9 +50,9 @@ export function DataTable<TData>({
                   <th
                     key={header.id}
                     className={cn(
-                      cellPad, 'text-label uppercase tracking-wider text-slate-400 font-bold text-left select-none',
+                      cellPad, 'text-label uppercase tracking-wider text-[#8A95A6] font-bold text-left select-none',
                       stickyHeader && 'sticky top-0 bg-[#080F1E] z-10',
-                      canSort && 'cursor-pointer hover:text-slate-600',
+                      canSort && 'cursor-pointer hover:text-[#566174]',
                       (header.column.columnDef.meta as { align?: string } | undefined)?.align === 'right' && 'text-right',
                     )}
                     onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
@@ -74,7 +74,7 @@ export function DataTable<TData>({
         <tbody>
           {table.getRowModel().rows.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className={cn(cellPad, 'text-center text-slate-400 py-8')}>
+              <td colSpan={columns.length} className={cn(cellPad, 'text-center text-[#8A95A6] py-8')}>
                 {emptyMessage}
               </td>
             </tr>
@@ -85,7 +85,7 @@ export function DataTable<TData>({
                   <td
                     key={cell.id}
                     className={cn(
-                      cellPad, 'text-slate-200',
+                      cellPad, 'text-[#CDD1C8]',
                       (cell.column.columnDef.meta as { align?: string } | undefined)?.align === 'right' && 'text-right font-mono',
                     )}
                   >

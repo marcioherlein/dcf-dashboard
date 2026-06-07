@@ -10,9 +10,9 @@ export function ConfidenceRing({ score, size = 40 }: ConfidenceRingProps) {
     return (
       <div className="flex flex-col items-center gap-0.5">
         <div style={{ width: size, height: size }} className="flex items-center justify-center">
-          <span className="text-[13px] text-slate-300">—</span>
+          <span className="text-[13px] text-[#8A95A6]">—</span>
         </div>
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-300">N/A</span>
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-[#8A95A6]">N/A</span>
       </div>
     )
   }
@@ -49,7 +49,7 @@ export function ConfidenceRing({ score, size = 40 }: ConfidenceRingProps) {
           </span>
         </div>
       </div>
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
+      <span className="text-[10px] font-semibold uppercase tracking-wide text-[#8A95A6]">{label}</span>
     </div>
   )
 }

@@ -40,7 +40,7 @@ export default function BubbleMap({ instruments }: Props) {
 
   if (instruments.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center text-slate-400 text-xs">
+      <div className="h-full flex items-center justify-center text-[#8A95A6] text-xs">
         No data
       </div>
     )
@@ -68,15 +68,15 @@ export default function BubbleMap({ instruments }: Props) {
         onMouseLeave={() => setHovered(null)}
       >
         {/* Background */}
-        <rect x={PAD.left} y={PAD.top} width={W - PAD.left - PAD.right} height={H - PAD.top - PAD.bottom} fill="#F8FAFB" rx="4" />
+        <rect x={PAD.left} y={PAD.top} width={W - PAD.left - PAD.right} height={H - PAD.top - PAD.bottom} fill="#F4F3EF" rx="4" />
 
         {/* X grid + labels */}
         {xGridValues.map((v) => {
           const x = xToPixel(v)
           return (
             <g key={`xg-${v}`}>
-              <line x1={x} y1={PAD.top} x2={x} y2={H - PAD.bottom} stroke="#E2E8F0" strokeWidth={1} />
-              <text x={x} y={H - PAD.bottom + 14} textAnchor="middle" fill="#94A3B8" fontSize="10">{v}</text>
+              <line x1={x} y1={PAD.top} x2={x} y2={H - PAD.bottom} stroke="#E3E1DA" strokeWidth={1} />
+              <text x={x} y={H - PAD.bottom + 14} textAnchor="middle" fill="#8A95A6" fontSize="10">{v}</text>
             </g>
           )
         })}
@@ -86,19 +86,19 @@ export default function BubbleMap({ instruments }: Props) {
           const y = yToPixel(v)
           return (
             <g key={`yg-${v}`}>
-              <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y} stroke="#E2E8F0" strokeWidth={1} />
-              <text x={PAD.left - 6} y={y + 4} textAnchor="end" fill="#94A3B8" fontSize="10">{v === 0 ? '0%' : `${v}%`}</text>
+              <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y} stroke="#E3E1DA" strokeWidth={1} />
+              <text x={PAD.left - 6} y={y + 4} textAnchor="end" fill="#8A95A6" fontSize="10">{v === 0 ? '0%' : `${v}%`}</text>
             </g>
           )
         })}
 
         {/* Axis labels */}
-        <text x={W / 2} y={H - 4} textAnchor="middle" fill="#64748B" fontSize="10">RS Score (Momentum)</text>
+        <text x={W / 2} y={H - 4} textAnchor="middle" fill="#566174" fontSize="10">RS Score (Momentum)</text>
         <text
           x={12}
           y={(PAD.top + H - PAD.bottom) / 2}
           textAnchor="middle"
-          fill="#64748B"
+          fill="#566174"
           fontSize="10"
           transform={`rotate(-90, 12, ${(PAD.top + H - PAD.bottom) / 2})`}
         >
@@ -137,7 +137,7 @@ export default function BubbleMap({ instruments }: Props) {
                   x={x}
                   y={y - r - 3}
                   textAnchor="middle"
-                  fill={isHovered ? '#0F172A' : stroke}
+                  fill={isHovered ? '#06101F' : stroke}
                   fontSize="9"
                   fontWeight="600"
                 >
@@ -170,12 +170,12 @@ export default function BubbleMap({ instruments }: Props) {
             transform: tooltipPos.x > W * 0.65 ? 'translateX(-110%)' : undefined,
           }}
         >
-          <div className="font-bold text-slate-100">{hovered.displayTicker}</div>
-          <div className="text-slate-400">{hovered.name.slice(0, 28)}</div>
+          <div className="font-bold text-[#E3E1DA]">{hovered.displayTicker}</div>
+          <div className="text-[#8A95A6]">{hovered.name.slice(0, 28)}</div>
           <div className="mt-1 flex gap-3">
-            <span className="text-slate-400">Score <span className="text-slate-200 font-semibold">{hovered.finalScore}</span></span>
-            <span className="text-slate-400">RS <span className="text-slate-200 font-semibold">{(hovered.factorScores as unknown as Record<string, number>).momentum?.toFixed(0) ?? '—'}</span></span>
-            <span className="text-slate-400">52w <span className="text-slate-200 font-semibold">{(hovered.keyMetrics?.['Dist 52w Hi'] as number | null)?.toFixed(1) ?? '—'}%</span></span>
+            <span className="text-[#8A95A6]">Score <span className="text-[#CDD1C8] font-semibold">{hovered.finalScore}</span></span>
+            <span className="text-[#8A95A6]">RS <span className="text-[#CDD1C8] font-semibold">{(hovered.factorScores as unknown as Record<string, number>).momentum?.toFixed(0) ?? '—'}</span></span>
+            <span className="text-[#8A95A6]">52w <span className="text-[#CDD1C8] font-semibold">{(hovered.keyMetrics?.['Dist 52w Hi'] as number | null)?.toFixed(1) ?? '—'}%</span></span>
           </div>
         </div>
       )}
@@ -189,10 +189,10 @@ export default function BubbleMap({ instruments }: Props) {
         ].map(({ color, label }) => (
           <div key={label} className="flex items-center gap-1.5">
             <div className="w-2.5 h-2.5 rounded-full border" style={{ borderColor: color, background: `${color}22` }} />
-            <span className="text-[10px] text-slate-400">{label}</span>
+            <span className="text-[10px] text-[#8A95A6]">{label}</span>
           </div>
         ))}
-        <span className="text-[10px] text-slate-400 ml-auto">Bubble size = score</span>
+        <span className="text-[10px] text-[#8A95A6] ml-auto">Bubble size = score</span>
       </div>
     </div>
   )

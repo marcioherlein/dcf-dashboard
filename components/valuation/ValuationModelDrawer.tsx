@@ -84,13 +84,13 @@ export function sourceLabel(source: AssumptionSource): string {
 
 export function sourceBadgeColor(source: AssumptionSource): string {
   switch (source) {
-    case 'analyst_estimate':    return 'bg-blue-900/50 text-blue-300'
+    case 'analyst_estimate':    return 'bg-blue-900/50 text-[#93B4F5]'
     case 'historical_3y_median':
-    case 'historical_5y_median': return 'bg-slate-700 text-slate-300'
+    case 'historical_5y_median': return 'bg-slate-700 text-[#8A95A6]'
     case 'peer_median':          return 'bg-purple-900/50 text-purple-300'
     case 'sector_fallback':      return 'bg-amber-900/50 text-amber-300'
     case 'manual_override':      return 'bg-green-900/50 text-green-300'
-    case 'model_default':        return 'bg-slate-700 text-slate-400'
+    case 'model_default':        return 'bg-slate-700 text-[#8A95A6]'
   }
 }
 
@@ -335,7 +335,7 @@ export default function ValuationModelDrawer({
               {isModified && onResetOverrides && (
                 <button
                   onClick={onResetOverrides}
-                  className="text-[11px] text-[#4a9eff] hover:text-blue-300 underline"
+                  className="text-[11px] text-[#4a9eff] hover:text-[#93B4F5] underline"
                 >
                   Reset to model
                 </button>

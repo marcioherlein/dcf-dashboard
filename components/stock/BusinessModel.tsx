@@ -86,10 +86,10 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
     employees && { label: `${(employees / 1000).toFixed(0)}K employees` },
   ].filter(Boolean) as { label: string }[]
 
-  const tickFill = isDark ? 'rgba(255,255,255,0.3)' : '#94a3b8'
+  const tickFill = isDark ? 'rgba(255,255,255,0.3)' : '#8A95A6'
   const tooltipStyle = isDark
     ? { background: '#1c1c1e', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, fontSize: 11, color: '#fff' }
-    : { background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 8, fontSize: 11, color: '#0F172A', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }
+    : { background: '#FFFFFF', border: '1px solid #E3E1DA', borderRadius: 8, fontSize: 11, color: '#06101F', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }
 
   // Margin trend data from financial statements (historical only)
   const marginTrendData = (incomeStatement ?? [])
@@ -125,31 +125,31 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
       label: 'Annual Revenue',
       value: revenueB,
       sub: usingTTM ? 'Trailing 12 months' : 'Last reported year',
-      color: 'bg-blue-50 border-blue-200',
+      color: 'bg-[#EAF1FF] border-[#93B4F5]',
     },
     {
       label: 'Profit Margin',
       value: netMarginKeep ?? (displayNetMgn != null ? fmtPct(displayNetMgn) : '—'),
       sub: netMarginKeep ? `Net income per $100 revenue${usingTTM ? ' (TTM)' : ''}` : 'Net margin',
-      color: displayNetMgn != null && displayNetMgn > 0.10 ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200',
+      color: displayNetMgn != null && displayNetMgn > 0.10 ? 'bg-[#E8F7EF] border-[#A3D9BE]' : 'bg-[#F4F3EF] border-[#E3E1DA]',
     },
     {
       label: 'Free Cash Flow',
       value: fcfB ?? (displayFcfMgn != null ? fmtPct(displayFcfMgn) : '—'),
       sub: fcfB ? `Generated per year (est.)${usingTTM ? ' · TTM' : ''}` : 'FCF margin',
-      color: displayFcfMgn != null && displayFcfMgn > 0.10 ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200',
+      color: displayFcfMgn != null && displayFcfMgn > 0.10 ? 'bg-[#E8F7EF] border-[#A3D9BE]' : 'bg-[#F4F3EF] border-[#E3E1DA]',
     },
   ]
 
   return (
     <div className="rounded-xl card px-4 py-4 sm:p-6">
-      <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-4">The Business</h2>
+      <h2 className="text-[11px] font-bold uppercase tracking-widest text-[#8A95A6] mb-4">The Business</h2>
 
       {/* Context pills */}
       {pills.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
           {pills.map((p) => (
-            <span key={p.label} className="rounded-full border border-slate-200 bg-slate-100 px-3 py-2 text-[12px] font-medium text-slate-600 min-h-[44px] flex items-center">
+            <span key={p.label} className="rounded-full border border-[#E3E1DA] bg-[#F4F3EF] px-3 py-2 text-[12px] font-medium text-[#566174] min-h-[44px] flex items-center">
               {p.label}
             </span>
           ))}
@@ -159,35 +159,35 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
       {/* Full description */}
       {description ? (
         <div className="mb-6">
-          <p className="text-[14px] text-slate-600 leading-relaxed">{displayDesc}</p>
+          <p className="text-[14px] text-[#566174] leading-relaxed">{displayDesc}</p>
           {isLongDesc && (
             <button
               onClick={() => setDescExpanded(e => !e)}
-              className="mt-2 text-[13px] font-medium text-blue-600 hover:text-blue-500 transition-colors min-h-[44px] flex items-center"
+              className="mt-2 text-[13px] font-medium text-[#2563EB] hover:text-[#2563EB] transition-colors min-h-[44px] flex items-center"
             >
               {descExpanded ? 'Show less' : 'Read more'}
             </button>
           )}
         </div>
       ) : (
-        <p className="text-[14px] text-slate-500 mb-6">No business description available for {ticker}.</p>
+        <p className="text-[14px] text-[#566174] mb-6">No business description available for {ticker}.</p>
       )}
 
       {/* Plain-English stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
         {statCards.map((card) => (
           <div key={card.label} className={`rounded-xl border px-4 py-4 ${card.color}`}>
-            <p className="text-[12px] text-slate-500 mb-1">{card.label}</p>
-            <p className="text-[18px] font-bold text-slate-900 tabular-nums">{card.value}</p>
-            <p className="text-[12px] text-slate-500 mt-0.5 leading-relaxed">{card.sub}</p>
+            <p className="text-[12px] text-[#566174] mb-1">{card.label}</p>
+            <p className="text-[18px] font-bold text-[#06101F] tabular-nums">{card.value}</p>
+            <p className="text-[12px] text-[#566174] mt-0.5 leading-relaxed">{card.sub}</p>
           </div>
         ))}
       </div>
 
       {/* Summary callout */}
       {summaryCallout && summaryCallout !== 'Insufficient data to generate a business quality summary.' && (
-        <div className="rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 mb-5">
-          <p className="text-[13px] text-blue-700 leading-relaxed">{summaryCallout}</p>
+        <div className="rounded-xl bg-[#EAF1FF] border border-[#93B4F5] px-4 py-3 mb-5">
+          <p className="text-[13px] text-[#2563EB] leading-relaxed">{summaryCallout}</p>
         </div>
       )}
 
@@ -195,7 +195,7 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         {chartData.length >= 2 && (
           <div>
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Revenue History ($M)</p>
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-[#8A95A6]">Revenue History ($M)</p>
             <ResponsiveContainer width="100%" height={140}>
               <BarChart data={chartData} margin={{ top: 0, right: 4, left: 4, bottom: 0 }}>
                 <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
@@ -214,7 +214,7 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
 
         {marginTrendData.length >= 2 && (
           <div>
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Margin Trends (%)</p>
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-[#8A95A6]">Margin Trends (%)</p>
             <ResponsiveContainer width="100%" height={140}>
               <LineChart data={marginTrendData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
                 <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />

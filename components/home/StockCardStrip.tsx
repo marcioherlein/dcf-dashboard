@@ -63,10 +63,10 @@ const CARDS = [
 
 function gradeColor(grade: string) {
   const g = grade.replace('+', '').replace('-', '')
-  if (g === 'A') return { bg: 'bg-emerald-500/20 border border-emerald-500/30', text: 'text-emerald-300' }
-  if (g === 'B') return { bg: 'bg-blue-500/20 border border-blue-500/30',       text: 'text-blue-300' }
-  if (g === 'C') return { bg: 'bg-amber-500/20 border border-amber-500/30',     text: 'text-amber-300' }
-  return { bg: 'bg-red-500/20 border border-red-500/30',                        text: 'text-red-300' }
+  if (g === 'A') return { bg: 'bg-[#E8F7EF]0/20 border border-emerald-500/30', text: 'text-[#A3D9BE]' }
+  if (g === 'B') return { bg: 'bg-[#EAF1FF]0/20 border border-blue-500/30',       text: 'text-[#93B4F5]' }
+  if (g === 'C') return { bg: 'bg-[#FFF4DA]0/20 border border-amber-500/30',     text: 'text-[#F3D391]' }
+  return { bg: 'bg-[#FCEAEA]0/20 border border-red-500/30',                        text: 'text-red-300' }
 }
 
 function sparklinePath(data: number[], w: number, h: number): { line: string; area: string } {
@@ -101,9 +101,9 @@ function PriceRangeBar({ low, high, current }: { low: number; high: number; curr
           style={{ left: `${pct}%` }}
         />
       </div>
-      <div className="mt-1 flex justify-between text-[10px] font-mono text-slate-400 tabular-nums">
+      <div className="mt-1 flex justify-between text-[10px] font-mono text-[#8A95A6] tabular-nums">
         <span>${low.toFixed(0)}</span>
-        <span className="text-slate-500 font-semibold">${current.toFixed(0)}</span>
+        <span className="text-[#566174] font-semibold">${current.toFixed(0)}</span>
         <span>${high.toFixed(0)}</span>
       </div>
     </div>
@@ -139,12 +139,12 @@ function StockCard({ card, index, visible }: { card: typeof CARDS[0]; index: num
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="rounded-md bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 text-[10px] font-bold text-blue-400 tracking-wide">
+              <span className="rounded-md bg-[#EAF1FF]0/10 border border-blue-500/20 px-1.5 py-0.5 text-[10px] font-bold text-[#2563EB] tracking-wide">
                 {card.ticker}
               </span>
-              <span className="text-[10px] text-slate-500 truncate">{card.sector}</span>
+              <span className="text-[10px] text-[#566174] truncate">{card.sector}</span>
             </div>
-            <p className="mt-1 text-sm font-semibold text-slate-200 leading-tight truncate">{card.name}</p>
+            <p className="mt-1 text-sm font-semibold text-[#CDD1C8] leading-tight truncate">{card.name}</p>
           </div>
           <div
             className={cn(
@@ -152,7 +152,7 @@ function StockCard({ card, index, visible }: { card: typeof CARDS[0]; index: num
               colors.bg, colors.text,
             )}
           >
-            <span className="text-base font-extrabold leading-none" style={{ fontFamily: 'var(--font-display, Space Grotesk), system-ui, sans-serif' }}>
+            <span className="text-base font-bold leading-none" style={{ fontFamily: 'var(--font-display, Space Grotesk), system-ui, sans-serif' }}>
               {card.grade}
             </span>
           </div>
@@ -161,7 +161,7 @@ function StockCard({ card, index, visible }: { card: typeof CARDS[0]; index: num
         {/* Verdict pill */}
         <p className={cn(
           'mt-2.5 text-[11px] font-medium leading-snug rounded-lg px-2.5 py-1.5',
-          isUnder ? 'bg-emerald-500/10 text-emerald-300' : 'bg-amber-500/10 text-amber-300',
+          isUnder ? 'bg-[#E8F7EF]0/10 text-[#A3D9BE]' : 'bg-[#FFF4DA]0/10 text-[#F3D391]',
         )}>
           {card.verdict}
         </p>
@@ -232,12 +232,12 @@ export default function StockCardStrip() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1">Live analysis</p>
-            <h2 className="text-2xl font-bold text-slate-100">Stocks investors are analyzing</h2>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-[#566174] mb-1">Live analysis</p>
+            <h2 className="text-2xl font-bold text-[#E3E1DA]">Stocks investors are analyzing</h2>
           </div>
           <a
             href="/screener"
-            className="text-sm font-semibold text-blue-400 hover:underline shrink-0 hidden sm:block"
+            className="text-sm font-semibold text-[#2563EB] hover:underline shrink-0 hidden sm:block"
           >
             View screener →
           </a>
@@ -252,7 +252,7 @@ export default function StockCardStrip() {
         </div>
 
         {/* Mobile hint */}
-        <p className="mt-3 text-center text-[11px] text-slate-400 sm:hidden">Scroll to see more →</p>
+        <p className="mt-3 text-center text-[11px] text-[#8A95A6] sm:hidden">Scroll to see more →</p>
       </div>
     </section>
   )

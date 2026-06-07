@@ -52,10 +52,10 @@ function MetricPill({ label, value }: { label: string; value: number | null }) {
 }
 
 const MARKET_COLORS: Record<string, string> = {
-  MERVAL: 'bg-blue-100 text-blue-700',
+  MERVAL: 'bg-[#EAF1FF] text-[#2563EB]',
   NYSE:   'bg-primary-fixed/60 text-on-primary-fixed-variant',
   NASDAQ: 'bg-violet-100 text-violet-700',
-  ROFEX:  'bg-amber-100 text-amber-700',
+  ROFEX:  'bg-[#FFF4DA] text-[#B56A00]',
 }
 
 export default function RankingTable({ results, loading, normalizeUSD }: Props) {
@@ -118,7 +118,7 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
         className="px-3 py-2.5 text-left cursor-pointer select-none whitespace-nowrap"
         onClick={() => toggleSort(k)}
       >
-        <span className={`flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider ${active ? 'text-primary' : 'text-on-surface-variant'}`}>
+        <span className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider ${active ? 'text-primary' : 'text-on-surface-variant'}`}>
           {label}
           <span className={`text-[8px] ${active ? 'opacity-100' : 'opacity-30'}`}>
             {active ? (sortDir === 'asc' ? '↑' : '↓') : '↕'}
@@ -152,8 +152,8 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
         <thead className="bg-surface-container-low sticky top-0 z-10">
           <tr>
             <SortHeader label="#" k="rank" />
-            <th className="px-3 py-2.5 text-left text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant whitespace-nowrap">Instrument</th>
-            <th className="px-3 py-2.5 text-left text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant">Market</th>
+            <th className="px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-on-surface-variant whitespace-nowrap">Instrument</th>
+            <th className="px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Market</th>
             <SortHeader label="Price" k="price" />
             <SortHeader label="1D %" k="change1DPct" />
             <SortHeader label="Score" k="finalScore" />
@@ -162,7 +162,7 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
             <SortHeader label="Earnings" k="earnings" />
             <SortHeader label="Quality" k="quality" />
             <SortHeader label="Risk" k="risk" />
-            <th className="px-3 py-2.5 text-left text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant">Tags</th>
+            <th className="px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Tags</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-outline-variant/10">
@@ -279,7 +279,7 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
 
                         {/* Factor breakdown */}
                         <div>
-                          <p className="text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant mb-2">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-2">
                             Factor Breakdown
                           </p>
                           <div className="space-y-2">
@@ -329,7 +329,7 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
 
                         {/* Key metrics */}
                         <div>
-                          <p className="text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant mb-2">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-2">
                             Key Metrics
                           </p>
                           <div className="flex flex-wrap gap-1">
@@ -341,7 +341,7 @@ export default function RankingTable({ results, loading, normalizeUSD }: Props) 
 
                         {/* Instrument details */}
                         <div>
-                          <p className="text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant mb-2">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-2">
                             Instrument Details
                           </p>
                           <div className="space-y-1 text-xs">

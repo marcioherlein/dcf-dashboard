@@ -17,7 +17,7 @@ import type { ETFProfileResponse } from '@/lib/data/etfTypes'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
-  loading: () => <div className="min-h-[200px] rounded-xl bg-slate-100 motion-safe:animate-pulse" />,
+  loading: () => <div className="min-h-[200px] rounded-xl bg-[#F4F3EF] motion-safe:animate-pulse" />,
 })
 
 export default function ETFDetailPage() {
@@ -82,13 +82,13 @@ export default function ETFDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-dvh bg-[#F1F5F9] px-4 sm:px-8 py-4 sm:py-8">
+      <div className="min-h-dvh bg-[#F4F3EF] px-4 sm:px-8 py-4 sm:py-8">
         <div className="max-w-6xl mx-auto space-y-4">
-          <div className="h-8 w-32 bg-slate-200 rounded motion-safe:animate-pulse" />
-          <div className="h-40 bg-white rounded-2xl border border-slate-200 motion-safe:animate-pulse" />
+          <div className="h-8 w-32 bg-[#E3E1DA] rounded motion-safe:animate-pulse" />
+          <div className="h-40 bg-white rounded-2xl border border-[#E3E1DA] motion-safe:animate-pulse" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-40 bg-white rounded-xl border border-slate-200 motion-safe:animate-pulse" />
+              <div key={i} className="h-40 bg-white rounded-xl border border-[#E3E1DA] motion-safe:animate-pulse" />
             ))}
           </div>
         </div>
@@ -98,13 +98,13 @@ export default function ETFDetailPage() {
 
   if (error || !profile) {
     return (
-      <div className="min-h-dvh bg-[#F1F5F9] px-4 sm:px-8 py-4 sm:py-8">
+      <div className="min-h-dvh bg-[#F4F3EF] px-4 sm:px-8 py-4 sm:py-8">
         <div className="max-w-6xl mx-auto">
-          <Link href="/etf" className="inline-flex items-center gap-1.5 text-[14px] text-slate-500 hover:text-slate-700 mb-6 min-h-[44px]">
+          <Link href="/etf" className="inline-flex items-center gap-1.5 text-[14px] text-[#566174] hover:text-[#566174] mb-6 min-h-[44px]">
             <ArrowLeft size={14} /> ETF Tracker
           </Link>
-          <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
-            <p className="text-sm text-slate-500">{error ?? 'ETF not found'}</p>
+          <div className="bg-white rounded-2xl border border-[#E3E1DA] p-8 text-center">
+            <p className="text-sm text-[#566174]">{error ?? 'ETF not found'}</p>
           </div>
         </div>
       </div>
@@ -112,9 +112,9 @@ export default function ETFDetailPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-[#F1F5F9]">
+    <div className="min-h-dvh bg-[#F4F3EF]">
       <div className="px-4 sm:px-8 py-6 sm:py-8 max-w-6xl mx-auto space-y-5">
-        <Link href="/etf" className="inline-flex items-center gap-1.5 text-[14px] text-slate-500 hover:text-slate-700 min-h-[44px]">
+        <Link href="/etf" className="inline-flex items-center gap-1.5 text-[14px] text-[#566174] hover:text-[#566174] min-h-[44px]">
           <ArrowLeft size={14} /> ETF Tracker
         </Link>
 
@@ -146,7 +146,7 @@ export default function ETFDetailPage() {
 
         {/* Price chart */}
         <div className="glass-card-light rounded-2xl p-4">
-          <p className="text-sm font-semibold text-slate-700 mb-3">Price History</p>
+          <p className="text-sm font-semibold text-[#566174] mb-3">Price History</p>
           <div className="min-h-[200px] w-full">
             <PriceChart ticker={symbol} />
           </div>

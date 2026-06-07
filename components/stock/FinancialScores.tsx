@@ -14,21 +14,21 @@ interface Props {
 }
 
 function ScoreColor(value: number, thresholds: [number, number]): string {
-  if (value >= thresholds[1]) return 'text-emerald-600'
-  if (value >= thresholds[0]) return 'text-amber-700'
-  return 'text-red-600'
+  if (value >= thresholds[1]) return 'text-[#11875D]'
+  if (value >= thresholds[0]) return 'text-[#B56A00]'
+  return 'text-[#D83B3B]'
 }
 
 function BgColor(value: number, thresholds: [number, number]): string {
-  if (value >= thresholds[1]) return 'bg-emerald-50 border-emerald-200'
-  if (value >= thresholds[0]) return 'bg-amber-50 border-amber-200'
-  return 'bg-red-50 border-red-200'
+  if (value >= thresholds[1]) return 'bg-[#E8F7EF] border-[#A3D9BE]'
+  if (value >= thresholds[0]) return 'bg-[#FFF4DA] border-[#F3D391]'
+  return 'bg-[#FCEAEA] border-[#F0B8B8]'
 }
 
 function BadgeColor(value: number, thresholds: [number, number]): string {
-  if (value >= thresholds[1]) return 'bg-emerald-100 text-emerald-800'
-  if (value >= thresholds[0]) return 'bg-amber-100 text-amber-800'
-  return 'bg-red-100 text-red-800'
+  if (value >= thresholds[1]) return 'bg-[#E8F7EF] text-[#0D6B46]'
+  if (value >= thresholds[0]) return 'bg-[#FFF4DA] text-[#854D0E]'
+  return 'bg-[#FCEAEA] text-[#991B1B]'
 }
 
 // Groups: Profitability (0-3), Leverage/Cash (4-6), Efficiency (7-8)
@@ -42,12 +42,12 @@ function CriterionRow({ pass, name, detail }: { pass: boolean | null; name: stri
   return (
     <div className="flex items-center gap-2.5 py-1.5">
       <div className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${
-        pass === null ? 'bg-slate-300 text-slate-600' : pass ? 'bg-emerald-500' : 'bg-red-500'
+        pass === null ? 'bg-[#CDD1C8] text-[#566174]' : pass ? 'bg-[#E8F7EF]0' : 'bg-[#FCEAEA]0'
       }`}>
         {pass === null ? '?' : pass ? '✓' : '✗'}
       </div>
-      <span className="flex-1 text-[11px] text-slate-700">{name}</span>
-      <span className="text-[11px] text-slate-500 font-mono tabular-nums">{detail}</span>
+      <span className="flex-1 text-[11px] text-[#06101F]">{name}</span>
+      <span className="text-[11px] text-[#566174] font-mono tabular-nums">{detail}</span>
     </div>
   )
 }
@@ -70,15 +70,15 @@ export default function FinancialScores({ scores }: Props) {
   if (noData) {
     return (
       <div className="rounded-xl card p-6">
-        <h2 className="mb-4 text-[14px] font-semibold text-slate-800">Financial Quality Scores</h2>
+        <h2 className="mb-4 text-[14px] font-semibold text-[#06101F]">Financial Quality Scores</h2>
         <div className="flex flex-col items-center justify-center py-10 gap-3">
-          <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
-            <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <div className="w-12 h-12 rounded-full bg-[#F4F3EF] flex items-center justify-center">
+            <svg className="w-6 h-6 text-[#8A95A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
             </svg>
           </div>
-          <p className="text-sm font-semibold text-slate-600">Fundamental data unavailable</p>
-          <p className="text-[11px] text-slate-500 text-center max-w-xs leading-relaxed">
+          <p className="text-sm font-semibold text-[#566174]">Fundamental data unavailable</p>
+          <p className="text-[11px] text-[#566174] text-center max-w-xs leading-relaxed">
             Yahoo Finance did not return financial statements for this ticker. Quality scores require at least 2 years of income statement and balance sheet data.
           </p>
         </div>
@@ -89,17 +89,17 @@ export default function FinancialScores({ scores }: Props) {
   const altmanSafe = altman != null && isFinite(altman.zScore) && Math.abs(altman.zScore) <= 50 ? altman : null
   const altmanGood = altmanSafe != null && altmanSafe.zScore >= 3.0
   const altmanMid  = altmanSafe != null && altmanSafe.zScore >= 1.8 && altmanSafe.zScore < 3.0
-  const altmanColor = altmanSafe == null ? 'text-slate-400' : altmanGood ? 'text-emerald-600' : altmanMid ? 'text-amber-700' : 'text-red-600'
-  const altmanBg    = altmanSafe == null ? 'bg-slate-50 border-slate-200' : altmanGood ? 'bg-emerald-50 border-emerald-200' : altmanMid ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200'
-  const altmanBadge = altmanSafe == null ? 'bg-slate-100 text-slate-600' : altmanGood ? 'bg-emerald-100 text-emerald-800' : altmanMid ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'
+  const altmanColor = altmanSafe == null ? 'text-[#8A95A6]' : altmanGood ? 'text-[#11875D]' : altmanMid ? 'text-[#B56A00]' : 'text-[#D83B3B]'
+  const altmanBg    = altmanSafe == null ? 'bg-[#F4F3EF] border-[#E3E1DA]' : altmanGood ? 'bg-[#E8F7EF] border-[#A3D9BE]' : altmanMid ? 'bg-[#FFF4DA] border-[#F3D391]' : 'bg-[#FCEAEA] border-[#F0B8B8]'
+  const altmanBadge = altmanSafe == null ? 'bg-[#F4F3EF] text-[#566174]' : altmanGood ? 'bg-[#E8F7EF] text-[#0D6B46]' : altmanMid ? 'bg-[#FFF4DA] text-[#854D0E]' : 'bg-[#FCEAEA] text-[#991B1B]'
   const altmanZoneLabel = altmanSafe == null ? 'No data' : altmanSafe.zone === 'Safe' ? 'Safe Zone' : altmanSafe.zone === 'Grey' ? 'Grey Zone' : 'Distress Zone'
 
   const mScore = beneish?.mScore ?? 0
   const beneishClean = beneish?.flag === 'Clean'
   const beneishWarn  = beneish?.flag === 'Warning'
-  const beneishColor = beneishClean ? 'text-emerald-600' : beneishWarn ? 'text-amber-700' : 'text-red-600'
-  const beneishBg    = beneishClean ? 'bg-emerald-50 border-emerald-200' : beneishWarn ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200'
-  const beneishBadge = beneishClean ? 'bg-emerald-100 text-emerald-800' : beneishWarn ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'
+  const beneishColor = beneishClean ? 'text-[#11875D]' : beneishWarn ? 'text-[#B56A00]' : 'text-[#D83B3B]'
+  const beneishBg    = beneishClean ? 'bg-[#E8F7EF] border-[#A3D9BE]' : beneishWarn ? 'bg-[#FFF4DA] border-[#F3D391]' : 'bg-[#FCEAEA] border-[#F0B8B8]'
+  const beneishBadge = beneishClean ? 'bg-[#E8F7EF] text-[#0D6B46]' : beneishWarn ? 'bg-[#FFF4DA] text-[#854D0E]' : 'bg-[#FCEAEA] text-[#991B1B]'
   const beneishLabel = beneish?.flag === 'Clean' ? 'Unlikely Manipulator' : beneish?.flag === 'Warning' ? 'Watch' : 'Possible Manipulation'
 
   const spreadPp   = Math.round(roic.spread * 1000) / 10
@@ -112,7 +112,7 @@ export default function FinancialScores({ scores }: Props) {
 
   return (
     <div className="rounded-xl card p-6">
-      <h2 className="mb-5 text-[14px] font-semibold text-slate-800">Financial Quality Scores</h2>
+      <h2 className="mb-5 text-[14px] font-semibold text-[#06101F]">Financial Quality Scores</h2>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
@@ -120,17 +120,17 @@ export default function FinancialScores({ scores }: Props) {
         <div className={`rounded-xl border p-4 ${BgColor(piotroski.score, [4, 8])}`}>
           <div className="flex items-start justify-between mb-1">
             <div>
-              <p className="text-[11px] font-semibold text-slate-500">Financial Strength</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">Piotroski F-Score</p>
+              <p className="text-[11px] font-semibold text-[#566174]">Financial Strength</p>
+              <p className="text-[10px] text-[#8A95A6] mt-0.5">Piotroski F-Score</p>
               <p className={`mt-0.5 text-3xl font-bold tabular-nums ${ScoreColor(piotroski.score, [4, 8])}`}>
-                {piotroski.score}<span className="text-base font-normal text-slate-500"> / 9</span>
+                {piotroski.score}<span className="text-base font-normal text-[#566174]"> / 9</span>
               </p>
             </div>
             <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${BadgeColor(piotroski.score, [4, 8])}`}>
               {piotroski.label}
             </span>
           </div>
-          <p className="mb-4 text-[11px] text-slate-400 leading-relaxed">
+          <p className="mb-4 text-[11px] text-[#8A95A6] leading-relaxed">
             9 binary accounting signals across profitability, leverage, and efficiency. Score ≥ 7 = strong. Score ≤ 3 = weak.
           </p>
 
@@ -150,10 +150,10 @@ export default function FinancialScores({ scores }: Props) {
                   variants={reduced ? {} : { hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3 } } }}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-[10px] font-semibold text-slate-500">{group.label}</p>
-                    <p className="text-[10px] font-mono text-slate-500">{groupPass}/{group.indices.length}</p>
+                    <p className="text-[10px] font-semibold text-[#566174]">{group.label}</p>
+                    <p className="text-[10px] font-mono text-[#566174]">{groupPass}/{group.indices.length}</p>
                   </div>
-                  <div className="divide-y divide-slate-100 rounded-lg bg-white border border-slate-200 px-2">
+                  <div className="divide-y divide-[#E3E1DA] rounded-lg bg-white border border-[#E3E1DA] px-2">
                     {groupCriteria.map((c, j) => (
                       <CriterionRow key={j} pass={c.pass} name={c.name} detail={c.detail} />
                     ))}
@@ -168,47 +168,47 @@ export default function FinancialScores({ scores }: Props) {
         <div className={`rounded-xl border p-4 ${altmanBg}`}>
           <div className="flex items-start justify-between mb-1">
             <div>
-              <p className="text-[11px] font-semibold text-slate-500">
+              <p className="text-[11px] font-semibold text-[#566174]">
                 Bankruptcy Risk
                 {altmanSafe && !altmanSafe.isReliable && (
-                  <span className="ml-1.5 text-[10px] text-amber-600 font-medium">(EM)</span>
+                  <span className="ml-1.5 text-[10px] text-[#B56A00] font-medium">(EM)</span>
                 )}
               </p>
-              <p className="text-[10px] text-slate-400 mt-0.5">Altman Z-Score</p>
+              <p className="text-[10px] text-[#8A95A6] mt-0.5">Altman Z-Score</p>
               {altmanSafe != null ? (
                 <p className={`mt-0.5 text-3xl font-bold tabular-nums ${altmanColor}`}>
                   {altmanSafe.zScore.toFixed(2)}
                 </p>
               ) : (
-                <p className="mt-0.5 text-sm text-slate-500">Insufficient data</p>
+                <p className="mt-0.5 text-sm text-[#566174]">Insufficient data</p>
               )}
             </div>
             <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${altmanBadge}`}>
               {altmanZoneLabel}
             </span>
           </div>
-          <p className="mb-4 text-[11px] text-slate-500 leading-relaxed">
+          <p className="mb-4 text-[11px] text-[#566174] leading-relaxed">
             Predicts bankruptcy risk within 2 years using 5 financial ratios.
             Z &lt; 1.8 = distress · 1.8–3.0 = grey · Z ≥ 3.0 = safe.
             {altmanSafe && !altmanSafe.isReliable && (
-              <span className="text-amber-700"> Limited reliability for non-US/EM companies.</span>
+              <span className="text-[#B56A00]"> Limited reliability for non-US/EM companies.</span>
             )}
           </p>
 
           {altmanSafe != null && (
             <div className="mb-4">
               {/* Proportional zone bar: 0–1.8 = distress (24%), 1.8–3.0 = grey (16%), 3.0–7.5 = safe (60%) */}
-              <div className="relative h-2.5 w-full rounded-full bg-slate-200 overflow-hidden">
-                <div className="absolute left-0 top-0 h-full bg-red-400" style={{ width: '24%' }} />
-                <div className="absolute top-0 h-full bg-amber-400" style={{ left: '24%', width: '16%' }} />
-                <div className="absolute top-0 h-full bg-emerald-400" style={{ left: '40%', width: '60%' }} />
+              <div className="relative h-2.5 w-full rounded-full bg-[#E3E1DA] overflow-hidden">
+                <div className="absolute left-0 top-0 h-full bg-[#D83B3B]" style={{ width: '24%' }} />
+                <div className="absolute top-0 h-full bg-[#B56A00]" style={{ left: '24%', width: '16%' }} />
+                <div className="absolute top-0 h-full bg-[#11875D]" style={{ left: '40%', width: '60%' }} />
                 {/* Pointer */}
                 <div
                   className="absolute top-1/2 w-3 h-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-slate-700 shadow"
                   style={{ left: `${Math.min(Math.max(altmanSafe.zScore / 7.5 * 100, 2), 98)}%` }}
                 />
               </div>
-              <div className="mt-1.5 flex justify-between text-[10px] text-slate-500">
+              <div className="mt-1.5 flex justify-between text-[10px] text-[#566174]">
                 <span>Distress &lt;1.8</span>
                 <span>Grey zone</span>
                 <span>Safe ≥3.0</span>
@@ -225,7 +225,7 @@ export default function FinancialScores({ scores }: Props) {
                 {showAltman ? 'Hide components ↑' : 'Show components ↓'}
               </button>
               {showAltman && (
-                <ul className="mt-2 space-y-1 rounded-lg bg-white border border-slate-200 px-3 py-2">
+                <ul className="mt-2 space-y-1 rounded-lg bg-white border border-[#E3E1DA] px-3 py-2">
                   {[
                     { label: 'X1 · Working Capital / Assets', value: altmanSafe.components.x1, weight: '×1.2' },
                     { label: 'X2 · Retained Earnings / Assets', value: altmanSafe.components.x2, weight: '×1.4' },
@@ -234,9 +234,9 @@ export default function FinancialScores({ scores }: Props) {
                     { label: 'X5 · Revenue / Assets', value: altmanSafe.components.x5, weight: '×1.0' },
                   ].map((row) => (
                     <li key={row.label} className="flex items-center gap-1 text-[11px] py-0.5">
-                      <span className="text-slate-500 w-8 shrink-0">{row.weight}</span>
-                      <span className="flex-1 text-slate-600">{row.label}</span>
-                      <span className="tabular-nums text-slate-900 font-mono">{row.value.toFixed(3)}</span>
+                      <span className="text-[#566174] w-8 shrink-0">{row.weight}</span>
+                      <span className="flex-1 text-[#566174]">{row.label}</span>
+                      <span className="tabular-nums text-[#06101F] font-mono">{row.value.toFixed(3)}</span>
                     </li>
                   ))}
                 </ul>
@@ -246,17 +246,17 @@ export default function FinancialScores({ scores }: Props) {
         </div>
 
         {/* ── Earnings Quality (Beneish M-Score) ── */}
-        <div className={`rounded-xl border p-4 ${beneish ? beneishBg : 'bg-slate-50 border-slate-200'}`}>
+        <div className={`rounded-xl border p-4 ${beneish ? beneishBg : 'bg-[#F4F3EF] border-[#E3E1DA]'}`}>
           <div className="flex items-start justify-between mb-1">
             <div>
-              <p className="text-[11px] font-semibold text-slate-500">Earnings Quality</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">Beneish M-Score</p>
+              <p className="text-[11px] font-semibold text-[#566174]">Earnings Quality</p>
+              <p className="text-[10px] text-[#8A95A6] mt-0.5">Beneish M-Score</p>
               {beneish ? (
                 <p className={`mt-0.5 text-3xl font-bold tabular-nums ${beneishColor}`}>
                   {mScore.toFixed(2)}
                 </p>
               ) : (
-                <p className="mt-0.5 text-sm text-slate-500">Not applicable</p>
+                <p className="mt-0.5 text-sm text-[#566174]">Not applicable</p>
               )}
             </div>
             {beneish ? (
@@ -264,23 +264,23 @@ export default function FinancialScores({ scores }: Props) {
                 {beneishLabel}
               </span>
             ) : (
-              <span className="rounded-full px-2.5 py-1 text-[11px] font-semibold bg-slate-100 text-slate-600">
+              <span className="rounded-full px-2.5 py-1 text-[11px] font-semibold bg-[#F4F3EF] text-[#566174]">
                 N/A
               </span>
             )}
           </div>
-          <p className="mb-3 text-[11px] text-slate-500 leading-relaxed">
+          <p className="mb-3 text-[11px] text-[#566174] leading-relaxed">
             Detects earnings manipulation using 8 accounting ratios. M-Score ≤ −1.78 = unlikely manipulator.
             {!beneish && (
-              <span className="text-slate-400"> Not available — requires USD-reporting financials (YoY ratios are inflation-distorted for non-USD companies).</span>
+              <span className="text-[#8A95A6]"> Not available — requires USD-reporting financials (YoY ratios are inflation-distorted for non-USD companies).</span>
             )}
           </p>
 
           {beneish && (
             <>
-              <p className="mb-3 text-[11px] text-slate-500">
+              <p className="mb-3 text-[11px] text-[#566174]">
                 Threshold ≤ −1.78 = clean.{' '}
-                <span className={beneishClean ? 'text-emerald-600' : 'text-amber-700'}>
+                <span className={beneishClean ? 'text-[#11875D]' : 'text-[#B56A00]'}>
                   {beneishClean ? 'Earnings quality looks intact.' : 'Review accounting signals.'}
                 </span>
               </p>
@@ -291,7 +291,7 @@ export default function FinancialScores({ scores }: Props) {
                 {showBeneish ? 'Hide indices ↑' : 'Show indices ↓'}
               </button>
               {showBeneish && (
-                <ul className="mt-2 space-y-1 rounded-lg bg-white border border-slate-200 px-3 py-2">
+                <ul className="mt-2 space-y-1 rounded-lg bg-white border border-[#E3E1DA] px-3 py-2">
                   {[
                     { label: 'DSRI · Receivables inflation', value: beneish.components.dsri },
                     { label: 'GMI · Gross margin change', value: beneish.components.gmi },
@@ -303,8 +303,8 @@ export default function FinancialScores({ scores }: Props) {
                     { label: 'LVGI · Leverage index', value: beneish.components.lvgi },
                   ].map((row) => (
                     <li key={row.label} className="flex items-center gap-1 text-[11px] py-0.5">
-                      <span className="flex-1 text-slate-600">{row.label}</span>
-                      <span className="tabular-nums text-slate-900 font-mono">{row.value.toFixed(4)}</span>
+                      <span className="flex-1 text-[#566174]">{row.label}</span>
+                      <span className="tabular-nums text-[#06101F] font-mono">{row.value.toFixed(4)}</span>
                     </li>
                   ))}
                 </ul>
@@ -315,21 +315,21 @@ export default function FinancialScores({ scores }: Props) {
 
         {/* ── Value Creation (ROIC vs WACC) ── */}
         {roic.dataAvailable && (
-          <div className={`rounded-xl border p-4 ${spreadGood ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+          <div className={`rounded-xl border p-4 ${spreadGood ? 'bg-[#E8F7EF] border-[#A3D9BE]' : 'bg-[#FCEAEA] border-[#F0B8B8]'}`}>
             <div className="flex items-start justify-between mb-1">
               <div>
-                <p className="text-[11px] font-semibold text-slate-500">Value Creation</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">ROIC vs cost of capital</p>
-                <p className={`mt-0.5 text-3xl font-bold tabular-nums ${spreadGood ? 'text-emerald-600' : 'text-red-600'}`}>
+                <p className="text-[11px] font-semibold text-[#566174]">Value Creation</p>
+                <p className="text-[10px] text-[#8A95A6] mt-0.5">ROIC vs cost of capital</p>
+                <p className={`mt-0.5 text-3xl font-bold tabular-nums ${spreadGood ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                   {fmtPct(roic.roic)}
                 </p>
-                <p className="text-[11px] text-slate-500">ROIC</p>
+                <p className="text-[11px] text-[#566174]">ROIC</p>
               </div>
-              <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${spreadGood ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}>
+              <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${spreadGood ? 'bg-[#E8F7EF] text-[#0D6B46]' : 'bg-[#FCEAEA] text-[#991B1B]'}`}>
                 {spreadGood ? 'Value Created' : 'Value Destroyed'}
               </span>
             </div>
-            <p className="mb-4 text-[11px] text-slate-500 leading-relaxed">
+            <p className="mb-4 text-[11px] text-[#566174] leading-relaxed">
               When ROIC exceeds WACC, each invested dollar generates more than it costs — compounding value over time.
             </p>
 
@@ -337,44 +337,44 @@ export default function FinancialScores({ scores }: Props) {
             <div className="space-y-2 mb-4">
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-[10px] text-slate-500 font-medium">ROIC</span>
-                  <span className={`text-[11px] font-mono font-semibold ${spreadGood ? 'text-emerald-600' : 'text-red-600'}`}>{fmtPct(roic.roic)}</span>
+                  <span className="text-[10px] text-[#566174] font-medium">ROIC</span>
+                  <span className={`text-[11px] font-mono font-semibold ${spreadGood ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>{fmtPct(roic.roic)}</span>
                 </div>
-                <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
+                <div className="h-2 rounded-full bg-[#E3E1DA] overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all ${spreadGood ? 'bg-emerald-500' : 'bg-red-500'}`}
+                    className={`h-full rounded-full transition-all ${spreadGood ? 'bg-[#E8F7EF]0' : 'bg-[#FCEAEA]0'}`}
                     style={{ width: `${(roicPct / barScale) * 100}%` }}
                   />
                 </div>
               </div>
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-[10px] text-slate-500 font-medium">WACC</span>
-                  <span className="text-[11px] font-mono font-semibold text-slate-700">{fmtPct(roic.roic - roic.spread)}</span>
+                  <span className="text-[10px] text-[#566174] font-medium">WACC</span>
+                  <span className="text-[11px] font-mono font-semibold text-[#06101F]">{fmtPct(roic.roic - roic.spread)}</span>
                 </div>
-                <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
+                <div className="h-2 rounded-full bg-[#E3E1DA] overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-slate-400"
+                    className="h-full rounded-full bg-[#8A95A6]"
                     style={{ width: `${(waccPct / barScale) * 100}%` }}
                   />
                 </div>
               </div>
-              <div className="flex items-center justify-between pt-1 border-t border-slate-200">
-                <span className="text-[10px] text-slate-500">Spread (ROIC − WACC)</span>
-                <span className={`text-[12px] font-bold font-mono ${spreadGood ? 'text-emerald-600' : 'text-red-600'}`}>
+              <div className="flex items-center justify-between pt-1 border-t border-[#E3E1DA]">
+                <span className="text-[10px] text-[#566174]">Spread (ROIC − WACC)</span>
+                <span className={`text-[12px] font-bold font-mono ${spreadGood ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                   {spreadPp > 0 ? '+' : ''}{spreadPp.toFixed(1)} pp
                 </span>
               </div>
             </div>
 
-            <div className="rounded-lg bg-white border border-slate-200 px-3 py-2 text-[11px] space-y-1">
+            <div className="rounded-lg bg-white border border-[#E3E1DA] px-3 py-2 text-[11px] space-y-1">
               <div className="flex justify-between">
-                <span className="text-slate-500">NOPAT</span>
-                <span className="tabular-nums text-slate-900 font-mono">{fmtM(roic.nopat)}</span>
+                <span className="text-[#566174]">NOPAT</span>
+                <span className="tabular-nums text-[#06101F] font-mono">{fmtM(roic.nopat)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Invested Capital</span>
-                <span className="tabular-nums text-slate-900 font-mono">{fmtM(roic.investedCapital)}</span>
+                <span className="text-[#566174]">Invested Capital</span>
+                <span className="tabular-nums text-[#06101F] font-mono">{fmtM(roic.investedCapital)}</span>
               </div>
             </div>
           </div>
@@ -382,7 +382,7 @@ export default function FinancialScores({ scores }: Props) {
 
       </div>
 
-      <p className="mt-4 text-[10px] text-slate-400">
+      <p className="mt-4 text-[10px] text-[#8A95A6]">
         Piotroski (2000), Altman (1968), Beneish (1999), ROIC/WACC per Damodaran framework. Computed from trailing annual financials.
       </p>
     </div>

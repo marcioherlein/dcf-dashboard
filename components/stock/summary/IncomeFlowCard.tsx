@@ -30,7 +30,7 @@ const NODE_FILL: Record<string, string> = {
   'Gross Profit':        '#059669',
   'Operating Expenses':  '#DC2626',
   'Operating Income':    '#059669',
-  'Tax & Other':         '#94A3B8',
+  'Tax & Other':         '#8A95A6',
   'Net Income':          '#059669',
 }
 
@@ -144,7 +144,7 @@ export default function IncomeFlowCard({ statementsData, currency = 'USD' }: Inc
     const value: number = payload?.value ?? 0
     if (!name || value <= 0) return null
 
-    const fill       = NODE_FILL[name]  ?? '#64748B'
+    const fill       = NODE_FILL[name]  ?? '#566174'
     const isRevenue  = name === 'Revenue'
     const isLeaf     = leafSet.has(index as number)
     // on narrow screens, only show full labels for Revenue and leaf nodes
@@ -173,7 +173,7 @@ export default function IncomeFlowCard({ statementsData, currency = 'USD' }: Inc
             fontFamily="Inter, system-ui, sans-serif"
             fontSize={11}
             fontWeight={600}
-            fill="#334155"
+            fill="#566174"
           >
             {name}
           </text>
@@ -187,7 +187,7 @@ export default function IncomeFlowCard({ statementsData, currency = 'USD' }: Inc
             dominantBaseline="middle"
             fontFamily="DM Mono, IBM Plex Mono, monospace"
             fontSize={11}
-            fill="#0F172A"
+            fill="#06101F"
           >
             {fmtFlow(value, fin)}
           </text>
@@ -201,7 +201,7 @@ export default function IncomeFlowCard({ statementsData, currency = 'USD' }: Inc
             dominantBaseline="middle"
             fontFamily="Inter, system-ui, sans-serif"
             fontSize={10}
-            fill="#64748B"
+            fill="#566174"
           >
             {pctLabel}
           </text>
@@ -237,15 +237,15 @@ export default function IncomeFlowCard({ statementsData, currency = 'USD' }: Inc
   const chartHeight = isNarrow ? 260 : 300
 
   return (
-    <div className="rounded-2xl overflow-hidden border border-slate-100 shadow-card">
-      <div className="px-5 py-3 bg-white border-b border-slate-100 flex items-center justify-between">
-        <p className="text-[12px] font-[650] text-slate-500">Income breakdown · TTM</p>
+    <div className="rounded-2xl overflow-hidden border border-[#E3E1DA] shadow-card">
+      <div className="px-5 py-3 bg-white border-b border-[#E3E1DA] flex items-center justify-between">
+        <p className="text-[12px] font-[650] text-[#566174]">Income breakdown · TTM</p>
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1.5 text-[11px] text-slate-400">
+          <span className="flex items-center gap-1.5 text-[11px] text-[#8A95A6]">
             <span className="inline-block w-2 h-2 rounded-sm bg-[#059669]" />
             Profit
           </span>
-          <span className="flex items-center gap-1.5 text-[11px] text-slate-400">
+          <span className="flex items-center gap-1.5 text-[11px] text-[#8A95A6]">
             <span className="inline-block w-2 h-2 rounded-sm bg-[#DC2626]" />
             Cost
           </span>

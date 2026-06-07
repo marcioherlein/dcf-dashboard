@@ -9,10 +9,10 @@ const chipVariants = cva(
     variants: {
       variant: {
         default:  'bg-white/5 border-[rgba(59,130,246,0.15)]',
-        positive: 'bg-emerald-500/10 border-emerald-500/20',
-        negative: 'bg-red-500/10 border-red-500/20',
-        warning:  'bg-amber-500/10 border-amber-500/20',
-        accent:   'bg-blue-500/10 border-blue-500/20',
+        positive: 'bg-[#E8F7EF]0/10 border-emerald-500/20',
+        negative: 'bg-[#FCEAEA]0/10 border-red-500/20',
+        warning:  'bg-[#FFF4DA]0/10 border-amber-500/20',
+        accent:   'bg-[#EAF1FF]0/10 border-blue-500/20',
       },
     },
     defaultVariants: { variant: 'default' },
@@ -22,11 +22,11 @@ const chipVariants = cva(
 const valueVariants = cva('text-sm font-bold font-mono mt-0.5', {
   variants: {
     variant: {
-      default:  'text-slate-200',
-      positive: 'text-emerald-400',
-      negative: 'text-red-400',
-      warning:  'text-amber-400',
-      accent:   'text-blue-400',
+      default:  'text-[#CDD1C8]',
+      positive: 'text-[#11875D]',
+      negative: 'text-[#D83B3B]',
+      warning:  'text-[#B56A00]',
+      accent:   'text-[#2563EB]',
     },
   },
   defaultVariants: { variant: 'default' },
@@ -44,7 +44,7 @@ export function MetricChip({ label, value, naReason, variant, className, tooltip
   const isNA = naReason != null || value === '—'
   return (
     <div className={cn(chipVariants({ variant: isNA ? 'default' : variant }), className)}>
-      <span className="text-label uppercase tracking-wider text-slate-500 flex items-center gap-0.5">
+      <span className="text-label uppercase tracking-wider text-[#566174] flex items-center gap-0.5">
         {label}
         {tooltip && <InfoTooltip text={tooltip} side="top" />}
       </span>

@@ -53,12 +53,12 @@ function ChartTooltip({ active, payload, label, hex }: any) {
   if (!active || !payload?.length) return null
   const v = payload[0]?.value as number | null
   return (
-    <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 shadow-md text-xs">
-      <p className="text-slate-500 mb-1">{label === 'TTM' ? 'Trailing 12M' : label}</p>
+    <div className="bg-white border border-[#E3E1DA] rounded-lg px-3 py-2 shadow-md text-xs">
+      <p className="text-[#566174] mb-1">{label === 'TTM' ? 'Trailing 12M' : label}</p>
       {v != null ? (
         <p className="font-bold tabular-nums" style={{ color: hex }}>{v.toFixed(1)}×</p>
       ) : (
-        <p className="text-slate-400">N/A</p>
+        <p className="text-[#8A95A6]">N/A</p>
       )}
     </div>
   )
@@ -136,22 +136,22 @@ export default function HistoricalMultiplesChart({
   const isElevated = ttmVal != null && histAvg != null && ttmVal > histAvg * 1.5
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-4 sm:px-5 py-4">
+    <div className="bg-white rounded-xl border border-[#E3E1DA] shadow-sm px-4 sm:px-5 py-4">
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-1">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-[#8A95A6] mb-1">
             Historical Valuation Multiples
           </p>
           {isElevated && (
-            <p className="text-[11px] text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-0.5 inline-block">
+            <p className="text-[11px] text-[#B56A00] bg-[#FFF4DA] border border-[#F3D391] rounded px-2 py-0.5 inline-block">
               Current {cfg.label} elevated vs. 5-year history — exit multiple will mean-revert
             </p>
           )}
         </div>
         {/* Metric tabs */}
-        <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5 shrink-0">
+        <div className="flex items-center gap-1 bg-[#F4F3EF] rounded-lg p-0.5 shrink-0">
           {METRICS.map(m => (
             <button
               key={m.key}
@@ -159,7 +159,7 @@ export default function HistoricalMultiplesChart({
               className="px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all min-h-[44px] flex items-center"
               style={active === m.key
                 ? { background: 'white', color: m.hex, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
-                : { color: '#94a3b8' }
+                : { color: '#8A95A6' }
               }
             >
               {m.label}
@@ -182,13 +182,13 @@ export default function HistoricalMultiplesChart({
 
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 10, fill: '#94a3b8' }}
+            tick={{ fontSize: 10, fill: '#8A95A6' }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
             domain={[yMin, yMax]}
-            tick={{ fontSize: 10, fill: '#94a3b8' }}
+            tick={{ fontSize: 10, fill: '#8A95A6' }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v: number) => v.toFixed(0) + '×'}
@@ -212,14 +212,14 @@ export default function HistoricalMultiplesChart({
           {histAvg != null && (
             <ReferenceLine
               y={histAvg}
-              stroke="#94a3b8"
+              stroke="#8A95A6"
               strokeDasharray="4 3"
               strokeWidth={1}
               label={{
                 value: `Avg ${histAvg.toFixed(1)}×`,
                 position: 'insideTopRight',
                 fontSize: 9,
-                fill: '#94a3b8',
+                fill: '#8A95A6',
               }}
             />
           )}
@@ -255,22 +255,22 @@ export default function HistoricalMultiplesChart({
 
       {/* Legend */}
       <div className="flex items-center gap-4 mt-2 flex-wrap">
-        <span className="flex items-center gap-1.5 text-[10px] text-slate-500">
+        <span className="flex items-center gap-1.5 text-[10px] text-[#566174]">
           <span className="inline-block w-3 h-0.5 rounded" style={{ background: cfg.hex }} />
           Annual
         </span>
-        <span className="flex items-center gap-1.5 text-[10px] text-slate-500">
+        <span className="flex items-center gap-1.5 text-[10px] text-[#566174]">
           <svg width="12" height="8"><circle cx="6" cy="4" r="4" fill={cfg.hex} /></svg>
           TTM (current)
         </span>
         {histAvg != null && (
-          <span className="flex items-center gap-1.5 text-[10px] text-slate-500">
+          <span className="flex items-center gap-1.5 text-[10px] text-[#566174]">
             <span className="inline-block w-5 border-t border-dashed border-slate-400" />
             5yr median
           </span>
         )}
         {sectorVal != null && (
-          <span className="flex items-center gap-1.5 text-[10px] text-slate-500">
+          <span className="flex items-center gap-1.5 text-[10px] text-[#566174]">
             <span className="inline-block w-5 border-t border-dashed border-blue-400" />
             Sector median
           </span>

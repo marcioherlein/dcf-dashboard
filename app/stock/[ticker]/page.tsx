@@ -356,7 +356,7 @@ function StockPageBody() {
 
   return (
     <>
-    <div className="min-h-dvh bg-slate-50">
+    <div className="min-h-dvh bg-[#F4F3EF]">
 
       {/* Context bar: stock identity + tab navigation */}
       <StockContextBar
@@ -442,47 +442,47 @@ function StockPageBody() {
         {loading && (
           <div className="pt-5 space-y-4 motion-safe:animate-pulse">
             {/* PriceHeader skeleton */}
-            <div className="rounded-xl bg-white border border-slate-200 p-5">
+            <div className="rounded-xl bg-white border border-[#E3E1DA] p-5">
               <div className="flex justify-between gap-4">
                 <div className="space-y-2">
-                  <div className="h-6 w-20 rounded-lg bg-slate-100" />
-                  <div className="h-7 w-52 rounded-lg bg-slate-100" />
+                  <div className="h-6 w-20 rounded-lg bg-[#F4F3EF]" />
+                  <div className="h-7 w-52 rounded-lg bg-[#F4F3EF]" />
                 </div>
                 <div className="space-y-2 text-right">
-                  <div className="h-9 w-32 rounded-lg bg-slate-100 ml-auto" />
-                  <div className="h-4 w-24 rounded-lg bg-slate-100 ml-auto" />
+                  <div className="h-9 w-32 rounded-lg bg-[#F4F3EF] ml-auto" />
+                  <div className="h-4 w-24 rounded-lg bg-[#F4F3EF] ml-auto" />
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-5 gap-2">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="h-14 rounded-xl bg-slate-100" />
+                  <div key={i} className="h-14 rounded-xl bg-[#F4F3EF]" />
                 ))}
               </div>
             </div>
             {/* Content skeleton */}
-            <div className="h-72 rounded-xl bg-white border border-slate-200" />
-            <div className="h-48 rounded-xl bg-white border border-slate-200" />
+            <div className="h-72 rounded-xl bg-white border border-[#E3E1DA]" />
+            <div className="h-48 rounded-xl bg-white border border-[#E3E1DA]" />
           </div>
         )}
 
         {error && (
-          <div className={`mt-8 rounded-xl border px-5 py-5 ${error.includes('NYSE and NASDAQ') ? 'bg-slate-50 border-slate-200' : 'bg-red-50 border-red-200'}`}>
+          <div className={`mt-8 rounded-xl border px-5 py-5 ${error.includes('NYSE and NASDAQ') ? 'bg-[#F4F3EF] border-[#E3E1DA]' : 'bg-[#FCEAEA] border-[#D83B3B]/30'}`}>
             {error.includes('NYSE and NASDAQ') ? (
               <div className="flex flex-col gap-2">
-                <p className="text-sm font-semibold text-slate-800">{error}</p>
-                <p className="text-xs text-slate-500">
+                <p className="text-sm font-semibold text-[#06101F]">{error}</p>
+                <p className="text-xs text-[#566174]">
                   International markets and other exchanges are on the roadmap.
                   Try searching for a US-listed equivalent or ADR.
                 </p>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                <p className="text-sm text-red-700">
+                <p className="text-sm text-[#D83B3B]">
                   <strong>Error:</strong> {error}. Yahoo Finance may be temporarily unavailable.
                 </p>
                 <button
                   onClick={loadData}
-                  className="self-start text-sm font-medium px-4 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors"
+                  className="self-start text-sm font-medium px-4 py-1.5 rounded-lg bg-[#FCEAEA] hover:bg-red-200 text-[#D83B3B] transition-colors"
                 >
                   Try again
                 </button>
@@ -530,8 +530,8 @@ function StockPageBody() {
             {/* While auth state is being determined, render a subtle pulse placeholder */}
             {viewGate === 'idle' && (
               <div className="pt-5 space-y-4 motion-safe:animate-pulse">
-                <div className="h-24 rounded-xl bg-white border border-slate-100" />
-                <div className="h-48 rounded-xl bg-white border border-slate-100" />
+                <div className="h-24 rounded-xl bg-white border border-[#E3E1DA]" />
+                <div className="h-48 rounded-xl bg-white border border-[#E3E1DA]" />
               </div>
             )}
             {viewGate === 'allowed' && (
@@ -715,7 +715,7 @@ function StockPageBody() {
                       nextEarningsDate={data.quote.nextEarningsDate ?? null}
                     />
                   ) : (
-                    <p className="text-sm text-slate-400 text-center py-12">Health data unavailable for this stock.</p>
+                    <p className="text-sm text-[#8A95A6] text-center py-12">Health data unavailable for this stock.</p>
                   )}
                   </TabErrorBoundary>
                 </motion.div>
@@ -747,15 +747,15 @@ function StockPageBody() {
 
         {/* ── Investment disclaimer ── */}
         <div className="px-4 sm:px-6 lg:px-8 pb-8 pt-2">
-          <p className="text-[11px] text-slate-500 leading-relaxed text-center max-w-3xl mx-auto">
-            <strong className="font-semibold text-slate-600">Not financial advice.</strong>{' '}
+          <p className="text-[11px] text-[#566174] leading-relaxed text-center max-w-3xl mx-auto">
+            <strong className="font-semibold text-[#566174]">Not financial advice.</strong>{' '}
             All outputs — DCF estimates, fair values, health scores, and scenarios — are model results
             based on publicly available data and mathematical assumptions. They are for informational
             purposes only and are not recommendations to buy, sell, or hold any security.
             Always consult a qualified financial advisor before making investment decisions.{' '}
-            <a href="/terms" className="underline hover:text-slate-600 transition-colors">Terms</a>
+            <a href="/terms" className="underline hover:text-[#566174] transition-colors">Terms</a>
             {' '}·{' '}
-            <a href="/privacy" className="underline hover:text-slate-600 transition-colors">Privacy</a>
+            <a href="/privacy" className="underline hover:text-[#566174] transition-colors">Privacy</a>
           </p>
         </div>
 

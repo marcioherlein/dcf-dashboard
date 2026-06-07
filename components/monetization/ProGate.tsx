@@ -28,12 +28,12 @@ export default function ProGate({ gate, children, placeholder }: ProGateProps) {
         </div>
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[2px] rounded-xl">
           <div className="flex flex-col items-center gap-3 px-6 text-center">
-            <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-[#EAF1FF] border border-blue-100 flex items-center justify-center">
               <Lock size={16} className="text-olive-700" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-800">{config.label}</p>
-              <p className="text-xs text-slate-500 mt-0.5">{config.description}</p>
+              <p className="text-sm font-semibold text-[#06101F]">{config.label}</p>
+              <p className="text-xs text-[#566174] mt-0.5">{config.description}</p>
             </div>
             <button
               onClick={() => setModalOpen(true)}

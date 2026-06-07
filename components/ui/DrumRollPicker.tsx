@@ -190,7 +190,7 @@ export function DrumRollPicker({ value, min, max, step, color, format, onChange,
                 className="tabular-nums font-[700] transition-all duration-75"
                 style={{
                   fontSize: isSelected ? 17 : 14,
-                  color: isSelected ? color : '#334155',
+                  color: isSelected ? color : '#566174',
                   opacity,
                   transform: `scale(${scale})`,
                   letterSpacing: '-0.01em',
