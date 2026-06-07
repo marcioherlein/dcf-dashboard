@@ -131,8 +131,8 @@ export async function GET(req: NextRequest) {
   const vd          = VERDICT_DISPLAY[verdict] ?? VERDICT_DISPLAY['Insufficient Data']
   const isUp        = (upside ?? 0) >= 0
   const upsideStr   = upside != null ? fmtPct(upside) : null
-  const upsideColor = upside == null ? '#64748B' : isUp ? BRAND.positive : BRAND.negative
-  const upBg        = upside == null ? '#F1F5F9' : isUp ? BRAND.positiveSoft : BRAND.negativeSoft
+  const upsideColor = upside == null ? '#566174' : isUp ? BRAND.positive : BRAND.negative
+  const upBg        = upside == null ? '#F4F3EF' : isUp ? BRAND.positiveSoft : BRAND.negativeSoft
 
   const baseUrl = `${req.nextUrl.protocol}//${req.nextUrl.host}`
 
@@ -184,7 +184,7 @@ export async function GET(req: NextRequest) {
 
   const interp      = migInterp(mig, migA)
   const hasMIG      = mig != null && migA != null
-  const hasLowerRow = hasMIG || interp != null
+  const _hasLowerRow = hasMIG || interp != null
   const dateStr     = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
   // ── render ────────────────────────────────────────────────────────────────
@@ -276,14 +276,14 @@ export async function GET(req: NextRequest) {
             overflow: 'hidden',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 10 }}>
-              <span style={{ color: '#0F172A', fontSize: 12, fontWeight: 700 }}>Price chart</span>
+              <span style={{ color: '#06101F', fontSize: 12, fontWeight: 700 }}>Price chart</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <div style={{ display: 'flex', width: 18, height: 2, background: BRAND.olive700, borderRadius: 1 }} />
-                <span style={{ color: '#64748B', fontSize: 10 }}>Fair value estimate {fv != null ? fmt(fv, currency) : ''}</span>
+                <span style={{ color: '#566174', fontSize: 10 }}>Fair value estimate {fv != null ? fmt(fv, currency) : ''}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <div style={{ display: 'flex', width: 18, height: 2, background: '#3B82F6', borderRadius: 1 }} />
-                <span style={{ color: '#64748B', fontSize: 10 }}>Current price {fmt(price, currency)}</span>
+                <span style={{ color: '#566174', fontSize: 10 }}>Current price {fmt(price, currency)}</span>
               </div>
             </div>
 
@@ -315,12 +315,12 @@ export async function GET(req: NextRequest) {
                     <div style={{ display: 'flex', position: 'absolute', top: 1, left: -3, width: 6, height: 6, borderRadius: '50%', background: '#F87171' }} />
                     <div style={{ display: 'flex', position: 'absolute', top: -2, left: (basePx! / TRACK_W) * 440 - 6, width: 12, height: 12, borderRadius: '50%', background: '#3B82F6', border: '2px solid white' }} />
                     <div style={{ display: 'flex', position: 'absolute', top: 1, left: 440 - 3, width: 6, height: 6, borderRadius: '50%', background: '#4ADE80' }} />
-                    {pricePx != null && <div style={{ display: 'flex', position: 'absolute', top: -4, left: (pricePx / TRACK_W) * 440 - 1, width: 2, height: 16, background: '#64748B' }} />}
+                    {pricePx != null && <div style={{ display: 'flex', position: 'absolute', top: -4, left: (pricePx / TRACK_W) * 440 - 1, width: 2, height: 16, background: '#566174' }} />}
                   </div>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ color: '#CBD5E1', fontSize: 12 }}>No chart data</span>
+                  <span style={{ color: '#CDD1C8', fontSize: 12 }}>No chart data</span>
                 </div>
               )
             )}
@@ -340,14 +340,14 @@ export async function GET(req: NextRequest) {
                 boxShadow: '0 1px 2px rgba(15,23,42,0.04)',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ color: '#0F172A', fontSize: 12, fontWeight: 700 }}>What the market is pricing in</span>
+                  <span style={{ color: '#06101F', fontSize: 12, fontWeight: 700 }}>What the market is pricing in</span>
                   <div style={{ display: 'flex', background: interp.chipBg, border: `1px solid ${interp.chipBorder}`, borderRadius: 9999, padding: '2px 8px' }}>
                     <span style={{ color: interp.chipColor, fontSize: 10, fontWeight: 600 }}>{interp.label}</span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <span style={{ color: '#64748B', fontSize: 10, fontWeight: 650 }}>Implied 5Y Revenue CAGR</span>
+                    <span style={{ color: '#566174', fontSize: 10, fontWeight: 650 }}>Implied 5Y Revenue CAGR</span>
                     <span style={{ color: interp.chipColor, fontSize: 28, fontWeight: 800, lineHeight: 1, letterSpacing: '-0.02em' }}>{(mig! * 100).toFixed(1)}%</span>
                     <span style={{ color: '#9B9B9B', fontSize: 10 }}>Model assumes {(migA! * 100).toFixed(1)}%</span>
                   </div>
@@ -369,14 +369,14 @@ export async function GET(req: NextRequest) {
                 borderRadius: 12, padding: '12px 16px',
                 boxShadow: '0 1px 2px rgba(15,23,42,0.04)',
               }}>
-                <span style={{ color: '#0F172A', fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Market interpretation</span>
+                <span style={{ color: '#06101F', fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Market interpretation</span>
                 <div style={{
                   display: 'flex', flexDirection: 'column', gap: 4,
                   background: interp.calloutBg, border: `1px solid ${interp.calloutBorder}`,
                   borderRadius: 10, padding: '10px 12px',
                 }}>
                   <span style={{ color: interp.titleColor, fontSize: 12, fontWeight: 700, lineHeight: 1.3 }}>{interp.title}</span>
-                  <span style={{ color: '#334155', fontSize: 11, lineHeight: 1.5 }}>{interp.body}</span>
+                  <span style={{ color: '#566174', fontSize: 11, lineHeight: 1.5 }}>{interp.body}</span>
                 </div>
               </div>
             )}
@@ -386,13 +386,13 @@ export async function GET(req: NextRequest) {
         {/* ── SCENARIO BAR — full width, matches ScenarioRangeBar ── */}
         {hasScenBar && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 12 }}>
-            <span style={{ color: '#64748B', fontSize: 10, fontWeight: 600 }}>Scenario range</span>
+            <span style={{ color: '#566174', fontSize: 10, fontWeight: 600 }}>Scenario range</span>
             <div style={{ display: 'flex', position: 'relative', height: 8, borderRadius: 9999, background: '#DBEAFE', width: TRACK_W }}>
               <div style={{ display: 'flex', position: 'absolute', top: 1, left: -3, width: 6, height: 6, borderRadius: '50%', background: '#F87171' }} />
               <div style={{ display: 'flex', position: 'absolute', top: 1, left: TRACK_W - 3, width: 6, height: 6, borderRadius: '50%', background: '#4ADE80' }} />
               <div style={{ display: 'flex', position: 'absolute', top: -2, left: basePx! - 6, width: 12, height: 12, borderRadius: '50%', background: '#3B82F6', border: '2px solid white', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }} />
               {pricePx != null && (
-                <div style={{ display: 'flex', position: 'absolute', top: -4, left: pricePx - 1, width: 2, height: 16, background: '#64748B' }} />
+                <div style={{ display: 'flex', position: 'absolute', top: -4, left: pricePx - 1, width: 2, height: 16, background: '#566174' }} />
               )}
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', width: TRACK_W }}>
@@ -402,7 +402,7 @@ export async function GET(req: NextRequest) {
             </div>
             {pricePx != null && (
               <div style={{ display: 'flex', position: 'relative', width: TRACK_W, height: 12 }}>
-                <span style={{ position: 'absolute', left: Math.max(0, Math.min(pricePx - 26, TRACK_W - 70)), color: '#64748B', fontSize: 9, fontWeight: 600 }}>Current price {fmt(price, currency)}</span>
+                <span style={{ position: 'absolute', left: Math.max(0, Math.min(pricePx - 26, TRACK_W - 70)), color: '#566174', fontSize: 9, fontWeight: 600 }}>Current price {fmt(price, currency)}</span>
               </div>
             )}
           </div>
