@@ -4,7 +4,6 @@ interface Stat {
   label: string
   value: string
   sub?: string
-  gauge?: { pct: number }
 }
 
 interface QuickStatsBarProps {
@@ -29,7 +28,7 @@ function fmt(n: number): string {
 }
 
 export default function QuickStatsBar({
-  marketCap, peRatio, beta, high52, low52, currentPrice, currency,
+  marketCap, peRatio, beta, high52: _high52, low52: _low52, currentPrice: _currentPrice, currency,
   pegRatio, evToEbitda, dividendYield, nextEarningsDate,
 }: QuickStatsBarProps) {
   const stats: Stat[] = []
@@ -52,18 +51,6 @@ export default function QuickStatsBar({
     stats.push({ label: 'Beta', value: beta.toFixed(2) })
   }
 
-  if (high52 != null && low52 != null) {
-    const pct = currentPrice != null && high52 > low52
-      ? Math.max(0, Math.min(100, ((currentPrice - low52) / (high52 - low52)) * 100))
-      : null
-    stats.push({
-      label: '52W Range',
-      value: `${currency}${low52.toFixed(2)} – ${currency}${high52.toFixed(2)}`,
-      sub: pct != null ? `${pct.toFixed(0)}% from 52W low` : undefined,
-      gauge: pct != null ? { pct } : undefined,
-    })
-  }
-
   if (dividendYield != null && dividendYield > 0) {
     stats.push({ label: 'Div. Yield', value: (dividendYield * 100).toFixed(2) + '%' })
   }
@@ -81,34 +68,16 @@ export default function QuickStatsBar({
   if (stats.length === 0) return null
 
   return (
-    <div className="rounded-2xl bg-white border border-[#E5E5E5] shadow-card px-4 sm:px-5 py-3">
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-x-4 gap-y-3">
+    <div className="rounded-xl bg-white border border-[#E5E5E5] shadow-card px-4 sm:px-5 py-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-4 gap-y-3">
         {stats.map((stat, i) => (
           <div
             key={stat.label}
-            className={i >= 4 ? 'hidden lg:block' : i >= 2 ? 'hidden sm:block' : undefined}
+            className={i >= 3 ? 'hidden sm:block' : undefined}
           >
-            <p className="text-[11px] font-semibold text-[#6B6B6B] uppercase tracking-wide mb-0.5 truncate">{stat.label}</p>
-            {stat.gauge ? (
-              <div>
-                <div className="relative h-1.5 bg-[#F5F5F5] rounded-full overflow-visible mb-1 mt-1">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#E5E5E5] via-olive-700 to-[#11875D]"
-                    style={{ width: `${stat.gauge.pct}%` }}
-                  />
-                  <div
-                    className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-olive-700 border border-white shadow-sm"
-                    style={{ left: `calc(${stat.gauge.pct}% - 4px)` }}
-                  />
-                </div>
-                {stat.sub && <p className="text-[11px] text-[#6B6B6B] mt-0.5 truncate">{stat.sub}</p>}
-              </div>
-            ) : (
-              <>
-                <p className={`text-[13px] font-semibold tabular-nums leading-tight truncate ${stat.label === 'Next Earnings' ? 'text-[#B56A00]' : 'text-ink-900'}`}>{stat.value}</p>
-                {stat.sub && <p className="text-[11px] text-[#6B6B6B] mt-0.5 truncate">{stat.sub}</p>}
-              </>
-            )}
+            <p className="text-[11px] font-[600] text-[#6B6B6B] mb-0.5 truncate">{stat.label}</p>
+            <p className={`text-[13px] font-semibold tabular-nums leading-tight truncate ${stat.label === 'Next Earnings' ? 'text-[#B56A00]' : 'text-ink-900'}`}>{stat.value}</p>
+            {stat.sub && <p className="text-[11px] text-[#6B6B6B] mt-0.5 truncate">{stat.sub}</p>}
           </div>
         ))}
       </div>

@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 const CARD =
-  'bg-white border border-[#E6ECF5] rounded-xl shadow-card'
+  'bg-white border border-[#E5E5E5] rounded-xl shadow-card'
 
 interface NextStepsCardProps {
   ticker: string
@@ -31,10 +31,10 @@ export default function NextStepsCard({
         <div className="w-7 h-7 rounded-full bg-[#EFF6FF] flex items-center justify-center shrink-0">
           <Compass size={15} className="text-[#2563EB]" />
         </div>
-        <p className="text-[14px] font-[750] text-[#0F172A]">Next Steps</p>
+        <p className="text-[14px] font-[750] text-[#06101F]">Next Steps</p>
       </div>
 
-      <p className="text-[13px] text-[#475569] leading-relaxed">
+      <p className="text-[13px] text-[#566174] leading-relaxed">
         Adjust assumptions, explore scenarios, and stress-test the model to build or challenge your conviction.
       </p>
 
@@ -54,15 +54,15 @@ export default function NextStepsCard({
         </button>
         <button
           onClick={onViewRisks}
-          className="w-full h-11 rounded-lg bg-white border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 text-[13px] font-medium transition-colors"
+          className="w-full h-11 rounded-lg bg-white border border-[#E3E1DA] text-[#566174] hover:border-[#CDD1C8] hover:bg-[#F4F3EF] text-[13px] font-medium transition-colors"
         >
           Risks &amp; health scores
         </button>
         <Link
           href={`/compare?a=${ticker}`}
-          className="w-full h-11 rounded-lg bg-white border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 text-[13px] font-medium transition-colors flex items-center justify-center gap-1.5"
+          className="w-full h-11 rounded-lg bg-white border border-[#E3E1DA] text-[#566174] hover:border-[#CDD1C8] hover:bg-[#F4F3EF] text-[13px] font-medium transition-colors flex items-center justify-center gap-1.5"
         >
-          <GitCompareArrows size={14} className="text-slate-400" />
+          <GitCompareArrows size={14} className="text-[#8A95A6]" />
           Compare with another stock
         </Link>
       </div>

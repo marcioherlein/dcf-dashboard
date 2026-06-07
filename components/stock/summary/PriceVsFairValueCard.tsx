@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import { fmtPrice } from '@/lib/formatters'
 
 const CARD =
-  'bg-white border border-[#E6ECF5] rounded-xl shadow-card'
+  'bg-white border border-[#E5E5E5] rounded-xl shadow-card'
 
 interface PriceVsFairValueCardProps {
   price: number
@@ -64,15 +64,15 @@ export default function PriceVsFairValueCard({
   return (
     <div className={cn(CARD, 'p-4 flex flex-col gap-3')}>
       {/* Header */}
-      <p className="text-[13px] font-[700] text-[#0F172A]">Price vs Fair Value</p>
+      <p className="text-[13px] font-[700] text-[#06101F]">Price vs Fair Value</p>
 
       {/* Ratio row */}
       <div className="flex items-center gap-2.5 flex-wrap">
-        <span className="text-[32px] font-[800] text-[#0F172A] leading-none tabular-nums">
+        <span className="text-[32px] font-[800] text-[#06101F] leading-none tabular-nums">
           {ratio != null ? `${ratio.toFixed(2)}×` : '—'}
         </span>
         <div>
-          <p className="text-[11px] font-[600] text-[#64748B] leading-tight">Price / Intrinsic</p>
+          <p className="text-[11px] font-[600] text-[#566174] leading-tight">Price / Intrinsic</p>
           {zone != null && (
             <span
               className={cn(
@@ -103,33 +103,33 @@ export default function PriceVsFairValueCard({
         {/* Dot marker */}
         {markerLeft != null && (
           <div
-            className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#0F172A] border-2 border-white shadow-sm"
+            className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#06101F] border-2 border-white shadow-sm"
             style={{ left: markerLeft }}
           />
         )}
       </div>
       <div className="flex justify-between mt-1">
-        <span className="text-[10px] text-[#64748B]">0×</span>
+        <span className="text-[10px] text-[#566174]">0×</span>
         <span className="text-[10px] text-[#3B82F6] font-[650]">1× Fair</span>
-        <span className="text-[10px] text-[#64748B]">2.5×</span>
+        <span className="text-[10px] text-[#566174]">2.5×</span>
       </div>
 
       {/* Interpretation sentence */}
       {interpText != null && (
-        <p className="text-[12px] text-[#334155] leading-relaxed">{interpText}</p>
+        <p className="text-[12px] text-[#566174] leading-relaxed">{interpText}</p>
       )}
 
       {ratio == null && (
-        <p className="text-[12px] text-[#94A3B8]">
+        <p className="text-[12px] text-[#8A95A6]">
           Fair value estimate unavailable — no interpretation possible.
         </p>
       )}
 
       {/* Analyst target */}
       {analystTargetMean != null && analystTargetMean > 0 && (
-        <p className="text-[12px] text-[#64748B]">
+        <p className="text-[12px] text-[#566174]">
           Analyst target:{' '}
-          <span className="font-[700] text-[#334155]">
+          <span className="font-[700] text-[#566174]">
             {fmtPrice(analystTargetMean, currency)}
           </span>
         </p>

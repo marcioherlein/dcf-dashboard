@@ -22,20 +22,20 @@ interface SummaryPriceChartCardProps {
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
-  loading: () => <div className="h-[160px] motion-safe:animate-pulse rounded-xl bg-slate-50" />,
+  loading: () => <div className="h-[160px] motion-safe:animate-pulse rounded-xl bg-[#F4F3EF]" />,
 })
 
 // ─── Card shell ───────────────────────────────────────────────────────────────
 
-const CARD = 'bg-white border border-[#E6ECF5] rounded-2xl shadow-card'
+const CARD = 'bg-white border border-[#E5E5E5] rounded-xl shadow-card'
 
 // ─── Footer metric ────────────────────────────────────────────────────────────
 
 function FooterMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="px-3 py-2.5 text-center">
-      <p className="text-[11px] font-[600] text-[#64748B] mb-0.5">{label}</p>
-      <p className="text-[13px] font-[700] text-[#0F172A] tabular-nums whitespace-nowrap">{value}</p>
+    <div className="px-2 py-2 text-center">
+      <p className="text-[10px] font-[600] text-[#6B6B6B] mb-0.5 truncate">{label}</p>
+      <p className="text-[12px] font-[700] text-[#111111] tabular-nums whitespace-nowrap">{value}</p>
     </div>
   )
 }
@@ -68,8 +68,8 @@ export default function SummaryPriceChartCard({
       </div>
 
       {/* Footer metrics */}
-      <div className="border-t border-[#E6ECF5]">
-        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#E6ECF5]">
+      <div className="border-t border-[#E5E5E5]">
+        <div className="grid grid-cols-4 divide-x divide-[#E5E5E5]">
           <FooterMetric label="52W Low"    value={fmtPrice(low52, currency)} />
           <FooterMetric label="52W High"   value={fmtPrice(high52, currency)} />
           <FooterMetric label="Market Cap" value={fmtLargeCurrency(marketCap, currency)} />

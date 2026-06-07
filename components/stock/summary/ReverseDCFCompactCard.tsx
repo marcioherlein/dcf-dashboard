@@ -8,7 +8,7 @@ import { computeReverseDCF } from '@/lib/valuation/methods/reverseDcf'
 import InfoTooltip from '@/components/ui/InfoTooltip'
 
 const CARD =
-  'bg-white border border-[#E6ECF5] rounded-xl shadow-card'
+  'bg-white border border-[#E5E5E5] rounded-xl shadow-card'
 
 interface ReverseDCFCompactCardProps {
   price: number
@@ -34,7 +34,7 @@ const CHIP_STYLES = {
   reasonable:      { bg: 'bg-[#EFF6FF]', border: 'border-[#BFDBFE]', text: 'text-[#2563EB]' },
   aggressive:      { bg: 'bg-[#FFF7ED]', border: 'border-[#FED7AA]', text: 'text-[#D97706]' },
   very_aggressive: { bg: 'bg-[#FEF2F2]', border: 'border-[#FECACA]', text: 'text-[#DC2626]' },
-  not_meaningful:  { bg: 'bg-[#F1F5F9]', border: 'border-[#E2E8F0]', text: 'text-[#64748B]' },
+  not_meaningful:  { bg: 'bg-[#F4F3EF]', border: 'border-[#E3E1DA]', text: 'text-[#6B6B6B]' },
 } as const
 
 const CHIP_LABELS = {
@@ -54,7 +54,7 @@ const IMPLIED_COLOR: Record<Interpretation, string> = {
   reasonable:      'text-[#2563EB]',
   aggressive:      'text-[#D97706]',
   very_aggressive: 'text-[#DC2626]',
-  not_meaningful:  'text-[#64748B]',
+  not_meaningful:  'text-[#6B6B6B]',
 }
 
 export default function ReverseDCFCompactCard({
@@ -120,10 +120,10 @@ export default function ReverseDCFCompactCard({
     <div className={cn(CARD, 'p-4 flex flex-col gap-3')}>
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[13px] font-[700] text-[#0F172A] leading-tight">
+        <p className="text-[13px] font-[700] text-[#111111] leading-tight">
           What the market is pricing in
         </p>
-        <div className="flex items-center gap-1 text-[11px] font-[600] text-[#64748B]">
+        <div className="flex items-center gap-1 text-[11px] font-[600] text-[#6B6B6B]">
           <span>Reverse DCF</span>
           <Info className="w-3 h-3" />
         </div>
@@ -139,7 +139,7 @@ export default function ReverseDCFCompactCard({
               key={key}
               className={cn(
                 'rounded-full px-2.5 py-1 text-[11px] font-[600] border',
-                isActive ? cn(s.bg, s.border, s.text) : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#94A3B8]',
+                isActive ? cn(s.bg, s.border, s.text) : 'bg-[#F4F3EF] border-[#E3E1DA] text-[#8A95A6]',
               )}
             >
               {CHIP_LABELS[key]}
@@ -152,7 +152,7 @@ export default function ReverseDCFCompactCard({
       <div className="flex flex-col sm:flex-row gap-4">
         {/* Left */}
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-[650] text-[#64748B] mb-1 flex items-center gap-1">
+          <p className="text-[11px] font-[650] text-[#6B6B6B] mb-1 flex items-center gap-1">
             Implied 5Y Revenue CAGR
             <InfoTooltip content="What annual revenue growth rate does the market assume over the next 5 years to justify today's price? Uses current FCF margins and WACC. A 5-year horizon gives a more demanding (conservative) implied rate than 10 years." />
           </p>
@@ -161,7 +161,7 @@ export default function ReverseDCFCompactCard({
               {impliedPct.toFixed(1)}%
             </p>
           ) : (
-            <p className="text-[20px] font-[700] text-[#94A3B8]">—</p>
+            <p className="text-[20px] font-[700] text-[#8A95A6]">—</p>
           )}
 
           {historicalPct != null && (
@@ -213,7 +213,7 @@ export default function ReverseDCFCompactCard({
           <p className="text-[11px] font-[650] text-[#DC2626] mb-0.5">
             What does negative implied growth mean?
           </p>
-          <p className="text-[11px] text-[#64748B] leading-relaxed">
+          <p className="text-[11px] text-[#6B6B6B] leading-relaxed">
             The market is pricing this stock as if revenue will shrink over the next 5 years.
           </p>
         </div>
@@ -222,7 +222,7 @@ export default function ReverseDCFCompactCard({
       {/* Takeaway callout */}
       {showCallout && impliedPct != null && historicalPct != null && (
         <div className="rounded-lg bg-[#EFF6FF] border border-[#BFDBFE] px-3 py-2.5">
-          <p className="text-[12px] text-[#334155] leading-relaxed">
+          <p className="text-[12px] text-[#6B6B6B] leading-relaxed">
             The market assumes{' '}
             <strong>{impliedPct.toFixed(1)}%</strong> revenue growth —{' '}
             {Math.abs(impliedPct - historicalPct).toFixed(1)}pp{' '}
@@ -233,16 +233,16 @@ export default function ReverseDCFCompactCard({
       )}
 
       {showCallout && (impliedPct == null || historicalPct == null) && (
-        <div className="rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2.5">
-          <p className="text-[12px] text-[#64748B] leading-relaxed">
+        <div className="rounded-lg bg-[#F4F3EF] border border-[#E3E1DA] px-3 py-2.5">
+          <p className="text-[12px] text-[#6B6B6B] leading-relaxed">
             {result.interpretationText}
           </p>
         </div>
       )}
 
       {!showCallout && (
-        <div className="rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2.5">
-          <p className="text-[12px] text-[#64748B] leading-relaxed">
+        <div className="rounded-lg bg-[#F4F3EF] border border-[#E3E1DA] px-3 py-2.5">
+          <p className="text-[12px] text-[#6B6B6B] leading-relaxed">
             {result.interpretationText}
           </p>
         </div>
@@ -257,7 +257,7 @@ export default function ReverseDCFCompactCard({
 
       {/* CAGR cap disclosure */}
       {cagrCapActive && (
-        <p className="text-[10px] text-[#64748B] mt-1">
+        <p className="text-[10px] text-[#6B6B6B] mt-1">
           Raw blended rate was {((rawBlendedCagr as number) * 100).toFixed(1)}% — reduced to {((cagrCap as number) * 100).toFixed(0)}% by size/sector cap.
         </p>
       )}
@@ -305,7 +305,7 @@ function HistoricalCAGRBlock({
 
   return (
     <div className="mt-2.5">
-      <p className="text-[11px] font-[650] text-[#64748B] mb-0.5">
+      <p className="text-[11px] font-[650] text-[#6B6B6B] mb-0.5">
         {isFinancialSector ? '3Y Historical Earnings CAGR' : '3Y Historical CAGR'}
       </p>
       <div
@@ -318,11 +318,11 @@ function HistoricalCAGRBlock({
         onMouseLeave={hasChart ? () => setOpen(false) : undefined}
         onClick={hasChart ? () => (open ? setOpen(false) : openPopup()) : undefined}
       >
-        <p className="text-[14px] font-[700] text-[#334155] tabular-nums">
+        <p className="text-[14px] font-[700] text-[#6B6B6B] tabular-nums">
           {historicalPct.toFixed(1)}%
         </p>
         {hasChart && (
-          <span className="text-[10px] text-[#94A3B8] group-hover:text-[#3B82F6] transition-colors select-none">
+          <span className="text-[10px] text-[#8A95A6] group-hover:text-[#3B82F6] transition-colors select-none">
             ↗
           </span>
         )}
@@ -334,7 +334,7 @@ function HistoricalCAGRBlock({
           style={{ top: popupPos.top, left: popupPos.left }}
         >
           <div
-            className="pointer-events-auto bg-white border border-[#E6ECF5] rounded-xl shadow-card-md p-3 w-[230px]"
+            className="pointer-events-auto bg-white border border-[#E5E5E5] rounded-xl shadow-card-md p-3 w-[230px]"
             onMouseEnter={() => setOpen(true)}
             onMouseLeave={() => setOpen(false)}
           >
@@ -380,7 +380,7 @@ function RevenueCAGRChart({
 
   return (
     <div>
-      <p className="text-[11px] font-[700] text-[#0F172A] mb-2">Revenue History</p>
+      <p className="text-[11px] font-[700] text-[#111111] mb-2">Revenue History</p>
       <svg width={W} height={SVG_H} viewBox={`0 0 ${W} ${SVG_H}`} overflow="visible">
         {actuals.map((row, i) => {
           const rev = row.revenue ?? 0
@@ -398,14 +398,14 @@ function RevenueCAGRChart({
               <text
                 x={x + barW / 2} y={y - 4}
                 textAnchor="middle" fontSize={8.5}
-                fill={isLast ? '#1D4ED8' : '#64748B'} fontWeight={isLast ? '700' : '400'}
+                fill={isLast ? '#1D4ED8' : '#566174'} fontWeight={isLast ? '700' : '400'}
               >
                 {fmtRevenue(rev)}
               </text>
               {/* year label below */}
               <text
                 x={x + barW / 2} y={BAR_H + 12}
-                textAnchor="middle" fontSize={9} fill="#64748B"
+                textAnchor="middle" fontSize={9} fill="#566174"
               >
                 {yearLabel(row.year)}
               </text>
@@ -429,8 +429,8 @@ function RevenueCAGRChart({
       </svg>
 
       {historicalCAGR != null && n >= 2 && (
-        <div className="mt-1 flex items-center justify-between border-t border-[#F1F5F9] pt-1.5">
-          <span className="text-[10px] text-[#64748B]">
+        <div className="mt-1 flex items-center justify-between border-t border-[#F4F3EF] pt-1.5">
+          <span className="text-[10px] text-[#6B6B6B]">
             {firstYear} → {lastYear}
           </span>
           <span className="text-[11px] font-[700] text-[#3B82F6]">
@@ -438,7 +438,7 @@ function RevenueCAGRChart({
           </span>
         </div>
       )}
-      <p className="text-[10px] text-[#94A3B8] mt-0.5">Source: annual financial statements</p>
+      <p className="text-[10px] text-[#8A95A6] mt-0.5">Source: annual financial statements</p>
     </div>
   )
 }
@@ -461,10 +461,10 @@ function BarRow({ label, labelTooltip, dotHex, value, barColor, widthPct, zeroLi
       <div className="flex items-center justify-between mb-0.5">
         <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full shrink-0" style={{ background: dotHex }} />
-          <span className="text-[11px] text-[#64748B] truncate">{label}</span>
+          <span className="text-[11px] text-[#6B6B6B] truncate">{label}</span>
           {labelTooltip && <InfoTooltip content={labelTooltip} />}
         </div>
-        <span className="text-[11px] font-[700] text-[#334155] tabular-nums ml-1 shrink-0">
+        <span className="text-[11px] font-[700] text-[#6B6B6B] tabular-nums ml-1 shrink-0">
           {value != null ? `${value.toFixed(1)}%` : '—'}
         </span>
       </div>
@@ -477,7 +477,7 @@ function BarRow({ label, labelTooltip, dotHex, value, barColor, widthPct, zeroLi
         )}
         {zeroLineLeft != null && (
           <div
-            className="absolute top-0 bottom-0 w-px bg-[#94A3B8]/60"
+            className="absolute top-0 bottom-0 w-px bg-[#8A95A6]/60"
             style={{ left: `${zeroLineLeft}%` }}
           />
         )}

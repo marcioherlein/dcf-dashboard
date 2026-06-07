@@ -4,7 +4,7 @@ import { CheckCircle, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const CARD =
-  'bg-white border border-[#E6ECF5] rounded-xl shadow-card'
+  'bg-white border border-[#E5E5E5] rounded-xl shadow-card'
 
 const POSITIVE_RE =
   /strong|grow|profit|margin|cash\s*gen|moat|leader|dominan|innovat|compet.*advan|pric.*power|market.*share|expand|increas|high.*return|quality|best.in.class|track.record|breadth|diversif|solid|robust|effici|resilient|premium/i
@@ -50,7 +50,7 @@ export default function BullCaseCard({
         <div className="w-7 h-7 rounded-full bg-[#ECFDF3] flex items-center justify-center shrink-0">
           <CheckCircle size={15} className="text-[#16A34A]" />
         </div>
-        <p className="text-[14px] font-[750] text-[#06101F]">
+        <p className="text-[14px] font-[750] text-[#111111]">
           Supporting the Thesis
         </p>
       </div>
@@ -61,14 +61,14 @@ export default function BullCaseCard({
           {bullets.map((b, i) => (
             <li key={i} className="flex items-start gap-2">
               <Check size={13} className="text-[#16A34A] shrink-0 mt-0.5" />
-              <span className="text-[13px] text-[#06101F] leading-relaxed break-words min-w-0">
+              <span className="text-[13px] text-[#111111] leading-relaxed break-words min-w-0">
                 {b.length > 160 ? b.slice(0, 157) + '…' : b}
               </span>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-[13px] text-[#566174] italic">
+        <p className="text-[13px] text-[#6B6B6B] italic">
           Support factors unavailable for this stock.
         </p>
       )}

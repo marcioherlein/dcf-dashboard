@@ -87,7 +87,7 @@ export default function SummaryHeroCard({
 
   return (
     <div
-      className={cn('border rounded-2xl p-6 overflow-hidden', verdict.borderClass)}
+      className={cn('border rounded-xl p-5 overflow-hidden shadow-card', verdict.borderClass)}
       style={{ background: verdict.bgStyle }}
     >
       <div className="flex flex-col gap-4">

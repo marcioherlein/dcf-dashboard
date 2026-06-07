@@ -76,37 +76,37 @@ function fmtPct(n: number | null | undefined, decimals = 1): string {
 
 function gradeBadge(color: string): string {
   if (color === 'emerald' || color === 'green')
-    return 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+    return 'bg-[#E8F7EF] text-[#11875D] border border-emerald-100'
   if (color === 'blue')
-    return 'bg-blue-50 text-blue-700 border border-blue-100'
+    return 'bg-[#EAF1FF] text-[#2563EB] border border-blue-100'
   if (color === 'amber' || color === 'orange')
-    return 'bg-amber-50 text-amber-700 border border-amber-100'
-  return 'bg-red-50 text-red-700 border border-red-100'
+    return 'bg-[#FFF4DA] text-[#B56A00] border border-amber-100'
+  return 'bg-[#FCEAEA] text-[#D83B3B] border border-red-100'
 }
 
 function MetricRow({ label, value, valueClass, tooltip }: { label: string; value: string; valueClass?: string; tooltip?: string }) {
   return (
     <div className="flex items-center justify-between gap-2 py-1">
-      <span className="text-[13px] text-slate-600 truncate flex items-center gap-0.5">
+      <span className="text-[13px] text-[#6B6B6B] truncate flex items-center gap-0.5">
         {label}
         {tooltip && <InfoTooltip content={tooltip} />}
       </span>
-      <span className={`text-[13px] font-semibold tabular-nums shrink-0 ${valueClass ?? 'text-slate-800'}`}>{value}</span>
+      <span className={`text-[13px] font-semibold tabular-nums shrink-0 ${valueClass ?? 'text-[#111111]'}`}>{value}</span>
     </div>
   )
 }
 
 function iconAccent(color: string): string {
-  if (color === 'emerald' || color === 'green') return 'text-emerald-500'
-  if (color === 'blue')                         return 'text-blue-500'
-  if (color === 'amber' || color === 'orange')  return 'text-amber-500'
-  return 'text-red-500'
+  if (color === 'emerald' || color === 'green') return 'text-[#11875D]'
+  if (color === 'blue')                         return 'text-[#2563EB]'
+  if (color === 'amber' || color === 'orange')  return 'text-[#B56A00]'
+  return 'text-[#D83B3B]'
 }
 
 function CardHeader({ title, label, color, tooltip, Icon }: { title: string; label: string; color: string; tooltip?: string; Icon?: LucideIcon }) {
   return (
     <div className="flex items-center justify-between mb-2">
-      <p className="text-[12px] font-medium text-slate-500 flex items-center gap-1.5">
+      <p className="text-[12px] font-medium text-[#6B6B6B] flex items-center gap-1.5">
         {Icon && <Icon size={13} className={`shrink-0 ${iconAccent(color)}`} />}
         {title}
         {tooltip && <InfoTooltip content={tooltip} />}
@@ -118,12 +118,12 @@ function CardHeader({ title, label, color, tooltip, Icon }: { title: string; lab
 
 function MiniBar({ value, max, color }: { value: number; max: number; color: string }) {
   const pct = Math.min(Math.max((value / max) * 100, 0), 100)
-  const barColor = color === 'emerald' ? 'bg-emerald-400'
+  const barColor = color === 'emerald' ? 'bg-[#11875D]'
     : color === 'blue' ? 'bg-blue-400'
-    : color === 'amber' ? 'bg-amber-400'
-    : 'bg-red-400'
+    : color === 'amber' ? 'bg-[#B56A00]'
+    : 'bg-[#D83B3B]'
   return (
-    <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+    <div className="flex-1 h-1.5 bg-[#F4F3EF] rounded-full overflow-hidden">
       <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
     </div>
   )
@@ -142,7 +142,7 @@ function BusinessQualityCard({ ratings, scores, panel }: { ratings: StockRatings
   const spreadPct = roic?.dataAvailable && roic.spread != null
     ? `${roic.spread >= 0 ? '+' : ''}${(roic.spread * 100).toFixed(1)}pp vs WACC`
     : '—'
-  const spreadClass = roic?.spread != null && roic.spread >= 0 ? 'text-emerald-600' : 'text-red-500'
+  const spreadClass = roic?.spread != null && roic.spread >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'
 
   const roicSpread = roic?.spread ?? null
   const interpSentence = roicSpread != null
@@ -174,7 +174,7 @@ function BusinessQualityCard({ ratings, scores, panel }: { ratings: StockRatings
             value={profitability ? `${profitability.grade} — ${profitability.label}` : '—'}
           />
         </div>
-        <p className="text-[12px] text-slate-600 leading-snug sm:pl-4 pt-2 sm:pt-0">
+        <p className="text-[12px] text-[#6B6B6B] leading-snug sm:pl-4 pt-2 sm:pt-0">
           {interpSentence}
         </p>
       </div>
@@ -218,29 +218,29 @@ function GrowthOutlookCard({ ratings, cagrAnalysis, panel }: { ratings: StockRat
         {hist != null && (
           <div>
             <div className="flex items-center gap-2 mb-1 min-w-0">
-              <span className="text-[12px] text-slate-600 w-20 sm:w-28 shrink-0 flex items-center gap-0.5">
+              <span className="text-[12px] text-[#6B6B6B] w-20 sm:w-28 shrink-0 flex items-center gap-0.5">
                 3Y Historical CAGR
                 <InfoTooltip content="Raw 3-year revenue CAGR from reported financials. The valuation model uses a blended rate that applies a convergence discount toward long-run growth and a size cap for large-cap companies, so the model input may differ from this figure." />
               </span>
               <MiniBar value={Math.abs(hist)} max={maxBar} color={hist >= 0 ? 'blue' : 'amber'} />
-              <span className="text-[13px] font-semibold tabular-nums text-slate-700 w-12 text-right">{fmtPct(hist)}</span>
+              <span className="text-[13px] font-semibold tabular-nums text-[#111111] w-12 text-right">{fmtPct(hist)}</span>
             </div>
           </div>
         )}
         {analyst != null && (
           <div>
             <div className="flex items-center gap-2 mb-1 min-w-0">
-              <span className="text-[12px] text-slate-600 w-20 sm:w-28 shrink-0">Analyst Est. (1Y)</span>
+              <span className="text-[12px] text-[#6B6B6B] w-20 sm:w-28 shrink-0">Analyst Est. (1Y)</span>
               <MiniBar value={Math.abs(analyst)} max={maxBar} color={analyst >= 0 ? 'emerald' : 'amber'} />
-              <span className="text-[13px] font-semibold tabular-nums text-slate-700 w-12 text-right">{fmtPct(analyst)}</span>
+              <span className="text-[13px] font-semibold tabular-nums text-[#111111] w-12 text-right">{fmtPct(analyst)}</span>
             </div>
           </div>
         )}
         {!hist && !analyst && (
-          <p className="text-[12px] text-slate-400 italic">Growth data unavailable</p>
+          <p className="text-[12px] text-[#8A95A6] italic">Growth data unavailable</p>
         )}
       </div>
-      <p className="text-[12px] text-slate-600 leading-snug mt-2">{growthSentence}</p>
+      <p className="text-[12px] text-[#6B6B6B] leading-snug mt-2">{growthSentence}</p>
     </>
   )
 
@@ -286,7 +286,7 @@ function ProfitabilityCard({ ratings, businessProfile, statementsData, panel }: 
         <MetricRow label="Net Margin" value={fmtPct(businessProfile.netMargin)} />
         <MetricRow label="FCF Margin" value={fmtPct(businessProfile.fcfMargin)} />
       </div>
-      <p className="text-[12px] text-slate-600 leading-snug mt-2">{profSentence}</p>
+      <p className="text-[12px] text-[#6B6B6B] leading-snug mt-2">{profSentence}</p>
     </>
   )
 
@@ -333,11 +333,11 @@ function CashConversionCard({ businessProfile, statementsData, panel }: {
         <MetricRow
           label="FCF / Net Income"
           value={conversionRatio != null ? (conversionRatio > 3 ? '>300%' : `${(conversionRatio * 100).toFixed(0)}%`) : '—'}
-          valueClass={conversionRatio != null ? (conversionRatio >= 0.8 ? 'text-emerald-600' : conversionRatio >= 0.5 ? 'text-amber-600' : 'text-red-500') : undefined}
+          valueClass={conversionRatio != null ? (conversionRatio >= 0.8 ? 'text-[#11875D]' : conversionRatio >= 0.5 ? 'text-[#B56A00]' : 'text-[#D83B3B]') : undefined}
           tooltip="What share of reported earnings converts to real cash. >80% is a quality signal. Values above 100% are normal for asset-light businesses where non-cash charges (stock-based comp, D&A) and working-capital release push FCF above net income."
         />
       </div>
-      <p className="text-[12px] text-slate-600 leading-snug mt-2">{cashSentence}</p>
+      <p className="text-[12px] text-[#6B6B6B] leading-snug mt-2">{cashSentence}</p>
     </>
   )
 
@@ -373,7 +373,7 @@ function BalanceSheetCard({ scores, statementsData, panel }: {
 
   const altman = scores.altman
   const zone = altman?.zone ?? null
-  const zoneColor = zone === 'Safe' ? 'text-emerald-600' : zone === 'Grey' ? 'text-amber-600' : zone === 'Distress' ? 'text-red-500' : undefined
+  const zoneColor = zone === 'Safe' ? 'text-[#11875D]' : zone === 'Grey' ? 'text-[#B56A00]' : zone === 'Distress' ? 'text-[#D83B3B]' : undefined
 
   const bsColor = zone === 'Safe' || (currentRatio != null && currentRatio >= 1.5) ? 'emerald'
     : zone === 'Distress' ? 'red'
@@ -399,17 +399,17 @@ function BalanceSheetCard({ scores, statementsData, panel }: {
         <MetricRow
           label="Net Debt / EBITDA"
           value={ndToEbitda != null ? `${ndToEbitda.toFixed(1)}x` : '—'}
-          valueClass={ndToEbitda != null ? (ndToEbitda <= 2 ? 'text-emerald-600' : ndToEbitda <= 4 ? 'text-amber-600' : 'text-red-500') : undefined}
+          valueClass={ndToEbitda != null ? (ndToEbitda <= 2 ? 'text-[#11875D]' : ndToEbitda <= 4 ? 'text-[#B56A00]' : 'text-[#D83B3B]') : undefined}
         />
         <MetricRow
           label="Current Ratio"
           value={currentRatio != null ? currentRatio.toFixed(1) : '—'}
-          valueClass={currentRatio != null ? (currentRatio >= 1.5 ? 'text-emerald-600' : currentRatio >= 1.0 ? 'text-amber-600' : 'text-red-500') : undefined}
+          valueClass={currentRatio != null ? (currentRatio >= 1.5 ? 'text-[#11875D]' : currentRatio >= 1.0 ? 'text-[#B56A00]' : 'text-[#D83B3B]') : undefined}
         />
         <MetricRow
           label="Quick Ratio"
           value={quickRatio != null ? quickRatio.toFixed(1) : '—'}
-          valueClass={quickRatio != null ? (quickRatio >= 1.0 ? 'text-emerald-600' : quickRatio >= 0.7 ? 'text-amber-600' : 'text-red-500') : undefined}
+          valueClass={quickRatio != null ? (quickRatio >= 1.0 ? 'text-[#11875D]' : quickRatio >= 0.7 ? 'text-[#B56A00]' : 'text-[#D83B3B]') : undefined}
         />
         {altman != null && (
           <MetricRow
@@ -419,10 +419,10 @@ function BalanceSheetCard({ scores, statementsData, panel }: {
           />
         )}
         {altman?.isReliable === false && (
-          <p className="text-[10px] text-slate-400 leading-snug">* Z-Score may be unreliable for non-US companies</p>
+          <p className="text-[10px] text-[#8A95A6] leading-snug">* Z-Score may be unreliable for non-US companies</p>
         )}
       </div>
-      <p className="text-[12px] text-slate-600 leading-snug mt-2">{bsSentence}</p>
+      <p className="text-[12px] text-[#6B6B6B] leading-snug mt-2">{bsSentence}</p>
     </>
   )
 
@@ -449,9 +449,9 @@ function deriveRiskLevel(ratings: StockRatings): { label: string; color: RiskCol
       valuation?.color === 'amber'
     )
 
-  if (isElevated) return { label: 'Elevated', color: 'red', badgeClass: 'bg-red-50 text-red-700 border border-red-200' }
-  if (isModerate) return { label: 'Moderate', color: 'amber', badgeClass: 'bg-amber-50 text-amber-700 border border-amber-200' }
-  return { label: 'Low', color: 'emerald', badgeClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200' }
+  if (isElevated) return { label: 'Elevated', color: 'red', badgeClass: 'bg-[#FCEAEA] text-[#D83B3B] border border-[#F0B8B8]' }
+  if (isModerate) return { label: 'Moderate', color: 'amber', badgeClass: 'bg-[#FFF4DA] text-[#B56A00] border border-[#F3D391]' }
+  return { label: 'Low', color: 'emerald', badgeClass: 'bg-[#E8F7EF] text-[#11875D] border border-[#A3D9BE]' }
 }
 
 function buildRiskBullets(ratings: StockRatings, cagrAnalysis: CAGRAnalysisData | null): string[] {
@@ -488,13 +488,13 @@ function RisksGridCard({ ratings, cagrAnalysis, onViewRisks, panel }: {
   const risk    = deriveRiskLevel(ratings)
   const bullets = buildRiskBullets(ratings, cagrAnalysis)
 
-  const dotColor = risk.color === 'red' ? 'bg-red-400' : risk.color === 'amber' ? 'bg-amber-400' : 'bg-emerald-400'
+  const dotColor = risk.color === 'red' ? 'bg-[#D83B3B]' : risk.color === 'amber' ? 'bg-[#B56A00]' : 'bg-[#11875D]'
 
   const inner = (
     <>
       <div className="flex items-center justify-between mb-2">
-        <p className="text-[12px] font-medium text-slate-500 flex items-center gap-1.5">
-          <AlertTriangle size={13} className={`shrink-0 ${risk.color === 'red' ? 'text-red-500' : risk.color === 'amber' ? 'text-amber-500' : 'text-emerald-500'}`} />
+        <p className="text-[12px] font-medium text-[#6B6B6B] flex items-center gap-1.5">
+          <AlertTriangle size={13} className={`shrink-0 ${risk.color === 'red' ? 'text-[#D83B3B]' : risk.color === 'amber' ? 'text-[#B56A00]' : 'text-[#11875D]'}`} />
           Risks to Thesis
         </p>
         <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${risk.badgeClass}`}>{risk.label}</span>
@@ -503,7 +503,7 @@ function RisksGridCard({ ratings, cagrAnalysis, onViewRisks, panel }: {
         {bullets.map((b, i) => (
           <li key={i} className="flex items-start gap-2">
             <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${dotColor}`} />
-            <span className="text-[13px] text-slate-600 leading-snug">{b}</span>
+            <span className="text-[13px] text-[#6B6B6B] leading-snug">{b}</span>
           </li>
         ))}
       </ul>
@@ -541,11 +541,11 @@ function RelativeValuationCard({ valuationMethods, quote, panel }: { valuationMe
   let overallLabel: string
   let overallClass: string
   if (expensiveCount > applicable.length / 2) {
-    overallLabel = 'Expensive'; overallClass = 'bg-red-50 text-red-700 border-red-200'
+    overallLabel = 'Expensive'; overallClass = 'bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]'
   } else if (cheapCount > applicable.length / 2) {
-    overallLabel = 'Cheap'; overallClass = 'bg-emerald-50 text-emerald-700 border-emerald-200'
+    overallLabel = 'Cheap'; overallClass = 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]'
   } else {
-    overallLabel = 'Fair'; overallClass = 'bg-blue-50 text-blue-700 border-blue-200'
+    overallLabel = 'Fair'; overallClass = 'bg-[#EAF1FF] text-[#2563EB] border-[#93B4F5]'
   }
 
   const LABELS: Record<string, string> = {
@@ -554,17 +554,17 @@ function RelativeValuationCard({ valuationMethods, quote, panel }: { valuationMe
 
   function vsClass(actual: number, median: number): string {
     const r = actual / median
-    if (r > 1.25) return 'text-red-600'
-    if (r < 0.80) return 'text-emerald-600'
-    return 'text-slate-600'
+    if (r > 1.25) return 'text-[#D83B3B]'
+    if (r < 0.80) return 'text-[#11875D]'
+    return 'text-[#6B6B6B]'
   }
 
   const inner = (
     <>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5 min-w-0">
-          <Tag size={13} className={`shrink-0 ${overallLabel === 'Cheap' ? 'text-emerald-500' : overallLabel === 'Expensive' ? 'text-red-500' : 'text-blue-500'}`} />
-          <span className="text-[12px] font-medium text-slate-500 truncate">Relative Valuation</span>
+          <Tag size={13} className={`shrink-0 ${overallLabel === 'Cheap' ? 'text-[#11875D]' : overallLabel === 'Expensive' ? 'text-[#D83B3B]' : 'text-[#2563EB]'}`} />
+          <span className="text-[12px] font-medium text-[#6B6B6B] truncate">Relative Valuation</span>
         </div>
         <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border whitespace-nowrap ${overallClass}`}>
           {overallLabel}
@@ -573,7 +573,7 @@ function RelativeValuationCard({ valuationMethods, quote, panel }: { valuationMe
       <div className="space-y-1.5">
         {applicable.slice(0, 3).map((e: AnyRecord) => (
           <div key={e.multiple} className="flex items-center justify-between">
-            <span className="text-[13px] text-slate-600 flex items-center gap-0.5">
+            <span className="text-[13px] text-[#6B6B6B] flex items-center gap-0.5">
               {LABELS[e.multiple] ?? e.multiple}
               {e.multiple === 'evEbitda' && (
                 <InfoTooltip content="Enterprise Value divided by EBITDA. Compares total company value (including debt) to operating earnings. Lower than sector median suggests cheaper relative pricing." />
@@ -583,25 +583,25 @@ function RelativeValuationCard({ valuationMethods, quote, panel }: { valuationMe
               <span className={`text-[13px] font-semibold tabular-nums ${vsClass(e.actualValue, e.sectorMedian)}`}>
                 {e.actualValue.toFixed(1)}×
               </span>
-              <span className="text-[10px] text-slate-300">vs</span>
-              <span className="text-[11px] text-slate-400 tabular-nums">{e.sectorMedian.toFixed(1)}×</span>
+              <span className="text-[10px] text-[#8A95A6]">vs</span>
+              <span className="text-[11px] text-[#8A95A6] tabular-nums">{e.sectorMedian.toFixed(1)}×</span>
             </div>
           </div>
         ))}
         {pegRatio != null && pegRatio > 0 && pegRatio < 100 && (
           <div className="flex items-center justify-between">
-            <span className="text-[13px] text-slate-600 flex items-center gap-0.5">
+            <span className="text-[13px] text-[#6B6B6B] flex items-center gap-0.5">
               PEG (5Y)
               <InfoTooltip content="Price/Earnings to Growth. Below 1 suggests growth may be underpriced. Above 2 often signals expensive relative to growth expectations." />
             </span>
-            <span className={`text-[13px] font-semibold tabular-nums ${pegRatio < 1 ? 'text-emerald-600' : pegRatio > 2 ? 'text-red-600' : 'text-slate-600'}`}>
+            <span className={`text-[13px] font-semibold tabular-nums ${pegRatio < 1 ? 'text-[#11875D]' : pegRatio > 2 ? 'text-[#D83B3B]' : 'text-[#6B6B6B]'}`}>
               {pegRatio.toFixed(2)}×
             </span>
           </div>
         )}
       </div>
       {applicable.length > 0 && (
-        <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">vs. sector median</p>
+        <p className="text-[11px] text-[#8A95A6] mt-2 leading-relaxed">vs. sector median</p>
       )}
     </>
   )
@@ -623,7 +623,7 @@ export default function OverviewMetricGrid({ ratings, scores, businessProfile, c
 
   if (panel) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-px bg-slate-100">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-px bg-[#F4F3EF]">
         <div className="sm:col-span-2 bg-white p-4 sm:p-5">
           <BusinessQualityCard ratings={ratings} scores={scores ?? {}} panel />
         </div>

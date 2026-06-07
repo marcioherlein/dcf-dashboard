@@ -31,7 +31,7 @@ function BubbleDot(props: any) {
 
   const { isAnchor, ticker, analystCount } = payload as PlotPoint
   const r = isAnchor ? 22 : 18
-  const fill = isAnchor ? '#2563EB' : '#64748B'
+  const fill = isAnchor ? '#2563EB' : '#566174'
   const tickerSize = (ticker?.length ?? 0) > 3 ? 7.5 : 8.5
 
   return (
@@ -80,41 +80,41 @@ function PeerTooltip({ active, payload }: any) {
 
   // Consistent thresholds with the rest of the app (OverviewMetricGrid: ≤1 good, ≤2 neutral, >2 expensive)
   const pegCls = peg == null ? ''
-    : peg <= 1   ? 'text-emerald-600'
-    : peg <= 2   ? 'text-amber-600'
-    : 'text-red-600'
+    : peg <= 1   ? 'text-[#11875D]'
+    : peg <= 2   ? 'text-[#B56A00]'
+    : 'text-[#D83B3B]'
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-lg px-3 py-2.5 min-w-[160px]">
-      <p className="text-[12px] font-bold text-slate-900 mb-0.5">{p.ticker}</p>
-      <p className="text-[11px] text-slate-500 mb-2 truncate max-w-[180px]">{p.name}</p>
+    <div className="bg-white border border-[#E3E1DA] rounded-xl shadow-lg px-3 py-2.5 min-w-[160px]">
+      <p className="text-[12px] font-bold text-[#06101F] mb-0.5">{p.ticker}</p>
+      <p className="text-[11px] text-[#566174] mb-2 truncate max-w-[180px]">{p.name}</p>
       <div className="space-y-1">
         <div className="flex justify-between gap-4">
-          <span className="text-[11px] text-slate-500">Forward P/E</span>
-          <span className="text-[11px] font-semibold text-slate-800">{p.x.toFixed(1)}x</span>
+          <span className="text-[11px] text-[#566174]">Forward P/E</span>
+          <span className="text-[11px] font-semibold text-[#06101F]">{p.x.toFixed(1)}x</span>
         </div>
         <div className="flex justify-between gap-4">
-          <span className="text-[11px] text-slate-500">NTM EPS growth</span>
-          <span className="text-[11px] font-semibold text-slate-800">
+          <span className="text-[11px] text-[#566174]">NTM EPS growth</span>
+          <span className="text-[11px] font-semibold text-[#06101F]">
             {p.y >= 0 ? '+' : ''}{p.y.toFixed(1)}%
           </span>
         </div>
         {pegStr && (
-          <div className="flex justify-between gap-4 pt-1 border-t border-slate-100 mt-1">
-            <span className="text-[11px] text-slate-500">PEG ratio</span>
+          <div className="flex justify-between gap-4 pt-1 border-t border-[#E3E1DA] mt-1">
+            <span className="text-[11px] text-[#566174]">PEG ratio</span>
             <span className={cn('text-[11px] font-bold', pegCls)}>{pegStr}</span>
           </div>
         )}
         {mcap && (
           <div className="flex justify-between gap-4">
-            <span className="text-[11px] text-slate-500">Market cap</span>
-            <span className="text-[11px] font-semibold text-slate-800">{mcap}</span>
+            <span className="text-[11px] text-[#566174]">Market cap</span>
+            <span className="text-[11px] font-semibold text-[#06101F]">{mcap}</span>
           </div>
         )}
         {p.analystCount != null && (
           <div className="flex justify-between gap-4">
-            <span className="text-[11px] text-slate-500">Analysts</span>
-            <span className="text-[11px] font-semibold text-slate-800">{p.analystCount}</span>
+            <span className="text-[11px] text-[#566174]">Analysts</span>
+            <span className="text-[11px] font-semibold text-[#06101F]">{p.analystCount}</span>
           </div>
         )}
       </div>
@@ -133,7 +133,7 @@ const PEER_TOOLTIP_TEXT =
   "Peers are sourced from Yahoo Finance's 'People also watch' list — stocks frequently viewed together with this one. These are behaviorally similar, not analyst-defined industry peers. Use as a directional comparison, not a precise peer group."
 
 const CARD =
-  'bg-white border border-[#E6ECF5] rounded-xl shadow-card p-4'
+  'bg-white border border-[#E5E5E5] rounded-xl shadow-card p-4'
 
 export default function PeerValuationChart({ ticker, isFinancialSector = false }: PeerValuationChartProps) {
   const [data, setData]       = useState<PeersResponse | null>(null)
@@ -214,11 +214,11 @@ export default function PeerValuationChart({ ticker, isFinancialSector = false }
     return (
       <div className={CARD}>
         <div className="flex items-center justify-between mb-3">
-          <div className="h-3.5 w-36 rounded bg-slate-100 motion-safe:animate-pulse" />
-          <div className="h-3 w-20 rounded bg-slate-100 motion-safe:animate-pulse" />
+          <div className="h-3.5 w-36 rounded bg-[#F4F3EF] motion-safe:animate-pulse" />
+          <div className="h-3 w-20 rounded bg-[#F4F3EF] motion-safe:animate-pulse" />
         </div>
-        <div className="h-[260px] rounded-xl bg-slate-50 motion-safe:animate-pulse" />
-        <div className="mt-3 h-3 w-48 rounded bg-slate-100 motion-safe:animate-pulse" />
+        <div className="h-[260px] rounded-xl bg-[#F4F3EF] motion-safe:animate-pulse" />
+        <div className="mt-3 h-3 w-48 rounded bg-[#F4F3EF] motion-safe:animate-pulse" />
       </div>
     )
   }
@@ -230,12 +230,12 @@ export default function PeerValuationChart({ ticker, isFinancialSector = false }
       : (error ?? 'No comparable peers found for this stock on Yahoo Finance.')
     return (
       <div className={cn(CARD, 'flex items-center gap-3 py-5')}>
-        <div className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
-          <Info className="w-3.5 h-3.5 text-slate-300" />
+        <div className="w-7 h-7 rounded-lg bg-[#F4F3EF] border border-[#E3E1DA] flex items-center justify-center shrink-0">
+          <Info className="w-3.5 h-3.5 text-[#8A95A6]" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[12px] font-semibold text-slate-500">Peer comparison unavailable</p>
-          <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+          <p className="text-[12px] font-semibold text-[#566174]">Peer comparison unavailable</p>
+          <p className="text-[11px] text-[#8A95A6] mt-0.5 truncate">
             {friendlyError}
           </p>
         </div>
@@ -244,7 +244,7 @@ export default function PeerValuationChart({ ticker, isFinancialSector = false }
             type="button"
             onClick={load}
             aria-label="Retry loading peer data"
-            className="text-slate-300 hover:text-slate-500 transition-colors shrink-0"
+            className="text-[#8A95A6] hover:text-[#566174] transition-colors shrink-0"
           >
             <RefreshCw className="w-3.5 h-3.5" />
           </button>
@@ -261,11 +261,11 @@ export default function PeerValuationChart({ ticker, isFinancialSector = false }
     >
       {/* Header */}
       <div className="flex items-center justify-between gap-2 mb-1">
-        <p className="text-[13px] font-[700] text-[#0F172A] leading-tight">
+        <p className="text-[13px] font-[700] text-[#06101F] leading-tight">
           P/E vs. next-12-month EPS growth — peer comparison
         </p>
         <div className="flex items-center gap-1.5">
-          <div className="flex items-center gap-1 text-[11px] font-[600] text-[#64748B]">
+          <div className="flex items-center gap-1 text-[11px] font-[600] text-[#566174]">
             <span>Yahoo peers</span>
             <InfoTooltip content={PEER_TOOLTIP_TEXT} />
           </div>
@@ -273,41 +273,41 @@ export default function PeerValuationChart({ ticker, isFinancialSector = false }
             type="button"
             onClick={load}
             aria-label="Refresh peer data"
-            className="text-slate-300 hover:text-slate-500 transition-colors"
+            className="text-[#8A95A6] hover:text-[#566174] transition-colors"
           >
             <RefreshCw className="w-3 h-3" />
           </button>
         </div>
       </div>
 
-      <p className="text-[11px] text-slate-400 mb-3">
+      <p className="text-[11px] text-[#8A95A6] mb-3">
         Forward P/E (x) vs. consensus next-12-month EPS growth (%).
         {isFinancialSector && (
-          <span className="ml-1 text-amber-600">P/E and EPS growth are less reliable for financials — interpret with caution.</span>
+          <span className="ml-1 text-[#B56A00]">P/E and EPS growth are less reliable for financials — interpret with caution.</span>
         )}
       </p>
 
       <ResponsiveContainer width="100%" height={260}>
         {/* ComposedChart: Scatter for bubbles + Line for PEG reference lines in data space */}
         <ComposedChart margin={{ top: 10, right: 20, bottom: 30, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#F4F3EF" />
 
           <XAxis
             type="number" dataKey="x"
             domain={[xMin, xMax]}
             tickFormatter={v => `${v}x`}
-            tick={{ fontSize: 10, fill: '#94A3B8' }}
+            tick={{ fontSize: 10, fill: '#8A95A6' }}
             axisLine={false} tickLine={false}
             name="P/E"
           >
-            <Label value="P/E ratio (x)" position="insideBottom" offset={-16} style={{ fontSize: 10, fill: '#94A3B8' }} />
+            <Label value="P/E ratio (x)" position="insideBottom" offset={-16} style={{ fontSize: 10, fill: '#8A95A6' }} />
           </XAxis>
 
           <YAxis
             type="number" dataKey="y"
             domain={[yMin, yMax]}
             tickFormatter={v => `${v}%`}
-            tick={{ fontSize: 10, fill: '#94A3B8' }}
+            tick={{ fontSize: 10, fill: '#8A95A6' }}
             axisLine={false} tickLine={false} width={38}
             name="EPS growth"
           />
@@ -338,7 +338,7 @@ export default function PeerValuationChart({ ticker, isFinancialSector = false }
 
           <Tooltip
             content={<PeerTooltip />}
-            cursor={{ strokeDasharray: '3 3', stroke: '#CBD5E1' }}
+            cursor={{ strokeDasharray: '3 3', stroke: '#CDD1C8' }}
           />
 
           <Scatter
@@ -353,21 +353,21 @@ export default function PeerValuationChart({ ticker, isFinancialSector = false }
       <div className="flex items-center gap-4 mt-2 flex-wrap">
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-full bg-[#2563EB]" />
-          <span className="text-[10px] text-slate-500 font-medium">{ticker}</span>
+          <span className="text-[10px] text-[#566174] font-medium">{ticker}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-[#64748B] opacity-70" />
-          <span className="text-[10px] text-slate-500">Peers</span>
+          <div className="w-3 h-3 rounded-full bg-[#566174] opacity-70" />
+          <span className="text-[10px] text-[#566174]">Peers</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-4 h-0.5 rounded" style={{ background: '#10B981', backgroundImage: 'repeating-linear-gradient(90deg,#10B981 0,#10B981 4px,transparent 4px,transparent 7px)' }} />
-          <span className="text-[10px] text-slate-400">PEG = 1</span>
+          <span className="text-[10px] text-[#8A95A6]">PEG = 1</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-4 h-0.5 rounded" style={{ background: '#F59E0B', backgroundImage: 'repeating-linear-gradient(90deg,#F59E0B 0,#F59E0B 4px,transparent 4px,transparent 7px)' }} />
-          <span className="text-[10px] text-slate-400">PEG = 1.5</span>
+          <span className="text-[10px] text-[#8A95A6]">PEG = 1.5</span>
         </div>
-        <span className="text-[10px] text-slate-400 ml-auto hidden sm:block">
+        <span className="text-[10px] text-[#8A95A6] ml-auto hidden sm:block">
           Bubble number = analyst count behind estimate
         </span>
       </div>

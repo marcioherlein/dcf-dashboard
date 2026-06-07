@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import { fmtPrice } from '@/lib/formatters'
 
 const CARD =
-  'bg-white border border-[#E6ECF5] rounded-xl shadow-card'
+  'bg-white border border-[#E5E5E5] rounded-xl shadow-card'
 
 interface MarketInterpretationCardProps {
   upsidePct: number | null
@@ -86,8 +86,8 @@ function buildInterpretation(
   } else {
     title = 'Insufficient model data'
     body = 'Fair value estimate is unavailable. Check back when more financial data is accessible.'
-    bgColor = '#F1F5F9'
-    borderColor = '#E2E8F0'
+    bgColor = '#F4F3EF'
+    borderColor = '#E3E1DA'
   }
 
   return { title, body, bgColor, borderColor }
@@ -102,7 +102,7 @@ function normalizeRec(raw: string): { label: string; color: string } {
     return { label: 'Hold', color: 'text-[#D97706]' }
   if (r.includes('sell') || r.includes('underperform') || r.includes('underweight'))
     return { label: 'Sell', color: 'text-[#DC2626]' }
-  return { label: raw, color: 'text-[#64748B]' }
+  return { label: raw, color: 'text-[#566174]' }
 }
 
 export default function MarketInterpretationCard({
@@ -131,7 +131,7 @@ export default function MarketInterpretationCard({
   return (
     <div className={cn(CARD, 'p-4 flex flex-col gap-3')}>
       {/* Header */}
-      <p className="text-[13px] font-[700] text-[#0F172A]">Market Interpretation</p>
+      <p className="text-[13px] font-[700] text-[#06101F]">Market Interpretation</p>
 
       {/* Interpretation box */}
       <div
@@ -141,12 +141,12 @@ export default function MarketInterpretationCard({
           border: `1px solid ${interp.borderColor}`,
         }}
       >
-        <p className="text-[13px] font-[700] text-[#0F172A] leading-snug">
+        <p className="text-[13px] font-[700] text-[#06101F] leading-snug">
           {interp.title}
         </p>
-        <p className="text-[12px] text-[#334155] leading-relaxed">{interp.body}</p>
+        <p className="text-[12px] text-[#566174] leading-relaxed">{interp.body}</p>
         {showRdcfNote && (
-          <p className="text-[11px] text-[#64748B] mt-1 leading-relaxed italic">
+          <p className="text-[11px] text-[#566174] mt-1 leading-relaxed italic">
             {reverseDCFText}
           </p>
         )}
@@ -154,20 +154,20 @@ export default function MarketInterpretationCard({
 
       {/* Analyst consensus */}
       {showAnalyst && (
-        <div className="flex flex-col gap-2 border-t border-[#E6ECF5] pt-3 mt-1">
+        <div className="flex flex-col gap-2 border-t border-[#E5E5E5] pt-3 mt-1">
           <div className="flex items-center justify-between gap-2">
             <div>
-              <p className="text-[11px] font-[600] text-[#64748B] mb-0.5">
+              <p className="text-[11px] font-[600] text-[#566174] mb-0.5">
                 Analyst consensus
               </p>
               <p className={cn('text-[13px] font-[700]', recColor)}>{recLabel}</p>
             </div>
             {analystTargetMean != null && analystTargetMean > 0 && (
               <div className="text-right">
-                <p className="text-[11px] font-[600] text-[#64748B] mb-0.5">
+                <p className="text-[11px] font-[600] text-[#566174] mb-0.5">
                   Target price
                 </p>
-                <p className="text-[13px] font-[700] text-[#0F172A] tabular-nums">
+                <p className="text-[13px] font-[700] text-[#06101F] tabular-nums">
                   {fmtPrice(analystTargetMean, currency)}
                 </p>
               </div>
@@ -191,7 +191,7 @@ export default function MarketInterpretationCard({
               return (
                 <div className="mt-1">
                   {/* Bar */}
-                  <div className="relative h-4 rounded-full bg-slate-100 overflow-visible">
+                  <div className="relative h-4 rounded-full bg-[#F4F3EF] overflow-visible">
                     {/* Range band (low to high target) */}
                     <div
                       className="absolute top-0 bottom-0 rounded-full bg-gradient-to-r from-slate-200 to-emerald-200"
@@ -205,27 +205,27 @@ export default function MarketInterpretationCard({
                     />
                     {/* Mean target marker */}
                     <div
-                      className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white shadow-sm z-10"
+                      className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#E8F7EF]0 border-2 border-white shadow-sm z-10"
                       style={{ left: `${Math.max(3, Math.min(97, meanPct))}%`, marginLeft: '-6px' }}
                       title={`Mean target: ${fmtPrice(analystTargetMean, currency)}`}
                     />
                   </div>
                   {/* Labels */}
-                  <div className="flex items-center justify-between mt-1.5 text-[10px] text-slate-400 tabular-nums">
+                  <div className="flex items-center justify-between mt-1.5 text-[10px] text-[#8A95A6] tabular-nums">
                     <span>{fmtPrice(analystTargetLow, currency)}</span>
-                    <span className={`font-semibold ${upside > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                    <span className={`font-semibold ${upside > 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                       Mean {upsideStr} upside
                     </span>
                     <span>{fmtPrice(analystTargetHigh, currency)}</span>
                   </div>
                   {/* Legend */}
                   <div className="flex items-center gap-3 mt-1">
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400">
+                    <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]">
                       <span className="w-2.5 h-2.5 rounded-full bg-slate-700 border border-white inline-block" />
                       Current
                     </span>
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 border border-white inline-block" />
+                    <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#E8F7EF]0 border border-white inline-block" />
                       Consensus target
                     </span>
                   </div>

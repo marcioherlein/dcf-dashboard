@@ -75,50 +75,50 @@ export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, up
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
 
       {/* ── Column 1: What supports ── */}
-      <div className="bg-white border border-[#E6ECF5] rounded-xl p-4 sm:p-5 shadow-card">
+      <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 shadow-card">
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-7 h-7 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
-            <span className="text-emerald-500 text-[12px] leading-none">✓</span>
+          <div className="w-7 h-7 rounded-full bg-[#E8F7EF] flex items-center justify-center shrink-0">
+            <span className="text-[#11875D] text-[12px] leading-none">✓</span>
           </div>
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">What Supports the Valuation?</p>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-[#8A95A6]">What Supports the Valuation?</p>
         </div>
         {supportBullets.length > 0 ? (
           <ul className="space-y-2.5">
             {supportBullets.map((d, i) => (
               <li key={i} className="flex items-start gap-2 py-0.5">
-                <span className="text-emerald-500 mt-0.5 shrink-0 text-[13px]">✓</span>
-                <span className="text-[13px] text-slate-600 leading-relaxed">{d}</span>
+                <span className="text-[#11875D] mt-0.5 shrink-0 text-[13px]">✓</span>
+                <span className="text-[13px] text-[#566174] leading-relaxed">{d}</span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-[13px] text-slate-400">Support factors unavailable.</p>
+          <p className="text-[13px] text-[#8A95A6]">Support factors unavailable.</p>
         )}
       </div>
 
       {/* ── Column 2: What could go wrong ── */}
-      <div className="bg-white border border-[#E6ECF5] rounded-xl p-4 sm:p-5 shadow-card">
+      <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 shadow-card">
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-7 h-7 rounded-full bg-red-50 flex items-center justify-center shrink-0">
-            <span className="text-red-500 text-[12px] leading-none">!</span>
+          <div className="w-7 h-7 rounded-full bg-[#FCEAEA] flex items-center justify-center shrink-0">
+            <span className="text-[#D83B3B] text-[12px] leading-none">!</span>
           </div>
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">What Could Go Wrong?</p>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-[#8A95A6]">What Could Go Wrong?</p>
         </div>
         {riskBullets.length > 0 ? (
           <ul className="space-y-2.5">
             {riskBullets.map((b, i) => (
               <li key={i} className="flex items-start gap-2 py-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-[7px] shrink-0" />
-                <span className="text-[13px] text-slate-600 leading-relaxed">{b}</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#D83B3B] mt-[7px] shrink-0" />
+                <span className="text-[13px] text-[#566174] leading-relaxed">{b}</span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-[13px] text-slate-400">No risk signals from available data.</p>
+          <p className="text-[13px] text-[#8A95A6]">No risk signals from available data.</p>
         )}
         <button
           onClick={onViewRisks}
-          className="mt-3.5 min-h-[44px] flex items-center text-[13px] font-medium text-olive-700 hover:text-blue-700 transition-colors"
+          className="mt-3.5 min-h-[44px] flex items-center text-[13px] font-medium text-olive-700 hover:text-[#2563EB] transition-colors"
         >
           View full risk analysis →
         </button>
@@ -126,16 +126,16 @@ export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, up
 
       {/* ── Column 3: Next step ── */}
       <div className={cn(
-        'bg-white border border-[#E6ECF5] rounded-xl p-4 sm:p-5 shadow-card',
+        'bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 shadow-card',
         'flex flex-col'
       )}>
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-            <span className="text-blue-500 text-[12px] leading-none">→</span>
+          <div className="w-7 h-7 rounded-full bg-[#EAF1FF] flex items-center justify-center shrink-0">
+            <span className="text-[#2563EB] text-[12px] leading-none">→</span>
           </div>
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Next Step</p>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-[#8A95A6]">Next Step</p>
         </div>
-        <p className="text-[13px] text-slate-500 leading-relaxed mb-4">
+        <p className="text-[13px] text-[#566174] leading-relaxed mb-4">
           Use the Valuation tab to test whether your assumptions support the current price.
         </p>
         <div className="space-y-2 mt-auto">
@@ -157,7 +157,7 @@ export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, up
           {onSave && (
             <button
               onClick={onSave}
-              className="w-full rounded-xl py-3 min-h-[44px] text-[14px] font-semibold text-slate-600 border border-[#E6ECF5] hover:bg-slate-50 transition-colors"
+              className="w-full rounded-xl py-3 min-h-[44px] text-[14px] font-semibold text-[#566174] border border-[#E5E5E5] hover:bg-[#F4F3EF] transition-colors"
             >
               Add to watchlist
             </button>

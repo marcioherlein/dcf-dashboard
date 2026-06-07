@@ -38,7 +38,8 @@ const TOKEN = {
 // ─── Signal row ───────────────────────────────────────────────────────────────
 
 function SignalRow({ signal }: { signal: VerdictSignal }) {
-  const { status, label, value, detail } = signal
+  const { status, label: rawLabel, value, detail } = signal
+  const label = SIGNAL_LABEL_OVERRIDES[rawLabel] ?? rawLabel
 
   const tok = status === 'pass' ? TOKEN.pass : status === 'fail' ? TOKEN.fail : TOKEN.neutral
 
@@ -77,6 +78,15 @@ const DIMENSION_LABELS: Record<string, string> = {
   integrity:  'Earnings Integrity',
 }
 
+// Plain-English signal label overrides — map from computed label to readable alternative
+const SIGNAL_LABEL_OVERRIDES: Record<string, string> = {
+  'Piotroski F-score':  'Earnings quality score',
+  'Altman Z-score':     'Bankruptcy risk score',
+  'Beneish M-score':    'Earnings manipulation risk',
+  'ROIC > WACC':        'Returns above cost of capital',
+  'ROIC spread':        'Capital return spread',
+}
+
 function DimensionCard({ dim }: { dim: VerdictDimension }) {
   const total = dim.signals.filter(s => s.status !== 'na').length
   const passing = dim.passingCount
@@ -94,7 +104,7 @@ function DimensionCard({ dim }: { dim: VerdictDimension }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <span
-          className="text-[10px] font-bold uppercase tracking-[0.06em]"
+          className="text-[11px] font-[650]"
           style={{ color: '#6B6B6B' }}
         >
           {DIMENSION_LABELS[dim.id] ?? dim.label}
@@ -169,7 +179,7 @@ export default function InvestmentVerdict({
 
   return (
     <div
-      className="rounded-2xl p-4 flex flex-col gap-3"
+      className="rounded-xl p-4 flex flex-col gap-3 shadow-card"
       style={{ background: '#FAFAFA', border: '1px solid #E5E5E5' }}
     >
       {/* ── Verdict headline ─────────────────────────────────────────────── */}
@@ -178,9 +188,9 @@ export default function InvestmentVerdict({
         style={{ background: headerTok.bg, border: `1px solid ${headerTok.border}` }}
       >
         <div className="flex flex-col gap-1 min-w-0">
-          {/* Label eyebrow */}
+          {/* Label */}
           <span
-            className="text-[10px] font-bold uppercase tracking-[0.06em]"
+            className="text-[11px] font-[650]"
             style={{ color: TOKEN.neutral.text }}
           >
             Investment Checklist
@@ -227,8 +237,8 @@ export default function InvestmentVerdict({
       </div>
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
-      <p className="text-[10px] text-center leading-relaxed" style={{ color: '#9B9B9B' }}>
-        Piotroski F-score · Altman Z-score · Beneish M-score · ROIC spread · DCF upside.
+      <p className="text-[11px] text-center leading-relaxed" style={{ color: '#6B6B6B' }}>
+        Scores: Earnings quality, financial distress risk, manipulation risk, ROIC vs WACC, DCF upside.
         N/A signals excluded from totals.
       </p>
     </div>

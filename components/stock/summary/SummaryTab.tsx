@@ -131,21 +131,7 @@ export default function SummaryTab({
   return (
     <div className="flex flex-col gap-4">
 
-      {/* ── 1. VERDICT ───────────────────────────────────────────────────────── */}
-      {scores && (
-        <InvestmentVerdict
-          ticker={ticker}
-          upsidePct={upsidePct}
-          scores={scores}
-          analystRecommendation={analystRecommendation}
-          fcfMargin={businessProfile?.fcfMargin ?? null}
-          grossMargin={businessProfile?.grossMargin ?? null}
-          netMargin={businessProfile?.netMargin ?? null}
-          revenueCAGR={cagrAnalysis?.historicalCagr3y ?? null}
-        />
-      )}
-
-      {/* ── 2. VALUATION — hero + price chart, equal columns ─────────────────── */}
+      {/* ── 1. VALUATION — verdict headline + price chart ────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
         <SummaryHeroCard
           ticker={ticker}
@@ -174,6 +160,20 @@ export default function SummaryTab({
           currency={currency}
         />
       </div>
+
+      {/* ── 2. CHECKLIST — does the company support the verdict? ─────────────── */}
+      {scores && (
+        <InvestmentVerdict
+          ticker={ticker}
+          upsidePct={upsidePct}
+          scores={scores}
+          analystRecommendation={analystRecommendation}
+          fcfMargin={businessProfile?.fcfMargin ?? null}
+          grossMargin={businessProfile?.grossMargin ?? null}
+          netMargin={businessProfile?.netMargin ?? null}
+          revenueCAGR={cagrAnalysis?.historicalCagr3y ?? null}
+        />
+      )}
 
       {/* ── 3. MARKET PRICING — what is the price implying? ──────────────────── */}
       <ReverseDCFCompactCard
@@ -227,7 +227,7 @@ export default function SummaryTab({
 
       {/* ── 6. FUNDAMENTALS — business quality panel ─────────────────────────── */}
       {ratings && (
-        <div className="rounded-2xl overflow-hidden border border-[#E5E5E5] shadow-card">
+        <div className="rounded-xl overflow-hidden border border-[#E5E5E5] shadow-card">
           <div className="px-4 sm:px-5 py-3 bg-white border-b border-[#E5E5E5]">
             <p className="text-[12px] font-[650] text-[#6B6B6B]">Business fundamentals</p>
           </div>
