@@ -91,12 +91,12 @@ function PeerTooltip({ active, payload }: any) {
       <div className="space-y-1">
         <div className="flex justify-between gap-4">
           <span className="text-[11px] text-[#566174]">Forward P/E</span>
-          <span className="text-[11px] font-semibold text-[#06101F]">{p.x.toFixed(1)}x</span>
+          <span className="text-[11px] font-semibold text-[#06101F]">{p.x != null ? `${p.x.toFixed(1)}x` : '—'}</span>
         </div>
         <div className="flex justify-between gap-4">
           <span className="text-[11px] text-[#566174]">NTM EPS growth</span>
           <span className="text-[11px] font-semibold text-[#06101F]">
-            {p.y >= 0 ? '+' : ''}{p.y.toFixed(1)}%
+            {p.y != null ? `${p.y >= 0 ? '+' : ''}${p.y.toFixed(1)}%` : '—'}
           </span>
         </div>
         {pegStr && (
@@ -184,7 +184,7 @@ export default function PeerValuationChart({ ticker, isFinancialSector = false }
         analystCount: p.analystCount,
         isAnchor: false,
       })),
-    ]
+    ].filter(p => p.x != null && isFinite(p.x) && p.y != null && isFinite(p.y))
   }, [data])
 
   // Safe domain computation — guards against empty array
@@ -385,8 +385,8 @@ export default function PeerValuationChart({ ticker, isFinancialSector = false }
             <tr key={p.ticker}>
               <td>{p.ticker}</td>
               <td>{p.name}</td>
-              <td>{p.x.toFixed(1)}x</td>
-              <td>{p.y >= 0 ? '+' : ''}{p.y.toFixed(1)}%</td>
+              <td>{p.x != null ? `${p.x.toFixed(1)}x` : '—'}</td>
+              <td>{p.y != null ? `${p.y >= 0 ? '+' : ''}${p.y.toFixed(1)}%` : '—'}</td>
               <td>{p.analystCount ?? '—'}</td>
             </tr>
           ))}
