@@ -92,7 +92,7 @@ export default function MarketTeaserSection() {
 
             {/* Left: data rows */}
             <div className="px-6 py-5">
-              <p className="text-[11px] font-bold text-[#6B6B6B] mb-4 tracking-[0.05em] uppercase">Example: Apple Inc. (AAPL)</p>
+              <p className="text-[11px] font-[650] text-[#6B6B6B] mb-4">Example: Apple Inc. (AAPL)</p>
               <div className="space-y-0">
                 {TEASER_ROWS.map(({ label, val, type, i }) => (
                   <motion.div
@@ -128,13 +128,12 @@ export default function MarketTeaserSection() {
 
             {/* Right: spectrum + summary */}
             <div className="px-6 py-5">
-              <p className="text-[11px] font-bold text-[#6B6B6B] mb-4 tracking-[0.05em] uppercase">Growth spectrum</p>
+              <p className="text-[11px] font-[650] text-[#6B6B6B] mb-4">Growth spectrum</p>
               <div className="flex items-baseline gap-2 mb-1">
                 <motion.span
                   className="text-[40px] font-bold tabular-nums text-[#111111] leading-none"
                   initial={reduced ? {} : { opacity: 0, y: 8 }}
-                  whileInView={reduced ? {} : { opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.5, ease: EASE }}
                 >
                   12.1%

@@ -424,8 +424,8 @@ export default function LandingHero() {
     <section
       className="overflow-x-hidden relative"
       style={{
-        paddingTop: 'max(96px, calc(80px + 2vh))',
-        paddingBottom: 'clamp(48px, 5vh, 80px)',
+        paddingTop: 'max(72px, calc(60px + 2vh))',
+        paddingBottom: 'clamp(40px, 5vh, 80px)',
         background: '#000000',
       }}
     >
@@ -467,7 +467,7 @@ export default function LandingHero() {
             </motion.div>
 
             {/* Headline — line-by-line stagger */}
-            <div className="mb-4" style={{ lineHeight: 1.05, letterSpacing: '-0.035em' }}>
+            <div className="mb-3 sm:mb-4" style={{ lineHeight: 1.05, letterSpacing: '-0.035em' }}>
               {[
                 { text: 'Invest with', delay: 0.06, plain: true },
                 { text: 'a process,', delay: 0.14, plain: true },
@@ -494,7 +494,7 @@ export default function LandingHero() {
               initial={reduced ? {} : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: EASE, delay: 0.32 }}
-              className="text-[16px] leading-relaxed mb-8"
+              className="text-[14px] sm:text-[16px] leading-relaxed mb-6"
               style={{ maxWidth: '440px', color: 'rgba(255,255,255,0.72)' }}
             >
               insic computes a fair value estimate for any stock and shows you what growth rate the current price implies — so you can judge whether the market is right before you commit capital.
@@ -505,7 +505,7 @@ export default function LandingHero() {
               initial={reduced ? {} : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease: EASE, delay: 0.42 }}
-              className="flex flex-col sm:flex-row gap-3 mb-8"
+              className="flex flex-col sm:flex-row gap-3 mb-6"
             >
               {session ? (
                 <Link
