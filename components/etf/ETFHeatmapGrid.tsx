@@ -2,7 +2,7 @@
 
 import { memo } from 'react'
 import Link from 'next/link'
-import { Plus, Check } from 'lucide-react'
+import { Plus, Check, AlertCircle, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { scoreColor, scoreLabel, scoreBgCell, scoreBadge } from '@/lib/data/etfScore'
 import { fmtMultiple } from '@/lib/formatters'
@@ -10,16 +10,34 @@ import { InfoTooltip } from '@/components/ui/info-tooltip'
 import type { ETFMeta } from '@/lib/data/etfUniverse'
 import type { ETFBatchItem } from '@/lib/data/etfTypes'
 
+// Score tier icon — gives colorblind users a non-color signal
+function ScoreTierIcon({ score }: { score: number }) {
+  if (score >= 70) return <span className="text-[10px] leading-none" aria-hidden="true">↓</span>  // cheap = price below value
+  if (score >= 50) return <span className="text-[10px] leading-none" aria-hidden="true">→</span>
+  if (score >= 30) return <span className="text-[10px] leading-none" aria-hidden="true">↑</span>  // stretched = price above value
+  return <span className="text-[10px] leading-none" aria-hidden="true">↑↑</span>
+}
+
 interface Props {
   metas: ETFMeta[]
   data: Record<string, ETFBatchItem | null>
   watchlistedTickers: Set<string>
   onAdd: (ticker: string) => void
   cols?: 3 | 4
+  hasError?: boolean
 }
 
-export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchlistedTickers, onAdd, cols = 3 }: Props) {
-  const loading = Object.keys(data).length === 0
+export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchlistedTickers, onAdd, cols = 3, hasError }: Props) {
+  const loading = !hasError && Object.keys(data).length === 0
+
+  if (hasError) {
+    return (
+      <div className="flex items-center gap-2 text-[13px] text-[#8A95A6] py-4">
+        <AlertCircle size={14} className="text-[#D83B3B] shrink-0" />
+        <span>Could not load ETF data. Use Retry above to refresh.</span>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -43,11 +61,11 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
           <div
             key={meta.ticker}
             className={cn(
-              'group relative rounded-xl border p-3 transition-all hover:shadow-sm',
+              'group relative rounded-xl border p-3 transition-all hover:shadow-sm cursor-pointer',
               score != null ? scoreBgCell(score) : 'bg-white border-[#E3E1DA]',
             )}
           >
-            {/* Full-card invisible link — navigates on click anywhere except the button */}
+            {/* Full-card invisible link */}
             <Link
               href={`/etf/${meta.ticker}`}
               className="absolute inset-0 rounded-xl z-0"
@@ -79,16 +97,19 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
               </button>
             </div>
 
-            {/* Score */}
+            {/* Score with colorblind-accessible icon */}
             <div className="relative z-10 flex items-center gap-1.5 mb-2">
               {score != null ? (
                 <>
                   <span className={cn('font-sans font-bold text-[22px] leading-none', scoreColor(score))}>
                     {score}
                   </span>
-                  <span className={cn('text-[10px] font-semibold px-1.5 py-0.5 rounded-full', scoreBadge(score))}>
-                    {scoreLabel(score)}
-                  </span>
+                  <div className="flex items-center gap-0.5">
+                    <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded-full', scoreBadge(score))}>
+                      <ScoreTierIcon score={score} />
+                      {' '}{scoreLabel(score)}
+                    </span>
+                  </div>
                   <InfoTooltip text="Score = P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio penalty (20 pts). 70+ = Deep Value." side="top" />
                 </>
               ) : (
@@ -96,18 +117,22 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
               )}
             </div>
 
-            {/* Stat row — fixed-width P/E column so ER always aligns */}
-            <div className="relative z-10 flex items-center gap-0 text-[11px]">
-              {item?.peRatio != null && (
-                <span className="text-[#566174] w-[72px] shrink-0">
-                  P/E <span className="font-mono font-semibold text-[#06101F]">{fmtMultiple(item.peRatio)}</span>
-                </span>
-              )}
-              {item?.expenseRatio != null && (
-                <span className="text-[#566174]">
-                  ER <span className="font-mono font-semibold text-[#06101F]">{(item.expenseRatio * 100).toFixed(2)}%</span>
-                </span>
-              )}
+            {/* Stat row */}
+            <div className="relative z-10 flex items-center justify-between text-[11px]">
+              <div className="flex items-center gap-3">
+                {item?.peRatio != null && (
+                  <span className="text-[#566174]">
+                    P/E <span className="font-mono font-semibold text-[#06101F]">{fmtMultiple(item.peRatio)}</span>
+                  </span>
+                )}
+                {item?.expenseRatio != null && (
+                  <span className="text-[#566174]">
+                    ER <span className="font-mono font-semibold text-[#06101F]">{(item.expenseRatio * 100).toFixed(2)}%</span>
+                  </span>
+                )}
+              </div>
+              {/* Link affordance — visible on hover */}
+              <ArrowRight size={11} className="text-[#C5C9C2] group-hover:text-olive-600 transition-colors shrink-0" />
             </div>
           </div>
         )

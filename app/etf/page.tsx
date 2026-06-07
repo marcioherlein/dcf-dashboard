@@ -1,19 +1,20 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { PieChart, RefreshCw } from 'lucide-react'
+import { PieChart, RefreshCw, GitCompare } from 'lucide-react'
+import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { ETFSearchBar } from '@/components/etf/ETFSearchBar'
 import { ETFWatchlistCard } from '@/components/etf/ETFWatchlistCard'
 import { ETFUniverseSection } from '@/components/etf/ETFUniverseSection'
 import { ETFMarketPulse } from '@/components/etf/ETFMarketPulse'
-import { ETFOnboardBanner } from '@/components/etf/ETFOnboardBanner'
+import { ETFHelpButton } from '@/components/etf/ETFOnboardBanner'
 import { loadETFWatchlist, deleteETFEntry, saveETFEntry } from '@/lib/data/etfWatchlistStore'
 import { ALL_TICKERS } from '@/lib/data/etfUniverse'
 import type { ETFEntry, ETFBatchItem } from '@/lib/data/etfTypes'
 
 const SESSION_CACHE_KEY = 'etf_batch_v1'
-const SESSION_CACHE_TTL = 30 * 60 * 1000 // 30 minutes
+const SESSION_CACHE_TTL = 30 * 60 * 1000
 
 function readBatchCache(): Record<string, ETFBatchItem | null> | null {
   if (typeof window === 'undefined') return null
@@ -32,9 +33,15 @@ function writeBatchCache(data: Record<string, ETFBatchItem | null>): void {
   if (typeof window === 'undefined') return
   try {
     sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({ data, ts: Date.now() }))
-  } catch {
-    // quota exceeded — silent fail
-  }
+  } catch {}
+}
+
+// ── Undo toast ────────────────────────────────────────────────────────────────
+
+interface UndoToast {
+  ticker: string
+  entry: ETFEntry
+  timer: ReturnType<typeof setTimeout>
 }
 
 export default function ETFTrackerPage() {
@@ -45,8 +52,10 @@ export default function ETFTrackerPage() {
   const [watchlist, setWatchlist]   = useState<ETFEntry[]>([])
   const [wlLoading, setWlLoading]   = useState(true)
   const [sparklines, setSparklines] = useState<Record<string, number[] | null>>({})
-  const [deleteError, setDeleteError] = useState<string | null>(null)
   const fetchedSparklines = useRef<Set<string>>(new Set())
+
+  // Undo-delete toast
+  const [undoToast, setUndoToast] = useState<UndoToast | null>(null)
 
   const loadWatchlist = useCallback(async () => {
     setWlLoading(true)
@@ -57,7 +66,6 @@ export default function ETFTrackerPage() {
 
   useEffect(() => { loadWatchlist() }, [loadWatchlist])
 
-  // Batch-fetch sparklines for new tickers only (deduplication)
   useEffect(() => {
     if (watchlist.length === 0) { setSparklines({}); return }
     const newTickers = watchlist.filter((e) => !fetchedSparklines.current.has(e.ticker))
@@ -86,17 +94,46 @@ export default function ETFTrackerPage() {
     })
   }, [watchlist])
 
-  async function handleDelete(ticker: string) {
-    const prev = watchlist
-    setWatchlist((current) => current.filter((e) => e.ticker !== ticker))
-    setDeleteError(null)
-    try {
-      await deleteETFEntry(ticker, userEmail)
-    } catch {
-      setWatchlist(prev)
-      setDeleteError(`Failed to remove ${ticker}. Please try again.`)
+  function handleDelete(ticker: string) {
+    const entry = watchlist.find((e) => e.ticker === ticker)
+    if (!entry) return
+
+    // Clear any existing toast
+    if (undoToast) {
+      clearTimeout(undoToast.timer)
+      deleteETFEntry(undoToast.ticker, userEmail).catch(() => {})
     }
+
+    // Optimistically remove
+    setWatchlist((current) => current.filter((e) => e.ticker !== ticker))
+
+    // Schedule permanent deletion after 5s
+    const timer = setTimeout(() => {
+      deleteETFEntry(ticker, userEmail).catch(() => {
+        // If delete fails, silently restore
+        setWatchlist((prev) => {
+          const has = prev.some((e) => e.ticker === ticker)
+          return has ? prev : [entry, ...prev]
+        })
+      })
+      setUndoToast(null)
+    }, 5000)
+
+    setUndoToast({ ticker, entry, timer })
   }
+
+  function handleUndo() {
+    if (!undoToast) return
+    clearTimeout(undoToast.timer)
+    setWatchlist((prev) => {
+      const has = prev.some((e) => e.ticker === undoToast.ticker)
+      return has ? prev : [undoToast.entry, ...prev]
+    })
+    setUndoToast(null)
+  }
+
+  // Dismiss toast without undoing (user navigated away, etc.)
+  useEffect(() => () => { if (undoToast) clearTimeout(undoToast.timer) }, [undoToast])
 
   // ── Batch / universe state ───────────────────────────────────────────────────
   const [batchData, setBatchData]       = useState<Record<string, ETFBatchItem | null>>({})
@@ -106,8 +143,6 @@ export default function ETFTrackerPage() {
 
   const fetchBatch = useCallback(async () => {
     if (batchFetched) return
-
-    // Serve from sessionStorage cache if available
     const cached = readBatchCache()
     if (cached) {
       setBatchData(cached)
@@ -115,7 +150,6 @@ export default function ETFTrackerPage() {
       setBatchLoading(false)
       return
     }
-
     setBatchLoading(true)
     setBatchError(null)
     try {
@@ -123,7 +157,6 @@ export default function ETFTrackerPage() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const json = await res.json()
       setBatchData(json)
-      // Only mark fetched if we actually got data
       const hasData = Object.values(json).some((v) => v !== null)
       if (hasData) {
         setBatchFetched(true)
@@ -139,7 +172,6 @@ export default function ETFTrackerPage() {
 
   useEffect(() => { fetchBatch() }, [fetchBatch])
 
-  // Quick-add handler for empty state buttons
   async function handleQuickAdd(ticker: string) {
     const item = batchData[ticker]
     if (!item) return
@@ -160,21 +192,33 @@ export default function ETFTrackerPage() {
     loadWatchlist()
   }
 
+  const hasWatchlist = !wlLoading && watchlist.length > 0
+
   return (
-    <div className="min-h-dvh bg-[#FFFFFF]">
+    <div className="min-h-dvh bg-[#F9F8F5]">
 
       {/* ── Page header ─────────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-[#E3E1DA] px-4 sm:px-8 pt-6 pb-5">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-2.5 mb-1">
-            <div className="w-7 h-7 rounded-lg bg-olive-700 flex items-center justify-center shrink-0">
-              <PieChart size={14} className="text-white" />
+          <div className="flex items-start justify-between gap-4 mb-1">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-olive-700 flex items-center justify-center shrink-0">
+                <PieChart size={15} className="text-white" />
+              </div>
+              <h1 className="text-[24px] sm:text-[28px] font-bold tracking-tight text-[#06101F]">
+                ETF Tracker
+              </h1>
+              <ETFHelpButton />
             </div>
-            <h1 className="text-[20px] font-bold tracking-tight text-[#06101F]">
-              ETF Tracker
-            </h1>
+            <Link
+              href="/etf/compare"
+              className="hidden sm:flex items-center gap-1.5 text-[12px] font-semibold text-[#566174] hover:text-olive-700 border border-[#E3E1DA] hover:border-[#BFD2A1] rounded-lg px-3 py-2 transition-colors whitespace-nowrap bg-white"
+            >
+              <GitCompare size={13} />
+              Compare ETFs
+            </Link>
           </div>
-          <p className="text-[13px] text-[#566174] mb-5 ml-[36px]">
+          <p className="text-[13px] text-[#566174] mb-5 ml-[42px]">
             Value-oriented lens on the ETF universe — basket P/E, P/B, expense ratios, and a Value Score.
           </p>
           <ETFSearchBar />
@@ -184,12 +228,9 @@ export default function ETFTrackerPage() {
       {/* ── Content ─────────────────────────────────────────────────────────── */}
       <div className="px-4 sm:px-8 py-6 sm:py-8 max-w-7xl mx-auto space-y-10">
 
-        {/* Onboarding banner (first-run only) */}
-        <ETFOnboardBanner />
-
-        {/* Market Pulse */}
+        {/* Market Pulse — always first */}
         {batchError ? (
-          <div className="glass-card-light rounded-xl p-4 flex items-center justify-between gap-4">
+          <div className="bg-white border border-[#E3E1DA] rounded-xl p-4 flex items-center justify-between gap-4">
             <p className="text-sm text-[#566174]">{batchError}</p>
             <button
               onClick={() => { setBatchFetched(false); fetchBatch() }}
@@ -202,30 +243,15 @@ export default function ETFTrackerPage() {
           <ETFMarketPulse data={batchData} loading={batchLoading} />
         )}
 
-        {/* ── My Watchlist ──────────────────────────────────────────────────── */}
-        <section>
-          <div className="flex items-center gap-2.5 mb-5">
-            <h2 className="text-[13px] font-[650] text-[#566174]">
-              My Watchlist
-            </h2>
-            {watchlist.length > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold bg-olive-100 text-olive-700">
+        {/* ── My Watchlist (only shown when it has items) ──────────────────── */}
+        {hasWatchlist && (
+          <section>
+            <div className="flex items-center gap-2.5 mb-5">
+              <h2 className="text-[18px] font-bold text-[#06101F]">My Watchlist</h2>
+              <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full text-[11px] font-bold bg-olive-100 text-olive-700">
                 {watchlist.length}
               </span>
-            )}
-          </div>
-
-          {deleteError && (
-            <p className="text-sm text-[#D83B3B] mb-3">{deleteError}</p>
-          )}
-
-          {wlLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="h-[340px] bg-[#F4F3EF] rounded-2xl border border-[#E3E1DA] motion-safe:animate-pulse" />
-              ))}
             </div>
-          ) : watchlist.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {watchlist.map((entry) => (
                 <ETFWatchlistCard
@@ -238,46 +264,44 @@ export default function ETFTrackerPage() {
                 />
               ))}
             </div>
-          ) : (
-            <div className="glass-card-light rounded-2xl p-8 flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-xl bg-[#F4F3EF] flex items-center justify-center mb-4">
-                <PieChart size={22} className="text-[#8A95A6]" />
-              </div>
-              <h3 className="text-[14px] font-semibold text-[#06101F] mb-1">Track ETFs by what they&apos;re actually worth</h3>
-              <p className="text-[13px] text-[#8A95A6] max-w-sm mb-5">
-                Search for a ticker above, or browse and add from the sectors, geographies, and styles below.
-              </p>
-              {Object.keys(batchData).length > 0 && (
-                <div className="flex gap-2 flex-wrap justify-center">
-                  {['SPY', 'VTV', 'VYM'].map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => handleQuickAdd(t)}
-                      className="px-4 py-2 min-h-[44px] rounded-lg border border-[#E3E1DA] bg-white text-[13px] font-semibold text-[#566174] hover:border-[#BFD2A1] hover:text-olive-700 hover:bg-olive-50 transition-colors"
-                    >
-                      + {t}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <p className="text-[12px] text-[#8A95A6] mt-4">
-                Or browse sectors, geographies, and styles below ↓
-              </p>
-            </div>
-          )}
-        </section>
+          </section>
+        )}
 
-        {/* ── Universe: sectors, geographies, styles, rankings ────────────── */}
-        <div className="border-t border-[#E3E1DA] pt-2">
-          <ETFUniverseSection
-            data={batchData}
-            watchlist={watchlist}
-            userEmail={userEmail}
-            onWatchlistUpdate={loadWatchlist}
-          />
-        </div>
+        {/* Loading skeletons for watchlist */}
+        {wlLoading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="h-[340px] bg-white rounded-2xl border border-[#E3E1DA] motion-safe:animate-pulse" />
+            ))}
+          </div>
+        )}
+
+        {/* ── Universe: sectors, geographies, styles, rankings ─────────────── */}
+        <ETFUniverseSection
+          data={batchData}
+          watchlist={watchlist}
+          userEmail={userEmail}
+          onWatchlistUpdate={loadWatchlist}
+          hasError={!!batchError}
+          emptyWatchlist={!hasWatchlist && !wlLoading}
+          batchData={batchData}
+          onQuickAdd={handleQuickAdd}
+        />
 
       </div>
+
+      {/* ── Undo toast ───────────────────────────────────────────────────────── */}
+      {undoToast && (
+        <div className="fixed bottom-[72px] lg:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[#06101F] text-white rounded-xl px-4 py-3 shadow-lg text-[13px] font-medium whitespace-nowrap animate-in slide-in-from-bottom-2 duration-200">
+          <span>{undoToast.ticker} removed from watchlist</span>
+          <button
+            onClick={handleUndo}
+            className="font-bold text-olive-400 hover:text-olive-300 transition-colors underline underline-offset-2"
+          >
+            Undo
+          </button>
+        </div>
+      )}
     </div>
   )
 }

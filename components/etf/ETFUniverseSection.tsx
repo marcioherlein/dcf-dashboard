@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Plus, Check, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { fmtLarge, fmtPctAbs, fmtMultiple } from '@/lib/formatters'
-import { scoreColor, scoreLabel } from '@/lib/data/etfScore'
+import { scoreColor, scoreLabel, scoreBadge } from '@/lib/data/etfScore'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { ETFHeatmapGrid } from '@/components/etf/ETFHeatmapGrid'
 import { SECTOR_META, GEO_META, STYLE_META, ALL_META } from '@/lib/data/etfUniverse'
@@ -25,6 +25,18 @@ function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; s
   return sortDir === 'desc'
     ? <ChevronDown size={11} className="text-olive-700" />
     : <ChevronUp size={11} className="text-olive-700" />
+}
+
+// Group badge — uses neutral palette, distinguished by shape/icon rather than random colors
+const groupBadge: Record<ETFGroup, string> = {
+  sector: 'bg-[#F4F3EF] text-[#566174] border-[#E3E1DA]',
+  geo:    'bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]',
+  style:  'bg-[#F0FDF4] text-[#11875D] border-[#BBF7D0]',
+}
+const groupLabel: Record<ETFGroup, string> = {
+  sector: 'Sector',
+  geo:    'Geography',
+  style:  'Style',
 }
 
 function Leaderboard({
@@ -48,6 +60,8 @@ function Leaderboard({
     if (typeof window === 'undefined') return 'desc'
     return (localStorage.getItem('etf_lb_sort_dir') as SortDir) ?? 'desc'
   })
+  // Track recently-added tickers for button animation
+  const [justAdded, setJustAdded] = useState<Set<string>>(new Set())
 
   useEffect(() => { localStorage.setItem('etf_lb_filter', filter) }, [filter])
   useEffect(() => { localStorage.setItem('etf_lb_sort_key', sortKey) }, [sortKey])
@@ -58,33 +72,32 @@ function Leaderboard({
     else { setSortKey(key); setSortDir('desc') }
   }
 
+  function handleAdd(ticker: string) {
+    onAdd(ticker)
+    setJustAdded((prev) => {
+      const next = new Set(prev)
+      next.add(ticker)
+      setTimeout(() => setJustAdded((p) => { const n = new Set(p); n.delete(ticker); return n }), 600)
+      return next
+    })
+  }
+
   const FILTERS: { id: FilterGroup; label: string }[] = [
-    { id: 'all',    label: 'All'          },
-    { id: 'sector', label: 'Sectors'      },
-    { id: 'geo',    label: 'Geographies'  },
-    { id: 'style',  label: 'Styles'       },
+    { id: 'all',    label: 'All'         },
+    { id: 'sector', label: 'Sectors'     },
+    { id: 'geo',    label: 'Geographies' },
+    { id: 'style',  label: 'Styles'      },
   ]
 
   type ColDef = { key: SortKey; label: string }
   const COLS: ColDef[] = [
-    { key: 'peRatio',      label: 'P/E'        },
-    { key: 'pbRatio',      label: 'P/B'        },
-    { key: 'expenseRatio', label: 'Exp. ratio' },
-    { key: 'yield',        label: 'Yield'      },
-    { key: 'aum',          label: 'AUM'        },
+    { key: 'peRatio',      label: 'P/E'         },
+    { key: 'pbRatio',      label: 'P/B'         },
+    { key: 'expenseRatio', label: 'Exp. ratio'  },
+    { key: 'yield',        label: 'Yield'       },
+    { key: 'aum',          label: 'AUM'         },
     { key: 'valueScore',   label: 'Value score' },
   ]
-
-  const groupBadge: Record<ETFGroup, string> = {
-    sector: 'bg-violet-50 text-violet-700 border-violet-200',
-    geo:    'bg-sky-50 text-sky-700 border-sky-200',
-    style:  'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]',
-  }
-  const groupLabel: Record<ETFGroup, string> = {
-    sector: 'Sector',
-    geo:    'Geography',
-    style:  'Style',
-  }
 
   const rows = (ALL_META as ETFMeta[])
     .filter((m) => filter === 'all' || m.group === filter)
@@ -100,17 +113,18 @@ function Leaderboard({
 
   return (
     <section>
-      <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
-        <h2 className="text-[13px] font-[650] text-[#566174]">
-          Rankings
-        </h2>
+      <div className="flex items-center justify-between gap-4 flex-wrap mb-1">
+        <div>
+          <h2 className="text-[18px] font-bold text-[#06101F]">Rankings</h2>
+          <p className="text-[12px] text-[#8A95A6] mt-0.5">All ETFs ranked — click any column header to sort</p>
+        </div>
         <div className="flex gap-1.5 flex-wrap">
           {FILTERS.map((f) => (
             <button
               key={f.id}
               onClick={() => setFilter(f.id)}
               className={cn(
-                'px-3 py-2.5 rounded-full text-[12px] font-semibold transition-colors border',
+                'px-3 py-2 rounded-full text-[12px] font-semibold transition-colors border',
                 filter === f.id
                   ? 'bg-olive-700 text-white border-olive-700'
                   : 'bg-white text-[#566174] border-[#E3E1DA] hover:border-[#BFD2A1] hover:text-olive-700',
@@ -122,7 +136,7 @@ function Leaderboard({
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-[#E3E1DA] overflow-hidden">
+      <div className="bg-white rounded-xl border border-[#E3E1DA] overflow-hidden mt-4">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -157,11 +171,13 @@ function Leaderboard({
             <tbody className="divide-y divide-[#F4F3EF]">
               {rows.map(({ meta, item }) => {
                 const score = item?.valueScore ?? null
+                const isWatchlisted = watchlistedTickers.has(meta.ticker)
+                const wasJustAdded = justAdded.has(meta.ticker)
                 return (
                   <tr key={meta.ticker} className="hover:bg-[#F4F3EF] transition-colors group">
                     <td className="pl-4 pr-3 py-3 sticky left-0 bg-white group-hover:bg-[#F4F3EF] transition-colors">
                       <Link href={`/etf/${meta.ticker}`} className="block">
-                        <span className="font-sans font-bold text-[13px] text-[#06101F] hover:text-[#2563EB] transition-colors">
+                        <span className="font-sans font-bold text-[13px] text-[#06101F] hover:text-olive-700 transition-colors">
                           {meta.ticker}
                         </span>
                         <span className="block text-[11px] text-[#8A95A6] mt-0.5 truncate max-w-[160px]">
@@ -204,16 +220,18 @@ function Leaderboard({
                     </td>
                     <td className="px-4 py-3">
                       <button
-                        onClick={() => onAdd(meta.ticker)}
-                        aria-label={watchlistedTickers.has(meta.ticker) ? `${meta.ticker} in watchlist` : `Add ${meta.ticker} to watchlist`}
+                        onClick={() => !isWatchlisted && handleAdd(meta.ticker)}
+                        aria-label={isWatchlisted ? `${meta.ticker} in watchlist` : `Add ${meta.ticker} to watchlist`}
                         className={cn(
-                          'min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all',
-                          watchlistedTickers.has(meta.ticker)
+                          'min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all duration-150',
+                          isWatchlisted
                             ? 'bg-[#E8F7EF] text-[#11875D]'
                             : 'bg-[#F4F3EF] text-[#8A95A6] hover:bg-olive-50 hover:text-olive-700',
+                          wasJustAdded && 'scale-125',
                         )}
+                        style={wasJustAdded ? { transition: 'transform 0.15s ease' } : undefined}
                       >
-                        {watchlistedTickers.has(meta.ticker) ? <Check size={12} /> : <Plus size={12} />}
+                        {isWatchlisted ? <Check size={12} /> : <Plus size={12} />}
                       </button>
                     </td>
                   </tr>
@@ -227,6 +245,58 @@ function Leaderboard({
   )
 }
 
+// ─── Empty watchlist CTA with top picks ───────────────────────────────────────
+
+function EmptyWatchlistCTA({
+  data,
+  onQuickAdd,
+}: {
+  data: Record<string, ETFBatchItem | null>
+  onQuickAdd: (ticker: string) => void
+}) {
+  const TOP_PICKS = ['SPY', 'VTV', 'VYM']
+
+  return (
+    <section>
+      <h2 className="text-[18px] font-bold text-[#06101F] mb-5">My Watchlist</h2>
+      <div className="bg-white border border-[#E3E1DA] rounded-2xl p-8 flex flex-col items-center text-center" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+        <div className="w-12 h-12 rounded-xl bg-[#F4F3EF] flex items-center justify-center mb-4">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8A95A6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21.21 15.89A10 10 0 1 1 8 2.83" /><path d="M22 12A10 10 0 0 0 12 2v10z" />
+          </svg>
+        </div>
+        <h3 className="text-[15px] font-bold text-[#06101F] mb-1">Track ETFs by what they&apos;re actually worth</h3>
+        <p className="text-[13px] text-[#8A95A6] max-w-xs mb-5 leading-relaxed">
+          Search for a ticker at the top of the page, or add directly from the rankings and grids below.
+        </p>
+
+        {Object.keys(data).length > 0 && (
+          <div className="flex gap-2 flex-wrap justify-center">
+            {TOP_PICKS.map((t) => {
+              const item = data[t]
+              const score = item?.valueScore ?? null
+              return (
+                <button
+                  key={t}
+                  onClick={() => onQuickAdd(t)}
+                  className="flex flex-col items-center px-4 py-2.5 min-h-[44px] rounded-xl border border-[#E3E1DA] bg-white hover:border-[#BFD2A1] hover:bg-olive-50 transition-colors"
+                >
+                  <span className="text-[13px] font-bold text-[#06101F]">+ {t}</span>
+                  {score != null && (
+                    <span className={cn('text-[11px] font-semibold mt-0.5', scoreColor(score))}>
+                      {score} · {scoreLabel(score)}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 interface Props {
@@ -234,9 +304,13 @@ interface Props {
   watchlist: ETFEntry[]
   userEmail: string | null
   onWatchlistUpdate: () => void
+  hasError?: boolean
+  emptyWatchlist?: boolean
+  batchData: Record<string, ETFBatchItem | null>
+  onQuickAdd: (ticker: string) => void
 }
 
-export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpdate }: Props) {
+export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpdate, hasError, emptyWatchlist, batchData, onQuickAdd }: Props) {
   const watchlistedTickers = useMemo(() => new Set(watchlist.map((e) => e.ticker)), [watchlist])
 
   const handleAdd = useCallback(async (ticker: string) => {
@@ -262,13 +336,20 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
 
   return (
     <div className="space-y-10">
-      {/* Sectors */}
+
+      {/* Empty watchlist CTA — shown above rankings when watchlist is empty */}
+      {emptyWatchlist && (
+        <EmptyWatchlistCTA data={batchData} onQuickAdd={onQuickAdd} />
+      )}
+
+      {/* Rankings leaderboard — most useful tool, shown first */}
+      <Leaderboard data={data} watchlistedTickers={watchlistedTickers} onAdd={handleAdd} />
+
+      {/* Heatmap grids */}
       <section>
         <div className="mb-3">
-          <h2 className="text-[13px] font-[650] text-[#566174]">
-            Sectors
-          </h2>
-          <p className="text-[12px] text-[#9B9B9B] mt-0.5">US SPDR sector ETFs (GICS)</p>
+          <h2 className="text-[18px] font-bold text-[#06101F]">Sectors</h2>
+          <p className="text-[12px] text-[#8A95A6] mt-0.5">US SPDR sector ETFs (GICS)</p>
         </div>
         <ETFHeatmapGrid
           metas={SECTOR_META}
@@ -276,16 +357,14 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
           watchlistedTickers={watchlistedTickers}
           onAdd={handleAdd}
           cols={4}
+          hasError={hasError}
         />
       </section>
 
-      {/* Geographies */}
       <section>
         <div className="mb-3">
-          <h2 className="text-[13px] font-[650] text-[#566174]">
-            Geographies
-          </h2>
-          <p className="text-[12px] text-[#9B9B9B] mt-0.5">Regional and country exposure</p>
+          <h2 className="text-[18px] font-bold text-[#06101F]">Geographies</h2>
+          <p className="text-[12px] text-[#8A95A6] mt-0.5">Regional and country exposure</p>
         </div>
         <ETFHeatmapGrid
           metas={GEO_META}
@@ -293,16 +372,14 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
           watchlistedTickers={watchlistedTickers}
           onAdd={handleAdd}
           cols={3}
+          hasError={hasError}
         />
       </section>
 
-      {/* Styles */}
       <section>
         <div className="mb-3">
-          <h2 className="text-[13px] font-[650] text-[#566174]">
-            Styles
-          </h2>
-          <p className="text-[12px] text-[#9B9B9B] mt-0.5">Factor tilts and smart beta</p>
+          <h2 className="text-[18px] font-bold text-[#06101F]">Styles</h2>
+          <p className="text-[12px] text-[#8A95A6] mt-0.5">Factor tilts and smart beta</p>
         </div>
         <ETFHeatmapGrid
           metas={STYLE_META}
@@ -310,13 +387,9 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
           watchlistedTickers={watchlistedTickers}
           onAdd={handleAdd}
           cols={4}
+          hasError={hasError}
         />
       </section>
-
-      {/* Rankings leaderboard */}
-      <div className="border-t border-[#E3E1DA] pt-8">
-        <Leaderboard data={data} watchlistedTickers={watchlistedTickers} onAdd={handleAdd} />
-      </div>
     </div>
   )
 }

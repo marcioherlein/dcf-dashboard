@@ -67,11 +67,14 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
       </div>
 
       {/* Sparkline */}
-      <div className="h-12 rounded-lg overflow-hidden">
+      <div className="relative h-12 rounded-lg overflow-hidden">
         {sparklineData === undefined ? (
           <SparklineSkeleton width={400} height={48} />
         ) : sparklineData && sparklineData.length >= 2 ? (
-          <Sparkline prices={sparklineData} up={sparkUp} className="w-full h-12" width={400} height={48} />
+          <>
+            <Sparkline prices={sparklineData} up={sparkUp} className="w-full h-12" width={400} height={48} />
+            <span className="absolute bottom-1 right-2 text-[10px] font-semibold text-[#8A95A6] bg-white/70 rounded px-1">1M</span>
+          </>
         ) : (
           <div className="w-full h-12 flex items-center justify-center">
             <span className="text-[11px] text-[#8A95A6]">No chart data</span>
@@ -107,7 +110,6 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
             ))}
           </div>
           <div className="flex items-center gap-1 mt-1.5">
-            <p className="text-[10px] text-[#8A95A6]">Score breakdown / 100</p>
             <InfoTooltip text="P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio (up to −20 pts) = 0–100. 70+ = Deep Value." side="top" />
           </div>
         </div>
