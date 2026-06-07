@@ -58,6 +58,53 @@ export function scoreLabel(score: number): string {
   return 'Expensive'
 }
 
+/** Generate a human-readable sentence explaining a score breakdown. */
+export function explainScore(
+  breakdown: ScoreBreakdown,
+  score: number,
+  metrics: { peRatio: number | null; pbRatio: number | null; yieldVal: number | null; expenseRatio: number | null },
+): string {
+  const parts: string[] = []
+
+  // P/E narrative
+  if (metrics.peRatio != null) {
+    const pePct = breakdown.pe / 30
+    if (pePct >= 0.8) parts.push(`cheap P/E of ${metrics.peRatio.toFixed(1)}×`)
+    else if (pePct >= 0.5) parts.push(`fair P/E of ${metrics.peRatio.toFixed(1)}×`)
+    else parts.push(`elevated P/E of ${metrics.peRatio.toFixed(1)}×`)
+  }
+
+  // P/B narrative
+  if (metrics.pbRatio != null) {
+    const pbPct = breakdown.pb / 25
+    if (pbPct >= 0.8) parts.push(`attractive P/B of ${metrics.pbRatio.toFixed(1)}×`)
+    else if (pbPct >= 0.5) parts.push(`moderate P/B of ${metrics.pbRatio.toFixed(1)}×`)
+    else parts.push(`stretched P/B of ${metrics.pbRatio.toFixed(1)}×`)
+  }
+
+  // Yield narrative
+  if (metrics.yieldVal != null && metrics.yieldVal > 0) {
+    const pct = (metrics.yieldVal * 100).toFixed(1)
+    if (breakdown.yieldPts >= 20) parts.push(`strong ${pct}% yield`)
+    else if (breakdown.yieldPts >= 10) parts.push(`modest ${pct}% yield`)
+    else parts.push(`low ${pct}% yield`)
+  }
+
+  // Expense penalty narrative
+  if (metrics.expenseRatio != null && breakdown.expensePenalty > 5) {
+    const er = (metrics.expenseRatio * 100).toFixed(2)
+    parts.push(`${er}% expense ratio dragging score by ${breakdown.expensePenalty} pts`)
+  } else if (metrics.expenseRatio != null && breakdown.expensePenalty <= 1) {
+    parts.push(`near-zero cost at ${(metrics.expenseRatio * 100).toFixed(2)}%`)
+  }
+
+  if (parts.length === 0) return `Composite score of ${score}/100.`
+
+  const _label = scoreLabel(score)
+  const intro = score >= 70 ? 'Trading at a discount' : score >= 50 ? 'Trading near fair value' : score >= 30 ? 'Trading at a premium' : 'Significantly overvalued'
+  return `${intro}: ${parts.join(', ')}.`
+}
+
 export function scoreColor(score: number): string {
   if (score >= 70) return 'text-[#11875D]'
   if (score >= 50) return 'text-[#2563EB]'
@@ -66,7 +113,7 @@ export function scoreColor(score: number): string {
 }
 
 export function scoreBgCell(score: number): string {
-  if (score >= 70) return 'bg-[#F0FDF4] border-[#BBF7D0]'
+  if (score >= 70) return 'bg-[#F4FBF7] border-[#C8EAD8]'
   if (score >= 50) return 'bg-white border-[#E3E1DA]'
   if (score >= 30) return 'bg-[#FFFBEB] border-[#FDE68A]'
   return 'bg-[#FEF2F2] border-[#FECACA]'

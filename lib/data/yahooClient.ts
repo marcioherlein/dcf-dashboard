@@ -30,8 +30,9 @@ export interface TickerSearchResult {
 }
 
 export async function searchTicker(query: string): Promise<TickerSearchResult[]> {
+  // validateResult: false needed for ETF quoteType which yahoo-finance2 schema doesn't include
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result: any = await yf.search(query, { newsCount: 0 })
+  const result: any = await yf.search(query, { newsCount: 0 }, { validateResult: false })
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function isSupported(q: any): boolean {
@@ -40,9 +41,10 @@ export async function searchTicker(query: string): Promise<TickerSearchResult[]>
     return NYSE_NASDAQ_CODES.has(code) || name.includes('NASDAQ') || name.includes('NYSE')
   }
 
+  // Include both EQUITYs and ETFs
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const equities: TickerSearchResult[] = (result.quotes ?? [])
-    .filter((q: any) => q.quoteType === 'EQUITY')
+  const hits: TickerSearchResult[] = (result.quotes ?? [])
+    .filter((q: any) => q.quoteType === 'EQUITY' || q.quoteType === 'ETF')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .map((q: any): TickerSearchResult => ({
       symbol: q.symbol as string,
@@ -51,12 +53,13 @@ export async function searchTicker(query: string): Promise<TickerSearchResult[]>
       exchange: q.exchange as string | undefined,
       exchDisp: (q.exchDisp ?? q.fullExchangeName ?? q.exchange) as string | undefined,
       quoteType: q.quoteType as string | undefined,
-      supported: isSupported(q),
+      // ETFs on NYSE Arca (PCX) and Bats (BTS) are always supported; equities use exchange check
+      supported: q.quoteType === 'ETF' ? true : isSupported(q),
     }))
 
   // Supported results first, then unsupported; cap total at 8
-  const supported = equities.filter(r => r.supported)
-  const unsupported = equities.filter(r => !r.supported)
+  const supported = hits.filter(r => r.supported)
+  const unsupported = hits.filter(r => !r.supported)
   return [...supported, ...unsupported].slice(0, 8)
 }
 

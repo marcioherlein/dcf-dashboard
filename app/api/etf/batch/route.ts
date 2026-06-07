@@ -34,6 +34,8 @@ export interface ETFBatchItem {
   yield: number | null
   aum: number | null
   valueScore: number
+  price: number | null
+  priceChangePct: number | null
 }
 
 async function fetchOne(ticker: string): Promise<ETFBatchItem | null> {
@@ -66,6 +68,9 @@ async function fetchOne(ticker: string): Promise<ETFBatchItem | null> {
 
     const { score: valueScore } = computeETFScore(peRatio, pbRatio, yieldVal, expenseRatio)
 
+    const regularMarketPrice: number | null = typeof price.regularMarketPrice === 'number' ? price.regularMarketPrice : null
+    const priceChangePct: number | null = typeof price.regularMarketChangePercent === 'number' ? price.regularMarketChangePercent : null
+
     return {
       ticker,
       name: (price.longName ?? price.shortName ?? ticker) as string,
@@ -76,6 +81,8 @@ async function fetchOne(ticker: string): Promise<ETFBatchItem | null> {
       yield: yieldVal,
       aum: typeof detail.totalAssets === 'number' ? detail.totalAssets : null,
       valueScore,
+      price: regularMarketPrice,
+      priceChangePct,
     }
   } catch {
     return null

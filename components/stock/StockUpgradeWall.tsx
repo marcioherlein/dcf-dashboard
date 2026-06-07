@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, Lock, Zap } from 'lucide-react'
+import { Lock, Zap, Check } from 'lucide-react'
 
 interface Props {
   ticker: string
@@ -19,7 +19,7 @@ interface Props {
   viewCount: number
 }
 
-const LIMIT = 5
+const LIMIT = 3
 
 const PRO_HIGHLIGHTS = [
   'Unlimited analyses — no monthly cap',
@@ -177,7 +177,7 @@ export default function StockUpgradeWall({ ticker, companyName, price, currency,
             ) : (
               <>
                 <Zap size={15} aria-hidden="true" />
-                Upgrade to Pro — $17/mo
+                Upgrade to Pro — $19/mo
               </>
             )}
           </button>

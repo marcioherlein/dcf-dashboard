@@ -129,7 +129,8 @@ export default function TopBar() {
     const match = results.find(r => r.symbol === symbol)
     if (match && !match.supported) return
     setOpen(false); setQuery(''); setUnsupportedError(null)
-    router.push(`/stock/${symbol}`)
+    const dest = match?.quoteType === 'ETF' ? `/etf/${symbol}` : `/stock/${symbol}`
+    router.push(dest)
   }
 
   const handleSubmit = (raw: string) => {
@@ -143,7 +144,8 @@ export default function TopBar() {
       return
     }
     setOpen(false); setQuery(''); setUnsupportedError(null)
-    router.push(`/stock/${trimmed}`)
+    const dest = match?.quoteType === 'ETF' ? `/etf/${trimmed}` : `/stock/${trimmed}`
+    router.push(dest)
   }
 
   return (

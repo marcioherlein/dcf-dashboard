@@ -23,7 +23,9 @@ export async function GET(req: NextRequest) {
       low: p.low ?? p.close,
       close: p.close ?? p.adjClose ?? 0,
       volume: p.volume ?? 0,
-    })))
+    })), {
+      headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200' },
+    })
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }

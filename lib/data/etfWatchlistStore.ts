@@ -19,7 +19,14 @@ function readLocal(): ETFEntry[] {
   if (_localCache !== null) return _localCache
   try {
     const raw = localStorage.getItem(LOCAL_KEY)
-    _localCache = raw ? (JSON.parse(raw) as ETFEntry[]) : []
+    const parsed = raw ? (JSON.parse(raw) as ETFEntry[]) : []
+    // Backfill new nullable fields for entries saved before the type extension
+    _localCache = parsed.map((e) => ({
+      ...e,
+      price: e.price ?? null,
+      priceChangePct: e.priceChangePct ?? null,
+      metricsUpdatedAt: e.metricsUpdatedAt ?? null,
+    }))
     return _localCache
   } catch {
     return []
@@ -128,5 +135,8 @@ function rowToEntry(row: Record<string, unknown>): ETFEntry {
     pbRatio: (row.pb_ratio as number | null) ?? null,
     totalAssets: (row.total_assets as number | null) ?? null,
     addedAt: (row.added_at as string) ?? new Date().toISOString(),
+    price: null,
+    priceChangePct: null,
+    metricsUpdatedAt: null,
   }
 }

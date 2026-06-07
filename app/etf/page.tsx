@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { PieChart, RefreshCw, GitCompare } from 'lucide-react'
+import { PieChart, RefreshCw, GitCompare, CheckSquare, Square } from 'lucide-react'
 import Link from 'next/link'
+import { cn } from '@/lib/utils'
 import { useSession } from 'next-auth/react'
 import { ETFSearchBar } from '@/components/etf/ETFSearchBar'
 import { ETFWatchlistCard } from '@/components/etf/ETFWatchlistCard'
@@ -73,7 +74,7 @@ export default function ETFTrackerPage() {
 
     Promise.allSettled(
       newTickers.map((e) =>
-        fetch(`/api/price-history?ticker=${e.ticker}`)
+        fetch(`/api/historical?ticker=${e.ticker}&period=1mo`)
           .then((r) => r.json())
           .then((bars: Array<{ close: number }>) => ({
             ticker: e.ticker,
@@ -172,6 +173,28 @@ export default function ETFTrackerPage() {
 
   useEffect(() => { fetchBatch() }, [fetchBatch])
 
+  // When batch data arrives, merge live price/metrics into watchlist entries
+  useEffect(() => {
+    if (Object.keys(batchData).length === 0) return
+    setWatchlist((prev) =>
+      prev.map((entry) => {
+        const live = batchData[entry.ticker]
+        if (!live) return entry
+        return {
+          ...entry,
+          peRatio: live.peRatio,
+          pbRatio: live.pbRatio,
+          yield: live.yield,
+          expenseRatio: live.expenseRatio,
+          valueScore: live.valueScore,
+          price: live.price,
+          priceChangePct: live.priceChangePct,
+          metricsUpdatedAt: new Date().toISOString(),
+        }
+      }),
+    )
+  }, [batchData])
+
   async function handleQuickAdd(ticker: string) {
     const item = batchData[ticker]
     if (!item) return
@@ -186,6 +209,9 @@ export default function ETFTrackerPage() {
         pbRatio: item.pbRatio,
         totalAssets: item.aum,
         addedAt: new Date().toISOString(),
+        price: item.price,
+        priceChangePct: item.priceChangePct,
+        metricsUpdatedAt: new Date().toISOString(),
       },
       userEmail,
     )
@@ -193,6 +219,23 @@ export default function ETFTrackerPage() {
   }
 
   const hasWatchlist = !wlLoading && watchlist.length > 0
+
+  // ── Compare mode ──────────────────────────────────────────────────────────
+  const [compareMode, setCompareMode] = useState(false)
+  const [compareSelected, setCompareSelected] = useState<Set<string>>(new Set())
+
+  function toggleCompareSelect(ticker: string) {
+    setCompareSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(ticker)) next.delete(ticker)
+      else if (next.size < 4) next.add(ticker)
+      return next
+    })
+  }
+
+  const compareUrl = compareSelected.size >= 2
+    ? `/etf/compare?symbols=${Array.from(compareSelected).join(',')}`
+    : null
 
   return (
     <div className="min-h-dvh bg-[#F9F8F5]">
@@ -212,16 +255,39 @@ export default function ETFTrackerPage() {
             </div>
             <Link
               href="/etf/compare"
-              className="hidden sm:flex items-center gap-1.5 text-[12px] font-semibold text-[#566174] hover:text-olive-700 border border-[#E3E1DA] hover:border-[#BFD2A1] rounded-lg px-3 py-2 transition-colors whitespace-nowrap bg-white"
+              className="hidden sm:flex items-center gap-1.5 text-[12px] font-semibold text-[#6B6B6B] hover:text-olive-700 border border-[#E3E1DA] hover:border-[#BFD2A1] rounded-lg px-3 py-2 transition-colors whitespace-nowrap bg-white"
             >
               <GitCompare size={13} />
               Compare ETFs
             </Link>
           </div>
-          <p className="text-[13px] text-[#566174] mb-5 ml-[42px]">
+          <p className="text-[13px] text-[#6B6B6B] mb-5 ml-[42px]">
             Value-oriented lens on the ETF universe — basket P/E, P/B, expense ratios, and a Value Score.
           </p>
-          <ETFSearchBar />
+          <ETFSearchBar
+            onAdd={async (symbol, name) => {
+              const item = batchData[symbol]
+              await saveETFEntry(
+                {
+                  ticker: symbol,
+                  name: item?.name ?? name,
+                  valueScore: item?.valueScore ?? null,
+                  expenseRatio: item?.expenseRatio ?? null,
+                  yield: item?.yield ?? null,
+                  peRatio: item?.peRatio ?? null,
+                  pbRatio: item?.pbRatio ?? null,
+                  totalAssets: item?.aum ?? null,
+                  addedAt: new Date().toISOString(),
+                  price: item?.price ?? null,
+                  priceChangePct: item?.priceChangePct ?? null,
+                  metricsUpdatedAt: new Date().toISOString(),
+                },
+                userEmail,
+              )
+              loadWatchlist()
+            }}
+            watchlistedTickers={new Set(watchlist.map((e) => e.ticker))}
+          />
         </div>
       </div>
 
@@ -246,22 +312,63 @@ export default function ETFTrackerPage() {
         {/* ── My Watchlist (only shown when it has items) ──────────────────── */}
         {hasWatchlist && (
           <section>
-            <div className="flex items-center gap-2.5 mb-5">
+            <div className="flex items-center gap-2.5 mb-4 flex-wrap">
               <h2 className="text-[18px] font-bold text-[#06101F]">My Watchlist</h2>
               <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full text-[11px] font-bold bg-olive-100 text-olive-700">
                 {watchlist.length}
               </span>
+              <div className="ml-auto flex items-center gap-2">
+                {compareMode && compareSelected.size > 0 && (
+                  <span className="text-[12px] text-[#6B6B6B]">{compareSelected.size}/4 selected</span>
+                )}
+                {compareMode && compareUrl && (
+                  <Link
+                    href={compareUrl}
+                    className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold bg-olive-700 text-white rounded-lg hover:bg-olive-600 transition-colors min-h-[36px]"
+                  >
+                    <GitCompare size={12} />
+                    Compare {compareSelected.size}
+                  </Link>
+                )}
+                {watchlist.length >= 2 && (
+                  <button
+                    onClick={() => { setCompareMode((v) => !v); setCompareSelected(new Set()) }}
+                    className={cn(
+                      'flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold rounded-lg border transition-colors min-h-[36px]',
+                      compareMode
+                        ? 'bg-olive-50 border-[#BFD2A1] text-olive-700'
+                        : 'bg-white border-[#E3E1DA] text-[#6B6B6B] hover:border-[#BFD2A1] hover:text-olive-700',
+                    )}
+                  >
+                    <GitCompare size={12} />
+                    {compareMode ? 'Cancel' : 'Compare'}
+                  </button>
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {watchlist.map((entry) => (
-                <ETFWatchlistCard
-                  key={entry.ticker}
-                  entry={entry}
-                  sparklineData={
-                    entry.ticker in sparklines ? sparklines[entry.ticker] : undefined
-                  }
-                  onDelete={handleDelete}
-                />
+                <div key={entry.ticker} className="relative">
+                  {compareMode && (
+                    <button
+                      onClick={() => toggleCompareSelect(entry.ticker)}
+                      aria-label={compareSelected.has(entry.ticker) ? `Deselect ${entry.ticker}` : `Select ${entry.ticker} for comparison`}
+                      className="absolute top-3 left-3 z-20 min-w-[28px] min-h-[28px] flex items-center justify-center rounded-md bg-white border border-[#E3E1DA] shadow-sm transition-colors hover:border-olive-700"
+                    >
+                      {compareSelected.has(entry.ticker)
+                        ? <CheckSquare size={16} className="text-olive-700" />
+                        : <Square size={16} className="text-[#8A95A6]" />
+                      }
+                    </button>
+                  )}
+                  <div className={cn('transition-opacity', compareMode && compareSelected.size >= 4 && !compareSelected.has(entry.ticker) ? 'opacity-40' : 'opacity-100')}>
+                    <ETFWatchlistCard
+                      entry={entry}
+                      sparklineData={entry.ticker in sparklines ? sparklines[entry.ticker] : undefined}
+                      onDelete={handleDelete}
+                    />
+                  </div>
+                </div>
               ))}
             </div>
           </section>

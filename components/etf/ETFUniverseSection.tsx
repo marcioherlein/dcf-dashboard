@@ -328,6 +328,9 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
         pbRatio: item.pbRatio,
         totalAssets: item.aum,
         addedAt: new Date().toISOString(),
+        price: item.price ?? null,
+        priceChangePct: item.priceChangePct ?? null,
+        metricsUpdatedAt: new Date().toISOString(),
       },
       userEmail,
     )

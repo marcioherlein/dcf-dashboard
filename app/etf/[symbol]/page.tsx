@@ -10,7 +10,7 @@ import { ETFProfileCard } from '@/components/etf/ETFProfileCard'
 import { ETFMetricsGrid } from '@/components/etf/ETFMetricsGrid'
 import { ETFHoldingsTable } from '@/components/etf/ETFHoldingsTable'
 import { ETFSectorAllocation } from '@/components/etf/ETFSectorAllocation'
-import { ETFValuationHistory } from '@/components/etf/ETFValuationHistory'
+import { ETFMetricHistory } from '@/components/etf/ETFMetricHistory'
 import { ETFBasketDCF } from '@/components/etf/ETFBasketDCF'
 import { saveETFEntry, deleteETFEntry, getETFEntry } from '@/lib/data/etfWatchlistStore'
 import type { ETFProfileResponse } from '@/lib/data/etfTypes'
@@ -73,6 +73,9 @@ export default function ETFDetailPage() {
           pbRatio: profile.pbRatio ?? null,
           totalAssets: profile.aum ?? null,
           addedAt: new Date().toISOString(),
+          price: profile.price ?? null,
+          priceChangePct: profile.priceChangePct ?? null,
+          metricsUpdatedAt: new Date().toISOString(),
         },
         userEmail,
       )
@@ -125,8 +128,11 @@ export default function ETFDetailPage() {
           onWatchlist={handleWatchlist}
         />
 
-        {/* Metrics grid */}
+        {/* Metrics grid + Score Rationale */}
         <ETFMetricsGrid metrics={profile} />
+
+        {/* Metric History (P/E, P/B, Yield, Score) */}
+        <ETFMetricHistory ticker={symbol} />
 
         {/* Basket DCF Signal */}
         <ETFBasketDCF holdings={profile.holdings ?? []} />
@@ -141,12 +147,9 @@ export default function ETFDetailPage() {
           </div>
         </div>
 
-        {/* Value Score History */}
-        <ETFValuationHistory ticker={symbol} />
-
         {/* Price chart */}
         <div className="glass-card-light rounded-2xl p-4">
-          <p className="text-sm font-semibold text-[#566174] mb-3">Price History</p>
+          <p className="text-sm font-semibold text-[#6B6B6B] mb-3">Price History</p>
           <div className="min-h-[200px] w-full">
             <PriceChart ticker={symbol} />
           </div>

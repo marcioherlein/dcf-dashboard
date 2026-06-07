@@ -48,15 +48,3 @@ export async function saveValuation(
   return data
 }
 
-export async function getValuations(ticker: string): Promise<ValuationSnapshot[]> {
-  const client = getClient()
-  if (!client) return []
-  const { data, error } = await client
-    .from('valuations')
-    .select('*')
-    .eq('ticker', ticker.toUpperCase())
-    .order('saved_at', { ascending: false })
-    .limit(20)
-  if (error) throw error
-  return data ?? []
-}

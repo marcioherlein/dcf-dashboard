@@ -8,6 +8,8 @@ export interface ETFBatchItem {
   yield: number | null
   aum: number | null
   valueScore: number
+  price: number | null
+  priceChangePct: number | null
 }
 
 export interface ETFEntry {
@@ -20,6 +22,12 @@ export interface ETFEntry {
   pbRatio: number | null
   totalAssets: number | null
   addedAt: string
+  /** Live price — refreshed from batch on page load, not persisted */
+  price: number | null
+  /** Live % change — refreshed from batch on page load, not persisted */
+  priceChangePct: number | null
+  /** ISO date when metrics were last refreshed from live data */
+  metricsUpdatedAt: string | null
 }
 
 export interface ETFProfileResponse {

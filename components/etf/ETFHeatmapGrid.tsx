@@ -2,7 +2,7 @@
 
 import { memo } from 'react'
 import Link from 'next/link'
-import { Plus, Check, AlertCircle, ArrowRight } from 'lucide-react'
+import { Plus, Check, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { scoreColor, scoreLabel, scoreBgCell, scoreBadge } from '@/lib/data/etfScore'
 import { fmtMultiple } from '@/lib/formatters'
@@ -12,9 +12,9 @@ import type { ETFBatchItem } from '@/lib/data/etfTypes'
 
 // Score tier icon — gives colorblind users a non-color signal
 function ScoreTierIcon({ score }: { score: number }) {
-  if (score >= 70) return <span className="text-[10px] leading-none" aria-hidden="true">↓</span>  // cheap = price below value
+  if (score >= 70) return <span className="text-[10px] leading-none" aria-hidden="true">↓</span>
   if (score >= 50) return <span className="text-[10px] leading-none" aria-hidden="true">→</span>
-  if (score >= 30) return <span className="text-[10px] leading-none" aria-hidden="true">↑</span>  // stretched = price above value
+  if (score >= 30) return <span className="text-[10px] leading-none" aria-hidden="true">↑</span>
   return <span className="text-[10px] leading-none" aria-hidden="true">↑↑</span>
 }
 
@@ -53,7 +53,7 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
 
         if (loading) {
           return (
-            <div key={meta.ticker} className="h-[108px] rounded-xl border border-[#E3E1DA] bg-[#F4F3EF] motion-safe:animate-pulse" />
+            <div key={meta.ticker} className="h-[108px] rounded-xl border border-[#E3E1DA] bg-[#F5F5F5] motion-safe:animate-pulse" />
           )
         }
 
@@ -73,35 +73,11 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
               aria-hidden="true"
             />
 
-            {/* Header row */}
-            <div className="relative z-10 flex items-start justify-between gap-1 mb-2">
-              <Link href={`/etf/${meta.ticker}`} tabIndex={0} className="min-w-0 flex-1">
-                <span className="block font-sans font-bold text-[14px] text-[#06101F] leading-none group-hover:text-olive-700 transition-colors">
-                  {meta.ticker}
-                </span>
-                <span className="block text-[11px] text-[#566174] mt-0.5 leading-tight truncate">
-                  {meta.label}
-                </span>
-              </Link>
-              <button
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(meta.ticker) }}
-                className={cn(
-                  'relative z-20 shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-olive-700 focus-visible:ring-offset-1 focus-visible:outline-none',
-                  isWatchlisted
-                    ? 'bg-[#E8F7EF] text-[#11875D]'
-                    : 'bg-white/80 text-[#8A95A6] hover:bg-olive-50 hover:text-olive-700 border border-[#E3E1DA] hover:border-[#BFD2A1]',
-                )}
-                aria-label={isWatchlisted ? `${meta.ticker} is in your watchlist` : `Add ${meta.ticker} to watchlist`}
-              >
-                {isWatchlisted ? <Check size={12} /> : <Plus size={12} />}
-              </button>
-            </div>
-
-            {/* Score with colorblind-accessible icon */}
-            <div className="relative z-10 flex items-center gap-1.5 mb-2">
+            {/* Score — primary visual element */}
+            <div className="relative z-10 flex items-baseline gap-1.5 mb-1.5">
               {score != null ? (
                 <>
-                  <span className={cn('font-sans font-bold text-[22px] leading-none', scoreColor(score))}>
+                  <span className={cn('font-sans font-bold text-[26px] leading-none', scoreColor(score))}>
                     {score}
                   </span>
                   <div className="flex items-center gap-0.5">
@@ -113,26 +89,46 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
                   <InfoTooltip text="Score = P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio penalty (20 pts). 70+ = Deep Value." side="top" />
                 </>
               ) : (
-                <div className="h-6 w-16 rounded bg-[#F4F3EF] motion-safe:animate-pulse" />
+                <div className="h-6 w-16 rounded bg-[#E3E1DA] motion-safe:animate-pulse" />
               )}
             </div>
 
+            {/* Ticker row */}
+            <div className="relative z-10 flex items-start justify-between gap-1 mb-1">
+              <Link href={`/etf/${meta.ticker}`} tabIndex={0} className="min-w-0 flex-1">
+                <span className="block font-sans font-bold text-[13px] text-[#06101F] leading-none group-hover:text-olive-700 transition-colors">
+                  {meta.ticker}
+                </span>
+                <span className="block text-[11px] text-[#6B6B6B] mt-0.5 leading-tight truncate">
+                  {meta.label}
+                </span>
+              </Link>
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(meta.ticker) }}
+                className={cn(
+                  'relative z-20 shrink-0 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-olive-700 focus-visible:ring-offset-1 focus-visible:outline-none',
+                  isWatchlisted
+                    ? 'bg-[#E8F7EF] text-[#11875D]'
+                    : 'bg-white/80 text-[#8A95A6] hover:bg-olive-50 hover:text-olive-700 border border-[#E3E1DA] hover:border-[#BFD2A1]',
+                )}
+                aria-label={isWatchlisted ? `${meta.ticker} is in your watchlist` : `Add ${meta.ticker} to watchlist`}
+              >
+                {isWatchlisted ? <Check size={11} /> : <Plus size={11} />}
+              </button>
+            </div>
+
             {/* Stat row */}
-            <div className="relative z-10 flex items-center justify-between text-[11px]">
-              <div className="flex items-center gap-3">
-                {item?.peRatio != null && (
-                  <span className="text-[#566174]">
-                    P/E <span className="font-mono font-semibold text-[#06101F]">{fmtMultiple(item.peRatio)}</span>
-                  </span>
-                )}
-                {item?.expenseRatio != null && (
-                  <span className="text-[#566174]">
-                    ER <span className="font-mono font-semibold text-[#06101F]">{(item.expenseRatio * 100).toFixed(2)}%</span>
-                  </span>
-                )}
-              </div>
-              {/* Link affordance — visible on hover */}
-              <ArrowRight size={11} className="text-[#C5C9C2] group-hover:text-olive-600 transition-colors shrink-0" />
+            <div className="relative z-10 flex items-center gap-3 text-[11px]">
+              {item?.peRatio != null && (
+                <span className="text-[#6B6B6B]">
+                  P/E <span className="font-mono font-semibold text-[#06101F]">{fmtMultiple(item.peRatio)}</span>
+                </span>
+              )}
+              {item?.expenseRatio != null && (
+                <span className="text-[#6B6B6B]">
+                  ER <span className="font-mono font-semibold text-[#06101F]">{(item.expenseRatio * 100).toFixed(2)}%</span>
+                </span>
+              )}
             </div>
           </div>
         )

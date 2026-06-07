@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { createClient } from '@supabase/supabase-js'
 
-const FREE_LIMIT = 5
+const FREE_LIMIT = 3
 
 function getClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL

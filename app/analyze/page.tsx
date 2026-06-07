@@ -23,7 +23,9 @@ interface SearchResult {
   longname?: string
   shortname?: string
   exchange?: string
+  exchDisp?: string
   quoteType?: string
+  supported: boolean
 }
 
 interface RecentItem {
@@ -86,6 +88,7 @@ function SearchHero() {
   const [open, setOpen]             = useState(false)
   const [loading, setLoading]       = useState(false)
   const [activeIdx, setActiveIdx]   = useState(-1)
+  const [unsupportedError, setUnsupportedError] = useState<string | null>(null)
   const [showExplainer, setShowExplainer] = useState(false)
   const debounce  = useRef<ReturnType<typeof setTimeout>>()
   const searchRef = useRef<HTMLDivElement>(null)
@@ -93,7 +96,7 @@ function SearchHero() {
   const listboxId = 'analyze-search-listbox'
 
   useEffect(() => {
-    if (query.length < 1) { setResults([]); setOpen(false); return }
+    if (query.length < 1) { setResults([]); setOpen(false); setUnsupportedError(null); return }
     clearTimeout(debounce.current)
     debounce.current = setTimeout(() => {
       setLoading(true)
@@ -126,8 +129,17 @@ function SearchHero() {
   }, [])
 
   const select = useCallback((symbol: string) => {
-    setOpen(false); setQuery(''); router.push(`/stock/${symbol}`)
-  }, [router])
+    const match = results.find(r => r.symbol === symbol)
+    if (match && !match.supported) {
+      const exch = match.exchDisp ?? match.exchange ?? 'a foreign exchange'
+      setUnsupportedError(`${match.symbol} trades on ${exch} — we only cover NYSE and NASDAQ stocks.`)
+      setOpen(false)
+      return
+    }
+    setOpen(false); setQuery(''); setUnsupportedError(null)
+    const dest = match?.quoteType === 'ETF' ? `/etf/${symbol}` : `/stock/${symbol}`
+    router.push(dest)
+  }, [router, results])
 
   const handleKey = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
@@ -278,23 +290,35 @@ function SearchHero() {
                   onClick={() => select(r.symbol)}
                   className={cn(
                     'flex w-full items-center justify-between gap-3 px-4 py-3 text-left border-b border-[#E5E5E5] last:border-b-0 transition-colors min-h-[48px]',
-                    idx === activeIdx ? 'bg-[#FAFAFA]' : 'hover:bg-[#FAFAFA]',
+                    !r.supported ? 'opacity-50 cursor-not-allowed' : idx === activeIdx ? 'bg-[#FAFAFA]' : 'hover:bg-[#FAFAFA]',
                   )}
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-[13px] font-bold text-ink-900 font-mono">{r.symbol}</span>
-                      {r.exchange && <span className="text-[11px] text-[#6B6B6B] uppercase">{r.exchange}</span>}
+                      {r.exchange && <span className="text-[11px] text-[#6B6B6B] uppercase">{r.exchDisp ?? r.exchange}</span>}
                     </div>
                     <span className="text-[12px] text-[#6B6B6B] truncate block">{r.longname ?? r.shortname}</span>
                   </div>
-                  {r.quoteType && (
-                    <span className="shrink-0 text-[11px] font-semibold text-[#5F790B] bg-[#EEF4DD] border border-[#BFD2A1] px-2 py-0.5 rounded-md">
-                      {r.quoteType === 'EQUITY' ? 'Equity' : r.quoteType === 'ETF' ? 'ETF' : r.quoteType}
+                  {r.supported ? (
+                    r.quoteType && (
+                      <span className="shrink-0 text-[11px] font-semibold text-[#5F790B] bg-[#EEF4DD] border border-[#BFD2A1] px-2 py-0.5 rounded-md">
+                        {r.quoteType === 'EQUITY' ? 'Equity' : r.quoteType === 'ETF' ? 'ETF' : r.quoteType}
+                      </span>
+                    )
+                  ) : (
+                    <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-white text-[#6B6B6B] border border-[#E5E5E5] whitespace-nowrap">
+                      Not covered
                     </span>
                   )}
                 </button>
               ))}
+              {unsupportedError && (
+                <div className="px-4 py-2.5 bg-amber-50 border-t border-amber-100 flex items-start gap-2">
+                  <span className="text-amber-500 shrink-0 mt-0.5 text-[13px]">⚠</span>
+                  <p className="text-[11px] text-amber-700 leading-snug">{unsupportedError}</p>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

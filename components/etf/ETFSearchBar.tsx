@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, X } from 'lucide-react'
+import { Search, X, Plus, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ETFResult {
@@ -11,12 +11,20 @@ interface ETFResult {
   exchange: string
 }
 
-export function ETFSearchBar() {
+interface Props {
+  /** If provided, shows a + button on each search result to add without navigating */
+  onAdd?: (symbol: string, name: string) => Promise<void>
+  /** Set of already-watchlisted tickers to show check state */
+  watchlistedTickers?: Set<string>
+}
+
+export function ETFSearchBar({ onAdd, watchlistedTickers }: Props) {
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<ETFResult[]>([])
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
+  const [justAdded, setJustAdded] = useState<Set<string>>(new Set())
   const containerRef = useRef<HTMLDivElement>(null)
   const listboxId = 'etf-search-listbox'
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -66,6 +74,19 @@ export function ETFSearchBar() {
     router.push(`/etf/${symbol}`)
   }
 
+  async function handleAdd(e: React.MouseEvent, symbol: string, name: string) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!onAdd) return
+    await onAdd(symbol, name)
+    setJustAdded((prev) => {
+      const next = new Set(prev)
+      next.add(symbol)
+      setTimeout(() => setJustAdded((p) => { const n = new Set(p); n.delete(symbol); return n }), 1500)
+      return next
+    })
+  }
+
   return (
     <div ref={containerRef} className="relative w-full max-w-xl">
       <div className="relative flex items-center">
@@ -87,7 +108,7 @@ export function ETFSearchBar() {
           <button
             onClick={() => { setQuery(''); setResults([]); setOpen(false) }}
             aria-label="Clear search"
-            className="absolute right-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-[#8A95A6] hover:text-[#566174]"
+            className="absolute right-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-[#8A95A6] hover:text-[#6B6B6B]"
           >
             <X size={14} />
           </button>
@@ -108,21 +129,43 @@ export function ETFSearchBar() {
               No ETFs found for &ldquo;{query}&rdquo;
             </div>
           ) : (
-            results.map((r) => (
-              <button
-                key={r.symbol}
-                role="option"
-                aria-selected={false}
-                onMouseDown={() => handleSelect(r.symbol)}
-                className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F3EF] transition-colors text-left group min-h-[48px]"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-[14px] font-bold text-[#06101F] font-mono w-14 shrink-0">{r.symbol}</span>
-                  <span className="text-[14px] text-[#566174] truncate">{r.name}</span>
+            results.map((r) => {
+              const isWatchlisted = watchlistedTickers?.has(r.symbol) ?? false
+              const wasJustAdded = justAdded.has(r.symbol)
+              return (
+                <div
+                  key={r.symbol}
+                  role="option"
+                  aria-selected={false}
+                  className="flex items-center justify-between px-4 py-3 hover:bg-[#F5F5F5] transition-colors group min-h-[48px]"
+                >
+                  <button
+                    onMouseDown={() => handleSelect(r.symbol)}
+                    className="flex items-center gap-3 flex-1 text-left"
+                  >
+                    <span className="text-[14px] font-bold text-[#06101F] font-mono w-14 shrink-0">{r.symbol}</span>
+                    <span className="text-[14px] text-[#6B6B6B] truncate">{r.name}</span>
+                  </button>
+                  <div className="flex items-center gap-2 shrink-0 ml-2">
+                    <span className="text-[10px] text-[#8A95A6] font-medium hidden sm:block">{r.exchange}</span>
+                    {onAdd && (
+                      <button
+                        onMouseDown={(e) => handleAdd(e, r.symbol, r.name)}
+                        aria-label={isWatchlisted || wasJustAdded ? `${r.symbol} in watchlist` : `Add ${r.symbol} to watchlist`}
+                        className={cn(
+                          'min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg border transition-all',
+                          isWatchlisted || wasJustAdded
+                            ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]'
+                            : 'bg-white border-[#E3E1DA] text-[#8A95A6] hover:bg-olive-50 hover:border-[#BFD2A1] hover:text-olive-700',
+                        )}
+                      >
+                        {isWatchlisted || wasJustAdded ? <Check size={12} /> : <Plus size={12} />}
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <span className={cn('text-[10px] text-[#8A95A6] font-medium shrink-0 ml-2')}>{r.exchange}</span>
-              </button>
-            ))
+              )
+            })
           )}
         </div>
       )}

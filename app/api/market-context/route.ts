@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { rateLimit } from '@/lib/rateLimit'
 import { get2YTreasury, getHYSpread } from '@/lib/data/fredClient'
 import { createServiceClient } from '@/lib/supabase'
@@ -170,26 +172,36 @@ export async function GET(req: NextRequest) {
       current: erp != null && erp * 100 >= b.min && erp * 100 < b.max,
     }))
 
-    // ── Model alerts from Supabase valuations ─────────────────────────────────
+    // ── Model alerts from Supabase valuations (session-scoped) ────────────────
     let modelAlerts: import('@/lib/market-context/types').ModelAlert[] = []
     let portfolioExposure: { sector: string; count: number; pct: number }[] = []
     try {
-      const supabase = createServiceClient()
-      const { data: valuations } = await supabase
-        .from('valuations')
-        .select('ticker, company, wacc, cagr, terminal_g')
-        .order('saved_at', { ascending: false })
-        .limit(50)
+      const session = await getServerSession(authOptions)
+      const userEmail = session?.user?.email
+      if (userEmail) {
+        const supabase = createServiceClient()
+        // First resolve user UUID from email
+        const { data: userRow } = await supabase
+          .from('users')
+          .select('id')
+          .eq('email', userEmail)
+          .single()
+        if (userRow?.id) {
+          const { data: valuations } = await supabase
+            .from('valuations')
+            .select('ticker, company, wacc, cagr, terminal_g')
+            .eq('user_id', userRow.id)
+            .order('saved_at', { ascending: false })
+            .limit(50)
 
       if (valuations?.length) {
-        modelAlerts = computeModelAlerts(valuations, dgs2 != null ? dgs2 * 100 : null, tnxYield)
-
-        // Sector exposure: map tickers to sectors using SECTOR_ETFS membership
-        // Since we don't have a sector column in valuations, count unique tickers as a proxy
-        const uniqueTickers = Array.from(new Set(valuations.map((v: { ticker: string }) => v.ticker)))
-        const total = uniqueTickers.length
-        if (total > 0) {
-          portfolioExposure = [{ sector: 'Saved Valuations', count: total, pct: 100 }]
+          modelAlerts = computeModelAlerts(valuations, dgs2 != null ? dgs2 * 100 : null, tnxYield)
+          const uniqueTickers = Array.from(new Set(valuations.map((v: { ticker: string }) => v.ticker)))
+          const total = uniqueTickers.length
+          if (total > 0) {
+            portfolioExposure = [{ sector: 'Saved Valuations', count: total, pct: 100 }]
+          }
+        }
         }
       }
     } catch {
