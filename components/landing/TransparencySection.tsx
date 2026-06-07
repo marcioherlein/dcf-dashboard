@@ -5,45 +5,6 @@ import { Eye, LayoutGrid, Database, TrendingUp } from 'lucide-react'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
-const FEATURES = [
-  {
-    Icon: Eye,
-    iconColor: '#5F790B',
-    iconBg: '#EEF4DD',
-    title: 'Transparent assumptions',
-    body: 'See every driver that impacts value.',
-    chips: ['Growth rate', 'WACC', 'Margins'],
-    chipStyle: { bg: '#EEF4DD', text: '#5F790B', border: '#BFD2A1' },
-  },
-  {
-    Icon: LayoutGrid,
-    iconColor: '#5F790B',
-    iconBg: '#EEF4DD',
-    title: 'Multiple valuation methods',
-    body: 'DCF, Reverse DCF, and multiples working together.',
-    chips: ['DCF', 'Reverse DCF', 'Multiples'],
-    chipStyle: { bg: '#EEF4DD', text: '#5F790B', border: '#BFD2A1' },
-  },
-  {
-    Icon: Database,
-    iconColor: '#6B6B6B',
-    iconBg: '#FFFFFF',
-    title: 'Public data sources',
-    body: 'Financials and estimates from trusted providers.',
-    chips: ['FRED', 'Yahoo Finance', 'SEC'],
-    chipStyle: { bg: '#F5F5F5', text: '#6B6B6B', border: '#E5E5E5' },
-  },
-  {
-    Icon: TrendingUp,
-    iconColor: '#B56A00',
-    iconBg: '#FFF4DA',
-    title: 'Sensitivity & scenarios',
-    body: 'See how outcomes change when assumptions change.',
-    chips: ['Bear', 'Base', 'Bull'],
-    chipStyle: { bg: '#FFF4DA', text: '#B56A00', border: '#F3D391' },
-  },
-]
-
 export default function TransparencySection() {
   const ref = useRef<HTMLElement>(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
@@ -53,12 +14,12 @@ export default function TransparencySection() {
     <section ref={ref} className="overflow-x-hidden" style={{ background: '#F5F5F5', borderBottom: '1px solid #E5E5E5' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-14 sm:py-20">
 
-        {/* Header — scale zoom, matches the original pattern */}
+        {/* Header */}
         <motion.div
-          className="text-center mb-10 sm:mb-14"
-          initial={reduced ? {} : { opacity: 0, scale: 0.93, y: 18 }}
-          animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
-          transition={{ duration: 0.65, ease: EASE }}
+          className="mb-10 sm:mb-14"
+          initial={reduced ? {} : { opacity: 0, y: 18 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.55, ease: EASE }}
         >
           <h2
             className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] text-[#111111]"
@@ -66,57 +27,109 @@ export default function TransparencySection() {
           >
             No black boxes. Every assumption is yours.
           </h2>
-          <p className="text-[15px] sm:text-[17px] text-[#6B6B6B] mx-auto leading-relaxed" style={{ maxWidth: '520px' }}>
-            We believe investors deserve transparency in how fair value is derived.
+          <p className="text-[15px] sm:text-[17px] text-[#6B6B6B] leading-relaxed" style={{ maxWidth: '480px' }}>
             Every model, source, and assumption is visible and adjustable.
           </p>
         </motion.div>
 
-        {/* 2×2 card grid — horizontal scroll on mobile, stagger reveal on desktop */}
-        <div className="-mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto snap-x snap-mandatory pb-4 sm:pb-0 sm:overflow-visible">
-          <div className="flex gap-4 w-max sm:w-auto sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-5">
-            {FEATURES.map(({ Icon, iconColor, iconBg, title, body, chips, chipStyle }, i) => (
-              <motion.div
-                key={title}
-                initial={reduced ? {} : { opacity: 0, scale: 0.94 }}
-                animate={inView ? { opacity: 1, scale: 1 } : {}}
-                transition={{ duration: 0.5, ease: [0.34, 1, 0.64, 1], delay: 0.1 + i * 0.08 }}
-                whileHover={reduced ? {} : { y: -3, boxShadow: '0 12px 32px rgba(0,0,0,0.09)' }}
-                className="snap-start flex flex-col rounded-[18px] bg-white border border-[#C8C8C8] p-6 transition-shadow w-[72vw] max-w-[280px] sm:w-auto sm:max-w-none"
-                style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}
+        {/* ── Anchor card — Transparent assumptions (lead feature) ── */}
+        <motion.div
+          initial={reduced ? {} : { opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.55, ease: EASE, delay: 0.08 }}
+          className="rounded-[20px] bg-white border border-[#C8C8C8] p-7 sm:p-9 mb-4 sm:mb-5"
+          style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.07)' }}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-6 items-start">
+            <div>
+              <div
+                className="w-10 h-10 rounded-[10px] bg-[#EEF4DD] flex items-center justify-center mb-4"
+                aria-hidden="true"
               >
-                {/* Icon */}
-                <div
-                  className="flex items-center justify-center rounded-[10px] mb-5 shrink-0"
-                  style={{ width: '42px', height: '42px', background: iconBg }}
-                  aria-hidden="true"
+                <Eye size={18} color="#5F790B" strokeWidth={1.8} />
+              </div>
+              <h3 className="text-[20px] sm:text-[24px] font-bold text-[#111111] mb-2" style={{ letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+                Transparent assumptions
+              </h3>
+              <p className="text-[15px] text-[#6B6B6B] leading-relaxed max-w-[420px]">
+                See every driver that impacts value — growth rate, WACC, margins, terminal multiple. Adjust any input and watch the fair value update in real time.
+              </p>
+            </div>
+            {/* Chips — right column on desktop, below on mobile */}
+            <div className="flex flex-wrap sm:flex-col gap-2 sm:gap-2 sm:items-end shrink-0">
+              {['Growth rate', 'WACC', 'Margins', 'Exit multiple'].map(chip => (
+                <span
+                  key={chip}
+                  className="rounded-full border px-3 py-1 text-[12px] font-semibold whitespace-nowrap"
+                  style={{ background: '#EEF4DD', color: '#5F790B', borderColor: '#BFD2A1' }}
                 >
-                  <Icon size={18} color={iconColor} strokeWidth={1.8} />
-                </div>
-
-                <h3 className="text-[15px] font-bold text-[#111111] mb-2 leading-snug" style={{ letterSpacing: '-0.01em' }}>
-                  {title}
-                </h3>
-                <p className="text-[13px] text-[#6B6B6B] leading-relaxed mb-4 flex-1">
-                  {body}
-                </p>
-
-                {/* Chips */}
-                <div className="flex flex-wrap gap-1.5">
-                  {chips.map((chip) => (
-                    <span
-                      key={chip}
-                      className="rounded-full border px-2.5 py-0.5 text-[11px] font-semibold"
-                      style={{ background: chipStyle.bg, color: chipStyle.text, borderColor: chipStyle.border }}
-                    >
-                      {chip}
-                    </span>
-                  ))}
-                </div>
-              </motion.div>
-            ))}
+                  {chip}
+                </span>
+              ))}
+            </div>
           </div>
+        </motion.div>
+
+        {/* ── Three supporting cards ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
+          {[
+            {
+              Icon: LayoutGrid,
+              title: 'Multiple valuation methods',
+              body: 'DCF, Reverse DCF, and multiples — all running in parallel.',
+              chips: ['DCF', 'Reverse DCF', 'Multiples'],
+              delay: 0.14,
+            },
+            {
+              Icon: Database,
+              title: 'Public data sources',
+              body: 'Financials and estimates from trusted, verifiable providers.',
+              chips: ['FRED', 'Yahoo Finance', 'SEC'],
+              delay: 0.20,
+            },
+            {
+              Icon: TrendingUp,
+              title: 'Sensitivity & scenarios',
+              body: 'Bear, base, and bull cases show how outcomes shift.',
+              chips: ['Bear', 'Base', 'Bull'],
+              delay: 0.26,
+            },
+          ].map(({ Icon, title, body, chips, delay }) => (
+            <motion.div
+              key={title}
+              initial={reduced ? {} : { opacity: 0, y: 16 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, ease: EASE, delay }}
+              className="rounded-[18px] bg-white border border-[#C8C8C8] p-5 flex flex-col"
+              style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}
+            >
+              <div
+                className="w-9 h-9 rounded-[8px] bg-[#EEF4DD] flex items-center justify-center mb-4 shrink-0"
+                aria-hidden="true"
+              >
+                <Icon size={16} color="#5F790B" strokeWidth={1.8} />
+              </div>
+              <h3 className="text-[14px] font-bold text-[#111111] mb-1.5 leading-snug" style={{ letterSpacing: '-0.01em' }}>
+                {title}
+              </h3>
+              <p className="text-[13px] text-[#6B6B6B] leading-relaxed mb-4 flex-1">
+                {body}
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {chips.map(chip => (
+                  <span
+                    key={chip}
+                    className="rounded-full border px-2.5 py-0.5 text-[11px] font-semibold"
+                    style={{ background: '#EEF4DD', color: '#5F790B', borderColor: '#BFD2A1' }}
+                  >
+                    {chip}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
+          ))}
         </div>
+
       </div>
     </section>
   )

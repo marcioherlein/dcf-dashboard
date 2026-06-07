@@ -167,7 +167,7 @@ function MetricsTable({ columns, rows, hideSparks }: { columns: string[]; rows: 
             </th>
             {columns.map(col => (
               <th key={col} className={`px-2 sm:px-3 py-2 text-right text-[11px] font-semibold whitespace-nowrap ${
-                col === 'TTM' ? 'text-amber-600 bg-amber-50/40' : 'text-slate-500'
+                col === 'TTM' ? 'text-[#92400E] bg-amber-50/60' : 'text-[#6B6B6B]'
               }`}>
                 {col}
               </th>
@@ -195,7 +195,7 @@ function MetricsTable({ columns, rows, hideSparks }: { columns: string[]; rows: 
                   {!hideSparks && <Sparkline values={row.values} positiveIsGood={pig} />}
                   {row.label}
                   {row.positiveIsGood != null && !row.indent && (
-                    <span className="ml-1 text-[10px] text-slate-400 font-normal" aria-label={row.positiveIsGood ? 'higher is better' : 'lower is better'}>
+                    <span className="ml-1 text-[10px] text-[#6B6B6B] font-normal" aria-label={row.positiveIsGood ? 'higher is better' : 'lower is better'}>
                       {row.positiveIsGood ? '↑' : '↓'}
                     </span>
                   )}
@@ -649,13 +649,13 @@ export default function FinancialsHub({ statementsData, financialsData, currency
           <div className="flex rounded-lg overflow-hidden border border-slate-200 text-[11px] shrink-0 ml-3">
             <button
               onClick={() => handlePeriodChange('annual')}
-              className={`px-2.5 py-1.5 transition-colors ${analyticsPeriod === 'annual' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-slate-400 hover:bg-slate-50'}`}
+              className={`px-2.5 py-1.5 transition-colors ${analyticsPeriod === 'annual' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-[#6B6B6B] hover:bg-[#F5F5F5]'}`}
             >
               Annual
             </button>
             <button
               onClick={() => handlePeriodChange('quarterly')}
-              className={`px-2.5 py-1.5 border-l border-slate-200 transition-colors ${analyticsPeriod === 'quarterly' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-slate-400 hover:bg-slate-50'}`}
+              className={`px-2.5 py-1.5 border-l border-slate-200 transition-colors ${analyticsPeriod === 'quarterly' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-[#6B6B6B] hover:bg-[#F5F5F5]'}`}
             >
               Quarterly
             </button>
@@ -807,14 +807,14 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                             <div className={`w-full h-full rounded-t-sm ${isUp ? 'bg-red-300' : isDn ? 'bg-emerald-400' : 'bg-slate-300'}`}
                               title={`${p.year}: ${fmtShares(p.sharesM)}`} />
                           </div>
-                          <span className="text-[10px] text-slate-400 truncate max-w-full">{p.year}</span>
+                          <span className="text-[10px] text-[#6B6B6B] truncate max-w-full">{p.year}</span>
                         </div>
                       )
                     })}
                   </div>
                   <div className="flex items-center gap-4 mt-1.5">
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Decreasing (buybacks)</span>
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />Increasing (dilution)</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#6B6B6B]"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Decreasing (buybacks)</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#6B6B6B]"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />Increasing (dilution)</span>
                   </div>
                 </div>
               )
@@ -868,7 +868,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                             <div className={`w-full h-full rounded-t-sm ${isPos ? 'bg-emerald-500' : 'bg-red-400'}`}
                               title={`${p.year}: EPS ${isPos ? '+' : ''}$${val.toFixed(2)}`} />
                           </div>
-                          <span className="text-[10px] text-slate-400 truncate max-w-full">{p.year}</span>
+                          <span className="text-[10px] text-[#6B6B6B] truncate max-w-full">{p.year}</span>
                         </div>
                       )
                     })}
@@ -963,17 +963,17 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                     {/* X-axis labels (fixed margin below bars) */}
                     <div className="flex gap-1.5 mt-4">
                       {roicPoints.map((p) => (
-                        <div key={p.year} className="flex-1 text-center text-[10px] text-slate-400">{p.year}</div>
+                        <div key={p.year} className="flex-1 text-center text-[10px] text-[#6B6B6B]">{p.year}</div>
                       ))}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4 mt-2">
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />ROIC above WACC</span>
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />ROIC below WACC</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#6B6B6B]"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />ROIC above WACC</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#6B6B6B]"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />ROIC below WACC</span>
                     {wacc != null && <span className="flex items-center gap-1 text-[10px] text-amber-500"><span className="w-5 border-t-2 border-dashed border-amber-400 inline-block" />WACC</span>}
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1.5 leading-snug">
+                  <p className="text-[10px] text-[#6B6B6B] mt-1.5 leading-snug">
                     ROIC above WACC = company creates value for shareholders. Below WACC = capital is being destroyed even if profits appear positive.
                   </p>
                 </div>
@@ -1023,14 +1023,14 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                             <div className={`w-full h-full rounded-t-sm ${isPositive ? 'bg-[#059669]' : 'bg-red-300'}`}
                               title={`${p.year}: FCF ${fmtM(val)}`} />
                           </div>
-                          <span className="text-[10px] text-slate-400 truncate max-w-full">{p.year}</span>
+                          <span className="text-[10px] text-[#6B6B6B] truncate max-w-full">{p.year}</span>
                         </div>
                       )
                     })}
                   </div>
                   <div className="flex items-center gap-4 mt-1.5">
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-[#059669] inline-block" />Positive FCF</span>
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />Negative FCF (cash burn)</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#6B6B6B]"><span className="w-2 h-2 rounded-sm bg-[#059669] inline-block" />Positive FCF</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#6B6B6B]"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />Negative FCF (cash burn)</span>
                   </div>
                 </div>
               )
@@ -1094,14 +1094,14 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                             />
                           ) : <div className="flex-1" />}
                         </div>
-                        <span className="text-[10px] text-slate-400 truncate max-w-full">{p.year}</span>
+                        <span className="text-[10px] text-[#6B6B6B] truncate max-w-full">{p.year}</span>
                       </div>
                     ))}
                   </div>
                   <div className="flex items-center gap-4 mt-1.5 flex-wrap">
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-[#2563EB] inline-block" />Gross</span>
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-violet-400 inline-block" />Operating</span>
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Net</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#6B6B6B]"><span className="w-2 h-2 rounded-sm bg-[#2563EB] inline-block" />Gross</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#6B6B6B]"><span className="w-2 h-2 rounded-sm bg-violet-400 inline-block" />Operating</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#6B6B6B]"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Net</span>
                   </div>
                 </div>
               )
@@ -1151,15 +1151,15 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                               />
                             ) : <div className="flex-1" />}
                           </div>
-                          <span className="text-[10px] text-slate-400 truncate max-w-full">{p.year}</span>
+                          <span className="text-[10px] text-[#6B6B6B] truncate max-w-full">{p.year}</span>
                         </div>
                       )
                     })}
                   </div>
                   <div className="flex items-center gap-4 mt-1.5 flex-wrap">
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-[#059669] inline-block" />Operating CF</span>
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-500 inline-block" />Free CF</span>
-                    <span className="text-[10px] text-slate-400">Both scaled to max OCF. FCF conversion = FCF/OCF</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#6B6B6B]"><span className="w-2 h-2 rounded-sm bg-[#059669] inline-block" />Operating CF</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#6B6B6B]"><span className="w-2 h-2 rounded-sm bg-emerald-500 inline-block" />Free CF</span>
+                    <span className="text-[10px] text-[#6B6B6B]">Both scaled to max OCF. FCF conversion = FCF/OCF</span>
                   </div>
                 </div>
               )
@@ -1246,7 +1246,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
 
             <div className="border-t border-slate-100 px-4 sm:px-5 pt-4 pb-4">
               <MetricsTable columns={cols} rows={solvencyRows} />
-              <p className="text-[10px] text-slate-400 mt-2 px-1">
+              <p className="text-[10px] text-[#6B6B6B] mt-2 px-1">
                 Net Debt = Total Debt − Cash &amp; Equivalents. Negative Net Debt means net cash position.
                 Total Liab./Assets includes operating liabilities (deferred revenue, lease obligations).
                 Cash Runway only shown when operating cash flow is negative.
@@ -1315,14 +1315,14 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                                 <div className={`w-full h-full rounded-t-sm ${color}`} title={`${p.year}: ${fmtND(val)}`} />
                               </div>
                             )}
-                            <span className="text-[10px] text-slate-400 truncate max-w-full shrink-0">{p.year}</span>
+                            <span className="text-[10px] text-[#6B6B6B] truncate max-w-full shrink-0">{p.year}</span>
                           </div>
                         )
                       })}
                     </div>
                     <div className="flex items-center gap-3 mt-2">
-                      <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Net cash (negative debt)</span>
-                      <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-slate-400 inline-block" />Net debt</span>
+                      <span className="flex items-center gap-1 text-[10px] text-[#6B6B6B]"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Net cash (negative debt)</span>
+                      <span className="flex items-center gap-1 text-[10px] text-[#6B6B6B]"><span className="w-2 h-2 rounded-sm bg-slate-400 inline-block" />Net debt</span>
                     </div>
                   </div>
                 )
@@ -1408,12 +1408,12 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
                     <div className="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5">
-                      <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">Dividend Yield</p>
+                      <p className="text-[10px] text-[#6B6B6B] font-semibold uppercase tracking-wide mb-0.5">Dividend Yield</p>
                       <p className="text-[18px] font-bold text-emerald-600 tabular-nums">{(divYield * 100).toFixed(2)}%</p>
                     </div>
                     {payoutRatio != null && payoutRatio > 0 && (
                       <div className="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5">
-                        <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">Payout Ratio</p>
+                        <p className="text-[10px] text-[#6B6B6B] font-semibold uppercase tracking-wide mb-0.5">Payout Ratio</p>
                         <p className="text-[18px] font-bold text-slate-800 tabular-nums">{(payoutRatio * 100).toFixed(0)}%</p>
                         <div className="h-1 bg-slate-200 rounded-full mt-1">
                           <div className={`h-full rounded-full ${payoutRatio > 0.9 ? 'bg-red-400' : payoutRatio > 0.7 ? 'bg-amber-400' : 'bg-emerald-400'}`} style={{ width: `${Math.min(100, payoutRatio * 100)}%` }} />
@@ -1441,7 +1441,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                                 <div className="relative w-full" style={{ height: `${hp}%` }}>
                                   <div className="w-full h-full rounded-t-sm bg-emerald-400" title={`${d.year}: ${fmtM(d.paid)}`} />
                                 </div>
-                                <span className="text-[10px] text-slate-400 truncate max-w-full">{d.year}</span>
+                                <span className="text-[10px] text-[#6B6B6B] truncate max-w-full">{d.year}</span>
                               </div>
                             )
                           })}
@@ -1532,7 +1532,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                                   <div className={`w-full h-full rounded-t-sm ${positive ? 'bg-[#2563EB]' : 'bg-slate-300'}`}
                                     title={`${quarterLabel(r)}: ${sym}${fmtRevShort(val ?? 0)}`} />
                                 </div>
-                                <span className="text-[10px] text-slate-400 truncate max-w-full">{quarterLabel(r)}</span>
+                                <span className="text-[10px] text-[#6B6B6B] truncate max-w-full">{quarterLabel(r)}</span>
                               </div>
                             )
                           })}
@@ -1564,15 +1564,15 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                                   <div className={`w-full h-full rounded-t-sm ${hasBeat ? 'bg-emerald-400' : hasMiss ? 'bg-red-300' : isPositive ? 'bg-violet-400' : 'bg-slate-300'}`}
                                     title={`${quarterLabel(r)}: ${sym}${val?.toFixed(2) ?? '—'}${beat != null ? ` (${beat > 0 ? '+' : ''}${beat.toFixed(1)}% surprise)` : ''}`} />
                                 </div>
-                                <span className="text-[10px] text-slate-400 truncate max-w-full">{quarterLabel(r)}</span>
+                                <span className="text-[10px] text-[#6B6B6B] truncate max-w-full">{quarterLabel(r)}</span>
                               </div>
                             )
                           })}
                         </div>
                         <div className="flex items-center gap-3 mt-1.5">
-                          <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Beat</span>
-                          <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />Miss</span>
-                          <span className="flex items-center gap-1 text-[10px] text-slate-400"><span className="w-2 h-2 rounded-sm bg-violet-400 inline-block" />Positive</span>
+                          <span className="flex items-center gap-1 text-[10px] text-[#6B6B6B]"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Beat</span>
+                          <span className="flex items-center gap-1 text-[10px] text-[#6B6B6B]"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" />Miss</span>
+                          <span className="flex items-center gap-1 text-[10px] text-[#6B6B6B]"><span className="w-2 h-2 rounded-sm bg-violet-400 inline-block" />Positive</span>
                         </div>
                       </div>
                     )}
@@ -1624,7 +1624,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                         </div>
                         <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
                           {segments.map(s => (
-                            <span key={s.label} className="flex items-center gap-1 text-[10px] text-slate-500">
+                            <span key={s.label} className="flex items-center gap-1 text-[10px] text-[#6B6B6B]">
                               <span className={`inline-block w-2 h-2 rounded-sm ${s.color}`} />
                               {s.label} ({s.count})
                             </span>
@@ -1701,9 +1701,9 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                             <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-slate-800 border-2 border-white shadow z-20" style={{ left: `calc(${pricePct}% - 6px)` }} />
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-[10px] text-slate-400 tabular-nums">{sym}{lo.toFixed(2)} Low</span>
+                            <span className="text-[10px] text-[#6B6B6B] tabular-nums">{sym}{lo.toFixed(2)} Low</span>
                             <span className="text-[10px] text-blue-500 tabular-nums">Avg {sym}{avg.toFixed(2)}</span>
-                            <span className="text-[10px] text-slate-400 tabular-nums">High {sym}{hi.toFixed(2)}</span>
+                            <span className="text-[10px] text-[#6B6B6B] tabular-nums">High {sym}{hi.toFixed(2)}</span>
                           </div>
                         </div>
                       )
@@ -1766,8 +1766,8 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                         })}
                       </div>
                       <div className="flex items-center gap-3 mt-2">
-                        <span className="flex items-center gap-1 text-[10px] text-slate-500"><span className="inline-block w-3 h-2 rounded-sm bg-blue-500" />Actual</span>
-                        <span className="flex items-center gap-1 text-[10px] text-slate-500"><span className="inline-block w-3 h-2 rounded-sm bg-blue-200 border border-dashed border-blue-400" />Estimate</span>
+                        <span className="flex items-center gap-1 text-[10px] text-[#6B6B6B]"><span className="inline-block w-3 h-2 rounded-sm bg-blue-500" />Actual</span>
+                        <span className="flex items-center gap-1 text-[10px] text-[#6B6B6B]"><span className="inline-block w-3 h-2 rounded-sm bg-blue-200 border border-dashed border-blue-400" />Estimate</span>
                       </div>
                     </div>
                   )
@@ -1828,7 +1828,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                                   {hasRevenue && <>
                                     <td className="px-4 py-3 text-right tabular-nums font-mono text-slate-800 font-medium">
                                       {revAvg != null ? (revAvg >= 1e12 ? `${sym}${(revAvg / 1e12).toFixed(2)}T` : revAvg >= 1e9 ? `${sym}${(revAvg / 1e9).toFixed(1)}B` : revAvg >= 1e6 ? `${sym}${(revAvg / 1e6).toFixed(0)}M` : `${sym}${revAvg.toFixed(0)}`) : '—'}
-                                      {row.revenue.analysts != null && <span className="text-[10px] text-slate-400 ml-1">({row.revenue.analysts})</span>}
+                                      {row.revenue.analysts != null && <span className="text-[10px] text-[#6B6B6B] ml-1">({row.revenue.analysts})</span>}
                                     </td>
                                     <td className={`px-3 py-3 text-right tabular-nums text-[12px] font-semibold ${revGrowth == null ? 'text-slate-400' : revGrowth >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                                       {revGrowth != null ? `${revGrowth >= 0 ? '+' : ''}${(revGrowth * 100).toFixed(1)}%` : '—'}
@@ -1837,7 +1837,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                                   {hasEPS && <>
                                     <td className="px-4 py-3 text-right tabular-nums font-mono text-slate-800 font-medium">
                                       {epsAvg != null ? `${sym}${epsAvg.toFixed(2)}` : '—'}
-                                      {row.eps.analysts != null && <span className="text-[10px] text-slate-400 ml-1">({row.eps.analysts})</span>}
+                                      {row.eps.analysts != null && <span className="text-[10px] text-[#6B6B6B] ml-1">({row.eps.analysts})</span>}
                                     </td>
                                     <td className={`px-3 py-3 text-right tabular-nums text-[12px] font-semibold ${epsGrowth == null ? 'text-slate-400' : epsGrowth >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                                       {epsGrowth != null ? `${epsGrowth >= 0 ? '+' : ''}${(epsGrowth * 100).toFixed(1)}%` : '—'}
@@ -1849,7 +1849,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                           </tbody>
                         </table>
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-1.5">Number in parentheses = analysts covering this estimate. Low/High ranges available from Yahoo Finance.</p>
+                      <p className="text-[10px] text-[#6B6B6B] mt-1.5">Number in parentheses = analysts covering this estimate. Low/High ranges available from Yahoo Finance.</p>
                     </div>
                   )
                 })()}
@@ -1935,7 +1935,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                       <div className="flex items-baseline justify-between mb-3">
                         <p className="text-[13px] font-semibold text-slate-700">Relative Valuation</p>
                         {allPeers.length > 0 && (
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] text-[#6B6B6B]">
                             vs. {allPeers.slice(0, 4).join(', ')}{allPeers.length > 4 ? ` +${allPeers.length - 4}` : ''}
                           </span>
                         )}
@@ -1976,7 +1976,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                           )
                         })}
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-2">
+                      <p className="text-[10px] text-[#6B6B6B] mt-2">
                         {allPeers.length > 0 ? 'Live peer medians' : 'Industry medians (Damodaran 2025)'}
                         . Discount = trading below peers; Premium = trading above.
                       </p>
@@ -2187,7 +2187,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                       </tbody>
                     </table>
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1.5">Source: 13F filings · Weight = % of institution portfolio · Change = weight shift vs prior quarter</p>
+                  <p className="text-[10px] text-[#6B6B6B] mt-1.5">Source: 13F filings · Weight = % of institution portfolio · Change = weight shift vs prior quarter</p>
                 </div>
               )
             })()}
@@ -2225,7 +2225,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                       </a>
                     ))}
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1.5">Direct links to SEC EDGAR filings · 10-K = annual report · 10-Q = quarterly · DEF 14A = proxy statement</p>
+                  <p className="text-[10px] text-[#6B6B6B] mt-1.5">Direct links to SEC EDGAR filings · 10-K = annual report · 10-Q = quarterly · DEF 14A = proxy statement</p>
                 </div>
               )
             })()}

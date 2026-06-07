@@ -42,7 +42,7 @@ function CriterionRow({ pass, name, detail }: { pass: boolean | null; name: stri
   return (
     <div className="flex items-center gap-2.5 py-1.5">
       <div className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${
-        pass === null ? 'bg-slate-300 text-slate-600' : pass ? 'bg-emerald-500' : 'bg-red-500'
+        pass === null ? 'bg-[#C8C8C8] text-[#111111]' : pass ? 'bg-emerald-500' : 'bg-red-500'
       }`}>
         {pass === null ? '?' : pass ? '✓' : '✗'}
       </div>

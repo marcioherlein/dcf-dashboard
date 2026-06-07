@@ -372,13 +372,13 @@ export default function YahooFinancials({ statementsData, currency = '$', report
           <div className="flex rounded-lg overflow-hidden border border-slate-200 text-[12px]">
             <button
               onClick={() => setPeriod('annual')}
-              className={`px-3 py-1.5 ${period === 'annual' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-slate-400 hover:bg-slate-50'}`}
+              className={`px-3 py-1.5 ${period === 'annual' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-[#6B6B6B] hover:bg-[#F5F5F5]'}`}
             >
               Annual
             </button>
             <button
               onClick={() => setPeriod('quarterly')}
-              className={`px-3 py-1.5 border-l border-slate-200 ${period === 'quarterly' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-slate-400 hover:bg-slate-50'}`}
+              className={`px-3 py-1.5 border-l border-slate-200 ${period === 'quarterly' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-[#6B6B6B] hover:bg-[#F5F5F5]'}`}
             >
               Quarterly
             </button>
