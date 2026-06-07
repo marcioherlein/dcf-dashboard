@@ -103,9 +103,9 @@ reported FCF. Check `historicalFCF` array (last entry) as the ground truth.
 ### Finding 5: Monotonically rising CapEx/D&A not captured by 3Y-median blend
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** MSFT (Azure AI), AMZN (AWS), GOOGL (4.6pp gap), META (7.2pp gap Reality Labs) — AI infra capex surge is systemic
-**Run count:** 4
-**Status:** integrated — 4 major AI infrastructure companies confirmed
+**Ticker / Context:** MSFT, AMZN, GOOGL, META, ORCL (10%→17%→13%→37% capex surge) — AI cloud infra capex surges causing median-blend to anchor below current intensity
+**Run count:** 5
+**Status:** integrated — 5 AI infra companies; ORCL most extreme: capex 37% in one year caused FCF to go negative
 
 **Observed:** `buildProjectedRows` blends `medianCapexPct = median(3Y) × 0.60 + TTM × 0.40`.
 When capex is monotonically rising (MSFT: 13.3%→18.1%→22.9%), the 3Y median (18.1%) anchors
@@ -123,8 +123,8 @@ blended << TTM by >3pp, flag as capex-understatement for this company.
 ### Finding 6: taxRate = null in all historical IS rows — FMP field not populating
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** ALL 53 AUDITED TICKERS — 100% reproduction rate (taxRate=null for every FMP-sourced company)
-**Run count:** 53
+**Ticker / Context:** ALL 77 AUDITED TICKERS — 100% reproduction rate (taxRate=null for every FMP-sourced company across all sectors)
+**Run count:** 77
 **Status:** integrated — 100% reproduction rate; taxRate field is never populated in FMP income statement rows
 
 **Observed:** All 5 MSFT historical IS rows have `taxRate: null`. `buildProjectedRows` falls back to
@@ -141,9 +141,9 @@ resulting NOPAT impact.
 ### Finding 7: Cyclical/recovery trough silent — EBIT=null + median NI positive but trough-distorted
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** MU (cyclical), LYFT (deferred tax), DIS (EBIT=null recovery: med=5.4% vs TTM=13.1%)
-**Run count:** 3
-**Status:** integrated — 3 distinct trigger patterns confirmed
+**Ticker / Context:** MU (cyclical), LYFT (deferred tax), DIS (recovery: med=5.4% vs TTM=13.1%), HUBS (recovery: med=0.2% vs TTM=1.5%)
+**Run count:** 4
+**Status:** integrated — 4 instances across cyclical, one-time-gain, and recovery patterns
 
 **Observed:** With EBIT=null rows, `isCyclicalTrough` cannot evaluate (condition requires `medianEbitMargin < -0.02`).
 The EBIT null fallback fires and uses `medianNetMargin`. For MU, the 3-year NI% values are [-37.5%, 3.1%, 22.8%],
@@ -291,9 +291,9 @@ Ensure F4 check note clarifies that ratio > 1.50 for capital-intensive non-finan
 ### Finding 13: deriveNetMargin 'last' picks oldest year — auditBundle IS rows are newest-first
 **Agent:** audit-valuation
 **Date:** 2026-06-05
-**Ticker / Context:** SHOP, WDAY, DDOG, PANW(4.4x), CELH(2.9x), PFE(2.9x) — 6 tickers confirmed, all sectors
-**Run count:** 6
-**Status:** integrated — systemic; affects any ticker where recent peak-year NI% >> trailing NI%
+**Ticker / Context:** SHOP, WDAY, DDOG, PANW, CELH, PFE, SMCI(2.8x), DOCU(4.0x, FY2025 gain 35.9%→picked as latest) — 8 confirmed
+**Run count:** 8
+**Status:** integrated — 8 instances across SaaS, AI hardware, enterprise software
 
 **Observed:** SHOP's FY2021 net margin was 63.2% due to warrant fair value adjustments (a one-time non-cash
 gain), not operating earnings. This row is included in the 5-year `withBoth` set used by `deriveNetMargin`.
