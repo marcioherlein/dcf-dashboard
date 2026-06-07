@@ -358,7 +358,7 @@ export default function YahooFinancials({ statementsData, currency = '$', report
                 onClick={() => setStatement(tab.id)}
                 className={`px-3 sm:px-4 py-2 text-[12px] sm:text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap ${
                   statement === tab.id
-                    ? 'border-blue-600 text-blue-600'
+                    ? 'border-olive-700 text-olive-700'
                     : 'border-transparent text-slate-400 hover:text-slate-700'
                 }`}
               >
@@ -372,21 +372,21 @@ export default function YahooFinancials({ statementsData, currency = '$', report
           <div className="flex rounded-lg overflow-hidden border border-slate-200 text-[12px]">
             <button
               onClick={() => setPeriod('annual')}
-              className={`px-3 py-1.5 ${period === 'annual' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-[#6B6B6B] hover:bg-[#F5F5F5]'}`}
+              className={`px-3 py-1.5 ${period === 'annual' ? 'bg-olive-50 text-olive-700 font-semibold' : 'text-slate-400 hover:bg-slate-50'}`}
             >
               Annual
             </button>
             <button
               onClick={() => setPeriod('quarterly')}
-              className={`px-3 py-1.5 border-l border-slate-200 ${period === 'quarterly' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-[#6B6B6B] hover:bg-[#F5F5F5]'}`}
+              className={`px-3 py-1.5 border-l border-slate-200 ${period === 'quarterly' ? 'bg-olive-50 text-olive-700 font-semibold' : 'text-slate-400 hover:bg-slate-50'}`}
             >
               Quarterly
             </button>
           </div>
-          <button onClick={() => toggleAll(false)} className="text-[12px] text-slate-500 hover:text-slate-700 whitespace-nowrap min-h-[36px] px-2.5 py-1 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors">
+          <button onClick={() => toggleAll(false)} className="text-[12px] text-slate-500 hover:text-slate-700 whitespace-nowrap min-h-[44px] px-2.5 py-1 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors">
             Collapse all
           </button>
-          <button onClick={() => toggleAll(true)} className="text-[12px] text-blue-600 hover:text-blue-700 whitespace-nowrap min-h-[36px] px-2.5 py-1 rounded-full border border-blue-200 hover:border-blue-300 hover:bg-blue-50/50 transition-colors">
+          <button onClick={() => toggleAll(true)} className="text-[12px] text-blue-600 hover:text-blue-700 whitespace-nowrap min-h-[44px] px-2.5 py-1 rounded-full border border-blue-200 hover:border-blue-300 hover:bg-blue-50/50 transition-colors">
             Expand all
           </button>
         </div>

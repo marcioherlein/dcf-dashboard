@@ -135,7 +135,7 @@ function SegmentTabs({ active, counts, onSelect }: {
             className={cn(
               'flex items-center gap-1.5 px-4 py-3 text-[13px] font-semibold whitespace-nowrap border-b-2 transition-colors',
               isActive
-                ? 'text-[#2563EB] border-[#2563EB]'
+                ? 'text-olive-700 border-olive-700'
                 : 'text-[#475569] border-transparent hover:text-slate-800 hover:border-slate-300',
             )}
           >
@@ -168,7 +168,7 @@ function FilterSelect({ label, value, options, onChange }: {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="appearance-none pl-3 pr-7 py-2 text-[12px] font-semibold text-[#334155] bg-white border border-[#DDE6F2] rounded-xl cursor-pointer hover:border-blue-300 focus:outline-none focus:border-blue-400 transition-colors min-h-[40px]"
+        className="appearance-none pl-3 pr-7 py-2 text-[12px] font-semibold text-[#334155] bg-white border border-[#DDE6F2] rounded-xl cursor-pointer hover:border-blue-300 focus:outline-none focus:border-blue-400 transition-colors min-h-[44px]"
         style={{ fontSize: '16px' }}
       >
         {options.map((o) => (
@@ -215,7 +215,7 @@ function SortDropdown({ current, dir, onSort }: {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="listbox"
-        className="flex items-center gap-2 pl-3 pr-2.5 py-2 text-[12px] font-semibold text-[#334155] bg-white border border-[#DDE6F2] rounded-xl hover:border-blue-300 transition-colors min-h-[40px]"
+        className="flex items-center gap-2 pl-3 pr-2.5 py-2 text-[12px] font-semibold text-[#334155] bg-white border border-[#DDE6F2] rounded-xl hover:border-blue-300 transition-colors min-h-[44px]"
       >
         Sort: {currentLabel}
         <ChevronDown size={12} className="text-slate-400" />
@@ -392,7 +392,7 @@ function EmptyState() {
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
           <Link
             href="/analyze"
-            className="w-full sm:w-auto rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-6 py-3 text-[14px] font-semibold transition-colors min-h-[48px] flex items-center justify-center"
+            className="w-full sm:w-auto rounded-xl bg-olive-700 hover:bg-olive-600 text-white px-6 py-3 text-[14px] font-semibold transition-colors min-h-[48px] flex items-center justify-center"
           >
             Analyze a stock
           </Link>
@@ -458,7 +458,7 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
             className={cn(
               'min-w-[44px] h-[44px] rounded-lg text-[12px] font-semibold border transition-colors',
               p === page
-                ? 'bg-[#2563EB] border-[#2563EB] text-white'
+                ? 'bg-olive-700 border-olive-700 text-white'
                 : 'border-[#DDE6F2] text-[#334155] hover:bg-slate-50',
             )}
           >
@@ -669,7 +669,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
             onClick={() => setView('table')}
             title="Table view"
             aria-label="Table view"
-            className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', view === 'table' ? 'bg-white text-[#2563EB] shadow-sm' : 'text-slate-400 hover:text-slate-600')}
+            className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', view === 'table' ? 'bg-white text-olive-700 shadow-sm' : 'text-slate-400 hover:text-slate-600')}
           >
             <List size={16} />
           </button>
@@ -677,7 +677,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
             onClick={() => setView('grid')}
             title="Grid view"
             aria-label="Grid view"
-            className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', view === 'grid' ? 'bg-white text-[#2563EB] shadow-sm' : 'text-slate-400 hover:text-slate-600')}
+            className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', view === 'grid' ? 'bg-white text-olive-700 shadow-sm' : 'text-slate-400 hover:text-slate-600')}
           >
             <LayoutGrid size={16} />
           </button>
@@ -723,10 +723,10 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
         <div className="space-y-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-24 bg-white border border-[#E6ECF5] rounded-2xl animate-pulse" />
+              <div key={i} className="h-24 bg-white border border-[#E6ECF5] rounded-2xl motion-safe:animate-pulse" />
             ))}
           </div>
-          <div className="h-96 bg-white border border-[#E6ECF5] rounded-2xl animate-pulse" />
+          <div className="h-96 bg-white border border-[#E6ECF5] rounded-2xl motion-safe:animate-pulse" />
         </div>
       )}
 
@@ -766,13 +766,13 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
                       className="w-32 px-2.5 py-1.5 text-[12px] text-slate-800 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100"
                       style={{ fontSize: '16px' }}
                     />
-                    <button type="submit" className="text-[12px] font-semibold text-blue-600 hover:text-blue-700 px-2 py-1.5 min-h-[34px]">Add</button>
-                    <button type="button" onClick={() => { setGroupInputOpen(false); setGroupInputValue('') }} className="text-[12px] text-slate-400 hover:text-slate-600 px-1.5 py-1.5 min-h-[34px]">Cancel</button>
+                    <button type="submit" className="text-[12px] font-semibold text-blue-600 hover:text-blue-700 px-2 py-1.5 min-h-[44px]">Add</button>
+                    <button type="button" onClick={() => { setGroupInputOpen(false); setGroupInputValue('') }} className="text-[12px] text-slate-400 hover:text-slate-600 px-1.5 py-1.5 min-h-[44px]">Cancel</button>
                   </form>
                 ) : (
                   <button
                     onClick={() => setGroupInputOpen(true)}
-                    className="shrink-0 flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold text-[#2563EB] border border-dashed border-blue-300 bg-white hover:bg-blue-50 rounded-xl transition-colors whitespace-nowrap min-h-[40px]"
+                    className="shrink-0 flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold text-[#2563EB] border border-dashed border-blue-300 bg-white hover:bg-blue-50 rounded-xl transition-colors whitespace-nowrap min-h-[44px]"
                   >
                     <Plus size={13} />
                     New group
@@ -819,9 +819,9 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
                 />
                 <button
                   className={cn(
-                    'flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold border rounded-xl transition-colors min-h-[40px]',
+                    'flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold border rounded-xl transition-colors min-h-[44px]',
                     hasFilters
-                      ? 'bg-blue-50 border-blue-300 text-blue-700'
+                      ? 'bg-olive-50 border-olive-700 text-olive-700'
                       : 'bg-white border-[#DDE6F2] text-[#334155] hover:border-blue-300',
                   )}
                   onClick={() => { setFilterUpside('all'); setFilterConfidence('all'); setSearch('') }}
@@ -884,13 +884,13 @@ export default function ValuationsPage() {
     return (
       <div className="min-h-dvh bg-background px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div className="space-y-4">
-          <div className="h-10 w-48 bg-white border border-[#E6ECF5] rounded-xl animate-pulse" />
+          <div className="h-10 w-48 bg-white border border-[#E6ECF5] rounded-xl motion-safe:animate-pulse" />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-24 bg-white border border-[#E6ECF5] rounded-2xl animate-pulse" />
+              <div key={i} className="h-24 bg-white border border-[#E6ECF5] rounded-2xl motion-safe:animate-pulse" />
             ))}
           </div>
-          <div className="h-96 bg-white border border-[#E6ECF5] rounded-2xl animate-pulse" />
+          <div className="h-96 bg-white border border-[#E6ECF5] rounded-2xl motion-safe:animate-pulse" />
         </div>
       </div>
     )

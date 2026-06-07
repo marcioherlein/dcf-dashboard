@@ -237,7 +237,7 @@ export default function IncomeFlowCard({ statementsData, currency = 'USD' }: Inc
   const chartHeight = isNarrow ? 260 : 300
 
   return (
-    <div className="rounded-[20px] overflow-hidden border border-slate-100 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
+    <div className="rounded-2xl overflow-hidden border border-slate-100 shadow-card">
       <div className="px-5 py-3 bg-white border-b border-slate-100 flex items-center justify-between">
         <p className="text-[12px] font-[650] text-slate-500">Income breakdown · TTM</p>
         <div className="flex items-center gap-3">

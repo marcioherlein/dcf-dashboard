@@ -328,7 +328,7 @@ export default function FCFBuildUp({
     return (
       <button onClick={onClick}
         className={`px-3 py-1.5 text-xs font-medium transition ${active
-          ? 'bg-blue-600 text-white'
+          ? 'bg-olive-700 text-white'
           : 'text-slate-500 hover:bg-slate-100'}`}>
         {label}
       </button>

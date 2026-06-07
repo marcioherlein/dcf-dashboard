@@ -74,8 +74,8 @@ export default function ReverseDCFSection() {
             transition={{ duration: 0.68, ease: EASE }}
           >
             <p
-              className="font-semibold mb-3"
-              style={{ fontSize: '13px', color: '#2563EB' }}
+              className="font-semibold mb-3 text-blue-600"
+              style={{ fontSize: '13px' }}
             >
               What is today&apos;s price already betting on?
             </p>
@@ -131,7 +131,7 @@ export default function ReverseDCFSection() {
               >
                 <Link
                   href={`/stock/${stock.ticker}`}
-                  className="group block rounded-[20px] bg-white border p-5 transition-all hover:-translate-y-0.5 active:scale-95"
+                  className="group block rounded-2xl bg-white border p-5 transition-all hover:-translate-y-0.5 active:scale-95"
                   style={{
                     borderColor: '#E6ECF5',
                     boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 4px 16px rgba(15,23,42,0.05)',

@@ -17,7 +17,7 @@ import type { ETFProfileResponse } from '@/lib/data/etfTypes'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
-  loading: () => <div className="min-h-[200px] rounded-xl bg-slate-100 animate-pulse" />,
+  loading: () => <div className="min-h-[200px] rounded-xl bg-slate-100 motion-safe:animate-pulse" />,
 })
 
 export default function ETFDetailPage() {
@@ -84,11 +84,11 @@ export default function ETFDetailPage() {
     return (
       <div className="min-h-dvh bg-[#F1F5F9] px-4 sm:px-8 py-4 sm:py-8">
         <div className="max-w-6xl mx-auto space-y-4">
-          <div className="h-8 w-32 bg-slate-200 rounded animate-pulse" />
-          <div className="h-40 bg-white rounded-2xl border border-slate-200 animate-pulse" />
+          <div className="h-8 w-32 bg-slate-200 rounded motion-safe:animate-pulse" />
+          <div className="h-40 bg-white rounded-2xl border border-slate-200 motion-safe:animate-pulse" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-40 bg-white rounded-xl border border-slate-200 animate-pulse" />
+              <div key={i} className="h-40 bg-white rounded-xl border border-slate-200 motion-safe:animate-pulse" />
             ))}
           </div>
         </div>

@@ -16,7 +16,7 @@ interface Props {
 
 // ── Sparkline ──────────────────────────────────────────────────────────────────
 function SparklineSkeleton() {
-  return <div className="h-8 w-full rounded-lg bg-slate-100 animate-pulse" />
+  return <div className="h-8 w-full rounded-lg bg-slate-100 motion-safe:animate-pulse" />
 }
 
 function Sparkline({ values, positive }: { values: number[]; positive: boolean }) {
@@ -137,7 +137,7 @@ function IndexCard({ label, value, changePct, sparklineValues, sparkLoading, int
   const changeCls = rateMode ? rateCls(changePct) : equityCls(changePct)
 
   const inner = (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_16px_rgba(15,23,42,0.04)] px-3 pt-3 pb-3 flex flex-col h-full transition-all hover:shadow-md hover:border-slate-300 cursor-pointer">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-card px-3 pt-3 pb-3 flex flex-col h-full transition-all hover:shadow-card-md hover:border-slate-300 cursor-pointer">
       {/* Icon + label */}
       <div className="flex items-center gap-2">
         <div className={cn('w-6 h-6 rounded-lg flex items-center justify-center shrink-0', iconBg)}>

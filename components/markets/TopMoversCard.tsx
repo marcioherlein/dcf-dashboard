@@ -66,7 +66,7 @@ export default function TopMoversCard() {
               key={t}
               onClick={() => setTab(t)}
               className={cn(
-                'px-2.5 py-1 capitalize transition-colors',
+                'px-2.5 py-1 min-h-[44px] capitalize transition-colors',
                 tab === t
                   ? t === 'gainers' ? 'bg-emerald-600 text-white' : 'bg-red-500 text-white'
                   : 'bg-white text-slate-500 hover:bg-slate-50'
@@ -82,7 +82,7 @@ export default function TopMoversCard() {
         {loading ? (
           <div className="p-4 space-y-2">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-9 rounded-lg bg-slate-100 animate-pulse" />
+              <div key={i} className="h-9 rounded-lg bg-slate-100 motion-safe:animate-pulse" />
             ))}
           </div>
         ) : movers.length === 0 ? (

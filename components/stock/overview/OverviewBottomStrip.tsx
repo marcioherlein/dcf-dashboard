@@ -75,7 +75,7 @@ export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, up
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
 
       {/* ── Column 1: What supports ── */}
-      <div className="bg-white border border-[#E6ECF5] rounded-[18px] p-4 sm:p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+      <div className="bg-white border border-[#E6ECF5] rounded-xl p-4 sm:p-5 shadow-card">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-7 h-7 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
             <span className="text-emerald-500 text-[12px] leading-none">✓</span>
@@ -97,7 +97,7 @@ export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, up
       </div>
 
       {/* ── Column 2: What could go wrong ── */}
-      <div className="bg-white border border-[#E6ECF5] rounded-[18px] p-4 sm:p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]">
+      <div className="bg-white border border-[#E6ECF5] rounded-xl p-4 sm:p-5 shadow-card">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-7 h-7 rounded-full bg-red-50 flex items-center justify-center shrink-0">
             <span className="text-red-500 text-[12px] leading-none">!</span>
@@ -126,7 +126,7 @@ export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, up
 
       {/* ── Column 3: Next step ── */}
       <div className={cn(
-        'bg-white border border-[#E6ECF5] rounded-[18px] p-4 sm:p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]',
+        'bg-white border border-[#E6ECF5] rounded-xl p-4 sm:p-5 shadow-card',
         'flex flex-col'
       )}>
         <div className="flex items-center gap-2 mb-2">
@@ -142,7 +142,7 @@ export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, up
           <button
             onClick={onViewValuation}
             className={cn(
-              'w-full rounded-[12px] py-3 min-h-[44px] text-[14px] font-semibold text-white transition-all',
+              'w-full rounded-xl py-3 min-h-[44px] text-[14px] font-semibold text-white transition-all',
               'bg-olive-700 hover:bg-olive-600 active:scale-95 shadow-sm'
             )}
           >
@@ -150,14 +150,14 @@ export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, up
           </button>
           <button
             onClick={onViewValuation}
-            className="w-full rounded-[12px] py-3 min-h-[44px] text-[14px] font-semibold text-olive-700 border border-blue-200 bg-blue-50 hover:bg-blue-100 transition-colors"
+            className="w-full rounded-xl py-3 min-h-[44px] text-[14px] font-semibold text-olive-700 border border-[#C8C8C8] hover:bg-olive-50 transition-colors"
           >
             Review assumptions
           </button>
           {onSave && (
             <button
               onClick={onSave}
-              className="w-full rounded-[12px] py-3 min-h-[44px] text-[14px] font-semibold text-slate-600 border border-[#E6ECF5] hover:bg-slate-50 transition-colors"
+              className="w-full rounded-xl py-3 min-h-[44px] text-[14px] font-semibold text-slate-600 border border-[#E6ECF5] hover:bg-slate-50 transition-colors"
             >
               Add to watchlist
             </button>

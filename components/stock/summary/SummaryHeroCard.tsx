@@ -84,14 +84,14 @@ export default function SummaryHeroCard({
 
   return (
     <div
-      className={cn('border rounded-[20px] p-6 overflow-hidden', verdict.borderClass)}
+      className={cn('border rounded-2xl p-6 overflow-hidden', verdict.borderClass)}
       style={{ background: verdict.bgStyle }}
     >
       <div className="flex flex-col gap-4">
 
         {/* ── Headline block ── */}
         <div className="flex flex-col gap-1.5">
-          <p className="text-[26px] sm:text-[30px] font-[800] text-[#111111] leading-tight tracking-tight [text-wrap:balance]">
+          <p className="text-[26px] sm:text-[30px] font-[800] text-ink-900 leading-tight tracking-tight [text-wrap:balance]">
             {ticker} looks{' '}
             <span className={verdict.headingClass}>{verdict.word}</span>
           </p>
@@ -114,7 +114,7 @@ export default function SummaryHeroCard({
         <div className="flex flex-wrap items-end gap-5">
           <div>
             <p className="text-[11px] text-[#6B6B6B] mb-0.5">Fair value</p>
-            <p className="text-[26px] font-[750] text-[#111111] tabular-nums leading-none">
+            <p className="text-[26px] font-[750] text-ink-900 tabular-nums leading-none">
               {fairValue != null ? fmtPrice(fairValue, currency) : '—'}
             </p>
           </div>
@@ -157,7 +157,7 @@ export default function SummaryHeroCard({
                 <span
                   key={i}
                   title={drivers.filter(d => POSITIVE_RE.test(d))[i]}
-                  className="text-[12px] font-[600] text-[#111111] bg-white border border-[#E5E5E5] rounded-full px-3 py-1 leading-tight"
+                  className="text-[12px] font-[600] text-ink-900 bg-white border border-[#E5E5E5] rounded-full px-3 py-1 leading-tight"
                 >
                   {label}
                 </span>

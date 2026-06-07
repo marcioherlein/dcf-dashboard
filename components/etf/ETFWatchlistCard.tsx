@@ -60,7 +60,7 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
         <button
           onClick={() => onDelete(entry.ticker)}
           aria-label={`Remove ${entry.ticker} from watchlist`}
-          className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors border border-transparent hover:border-red-100 focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-1 focus-visible:outline-none"
+          className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors border border-transparent hover:border-red-100 focus-visible:ring-2 focus-visible:ring-olive-700 focus-visible:ring-offset-1 focus-visible:outline-none"
         >
           <Trash2 size={14} />
         </button>
@@ -131,7 +131,7 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
       <Link
         href={`/etf/${entry.ticker}`}
         aria-label={`View ${entry.ticker} ETF details`}
-        className="flex items-center justify-center gap-1.5 w-full rounded-xl bg-slate-50 hover:bg-[#F6FAEA] hover:text-[#5F790B] text-slate-500 text-[12px] font-semibold py-2.5 transition-colors border border-slate-100 min-h-[44px]"
+        className="flex items-center justify-center gap-1.5 w-full rounded-xl bg-slate-50 hover:bg-olive-50 hover:text-olive-700 text-slate-500 text-[12px] font-semibold py-2.5 transition-colors border border-slate-100 min-h-[44px]"
       >
         <ExternalLink size={11} />
         View full analysis

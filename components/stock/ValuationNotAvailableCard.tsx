@@ -141,7 +141,7 @@ export default function ValuationNotAvailableCard({
     <div className="flex flex-col gap-4">
 
       {/* ── Veto notice (compact) ── */}
-      <div className="rounded-[14px] border border-amber-200 bg-amber-50/60 px-5 py-4 flex flex-col gap-2">
+      <div className="rounded-xl border border-amber-200 bg-amber-50/60 px-5 py-4 flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <span className="text-amber-500 text-base" aria-hidden="true">⚠</span>
           <p className="text-sm font-semibold text-amber-800">DCF valuation not available for {ticker}</p>
@@ -156,7 +156,7 @@ export default function ValuationNotAvailableCard({
 
       {/* ── Multiples-based estimate ── */}
       {(hasMultiplesFV || hasAnalystTarget) && (
-        <div className="rounded-[14px] border border-[#E6ECF5] bg-white px-5 py-4 flex flex-col gap-4">
+        <div className="rounded-xl border border-[#E6ECF5] bg-white px-5 py-4 flex flex-col gap-4">
           <div>
             <p className="text-[13px] font-[700] text-[#0F172A] mb-0.5">Market-based estimates</p>
             <p className="text-[12px] text-[#64748B]">
@@ -167,7 +167,7 @@ export default function ValuationNotAvailableCard({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Multiples blended FV */}
             {hasMultiplesFV && currentPrice != null && currentPrice > 0 && (
-              <div className="rounded-[10px] border border-[#E6ECF5] bg-[#F8FAFC] px-4 py-3 flex flex-col gap-1">
+              <div className="rounded-lg border border-[#E6ECF5] bg-[#F8FAFC] px-4 py-3 flex flex-col gap-1">
                 <p className="text-[11px] text-[#64748B] font-[500] uppercase tracking-wide">Multiples estimate</p>
                 <p className="text-[22px] font-[750] text-[#0F172A] leading-none">
                   {fmtPrice(multiplesBlendedFV!, currency)}
@@ -185,7 +185,7 @@ export default function ValuationNotAvailableCard({
 
             {/* Analyst consensus */}
             {hasAnalystTarget && currentPrice != null && currentPrice > 0 && (
-              <div className="rounded-[10px] border border-[#E6ECF5] bg-[#F8FAFC] px-4 py-3 flex flex-col gap-1">
+              <div className="rounded-lg border border-[#E6ECF5] bg-[#F8FAFC] px-4 py-3 flex flex-col gap-1">
                 <p className="text-[11px] text-[#64748B] font-[500] uppercase tracking-wide">Analyst consensus target</p>
                 <p className="text-[22px] font-[750] text-[#0F172A] leading-none">
                   {fmtPrice(analystTargetMean!, currency)}
@@ -252,14 +252,14 @@ export default function ValuationNotAvailableCard({
 
       {/* ── Current multiples ── */}
       {multiples.length > 0 && (
-        <div className="rounded-[14px] border border-[#E6ECF5] bg-white px-5 py-4 flex flex-col gap-3">
+        <div className="rounded-xl border border-[#E6ECF5] bg-white px-5 py-4 flex flex-col gap-3">
           <div>
             <p className="text-[13px] font-[700] text-[#0F172A] mb-0.5">Current trading multiples</p>
             <p className="text-[12px] text-[#64748B]">How the market is pricing {ticker} today relative to its fundamentals.</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {multiples.map(m => (
-              <div key={m.label} className="rounded-[8px] border border-[#E6ECF5] bg-[#F8FAFC] px-3 py-2.5 flex flex-col gap-0.5">
+              <div key={m.label} className="rounded-md border border-[#E6ECF5] bg-[#F8FAFC] px-3 py-2.5 flex flex-col gap-0.5">
                 <p className="text-[11px] text-[#64748B] font-[500]">{m.label}</p>
                 <p className="text-[17px] font-[700] text-[#0F172A] leading-none">{fmt(m.value)}×</p>
               </div>
@@ -272,7 +272,7 @@ export default function ValuationNotAvailableCard({
               <p className="text-[11px] text-[#64748B] font-[500]">Peer EV/Revenue comparison</p>
               <div className="flex flex-wrap gap-2">
                 {validPeers.slice(0, 6).map(p => (
-                  <div key={p.ticker} className="rounded-[6px] border border-[#E6ECF5] bg-[#F8FAFC] px-2.5 py-1.5 flex items-center gap-1.5">
+                  <div key={p.ticker} className="rounded-sm border border-[#E6ECF5] bg-[#F8FAFC] px-2.5 py-1.5 flex items-center gap-1.5">
                     <span className="text-[11px] font-[650] text-[#334155]">{p.ticker}</span>
                     {p.evToRevenue != null && (
                       <span className="text-[11px] text-[#64748B]">{fmt(p.evToRevenue)}×</span>
@@ -280,7 +280,7 @@ export default function ValuationNotAvailableCard({
                   </div>
                 ))}
                 {evToRevenue != null && (
-                  <div className="rounded-[6px] border border-[#0F172A] bg-[#0F172A] px-2.5 py-1.5 flex items-center gap-1.5">
+                  <div className="rounded-sm border border-[#0F172A] bg-[#0F172A] px-2.5 py-1.5 flex items-center gap-1.5">
                     <span className="text-[11px] font-[650] text-white">{ticker}</span>
                     <span className="text-[11px] text-slate-300">{fmt(evToRevenue)}×</span>
                   </div>
@@ -293,7 +293,7 @@ export default function ValuationNotAvailableCard({
 
       {/* ── Sector-specific guidance ── */}
       {methods && (
-        <div className="rounded-[14px] border border-[#E6ECF5] bg-white px-5 py-4 flex flex-col gap-4">
+        <div className="rounded-xl border border-[#E6ECF5] bg-white px-5 py-4 flex flex-col gap-4">
           <div>
             <p className="text-[13px] font-[700] text-[#0F172A] mb-1">
               {reit ? 'REIT valuation approaches' : bank ? 'Financial sector valuation approaches' : 'Relevant valuation approaches for this sector'}
@@ -319,7 +319,7 @@ export default function ValuationNotAvailableCard({
       )}
 
       {/* ── Redirect to other tabs ── */}
-      <div className="rounded-[14px] border border-[#E6ECF5] bg-[#F8FAFC] px-5 py-4">
+      <div className="rounded-xl border border-[#E6ECF5] bg-[#F8FAFC] px-5 py-4">
         <p className="text-[12px] font-[650] text-[#475569] mb-2">Available on other tabs</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[12px] text-[#64748B]">
           <div className="flex items-start gap-2">

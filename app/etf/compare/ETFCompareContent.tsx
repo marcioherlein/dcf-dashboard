@@ -93,12 +93,12 @@ export default function ETFCompareContent() {
                   onChange={(e) => setAddInput(e.target.value.toUpperCase())}
                   onKeyDown={(e) => { if (e.key === 'Enter') addSymbol() }}
                   placeholder="Add ticker…"
-                  className="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-sm font-mono text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-28"
+                  className="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-sm font-mono text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-olive-700 w-28"
                 />
                 <button
                   onClick={addSymbol}
                   aria-label="Add ETF"
-                  className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-500 transition-colors"
+                  className="w-7 h-7 min-h-[44px] rounded-full bg-olive-700 text-white flex items-center justify-center hover:bg-olive-600 transition-colors"
                 >
                   <Plus size={12} />
                 </button>
@@ -109,8 +109,8 @@ export default function ETFCompareContent() {
 
         {loading ? (
           <div className="space-y-4">
-            <div className="h-64 glass-card-light rounded-xl animate-pulse" />
-            <div className="h-72 glass-card-light rounded-xl animate-pulse" />
+            <div className="h-64 glass-card-light rounded-xl motion-safe:animate-pulse" />
+            <div className="h-72 glass-card-light rounded-xl motion-safe:animate-pulse" />
           </div>
         ) : profiles.length === 0 ? (
           <div className="glass-card-light rounded-xl p-8 text-center">

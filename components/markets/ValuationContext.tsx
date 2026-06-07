@@ -8,7 +8,7 @@ interface Props {
 }
 
 function bandBarClass(b: { label: string; current?: boolean }): string {
-  if (b.current) return 'bg-blue-600 text-white font-bold ring-2 ring-blue-300'
+  if (b.current) return 'bg-olive-700 text-white font-bold ring-2 ring-olive-700/30'
   if (b.label.startsWith('Cheap'))      return 'bg-emerald-50 text-emerald-700'
   if (b.label.startsWith('Fair'))       return 'bg-slate-100 text-slate-600'
   if (b.label.startsWith('Elevated'))   return 'bg-amber-50 text-amber-700'
@@ -95,7 +95,7 @@ export default function ValuationContext({ valuation }: Props) {
               <div className="relative mt-4 mb-1">
                 {peMarker != null && (
                   <div className="absolute -top-3 flex justify-center" style={{ left: `calc(${peMarker}% - 5px)` }}>
-                    <div className="w-2.5 h-2.5 rounded-full bg-blue-600 border-2 border-white shadow" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-olive-700 border-2 border-white shadow" />
                   </div>
                 )}
                 <div className="grid grid-cols-4 gap-0.5">
@@ -140,7 +140,7 @@ export default function ValuationContext({ valuation }: Props) {
               <div className="relative mt-4 mb-1">
                 {erpMarker != null && (
                   <div className="absolute -top-3 flex justify-center" style={{ left: `calc(${erpMarker}% - 5px)` }}>
-                    <div className="w-2.5 h-2.5 rounded-full bg-blue-600 border-2 border-white shadow" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-olive-700 border-2 border-white shadow" />
                   </div>
                 )}
                 <div className="grid grid-cols-4 gap-0.5">

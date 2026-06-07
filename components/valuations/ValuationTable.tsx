@@ -356,7 +356,7 @@ function Th({ label, sortKey, current, dir, onSort, align = 'right' }: {
     >
       <span className={cn('inline-flex items-center gap-1', align === 'right' ? 'justify-end' : 'justify-start')}>
         {label}
-        <svg className={cn('w-3 h-3 transition-opacity', active ? 'opacity-100 text-blue-500' : 'opacity-20')} fill="currentColor" viewBox="0 0 20 20">
+        <svg className={cn('w-3 h-3 transition-opacity', active ? 'opacity-100 text-olive-700' : 'opacity-20')} fill="currentColor" viewBox="0 0 20 20">
           {active && dir === 'asc' ? (
             <path d="M10 6l-4 4h8l-4-4z" />
           ) : active && dir === 'desc' ? (

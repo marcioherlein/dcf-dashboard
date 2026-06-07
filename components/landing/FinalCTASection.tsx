@@ -100,7 +100,7 @@ export default function FinalCTASection() {
     <section ref={sectionRef} className="overflow-x-hidden" style={{ background: '#000000' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
         <motion.div
-          className="rounded-[20px] text-center px-5 sm:px-8 py-10 sm:py-14"
+          className="rounded-2xl text-center px-5 sm:px-8 py-10 sm:py-14"
           initial={reduced !== false ? {} : { opacity: 0, scale: 0.92, y: 28 }}
           animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
           transition={{ duration: 0.70, ease: EASE }}
@@ -129,7 +129,7 @@ export default function FinalCTASection() {
           {/* Search */}
           <div ref={containerRef} className="relative mx-auto w-full" style={{ maxWidth: '480px' }}>
             <div
-              className="flex items-center gap-3 rounded-[14px] border bg-[#1C1C1C] transition-all"
+              className="flex items-center gap-3 rounded-xl border bg-[#1C1C1C] transition-all"
               style={{
                 height: '56px',
                 padding: '0 16px',
@@ -140,7 +140,7 @@ export default function FinalCTASection() {
               }}
             >
               {loading
-                ? <div className="h-4 w-4 rounded-full border-2 border-[#9B9B9B] border-t-[#7C9A19] animate-spin shrink-0" />
+                ? <div className="h-4 w-4 rounded-full border-2 border-[#9B9B9B] border-t-[#7C9A19] motion-safe:animate-spin shrink-0" />
                 : <Search size={18} className="text-[#9B9B9B] shrink-0" />
               }
               <input
@@ -172,7 +172,7 @@ export default function FinalCTASection() {
               />
               <button
                 onClick={handleSubmit}
-                className="shrink-0 rounded-[10px] px-4 text-[13px] font-bold text-white transition-all hover:-translate-y-px active:scale-95 flex items-center gap-1.5"
+                className="shrink-0 rounded-md px-4 text-[13px] font-bold text-white transition-all hover:-translate-y-px active:scale-95 flex items-center gap-1.5"
                 style={{
                   background: '#5F790B',
                   boxShadow: '0 3px 10px rgba(95,121,11,0.28)',
@@ -208,7 +208,7 @@ export default function FinalCTASection() {
                     onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = i === activeIndex ? 'rgba(95,121,11,0.15)' : 'transparent' }}
                   >
                     <span className="text-[14px] font-bold text-[#FFFFFF] w-14 shrink-0">{r.symbol}</span>
-                    <span className="text-[13px] text-[#9B9B9B] truncate">{r.longname ?? r.shortname}</span>
+                    <span className="text-[13px] text-[#6B6B6B] truncate">{r.longname ?? r.shortname}</span>
                   </button>
                 ))}
               </div>
@@ -222,7 +222,7 @@ export default function FinalCTASection() {
                 aria-live="polite"
                 style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.24)' }}
               >
-                <p className="text-[13px] text-[#9B9B9B] leading-snug">
+                <p className="text-[13px] text-[#6B6B6B] leading-snug">
                   No results for &ldquo;{query}&rdquo;.{' '}
                   <span className="text-[#C4C4C4]">Try NVDA, AAPL, or MELI.</span>
                 </p>

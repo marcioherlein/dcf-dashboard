@@ -28,7 +28,7 @@ export default function CompanyCard({ description, sector, industry, country, em
   ].filter(Boolean) as string[]
 
   return (
-    <div className="bg-[#F8FAFC] border border-[#E6ECF5] rounded-[18px] p-3 sm:p-4">
+    <div className="bg-[#F8FAFC] border border-[#E6ECF5] rounded-xl p-3 sm:p-4">
       {/* Description — clamp to 3 lines on mobile when collapsed */}
       <p className={cn(
         'text-[13px] text-[#475569] leading-relaxed mb-0.5',
@@ -50,7 +50,7 @@ export default function CompanyCard({ description, sector, industry, country, em
         {tags.map(tag => (
           <span
             key={tag}
-            className="text-[11px] font-[600] text-[#475569] bg-[#F8FAFC] border border-[#E6ECF5] rounded-[6px] px-2.5 py-0.5"
+            className="text-[11px] font-[600] text-[#475569] bg-[#F8FAFC] border border-[#E6ECF5] rounded-md px-2.5 py-0.5"
           >
             {tag}
           </span>

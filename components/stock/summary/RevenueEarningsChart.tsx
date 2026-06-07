@@ -100,7 +100,7 @@ export default function RevenueEarningsChart({ statementsData, currency = 'USD' 
     : null
 
   return (
-    <div className="rounded-[20px] overflow-hidden border border-slate-100 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
+    <div className="rounded-2xl overflow-hidden border border-slate-100 shadow-card">
       {/* header */}
       <div className="px-4 sm:px-5 py-3 bg-white border-b border-slate-100 flex items-center justify-between">
         <p className="text-[12px] font-[650] text-slate-500">Revenue &amp; Net Income</p>

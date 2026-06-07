@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import { fmtPrice } from '@/lib/formatters'
 
 const CARD =
-  'bg-white border border-[#E6ECF5] rounded-[18px] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]'
+  'bg-white border border-[#E6ECF5] rounded-xl shadow-card'
 
 interface PriceVsFairValueCardProps {
   price: number
@@ -103,7 +103,7 @@ export default function PriceVsFairValueCard({
         {/* Dot marker */}
         {markerLeft != null && (
           <div
-            className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#0F172A] border-2 border-white shadow-[0_1px_4px_rgba(15,23,42,0.25)]"
+            className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#0F172A] border-2 border-white shadow-sm"
             style={{ left: markerLeft }}
           />
         )}

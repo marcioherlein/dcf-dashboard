@@ -52,7 +52,7 @@ export default function TestimonialsSection() {
           >
             <div className="flex items-start gap-4 mb-8">
               <motion.div
-                className="w-10 h-10 rounded-[10px] bg-[#EEF4DD] flex items-center justify-center shrink-0 mt-0.5"
+                className="w-10 h-10 rounded-md bg-[#EEF4DD] flex items-center justify-center shrink-0 mt-0.5"
                 initial={reduced ? {} : { scale: 0.6, opacity: 0 }}
                 animate={inView ? { scale: 1, opacity: 1 } : {}}
                 transition={{ duration: 0.45, ease: EASE, delay: 0.1 }}
@@ -94,8 +94,7 @@ export default function TestimonialsSection() {
             transition={{ duration: 0.65, ease: EASE, delay: 0.2 }}
           >
             <motion.div
-              className="rounded-[18px] border border-[#E5E5E5] bg-[#FAFAFA] p-6 sm:p-8 relative"
-              style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
+              className="rounded-2xl border border-[#E5E5E5] bg-[#FAFAFA] p-6 sm:p-8 relative shadow-card"
               animate={reduced ? {} : { y: [0, -6, 0] }}
               transition={{
                 duration: 5,

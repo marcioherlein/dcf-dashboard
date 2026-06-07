@@ -64,7 +64,7 @@ const DynamicChart = dynamic(
       )
     }
   }),
-  { ssr: false, loading: () => <div className="h-[260px] rounded-xl bg-slate-100 animate-pulse" /> },
+  { ssr: false, loading: () => <div className="h-[260px] rounded-xl bg-slate-100 motion-safe:animate-pulse" /> },
 )
 
 export function ETFComparisonChart({ symbols }: Props) {
@@ -99,7 +99,7 @@ export function ETFComparisonChart({ symbols }: Props) {
     })
   }, [symbols])
 
-  if (loading) return <div className="h-[260px] rounded-xl bg-slate-100 animate-pulse" />
+  if (loading) return <div className="h-[260px] rounded-xl bg-slate-100 motion-safe:animate-pulse" />
   if (series.length === 0) return <p className="text-sm text-slate-400 py-4">Price history unavailable.</p>
 
   return <DynamicChart series={series} />

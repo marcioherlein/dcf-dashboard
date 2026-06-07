@@ -367,7 +367,7 @@ export default function InvestorGradeCard({
           {onViewDetails && (
             <button
               onClick={onViewDetails}
-              className="flex-1 rounded-xl py-3 min-h-[44px] text-[14px] font-semibold text-white transition-all bg-blue-600 shadow-sm hover:bg-blue-700 active:scale-95"
+              className="flex-1 rounded-xl py-3 min-h-[44px] text-[14px] font-semibold text-white transition-all bg-olive-700 shadow-sm hover:bg-olive-600 active:scale-95"
             >
               Explore full valuation →
             </button>

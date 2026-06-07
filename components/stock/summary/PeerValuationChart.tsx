@@ -133,7 +133,7 @@ const PEER_TOOLTIP_TEXT =
   "Peers are sourced from Yahoo Finance's 'People also watch' list — stocks frequently viewed together with this one. These are behaviorally similar, not analyst-defined industry peers. Use as a directional comparison, not a precise peer group."
 
 const CARD =
-  'bg-white border border-[#E6ECF5] rounded-[18px] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)] p-4'
+  'bg-white border border-[#E6ECF5] rounded-xl shadow-card p-4'
 
 export default function PeerValuationChart({ ticker, isFinancialSector = false }: PeerValuationChartProps) {
   const [data, setData]       = useState<PeersResponse | null>(null)
@@ -214,11 +214,11 @@ export default function PeerValuationChart({ ticker, isFinancialSector = false }
     return (
       <div className={CARD}>
         <div className="flex items-center justify-between mb-3">
-          <div className="h-3.5 w-36 rounded bg-slate-100 animate-pulse" />
-          <div className="h-3 w-20 rounded bg-slate-100 animate-pulse" />
+          <div className="h-3.5 w-36 rounded bg-slate-100 motion-safe:animate-pulse" />
+          <div className="h-3 w-20 rounded bg-slate-100 motion-safe:animate-pulse" />
         </div>
-        <div className="h-[260px] rounded-xl bg-slate-50 animate-pulse" />
-        <div className="mt-3 h-3 w-48 rounded bg-slate-100 animate-pulse" />
+        <div className="h-[260px] rounded-xl bg-slate-50 motion-safe:animate-pulse" />
+        <div className="mt-3 h-3 w-48 rounded bg-slate-100 motion-safe:animate-pulse" />
       </div>
     )
   }

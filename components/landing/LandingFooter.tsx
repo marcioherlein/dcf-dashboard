@@ -32,7 +32,7 @@ export default function LandingFooter() {
             <Link href="/" className="flex items-center gap-2 mb-3 group" aria-label="insic home">
               <InsicLogoLockup size="md" on="dark" />
             </Link>
-            <p className="text-[13px] text-[#9B9B9B] leading-relaxed mb-5">
+            <p className="text-[13px] text-[#6B6B6B] leading-relaxed mb-5">
               Invest with a process, not a story.
             </p>
 
@@ -89,7 +89,7 @@ export default function LandingFooter() {
                   <Link
                     key={item.label}
                     href={item.href}
-                    className="text-[13px] text-[#9B9B9B] hover:text-white transition-colors"
+                    className="text-[13px] text-[#6B6B6B] hover:text-white transition-colors"
                   >
                     {item.label}
                   </Link>
@@ -101,10 +101,10 @@ export default function LandingFooter() {
 
         {/* Bottom bar */}
         <div className="mt-10 pt-6 border-t border-[rgba(255,255,255,0.07)]">
-          <p className="text-[11px] text-[#9B9B9B] leading-relaxed">
+          <p className="text-[11px] text-[#6B6B6B] leading-relaxed">
             Not financial advice. See Terms.
           </p>
-          <p className="text-[11px] text-[#9B9B9B] mt-1">
+          <p className="text-[11px] text-[#6B6B6B] mt-1">
             © {new Date().getFullYear()} insic. All rights reserved.
           </p>
         </div>

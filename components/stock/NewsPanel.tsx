@@ -58,7 +58,7 @@ function formatTime(epochSeconds: number): { relative: string; absolute: string;
 
 function SkeletonCard() {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 animate-pulse min-h-[88px]">
+    <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 motion-safe:animate-pulse min-h-[88px]">
       <div className="h-4 bg-slate-200 rounded w-4/5 mb-1.5" />
       <div className="h-3.5 bg-slate-200 rounded w-3/5 mb-3" />
       <div className="flex items-center gap-2">
@@ -197,7 +197,7 @@ export default function NewsPanel({ ticker }: { ticker: string }) {
                   <div className="flex items-center gap-1.5 ml-auto shrink-0">
                     {/* New badge */}
                     {isNew && (
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-600 text-white leading-none">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-olive-700 text-white leading-none">
                         New
                       </span>
                     )}

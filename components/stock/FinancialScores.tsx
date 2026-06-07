@@ -42,7 +42,7 @@ function CriterionRow({ pass, name, detail }: { pass: boolean | null; name: stri
   return (
     <div className="flex items-center gap-2.5 py-1.5">
       <div className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${
-        pass === null ? 'bg-[#C8C8C8] text-[#111111]' : pass ? 'bg-emerald-500' : 'bg-red-500'
+        pass === null ? 'bg-slate-300 text-slate-600' : pass ? 'bg-emerald-500' : 'bg-red-500'
       }`}>
         {pass === null ? '?' : pass ? '✓' : '✗'}
       </div>
@@ -220,7 +220,7 @@ export default function FinancialScores({ scores }: Props) {
             <>
               <button
                 onClick={() => setShowAltman(!showAltman)}
-                className="text-[11px] text-blue-600 hover:text-blue-800 underline underline-offset-2"
+                className="text-[11px] text-olive-600 hover:text-olive-700 underline underline-offset-2"
               >
                 {showAltman ? 'Hide components ↑' : 'Show components ↓'}
               </button>
@@ -286,7 +286,7 @@ export default function FinancialScores({ scores }: Props) {
               </p>
               <button
                 onClick={() => setShowBeneish(!showBeneish)}
-                className="text-[11px] text-blue-600 hover:text-blue-800 underline underline-offset-2"
+                className="text-[11px] text-olive-600 hover:text-olive-700 underline underline-offset-2"
               >
                 {showBeneish ? 'Hide indices ↑' : 'Show indices ↓'}
               </button>

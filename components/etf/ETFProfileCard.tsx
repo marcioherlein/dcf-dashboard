@@ -68,7 +68,7 @@ export function ETFProfileCard({ profile, isWatchlisted, onWatchlist }: Props) {
         <div className="flex items-center gap-2 flex-wrap shrink-0">
           <Link
             href={`/etf/compare?symbols=${profile.ticker}`}
-            className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-lg text-sm font-semibold transition-colors border border-slate-200 text-slate-600 hover:border-[#BFD2A1] hover:text-[#5F790B] hover:bg-[#F6FAEA] focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:outline-none"
+            className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-lg text-sm font-semibold transition-colors border border-slate-200 text-slate-600 hover:border-[#BFD2A1] hover:text-olive-700 hover:bg-olive-50 focus-visible:ring-2 focus-visible:ring-olive-700 focus-visible:outline-none"
           >
             <GitCompare size={14} />
             Compare
@@ -76,10 +76,10 @@ export function ETFProfileCard({ profile, isWatchlisted, onWatchlist }: Props) {
           <button
             onClick={onWatchlist}
             className={cn(
-              'flex items-center gap-1.5 px-4 py-2 min-h-[44px] rounded-lg text-sm font-semibold transition-colors shrink-0 focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-1 focus-visible:outline-none',
+              'flex items-center gap-1.5 px-4 py-2 min-h-[44px] rounded-lg text-sm font-semibold transition-colors shrink-0 focus-visible:ring-2 focus-visible:ring-olive-700 focus-visible:ring-offset-1 focus-visible:outline-none',
               isWatchlisted
                 ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100'
-                : 'bg-[#5F790B] text-white hover:bg-[#6F8F12]',
+                : 'bg-olive-700 text-white hover:bg-olive-600',
             )}
           >
             {isWatchlisted ? <Check size={14} /> : <Plus size={14} />}

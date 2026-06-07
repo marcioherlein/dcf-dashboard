@@ -40,12 +40,12 @@ export default function AssumptionSlider({
           {isOverridden && (
             <button
               onClick={() => onChange(defaultValue)}
-              className="text-[11px] text-blue-400 hover:text-blue-800 underline underline-offset-2"
+              className="text-[11px] text-olive-600 hover:text-olive-700 underline underline-offset-2"
             >
               Reset
             </button>
           )}
-          <span className={`text-base font-bold tabular-nums min-w-[52px] text-right ${isOverridden ? 'text-blue-400' : 'text-slate-100'}`}>
+          <span className={`text-base font-bold tabular-nums min-w-[52px] text-right ${isOverridden ? 'text-olive-600' : 'text-slate-100'}`}>
             {toDisplay(value, unit)}
           </span>
         </div>
@@ -67,7 +67,7 @@ export default function AssumptionSlider({
             [&::-webkit-slider-thumb]:rounded-full
             [&::-webkit-slider-thumb]:bg-white
             [&::-webkit-slider-thumb]:border-2
-            [&::-webkit-slider-thumb]:border-blue-500
+            [&::-webkit-slider-thumb]:border-olive-600
             [&::-webkit-slider-thumb]:shadow-md
             [&::-webkit-slider-thumb]:transition-transform
             [&::-webkit-slider-thumb]:hover:scale-110
@@ -76,10 +76,10 @@ export default function AssumptionSlider({
             [&::-moz-range-thumb]:rounded-full
             [&::-moz-range-thumb]:bg-white
             [&::-moz-range-thumb]:border-2
-            [&::-moz-range-thumb]:border-blue-500
+            [&::-moz-range-thumb]:border-olive-600
             [&::-moz-range-thumb]:shadow-md"
           style={{
-            background: `linear-gradient(to right, #3b82f6 ${pct}%, #e2e8f0 ${pct}%)`,
+            background: `linear-gradient(to right, #5F790B ${pct}%, #e2e8f0 ${pct}%)`,
           }}
         />
       </div>

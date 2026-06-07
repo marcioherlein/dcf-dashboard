@@ -23,8 +23,8 @@ type FilterGroup = 'all' | ETFGroup
 function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
   if (col !== sortKey) return <ChevronsUpDown size={11} className="text-slate-300" />
   return sortDir === 'desc'
-    ? <ChevronDown size={11} className="text-[#5F790B]" />
-    : <ChevronUp size={11} className="text-[#5F790B]" />
+    ? <ChevronDown size={11} className="text-olive-700" />
+    : <ChevronUp size={11} className="text-olive-700" />
 }
 
 function Leaderboard({
@@ -112,8 +112,8 @@ function Leaderboard({
               className={cn(
                 'px-3 py-2.5 rounded-full text-[12px] font-semibold transition-colors border',
                 filter === f.id
-                  ? 'bg-[#5F790B] text-white border-[#5F790B]'
-                  : 'bg-white text-slate-500 border-slate-200 hover:border-[#BFD2A1] hover:text-[#5F790B]',
+                  ? 'bg-olive-700 text-white border-olive-700'
+                  : 'bg-white text-slate-500 border-slate-200 hover:border-[#BFD2A1] hover:text-olive-700',
               )}
             >
               {f.label}
@@ -210,7 +210,7 @@ function Leaderboard({
                           'min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all',
                           watchlistedTickers.has(meta.ticker)
                             ? 'bg-emerald-50 text-emerald-600'
-                            : 'bg-slate-100 text-slate-400 hover:bg-[#F6FAEA] hover:text-[#5F790B]',
+                            : 'bg-slate-100 text-slate-400 hover:bg-olive-50 hover:text-olive-700',
                         )}
                       >
                         {watchlistedTickers.has(meta.ticker) ? <Check size={12} /> : <Plus size={12} />}

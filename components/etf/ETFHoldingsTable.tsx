@@ -55,7 +55,7 @@ export function ETFHoldingsTable({ holdings }: Props) {
                     <div className="flex items-center justify-end gap-2">
                       <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden hidden sm:block">
                         <div
-                          className="h-full bg-[#5F790B] rounded-full"
+                          className="h-full bg-olive-700 rounded-full"
                           style={{ width: `${(h.weight / maxWeight) * 100}%` }}
                         />
                       </div>
@@ -71,7 +71,7 @@ export function ETFHoldingsTable({ holdings }: Props) {
                   {h.symbol && (
                     <Link
                       href={`/stock/${h.symbol}`}
-                      className="inline-flex items-center gap-1 text-slate-500 hover:text-[#5F790B] transition-colors focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:outline-none rounded"
+                      className="inline-flex items-center gap-1 text-slate-500 hover:text-olive-700 transition-colors focus-visible:ring-2 focus-visible:ring-olive-700 focus-visible:outline-none rounded"
                       aria-label={`Open DCF analysis for ${h.symbol}`}
                     >
                       <ExternalLink size={12} />

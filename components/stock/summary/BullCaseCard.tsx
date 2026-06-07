@@ -4,7 +4,7 @@ import { CheckCircle, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const CARD =
-  'bg-white border border-[#E6ECF5] rounded-[18px] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]'
+  'bg-white border border-[#E6ECF5] rounded-xl shadow-card'
 
 const POSITIVE_RE =
   /strong|grow|profit|margin|cash\s*gen|moat|leader|dominan|innovat|compet.*advan|pric.*power|market.*share|expand|increas|high.*return|quality|best.in.class|track.record|breadth|diversif|solid|robust|effici|resilient|premium/i
@@ -76,7 +76,7 @@ export default function BullCaseCard({
       {/* CTA */}
       <button
         onClick={onViewDetails}
-        className="mt-auto text-[13px] font-[650] text-[#2563EB] hover:text-[#1D4ED8] hover:underline underline-offset-2 transition-colors flex items-center gap-1 min-h-[36px]"
+        className="mt-auto text-[13px] font-[650] text-[#2563EB] hover:text-[#1D4ED8] hover:underline underline-offset-2 transition-colors flex items-center gap-1 min-h-[44px]"
       >
         View full risk &amp; thesis <span aria-hidden>→</span>
       </button>

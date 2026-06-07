@@ -73,7 +73,7 @@ export default function StockHeroCards({
       {/* ── Card 1: Current Price ── */}
       <HeroCard>
         <CardLabel>Current Price</CardLabel>
-        <p className="text-[22px] sm:text-3xl font-bold tabular-nums text-[#111111] leading-none">
+        <p className="text-[22px] sm:text-3xl font-bold tabular-nums text-ink-900 leading-none">
           {fmtPrice(price, currency)}
         </p>
         <p className={cn('text-[12px] sm:text-sm font-semibold mt-1.5 tabular-nums', isUp ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
@@ -85,7 +85,7 @@ export default function StockHeroCards({
           <div className="relative h-2 rounded-full overflow-hidden bg-[#F5F5F5]">
             <div className="absolute inset-0 bg-[#E5E5E5] rounded-full" />
             <div
-              className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-[#111111] shadow-sm"
+              className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-ink-900 shadow-sm"
               style={{ left: `calc(${pricePct52}% - 6px)` }}
             />
           </div>
@@ -101,7 +101,7 @@ export default function StockHeroCards({
         <CardLabel>Intrinsic Value</CardLabel>
         {fairValue != null ? (
           <>
-            <p className="text-[22px] sm:text-3xl font-bold tabular-nums text-[#111111] leading-none">
+            <p className="text-[22px] sm:text-3xl font-bold tabular-nums text-ink-900 leading-none">
               {fmtPrice(fairValue, currency)}
             </p>
             {upsidePct != null && (
@@ -126,7 +126,7 @@ export default function StockHeroCards({
                   </div>
                   <div className="text-center">
                     <p className="text-[11px] text-[#6B6B6B] mb-0.5">Base</p>
-                    <p className="text-[12px] font-bold text-[#111111] tabular-nums">{fmtPrice(scenarios.base.fairValue, currency)}</p>
+                    <p className="text-[12px] font-bold text-ink-900 tabular-nums">{fmtPrice(scenarios.base.fairValue, currency)}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-[11px] text-[#6B6B6B] mb-0.5">Bull</p>
@@ -159,7 +159,7 @@ export default function StockHeroCards({
         </p>
         <button
           onClick={onViewDetails}
-          className="mt-auto pt-3 min-h-[44px] flex items-end text-[13px] font-semibold text-[#5F790B] hover:text-[#526A08] transition-colors"
+          className="mt-auto pt-3 min-h-[44px] flex items-end text-[13px] font-semibold text-olive-700 hover:text-olive-600 transition-colors"
         >
           View valuation →
         </button>
@@ -188,7 +188,7 @@ export default function StockHeroCards({
               />
               {/* Current price dot */}
               <div
-                className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white border-2 border-[#111111] shadow"
+                className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white border-2 border-ink-900 shadow"
                 style={{ left: `calc(${pricePct}% - 7px)` }}
               />
             </div>
@@ -196,11 +196,11 @@ export default function StockHeroCards({
             <div className="flex justify-between mt-2.5">
               <div>
                 <p className="text-[11px] text-[#6B6B6B]">Fair Value</p>
-                <p className="text-[13px] font-semibold text-[#111111] tabular-nums mt-0.5">{fmtPrice(fairValue, currency)}</p>
+                <p className="text-[13px] font-semibold text-ink-900 tabular-nums mt-0.5">{fmtPrice(fairValue, currency)}</p>
               </div>
               <div className="text-right">
                 <p className="text-[11px] text-[#6B6B6B]">Current Price</p>
-                <p className="text-[13px] font-semibold text-[#111111] tabular-nums mt-0.5">{fmtPrice(price, currency)}</p>
+                <p className="text-[13px] font-semibold text-ink-900 tabular-nums mt-0.5">{fmtPrice(price, currency)}</p>
               </div>
             </div>
 

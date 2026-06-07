@@ -42,7 +42,7 @@ const DynamicChart = dynamic(
       )
     }
   }),
-  { ssr: false, loading: () => <div className="h-[140px] rounded-lg bg-slate-100 animate-pulse" /> },
+  { ssr: false, loading: () => <div className="h-[140px] rounded-lg bg-slate-100 motion-safe:animate-pulse" /> },
 )
 
 export function ETFValuationHistory({ ticker }: Props) {
@@ -62,7 +62,7 @@ export function ETFValuationHistory({ ticker }: Props) {
     return (
       <div className="glass-card-light rounded-xl p-4">
         <p className="text-sm font-semibold text-slate-700 mb-3">Value Score History</p>
-        <div className="h-[140px] bg-slate-100 rounded-lg animate-pulse" />
+        <div className="h-[140px] bg-slate-100 rounded-lg motion-safe:animate-pulse" />
       </div>
     )
   }

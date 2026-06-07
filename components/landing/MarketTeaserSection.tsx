@@ -61,8 +61,7 @@ export default function MarketTeaserSection() {
     <section className="overflow-x-hidden" style={{ background: '#F5F5F5', borderBottom: '1px solid #E5E5E5' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-12 sm:py-16">
         <motion.div
-          className="rounded-[20px] border border-[#E5E5E5] bg-white overflow-hidden"
-          style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
+          className="rounded-2xl border border-[#E5E5E5] bg-white overflow-hidden shadow-card"
           initial={reduced ? {} : { opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-60px' }}
@@ -71,7 +70,7 @@ export default function MarketTeaserSection() {
           {/* Header */}
           <div className="flex items-start gap-3 px-6 pt-6 pb-4 border-b border-[#F5F5F5]">
             <motion.div
-              className="w-10 h-10 rounded-[10px] bg-[#EEF4DD] flex items-center justify-center shrink-0 mt-0.5"
+              className="w-10 h-10 rounded-md bg-[#EEF4DD] flex items-center justify-center shrink-0 mt-0.5"
               whileInView={reduced ? {} : { scale: [0.8, 1.12, 1] }}
               viewport={{ once: true }}
               transition={{ duration: 0.55, ease: EASE, delay: 0.15 }}

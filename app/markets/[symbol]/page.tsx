@@ -60,7 +60,7 @@ const TYPE_BADGE: Record<string, { label: string; cls: string }> = {
 
 // ── Skeleton ────────────────────────────────────────────────────────────────
 function Skeleton({ className }: { className?: string }) {
-  return <div className={cn('animate-pulse rounded bg-white/8', className)} />
+  return <div className={cn('motion-safe:animate-pulse rounded bg-white/8', className)} />
 }
 
 function PageSkeleton() {

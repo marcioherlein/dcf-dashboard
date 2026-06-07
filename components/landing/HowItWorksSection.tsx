@@ -75,7 +75,7 @@ export default function HowItWorksSection() {
               aria-hidden="true"
             />
 
-            {STEPS.map(({ n, Icon: _Icon, title, body }, i) => (
+            {STEPS.map(({ n, Icon, title, body }, i) => (
               <motion.div
                 key={i}
                 initial={reduced ? {} : { opacity: 0, x: i === 0 ? -20 : i === 2 ? 20 : 0, y: i === 1 ? 16 : 0 }}
@@ -149,7 +149,7 @@ export default function HowItWorksSection() {
               {/* Right column: icon + text */}
               <div className={i < STEPS.length - 1 ? 'pb-8' : 'pb-0'}>
                 <div className="flex items-center gap-2.5 mb-2">
-                  <div className="w-8 h-8 rounded-[8px] bg-[#EEF4DD] flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded bg-[#EEF4DD] flex items-center justify-center shrink-0">
                     <Icon size={15} className="text-[#5F790B]" strokeWidth={1.8} />
                   </div>
                   <h3 className="text-[15px] font-bold text-[#111111] leading-snug">{title}</h3>

@@ -63,7 +63,7 @@ function ActionLink({ onClick, children }: { onClick: () => void; children: Reac
   return (
     <button
       onClick={onClick}
-      className="mt-auto min-h-[44px] flex items-end pb-0.5 text-[12px] font-semibold text-[#5F790B] hover:text-[#526A08] transition-colors"
+      className="mt-auto min-h-[44px] flex items-end pb-0.5 text-[12px] font-semibold text-olive-700 hover:text-olive-600 transition-colors"
     >
       {children}
     </button>
@@ -104,7 +104,7 @@ export default function StockSummaryCard({
       {/* ── Card 1: Current Price ── */}
       <MetricBox>
         <BoxLabel>Current Price</BoxLabel>
-        <p className="text-[28px] sm:text-[24px] font-bold tabular-nums text-[#111111] leading-none mb-1">
+        <p className="text-[28px] sm:text-[24px] font-bold tabular-nums text-ink-900 leading-none mb-1">
           {fmtPrice(price, currency)}
         </p>
         <p className={cn('text-[13px] sm:text-[12px] font-semibold tabular-nums', isUp ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
@@ -116,7 +116,7 @@ export default function StockSummaryCard({
         <div className="relative h-1.5 rounded-full overflow-hidden bg-[#F5F5F5]">
           <div className="absolute inset-0 bg-gradient-to-r from-[#11875D] via-[#B56A00] to-[#D83B3B]" />
           <div
-            className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white border-[1.5px] border-[#111111] shadow-sm"
+            className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white border-[1.5px] border-ink-900 shadow-sm"
             style={{ left: `calc(${pricePct52}% - 5px)` }}
           />
         </div>
@@ -132,7 +132,7 @@ export default function StockSummaryCard({
         <BoxLabel tooltip="An estimate of what the stock may be worth based on our valuation models and assumptions. May differ from the Valuation tab's full analysis if assumptions have been adjusted.">Intrinsic Value</BoxLabel>
         {fairValue != null ? (
           <>
-            <p className="text-[28px] sm:text-[24px] font-bold tabular-nums text-[#111111] leading-none mb-1">
+            <p className="text-[28px] sm:text-[24px] font-bold tabular-nums text-ink-900 leading-none mb-1">
               {fmtPrice(fairValue, currency)}
             </p>
             {upsidePct != null && (
@@ -222,7 +222,7 @@ export default function StockSummaryCard({
         {ratio != null ? (
           <>
             <div className="flex items-baseline gap-2 mb-1">
-              <span className="text-[30px] sm:text-[28px] font-extrabold tabular-nums text-[#111111] leading-none">{ratio.toFixed(2)}×</span>
+              <span className="text-[30px] sm:text-[28px] font-extrabold tabular-nums text-ink-900 leading-none">{ratio.toFixed(2)}×</span>
               <span className="text-[11px] text-[#6B6B6B]">Price / Intrinsic</span>
             </div>
             <span className={cn('inline-flex text-[10px] font-bold px-2.5 py-0.5 rounded-full border mb-3', ratioChipClass)}>
@@ -232,14 +232,14 @@ export default function StockSummaryCard({
             {/* Mini zone bar */}
             <div className="relative h-2 rounded-full overflow-hidden flex mb-0.5">
               <div className="bg-[#11875D] h-full" style={{ width: '28%' }} />
-              <div className="bg-[#5F790B] h-full" style={{ width: '8%' }} />
+              <div className="bg-olive-700 h-full" style={{ width: '8%' }} />
               <div className="bg-[#2563EB] h-full" style={{ width: '8%' }} />
               <div className="bg-[#B56A00] h-full" style={{ width: '12%' }} />
               <div className="bg-[#D83B3B] h-full flex-1" />
             </div>
             <div className="relative h-2 -mt-2 pointer-events-none mb-1">
               <div className="absolute top-0 bottom-0 w-0.5 bg-white/80 z-10" style={{ left: `${fvLinePct}%` }} />
-              <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#111111] border-2 border-white shadow z-20" style={{ left: `calc(${dotPct}% - 6px)` }} />
+              <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-ink-900 border-2 border-white shadow z-20" style={{ left: `calc(${dotPct}% - 6px)` }} />
             </div>
             <div className="flex justify-between mb-3">
               <span className="text-[10px] text-[#6B6B6B]">0×</span>

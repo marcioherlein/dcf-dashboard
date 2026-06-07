@@ -121,7 +121,7 @@ export default function FinancialSnapshotBar({ statementsData, currency = 'USD',
   void capexPct
 
   return (
-    <div className="rounded-[16px] bg-white border border-slate-100 shadow-[0_1px_3px_rgba(15,23,42,0.06)] px-4 sm:px-5 py-3">
+    <div className="rounded-2xl bg-white border border-slate-100 shadow-card px-4 sm:px-5 py-3">
       <div className={`grid gap-x-4 gap-y-2.5 ${stats.length >= 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3'}`}>
         {stats.map((stat) => (
           <div key={stat.label}>

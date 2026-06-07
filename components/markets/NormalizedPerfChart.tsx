@@ -189,13 +189,13 @@ export default function NormalizedPerfChart() {
                 placeholder="AAPL"
                 className="w-20 px-2 py-0.5 text-[16px] rounded-full border border-blue-300 bg-white text-slate-700 outline-none focus:border-blue-500"
               />
-              <button type="submit" className="text-[11px] font-semibold text-olive-700 hover:text-blue-500">Add</button>
-              <button type="button" onClick={() => setShowAddInput(false)} className="text-[11px] text-slate-400 hover:text-slate-600">✕</button>
+              <button type="submit" className="text-[11px] font-semibold text-olive-700 hover:text-blue-500 min-h-[44px]">Add</button>
+              <button type="button" onClick={() => setShowAddInput(false)} className="text-[11px] text-slate-400 hover:text-slate-600 min-h-[44px]">✕</button>
             </form>
           ) : (
             <button
               onClick={() => setShowAddInput(true)}
-              className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-dashed border-slate-300 text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-colors"
+              className="flex items-center gap-1 px-2 py-0.5 min-h-[44px] rounded-full text-[11px] font-semibold border border-dashed border-slate-300 text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-colors"
             >
               <Plus size={10} /> Add
             </button>
@@ -209,7 +209,7 @@ export default function NormalizedPerfChart() {
           <div className="h-full flex items-center justify-center">
             <div className="flex gap-1">
               {[0, 1, 2].map(i => (
-                <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-pulse" style={{ animationDelay: `${i * 150}ms` }} />
+                <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-300 motion-safe:animate-pulse" style={{ animationDelay: `${i * 150}ms` }} />
               ))}
             </div>
           </div>

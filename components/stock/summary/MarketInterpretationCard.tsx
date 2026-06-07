@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import { fmtPrice } from '@/lib/formatters'
 
 const CARD =
-  'bg-white border border-[#E6ECF5] rounded-[18px] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]'
+  'bg-white border border-[#E6ECF5] rounded-xl shadow-card'
 
 interface MarketInterpretationCardProps {
   upsidePct: number | null
@@ -135,7 +135,7 @@ export default function MarketInterpretationCard({
 
       {/* Interpretation box */}
       <div
-        className="rounded-[12px] px-3.5 py-3 flex flex-col gap-1"
+        className="rounded-xl px-3.5 py-3 flex flex-col gap-1"
         style={{
           background: interp.bgColor,
           border: `1px solid ${interp.borderColor}`,

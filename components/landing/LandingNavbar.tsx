@@ -68,7 +68,7 @@ export default function LandingNavbar() {
               {session ? (
                 <Link
                   href="/analyze"
-                  className="hidden sm:inline-flex items-center justify-center rounded-[10px] px-6 py-2.5 text-[14px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95 whitespace-nowrap"
+                  className="hidden sm:inline-flex items-center justify-center rounded-md px-6 py-2.5 text-[14px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95 whitespace-nowrap"
                   style={{ background: '#5F790B', boxShadow: '0 4px 12px rgba(95,121,11,0.25)', minHeight: '44px' }}
                 >
                   Go to app
@@ -84,7 +84,7 @@ export default function LandingNavbar() {
                   </button>
                   <button
                     onClick={() => signIn('google')}
-                    className="hidden sm:inline-flex items-center justify-center rounded-[10px] px-7 text-[14px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95 whitespace-nowrap"
+                    className="hidden sm:inline-flex items-center justify-center rounded-md px-7 text-[14px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95 whitespace-nowrap"
                     style={{ background: '#5F790B', boxShadow: '0 4px 12px rgba(95,121,11,0.25)', minHeight: '44px' }}
                   >
                     Get started
@@ -115,7 +115,7 @@ export default function LandingNavbar() {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="fixed left-3 right-3 z-40 lg:hidden rounded-2xl overflow-hidden"
-            style={{ top: 'calc(5.5rem + env(safe-area-inset-top, 0px))', background: 'rgba(255,255,255,0.98)', border: '1px solid #E5E5E5', boxShadow: '0 16px 40px rgba(0,0,0,0.14)' }}
+            style={{ top: 'calc(5.5rem + env(safe-area-inset-top, 0px))', background: 'rgba(255,255,255,0.98)', border: '1px solid #E5E5E5', boxShadow: '0 16px 48px rgba(0,0,0,0.14), 0 4px 12px rgba(0,0,0,0.07)' }}
           >
             <nav className="flex flex-col p-3 gap-0.5">
               {NAV_LINKS.map(link => (
@@ -123,7 +123,7 @@ export default function LandingNavbar() {
                   key={link.label}
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center py-3 px-4 rounded-[10px] text-[15px] font-medium text-[#6B6B6B] hover:bg-[#EEF4DD] hover:text-[#111111] transition-colors"
+                  className="flex items-center py-3 px-4 rounded-md text-[15px] font-medium text-[#6B6B6B] hover:bg-[#EEF4DD] hover:text-[#111111] transition-colors"
                   style={{ minHeight: '44px' }}
                 >
                   {link.label}
@@ -135,7 +135,7 @@ export default function LandingNavbar() {
                 <Link
                   href="/analyze"
                   onClick={() => setMobileOpen(false)}
-                  className="w-full text-center rounded-[10px] py-3.5 text-[15px] font-semibold text-white flex items-center justify-center"
+                  className="w-full text-center rounded-md py-3.5 text-[15px] font-semibold text-white flex items-center justify-center"
                   style={{ background: '#5F790B', minHeight: '48px' }}
                 >
                   Go to app
@@ -144,14 +144,14 @@ export default function LandingNavbar() {
                 <>
                   <button
                     onClick={() => { setMobileOpen(false); signIn('google') }}
-                    className="w-full rounded-[10px] py-3.5 text-[15px] font-semibold text-white"
+                    className="w-full rounded-md py-3.5 text-[15px] font-semibold text-white"
                     style={{ background: '#5F790B', minHeight: '48px' }}
                   >
                     Get started free
                   </button>
                   <button
                     onClick={() => { setMobileOpen(false); signIn('google') }}
-                    className="w-full rounded-[10px] py-3.5 text-[15px] font-semibold text-[#6B6B6B] border border-[#E5E5E5] hover:bg-[#F5F5F5] transition-colors"
+                    className="w-full rounded-md py-3.5 text-[15px] font-semibold text-[#6B6B6B] border border-[#E5E5E5] hover:bg-[#F5F5F5] transition-colors"
                     style={{ minHeight: '48px' }}
                   >
                     Sign in

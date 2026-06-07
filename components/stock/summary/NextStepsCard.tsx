@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 const CARD =
-  'bg-white border border-[#E6ECF5] rounded-[18px] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]'
+  'bg-white border border-[#E6ECF5] rounded-xl shadow-card'
 
 interface NextStepsCardProps {
   ticker: string
@@ -42,25 +42,25 @@ export default function NextStepsCard({
       <div className="flex flex-col gap-2 mt-auto">
         <button
           onClick={onViewValuation}
-          className="w-full h-11 rounded-[10px] bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-[14px] font-[650] transition-colors flex items-center justify-center gap-1.5"
+          className="w-full h-11 rounded-lg bg-olive-700 hover:bg-olive-600 text-white text-[14px] font-[650] transition-colors flex items-center justify-center gap-1.5"
         >
           View full valuation <ArrowRight size={15} />
         </button>
         <button
           onClick={onViewAssumptions}
-          className="w-full h-11 rounded-[10px] bg-white border border-[#2563EB] text-[#2563EB] hover:bg-[#EFF6FF] text-[14px] font-[650] transition-colors"
+          className="w-full h-11 rounded-lg bg-white border border-[#C8C8C8] text-olive-700 hover:bg-olive-50 text-[14px] font-[650] transition-colors"
         >
           Review assumptions
         </button>
         <button
           onClick={onViewRisks}
-          className="w-full h-11 rounded-[10px] bg-white border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 text-[13px] font-medium transition-colors"
+          className="w-full h-11 rounded-lg bg-white border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 text-[13px] font-medium transition-colors"
         >
           Risks &amp; health scores
         </button>
         <Link
           href={`/compare?a=${ticker}`}
-          className="w-full h-11 rounded-[10px] bg-white border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 text-[13px] font-medium transition-colors flex items-center justify-center gap-1.5"
+          className="w-full h-11 rounded-lg bg-white border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 text-[13px] font-medium transition-colors flex items-center justify-center gap-1.5"
         >
           <GitCompareArrows size={14} className="text-slate-400" />
           Compare with another stock

@@ -167,7 +167,7 @@ export default function ETFTrackerPage() {
       <div className="bg-white border-b border-slate-200 px-4 sm:px-8 pt-6 pb-5">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-8 h-8 rounded-lg bg-[#5F790B] flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-olive-700 flex items-center justify-center shrink-0">
               <PieChart size={16} className="text-white" />
             </div>
             <h1
@@ -195,7 +195,7 @@ export default function ETFTrackerPage() {
             <p className="text-sm text-slate-500">{batchError}</p>
             <button
               onClick={() => { setBatchFetched(false); fetchBatch() }}
-              className="flex items-center gap-1.5 text-sm font-semibold text-[#5F790B] hover:text-[#6F8F12] transition-colors"
+              className="flex items-center gap-1.5 text-sm font-semibold text-olive-700 hover:text-olive-600 transition-colors"
             >
               <RefreshCw size={13} /> Retry
             </button>
@@ -213,7 +213,7 @@ export default function ETFTrackerPage() {
               My Watchlist
             </h2>
             {watchlist.length > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-full text-[11px] font-bold bg-[#EEF4DD] text-[#5F790B]">
+              <span className="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-full text-[11px] font-bold bg-olive-100 text-olive-700">
                 {watchlist.length}
               </span>
             )}
@@ -226,7 +226,7 @@ export default function ETFTrackerPage() {
           {wlLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="h-[340px] bg-slate-100 rounded-2xl border border-slate-200 animate-pulse" />
+                <div key={i} className="h-[340px] bg-slate-100 rounded-2xl border border-slate-200 motion-safe:animate-pulse" />
               ))}
             </div>
           ) : watchlist.length > 0 ? (
@@ -257,7 +257,7 @@ export default function ETFTrackerPage() {
                     <button
                       key={t}
                       onClick={() => handleQuickAdd(t)}
-                      className="px-4 py-2 min-h-[44px] rounded-lg border border-slate-200 bg-white text-[13px] font-semibold text-slate-600 hover:border-[#BFD2A1] hover:text-[#5F790B] hover:bg-[#F6FAEA] transition-colors"
+                      className="px-4 py-2 min-h-[44px] rounded-lg border border-slate-200 bg-white text-[13px] font-semibold text-slate-600 hover:border-[#BFD2A1] hover:text-olive-700 hover:bg-olive-50 transition-colors"
                     >
                       + {t}
                     </button>

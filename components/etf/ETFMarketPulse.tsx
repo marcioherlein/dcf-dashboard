@@ -16,7 +16,7 @@ export function ETFMarketPulse({ data, loading }: Props) {
     return (
       <div className="flex gap-3 flex-wrap">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-[68px] w-48 rounded-xl border border-slate-200 bg-slate-100 animate-pulse" />
+          <div key={i} className="h-[68px] w-48 rounded-xl border border-slate-200 bg-slate-100 motion-safe:animate-pulse" />
         ))}
       </div>
     )

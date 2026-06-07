@@ -53,7 +53,7 @@ export function ETFExposureCard({ ticker }: Props) {
 
   if (loading) {
     return (
-      <div className="glass-card-light rounded-xl p-4 animate-pulse">
+      <div className="glass-card-light rounded-xl p-4 motion-safe:animate-pulse">
         <div className="h-4 w-40 bg-slate-200 rounded mb-3" />
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (

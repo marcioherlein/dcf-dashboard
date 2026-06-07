@@ -467,7 +467,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
         <div className="flex gap-1">
           {PERIODS.map(p => (
             <button key={p} onClick={() => setPeriod(p)}
-              className={`rounded-lg px-3 py-2.5 min-h-[44px] text-xs font-medium transition ${period === p ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'}`}>
+              className={`rounded-lg px-3 py-2.5 min-h-[44px] text-xs font-medium transition ${period === p ? 'bg-olive-100 text-olive-700' : 'text-slate-500 hover:bg-slate-100'}`}>
               {PERIOD_LABELS[p]}
             </button>
           ))}
@@ -511,7 +511,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
         )}
         {isCompare && (
           <button onClick={() => setCompareMode(p => p === 'price' ? 'percent' : 'price')}
-            className={`ml-auto text-[11px] font-bold px-2.5 py-0.5 rounded-full border transition ${compareMode === 'percent' ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+            className={`ml-auto text-[11px] font-bold px-2.5 py-0.5 rounded-full border transition ${compareMode === 'percent' ? 'bg-olive-700 text-white border-olive-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
             {compareMode === 'percent' ? '% Return' : '$ Price'}
           </button>
         )}

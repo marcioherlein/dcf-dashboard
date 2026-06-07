@@ -81,7 +81,7 @@ export default function QuickStatsBar({
   if (stats.length === 0) return null
 
   return (
-    <div className="rounded-[16px] bg-white border border-[#E5E5E5] shadow-card px-4 sm:px-5 py-3">
+    <div className="rounded-2xl bg-white border border-[#E5E5E5] shadow-card px-4 sm:px-5 py-3">
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-x-4 gap-y-3">
         {stats.map((stat, i) => (
           <div
@@ -93,11 +93,11 @@ export default function QuickStatsBar({
               <div>
                 <div className="relative h-1.5 bg-[#F5F5F5] rounded-full overflow-visible mb-1 mt-1">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#E5E5E5] via-[#5F790B] to-[#11875D]"
+                    className="h-full rounded-full bg-gradient-to-r from-[#E5E5E5] via-olive-700 to-[#11875D]"
                     style={{ width: `${stat.gauge.pct}%` }}
                   />
                   <div
-                    className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#5F790B] border border-white shadow-sm"
+                    className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-olive-700 border border-white shadow-sm"
                     style={{ left: `calc(${stat.gauge.pct}% - 4px)` }}
                   />
                 </div>
@@ -105,7 +105,7 @@ export default function QuickStatsBar({
               </div>
             ) : (
               <>
-                <p className={`text-[13px] font-semibold tabular-nums leading-tight truncate ${stat.label === 'Next Earnings' ? 'text-[#B56A00]' : 'text-[#111111]'}`}>{stat.value}</p>
+                <p className={`text-[13px] font-semibold tabular-nums leading-tight truncate ${stat.label === 'Next Earnings' ? 'text-[#B56A00]' : 'text-ink-900'}`}>{stat.value}</p>
                 {stat.sub && <p className="text-[11px] text-[#6B6B6B] mt-0.5 truncate">{stat.sub}</p>}
               </>
             )}

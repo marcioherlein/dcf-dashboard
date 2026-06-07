@@ -113,7 +113,7 @@ export default function InstrumentPriceChart({ symbol, currency = 'USD' }: Props
               className={cn(
                 'px-2 py-2.5 min-h-[44px] text-[11px] font-semibold rounded transition-colors',
                 period === p
-                  ? 'bg-blue-100 text-blue-700'
+                  ? 'bg-olive-100 text-olive-700'
                   : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100',
               )}
             >
@@ -131,7 +131,7 @@ export default function InstrumentPriceChart({ symbol, currency = 'USD' }: Props
               {[0, 1, 2].map(i => (
                 <div
                   key={i}
-                  className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-pulse"
+                  className="w-1.5 h-1.5 rounded-full bg-slate-300 motion-safe:animate-pulse"
                   style={{ animationDelay: `${i * 150}ms` }}
                 />
               ))}

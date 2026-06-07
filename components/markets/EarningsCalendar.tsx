@@ -70,7 +70,7 @@ export default function EarningsCalendar() {
       {loading ? (
         <div className="p-4 space-y-2">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-8 rounded bg-slate-100 animate-pulse" />
+            <div key={i} className="h-8 rounded bg-slate-100 motion-safe:animate-pulse" />
           ))}
         </div>
       ) : items.length === 0 ? (
@@ -134,7 +134,7 @@ export default function EarningsCalendar() {
           {items.length > PREVIEW_COUNT && (
             <button
               onClick={() => setExpanded(x => !x)}
-              className="w-full px-4 py-2.5 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-blue-600 hover:bg-blue-50/50 transition-colors"
+              className="w-full px-4 py-2.5 min-h-[44px] border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-blue-600 hover:bg-blue-50/50 transition-colors"
             >
               {expanded ? (
                 <><ChevronUp size={13} /> Show fewer</>

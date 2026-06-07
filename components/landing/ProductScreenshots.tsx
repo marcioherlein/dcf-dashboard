@@ -79,7 +79,7 @@ export function SummaryMockScreen() {
   return (
     <div
       ref={ref}
-      className="rounded-[20px] overflow-hidden bg-white w-full"
+      className="rounded-2xl overflow-hidden bg-white w-full"
       style={{
         border: '1px solid #E6ECF5',
         boxShadow: '0 24px 70px rgba(15,23,42,0.14), 0 2px 8px rgba(15,23,42,0.05)',
@@ -131,7 +131,7 @@ export function SummaryMockScreen() {
 
         {/* Verdict hero card */}
         <motion.div
-          className="rounded-[16px] p-4 border border-[#BBF7D0]"
+          className="rounded-xl p-4 border border-[#BBF7D0]"
           style={{ background: '#F0FDF4' }}
           initial={reduced ? {} : { opacity: 0, y: 12 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -165,7 +165,7 @@ export function SummaryMockScreen() {
 
         {/* Reverse DCF card */}
         <motion.div
-          className="rounded-[16px] bg-white border border-[#E6ECF5] p-3"
+          className="rounded-xl bg-white border border-[#E6ECF5] p-3"
           style={{ boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}
           initial={reduced ? {} : { opacity: 0, y: 12 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -227,7 +227,7 @@ export function SummaryMockScreen() {
 
           {/* Takeaway callout */}
           <motion.div
-            className="mt-2.5 rounded-[8px] px-2.5 py-2 border border-[#BFDBFE]"
+            className="mt-2.5 rounded px-2.5 py-2 border border-[#BFDBFE]"
             style={{ background: '#EFF6FF' }}
             initial={reduced ? {} : { opacity: 0 }}
             animate={inView ? { opacity: 1 } : {}}
@@ -260,7 +260,7 @@ export function ValuationMockScreen() {
   return (
     <div
       ref={ref}
-      className="rounded-[20px] overflow-hidden bg-white w-full"
+      className="rounded-2xl overflow-hidden bg-white w-full"
       style={{
         border: '1px solid #E6ECF5',
         boxShadow: '0 16px 48px rgba(15,23,42,0.10), 0 2px 6px rgba(15,23,42,0.04)',
@@ -347,7 +347,7 @@ export function ValuationMockScreen() {
 
         {/* Model verdict */}
         <motion.div
-          className="bg-white rounded-[14px] border border-[#E6ECF5] p-3"
+          className="bg-white rounded-xl border border-[#E6ECF5] p-3"
           style={{ boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}
           initial={reduced ? {} : { opacity: 0, y: 8 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -365,7 +365,7 @@ export function ValuationMockScreen() {
 
         {/* Model range bar */}
         <motion.div
-          className="bg-white rounded-[14px] border border-[#E6ECF5] p-3"
+          className="bg-white rounded-xl border border-[#E6ECF5] p-3"
           style={{ boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}
           initial={reduced ? {} : { opacity: 0, y: 8 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -395,7 +395,7 @@ export function ValuationMockScreen() {
 
         {/* Effective blend weights */}
         <motion.div
-          className="bg-white rounded-[14px] border border-[#E6ECF5] p-3"
+          className="bg-white rounded-xl border border-[#E6ECF5] p-3"
           style={{ boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}
           initial={reduced ? {} : { opacity: 0, y: 8 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}

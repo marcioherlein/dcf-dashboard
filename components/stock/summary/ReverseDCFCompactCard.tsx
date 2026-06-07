@@ -8,7 +8,7 @@ import { computeReverseDCF } from '@/lib/valuation/methods/reverseDcf'
 import InfoTooltip from '@/components/ui/InfoTooltip'
 
 const CARD =
-  'bg-white border border-[#E6ECF5] rounded-[18px] shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)]'
+  'bg-white border border-[#E6ECF5] rounded-xl shadow-card'
 
 interface ReverseDCFCompactCardProps {
   price: number
@@ -209,7 +209,7 @@ export default function ReverseDCFCompactCard({
 
       {/* Negative CAGR note */}
       {impliedPct != null && impliedPct < 0 && (
-        <div className="rounded-[8px] bg-[#FEF2F2] border border-[#FECACA] px-3 py-2">
+        <div className="rounded-md bg-[#FEF2F2] border border-[#FECACA] px-3 py-2">
           <p className="text-[11px] font-[650] text-[#DC2626] mb-0.5">
             What does negative implied growth mean?
           </p>
@@ -221,7 +221,7 @@ export default function ReverseDCFCompactCard({
 
       {/* Takeaway callout */}
       {showCallout && impliedPct != null && historicalPct != null && (
-        <div className="rounded-[10px] bg-[#EFF6FF] border border-[#BFDBFE] px-3 py-2.5">
+        <div className="rounded-lg bg-[#EFF6FF] border border-[#BFDBFE] px-3 py-2.5">
           <p className="text-[12px] text-[#334155] leading-relaxed">
             The market assumes{' '}
             <strong>{impliedPct.toFixed(1)}%</strong> revenue growth —{' '}
@@ -233,7 +233,7 @@ export default function ReverseDCFCompactCard({
       )}
 
       {showCallout && (impliedPct == null || historicalPct == null) && (
-        <div className="rounded-[10px] bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2.5">
+        <div className="rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2.5">
           <p className="text-[12px] text-[#64748B] leading-relaxed">
             {result.interpretationText}
           </p>
@@ -241,7 +241,7 @@ export default function ReverseDCFCompactCard({
       )}
 
       {!showCallout && (
-        <div className="rounded-[10px] bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2.5">
+        <div className="rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2.5">
           <p className="text-[12px] text-[#64748B] leading-relaxed">
             {result.interpretationText}
           </p>
@@ -334,7 +334,7 @@ function HistoricalCAGRBlock({
           style={{ top: popupPos.top, left: popupPos.left }}
         >
           <div
-            className="pointer-events-auto bg-white border border-[#E6ECF5] rounded-[14px] shadow-[0_8px_32px_rgba(15,23,42,0.14)] p-3 w-[230px]"
+            className="pointer-events-auto bg-white border border-[#E6ECF5] rounded-xl shadow-card-md p-3 w-[230px]"
             onMouseEnter={() => setOpen(true)}
             onMouseLeave={() => setOpen(false)}
           >

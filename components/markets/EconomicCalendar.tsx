@@ -59,7 +59,7 @@ export default function EconomicCalendar() {
       {loading ? (
         <div className="p-4 space-y-2">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-8 rounded bg-slate-100 animate-pulse" />
+            <div key={i} className="h-8 rounded bg-slate-100 motion-safe:animate-pulse" />
           ))}
         </div>
       ) : events.length === 0 ? (

@@ -422,7 +422,7 @@ function StockPageBody() {
         </div>
 
         {loading && (
-          <div className="pt-5 space-y-4 animate-pulse">
+          <div className="pt-5 space-y-4 motion-safe:animate-pulse">
             {/* PriceHeader skeleton */}
             <div className="rounded-xl bg-white border border-slate-200 p-5">
               <div className="flex justify-between gap-4">
@@ -511,7 +511,7 @@ function StockPageBody() {
             )}
             {/* While auth state is being determined, render a subtle pulse placeholder */}
             {viewGate === 'idle' && (
-              <div className="pt-5 space-y-4 animate-pulse">
+              <div className="pt-5 space-y-4 motion-safe:animate-pulse">
                 <div className="h-24 rounded-xl bg-white border border-slate-100" />
                 <div className="h-48 rounded-xl bg-white border border-slate-100" />
               </div>

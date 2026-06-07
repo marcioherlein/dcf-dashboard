@@ -76,7 +76,7 @@ function LiveTabIndicator({ activeTab }: { activeTab: number }) {
 function BrowserChrome({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="w-full rounded-[16px] overflow-hidden"
+      className="w-full rounded-xl overflow-hidden"
       style={{
         boxShadow: '0 24px 64px rgba(0,0,0,0.20), 0 4px 16px rgba(0,0,0,0.10), 0 1px 0 rgba(255,255,255,0.12) inset',
         border: '1px solid rgba(255,255,255,0.12)',
@@ -168,11 +168,11 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
         {/* Logo */}
         <span className="font-bold text-[13px] tracking-tight" style={{ color: '#111111', letterSpacing: '-0.03em' }}>insic</span>
         {/* Search mock */}
-        <div className="flex items-center gap-1.5 rounded-[8px] px-2.5 py-1.5" style={{ background: '#F5F5F5', border: '1px solid #E5E5E5' }}>
+        <div className="flex items-center gap-1.5 rounded px-2.5 py-1.5" style={{ background: '#F5F5F5', border: '1px solid #E5E5E5' }}>
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9B9B9B" strokeWidth={2.5}>
             <circle cx="11" cy="11" r="8" /><path strokeLinecap="round" d="m21 21-4.35-4.35" />
           </svg>
-          <span className="text-[10px] text-[#9B9B9B]">Search tickers…</span>
+          <span className="text-[10px] text-[#6B6B6B]">Search tickers…</span>
         </div>
         {/* Avatar */}
         <div className="w-6 h-6 rounded-full bg-[#5F790B] flex items-center justify-center">
@@ -186,7 +186,7 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
           <div className="w-7 h-7 rounded-full bg-[#F0F0F0] border border-[#E5E5E5] flex items-center justify-center text-[10px] font-bold text-[#111111]">A</div>
           <div>
             <span className="text-[13px] font-bold text-[#111111] mr-1.5">AAPL</span>
-            <span className="text-[11px] text-[#9B9B9B]">Apple Inc.</span>
+            <span className="text-[11px] text-[#6B6B6B]">Apple Inc.</span>
           </div>
         </div>
         <div className="flex items-baseline gap-1.5">
@@ -213,7 +213,7 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
 
         {/* Verdict card */}
         <motion.div
-          className="mx-4 mt-3 mb-2 rounded-[12px] px-4 py-3"
+          className="mx-4 mt-3 mb-2 rounded-lg px-4 py-3"
           style={{ border: '1px solid #BFD2A1', background: 'linear-gradient(135deg, #F6FAEA 0%, #EEF4DD 100%)' }}
           initial={{ opacity: 0, y: 12, scale: 0.96 }}
           animate={verdictVisible ? { opacity: 1, y: 0, scale: 1 } : {}}
@@ -242,7 +242,7 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
               High confidence
             </motion.span>
             <motion.span
-              className="text-[9.5px] text-[#9B9B9B]"
+              className="text-[9.5px] text-[#6B6B6B]"
               initial={{ opacity: 0 }}
               animate={verdictVisible ? { opacity: 1 } : {}}
               transition={{ delay: 0.44, duration: 0.35 }}
@@ -253,7 +253,7 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
         </motion.div>
 
         {/* Metrics row */}
-        <div className="grid grid-cols-3 mx-4 mb-3 rounded-[10px] overflow-hidden" style={{ border: '1px solid #E8E6E0' }}>
+        <div className="grid grid-cols-3 mx-4 mb-3 rounded-md overflow-hidden" style={{ border: '1px solid #E8E6E0' }}>
           {[
             { label: 'Fair Value', val: '$226.80', color: '#5F790B', bg: '#F6FAEA', delay: 0 },
             { label: 'Current Price', val: '$183.42', color: '#111111', bg: '#FAFAFA', delay: 0.07 },
@@ -267,7 +267,7 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
               animate={metricsVisible ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: m.delay, duration: 0.4, ease: EASE }}
             >
-              <p className="text-[8px] text-[#9B9B9B] uppercase tracking-wider mb-0.5">{m.label}</p>
+              <p className="text-[8px] text-[#6B6B6B] uppercase tracking-wider mb-0.5">{m.label}</p>
               <p className="text-[13px] font-bold tabular-nums" style={{ color: m.color }}>{m.val}</p>
             </motion.div>
           ))}
@@ -280,7 +280,7 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
           animate={metricsVisible ? { opacity: 1 } : {}}
           transition={{ delay: 0.25, duration: 0.4 }}
         >
-          <p className="text-[8.5px] text-[#9B9B9B] mb-1.5">Scenario range</p>
+          <p className="text-[8.5px] text-[#6B6B6B] mb-1.5">Scenario range</p>
           <div className="relative h-2 rounded-full overflow-hidden" style={{ background: 'linear-gradient(to right, #F0B8B8 0%, #E5E5E5 42%, #BFD2A1 100%)' }}>
             <motion.div
               className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-sm"
@@ -291,9 +291,9 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
             />
           </div>
           <div className="flex justify-between mt-1">
-            <span className="text-[8px] text-[#9B9B9B]">$150.10 Bear</span>
+            <span className="text-[8px] text-[#6B6B6B]">$150.10 Bear</span>
             <span className="text-[8px] font-semibold text-[#5F790B]">$226.60 Base</span>
-            <span className="text-[8px] text-[#9B9B9B]">$305.40 Bull</span>
+            <span className="text-[8px] text-[#6B6B6B]">$305.40 Bull</span>
           </div>
         </motion.div>
 
@@ -306,13 +306,13 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
         >
           <div className="flex items-center gap-4 mb-2">
             {[['Price', '#111111'], ['Fair Value', '#5F790B'], ['Analyst Target', '#2563EB']].map(([l, c]) => (
-              <span key={l} className="flex items-center gap-1.5 text-[8.5px] text-[#9B9B9B]">
+              <span key={l} className="flex items-center gap-1.5 text-[8.5px] text-[#6B6B6B]">
                 <span style={{ display: 'inline-block', width: 14, height: 2, background: c, borderRadius: 1 }} />
                 {l}
               </span>
             ))}
           </div>
-          <div className="rounded-[8px] overflow-hidden" style={{ background: '#FAFAFA', border: '1px solid #E8E6E0', padding: '8px 8px 4px' }}>
+          <div className="rounded overflow-hidden" style={{ background: '#FAFAFA', border: '1px solid #E8E6E0', padding: '8px 8px 4px' }}>
             <svg viewBox="0 0 260 64" className="w-full" style={{ height: 52, display: 'block' }}>
               {/* Area fill under price line */}
               <defs>
@@ -353,13 +353,13 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
 
         {/* CAGR card */}
         <motion.div
-          className="mx-4 mb-4 rounded-[10px] px-3 py-2.5"
+          className="mx-4 mb-4 rounded-md px-3 py-2.5"
           style={{ border: '1px solid #E5E5E5', background: '#FAFAFA' }}
           initial={{ opacity: 0, y: 10 }}
           animate={cagrVisible ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, ease: EASE }}
         >
-          <p className="text-[8.5px] text-[#9B9B9B] mb-1.5">Market-implied 5Y revenue CAGR at today&apos;s price</p>
+          <p className="text-[8.5px] text-[#6B6B6B] mb-1.5">Market-implied 5Y revenue CAGR at today&apos;s price</p>
           <div className="flex items-center justify-between">
             <motion.span
               className="text-[17px] font-bold tabular-nums text-[#111111]"
@@ -510,7 +510,7 @@ export default function LandingHero() {
               {session ? (
                 <Link
                   href="/analyze"
-                  className="inline-flex items-center justify-center rounded-[10px] px-6 py-3.5 text-[15px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
+                  className="inline-flex items-center justify-center rounded-md px-6 py-3.5 text-[15px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
                   style={{ background: '#5F790B', boxShadow: '0 4px 16px rgba(95,121,11,0.28)', minHeight: '52px' }}
                 >
                   Start analyzing for free
@@ -518,7 +518,7 @@ export default function LandingHero() {
               ) : (
                 <motion.button
                   onClick={() => signIn('google')}
-                  className="inline-flex items-center justify-center rounded-[10px] px-6 py-3.5 text-[15px] font-semibold text-white transition-all active:scale-95"
+                  className="inline-flex items-center justify-center rounded-md px-6 py-3.5 text-[15px] font-semibold text-white transition-all active:scale-95"
                   style={{ background: '#5F790B', minHeight: '52px' }}
                   whileHover={reduced ? {} : { y: -2, boxShadow: '0 8px 24px rgba(95,121,11,0.38)' }}
                   transition={{ duration: 0.2 }}
@@ -529,7 +529,7 @@ export default function LandingHero() {
               )}
               <a
                 href="#how-it-works"
-                className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.06)] px-6 py-3.5 text-[15px] font-semibold text-white hover:bg-[rgba(255,255,255,0.12)] hover:border-[rgba(255,255,255,0.28)] transition-colors"
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.06)] px-6 py-3.5 text-[15px] font-semibold text-white hover:bg-[rgba(255,255,255,0.12)] hover:border-[rgba(255,255,255,0.28)] transition-colors"
                 style={{ minHeight: '52px' }}
               >
                 <Play size={13} className="text-[#7C9A19]" fill="#7C9A19" />

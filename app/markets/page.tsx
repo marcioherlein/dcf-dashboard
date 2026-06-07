@@ -25,7 +25,7 @@ import type { MarketContextPayload } from '@/lib/market-context/types'
 const REFRESH_INTERVAL_MS = 60_000
 
 function Sk({ h = 'h-32', className = '' }: { h?: string; className?: string }) {
-  return <div className={`animate-pulse rounded-2xl bg-white/70 border border-slate-100 ${h} ${className}`} />
+  return <div className={`motion-safe:animate-pulse rounded-2xl bg-white/70 border border-slate-100 ${h} ${className}`} />
 }
 
 function pct(v: number | null) {
@@ -148,7 +148,7 @@ export default function MarketsPage() {
     <div className="min-h-dvh bg-background">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-lg focus:text-sm focus:font-semibold focus:outline-none focus:shadow-lg"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-olive-700 focus:text-white focus:rounded-lg focus:text-sm focus:font-semibold focus:outline-none focus:shadow-lg"
       >
         Skip to content
       </a>
@@ -159,7 +159,7 @@ export default function MarketsPage() {
             <span>Market data could not be loaded. Check API keys and try again.</span>
             <button
               onClick={() => fetchAll(true)}
-              className="text-red-700 font-semibold text-[11px] hover:underline ml-4"
+              className="text-red-700 font-semibold text-[11px] hover:underline ml-4 min-h-[44px]"
             >
               Try again
             </button>
@@ -189,7 +189,7 @@ export default function MarketsPage() {
               className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-white/60 transition-colors disabled:opacity-50 min-h-[44px] min-w-[44px] flex items-center justify-center"
               title="Refresh"
             >
-              <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
+              <RefreshCw size={13} className={refreshing ? 'motion-safe:animate-spin' : ''} />
             </button>
           </div>
         </div>
