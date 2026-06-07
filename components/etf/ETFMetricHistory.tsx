@@ -85,7 +85,7 @@ const METRICS: MetricConfig[] = [
 
 const DynamicSmallChart = dynamic(
   () => import('recharts').then((m) => {
-    const { ResponsiveContainer, AreaChart, Area, LineChart, Line, XAxis, YAxis, Tooltip, ReferenceLine, ReferenceArea, CartesianGrid } = m
+    const { ResponsiveContainer, AreaChart, Area, LineChart, Line, XAxis, YAxis, Tooltip, ReferenceLine, _ReferenceArea, CartesianGrid } = m
 
     return function SmallChart({
       data,

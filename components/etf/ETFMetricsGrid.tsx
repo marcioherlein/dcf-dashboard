@@ -78,7 +78,7 @@ function ScoreGauge({ score, label }: { score: number; label: string }) {
 }
 
 // Score explanation table
-const FACTOR_BENCHMARKS = [
+const _FACTOR_BENCHMARKS = [
   { key: 'pe',           label: 'P/E ratio',       ideal: '≤ 15× ideal',  max: 30 },
   { key: 'pb',           label: 'P/B ratio',        ideal: '≤ 1.5× ideal', max: 25 },
   { key: 'yieldPts',     label: 'Dividend yield',   ideal: '≥ 4% ideal',   max: 25 },
