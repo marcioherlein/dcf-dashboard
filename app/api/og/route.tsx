@@ -5,6 +5,8 @@ import { VERDICT_DISPLAY, SITE_URL, BRAND, type VerdictKey } from '@/lib/brand'
 
 export const runtime = 'edge'
 
+// ── helpers ──────────────────────────────────────────────────────────────────
+
 function fmt(v: number, currency: string) {
   const sym = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$' : currency + ' '
   if (v >= 1_000_000) return sym + (v / 1_000_000).toFixed(2) + 'M'
@@ -17,6 +19,54 @@ function fmtPct(v: number) {
 }
 
 interface MethodItem { label: string; fv: number }
+
+// Sample an array to at most maxLen evenly-spaced items
+function sample<T>(arr: T[], maxLen: number): T[] {
+  if (arr.length <= maxLen) return arr
+  const step = arr.length / maxLen
+  return Array.from({ length: maxLen }, (_, i) => arr[Math.floor(i * step)])
+}
+
+function buildChartPoints(
+  closes: number[],
+  fvValue: number,
+  w: number,
+  h: number,
+  pad = 10,
+): { pricePoints: string; fvPoints: string; areaPoints: string } {
+  const all = [...closes, fvValue]
+  const minV = Math.min(...all) * 0.98
+  const maxV = Math.max(...all) * 1.02
+  const scaleY = (v: number) => pad + ((maxV - v) / (maxV - minV)) * (h - pad * 2)
+  const scaleX = (i: number) => (i / (closes.length - 1)) * w
+
+  const pricePts = closes.map((c, i) => `${scaleX(i).toFixed(1)},${scaleY(c).toFixed(1)}`).join(' ')
+  const fvY = scaleY(fvValue).toFixed(1)
+  const fvPts = `0,${fvY} ${w},${fvY}`
+  const areaPts = closes
+    .map((c, i) => `${scaleX(i).toFixed(1)},${scaleY(c).toFixed(1)}`)
+    .concat([`${w},${h}`, `0,${h}`])
+    .join(' ')
+
+  return { pricePoints: pricePts, fvPoints: fvPts, areaPoints: areaPts }
+}
+
+const BLURB: Record<VerdictKey, string> = {
+  'Undervalued':       'At current price, the stock trades below our intrinsic value estimate.',
+  'Fairly Valued':     'The stock appears fairly priced relative to our intrinsic value estimate.',
+  'Overvalued':        'The stock trades above our intrinsic value estimate at current price.',
+  'Insufficient Data': 'Insufficient data to form a reliable intrinsic value estimate.',
+}
+
+function migInterpretation(mig: number | null, migA: number | null, verdictColor: string) {
+  if (!mig || !migA) return null
+  const ratio = mig / migA
+  if (ratio < 0.8)  return { icon: '↗', title: 'Growth assumptions are conservative', body: 'Market expects less than the model assumes. Upside could be underestimated.', color: BRAND.positive }
+  if (ratio < 1.2)  return { icon: '↗', title: 'Growth assumptions are reasonable',  body: 'Implied growth expectations are supported by fundamentals and risk profile. Value remains attractive.', color: verdictColor }
+  return             { icon: '⚠', title: 'Market pricing in aggressive growth',      body: 'Market expects more than the model assumes. Risk of disappointment is elevated.', color: BRAND.negative }
+}
+
+// ── route ────────────────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
   const p           = req.nextUrl.searchParams
@@ -35,11 +85,10 @@ export async function GET(req: NextRequest) {
   const migRaw      = p.get('mig') ? parseFloat(p.get('mig')!) : null
   const migAssumed  = p.get('migAssumed') ? parseFloat(p.get('migAssumed')!) : null
 
-  // Parse methods JSON: [{label, fv}, ...]
-  let methods: MethodItem[] = []
+  let _methods: MethodItem[] = []
   try {
     const raw = p.get('methods')
-    if (raw) methods = JSON.parse(decodeURIComponent(raw)).slice(0, 3)
+    if (raw) _methods = JSON.parse(decodeURIComponent(raw)).slice(0, 3)
   } catch { /* ignore */ }
 
   const price  = isNaN(priceRaw) ? 0 : priceRaw
@@ -50,185 +99,312 @@ export async function GET(req: NextRequest) {
   const mig    = migRaw != null && !isNaN(migRaw) ? migRaw : null
   const migA   = migAssumed != null && !isNaN(migAssumed) ? migAssumed : null
 
-  const vd       = VERDICT_DISPLAY[verdict] ?? VERDICT_DISPLAY['Insufficient Data']
-  const isUp     = (upside ?? 0) >= 0
-  const upsideStr = upside != null ? `${isUp ? '+' : ''}${(upside * 100).toFixed(1)}%` : null
+  const vd          = VERDICT_DISPLAY[verdict] ?? VERDICT_DISPLAY['Insufficient Data']
+  const isUp        = (upside ?? 0) >= 0
+  const upsideStr   = upside != null ? fmtPct(upside) : null
   const upsideColor = upside == null ? '#64748B' : isUp ? BRAND.positive : BRAND.negative
+  const upBg        = upside == null ? '#F1F5F9' : isUp ? BRAND.positiveSoft : BRAND.negativeSoft
 
   const baseUrl = `${req.nextUrl.protocol}//${req.nextUrl.host}`
-  let logoData: string | null = null
-  try {
-    const res = await fetch(`${baseUrl}/brand/insic-logo-horizontal-on-dark.png`)
-    if (res.ok) {
-      const buf = await res.arrayBuffer()
-      const bytes = new Uint8Array(buf)
-      const binary = bytes.reduce((acc, b) => acc + String.fromCharCode(b), '')
-      logoData = `data:image/png;base64,${btoa(binary)}`
-    }
-  } catch { /* fallback to text */ }
 
-  // Scenario bar geometry — full track width
-  const TRACK_W = 1072 // 1200 - 64*2 padding
-  const fvRange = bear != null && bull != null && bull > bear ? bull - bear : null
-  const basePx  = fvRange && fvRange > 0 && fv != null && fv > 0
-    ? Math.max(10, Math.min(TRACK_W - 10, ((fv - bear!) / fvRange) * TRACK_W))
+  // ── parallel fetches ──────────────────────────────────────────────────────
+
+  const [logoData, stockLogoData, priceHistory] = await Promise.all([
+    // insic brand logo
+    fetch(`${baseUrl}/brand/insic-logo-horizontal.png`)
+      .then(r => r.ok ? r.arrayBuffer() : null)
+      .then(buf => buf ? `data:image/png;base64,${btoa(new Uint8Array(buf).reduce((a, b) => a + String.fromCharCode(b), ''))}` : null)
+      .catch(() => null),
+
+    // stock/company logo via Google favicon service
+    name ? fetch(`https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${
+      name.replace(/\s+(Corp\.?|Inc\.?|Ltd\.?|LLC\.?|PLC\.?|SE|AG|NV|SA|Group|Holdings?|Holding|Technologies?|Technology|Solutions?|Enterprises?|International|Industries?)$/i, '')
+          .trim().toLowerCase().replace(/[^a-z0-9]/g, '')}.com&size=64`)
+      .then(r => r.ok ? r.arrayBuffer() : null)
+      .then(buf => buf ? `data:image/png;base64,${btoa(new Uint8Array(buf).reduce((a, b) => a + String.fromCharCode(b), ''))}` : null)
+      .catch(() => null) : Promise.resolve(null),
+
+    // price history for sparkline
+    fetch(`${baseUrl}/api/historical?ticker=${ticker}&period=1y`)
+      .then(r => r.ok ? r.json() : null)
+      .then((d: { close: number }[] | null) => {
+        if (!Array.isArray(d) || d.length === 0) return null
+        const closes = d.map((row: { close: number }) => row.close).filter(Boolean)
+        return closes.length > 0 ? sample(closes, 60) : null
+      })
+      .catch(() => null),
+  ])
+
+  // ── chart geometry ────────────────────────────────────────────────────────
+
+  const CHART_W = 480
+  const CHART_H = 200
+  const chartData = priceHistory && fv != null && priceHistory.length >= 4
+    ? buildChartPoints(priceHistory, fv, CHART_W, CHART_H)
     : null
-  const pricePx = fvRange && fvRange > 0 && price > 0
-    ? Math.max(10, Math.min(TRACK_W - 10, ((price - bear!) / fvRange) * TRACK_W))
-    : null
 
-  const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  // ── scenario bar geometry ─────────────────────────────────────────────────
 
-  const hasModels  = methods.length > 0
-  const hasMIG     = mig != null && migA != null
+  const TRACK_W   = 1072
+  const fvRange   = bear != null && bull != null && bull > bear ? bull - bear : null
+  const basePx    = fvRange && fv != null ? Math.max(10, Math.min(TRACK_W - 10, ((fv - bear!) / fvRange) * TRACK_W)) : null
+  const pricePx   = fvRange && price > 0  ? Math.max(10, Math.min(TRACK_W - 10, ((price - bear!) / fvRange) * TRACK_W)) : null
   const hasScenBar = bear != null && bull != null && basePx != null
+
+  // ── derived content ────────────────────────────────────────────────────────
+
+  const interp      = migInterpretation(mig, migA, vd.colorHex)
+  const hasMIG      = mig != null && migA != null
+  const hasLowerRow = hasMIG || interp != null
+  const dateStr     = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+
+  // ── render ────────────────────────────────────────────────────────────────
 
   return new ImageResponse(
     (
-      <div style={{ display: 'flex', flexDirection: 'column', width: 1200, height: 630, background: `linear-gradient(145deg,${BRAND.ink900} 0%,${BRAND.ink800} 55%,#091525 100%)`, padding: '44px 64px 36px', fontFamily: 'system-ui,-apple-system,sans-serif', position: 'relative', overflow: 'hidden' }}>
-
-        {/* Dot grid */}
-        <div style={{ display: 'flex', position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundImage: `radial-gradient(rgba(95,121,11,0.08) 1px,transparent 1px)`, backgroundSize: '28px 28px' }} />
-
-        {/* Glow */}
-        <div style={{ display: 'flex', position: 'absolute', top: -140, right: -80, width: 520, height: 520, background: `radial-gradient(circle,rgba(95,121,11,0.10) 0%,transparent 70%)` }} />
-        <div style={{ display: 'flex', position: 'absolute', bottom: -120, left: -60, width: 400, height: 400, background: `radial-gradient(circle,${vd.colorHex}18 0%,transparent 70%)` }} />
-
-        {/* Verdict color accent bar */}
-        <div style={{ display: 'flex', position: 'absolute', top: 0, left: 64, right: 64, height: 3, borderRadius: 4, background: vd.colorHex, opacity: 0.9 }} />
+      <div style={{
+        display: 'flex', flexDirection: 'column',
+        width: 1200, height: 630,
+        background: '#F8F7F2',
+        padding: '28px 44px 24px',
+        fontFamily: 'system-ui,-apple-system,sans-serif',
+      }}>
 
         {/* ── HEADER ── */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           {logoData
-            ? <img src={logoData} style={{ height: 22, objectFit: 'contain' }} alt="insic" />
-            : <span style={{ color: BRAND.olive700, fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em' }}>insic</span>
+            ? <img src={logoData} style={{ height: 20, objectFit: 'contain' }} alt="insic" />
+            : <span style={{ color: BRAND.olive700, fontSize: 16, fontWeight: 800, letterSpacing: '-0.02em' }}>insic</span>
           }
-          {conviction
-            ? <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: `${BRAND.olive700}18`, border: `1px solid ${BRAND.olive700}40`, borderRadius: 9999, padding: '5px 14px' }}>
-                <div style={{ display: 'flex', width: 6, height: 6, borderRadius: '50%', background: BRAND.olive700 }} />
-                <span style={{ color: BRAND.olive100, fontSize: 11, fontWeight: 600 }}>{conviction}</span>
-              </div>
-            : <div style={{ display: 'flex' }} />
-          }
+          <span style={{ color: '#94A3B8', fontSize: 11 }}>{dateStr}</span>
         </div>
 
-        {/* ── MAIN BODY: left verdict + right model panel ── */}
-        <div style={{ display: 'flex', flex: 1, gap: 0, position: 'relative' }}>
+        {/* ── MAIN ROW: hero left + chart right ── */}
+        <div style={{ display: 'flex', flex: 1, gap: 20, minHeight: 0 }}>
 
           {/* LEFT — verdict hero */}
-          <div style={{ display: 'flex', flexDirection: 'column', flex: '0 0 auto', width: hasModels ? 560 : 800, justifyContent: 'space-between' }}>
+          <div style={{
+            display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+            flex: '0 0 520px',
+            background: '#FFFFFF', border: `1px solid ${BRAND.border}`,
+            borderRadius: 16, padding: '20px 24px',
+            boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.05)',
+          }}>
 
-            {/* Verdict headline */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {name
-                ? <span style={{ color: '#64748B', fontSize: 13, fontWeight: 500 }}>{name}</span>
-                : <div style={{ display: 'flex' }} />
-              }
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                <span style={{ color: 'white', fontSize: 58, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1 }}>{ticker}</span>
-                <span style={{ color: '#475569', fontSize: 44, fontWeight: 300, letterSpacing: '-0.02em', lineHeight: 1 }}>looks</span>
+            {/* Company + verdict */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {/* Stock logo + name */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {stockLogoData && (
+                  <img src={stockLogoData} style={{ width: 22, height: 22, borderRadius: 5, objectFit: 'contain' }} alt={ticker} />
+                )}
+                {name ? <span style={{ color: '#64748B', fontSize: 12, fontWeight: 500 }}>{name}</span> : <div style={{ display: 'flex' }} />}
               </div>
-              <span style={{ color: vd.colorHex, fontSize: 52, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}>{vd.word}</span>
+
+              {/* Ticker + looks + verdict word */}
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                <span style={{ color: BRAND.ink900, fontSize: 52, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1 }}>{ticker}</span>
+                <span style={{ color: '#94A3B8', fontSize: 36, fontWeight: 300, letterSpacing: '-0.01em', lineHeight: 1 }}>looks</span>
+                <span style={{ color: vd.colorHex, fontSize: 36, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1 }}>{vd.word}</span>
+              </div>
+
+              {/* Description blurb */}
+              <span style={{ color: '#475569', fontSize: 12, lineHeight: 1.5, maxWidth: 420 }}>{BLURB[verdict]}</span>
             </div>
 
-            {/* Key metrics row */}
-            <div style={{ display: 'flex', gap: 0, marginTop: 20 }}>
-              {/* Fair value */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingRight: 20, borderRight: '1px solid rgba(255,255,255,0.07)' }}>
-                <span style={{ color: '#475569', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.09em' }}>Fair Value</span>
-                <span style={{ color: 'white', fontSize: 30, fontWeight: 800, letterSpacing: '-0.02em' }}>{fv != null ? fmt(fv, currency) : '—'}</span>
+            {/* Metrics row */}
+            <div style={{ display: 'flex', gap: 0, marginTop: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, paddingRight: 20, borderRight: `1px solid ${BRAND.border}` }}>
+                <span style={{ color: '#94A3B8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Fair Value</span>
+                <span style={{ color: BRAND.ink900, fontSize: 26, fontWeight: 800, letterSpacing: '-0.02em' }}>{fv != null ? fmt(fv, currency) : '—'}</span>
               </div>
-              {/* Price */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingLeft: 20, paddingRight: 20, borderRight: '1px solid rgba(255,255,255,0.07)' }}>
-                <span style={{ color: '#475569', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.09em' }}>Price</span>
-                <span style={{ color: '#94A3B8', fontSize: 30, fontWeight: 800, letterSpacing: '-0.02em' }}>{fmt(price, currency)}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, paddingLeft: 20, paddingRight: 20, borderRight: `1px solid ${BRAND.border}` }}>
+                <span style={{ color: '#94A3B8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Vs Current Price</span>
+                <span style={{ color: '#475569', fontSize: 26, fontWeight: 800, letterSpacing: '-0.02em' }}>{fmt(price, currency)}</span>
               </div>
-              {/* Upside badge */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingLeft: 20 }}>
-                <span style={{ color: '#475569', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.09em' }}>{upsideStr != null && !isUp ? 'Downside' : 'Upside'}</span>
-                <div style={{ display: 'flex', alignItems: 'center', background: upsideStr == null ? 'rgba(100,116,139,0.15)' : isUp ? `${BRAND.positive}22` : `${BRAND.negative}22`, borderRadius: 8, padding: '3px 10px 3px 8px' }}>
-                  <span style={{ color: upsideColor, fontSize: 30, fontWeight: 800, letterSpacing: '-0.02em' }}>{upsideStr ?? '—'}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, paddingLeft: 20 }}>
+                <span style={{ color: '#94A3B8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{isUp ? 'Upside' : 'Downside'}</span>
+                <div style={{ display: 'flex', background: upBg, borderRadius: 8, padding: '3px 10px' }}>
+                  <span style={{ color: upsideColor, fontSize: 26, fontWeight: 800, letterSpacing: '-0.02em' }}>{upsideStr ?? '—'}</span>
                 </div>
               </div>
             </div>
 
-            {/* MIG callout */}
-            {hasMIG
-              ? <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14, background: `${BRAND.olive700}14`, border: `1px solid ${BRAND.olive700}30`, borderRadius: 8, padding: '7px 12px' }}>
-                  <div style={{ display: 'flex', width: 4, height: 28, borderRadius: 2, background: BRAND.olive700, flexShrink: 0 }} />
-                  <span style={{ color: BRAND.olive100, fontSize: 11, lineHeight: 1.4 }}>
-                    Market prices in <span style={{ color: 'white', fontWeight: 700 }}>{(mig! * 100).toFixed(1)}% revenue CAGR</span> — model assumes <span style={{ color: vd.colorHex, fontWeight: 700 }}>{(migA! * 100).toFixed(1)}%</span>
-                  </span>
+            {/* Conviction badge */}
+            {conviction && (
+              <div style={{ display: 'flex' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12, background: vd.bgHex, border: `1px solid ${vd.borderHex}`, borderRadius: 9999, padding: '4px 12px' }}>
+                  <div style={{ display: 'flex', width: 6, height: 6, borderRadius: '50%', background: vd.colorHex }} />
+                  <span style={{ color: vd.colorHex, fontSize: 10, fontWeight: 600 }}>{conviction}</span>
                 </div>
-              : <div style={{ display: 'flex' }} />
-            }
-
+              </div>
+            )}
           </div>
 
-          {/* RIGHT — model consensus panel */}
-          {hasModels && (
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, marginLeft: 40, paddingLeft: 40, borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
-              <span style={{ color: '#475569', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 14 }}>Model Consensus</span>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {methods.map((m, i) => {
-                  const methodUpside = price > 0 ? (m.fv - price) / price : null
-                  const mUp = (methodUpside ?? 0) >= 0
-                  const mColor = methodUpside == null ? '#64748B' : mUp ? BRAND.positive : BRAND.negative
-                  return (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 14px' }}>
-                      <span style={{ color: '#94A3B8', fontSize: 12, fontWeight: 600 }}>{m.label}</span>
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                        <span style={{ color: 'white', fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em' }}>{fmt(m.fv, currency)}</span>
-                        {methodUpside != null && (
-                          <span style={{ color: mColor, fontSize: 11, fontWeight: 700 }}>{fmtPct(methodUpside)}</span>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-              {/* Blended line */}
-              {fv != null && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                  <span style={{ color: '#64748B', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Blended</span>
-                  <span style={{ color: 'white', fontSize: 14, fontWeight: 800 }}>{fmt(fv, currency)}</span>
+          {/* RIGHT — price chart or scenario bar */}
+          <div style={{
+            display: 'flex', flexDirection: 'column',
+            flex: 1,
+            background: '#FFFFFF', border: `1px solid ${BRAND.border}`,
+            borderRadius: 16, padding: '16px 20px',
+            boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.05)',
+            overflow: 'hidden',
+          }}>
+            <span style={{ color: '#64748B', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Price chart</span>
+
+            {chartData ? (
+              <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                {/* Legend */}
+                <div style={{ display: 'flex', gap: 16, marginBottom: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <div style={{ display: 'flex', width: 20, height: 2, background: BRAND.olive700, borderRadius: 1 }} />
+                    <span style={{ color: '#64748B', fontSize: 10 }}>Fair value estimate {fv != null ? fmt(fv, currency) : ''}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <div style={{ display: 'flex', width: 20, height: 2, background: BRAND.blue600, borderRadius: 1 }} />
+                    <span style={{ color: '#64748B', fontSize: 10 }}>Current price {fmt(price, currency)}</span>
+                  </div>
                 </div>
-              )}
-            </div>
-          )}
+
+                {/* SVG chart */}
+                <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
+                  <svg width={CHART_W} height={CHART_H} style={{ display: 'flex', overflow: 'visible' }}>
+                    {/* Area fill under price line */}
+                    <polygon points={chartData.areaPoints} fill={`${BRAND.blue600}12`} />
+                    {/* FV dashed line */}
+                    <polyline points={chartData.fvPoints} fill="none" stroke={BRAND.olive700} strokeWidth="1.5" strokeDasharray="6,4" />
+                    {/* Price line */}
+                    <polyline points={chartData.pricePoints} fill="none" stroke={BRAND.blue600} strokeWidth="2" strokeLinejoin="round" />
+                  </svg>
+
+                  {/* Right-edge badges */}
+                  <div style={{ display: 'flex', flexDirection: 'column', position: 'absolute', right: -16, top: 0, bottom: 0, justifyContent: 'space-between', paddingTop: 4, paddingBottom: 4 }}>
+                    <div style={{ display: 'flex', background: BRAND.olive700, borderRadius: 6, padding: '3px 8px' }}>
+                      <span style={{ color: 'white', fontSize: 10, fontWeight: 700 }}>{fv != null ? fmt(fv, currency) : ''}</span>
+                    </div>
+                    <div style={{ display: 'flex', background: BRAND.blue600, borderRadius: 6, padding: '3px 8px' }}>
+                      <span style={{ color: 'white', fontSize: 10, fontWeight: 700 }}>{fmt(price, currency)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Fallback: scenario bar when no chart data */
+              hasScenBar ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1, justifyContent: 'center' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: BRAND.negative, fontSize: 11, fontWeight: 600 }}>Bear {fmt(bear!, currency)}</span>
+                    <span style={{ color: '#475569', fontSize: 11, fontWeight: 700 }}>Base {fv != null ? fmt(fv, currency) : '—'}</span>
+                    <span style={{ color: BRAND.positive, fontSize: 11, fontWeight: 600 }}>Bull {fmt(bull!, currency)}</span>
+                  </div>
+                  <div style={{ display: 'flex', position: 'relative', height: 8, borderRadius: 9999, background: `linear-gradient(to right,${BRAND.negative}50,#E2E8F0,${BRAND.positive}50)` }}>
+                    {pricePx != null && (
+                      <div style={{ display: 'flex', position: 'absolute', top: -4, left: (pricePx / TRACK_W) * 440 - 5, width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: `8px solid ${BRAND.blue600}` }} />
+                    )}
+                    <div style={{ display: 'flex', position: 'absolute', top: -5, left: (basePx! / TRACK_W) * 440 - 9, width: 18, height: 18, borderRadius: '50%', background: 'white', border: `3px solid ${BRAND.olive700}`, boxShadow: '0 1px 4px rgba(0,0,0,0.12)' }} />
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ color: '#CBD5E1', fontSize: 12 }}>No chart data</span>
+                </div>
+              )
+            )}
+          </div>
         </div>
 
-        {/* ── SCENARIO BAR — full width ── */}
-        {hasScenBar && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 20, position: 'relative' }}>
-            {/* Labels */}
+        {/* ── LOWER ROW: MIG + interpretation ── */}
+        {hasLowerRow && (
+          <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+
+            {/* MIG card */}
+            {hasMIG && (
+              <div style={{
+                display: 'flex', flexDirection: 'column', flex: 1,
+                background: '#FFFFFF', border: `1px solid ${BRAND.border}`,
+                borderRadius: 14, padding: '14px 18px',
+                boxShadow: '0 1px 2px rgba(15,23,42,0.04)',
+              }}>
+                <span style={{ color: '#64748B', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>What the market is pricing in</span>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span style={{ color: '#64748B', fontSize: 10, fontWeight: 600 }}>Implied 5Y Revenue CAGR</span>
+                    <span style={{ color: vd.colorHex, fontSize: 28, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1 }}>{(mig! * 100).toFixed(1)}%</span>
+                    <span style={{ color: '#94A3B8', fontSize: 10 }}>Model assumes {(migA! * 100).toFixed(1)}%</span>
+                  </div>
+                  {/* Mini sparkline for MIG trend — simple visual bar */}
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 32 }}>
+                    {[0.3, 0.5, 0.45, 0.6, 0.7, 0.65, 0.8, 0.85, 0.9, 1].map((h, i) => (
+                      <div key={i} style={{ display: 'flex', width: 5, height: 32 * h, borderRadius: 2, background: vd.colorHex, opacity: 0.3 + h * 0.5 }} />
+                    ))}
+                    <div style={{ display: 'flex', width: 8, height: 8, borderRadius: '50%', background: vd.colorHex, marginBottom: 0, alignSelf: 'flex-end' }} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Market interpretation card */}
+            {interp && (
+              <div style={{
+                display: 'flex', flexDirection: 'column', flex: 1,
+                background: vd.bgHex, border: `1px solid ${vd.borderHex}`,
+                borderRadius: 14, padding: '14px 18px',
+                boxShadow: '0 1px 2px rgba(15,23,42,0.04)',
+              }}>
+                <span style={{ color: '#64748B', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Market interpretation</span>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  <div style={{ display: 'flex', width: 32, height: 32, borderRadius: 8, background: interp.color + '20', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="16" height="16" viewBox="0 0 16 16" style={{ display: 'flex' }}>
+                      <path d={interp.icon === '⚠'
+                        ? 'M8 1L15 14H1L8 1Z'
+                        : 'M3 11 L9 5 M9 5 L9 10 M9 5 L4 5'}
+                        fill={interp.icon === '⚠' ? 'none' : 'none'}
+                        stroke={interp.color}
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <span style={{ color: interp.color, fontSize: 12, fontWeight: 700, lineHeight: 1.3 }}>{interp.title}</span>
+                    <span style={{ color: '#475569', fontSize: 11, lineHeight: 1.4 }}>{interp.body}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── SCENARIO BAR (full width, only if chart was shown) ── */}
+        {hasScenBar && chartData && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ color: '#64748B', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Scenario range</span>
+            </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', width: TRACK_W }}>
               <span style={{ color: BRAND.negative, fontSize: 10, fontWeight: 600 }}>Bear {fmt(bear!, currency)}</span>
-              <span style={{ color: BRAND.olive100, fontSize: 10, fontWeight: 700 }}>Base {fv != null ? fmt(fv, currency) : '—'}</span>
+              <span style={{ color: '#475569', fontSize: 10, fontWeight: 700 }}>Base {fv != null ? fmt(fv, currency) : '—'}</span>
               <span style={{ color: BRAND.positive, fontSize: 10, fontWeight: 600 }}>Bull {fmt(bull!, currency)}</span>
             </div>
-            {/* Track */}
-            <div style={{ display: 'flex', position: 'relative', height: 7, borderRadius: 9999, background: `linear-gradient(to right,${BRAND.negative}60,rgba(100,116,139,0.25),${BRAND.positive}60)`, width: TRACK_W }}>
-              {/* Current price tick */}
+            <div style={{ display: 'flex', position: 'relative', height: 8, borderRadius: 9999, background: `linear-gradient(to right,${BRAND.negative}40,#E2E8F0,${BRAND.positive}40)`, width: TRACK_W }}>
               {pricePx != null && (
-                <div style={{ display: 'flex', position: 'absolute', top: -4, left: pricePx - 6, width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '8px solid #94A3B8' }} />
+                <div style={{ display: 'flex', position: 'absolute', top: -4, left: pricePx - 5, width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: `8px solid ${BRAND.blue600}` }} />
               )}
-              {/* Fair value dot */}
-              <div style={{ display: 'flex', position: 'absolute', top: -5, left: basePx! - 8, width: 17, height: 17, borderRadius: '50%', background: 'white', border: `3px solid ${BRAND.olive700}` }} />
+              <div style={{ display: 'flex', position: 'absolute', top: -5, left: basePx! - 9, width: 18, height: 18, borderRadius: '50%', background: 'white', border: `3px solid ${BRAND.olive700}`, boxShadow: '0 1px 4px rgba(0,0,0,0.12)' }} />
             </div>
-            {/* Price label under tick */}
             {pricePx != null && (
-              <div style={{ display: 'flex', position: 'relative', width: TRACK_W, height: 12 }}>
-                <span style={{ position: 'absolute', left: Math.max(0, Math.min(pricePx - 22, TRACK_W - 55)), color: '#64748B', fontSize: 9, fontWeight: 600 }}>Price {fmt(price, currency)}</span>
+              <div style={{ display: 'flex', position: 'relative', width: TRACK_W, height: 14 }}>
+                <span style={{ position: 'absolute', left: Math.max(0, Math.min(pricePx - 26, TRACK_W - 70)), color: BRAND.blue600, fontSize: 9, fontWeight: 600 }}>Current price {fmt(price, currency)}</span>
               </div>
             )}
           </div>
         )}
 
         {/* ── FOOTER ── */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 14, marginTop: hasScenBar ? 6 : 16, borderTop: `1px solid ${BRAND.olive700}20` }}>
-          <span style={{ color: '#334155', fontSize: 10 }}>Not financial advice · model output only</span>
-          <span style={{ color: '#334155', fontSize: 10 }}>{SITE_URL} · {dateStr}</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 10, marginTop: 10, borderTop: `1px solid ${BRAND.border}` }}>
+          <span style={{ color: '#94A3B8', fontSize: 9 }}>Not financial advice · model output only</span>
+          <span style={{ color: '#94A3B8', fontSize: 9 }}>{SITE_URL} · Invest with a process, not a story.</span>
         </div>
 
       </div>
