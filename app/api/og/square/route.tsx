@@ -53,12 +53,41 @@ const BLURB: Record<VerdictKey, string> = {
   'Insufficient Data': 'Insufficient data to form a reliable intrinsic value estimate.',
 }
 
-function migInterpretation(mig: number | null, migA: number | null, verdictColor: string) {
+function migInterp(mig: number | null, migA: number | null) {
   if (!mig || !migA) return null
   const ratio = mig / migA
-  if (ratio < 0.8)  return { isWarn: false, title: 'Growth assumptions are conservative', body: 'Market expects less than the model assumes. Upside could be underestimated.', color: BRAND.positive }
-  if (ratio < 1.2)  return { isWarn: false, title: 'Growth assumptions are reasonable',  body: 'Implied growth expectations are supported by fundamentals and risk profile.', color: verdictColor }
-  return             { isWarn: true,  title: 'Market pricing in aggressive growth',      body: 'Market expects more than the model assumes. Risk of disappointment is elevated.', color: BRAND.negative }
+  if (ratio < 0.8) return {
+    label: 'Conservative',
+    chipBg: '#ECFDF3', chipBorder: '#BBF7D0', chipColor: '#047857',
+    calloutBg: '#ECFDF3', calloutBorder: '#BBF7D0',
+    title: 'Growth assumptions are conservative',
+    body: 'Market expects less than the model assumes. Upside could be underestimated.',
+    titleColor: '#047857',
+  }
+  if (ratio < 1.2) return {
+    label: 'Reasonable',
+    chipBg: '#EFF6FF', chipBorder: '#BFDBFE', chipColor: '#2563EB',
+    calloutBg: '#EFF6FF', calloutBorder: '#BFDBFE',
+    title: 'Growth assumptions are reasonable',
+    body: 'Implied growth expectations are supported by fundamentals and risk profile.',
+    titleColor: '#2563EB',
+  }
+  if (ratio < 1.6) return {
+    label: 'Aggressive',
+    chipBg: '#FFF7ED', chipBorder: '#FED7AA', chipColor: '#D97706',
+    calloutBg: '#FFFBEB', calloutBorder: '#FDE68A',
+    title: 'Market pricing in aggressive growth',
+    body: 'Market expects more than the model assumes. Risk of disappointment is elevated.',
+    titleColor: '#D97706',
+  }
+  return {
+    label: 'Very Aggressive',
+    chipBg: '#FEF2F2', chipBorder: '#FECACA', chipColor: '#DC2626',
+    calloutBg: '#FEF2F2', calloutBorder: '#FECACA',
+    title: 'Market pricing in aggressive growth',
+    body: 'Market expects significantly more than the model assumes. Risk is elevated.',
+    titleColor: '#DC2626',
+  }
 }
 
 // ── route ────────────────────────────────────────────────────────────────────
@@ -118,7 +147,7 @@ export async function GET(req: NextRequest) {
       .then(buf => buf ? `data:image/png;base64,${btoa(new Uint8Array(buf).reduce((a, b) => a + String.fromCharCode(b), ''))}` : null)
       .catch(() => null) : Promise.resolve(null),
 
-    fetch(`${baseUrl}/api/historical?ticker=${ticker}&period=1y`)
+    fetch(`${baseUrl}/api/historical?ticker=${ticker}&period=1y`, { headers: { 'x-og-internal': '1' } })
       .then(r => r.ok ? r.json() : null)
       .then((d: { close: number }[] | null) => {
         if (!Array.isArray(d) || d.length === 0) return null
@@ -146,7 +175,7 @@ export async function GET(req: NextRequest) {
 
   // ── derived content ────────────────────────────────────────────────────────
 
-  const interp  = migInterpretation(mig, migA, vd.colorHex)
+  const interp  = migInterp(mig, migA)
   const hasMIG  = mig != null && migA != null
   const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 

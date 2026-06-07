@@ -3,8 +3,11 @@ import { getHistorical, type HistoricalPeriod } from '@/lib/data/yahooClient'
 import { rateLimit } from '@/lib/rateLimit'
 
 export async function GET(req: NextRequest) {
-  const limited = rateLimit(req, 5, 60000, 'historical')
-  if (limited) return limited
+  // OG image routes call this server-side; skip rate limiting for internal requests
+  if (!req.headers.get('x-og-internal')) {
+    const limited = rateLimit(req, 5, 60000, 'historical')
+    if (limited) return limited
+  }
 
   const ticker = req.nextUrl.searchParams.get('ticker')?.toUpperCase()
   const period = (req.nextUrl.searchParams.get('period') ?? '1y') as HistoricalPeriod

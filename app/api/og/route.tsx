@@ -58,12 +58,41 @@ const BLURB: Record<VerdictKey, string> = {
   'Insufficient Data': 'Insufficient data to form a reliable intrinsic value estimate.',
 }
 
-function migInterpretation(mig: number | null, migA: number | null, verdictColor: string) {
+function migInterp(mig: number | null, migA: number | null) {
   if (!mig || !migA) return null
   const ratio = mig / migA
-  if (ratio < 0.8)  return { icon: '↗', title: 'Growth assumptions are conservative', body: 'Market expects less than the model assumes. Upside could be underestimated.', color: BRAND.positive }
-  if (ratio < 1.2)  return { icon: '↗', title: 'Growth assumptions are reasonable',  body: 'Implied growth expectations are supported by fundamentals and risk profile. Value remains attractive.', color: verdictColor }
-  return             { icon: '⚠', title: 'Market pricing in aggressive growth',      body: 'Market expects more than the model assumes. Risk of disappointment is elevated.', color: BRAND.negative }
+  if (ratio < 0.8) return {
+    label: 'Conservative',
+    chipBg: '#ECFDF3', chipBorder: '#BBF7D0', chipColor: '#047857',
+    calloutBg: '#ECFDF3', calloutBorder: '#BBF7D0',
+    title: 'Growth assumptions are conservative',
+    body: 'Market expects less than the model assumes. Upside could be underestimated.',
+    titleColor: '#047857',
+  }
+  if (ratio < 1.2) return {
+    label: 'Reasonable',
+    chipBg: '#EFF6FF', chipBorder: '#BFDBFE', chipColor: '#2563EB',
+    calloutBg: '#EFF6FF', calloutBorder: '#BFDBFE',
+    title: 'Growth assumptions are reasonable',
+    body: 'Implied growth expectations are supported by fundamentals and risk profile. Value remains attractive.',
+    titleColor: '#2563EB',
+  }
+  if (ratio < 1.6) return {
+    label: 'Aggressive',
+    chipBg: '#FFF7ED', chipBorder: '#FED7AA', chipColor: '#D97706',
+    calloutBg: '#FFFBEB', calloutBorder: '#FDE68A',
+    title: 'Market pricing in aggressive growth',
+    body: 'Market expects more than the model assumes. Risk of disappointment is elevated.',
+    titleColor: '#D97706',
+  }
+  return {
+    label: 'Very Aggressive',
+    chipBg: '#FEF2F2', chipBorder: '#FECACA', chipColor: '#DC2626',
+    calloutBg: '#FEF2F2', calloutBorder: '#FECACA',
+    title: 'Market pricing in aggressive growth',
+    body: 'Market expects significantly more than the model assumes. Risk is elevated.',
+    titleColor: '#DC2626',
+  }
 }
 
 // ── route ────────────────────────────────────────────────────────────────────
@@ -125,7 +154,7 @@ export async function GET(req: NextRequest) {
       .catch(() => null) : Promise.resolve(null),
 
     // price history for sparkline
-    fetch(`${baseUrl}/api/historical?ticker=${ticker}&period=1y`)
+    fetch(`${baseUrl}/api/historical?ticker=${ticker}&period=1y`, { headers: { 'x-og-internal': '1' } })
       .then(r => r.ok ? r.json() : null)
       .then((d: { close: number }[] | null) => {
         if (!Array.isArray(d) || d.length === 0) return null
@@ -153,7 +182,7 @@ export async function GET(req: NextRequest) {
 
   // ── derived content ────────────────────────────────────────────────────────
 
-  const interp      = migInterpretation(mig, migA, vd.colorHex)
+  const interp      = migInterp(mig, migA)
   const hasMIG      = mig != null && migA != null
   const hasLowerRow = hasMIG || interp != null
   const dateStr     = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -171,137 +200,122 @@ export async function GET(req: NextRequest) {
       }}>
 
         {/* ── HEADER ── */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           {logoData
-            ? <img src={logoData} style={{ height: 20, objectFit: 'contain' }} alt="insic" />
-            : <span style={{ color: BRAND.olive700, fontSize: 16, fontWeight: 800, letterSpacing: '-0.02em' }}>insic</span>
+            ? <img src={logoData} style={{ height: 18, objectFit: 'contain' }} alt="insic" />
+            : <span style={{ color: BRAND.olive700, fontSize: 15, fontWeight: 800, letterSpacing: '-0.02em' }}>insic</span>
           }
-          <span style={{ color: '#94A3B8', fontSize: 11 }}>{dateStr}</span>
+          <span style={{ color: '#9B9B9B', fontSize: 11 }}>{dateStr}</span>
         </div>
 
-        {/* ── MAIN ROW: hero left + chart right ── */}
-        <div style={{ display: 'flex', flex: 1, gap: 20, minHeight: 0 }}>
+        {/* ── MAIN ROW: hero card left + chart right ── */}
+        <div style={{ display: 'flex', flex: 1, gap: 16, minHeight: 0 }}>
 
-          {/* LEFT — verdict hero */}
+          {/* LEFT — verdict hero, verdict-tinted background */}
           <div style={{
-            display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-            flex: '0 0 520px',
-            background: '#FFFFFF', border: `1px solid ${BRAND.border}`,
+            display: 'flex', flexDirection: 'column',
+            flex: '0 0 516px',
+            background: vd.bgHex, border: `1px solid ${vd.borderHex}`,
             borderRadius: 16, padding: '20px 24px',
-            boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.05)',
+            overflow: 'hidden',
           }}>
-
-            {/* Company + verdict */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {/* Stock logo + name */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* Company name + stock logo + conviction badge */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                 {stockLogoData && (
-                  <img src={stockLogoData} style={{ width: 22, height: 22, borderRadius: 5, objectFit: 'contain' }} alt={ticker} />
+                  <img src={stockLogoData} style={{ width: 20, height: 20, borderRadius: 4, objectFit: 'contain' }} alt={ticker} />
                 )}
-                {name ? <span style={{ color: '#64748B', fontSize: 12, fontWeight: 500 }}>{name}</span> : <div style={{ display: 'flex' }} />}
+                {name && <span style={{ color: '#6B6B6B', fontSize: 12, fontWeight: 500 }}>{name}</span>}
               </div>
-
-              {/* Ticker + looks + verdict word */}
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                <span style={{ color: BRAND.ink900, fontSize: 52, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1 }}>{ticker}</span>
-                <span style={{ color: '#94A3B8', fontSize: 36, fontWeight: 300, letterSpacing: '-0.01em', lineHeight: 1 }}>looks</span>
-                <span style={{ color: vd.colorHex, fontSize: 36, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1 }}>{vd.word}</span>
-              </div>
-
-              {/* Description blurb */}
-              <span style={{ color: '#475569', fontSize: 12, lineHeight: 1.5, maxWidth: 420 }}>{BLURB[verdict]}</span>
+              {conviction && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.7)', border: `1px solid ${vd.borderHex}`, borderRadius: 9999, padding: '3px 10px' }}>
+                  <div style={{ display: 'flex', width: 5, height: 5, borderRadius: '50%', background: vd.colorHex }} />
+                  <span style={{ color: vd.colorHex, fontSize: 10, fontWeight: 650 }}>{conviction}</span>
+                </div>
+              )}
             </div>
 
-            {/* Metrics row */}
-            <div style={{ display: 'flex', gap: 0, marginTop: 16 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, paddingRight: 20, borderRight: `1px solid ${BRAND.border}` }}>
-                <span style={{ color: '#94A3B8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Fair Value</span>
-                <span style={{ color: BRAND.ink900, fontSize: 26, fontWeight: 800, letterSpacing: '-0.02em' }}>{fv != null ? fmt(fv, currency) : '—'}</span>
+            {/* Ticker + looks + verdict word */}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+              <span style={{ color: '#111111', fontSize: 50, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1 }}>{ticker}</span>
+              <span style={{ color: '#9B9B9B', fontSize: 32, fontWeight: 300, letterSpacing: '-0.01em', lineHeight: 1 }}>looks</span>
+              <span style={{ color: vd.colorHex, fontSize: 32, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1 }}>{vd.word}</span>
+            </div>
+
+            {/* Description */}
+            <span style={{ color: '#6B6B6B', fontSize: 13, lineHeight: 1.5, marginTop: 8 }}>{BLURB[verdict]}</span>
+
+            {/* Metrics row — vertical divider elements, items-end aligned */}
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 20, marginTop: 20 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ color: '#6B6B6B', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Fair Value</span>
+                <span style={{ color: '#111111', fontSize: 26, fontWeight: 750, letterSpacing: '-0.02em', lineHeight: 1 }}>{fv != null ? fmt(fv, currency) : '—'}</span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, paddingLeft: 20, paddingRight: 20, borderRight: `1px solid ${BRAND.border}` }}>
-                <span style={{ color: '#94A3B8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Vs Current Price</span>
-                <span style={{ color: '#475569', fontSize: 26, fontWeight: 800, letterSpacing: '-0.02em' }}>{fmt(price, currency)}</span>
+              <div style={{ display: 'flex', width: 1, height: 28, background: '#C8C8C8', marginBottom: 2, flexShrink: 0 }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ color: '#6B6B6B', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Vs Current Price</span>
+                <span style={{ color: '#6B6B6B', fontSize: 26, fontWeight: 750, letterSpacing: '-0.02em', lineHeight: 1 }}>{fmt(price, currency)}</span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, paddingLeft: 20 }}>
-                <span style={{ color: '#94A3B8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{isUp ? 'Upside' : 'Downside'}</span>
+              <div style={{ display: 'flex', width: 1, height: 28, background: '#C8C8C8', marginBottom: 2, flexShrink: 0 }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ color: '#6B6B6B', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{isUp ? 'Upside' : 'Downside'}</span>
                 <div style={{ display: 'flex', background: upBg, borderRadius: 8, padding: '3px 10px' }}>
-                  <span style={{ color: upsideColor, fontSize: 26, fontWeight: 800, letterSpacing: '-0.02em' }}>{upsideStr ?? '—'}</span>
+                  <span style={{ color: upsideColor, fontSize: 26, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1 }}>{upsideStr ?? '—'}</span>
                 </div>
               </div>
             </div>
-
-            {/* Conviction badge */}
-            {conviction && (
-              <div style={{ display: 'flex' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12, background: vd.bgHex, border: `1px solid ${vd.borderHex}`, borderRadius: 9999, padding: '4px 12px' }}>
-                  <div style={{ display: 'flex', width: 6, height: 6, borderRadius: '50%', background: vd.colorHex }} />
-                  <span style={{ color: vd.colorHex, fontSize: 10, fontWeight: 600 }}>{conviction}</span>
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* RIGHT — price chart or scenario bar */}
+          {/* RIGHT — price chart */}
           <div style={{
             display: 'flex', flexDirection: 'column',
             flex: 1,
-            background: '#FFFFFF', border: `1px solid ${BRAND.border}`,
-            borderRadius: 16, padding: '16px 20px',
-            boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.05)',
+            background: '#FFFFFF', border: '1px solid #E6ECF5',
+            borderRadius: 16, padding: '14px 18px',
+            boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.06)',
             overflow: 'hidden',
           }}>
-            <span style={{ color: '#64748B', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Price chart</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 10 }}>
+              <span style={{ color: '#0F172A', fontSize: 12, fontWeight: 700 }}>Price chart</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <div style={{ display: 'flex', width: 18, height: 2, background: BRAND.olive700, borderRadius: 1 }} />
+                <span style={{ color: '#64748B', fontSize: 10 }}>Fair value estimate {fv != null ? fmt(fv, currency) : ''}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <div style={{ display: 'flex', width: 18, height: 2, background: '#3B82F6', borderRadius: 1 }} />
+                <span style={{ color: '#64748B', fontSize: 10 }}>Current price {fmt(price, currency)}</span>
+              </div>
+            </div>
 
             {chartData ? (
-              <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                {/* Legend */}
-                <div style={{ display: 'flex', gap: 16, marginBottom: 8 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <div style={{ display: 'flex', width: 20, height: 2, background: BRAND.olive700, borderRadius: 1 }} />
-                    <span style={{ color: '#64748B', fontSize: 10 }}>Fair value estimate {fv != null ? fmt(fv, currency) : ''}</span>
+              <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
+                <svg width={CHART_W} height={CHART_H} style={{ display: 'flex', overflow: 'visible' }}>
+                  <polygon points={chartData.areaPoints} fill="rgba(59,130,246,0.07)" />
+                  <polyline points={chartData.fvPoints} fill="none" stroke={BRAND.olive700} strokeWidth="1.5" strokeDasharray="6,4" />
+                  <polyline points={chartData.pricePoints} fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinejoin="round" />
+                </svg>
+                <div style={{ display: 'flex', flexDirection: 'column', position: 'absolute', right: -10, top: 0, bottom: 0, justifyContent: 'space-between', paddingTop: 4, paddingBottom: 4 }}>
+                  <div style={{ display: 'flex', background: BRAND.olive700, borderRadius: 6, padding: '3px 7px' }}>
+                    <span style={{ color: 'white', fontSize: 10, fontWeight: 700 }}>{fv != null ? fmt(fv, currency) : ''}</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <div style={{ display: 'flex', width: 20, height: 2, background: BRAND.blue600, borderRadius: 1 }} />
-                    <span style={{ color: '#64748B', fontSize: 10 }}>Current price {fmt(price, currency)}</span>
-                  </div>
-                </div>
-
-                {/* SVG chart */}
-                <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
-                  <svg width={CHART_W} height={CHART_H} style={{ display: 'flex', overflow: 'visible' }}>
-                    {/* Area fill under price line */}
-                    <polygon points={chartData.areaPoints} fill={`${BRAND.blue600}12`} />
-                    {/* FV dashed line */}
-                    <polyline points={chartData.fvPoints} fill="none" stroke={BRAND.olive700} strokeWidth="1.5" strokeDasharray="6,4" />
-                    {/* Price line */}
-                    <polyline points={chartData.pricePoints} fill="none" stroke={BRAND.blue600} strokeWidth="2" strokeLinejoin="round" />
-                  </svg>
-
-                  {/* Right-edge badges */}
-                  <div style={{ display: 'flex', flexDirection: 'column', position: 'absolute', right: -16, top: 0, bottom: 0, justifyContent: 'space-between', paddingTop: 4, paddingBottom: 4 }}>
-                    <div style={{ display: 'flex', background: BRAND.olive700, borderRadius: 6, padding: '3px 8px' }}>
-                      <span style={{ color: 'white', fontSize: 10, fontWeight: 700 }}>{fv != null ? fmt(fv, currency) : ''}</span>
-                    </div>
-                    <div style={{ display: 'flex', background: BRAND.blue600, borderRadius: 6, padding: '3px 8px' }}>
-                      <span style={{ color: 'white', fontSize: 10, fontWeight: 700 }}>{fmt(price, currency)}</span>
-                    </div>
+                  <div style={{ display: 'flex', background: '#3B82F6', borderRadius: 6, padding: '3px 7px' }}>
+                    <span style={{ color: 'white', fontSize: 10, fontWeight: 700 }}>{fmt(price, currency)}</span>
                   </div>
                 </div>
               </div>
             ) : (
-              /* Fallback: scenario bar when no chart data */
               hasScenBar ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1, justifyContent: 'center' }}>
+                <div style={{ display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: BRAND.negative, fontSize: 11, fontWeight: 600 }}>Bear {fmt(bear!, currency)}</span>
-                    <span style={{ color: '#475569', fontSize: 11, fontWeight: 700 }}>Base {fv != null ? fmt(fv, currency) : '—'}</span>
-                    <span style={{ color: BRAND.positive, fontSize: 11, fontWeight: 600 }}>Bull {fmt(bull!, currency)}</span>
+                    <span style={{ color: '#F87171', fontSize: 11, fontWeight: 600 }}>Bear {fmt(bear!, currency)}</span>
+                    <span style={{ color: '#2563EB', fontSize: 11, fontWeight: 700 }}>Base {fv != null ? fmt(fv, currency) : '—'}</span>
+                    <span style={{ color: '#10B981', fontSize: 11, fontWeight: 600 }}>Bull {fmt(bull!, currency)}</span>
                   </div>
-                  <div style={{ display: 'flex', position: 'relative', height: 8, borderRadius: 9999, background: `linear-gradient(to right,${BRAND.negative}50,#E2E8F0,${BRAND.positive}50)` }}>
-                    {pricePx != null && (
-                      <div style={{ display: 'flex', position: 'absolute', top: -4, left: (pricePx / TRACK_W) * 440 - 5, width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: `8px solid ${BRAND.blue600}` }} />
-                    )}
-                    <div style={{ display: 'flex', position: 'absolute', top: -5, left: (basePx! / TRACK_W) * 440 - 9, width: 18, height: 18, borderRadius: '50%', background: 'white', border: `3px solid ${BRAND.olive700}`, boxShadow: '0 1px 4px rgba(0,0,0,0.12)' }} />
+                  <div style={{ display: 'flex', position: 'relative', height: 8, borderRadius: 9999, background: '#DBEAFE', width: '100%' }}>
+                    <div style={{ display: 'flex', position: 'absolute', top: 1, left: -3, width: 6, height: 6, borderRadius: '50%', background: '#F87171' }} />
+                    <div style={{ display: 'flex', position: 'absolute', top: -2, left: (basePx! / TRACK_W) * 440 - 6, width: 12, height: 12, borderRadius: '50%', background: '#3B82F6', border: '2px solid white' }} />
+                    <div style={{ display: 'flex', position: 'absolute', top: 1, left: 440 - 3, width: 6, height: 6, borderRadius: '50%', background: '#4ADE80' }} />
+                    {pricePx != null && <div style={{ display: 'flex', position: 'absolute', top: -4, left: (pricePx / TRACK_W) * 440 - 1, width: 2, height: 16, background: '#64748B' }} />}
                   </div>
                 </div>
               ) : (
@@ -313,98 +327,91 @@ export async function GET(req: NextRequest) {
           </div>
         </div>
 
-        {/* ── LOWER ROW: MIG + interpretation ── */}
-        {hasLowerRow && (
+        {/* ── LOWER ROW: MIG card + interpretation card ── */}
+        {(hasMIG || interp) && (
           <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
 
-            {/* MIG card */}
-            {hasMIG && (
+            {/* MIG card — mirrors ReverseDCFCompactCard */}
+            {hasMIG && interp && (
               <div style={{
                 display: 'flex', flexDirection: 'column', flex: 1,
-                background: '#FFFFFF', border: `1px solid ${BRAND.border}`,
-                borderRadius: 14, padding: '14px 18px',
+                background: '#FFFFFF', border: '1px solid #E6ECF5',
+                borderRadius: 12, padding: '12px 16px',
                 boxShadow: '0 1px 2px rgba(15,23,42,0.04)',
               }}>
-                <span style={{ color: '#64748B', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>What the market is pricing in</span>
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <span style={{ color: '#64748B', fontSize: 10, fontWeight: 600 }}>Implied 5Y Revenue CAGR</span>
-                    <span style={{ color: vd.colorHex, fontSize: 28, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1 }}>{(mig! * 100).toFixed(1)}%</span>
-                    <span style={{ color: '#94A3B8', fontSize: 10 }}>Model assumes {(migA! * 100).toFixed(1)}%</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <span style={{ color: '#0F172A', fontSize: 12, fontWeight: 700 }}>What the market is pricing in</span>
+                  <div style={{ display: 'flex', background: interp.chipBg, border: `1px solid ${interp.chipBorder}`, borderRadius: 9999, padding: '2px 8px' }}>
+                    <span style={{ color: interp.chipColor, fontSize: 10, fontWeight: 600 }}>{interp.label}</span>
                   </div>
-                  {/* Mini sparkline for MIG trend — simple visual bar */}
-                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 32 }}>
-                    {[0.3, 0.5, 0.45, 0.6, 0.7, 0.65, 0.8, 0.85, 0.9, 1].map((h, i) => (
-                      <div key={i} style={{ display: 'flex', width: 5, height: 32 * h, borderRadius: 2, background: vd.colorHex, opacity: 0.3 + h * 0.5 }} />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <span style={{ color: '#64748B', fontSize: 10, fontWeight: 650 }}>Implied 5Y Revenue CAGR</span>
+                    <span style={{ color: interp.chipColor, fontSize: 28, fontWeight: 800, lineHeight: 1, letterSpacing: '-0.02em' }}>{(mig! * 100).toFixed(1)}%</span>
+                    <span style={{ color: '#9B9B9B', fontSize: 10 }}>Model assumes {(migA! * 100).toFixed(1)}%</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 32, paddingBottom: 2 }}>
+                    {[0.25, 0.4, 0.35, 0.55, 0.6, 0.5, 0.7, 0.75, 0.85, 1].map((h, i) => (
+                      <div key={i} style={{ display: 'flex', width: 5, height: 32 * h, borderRadius: 2, background: interp.chipColor, opacity: 0.2 + h * 0.6 }} />
                     ))}
-                    <div style={{ display: 'flex', width: 8, height: 8, borderRadius: '50%', background: vd.colorHex, marginBottom: 0, alignSelf: 'flex-end' }} />
+                    <div style={{ display: 'flex', width: 7, height: 7, borderRadius: '50%', background: interp.chipColor, marginBottom: 1 }} />
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Market interpretation card */}
+            {/* Market interpretation — mirrors MarketInterpretationCard callout */}
             {interp && (
               <div style={{
                 display: 'flex', flexDirection: 'column', flex: 1,
-                background: vd.bgHex, border: `1px solid ${vd.borderHex}`,
-                borderRadius: 14, padding: '14px 18px',
+                background: '#FFFFFF', border: '1px solid #E6ECF5',
+                borderRadius: 12, padding: '12px 16px',
                 boxShadow: '0 1px 2px rgba(15,23,42,0.04)',
               }}>
-                <span style={{ color: '#64748B', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Market interpretation</span>
-                <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                  <div style={{ display: 'flex', width: 32, height: 32, borderRadius: 8, background: interp.color + '20', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg width="16" height="16" viewBox="0 0 16 16" style={{ display: 'flex' }}>
-                      <path d={interp.icon === '⚠'
-                        ? 'M8 1L15 14H1L8 1Z'
-                        : 'M3 11 L9 5 M9 5 L9 10 M9 5 L4 5'}
-                        fill={interp.icon === '⚠' ? 'none' : 'none'}
-                        stroke={interp.color}
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <span style={{ color: interp.color, fontSize: 12, fontWeight: 700, lineHeight: 1.3 }}>{interp.title}</span>
-                    <span style={{ color: '#475569', fontSize: 11, lineHeight: 1.4 }}>{interp.body}</span>
-                  </div>
+                <span style={{ color: '#0F172A', fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Market interpretation</span>
+                <div style={{
+                  display: 'flex', flexDirection: 'column', gap: 4,
+                  background: interp.calloutBg, border: `1px solid ${interp.calloutBorder}`,
+                  borderRadius: 10, padding: '10px 12px',
+                }}>
+                  <span style={{ color: interp.titleColor, fontSize: 12, fontWeight: 700, lineHeight: 1.3 }}>{interp.title}</span>
+                  <span style={{ color: '#334155', fontSize: 11, lineHeight: 1.5 }}>{interp.body}</span>
                 </div>
               </div>
             )}
           </div>
         )}
 
-        {/* ── SCENARIO BAR (full width, only if chart was shown) ── */}
-        {hasScenBar && chartData && (
+        {/* ── SCENARIO BAR — full width, matches ScenarioRangeBar ── */}
+        {hasScenBar && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ color: '#64748B', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Scenario range</span>
+            <span style={{ color: '#64748B', fontSize: 10, fontWeight: 600 }}>Scenario range</span>
+            <div style={{ display: 'flex', position: 'relative', height: 8, borderRadius: 9999, background: '#DBEAFE', width: TRACK_W }}>
+              <div style={{ display: 'flex', position: 'absolute', top: 1, left: -3, width: 6, height: 6, borderRadius: '50%', background: '#F87171' }} />
+              <div style={{ display: 'flex', position: 'absolute', top: 1, left: TRACK_W - 3, width: 6, height: 6, borderRadius: '50%', background: '#4ADE80' }} />
+              <div style={{ display: 'flex', position: 'absolute', top: -2, left: basePx! - 6, width: 12, height: 12, borderRadius: '50%', background: '#3B82F6', border: '2px solid white', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }} />
+              {pricePx != null && (
+                <div style={{ display: 'flex', position: 'absolute', top: -4, left: pricePx - 1, width: 2, height: 16, background: '#64748B' }} />
+              )}
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', width: TRACK_W }}>
-              <span style={{ color: BRAND.negative, fontSize: 10, fontWeight: 600 }}>Bear {fmt(bear!, currency)}</span>
-              <span style={{ color: '#475569', fontSize: 10, fontWeight: 700 }}>Base {fv != null ? fmt(fv, currency) : '—'}</span>
-              <span style={{ color: BRAND.positive, fontSize: 10, fontWeight: 600 }}>Bull {fmt(bull!, currency)}</span>
-            </div>
-            <div style={{ display: 'flex', position: 'relative', height: 8, borderRadius: 9999, background: `linear-gradient(to right,${BRAND.negative}40,#E2E8F0,${BRAND.positive}40)`, width: TRACK_W }}>
-              {pricePx != null && (
-                <div style={{ display: 'flex', position: 'absolute', top: -4, left: pricePx - 5, width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: `8px solid ${BRAND.blue600}` }} />
-              )}
-              <div style={{ display: 'flex', position: 'absolute', top: -5, left: basePx! - 9, width: 18, height: 18, borderRadius: '50%', background: 'white', border: `3px solid ${BRAND.olive700}`, boxShadow: '0 1px 4px rgba(0,0,0,0.12)' }} />
+              <span style={{ color: '#F87171', fontSize: 10, fontWeight: 600 }}>Bear {fmt(bear!, currency)}</span>
+              <span style={{ color: '#2563EB', fontSize: 10, fontWeight: 700 }}>Base {fv != null ? fmt(fv, currency) : '—'}</span>
+              <span style={{ color: '#10B981', fontSize: 10, fontWeight: 600 }}>Bull {fmt(bull!, currency)}</span>
             </div>
             {pricePx != null && (
-              <div style={{ display: 'flex', position: 'relative', width: TRACK_W, height: 14 }}>
-                <span style={{ position: 'absolute', left: Math.max(0, Math.min(pricePx - 26, TRACK_W - 70)), color: BRAND.blue600, fontSize: 9, fontWeight: 600 }}>Current price {fmt(price, currency)}</span>
+              <div style={{ display: 'flex', position: 'relative', width: TRACK_W, height: 12 }}>
+                <span style={{ position: 'absolute', left: Math.max(0, Math.min(pricePx - 26, TRACK_W - 70)), color: '#64748B', fontSize: 9, fontWeight: 600 }}>Current price {fmt(price, currency)}</span>
               </div>
             )}
           </div>
         )}
 
         {/* ── FOOTER ── */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 10, marginTop: 10, borderTop: `1px solid ${BRAND.border}` }}>
-          <span style={{ color: '#94A3B8', fontSize: 9 }}>Not financial advice · model output only</span>
-          <span style={{ color: '#94A3B8', fontSize: 9 }}>{SITE_URL} · Invest with a process, not a story.</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 10, marginTop: 10, borderTop: '1px solid #E5E5E5' }}>
+          <span style={{ color: '#9B9B9B', fontSize: 9 }}>Not financial advice · model output only</span>
+          <span style={{ color: '#9B9B9B', fontSize: 9 }}>{SITE_URL} · Invest with a process, not a story.</span>
         </div>
 
       </div>
