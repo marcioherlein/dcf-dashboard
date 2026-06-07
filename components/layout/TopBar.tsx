@@ -147,7 +147,7 @@ export default function TopBar() {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 glass-toolbar" data-topbar>
+    <header className="fixed top-0 left-0 lg:left-[220px] right-0 z-40 glass-toolbar" data-topbar>
 
       {/* ── Mobile stock header: single row (tabs live in TabNav below) ── */}
       {stockNav && (
@@ -246,7 +246,7 @@ export default function TopBar() {
       <div
         className={cn(
           stockNav ? 'hidden sm:grid' : 'grid',
-          'relative px-3 sm:px-4 lg:pl-[220px]'
+          'relative px-3 sm:px-4'
         )}
         style={{
           height: '52px',
