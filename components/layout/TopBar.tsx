@@ -76,7 +76,7 @@ function UserAvatar({ image, name }: { image: string | null; name: string | null
 export default function TopBar() {
   const router = useRouter()
   const { data: session } = useSession()
-  const { stockNav, onTabChangeRef, onSaveRef } = useStockNav()
+  const { stockNav, onSaveRef } = useStockNav()
 
   const [query, setQuery]     = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
