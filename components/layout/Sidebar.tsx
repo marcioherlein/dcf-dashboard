@@ -72,7 +72,7 @@ function NavItem({
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#9B9B9B]">
+    <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6B6B6B]">
       {children}
     </p>
   )
@@ -160,7 +160,7 @@ export default function Sidebar() {
               </p>
               <button
                 onClick={() => signOut()}
-                className="min-h-[44px] flex items-center px-2 text-[11px] text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors leading-tight"
+                className="min-h-[44px] flex items-center px-2 text-[11px] text-[#6B6B6B] hover:text-[#111111] transition-colors leading-tight"
               >
                 Sign out
               </button>

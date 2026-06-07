@@ -202,7 +202,7 @@ function SearchHero() {
                     <span className="text-[#6B6B6B]">Implied growth significantly exceeds historical. Market is betting on a major acceleration.</span>
                   </div>
                 </div>
-                <p className="mt-3 text-[#9B9B9B] text-[11px]">Intrinsic value is a DCF-based model estimate. All outputs are not financial advice.</p>
+                <p className="mt-3 text-[#6B6B6B] text-[11px]">Intrinsic value is a DCF-based model estimate. All outputs are not financial advice.</p>
               </div>
             </motion.div>
           )}
@@ -220,7 +220,7 @@ function SearchHero() {
           {loading ? (
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#E5E5E5] border-t-[#5F790B] shrink-0" />
           ) : (
-            <Search size={15} className="text-[#9B9B9B] shrink-0" />
+            <Search size={15} className="text-[#6B6B6B] shrink-0" />
           )}
           <input
             ref={inputRef}
@@ -239,7 +239,7 @@ function SearchHero() {
             className="flex-1 min-w-0 bg-transparent text-[16px] text-[#111111] placeholder-[#9B9B9B] focus:outline-none"
           />
           {!query && (
-            <kbd className="shrink-0 hidden sm:flex items-center rounded border border-[#E5E5E5] px-1.5 py-0.5 text-[10px] text-[#9B9B9B] font-mono leading-tight select-none">
+            <kbd className="shrink-0 hidden sm:flex items-center rounded border border-[#E5E5E5] px-1.5 py-0.5 text-[10px] text-[#6B6B6B] font-mono leading-tight select-none">
               /
             </kbd>
           )}
@@ -267,7 +267,7 @@ function SearchHero() {
               {results.length === 0 ? (
                 <div className="px-4 py-6 text-center">
                   <p className="text-[12px] text-[#6B6B6B]">No results for &ldquo;{query}&rdquo;</p>
-                  <p className="text-[11px] text-[#9B9B9B] mt-1">Try the full ticker symbol, e.g. MELI, NVDA</p>
+                  <p className="text-[11px] text-[#6B6B6B] mt-1">Try the full ticker symbol, e.g. MELI, NVDA</p>
                 </div>
               ) : results.map((r, idx) => (
                 <button
@@ -284,7 +284,7 @@ function SearchHero() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-[13px] font-bold text-[#111111] font-mono">{r.symbol}</span>
-                      {r.exchange && <span className="text-[11px] text-[#9B9B9B] uppercase">{r.exchange}</span>}
+                      {r.exchange && <span className="text-[11px] text-[#6B6B6B] uppercase">{r.exchange}</span>}
                     </div>
                     <span className="text-[12px] text-[#6B6B6B] truncate block">{r.longname ?? r.shortname}</span>
                   </div>
@@ -443,7 +443,7 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
                 {fmtPrice(fairValue)}
               </p>
             ) : (
-              <p className="text-[12px] text-[#9B9B9B]">No model yet</p>
+              <p className="text-[12px] text-[#6B6B6B]">No model yet</p>
             )}
           </div>
           {upsidePct != null && (
@@ -668,7 +668,7 @@ function MarketPricingLeaderboard({ quotes }: { quotes: FeaturedQuote[] }) {
               className="absolute left-5 bottom-full mb-2 z-20 w-72 max-w-[calc(100vw-40px)] rounded-xl bg-[#111111] text-white text-[11px] leading-relaxed px-3.5 py-3 shadow-lg"
             >
               <p className="font-semibold mb-1">Reverse DCF method</p>
-              <p className="text-[#9B9B9B]">Implied CAGR is the 5-year revenue growth rate that would justify the current stock price, computed via a reverse discounted cash flow model at the company&apos;s estimated WACC.</p>
+              <p className="text-[#6B6B6B]">Implied CAGR is the 5-year revenue growth rate that would justify the current stock price, computed via a reverse discounted cash flow model at the company&apos;s estimated WACC.</p>
               <p className="text-[#6B6B6B] mt-1.5">Historical CAGR is from annual revenue filings. Model estimates only — not financial advice.</p>
             </motion.div>
           )}
@@ -761,7 +761,7 @@ function RecentlyViewed() {
         <div className="rounded-xl bg-white border border-[#E5E5E5] shadow-card px-6 py-8 flex flex-col items-center text-center gap-2">
           <Clock size={22} className="text-[#C4C4C4]" />
           <p className="text-[13px] font-medium text-[#6B6B6B]">No recent analyses yet</p>
-          <p className="text-[12px] text-[#9B9B9B]">Stocks you open will appear here so you can quickly pick up where you left off.</p>
+          <p className="text-[12px] text-[#6B6B6B]">Stocks you open will appear here so you can quickly pick up where you left off.</p>
           <button
             onClick={() => document.getElementById('analyze-search-input')?.focus()}
             className="mt-2 text-[12px] font-semibold text-[#5F790B] hover:text-[#526A08] transition-colors"

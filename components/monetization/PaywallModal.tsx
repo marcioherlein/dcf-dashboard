@@ -85,7 +85,7 @@ export default function PaywallModal({ gate, onClose }: Props) {
 
         <button
           onClick={onClose}
-          className="mt-3 w-full text-center text-[12px] text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors"
+          className="mt-3 w-full text-center text-[12px] text-[#6B6B6B] hover:text-[#111111] transition-colors"
         >
           Maybe later
         </button>

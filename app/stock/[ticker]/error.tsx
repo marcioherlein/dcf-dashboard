@@ -7,7 +7,7 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
         <p className="text-sm font-semibold text-[#D83B3B]">Something went wrong loading this page</p>
         <p className="mt-2 text-xs text-[#6B6B6B]">Please try again. If the problem persists, the stock data may be temporarily unavailable.</p>
         {process.env.NODE_ENV === 'development' && (
-          <p className="mt-2 text-[10px] text-[#9B9B9B] font-mono break-all">{error.message}</p>
+          <p className="mt-2 text-[10px] text-[#6B6B6B] font-mono break-all">{error.message}</p>
         )}
         <button
           onClick={reset}

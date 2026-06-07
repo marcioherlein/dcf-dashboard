@@ -94,7 +94,7 @@ export default function PricingPage() {
             <InsicLogoLockup size="sm" />
           </Link>
         <span className="text-[#C4C4C4]">·</span>
-        <span className="text-[13px] text-[#9B9B9B]">Pricing</span>
+        <span className="text-[13px] text-[#6B6B6B]">Pricing</span>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -120,10 +120,10 @@ export default function PricingPage() {
           {/* Free card */}
           <div className="rounded-[20px] bg-white border border-[#E5E5E5] p-8 flex flex-col shadow-card">
             <div className="mb-6">
-              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#9B9B9B] mb-3">Free</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#6B6B6B] mb-3">Free</p>
               <div className="flex items-baseline gap-1">
                 <span className="text-[48px] font-bold text-[#111111] leading-none tabular-nums">$0</span>
-                <span className="text-[#9B9B9B] text-[14px] font-medium">/ month</span>
+                <span className="text-[#6B6B6B] text-[14px] font-medium">/ month</span>
               </div>
               <p className="text-[13px] text-[#6B6B6B] mt-2">No credit card. No time limit. Just analysis.</p>
             </div>
@@ -166,7 +166,7 @@ export default function PricingPage() {
               <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#EEF4DD] mb-3">Pro</p>
               <div className="flex items-baseline gap-1">
                 <span className="text-[48px] font-bold text-white leading-none tabular-nums">${monthlyPrice}</span>
-                <span className="text-[#9B9B9B] text-[14px] font-medium">/ month</span>
+                <span className="text-[#6B6B6B] text-[14px] font-medium">/ month</span>
               </div>
               <p className="text-[#6B6B6B] text-[13px] mt-2">Cancel anytime. No contracts.</p>
             </div>
@@ -195,7 +195,7 @@ export default function PricingPage() {
 
         {/* Data sources / trust bar */}
         <div className="rounded-[16px] bg-white border border-[#E5E5E5] px-6 sm:px-8 py-6 mb-16 text-center shadow-card">
-          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#9B9B9B] mb-4">Powered by public data</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#6B6B6B] mb-4">Powered by public data</p>
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] font-medium text-[#6B6B6B]">
             <span>Yahoo Finance</span>
             <span className="hidden sm:inline text-[#E5E5E5]">·</span>
@@ -205,7 +205,7 @@ export default function PricingPage() {
             <span className="hidden sm:inline text-[#E5E5E5]">·</span>
             <span>Damodaran (NYU Stern)</span>
           </div>
-          <p className="mt-4 text-[11px] text-[#9B9B9B] max-w-lg mx-auto leading-relaxed">
+          <p className="mt-4 text-[11px] text-[#6B6B6B] max-w-lg mx-auto leading-relaxed">
             Not financial advice. Fair value estimates are model outputs based on public data and stated assumptions — not guarantees of future returns.
           </p>
         </div>
@@ -223,7 +223,7 @@ export default function PricingPage() {
                 <div className="px-5 py-3 border-b border-[#E5E5E5] bg-[#FAFAFA]">
                   <span className={cn(
                     'text-[10px] font-bold uppercase tracking-[0.08em]',
-                    tier === 'Pro' ? 'text-[#5F790B]' : 'text-[#9B9B9B]',
+                    tier === 'Pro' ? 'text-[#5F790B]' : 'text-[#6B6B6B]',
                   )}>{tier}</span>
                 </div>
                 <ul className="divide-y divide-[#F5F5F5]">
@@ -257,8 +257,8 @@ export default function PricingPage() {
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="border-b border-[#E5E5E5] bg-[#FAFAFA]">
-                  <th className="text-left px-6 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#9B9B9B] w-1/2">Feature</th>
-                  <th className="text-center px-4 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#9B9B9B]">Free</th>
+                  <th className="text-left px-6 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6B6B6B] w-1/2">Feature</th>
+                  <th className="text-center px-4 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6B6B6B]">Free</th>
                   <th className="text-center px-4 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#5F790B]">Pro</th>
                 </tr>
               </thead>
@@ -307,7 +307,7 @@ export default function PricingPage() {
           <h2 className="text-[22px] sm:text-[26px] font-bold text-white mb-3 tracking-tight">
             Know what has to be true before you buy.
           </h2>
-          <p className="text-[#9B9B9B] mb-7 text-[14px]">
+          <p className="text-[#6B6B6B] mb-7 text-[14px]">
             A first-pass valuation in seconds. Go deeper when it matters.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -339,7 +339,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
         className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-[#FAFAFA] transition-colors min-h-[52px]"
       >
         <span className="text-[14px] font-semibold text-[#111111] text-balance">{q}</span>
-        <span className={cn('text-[#9B9B9B] transition-transform shrink-0 ml-4', open && 'rotate-180')}>
+        <span className={cn('text-[#6B6B6B] transition-transform shrink-0 ml-4', open && 'rotate-180')}>
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
