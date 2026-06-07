@@ -5,15 +5,10 @@ import { computeReverseDCF } from '@/lib/valuation/methods/reverseDcf'
 import SummaryHeroCard from './SummaryHeroCard'
 import SummaryPriceChartCard from './SummaryPriceChartCard'
 import ReverseDCFCompactCard from './ReverseDCFCompactCard'
-import MarketInterpretationCard from './MarketInterpretationCard'
 import BullCaseCard from './BullCaseCard'
 import BearCaseCard from './BearCaseCard'
-import NextStepsCard from './NextStepsCard'
+import BusinessPerformanceCard from './BusinessPerformanceCard'
 import OverviewMetricGrid from '@/components/stock/OverviewMetricGrid'
-import CompanyCard from '@/components/stock/overview/CompanyCard'
-import IncomeFlowCard from './IncomeFlowCard'
-import RevenueEarningsChart from './RevenueEarningsChart'
-import FinancialSnapshotBar from './FinancialSnapshotBar'
 import { ETFExposureCard } from './ETFExposureCard'
 import PeerValuationChart from './PeerValuationChart'
 import QuickStatsBar from '@/components/stock/QuickStatsBar'
@@ -113,12 +108,12 @@ export default function SummaryTab({
   sharesM, cashM, debtM, revenueM, fcfMargin,
   wacc, terminalG, historicalCAGR, analystCAGR, isEmergingMarket, revenueHistory,
   scenarios, ratings, scores, businessProfile, cagrAnalysis, statementsData,
-  valuationMethods, quote, analystTargetMean, analystTargetLow, analystTargetHigh, userModelFairValue,
+  valuationMethods, quote, analystTargetMean, analystTargetLow: _analystTargetLow, analystTargetHigh: _analystTargetHigh, userModelFairValue,
   marketCap, peRatio, beta, pegRatio, evToEbitda, dividendYield, holdingReturns, nextEarningsDate,
-  onViewValuation, onViewRisks, onViewAssumptions, analystRecommendation,
+  onViewValuation, onViewRisks, onViewAssumptions: _onViewAssumptions, analystRecommendation,
 }: SummaryTabProps) {
 
-  const rdcfResult = useMemo(() => computeReverseDCF({
+  const _rdcfResult = useMemo(() => computeReverseDCF({
     currentPrice: price,
     sharesOutstanding: sharesM != null ? sharesM * 1e6 : null,
     cashM,
@@ -131,45 +126,12 @@ export default function SummaryTab({
   }), [price, sharesM, cashM, debtM, revenueM, fcfMargin, wacc, terminalG, historicalCAGR])
 
   const isFinancialSector = ['Financial Services', 'Banks', 'Insurance', 'Financial'].includes(sector)
-
   const drivers: string[] = cagrAnalysis?.drivers ?? []
 
   return (
     <div className="flex flex-col gap-4">
 
-      {/* ── Row 0: Company identity ───────────────────────────────────────── */}
-      {businessProfile?.description && (
-        <CompanyCard
-          description={businessProfile.description}
-          sector={sector}
-          industry={businessProfile.industry ?? ''}
-          country={businessProfile.country ?? ''}
-          employees={businessProfile.employees ?? null}
-          ticker={ticker}
-        />
-      )}
-
-      {/* ── Row 0.5: Quick stats bar ──────────────────────────────────────── */}
-      <QuickStatsBar
-        marketCap={marketCap ?? null}
-        peRatio={peRatio ?? null}
-        beta={beta ?? null}
-        high52={high52}
-        low52={low52}
-        currentPrice={price}
-        currency={currency}
-        pegRatio={pegRatio ?? null}
-        evToEbitda={evToEbitda ?? null}
-        dividendYield={dividendYield ?? null}
-        nextEarningsDate={nextEarningsDate ?? null}
-      />
-
-      {/* ── Zone 0.7: Financial performance snapshot ─────────────────────── */}
-      {statementsData && (
-        <FinancialSnapshotBar statementsData={statementsData} currency={currency} currentPrice={price} />
-      )}
-
-      {/* ── Zone 0.9: Investment checklist ───────────────────────────────── */}
+      {/* ── 1. VERDICT ───────────────────────────────────────────────────────── */}
       {scores && (
         <InvestmentVerdict
           ticker={ticker}
@@ -183,7 +145,7 @@ export default function SummaryTab({
         />
       )}
 
-      {/* ── Zone 1: Verdict — hero + price chart, equal columns ──────────── */}
+      {/* ── 2. VALUATION — hero + price chart, equal columns ─────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
         <SummaryHeroCard
           ticker={ticker}
@@ -197,6 +159,8 @@ export default function SummaryTab({
           scenarios={scenarios}
           drivers={drivers}
           onViewValuation={onViewValuation}
+          analystTargetMean={analystTargetMean ?? null}
+          analystRecommendation={analystRecommendation ?? null}
         />
         <SummaryPriceChartCard
           ticker={ticker}
@@ -211,70 +175,61 @@ export default function SummaryTab({
         />
       </div>
 
-      {/* ── Zone 1.5: Historical returns vs. SPY ─────────────────────────── */}
-      {holdingReturns && (
-        <HoldingReturns returns={holdingReturns} ticker={ticker} />
-      )}
+      {/* ── 3. MARKET PRICING — what is the price implying? ──────────────────── */}
+      <ReverseDCFCompactCard
+        price={price}
+        currency={currency}
+        sharesM={sharesM}
+        cashM={cashM}
+        debtM={debtM}
+        revenueM={revenueM}
+        fcfMargin={fcfMargin}
+        wacc={wacc}
+        terminalG={terminalG}
+        historicalCAGR={historicalCAGR}
+        analystCAGR={analystCAGR}
+        isEmergingMarket={isEmergingMarket}
+        isFinancialSector={isFinancialSector}
+        rawBlendedCagr={cagrAnalysis?.rawBlended ?? null}
+        cagrCap={cagrAnalysis?.cagrCap ?? null}
+        revenueHistory={revenueHistory ?? []}
+      />
 
-      {/* ── Zone 2: What the price assumes ───────────────────────────────── */}      <div className="rounded-2xl bg-[#F8FAFC] border border-[#E6ECF5] p-4 sm:p-5">
-        <p className="text-[12px] font-[650] text-slate-500 mb-3">What the market is pricing in</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-          <ReverseDCFCompactCard
-            price={price}
-            currency={currency}
-            sharesM={sharesM}
-            cashM={cashM}
-            debtM={debtM}
-            revenueM={revenueM}
-            fcfMargin={fcfMargin}
-            wacc={wacc}
-            terminalG={terminalG}
-            historicalCAGR={historicalCAGR}
-            analystCAGR={analystCAGR}
-            isEmergingMarket={isEmergingMarket}
-            isFinancialSector={isFinancialSector}
-            rawBlendedCagr={cagrAnalysis?.rawBlended ?? null}
-            cagrCap={cagrAnalysis?.cagrCap ?? null}
-            revenueHistory={revenueHistory ?? []}
-          />
-          <MarketInterpretationCard
-            upsidePct={upsidePct}
-            confidence={confidence}
-            reverseDCFInterpretation={rdcfResult.interpretation}
-            reverseDCFText={rdcfResult.interpretationText}
-            analystRecommendation={analystRecommendation ?? ''}
-            analystTargetMean={analystTargetMean ?? null}
-            analystTargetLow={analystTargetLow ?? null}
-            analystTargetHigh={analystTargetHigh ?? null}
-            currentPrice={price}
-            currency={currency}
-          />
-        </div>
+      {/* ── 4. THESIS — bull and bear cases ──────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
+        <BullCaseCard
+          drivers={drivers}
+          upsidePct={upsidePct}
+          onViewDetails={onViewRisks}
+        />
+        <BearCaseCard
+          drivers={drivers}
+          upsidePct={upsidePct}
+          ratings={ratings}
+          onViewDetails={onViewRisks}
+        />
       </div>
 
-      {/* ── Zone 2.5: Revenue & earnings trend ───────────────────────────── */}
-      {statementsData && (
-        <RevenueEarningsChart statementsData={statementsData} currency={currency} />
-      )}
+      {/* ── 5. CONTEXT — market stats bar ────────────────────────────────────── */}
+      <QuickStatsBar
+        marketCap={marketCap ?? null}
+        peRatio={peRatio ?? null}
+        beta={beta ?? null}
+        high52={high52}
+        low52={low52}
+        currentPrice={price}
+        currency={currency}
+        pegRatio={pegRatio ?? null}
+        evToEbitda={evToEbitda ?? null}
+        dividendYield={dividendYield ?? null}
+        nextEarningsDate={nextEarningsDate ?? null}
+      />
 
-      {/* ── Zone 2.55: Peer P/E vs EPS growth scatter ────────────────────── */}
-      <PeerValuationChart ticker={ticker} isFinancialSector={isFinancialSector} />
-
-      {/* ── Zone 2.6: Income flow chart ───────────────────────────────────── */}
-      {statementsData && (
-        <IncomeFlowCard
-          statementsData={statementsData}
-          currency={currency}
-        />
-      )}
-
-      {/* ── Zone 2.7: ETF Exposure ─────────────────────────────────────────── */}
-      <ETFExposureCard ticker={ticker} />
-
-      {/* ── Zone 3: Business fundamentals panel ──────────────────────────── */}      {ratings && (
-        <div className="rounded-2xl overflow-hidden border border-slate-100 shadow-card">
-          <div className="px-4 sm:px-5 py-3 bg-white border-b border-slate-100">
-            <p className="text-[12px] font-[650] text-slate-500">Business fundamentals</p>
+      {/* ── 6. FUNDAMENTALS — business quality panel ─────────────────────────── */}
+      {ratings && (
+        <div className="rounded-2xl overflow-hidden border border-[#E5E5E5] shadow-card">
+          <div className="px-4 sm:px-5 py-3 bg-white border-b border-[#E5E5E5]">
+            <p className="text-[12px] font-[650] text-[#6B6B6B]">Business fundamentals</p>
           </div>
           <OverviewMetricGrid
             ratings={ratings}
@@ -290,26 +245,19 @@ export default function SummaryTab({
         </div>
       )}
 
-      {/* ── Zone 4: Bull · Bear · Next steps ─────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-stretch">
-        <BullCaseCard
-          drivers={drivers}
-          upsidePct={upsidePct}
-          onViewDetails={onViewRisks}
-        />
-        <BearCaseCard
-          drivers={drivers}
-          upsidePct={upsidePct}
-          ratings={ratings}
-          onViewDetails={onViewRisks}
-        />
-        <NextStepsCard
-          ticker={ticker}
-          onViewValuation={onViewValuation}
-          onViewAssumptions={onViewAssumptions}
-          onViewRisks={onViewRisks}
-        />
-      </div>
+      {/* ── 7. PERFORMANCE — revenue trend + income breakdown ────────────────── */}
+      {statementsData && (
+        <BusinessPerformanceCard statementsData={statementsData} currency={currency} />
+      )}
+
+      {/* ── 8. RELATIVE — peer valuation scatter ─────────────────────────────── */}
+      <PeerValuationChart ticker={ticker} isFinancialSector={isFinancialSector} />
+
+      {/* ── 9. EXTRAS — holding returns + ETF exposure ───────────────────────── */}
+      {holdingReturns && (
+        <HoldingReturns returns={holdingReturns} ticker={ticker} />
+      )}
+      <ETFExposureCard ticker={ticker} />
 
     </div>
   )

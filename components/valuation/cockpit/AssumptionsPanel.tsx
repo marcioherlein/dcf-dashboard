@@ -39,10 +39,10 @@ const GRAHAM_FLOORS: Partial<Record<keyof ValuationAssumptions, number>> = {
 }
 
 const METHOD_CFG = {
-  DCF:    { tagBg: 'bg-blue-100',    tagText: 'text-blue-700',    hex: '#3b82f6', trackCls: 'bg-blue-500'   },
+  DCF:    { tagBg: 'bg-[#EAF1FF]',   tagText: 'text-[#2563EB]',    hex: '#3b82f6', trackCls: 'bg-[#2563EB]'   },
   'P/E':  { tagBg: 'bg-violet-100',  tagText: 'text-violet-700',  hex: '#8b5cf6', trackCls: 'bg-violet-500' },
-  EBITDA: { tagBg: 'bg-amber-100',   tagText: 'text-amber-700',   hex: '#f59e0b', trackCls: 'bg-amber-500'  },
-  Rev:    { tagBg: 'bg-emerald-100', tagText: 'text-emerald-700', hex: '#10b981', trackCls: 'bg-emerald-500' },
+  EBITDA: { tagBg: 'bg-[#FFF4DA]',   tagText: 'text-[#B56A00]',   hex: '#f59e0b', trackCls: 'bg-[#B56A00]'  },
+  Rev:    { tagBg: 'bg-[#E8F7EF]',   tagText: 'text-[#11875D]',   hex: '#10b981', trackCls: 'bg-[#11875D]'  },
 } as const
 
 type MethodKey = keyof typeof METHOD_CFG
@@ -109,21 +109,21 @@ function getStats(field: Field, sparkPoints?: SparkPoint[], effectiveTypicals?: 
 }
 
 function getContextLabel(value: number, field: Field, stats: Stats, ttmVal?: number, effectiveTypicals?: { min: number; max: number }): { text: string; dot: string } {
-  const tMin = effectiveTypicals?.min ?? field.typicalMin
-  const tMax = effectiveTypicals?.max ?? field.typicalMax
+  const _tMin = effectiveTypicals?.min ?? field.typicalMin
+  const _tMax = effectiveTypicals?.max ?? field.typicalMax
   const ref   = stats.isReal ? stats.med : ttmVal
   const label = stats.isReal ? 'historical avg' : 'recent level'
   if (ref == null) {
-    if (value > tMax) return { text: 'Above typical range', dot: 'bg-amber-400' }
-    if (value < tMin) return { text: 'Below typical range', dot: 'bg-emerald-400' }
-    return { text: 'Within typical range', dot: 'bg-slate-400' }
+    if (value > field.typicalMax) return { text: 'Above typical range', dot: 'bg-[#B56A00]' }
+    if (value < field.typicalMin) return { text: 'Below typical range', dot: 'bg-[#11875D]' }
+    return { text: 'Within typical range', dot: 'bg-[#8A95A6]' }
   }
   const ratio = value / ref
-  if (ratio < 0.94)  return { text: `Below ${label}`,          dot: 'bg-emerald-500' }
-  if (ratio < 0.97)  return { text: `Slightly below ${label}`, dot: 'bg-emerald-400' }
-  if (ratio <= 1.03) return { text: `Near ${label}`,           dot: 'bg-amber-400'   }
-  if (ratio <= 1.07) return { text: `Slightly above ${label}`, dot: 'bg-amber-500'   }
-  return               { text: `Above ${label}`,               dot: 'bg-red-400'     }
+  if (ratio < 0.94)  return { text: `Below ${label}`,          dot: 'bg-[#11875D]' }
+  if (ratio < 0.97)  return { text: `Slightly below ${label}`, dot: 'bg-[#11875D]' }
+  if (ratio <= 1.03) return { text: `Near ${label}`,           dot: 'bg-[#B56A00]' }
+  if (ratio <= 1.07) return { text: `Slightly above ${label}`, dot: 'bg-[#B56A00]' }
+  return               { text: `Above ${label}`,               dot: 'bg-[#D83B3B]'  }
 }
 
 // ── Bar Chart ─────────────────────────────────────────────────────────────────
@@ -146,7 +146,7 @@ function BarChart({ sparkPoints, inputVal, color, unit, referenceLines = [] }: {
   if (bars.length === 0) {
     return (
       <div className="flex items-center justify-center h-[86px]">
-        <span className="text-[11px] text-slate-300">No historical data</span>
+        <span className="text-[11px] text-[#8A95A6]">No historical data</span>
       </div>
     )
   }
@@ -269,19 +269,19 @@ function AssumptionRowExpanded({
 
   const waccSignal = (() => {
     if (field.key !== 'wacc') return null
-    if (value > field.typicalMax) return { text: 'Above typical', cls: 'text-amber-600' }
-    if (value < field.typicalMin) return { text: 'Below typical', cls: 'text-emerald-600' }
-    return { text: 'Within typical', cls: 'text-slate-500' }
+    if (value > field.typicalMax) return { text: 'Above typical', cls: 'text-[#B56A00]' }
+    if (value < field.typicalMin) return { text: 'Below typical', cls: 'text-[#11875D]' }
+    return { text: 'Within typical', cls: 'text-[#566174]' }
   })()
 
   const currentMultiple = field.isExitMultiple ? (currPoint?.value ?? null) : null
   const expansionSignal = (() => {
     if (!field.isExitMultiple || currentMultiple == null || currentMultiple <= 0) return null
     const ratio = value / currentMultiple
-    if (ratio < 0.90) return { text: `▼ Implies ${((1 - ratio) * 100).toFixed(0)}% compression vs current ${currentMultiple.toFixed(1)}×`, cls: 'bg-emerald-50 border-emerald-200 text-emerald-700' }
-    if (ratio <= 1.10) return { text: `≈ Near current ${currentMultiple.toFixed(1)}×`, cls: 'bg-slate-100 border-slate-200 text-slate-600' }
-    if (ratio <= 1.50) return { text: `▲ Assumes ${ratio.toFixed(1)}× expansion vs current ${currentMultiple.toFixed(1)}×`, cls: 'bg-amber-50 border-amber-200 text-amber-700' }
-    return { text: `▲▲ Aggressive ${ratio.toFixed(1)}× expansion vs current ${currentMultiple.toFixed(1)}×`, cls: 'bg-red-50 border-red-200 text-red-600' }
+    if (ratio < 0.90) return { text: `▼ Implies ${((1 - ratio) * 100).toFixed(0)}% compression vs current ${currentMultiple.toFixed(1)}×`, cls: 'bg-[#E8F7EF] border-[#A7D7C0] text-[#11875D]' }
+    if (ratio <= 1.10) return { text: `≈ Near current ${currentMultiple.toFixed(1)}×`, cls: 'bg-[#F4F3EF] border-[#E3E1DA] text-[#566174]' }
+    if (ratio <= 1.50) return { text: `▲ Assumes ${ratio.toFixed(1)}× expansion vs current ${currentMultiple.toFixed(1)}×`, cls: 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]' }
+    return { text: `▲▲ Aggressive ${ratio.toFixed(1)}× expansion vs current ${currentMultiple.toFixed(1)}×`, cls: 'bg-[#FCEAEA] border-[#F0AEAE] text-[#D83B3B]' }
   })()
 
   const pegRatio = field.key === 'exitPE' && cagr != null && cagr > 0 ? value / (cagr * 100) : null
@@ -327,17 +327,17 @@ function AssumptionRowExpanded({
 
       {/* Delta vs default — shown below picker when dirty */}
       {isDirty && (
-        <div className={`text-[10px] font-[600] tabular-nums text-center -mt-1 ${delta > 0 ? 'text-emerald-500' : 'text-red-400'}`}>
+        <div className={`text-[10px] font-[600] tabular-nums text-center -mt-1 ${delta > 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
           {deltaDisplay} vs default
         </div>
       )}
 
       {/* Steppers */}
       <div className="flex items-center justify-between gap-2">
-        <button onClick={() => onChange(clamp(value - field.step))} className="flex-1 h-11 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all text-sm font-bold select-none" aria-label={`Decrease ${field.label}`}>−</button>
+        <button onClick={() => onChange(clamp(value - field.step))} className="flex-1 h-11 flex items-center justify-center rounded-lg border border-[#E3E1DA] bg-white text-[#566174] hover:text-[#06101F] hover:bg-[#F4F3EF] transition-all text-sm font-bold select-none" aria-label={`Decrease ${field.label}`}>−</button>
         <button
           onClick={startEdit}
-          className="flex-1 h-11 text-[13px] font-[700] tabular-nums text-center border border-slate-200 rounded-lg bg-white hover:bg-slate-50 transition-colors text-slate-600"
+          className="flex-1 h-11 text-[13px] font-[700] tabular-nums text-center border border-[#E3E1DA] rounded-lg bg-white hover:bg-[#F4F3EF] transition-colors text-[#566174]"
           title="Click to type a value directly"
           aria-label={`${field.label}: ${fmtVal(value, field.unit)}. Click to type.`}
         >
@@ -348,27 +348,27 @@ function AssumptionRowExpanded({
               onBlur={commitEdit}
               onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') setIsEditing(false) }}
               autoFocus
-              className="text-[13px] font-[700] tabular-nums text-center w-full border-none outline-none bg-transparent text-slate-900"
+              className="text-[13px] font-[700] tabular-nums text-center w-full border-none outline-none bg-transparent text-[#06101F]"
               aria-label={`Enter ${field.label} value`}
             />
           ) : fmtVal(value, field.unit)}
         </button>
-        <button onClick={() => onChange(clamp(value + field.step))} className="flex-1 h-11 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all text-sm font-bold select-none" aria-label={`Increase ${field.label}`}>+</button>
+        <button onClick={() => onChange(clamp(value + field.step))} className="flex-1 h-11 flex items-center justify-center rounded-lg border border-[#E3E1DA] bg-white text-[#566174] hover:text-[#06101F] hover:bg-[#F4F3EF] transition-all text-sm font-bold select-none" aria-label={`Increase ${field.label}`}>+</button>
       </div>
 
       {/* WACC signal */}
       {field.key === 'wacc' && waccSignal && (
         <div className="flex items-center gap-1.5">
           <span className={`text-[10px] font-[600] ${waccSignal.cls}`}>{waccSignal.text}</span>
-          <span className="text-[10px] text-slate-400">· typical {fmtVal(field.typicalMin, '%')}–{fmtVal(field.typicalMax, '%')}</span>
+          <span className="text-[10px] text-[#8A95A6]">· typical {fmtVal(field.typicalMin, '%')}–{fmtVal(field.typicalMax, '%')}</span>
         </div>
       )}
 
       {/* CAGR sector hint */}
       {field.key === 'cagr' && sector && SECTOR_CAGR_HINT[sector] && (
         <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full shrink-0 bg-slate-300" />
-          <span className="text-[10px] text-slate-500">Typical {sector} CAGR: {SECTOR_CAGR_HINT[sector]}</span>
+          <span className="w-2 h-2 rounded-full shrink-0 bg-[#8A95A6]" />
+          <span className="text-[10px] text-[#566174]">Typical {sector} CAGR: {SECTOR_CAGR_HINT[sector]}</span>
         </div>
       )}
 
@@ -383,15 +383,15 @@ function AssumptionRowExpanded({
       {showGordonPE && (
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full shrink-0 bg-indigo-300" />
-          <span className="text-[10px] text-slate-500">Intrinsic P/E (Gordon): <span className="font-[700] text-indigo-600">{intrinsicPE!.toFixed(1)}×</span></span>
+          <span className="text-[10px] text-[#566174]">Intrinsic P/E (Gordon): <span className="font-[700] text-indigo-600">{intrinsicPE!.toFixed(1)}×</span></span>
         </div>
       )}
 
       {/* PEG ratio */}
       {showPEG && pegRatio != null && (
         <div className="flex items-center gap-1.5">
-          <span className={`w-2 h-2 rounded-full shrink-0 ${pegRatio < 1 ? 'bg-emerald-400' : pegRatio < 2 ? 'bg-amber-400' : 'bg-red-400'}`} />
-          <span className="text-[10px] text-slate-500">PEG: <span className={`font-[700] tabular-nums ${pegRatio < 1 ? 'text-emerald-600' : pegRatio < 2 ? 'text-amber-600' : 'text-red-500'}`}>{pegRatio.toFixed(1)}×</span> · Lynch: &lt;1 = attractive, &gt;2 = expensive</span>
+          <span className={`w-2 h-2 rounded-full shrink-0 ${pegRatio < 1 ? 'bg-[#11875D]' : pegRatio < 2 ? 'bg-[#B56A00]' : 'bg-[#D83B3B]'}`} />
+          <span className="text-[10px] text-[#566174]">PEG: <span className={`font-[700] tabular-nums ${pegRatio < 1 ? 'text-[#11875D]' : pegRatio < 2 ? 'text-[#B56A00]' : 'text-[#D83B3B]'}`}>{pegRatio.toFixed(1)}×</span> · Lynch: &lt;1 = attractive, &gt;2 = expensive</span>
         </div>
       )}
 
@@ -399,9 +399,9 @@ function AssumptionRowExpanded({
       {showChart && (
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] text-slate-400">{hasSeries ? '5-year history' : 'No historical data'}</span>
+            <span className="text-[10px] text-[#8A95A6]">{hasSeries ? '5-year history' : 'No historical data'}</span>
           </div>
-          <div className="rounded-xl bg-slate-50/60 p-2">
+          <div className="rounded-xl bg-[#F4F3EF]/60 p-2">
             <BarChart
               sparkPoints={sparkPoints ?? []} inputVal={value} color={color} unit={field.unit}
               typicalMin={effectiveTypicals.min} typicalMax={effectiveTypicals.max}
@@ -412,20 +412,20 @@ function AssumptionRowExpanded({
       )}
 
       {/* Context label + FV impact + reset */}
-      <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
+      <div className="flex items-center justify-between gap-2 pt-1 border-t border-[#E3E1DA]">
         <div className="flex items-center gap-1.5 min-w-0">
           <span className={`w-2 h-2 rounded-full shrink-0 ${ctxLabel.dot}`} />
-          <span className="text-[10px] text-slate-500 truncate">{ctxLabel.text}</span>
+          <span className="text-[10px] text-[#566174] truncate">{ctxLabel.text}</span>
           {field.isExitMultiple && sectorBenchmark != null && (
-            <span className="text-[10px] text-slate-400 shrink-0">· sector: {sectorBenchmark.toFixed(0)}×</span>
+            <span className="text-[10px] text-[#8A95A6] shrink-0">· sector: {sectorBenchmark.toFixed(0)}×</span>
           )}
         </div>
         <div className="flex items-center gap-3 shrink-0">
           {dollarImpact != null && (
-            <span className="text-[10px] text-slate-400 tabular-nums">±{currency}{dollarImpact < 10 ? dollarImpact.toFixed(2) : dollarImpact.toFixed(1)}/{field.unit === '%' ? '1pp' : '1×'}</span>
+            <span className="text-[10px] text-[#8A95A6] tabular-nums">±{currency}{dollarImpact < 10 ? dollarImpact.toFixed(2) : dollarImpact.toFixed(1)}/{field.unit === '%' ? '1pp' : '1×'}</span>
           )}
           {isDirty && (
-            <button onClick={onReset} className="text-[10px] text-slate-400 hover:text-red-500 transition-colors">Reset</button>
+            <button onClick={onReset} className="text-[10px] text-[#8A95A6] hover:text-[#D83B3B] transition-colors">Reset</button>
           )}
         </div>
       </div>
@@ -462,28 +462,28 @@ function AssumptionRowCollapsed({
       onClick={onToggle}
       className={cn(
         'w-full flex items-center gap-3 px-4 py-3 transition-colors text-left group',
-        isExpanded ? 'bg-slate-50/80' : 'hover:bg-slate-50/60',
+        isExpanded ? 'bg-[#F4F3EF]/80' : 'hover:bg-[#F4F3EF]/60',
       )}
       aria-expanded={isExpanded}
     >
       {/* Label */}
       <div className="flex flex-col min-w-0 w-[140px] shrink-0">
-        <span className={cn('text-[12px] font-[650] leading-tight', isDirty ? 'text-blue-700' : 'text-slate-700')}>
+        <span className={cn('text-[12px] font-[650] leading-tight', isDirty ? 'text-[#2563EB]' : 'text-[#566174]')}>
           {field.label}
-          {isDirty && <span className="ml-1 text-[10px] text-blue-500">●</span>}
+          {isDirty && <span className="ml-1 text-[10px] text-[#2563EB]">●</span>}
         </span>
-        <span className="text-[10px] text-slate-400 leading-tight mt-0.5 truncate">{field.subLabel}</span>
+        <span className="text-[10px] text-[#8A95A6] leading-tight mt-0.5 truncate">{field.subLabel}</span>
       </div>
 
       {/* Slider track (visual indicator, not interactive in collapsed state) */}
       <div className="flex-1 relative" style={{ height: 16 }}>
-        <div className="absolute top-1/2 -translate-y-1/2 w-full h-[3px] bg-slate-100 rounded-full" />
+        <div className="absolute top-1/2 -translate-y-1/2 w-full h-[3px] bg-[#E3E1DA] rounded-full" />
         <div className="absolute top-1/2 -translate-y-1/2 h-[3px] rounded-full" style={{ width: `${sliderPct}%`, background: color, opacity: 0.6 }} />
         <div className="absolute top-1/2 -translate-y-1/2 w-[10px] h-[10px] rounded-full ring-2 ring-white shadow-sm" style={{ left: `${sliderPct}%`, transform: 'translate(-50%, -50%)', background: color }} />
       </div>
 
       {/* Value */}
-      <span className={cn('text-[13px] font-[750] tabular-nums font-mono w-[52px] text-right shrink-0', isDirty ? 'text-blue-700' : 'text-slate-800')}>
+      <span className={cn('text-[13px] font-[750] tabular-nums font-mono w-[52px] text-right shrink-0', isDirty ? 'text-[#2563EB]' : 'text-[#06101F]')}>
         {fmtVal(value, field.unit)}
       </span>
 
@@ -491,7 +491,7 @@ function AssumptionRowCollapsed({
       <span className={cn('w-2 h-2 rounded-full shrink-0', ctxLabel.dot)} title={ctxLabel.text} />
 
       {/* Chevron */}
-      <ChevronRight size={14} className={cn('text-slate-300 shrink-0 transition-transform duration-200 motion-reduce:transition-none', isExpanded && 'rotate-90')} />
+      <ChevronRight size={14} className={cn('text-[#8A95A6] shrink-0 transition-transform duration-200 motion-reduce:transition-none', isExpanded && 'rotate-90')} />
     </button>
   )
 }
@@ -520,16 +520,16 @@ function LargestChangesBar({ assumptions, defaults, sensitivity }: {
   if (changes.length === 0) return null
 
   return (
-    <div className="px-4 py-3 border-t border-slate-100">
-      <p className="text-[10px] font-[650] text-slate-400 mb-2">Largest changes vs. defaults</p>
+    <div className="px-4 py-3 border-t border-[#E3E1DA]">
+      <p className="text-[10px] font-[650] text-[#8A95A6] mb-2">Largest changes vs. defaults</p>
       <div className="flex flex-wrap gap-1.5">
         {changes.map(c => {
           const mc = METHOD_CFG[c.methods[0]]
           return (
             <div key={c.key} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${mc.tagBg}`}>
               <span className={`text-[10px] font-bold ${mc.tagText}`}>{c.label}</span>
-              {c.impactFmt && <span className={`text-[10px] font-bold tabular-nums ${c.netImpact >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{c.impactFmt}</span>}
-              <span className="text-[10px] text-slate-500 tabular-nums">{c.deltaFmt}</span>
+              {c.impactFmt && <span className={`text-[10px] font-bold tabular-nums ${c.netImpact >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>{c.impactFmt}</span>}
+              <span className="text-[10px] text-[#566174] tabular-nums">{c.deltaFmt}</span>
             </div>
           )
         })}
@@ -600,20 +600,20 @@ export default function AssumptionsPanel({
     <div className="bg-white rounded-[14px] border border-[#E6ECF5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden">
 
       {/* Header strip */}
-      <div className="flex items-center justify-between flex-wrap gap-2 px-4 py-3 border-b border-slate-100">
+      <div className="flex items-center justify-between flex-wrap gap-2 px-4 py-3 border-b border-[#E3E1DA]">
         <div className="flex items-center gap-2">
-          <span className="text-[13px] font-bold text-slate-800">Assumptions</span>
+          <span className="text-[13px] font-bold text-[#06101F]">Assumptions</span>
           {dirtyCount > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">
+            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold bg-[#EAF1FF] text-[#2563EB]">
               {dirtyCount}
             </span>
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* Presets */}
-          <div className="flex items-center gap-0.5 rounded-lg border border-slate-200 p-0.5 bg-white">
+          <div className="flex items-center gap-0.5 rounded-lg border border-[#E3E1DA] p-0.5 bg-white">
             {presets.map(p => (
-              <button key={p.id} onClick={p.onClick} className={cn('text-[11px] font-semibold px-3 py-1.5 rounded-md motion-safe:transition-all', p.active ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50')}>
+              <button key={p.id} onClick={p.onClick} className={cn('text-[11px] font-semibold px-3 py-1.5 rounded-md motion-safe:transition-all', p.active ? 'bg-[#2563EB] text-white shadow-sm' : 'text-[#566174] hover:text-[#06101F] hover:bg-[#F4F3EF]')}>
                 {p.label}
               </button>
             ))}
@@ -621,18 +621,18 @@ export default function AssumptionsPanel({
 
           {/* FV delta badge */}
           {deltaPct != null && isModified && Math.abs(deltaPct) > 0.001 && (
-            <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold', deltaPct >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-50 text-red-600')}>
+            <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold', deltaPct >= 0 ? 'bg-[#E8F7EF] text-[#11875D]' : 'bg-[#FCEAEA] text-[#D83B3B]')}>
               {deltaPct >= 0 ? '▲' : '▼'} {Math.abs(deltaPct * 100).toFixed(1)}% FV
             </span>
           )}
 
           {/* Undo */}
           {canUndo && onUndo && (
-            <button onClick={onUndo} className="text-[11px] font-semibold text-slate-600 hover:text-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 motion-safe:transition-all">↩</button>
+            <button onClick={onUndo} className="text-[11px] font-semibold text-[#566174] hover:text-[#06101F] px-2.5 py-1.5 rounded-lg border border-[#E3E1DA] hover:bg-[#F4F3EF] motion-safe:transition-all">↩</button>
           )}
 
           {/* Reset */}
-          <button onClick={onReset} disabled={!isModified} className="text-[11px] font-semibold text-slate-600 hover:text-slate-700 disabled:text-slate-300 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:border-slate-100 motion-safe:transition-all">↺ Reset</button>
+          <button onClick={onReset} disabled={!isModified} className="text-[11px] font-semibold text-[#566174] hover:text-[#06101F] disabled:text-[#8A95A6] px-2.5 py-1.5 rounded-lg border border-[#E3E1DA] hover:bg-[#F4F3EF] disabled:border-[#E3E1DA] motion-safe:transition-all">↺ Reset</button>
         </div>
       </div>
 
@@ -640,12 +640,12 @@ export default function AssumptionsPanel({
       {FIELD_GROUPS.map((group, gi) => {
         const groupFields = group.keys.map(k => FIELDS.find(f => f.key === k)!).filter(Boolean)
         return (
-          <div key={group.label} className={gi > 0 ? 'border-t border-slate-100' : ''}>
+          <div key={group.label} className={gi > 0 ? 'border-t border-[#E3E1DA]' : ''}>
             {/* Group label */}
             <div className="flex items-center gap-2 px-4 pt-2 pb-1">
-              <span className="text-[10px] font-[700] uppercase tracking-wide text-slate-400">{group.label}</span>
+              <span className="text-[10px] font-[700] uppercase tracking-wide text-[#8A95A6]">{group.label}</span>
               {group.label === 'Exit Multiples' && (
-                <span className="text-[10px] text-slate-400 normal-case font-normal tracking-normal">· what the market pays at exit · Damodaran Jan 2025 industry medians</span>
+                <span className="text-[10px] text-[#8A95A6] normal-case font-normal tracking-normal">· what the market pays at exit · Damodaran Jan 2025 industry medians</span>
               )}
             </div>
 
@@ -656,7 +656,7 @@ export default function AssumptionsPanel({
               const isDirty = Math.abs((assumptions[f.key] as number) - (defaults[f.key] as number)) > 0.00001
 
               return (
-                <div key={f.key} className="border-t border-slate-50 first:border-t-0">
+                <div key={f.key} className="border-t border-[#F4F3EF] first:border-t-0">
                   <AssumptionRowCollapsed
                     field={f}
                     value={assumptions[f.key] as number}

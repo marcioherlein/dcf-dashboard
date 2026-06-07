@@ -8,6 +8,7 @@ import { type TabId } from '@/components/stock/TabNav'
 import TabNav from '@/components/stock/TabNav'
 import StockContextBar from '@/components/stock/StockContextBar'
 import FinancialsHub from '@/components/stock/FinancialsHub'
+import CompanyCard from '@/components/stock/overview/CompanyCard'
 import { computeCockpitOutput } from '@/lib/valuation/cockpit'
 import ValuationCockpit, { buildSnapshot, seedAssumptions } from '@/components/valuation/ValuationCockpit'
 import AuthBanner from '@/components/auth/AuthBanner'
@@ -414,6 +415,20 @@ function StockPageBody() {
       />
 
       <TabNav activeTab={activeTab} onChange={handleTabChange} />
+
+      {/* Company identity — shown at page level, above all tabs */}
+      {data?.businessProfile?.description && (
+        <div className="px-4 sm:px-6 lg:px-8 pt-4">
+          <CompanyCard
+            description={data.businessProfile.description}
+            sector={data.quote.sector ?? ''}
+            industry={data.businessProfile.industry ?? ''}
+            country={data.businessProfile.country ?? ''}
+            employees={data.businessProfile.employees ?? null}
+            ticker={ticker}
+          />
+        </div>
+      )}
 
       {/* Session-based soft auth nudge (appears on 2nd+ stock page view) */}
       <AuthBanner />

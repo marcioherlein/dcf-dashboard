@@ -50,7 +50,7 @@ export default function BullCaseCard({
         <div className="w-7 h-7 rounded-full bg-[#ECFDF3] flex items-center justify-center shrink-0">
           <CheckCircle size={15} className="text-[#16A34A]" />
         </div>
-        <p className="text-[14px] font-[750] text-[#0F172A]">
+        <p className="text-[14px] font-[750] text-[#06101F]">
           Supporting the Thesis
         </p>
       </div>
@@ -61,14 +61,14 @@ export default function BullCaseCard({
           {bullets.map((b, i) => (
             <li key={i} className="flex items-start gap-2">
               <Check size={13} className="text-[#16A34A] shrink-0 mt-0.5" />
-              <span className="text-[13px] text-[#334155] leading-relaxed">
-                {b}
+              <span className="text-[13px] text-[#06101F] leading-relaxed break-words min-w-0">
+                {b.length > 160 ? b.slice(0, 157) + '…' : b}
               </span>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-[13px] text-[#64748B] italic">
+        <p className="text-[13px] text-[#566174] italic">
           Support factors unavailable for this stock.
         </p>
       )}

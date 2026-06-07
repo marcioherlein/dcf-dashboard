@@ -75,7 +75,7 @@ export default function BearCaseCard({
         <div className="w-7 h-7 rounded-full bg-[#FEF2F2] flex items-center justify-center shrink-0">
           <AlertCircle size={15} className="text-[#DC2626]" />
         </div>
-        <p className="text-[14px] font-[750] text-[#0F172A]">
+        <p className="text-[14px] font-[750] text-[#06101F]">
           Risks to Watch
         </p>
       </div>
@@ -85,8 +85,8 @@ export default function BearCaseCard({
         {bullets.map((b, i) => (
           <li key={i} className="flex items-start gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-[#DC2626] shrink-0 mt-1.5" />
-            <span className="text-[13px] text-[#334155] leading-relaxed">
-              {b}
+            <span className="text-[13px] text-[#06101F] leading-relaxed break-words min-w-0">
+              {b.length > 160 ? b.slice(0, 157) + '…' : b}
             </span>
           </li>
         ))}

@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils'
 import { fmtPrice, fmtPct } from '@/lib/formatters'
 import ScenarioRangeBar from '@/components/ui/ScenarioRangeBar'
 import { deriveVerdict, buildVerdictDescription } from '@/lib/stock/verdict'
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ScenarioCase {
@@ -30,6 +29,8 @@ interface SummaryHeroCardProps {
   } | null
   drivers: string[]
   onViewValuation: () => void
+  analystTargetMean?: number | null
+  analystRecommendation?: string | null
 }
 
 // ─── Confidence chip ──────────────────────────────────────────────────────────
@@ -70,6 +71,8 @@ export default function SummaryHeroCard({
   totalModels,
   scenarios,
   drivers,
+  analystTargetMean,
+  analystRecommendation,
 }: SummaryHeroCardProps) {
   const verdict     = deriveVerdict(upsidePct, fairValue)
   const description = buildVerdictDescription(upsidePct, verdict.descVerb)
@@ -91,8 +94,8 @@ export default function SummaryHeroCard({
 
         {/* ── Headline block ── */}
         <div className="flex flex-col gap-1.5">
-          <p className="text-[26px] sm:text-[30px] font-[800] text-ink-900 leading-tight tracking-tight [text-wrap:balance]">
-            {ticker} looks{' '}
+          <p className="text-[26px] sm:text-[30px] font-[800] text-ink-900 leading-tight tracking-tight [text-wrap:balance] break-words">
+            {ticker.length > 8 ? ticker.slice(0, 8) + '…' : ticker} looks{' '}
             <span className={verdict.headingClass}>{verdict.word}</span>
           </p>
           {confidence && (
@@ -136,6 +139,37 @@ export default function SummaryHeroCard({
           </p>
         )}
 
+        {/* ── Analyst consensus line ── */}
+        {(analystTargetMean != null || analystRecommendation) && (
+          <div className="flex items-center gap-2 flex-wrap">
+            {analystRecommendation && analystRecommendation.trim().length > 0 && (() => {
+              const r = analystRecommendation.toLowerCase()
+              const recLabel = r.includes('strong_buy') || r.includes('strong buy') ? 'Strong Buy'
+                : r.includes('buy') ? 'Buy'
+                : r.includes('hold') || r.includes('neutral') ? 'Hold'
+                : r.includes('sell') ? 'Sell'
+                : analystRecommendation
+              const recColor = recLabel === 'Strong Buy' || recLabel === 'Buy' ? 'text-[#11875D]'
+                : recLabel === 'Hold' ? 'text-[#B56A00]'
+                : recLabel === 'Sell' ? 'text-[#D83B3B]'
+                : 'text-[#6B6B6B]'
+              return (
+                <span className="text-[11px] text-[#9B9B9B]">
+                  Analysts: <span className={cn('font-[700]', recColor)}>{recLabel}</span>
+                </span>
+              )
+            })()}
+            {analystTargetMean != null && analystTargetMean > 0 && (
+              <span className="text-[11px] text-[#9B9B9B]">
+                · target{' '}
+                <span className="font-[700] text-[#6B6B6B] tabular-nums">
+                  {fmtPrice(analystTargetMean, currency)}
+                </span>
+              </span>
+            )}
+          </div>
+        )}
+
         {/* ── Scenario range bar ── */}
         {scenarios && (
           <ScenarioRangeBar
@@ -157,7 +191,7 @@ export default function SummaryHeroCard({
                 <span
                   key={i}
                   title={drivers.filter(d => POSITIVE_RE.test(d))[i]}
-                  className="text-[12px] font-[600] text-ink-900 bg-white border border-[#E5E5E5] rounded-full px-3 py-1 leading-tight"
+                  className="text-[12px] font-[600] text-ink-900 bg-white border border-[#E5E5E5] rounded-full px-3 py-1 leading-tight max-w-[200px] truncate"
                 >
                   {label}
                 </span>
