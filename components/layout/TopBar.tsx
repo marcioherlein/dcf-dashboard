@@ -267,29 +267,156 @@ export default function TopBar() {
           </Link>
         </div>
 
-        {/* ── Column 2: stock identity (slim) OR centered search ── */}
+        {/* ── Column 2: search bar — always centered on lg+; stock identity on sm–lg when on stock page ── */}
         {stockNav ? (
-          <div className="flex items-center min-w-0 gap-2 pl-1">
-            <CompanyLogo ticker={stockNav.ticker} />
-            <span className="font-bold text-[13px] text-[#111111] tracking-tight shrink-0">
-              {stockNav.ticker}
-            </span>
-            {stockNav.price != null && (
-              <div className="flex items-baseline gap-1 shrink-0">
-                <span className="font-semibold text-[13px] text-[#111111] tabular-nums">
-                  {stockNav.currency}{stockNav.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-                {stockNav.changePct != null && (
-                  <span className={cn(
-                    'text-[11px] font-medium tabular-nums',
-                    stockNav.changePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]',
-                  )}>
-                    {stockNav.changePct >= 0 ? '+' : ''}{stockNav.changePct.toFixed(2)}%
+          <>
+            {/* sm–lg: show stock identity (no room for search alongside sidebar) */}
+            <div className="flex items-center min-w-0 gap-2 pl-1 lg:hidden">
+              <CompanyLogo ticker={stockNav.ticker} />
+              <span className="font-bold text-[13px] text-[#111111] tracking-tight shrink-0">
+                {stockNav.ticker}
+              </span>
+              {stockNav.price != null && (
+                <div className="flex items-baseline gap-1 shrink-0">
+                  <span className="font-semibold text-[13px] text-[#111111] tabular-nums">
+                    {stockNav.currency}{stockNav.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
-                )}
+                  {stockNav.changePct != null && (
+                    <span className={cn(
+                      'text-[11px] font-medium tabular-nums',
+                      stockNav.changePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]',
+                    )}>
+                      {stockNav.changePct >= 0 ? '+' : ''}{stockNav.changePct.toFixed(2)}%
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+            {/* lg+: full search bar — same as non-stock pages */}
+            <div className="hidden lg:flex justify-center w-full">
+              <div className="relative w-full sm:w-auto sm:max-w-[480px]" ref={searchRef}>
+                <div
+                  className="flex items-center gap-2 rounded-[999px] px-3.5 py-2 transition-all border"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.80)',
+                    backdropFilter: 'blur(10px)',
+                    WebkitBackdropFilter: 'blur(10px)',
+                    borderColor: open ? 'rgba(95, 121, 11, 0.45)' : '#E5E5E5',
+                    boxShadow: open ? '0 0 0 3px rgba(95, 121, 11, 0.09)' : 'none',
+                  }}
+                >
+                  {loading ? (
+                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#E5E5E5] border-t-[#5F790B] shrink-0" />
+                  ) : (
+                    <Search size={14} className={searchError ? 'text-[#D83B3B] shrink-0' : 'text-[#9B9B9B] shrink-0'} />
+                  )}
+                  <input
+                    type="text"
+                    role="combobox"
+                    aria-expanded={open}
+                    aria-haspopup="listbox"
+                    aria-autocomplete="list"
+                    aria-controls={open ? topbarListboxId : undefined}
+                    aria-activedescendant={activeIdx >= 0 ? `topbar-result-${activeIdx}` : undefined}
+                    value={query}
+                    onChange={e => { setQuery(e.target.value); setUnsupportedError(null); setSearchError(false) }}
+                    onKeyDown={e => {
+                      if (e.key === 'Escape') { setOpen(false); setActiveIdx(-1); return }
+                      if (e.key === 'ArrowDown') {
+                        e.preventDefault()
+                        if (!open && results.length > 0) setOpen(true)
+                        setActiveIdx(prev => Math.min(prev + 1, results.length - 1))
+                        return
+                      }
+                      if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx(prev => Math.max(prev - 1, -1)); return }
+                      if (e.key === 'Enter') {
+                        if (activeIdx >= 0 && results[activeIdx]?.supported) { select(results[activeIdx].symbol) }
+                        else if (query.trim()) { handleSubmit(query) }
+                      }
+                    }}
+                    placeholder="Search ticker or company…"
+                    className="flex-1 min-w-0 bg-transparent text-[16px] sm:text-[13px] text-[#111111] placeholder-[#9B9B9B] focus:outline-none"
+                    autoCorrect="off"
+                    autoCapitalize="characters"
+                    spellCheck={false}
+                  />
+                  {searchError && !open && (
+                    <span className="text-[11px] text-[#D83B3B] shrink-0 whitespace-nowrap">Search unavailable</span>
+                  )}
+                </div>
+                <AnimatePresence>
+                  {open && (
+                    <motion.div
+                      key="search-dropdown-stock"
+                      id={topbarListboxId}
+                      role="listbox"
+                      aria-label="Search suggestions"
+                      variants={reduced ? {} : slideDown}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      style={{ originY: 0 }}
+                      className="absolute left-0 right-0 top-full mt-1.5 overflow-hidden glass-card-light rounded-xl z-50 max-h-[70vh] overflow-y-auto"
+                    >
+                      <motion.div
+                        variants={reduced ? {} : { visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } } }}
+                        initial="hidden"
+                        animate="visible"
+                      >
+                        {results.map((r, idx) => (
+                          <motion.button
+                            key={r.symbol}
+                            id={`topbar-result-${idx}`}
+                            role="option"
+                            aria-selected={idx === activeIdx}
+                            variants={reduced ? {} : { hidden: { opacity: 0, x: -6 }, visible: { opacity: 1, x: 0, transition: { duration: 0.16 } } }}
+                            onClick={() => r.supported ? select(r.symbol) : undefined}
+                            disabled={!r.supported}
+                            className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left border-b border-[#E5E5E5] last:border-b-0 transition-colors ${
+                              idx === activeIdx ? 'bg-[#F6FAEA]' : ''
+                            } ${
+                              r.supported
+                                ? 'hover:bg-[#F6FAEA] cursor-pointer'
+                                : 'opacity-40 cursor-not-allowed'
+                            }`}
+                          >
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <span className="text-[14px] font-bold text-[#111111] font-mono">{r.symbol}</span>
+                                {r.exchange && r.supported && (
+                                  <span className="text-[10px] text-[#6B6B6B] font-medium uppercase">{r.exchange}</span>
+                                )}
+                              </div>
+                              <span className="text-[12px] text-[#6B6B6B] truncate block">{r.longname ?? r.shortname}</span>
+                            </div>
+                            {r.supported ? (
+                              r.quoteType && (
+                                <span className="shrink-0 text-[11px] font-semibold text-[#5F790B] bg-[#EEF4DD] border border-[#BFD2A1] px-2 py-0.5 rounded-md">
+                                  {r.quoteType === 'EQUITY' ? 'Equity' : r.quoteType === 'ETF' ? 'ETF' : r.quoteType === 'INDEX' ? 'Index' : r.quoteType}
+                                </span>
+                              )
+                            ) : (
+                              <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[#FFFFFF] text-[#6B6B6B] border border-[#E5E5E5] whitespace-nowrap">
+                                Not available — {r.exchDisp ?? r.exchange}
+                              </span>
+                            )}
+                          </motion.button>
+                        ))}
+                        {unsupportedError && (
+                          <div className="px-4 py-3 flex items-start gap-2 bg-[#FFF4DA] border-t border-[#F3D391]">
+                            <svg className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[#B56A00]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                            </svg>
+                            <p className="text-[11px] text-[#B56A00] leading-snug">{unsupportedError}</p>
+                          </div>
+                        )}
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-            )}
-          </div>
+            </div>
+          </>
         ) : (
           /* Wide centered search for non-stock pages */
           <div className="flex justify-center w-full">
@@ -419,8 +546,33 @@ export default function TopBar() {
           </div>
         )}
 
-        {/* ── Column 3: save + auth ── */}
+        {/* ── Column 3: stock identity (lg only) + save + auth ── */}
         <div className="flex items-center gap-2 sm:gap-3 justify-end min-w-0">
+
+          {/* On desktop, show stock identity here (search is in col 2 instead) */}
+          {stockNav && (
+            <div className="hidden lg:flex items-center gap-2 pl-1 border-r border-[#E5E5E5] pr-3 mr-1 shrink-0">
+              <CompanyLogo ticker={stockNav.ticker} />
+              <span className="font-bold text-[13px] text-[#111111] tracking-tight">
+                {stockNav.ticker}
+              </span>
+              {stockNav.price != null && (
+                <div className="flex items-baseline gap-1">
+                  <span className="font-semibold text-[13px] text-[#111111] tabular-nums">
+                    {stockNav.currency}{stockNav.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  {stockNav.changePct != null && (
+                    <span className={cn(
+                      'text-[11px] font-medium tabular-nums',
+                      stockNav.changePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]',
+                    )}>
+                      {stockNav.changePct >= 0 ? '+' : ''}{stockNav.changePct.toFixed(2)}%
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {stockNav && (
             <button
