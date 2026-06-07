@@ -348,7 +348,11 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
       fetch(`/api/financials?ticker=${q.ticker}`, { signal: controller.signal })
         .then((r) => r.json())
         .then((data) => {
-          const fv    = data?.valuationMethods?.triangulatedFairValue ?? null
+          // Use cockpit blended fair value (Forward P/E + EV/EBITDA + Revenue Multiple + DCF)
+          // to match exactly what the stock page shows. Falls back to triangulated DCF-only value.
+          const fv    = data?.valuationMethods?.cockpitFairValue
+                     ?? data?.valuationMethods?.triangulatedFairValue
+                     ?? null
           const price = data?.quote?.price ?? q.price
           setFairValue(fv)
           if (fv != null && price && price > 0) setUpsidePct((fv - price) / price)

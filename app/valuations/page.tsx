@@ -11,6 +11,7 @@ import {
 import { loadWatchlist, saveWatchlistEntry, deleteWatchlistEntry } from '@/lib/simplifier/watchlistStore'
 import type { WatchlistEntry, ListTag } from '@/lib/simplifier/types'
 import { fmtPct } from '@/lib/formatters'
+import { upsideZone } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import { ValuationTable, type SortKey } from '@/components/valuations/ValuationTable'
 
@@ -25,8 +26,9 @@ type FilterConfidence = 'all' | 'high' | 'medium' | 'low'
 
 function getVerdict(e: WatchlistEntry): 'Undervalued' | 'Fair Value' | 'Overvalued' | 'Needs Review' {
   if (e.snapshot.fairValue == null || e.snapshot.upsidePct == null) return 'Needs Review'
-  if (e.snapshot.upsidePct > 0.15)  return 'Undervalued'
-  if (e.snapshot.upsidePct > -0.15) return 'Fair Value'
+  const zone = upsideZone(e.snapshot.upsidePct)
+  if (zone === 'Undervalued') return 'Undervalued'
+  if (zone === 'Fairly Valued') return 'Fair Value'
   return 'Overvalued'
 }
 
@@ -53,9 +55,9 @@ function applyFilters(
     const q = query.toLowerCase()
     res = res.filter((e) => e.ticker.toLowerCase().includes(q) || e.companyName.toLowerCase().includes(q))
   }
-  if (upside === 'undervalued')  res = res.filter((e) => (e.snapshot.upsidePct ?? 0) > 0.15)
-  if (upside === 'fair')         res = res.filter((e) => { const u = e.snapshot.upsidePct ?? null; return u != null && u >= -0.15 && u <= 0.15 })
-  if (upside === 'overvalued')   res = res.filter((e) => (e.snapshot.upsidePct ?? 0) < -0.15)
+  if (upside === 'undervalued')  res = res.filter((e) => (e.snapshot.upsidePct ?? 0) >= 0.20)
+  if (upside === 'fair')         res = res.filter((e) => { const u = e.snapshot.upsidePct ?? null; return u != null && u >= 0 && u < 0.20 })
+  if (upside === 'overvalued')   res = res.filter((e) => (e.snapshot.upsidePct ?? 0) < 0)
   if (confidence === 'high')     res = res.filter((e) => e.overallScore != null && e.overallScore >= 0.7)
   if (confidence === 'medium')   res = res.filter((e) => e.overallScore != null && e.overallScore >= 0.4 && e.overallScore < 0.7)
   if (confidence === 'low')      res = res.filter((e) => e.overallScore != null && e.overallScore < 0.4)
@@ -397,7 +399,7 @@ function EmptyState() {
             Analyze a stock
           </Link>
           <Link
-            href="/markets"
+            href="/analyze"
             className="w-full sm:w-auto rounded-xl border border-[#DDE6F2] text-[#334155] hover:bg-slate-50 px-6 py-3 text-[14px] font-semibold transition-colors min-h-[48px] flex items-center justify-center"
           >
             Explore popular analyses
@@ -583,7 +585,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
     const avgUpside  = withUpside.length > 0
       ? withUpside.reduce((s, e) => s + (e.snapshot.upsidePct ?? 0), 0) / withUpside.length
       : null
-    const undervalued = entries.filter((e) => (e.snapshot.upsidePct ?? 0) > 0.15).length
+    const undervalued = entries.filter((e) => (e.snapshot.upsidePct ?? 0) >= 0.20).length
     const needsReview = entries.filter((e) => e.snapshot.fairValue == null || e.snapshot.upsidePct == null).length
     return { tracked, avgUpside, undervalued, needsReview }
   }, [entries])
@@ -800,9 +802,9 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
                   value={filterUpside}
                   options={[
                     { value: 'all',         label: 'Any' },
-                    { value: 'undervalued', label: 'Undervalued (>15%)' },
-                    { value: 'fair',        label: 'Fair Value (±15%)' },
-                    { value: 'overvalued',  label: 'Overvalued (<−15%)' },
+                    { value: 'undervalued', label: 'Undervalued (≥20%)' },
+                    { value: 'fair',        label: 'Fair Value (0–20%)' },
+                    { value: 'overvalued',  label: 'Overvalued (<0%)' },
                   ]}
                   onChange={(v) => setFilterUpside(v as FilterUpside)}
                 />

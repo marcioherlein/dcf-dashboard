@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Bell, Settings, HelpCircle, PieChart, X, Globe, Bookmark, LayoutDashboard, SlidersHorizontal, ClipboardList } from 'lucide-react'
+import { Bell, Settings, HelpCircle, PieChart, X, Globe, Bookmark, LayoutDashboard, SlidersHorizontal } from 'lucide-react'
 
 const LEFT_NAV = [
   {
@@ -46,7 +46,6 @@ const RIGHT_NAV = [
 ]
 
 const MORE_ITEMS = [
-  { href: '/simplifier',             label: 'Simplifier',          icon: ClipboardList   },
   { href: '/valuations',             label: 'My Valuations',       icon: Bookmark        },
   { href: '/monitor?tab=portfolio',  label: 'Monitor / Portfolio', icon: LayoutDashboard },
   { href: '/alerts',                 label: 'Alerts',              icon: Bell            },

@@ -17,7 +17,8 @@ import { calculateMultiples, PEER_TICKERS } from '@/lib/dcf/calculateMultiples'
 import { calculatePiotroski, calculateAltman, calculateBeneish, calculateROIC } from '@/lib/dcf/calculateScores'
 import { getCRPByCountry } from '@/lib/dcf/countryRiskPremium'
 import { runAssumptionAudit } from '@/lib/valuation/assumptionAuditor'
-import { seedAssumptions } from '@/lib/valuation/cockpitBuilders'
+import { seedAssumptions, buildSnapshot } from '@/lib/valuation/cockpitBuilders'
+import { computeCockpitOutput } from '@/lib/valuation/cockpit'
 
 export async function GET(req: NextRequest) {
   const limited = rateLimit(req, 3, 60_000, 'financials')
@@ -732,7 +733,12 @@ export async function GET(req: NextRequest) {
         ? Math.round(weights.multiples / totalWeight * 100) : 0,
     }
 
-    const valuationMethods = {
+    const valuationMethods: Record<string, unknown> & {
+      triangulatedFairValue: number
+      triangulatedUpsidePct: number
+      cockpitFairValue?: number | null
+      cockpitUpsidePct?: number | null
+    } = {
       companyType,
       companyTypeLabel: companyTypeLabel(companyType),
       primaryModelLabel: primaryModelLabel(companyType, hasDividend),
@@ -1477,6 +1483,38 @@ export async function GET(req: NextRequest) {
       _fwdEPS != null && _fwdEPS > 0 && currentPrice > 0
         ? Math.round((currentPrice / _fwdEPS) * 10) / 10
         : null
+
+    // Compute the cockpit blended fair value server-side so the analyze page and
+    // stock page always show the same verdict. The cockpit uses a multi-method
+    // blend (Forward P/E, EV/EBITDA, Revenue Multiple, Core DCF) identical to
+    // what ValuationCockpit renders client-side on the stock page.
+    let cockpitFairValue: number | null = null
+    let cockpitUpsidePct: number | null = null
+    try {
+      const _cockpitBundle = {
+        ..._auditBundle,
+        fairValue: { debt: rawDebtM, cash: cashM, sharesOutstanding: sharesM },
+        scenarios,
+        incomeStatementQuarterly: fmp.incomeStatementQuarterly,
+        ratiosQuarterly: fmp.ratiosQuarterly,
+      }
+      const _snap = buildSnapshot(_cockpitBundle)
+      // Seed fullDcfFairValue so Core DCF uses the 4-model Damodaran blend
+      _snap.fullDcfFairValue = scenarios.base.fairValue ?? null
+      const _cockpitAssumptions = seedAssumptions(_cockpitBundle)
+      const _cockpitOutput = computeCockpitOutput(_cockpitAssumptions, _snap)
+      cockpitFairValue  = _cockpitOutput.blendedFairValue
+      cockpitUpsidePct  = _cockpitOutput.upsidePct
+    } catch {
+      // Silent — falls back to triangulatedFairValue in the analyze page
+    }
+
+    // Patch valuationMethods with the cockpit result so the analyze page
+    // and stock page show the same verdict.
+    if (cockpitFairValue != null) {
+      valuationMethods.cockpitFairValue  = cockpitFairValue
+      valuationMethods.cockpitUpsidePct  = cockpitUpsidePct
+    }
 
     return NextResponse.json({
       ticker,

@@ -292,8 +292,8 @@ export default function TopBar() {
           </div>
         ) : (
           /* Wide centered search for non-stock pages */
-          <div className="flex justify-center w-full mx-3 sm:mx-0">
-            <div className="relative w-full sm:w-auto sm:max-w-[480px]" ref={searchRef}>
+          <div className="flex justify-center w-full">
+            <div className="relative w-full max-w-[calc(100vw-120px)] sm:w-auto sm:max-w-[480px]" ref={searchRef}>
               <div
                 className="flex items-center gap-2 rounded-[999px] px-3.5 py-2 transition-all border"
                 style={{

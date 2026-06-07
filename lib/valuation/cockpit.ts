@@ -802,9 +802,9 @@ export function computeCockpitOutput(
     : null
   let canonicalVerdict: CockpitOutput['verdict'] = 'Insufficient Data'
   if (canonicalUpside != null) {
-    if (canonicalUpside > 0.15) canonicalVerdict = 'Undervalued'
-    else if (canonicalUpside < -0.15) canonicalVerdict = 'Overvalued'
-    else canonicalVerdict = 'Fairly Valued'
+    if (canonicalUpside >= 0.20) canonicalVerdict = 'Undervalued'
+    else if (canonicalUpside >= 0.00) canonicalVerdict = 'Fairly Valued'
+    else canonicalVerdict = 'Overvalued'
   }
 
   return {
