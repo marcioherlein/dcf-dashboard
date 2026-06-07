@@ -70,7 +70,7 @@ export default function FairValueBar({ price, fairValue, currency, bearCase, bul
           <span className={cn('text-[11px] font-bold px-2.5 py-1 rounded-full border block mb-1', chipClass)}>
             {ratioLabel(ratio)}
           </span>
-          <span className={cn('text-[20px] font-black tabular-nums block', isAbove ? 'text-[#D83B3B]' : 'text-[#11875D]')}>
+          <span className={cn('text-[20px] font-bold tabular-nums block', isAbove ? 'text-[#D83B3B]' : 'text-[#11875D]')}>
             {isAbove ? '+' : ''}{diff.toFixed(1)}%
           </span>
         </div>

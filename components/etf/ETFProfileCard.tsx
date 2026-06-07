@@ -46,7 +46,7 @@ export function ETFProfileCard({ profile, isWatchlisted, onWatchlist }: Props) {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <div className="flex items-baseline gap-3">
-            <span className="text-3xl font-black font-sans text-[#06101F]">{profile.ticker}</span>
+            <span className="text-3xl font-bold font-sans text-[#06101F]">{profile.ticker}</span>
             {profile.price != null && (
               <span className="text-2xl font-bold text-[#06101F]">{fmtPrice(profile.price, 'USD')}</span>
             )}

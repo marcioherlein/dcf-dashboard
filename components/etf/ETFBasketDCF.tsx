@@ -112,7 +112,7 @@ export function ETFBasketDCF({ holdings }: Props) {
           <div key={r.holding.symbol} className="flex items-center gap-3">
             <Link
               href={`/stock/${r.holding.symbol}`}
-              className="font-sans font-black text-xs text-[#06101F] hover:text-[#2563EB] transition-colors w-12 shrink-0"
+              className="font-sans font-bold text-xs text-[#06101F] hover:text-[#2563EB] transition-colors w-12 shrink-0"
             >
               {r.holding.symbol}
             </Link>

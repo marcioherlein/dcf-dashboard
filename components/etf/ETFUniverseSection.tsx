@@ -161,7 +161,7 @@ function Leaderboard({
                   <tr key={meta.ticker} className="hover:bg-[#F4F3EF] transition-colors group">
                     <td className="pl-4 pr-3 py-3 sticky left-0 bg-white group-hover:bg-[#F4F3EF] transition-colors">
                       <Link href={`/etf/${meta.ticker}`} className="block">
-                        <span className="font-sans font-black text-[13px] text-[#06101F] hover:text-[#2563EB] transition-colors">
+                        <span className="font-sans font-bold text-[13px] text-[#06101F] hover:text-[#2563EB] transition-colors">
                           {meta.ticker}
                         </span>
                         <span className="block text-[11px] text-[#8A95A6] mt-0.5 truncate max-w-[160px]">
@@ -194,7 +194,7 @@ function Leaderboard({
                     <td className="px-3 py-3 text-right">
                       {score != null ? (
                         <div className="inline-flex items-center gap-1.5 justify-end">
-                          <span className={cn('text-[13px] font-black font-sans', scoreColor(score))}>{score}</span>
+                          <span className={cn('text-[13px] font-bold font-sans', scoreColor(score))}>{score}</span>
                           <span className={cn('text-[10px] font-semibold', scoreColor(score))}>{scoreLabel(score)}</span>
                           <InfoTooltip text="Score = P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio penalty (20 pts). 70+ = Deep Value." side="top" />
                         </div>

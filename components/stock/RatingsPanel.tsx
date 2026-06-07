@@ -91,7 +91,7 @@ function CategoryCard({ title, rating }: { title: string; rating: CategoryRating
           <p className="text-[12px] font-semibold uppercase tracking-wide text-[#566174]">{title}</p>
           <p className={`mt-0.5 text-[14px] font-semibold leading-snug ${c.text}`}>{rating.label}</p>
         </div>
-        <div className={`rounded-xl px-3 py-1.5 text-[32px] font-black shrink-0 ${c.badge}`}>
+        <div className={`rounded-xl px-3 py-1.5 text-[32px] font-bold shrink-0 ${c.badge}`}>
           {rating.grade}
         </div>
       </div>
@@ -124,7 +124,7 @@ export default function RatingsPanel({ ratings }: Props) {
             <p className="text-[11px] font-medium text-[#566174]">Overall</p>
             <p className={`text-[13px] font-bold ${oc.text}`}>{ratings.overall.label}</p>
           </div>
-          <span className={`text-[32px] font-black ${oc.text}`}>{ratings.overall.grade}</span>
+          <span className={`text-[32px] font-bold ${oc.text}`}>{ratings.overall.grade}</span>
         </div>
       </div>
 

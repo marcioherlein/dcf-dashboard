@@ -48,7 +48,7 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <span className="block font-sans font-black text-[22px] text-[#06101F] leading-none tracking-tight">
+          <span className="block font-sans font-bold text-[22px] text-[#06101F] leading-none tracking-tight">
             {entry.ticker}
           </span>
           {entry.name && (
@@ -84,7 +84,7 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
         {/* Number + badge */}
         <div className="shrink-0">
           <div className="flex items-baseline gap-2">
-            <span className={cn('font-sans font-black text-[32px] leading-none', scoreColor(score))}>
+            <span className={cn('font-sans font-bold text-[32px] leading-none', scoreColor(score))}>
               {score}
             </span>
             <span className="text-[11px] text-[#8A95A6] font-medium">/100</span>

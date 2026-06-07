@@ -117,7 +117,7 @@ export function ETFSearchBar() {
                 className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F3EF] transition-colors text-left group min-h-[48px]"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-[14px] font-black text-[#06101F] font-mono w-14 shrink-0">{r.symbol}</span>
+                  <span className="text-[14px] font-bold text-[#06101F] font-mono w-14 shrink-0">{r.symbol}</span>
                   <span className="text-[14px] text-[#566174] truncate">{r.name}</span>
                 </div>
                 <span className={cn('text-[10px] text-[#8A95A6] font-medium shrink-0 ml-2')}>{r.exchange}</span>

@@ -137,7 +137,7 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
               <span className="text-[#D83B3B] font-semibold">D/F</span> Weak
             </p>
             {overallGrade && overallGrade !== 'N/A' && (
-              <span className="text-[32px] font-black text-[#06101F] leading-none">{overallGrade}</span>
+              <span className="text-[32px] font-bold text-[#06101F] leading-none">{overallGrade}</span>
             )}
           </div>
         </div>
@@ -203,7 +203,7 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
                     <InfoTip text="9-point checklist of profitability, leverage, and efficiency. Score 8–9 = strong financial health; below 4 = signals weakness." />
                   </span>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[32px] font-black text-[#06101F] tabular-nums">{piotroski}/9</span>
+                    <span className="text-[32px] font-bold text-[#06101F] tabular-nums">{piotroski}/9</span>
                     <span className={`text-[12px] font-medium rounded-full px-2.5 py-1 ${piotroski >= 8 ? 'bg-[#E8F7EF] text-[#11875D]' : piotroski >= 4 ? 'bg-[#FFF4DA] text-[#B56A00]' : 'bg-[#FCEAEA] text-[#D83B3B]'}`}>
                       {piotroski >= 8 ? 'Strong' : piotroski >= 4 ? 'Mixed' : 'Weak'}
                     </span>
