@@ -95,15 +95,12 @@ export default function TestimonialsSection() {
           >
             <motion.div
               className="rounded-[18px] border border-[#E5E5E5] bg-[#FAFAFA] p-6 sm:p-8 relative"
-              style={{ boxShadow: '0 8px 32px rgba(6,16,31,0.07)' }}
-              animate={reduced ? {} : {
-                y: [0, -6, 0],
-              }}
+              style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
+              animate={reduced ? {} : { y: [0, -6, 0] }}
               transition={{
                 duration: 5,
-                repeat: 3,
+                repeat: Infinity,
                 ease: 'easeInOut',
-                repeatType: 'loop',
               }}
             >
               {/* Quote mark */}
@@ -123,7 +120,7 @@ export default function TestimonialsSection() {
                 </div>
                 <div>
                   <p className="text-[13px] font-semibold text-[#111111]">Michael T.</p>
-                  <p className="text-[12px] text-[#9B9B9B]">Self-directed investor</p>
+                  <p className="text-[12px] text-[#6B6B6B]">Self-directed investor</p>
                 </div>
               </div>
             </motion.div>

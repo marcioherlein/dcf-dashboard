@@ -83,7 +83,7 @@ export default function HowItWorksSection() {
                 transition={{ duration: 0.52, ease: EASE, delay: 0.14 + i * 0.1 }}
                 className="flex flex-col gap-4"
               >
-                {/* Badge — number + icon merged */}
+                {/* Badge — number only, clean */}
                 <motion.div
                   className="relative w-10 h-10 rounded-full bg-[#5F790B] flex items-center justify-center text-white font-bold text-[15px] shrink-0 z-10"
                   initial={reduced ? {} : { scale: 0.6, opacity: 0 }}
@@ -100,11 +100,6 @@ export default function HowItWorksSection() {
                     />
                   )}
                 </motion.div>
-
-                {/* Icon tile */}
-                <div className="w-10 h-10 rounded-[10px] bg-[#FFFFFF] border border-[#E5E5E5] flex items-center justify-center">
-                  <Icon size={17} className="text-[#5F790B]" strokeWidth={1.8} />
-                </div>
 
                 <div>
                   <h3 className="text-[15px] font-bold text-[#111111] mb-1.5 leading-snug">{title}</h3>

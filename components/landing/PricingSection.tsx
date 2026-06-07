@@ -39,7 +39,7 @@ export default function PricingSection() {
   const annualTotal   = 136
 
   return (
-    <section id="pricing" className="overflow-x-hidden" style={{ background: '#FFFFFF', borderBottom: '1px solid #E5E5E5' }}>
+    <section id="pricing" className="overflow-x-hidden" style={{ background: '#F5F5F5', borderBottom: '1px solid #E5E5E5' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-14 sm:py-20">
 
         {/* Header */}
@@ -49,7 +49,7 @@ export default function PricingSection() {
           </h2>
 
           {/* Toggle */}
-          <div className="inline-flex items-center gap-1 rounded-full bg-white border border-[#E5E5E5] p-1 mt-4" style={{ boxShadow: '0 2px 8px rgba(6,16,31,0.06)' }}>
+          <div className="inline-flex items-center gap-1 rounded-full bg-white border border-[#E5E5E5] p-1 mt-4" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
             <button
               onClick={() => setAnnual(false)}
               className={cn(
@@ -81,11 +81,11 @@ export default function PricingSection() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-[680px] mx-auto">
 
           {/* Free */}
-          <div className="rounded-[20px] border border-[#E5E5E5] bg-white p-6 flex flex-col" style={{ boxShadow: '0 4px 16px rgba(6,16,31,0.05)' }}>
-            <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#9B9B9B] mb-3">Free</p>
+          <div className="rounded-[20px] border border-[#E5E5E5] bg-white p-6 flex flex-col" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+            <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#6B6B6B] mb-3">Free</p>
             <div className="flex items-baseline gap-1 mb-1">
               <span className="text-[44px] font-bold text-[#111111] leading-none tabular-nums">$0</span>
-              <span className="text-[13px] text-[#9B9B9B] font-medium">/month</span>
+              <span className="text-[13px] text-[#6B6B6B] font-medium">/month</span>
             </div>
             <p className="text-[12px] text-[#6B6B6B] mb-5">No credit card required. Free plan never expires.</p>
             <button
@@ -105,16 +105,16 @@ export default function PricingSection() {
           </div>
 
           {/* Pro */}
-          <div className="rounded-[20px] border border-[#BFD2A1] bg-white p-6 flex flex-col relative" style={{ boxShadow: '0 4px 20px rgba(95,121,11,0.12)' }}>
+          <div className="rounded-[20px] border-2 border-[#5F790B] bg-white p-6 flex flex-col relative" style={{ boxShadow: '0 4px 20px rgba(95,121,11,0.14)' }}>
             <div className="absolute top-4 right-4 rounded-full bg-[#5F790B] text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1">
-              MOST POPULAR
+              Most popular
             </div>
             <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#5F790B] mb-3">Pro</p>
             <div className="flex items-baseline gap-1 mb-1">
               <span className="text-[44px] font-bold text-[#111111] leading-none tabular-nums">
                 ${annual ? annualMonthly.toFixed(2) : monthlyPrice}
               </span>
-              <span className="text-[13px] text-[#9B9B9B] font-medium">/month</span>
+              <span className="text-[13px] text-[#6B6B6B] font-medium">/month</span>
             </div>
             {annual && (
               <p className="text-[12px] text-[#6B6B6B] mb-1">Billed as ${annualTotal}/year</p>
@@ -127,7 +127,7 @@ export default function PricingSection() {
             >
               Start Pro →
             </button>
-            <p className="text-center text-[11px] text-[#9B9B9B] mb-4">Cancel anytime.</p>
+            <p className="text-center text-[11px] text-[#6B6B6B] mb-4">Cancel anytime.</p>
             <ul className="space-y-2.5 flex-1">
               {PRO_FEATURES.map(f => (
                 <li key={f} className="flex items-start gap-2.5">

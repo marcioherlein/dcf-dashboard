@@ -97,7 +97,7 @@ export default function FinalCTASection() {
   }
 
   return (
-    <section ref={sectionRef} className="overflow-x-hidden" style={{ background: '#FFFFFF', borderBottom: '1px solid #E5E5E5' }}>
+    <section ref={sectionRef} className="overflow-x-hidden" style={{ background: '#000000' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
         <motion.div
           className="rounded-[20px] text-center px-5 sm:px-8 py-10 sm:py-14"
@@ -107,7 +107,7 @@ export default function FinalCTASection() {
           style={{
             background: '#111111',
             border: '1px solid rgba(255,255,255,0.07)',
-            boxShadow: '0 16px 48px rgba(6, 16, 31, 0.24)',
+            boxShadow: '0 0 0 1px rgba(95,121,11,0.08), 0 16px 48px rgba(0,0,0,0.4)',
           }}
         >
           <h2

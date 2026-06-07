@@ -17,12 +17,12 @@ const FEATURES = [
   },
   {
     Icon: LayoutGrid,
-    iconColor: '#2563EB',
-    iconBg: '#EAF1FF',
+    iconColor: '#5F790B',
+    iconBg: '#EEF4DD',
     title: 'Multiple valuation methods',
     body: 'DCF, Reverse DCF, and multiples working together.',
     chips: ['DCF', 'Reverse DCF', 'Multiples'],
-    chipStyle: { bg: '#EAF1FF', text: '#2563EB', border: '#BFDBFE' },
+    chipStyle: { bg: '#EEF4DD', text: '#5F790B', border: '#BFD2A1' },
   },
   {
     Icon: Database,
@@ -50,7 +50,7 @@ export default function TransparencySection() {
   const reduced = useReducedMotion()
 
   return (
-    <section ref={ref} className="overflow-x-hidden" style={{ background: '#FFFFFF', borderBottom: '1px solid #E5E5E5' }}>
+    <section ref={ref} className="overflow-x-hidden" style={{ background: '#F5F5F5', borderBottom: '1px solid #E5E5E5' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-14 sm:py-20">
 
         {/* Header — scale zoom, matches the original pattern */}
@@ -83,7 +83,7 @@ export default function TransparencySection() {
                 transition={{ duration: 0.5, ease: [0.34, 1, 0.64, 1], delay: 0.1 + i * 0.08 }}
                 whileHover={reduced ? {} : { y: -3, boxShadow: '0 12px 32px rgba(6,16,31,0.09)' }}
                 className="snap-start flex flex-col rounded-[18px] bg-white border border-[#E5E5E5] p-6 transition-shadow w-[72vw] max-w-[280px] sm:w-auto sm:max-w-none"
-                style={{ boxShadow: '0 4px 16px rgba(6,16,31,0.05)' }}
+                style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
               >
                 {/* Icon */}
                 <div

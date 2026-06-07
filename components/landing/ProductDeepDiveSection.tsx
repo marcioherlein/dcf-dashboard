@@ -81,7 +81,7 @@ function AnimatedPanel({
       {/* Pull-quote — user-outcome sentence */}
       <motion.p
         className="text-[13px] italic mb-6"
-        style={{ color: '#9B9B9B', borderLeft: '2px solid #E5E5E5', paddingLeft: '12px' }}
+        style={{ color: '#6B6B6B', borderLeft: '2px solid #E5E5E5', paddingLeft: '12px' }}
         initial={reduced !== false ? {} : { opacity: 0 }}
         animate={inView ? { opacity: 1 } : {}}
         transition={{ duration: 0.4, ease: EASE, delay: delay + 0.28 }}

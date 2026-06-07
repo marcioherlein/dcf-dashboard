@@ -78,14 +78,14 @@ function BrowserChrome({ children }: { children: React.ReactNode }) {
     <div
       className="w-full rounded-[16px] overflow-hidden"
       style={{
-        boxShadow: '0 24px 64px rgba(6,16,31,0.16), 0 4px 16px rgba(6,16,31,0.08), 0 1px 0 rgba(255,255,255,0.9) inset',
-        border: '1px solid rgba(0,0,0,0.1)',
+        boxShadow: '0 24px 64px rgba(0,0,0,0.20), 0 4px 16px rgba(0,0,0,0.10), 0 1px 0 rgba(255,255,255,0.12) inset',
+        border: '1px solid rgba(255,255,255,0.12)',
       }}
     >
       {/* Title bar */}
       <div
         className="flex items-center gap-2 px-4"
-        style={{ height: '36px', background: '#F2F1ED', borderBottom: '1px solid #E0DED9' }}
+        style={{ height: '36px', background: '#2A2A2A', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
       >
         {/* Traffic lights */}
         <div className="flex items-center gap-1.5">
@@ -96,12 +96,12 @@ function BrowserChrome({ children }: { children: React.ReactNode }) {
         {/* Address bar */}
         <div
           className="flex-1 mx-3 rounded-md flex items-center px-3 gap-1.5"
-          style={{ height: '22px', background: '#E8E7E3', border: '0.5px solid rgba(0,0,0,0.1)' }}
+          style={{ height: '22px', background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.12)' }}
         >
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#9B9B9B" strokeWidth={2.5} className="shrink-0">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#6B6B6B" strokeWidth={2.5} className="shrink-0">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
-          <span className="text-[10px] text-[#9B9B9B] font-medium tracking-tight">insic.app/stock/AAPL</span>
+          <span className="text-[10px] text-[#6B6B6B] font-medium tracking-tight">insic.app/stock/AAPL</span>
         </div>
       </div>
       {/* Content */}
@@ -168,7 +168,7 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
         {/* Logo */}
         <span className="font-bold text-[13px] tracking-tight" style={{ color: '#111111', letterSpacing: '-0.03em' }}>insic</span>
         {/* Search mock */}
-        <div className="flex items-center gap-1.5 rounded-[8px] px-2.5 py-1.5" style={{ background: '#F1EFE9', border: '1px solid #E5E5E5' }}>
+        <div className="flex items-center gap-1.5 rounded-[8px] px-2.5 py-1.5" style={{ background: '#F5F5F5', border: '1px solid #E5E5E5' }}>
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9B9B9B" strokeWidth={2.5}>
             <circle cx="11" cy="11" r="8" /><path strokeLinecap="round" d="m21 21-4.35-4.35" />
           </svg>
@@ -401,179 +401,7 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
 }
 
 // ── Market pricing teaser ────────────────────────────────────────────────────
-// Hardened: values visible by default (no opacity:0 gate), animate on enter.
-// Uses whileInView directly — no manual IntersectionObserver needed.
-
-const TEASER_ROWS = [
-  { label: 'Implied 5Y Revenue CAGR', val: '12.1%',    type: 'hero',   i: 0 },
-  { label: '3Y Historical CAGR',      val: '6.7%',     type: 'normal', i: 1 },
-  { label: 'Analyst Estimate (5Y)',   val: '9.3%',     type: 'normal', i: 2 },
-  { label: 'Market Interpretation',   val: 'Moderate', type: 'badge',  i: 3 },
-] as const
-
-// The CAGR spectrum bar — shows where 12.1% sits
-function CAGRBar({ reduced }: { reduced: boolean | null }) {
-  // 12.1% is in "Moderate" zone (8–15%). Map to position: ~47% across
-  const position = 47
-
-  const zones = [
-    { label: 'Conservative', sub: '<8%',     width: 28 },
-    { label: 'Moderate',     sub: '8–15%',   width: 26 },
-    { label: 'Aggressive',   sub: '15–25%',  width: 26 },
-    { label: 'Very Agr.',    sub: '>25%',    width: 20 },
-  ]
-
-  const zoneColors = ['#E8F7EF', '#EEF4DD', '#FFF4DA', '#FCEAEA']
-  const zoneBorders = ['#A7D7C0', '#BFD2A1', '#F3D391', '#F0B8B8']
-
-  return (
-    <div className="mt-5">
-      {/* Zone bar */}
-      <div className="relative flex rounded-full overflow-hidden h-2 mb-3" style={{ gap: 2 }}>
-        {zones.map((z, i) => (
-          <div
-            key={z.label}
-            className="h-full relative"
-            style={{ width: `${z.width}%`, background: zoneColors[i], border: `1px solid ${zoneBorders[i]}` }}
-          />
-        ))}
-        {/* Indicator dot */}
-        <motion.div
-          className="absolute top-1/2 -translate-y-1/2 z-10"
-          style={{ left: `${position}%` }}
-          initial={reduced ? {} : { scale: 0, opacity: 0 }}
-          whileInView={reduced ? {} : { scale: 1, opacity: 1 }}
-          viewport={{ once: true, margin: '-40px' }}
-          transition={{ delay: 0.5, duration: 0.4, type: 'spring', stiffness: 280, damping: 18 }}
-        >
-          <div className="w-3.5 h-3.5 rounded-full bg-white border-2 border-[#5F790B] shadow-sm -translate-x-1/2" />
-        </motion.div>
-      </div>
-
-      {/* Zone labels */}
-      <div className="flex text-[10px] text-[#9B9B9B]">
-        {zones.map((z, i) => (
-          <div key={z.label} className="flex flex-col items-center leading-tight" style={{ width: `${z.width}%` }}>
-            <span className={i === 1 ? 'font-semibold text-[#5F790B]' : ''}>{z.label}</span>
-            <span>{z.sub}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function MarketTeaserSection({ reduced }: { reduced: boolean | null }) {
-  return (
-    <motion.div
-      className="mt-10 mx-auto px-4 sm:px-6 relative"
-      style={{ maxWidth: '1200px', zIndex: 1 }}
-      initial={reduced ? {} : { opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.6, ease: EASE }}
-    >
-      <div
-        className="rounded-[20px] border border-[#E5E5E5] bg-white overflow-hidden"
-        style={{ boxShadow: '0 8px 32px rgba(6,16,31,0.07)' }}
-      >
-        {/* Header */}
-        <div className="flex items-start gap-3 px-6 pt-6 pb-4 border-b border-[#F5F5F5]">
-          <motion.div
-            className="w-10 h-10 rounded-[10px] bg-[#EEF4DD] flex items-center justify-center shrink-0 mt-0.5"
-            whileInView={reduced ? {} : { scale: [0.8, 1.12, 1] }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.55, ease: EASE, delay: 0.15 }}
-          >
-            <svg className="w-4.5 h-4.5 text-[#5F790B]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-            </svg>
-          </motion.div>
-          <div>
-            <h2 className="text-[17px] font-bold text-[#111111] leading-tight">What the market is pricing in</h2>
-            <p className="text-[13px] text-[#6B6B6B] mt-1 leading-relaxed">
-              See the growth and profitability the market expects over the coming years.
-            </p>
-          </div>
-        </div>
-
-        {/* Body: two-column on desktop */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#F5F5F5]">
-
-          {/* Left: data rows */}
-          <div className="px-6 py-5">
-            <p className="text-[11px] font-bold text-[#9B9B9B] mb-4 tracking-[0.05em]">Example: Apple Inc. (AAPL)</p>
-
-            <div className="space-y-0">
-              {TEASER_ROWS.map(({ label, val, type, i }) => (
-                <motion.div
-                  key={label}
-                  className="flex items-center justify-between py-3 border-b border-[#F5F5F5] last:border-0"
-                  // Hardened: visible by default, animates in on scroll
-                  initial={reduced ? {} : { opacity: 0, x: -14 }}
-                  whileInView={reduced ? {} : { opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: '-30px' }}
-                  transition={{ delay: i * 0.08, duration: 0.4, ease: EASE }}
-                >
-                  <span className={`text-[13px] leading-snug ${type === 'hero' ? 'font-semibold text-[#111111]' : 'text-[#6B6B6B]'}`}>
-                    {label}
-                  </span>
-                  {type === 'badge' ? (
-                    <motion.span
-                      className="text-[11px] font-semibold bg-[#FFF4DA] text-[#B56A00] border border-[#F3D391] rounded-full px-2.5 py-0.5 shrink-0"
-                      initial={reduced ? {} : { opacity: 0, scale: 0.85 }}
-                      whileInView={reduced ? {} : { opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.32, duration: 0.35, ease: EASE }}
-                    >
-                      {val}
-                    </motion.span>
-                  ) : type === 'hero' ? (
-                    <span className="text-[18px] font-bold tabular-nums text-[#5F790B] shrink-0">{val}</span>
-                  ) : (
-                    <span className="text-[13px] font-semibold tabular-nums text-[#111111] shrink-0">{val}</span>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right: spectrum + summary */}
-          <div className="px-6 py-5">
-            <p className="text-[11px] font-bold text-[#9B9B9B] mb-4 tracking-[0.05em]">Growth spectrum</p>
-
-            {/* Big callout number */}
-            <div className="flex items-baseline gap-2 mb-1">
-              <motion.span
-                className="text-[40px] font-bold tabular-nums text-[#111111] leading-none"
-                initial={reduced ? {} : { opacity: 0, y: 8 }}
-                whileInView={reduced ? {} : { opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2, duration: 0.5, ease: EASE }}
-              >
-                12.1%
-              </motion.span>
-              <span className="text-[13px] text-[#6B6B6B]">implied annually</span>
-            </div>
-            <p className="text-[12px] text-[#9B9B9B] mb-1">vs. 6.7% historical track record</p>
-
-            <CAGRBar reduced={reduced} />
-
-            <motion.p
-              className="mt-4 text-[12px] text-[#6B6B6B] leading-relaxed"
-              initial={reduced ? {} : { opacity: 0 }}
-              whileInView={reduced ? {} : { opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.6, duration: 0.5 }}
-            >
-              At today&apos;s price, the market implies 12.1% annual revenue growth over the next 5 years — above Apple&apos;s recent track record of 6.7%.
-            </motion.p>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  )
-}
+// Now lives in MarketTeaserSection.tsx (extracted from hero for clean narrative boundary)
 
 // ── Main component ───────────────────────────────────────────────────────────
 export default function LandingHero() {
@@ -597,8 +425,8 @@ export default function LandingHero() {
       className="overflow-x-hidden relative"
       style={{
         paddingTop: 'max(96px, calc(80px + 2vh))',
-        paddingBottom: 'clamp(24px, 3vh, 48px)',
-        background: '#FFFFFF',
+        paddingBottom: 'clamp(48px, 5vh, 80px)',
+        background: '#000000',
       }}
     >
       {/* Subtle radial olive aurora — behind content */}
@@ -606,7 +434,7 @@ export default function LandingHero() {
         aria-hidden="true"
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse 60% 55% at 70% 45%, rgba(95,121,11,0.07) 0%, transparent 65%)',
+          background: 'radial-gradient(ellipse 60% 55% at 70% 45%, rgba(95,121,11,0.12) 0%, transparent 65%)',
           zIndex: 0,
         }}
       />
@@ -624,8 +452,8 @@ export default function LandingHero() {
               transition={{ duration: 0.45, ease: EASE }}
               className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 mb-5"
               style={{
-                background: 'rgba(95,121,11,0.09)',
-                border: '1px solid rgba(95,121,11,0.22)',
+                background: 'rgba(95,121,11,0.15)',
+                border: '1px solid rgba(95,121,11,0.35)',
               }}
             >
               <motion.div
@@ -633,7 +461,7 @@ export default function LandingHero() {
                 animate={reduced ? {} : { scale: [1, 1.4, 1], opacity: [1, 0.7, 1] }}
                 transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
               />
-              <span className="text-[12px] font-semibold text-[#5F790B]">
+              <span className="text-[12px] font-semibold text-[#7C9A19]">
                 Institutional-quality valuation tools for individual investors
               </span>
             </motion.div>
@@ -653,7 +481,7 @@ export default function LandingHero() {
                   className="font-bold block"
                   style={{
                     fontSize: 'clamp(32px, 9.5vw, 60px)',
-                    color: plain ? '#111111' : '#5F790B',
+                    color: plain ? '#FFFFFF' : '#7C9A19',
                   }}
                 >
                   {text}
@@ -666,8 +494,8 @@ export default function LandingHero() {
               initial={reduced ? {} : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: EASE, delay: 0.32 }}
-              className="text-[16px] text-[#555555] leading-relaxed mb-8"
-              style={{ maxWidth: '440px' }}
+              className="text-[16px] leading-relaxed mb-8"
+              style={{ maxWidth: '440px', color: 'rgba(255,255,255,0.72)' }}
             >
               insic computes a fair value estimate for any stock and shows you what growth rate the current price implies — so you can judge whether the market is right before you commit capital.
             </motion.p>
@@ -701,10 +529,10 @@ export default function LandingHero() {
               )}
               <a
                 href="#how-it-works"
-                className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-[#C8C8C8] bg-white px-6 py-3.5 text-[15px] font-semibold text-[#111111] hover:bg-[#F6FAEA] hover:border-[#5F790B] transition-colors"
+                className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.06)] px-6 py-3.5 text-[15px] font-semibold text-white hover:bg-[rgba(255,255,255,0.12)] hover:border-[rgba(255,255,255,0.28)] transition-colors"
                 style={{ minHeight: '52px' }}
               >
-                <Play size={13} className="text-[#5F790B]" fill="#5F790B" />
+                <Play size={13} className="text-[#7C9A19]" fill="#7C9A19" />
                 See how it works
               </a>
             </motion.div>
@@ -729,7 +557,7 @@ export default function LandingHero() {
                     <svg key={s} className="w-3.5 h-3.5" fill="#5F790B" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                   ))}
                 </div>
-                <span className="text-[12px] text-[#555555]">Trusted by investors who do their own research</span>
+                <span className="text-[12px] text-[rgba(255,255,255,0.55)]">Trusted by investors who do their own research</span>
               </div>
             </motion.div>
           </div>
@@ -747,8 +575,6 @@ export default function LandingHero() {
 
         </div>
       </div>
-
-      <MarketTeaserSection reduced={reduced} />
 
       {/* Reduced motion override */}
       <style>{`
