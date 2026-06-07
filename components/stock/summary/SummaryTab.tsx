@@ -172,6 +172,7 @@ export default function SummaryTab({
       {/* ── Zone 0.9: Investment checklist ───────────────────────────────── */}
       {scores && (
         <InvestmentVerdict
+          ticker={ticker}
           upsidePct={upsidePct}
           scores={scores}
           analystRecommendation={analystRecommendation}

@@ -26,6 +26,8 @@ export interface VerdictResult {
   totalSignals: number
   label: VerdictLabel
   color: 'green' | 'amber' | 'red'
+  /** One-line headline: "MSFT passes 9 of 11 checks — strong fundamentals." */
+  headline: string
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -59,6 +61,8 @@ function pioC(piotroski: PiotroskiResult | null | undefined, nameFragment: strin
 // ─── Core computation ─────────────────────────────────────────────────────────
 
 export interface VerdictInputs {
+  // Identification
+  ticker?: string | null
   // Valuation
   upsidePct: number | null | undefined           // decimal, e.g. 0.23 = 23% upside
   roic: ROICResult | null | undefined
@@ -76,6 +80,7 @@ export interface VerdictInputs {
 
 export function computeVerdict(inputs: VerdictInputs): VerdictResult {
   const {
+    ticker,
     upsidePct, roic, analystRecommendation,
     piotroski, altman, beneish,
     fcfMargin, grossMargin, netMargin, revenueCAGR: _revenueCAGR,
@@ -217,5 +222,13 @@ export function computeVerdict(inputs: VerdictInputs): VerdictResult {
     : 'Multiple concerns'
   const color = ratio >= 0.75 ? 'green' : ratio >= 0.5 ? 'amber' : 'red'
 
-  return { dimensions: allDimensions, totalPassing, totalSignals, label, color }
+  // Headline: "MSFT passes 9 of 11 checks — strong fundamentals."
+  const name = ticker ? ticker.toUpperCase() : 'This stock'
+  const verdictPhrase =
+    color === 'green' ? 'strong fundamentals'
+    : color === 'amber' ? 'mixed signals'
+    : 'multiple concerns'
+  const headline = `${name} passes ${totalPassing} of ${totalSignals} checks — ${verdictPhrase}.`
+
+  return { dimensions: allDimensions, totalPassing, totalSignals, label, color, headline }
 }
