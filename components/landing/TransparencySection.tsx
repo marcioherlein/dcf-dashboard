@@ -81,7 +81,7 @@ export default function TransparencySection() {
                 initial={reduced ? {} : { opacity: 0, scale: 0.94 }}
                 animate={inView ? { opacity: 1, scale: 1 } : {}}
                 transition={{ duration: 0.5, ease: [0.34, 1, 0.64, 1], delay: 0.1 + i * 0.08 }}
-                whileHover={reduced ? {} : { y: -3, boxShadow: '0 12px 32px rgba(6,16,31,0.09)' }}
+                whileHover={reduced ? {} : { y: -3, boxShadow: '0 12px 32px rgba(0,0,0,0.09)' }}
                 className="snap-start flex flex-col rounded-[18px] bg-white border border-[#C8C8C8] p-6 transition-shadow w-[72vw] max-w-[280px] sm:w-auto sm:max-w-none"
                 style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}
               >
@@ -97,7 +97,7 @@ export default function TransparencySection() {
                 <h3 className="text-[15px] font-bold text-[#111111] mb-2 leading-snug" style={{ letterSpacing: '-0.01em' }}>
                   {title}
                 </h3>
-                <p className="text-[13px] text-[#555555] leading-relaxed mb-4 flex-1">
+                <p className="text-[13px] text-[#6B6B6B] leading-relaxed mb-4 flex-1">
                   {body}
                 </p>
 

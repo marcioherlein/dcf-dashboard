@@ -88,7 +88,7 @@ export default function QuickStatsBar({
             key={stat.label}
             className={i >= 4 ? 'hidden lg:block' : i >= 2 ? 'hidden sm:block' : undefined}
           >
-            <p className="text-[11px] font-semibold text-[#9B9B9B] uppercase tracking-wide mb-0.5 truncate">{stat.label}</p>
+            <p className="text-[11px] font-semibold text-[#6B6B6B] uppercase tracking-wide mb-0.5 truncate">{stat.label}</p>
             {stat.gauge ? (
               <div>
                 <div className="relative h-1.5 bg-[#F5F5F5] rounded-full overflow-visible mb-1 mt-1">
@@ -101,12 +101,12 @@ export default function QuickStatsBar({
                     style={{ left: `calc(${stat.gauge.pct}% - 4px)` }}
                   />
                 </div>
-                {stat.sub && <p className="text-[11px] text-[#9B9B9B] mt-0.5 truncate">{stat.sub}</p>}
+                {stat.sub && <p className="text-[11px] text-[#6B6B6B] mt-0.5 truncate">{stat.sub}</p>}
               </div>
             ) : (
               <>
                 <p className={`text-[13px] font-semibold tabular-nums leading-tight truncate ${stat.label === 'Next Earnings' ? 'text-[#B56A00]' : 'text-[#111111]'}`}>{stat.value}</p>
-                {stat.sub && <p className="text-[11px] text-[#9B9B9B] mt-0.5 truncate">{stat.sub}</p>}
+                {stat.sub && <p className="text-[11px] text-[#6B6B6B] mt-0.5 truncate">{stat.sub}</p>}
               </>
             )}
           </div>

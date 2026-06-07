@@ -135,8 +135,8 @@ export default function FinalCTASection() {
                 padding: '0 16px',
                 borderColor: open ? 'rgba(95,121,11,0.55)' : noResults ? 'rgba(184,69,69,0.45)' : 'rgba(255,255,255,0.10)',
                 boxShadow: open
-                  ? '0 0 0 3px rgba(95,121,11,0.12), 0 2px 8px rgba(6,16,31,0.18)'
-                  : '0 2px 8px rgba(6,16,31,0.14)',
+                  ? '0 0 0 3px rgba(95,121,11,0.12), 0 2px 8px rgba(0,0,0,0.18)'
+                  : '0 2px 8px rgba(0,0,0,0.14)',
               }}
             >
               {loading
@@ -189,7 +189,7 @@ export default function FinalCTASection() {
               <div
                 id="cta-search-listbox"
                 className="absolute left-0 right-0 top-full mt-2 bg-[#1C1C1C] rounded-xl border border-[rgba(255,255,255,0.10)] overflow-hidden z-50 text-left"
-                style={{ boxShadow: '0 16px 40px rgba(6,16,31,0.28)' }}
+                style={{ boxShadow: '0 16px 40px rgba(0,0,0,0.28)' }}
                 role="listbox"
               >
                 {results.map((r, i) => (
@@ -220,7 +220,7 @@ export default function FinalCTASection() {
                 className="absolute left-0 right-0 top-full mt-2 rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#1C1C1C] px-4 py-3 z-50 text-left"
                 role="status"
                 aria-live="polite"
-                style={{ boxShadow: '0 4px 16px rgba(6,16,31,0.24)' }}
+                style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.24)' }}
               >
                 <p className="text-[13px] text-[#9B9B9B] leading-snug">
                   No results for &ldquo;{query}&rdquo;.{' '}
@@ -235,7 +235,7 @@ export default function FinalCTASection() {
               <div
                 className="absolute left-0 right-0 top-full mt-2 rounded-xl border border-[#F0B8B8] bg-[#FCEAEA] px-4 py-2.5 z-50 flex items-center gap-2"
                 role="alert"
-                style={{ boxShadow: '0 4px 12px rgba(6,16,31,0.08)' }}
+                style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
               >
                 <svg className="w-3.5 h-3.5 shrink-0 text-[#D83B3B]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <circle cx="12" cy="12" r="10" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4M12 16h.01" />

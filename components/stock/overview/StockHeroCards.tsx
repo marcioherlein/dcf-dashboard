@@ -31,7 +31,7 @@ function HeroCard({ children, className }: { children: React.ReactNode; classNam
 }
 
 function CardLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-[12px] font-semibold text-[#9B9B9B] mb-2.5">{children}</p>
+  return <p className="text-[12px] font-semibold text-[#6B6B6B] mb-2.5">{children}</p>
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -81,7 +81,7 @@ export default function StockHeroCards({
         </p>
 
         <div className="mt-auto pt-4">
-          <p className="text-[11px] font-semibold text-[#9B9B9B] mb-2">52-Week Range</p>
+          <p className="text-[11px] font-semibold text-[#6B6B6B] mb-2">52-Week Range</p>
           <div className="relative h-2 rounded-full overflow-hidden bg-[#F5F5F5]">
             <div className="absolute inset-0 bg-gradient-to-r from-[#11875D] via-[#B56A00] to-[#D83B3B] opacity-60" />
             <div
@@ -90,8 +90,8 @@ export default function StockHeroCards({
             />
           </div>
           <div className="flex justify-between mt-1.5">
-            <span className="text-[11px] text-[#9B9B9B] tabular-nums">{fmtPrice(low52, currency)}</span>
-            <span className="text-[11px] text-[#9B9B9B] tabular-nums">{fmtPrice(high52, currency)}</span>
+            <span className="text-[11px] text-[#6B6B6B] tabular-nums">{fmtPrice(low52, currency)}</span>
+            <span className="text-[11px] text-[#6B6B6B] tabular-nums">{fmtPrice(high52, currency)}</span>
           </div>
         </div>
       </HeroCard>
@@ -112,24 +112,24 @@ export default function StockHeroCards({
                 {fmtPct(upsidePct)} {upsidePct >= 0 ? 'upside' : 'downside'}
               </span>
             )}
-            <p className="text-[11px] text-[#9B9B9B] mt-1.5 leading-snug">
+            <p className="text-[11px] text-[#6B6B6B] mt-1.5 leading-snug">
               Based on blended DCF + multiples
             </p>
 
             {scenarios && (
               <div className="mt-auto pt-4">
-                <p className="text-[11px] font-semibold text-[#9B9B9B] mb-1.5">Scenario Range</p>
+                <p className="text-[11px] font-semibold text-[#6B6B6B] mb-1.5">Scenario Range</p>
                 <div className="flex items-center justify-between rounded-lg bg-[#FFFFFF] border border-[#E5E5E5] px-2 py-2">
                   <div className="text-center">
-                    <p className="text-[11px] text-[#9B9B9B] mb-0.5">Bear</p>
+                    <p className="text-[11px] text-[#6B6B6B] mb-0.5">Bear</p>
                     <p className="text-[12px] font-semibold text-[#D83B3B] tabular-nums">{fmtPrice(scenarios.bear.fairValue, currency)}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-[11px] text-[#9B9B9B] mb-0.5">Base</p>
+                    <p className="text-[11px] text-[#6B6B6B] mb-0.5">Base</p>
                     <p className="text-[12px] font-bold text-[#111111] tabular-nums">{fmtPrice(scenarios.base.fairValue, currency)}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-[11px] text-[#9B9B9B] mb-0.5">Bull</p>
+                    <p className="text-[11px] text-[#6B6B6B] mb-0.5">Bull</p>
                     <p className="text-[12px] font-semibold text-[#11875D] tabular-nums">{fmtPrice(scenarios.bull.fairValue, currency)}</p>
                   </div>
                 </div>
@@ -137,7 +137,7 @@ export default function StockHeroCards({
             )}
           </>
         ) : (
-          <p className="text-[13px] text-[#9B9B9B] mt-2">Valuation not available for this instrument.</p>
+          <p className="text-[13px] text-[#6B6B6B] mt-2">Valuation not available for this instrument.</p>
         )}
       </HeroCard>
 
@@ -195,11 +195,11 @@ export default function StockHeroCards({
 
             <div className="flex justify-between mt-2.5">
               <div>
-                <p className="text-[11px] text-[#9B9B9B]">Fair Value</p>
+                <p className="text-[11px] text-[#6B6B6B]">Fair Value</p>
                 <p className="text-[13px] font-semibold text-[#111111] tabular-nums mt-0.5">{fmtPrice(fairValue, currency)}</p>
               </div>
               <div className="text-right">
-                <p className="text-[11px] text-[#9B9B9B]">Current Price</p>
+                <p className="text-[11px] text-[#6B6B6B]">Current Price</p>
                 <p className="text-[13px] font-semibold text-[#111111] tabular-nums mt-0.5">{fmtPrice(price, currency)}</p>
               </div>
             </div>
@@ -211,7 +211,7 @@ export default function StockHeroCards({
             </p>
           </>
         ) : (
-          <p className="text-[13px] text-[#9B9B9B] mt-2">Fair value estimate not available.</p>
+          <p className="text-[13px] text-[#6B6B6B] mt-2">Fair value estimate not available.</p>
         )}
       </HeroCard>
 

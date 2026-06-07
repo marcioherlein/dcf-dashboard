@@ -67,7 +67,7 @@ function ScenarioSlider({
       </div>
 
       {/* Track */}
-      <div className="relative h-2 rounded-full bg-gradient-to-r from-[#F0B8B8] via-[#E5E5E5] to-[#BFD2A1]">
+      <div className="relative h-2 rounded-full bg-gradient-to-r from-[#F0B8B8] via-[#FFF4DA] to-[#BFD2A1]">
         {/* Base case dot — olive */}
         <div
           className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border-2 border-[#5F790B] shadow-sm z-10"

@@ -52,7 +52,7 @@ function MetricBox({ children, className }: { children: React.ReactNode; classNa
 
 function BoxLabel({ children, tooltip }: { children: React.ReactNode; tooltip?: string }) {
   return (
-    <p className="text-[11px] font-semibold uppercase tracking-widest text-[#9B9B9B] mb-2 flex items-center gap-0.5">
+    <p className="text-[11px] font-semibold uppercase tracking-widest text-[#6B6B6B] mb-2 flex items-center gap-0.5">
       {children}
       {tooltip && <InfoTooltip content={tooltip} />}
     </p>
@@ -110,9 +110,9 @@ export default function StockSummaryCard({
         <p className={cn('text-[13px] sm:text-[12px] font-semibold tabular-nums', isUp ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
           {isUp ? '+' : ''}{fmtPrice(change, currency)} ({isUp ? '+' : ''}{changePct.toFixed(2)}%)
         </p>
-        <p className="text-[10px] text-[#9B9B9B] mb-3">today</p>
+        <p className="text-[10px] text-[#6B6B6B] mb-3">today</p>
 
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-[#9B9B9B] mb-1.5">52-Week Range</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-[#6B6B6B] mb-1.5">52-Week Range</p>
         <div className="relative h-1.5 rounded-full overflow-hidden bg-[#F5F5F5]">
           <div className="absolute inset-0 bg-gradient-to-r from-[#11875D] via-[#B56A00] to-[#D83B3B]" />
           <div
@@ -121,8 +121,8 @@ export default function StockSummaryCard({
           />
         </div>
         <div className="flex justify-between mt-1 mb-3">
-          <span className="text-[11px] text-[#9B9B9B] tabular-nums">{fmtPrice(low52, currency)}</span>
-          <span className="text-[11px] text-[#9B9B9B] tabular-nums">{fmtPrice(high52, currency)}</span>
+          <span className="text-[11px] text-[#6B6B6B] tabular-nums">{fmtPrice(low52, currency)}</span>
+          <span className="text-[11px] text-[#6B6B6B] tabular-nums">{fmtPrice(high52, currency)}</span>
         </div>
         <ActionLink onClick={onViewDetails}>View valuation →</ActionLink>
       </MetricBox>
@@ -140,7 +140,7 @@ export default function StockSummaryCard({
                 {upsidePct >= 0 ? '+' : ''}{fmtPct(upsidePct)} {upsidePct >= 0 ? 'upside' : 'downside'}
               </p>
             )}
-            <p className="text-[10px] text-[#9B9B9B] mb-3">Blended DCF + multiples</p>
+            <p className="text-[10px] text-[#6B6B6B] mb-3">Blended DCF + multiples</p>
 
             {scenarios && (() => {
               const lo = scenarios.bear.fairValue
@@ -148,7 +148,7 @@ export default function StockSummaryCard({
               const isInRange = fairValue >= lo * 0.9 && fairValue <= hi * 1.1
               return isInRange ? (
                 <>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-[#9B9B9B] mb-1.5">DCF Scenario Range</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-[#6B6B6B] mb-1.5">DCF Scenario Range</p>
                   <div className="relative h-1.5 rounded-full bg-[#F5F5F5] overflow-hidden mb-1">
                     {(() => {
                       const span = hi - lo
@@ -161,12 +161,12 @@ export default function StockSummaryCard({
                   </div>
                   <div className="flex justify-between mb-3">
                     <span className="text-[11px] text-[#D83B3B] tabular-nums">{fmtPrice(scenarios.bear.fairValue, currency)}</span>
-                    <span className="text-[11px] text-[#9B9B9B]">bear → bull</span>
+                    <span className="text-[11px] text-[#6B6B6B]">bear → bull</span>
                     <span className="text-[11px] text-[#11875D] tabular-nums">{fmtPrice(scenarios.bull.fairValue, currency)}</span>
                   </div>
                 </>
               ) : (
-                <p className="text-[11px] text-[#9B9B9B] mb-3 leading-snug">
+                <p className="text-[11px] text-[#6B6B6B] mb-3 leading-snug">
                   Scenario range available in Valuation tab.
                 </p>
               )
@@ -174,7 +174,7 @@ export default function StockSummaryCard({
             <ActionLink onClick={onViewDetails}>View valuation →</ActionLink>
           </>
         ) : (
-          <p className="text-sm text-[#9B9B9B] mt-1">—</p>
+          <p className="text-sm text-[#6B6B6B] mt-1">—</p>
         )}
       </MetricBox>
 
@@ -203,7 +203,7 @@ export default function StockSummaryCard({
         {upsidePct != null && (
           <div className="flex items-center gap-3 mb-3">
             <div>
-              <p className="text-[10px] text-[#9B9B9B] mb-0.5 flex items-center gap-0.5">
+              <p className="text-[10px] text-[#6B6B6B] mb-0.5 flex items-center gap-0.5">
                 Margin of Safety
                 <InfoTooltip content="The gap between the current price and our fair value estimate. A positive margin means the stock trades below fair value. Negative means you're paying a premium." />
               </p>
@@ -223,7 +223,7 @@ export default function StockSummaryCard({
           <>
             <div className="flex items-baseline gap-2 mb-1">
               <span className="text-[30px] sm:text-[28px] font-extrabold tabular-nums text-[#111111] leading-none">{ratio.toFixed(2)}×</span>
-              <span className="text-[11px] text-[#9B9B9B]">Price / Intrinsic</span>
+              <span className="text-[11px] text-[#6B6B6B]">Price / Intrinsic</span>
             </div>
             <span className={cn('inline-flex text-[10px] font-bold px-2.5 py-0.5 rounded-full border mb-3', ratioChipClass)}>
               {ratioZoneLabel}
@@ -242,9 +242,9 @@ export default function StockSummaryCard({
               <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#111111] border-2 border-white shadow z-20" style={{ left: `calc(${dotPct}% - 6px)` }} />
             </div>
             <div className="flex justify-between mb-3">
-              <span className="text-[10px] text-[#9B9B9B]">0×</span>
+              <span className="text-[10px] text-[#6B6B6B]">0×</span>
               <span className="text-[10px] text-[#2563EB]">1× FV</span>
-              <span className="text-[10px] text-[#9B9B9B]">2.5×</span>
+              <span className="text-[10px] text-[#6B6B6B]">2.5×</span>
             </div>
 
             {upsidePct != null && (
@@ -257,7 +257,7 @@ export default function StockSummaryCard({
             <ActionLink onClick={onViewDetails}>View valuation →</ActionLink>
           </>
         ) : (
-          <p className="text-sm text-[#9B9B9B] mt-1">—</p>
+          <p className="text-sm text-[#6B6B6B] mt-1">—</p>
         )}
       </MetricBox>
 

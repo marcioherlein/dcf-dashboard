@@ -261,7 +261,7 @@ export default function InvestorVerdictCard({
       )}
 
       {/* Disclaimer */}
-      <p className="text-[11px] text-[#9B9B9B] leading-tight border-t border-[#E5E5E5]/70 pt-2">
+      <p className="text-[11px] text-[#6B6B6B] leading-tight border-t border-[#E5E5E5]/70 pt-2">
         Model-based estimate, not financial advice. Treat as one input alongside your own research.
       </p>
     </div>

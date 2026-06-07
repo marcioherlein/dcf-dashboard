@@ -317,7 +317,7 @@ export default function TopBar() {
             {/* Mobile: app icon tile */}
             <InsicAppIcon size={32} className="sm:hidden" />
             {/* Desktop: full lockup */}
-            <span className="hidden sm:block" style={{ filter: 'drop-shadow(0 1px 3px rgba(6,16,31,0.12))' }}>
+            <span className="hidden sm:block" style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.12))' }}>
               <InsicLogoLockup size="md" />
             </span>
           </Link>
@@ -505,7 +505,7 @@ export default function TopBar() {
                             <div className="flex items-center gap-2 mb-0.5">
                               <span className="text-[14px] font-bold text-[#111111] font-mono">{r.symbol}</span>
                               {r.exchange && r.supported && (
-                                <span className="text-[10px] text-[#9B9B9B] font-medium uppercase">{r.exchange}</span>
+                                <span className="text-[10px] text-[#6B6B6B] font-medium uppercase">{r.exchange}</span>
                               )}
                             </div>
                             <span className="text-[12px] text-[#6B6B6B] truncate block">{r.longname ?? r.shortname}</span>
@@ -517,7 +517,7 @@ export default function TopBar() {
                               </span>
                             )
                           ) : (
-                            <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[#FFFFFF] text-[#9B9B9B] border border-[#E5E5E5] whitespace-nowrap">
+                            <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[#FFFFFF] text-[#6B6B6B] border border-[#E5E5E5] whitespace-nowrap">
                               Not available — {r.exchDisp ?? r.exchange}
                             </span>
                           )}
@@ -565,14 +565,14 @@ export default function TopBar() {
               {isPro && (
                 <button
                   onClick={openBillingPortal}
-                  className="text-[12px] text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors whitespace-nowrap hidden sm:block"
+                  className="text-[12px] text-[#6B6B6B] hover:text-[#111111] transition-colors whitespace-nowrap hidden sm:block"
                 >
                   Billing
                 </button>
               )}
               <button
                 onClick={() => signOut()}
-                className="text-[12px] text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors whitespace-nowrap hidden sm:block"
+                className="text-[12px] text-[#6B6B6B] hover:text-[#111111] transition-colors whitespace-nowrap hidden sm:block"
               >
                 Sign out
               </button>

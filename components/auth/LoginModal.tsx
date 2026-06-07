@@ -60,7 +60,7 @@ export default function LoginModal({ onClose, intent, headline }: Props) {
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-[#F5F5F5]"
+          className="absolute top-4 right-4 text-[#6B6B6B] hover:text-[#6B6B6B] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-[#F5F5F5]"
           aria-label="Close"
         >
           <X size={18} />
@@ -94,7 +94,7 @@ export default function LoginModal({ onClose, intent, headline }: Props) {
           Continue with Google
         </button>
 
-        <p className="mt-5 text-[11px] text-[#9B9B9B]">
+        <p className="mt-5 text-[11px] text-[#6B6B6B]">
           insic is free during beta. No credit card required.
         </p>
       </div>
