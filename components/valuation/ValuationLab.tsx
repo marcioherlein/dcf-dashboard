@@ -18,6 +18,8 @@ import {
   deriveForwardPEAssumptions,
   deriveRevenueMultipleAssumptions,
 } from '@/lib/valuation/assumptions/deriveAssumptions'
+import type { AssumptionAudit, AuditResult } from '@/lib/valuation/assumptionAuditor'
+import { AssumptionHealthBanner } from './AssumptionHealthBanner'
 import { fmtPrice, fmtPct, fmtLargeCurrency } from '@/lib/formatters'
 import { TrendBadge } from '@/components/ui/trend-badge'
 import { NABadge } from '@/components/ui/na-badge'
@@ -83,9 +85,9 @@ type ConfidenceLevel = 'high' | 'medium' | 'low'
 
 function ConfidenceBadge({ level }: { level: ConfidenceLevel }) {
   const cfg = {
-    high:   { label: 'High Confidence',   bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
-    medium: { label: 'Medium Confidence', bg: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-200'   },
-    low:    { label: 'Low Confidence',    bg: 'bg-red-50',     text: 'text-red-700',     border: 'border-red-200'     },
+    high:   { label: 'High Confidence',   bg: 'bg-[#E8F7EF]', text: 'text-[#11875D]', border: 'border-[#CDD1C8]' },
+    medium: { label: 'Medium Confidence', bg: 'bg-[#FFF4DA]',   text: 'text-[#B56A00]',   border: 'border-[#E3E1DA]'   },
+    low:    { label: 'Low Confidence',    bg: 'bg-[#FCEAEA]',     text: 'text-[#D83B3B]',     border: 'border-[#E3E1DA]'     },
   }[level]
   return (
     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border uppercase tracking-wider shrink-0 ${cfg.bg} ${cfg.text} ${cfg.border}`}>
@@ -109,10 +111,10 @@ function methodVerdict(upsidePct: number | null, reverseDCFLabel?: string): stri
 
 function resultToneClass(tone: ValuationResult['tone']): string {
   switch (tone) {
-    case 'positive': return 'text-emerald-600'
-    case 'negative': return 'text-red-600'
-    case 'warning':  return 'text-amber-600'
-    default:         return 'text-slate-900'
+    case 'positive': return 'text-[#11875D]'
+    case 'negative': return 'text-[#D83B3B]'
+    case 'warning':  return 'text-[#B56A00]'
+    default:         return 'text-[#06101F]'
   }
 }
 
@@ -247,48 +249,48 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
     <div className="card rounded-xl">
 
       {/* ① Three-column hero */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-200">
+      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[#E3E1DA]">
         <div className="flex flex-col items-center px-3 sm:px-4 py-5 gap-1">
-          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold text-center">Market Implies</p>
+          <p className="text-[10px] uppercase tracking-wider text-[#8A95A6] font-bold text-center">Market Implies</p>
           <p className="text-xl sm:text-2xl font-bold tabular-nums" style={{ color: toneColor }}>
             {impliedCAGR != null ? (impliedCAGR * 100).toFixed(1) + '%' : '—'}
           </p>
-          <p className="text-xs text-slate-500">5Y CAGR</p>
+          <p className="text-xs text-[#566174]">5Y CAGR</p>
           {impliedCAGR != null && toneLabel && (
             <span className="text-xs font-semibold mt-1 text-center" style={{ color: toneColor }}>
               {toneIcon} {toneLabel}
             </span>
           )}
           {result.interpretation === 'not_meaningful' && (
-            <span className="text-[10px] text-amber-600 text-center leading-snug mt-1 px-1">
+            <span className="text-[10px] text-[#B56A00] text-center leading-snug mt-1 px-1">
               Not computable — see below
             </span>
           )}
         </div>
         <div className="flex flex-col items-center px-3 sm:px-4 py-5 gap-1">
-          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold text-center">Analyst Says</p>
-          <p className="text-xl sm:text-2xl font-bold tabular-nums text-slate-900">
+          <p className="text-[10px] uppercase tracking-wider text-[#8A95A6] font-bold text-center">Analyst Says</p>
+          <p className="text-xl sm:text-2xl font-bold tabular-nums text-[#06101F]">
             {analystCAGR != null ? (analystCAGR * 100).toFixed(1) + '%' : '—'}
           </p>
-          <p className="text-xs text-slate-500">FY+1 estimate</p>
-          {analystCAGR != null && <span className="text-xs text-slate-400 mt-1">─ Consensus</span>}
+          <p className="text-xs text-[#566174]">FY+1 estimate</p>
+          {analystCAGR != null && <span className="text-xs text-[#8A95A6] mt-1">─ Consensus</span>}
         </div>
         <div className="flex flex-col items-center px-3 sm:px-4 py-5 gap-1">
-          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold text-center">History (3Y)</p>
-          <p className="text-xl sm:text-2xl font-bold tabular-nums text-slate-900">
+          <p className="text-[10px] uppercase tracking-wider text-[#8A95A6] font-bold text-center">History (3Y)</p>
+          <p className="text-xl sm:text-2xl font-bold tabular-nums text-[#06101F]">
             {historicalCAGR != null ? (historicalCAGR * 100).toFixed(1) + '%' : '—'}
           </p>
-          <p className="text-xs text-slate-500">3Y revenue CAGR</p>
-          {historicalCAGR != null && <span className="text-xs text-slate-400 mt-1">─ Historical</span>}
+          <p className="text-xs text-[#566174]">3Y revenue CAGR</p>
+          {historicalCAGR != null && <span className="text-xs text-[#8A95A6] mt-1">─ Historical</span>}
         </div>
       </div>
 
       {/* ② Show / hide calculations toggle */}
       {canShowMath && (
-        <div className="px-5 py-2 border-t border-slate-100">
+        <div className="px-5 py-2 border-t border-[#E3E1DA]">
           <button
             onClick={() => setShowMath(v => !v)}
-            className="text-[11px] text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 transition-colors"
+            className="text-[11px] text-[#2563EB] hover:text-[#2563EB] font-medium flex items-center gap-1 transition-colors"
           >
             <ChevronDown size={12} className={cn('transition-transform duration-200', showMath ? 'rotate-180' : '')} />
             {showMath ? 'Hide calculations' : 'Show calculations'}
@@ -309,45 +311,45 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
           >
 
             {/* Fixed inputs grid */}
-            <div className="px-5 py-4 border-t border-slate-100 bg-blue-50/30">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Fixed assumptions (locked inputs)</p>
+            <div className="px-5 py-4 border-t border-[#E3E1DA] bg-[#EAF1FF]/30">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[#8A95A6] mb-3">Fixed assumptions (locked inputs)</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3">
                 {lastRevenue != null && (
                   <div>
-                    <p className="text-[10px] text-slate-500">Starting Revenue (TTM)</p>
-                    <p className="text-sm font-semibold tabular-nums text-slate-900">{fmtCompact(lastRevenue)}</p>
+                    <p className="text-[10px] text-[#566174]">Starting Revenue (TTM)</p>
+                    <p className="text-sm font-semibold tabular-nums text-[#06101F]">{fmtCompact(lastRevenue)}</p>
                   </div>
                 )}
                 <div>
-                  <p className="text-[10px] text-slate-500">FCF Margin</p>
-                  <p className="text-sm font-semibold tabular-nums text-slate-900">
+                  <p className="text-[10px] text-[#566174]">FCF Margin</p>
+                  <p className="text-sm font-semibold tabular-nums text-[#06101F]">
                     {lastFCFMargin != null ? (lastFCFMargin * 100).toFixed(1) + '%' : '—'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-slate-500">WACC</p>
-                  <p className="text-sm font-semibold tabular-nums text-slate-900">{(wacc * 100).toFixed(1)}%</p>
+                  <p className="text-[10px] text-[#566174]">WACC</p>
+                  <p className="text-sm font-semibold tabular-nums text-[#06101F]">{(wacc * 100).toFixed(1)}%</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-slate-500">Terminal Growth</p>
-                  <p className="text-sm font-semibold tabular-nums text-slate-900">{(terminalG * 100).toFixed(1)}%</p>
+                  <p className="text-[10px] text-[#566174]">Terminal Growth</p>
+                  <p className="text-sm font-semibold tabular-nums text-[#06101F]">{(terminalG * 100).toFixed(1)}%</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-slate-500">Projection Years</p>
-                  <p className="text-sm font-semibold tabular-nums text-slate-900">5 years</p>
+                  <p className="text-[10px] text-[#566174]">Projection Years</p>
+                  <p className="text-sm font-semibold tabular-nums text-[#06101F]">5 years</p>
                 </div>
                 {sharesAbsolute != null && (
                   <div>
-                    <p className="text-[10px] text-slate-500">Shares Outstanding</p>
-                    <p className="text-sm font-semibold tabular-nums text-slate-900">
+                    <p className="text-[10px] text-[#566174]">Shares Outstanding</p>
+                    <p className="text-sm font-semibold tabular-nums text-[#06101F]">
                       {sharesAbsolute >= 1e9 ? (sharesAbsolute / 1e9).toFixed(2) + 'B' : (sharesAbsolute / 1e6).toFixed(0) + 'M'}
                     </p>
                   </div>
                 )}
                 {cashM != null && debtM != null && (
                   <div>
-                    <p className="text-[10px] text-slate-500">Net Cash / (Debt)</p>
-                    <p className={cn('text-sm font-semibold tabular-nums', cashM - debtM >= 0 ? 'text-emerald-600' : 'text-red-600')}>
+                    <p className="text-[10px] text-[#566174]">Net Cash / (Debt)</p>
+                    <p className={cn('text-sm font-semibold tabular-nums', cashM - debtM >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
                       {fmtCompact((cashM - debtM) * 1e6)}
                     </p>
                   </div>
@@ -356,57 +358,57 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
             </div>
 
             {/* Year-by-year projection table */}
-            <div className="px-5 py-4 border-t border-slate-100">
+            <div className="px-5 py-4 border-t border-[#E3E1DA]">
               <div className="flex items-center gap-2 mb-3 flex-wrap">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#8A95A6]">
                   Year-by-year projection
                 </p>
-                <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">
+                <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-[#EAF1FF] text-[#2563EB] font-bold">
                   ★ X = {impliedCAGR != null ? (impliedCAGR * 100).toFixed(1) + '%' : '—'} CAGR (solved)
                 </span>
               </div>
               <div className="overflow-x-auto -mx-5 px-5">
                 <table className="w-full min-w-[420px] text-[11px]">
                   <thead>
-                    <tr className="border-b border-slate-200">
-                      <th className="pb-2 text-left font-semibold text-slate-500 pr-2 w-10">Yr</th>
-                      <th className="pb-2 text-right font-bold text-blue-600 px-2 bg-blue-50/60 rounded-t-sm">★ Rev. Growth</th>
-                      <th className="pb-2 text-right font-semibold text-slate-500 px-2">Revenue</th>
-                      <th className="pb-2 text-right font-semibold text-slate-500 px-2 hidden sm:table-cell">FCF</th>
-                      <th className="pb-2 text-right font-semibold text-slate-500 px-2 hidden md:table-cell">Disc. Factor</th>
-                      <th className="pb-2 text-right font-semibold text-slate-700 pl-2">PV of FCF</th>
+                    <tr className="border-b border-[#E3E1DA]">
+                      <th className="pb-2 text-left font-semibold text-[#566174] pr-2 w-10">Yr</th>
+                      <th className="pb-2 text-right font-bold text-[#2563EB] px-2 bg-[#EAF1FF]/60 rounded-t-sm">★ Rev. Growth</th>
+                      <th className="pb-2 text-right font-semibold text-[#566174] px-2">Revenue</th>
+                      <th className="pb-2 text-right font-semibold text-[#566174] px-2 hidden sm:table-cell">FCF</th>
+                      <th className="pb-2 text-right font-semibold text-[#566174] px-2 hidden md:table-cell">Disc. Factor</th>
+                      <th className="pb-2 text-right font-semibold text-[#06101F] pl-2">PV of FCF</th>
                     </tr>
                   </thead>
                   <tbody>
                     {projectionData.rows.map((row, i) => (
-                      <tr key={row.year} className={cn('border-b border-slate-100', i % 2 === 0 ? '' : 'bg-slate-50/40')}>
-                        <td className="py-1.5 text-left text-slate-500 font-medium pr-2">{row.year}</td>
-                        <td className="py-1.5 text-right text-blue-700 font-bold bg-blue-50/40 px-2">
+                      <tr key={row.year} className={cn('border-b border-[#E3E1DA]', i % 2 === 0 ? '' : 'bg-[#F4F3EF]/40')}>
+                        <td className="py-1.5 text-left text-[#566174] font-medium pr-2">{row.year}</td>
+                        <td className="py-1.5 text-right text-[#2563EB] font-bold bg-[#EAF1FF]/40 px-2">
                           {impliedCAGR != null ? '+' + (impliedCAGR * 100).toFixed(1) + '%' : '—'}
                         </td>
-                        <td className="py-1.5 text-right text-slate-700 px-2 tabular-nums">{fmtCompact(row.revenue)}</td>
-                        <td className="py-1.5 text-right text-slate-700 px-2 tabular-nums hidden sm:table-cell">{fmtCompact(row.fcf)}</td>
-                        <td className="py-1.5 text-right text-slate-500 px-2 tabular-nums hidden md:table-cell">÷ {row.discountFactor.toFixed(3)}</td>
-                        <td className="py-1.5 text-right text-slate-900 font-semibold pl-2 tabular-nums">{fmtCompact(row.pv)}</td>
+                        <td className="py-1.5 text-right text-[#06101F] px-2 tabular-nums">{fmtCompact(row.revenue)}</td>
+                        <td className="py-1.5 text-right text-[#06101F] px-2 tabular-nums hidden sm:table-cell">{fmtCompact(row.fcf)}</td>
+                        <td className="py-1.5 text-right text-[#566174] px-2 tabular-nums hidden md:table-cell">÷ {row.discountFactor.toFixed(3)}</td>
+                        <td className="py-1.5 text-right text-[#06101F] font-semibold pl-2 tabular-nums">{fmtCompact(row.pv)}</td>
                       </tr>
                     ))}
                     {/* Terminal value row */}
-                    <tr className="border-t-2 border-dashed border-slate-300">
-                      <td className="py-1.5 text-left text-slate-500 font-medium pr-2">TV</td>
-                      <td className="py-1.5 text-right text-blue-600 bg-blue-50/40 px-2 text-[10px]">
+                    <tr className="border-t-2 border-dashed border-[#CDD1C8]">
+                      <td className="py-1.5 text-left text-[#566174] font-medium pr-2">TV</td>
+                      <td className="py-1.5 text-right text-[#2563EB] bg-[#EAF1FF]/40 px-2 text-[10px]">
                         g = {(terminalG * 100).toFixed(1)}% ∞
                       </td>
-                      <td className="py-1.5 text-right text-slate-400 px-2">—</td>
-                      <td className="py-1.5 text-right text-slate-700 px-2 tabular-nums hidden sm:table-cell">{fmtCompact(projectionData.tv)}</td>
-                      <td className="py-1.5 text-right text-slate-500 px-2 tabular-nums hidden md:table-cell">÷ {Math.pow(1 + wacc, N).toFixed(3)}</td>
-                      <td className="py-1.5 text-right text-slate-900 font-semibold pl-2 tabular-nums">{fmtCompact(projectionData.pvTv)}</td>
+                      <td className="py-1.5 text-right text-[#8A95A6] px-2">—</td>
+                      <td className="py-1.5 text-right text-[#06101F] px-2 tabular-nums hidden sm:table-cell">{fmtCompact(projectionData.tv)}</td>
+                      <td className="py-1.5 text-right text-[#566174] px-2 tabular-nums hidden md:table-cell">÷ {Math.pow(1 + wacc, N).toFixed(3)}</td>
+                      <td className="py-1.5 text-right text-[#06101F] font-semibold pl-2 tabular-nums">{fmtCompact(projectionData.pvTv)}</td>
                     </tr>
                     {/* Total EV row */}
-                    <tr className="border-t-2 border-slate-300 bg-slate-50">
-                      <td colSpan={3} className="py-2 text-left font-bold text-slate-700 pr-2 text-xs">Implied Enterprise Value</td>
-                      <td className="py-2 text-right font-bold text-slate-900 tabular-nums hidden sm:table-cell px-2"></td>
-                      <td className="py-2 text-right font-bold text-slate-900 tabular-nums hidden md:table-cell px-2"></td>
-                      <td className="py-2 text-right font-bold text-slate-900 tabular-nums pl-2 text-xs">
+                    <tr className="border-t-2 border-[#CDD1C8] bg-[#F4F3EF]">
+                      <td colSpan={3} className="py-2 text-left font-bold text-[#06101F] pr-2 text-xs">Implied Enterprise Value</td>
+                      <td className="py-2 text-right font-bold text-[#06101F] tabular-nums hidden sm:table-cell px-2"></td>
+                      <td className="py-2 text-right font-bold text-[#06101F] tabular-nums hidden md:table-cell px-2"></td>
+                      <td className="py-2 text-right font-bold text-[#06101F] tabular-nums pl-2 text-xs">
                         {fmtCompact(projectionData.totalEV)}
                       </td>
                     </tr>
@@ -414,7 +416,7 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
                 </table>
               </div>
               {result.impliedEV != null && (
-                <p className="text-[10px] text-slate-400 mt-2">
+                <p className="text-[10px] text-[#8A95A6] mt-2">
                   Cross-check: market cap + debt − cash = {fmtCompact(result.impliedEV)}.
                   {Math.abs(projectionData.totalEV - result.impliedEV) / result.impliedEV < 0.01
                     ? ' ✓ Table matches.'
@@ -425,8 +427,8 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
 
             {/* Sensitivity strip */}
             {sensitivityScenarios.length > 0 && (
-              <div className="px-5 py-4 border-t border-slate-100 bg-slate-50/60">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">What if growth is different?</p>
+              <div className="px-5 py-4 border-t border-[#E3E1DA] bg-[#F4F3EF]/60">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#8A95A6] mb-3">What if growth is different?</p>
                 <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5 snap-x">
                   {sensitivityScenarios.map(s => {
                     const isImplied  = !!s.isImplied
@@ -438,27 +440,27 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
                         className={cn(
                           'shrink-0 snap-start flex flex-col items-center px-3 py-3 rounded-xl border text-center min-w-[90px]',
                           isImplied
-                            ? 'border-blue-300 bg-blue-50 ring-1 ring-blue-200 shadow-sm'
-                            : 'border-slate-200 bg-white'
+                            ? 'border-[#93B4F5] bg-[#EAF1FF] ring-1 ring-blue-200 shadow-sm'
+                            : 'border-[#E3E1DA] bg-white'
                         )}
                       >
-                        <p className={cn('text-sm font-bold tabular-nums', isImplied ? 'text-blue-700' : 'text-slate-700')}>
+                        <p className={cn('text-sm font-bold tabular-nums', isImplied ? 'text-[#2563EB]' : 'text-[#06101F]')}>
                           {s.label}
                         </p>
                         {s.sublabel && (
-                          <p className={cn('text-[11px] mt-0.5 leading-tight', isImplied ? 'text-blue-500' : 'text-slate-400')}>
+                          <p className={cn('text-[11px] mt-0.5 leading-tight', isImplied ? 'text-[#2563EB]' : 'text-[#8A95A6]')}>
                             {s.sublabel}
                           </p>
                         )}
-                        <div className="mt-2 pt-2 border-t border-slate-100 w-full">
+                        <div className="mt-2 pt-2 border-t border-[#E3E1DA] w-full">
                           <p className={cn('text-sm font-bold tabular-nums',
-                            isImplied ? 'text-blue-700' : isCheap ? 'text-emerald-600' : isExpensive ? 'text-red-600' : 'text-slate-700'
+                            isImplied ? 'text-[#2563EB]' : isCheap ? 'text-[#11875D]' : isExpensive ? 'text-[#D83B3B]' : 'text-[#06101F]'
                           )}>
                             {s.fvPerShare != null ? fmtPrice(s.fvPerShare, currency) : '—'}
                           </p>
                           {isImplied
-                            ? <p className="text-[11px] text-blue-500 mt-0.5">= market price</p>
-                            : <p className={cn('text-[11px] mt-0.5', isCheap ? 'text-emerald-500' : isExpensive ? 'text-red-500' : 'text-slate-400')}>
+                            ? <p className="text-[11px] text-[#2563EB] mt-0.5">= market price</p>
+                            : <p className={cn('text-[11px] mt-0.5', isCheap ? 'text-[#11875D]' : isExpensive ? 'text-[#D83B3B]' : 'text-[#8A95A6]')}>
                                 {s.fvPerShare != null ? (isCheap ? 'undervalued' : isExpensive ? 'overvalued' : 'near fair') : ''}
                               </p>
                           }
@@ -467,7 +469,7 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
                     )
                   })}
                 </div>
-                <p className="text-[10px] text-slate-400 mt-2.5 leading-relaxed">
+                <p className="text-[10px] text-[#8A95A6] mt-2.5 leading-relaxed">
                   Fair value at each growth scenario, holding WACC, FCF margin and all other inputs constant. Green = stock looks cheap; red = expensive.
                 </p>
               </div>
@@ -478,29 +480,29 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
       </AnimatePresence>
 
       {/* ④ Assumptions + interpretation (always visible) */}
-      <div className="px-5 py-4 border-t border-slate-100 bg-slate-50">
-        <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-3">Assumptions used</p>
+      <div className="px-5 py-4 border-t border-[#E3E1DA] bg-[#F4F3EF]">
+        <p className="text-[10px] uppercase tracking-wider text-[#8A95A6] font-bold mb-3">Assumptions used</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <div>
-            <p className="text-[10px] text-slate-500">FCF Margin</p>
+            <p className="text-[10px] text-[#566174]">FCF Margin</p>
             <p className={cn('text-sm font-semibold tabular-nums',
-              lastFCFMargin != null && lastFCFMargin < 0 ? 'text-red-600' : 'text-slate-900'
+              lastFCFMargin != null && lastFCFMargin < 0 ? 'text-[#D83B3B]' : 'text-[#06101F]'
             )}>
               {lastFCFMargin != null ? (lastFCFMargin * 100).toFixed(1) + '%' : '—'}
             </p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500">WACC</p>
-            <p className="text-sm font-semibold tabular-nums text-slate-900">{(wacc * 100).toFixed(1)}%</p>
+            <p className="text-[10px] text-[#566174]">WACC</p>
+            <p className="text-sm font-semibold tabular-nums text-[#06101F]">{(wacc * 100).toFixed(1)}%</p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500">Terminal G</p>
-            <p className="text-sm font-semibold tabular-nums text-slate-900">{(terminalG * 100).toFixed(1)}%</p>
+            <p className="text-[10px] text-[#566174]">Terminal G</p>
+            <p className="text-sm font-semibold tabular-nums text-[#06101F]">{(terminalG * 100).toFixed(1)}%</p>
           </div>
         </div>
         {result.interpretationText && (
           <p className={cn('text-xs mt-3 leading-relaxed',
-            result.interpretation === 'not_meaningful' ? 'text-amber-700 font-medium' : 'text-slate-500'
+            result.interpretation === 'not_meaningful' ? 'text-[#B56A00] font-medium' : 'text-[#566174]'
           )}>
             {result.interpretationText}
           </p>
@@ -508,7 +510,7 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
         {result.guardErrors.length > 0 && (
           <div className="mt-2 space-y-1">
             {result.guardErrors.map((w, i) => (
-              <p key={i} className="text-[10px] text-amber-600">⚠ {w}</p>
+              <p key={i} className="text-[10px] text-[#B56A00]">⚠ {w}</p>
             ))}
           </div>
         )}
@@ -585,9 +587,10 @@ interface MethodInlinePanelProps {
   currency: string
   onAssumptionChange: (key: string, value: number) => void
   onResetOverrides: () => void
+  audit?: AssumptionAudit | null
 }
 
-function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, onResetOverrides }: MethodInlinePanelProps) {
+function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, onResetOverrides, audit }: MethodInlinePanelProps) {
   const isModified = Object.keys(overrides).length > 0
   const upside =
     config.fairValueSummary != null && config.currentPrice != null && config.currentPrice > 0
@@ -597,18 +600,23 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
   const editableAssumptions   = config.assumptions.filter(a => a.editable)
   const readonlyAssumptions   = config.assumptions.filter(a => !a.editable && a.unit !== 'shares')
 
+  // Build a key→AuditResult lookup for inline rendering
+  const auditByKey = audit
+    ? Object.fromEntries(audit.results.map((r: AuditResult) => [r.key, r]))
+    : {}
+
   return (
     <div className="card rounded-xl overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+      <div className="px-5 py-4 border-b border-[#E3E1DA] flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>
-          <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{config.methodDescription ?? config.subtitle}</p>
+          <p className="text-xs text-[#566174] mt-0.5 leading-relaxed">{config.methodDescription ?? config.subtitle}</p>
         </div>
         {config.fairValueSummary != null && (
           <div className="flex items-center gap-3 sm:shrink-0">
             <div className="text-right">
-              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Fair Value</p>
-              <p className="text-lg font-bold tabular-nums text-slate-900">
+              <p className="text-[10px] uppercase tracking-wider text-[#8A95A6] font-bold">Fair Value</p>
+              <p className="text-lg font-bold tabular-nums text-[#06101F]">
                 {fmtPrice(config.fairValueSummary, currency)}
               </p>
             </div>
@@ -621,7 +629,7 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
       {config.warnings.length > 0 && (
         <div className="px-5 pt-3 space-y-1.5">
           {config.warnings.map((w, i) => (
-            <div key={i} className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-700">
+            <div key={i} className="bg-[#FFF4DA] border border-[#E3E1DA] rounded-lg px-3 py-2 text-xs text-[#B56A00]">
               ⚠ {w}
             </div>
           ))}
@@ -637,17 +645,27 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
           ? ((config.fairValueSummary - config.currentPrice) / config.currentPrice * 100)
           : null
         return (
-          <p className="mx-5 mt-4 text-[11px] text-slate-500 bg-slate-50 rounded-lg px-3 py-2 border border-slate-100 leading-relaxed">
-            With <strong className="text-slate-700">{cagrVal}% annual revenue growth</strong>, this model estimates{' '}
-            <strong className="text-slate-700">{fmtPrice(config.fairValueSummary, currency)}</strong> fair value
+          <p className="mx-5 mt-4 text-[11px] text-[#566174] bg-[#F4F3EF] rounded-lg px-3 py-2 border border-[#E3E1DA] leading-relaxed">
+            With <strong className="text-[#06101F]">{cagrVal}% annual revenue growth</strong>, this model estimates{' '}
+            <strong className="text-[#06101F]">{fmtPrice(config.fairValueSummary, currency)}</strong> fair value
             {upsideNum != null && (
-              <> (<span className={upsideNum >= 0 ? 'text-emerald-700 font-semibold' : 'text-amber-700 font-semibold'}>
+              <> (<span className={upsideNum >= 0 ? 'text-[#11875D] font-semibold' : 'text-[#B56A00] font-semibold'}>
                 {upsideNum >= 0 ? '+' : ''}{upsideNum.toFixed(1)}% vs today
               </span>)</>
             )}.
           </p>
         )
       })()}
+
+      {/* Assumption health banner — shows audit grade + per-assumption signals */}
+      {audit && (
+        <div className="px-5 pt-4">
+          <AssumptionHealthBanner
+            audit={audit}
+            onApplySuggestion={onAssumptionChange}
+          />
+        </div>
+      )}
 
       {/* Editable sliders */}
       {editableAssumptions.length > 0 && (
@@ -674,12 +692,12 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                 {/* Label row */}
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-sm font-semibold text-slate-700">{a.label}</span>
+                    <span className="text-sm font-semibold text-[#06101F]">{a.label}</span>
                     {a.description && (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger>
-                            <span className="inline-flex w-4 h-4 items-center justify-center rounded-full bg-slate-100 text-slate-400 text-[10px] cursor-help">?</span>
+                            <span className="inline-flex w-4 h-4 items-center justify-center rounded-full bg-[#E3E1DA] text-[#8A95A6] text-[10px] cursor-help">?</span>
                           </TooltipTrigger>
                           <TooltipContent side="top" className="max-w-xs text-[12px]">
                             {a.description}
@@ -691,14 +709,14 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                     <span className={cn(
                       'text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider',
                       isOverridden
-                        ? 'bg-blue-100 text-blue-700'
+                        ? 'bg-[#EAF1FF] text-[#2563EB]'
                         : a.source === 'analyst_estimate'
-                        ? 'bg-emerald-100 text-emerald-700'
+                        ? 'bg-[#E8F7EF] text-[#11875D]'
                         : a.source === 'historical_3y_median' || a.source === 'historical_5y_median'
-                        ? 'bg-blue-100 text-blue-600'
+                        ? 'bg-[#EAF1FF] text-[#2563EB]'
                         : a.source === 'sector_fallback'
-                        ? 'bg-amber-100 text-amber-700'
-                        : 'bg-slate-100 text-slate-500',
+                        ? 'bg-[#FFF4DA] text-[#B56A00]'
+                        : 'bg-[#E3E1DA] text-[#566174]',
                     )}>
                       {isOverridden ? 'Override' : sourceLabel(a.source)}
                     </span>
@@ -708,14 +726,14 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                     {heat.level !== 'neutral' && (
                       <span className={cn(
                         'text-[10px] font-semibold px-1.5 py-0.5 rounded-full border',
-                        heat.level === 'green' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
-                        heat.level === 'amber' ? 'bg-amber-50  border-amber-200  text-amber-700'  :
-                                                 'bg-red-50    border-red-200    text-red-700',
+                        heat.level === 'green' ? 'bg-[#E8F7EF] border-[#CDD1C8] text-[#11875D]' :
+                        heat.level === 'amber' ? 'bg-[#FFF4DA]  border-[#E3E1DA]  text-[#B56A00]'  :
+                                                 'bg-[#FCEAEA]    border-[#E3E1DA]    text-[#D83B3B]',
                       )}>
                         {heat.level === 'red' ? '⚠ Aggressive' : heat.level === 'amber' ? '↑ Elevated' : '✓ Conservative'}
                       </span>
                     )}
-                    <span className="text-sm font-semibold tabular-nums text-slate-900">
+                    <span className="text-sm font-semibold tabular-nums text-[#06101F]">
                       {displayVal}{a.unit === '%' ? '%' : a.unit === 'x' ? '×' : ''}
                     </span>
                   </div>
@@ -731,7 +749,7 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                   onChange={e => onAssumptionChange(a.key, parseFloat(e.target.value))}
                   className="w-full h-1.5 rounded-full cursor-pointer appearance-none"
                   style={{
-                    background: `linear-gradient(to right, ${trackColor} ${fillPct}%, #e2e8f0 ${fillPct}%)`,
+                    background: `linear-gradient(to right, ${trackColor} ${fillPct}%, #E3E1DA ${fillPct}%)`,
                   }}
                 />
 
@@ -739,10 +757,10 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                 {deviationMsg && (
                   <p className={cn(
                     'text-[10px] mt-1 leading-tight',
-                    heat.level === 'red'    ? 'text-red-600   font-medium' :
-                    heat.level === 'amber'  ? 'text-amber-600 font-medium' :
-                    heat.level === 'green'  ? 'text-emerald-600 font-medium' :
-                    'text-slate-400',
+                    heat.level === 'red'    ? 'text-[#D83B3B]   font-medium' :
+                    heat.level === 'amber'  ? 'text-[#B56A00] font-medium' :
+                    heat.level === 'green'  ? 'text-[#11875D] font-medium' :
+                    'text-[#8A95A6]',
                   )}>
                     {heat.level === 'neutral' ? `▸ ${deviationMsg}` : deviationMsg}
                   </p>
@@ -751,7 +769,7 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                 {/* Benchmark snap chips */}
                 {a.benchmarks && a.benchmarks.length > 0 && (
                   <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                    <span className="text-[10px] text-slate-400 shrink-0">Compare:</span>
+                    <span className="text-[10px] text-[#8A95A6] shrink-0">Compare:</span>
                     {a.benchmarks.map(b => {
                       const isCurrent = Math.abs((a.key in overrides ? overrides[a.key] : (a.value ?? 0)) - b.value) < 0.0005
                       return (
@@ -761,8 +779,8 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                           className={cn(
                             'text-[10px] px-2 py-0.5 rounded-full border tabular-nums transition-colors',
                             isCurrent
-                              ? 'bg-blue-50 border-blue-300 text-blue-700 font-semibold'
-                              : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700',
+                              ? 'bg-[#EAF1FF] border-[#93B4F5] text-[#2563EB] font-semibold'
+                              : 'bg-[#F4F3EF] border-[#E3E1DA] text-[#566174] hover:bg-[#EAF1FF] hover:border-[#93B4F5] hover:text-[#2563EB]',
                           )}
                         >
                           {b.label}: {fmtBenchmarkValue(b.value, a.unit)}
@@ -771,6 +789,34 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                     })}
                   </div>
                 )}
+
+                {/* Inline audit signal — only when warn or error and NOT already shown in banner */}
+                {(() => {
+                  const ar = auditByKey[a.key] as AuditResult | undefined
+                  if (!ar || ar.severity === 'ok') return null
+                  return (
+                    <div className={cn(
+                      'mt-2 rounded-lg border px-2.5 py-2 text-[10px] leading-snug',
+                      ar.severity === 'error'
+                        ? 'bg-[#FEF2F2] border-[#FECACA] text-[#D83B3B]'
+                        : 'bg-[#FFFBEB] border-[#FDE68A] text-[#92400E]',
+                    )}>
+                      <span className="font-semibold">
+                        {ar.severity === 'error' ? '✗ ' : '⚠ '}{ar.signal}
+                      </span>
+                      {ar.suggestedValue != null && ar.key !== 'quality' && (
+                        <button
+                          onClick={() => onAssumptionChange(ar.key, ar.suggestedValue!)}
+                          className="ml-2 underline decoration-dotted font-semibold hover:no-underline"
+                        >
+                          → Use {ar.key === 'exitPE' || ar.key === 'revenueMultiple'
+                            ? `${ar.suggestedValue.toFixed(1)}×`
+                            : `${(ar.suggestedValue * 100).toFixed(1)}%`}
+                        </button>
+                      )}
+                    </div>
+                  )
+                })()}
               </div>
             )
           })}
@@ -782,9 +828,9 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
         <div className="px-5 pt-4 pb-2">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {readonlyAssumptions.map(a => (
-              <div key={a.key} className="bg-slate-50 rounded-lg px-3 py-2">
-                <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">{a.label}</p>
-                <p className="text-sm font-semibold tabular-nums text-slate-800 mt-0.5">
+              <div key={a.key} className="bg-[#F4F3EF] rounded-lg px-3 py-2">
+                <p className="text-[10px] text-[#566174] font-medium uppercase tracking-wider">{a.label}</p>
+                <p className="text-sm font-semibold tabular-nums text-[#06101F] mt-0.5">
                   {fmtAssumptionDisplay(a, overrides)}{a.unit === '%' ? '%' : a.unit === 'x' ? '×' : ''}
                 </p>
               </div>
@@ -795,11 +841,11 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
 
       {/* Footer: Results + Reset */}
       {(config.results.length > 0 || isModified) && (
-        <div className="px-5 py-3 mt-2 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-4 flex-wrap">
+        <div className="px-5 py-3 mt-2 border-t border-[#E3E1DA] bg-[#F4F3EF] flex items-center justify-between gap-4 flex-wrap">
           <div className="flex gap-4 flex-wrap">
             {config.results.map((r, i) => (
               <div key={i} className="text-xs">
-                <span className="text-slate-500">{r.label}: </span>
+                <span className="text-[#566174]">{r.label}: </span>
                 <span className={cn('font-semibold tabular-nums', resultToneClass(r.tone))}>
                   {r.formattedValue === '—' ? <NABadge reason="calc-error" /> : r.formattedValue}
                 </span>
@@ -807,7 +853,7 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
             ))}
           </div>
           {isModified && (
-            <button onClick={onResetOverrides} className="text-xs text-blue-600 hover:text-blue-700 underline shrink-0">
+            <button onClick={onResetOverrides} className="text-xs text-[#2563EB] hover:text-[#2563EB] underline shrink-0">
               Reset to model
             </button>
           )}
@@ -871,30 +917,30 @@ function MethodAccordion({
       {/* Clickable header row */}
       <button
         onClick={onToggle}
-        className="w-full px-5 py-4 flex items-start gap-3 text-left hover:bg-slate-50/60 transition-colors"
+        className="w-full px-5 py-4 flex items-start gap-3 text-left hover:bg-[#F4F3EF]/60 transition-colors"
       >
         <ChevronDown
           size={14}
-          className={cn('shrink-0 text-slate-400 transition-transform mt-0.5', isOpen ? 'rotate-180' : '')}
+          className={cn('shrink-0 text-[#8A95A6] transition-transform mt-0.5', isOpen ? 'rotate-180' : '')}
         />
         <div className="min-w-0 flex-1">
           {/* Row 1: name + confidence badge + FV + upside */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-slate-800">{title}</span>
+            <span className="text-sm font-semibold text-[#06101F]">{title}</span>
             {confidence && <ConfidenceBadge level={confidence} />}
             {fairValue != null && (
-              <span className="text-sm font-bold tabular-nums text-slate-900 ml-auto">
+              <span className="text-sm font-bold tabular-nums text-[#06101F] ml-auto">
                 {fmtPrice(fairValue, currency)}
               </span>
             )}
             {upsidePct != null && <TrendBadge value={upsidePct} size="sm" />}
           </div>
           {/* Row 2: verdict */}
-          {verdict && <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">{verdict}</p>}
+          {verdict && <p className="text-[11px] text-[#566174] mt-0.5 leading-snug">{verdict}</p>}
           {/* Row 3: best for */}
           {bestFor && (
-            <p className="text-[10px] text-slate-400 mt-1">
-              <span className="font-semibold text-slate-500">Best for:</span> {bestFor}
+            <p className="text-[10px] text-[#8A95A6] mt-1">
+              <span className="font-semibold text-[#566174]">Best for:</span> {bestFor}
             </p>
           )}
         </div>
@@ -906,7 +952,7 @@ function MethodAccordion({
           {chips.map(c => (
             <span
               key={c.label}
-              className="inline-flex items-center gap-0.5 text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200"
+              className="inline-flex items-center gap-0.5 text-[10px] bg-[#E3E1DA] text-[#566174] px-2 py-0.5 rounded-full border border-[#E3E1DA]"
             >
               {c.label}: {c.value}
               {c.onToggleLink && (
@@ -922,9 +968,9 @@ function MethodAccordion({
           ))}
           {weight > 0 && (
             <div className="ml-auto flex items-center gap-1.5 shrink-0">
-              <span className="text-[10px] text-slate-400">{(weight * 100).toFixed(0)}% weight</span>
-              <div className="w-14 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                <div className="h-full rounded-full bg-blue-300" style={{ width: `${weight * 100}%` }} />
+              <span className="text-[10px] text-[#8A95A6]">{(weight * 100).toFixed(0)}% weight</span>
+              <div className="w-14 h-1.5 rounded-full bg-[#E3E1DA] overflow-hidden">
+                <div className="h-full rounded-full bg-[#2563EB]" style={{ width: `${weight * 100}%` }} />
               </div>
             </div>
           )}
@@ -938,20 +984,20 @@ function MethodAccordion({
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="overflow-hidden border-t border-slate-100 bg-white"
+            className="overflow-hidden border-t border-[#E3E1DA] bg-white"
           >
             <div className="[&_.card]:rounded-none [&_.card]:border-0 [&_.card]:shadow-none">
               {/* 3-step guide */}
               {guide.length > 0 && (
-                <div className="px-5 pt-4 pb-3 bg-blue-50/40 border-b border-blue-100">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-2">How to use this model</p>
+                <div className="px-5 pt-4 pb-3 bg-[#EAF1FF]/40 border-b border-[#93B4F5]">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#2563EB] mb-2">How to use this model</p>
                   <ol className="space-y-1.5">
                     {guide.map((step, i) => (
                       <li key={i} className="flex items-start gap-2">
-                        <span className="shrink-0 w-4 h-4 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold flex items-center justify-center mt-0.5">
+                        <span className="shrink-0 w-4 h-4 rounded-full bg-[#EAF1FF] text-[#2563EB] text-[10px] font-bold flex items-center justify-center mt-0.5">
                           {i + 1}
                         </span>
-                        <span className="text-[11px] text-slate-600 leading-snug">{step}</span>
+                        <span className="text-[11px] text-[#566174] leading-snug">{step}</span>
                       </li>
                     ))}
                   </ol>
@@ -1008,6 +1054,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
 
   const currency     = apiData?.quote?.currency ?? 'USD'
   const currentPrice = (apiData?.quote?.price   ?? 0) as number
+  const assumptionAudit = (apiData?.assumptionAudit as AssumptionAudit | null | undefined) ?? null
 
   const cagrBenchmarks = useMemo(() => {
     const out: Array<{ label: string; value: number }> = []
@@ -1296,16 +1343,16 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
     <div className="space-y-4">
 
       {/* ── 1. Fair Value by Method ──────────────────────────────────────── */}
-      <div className="rounded-xl border border-slate-100 bg-white/70 px-4 py-4">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">Fair Value by Method</p>
+      <div className="rounded-xl border border-[#E3E1DA] bg-white/70 px-4 py-4">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-[#8A95A6] mb-3">Fair Value by Method</p>
         <div className="space-y-2">
           {summaryMethods.map(m => {
             if (m.fairValue == null) return (
               <div key={m.id} className="flex items-center gap-2 sm:gap-3 opacity-40">
-                <span className="text-[11px] text-slate-400 w-24 sm:w-36 shrink-0 truncate">{m.label}</span>
-                <div className="flex-1 h-4 bg-slate-100 rounded-full" />
-                <span className="text-[11px] text-slate-400 w-10 sm:w-16 text-right">N/A</span>
-                <span className="text-[11px] text-slate-400 w-10 sm:w-16 text-right">—</span>
+                <span className="text-[11px] text-[#8A95A6] w-24 sm:w-36 shrink-0 truncate">{m.label}</span>
+                <div className="flex-1 h-4 bg-[#E3E1DA] rounded-full" />
+                <span className="text-[11px] text-[#8A95A6] w-10 sm:w-16 text-right">N/A</span>
+                <span className="text-[11px] text-[#8A95A6] w-10 sm:w-16 text-right">—</span>
               </div>
             )
             const upside = m.upsidePct ?? 0
@@ -1313,20 +1360,20 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
             const barWidth = Math.min(Math.abs(upside) * 100 / 2, 48)
             return (
               <div key={m.id} className="flex items-center gap-2 sm:gap-3">
-                <span className="text-[11px] text-slate-500 w-24 sm:w-36 shrink-0 truncate">{m.label}</span>
-                <div className="flex-1 relative h-4 bg-slate-100 rounded-full overflow-hidden">
+                <span className="text-[11px] text-[#566174] w-24 sm:w-36 shrink-0 truncate">{m.label}</span>
+                <div className="flex-1 relative h-4 bg-[#E3E1DA] rounded-full overflow-hidden">
                   <div
-                    className={`absolute top-0 bottom-0 rounded-full ${isUp ? 'bg-emerald-300' : 'bg-red-300'}`}
+                    className={`absolute top-0 bottom-0 rounded-full ${isUp ? 'bg-[#11875D]' : 'bg-[#D83B3B]'}`}
                     style={isUp
                       ? { left: '50%', width: `${barWidth}%` }
                       : { right: '50%', width: `${barWidth}%` }}
                   />
-                  <div className="absolute top-0 bottom-0 left-1/2 w-[1.5px] bg-slate-400" />
+                  <div className="absolute top-0 bottom-0 left-1/2 w-[1.5px] bg-[#8A95A6]" />
                 </div>
-                <span className={`text-[12px] font-semibold tabular-nums w-10 sm:w-14 text-right ${isUp ? 'text-emerald-600' : 'text-red-500'}`}>
+                <span className={`text-[12px] font-semibold tabular-nums w-10 sm:w-14 text-right ${isUp ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                   {isUp ? '+' : ''}{(upside * 100).toFixed(1)}%
                 </span>
-                <span className="text-[11px] text-slate-500 w-12 sm:w-16 text-right tabular-nums font-mono">{currency}{m.fairValue.toFixed(2)}</span>
+                <span className="text-[11px] text-[#566174] w-12 sm:w-16 text-right tabular-nums font-mono">{currency}{m.fairValue.toFixed(2)}</span>
               </div>
             )
           })}
@@ -1335,21 +1382,21 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
             const isUp = upside >= 0
             const barWidth = Math.min(Math.abs(upside) * 100 / 2, 48)
             return (
-              <div className="flex items-center gap-2 sm:gap-3 pt-2 border-t border-slate-100 mt-1">
-                <span className="text-[11px] font-bold text-slate-700 w-24 sm:w-36 shrink-0">Blended Estimate</span>
-                <div className="flex-1 relative h-4 bg-blue-50 rounded-full overflow-hidden">
+              <div className="flex items-center gap-2 sm:gap-3 pt-2 border-t border-[#E3E1DA] mt-1">
+                <span className="text-[11px] font-bold text-[#06101F] w-24 sm:w-36 shrink-0">Blended Estimate</span>
+                <div className="flex-1 relative h-4 bg-[#EAF1FF] rounded-full overflow-hidden">
                   <div
-                    className={`absolute top-0 bottom-0 rounded-full ${isUp ? 'bg-blue-400' : 'bg-orange-400'}`}
+                    className={`absolute top-0 bottom-0 rounded-full ${isUp ? 'bg-[#2563EB]' : 'bg-orange-400'}`}
                     style={isUp
                       ? { left: '50%', width: `${barWidth}%` }
                       : { right: '50%', width: `${barWidth}%` }}
                   />
-                  <div className="absolute top-0 bottom-0 left-1/2 w-[1.5px] bg-slate-500" />
+                  <div className="absolute top-0 bottom-0 left-1/2 w-[1.5px] bg-[#566174]" />
                 </div>
-                <span className={`text-[12px] font-bold tabular-nums w-10 sm:w-14 text-right ${isUp ? 'text-blue-600' : 'text-orange-600'}`}>
+                <span className={`text-[12px] font-bold tabular-nums w-10 sm:w-14 text-right ${isUp ? 'text-[#2563EB]' : 'text-orange-600'}`}>
                   {isUp ? '+' : ''}{(upside * 100).toFixed(1)}%
                 </span>
-                <span className="text-[11px] font-bold text-slate-700 w-12 sm:w-16 text-right tabular-nums font-mono">{currency}{weightedFV.toFixed(2)}</span>
+                <span className="text-[11px] font-bold text-[#06101F] w-12 sm:w-16 text-right tabular-nums font-mono">{currency}{weightedFV.toFixed(2)}</span>
               </div>
             )
           })()}
@@ -1422,14 +1469,14 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
         >
           {/* Executive DCF summary */}
           {coreDcfFV != null && (
-            <div className="px-5 pt-4 pb-3 border-b border-slate-100 bg-slate-50/50">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+            <div className="px-5 pt-4 pb-3 border-b border-[#E3E1DA] bg-[#F4F3EF]/50">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[#8A95A6] mb-2">
                 {fullDcfLiveFV != null ? 'Modelling Table Result' : 'Core DCF Result'}
               </p>
               <div className="flex items-center gap-3 flex-wrap">
                 <div>
-                  <p className="text-[10px] text-slate-500">Fair Value</p>
-                  <p className="text-lg font-bold tabular-nums text-slate-900">
+                  <p className="text-[10px] text-[#566174]">Fair Value</p>
+                  <p className="text-lg font-bold tabular-nums text-[#06101F]">
                     {fmtPrice(coreDcfFV!, currency)}
                   </p>
                 </div>
@@ -1438,20 +1485,20 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
                 )}
                 <div className="ml-auto flex gap-4 flex-wrap">
                   <div>
-                    <p className="text-[10px] text-slate-500">WACC</p>
-                    <p className="text-sm font-semibold tabular-nums text-slate-800">
+                    <p className="text-[10px] text-[#566174]">WACC</p>
+                    <p className="text-sm font-semibold tabular-nums text-[#06101F]">
                       {((apiData?.wacc?.wacc ?? 0.09) * 100).toFixed(1)}%
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-slate-500">Terminal G</p>
-                    <p className="text-sm font-semibold tabular-nums text-slate-800">
+                    <p className="text-[10px] text-[#566174]">Terminal G</p>
+                    <p className="text-sm font-semibold tabular-nums text-[#06101F]">
                       {((apiData?.terminalG ?? 0.025) * 100).toFixed(1)}%
                     </p>
                   </div>
                 </div>
               </div>
-              <p className="text-[10px] text-slate-500 mt-2">
+              <p className="text-[10px] text-[#566174] mt-2">
                 {fullDcfLiveFV != null
                   ? 'Derived from the modelling table below — updates as you edit projections.'
                   : 'UFCF & LFCF · Perpetuity Growth & Exit Multiple blend — Damodaran four-model average.'}
@@ -1463,18 +1510,18 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
         <div className="glass-accordion-header rounded-xl overflow-hidden">
           <button
             onClick={() => setSanityChecksOpen(o => !o)}
-            className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50/60 transition-colors text-left"
+            className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F4F3EF]/60 transition-colors text-left"
           >
             <div>
               <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold text-slate-800">Sanity Checks — Multiples</p>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 uppercase tracking-wider">3 models</span>
+                <p className="text-sm font-semibold text-[#06101F]">Sanity Checks — Multiples</p>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#E3E1DA] text-[#566174] border border-[#E3E1DA] uppercase tracking-wider">3 models</span>
               </div>
-              <p className="text-[11px] text-slate-500 mt-0.5">Forward P/E · EV/EBITDA · Revenue Multiple — how the market prices peers. Best used as a cross-check against DCF results.</p>
+              <p className="text-[11px] text-[#566174] mt-0.5">Forward P/E · EV/EBITDA · Revenue Multiple — how the market prices peers. Best used as a cross-check against DCF results.</p>
             </div>
             <ChevronDown
               size={14}
-              className={cn('shrink-0 text-slate-400 transition-transform ml-3', sanityChecksOpen ? 'rotate-180' : '')}
+              className={cn('shrink-0 text-[#8A95A6] transition-transform ml-3', sanityChecksOpen ? 'rotate-180' : '')}
             />
           </button>
           <AnimatePresence>
@@ -1484,7 +1531,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                className="overflow-hidden border-t border-slate-100"
+                className="overflow-hidden border-t border-[#E3E1DA]"
               >
                 <div className="p-3 space-y-3">
                   <MethodAccordion
@@ -1513,6 +1560,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
                       currency={currency}
                       onAssumptionChange={(key, val) => handleAssumptionChange('forward_pe', key, val)}
                       onResetOverrides={() => handleResetOverrides('forward_pe')}
+                      audit={assumptionAudit}
                     />
                   </MethodAccordion>
 
@@ -1541,6 +1589,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
                       currency={currency}
                       onAssumptionChange={(key, val) => handleAssumptionChange('ev_ebitda', key, val)}
                       onResetOverrides={() => handleResetOverrides('ev_ebitda')}
+                      audit={assumptionAudit}
                     />
                   </MethodAccordion>
 
@@ -1569,6 +1618,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
                       currency={currency}
                       onAssumptionChange={(key, val) => handleAssumptionChange('revenue_multiple', key, val)}
                       onResetOverrides={() => handleResetOverrides('revenue_multiple')}
+                      audit={assumptionAudit}
                     />
                   </MethodAccordion>
                 </div>
@@ -1579,8 +1629,8 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
       </div>
 
       {/* ── How We Value section ─────────────────────────────────────────── */}
-      <div className="rounded-xl border border-slate-100 bg-white/70 px-4 py-5">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-4">How We Value {ticker}</p>
+      <div className="rounded-xl border border-[#E3E1DA] bg-white/70 px-4 py-5">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-[#8A95A6] mb-4">How We Value {ticker}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { step: 1, title: 'Gather Data', body: 'Pull live financials, analyst estimates, and market data from Yahoo Finance.' },
@@ -1592,8 +1642,8 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
               <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
                 <span className="text-[11px] font-bold text-white">{step}</span>
               </div>
-              <p className="text-[13px] font-semibold text-slate-800">{title}</p>
-              <p className="text-[11px] text-slate-500 leading-relaxed">{body}</p>
+              <p className="text-[13px] font-semibold text-[#06101F]">{title}</p>
+              <p className="text-[11px] text-[#566174] leading-relaxed">{body}</p>
             </div>
           ))}
         </div>
@@ -1601,7 +1651,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
 
       {/* ── Valuation Models summary cards ───────────────────────────────── */}
       <div>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">Valuation Models</p>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-[#8A95A6] mb-3">Valuation Models</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {summaryMethods.map(m => {
             const isUp = m.upsidePct != null && m.upsidePct >= 0
@@ -1613,20 +1663,20 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
                   setOpenMethodId(p => p === target ? null : target)
                   setTimeout(() => methodRefs.current[target]?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
                 }}
-                className="text-left rounded-xl border border-slate-100 bg-white/80 hover:bg-white hover:border-blue-200 transition-colors px-4 py-3 space-y-1.5"
+                className="text-left rounded-xl border border-[#E3E1DA] bg-white/80 hover:bg-white hover:border-[#93B4F5] transition-colors px-4 py-3 space-y-1.5"
               >
-                <p className="text-[11px] font-bold text-slate-700">{m.label}</p>
+                <p className="text-[11px] font-bold text-[#06101F]">{m.label}</p>
                 {m.fairValue != null ? (
                   <>
-                    <p className="text-[18px] font-bold text-slate-900 tabular-nums leading-none">{currency}{m.fairValue.toFixed(2)}</p>
-                    <p className={`text-[12px] font-semibold ${isUp ? 'text-emerald-600' : 'text-red-500'}`}>
+                    <p className="text-[18px] font-bold text-[#06101F] tabular-nums leading-none">{currency}{m.fairValue.toFixed(2)}</p>
+                    <p className={`text-[12px] font-semibold ${isUp ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                       {isUp ? '+' : ''}{((m.upsidePct ?? 0) * 100).toFixed(1)}% upside
                     </p>
                   </>
                 ) : (
-                  <p className="text-[12px] text-slate-400 italic">Not applicable</p>
+                  <p className="text-[12px] text-[#8A95A6] italic">Not applicable</p>
                 )}
-                <p className="text-[10px] text-slate-400">{(m.weight * 100).toFixed(0)}% weight</p>
+                <p className="text-[10px] text-[#8A95A6]">{(m.weight * 100).toFixed(0)}% weight</p>
               </button>
             )
           })}

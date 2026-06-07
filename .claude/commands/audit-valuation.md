@@ -450,7 +450,82 @@ Verify each guard fires (or correctly does not) for this ticker:
 
 ---
 
-## Output Requirements
+## Phase 7 — Pre-set Value Explainability Audit
+
+This phase audits whether the model's automatically-seeded assumptions are **clearly explained to users** — not just computationally correct. A value that is right but unexplained is as dangerous as a wrong value: the user either blindly accepts it or blindly overrides it.
+
+Run this phase for every ticker. It catches cases where the model is silently wrong (F13 netMargin bug: user sees "5%" with no warning, no explanation) or where a low-confidence sector-fallback is presented with the same authority as a high-confidence analyst consensus.
+
+### 7A — Per-assumption UI clarity check
+
+For each of the 7 seeded assumptions (`revenueCAGR`, `netMargin`, `exitPE`, `revenueMultiple`, `dilutionRate`, `discountRate`, `exitMultiple` where applicable), answer:
+
+| Check | What to verify |
+|---|---|
+| **Source** | Is the `source` badge correct? (`analyst_estimate` requires numAnalysts ≥ 3; `historical_3y_median` = using IS rows; `sector_fallback` = no company data available; `model_default` = computed formula). State which source was used and whether it's the most credible available. |
+| **Description** | Does `a.description` exist and explain the assumption in plain English — not jargon? A good description: "How fast you expect revenue to grow each year for the next 5 years." A bad one: "Revenue CAGR input." |
+| **sourceExplanation** | Does `sourceExplanation` include actual numbers for this company? It should name the analyst count, the FY+1 estimate, the historical value, and the blend weight (e.g. "54 analysts: FY+1 16.6%, FY+2 14.6%; hist 3Y 12.4% → blended 18.4%"). A generic fallback message ("using sector default 12%") with no company-specific data should be flagged. |
+| **Benchmarks** | Are `benchmarks` populated so the user can compare and snap to a reference? If `source = analyst_estimate` there must be an analyst benchmark. If `source = sector_fallback`, there must be a sector median benchmark. Missing benchmarks = no snap button = user has no reference point. |
+| **Heat accuracy** | Is the heat level (conservative/elevated/aggressive) calibrated correctly relative to the primary benchmark? If `heat = 'neutral'` but `assumptionAudit.severity = 'warn'` for this key → the UI is under-reporting risk. This is a critical gap: user sees a neutral slider but the model has a warning. |
+| **Audit signal** | Look up `assumptionAudit.results` for this key. If `severity = 'warn'` or `'error'`: is the `signal` text and `reason` now visible to the user? As of the AssumptionHealthBanner integration, it should appear both in the banner and as an inline row below the slider. Verify: is the signal text non-technical enough for a non-expert? |
+| **Suggested fix** | If `suggestedValue` is present, state it and confirm the "→ Use X%" snap button appears inline on the slider. |
+| **Confidence** | State `confidence` from the audit result (`high`/`medium`/`low`). Flag any `low` confidence assumptions — sector fallbacks and single-analyst coverage are essentially guesses and should be labelled accordingly. |
+
+**Example output for this section:**
+
+```
+ASSUMPTION EXPLAINABILITY AUDIT — [TICKER]
+
+revenueCAGR: 18.4%
+  Source: analyst_estimate (54 analysts) — credible ✓
+  Description: "How fast you expect revenue to grow each year..." ✓
+  sourceExplanation: "54 analysts: FY+1 16.6%, FY+2 14.6%; hist 3Y 12.4% → blended 18.4%" ✓
+  Benchmarks: [Analyst consensus: 18.5%, Fundamental: 16.1%] ✓
+  Heat: neutral (1% above analyst — within threshold) ✓
+  Audit: ok (confidence: high) ✓
+  Snap button: n/a (no suggestedValue)
+
+netMargin: 5.0%
+  Source: historical_3y_median — but NOTE: this is using FY2021 data via F13 bug ⚠
+  Description: "What fraction of revenue becomes profit by year 5..." ✓
+  sourceExplanation: "3Y median X%, last Y%; stable (+0.5%)" — generic, no company numbers
+  Benchmarks: none populated — user cannot compare to sector peer ⚠
+  Heat: neutral — NO signal that 5% is drastically below actual 13% ⚠ CRITICAL
+  Audit: severity=warn — "Aggressive expansion (+44.2pp vs trailing)" ✓ (should appear inline)
+  Snap button: "→ Use 13.2%" should appear inline ✓
+  Confidence: medium
+
+exitPE: 38×
+  Source: historical_3y_median — label misleading, actually sector-median path
+  Description: "P/E multiple at exit year — most mature companies trade at 15–25×" ✓
+  sourceExplanation: "No current P/E; sector median 38× (Software - Application)" ← no current P/E means peRatio=null in auditBundle (F2 if not fixed)
+  Benchmarks: [Sector: 38×] — should also show current P/E if available
+  Heat: neutral
+  Audit: ok (consistent with +1Y forward P/E) ✓
+```
+
+### 7B — Overall assumption health summary
+
+- State `assumptionAudit.grade` (A/B/C/D) and `score` (0–100).
+- List every `warn` and `error` result with the full `signal` text and `reason`.
+- State whether the **AssumptionHealthBanner** is showing in the UI for this stock. It should appear above every method's slider section when `assumptionAudit` is non-null.
+- Verdict: would a non-expert investor understand which assumptions need review just from reading the UI — without reading this audit?
+
+### 7C — Confidence transparency
+
+For each assumption where `confidence = 'low'` (sector fallback, ≤ 2 analysts, no peer data):
+- The user is seeing a model guess presented as a derived value.
+- Is the `source` badge and `sourceExplanation` clear enough that the user understands this is a fallback?
+- State what information would improve confidence (e.g., "adding analyst estimates would upgrade this from sector-fallback to analyst_estimate").
+
+### 7D — User-language check
+
+For every `warn` or `error` audit result, read the `reason` text and check for jargon:
+- Terms like "NOPAT", "CAGR cap", "geo-discount", "convergence discount", "CRP" are opaque to non-experts.
+- Terms like "Gordon Growth", "WACC-g spread", "terminal value" need brief context the first time they appear.
+- If the reason text would confuse a CFO (not a financial modelling specialist), flag it with a suggested plain-English rewrite.
+
+---
 
 ### Summary header (always first)
 ```
@@ -489,6 +564,10 @@ Inline table as specified.
 
 ### Guard coverage table (Phase 6)
 Inline table as specified.
+
+### Assumption explainability table (Phase 7)
+| Assumption | Source | Description? | sourceExplanation specific? | Benchmarks? | Heat vs audit match? | Audit severity | User can act? |
+|---|---|---|---|---|---|---|---|
 
 ### Prioritized fix list
 Rank by severity:
