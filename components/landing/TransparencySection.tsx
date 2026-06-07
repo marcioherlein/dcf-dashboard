@@ -66,7 +66,7 @@ export default function TransparencySection() {
           >
             No black boxes. Every assumption is yours.
           </h2>
-          <p className="text-[15px] sm:text-[17px] text-[#555555] mx-auto leading-relaxed" style={{ maxWidth: '520px' }}>
+          <p className="text-[15px] sm:text-[17px] text-[#6B6B6B] mx-auto leading-relaxed" style={{ maxWidth: '520px' }}>
             We believe investors deserve transparency in how fair value is derived.
             Every model, source, and assumption is visible and adjustable.
           </p>
@@ -82,8 +82,8 @@ export default function TransparencySection() {
                 animate={inView ? { opacity: 1, scale: 1 } : {}}
                 transition={{ duration: 0.5, ease: [0.34, 1, 0.64, 1], delay: 0.1 + i * 0.08 }}
                 whileHover={reduced ? {} : { y: -3, boxShadow: '0 12px 32px rgba(6,16,31,0.09)' }}
-                className="snap-start flex flex-col rounded-[18px] bg-white border border-[#E5E5E5] p-6 transition-shadow w-[72vw] max-w-[280px] sm:w-auto sm:max-w-none"
-                style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+                className="snap-start flex flex-col rounded-[18px] bg-white border border-[#C8C8C8] p-6 transition-shadow w-[72vw] max-w-[280px] sm:w-auto sm:max-w-none"
+                style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}
               >
                 {/* Icon */}
                 <div

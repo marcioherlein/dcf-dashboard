@@ -122,7 +122,7 @@ export default function FinalCTASection() {
           >
             Know what has to be true before you buy.
           </h2>
-          <p className="text-base sm:text-[17px]" style={{ color: '#9B9B9B', lineHeight: 1.55, marginBottom: '28px' }}>
+          <p className="text-base sm:text-[17px]" style={{ color: 'rgba(255,255,255,0.60)', lineHeight: 1.55, marginBottom: '28px' }}>
             A first-pass valuation in seconds. Go deeper when it matters.
           </p>
 
@@ -248,7 +248,7 @@ export default function FinalCTASection() {
           {/* Trust bullets */}
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 flex-wrap">
             {['Free to analyze', 'No credit card required', 'Results in seconds'].map(b => (
-              <span key={b} className="flex items-center gap-1.5 text-[13px] text-[#9B9B9B]">
+              <span key={b} className="flex items-center gap-1.5 text-[13px]" style={{ color: 'rgba(255,255,255,0.55)' }}>
                 <span
                   className="flex items-center justify-center rounded-full shrink-0"
                   style={{ width: '16px', height: '16px', background: 'rgba(95,121,11,0.20)' }}

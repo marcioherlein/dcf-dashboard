@@ -39,7 +39,7 @@ export default function PricingSection() {
   const annualTotal   = 136
 
   return (
-    <section id="pricing" className="overflow-x-hidden" style={{ background: '#F5F5F5', borderBottom: '1px solid #E5E5E5' }}>
+    <section id="pricing" className="overflow-x-hidden" style={{ background: '#FFFFFF', borderBottom: '1px solid #E5E5E5' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-14 sm:py-20">
 
         {/* Header */}
@@ -49,7 +49,7 @@ export default function PricingSection() {
           </h2>
 
           {/* Toggle */}
-          <div className="inline-flex items-center gap-1 rounded-full bg-white border border-[#E5E5E5] p-1 mt-4" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+          <div className="inline-flex items-center gap-1 rounded-full bg-white border border-[#E5E5E5] p-1 mt-4" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
             <button
               onClick={() => setAnnual(false)}
               className={cn(
@@ -81,7 +81,7 @@ export default function PricingSection() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-[680px] mx-auto">
 
           {/* Free */}
-          <div className="rounded-[20px] border border-[#E5E5E5] bg-white p-6 flex flex-col" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+          <div className="rounded-[20px] border border-[#E5E5E5] bg-white p-6 flex flex-col" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
             <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#6B6B6B] mb-3">Free</p>
             <div className="flex items-baseline gap-1 mb-1">
               <span className="text-[44px] font-bold text-[#111111] leading-none tabular-nums">$0</span>
