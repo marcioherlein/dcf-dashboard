@@ -113,14 +113,14 @@ export default function SummaryHeroCard({
         {/* ── Primary metrics ── */}
         <div className="flex flex-wrap items-end gap-5">
           <div>
-            <p className="text-[11px] text-[#9B9B9B] mb-0.5">Fair value</p>
+            <p className="text-[11px] text-[#6B6B6B] mb-0.5">Fair value</p>
             <p className="text-[26px] font-[750] text-[#111111] tabular-nums leading-none">
               {fairValue != null ? fmtPrice(fairValue, currency) : '—'}
             </p>
           </div>
           <div className="w-px h-7 bg-[#E5E5E5] self-end mb-0.5 shrink-0" />
           <div>
-            <p className="text-[11px] text-[#9B9B9B] mb-0.5">vs current price</p>
+            <p className="text-[11px] text-[#6B6B6B] mb-0.5">vs current price</p>
             <p className={cn('text-[26px] font-[750] leading-none tabular-nums', verdict.upsideClass)}>
               {upsideDisplay}
             </p>
@@ -151,7 +151,7 @@ export default function SummaryHeroCard({
         {/* ── Key strengths ── */}
         {badgeDrivers.length > 0 && (
           <div>
-            <p className="text-[11px] text-[#9B9B9B] mb-2">Key strengths</p>
+            <p className="text-[11px] text-[#6B6B6B] mb-2">Key strengths</p>
             <div className="flex flex-wrap gap-1.5">
               {badgeDrivers.map((label, i) => (
                 <span

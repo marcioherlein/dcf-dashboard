@@ -24,7 +24,7 @@ interface StockHeroCardsProps {
 
 function HeroCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('bg-white border border-[#E5E5E5] rounded-2xl p-4 sm:p-5 shadow-card flex flex-col', className)}>
+    <div className={cn('bg-white border border-[#E5E5E5] rounded-2xl p-4 sm:p-5 flex flex-col', className)} style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.07)' }}>
       {children}
     </div>
   )
@@ -83,7 +83,7 @@ export default function StockHeroCards({
         <div className="mt-auto pt-4">
           <p className="text-[11px] font-semibold text-[#6B6B6B] mb-2">52-Week Range</p>
           <div className="relative h-2 rounded-full overflow-hidden bg-[#F5F5F5]">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#11875D] via-[#B56A00] to-[#D83B3B] opacity-60" />
+            <div className="absolute inset-0 bg-[#E5E5E5] rounded-full" />
             <div
               className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-[#111111] shadow-sm"
               style={{ left: `calc(${pricePct52}% - 6px)` }}
