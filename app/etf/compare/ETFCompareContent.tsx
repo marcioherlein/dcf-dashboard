@@ -78,7 +78,7 @@ export default function ETFCompareContent() {
           {/* Symbol chips + add input */}
           <div className="flex items-center gap-2 flex-wrap mt-3">
             {symbols.map((t) => (
-              <span key={t} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card-light text-sm font-mono font-black text-[#06101F]">
+              <span key={t} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card-light text-sm font-mono font-bold text-[#06101F]">
                 {t}
                 <button onClick={() => removeSymbol(t)} aria-label={`Remove ${t}`} className="text-[#8A95A6] hover:text-[#566174] transition-colors">
                   <X size={12} />
@@ -144,7 +144,7 @@ export default function ETFCompareContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {profiles.map((p) => (
                   <div key={p.ticker} className="glass-card-light rounded-xl p-4">
-                    <p className="text-sm font-black font-mono text-[#06101F] mb-3">{p.ticker}</p>
+                    <p className="text-sm font-bold font-mono text-[#06101F] mb-3">{p.ticker}</p>
                     <div className="space-y-1.5">
                       {p.holdings.slice(0, 5).map((h) => (
                         <div key={h.symbol} className="flex items-center justify-between gap-2">

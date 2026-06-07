@@ -272,7 +272,7 @@ function GridCard({ entry }: { entry: WatchlistEntry }) {
     <div className="bg-white border border-[#E6ECF5] rounded-2xl p-5 flex flex-col gap-3 hover:border-[#93B4F5] hover:shadow-md transition-all">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <Link href={`/stock/${entry.ticker}`} className="text-[15px] font-black text-[#06101F] font-mono hover:text-[#2563EB] transition-colors">
+          <Link href={`/stock/${entry.ticker}`} className="text-[15px] font-bold text-[#06101F] font-mono hover:text-[#2563EB] transition-colors">
             {entry.ticker}
           </Link>
           <p className="text-[11px] text-[#566174] mt-0.5 truncate">{entry.companyName}</p>
