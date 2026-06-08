@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
-import { cn } from '@/lib/utils'
 import { sectorColor } from '@/lib/chartColors'
 import type { ScreenerStock } from '@/app/api/screener/route'
 import type { AxisConfig, AxisField, BubbleSizeField } from './AxisPicker'
