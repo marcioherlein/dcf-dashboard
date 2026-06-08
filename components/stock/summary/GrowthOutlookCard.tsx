@@ -36,7 +36,7 @@ function ratingBadgeClass(rating: Rating): string {
     return 'bg-[#EEF4DD] text-[#5F790B] border border-[#C9DC8E]'
   }
   // C — amber
-  return 'bg-[#FFFBEB] text-[#92400E] border border-[#FCD34D]'
+  return 'bg-[#FFF4DA] text-[#B56A00] border border-[#F3D391]'
 }
 
 function fmtPct(v: number | null | undefined): string {
@@ -88,7 +88,7 @@ function MetricRow({ label, value }: MetricRowProps) {
         <span
           className={cn(
             'text-[13px] font-[700] tabular-nums shrink-0',
-            hasValue ? 'text-[#111111]' : 'text-[#AAAAAA]',
+            hasValue ? 'text-[#111111]' : 'text-[#9B9B9B]',
           )}
         >
           {fmtPct(value)}
@@ -96,13 +96,20 @@ function MetricRow({ label, value }: MetricRowProps) {
       </div>
 
       {/* Progress bar */}
-      <div className="h-[6px] bg-[#F0F0F0] rounded-full overflow-hidden">
+      <div
+        className="h-[6px] bg-[#E5E5E5] rounded-full overflow-hidden"
+        role="meter"
+        aria-label={label}
+        aria-valuenow={Math.round(width)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
         <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{
-            width: `${width}%`,
-            backgroundColor: hasValue ? '#5F790B' : 'transparent',
-          }}
+          className={cn(
+            'h-full rounded-full transition-all duration-500',
+            hasValue ? 'bg-[#5F790B]' : 'bg-transparent',
+          )}
+          style={{ width: `${width}%` }}
         />
       </div>
     </div>
@@ -128,12 +135,12 @@ export default function GrowthOutlookCard({
     <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 flex flex-col gap-3">
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[12px] font-[750] text-[#111111] tracking-wide uppercase">
+        <span className="text-[12px] font-[750] text-[#111111]">
           Growth Outlook
         </span>
         <span
           className={cn(
-            'text-[11px] font-[700] px-2 py-0.5 rounded-md leading-none',
+            'text-[12px] font-[700] px-2 py-0.5 rounded-md leading-none',
             ratingBadgeClass(rating),
           )}
         >
@@ -144,7 +151,7 @@ export default function GrowthOutlookCard({
       {/* Metric rows */}
       <div className="flex flex-col gap-3">
         <MetricRow
-          label="Revenue Growth (Next 3Y CAGR)"
+          label="Revenue CAGR (3Y Historical)"
           value={revGrowth}
         />
         <MetricRow
@@ -155,9 +162,6 @@ export default function GrowthOutlookCard({
 
       {/* Footer / Verdict */}
       <div className="pt-1 border-t border-[#F0F0F0] flex flex-col gap-1">
-        <span className="text-[10px] font-[750] text-[#5F790B] uppercase tracking-widest">
-          Verdict
-        </span>
         <p className="text-[13px] text-[#111111] leading-relaxed">{verdict}</p>
       </div>
     </div>

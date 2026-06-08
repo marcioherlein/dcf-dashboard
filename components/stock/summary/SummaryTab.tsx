@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import StockIdentityHeader from './StockIdentityHeader'
 import RevenueChartCard from './RevenueChartCard'
 import FCFChartCard from './FCFChartCard'
@@ -43,9 +44,6 @@ interface SummaryTabProps {
   // cockpit
   fairValue: number | null
   upsidePct: number | null
-  confidence: 'High' | 'Medium' | 'Low' | null
-  modelCount: number
-  totalModels: number
   // reverse DCF inputs
   sharesM: number | null
   cashM: number | null
@@ -116,7 +114,7 @@ interface SummaryTabProps {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9B9B9B] px-0.5">
+    <h2 className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#6B6B6B] px-0.5">
       {children}
     </h2>
   )
@@ -147,18 +145,18 @@ export default function SummaryTab({
   const isFinancialSector = ['Financial Services', 'Banks', 'Insurance', 'Financial'].includes(sector)
 
   // Extract forward EPS growth for next 1Y from analystForwardEstimates
-  const epsGrowthFwd =
-    analystForwardEstimates?.find((e) => e.period === '+1y')?.eps?.growth ?? null
+  const epsGrowthFwd = useMemo(
+    () => analystForwardEstimates?.find((e) => e.period === '+1y')?.eps?.growth ?? null,
+    [analystForwardEstimates],
+  )
 
   // Verdict derivation for SeeValuationCTA
-  const verdict: 'Undervalued' | 'Fairly Valued' | 'Overvalued' | 'Insufficient Data' | null =
-    upsidePct == null
-      ? null
-      : upsidePct >= 15
-      ? 'Undervalued'
-      : upsidePct <= -10
-      ? 'Overvalued'
-      : 'Fairly Valued'
+  const verdict = useMemo((): 'Undervalued' | 'Fairly Valued' | 'Overvalued' | 'Insufficient Data' | null => {
+    if (upsidePct == null) return null
+    if (upsidePct >= 15) return 'Undervalued'
+    if (upsidePct <= -10) return 'Overvalued'
+    return 'Fairly Valued'
+  }, [upsidePct])
 
   return (
     <div className="flex flex-col gap-5">

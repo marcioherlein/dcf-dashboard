@@ -251,7 +251,7 @@ export default function IncomeFlowCard({ statementsData, currency = 'USD' }: Inc
           </span>
         </div>
       </div>
-      <div className="bg-white" ref={containerRef}>
+      <div className="bg-white" ref={containerRef} role="img" aria-label="Income breakdown Sankey chart — TTM">
         {chartWidth > 0 && (
           <SankeyChart
             width={chartWidth}

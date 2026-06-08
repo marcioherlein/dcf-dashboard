@@ -111,12 +111,12 @@ function LegendItem({
 
   return (
     <span className="flex items-center gap-1.5">
-      <svg width="20" height="10" viewBox="0 0 20 10" aria-hidden="true">
+      <svg width="28" height="12" viewBox="0 0 28 12" aria-hidden="true">
         <line
           x1="0"
-          y1="5"
-          x2="20"
-          y2="5"
+          y1="6"
+          x2="28"
+          y2="6"
           stroke={color}
           strokeWidth="2.5"
           strokeDasharray={dashArray}
@@ -142,7 +142,7 @@ function InfoTooltip({ text }: { text: string }) {
         onMouseLeave={() => setVisible(false)}
         onFocus={() => setVisible(true)}
         onBlur={() => setVisible(false)}
-        className="text-[#A0A0A0] hover:text-[#6B6B6B] transition-colors focus:outline-none"
+        className="text-[#6B6B6B] hover:text-[#111111] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-1 rounded min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
       >
         <Info size={13} strokeWidth={1.8} />
       </button>
@@ -175,20 +175,20 @@ export default function ProfitabilityChartCard({
   )
 
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4">
+    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4" aria-label="Profitability margins chart">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px] font-[700] tracking-widest text-[#111111] uppercase">
+          <span className="text-sm font-semibold text-[#111111]">
             Profitability Chart
           </span>
-          <InfoTooltip text="Trailing margins over time" />
+          <InfoTooltip text="Gross, EBIT and Net profit margins as a % of revenue. Quarterly (last 12Q) or annual (last 8Y) data." />
         </div>
 
         {/* Legend */}
         <div className="flex items-center gap-3 flex-wrap justify-end">
           <LegendItem label="Gross Margin" color="#5F790B" style="solid" />
-          <LegendItem label="EBIT Margin"  color="#2563EB" style="dashed" />
+          <LegendItem label="EBIT Margin"  color="#B56A00" style="dashed" />
           <LegendItem label="Net Margin"   color="#6B6B6B" style="dotted" />
         </div>
       </div>
@@ -196,10 +196,12 @@ export default function ProfitabilityChartCard({
       {/* Chart */}
       {points.length === 0 ? (
         <div className="h-[200px] flex items-center justify-center">
-          <span className="text-[12px] text-[#A0A0A0]">No margin data available</span>
+          <span className="text-[12px] text-[#9B9B9B]">No margin data available</span>
         </div>
       ) : (
-        <ChartBody points={points} />
+        <div role="img" aria-label="Profitability margins over time line chart">
+          <ChartBody points={points} />
+        </div>
       )}
     </div>
   )

@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -12,6 +13,7 @@ interface Props {
   ratingsSummary?: string
   ratingsLabel?: string
   cagrDrivers?: string[]
+  isLoading?: boolean
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -96,21 +98,24 @@ function pickPositiveDriver(drivers: string[] | undefined | null): string | null
 
 // ─── Trend badge ──────────────────────────────────────────────────────────────
 
-const TREND_STYLES: Record<Trend, { dot: string; text: string; label: string }> = {
+const TREND_STYLES: Record<Trend, { dot: string; text: string; label: string; icon: string }> = {
   improving: {
-    dot:   'bg-[#16A34A]',
-    text:  'text-[#16A34A]',
+    dot:   'bg-[#11875D]',
+    text:  'text-[#11875D]',
     label: 'Improving',
+    icon:  '↑',
   },
   stable: {
-    dot:   'bg-[#9B9B9B]',
+    dot:   'bg-[#6B6B6B]',
     text:  'text-[#6B6B6B]',
     label: 'Stable',
+    icon:  '—',
   },
   declining: {
-    dot:   'bg-[#DC2626]',
-    text:  'text-[#DC2626]',
+    dot:   'bg-[#D83B3B]',
+    text:  'text-[#D83B3B]',
     label: 'Declining',
+    icon:  '↓',
   },
 }
 
@@ -120,7 +125,7 @@ function Bullet({ children }: { children: React.ReactNode }) {
   return (
     <li className="flex items-start gap-2">
       {/* Olive dot */}
-      <div className="w-1.5 h-1.5 rounded-full bg-[#5F790B] shrink-0 mt-[6px]" />
+      <div aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-[#5F790B] shrink-0 mt-[6px]" />
       <span className="text-[13px] text-[#111111] leading-relaxed break-words min-w-0">
         {children}
       </span>
@@ -138,25 +143,45 @@ export default function ProfitabilityTextCard({
   ratingsSummary,
   ratingsLabel,
   cagrDrivers,
+  isLoading,
 }: Props) {
-  const verdict        = buildVerdict(ratingsLabel, ratingsGrade)
-  const historySentence = deriveHistorySentence(ratingsSummary, grossMargin, netMargin, fcfMargin)
-  const trend          = classifyTrend(ratingsLabel)
-  const trendStyle     = TREND_STYLES[trend]
-  const positiveDriver = pickPositiveDriver(cagrDrivers)
+  const derived = useMemo(() => {
+    const verdict         = buildVerdict(ratingsLabel, ratingsGrade)
+    const historySentence = deriveHistorySentence(ratingsSummary, grossMargin, netMargin, fcfMargin)
+    const trend           = classifyTrend(ratingsLabel)
+    const trendStyle      = TREND_STYLES[trend]
+    const positiveDriver  = pickPositiveDriver(cagrDrivers)
+    return { verdict, historySentence, trend, trendStyle, positiveDriver }
+  }, [grossMargin, netMargin, fcfMargin, ratingsGrade, ratingsSummary, ratingsLabel, cagrDrivers])
+
+  const { verdict, historySentence, trendStyle, positiveDriver } = derived
+
+  if (isLoading) {
+    return (
+      <div className="bg-white border border-[#E5E5E5] rounded-xl p-4">
+        <div className="animate-pulse space-y-3">
+          <div className="h-3 bg-[#E5E5E5] rounded w-24" />
+          <div className="h-3 bg-[#E5E5E5] rounded w-full" />
+          <div className="h-3 bg-[#E5E5E5] rounded w-5/6" />
+          <div className="h-3 bg-[#E5E5E5] rounded w-4/6" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-white border border-[#E5E5E5] rounded-xl p-4">
-      {/* Header */}
-      <p className="text-[12px] font-bold text-[#6B6B6B] tracking-wider uppercase mb-3">
-        PROFITABILITY
-      </p>
+      {/* Header — fix [1]: sentence-case, remove uppercase/tracking-wider; fix [6]: use h3 for heading hierarchy */}
+      <h3 className="text-[12px] font-medium text-[#6B6B6B] mb-3">
+        Profitability
+      </h3>
 
-      {/* Bullet list */}
-      <ul className="space-y-2.5">
+      {/* Bullet list — fix [8]: aria-label */}
+      <ul className="space-y-2.5" aria-label="Profitability summary">
         {/* Bullet 1 — Verdict */}
         <Bullet>
-          <span className="font-[600]">Verdict: </span>
+          {/* fix [10]: font-[600] → font-semibold */}
+          <span className="font-semibold">Verdict: </span>
           {verdict}
         </Bullet>
 
@@ -168,11 +193,16 @@ export default function ProfitabilityTextCard({
         </Bullet>
 
         {/* Bullet 3 — Trend / Rate */}
+        {/* fix [5]: add icon alongside dot for non-color indicator; fix [7]: aria-hidden on dot */}
         <li className="flex items-start gap-2">
-          <div className={cn('w-1.5 h-1.5 rounded-full shrink-0 mt-[6px]', trendStyle.dot)} />
+          <div aria-hidden="true" className={cn('w-1.5 h-1.5 rounded-full shrink-0 mt-[6px]', trendStyle.dot)} />
           <span className="text-[13px] leading-relaxed">
-            <span className="text-[#111111] font-[500]">Trend: </span>
-            <span className={cn('font-[650]', trendStyle.text)}>{trendStyle.label}</span>
+            <span className="text-[#111111] font-medium">Trend: </span>
+            {/* fix [9]: font-[650] → font-semibold */}
+            <span className={cn('font-semibold', trendStyle.text)}>
+              <span aria-hidden="true" className="mr-0.5">{trendStyle.icon}</span>
+              {trendStyle.label}
+            </span>
           </span>
         </li>
 

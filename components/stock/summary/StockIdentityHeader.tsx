@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { fmtLargeCurrency } from '@/lib/formatters'
 
@@ -89,7 +89,7 @@ function initials(name: string): string {
 
 function TagChip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded-full border border-[#E5E5E5] bg-white px-3 py-1 text-[11px] font-semibold text-[#6B6B6B]">
+    <span className="rounded-full border border-[#E5E5E5] bg-white px-3 py-1 text-[12px] font-semibold text-[#6B6B6B]">
       {children}
     </span>
   )
@@ -126,7 +126,15 @@ function RangeSlider({ low, high, current, currency }: RangeSliderProps) {
   return (
     <div className="mt-3">
       {/* Track */}
-      <div className="relative h-2 rounded-full bg-[#E5E5E5] mx-1">
+      <div
+        className="relative h-2 rounded-full bg-[#E5E5E5] mx-1"
+        role="meter"
+        aria-label="52-week price range"
+        aria-valuemin={low}
+        aria-valuemax={high}
+        aria-valuenow={current}
+        aria-valuetext={`${fmtPriceValue(current, currency)} — range ${fmtPriceValue(low, currency)} to ${fmtPriceValue(high, currency)}`}
+      >
         {/* Filled portion */}
         <div
           className="absolute left-0 top-0 h-2 rounded-full bg-[#5F790B]"
@@ -140,13 +148,13 @@ function RangeSlider({ low, high, current, currency }: RangeSliderProps) {
       </div>
       {/* Labels */}
       <div className="mt-2 flex items-center justify-between">
-        <span className="text-[11px] font-mono tabular-nums text-[#6B6B6B]">
+        <span className="text-[12px] font-mono tabular-nums text-[#6B6B6B]">
           {fmtPriceValue(low, currency)}
         </span>
-        <span className="text-[11px] font-mono tabular-nums text-[#111111] font-semibold">
+        <span className="text-[12px] font-mono tabular-nums text-[#111111] font-semibold">
           {fmtPriceValue(current, currency)}
         </span>
-        <span className="text-[11px] font-mono tabular-nums text-[#6B6B6B]">
+        <span className="text-[12px] font-mono tabular-nums text-[#6B6B6B]">
           {fmtPriceValue(high, currency)}
         </span>
       </div>
@@ -190,32 +198,26 @@ export default function StockIdentityHeader({
   const [descExpanded, setDescExpanded] = useState(false)
 
   const isPositive = change >= 0
-  const changeColor = isPositive ? '#11875D' : '#D83B3B'
   const changeSign = isPositive ? '+' : ''
 
   const prefix = currencyPrefix(currency)
 
-  // Computed metrics
-  // P/FCF: price / fcfPerShare. fcfPerShare is not in props directly, but
-  // fcfMargin can be used if we also have revenue/share. Since we only have
-  // fcfMargin, we cannot compute it without per-share revenue — show '—'.
-  const pfcfValue = '—'
-
-  // ROE formatted
-  const roeStr =
-    roe != null && isFinite(roe)
-      ? (roe * 100).toFixed(1) + '%'
-      : '—'
-  const roicStr =
-    roic != null && isFinite(roic)
-      ? (roic * 100).toFixed(1) + '%'
-      : '—'
-
-  // Dividend yield formatted (dividendYield is already a decimal ratio e.g. 0.015)
-  const divYieldStr =
-    dividendYield != null && isFinite(dividendYield) && dividendYield > 0
-      ? (dividendYield * 100).toFixed(2) + '%'
-      : '—'
+  // Computed metrics (memoised to avoid recomputation on unrelated re-renders)
+  const roeStr = useMemo(
+    () => (roe != null && isFinite(roe) ? (roe * 100).toFixed(1) + '%' : '—'),
+    [roe],
+  )
+  const roicStr = useMemo(
+    () => (roic != null && isFinite(roic) ? (roic * 100).toFixed(1) + '%' : '—'),
+    [roic],
+  )
+  const divYieldStr = useMemo(
+    () =>
+      dividendYield != null && isFinite(dividendYield) && dividendYield > 0
+        ? (dividendYield * 100).toFixed(2) + '%'
+        : '—',
+    [dividendYield],
+  )
 
   // Description truncation
   const DESC_LIMIT = 160
@@ -226,14 +228,15 @@ export default function StockIdentityHeader({
       : description
 
   // Tag chips
-  const tags: string[] = []
-  if (sector) tags.push(sector)
-  if (industry) tags.push(industry)
-  const sizeLabel = companySizeLabel(employees)
-  if (sizeLabel) tags.push(sizeLabel)
-  if (dividendYield != null && dividendYield > 0) tags.push('Dividend Paying')
-  // S&P 500 tag: show when sector is known (proxy — could be made prop-driven)
-  if (sector) tags.push('S&P 500')
+  const tags = useMemo(() => {
+    const result: string[] = []
+    if (sector) result.push(sector)
+    if (industry) result.push(industry)
+    const sizeLabel = companySizeLabel(employees)
+    if (sizeLabel) result.push(sizeLabel)
+    if (dividendYield != null && dividendYield > 0) result.push('Dividend Paying')
+    return result
+  }, [sector, industry, employees, dividendYield])
 
   // Company type label (simple heuristic)
   const companyType = industry ?? sector ?? 'Equity'
@@ -246,13 +249,13 @@ export default function StockIdentityHeader({
         style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
       >
         {/* Left col (≈70%) — Identity */}
-        <div className="flex-1 min-w-0" style={{ flex: '0 0 68%', maxWidth: '68%' }}>
+        <div className="w-full sm:basis-[68%] sm:max-w-[68%] flex-1 min-w-0">
           <div className="flex items-start gap-4">
             {/* Logo placeholder */}
             <div
-              className="flex-shrink-0 flex items-center justify-center rounded-xl bg-[#F4F3EF] border border-[#E5E5E5] text-[#6B6B6B] font-bold text-base select-none"
-              style={{ width: 56, height: 56, fontSize: 18, letterSpacing: 1 }}
+              role="img"
               aria-label={companyName + ' logo'}
+              className="flex-shrink-0 flex items-center justify-center rounded-xl bg-[#F4F3EF] border border-[#E5E5E5] text-[#6B6B6B] font-bold select-none w-14 h-14 text-lg tracking-wide"
             >
               {initials(companyName)}
             </div>
@@ -278,7 +281,8 @@ export default function StockIdentityHeader({
                 {shouldTruncate && (
                   <button
                     onClick={() => setDescExpanded((v) => !v)}
-                    className="ml-1 text-[#5F790B] font-semibold hover:underline focus:outline-none text-[13px]"
+                    aria-expanded={descExpanded}
+                    className="ml-1 inline-flex items-center min-h-[44px] px-1 text-[#5F790B] font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-1 rounded text-[13px]"
                   >
                     {descExpanded ? 'Show less' : 'Read more'}
                   </button>
@@ -299,16 +303,12 @@ export default function StockIdentityHeader({
 
         {/* Right col (≈30%) — Price */}
         <div
-          className="flex-shrink-0 flex flex-col justify-start"
-          style={{ flex: '0 0 30%', maxWidth: '30%', minWidth: 160 }}
+          className="flex-shrink-0 flex flex-col justify-start w-full sm:basis-[30%] sm:max-w-[30%] sm:min-w-[160px]"
         >
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-[#9B9B9B] mb-1">
-            Current Price
+          <p className="text-[12px] font-semibold text-[#6B6B6B] mb-1">
+            Current price
           </p>
-          <p
-            className="font-mono tabular-nums font-bold leading-none text-[#111111]"
-            style={{ fontSize: 32 }}
-          >
+          <p className="text-[32px] font-mono tabular-nums font-bold leading-none text-[#111111]">
             {prefix}
             {price.toLocaleString(undefined, {
               minimumFractionDigits: 2,
@@ -318,9 +318,10 @@ export default function StockIdentityHeader({
 
           {/* 1D change row — changePct is a whole-number % (e.g. 0.97 means 0.97%) */}
           <div
-            className="mt-1.5 flex items-center gap-1.5 text-[13px] font-semibold font-mono tabular-nums"
-            style={{ color: changeColor }}
+            className={`mt-1.5 flex items-center gap-1.5 text-[13px] font-semibold font-mono tabular-nums ${isPositive ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}
           >
+            <span aria-hidden="true">{isPositive ? '▲' : '▼'}</span>
+            <span className="sr-only">{isPositive ? 'up' : 'down'}</span>
             <span>
               {changeSign}
               {change.toFixed(2)}
@@ -329,25 +330,23 @@ export default function StockIdentityHeader({
               ({changeSign}
               {Math.abs(changePct).toFixed(2)}%)
             </span>
-            <span className="text-[11px] font-normal text-[#9B9B9B] ml-0.5">1D</span>
+            <span className="text-[12px] font-normal text-[#6B6B6B] ml-0.5">1D</span>
           </div>
 
           {/* Pre-Market row */}
           {marketState === 'PRE' && preMarketPrice != null && (
             <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
-              <span className="text-[11px] font-semibold text-[#9B9B9B] uppercase tracking-wide">
-                Pre-Market
+              <span className="text-[12px] font-semibold text-[#6B6B6B]">
+                Pre-market
               </span>
               <span className="font-mono tabular-nums text-[12px] font-semibold text-[#111111]">
                 {fmtPriceValue(preMarketPrice, currency)}
               </span>
               {preMarketChangePct != null && (
                 <span
-                  className="font-mono tabular-nums text-[11px] font-semibold"
-                  style={{
-                    color: preMarketChangePct >= 0 ? '#11875D' : '#D83B3B',
-                  }}
+                  className={`font-mono tabular-nums text-[11px] font-semibold ${preMarketChangePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}
                 >
+                  <span aria-hidden="true">{preMarketChangePct >= 0 ? '▲' : '▼'}</span>
                   {preMarketChangePct >= 0 ? '+' : ''}
                   {Math.abs(preMarketChangePct).toFixed(2)}%
                 </span>
@@ -358,19 +357,17 @@ export default function StockIdentityHeader({
           {/* After-Hours row */}
           {marketState === 'POST' && postMarketPrice != null && (
             <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
-              <span className="text-[11px] font-semibold text-[#9B9B9B] uppercase tracking-wide">
-                After Hours
+              <span className="text-[12px] font-semibold text-[#6B6B6B]">
+                After hours
               </span>
               <span className="font-mono tabular-nums text-[12px] font-semibold text-[#111111]">
                 {fmtPriceValue(postMarketPrice, currency)}
               </span>
               {postMarketChangePct != null && (
                 <span
-                  className="font-mono tabular-nums text-[11px] font-semibold"
-                  style={{
-                    color: postMarketChangePct >= 0 ? '#11875D' : '#D83B3B',
-                  }}
+                  className={`font-mono tabular-nums text-[11px] font-semibold ${postMarketChangePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}
                 >
+                  <span aria-hidden="true">{postMarketChangePct >= 0 ? '▲' : '▼'}</span>
                   {postMarketChangePct >= 0 ? '+' : ''}
                   {Math.abs(postMarketChangePct).toFixed(2)}%
                 </span>
@@ -384,16 +381,16 @@ export default function StockIdentityHeader({
       <div className="flex flex-col sm:flex-row gap-4 items-stretch">
         {/* Left col (≈70%) — Price Chart */}
         <div
-          className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden flex flex-col"
-          style={{ flex: '0 0 68%', maxWidth: '68%', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
+          className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden flex flex-col w-full sm:basis-[68%] sm:max-w-[68%]"
+          style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
         >
           {/* Card header */}
           <div className="px-4 pt-4 pb-2 border-b border-[#E5E5E5]">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-[#9B9B9B]">
-              Price Chart
+            <p className="text-[12px] font-semibold text-[#6B6B6B]">
+              Price chart
             </p>
           </div>
-          <div className="flex-1 min-h-[320px]">
+          <div className="flex-1 min-h-[220px] sm:min-h-[320px]" role="img" aria-label={`${ticker} price history chart`}>
             <PriceChart
               ticker={ticker}
               isDark={false}
@@ -406,12 +403,12 @@ export default function StockIdentityHeader({
 
         {/* Right col (≈30%) — Market Metrics */}
         <div
-          className="bg-white border border-[#E5E5E5] rounded-xl flex flex-col"
-          style={{ flex: '0 0 30%', maxWidth: '30%', minWidth: 200, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
+          className="bg-white border border-[#E5E5E5] rounded-xl flex flex-col w-full sm:basis-[30%] sm:max-w-[30%] sm:min-w-[200px]"
+          style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
         >
           <div className="px-4 pt-4 pb-3 border-b border-[#E5E5E5]">
-            <p className="text-[13px] font-bold text-[#111111] uppercase tracking-widest">
-              Market Metrics
+            <p className="text-[12px] font-semibold text-[#6B6B6B]">
+              Market metrics
             </p>
           </div>
 
@@ -423,10 +420,6 @@ export default function StockIdentityHeader({
             <MetricRow
               label="P/E (TTM)"
               value={peRatio != null ? peRatio.toFixed(2) + '×' : '—'}
-            />
-            <MetricRow
-              label="P/FCF (TTM)"
-              value={pfcfValue}
             />
             <MetricRow
               label="EV/EBITDA (TTM)"
@@ -453,8 +446,8 @@ export default function StockIdentityHeader({
 
           {/* 52-Week Range */}
           <div className="px-4 pb-4 pt-1 border-t border-[#E5E5E5] mt-1">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-[#9B9B9B] mb-1">
-              52-Week Range
+            <p className="text-[12px] font-semibold text-[#6B6B6B] mb-1">
+              52-week range
             </p>
             <RangeSlider
               low={low52}

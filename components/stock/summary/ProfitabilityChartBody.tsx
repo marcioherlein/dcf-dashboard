@@ -52,7 +52,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
     {
       label: 'EBIT Margin',
       value: payload.find((p) => p.name === 'ebitMargin')?.value ?? null,
-      color: '#2563EB',
+      color: '#B56A00',
     },
     {
       label: 'Net Margin',
@@ -67,10 +67,19 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
       {rows.map((row) => (
         <div key={row.label} className="flex items-center justify-between gap-3 mb-0.5">
           <span className="flex items-center gap-1 text-[10px] text-[#6B6B6B]">
-            <span
-              className="inline-block w-2 h-0.5 rounded-full"
-              style={{ backgroundColor: row.color }}
-            />
+            <svg width="16" height="8" viewBox="0 0 16 8" aria-hidden="true">
+              <line
+                x1="0" y1="4" x2="16" y2="4"
+                stroke={row.color}
+                strokeWidth="2"
+                strokeDasharray={
+                  row.label === 'EBIT Margin' ? '6 3' :
+                  row.label === 'Net Margin' ? '2 3' :
+                  undefined
+                }
+                strokeLinecap="round"
+              />
+            </svg>
             {row.label}
           </span>
           <span
@@ -106,8 +115,8 @@ function XTick(props: Record<string, any>) {
       x={x}
       y={y + 10}
       textAnchor="middle"
-      fill="#A0A0A0"
-      fontSize={9}
+      fill="#9B9B9B"
+      fontSize={11}
       fontWeight={500}
     >
       {label}
@@ -142,7 +151,7 @@ export default function ProfitabilityChartBody({ points }: { points: ChartPoint[
 
         <YAxis
           tickFormatter={(v: number) => `${v.toFixed(0)}%`}
-          tick={{ fill: '#A0A0A0', fontSize: 9, fontWeight: 500 }}
+          tick={{ fill: '#9B9B9B', fontSize: 11, fontWeight: 500 }}
           axisLine={false}
           tickLine={false}
           width={34}
@@ -165,16 +174,16 @@ export default function ProfitabilityChartBody({ points }: { points: ChartPoint[
           connectNulls
         />
 
-        {/* EBIT Margin — dashed blue */}
+        {/* EBIT Margin — dashed amber */}
         <Line
           type="monotone"
           dataKey="ebitMargin"
           name="ebitMargin"
-          stroke="#2563EB"
+          stroke="#B56A00"
           strokeWidth={2}
           strokeDasharray="6 3"
           dot={false}
-          activeDot={{ r: 3, strokeWidth: 0, fill: '#2563EB' }}
+          activeDot={{ r: 3, strokeWidth: 0, fill: '#B56A00' }}
           connectNulls
         />
 

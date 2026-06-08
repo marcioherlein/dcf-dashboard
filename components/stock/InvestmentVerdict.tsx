@@ -59,8 +59,7 @@ function StatusIcon({ status }: { status: CriterionStatus }) {
   if (status === 'pass') {
     return (
       <span
-        className="flex items-center justify-center w-[18px] h-[18px] rounded-full shrink-0 text-[10px] font-bold"
-        style={{ background: '#E8F7EF', color: '#11875D' }}
+        className="flex items-center justify-center w-[18px] h-[18px] rounded-full shrink-0 text-[10px] font-bold bg-[#E8F7EF] text-[#11875D]"
         aria-label="Pass"
       >
         ✓
@@ -70,8 +69,7 @@ function StatusIcon({ status }: { status: CriterionStatus }) {
   if (status === 'fail') {
     return (
       <span
-        className="flex items-center justify-center w-[18px] h-[18px] rounded-full shrink-0 text-[10px] font-bold"
-        style={{ background: '#FCEAEA', color: '#D83B3B' }}
+        className="flex items-center justify-center w-[18px] h-[18px] rounded-full shrink-0 text-[10px] font-bold bg-[#FCEAEA] text-[#D83B3B]"
         aria-label="Fail"
       >
         ✗
@@ -80,8 +78,7 @@ function StatusIcon({ status }: { status: CriterionStatus }) {
   }
   return (
     <span
-      className="flex items-center justify-center w-[18px] h-[18px] rounded-full shrink-0 text-[10px] font-bold"
-      style={{ background: '#F5F5F5', color: '#9B9B9B' }}
+      className="flex items-center justify-center w-[18px] h-[18px] rounded-full shrink-0 text-[10px] font-bold bg-[#F5F5F5] text-[#9B9B9B]"
       aria-label="Not available"
     >
       –
@@ -92,30 +89,27 @@ function StatusIcon({ status }: { status: CriterionStatus }) {
 // ─── Single criterion row ─────────────────────────────────────────────────────
 
 function CriterionRow({ c }: { c: Criterion }) {
-  const valueColor =
-    c.status === 'pass' ? '#11875D' : c.status === 'fail' ? '#D83B3B' : '#9B9B9B'
-  const valueBg =
-    c.status === 'pass' ? '#E8F7EF' : c.status === 'fail' ? '#FCEAEA' : '#F5F5F5'
-  const valueBorder =
-    c.status === 'pass' ? '#A3D9BE' : c.status === 'fail' ? '#F0B8B8' : '#E5E5E5'
+  const valueClass =
+    c.status === 'pass'
+      ? 'text-[#11875D]'
+      : c.status === 'fail'
+        ? 'text-[#D83B3B]'
+        : 'text-[#9B9B9B]'
 
   return (
     <div
-      className="flex items-center justify-between gap-2 py-[7px] border-b last:border-0"
-      style={{ borderColor: '#F0F0F0' }}
+      role="row"
+      aria-label={`${c.label}: ${c.status} — ${c.value}`}
+      className="flex items-center justify-between gap-2 py-[7px] border-b border-[#F0F0F0] last:border-0"
     >
       <div className="flex items-center gap-[7px] min-w-0">
         <StatusIcon status={c.status} />
-        <span
-          className="text-[12px] leading-tight truncate"
-          style={{ color: '#111111' }}
-        >
+        <span className="text-[12px] leading-tight truncate text-[#111111]">
           {c.label}
         </span>
       </div>
       <span
-        className="text-[11px] font-medium px-[7px] py-[2px] rounded-md border shrink-0 tabular-nums"
-        style={{ color: valueColor, background: valueBg, borderColor: valueBorder }}
+        className={`text-[11px] font-medium shrink-0 tabular-nums ${valueClass}`}
       >
         {c.value}
       </span>
@@ -128,8 +122,7 @@ function CriterionRow({ c }: { c: Criterion }) {
 function CategoryHeader({ label }: { label: string }) {
   return (
     <p
-      className="text-[10px] font-[700] uppercase tracking-[0.07em] pt-[6px] pb-[2px]"
-      style={{ color: '#9B9B9B' }}
+      className="text-[11px] font-[600] pt-[6px] pb-[2px] text-[#6B6B6B]"
     >
       {label}
     </p>
@@ -146,7 +139,7 @@ function InfoIcon() {
       viewBox="0 0 16 16"
       fill="none"
       aria-hidden="true"
-      style={{ color: '#C0C0C0', flexShrink: 0 }}
+      className="text-[#C0C0C0] shrink-0"
     >
       <circle cx="8" cy="8" r="7.25" stroke="currentColor" strokeWidth="1.5" />
       <rect x="7.25" y="6.75" width="1.5" height="5" rx="0.75" fill="currentColor" />
@@ -335,15 +328,13 @@ export default function InvestmentVerdict({
 
   return (
     <div
-      className="rounded-xl p-4 flex flex-col gap-0"
-      style={{ background: '#FFFFFF', border: '1px solid #E5E5E5' }}
+      className="rounded-xl p-4 flex flex-col gap-0 bg-white border border-[#E5E5E5]"
     >
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-[6px]">
           <span
-            className="text-[11px] font-[700] uppercase tracking-[0.07em]"
-            style={{ color: '#6B6B6B' }}
+            className="text-[13px] font-[700] text-[#444444]"
           >
             Investment Checklist
           </span>
@@ -357,7 +348,7 @@ export default function InvestmentVerdict({
             borderColor: ratio >= 0.75 ? '#A3D9BE' : ratio >= 0.5 ? '#F3D391' : '#F0B8B8',
           }}
         >
-          {totalMet} / {totalEligible} met
+          {ratio >= 0.75 ? 'Strong' : ratio >= 0.5 ? 'Mixed' : 'Weak'} · {totalMet} / {totalEligible} met
         </span>
       </div>
 
@@ -391,12 +382,8 @@ export default function InvestmentVerdict({
       </div>
 
       {/* ── Footer ─────────────────────────────────────────────────────────── */}
-      <p
-        className="text-[11px] text-center mt-3 leading-relaxed"
-        style={{ color: '#9B9B9B' }}
-      >
-        {totalMet} of {totalEligible} criteria met
-        {totalEligible < 12 ? ` · ${12 - totalEligible} N/A excluded` : ''}
+      <p className="text-[11px] text-center mt-3 leading-relaxed text-[#6B6B6B]">
+        Scores are model estimates, not investment advice.
       </p>
     </div>
   )

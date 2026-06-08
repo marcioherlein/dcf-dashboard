@@ -102,7 +102,7 @@ export function ETFExposureCard({ ticker }: Props) {
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-1 bg-[#F4F3EF] rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-blue-400 rounded-full"
+                        className="h-full bg-[#5F790B] rounded-full"
                         style={{ width: `${(etf.weight / maxWeight) * 100}%` }}
                       />
                     </div>

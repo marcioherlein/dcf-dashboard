@@ -4,6 +4,17 @@ import { cn } from '@/lib/utils'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+interface StatementsData {
+  ttm?: {
+    cashflowStatement?: { freeCashFlow?: number | null } | null
+    cashFlowStatement?: { freeCashFlow?: number | null } | null
+    incomeStatement?: {
+      totalRevenue?: number | null
+      operatingRevenue?: number | null
+    } | null
+  } | null
+}
+
 interface Props {
   fcfMargin?: number | null
   ttmCashFlow?: {
@@ -11,8 +22,7 @@ interface Props {
     operatingCashFlow?: number | null
     netIncome?: number | null
   } | null
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  statementsData?: any
+  statementsData?: StatementsData | null
 }
 
 type Rating = 'A+' | 'A-' | 'B+' | 'B' | 'C'
@@ -33,19 +43,17 @@ function fmtMultiple(v: number): string {
   return `${v.toFixed(2)}×`
 }
 
-function computeFcfMarginFromStatements(statementsData: unknown): number | null {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sd = statementsData as any
-  if (!sd) return null
+function computeFcfMarginFromStatements(statementsData: StatementsData | null | undefined): number | null {
+  if (!statementsData) return null
 
-  const ttmCF = sd?.ttm?.cashflowStatement ?? sd?.ttm?.cashFlowStatement ?? null
-  const ttmIS = sd?.ttm?.incomeStatement ?? null
+  const ttmCF = statementsData?.ttm?.cashflowStatement ?? statementsData?.ttm?.cashFlowStatement ?? null
+  const ttmIS = statementsData?.ttm?.incomeStatement ?? null
 
   const fcf = ttmCF?.freeCashFlow ?? null
   const revenue = ttmIS?.totalRevenue ?? ttmIS?.operatingRevenue ?? null
 
   if (fcf != null && revenue != null && revenue > 0) {
-    return (fcf as number) / (revenue as number)
+    return fcf / revenue
   }
   return null
 }
@@ -63,9 +71,9 @@ function getRating(fcfNiRatio: number | null, margin: number | null): Rating {
 function getBadgeStyle(rating: Rating): string {
   switch (rating) {
     case 'A+':
-      return 'bg-[#ECFDF3] text-[#047857] border border-[#BBF7D0]'
+      return 'bg-[#E8F7EF] text-[#11875D] border border-[#A3D9BE]'
     case 'A-':
-      return 'bg-[#ECFDF3] text-[#047857] border border-[#BBF7D0]'
+      return 'bg-[#E8F7EF] text-[#11875D] border border-[#A3D9BE]'
     case 'B+':
       return 'bg-[#F7F9EC] text-[#5F790B] border border-[#D6E89B]'
     case 'B':
@@ -105,8 +113,8 @@ function getVerdictBullets(fcfNiRatio: number | null): VerdictBullet[] {
 
 const ICON_COLOR_CLASS: Record<VerdictBullet['iconColor'], string> = {
   green: 'text-[#059669]',
-  gray:  'text-[#9B9B9B]',
-  red:   'text-[#DC2626]',
+  gray:  'text-[#6B6B6B]',
+  red:   'text-[#D83B3B]',
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -134,15 +142,17 @@ export default function CashConversionCard({
   const bullets = getVerdictBullets(fcfNiRatio)
 
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 flex flex-col gap-3">
+    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 flex flex-col gap-3">
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[12px] font-[700] tracking-wide text-[#6B6B6B] uppercase">
+        <p className="text-[12px] font-[600] text-[#6B6B6B]">
           Cash Conversion
         </p>
         <span
+          role="status"
+          aria-label={`Cash conversion quality rating: ${rating}`}
           className={cn(
-            'inline-block rounded-full px-2.5 py-0.5 text-[11px] font-[700] leading-tight',
+            'inline-block rounded-full px-2.5 py-0.5 text-[12px] font-[700] leading-tight',
             getBadgeStyle(rating),
           )}
         >
@@ -154,16 +164,16 @@ export default function CashConversionCard({
       <div className="flex flex-col divide-y divide-[#F0F0F0]">
         {/* FCF Margin */}
         <div className="flex items-center justify-between py-2">
-          <span className="text-[12px] text-[#566174]">FCF Margin (TTM)</span>
-          <span className="text-[13px] font-[650] text-[#06101F] tabular-nums">
+          <span className="text-[12px] text-[#6B6B6B]">FCF Margin (TTM)</span>
+          <span className="text-[13px] font-mono font-[650] text-[#111111] tabular-nums">
             {resolvedFcfMargin != null ? fmtPct(resolvedFcfMargin) : '—'}
           </span>
         </div>
 
         {/* FCF / Net Income */}
         <div className="flex items-center justify-between py-2">
-          <span className="text-[12px] text-[#566174]">FCF / Net Income (TTM)</span>
-          <span className="text-[13px] font-[650] text-[#06101F] tabular-nums">
+          <span className="text-[12px] text-[#6B6B6B]">FCF / Net Income (TTM)</span>
+          <span className="text-[13px] font-mono font-[650] text-[#111111] tabular-nums">
             {fcfNiRatio != null ? fmtMultiple(fcfNiRatio) : '—'}
           </span>
         </div>
@@ -174,6 +184,7 @@ export default function CashConversionCard({
         {bullets.map((b, i) => (
           <div key={i} className="flex items-start gap-2">
             <span
+              aria-hidden="true"
               className={cn(
                 'text-[12px] font-[700] leading-none mt-[1px] shrink-0 w-3 text-center',
                 ICON_COLOR_CLASS[b.iconColor],
@@ -181,7 +192,10 @@ export default function CashConversionCard({
             >
               {b.icon}
             </span>
-            <p className="text-[12px] text-[#566174] leading-snug">{b.text}</p>
+            <span className="sr-only">
+              {b.iconColor === 'green' ? 'Positive' : b.iconColor === 'red' ? 'Negative' : 'Neutral'}:
+            </span>
+            <p className="text-[12px] text-[#6B6B6B] leading-snug">{b.text}</p>
           </div>
         ))}
       </div>

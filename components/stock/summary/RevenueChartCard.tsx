@@ -13,9 +13,11 @@ const BarChartComponents = dynamic(
       function RevenueBar({
         data,
         unit,
+        height = 180,
       }: {
         data: Array<{ label: string; value: number; isProjected?: boolean }>
         unit: 'B' | 'M'
+        height?: number
       }) {
         const divisor = unit === 'B' ? 1e9 : 1e6
 
@@ -33,7 +35,7 @@ const BarChartComponents = dynamic(
             <text
               x={x + width / 2}
               y={y - 4}
-              fill="#566174"
+              fill="var(--color-text-secondary)"
               textAnchor="middle"
               fontSize={10}
               fontWeight={600}
@@ -44,14 +46,14 @@ const BarChartComponents = dynamic(
         }
 
         return (
-          <ResponsiveContainer width="100%" height={180}>
+          <ResponsiveContainer width="100%" height={height}>
             <BarChart data={data} margin={{ top: 24, right: 8, left: 8, bottom: 4 }} barCategoryGap="28%">
-              <CartesianGrid vertical={false} stroke="#F0F0F0" strokeDasharray="0" />
+              <CartesianGrid vertical={false} stroke="#E5E5E5" strokeDasharray="0" />
               <XAxis
                 dataKey="label"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 10, fill: '#8A95A6' }}
+                tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
               />
               <Bar dataKey="value" radius={[3, 3, 0, 0]} maxBarSize={48}>
                 <LabelList content={<CustomLabel />} />
@@ -157,9 +159,12 @@ export default function RevenueChartCard({
   function pillCls(active: boolean) {
     return [
       'px-2.5 py-0.5 rounded-full text-[11px] font-semibold leading-none border transition-colors cursor-pointer select-none',
+      'min-h-[44px] min-w-[44px] flex items-center justify-center',
+      'focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-1 focus-visible:outline-none',
+      'active:scale-95 active:opacity-90',
       active
         ? 'bg-[#5F790B] text-white border-[#5F790B]'
-        : 'bg-white text-[#566174] border-[#C8C8C8] hover:border-[#5F790B]',
+        : 'bg-white text-text-secondary border-border-warm hover:border-[#5F790B] hover:bg-olive-50 hover:text-olive-600',
     ].join(' ')
   }
 
@@ -168,10 +173,10 @@ export default function RevenueChartCard({
       {/* ── Header ── */}
       <div className="flex items-start justify-between mb-0.5">
         <div>
-          <p className="text-[11px] font-bold tracking-wide text-[#566174] uppercase leading-none">
-            Revenue Chart
+          <p className="text-[11px] font-bold text-text-secondary leading-none">
+            Revenue
           </p>
-          <p className="text-[10px] text-[#8A95A6] mt-1 leading-none">{unitLabel}</p>
+          <p className="text-xs text-[#8A95A6] mt-1 leading-none">{unitLabel}</p>
         </div>
 
         {/* Toggle pills */}
@@ -181,6 +186,7 @@ export default function RevenueChartCard({
             className={pillCls(view === 'quarterly')}
             onClick={() => setView('quarterly')}
             aria-pressed={view === 'quarterly'}
+            aria-label="Quarterly"
           >
             Q
           </button>
@@ -189,6 +195,7 @@ export default function RevenueChartCard({
             className={pillCls(view === 'annual')}
             onClick={() => setView('annual')}
             aria-pressed={view === 'annual'}
+            aria-label="Annual"
           >
             Y
           </button>
@@ -197,12 +204,18 @@ export default function RevenueChartCard({
 
       {/* ── Chart ── */}
       {hasData ? (
-        <div className="mt-2">
+        <div
+          className="mt-2"
+          role="img"
+          aria-label={`Revenue bar chart, ${view} view, values in ${unitLabel}`}
+        >
           <BarChartComponents data={chartData} unit={unit} />
         </div>
       ) : (
-        <div className="flex items-center justify-center h-[180px]">
-          <p className="text-[11px] text-[#8A95A6]">No data available</p>
+        <div role="status" aria-live="polite">
+          <div className="flex items-center justify-center h-[180px]">
+            <p className="text-[11px] text-[#8A95A6]">No data available</p>
+          </div>
         </div>
       )}
     </div>

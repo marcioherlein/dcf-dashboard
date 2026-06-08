@@ -573,13 +573,6 @@ function StockPageBody() {
                     sector={data.quote.sector ?? ''}
                     fairValue={cockpitOutput?.blendedFairValue ?? null}
                     upsidePct={cockpitOutput?.upsidePct ?? null}
-                    confidence={
-                      cockpitOutput?.divergence?.overallConfidence === 'high'   ? 'High'   :
-                      cockpitOutput?.divergence?.overallConfidence === 'medium' ? 'Medium' :
-                      cockpitOutput ? 'Low' : null
-                    }
-                    modelCount={cockpitOutput?.methods?.filter(m => m.fairValue != null && m.fairValue > 0).length ?? 0}
-                    totalModels={cockpitOutput?.methods?.length ?? 4}
                     sharesM={data.fairValue?.sharesOutstanding ?? null}
                     cashM={data.fairValue?.cash ?? null}
                     debtM={data.fairValue?.debt ?? null}
