@@ -10,7 +10,7 @@ interface Props {
 function barColor(tone: SectorBar['tone']): string {
   if (tone === 'positive') return '#10b981'
   if (tone === 'negative') return '#ef4444'
-  return '#8A95A6'
+  return '#9B9B9B'
 }
 
 export default function SectorRotation({ sectors }: Props) {
@@ -44,14 +44,14 @@ export default function SectorRotation({ sectors }: Props) {
         <div style={{ height: 'clamp(180px, 28vw, 220px)' }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} layout="vertical" margin={{ top: 0, right: 36, left: 4, bottom: 0 }}>
-              <XAxis type="number" tick={{ fontSize: 9, fill: '#566174' }} tickFormatter={v => `${v}`} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="sector" tick={{ fontSize: 10, fill: '#566174' }} width={90} axisLine={false} tickLine={false} />
+              <XAxis type="number" tick={{ fontSize: 9, fill: '#6B6B6B' }} tickFormatter={v => `${v}`} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="sector" tick={{ fontSize: 10, fill: '#6B6B6B' }} width={90} axisLine={false} tickLine={false} />
               <Tooltip
                 formatter={(v) => [`${(v as number).toFixed(2)}`, 'RS Score']}
                 labelStyle={{ fontSize: 12, fontWeight: 600, color: '#0f172a' }}
-                contentStyle={{ background: 'rgba(255,255,255,0.97)', border: '1px solid #E3E1DA', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+                contentStyle={{ background: 'rgba(255,255,255,0.97)', border: '1px solid #E5E5E5', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
               />
-              <ReferenceLine x={0} stroke="#E3E1DA" strokeWidth={1} />
+              <ReferenceLine x={0} stroke="#E5E5E5" strokeWidth={1} />
               <Bar dataKey="momentum" radius={[0, 3, 3, 0]}>
                 {data.map((entry, i) => (
                   <Cell key={i} fill={barColor(entry.tone)} />

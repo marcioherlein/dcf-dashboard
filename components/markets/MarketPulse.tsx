@@ -58,7 +58,7 @@ function SentimentGauge({ score }: { score: number }) {
   return (
     <div className="flex flex-col items-center">
       <svg viewBox="0 0 100 52" className="w-28 h-auto">
-        <path d={d} fill="none" stroke="#E3E1DA" strokeWidth="8" strokeLinecap="round" />
+        <path d={d} fill="none" stroke="#E5E5E5" strokeWidth="8" strokeLinecap="round" />
         <path
           d={d}
           fill="none"
@@ -71,7 +71,7 @@ function SentimentGauge({ score }: { score: number }) {
         <text x={cx} y={cy - 5} textAnchor="middle" fill={color} fontSize="16" fontWeight="800">
           {score}
         </text>
-        <text x={cx} y={cy + 4} textAnchor="middle" fill="#8A95A6" fontSize="7" fontWeight="600" letterSpacing="1">
+        <text x={cx} y={cy + 4} textAnchor="middle" fill="#6B6B6B" fontSize="7" fontWeight="600" letterSpacing="1">
           / 100
         </text>
       </svg>
