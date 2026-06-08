@@ -656,7 +656,12 @@ const FEATURE_POSTS = {
 
 async function runFeature() {
   const day = new Date().getDay()
-  const post_content = FEATURE_POSTS[day] ?? FEATURE_POSTS[1]
+  const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
+  // Rotate through the feature posts by day-of-week, but shift by week number
+  // so the same content never runs twice in quick succession on the same slot.
+  const dayKeys = [0, 1, 2, 3, 4, 5, 6]
+  const shiftedDay = dayKeys[(day + weekOfYear) % 7]
+  const post_content = FEATURE_POSTS[shiftedDay] ?? FEATURE_POSTS[1]
   const text = post_content.lines
     .map(l => l.replace(/\$\{APP_URL\}/g, APP_URL))
     .join('\n')

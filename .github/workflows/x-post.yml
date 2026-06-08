@@ -14,6 +14,7 @@ on:
     - cron: '0  13 * * 6'    # 10:00 AM ART — ETF pulse (market recap)
     - cron: '0  14 * * 6'    # 11:00 AM ART — App feature
     - cron: '0  15 * * 6'    # 12:00 PM ART — Weekly wrap (top 3 DCF)
+    - cron: '0  16 * * 6'    # 01:00 PM ART — DCF snapshot
     - cron: '0  17 * * 6'    # 02:00 PM ART — Sentiment / week-in-review
     # ── Sunday ───────────────────────────────────────────────────────────────
     - cron: '0  13 * * 0'    # 10:00 AM ART — Sentiment / what to watch
@@ -79,6 +80,7 @@ jobs:
             elif [ "$HHMM" = "1300" ] && [ "$DOW" = "6" ];  then echo "MODE=etf_pulse"    >> $GITHUB_ENV
             elif [ "$HHMM" = "1400" ] && [ "$DOW" = "6" ];  then echo "MODE=feature"      >> $GITHUB_ENV
             elif [ "$HHMM" = "1500" ] && [ "$DOW" = "6" ];  then echo "MODE=weekly_wrap"  >> $GITHUB_ENV
+            elif [ "$HHMM" = "1600" ] && [ "$DOW" = "6" ];  then echo "MODE=dcf"          >> $GITHUB_ENV
             elif [ "$HHMM" = "1700" ] && [ "$DOW" = "6" ];  then echo "MODE=sentiment"    >> $GITHUB_ENV
             # Sunday (DOW=7)
             elif [ "$HHMM" = "1300" ] && [ "$DOW" = "7" ];  then echo "MODE=sentiment"    >> $GITHUB_ENV
