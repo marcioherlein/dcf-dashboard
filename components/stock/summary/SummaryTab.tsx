@@ -177,7 +177,7 @@ export default function SummaryTab({
   sharesM, cashM, debtM, revenueM, fcfMargin,
   wacc, terminalG, historicalCAGR, analystCAGR, isEmergingMarket, revenueHistory,
   scenarios, ratings, scores, businessProfile, cagrAnalysis, statementsData,
-  valuationMethods, quote, analystTargetMean, analystTargetLow: _analystTargetLow,
+  valuationMethods: _valuationMethods, quote, analystTargetMean, analystTargetLow: _analystTargetLow,
   analystTargetHigh: _analystTargetHigh, userModelFairValue,
   marketCap, peRatio, beta, pegRatio, evToEbitda, dividendYield, holdingReturns,
   nextEarningsDate, onViewValuation, onViewFinancials, onViewRisks,
