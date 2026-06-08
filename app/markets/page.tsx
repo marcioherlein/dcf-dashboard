@@ -4,20 +4,21 @@ import Link from 'next/link'
 import { RefreshCw, ExternalLink } from 'lucide-react'
 import { useInView, useReducedMotion } from 'motion/react'
 
-import IndexSnapshotGrid    from '@/components/markets/IndexSnapshotGrid'
-import MarketPulse          from '@/components/markets/MarketPulse'
-import NormalizedPerfChart  from '@/components/markets/NormalizedPerfChart'
-import TopMoversCard        from '@/components/markets/TopMoversCard'
-import MarketHeatmapCard    from '@/components/markets/MarketHeatmapCard'
-import SectorRotation       from '@/components/markets/SectorRotation'
-import MacroSignals         from '@/components/markets/MacroSignals'
-import MarketBreadthCard    from '@/components/markets/MarketBreadthCard'
+import IndexSnapshotGrid     from '@/components/markets/IndexSnapshotGrid'
+import MarketPulse           from '@/components/markets/MarketPulse'
+import NormalizedPerfChart   from '@/components/markets/NormalizedPerfChart'
+import TopMoversCard         from '@/components/markets/TopMoversCard'
+import MarketHeatmapCard     from '@/components/markets/MarketHeatmapCard'
+import SectorRotation        from '@/components/markets/SectorRotation'
+import MacroSignals          from '@/components/markets/MacroSignals'
+import MarketBreadthCard     from '@/components/markets/MarketBreadthCard'
 import SectorPerformanceCard from '@/components/markets/SectorPerformanceCard'
-import EconomicCalendar     from '@/components/markets/EconomicCalendar'
-import EarningsCalendar     from '@/components/markets/EarningsCalendar'
-import ValuationContext     from '@/components/markets/ValuationContext'
-import PortfolioExposure    from '@/components/markets/PortfolioExposure'
-import MarketNewsSection    from '@/components/markets/MarketNewsSection'
+import ValuationContext      from '@/components/markets/ValuationContext'
+import PortfolioExposure     from '@/components/markets/PortfolioExposure'
+import MarketNewsSection     from '@/components/markets/MarketNewsSection'
+import MarketsTabNav         from '@/components/markets/MarketsTabNav'
+import CalendarTab           from '@/components/markets/CalendarTab'
+import type { MarketTab }    from '@/components/markets/MarketsTabNav'
 
 import type { MarketsData }          from '@/app/api/markets/data/route'
 import type { MarketContextPayload } from '@/lib/market-context/types'
@@ -33,8 +34,8 @@ function pct(v: number | null) {
   return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'
 }
 function pctCls(v: number | null) {
-  if (v == null) return "text-[#6B6B6B]"
-  return v > 0 ? "text-[#11875D]" : v < 0 ? "text-[#D83B3B]" : "text-[#6B6B6B]"
+  if (v == null) return 'text-[#6B6B6B]'
+  return v > 0 ? 'text-[#11875D]' : v < 0 ? 'text-[#D83B3B]' : 'text-[#6B6B6B]'
 }
 function timeAgo(ts: number): string {
   const s = Math.floor((Date.now() - ts) / 1000)
@@ -48,11 +49,11 @@ function getMarketStatus(): { label: string; cls: string } {
   const utcM = now.getUTCMinutes()
   const day  = now.getUTCDay()
   const et   = (utcH * 60 + utcM - 240 + 1440) % 1440
-  if (day === 0 || day === 6) return { label: 'Market Closed', cls: "bg-[#F5F5F5] text-[#6B6B6B]" }
-  if (et >= 240  && et < 570)  return { label: 'Pre-Market',    cls: "bg-[#FFF4DA] text-[#B56A00]" }
-  if (et >= 570  && et < 960)  return { label: '● Market Open', cls: "bg-[#E8F7EF] text-[#11875D] font-bold" }
-  if (et >= 960  && et < 1200) return { label: 'After Hours',   cls: "bg-[#EAF1FF] text-[#2563EB]" }
-  return { label: 'Market Closed', cls: "bg-[#F5F5F5] text-[#6B6B6B]" }
+  if (day === 0 || day === 6) return { label: 'Market Closed', cls: 'bg-[#F5F5F5] text-[#6B6B6B]' }
+  if (et >= 240  && et < 570)  return { label: 'Pre-Market',    cls: 'bg-[#FFF4DA] text-[#B56A00]' }
+  if (et >= 570  && et < 960)  return { label: '● Market Open', cls: 'bg-[#E8F7EF] text-[#11875D] font-bold' }
+  if (et >= 960  && et < 1200) return { label: 'After Hours',   cls: 'bg-[#EAF1FF] text-[#2563EB]' }
+  return { label: 'Market Closed', cls: 'bg-[#F5F5F5] text-[#6B6B6B]' }
 }
 
 function SectionHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: React.ReactNode }) {
@@ -83,6 +84,7 @@ export default function MarketsPage() {
   const [lastFetch,  setLastFetch]  = useState<number>(0)
   const [refreshing, setRefreshing] = useState(false)
   const [status]                    = useState(getMarketStatus)
+  const [activeTab,  setActiveTab]  = useState<MarketTab>('overview')
   const intervalRef                 = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const [, setTick] = useState(0)
@@ -132,16 +134,10 @@ export default function MarketsPage() {
 
   const now = new Date()
   const etTime = now.toLocaleTimeString('en-US', {
-    timeZone: 'America/New_York',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
+    timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit', hour12: true,
   })
   const etDate = now.toLocaleDateString('en-US', {
-    timeZone: 'America/New_York',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
+    timeZone: 'America/New_York', month: 'long', day: 'numeric', year: 'numeric',
   })
 
   return (
@@ -152,10 +148,10 @@ export default function MarketsPage() {
       >
         Skip to content
       </a>
-      <div id="main-content" className="max-w-[1440px] mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-6" tabIndex={-1}>
+      <div id="main-content" className="max-w-[1440px] mx-auto px-4 sm:px-6 py-4 sm:py-6" tabIndex={-1}>
 
         {err && (
-          <div className="rounded-xl border border-[#F0B8B8] bg-[#FCEAEA] px-4 py-3 text-[12px] text-[#D83B3B] flex items-center justify-between">
+          <div className="rounded-xl border border-[#F0B8B8] bg-[#FCEAEA] px-4 py-3 text-[12px] text-[#D83B3B] flex items-center justify-between mb-4">
             <span>Market data could not be loaded. Check API keys and try again.</span>
             <button
               onClick={() => fetchAll(true)}
@@ -167,26 +163,22 @@ export default function MarketsPage() {
         )}
 
         {/* ── Page Header ─────────────────────────────────────────────────── */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-2 mb-4">
           <div className="min-w-0">
-            <h1 className="text-[22px] sm:text-[24px] font-bold text-[#111111] leading-tight [text-wrap:balance]">Markets Overview</h1>
+            <h1 className="text-[22px] sm:text-[24px] font-bold text-[#111111] leading-tight [text-wrap:balance]">Markets</h1>
             <p className="text-[12px] text-[#6B6B6B] mt-0.5 hidden sm:block">
-              Market context and key drivers that influence valuation decisions.
+              Context and key drivers that influence valuation decisions.
             </p>
           </div>
           <div className="flex items-center gap-2 sm:pt-0.5 shrink-0">
-            <span className="text-[11px] text-[#6B6B6B] hidden md:block">
-              {etDate}, {etTime} ET
-            </span>
+            <span className="text-[11px] text-[#6B6B6B] hidden md:block">{etDate}, {etTime} ET</span>
             {lastFetch > 0 && (
-              <span className="text-[11px] text-[#6B6B6B] hidden lg:block">
-                · Updated {timeAgo(lastFetch)}
-              </span>
+              <span className="text-[11px] text-[#6B6B6B] hidden lg:block">· Updated {timeAgo(lastFetch)}</span>
             )}
             <button
               onClick={() => fetchAll(true)}
               disabled={refreshing}
-              className="p-2 rounded-lg text-[#6B6B6B] hover:text-[#6B6B6B] hover:bg-[#F5F5F5] transition-colors disabled:opacity-50 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="p-2 rounded-lg text-[#6B6B6B] hover:bg-[#F5F5F5] transition-colors disabled:opacity-50 min-h-[44px] min-w-[44px] flex items-center justify-center"
               title="Refresh"
             >
               <RefreshCw size={13} className={refreshing ? 'motion-safe:animate-spin' : ''} />
@@ -194,8 +186,8 @@ export default function MarketsPage() {
           </div>
         </div>
 
-        {/* ── Inline market strip ──────────────────────────────────────────── */}
-        <div className="flex items-center gap-4 sm:gap-5 overflow-x-auto scrollbar-hide glass-card-light rounded-xl px-4 py-2.5 min-h-[44px]">
+        {/* ── Persistent: Indices strip ────────────────────────────────────── */}
+        <div className="flex items-center gap-4 sm:gap-5 overflow-x-auto scrollbar-hide glass-card-light rounded-xl px-4 py-2.5 min-h-[44px] mb-4">
           <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full ${status.cls}`}>
             {status.label}
           </span>
@@ -211,8 +203,7 @@ export default function MarketsPage() {
                 <span className="text-[11px] font-semibold text-[#111111] tabular-nums">
                   {price != null
                     ? price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                    : '—'
-                  }
+                    : '—'}
                   {suffix ?? ''}
                 </span>
                 {sym?.changePct != null && (
@@ -223,11 +214,7 @@ export default function MarketsPage() {
               </div>
             )
             return sym ? (
-              <Link
-                key={label}
-                href={`/markets/${encodeURIComponent(sym.symbol)}`}
-                className="hover:opacity-70 transition-opacity"
-              >
+              <Link key={label} href={`/markets/${encodeURIComponent(sym.symbol)}`} className="hover:opacity-70 transition-opacity">
                 {inner}
               </Link>
             ) : (
@@ -236,161 +223,154 @@ export default function MarketsPage() {
           })}
         </div>
 
-        {/* ── Row 1: Index Snapshot Cards ─────────────────────────────────── */}
-        {mkt ? (
-          <IndexSnapshotGrid spx={spx} ndx={ndx} dji={dji} vix={vix} tnx={tnx} dxy={dxy} />
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {[...Array(6)].map((_, i) => <Sk key={i} h="h-[132px]" />)}
-          </div>
-        )}
-
-        {/* ── Row 2: Market Pulse · Performance Chart · Top Movers ─────────── */}
-        <div>
-          <SectionHeader
-            title="Market Snapshot"
-            subtitle="A quick read on the current regime, performance, and what's moving markets."
-            right={lastFetch > 0 ? (
-              <span className="text-[11px] text-[#6B6B6B]">Data as of {etTime} ET</span>
-            ) : undefined}
-          />
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
-            <div className="lg:col-span-4 flex flex-col">
-              {ctx ? <MarketPulse pulse={ctx.pulse} /> : <Sk h="h-[280px]" />}
+        {/* ── Persistent: Index snapshot cards ────────────────────────────── */}
+        <div className="mb-4">
+          {mkt ? (
+            <IndexSnapshotGrid spx={spx} ndx={ndx} dji={dji} vix={vix} tnx={tnx} dxy={dxy} />
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              {[...Array(6)].map((_, i) => <Sk key={i} h="h-[132px]" />)}
             </div>
-            <div className="lg:col-span-5 flex flex-col">
-              <NormalizedPerfChart />
-            </div>
-            <div className="lg:col-span-3 flex flex-col">
-              <TopMoversCard />
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* ── Row 3: Heatmap · Sector Rotation ────────────────────────────── */}
-        <div>
-          <SectionHeader
-            title="Sector Analysis"
-            subtitle="Where market leadership is concentrated and which sectors lead or lag."
-          />
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            <div className="lg:col-span-7 overflow-x-auto">
-              {mkt ? (
-                <div className="overflow-x-auto">
-                  <MarketHeatmapCard sectors={mkt.sectors} />
+        {/* ── Tab navigation ───────────────────────────────────────────────── */}
+        <MarketsTabNav active={activeTab} onChange={setActiveTab} />
+
+        {/* ── Tab panels ───────────────────────────────────────────────────── */}
+        <div className="mt-5 space-y-6">
+
+          {/* ── OVERVIEW TAB ─────────────────────────────────────────────── */}
+          {activeTab === 'overview' && (
+            <>
+              {/* Market Snapshot */}
+              <div>
+                <SectionHeader
+                  title="Market Snapshot"
+                  subtitle="A quick read on the current regime, performance, and what's moving markets."
+                  right={lastFetch > 0 ? (
+                    <span className="text-[11px] text-[#6B6B6B]">Data as of {etTime} ET</span>
+                  ) : undefined}
+                />
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch mt-4">
+                  <div className="lg:col-span-4 flex flex-col">
+                    {ctx ? <MarketPulse pulse={ctx.pulse} /> : <Sk h="h-[280px]" />}
+                  </div>
+                  <div className="lg:col-span-5 flex flex-col">
+                    <NormalizedPerfChart />
+                  </div>
+                  <div className="lg:col-span-3 flex flex-col">
+                    <TopMoversCard />
+                  </div>
                 </div>
-              ) : (
-                <Sk h="h-[320px]" />
-              )}
-            </div>
-            <div className="lg:col-span-5">
-              {ctx ? <SectorRotation sectors={ctx.sectors} /> : <Sk h="h-[320px]" />}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Row 4: Macro Signals · Market Breadth · Sector Performance ──── */}
-        <div>
-          <SectionHeader
-            title="Macro Environment"
-            subtitle="Indicators that affect discount rates, risk appetite, and valuation assumptions."
-          />
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            <div className="lg:col-span-5">
-              {ctx ? <MacroSignals signals={ctx.signals} /> : <Sk h="h-64" />}
-            </div>
-            <div className="lg:col-span-4">
-              {mkt ? (
-                <MarketBreadthCard sectors={mkt.sectors} />
-              ) : (
-                <Sk h="h-64" />
-              )}
-            </div>
-            <div className="lg:col-span-3">
-              {mkt ? (
-                <SectorPerformanceCard sectors={mkt.sectors} />
-              ) : (
-                <Sk h="h-64" />
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Row 5: Calendars ────────────────────────────────────────────── */}
-        <div>
-          <SectionHeader
-            title="Upcoming Events"
-            subtitle="Economic releases and earnings that may affect your valuation assumptions."
-            right={
-              <div className="flex items-center gap-3">
-                <span className="text-[11px] text-[#6B6B6B] hidden sm:block">All times in ET</span>
-                <a
-                  href="https://finance.yahoo.com/calendar"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-[11px] font-semibold text-olive-700 hover:text-olive-600 transition-colors"
-                >
-                  View full calendars
-                  <ExternalLink size={11} />
-                </a>
               </div>
-            }
-          />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <EconomicCalendar />
-            <EarningsCalendar />
-          </div>
-        </div>
 
-        {/* ── Row 6: Valuation Context · Saved Valuations ─────────────────── */}
-        <div>
-          <SectionHeader
-            title="Valuation Context"
-            subtitle="How current market prices compare to historical ranges — and what it means for your DCF."
-          />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {ctx ? <ValuationContext valuation={ctx.valuation} /> : <Sk h="h-56" />}
-            {ctx ? (
-              <PortfolioExposure
-                portfolioExposure={ctx.portfolioExposure}
-                modelAlerts={ctx.modelAlerts}
+              {/* Market News */}
+              {mkt && mkt.news.length > 0 && (
+                <div>
+                  <SectionHeader
+                    title="Market News"
+                    subtitle="Recent headlines — for context only, not a trading signal."
+                    right={
+                      <a
+                        href="https://finance.yahoo.com/news"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-[11px] font-semibold text-olive-700 hover:text-olive-600 transition-colors"
+                      >
+                        All news
+                        <ExternalLink size={11} />
+                      </a>
+                    }
+                  />
+                  <MarketNewsSection news={mkt.news} />
+                </div>
+              )}
+            </>
+          )}
+
+          {/* ── SECTORS TAB ──────────────────────────────────────────────── */}
+          {activeTab === 'sectors' && (
+            <>
+              {/* Heatmap + Rotation */}
+              <div>
+                <SectionHeader
+                  title="Sector Analysis"
+                  subtitle="Where market leadership is concentrated and which sectors lead or lag."
+                />
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-4">
+                  <div className="lg:col-span-7 overflow-x-auto">
+                    {mkt ? (
+                      <div className="overflow-x-auto">
+                        <MarketHeatmapCard sectors={mkt.sectors} />
+                      </div>
+                    ) : (
+                      <Sk h="h-[320px]" />
+                    )}
+                  </div>
+                  <div className="lg:col-span-5">
+                    {ctx ? <SectorRotation sectors={ctx.sectors} /> : <Sk h="h-[320px]" />}
+                  </div>
+                </div>
+              </div>
+
+              {/* Macro + Breadth + Sector Perf */}
+              <div>
+                <SectionHeader
+                  title="Macro Environment"
+                  subtitle="Indicators that affect discount rates, risk appetite, and valuation assumptions."
+                />
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-4">
+                  <div className="lg:col-span-5">
+                    {ctx ? <MacroSignals signals={ctx.signals} /> : <Sk h="h-64" />}
+                  </div>
+                  <div className="lg:col-span-4">
+                    {mkt ? <MarketBreadthCard sectors={mkt.sectors} /> : <Sk h="h-64" />}
+                  </div>
+                  <div className="lg:col-span-3">
+                    {mkt ? <SectorPerformanceCard sectors={mkt.sectors} /> : <Sk h="h-64" />}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* ── CALENDAR TAB ─────────────────────────────────────────────── */}
+          {activeTab === 'calendar' && (
+            <CalendarTab />
+          )}
+
+          {/* ── VALUATION CONTEXT TAB ────────────────────────────────────── */}
+          {activeTab === 'valuation' && (
+            <div>
+              <SectionHeader
+                title="Valuation Context"
+                subtitle="How current market prices compare to historical ranges — and what it means for your DCF."
               />
-            ) : (
-              <Sk h="h-56" />
-            )}
-          </div>
-        </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+                {ctx ? <ValuationContext valuation={ctx.valuation} /> : <Sk h="h-56" />}
+                {ctx ? (
+                  <PortfolioExposure
+                    portfolioExposure={ctx.portfolioExposure}
+                    modelAlerts={ctx.modelAlerts}
+                  />
+                ) : (
+                  <Sk h="h-56" />
+                )}
+              </div>
+            </div>
+          )}
 
-        {/* ── Row 7: Market News ───────────────────────────────────────────── */}
-        {mkt && mkt.news.length > 0 && (
-          <div>
-            <SectionHeader
-              title="Market News"
-              subtitle="Recent headlines — for context only, not a trading signal."
-              right={
-                <a
-                  href="https://finance.yahoo.com/news"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-[11px] font-semibold text-olive-700 hover:text-olive-600 transition-colors"
-                >
-                  View all news
-                  <ExternalLink size={11} />
-                </a>
-              }
-            />
-            <MarketNewsSection news={mkt.news} />
-          </div>
-        )}
+        </div>
 
         {/* ── Disclaimer ───────────────────────────────────────────────────── */}
-        <div className="border-t border-[#E5E5E5] pt-4">
+        <div className="border-t border-[#E5E5E5] pt-4 mt-8">
           <p className="text-[11px] text-[#6B6B6B] leading-snug">
             Past performance is not indicative of future results. Data is provided for informational purposes only and does not constitute investment advice.
           </p>
         </div>
 
-        <div className="h-2" />
+        <div className="h-4" />
       </div>
     </div>
   )

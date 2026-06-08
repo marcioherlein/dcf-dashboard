@@ -39,7 +39,6 @@ async function fetchFMPCalendar(from: string, to: string): Promise<EconomicEvent
         actual: e.actual != null ? String(e.actual) : null,
       }))
       .filter(e => e.event)
-      .slice(0, 15)
   } catch {
     return []
   }
@@ -62,10 +61,13 @@ export async function GET(req: NextRequest) {
   const limited = rateLimit(req, 5, 60_000, 'economic-calendar')
   if (limited) return limited
 
+  const p   = req.nextUrl.searchParams
   const now = new Date()
-  const from = now.toISOString().split('T')[0]
-  const to = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const from = p.get('from') ?? now.toISOString().split('T')[0]
+  const to   = p.get('to')   ?? new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
   const events = await fetchFMPCalendar(from, to)
-  return NextResponse.json({ events, fetchedAt: now.toISOString() })
+  return NextResponse.json({ events, fetchedAt: now.toISOString() }, {
+    headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200' },
+  })
 }
