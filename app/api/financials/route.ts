@@ -40,6 +40,58 @@ export async function GET(req: NextRequest) {
   const ticker = req.nextUrl.searchParams.get('ticker')?.toUpperCase()
   if (!ticker) return NextResponse.json({ error: 'ticker required' }, { status: 400 })
 
+  // ── Server-side view gate ──────────────────────────────────────────────────
+  // The client-side gate can be bypassed by blocking the /api/stock-views fetch.
+  // This enforces the limit at the data layer — the authoritative check.
+  if (session?.user?.email) {
+    const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (sbUrl && sbKey) {
+      const { createClient } = await import('@supabase/supabase-js')
+      const sb = createClient(sbUrl, sbKey)
+      const { data: userRow } = await sb
+        .from('users')
+        .select('id, plan')
+        .eq('email', session.user.email)
+        .single()
+
+      if (userRow) {
+        const plan = (userRow as { plan?: string }).plan
+        if (plan !== 'pro') {
+          const FREE_LIMIT = 3
+          const monthStart = new Date()
+          monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0)
+
+          // Check if this ticker is already unlocked this month
+          const { data: existingView } = await sb
+            .from('stock_views')
+            .select('id')
+            .eq('user_id', (userRow as { id: string }).id)
+            .eq('ticker', ticker)
+            .gte('first_viewed_at', monthStart.toISOString())
+            .maybeSingle()
+
+          if (!existingView) {
+            // Not yet unlocked — check monthly count
+            const { data: monthRows } = await sb
+              .from('stock_views')
+              .select('ticker')
+              .eq('user_id', (userRow as { id: string }).id)
+              .gte('first_viewed_at', monthStart.toISOString())
+            const monthCount = new Set(monthRows?.map((r: { ticker: string }) => r.ticker) ?? []).size
+            if (monthCount >= FREE_LIMIT) {
+              return NextResponse.json(
+                { error: 'Monthly limit reached. Upgrade to Pro for unlimited access.', code: 'VIEW_LIMIT_REACHED', limit: FREE_LIMIT },
+                { status: 402 }
+              )
+            }
+          }
+        }
+      }
+    }
+  }
+  // ── End view gate ──────────────────────────────────────────────────────────
+
   try {
     const [financials, quote, stockHistory, spyHistory, rfRate, fmp, annualBSRows] = await Promise.all([
       getFinancials(ticker),
