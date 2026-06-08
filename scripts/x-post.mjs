@@ -11,7 +11,7 @@
  *   MODE=dcf TICKER=AAPL APP_URL=... BUFFER_API_KEY=... BUFFER_CHANNEL_ID=... node scripts/x-post.mjs
  */
 
-import yahooFinance from 'yahoo-finance2'
+// No external imports needed — all data fetched via direct REST APIs
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -114,24 +114,38 @@ const SP500_SAMPLE = [
 async function runEarnings() {
   console.log('Fetching earnings calendar...')
 
-  // Get quotes with earningsTimestamp for each ticker in our sample
   const tomorrow = new Date()
   tomorrow.setDate(tomorrow.getDate() + 1)
   const tomorrowStr = tomorrow.toISOString().split('T')[0]
 
-  // Fetch quotes in parallel batches of 10
-  const results = []
-  for (let i = 0; i < SP500_SAMPLE.length; i += 10) {
-    const batch = SP500_SAMPLE.slice(i, i + 10)
-    const settled = await Promise.allSettled(
-      batch.map(t => yahooFinance.quote(t, { fields: ['earningsTimestamp','marketCap','symbol','shortName'] }))
-    )
-    for (const r of settled) {
-      if (r.status === 'fulfilled' && r.value) results.push(r.value)
+  // Fetch quotes via Yahoo Finance v7 REST API (no yahoo-finance2 needed)
+  async function fetchQuote(ticker) {
+    const res = await fetch(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`,
+      { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+    ).catch(() => null)
+    if (!res?.ok) return null
+    const json = await res.json().catch(() => null)
+    const meta = json?.chart?.result?.[0]?.meta
+    if (!meta) return null
+    return {
+      symbol: ticker,
+      marketCap: meta.marketCap ?? 0,
+      earningsTimestamp: meta.earningsTimestampStart ?? null,
     }
   }
 
-  // Filter: earnings timestamp falls on tomorrow (UTC date match)
+  // Fetch in batches to avoid rate limits
+  const results = []
+  for (let i = 0; i < SP500_SAMPLE.length; i += 8) {
+    const batch = SP500_SAMPLE.slice(i, i + 8)
+    const settled = await Promise.allSettled(batch.map(fetchQuote))
+    for (const r of settled) {
+      if (r.status === 'fulfilled' && r.value) results.push(r.value)
+    }
+    if (i + 8 < SP500_SAMPLE.length) await new Promise(res => setTimeout(res, 500))
+  }
+
   const reporting = results.filter(q => {
     if (!q.earningsTimestamp) return false
     const d = new Date(q.earningsTimestamp * 1000).toISOString().split('T')[0]
@@ -143,7 +157,6 @@ async function runEarnings() {
     return
   }
 
-  // Pick the largest by market cap
   reporting.sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0))
   const featured = reporting[0]
   const ticker = featured.symbol
@@ -309,9 +322,28 @@ async function runDcf() {
 // Pulls top market news headline from Yahoo Finance and posts it with a brief take.
 
 async function runNews() {
-  // Yahoo Finance trending tickers as a news proxy
-  const trendingRes = await yahooFinance.search('market', { newsCount: 5 }).catch(() => null)
-  const newsItems = trendingRes?.news ?? []
+  // Yahoo Finance news via direct REST API (no yahoo-finance2 needed)
+  const res = await fetch(
+    'https://query1.finance.yahoo.com/v1/finance/trending/US?count=5',
+    { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(10000) }
+  ).catch(() => null)
+
+  let newsItems = []
+  if (res?.ok) {
+    const json = await res.json().catch(() => null)
+    // Trending quotes give us tickers; fetch news from Yahoo search
+    const tickers = json?.finance?.result?.[0]?.quotes?.slice(0, 3).map(q => q.symbol) ?? []
+    if (tickers.length > 0) {
+      const newsRes = await fetch(
+        `https://query1.finance.yahoo.com/v1/finance/search?q=${tickers[0]}&newsCount=3&quotesCount=0`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+      ).catch(() => null)
+      if (newsRes?.ok) {
+        const newsJson = await newsRes.json().catch(() => null)
+        newsItems = newsJson?.news ?? []
+      }
+    }
+  }
 
   if (newsItems.length === 0) {
     console.log('No news found — skipping')
