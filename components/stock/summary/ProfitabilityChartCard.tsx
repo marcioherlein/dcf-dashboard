@@ -55,6 +55,7 @@ function derivePoints(
   // Prefer quarterly ratios — last 12, oldest first
   if (ratiosQuarterly && ratiosQuarterly.length > 0) {
     return [...ratiosQuarterly]
+      .filter((r) => typeof r.date === 'string')
       .sort((a, b) => a.date.localeCompare(b.date))
       .slice(-12)
       .map((r) => ({
@@ -69,7 +70,7 @@ function derivePoints(
   // Annual fallback — filter out projected, last 8, oldest first
   if (financialStatements && financialStatements.length > 0) {
     return [...financialStatements]
-      .filter((s) => !s.isProjected)
+      .filter((s) => !s.isProjected && typeof s.year === 'string')
       .sort((a, b) => a.year.localeCompare(b.year))
       .slice(-8)
       .map((s) => {
