@@ -102,6 +102,15 @@ async function fetchValuation(ticker) {
   return res.json()
 }
 
+// Use cockpitFairValue — same number shown in the app verdict card.
+// Falls back to triangulatedFairValue if cockpit wasn't computed (e.g. ETFs).
+function appFairValue(data) {
+  return data.valuationMethods?.cockpitFairValue ?? data.valuationMethods?.triangulatedFairValue ?? null
+}
+function appUpside(data) {
+  return data.valuationMethods?.cockpitUpsidePct ?? data.valuationMethods?.triangulatedUpsidePct ?? null
+}
+
 // Verdict language: analyst-style, not binary buy/sell signals
 function verdictLabel(upside) {
   if (upside >  0.25) return { emoji: '🟢', short: 'Attractively priced vs model',    long: 'trades at a meaningful discount to our intrinsic value estimate' }
@@ -177,8 +186,8 @@ async function runEarnings() {
   let dcfBlock = ''
   try {
     const data = await fetchValuation(ticker)
-    const fair   = data.valuationMethods?.triangulatedFairValue
-    const upside = data.valuationMethods?.triangulatedUpsidePct
+    const fair   = appFairValue(data)
+    const upside = appUpside(data)
     const price  = data.quote?.price
     const grade  = data.ratings?.overall?.grade
     const label  = data.ratings?.overall?.label
@@ -263,8 +272,8 @@ async function runDcf() {
   const data = await fetchValuation(ticker)
 
   const price      = data.quote?.price
-  const fair       = data.valuationMethods?.triangulatedFairValue
-  const upside     = data.valuationMethods?.triangulatedUpsidePct
+  const fair       = appFairValue(data)
+  const upside     = appUpside(data)
   const cagr       = data.cagr
   const grade      = data.ratings?.overall?.grade ?? ''
   const label      = data.ratings?.overall?.label ?? ''
@@ -947,8 +956,8 @@ async function runWeeklyWrap() {
     .map(({ ticker, data }) => ({
       ticker,
       price: data.quote?.price,
-      fair: data.valuationMethods?.triangulatedFairValue,
-      upside: data.valuationMethods?.triangulatedUpsidePct,
+      fair: appFairValue(data),
+      upside: appUpside(data),
     }))
     .filter(s => s.price && s.fair)
 
@@ -1065,8 +1074,8 @@ async function runDcfBear() {
   const data = await fetchValuation(ticker)
 
   const price  = data.quote?.price
-  const fair   = data.valuationMethods?.triangulatedFairValue
-  const upside = data.valuationMethods?.triangulatedUpsidePct
+  const fair   = appFairValue(data)
+  const upside = appUpside(data)
   const cagr   = data.cagr
   const wacc   = data.wacc?.wacc
   const grade  = data.ratings?.overall?.grade ?? ''
