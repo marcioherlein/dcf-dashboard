@@ -106,7 +106,7 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(meta.ticker) }}
                 className={cn(
-                  'relative z-20 shrink-0 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-olive-700 focus-visible:ring-offset-1 focus-visible:outline-none',
+                  'relative z-20 shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-olive-700 focus-visible:ring-offset-1 focus-visible:outline-none',
                   isWatchlisted
                     ? 'bg-[#E8F7EF] text-[#11875D]'
                     : 'bg-white/80 text-[#8A95A6] hover:bg-olive-50 hover:text-olive-700 border border-[#E3E1DA] hover:border-[#BFD2A1]',

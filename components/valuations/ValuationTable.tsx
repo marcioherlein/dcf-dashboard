@@ -131,6 +131,7 @@ function ExpandedNotePanel({ entry, onNoteSave, onClose }: {
               onChange={(e) => { setText(e.target.value); setEdited(true) }}
               rows={2}
               placeholder="Write your thesis, key reasons, or what to watch for…"
+              style={{ fontSize: '16px' }}
               className="w-full text-[12px] text-[#111111] bg-white border border-[#93B4F5] rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#93B4F5] focus:ring-2 focus:ring-olive-100 resize-none placeholder-slate-300"
             />
             <div className="flex items-center gap-3 mt-1.5">
@@ -199,7 +200,7 @@ function ActionsMenu({ entry, groups, onDelete, onTagUpdate, onGroupUpdate }: {
       <button
         onClick={() => { setOpen((v) => !v); setMoveOpen(false) }}
         aria-label="Row actions"
-        className="p-1.5 rounded-lg text-[#9B9B9B] hover:text-[#6B6B6B] hover:bg-[#E5E5E5] transition-colors sm:opacity-0 sm:group-hover:opacity-100"
+        className="p-1.5 rounded-lg text-[#9B9B9B] hover:text-[#6B6B6B] hover:bg-[#E5E5E5] transition-colors [@media(hover:hover)]:sm:opacity-0 [@media(hover:hover)]:sm:group-hover:opacity-100"
       >
         <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor">
           <circle cx="8" cy="3"  r="1.3" />
@@ -473,6 +474,7 @@ function NoteEditorMobile({ entry, onNoteSave }: {
         onChange={(e) => { setText(e.target.value); setEdited(true) }}
         rows={3}
         placeholder="Write your thesis…"
+        style={{ fontSize: '16px' }}
         className="w-full text-[12px] text-[#111111] bg-white border border-[#93B4F5] rounded-lg px-3 py-2 focus:outline-none focus:border-[#93B4F5] resize-none placeholder-slate-300"
       />
       <div className="flex items-center gap-3 mt-1.5">

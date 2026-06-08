@@ -49,7 +49,7 @@ export default function EconomicCalendar() {
   }, {})
 
   return (
-    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden">
+    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm [overflow:clip]">
       <div className="px-4 py-2.5 border-b border-[#E5E5E5] flex items-center gap-2">
         <Calendar size={13} className="text-[#6B6B6B]" />
         <span className="text-[10px] font-bold text-[#6B6B6B]">Economic Calendar</span>

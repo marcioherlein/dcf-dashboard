@@ -301,7 +301,7 @@ export default function ScreenerPage() {
                     onClick={() => setView('table')}
                     aria-label="Table view"
                     aria-pressed={view === 'table'}
-                    className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors ${view === 'table' ? 'bg-white text-[#111111] shadow-sm' : 'text-[#6B6B6B] hover:text-[#111111]'}`}
+                    className={`flex items-center justify-center w-11 h-11 rounded-md transition-colors ${view === 'table' ? 'bg-white text-[#111111] shadow-sm' : 'text-[#6B6B6B] hover:text-[#111111]'}`}
                   >
                     <TableProperties size={14} />
                   </button>
@@ -309,7 +309,7 @@ export default function ScreenerPage() {
                     onClick={() => setView('chart')}
                     aria-label="Chart view"
                     aria-pressed={view === 'chart'}
-                    className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors ${view === 'chart' ? 'bg-white text-[#111111] shadow-sm' : 'text-[#6B6B6B] hover:text-[#111111]'}`}
+                    className={`flex items-center justify-center w-11 h-11 rounded-md transition-colors ${view === 'chart' ? 'bg-white text-[#111111] shadow-sm' : 'text-[#6B6B6B] hover:text-[#111111]'}`}
                   >
                     <ScatterIcon size={14} />
                   </button>
@@ -396,7 +396,7 @@ export default function ScreenerPage() {
                     value={filters.sector}
                     onChange={e => setFilters(f => ({ ...f, sector: e.target.value }))}
                     aria-label="Filter by sector"
-                    className="appearance-none pl-3 pr-8 py-2 text-[13px] border border-[#E3E1DA] rounded-lg bg-white text-[#06101F] focus:outline-none focus:ring-2 focus:ring-[rgba(95,121,11,0.25)] cursor-pointer min-w-[180px]"
+                    className="appearance-none pl-3 pr-8 py-2 text-[16px] sm:text-[13px] border border-[#E3E1DA] rounded-lg bg-white text-[#06101F] focus:outline-none focus:ring-2 focus:ring-[rgba(95,121,11,0.25)] cursor-pointer min-w-[180px] min-h-[44px]"
                   >
                     {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>

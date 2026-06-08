@@ -21,11 +21,11 @@ export function ETFHelpButton() {
   // Close on click-outside
   useEffect(() => {
     if (!open) return
-    function handle(e: MouseEvent) {
+    function handle(e: PointerEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
-    document.addEventListener('mousedown', handle)
-    return () => document.removeEventListener('mousedown', handle)
+    document.addEventListener('pointerdown', handle)
+    return () => document.removeEventListener('pointerdown', handle)
   }, [open])
 
   return (
@@ -40,7 +40,7 @@ export function ETFHelpButton() {
       </button>
 
       {open && (
-        <div className="absolute left-0 top-9 z-50 w-80 bg-white border border-[#BFD2A1] rounded-xl shadow-lg p-4">
+        <div className="absolute right-0 top-9 z-50 w-80 max-w-[calc(100vw-2rem)] bg-white border border-[#BFD2A1] rounded-xl shadow-lg p-4">
           <div className="flex items-start justify-between gap-2 mb-2">
             <p className="text-[13px] font-bold text-[#06101F]">How the Value Score works</p>
             <button

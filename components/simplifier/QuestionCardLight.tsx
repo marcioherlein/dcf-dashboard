@@ -73,7 +73,7 @@ export default function QuestionCardLight({
             onChange={e => onNoteChange(questionId, e.target.value)}
             placeholder="Add context or notes…"
             rows={2}
-            className="mt-2 w-full bg-[#F7F6F1] border border-[#E8E6E0] rounded-lg text-[#2D2C31] text-xs px-3 py-2 placeholder-[#6B6A72] resize-none focus:outline-none focus:border-[#1f6feb] transition-colors"
+            className="mt-2 w-full bg-[#F7F6F1] border border-[#E8E6E0] rounded-lg text-[#2D2C31] text-[16px] px-3 py-2 placeholder-[#6B6A72] resize-none focus:outline-none focus:border-[#1f6feb] transition-colors"
           />
         )}
       </div>

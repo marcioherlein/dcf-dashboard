@@ -83,7 +83,7 @@ const TABS: { id: Tab; label: string; Icon: React.ElementType }[] = [
 
 // ── Shared input class ────────────────────────────────────────────────────────
 const INPUT_CLS =
-  'w-full px-3 py-2.5 text-sm bg-white border border-[#E5E5E5] rounded-lg text-[#111111] ' +
+  'w-full px-3 py-2.5 text-[16px] sm:text-sm bg-white border border-[#E5E5E5] rounded-lg text-[#111111] ' +
   'placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#5F790B]/20 ' +
   'focus:border-[#5F790B] transition-colors'
 
@@ -230,7 +230,7 @@ export default function AdminPage() {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search by email or name…"
-                className="w-full pl-8 pr-3 py-2 text-sm bg-white border border-[#E5E5E5] rounded-lg text-[#111111] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#5F790B]/20 focus:border-[#5F790B] transition-colors"
+                className="w-full pl-8 pr-3 py-2 text-[16px] sm:text-sm bg-white border border-[#E5E5E5] rounded-lg text-[#111111] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#5F790B]/20 focus:border-[#5F790B] transition-colors"
               />
             </div>
             {!loading && (

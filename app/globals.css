@@ -44,15 +44,17 @@
     border-color: hsl(var(--border));
     -webkit-tap-highlight-color: transparent;
   }
-  body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
-    overscroll-behavior-y: contain;
-  }
   html {
     font-family: var(--font-sans, 'Inter'), system-ui, -apple-system, sans-serif;
     scroll-padding-top: 100px;
     scroll-behavior: smooth;
+  }
+  /* Move overflow-x:hidden to body — on html it creates a scroll container on iOS
+     that breaks all nested overflow-x:auto tables (fixed position also breaks) */
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    overscroll-behavior-y: contain;
     overflow-x: hidden;
   }
   /* Anchor scroll offset: compensates for 72px fixed navbar + 16px breathing room */
@@ -61,11 +63,21 @@
     scroll-margin-top: 88px;
   }
   @media (max-width: 767px) {
+    /* Prevent iOS Safari viewport zoom on input focus — any input < 16px triggers it */
     input, select, textarea { font-size: max(16px, 1em); }
   }
   /* iOS Retina legibility floor — text-[9px] renders ~6.75pt on 3x screens */
   @media (max-width: 767px) {
     .text-\[9px\] { font-size: 10px; }
+  }
+  /* Android/iOS touch target floor — HIG and Material require 44px / 48dp */
+  @media (max-width: 1023px) {
+    button:not([data-no-min-h]),
+    [role="button"]:not([data-no-min-h]),
+    [role="tab"]:not([data-no-min-h]),
+    [role="option"]:not([data-no-min-h]) {
+      min-height: 44px;
+    }
   }
 }
 

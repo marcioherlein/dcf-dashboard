@@ -393,7 +393,7 @@ export default function ETFTrackerPage() {
                     <button
                       onClick={() => toggleCompareSelect(entry.ticker)}
                       aria-label={compareSelected.has(entry.ticker) ? `Deselect ${entry.ticker}` : `Select ${entry.ticker} for comparison`}
-                      className="absolute top-3 left-3 z-20 min-w-[28px] min-h-[28px] flex items-center justify-center rounded-md bg-white border border-[#E3E1DA] shadow-sm transition-colors hover:border-olive-700"
+                      className="absolute top-3 left-3 z-20 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-md bg-white border border-[#E3E1DA] shadow-sm transition-colors hover:border-olive-700"
                     >
                       {compareSelected.has(entry.ticker)
                         ? <CheckSquare size={16} className="text-olive-700" />
@@ -452,7 +452,7 @@ export default function ETFTrackerPage() {
 
       {/* ── Undo toast ───────────────────────────────────────────────────────── */}
       {undoToast && (
-        <div className="fixed bottom-[72px] lg:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[#06101F] text-white rounded-xl px-4 py-3 shadow-lg text-[13px] font-medium whitespace-nowrap animate-in slide-in-from-bottom-2 duration-200">
+        <div className="fixed left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[#06101F] text-white rounded-xl px-4 py-3 shadow-lg text-[13px] font-medium whitespace-nowrap animate-in slide-in-from-bottom-2 duration-200 lg:bottom-6" style={{ bottom: 'calc(56px + env(safe-area-inset-bottom, 0px) + 12px)' }}>
           <span>{undoToast.ticker} removed from watchlist</span>
           <button
             onClick={handleUndo}

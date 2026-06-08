@@ -42,7 +42,8 @@ export default function FeedbackButton() {
       {/* Floating button */}
       <button
         onClick={() => { setOpen(true); setStatus('idle') }}
-        className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-50 flex items-center gap-2 rounded-full bg-[#5F790B] hover:bg-[#526A08] active:scale-95 text-white text-[12px] font-semibold px-4 py-2.5 shadow-lg transition-all"
+        className="fixed right-4 lg:bottom-6 lg:right-6 z-50 flex items-center gap-2 rounded-full bg-[#5F790B] hover:bg-[#526A08] active:scale-95 text-white text-[12px] font-semibold px-4 py-2.5 shadow-lg transition-all"
+        style={{ bottom: 'calc(56px + env(safe-area-inset-bottom, 0px) + 12px)' }}
         aria-label="Send feedback"
       >
         <MessageSquare size={14} strokeWidth={2.5} />
@@ -89,7 +90,7 @@ export default function FeedbackButton() {
                     onChange={e => { setMessage(e.target.value); setStatus('idle') }}
                     placeholder="What's working well? What's confusing? What's missing?"
                     rows={4}
-                    className="w-full px-3 py-2.5 text-[13px] text-[#111111] placeholder-[#C4C4C4] bg-[#F8F8F6] border border-[#E5E5E5] rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-[#5F790B]/20 focus:border-[#5F790B] transition-colors"
+                    className="w-full px-3 py-2.5 text-[16px] text-[#111111] placeholder-[#C4C4C4] bg-[#F8F8F6] border border-[#E5E5E5] rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-[#5F790B]/20 focus:border-[#5F790B] transition-colors"
                     autoFocus
                   />
                   {status === 'error' && (

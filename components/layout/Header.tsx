@@ -67,7 +67,7 @@ export default function Header() {
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Search ticker or company…"
-              className="flex-1 bg-transparent pl-2 text-sm text-on-surface placeholder-on-surface-variant/50 focus:outline-none"
+              className="flex-1 bg-transparent pl-2 text-[16px] sm:text-sm text-on-surface placeholder-on-surface-variant/50 focus:outline-none"
             />
             {loading && (
               <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-outline-variant border-t-primary shrink-0" />

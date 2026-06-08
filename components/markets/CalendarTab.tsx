@@ -544,7 +544,7 @@ export default function CalendarTab() {
       </div>
 
       {/* ── Card with sub-tabs ────────────────────────────────────────────── */}
-      <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm [overflow:clip]">
 
         {/* Sub-tab nav */}
         <div role="tablist" aria-label="Calendar event types" className="flex items-center gap-0 border-b border-[#E5E5E5] overflow-x-auto scrollbar-hide">

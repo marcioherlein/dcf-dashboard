@@ -153,7 +153,7 @@ export function ETFSearchBar({ onAdd, watchlistedTickers }: Props) {
                         onMouseDown={(e) => handleAdd(e, r.symbol, r.name)}
                         aria-label={isWatchlisted || wasJustAdded ? `${r.symbol} in watchlist` : `Add ${r.symbol} to watchlist`}
                         className={cn(
-                          'min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg border transition-all',
+                          'min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg border transition-all',
                           isWatchlisted || wasJustAdded
                             ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]'
                             : 'bg-white border-[#E3E1DA] text-[#8A95A6] hover:bg-olive-50 hover:border-[#BFD2A1] hover:text-olive-700',

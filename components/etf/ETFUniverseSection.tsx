@@ -136,7 +136,7 @@ function Leaderboard({
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-[#E3E1DA] overflow-hidden mt-4">
+      <div className="bg-white rounded-xl border border-[#E3E1DA] [overflow:clip] mt-4">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

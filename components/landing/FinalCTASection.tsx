@@ -107,7 +107,7 @@ export default function FinalCTASection() {
     >
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
         <motion.div
-          className="rounded-2xl text-center px-5 sm:px-8 py-10 sm:py-14 pb-safe-nav lg:pb-14"
+          className="rounded-2xl text-center px-5 sm:px-8 py-10 sm:py-14 pb-10 sm:pb-14"
           initial={reduced !== false ? {} : { opacity: 0, y: 32, filter: 'blur(8px)' }}
           animate={inView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
           transition={{ duration: 0.65, ease: EASE }}

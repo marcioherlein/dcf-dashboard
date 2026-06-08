@@ -66,7 +66,7 @@ export default function MarketHeatmapCard({ sectors }: Props) {
   )
 
   return (
-    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden h-full">
+    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm [overflow:clip] h-full">
       <div className="px-4 py-2.5 border-b border-[#E5E5E5] flex items-center justify-between">
         <div>
           <span className="text-[10px] font-bold text-[#6B6B6B]">Market Heatmap</span>

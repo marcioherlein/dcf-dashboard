@@ -51,7 +51,7 @@ export default function TransparencySection() {
   const reduced = useReducedMotion()
 
   return (
-    <section ref={ref} className="overflow-x-hidden" style={{ background: '#F5F5F5', borderBottom: '1px solid #E5E5E5' }}>
+    <section ref={ref} className="[overflow-x:clip]" style={{ background: '#F5F5F5', borderBottom: '1px solid #E5E5E5' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-14 sm:py-20">
 
         {/* Header */}

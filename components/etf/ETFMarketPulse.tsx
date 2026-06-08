@@ -73,7 +73,7 @@ export function ETFMarketPulse({ data, loading }: Props) {
           label="Best value sector"
           sub={fundName(cheapestSector.meta.ticker, cheapestSector.item?.name)}
           href={`/etf/${cheapestSector.meta.ticker}`}
-          borderColor={`border-l-[${cheapestSector.score && cheapestSector.score >= 70 ? '#11875D' : cheapestSector.score && cheapestSector.score >= 50 ? '#2563EB' : '#B56A00'}]`}
+          borderColor={cheapestSector.score && cheapestSector.score >= 70 ? 'border-l-[#11875D]' : cheapestSector.score && cheapestSector.score >= 50 ? 'border-l-[#2563EB]' : 'border-l-[#B56A00]'}
         >
           <span className="font-mono text-[20px] font-bold leading-none text-[#06101F]">{cheapestSector.meta.ticker}</span>
           <Badge color={scoreColor(cheapestSector.score ?? 0)} bgClass={cheapestSector.score && cheapestSector.score >= 70 ? 'bg-[#E8F7EF]' : 'bg-[#EAF1FF]'}>
@@ -99,7 +99,7 @@ export function ETFMarketPulse({ data, loading }: Props) {
           label="Best value pick"
           sub={fundName(bestValue.meta.ticker, bestValue.item?.name)}
           href={`/etf/${bestValue.meta.ticker}`}
-          borderColor={`border-l-[${bestValue.score && bestValue.score >= 70 ? '#11875D' : '#2563EB'}]`}
+          borderColor={bestValue.score && bestValue.score >= 70 ? 'border-l-[#11875D]' : 'border-l-[#2563EB]'}
         >
           <span className="font-mono text-[20px] font-bold leading-none text-[#06101F]">{bestValue.meta.ticker}</span>
           <Badge color={scoreColor(bestValue.score ?? 0)} bgClass={bestValue.score && bestValue.score >= 70 ? 'bg-[#E8F7EF]' : 'bg-[#EAF1FF]'}>

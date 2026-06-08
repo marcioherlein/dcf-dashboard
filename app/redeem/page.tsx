@@ -93,7 +93,7 @@ export default function RedeemPage() {
                 onChange={e => { setCode(e.target.value.toUpperCase()); setError('') }}
                 onKeyDown={e => { if (e.key === 'Enter') handleRedeem() }}
                 placeholder="e.g. INSIC2024"
-                className="w-full rounded-xl border border-[#E3E1DA] bg-[#F4F3EF] px-4 py-3 text-[15px] font-mono font-semibold text-[#06101F] placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-olive-100 transition-all uppercase tracking-wider"
+                className="w-full rounded-xl border border-[#E3E1DA] bg-[#F4F3EF] px-4 py-3 text-[16px] font-mono font-semibold text-[#06101F] placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-olive-100 transition-all uppercase tracking-wider"
               />
 
               {error && (

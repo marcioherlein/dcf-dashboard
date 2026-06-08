@@ -25,7 +25,7 @@ const dmMono = DM_Mono({
 export const metadata: Metadata = {
   title: "insic — Invest with a process, not a story",
   description: "Fair value estimates, market-implied expectations, and transparent assumptions — so you can understand what has to be true before you invest. Free.",
-  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'insic' },
+  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'insic' },
 };
 
 export const viewport = {
@@ -42,8 +42,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("font-sans", inter.variable, dmMono.variable)}>
       <head>
-        {/* White theme color matches --color-bg */}
-        <meta name="theme-color" content="#FFFFFF" />
+        {/* Theme color matches --color-bg warm off-white */}
+        <meta name="theme-color" content="#FAF9F6" />
       </head>
       <body className="antialiased bg-background">
         <Providers>

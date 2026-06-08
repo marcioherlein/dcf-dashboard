@@ -163,7 +163,7 @@ export default function FactorRankingPage() {
         <select
           value={assetType}
           onChange={(e) => setAssetType(e.target.value as AssetFilter)}
-          className="bg-white border border-[#E3E1DA] text-[12px] text-[#566174] rounded-lg px-2 py-1 focus:outline-none focus:border-blue-400"
+          className="bg-white border border-[#E3E1DA] text-[16px] sm:text-[12px] text-[#566174] rounded-lg px-2 py-1 min-h-[44px] focus:outline-none focus:border-blue-400"
         >
           <option value="all">All Types</option>
           <option value="equity">Equities</option>
@@ -175,7 +175,7 @@ export default function FactorRankingPage() {
           <select
             value={sector}
             onChange={(e) => setSector(e.target.value)}
-            className="bg-white border border-[#E3E1DA] text-[12px] text-[#566174] rounded-lg px-2 py-1 focus:outline-none focus:border-blue-400"
+            className="bg-white border border-[#E3E1DA] text-[16px] sm:text-[12px] text-[#566174] rounded-lg px-2 py-1 min-h-[44px] focus:outline-none focus:border-blue-400"
           >
             {sectors.map((s) => (
               <option key={s} value={s}>{s === 'all' ? 'All Sectors' : s}</option>

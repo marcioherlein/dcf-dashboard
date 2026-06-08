@@ -65,11 +65,11 @@ function AxisDropdown({ label, value, options, onChange, className }: AxisDropdo
 
   useEffect(() => {
     if (!open) return
-    function handle(e: MouseEvent) {
+    function handle(e: PointerEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
-    document.addEventListener('mousedown', handle)
-    return () => document.removeEventListener('mousedown', handle)
+    document.addEventListener('pointerdown', handle)
+    return () => document.removeEventListener('pointerdown', handle)
   }, [open])
 
   return (
@@ -132,11 +132,11 @@ function BubbleSizeDropdown({ value, onChange, className }: BubbleSizeDropdownPr
 
   useEffect(() => {
     if (!open) return
-    function handle(e: MouseEvent) {
+    function handle(e: PointerEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
-    document.addEventListener('mousedown', handle)
-    return () => document.removeEventListener('mousedown', handle)
+    document.addEventListener('pointerdown', handle)
+    return () => document.removeEventListener('pointerdown', handle)
   }, [open])
 
   return (

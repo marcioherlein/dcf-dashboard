@@ -164,7 +164,7 @@ function ScoreRationale({ metrics }: { metrics: ETFMetrics }) {
           <p className="text-[13px] text-[#06101F] leading-relaxed mt-3 mb-4">{narrative}</p>
 
           {/* Factor table */}
-          <div className="rounded-lg overflow-hidden border border-[#E3E1DA]">
+          <div className="rounded-lg overflow-x-auto border border-[#E3E1DA]">
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-[#F5F5F5] border-b border-[#E3E1DA]">
