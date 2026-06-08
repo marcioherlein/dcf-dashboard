@@ -17,10 +17,9 @@ import FairValueChart from './cockpit/FairValueChart'
 import { type SparkPoint } from './cockpit/AssumptionsPanel'
 import ValuationMethodCards from './cockpit/ValuationMethodCards'
 import ModelDivergencePanel from './cockpit/ModelDivergencePanel'
-import RightSidebar from './cockpit/RightSidebar'
+import MonteCarloPanel from './cockpit/MonteCarloPanel'
 import VerdictHero from './cockpit/VerdictHero'
 import SensitivityMatrix from './SensitivityMatrix'
-import MonteCarloPanel from './cockpit/MonteCarloPanel'
 import SaveToWatchlistDialog from '@/components/watchlist/SaveToWatchlistDialog'
 import type { WatchlistSavePayload } from '@/components/watchlist/SaveToWatchlistDialog'
 import { fmtPrice } from '@/lib/formatters'
@@ -29,7 +28,7 @@ import type { AssumptionAudit } from '@/lib/valuation/assumptionAuditor'
 
 const ModellingWorkspace = dynamic(
   () => import('@/components/modelling/ModellingWorkspace'),
-  { ssr: false, loading: () => <div className="h-64 animate-pulse rounded-xl bg-[#F4F3EF]" /> }
+  { ssr: false, loading: () => <div className="h-64 animate-pulse rounded-xl bg-[#F5F5F5]" /> }
 )
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -381,7 +380,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         />
       )}
 
-      {/* ── 4. WHAT THE MARKET IS PRICING IN (reverse DCF / market-implied) ─── */}
+      {/* ── 4. WHAT THE MARKET IS PRICING IN ────────────────────────────────── */}
       <BusinessChecks
         roic={valueInvestingData.roic}
         roicSpread={valueInvestingData.roicSpread}
@@ -434,11 +433,11 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         />
       </div>
 
-      {/* ── 6. INDEPENDENT CHECKS (compact) — risk to watch + supporting thesis */}
+      {/* ── 6. INDEPENDENT CHECKS — signals outside the DCF model ──────────── */}
       <div className="rounded-xl border border-[#E5E5E5] bg-white overflow-hidden">
         <div className="px-4 py-3 border-b border-[#E5E5E5] flex items-center justify-between">
           <p className="text-[13px] font-semibold text-[#111111]">Independent checks</p>
-          <p className="text-[11px] text-[#9B9B9B]">Signals from outside the DCF</p>
+          <p className="text-[11px] text-[#9B9B9B]">Signals outside the valuation model — not included in fair value</p>
         </div>
         <div className="divide-y divide-[#F5F5F5]">
           {/* Structural risk */}
@@ -516,23 +515,40 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         currency={currency}
       />
 
-      <RightSidebar
-        output={output}
-        currentPrice={currentPrice}
-        currency={currency}
-        ticker={ticker}
-        companyType={snapshot.companyType}
-        onViewFullDCF={scrollToFullDCF}
-        onSave={() => setSaveOpen(true)}
-        lastChange={lastChange}
-      />
+      {/* ── 9. FULL DCF MODEL (collapsed) — year-by-year projections ─────────── */}
+      <details ref={fullDcfRef} className="group" id="full_dcf">
+        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E5E5E5] shadow-sm px-4 sm:px-5 py-3.5 hover:bg-[#EAF1FF] transition-colors select-none">
+          <span className="text-[#2563EB] text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
+          <span className="text-sm font-[650] text-[#2563EB]">
+            Full DCF Model — Year-by-Year Projections
+          </span>
+          {liveDcfFV != null && (
+            <span className="ml-1 text-[12px] font-[700] tabular-nums text-[#2563EB]">
+              {fmtPrice(liveDcfFV, currency)}
+            </span>
+          )}
+          <span className="ml-auto text-xs text-[#9B9B9B] hidden sm:inline">DCF-only estimate · click to expand · full screen available</span>
+        </summary>
+        <div className="mt-2">
+          <p className="sm:hidden text-[11px] text-[#9B9B9B] text-center py-2 px-4">
+            Best experienced on a wider screen — scroll horizontally to view all columns.
+          </p>
+          <ModellingWorkspace
+            apiData={apiData}
+            ticker={ticker}
+            statementsData={statementsData}
+            onDerivedFVChange={setLiveDcfFV}
+            cockpitWacc={assumptions.wacc}
+          />
+        </div>
+      </details>
 
-      {/* ── 9. MODEL EVIDENCE (collapsed) ────────────────────────────────────── */}
+      {/* ── 10. MODEL EVIDENCE (collapsed) ───────────────────────────────────── */}
       <details className="group" id="model_evidence">
-        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E6ECF5] shadow-sm px-4 sm:px-5 py-3.5 hover:bg-[#F4F3EF] transition-colors select-none">
-          <span className="text-[#8A95A6] text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
-          <span className="text-sm font-[650] text-[#06101F]">Model Evidence</span>
-          <span className="ml-auto text-xs text-[#8A95A6] hidden sm:inline">Fair value chart · divergence analysis · value investing metrics</span>
+        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E5E5E5] shadow-sm px-4 sm:px-5 py-3.5 hover:bg-[#F5F5F5] transition-colors select-none">
+          <span className="text-[#6B6B6B] text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
+          <span className="text-sm font-[650] text-[#111111]">Model Evidence</span>
+          <span className="ml-auto text-xs text-[#9B9B9B] hidden sm:inline">Fair value chart · divergence analysis · value investing metrics</span>
         </summary>
         <div className="mt-2 flex flex-col gap-3">
           <ValueInvestingPanel
@@ -547,34 +563,6 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
             currency={currency}
           />
           <ModelDivergencePanel divergence={output.divergence} />
-        </div>
-      </details>
-
-      {/* ── 10. FULL DCF MODEL (collapsed) ───────────────────────────────────── */}
-      <details ref={fullDcfRef} className="group" id="full_dcf">
-        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-blue-100 shadow-sm px-4 sm:px-5 py-3.5 hover:bg-[#EAF1FF] transition-colors select-none">
-          <span className="text-[#2563EB] text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
-          <span className="text-sm font-[650] text-[#2563EB]">
-            Full DCF Model — Year-by-Year Projections
-          </span>
-          {liveDcfFV != null && (
-            <span className="ml-1 text-[12px] font-[700] tabular-nums text-[#2563EB]">
-              {fmtPrice(liveDcfFV, currency)}
-            </span>
-          )}
-          <span className="ml-auto text-xs text-[#8A95A6] hidden sm:inline">DCF-only estimate · distinct from top blended value</span>
-        </summary>
-        <div className="mt-2">
-          <p className="sm:hidden text-[11px] text-[#8A95A6] text-center py-2 px-4">
-            Best experienced on a wider screen — scroll horizontally to view all columns.
-          </p>
-          <ModellingWorkspace
-            apiData={apiData}
-            ticker={ticker}
-            statementsData={statementsData}
-            onDerivedFVChange={setLiveDcfFV}
-            cockpitWacc={assumptions.wacc}
-          />
         </div>
       </details>
 
