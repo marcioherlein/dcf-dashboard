@@ -43,6 +43,10 @@ function writeLocal(entries: ETFEntry[]): void {
   }
 }
 
+export function readLocalWatchlist(): ETFEntry[] {
+  return readLocal()
+}
+
 export async function loadETFWatchlist(userEmail?: string | null): Promise<ETFEntry[]> {
   const local = readLocal()
   const client = getClient()

@@ -4,13 +4,14 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { PieChart, RefreshCw, GitCompare, CheckSquare, Square } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { useSession } from 'next-auth/react'
+import { useSession, signIn } from 'next-auth/react'
 import { ETFSearchBar } from '@/components/etf/ETFSearchBar'
 import { ETFWatchlistCard } from '@/components/etf/ETFWatchlistCard'
 import { ETFUniverseSection } from '@/components/etf/ETFUniverseSection'
 import { ETFMarketPulse } from '@/components/etf/ETFMarketPulse'
 import { ETFHelpButton } from '@/components/etf/ETFOnboardBanner'
-import { loadETFWatchlist, deleteETFEntry, saveETFEntry } from '@/lib/data/etfWatchlistStore'
+import ETFLoginToSaveModal from '@/components/etf/ETFLoginToSaveModal'
+import { loadETFWatchlist, deleteETFEntry, saveETFEntry, readLocalWatchlist } from '@/lib/data/etfWatchlistStore'
 import { ALL_TICKERS } from '@/lib/data/etfUniverse'
 import type { ETFEntry, ETFBatchItem } from '@/lib/data/etfTypes'
 
@@ -48,6 +49,19 @@ interface UndoToast {
 export default function ETFTrackerPage() {
   const { data: session } = useSession()
   const userEmail = session?.user?.email ?? null
+
+  // ── Login-to-save gate ───────────────────────────────────────────────────────
+  const [loginModal, setLoginModal] = useState<{ ticker: string; name: string | null; valueScore: number | null } | null>(null)
+
+  // After sign-in: sync any locally-saved entries to Supabase
+  useEffect(() => {
+    if (!userEmail) return
+    const local = readLocalWatchlist()
+    if (local.length === 0) return
+    local.forEach((entry) => {
+      saveETFEntry(entry, userEmail).catch(() => {})
+    })
+  }, [userEmail])
 
   // ── Watchlist state ──────────────────────────────────────────────────────────
   const [watchlist, setWatchlist]   = useState<ETFEntry[]>([])
@@ -195,27 +209,37 @@ export default function ETFTrackerPage() {
     )
   }, [batchData])
 
-  async function handleQuickAdd(ticker: string) {
-    const item = batchData[ticker]
-    if (!item) return
+  async function handleSaveWithGate(
+    ticker: string,
+    name: string | null,
+    entry: Omit<ETFEntry, 'ticker' | 'name' | 'addedAt'> & { ticker?: string; name?: string | null; addedAt?: string },
+    valueScore: number | null,
+  ) {
+    if (!userEmail) {
+      setLoginModal({ ticker, name, valueScore })
+      return
+    }
     await saveETFEntry(
-      {
-        ticker: item.ticker,
-        name: item.name,
-        valueScore: item.valueScore,
-        expenseRatio: item.expenseRatio,
-        yield: item.yield,
-        peRatio: item.peRatio,
-        pbRatio: item.pbRatio,
-        totalAssets: item.aum,
-        addedAt: new Date().toISOString(),
-        price: item.price,
-        priceChangePct: item.priceChangePct,
-        metricsUpdatedAt: new Date().toISOString(),
-      },
+      { ticker, name, addedAt: new Date().toISOString(), ...entry },
       userEmail,
     )
     loadWatchlist()
+  }
+
+  async function handleQuickAdd(ticker: string) {
+    const item = batchData[ticker]
+    if (!item) return
+    await handleSaveWithGate(ticker, item.name, {
+      valueScore: item.valueScore,
+      expenseRatio: item.expenseRatio,
+      yield: item.yield,
+      peRatio: item.peRatio,
+      pbRatio: item.pbRatio,
+      totalAssets: item.aum,
+      price: item.price,
+      priceChangePct: item.priceChangePct,
+      metricsUpdatedAt: new Date().toISOString(),
+    }, item.valueScore)
   }
 
   const hasWatchlist = !wlLoading && watchlist.length > 0
@@ -239,6 +263,16 @@ export default function ETFTrackerPage() {
 
   return (
     <div className="min-h-dvh bg-[#F9F8F5]">
+
+      {/* ── Login-to-save modal ──────────────────────────────────────────────── */}
+      {loginModal && (
+        <ETFLoginToSaveModal
+          ticker={loginModal.ticker}
+          name={loginModal.name}
+          valueScore={loginModal.valueScore}
+          onClose={() => setLoginModal(null)}
+        />
+      )}
 
       {/* ── Page header ─────────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-[#E3E1DA] px-4 sm:px-8 pt-6 pb-5">
@@ -267,24 +301,17 @@ export default function ETFTrackerPage() {
           <ETFSearchBar
             onAdd={async (symbol, name) => {
               const item = batchData[symbol]
-              await saveETFEntry(
-                {
-                  ticker: symbol,
-                  name: item?.name ?? name,
-                  valueScore: item?.valueScore ?? null,
-                  expenseRatio: item?.expenseRatio ?? null,
-                  yield: item?.yield ?? null,
-                  peRatio: item?.peRatio ?? null,
-                  pbRatio: item?.pbRatio ?? null,
-                  totalAssets: item?.aum ?? null,
-                  addedAt: new Date().toISOString(),
-                  price: item?.price ?? null,
-                  priceChangePct: item?.priceChangePct ?? null,
-                  metricsUpdatedAt: new Date().toISOString(),
-                },
-                userEmail,
-              )
-              loadWatchlist()
+              await handleSaveWithGate(symbol, item?.name ?? name, {
+                valueScore: item?.valueScore ?? null,
+                expenseRatio: item?.expenseRatio ?? null,
+                yield: item?.yield ?? null,
+                peRatio: item?.peRatio ?? null,
+                pbRatio: item?.pbRatio ?? null,
+                totalAssets: item?.aum ?? null,
+                price: item?.price ?? null,
+                priceChangePct: item?.priceChangePct ?? null,
+                metricsUpdatedAt: new Date().toISOString(),
+              }, item?.valueScore ?? null)
             }}
             watchlistedTickers={new Set(watchlist.map((e) => e.ticker))}
           />
@@ -318,6 +345,19 @@ export default function ETFTrackerPage() {
                 {watchlist.length}
               </span>
               <div className="ml-auto flex items-center gap-2">
+                {!userEmail && (
+                  <button
+                    onClick={() => signIn('google', { callbackUrl: window.location.href })}
+                    className="flex items-center gap-1.5 text-[12px] font-semibold text-[#5F790B] hover:text-[#6F8F12] transition-colors"
+                    title="Sign in to sync your watchlist across devices"
+                  >
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5" aria-hidden="true">
+                      <rect x="3" y="7" width="10" height="8" rx="1.5" />
+                      <path d="M5 7V5a3 3 0 016 0v2" />
+                    </svg>
+                    Sign in to sync
+                  </button>
+                )}
                 {compareMode && compareSelected.size > 0 && (
                   <span className="text-[12px] text-[#6B6B6B]">{compareSelected.size}/4 selected</span>
                 )}
@@ -393,6 +433,19 @@ export default function ETFTrackerPage() {
           emptyWatchlist={!hasWatchlist && !wlLoading}
           batchData={batchData}
           onQuickAdd={handleQuickAdd}
+          onSave={async (ticker, name, item) => {
+            await handleSaveWithGate(ticker, name, {
+              valueScore: item.valueScore,
+              expenseRatio: item.expenseRatio,
+              yield: item.yield,
+              peRatio: item.peRatio,
+              pbRatio: item.pbRatio,
+              totalAssets: item.aum,
+              price: item.price ?? null,
+              priceChangePct: item.priceChangePct ?? null,
+              metricsUpdatedAt: new Date().toISOString(),
+            }, item.valueScore)
+          }}
         />
 
       </div>

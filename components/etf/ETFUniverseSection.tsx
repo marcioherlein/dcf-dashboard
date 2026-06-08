@@ -308,15 +308,21 @@ interface Props {
   emptyWatchlist?: boolean
   batchData: Record<string, ETFBatchItem | null>
   onQuickAdd: (ticker: string) => void
+  /** Optional override — when provided, bypasses the internal saveETFEntry (used for login gating) */
+  onSave?: (ticker: string, name: string | null, item: ETFBatchItem) => Promise<void>
 }
 
-export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpdate, hasError, emptyWatchlist, batchData, onQuickAdd }: Props) {
+export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpdate, hasError, emptyWatchlist, batchData, onQuickAdd, onSave }: Props) {
   const watchlistedTickers = useMemo(() => new Set(watchlist.map((e) => e.ticker)), [watchlist])
 
   const handleAdd = useCallback(async (ticker: string) => {
     if (watchlistedTickers.has(ticker)) return
     const item = data[ticker]
     if (!item) return
+    if (onSave) {
+      await onSave(ticker, item.name, item)
+      return
+    }
     await saveETFEntry(
       {
         ticker: item.ticker,
@@ -335,7 +341,7 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
       userEmail,
     )
     onWatchlistUpdate()
-  }, [data, userEmail, watchlistedTickers, onWatchlistUpdate])
+  }, [data, userEmail, watchlistedTickers, onWatchlistUpdate, onSave])
 
   return (
     <div className="space-y-10">
