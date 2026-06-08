@@ -11,13 +11,13 @@ interface Props {
 export default function PriceTable({ title, items, priceDecimals = 2 }: Props) {
   return (
     <div className="rounded-xl glass-card-light overflow-hidden">
-      <div className="grid grid-cols-[1fr_60px_56px_60px] sm:grid-cols-[1fr_72px_68px_68px] items-center px-2 sm:px-3 py-2 border-b border-[#E3E1DA]">
-        <span className="text-[11px] font-bold text-[#566174] uppercase tracking-wider truncate pr-2">
+      <div className="grid grid-cols-[1fr_60px_56px_60px] sm:grid-cols-[1fr_72px_68px_68px] items-center px-2 sm:px-3 py-2 border-b border-[#E5E5E5]">
+        <span className="text-[11px] font-bold text-[#6B6B6B] truncate pr-2">
           {title}
         </span>
-        <span className="text-right text-[10px] font-bold text-[#8A95A6] uppercase tracking-wider">Price</span>
-        <span className="text-right text-[10px] font-bold text-[#8A95A6] uppercase tracking-wider">Chg</span>
-        <span className="text-right text-[10px] font-bold text-[#8A95A6] uppercase tracking-wider pr-0.5">%</span>
+        <span className="text-right text-[10px] font-bold text-[#6B6B6B]">Price</span>
+        <span className="text-right text-[10px] font-bold text-[#6B6B6B]">Chg</span>
+        <span className="text-right text-[10px] font-bold text-[#6B6B6B] pr-0.5">%</span>
       </div>
 
       <div className="divide-y divide-[#E3E1DA]">

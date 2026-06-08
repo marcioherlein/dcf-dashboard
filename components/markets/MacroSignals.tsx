@@ -11,14 +11,14 @@ function toneValueClass(tone: MacroSignalTile['tone']): string {
   if (tone === 'positive') return 'text-[#11875D]'
   if (tone === 'negative') return 'text-[#D83B3B]'
   if (tone === 'warning')  return 'text-[#B56A00]'
-  return 'text-[#06101F]'
+  return 'text-[#111111]'
 }
 
 function toneBadgeClass(tone: MacroSignalTile['tone']): string {
-  if (tone === 'positive') return 'bg-[#E8F7EF] text-[#11875D] border-[#CDD1C8]'
-  if (tone === 'negative') return 'bg-[#FCEAEA] text-[#D83B3B] border-[#E3E1DA]'
-  if (tone === 'warning')  return 'bg-[#FFF4DA] text-[#B56A00] border-[#E3E1DA]'
-  return 'bg-[#E3E1DA] text-[#566174] border-[#E3E1DA]'
+  if (tone === 'positive') return 'bg-[#E8F7EF] text-[#11875D] border-[#E5E5E5]'
+  if (tone === 'negative') return 'bg-[#FCEAEA] text-[#D83B3B] border-[#E5E5E5]'
+  if (tone === 'warning')  return 'bg-[#FFF4DA] text-[#B56A00] border-[#E5E5E5]'
+  return 'bg-[#E3E1DA] text-[#6B6B6B] border-[#E5E5E5]'
 }
 
 function iconForSignal(label: string): { icon: React.ReactNode; bg: string } {
@@ -35,46 +35,52 @@ function iconForSignal(label: string): { icon: React.ReactNode; bg: string } {
     return { icon: <AlertTriangle size={14} className="text-orange-600" />, bg: 'bg-orange-50' }
   if (l.includes('usd') || l.includes('dollar') || l.includes('dxy'))
     return { icon: <DollarSign size={14} className="text-[#11875D]" />, bg: 'bg-[#E8F7EF]' }
-  return { icon: <Percent size={14} className="text-[#566174]" />, bg: 'bg-[#E3E1DA]' }
+  return { icon: <Percent size={14} className="text-[#6B6B6B]" />, bg: 'bg-[#E3E1DA]' }
 }
 
 export default function MacroSignals({ signals }: Props) {
   return (
-    <div className="bg-white rounded-xl border border-[#E3E1DA] shadow-sm overflow-hidden h-full flex flex-col">
-      <div className="px-4 py-2.5 border-b border-[#E3E1DA]">
-        <span className="text-[11px] font-bold text-[#566174] uppercase tracking-wider">Macro Environment</span>
-        <p className="text-[11px] text-[#8A95A6] mt-0.5">Key signals that influence discount rates, risk appetite, and valuations.</p>
+    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden h-full flex flex-col">
+      <div className="px-4 py-2.5 border-b border-[#E5E5E5]">
+        <span className="text-[11px] font-bold text-[#6B6B6B]">Macro Environment</span>
+        <p className="text-[11px] text-[#6B6B6B] mt-0.5">Key signals that influence discount rates, risk appetite, and valuations.</p>
       </div>
 
       <div className="p-3 flex-1">
+        {signals.length === 0 ? (
+          <div className="flex items-center justify-center h-full min-h-[120px]">
+            <p className="text-[12px] text-[#6B6B6B]">No macro signals available</p>
+          </div>
+        ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {signals.map(sig => {
             const { icon, bg } = iconForSignal(sig.label)
             return (
-              <div key={sig.id} className="rounded-xl bg-[#F4F3EF] border border-[#E3E1DA] px-3 py-2.5 flex flex-col">
+              <div key={sig.id} className="rounded-xl bg-[#F5F5F5] border border-[#E5E5E5] px-3 py-2.5 flex flex-col">
                 <div className="flex items-center gap-2 mb-1.5">
                   <div className={cn('w-6 h-6 rounded-lg flex items-center justify-center shrink-0', bg)}>
                     {icon}
                   </div>
-                  <p className="text-[11px] font-bold text-[#566174] leading-tight uppercase tracking-wider truncate">{sig.label}</p>
+                  <p className="text-[11px] font-bold text-[#6B6B6B] leading-tight truncate">{sig.label}</p>
                 </div>
                 <p className={cn('text-[16px] font-bold tabular-nums leading-none', toneValueClass(sig.tone))}>
                   {sig.value}
                 </p>
-                {sig.sub && <p className="text-[11px] text-[#8A95A6] mt-0.5">{sig.sub}</p>}
+                {sig.sub && <p className="text-[11px] text-[#6B6B6B] mt-0.5">{sig.sub}</p>}
                 <span className={cn(
-                  'inline-flex items-center self-start mt-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full border uppercase tracking-wider',
+                  'inline-flex items-center self-start mt-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full border',
                   toneBadgeClass(sig.tone)
                 )}>
                   {sig.regimeLabel}
                 </span>
                 {sig.equityImplication && (
-                  <p className="text-[9.5px] text-[#566174] mt-1.5 leading-snug">{sig.equityImplication}</p>
+                  <p className="text-[9.5px] text-[#6B6B6B] mt-1.5 leading-snug">{sig.equityImplication}</p>
                 )}
               </div>
             )
           })}
         </div>
+        )}
       </div>
     </div>
   )

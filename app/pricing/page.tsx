@@ -10,8 +10,8 @@ import { InsicLogoLockup } from '@/components/ui/InsicLogo'
 // ─── Plan definitions ──────────────────────────────────────────────────────
 
 const FREE_FEATURES = [
-  'View up to 3 stocks per month',
-  'Save up to 3 analyses to Watchlist',
+  'View up to 10 stocks per month',
+  'Save up to 10 analyses to Watchlist',
   'Full DCF valuation — fair value, grade, upside',
   'Bear / Base / Bull scenario range',
   'Weighted consensus across 5 valuation methods',
@@ -40,7 +40,7 @@ const PRO_FEATURES = [
 ]
 
 const COMPARISON_ROWS = [
-  { label: 'Stocks per month',                             free: '3',   pro: '∞'   },
+  { label: 'Stocks per month',                             free: '10',  pro: '∞'   },
   { label: 'Saved analyses (Watchlist)',                   free: '3',   pro: '∞'   },
   { label: 'DCF fair value + grade badge',                 free: true,  pro: true  },
   { label: 'Weighted consensus (5 valuation methods)',     free: true,  pro: true  },
@@ -66,7 +66,7 @@ const COMPARISON_ROWS = [
 const FAQS = [
   {
     q: 'Is the free plan really free forever?',
-    a: 'Yes. Free is not a trial. You can analyze 3 stocks per month and save 3 analyses at no cost, forever. We only charge for features that add meaningful depth or remove the monthly limit.',
+    a: 'Yes. Free is not a trial. You can analyze 10 stocks per month and save 10 analyses at no cost, forever. We only charge for features that add meaningful depth or remove the monthly limit.',
   },
   {
     q: 'What happens when I hit the 3-stock limit?',
@@ -144,14 +144,19 @@ export default function PricingPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
           {/* Free */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-8 flex flex-col shadow-sm">
-            <div className="mb-8">
+          <div className="rounded-2xl border border-gray-200 bg-white p-8 flex flex-col shadow-sm relative">
+            <div className="absolute top-5 left-5">
+              <span className="rounded-full bg-[#EEF4DD] border border-[#BFD2A1] text-[#5F790B] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1">
+                Beta — free now
+              </span>
+            </div>
+            <div className="mb-8 mt-7">
               <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-4">Free</p>
               <div className="flex items-baseline gap-1.5 mb-2">
                 <span className="text-5xl font-bold text-gray-900 tabular-nums">$0</span>
                 <span className="text-gray-400 text-sm">/month</span>
               </div>
-              <p className="text-[13px] text-gray-500">3 stocks per month · 3 saved analyses · No credit card</p>
+              <p className="text-[13px] text-gray-500">10 stocks per month · 10 saved analyses · No credit card</p>
             </div>
 
             <button
@@ -182,8 +187,8 @@ export default function PricingPage() {
             <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-[#5F790B] opacity-[0.06] blur-3xl pointer-events-none" />
 
             <div className="absolute top-5 right-5">
-              <span className="rounded-full bg-[#5F790B] text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1">
-                Most popular
+              <span className="rounded-full bg-white/10 border border-white/20 text-white/60 text-[10px] font-bold uppercase tracking-wider px-3 py-1">
+                Coming soon
               </span>
             </div>
 
@@ -203,20 +208,10 @@ export default function PricingPage() {
               </div>
             ) : (
               <button
-                onClick={handleUpgrade}
-                disabled={upgrading}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#5F790B] hover:bg-[#526A08] disabled:opacity-60 py-3.5 text-[13.5px] font-bold text-white mb-8 min-h-[48px] shadow-sm transition-colors relative"
+                disabled
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-white/10 border border-white/15 py-3.5 text-[13.5px] font-semibold text-white/40 mb-8 min-h-[48px] cursor-not-allowed"
               >
-                {upgrading ? (
-                  <>
-                    <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                    Redirecting…
-                  </>
-                ) : session ? (
-                  'Start 7-day free trial →'
-                ) : (
-                  'Sign in to start trial →'
-                )}
+                Coming soon
               </button>
             )}
 

@@ -25,7 +25,7 @@ import type { MarketContextPayload } from '@/lib/market-context/types'
 const REFRESH_INTERVAL_MS = 60_000
 
 function Sk({ h = 'h-32', className = '' }: { h?: string; className?: string }) {
-  return <div className={`motion-safe:animate-pulse rounded-xl bg-[#F4F3EF] border border-[#E3E1DA] ${h} ${className}`} />
+  return <div className={`motion-safe:animate-pulse rounded-xl bg-[#F5F5F5] border border-[#E5E5E5] ${h} ${className}`} />
 }
 
 function pct(v: number | null) {
@@ -33,8 +33,8 @@ function pct(v: number | null) {
   return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'
 }
 function pctCls(v: number | null) {
-  if (v == null) return "text-[#8A95A6]"
-  return v > 0 ? "text-[#11875D]" : v < 0 ? "text-[#D83B3B]" : "text-[#566174]"
+  if (v == null) return "text-[#6B6B6B]"
+  return v > 0 ? "text-[#11875D]" : v < 0 ? "text-[#D83B3B]" : "text-[#6B6B6B]"
 }
 function timeAgo(ts: number): string {
   const s = Math.floor((Date.now() - ts) / 1000)
@@ -48,11 +48,11 @@ function getMarketStatus(): { label: string; cls: string } {
   const utcM = now.getUTCMinutes()
   const day  = now.getUTCDay()
   const et   = (utcH * 60 + utcM - 240 + 1440) % 1440
-  if (day === 0 || day === 6) return { label: 'Market Closed', cls: "bg-[#F4F3EF] text-[#566174]" }
+  if (day === 0 || day === 6) return { label: 'Market Closed', cls: "bg-[#F5F5F5] text-[#6B6B6B]" }
   if (et >= 240  && et < 570)  return { label: 'Pre-Market',    cls: "bg-[#FFF4DA] text-[#B56A00]" }
   if (et >= 570  && et < 960)  return { label: '● Market Open', cls: "bg-[#E8F7EF] text-[#11875D] font-bold" }
   if (et >= 960  && et < 1200) return { label: 'After Hours',   cls: "bg-[#EAF1FF] text-[#2563EB]" }
-  return { label: 'Market Closed', cls: "bg-[#F4F3EF] text-[#566174]" }
+  return { label: 'Market Closed', cls: "bg-[#F5F5F5] text-[#6B6B6B]" }
 }
 
 function SectionHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: React.ReactNode }) {
@@ -61,15 +61,15 @@ function SectionHeader({ title, subtitle, right }: { title: string; subtitle?: s
   const reduced = useReducedMotion()
 
   return (
-    <div ref={ref} className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-2 border-b border-[#E3E1DA] pb-3">
+    <div ref={ref} className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-2 border-b border-[#E5E5E5] pb-3">
       <div
         style={{
           clipPath: reduced ? 'none' : inView ? 'inset(0 0% 0 0)' : 'inset(0 100% 0 0)',
           transition: reduced ? 'none' : 'clip-path 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
-        <h2 className="text-[16px] font-bold text-[#06101F] tracking-tight">{title}</h2>
-        {subtitle && <p className="text-[12px] text-[#566174] mt-0.5">{subtitle}</p>}
+        <h2 className="text-[16px] font-bold text-[#111111] tracking-tight">{title}</h2>
+        {subtitle && <p className="text-[12px] text-[#6B6B6B] mt-0.5">{subtitle}</p>}
       </div>
       {right && <div className="shrink-0">{right}</div>}
     </div>
@@ -152,7 +152,7 @@ export default function MarketsPage() {
       >
         Skip to content
       </a>
-      <div id="main-content" className="max-w-[1440px] mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-12" tabIndex={-1}>
+      <div id="main-content" className="max-w-[1440px] mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-6" tabIndex={-1}>
 
         {err && (
           <div className="rounded-xl border border-[#F0B8B8] bg-[#FCEAEA] px-4 py-3 text-[12px] text-[#D83B3B] flex items-center justify-between">
@@ -169,24 +169,24 @@ export default function MarketsPage() {
         {/* ── Page Header ─────────────────────────────────────────────────── */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
           <div className="min-w-0">
-            <h1 className="text-[22px] sm:text-[24px] font-bold text-[#06101F] leading-tight [text-wrap:balance]">Markets Overview</h1>
-            <p className="text-[12px] text-[#566174] mt-0.5 hidden sm:block">
+            <h1 className="text-[22px] sm:text-[24px] font-bold text-[#111111] leading-tight [text-wrap:balance]">Markets Overview</h1>
+            <p className="text-[12px] text-[#6B6B6B] mt-0.5 hidden sm:block">
               Market context and key drivers that influence valuation decisions.
             </p>
           </div>
           <div className="flex items-center gap-2 sm:pt-0.5 shrink-0">
-            <span className="text-[11px] text-[#8A95A6] hidden md:block">
+            <span className="text-[11px] text-[#6B6B6B] hidden md:block">
               {etDate}, {etTime} ET
             </span>
             {lastFetch > 0 && (
-              <span className="text-[11px] text-[#8A95A6] hidden lg:block">
+              <span className="text-[11px] text-[#6B6B6B] hidden lg:block">
                 · Updated {timeAgo(lastFetch)}
               </span>
             )}
             <button
               onClick={() => fetchAll(true)}
               disabled={refreshing}
-              className="p-2 rounded-lg text-[#8A95A6] hover:text-[#566174] hover:bg-[#F4F3EF] transition-colors disabled:opacity-50 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="p-2 rounded-lg text-[#6B6B6B] hover:text-[#6B6B6B] hover:bg-[#F5F5F5] transition-colors disabled:opacity-50 min-h-[44px] min-w-[44px] flex items-center justify-center"
               title="Refresh"
             >
               <RefreshCw size={13} className={refreshing ? 'motion-safe:animate-spin' : ''} />
@@ -203,12 +203,12 @@ export default function MarketsPage() {
           {STRIP.map(({ label, sym, suffix, rateMode }) => {
             const price = sym?.price ?? null
             const changeCls = rateMode
-              ? (sym?.changePct == null ? 'text-[#8A95A6]' : sym.changePct > 0 ? 'text-[#B56A00]' : sym.changePct < 0 ? 'text-[#2563EB]' : 'text-[#8A95A6]')
+              ? (sym?.changePct == null ? 'text-[#6B6B6B]' : sym.changePct > 0 ? 'text-[#B56A00]' : sym.changePct < 0 ? 'text-[#2563EB]' : 'text-[#6B6B6B]')
               : pctCls(sym?.changePct ?? null)
             const inner = (
               <div className="flex items-center gap-1.5 shrink-0">
-                <span className="text-[10px] text-[#566174] font-medium">{label}</span>
-                <span className="text-[11px] font-semibold text-[#06101F] tabular-nums">
+                <span className="text-[10px] text-[#6B6B6B] font-medium">{label}</span>
+                <span className="text-[11px] font-semibold text-[#111111] tabular-nums">
                   {price != null
                     ? price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                     : '—'
@@ -251,7 +251,7 @@ export default function MarketsPage() {
             title="Market Snapshot"
             subtitle="A quick read on the current regime, performance, and what's moving markets."
             right={lastFetch > 0 ? (
-              <span className="text-[11px] text-[#8A95A6]">Data as of {etTime} ET</span>
+              <span className="text-[11px] text-[#6B6B6B]">Data as of {etTime} ET</span>
             ) : undefined}
           />
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
@@ -323,7 +323,7 @@ export default function MarketsPage() {
             subtitle="Economic releases and earnings that may affect your valuation assumptions."
             right={
               <div className="flex items-center gap-3">
-                <span className="text-[11px] text-[#8A95A6] hidden sm:block">All times in ET</span>
+                <span className="text-[11px] text-[#6B6B6B] hidden sm:block">All times in ET</span>
                 <a
                   href="https://finance.yahoo.com/calendar"
                   target="_blank"
@@ -384,13 +384,13 @@ export default function MarketsPage() {
         )}
 
         {/* ── Disclaimer ───────────────────────────────────────────────────── */}
-        <div className="border-t border-[#E3E1DA] pt-4">
-          <p className="text-[11px] text-[#566174] leading-snug">
+        <div className="border-t border-[#E5E5E5] pt-4">
+          <p className="text-[11px] text-[#6B6B6B] leading-snug">
             Past performance is not indicative of future results. Data is provided for informational purposes only and does not constitute investment advice.
           </p>
         </div>
 
-        <div className="h-4" />
+        <div className="h-2" />
       </div>
     </div>
   )

@@ -16,7 +16,7 @@ interface Props {
 
 // ── Sparkline ──────────────────────────────────────────────────────────────────
 function SparklineSkeleton() {
-  return <div className="h-8 w-full rounded-lg bg-[#F4F3EF] motion-safe:animate-pulse" />
+  return <div className="h-8 w-full rounded-lg bg-[#F5F5F5] motion-safe:animate-pulse" />
 }
 
 function Sparkline({ values, positive }: { values: number[]; positive: boolean }) {
@@ -61,7 +61,7 @@ function chip(label: string, tone: 'green' | 'red' | 'amber' | 'blue' | 'gray') 
     red:   'bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]',
     amber: 'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]',
     blue:  'bg-[#EAF1FF] text-[#2563EB] border-[#93B4F5]',
-    gray:  'bg-[#F4F3EF] text-[#566174] border-[#E3E1DA]',
+    gray:  'bg-[#F5F5F5] text-[#6B6B6B] border-[#E5E5E5]',
   }[tone]
   return (
     <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded-full border whitespace-nowrap', cls)}>
@@ -103,14 +103,14 @@ function pct(v: number | null) {
   return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'
 }
 function equityCls(v: number | null) {
-  if (v == null) return 'text-[#8A95A6]'
-  return v > 0 ? 'text-[#11875D]' : v < 0 ? 'text-[#D83B3B]' : 'text-[#566174]'
+  if (v == null) return 'text-[#6B6B6B]'
+  return v > 0 ? 'text-[#11875D]' : v < 0 ? 'text-[#D83B3B]' : 'text-[#6B6B6B]'
 }
 function rateCls(v: number | null) {
-  if (v == null) return 'text-[#8A95A6]'
+  if (v == null) return 'text-[#6B6B6B]'
   if (v > 0) return 'text-[#B56A00]'
   if (v < 0) return 'text-[#2563EB]'
-  return 'text-[#566174]'
+  return 'text-[#6B6B6B]'
 }
 function fmtPrice(v: number | null, decimals = 2) {
   if (v == null) return '—'
@@ -137,25 +137,25 @@ function IndexCard({ label, value, changePct, sparklineValues, sparkLoading, int
   const changeCls = rateMode ? rateCls(changePct) : equityCls(changePct)
 
   const inner = (
-    <div className="bg-white rounded-xl border border-[#E3E1DA] shadow-card px-3 pt-3 pb-3 flex flex-col h-full transition-all hover:shadow-card-md hover:border-[#CDD1C8] cursor-pointer">
+    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-card px-3 pt-3 pb-3 flex flex-col h-full transition-all hover:shadow-card-md hover:border-[#E5E5E5] cursor-pointer">
       {/* Icon + label */}
       <div className="flex items-center gap-2">
         <div className={cn('w-6 h-6 rounded-lg flex items-center justify-center shrink-0', iconBg)}>
           {icon}
         </div>
-        <p className="text-[11px] font-semibold text-[#566174] leading-tight">{label}</p>
+        <p className="text-[11px] font-semibold text-[#6B6B6B] leading-tight">{label}</p>
       </div>
       {/* Value */}
-      <p className="text-[20px] font-bold tabular-nums text-[#06101F] leading-none mt-2">{value}</p>
+      <p className="text-[20px] font-bold tabular-nums text-[#111111] leading-none mt-2">{value}</p>
       {/* Change + chip */}
       <div className="flex items-center gap-1.5 mt-1">
         <span className={cn('text-[11px] font-semibold tabular-nums', changeCls)}>
           {pct(changePct)}
         </span>
-        <span className="text-[10px] text-[#8A95A6]">Today</span>
+        <span className="text-[10px] text-[#6B6B6B]">Today</span>
         <div className="ml-auto">{interpretation}</div>
       </div>
-      {note && <p className="text-[10px] text-[#8A95A6] mt-0.5">{note}</p>}
+      {note && <p className="text-[10px] text-[#6B6B6B] mt-0.5">{note}</p>}
       {/* Sparkline — pinned to bottom */}
       <div className="mt-auto pt-2.5 h-9 flex items-end">
         {sparkLoading

@@ -23,7 +23,7 @@ const FREE_FEATURES = [
   'Financial health scores (Piotroski, Altman, Beneish)',
   'Risk signals and insider data',
   'News and analyst sentiment',
-  'Save up to 3 analyses',
+  'Save up to 10 analyses',
 ]
 
 const PRO_FEATURES = [

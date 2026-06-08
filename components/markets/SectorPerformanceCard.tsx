@@ -32,10 +32,10 @@ export default function SectorPerformanceCard({ sectors }: Props) {
   const visible = showAll ? sorted : sorted.slice(0, 6)
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E3E1DA] shadow-sm overflow-hidden h-full flex flex-col">
-      <div className="px-4 py-2.5 border-b border-[#E3E1DA]">
-        <span className="text-[10px] font-bold text-[#566174] uppercase tracking-wider">Sector Performance</span>
-        <p className="text-[10px] text-[#8A95A6] mt-0.5">Daily change · S&P 500 sectors</p>
+    <div className="bg-white rounded-2xl border border-[#E5E5E5] shadow-sm overflow-hidden h-full flex flex-col">
+      <div className="px-4 py-2.5 border-b border-[#E5E5E5]">
+        <span className="text-[10px] font-bold text-[#6B6B6B]">Sector Performance</span>
+        <p className="text-[10px] text-[#6B6B6B] mt-0.5">Daily change · S&P 500 sectors</p>
       </div>
 
       <div className="px-4 py-3 space-y-2 flex-1">
@@ -46,9 +46,9 @@ export default function SectorPerformanceCard({ sectors }: Props) {
           const name = SECTOR_NAMES[s.symbol] ?? s.name ?? s.symbol
           return (
             <div key={s.symbol} className="flex items-center gap-2">
-              <span className="text-[10px] text-[#566174] w-[88px] shrink-0 truncate">{name}</span>
+              <span className="text-[10px] text-[#6B6B6B] w-[88px] shrink-0 truncate">{name}</span>
               <div className="flex-1 relative h-3 flex items-center">
-                <div className="absolute inset-0 rounded-full bg-[#F4F3EF]" />
+                <div className="absolute inset-0 rounded-full bg-[#F5F5F5]" />
                 <div className="absolute top-0 bottom-0 left-1/2 w-px bg-[#CDD1C8]" />
                 {up ? (
                   <div
@@ -74,7 +74,7 @@ export default function SectorPerformanceCard({ sectors }: Props) {
       </div>
 
       {sorted.length > 6 && (
-        <div className="px-4 pb-3 border-t border-[#F4F3EF] pt-2">
+        <div className="px-4 pb-3 border-t border-[#E5E5E5] pt-2">
           <button
             onClick={() => setShowAll(v => !v)}
             className="text-[11px] font-semibold text-[#2563EB] hover:text-[#2563EB] transition-colors min-h-[44px] flex items-center"

@@ -19,8 +19,8 @@ function getImportance(ticker: string): 'High' | 'Medium' {
 }
 
 const IMPORTANCE_BADGE: Record<string, string> = {
-  High:   'bg-[#FCEAEA] text-[#D83B3B] border-[#E3E1DA]',
-  Medium: 'bg-[#FFF4DA] text-[#B56A00] border-[#E3E1DA]',
+  High:   'bg-[#FCEAEA] text-[#D83B3B] border-[#E5E5E5]',
+  Medium: 'bg-[#FFF4DA] text-[#B56A00] border-[#E5E5E5]',
 }
 
 function fmtDate(iso: string): string {
@@ -60,11 +60,11 @@ export default function EarningsCalendar() {
   }, {})
 
   return (
-    <div className="bg-white rounded-xl border border-[#E3E1DA] shadow-sm overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-[#E3E1DA] flex items-center gap-2">
-        <TrendingUp size={13} className="text-[#566174]" />
-        <span className="text-[10px] font-bold text-[#566174] uppercase tracking-wider">Earnings Calendar</span>
-        <span className="ml-auto text-[10px] text-[#8A95A6]">S&P 500 · Next 3 weeks</span>
+    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-[#E5E5E5] flex items-center gap-2">
+        <TrendingUp size={13} className="text-[#6B6B6B]" />
+        <span className="text-[10px] font-bold text-[#6B6B6B]">Earnings Calendar</span>
+        <span className="ml-auto text-[10px] text-[#6B6B6B]">S&P 500 · Next 3 weeks</span>
       </div>
 
       {loading ? (
@@ -75,15 +75,15 @@ export default function EarningsCalendar() {
         </div>
       ) : items.length === 0 ? (
         <div className="px-4 py-6 text-center">
-          <p className="text-[12px] font-semibold text-[#566174]">No upcoming earnings</p>
-          <p className="text-[11px] text-[#8A95A6] mt-1">No major S&P 500 earnings in the next 3 weeks.</p>
+          <p className="text-[12px] font-semibold text-[#6B6B6B]">No upcoming earnings</p>
+          <p className="text-[11px] text-[#6B6B6B] mt-1">No major S&P 500 earnings in the next 3 weeks.</p>
         </div>
       ) : (
         <>
           <div className="overflow-x-auto">
           <div style={{ minWidth: '480px' }}>
           {/* Column headers */}
-          <div className="px-4 py-1.5 border-b border-[#E3E1DA] bg-[#F4F3EF]/70 grid gap-2 text-[11px] font-bold uppercase tracking-wider text-[#8A95A6]"
+          <div className="px-4 py-1.5 border-b border-[#E5E5E5] bg-[#F5F5F5]/70 grid gap-2 text-[11px] font-bold text-[#6B6B6B]"
             style={{ gridTemplateColumns: '3.5rem 1fr 4.5rem 4rem auto' }}>
             <span>Ticker</span>
             <span>Company</span>
@@ -96,8 +96,8 @@ export default function EarningsCalendar() {
             {Object.entries(byDate).map(([date, dayItems]) => (
               <div key={date}>
                 {/* Date group header */}
-                <div className="px-4 py-1.5 bg-[#F4F3EF]/50 border-b border-[#E3E1DA]">
-                  <span className="text-[10px] font-bold text-[#566174]">{fmtDate(date)}</span>
+                <div className="px-4 py-1.5 bg-[#F5F5F5]/50 border-b border-[#E5E5E5]">
+                  <span className="text-[10px] font-bold text-[#6B6B6B]">{fmtDate(date)}</span>
                 </div>
                 {dayItems.map((e, i) => {
                   const importance = getImportance(e.ticker)
@@ -112,16 +112,16 @@ export default function EarningsCalendar() {
                         'text-[10px] font-bold px-1.5 py-0.5 rounded text-center font-mono',
                         importance === 'High'
                           ? 'text-[#2563EB] bg-[#EAF1FF] border border-[#93B4F5]'
-                          : 'text-[#566174] bg-[#E3E1DA] border border-[#E3E1DA]'
+                          : 'text-[#6B6B6B] bg-[#E3E1DA] border border-[#E5E5E5]'
                       )}>
                         {e.ticker}
                       </span>
-                      <p className="text-[11.5px] font-semibold text-[#06101F] truncate group-hover:text-[#06101F]">{e.company}</p>
+                      <p className="text-[11.5px] font-semibold text-[#111111] truncate group-hover:text-[#111111]">{e.company}</p>
                       <span className={`inline-flex items-center justify-center text-[10px] font-bold px-2 py-0.5 rounded-full border ${IMPORTANCE_BADGE[importance]}`}>
                         {importance}
                       </span>
-                      <p className="text-[11px] font-semibold text-[#06101F] tabular-nums font-mono text-right">{fmtEPS(e.epsEstimate)}</p>
-                      <ExternalLink size={10} className="text-[#8A95A6] group-hover:text-[#566174] transition-colors" />
+                      <p className="text-[11px] font-semibold text-[#111111] tabular-nums font-mono text-right">{fmtEPS(e.epsEstimate)}</p>
+                      <ExternalLink size={10} className="text-[#6B6B6B] group-hover:text-[#6B6B6B] transition-colors" />
                     </Link>
                   )
                 })}
@@ -134,7 +134,7 @@ export default function EarningsCalendar() {
           {items.length > PREVIEW_COUNT && (
             <button
               onClick={() => setExpanded(x => !x)}
-              className="w-full px-4 py-2.5 min-h-[44px] border-t border-[#E3E1DA] flex items-center justify-center gap-1.5 text-[11px] font-semibold text-[#2563EB] hover:bg-[#EAF1FF]/50 transition-colors"
+              className="w-full px-4 py-2.5 min-h-[44px] border-t border-[#E5E5E5] flex items-center justify-center gap-1.5 text-[11px] font-semibold text-[#2563EB] hover:bg-[#EAF1FF]/50 transition-colors"
             >
               {expanded ? (
                 <><ChevronUp size={13} /> Show fewer</>
@@ -145,7 +145,7 @@ export default function EarningsCalendar() {
           )}
 
           {!expanded && (
-            <div className="px-4 py-2.5 border-t border-[#E3E1DA] flex justify-end">
+            <div className="px-4 py-2.5 border-t border-[#E5E5E5] flex justify-end">
               <a
                 href="https://finance.yahoo.com/calendar/earnings"
                 target="_blank"

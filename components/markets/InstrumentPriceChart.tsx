@@ -47,11 +47,11 @@ function ChartTooltip({ active, payload, currency }: { active?: boolean; payload
   if (!active || !payload?.length) return null
   const d = payload[0]?.payload as HistoryPoint
   return (
-    <div className="bg-white border border-[#E3E1DA] rounded-xl shadow-lg px-3 py-2 text-xs">
-      <div className="text-[#566174] font-mono text-[10px] mb-1">{d.date}</div>
-      <div className="font-bold text-[#06101F] font-mono tabular-nums">{fmtPrice(d.close, currency)}</div>
+    <div className="bg-white border border-[#E5E5E5] rounded-xl shadow-lg px-3 py-2 text-xs">
+      <div className="text-[#6B6B6B] font-mono text-[10px] mb-1">{d.date}</div>
+      <div className="font-bold text-[#111111] font-mono tabular-nums">{fmtPrice(d.close, currency)}</div>
       {d.volume != null && (
-        <div className="text-[#8A95A6] text-[10px] mt-0.5">
+        <div className="text-[#6B6B6B] text-[10px] mt-0.5">
           Vol: {d.volume.toLocaleString('en-US')}
         </div>
       )}
@@ -103,8 +103,8 @@ export default function InstrumentPriceChart({ symbol, currency = 'USD' }: Props
   return (
     <div className="rounded-xl card">
       {/* Header */}
-      <div className="px-4 pt-3 pb-2 border-b border-[#E3E1DA] flex items-center justify-between">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-[#8A95A6] shrink-0">Price Chart</span>
+      <div className="px-4 pt-3 pb-2 border-b border-[#E5E5E5] flex items-center justify-between">
+        <span className="text-[11px] font-boldst text-[#6B6B6B] shrink-0">Price Chart</span>
         <div className="flex gap-1 overflow-x-auto scrollbar-hide ml-2">
           {PERIODS.map(p => (
             <button
@@ -114,7 +114,7 @@ export default function InstrumentPriceChart({ symbol, currency = 'USD' }: Props
                 'px-2 py-2.5 min-h-[44px] text-[11px] font-semibold rounded transition-colors',
                 period === p
                   ? 'bg-olive-100 text-olive-700'
-                  : 'text-[#566174] hover:text-[#06101F] hover:bg-[#E3E1DA]',
+                  : 'text-[#6B6B6B] hover:text-[#111111] hover:bg-[#E3E1DA]',
               )}
             >
               {p}
@@ -139,7 +139,7 @@ export default function InstrumentPriceChart({ symbol, currency = 'USD' }: Props
           </div>
         ) : error || displayData.length === 0 ? (
           <div className="h-full flex items-center justify-center">
-            <p className="text-[12px] text-[#8A95A6]">Chart data unavailable for this period.</p>
+            <p className="text-[12px] text-[#6B6B6B]">Chart data unavailable for this period.</p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">

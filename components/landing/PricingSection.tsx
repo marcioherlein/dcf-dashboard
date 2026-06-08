@@ -10,7 +10,7 @@ const FREE_FEATURES = [
   'Fair value summary',
   'Market-implied expectations',
   'Essential financials',
-  '3 saved analyses',
+  '10 saved analyses',
 ]
 
 const PRO_FEATURES = [
@@ -32,7 +32,7 @@ const PRO_DIFF = [
 ]
 
 export default function PricingSection() {
-  const [annual, setAnnual] = useState(true)
+  const [annual, setAnnual] = useState(false)
 
   const monthlyPrice  = 17
   const annualMonthly = 11.33
@@ -81,7 +81,10 @@ export default function PricingSection() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-[680px] lg:max-w-[860px] mx-auto">
 
           {/* Free */}
-          <div className="rounded-2xl border border-[#E5E5E5] bg-white p-6 flex flex-col shadow-card">
+          <div className="rounded-2xl border border-[#E5E5E5] bg-white p-6 flex flex-col shadow-card relative">
+            <div className="absolute top-4 right-4 rounded-full bg-[#EEF4DD] border border-[#BFD2A1] text-[#5F790B] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1">
+              Beta — free now
+            </div>
             <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#6B6B6B] mb-3">Free</p>
             <div className="flex items-baseline gap-1 mb-1">
               <span className="text-[44px] font-bold text-[#111111] leading-none tabular-nums">$0</span>
@@ -105,11 +108,11 @@ export default function PricingSection() {
           </div>
 
           {/* Pro */}
-          <div className="rounded-2xl border-2 border-[#5F790B] bg-white p-6 flex flex-col relative" style={{ boxShadow: '0 4px 20px rgba(95,121,11,0.14)' }}>
-            <div className="absolute top-4 right-4 rounded-full bg-[#5F790B] text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1">
-              Most popular
+          <div className="rounded-2xl border-2 border-[#E5E5E5] bg-white p-6 flex flex-col relative opacity-80">
+            <div className="absolute top-4 right-4 rounded-full bg-[#F4F3EF] border border-[#E3E1DA] text-[#9B9B9B] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1">
+              Coming soon
             </div>
-            <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#5F790B] mb-3">Pro</p>
+            <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#9B9B9B] mb-3">Pro</p>
             <div className="flex items-baseline gap-1 mb-1">
               <span className="text-[44px] font-bold text-[#111111] leading-none tabular-nums">
                 ${annual ? annualMonthly.toFixed(2) : monthlyPrice}
@@ -121,25 +124,23 @@ export default function PricingSection() {
             )}
             <p className="text-[12px] text-[#6B6B6B] mb-5">For investors who want deeper research.</p>
             <button
-              onClick={() => signIn('google')}
-              className="w-full rounded-md py-3 text-[13.5px] font-bold text-white transition-all hover:-translate-y-px active:scale-95 mb-5 min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-2"
-              style={{ background: '#5F790B', boxShadow: '0 4px 12px rgba(95,121,11,0.22)' }}
+              disabled
+              className="w-full rounded-md py-3 text-[13.5px] font-bold text-[#9B9B9B] mb-5 min-h-[48px] cursor-not-allowed bg-[#F4F3EF] border border-[#E3E1DA]"
             >
-              Start Pro →
+              Coming soon
             </button>
-            <p className="text-center text-[11px] text-[#6B6B6B] mb-4">Cancel anytime.</p>
             <ul className="space-y-2.5 flex-1">
               {PRO_FEATURES.map(f => (
                 <li key={f} className="flex items-start gap-2.5">
-                  <Check size={14} className="text-[#5F790B] shrink-0 mt-0.5" strokeWidth={2.5} />
-                  <span className="text-[13px] text-[#111111] leading-snug">{f}</span>
+                  <Check size={14} className="text-[#C4C4C4] shrink-0 mt-0.5" strokeWidth={2.5} />
+                  <span className="text-[13px] text-[#9B9B9B] leading-snug">{f}</span>
                 </li>
               ))}
             </ul>
           </div>
         </div>
 
-        {/* Pro-only quick-diff strip — helps mobile users see what they get without scanning both cards */}
+        {/* Pro-only quick-diff strip */}
         <div className="mt-5 max-w-[680px] lg:max-w-[860px] mx-auto rounded-xl border border-[#BFD2A1] bg-[#F6FAEA] px-5 py-3.5 flex flex-wrap items-center gap-3">
           <span className="text-[12px] font-bold text-[#5F790B] shrink-0">Pro adds:</span>
           {PRO_DIFF.map(f => (

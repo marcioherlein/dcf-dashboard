@@ -9,14 +9,14 @@ interface Props {
 function sentimentColor(label: SentimentLabel): string {
   if (label === 'Risk-On')      return 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]'
   if (label === 'Constructive') return 'bg-[#EAF1FF] text-[#2563EB] border-[#93B4F5]'
-  if (label === 'Neutral')      return 'bg-[#F4F3EF] text-[#566174] border-[#E3E1DA]'
+  if (label === 'Neutral')      return 'bg-[#F5F5F5] text-[#6B6B6B] border-[#E5E5E5]'
   if (label === 'Cautious')     return 'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]'
   return 'bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]'
 }
 
 function vixColor(vix: number): string {
   if (vix < 15) return 'text-[#11875D]'
-  if (vix < 20) return 'text-[#06101F]'
+  if (vix < 20) return 'text-[#111111]'
   if (vix < 25) return 'text-[#B56A00]'
   if (vix < 35) return 'text-[#D83B3B]'
   return 'text-[#D83B3B]'
@@ -75,17 +75,17 @@ function SentimentGauge({ score }: { score: number }) {
           / 100
         </text>
       </svg>
-      <p className="text-[11px] font-bold uppercase tracking-wider mt-0.5" style={{ color }}>{gaugeLabel(score)}</p>
+      <p className="text-[11px] font-bold mt-0.5" style={{ color }}>{gaugeLabel(score)}</p>
     </div>
   )
 }
 
 function StatBadge({ label, value, valueClass, sub }: { label: string; value: string; valueClass: string; sub?: string }) {
   return (
-    <div className="flex-1 rounded-xl bg-[#F4F3EF] border border-[#E3E1DA] px-3 py-2.5 text-center">
-      <p className="text-[11px] font-bold uppercase tracking-wider text-[#8A95A6] mb-1">{label}</p>
+    <div className="flex-1 rounded-xl bg-[#F5F5F5] border border-[#E5E5E5] px-3 py-2.5 text-center">
+      <p className="text-[11px] font-bold text-[#6B6B6B] mb-1">{label}</p>
       <p className={cn('text-[14px] font-bold tabular-nums leading-none', valueClass)}>{value}</p>
-      {sub && <p className="text-[11px] text-[#8A95A6] mt-0.5">{sub}</p>}
+      {sub && <p className="text-[11px] text-[#6B6B6B] mt-0.5">{sub}</p>}
     </div>
   )
 }
@@ -103,9 +103,9 @@ export default function MarketPulse({ pulse }: Props) {
   })()
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E3E1DA] shadow-sm overflow-hidden h-full">
-      <div className="px-4 py-2.5 border-b border-[#E3E1DA] flex items-center justify-between">
-        <span className="text-[11px] font-bold text-[#566174] uppercase tracking-wider">Market Pulse</span>
+    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden h-full">
+      <div className="px-4 py-2.5 border-b border-[#E5E5E5] flex items-center justify-between">
+        <span className="text-[11px] font-bold text-[#6B6B6B]">Market Pulse</span>
         <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full border', sentimentColor(sentimentLabel))}>
           {sentimentLabel}
         </span>
@@ -129,13 +129,13 @@ export default function MarketPulse({ pulse }: Props) {
           <StatBadge
             label="10Y Yield"
             value={tnxYield.toFixed(2) + '%'}
-            valueClass="text-[#06101F]"
+            valueClass="text-[#111111]"
             sub="Discount Rate"
           />
         </div>
 
-        <div className="w-full rounded-xl bg-[#F4F3EF] border border-[#E3E1DA] px-3 py-2.5">
-          <p className="text-[11px] text-[#566174] leading-snug">{interpretation}</p>
+        <div className="w-full rounded-xl bg-[#F5F5F5] border border-[#E5E5E5] px-3 py-2.5">
+          <p className="text-[11px] text-[#6B6B6B] leading-snug">{interpretation}</p>
         </div>
       </div>
     </div>

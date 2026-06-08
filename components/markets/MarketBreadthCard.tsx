@@ -59,10 +59,10 @@ export default function MarketBreadthCard({ sectors }: Props) {
   }[tone]
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E3E1DA] shadow-sm overflow-hidden h-full flex flex-col">
-      <div className="px-4 py-2.5 border-b border-[#E3E1DA]">
-        <span className="text-[10px] font-bold text-[#566174] uppercase tracking-wider">Market Breadth</span>
-        <p className="text-[10px] text-[#8A95A6] mt-0.5">Advancing vs declining sectors today</p>
+    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden h-full flex flex-col">
+      <div className="px-4 py-2.5 border-b border-[#E5E5E5]">
+        <span className="text-[10px] font-bold text-[#6B6B6B]">Market Breadth</span>
+        <p className="text-[10px] text-[#6B6B6B] mt-0.5">Advancing vs declining sectors today</p>
       </div>
 
       <div className="px-5 py-4 flex-1 flex flex-col gap-4">
@@ -71,13 +71,13 @@ export default function MarketBreadthCard({ sectors }: Props) {
         <div className="grid grid-cols-2 gap-3 text-center">
           <div>
             <p className="text-[28px] font-bold tabular-nums text-[#11875D] leading-none">{advPct}%</p>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#8A95A6] mt-1.5">Advancing</p>
-            <p className="text-[10px] text-[#566174] mt-0.5">{advancing} of {total}</p>
+            <p className="text-[10px] font-bold text-[#6B6B6B] mt-1.5">Advancing</p>
+            <p className="text-[10px] text-[#6B6B6B] mt-0.5">{advancing} of {total}</p>
           </div>
           <div>
             <p className="text-[28px] font-bold tabular-nums text-[#D83B3B] leading-none">{decPct}%</p>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#8A95A6] mt-1.5">Declining</p>
-            <p className="text-[10px] text-[#566174] mt-0.5">{declining} of {total}</p>
+            <p className="text-[10px] font-bold text-[#6B6B6B] mt-1.5">Declining</p>
+            <p className="text-[10px] text-[#6B6B6B] mt-0.5">{declining} of {total}</p>
           </div>
         </div>
 
@@ -88,7 +88,7 @@ export default function MarketBreadthCard({ sectors }: Props) {
             <div className="bg-[#E3E1DA] h-full transition-all"  style={{ width: `${unchPct}%` }} />
             <div className="bg-[#D83B3B] h-full transition-all"    style={{ width: `${decPct}%` }} />
           </div>
-          <p className="text-[10px] text-[#8A95A6]">Unchanged: {unchanged} of {total} ({unchPct}%)</p>
+          <p className="text-[10px] text-[#6B6B6B]">Unchanged: {unchanged} of {total} ({unchPct}%)</p>
         </div>
 
         {/* Health indicator */}
@@ -102,7 +102,7 @@ export default function MarketBreadthCard({ sectors }: Props) {
           {BadgeIcon}
           <div>
             <p className={cn('text-[12px] font-bold leading-tight', badgeTextCls)}>{badge}</p>
-            <p className="text-[11px] text-[#566174] mt-0.5 leading-snug">{text}</p>
+            <p className="text-[11px] text-[#6B6B6B] mt-0.5 leading-snug">{text}</p>
           </div>
         </div>
 

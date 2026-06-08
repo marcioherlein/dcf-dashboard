@@ -14,13 +14,13 @@ function MoverRow({ mover, rank }: { mover: Mover; rank: number }) {
   return (
     <Link
       href={`/stock/${mover.symbol}`}
-      className="flex items-center gap-2.5 px-4 py-2.5 min-h-[44px] hover:bg-[#F4F3EF] transition-colors group"
+      className="flex items-center gap-2.5 px-4 py-2.5 min-h-[44px] hover:bg-[#F5F5F5] transition-colors group"
     >
-      <span className="text-[10px] font-bold text-[#8A95A6] w-3 shrink-0">{rank}</span>
-      <span className="text-[11px] font-bold text-[#2563EB] bg-[#EAF1FF] border border-[#E3E1DA] px-1.5 py-0.5 rounded w-12 text-center shrink-0">
+      <span className="text-[10px] font-bold text-[#6B6B6B] w-3 shrink-0">{rank}</span>
+      <span className="text-[11px] font-bold text-[#2563EB] bg-[#EAF1FF] border border-[#E5E5E5] px-1.5 py-0.5 rounded w-12 text-center shrink-0">
         {mover.symbol}
       </span>
-      <span className="flex-1 text-[11px] font-medium text-[#566174] truncate group-hover:text-[#06101F]">
+      <span className="flex-1 text-[11px] font-medium text-[#6B6B6B] truncate group-hover:text-[#111111]">
         {mover.name}
       </span>
       <div className="flex items-center gap-1 shrink-0">
@@ -57,10 +57,10 @@ export default function TopMoversCard() {
   const movers = tab === 'gainers' ? (data?.gainers ?? []) : (data?.losers ?? [])
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E3E1DA] shadow-sm overflow-hidden h-full flex flex-col">
-      <div className="px-4 py-2.5 border-b border-[#E3E1DA] flex items-center justify-between">
-        <span className="text-[10px] font-bold text-[#566174] uppercase tracking-wider">Top Movers</span>
-        <div className="flex rounded-lg overflow-hidden border border-[#E3E1DA] text-[10px] font-bold">
+    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden h-full flex flex-col">
+      <div className="px-4 py-2.5 border-b border-[#E5E5E5] flex items-center justify-between">
+        <span className="text-[10px] font-bold text-[#6B6B6B]">Top Movers</span>
+        <div className="flex rounded-lg overflow-hidden border border-[#E5E5E5] text-[10px] font-bold">
           {(['gainers', 'losers'] as Tab[]).map(t => (
             <button
               key={t}
@@ -69,7 +69,7 @@ export default function TopMoversCard() {
                 'px-2.5 py-1 min-h-[44px] capitalize transition-colors',
                 tab === t
                   ? t === 'gainers' ? 'bg-[#11875D] text-white' : 'bg-[#D83B3B] text-white'
-                  : 'bg-white text-[#566174] hover:bg-[#F4F3EF]'
+                  : 'bg-white text-[#6B6B6B] hover:bg-[#F5F5F5]'
               )}
             >
               {t}
@@ -86,17 +86,17 @@ export default function TopMoversCard() {
             ))}
           </div>
         ) : movers.length === 0 ? (
-          <div className="px-4 py-6 text-center text-sm text-[#8A95A6]">No data available</div>
+          <div className="px-4 py-6 text-center text-sm text-[#6B6B6B]">No data available</div>
         ) : (
           movers.map((m, i) => <MoverRow key={m.symbol} mover={m} rank={i + 1} />)
         )}
       </div>
 
-      <div className="px-4 py-2.5 border-t border-[#E3E1DA] flex items-center justify-between">
-        <p className="text-[10px] text-[#8A95A6]">Large-cap · click ticker to analyze</p>
+      <div className="px-4 py-2.5 border-t border-[#E5E5E5] flex items-center justify-between">
+        <p className="text-[10px] text-[#6B6B6B]">Large-cap · click ticker to analyze</p>
         <Link
           href="/markets/movers"
-          className="text-[11px] font-semibold text-[#2563EB] hover:text-[#06101F] transition-colors"
+          className="text-[11px] font-semibold text-[#2563EB] hover:text-[#111111] transition-colors"
         >
           View all movers →
         </Link>

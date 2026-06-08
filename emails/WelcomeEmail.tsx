@@ -64,8 +64,8 @@ export default function WelcomeEmail({ name }: Props) {
               'Full DCF model + 5 valuation methods',
               'Bear / Base / Bull fair value scenarios',
               'Financial health scores (Piotroski, Altman, Beneish)',
-              '5 stock analyses per month',
-              '3 saved analyses to your watchlist',
+              '10 stock analyses per month',
+              '10 saved analyses to your watchlist',
             ].map(item => (
               <Text key={item} style={{ fontSize: '14px', color: '#475569', margin: '0 0 6px', paddingLeft: '16px' }}>
                 ✓ {item}

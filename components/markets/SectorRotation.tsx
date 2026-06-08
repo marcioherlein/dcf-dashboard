@@ -25,11 +25,19 @@ export default function SectorRotation({ sectors }: Props) {
   const top3    = sorted.slice(0, 3)
   const bottom3 = sorted.slice(-3).reverse()
 
+  if (data.length === 0) {
+    return (
+      <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden h-full flex items-center justify-center min-h-[200px]">
+        <p className="text-[12px] text-[#6B6B6B]">No sector data available</p>
+      </div>
+    )
+  }
+
   return (
-    <div className="bg-white rounded-xl border border-[#E3E1DA] shadow-sm overflow-hidden h-full">
-      <div className="px-4 py-2.5 border-b border-[#E3E1DA]">
-        <span className="text-[11px] font-bold text-[#566174] uppercase tracking-wider">Sector Rotation</span>
-        <p className="text-[11px] text-[#8A95A6] mt-0.5">Relative strength score vs S&P 500 — last 40 trading days</p>
+    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden h-full">
+      <div className="px-4 py-2.5 border-b border-[#E5E5E5]">
+        <span className="text-[11px] font-bold text-[#6B6B6B]">Sector Rotation</span>
+        <p className="text-[11px] text-[#6B6B6B] mt-0.5">Relative strength score vs S&P 500 — last 40 trading days</p>
       </div>
       <div className="px-4 py-3 grid grid-cols-1 xl:grid-cols-[1fr_auto] gap-4">
         {/* Chart */}
@@ -56,14 +64,14 @@ export default function SectorRotation({ sectors }: Props) {
         {/* Leaders / Laggards */}
         <div className="xl:w-36 flex xl:flex-col gap-3">
           <div className="flex-1 xl:flex-none">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-[#11875D] mb-1.5">Top Leaders</p>
+            <p className="text-[11px] font-bold text-[#11875D] mb-1.5">Top Leaders</p>
             <div className="space-y-1">
               {top3.map((d, i) => (
                 <div key={d.sector} className="flex items-center gap-1.5">
                   <span className="text-[11px] font-bold text-[#11875D] w-3 shrink-0">{i + 1}</span>
                   <span className={cn(
                     'text-[10px] font-semibold truncate flex-1',
-                    d.tone === 'positive' ? 'text-[#11875D]' : 'text-[#566174]'
+                    d.tone === 'positive' ? 'text-[#11875D]' : 'text-[#6B6B6B]'
                   )}>{d.sector}</span>
                   <span className="text-[11px] font-bold tabular-nums text-[#11875D] shrink-0">
                     +{d.momentum.toFixed(2)}
@@ -74,14 +82,14 @@ export default function SectorRotation({ sectors }: Props) {
           </div>
 
           <div className="flex-1 xl:flex-none">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-[#D83B3B] mb-1.5">Top Laggards</p>
+            <p className="text-[11px] font-bold text-[#D83B3B] mb-1.5">Top Laggards</p>
             <div className="space-y-1">
               {bottom3.map((d, i) => (
                 <div key={d.sector} className="flex items-center gap-1.5">
                   <span className="text-[11px] font-bold text-[#D83B3B] w-3 shrink-0">{i + 1}</span>
                   <span className={cn(
                     'text-[10px] font-semibold truncate flex-1',
-                    d.tone === 'negative' ? 'text-[#D83B3B]' : 'text-[#566174]'
+                    d.tone === 'negative' ? 'text-[#D83B3B]' : 'text-[#6B6B6B]'
                   )}>{d.sector}</span>
                   <span className="text-[11px] font-bold tabular-nums text-[#D83B3B] shrink-0">
                     {d.momentum.toFixed(2)}
@@ -92,8 +100,8 @@ export default function SectorRotation({ sectors }: Props) {
           </div>
         </div>
       </div>
-      <div className="px-4 pb-3 border-t border-[#F4F3EF] pt-2">
-        <p className="text-[11px] text-[#8A95A6]">RS score = relative outperformance ratio vs S&P 500. Not a % return.</p>
+      <div className="px-4 pb-3 border-t border-[#E5E5E5] pt-2">
+        <p className="text-[11px] text-[#6B6B6B]">RS score = relative outperformance ratio vs S&P 500. Not a % return.</p>
       </div>
     </div>
   )

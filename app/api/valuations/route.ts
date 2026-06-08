@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { saveValuation } from '@/lib/data/supabaseClient'
 import { createClient } from '@supabase/supabase-js'
 
-const FREE_SAVE_LIMIT = 3
+const FREE_SAVE_LIMIT = 10
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL

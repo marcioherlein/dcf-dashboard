@@ -25,13 +25,13 @@ const COLORS = ['#ec4899', '#14b8a6', '#f97316', '#84cc16', '#06b6d4', '#a855f7'
 function ChartTooltip({ active, payload, label, allSeries }: any) {
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-white/97 border border-[#E3E1DA] rounded-xl shadow-lg px-3 py-2.5 text-xs min-w-[160px]">
-      <div className="text-[#566174] font-mono mb-1.5 text-[10px]">{label}</div>
+    <div className="bg-white/97 border border-[#E5E5E5] rounded-xl shadow-lg px-3 py-2.5 text-xs min-w-[160px]">
+      <div className="text-[#6B6B6B] font-mono mb-1.5 text-[10px]">{label}</div>
       {payload.map((p: { name: string; value: number; color: string }) => (
         <div key={p.name} className="flex items-center justify-between gap-4 mb-0.5">
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full shrink-0" style={{ background: p.color }} />
-            <span className="text-[#566174]">{allSeries.find((s: { symbol: string }) => s.symbol === p.name)?.label ?? p.name}</span>
+            <span className="text-[#6B6B6B]">{allSeries.find((s: { symbol: string }) => s.symbol === p.name)?.label ?? p.name}</span>
           </div>
           <span className={cn('font-mono font-bold', p.value >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
             {p.value >= 0 ? '+' : ''}{p.value?.toFixed(2)}%
@@ -120,11 +120,11 @@ export default function NormalizedPerfChart() {
   const lastPoint = displayData[displayData.length - 1]
 
   return (
-    <div className="bg-white rounded-xl border border-[#E3E1DA] shadow-sm overflow-hidden flex flex-col flex-1">
+    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden flex flex-col flex-1">
       {/* Header */}
-      <div className="px-4 pt-3 pb-2 border-b border-[#E3E1DA]">
+      <div className="px-4 pt-3 pb-2 border-b border-[#E5E5E5]">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[11px] font-bold text-[#566174] uppercase tracking-wider shrink-0">Normalized Performance</span>
+          <span className="text-[11px] font-bold text-[#6B6B6B] shrink-0">Normalized Performance</span>
           <div className="flex gap-1 overflow-x-auto scrollbar-hide ml-2">
             {PERIODS.map(p => (
               <button
@@ -132,7 +132,7 @@ export default function NormalizedPerfChart() {
                 onClick={() => setPeriod(p)}
                 className={cn(
                   'px-2 py-0.5 min-h-[44px] flex items-center text-[11px] font-semibold rounded transition-colors',
-                  period === p ? 'bg-olive-700 text-white' : 'text-[#566174] hover:text-[#06101F] hover:bg-[#E3E1DA]'
+                  period === p ? 'bg-olive-700 text-white' : 'text-[#6B6B6B] hover:text-[#111111] hover:bg-[#E3E1DA]'
                 )}
               >
                 {p}
@@ -154,7 +154,7 @@ export default function NormalizedPerfChart() {
                     'flex items-center gap-1.5 px-2 py-0.5 min-h-[44px] rounded-full text-[11px] font-semibold border transition-all',
                     isOn
                       ? 'border-transparent text-white'
-                      : 'border-[#E3E1DA] bg-transparent text-[#8A95A6] opacity-50'
+                      : 'border-[#E5E5E5] bg-transparent text-[#6B6B6B] opacity-50'
                   )}
                   style={isOn ? { background: s.color } : {}}
                 >
@@ -187,15 +187,15 @@ export default function NormalizedPerfChart() {
                 value={addValue}
                 onChange={e => setAddValue(e.target.value.toUpperCase())}
                 placeholder="AAPL"
-                className="w-20 px-2 py-0.5 text-[16px] rounded-full border border-[#93B4F5] bg-white text-[#06101F] outline-none focus:border-blue-500"
+                className="w-20 px-2 py-0.5 text-[16px] rounded-full border border-[#93B4F5] bg-white text-[#111111] outline-none focus:border-blue-500"
               />
               <button type="submit" className="text-[11px] font-semibold text-olive-700 hover:text-[#2563EB] min-h-[44px]">Add</button>
-              <button type="button" onClick={() => setShowAddInput(false)} className="text-[11px] text-[#8A95A6] hover:text-[#566174] min-h-[44px]">✕</button>
+              <button type="button" onClick={() => setShowAddInput(false)} className="text-[11px] text-[#6B6B6B] hover:text-[#6B6B6B] min-h-[44px]">✕</button>
             </form>
           ) : (
             <button
               onClick={() => setShowAddInput(true)}
-              className="flex items-center gap-1 px-2 py-0.5 min-h-[44px] rounded-full text-[11px] font-semibold border border-dashed border-[#CDD1C8] text-[#8A95A6] hover:border-[#93B4F5] hover:text-[#2563EB] transition-colors"
+              className="flex items-center gap-1 px-2 py-0.5 min-h-[44px] rounded-full text-[11px] font-semibold border border-dashed border-[#E5E5E5] text-[#6B6B6B] hover:border-[#93B4F5] hover:text-[#2563EB] transition-colors"
             >
               <Plus size={10} /> Add
             </button>

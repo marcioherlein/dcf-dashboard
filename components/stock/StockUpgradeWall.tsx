@@ -19,7 +19,7 @@ interface Props {
   viewCount: number
 }
 
-const LIMIT = 3
+const LIMIT = 10
 
 const PRO_HIGHLIGHTS = [
   'Unlimited analyses — no monthly cap',
