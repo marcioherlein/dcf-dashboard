@@ -117,7 +117,7 @@ function ValueLabel(props: any) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function FCFChartCard({ statementsData, currency = 'USD' }: Props) {
+export default function FCFChartCard({ statementsData, currency: _currency = 'USD' }: Props) {
   const [period, setPeriod] = useState<PeriodTab>('Y')
 
   const points = useMemo<ChartPoint[]>(() => {

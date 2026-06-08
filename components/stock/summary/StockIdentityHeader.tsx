@@ -183,7 +183,7 @@ export default function StockIdentityHeader({
   roic,
   beta,
   dividendYield,
-  fcfMargin,
+  fcfMargin: _fcfMargin,
   high52,
   low52,
 }: Props) {

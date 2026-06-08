@@ -135,7 +135,7 @@ function RatioRow({ name, actual, median, isLast }: RatioRowProps) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function ValuationRatiosCard({ estimates, pegRatio, peRatio, sector }: Props) {
+export default function ValuationRatiosCard({ estimates, pegRatio, peRatio: _peRatio, sector }: Props) {
   const applicable = (estimates ?? []).filter((e) => e.applicable)
 
   // Derive a display benchmark source from whichever estimate is available first
