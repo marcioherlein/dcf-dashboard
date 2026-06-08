@@ -151,7 +151,7 @@ function InfoIcon() {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function InvestmentVerdict({
-  ticker,
+  ticker: _ticker,
   upsidePct,
   scores,
   analystRecommendation,
