@@ -5,6 +5,7 @@ import TopBar from './TopBar'
 import BottomNav from './BottomNav'
 import Sidebar from './Sidebar'
 import { StockNavProvider } from '@/contexts/StockNavContext'
+import FeedbackButton from '@/components/ui/FeedbackButton'
 
 function AppShellInner({ children }: { children: React.ReactNode }) {
   return (
@@ -33,6 +34,7 @@ export default function AppShellClient({ children }: { children: React.ReactNode
         <Sidebar />
         <AppShellInner>{children}</AppShellInner>
         <BottomNav />
+        <FeedbackButton />
       </div>
     </StockNavProvider>
   )

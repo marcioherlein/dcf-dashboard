@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { Search, Users, BarChart3, Mail, ChevronRight, CheckCircle, AlertCircle } from 'lucide-react'
+import { Search, Users, BarChart3, Mail, ChevronRight, CheckCircle, AlertCircle, MessageSquare } from 'lucide-react'
 
 const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? 'marcioherlein@gmail.com')
   .split(',').map(e => e.trim())
@@ -72,12 +72,13 @@ function TableSkeleton({ rows = 8, cols = 5 }: { rows?: number; cols?: number })
   )
 }
 
-type Tab = 'users' | 'analytics' | 'broadcast'
+type Tab = 'users' | 'analytics' | 'broadcast' | 'feedback'
 
 const TABS: { id: Tab; label: string; Icon: React.ElementType }[] = [
-  { id: 'users',     label: 'Users',     Icon: Users     },
-  { id: 'analytics', label: 'Analytics', Icon: BarChart3 },
-  { id: 'broadcast', label: 'Broadcast', Icon: Mail      },
+  { id: 'users',     label: 'Users',     Icon: Users        },
+  { id: 'analytics', label: 'Analytics', Icon: BarChart3    },
+  { id: 'broadcast', label: 'Broadcast', Icon: Mail         },
+  { id: 'feedback',  label: 'Feedback',  Icon: MessageSquare },
 ]
 
 // ── Shared input class ────────────────────────────────────────────────────────
@@ -86,6 +87,14 @@ const INPUT_CLS =
   'placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#5F790B]/20 ' +
   'focus:border-[#5F790B] transition-colors'
 
+interface FeedbackItem {
+  id: string
+  user_email: string | null
+  message: string
+  page: string | null
+  created_at: string
+}
+
 export default function AdminPage() {
   const { data: session, status } = useSession()
   const [tab, setTab]             = useState<Tab>('users')
@@ -93,6 +102,7 @@ export default function AdminPage() {
   const [stats, setStats]         = useState<Stats | null>(null)
   const [loading, setLoading]     = useState(true)
   const [search, setSearch]       = useState('')
+  const [feedbackItems, setFeedbackItems] = useState<FeedbackItem[]>([])
 
   const [subject, setSubject]                 = useState('')
   const [message, setMessage]                 = useState('')
@@ -108,9 +118,11 @@ export default function AdminPage() {
     Promise.all([
       fetch('/api/admin/users').then(r => r.json()),
       fetch('/api/admin/stats').then(r => r.json()),
-    ]).then(([u, s]) => {
+      fetch('/api/admin/feedback').then(r => r.json()),
+    ]).then(([u, s, f]) => {
       setUsers(Array.isArray(u) ? u : [])
       setStats(s?.totalUsers !== undefined ? s : null)
+      setFeedbackItems(Array.isArray(f) ? f : [])
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [isAdmin])
@@ -505,6 +517,43 @@ export default function AdminPage() {
               Review &amp; send
               <ChevronRight size={14} />
             </button>
+          )}
+        </div>
+      )}
+
+      {/* ── FEEDBACK TAB ────────────────────────────────────────────────── */}
+      {tab === 'feedback' && (
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm text-[#6B6B6B]">{feedbackItems.length} response{feedbackItems.length !== 1 ? 's' : ''}</p>
+          </div>
+          {feedbackItems.length === 0 ? (
+            <div className="rounded-xl border border-[#E5E5E5] px-6 py-12 text-center text-sm text-[#9B9B9B]">
+              No feedback yet. Keep shipping!
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {feedbackItems.map(item => (
+                <div key={item.id} className="rounded-xl border border-[#E5E5E5] bg-white px-5 py-4">
+                  <div className="flex items-start justify-between gap-4 mb-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-[13px] font-medium text-[#111111] truncate">
+                        {item.user_email ?? 'Anonymous'}
+                      </span>
+                      {item.page && (
+                        <span className="shrink-0 text-[11px] text-[#9B9B9B] bg-[#F4F3EF] border border-[#E5E5E5] rounded-full px-2 py-0.5 font-mono">
+                          {item.page}
+                        </span>
+                      )}
+                    </div>
+                    <span className="shrink-0 text-[11px] text-[#9B9B9B] whitespace-nowrap">
+                      {relativeTime(item.created_at)}
+                    </span>
+                  </div>
+                  <p className="text-[13px] text-[#333333] leading-relaxed whitespace-pre-wrap">{item.message}</p>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       )}
