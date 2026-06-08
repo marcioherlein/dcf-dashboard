@@ -10,19 +10,19 @@ const STEPS = [
     n: '1',
     Icon: Search,
     title: 'Search a ticker',
-    body: 'Find any public company in seconds.',
+    body: 'Type a ticker — data loads immediately.',
   },
   {
     n: '2',
     Icon: TrendingUp,
     title: 'Review fair value & market expectations',
-    body: "See what has to be true at today's price.",
+    body: "Review fair value, upside, and what growth the price requires.",
   },
   {
     n: '3',
     Icon: SlidersHorizontal,
     title: 'Stress-test the assumptions',
-    body: 'Adjust key drivers and explore different scenarios.',
+    body: 'Change growth and margin assumptions to test your own thesis.',
   },
 ]
 
@@ -43,9 +43,9 @@ export default function HowItWorksSection() {
         {/* Header */}
         <motion.div
           className="mb-10 sm:mb-14"
-          initial={reduced ? {} : { opacity: 0, y: 16 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.55, ease: EASE }}
+          initial={reduced ? {} : { opacity: 0, x: -20 }}
+          animate={inView ? { opacity: 1, x: 0 } : {}}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         >
           <h2 className="text-[24px] sm:text-[32px] font-bold text-[#111111] leading-tight" style={{ letterSpacing: '-0.025em' }}>
             A first-pass valuation in seconds.

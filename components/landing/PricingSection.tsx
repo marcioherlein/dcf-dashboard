@@ -53,7 +53,7 @@ export default function PricingSection() {
             <button
               onClick={() => setAnnual(false)}
               className={cn(
-                'rounded-full px-5 py-2 text-[13.5px] font-semibold transition-colors min-h-[44px]',
+                'rounded-full px-5 py-2 text-[13.5px] font-semibold transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-2',
                 !annual ? 'bg-[#5F790B] text-white' : 'text-[#6B6B6B] hover:text-[#111111]',
               )}
             >
@@ -62,7 +62,7 @@ export default function PricingSection() {
             <button
               onClick={() => setAnnual(true)}
               className={cn(
-                'rounded-full px-5 py-2 text-[13.5px] font-semibold transition-colors flex items-center gap-2 min-h-[44px]',
+                'rounded-full px-5 py-2 text-[13.5px] font-semibold transition-colors flex items-center gap-2 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-2',
                 annual ? 'bg-[#5F790B] text-white' : 'text-[#6B6B6B] hover:text-[#111111]',
               )}
             >
@@ -78,7 +78,7 @@ export default function PricingSection() {
         </div>
 
         {/* Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-[680px] mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-[680px] lg:max-w-[860px] mx-auto">
 
           {/* Free */}
           <div className="rounded-2xl border border-[#E5E5E5] bg-white p-6 flex flex-col shadow-card">
@@ -90,7 +90,7 @@ export default function PricingSection() {
             <p className="text-[12px] text-[#6B6B6B] mb-5">No credit card required. Free plan never expires.</p>
             <button
               onClick={() => signIn('google')}
-              className="w-full rounded-md border border-[#C8C8C8] py-3 text-[13.5px] font-semibold text-[#111111] hover:bg-[#F6FAEA] hover:border-[#5F790B] transition-colors mb-5 min-h-[48px]"
+              className="w-full rounded-md border border-[#C8C8C8] py-3 text-[13.5px] font-semibold text-[#111111] hover:bg-[#F6FAEA] hover:border-[#5F790B] transition-colors mb-5 min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-2"
             >
               Get started for free
             </button>
@@ -122,7 +122,7 @@ export default function PricingSection() {
             <p className="text-[12px] text-[#6B6B6B] mb-5">For investors who want deeper research.</p>
             <button
               onClick={() => signIn('google')}
-              className="w-full rounded-md py-3 text-[13.5px] font-bold text-white transition-all hover:-translate-y-px active:scale-95 mb-5 min-h-[48px]"
+              className="w-full rounded-md py-3 text-[13.5px] font-bold text-white transition-all hover:-translate-y-px active:scale-95 mb-5 min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-2"
               style={{ background: '#5F790B', boxShadow: '0 4px 12px rgba(95,121,11,0.22)' }}
             >
               Start Pro →
@@ -140,7 +140,7 @@ export default function PricingSection() {
         </div>
 
         {/* Pro-only quick-diff strip — helps mobile users see what they get without scanning both cards */}
-        <div className="mt-5 max-w-[680px] mx-auto rounded-xl border border-[#BFD2A1] bg-[#F6FAEA] px-5 py-3.5 flex flex-wrap items-center gap-3">
+        <div className="mt-5 max-w-[680px] lg:max-w-[860px] mx-auto rounded-xl border border-[#BFD2A1] bg-[#F6FAEA] px-5 py-3.5 flex flex-wrap items-center gap-3">
           <span className="text-[12px] font-bold text-[#5F790B] shrink-0">Pro adds:</span>
           {PRO_DIFF.map(f => (
             <span key={f} className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#111111] bg-white border border-[#BFD2A1] rounded-full px-3 py-1">

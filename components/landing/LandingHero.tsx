@@ -52,7 +52,7 @@ function LiveTabIndicator({ activeTab }: { activeTab: number }) {
         return (
           <span
             key={t}
-            className="relative text-[11px] py-2.5 px-3 font-medium transition-colors duration-300"
+            className="relative text-[11px] py-2.5 px-2 font-medium transition-colors duration-300"
             style={{ color: active ? '#111111' : '#9B9B9B' }}
           >
             {t}
@@ -160,6 +160,12 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
 
   return (
     <BrowserChrome>
+      {/* Mobile height cap: ~340px with fade-out peek effect; full height on sm+ */}
+      <div className="relative mock-card-cap">
+        <style>{`
+          .mock-card-cap { overflow: hidden; max-height: 340px; }
+          @media (min-width: 640px) { .mock-card-cap { overflow: visible; max-height: none; } }
+        `}</style>
       {/* App top bar */}
       <div
         className="flex items-center justify-between px-4"
@@ -396,7 +402,76 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
         </motion.div>
 
       </div>
+      {/* Fade mask on mobile only — implies more content below */}
+      <div
+        className="sm:hidden pointer-events-none absolute bottom-0 left-0 right-0"
+        style={{ height: '64px', background: 'linear-gradient(to bottom, transparent, #FFFFFF)' }}
+        aria-hidden="true"
+      />
+      </div>
     </BrowserChrome>
+  )
+}
+
+// ── Animated financial background ────────────────────────────────────────────
+function HeroBackground({ reduced }: { reduced: boolean | null }) {
+  const animStyle = reduced
+    ? {}
+    : {
+        animation: 'chartDrift 7s ease-in-out infinite alternate',
+        willChange: 'transform',
+        transform: 'translateZ(0)',
+      }
+
+  return (
+    <div
+      aria-hidden="true"
+      className="absolute inset-0 pointer-events-none overflow-hidden"
+      style={{ zIndex: 0 }}
+    >
+      <style>{`
+        @keyframes chartDrift {
+          0%   { transform: translateY(0px); }
+          100% { transform: translateY(-12px); }
+        }
+      `}</style>
+      <svg width="100%" height="100%" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Horizontal grid lines at 20%, 40%, 60%, 80% */}
+        <line x1="0" y1="20%" x2="100%" y2="20%" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
+        <line x1="0" y1="40%" x2="100%" y2="40%" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
+        <line x1="0" y1="60%" x2="100%" y2="60%" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
+        <line x1="0" y1="80%" x2="100%" y2="80%" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
+
+        {/* Vertical tick marks every ~10% of width */}
+        {[10, 20, 30, 40, 50, 60, 70, 80, 90].map((x) => (
+          <line
+            key={x}
+            x1={`${x}%`} y1="0"
+            x2={`${x}%`} y2="100%"
+            stroke="rgba(255,255,255,0.04)"
+            strokeWidth="0.5"
+          />
+        ))}
+
+        {/* Price lines — wrapped in a group so animation applies to both */}
+        <g style={animStyle}>
+          {/* Primary olive price line — slow-rising curved path */}
+          <path
+            d="M -5% 85% C 15% 78%, 30% 65%, 50% 52% C 65% 42%, 78% 32%, 105% 18%"
+            stroke="rgba(95,121,11,0.22)"
+            strokeWidth="1.5"
+            fill="none"
+          />
+          {/* Secondary white price line */}
+          <path
+            d="M -5% 92% C 10% 85%, 28% 76%, 48% 68% C 62% 62%, 80% 55%, 105% 44%"
+            stroke="rgba(255,255,255,0.06)"
+            strokeWidth="1"
+            fill="none"
+          />
+        </g>
+      </svg>
+    </div>
   )
 }
 
@@ -425,10 +500,13 @@ export default function LandingHero() {
       className="overflow-x-hidden relative"
       style={{
         paddingTop: 'max(72px, calc(60px + 2vh))',
-        paddingBottom: 'clamp(40px, 5vh, 80px)',
+        paddingBottom: 'clamp(52px, 6vh, 80px)',
         background: '#000000',
       }}
     >
+      {/* Animated financial chart background */}
+      <HeroBackground reduced={reduced} />
+
       {/* Subtle radial olive aurora — behind content */}
       <div
         aria-hidden="true"
@@ -462,7 +540,7 @@ export default function LandingHero() {
                 transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
               />
               <span className="text-[12px] font-semibold text-[#7C9A19]">
-                Institutional-quality valuation tools for individual investors
+                DCF-grade analysis tools for individual investors
               </span>
             </motion.div>
 
@@ -482,6 +560,7 @@ export default function LandingHero() {
                   style={{
                     fontSize: 'clamp(32px, 9.5vw, 60px)',
                     color: plain ? '#FFFFFF' : '#7C9A19',
+                    textWrap: 'balance',
                   }}
                 >
                   {text}
@@ -497,7 +576,7 @@ export default function LandingHero() {
               className="text-[14px] sm:text-[16px] leading-relaxed mb-6"
               style={{ maxWidth: '440px', color: 'rgba(255,255,255,0.72)' }}
             >
-              insic computes a fair value estimate for any stock and shows you what growth rate the current price implies — so you can judge whether the market is right before you commit capital.
+              insic computes a fair value estimate for any stock and shows you what growth rate the current price implies. You decide whether the market is right before you commit capital.
             </motion.p>
 
             {/* CTAs */}
@@ -568,7 +647,7 @@ export default function LandingHero() {
             initial={reduced ? {} : { opacity: 0, x: 28, y: 6 }}
             animate={{ opacity: 1, x: 0, y: 0 }}
             transition={{ type: 'spring', stiffness: 55, damping: 20, delay: 0.2 }}
-            className="w-full max-w-[420px] mx-auto lg:mx-0 lg:max-w-none"
+            className="w-full max-w-[360px] sm:max-w-[420px] mx-auto lg:mx-0 lg:max-w-[500px] lg:ml-auto"
           >
             <ProductMockCard inView={cardInView} reduced={reduced} />
           </motion.div>

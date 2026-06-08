@@ -5,13 +5,14 @@ import { Eye, LayoutGrid, Database, TrendingUp } from 'lucide-react'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
-const FEATURES = [
+// Primary features — elevated treatment, larger card, expanded description
+const PRIMARY = [
   {
     Icon: Eye,
     iconColor: '#5F790B',
     iconBg: '#EEF4DD',
     title: 'Transparent assumptions',
-    body: 'See every driver that impacts value.',
+    body: 'Every driver that affects fair value — growth rate, WACC, terminal margins — is visible and editable. No parameter hidden behind a paywall or buried in a black box.',
     chips: ['Growth rate', 'WACC', 'Margins'],
     chipStyle: { bg: '#EEF4DD', text: '#5F790B', border: '#BFD2A1' },
   },
@@ -20,27 +21,27 @@ const FEATURES = [
     iconColor: '#5F790B',
     iconBg: '#EEF4DD',
     title: 'Multiple valuation methods',
-    body: 'DCF, Reverse DCF, and multiples working together.',
+    body: 'DCF, Reverse DCF, and multiples work together in the same view. Compare outputs side-by-side and understand why they diverge.',
     chips: ['DCF', 'Reverse DCF', 'Multiples'],
     chipStyle: { bg: '#EEF4DD', text: '#5F790B', border: '#BFD2A1' },
   },
+]
+
+// Supporting features — compact list treatment
+const SECONDARY = [
   {
     Icon: Database,
     iconColor: '#6B6B6B',
-    iconBg: '#FFFFFF',
+    iconBg: '#F0F0F0',
     title: 'Public data sources',
-    body: 'Financials and estimates from trusted providers.',
-    chips: ['FRED', 'Yahoo Finance', 'SEC'],
-    chipStyle: { bg: '#F5F5F5', text: '#6B6B6B', border: '#E5E5E5' },
+    detail: 'FRED · Yahoo Finance · SEC',
   },
   {
     Icon: TrendingUp,
     iconColor: '#B56A00',
     iconBg: '#FFF4DA',
     title: 'Sensitivity & scenarios',
-    body: 'See how outcomes change when assumptions change.',
-    chips: ['Bear', 'Base', 'Bull'],
-    chipStyle: { bg: '#FFF4DA', text: '#B56A00', border: '#F3D391' },
+    detail: 'Bear · Base · Bull',
   },
 ]
 
@@ -53,12 +54,12 @@ export default function TransparencySection() {
     <section ref={ref} className="overflow-x-hidden" style={{ background: '#F5F5F5', borderBottom: '1px solid #E5E5E5' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-14 sm:py-20">
 
-        {/* Header — scale zoom, matches the original pattern */}
+        {/* Header */}
         <motion.div
           className="text-center mb-10 sm:mb-14"
-          initial={reduced ? {} : { opacity: 0, scale: 0.93, y: 18 }}
-          animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
-          transition={{ duration: 0.65, ease: EASE }}
+          initial={reduced ? {} : { opacity: 0, scale: 0.94 }}
+          animate={inView ? { opacity: 1, scale: 1 } : {}}
+          transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
         >
           <h2
             className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] text-[#111111]"
@@ -72,40 +73,40 @@ export default function TransparencySection() {
           </p>
         </motion.div>
 
-        {/* 2×2 card grid — horizontal scroll on mobile, stagger reveal on desktop */}
-        <div className="-mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto snap-x snap-mandatory pb-4 sm:pb-0 sm:overflow-visible">
-          <div className="flex gap-4 w-max sm:w-auto sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-5">
-            {FEATURES.map(({ Icon, iconColor, iconBg, title, body, chips, chipStyle }, i) => (
+        {/* Primary tier — 2 large cards, side by side */}
+        <div className="-mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto snap-x snap-mandatory pb-4 sm:pb-0 sm:overflow-visible mb-4 sm:mb-5">
+          <div className="flex gap-4 w-max sm:w-auto sm:grid sm:grid-cols-2 sm:gap-5">
+            {PRIMARY.map(({ Icon, iconColor, iconBg, title, body, chips, chipStyle }, i) => (
               <motion.div
                 key={title}
-                initial={reduced ? {} : { opacity: 0, scale: 0.94 }}
-                animate={inView ? { opacity: 1, scale: 1 } : {}}
+                initial={reduced ? {} : { opacity: 0, y: 20 }}
+                animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.5, ease: [0.34, 1, 0.64, 1], delay: 0.1 + i * 0.08 }}
                 whileHover={reduced ? {} : { y: -3, boxShadow: '0 12px 32px rgba(0,0,0,0.09)' }}
-                className="snap-start flex flex-col rounded-2xl bg-white border border-[#C8C8C8] p-6 transition-shadow w-[72vw] max-w-[280px] sm:w-auto sm:max-w-none shadow-card"
+                className="snap-start flex flex-col rounded-2xl bg-white border border-[#C8C8C8] p-7 transition-shadow w-[80vw] max-w-[340px] sm:w-auto sm:max-w-none shadow-card"
               >
                 {/* Icon */}
                 <div
                   className="flex items-center justify-center rounded-md mb-5 shrink-0"
-                  style={{ width: '42px', height: '42px', background: iconBg }}
+                  style={{ width: '44px', height: '44px', background: iconBg }}
                   aria-hidden="true"
                 >
-                  <Icon size={18} color={iconColor} strokeWidth={1.8} />
+                  <Icon size={20} color={iconColor} strokeWidth={1.8} />
                 </div>
 
-                <h3 className="text-[15px] font-bold text-[#111111] mb-2 leading-snug" style={{ letterSpacing: '-0.01em' }}>
+                <h3 className="text-[17px] font-bold text-[#111111] mb-3 leading-snug" style={{ letterSpacing: '-0.02em' }}>
                   {title}
                 </h3>
-                <p className="text-[13px] text-[#6B6B6B] leading-relaxed mb-4 flex-1">
+                <p className="text-[14px] text-[#6B6B6B] leading-relaxed mb-5 flex-1">
                   {body}
                 </p>
 
                 {/* Chips */}
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
                   {chips.map((chip) => (
                     <span
                       key={chip}
-                      className="rounded-full border px-2.5 py-0.5 text-[11px] font-semibold"
+                      className="rounded-full border px-3 py-1 text-[12px] font-semibold"
                       style={{ background: chipStyle.bg, color: chipStyle.text, borderColor: chipStyle.border }}
                     >
                       {chip}
@@ -116,6 +117,36 @@ export default function TransparencySection() {
             ))}
           </div>
         </div>
+
+        {/* Secondary tier — compact row list */}
+        <div className="grid sm:grid-cols-2 gap-3">
+          {SECONDARY.map(({ Icon, iconColor, iconBg, title, detail }, i) => (
+            <motion.div
+              key={title}
+              initial={reduced ? {} : { opacity: 0, y: 12 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.4, ease: EASE, delay: 0.3 + i * 0.07 }}
+              className="flex items-center gap-4 rounded-xl bg-white border border-[#E5E5E5] px-5 py-4"
+            >
+              <div
+                className="flex items-center justify-center rounded-md shrink-0"
+                style={{ width: '36px', height: '36px', background: iconBg }}
+                aria-hidden="true"
+              >
+                <Icon size={16} color={iconColor} strokeWidth={1.8} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[13px] font-bold text-[#111111] leading-snug" style={{ letterSpacing: '-0.01em' }}>
+                  {title}
+                </p>
+                <p className="text-[12px] text-[#9B9B9B] mt-0.5 leading-none">
+                  {detail}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
       </div>
     </section>
   )

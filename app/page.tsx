@@ -2,6 +2,7 @@ import LandingNavbar from '@/components/landing/LandingNavbar'
 import LandingHero from '@/components/landing/LandingHero'
 import HowItWorksSection from '@/components/landing/HowItWorksSection'
 import MarketTeaserSection from '@/components/landing/MarketTeaserSection'
+import ReverseDCFSection from '@/components/landing/ReverseDCFSection'
 import TestimonialsSection from '@/components/landing/TestimonialsSection'
 import TransparencySection from '@/components/landing/TransparencySection'
 import PricingSection from '@/components/landing/PricingSection'
@@ -19,6 +20,8 @@ export default function LandingPage() {
         <HowItWorksSection />
         {/* Off-white — data demonstration */}
         <MarketTeaserSection />
+        {/* Off-white — reverse DCF deepens data demo before social proof */}
+        <ReverseDCFSection />
         {/* White — testimonials break the off-white run */}
         <TestimonialsSection />
         {/* Off-white structural sections — true alternation */}

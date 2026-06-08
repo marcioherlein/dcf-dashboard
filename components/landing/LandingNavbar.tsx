@@ -28,9 +28,10 @@ export default function LandingNavbar() {
     <>
       {/* ── Floating navbar ───────────────────────────────────────────────── */}
       <header className="fixed top-0 left-0 right-0 z-50 px-3 sm:px-5 pointer-events-none" style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top, 0px))' }}>
+        <style>{`:root { --navbar-height: 3.5rem; } @media (min-width: 640px) { :root { --navbar-height: 4.5rem; } }`}</style>
         <div className="mx-auto pointer-events-auto" style={{ maxWidth: '1280px' }}>
           <div
-            className="grid items-center h-[72px] px-6 sm:px-8 rounded-2xl"
+            className="grid items-center h-14 sm:h-[72px] px-4 sm:px-6 rounded-2xl"
             style={{
               gridTemplateColumns: '1fr auto 1fr',
               background: 'rgba(255,255,255,0.97)',
@@ -115,7 +116,7 @@ export default function LandingNavbar() {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="fixed left-3 right-3 z-40 lg:hidden rounded-2xl overflow-hidden"
-            style={{ top: 'calc(5.5rem + env(safe-area-inset-top, 0px))', background: 'rgba(255,255,255,0.98)', border: '1px solid #E5E5E5', boxShadow: '0 16px 48px rgba(0,0,0,0.14), 0 4px 12px rgba(0,0,0,0.07)' }}
+            style={{ top: 'calc(var(--navbar-height) + 0.75rem + env(safe-area-inset-top, 0px))', background: 'rgba(255,255,255,0.98)', border: '1px solid #E5E5E5', boxShadow: '0 16px 48px rgba(0,0,0,0.14), 0 4px 12px rgba(0,0,0,0.07)' }}
           >
             <nav className="flex flex-col p-3 gap-0.5">
               {NAV_LINKS.map(link => (

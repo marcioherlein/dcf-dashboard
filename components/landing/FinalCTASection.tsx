@@ -97,13 +97,20 @@ export default function FinalCTASection() {
   }
 
   return (
-    <section ref={sectionRef} className="overflow-x-hidden" style={{ background: '#000000' }}>
+    <section
+      ref={sectionRef}
+      className="overflow-x-hidden"
+      style={{
+        background: '#000000',
+        paddingBottom: 'max(64px, calc(64px + env(safe-area-inset-bottom, 0px)))',
+      }}
+    >
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
         <motion.div
-          className="rounded-2xl text-center px-5 sm:px-8 py-10 sm:py-14"
-          initial={reduced !== false ? {} : { opacity: 0, scale: 0.92, y: 28 }}
-          animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
-          transition={{ duration: 0.70, ease: EASE }}
+          className="rounded-2xl text-center px-5 sm:px-8 py-10 sm:py-14 pb-safe-nav lg:pb-14"
+          initial={reduced !== false ? {} : { opacity: 0, y: 32, filter: 'blur(8px)' }}
+          animate={inView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+          transition={{ duration: 0.65, ease: EASE }}
           style={{
             background: '#111111',
             border: '1px solid rgba(255,255,255,0.07)',
@@ -127,6 +134,11 @@ export default function FinalCTASection() {
           </p>
 
           {/* Search */}
+          <motion.div
+            initial={reduced !== false ? {} : { opacity: 0, scale: 0.96 }}
+            animate={inView ? { opacity: 1, scale: 1 } : {}}
+            transition={{ duration: 0.55, ease: EASE, delay: 0.15 }}
+          >
           <div ref={containerRef} className="relative mx-auto w-full" style={{ maxWidth: '480px' }}>
             <div
               className="flex items-center gap-3 rounded-xl border bg-[#1C1C1C] transition-all"
@@ -244,6 +256,7 @@ export default function FinalCTASection() {
               </div>
             )}
           </div>
+          </motion.div>
 
           {/* Trust bullets */}
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 flex-wrap">

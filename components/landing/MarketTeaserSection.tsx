@@ -1,5 +1,6 @@
 'use client'
-import { motion, useReducedMotion } from 'motion/react'
+import { useRef } from 'react'
+import { motion, useInView, useReducedMotion } from 'motion/react'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
@@ -10,13 +11,13 @@ const TEASER_ROWS = [
   { label: 'Market Interpretation',   val: 'Moderate', type: 'badge',  i: 3 },
 ] as const
 
-function CAGRBar({ reduced }: { reduced: boolean | null }) {
+function CAGRBar({ inView, reduced }: { inView: boolean; reduced: boolean | null }) {
   const position = 47
   const zones = [
-    { label: 'Conservative', sub: '<8%',    width: 28 },
-    { label: 'Moderate',     sub: '8–15%',  width: 26 },
-    { label: 'Aggressive',   sub: '15–25%', width: 26 },
-    { label: 'Very Agr.',    sub: '>25%',   width: 20 },
+    { label: 'Con',   sub: '<8%',    width: 28 },
+    { label: 'Mod',   sub: '8–15%',  width: 26 },
+    { label: 'Agg',   sub: '15–25%', width: 26 },
+    { label: 'V.Agg', sub: '>25%',   width: 20 },
   ]
   const zoneColors  = ['#E8F7EF', '#EEF4DD', '#FFF4DA', '#FCEAEA']
   const zoneBorders = ['#A7D7C0', '#BFD2A1', '#F3D391', '#F0B8B8']
@@ -35,14 +36,13 @@ function CAGRBar({ reduced }: { reduced: boolean | null }) {
           className="absolute top-1/2 -translate-y-1/2 z-10"
           style={{ left: `${position}%` }}
           initial={reduced ? {} : { scale: 0, opacity: 0 }}
-          whileInView={reduced ? {} : { scale: 1, opacity: 1 }}
-          viewport={{ once: true, margin: '-40px' }}
+          animate={inView ? (reduced ? {} : { scale: 1, opacity: 1 }) : {}}
           transition={{ delay: 0.5, duration: 0.4, type: 'spring', stiffness: 280, damping: 18 }}
         >
           <div className="w-3.5 h-3.5 rounded-full bg-white border-2 border-[#5F790B] shadow-sm -translate-x-1/2" />
         </motion.div>
       </div>
-      <div className="flex text-[10px] text-[#6B6B6B]">
+      <div className="flex text-[9.5px] text-[#6B6B6B]">
         {zones.map((z, i) => (
           <div key={z.label} className="flex flex-col items-center leading-tight" style={{ width: `${z.width}%` }}>
             <span className={i === 1 ? 'font-semibold text-[#5F790B]' : ''}>{z.label}</span>
@@ -56,23 +56,24 @@ function CAGRBar({ reduced }: { reduced: boolean | null }) {
 
 export default function MarketTeaserSection() {
   const reduced = useReducedMotion()
+  const ref = useRef<HTMLElement>(null)
+  const inView = useInView(ref, { once: true, margin: '-60px' })
 
   return (
-    <section className="overflow-x-hidden" style={{ background: '#F5F5F5', borderBottom: '1px solid #E5E5E5' }}>
+    <section ref={ref} className="overflow-x-hidden" style={{ background: '#F5F5F5', borderBottom: '1px solid #E5E5E5' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-12 sm:py-16">
         <motion.div
           className="rounded-2xl border border-[#E5E5E5] bg-white overflow-hidden shadow-card"
           initial={reduced ? {} : { opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, ease: EASE }}
         >
           {/* Header */}
-          <div className="flex items-start gap-3 px-6 pt-6 pb-4 border-b border-[#F5F5F5]">
+          <div className="flex items-start gap-3 px-4 sm:px-6 pt-6 pb-4 border-b border-[#F5F5F5]">
             <motion.div
               className="w-10 h-10 rounded-md bg-[#EEF4DD] flex items-center justify-center shrink-0 mt-0.5"
-              whileInView={reduced ? {} : { scale: [0.8, 1.12, 1] }}
-              viewport={{ once: true }}
+              initial={reduced ? {} : { scale: 0.8, opacity: 0 }}
+              animate={inView ? (reduced ? {} : { scale: 1, opacity: 1 }) : {}}
               transition={{ duration: 0.55, ease: EASE, delay: 0.15 }}
             >
               <svg className="w-[18px] h-[18px] text-[#5F790B]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -91,7 +92,7 @@ export default function MarketTeaserSection() {
           <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#F5F5F5]">
 
             {/* Left: data rows */}
-            <div className="px-6 py-5">
+            <div className="px-4 sm:px-6 py-5">
               <p className="text-[11px] font-[650] text-[#6B6B6B] mb-4">Example: Apple Inc. (AAPL)</p>
               <div className="space-y-0">
                 {TEASER_ROWS.map(({ label, val, type, i }) => (
@@ -99,8 +100,7 @@ export default function MarketTeaserSection() {
                     key={label}
                     className="flex items-center justify-between py-3 border-b border-[#F5F5F5] last:border-0"
                     initial={reduced ? {} : { opacity: 0, x: -14 }}
-                    whileInView={reduced ? {} : { opacity: 1, x: 0 }}
-                    viewport={{ once: true, margin: '-30px' }}
+                    animate={inView ? (reduced ? {} : { opacity: 1, x: 0 }) : {}}
                     transition={{ delay: i * 0.08, duration: 0.4, ease: EASE }}
                   >
                     <span className={`text-[13px] leading-snug ${type === 'hero' ? 'font-semibold text-[#111111]' : 'text-[#6B6B6B]'}`}>
@@ -110,8 +110,7 @@ export default function MarketTeaserSection() {
                       <motion.span
                         className="text-[11px] font-semibold bg-[#FFF4DA] text-[#B56A00] border border-[#F3D391] rounded-full px-2.5 py-0.5 shrink-0"
                         initial={reduced ? {} : { opacity: 0, scale: 0.85 }}
-                        whileInView={reduced ? {} : { opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
+                        animate={inView ? (reduced ? {} : { opacity: 1, scale: 1 }) : {}}
                         transition={{ delay: 0.32, duration: 0.35, ease: EASE }}
                       >
                         {val}
@@ -127,13 +126,13 @@ export default function MarketTeaserSection() {
             </div>
 
             {/* Right: spectrum + summary */}
-            <div className="px-6 py-5">
+            <div className="px-4 sm:px-6 py-5">
               <p className="text-[11px] font-[650] text-[#6B6B6B] mb-4">Growth spectrum</p>
               <div className="flex items-baseline gap-2 mb-1">
                 <motion.span
                   className="text-[40px] font-bold tabular-nums text-[#111111] leading-none"
                   initial={reduced ? {} : { opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  animate={inView ? (reduced ? {} : { opacity: 1, y: 0 }) : {}}
                   transition={{ delay: 0.2, duration: 0.5, ease: EASE }}
                 >
                   12.1%
@@ -141,12 +140,11 @@ export default function MarketTeaserSection() {
                 <span className="text-[13px] text-[#6B6B6B]">implied annually</span>
               </div>
               <p className="text-[12px] text-[#6B6B6B] mb-1">vs. 6.7% historical track record</p>
-              <CAGRBar reduced={reduced} />
+              <CAGRBar inView={inView} reduced={reduced} />
               <motion.p
                 className="mt-4 text-[12px] text-[#6B6B6B] leading-relaxed"
                 initial={reduced ? {} : { opacity: 0 }}
-                whileInView={reduced ? {} : { opacity: 1 }}
-                viewport={{ once: true }}
+                animate={inView ? (reduced ? {} : { opacity: 1 }) : {}}
                 transition={{ delay: 0.6, duration: 0.5 }}
               >
                 At today&apos;s price, the market implies 12.1% annual revenue growth over the next 5 years — above Apple&apos;s recent track record of 6.7%.

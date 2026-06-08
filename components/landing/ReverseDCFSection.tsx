@@ -60,12 +60,11 @@ export default function ReverseDCFSection() {
       ref={ref}
       id="reverse-dcf"
       className="overflow-x-hidden"
-      style={{ background: 'white', borderTop: '1px solid #E3E1DA', borderBottom: '1px solid #E3E1DA' }}
+      style={{ background: 'white', borderTop: '1px solid #E5E5E5', borderBottom: '1px solid #E5E5E5' }}
     >
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
         <div
-          className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] items-center"
-          style={{ gap: '40px' }}
+          className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] items-center gap-8 lg:gap-[40px]"
         >
           {/* Left: explanation — zoom in */}
           <motion.div
@@ -74,7 +73,7 @@ export default function ReverseDCFSection() {
             transition={{ duration: 0.68, ease: EASE }}
           >
             <p
-              className="font-semibold mb-3 text-[#2563EB]"
+              className="font-semibold mb-3 text-[#5F790B]"
               style={{ fontSize: '13px' }}
             >
               What is today&apos;s price already betting on?
@@ -85,7 +84,7 @@ export default function ReverseDCFSection() {
                 fontWeight: 700,
                 lineHeight: 1.1,
                 letterSpacing: '-0.025em',
-                color: '#06101F',
+                color: '#111111',
                 marginBottom: '20px',
               }}
             >
@@ -95,7 +94,7 @@ export default function ReverseDCFSection() {
               className="text-base"
               style={{
                 lineHeight: 1.6,
-                color: '#566174',
+                color: '#6B6B6B',
                 marginBottom: '24px',
                 maxWidth: '420px',
               }}
@@ -107,11 +106,11 @@ export default function ReverseDCFSection() {
               className="text-base"
               style={{
                 lineHeight: 1.6,
-                color: '#566174',
+                color: '#6B6B6B',
                 padding: '16px 20px',
                 borderRadius: '12px',
-                background: '#F4F3EF',
-                border: '1px solid #E6ECF5',
+                background: '#F5F5F5',
+                border: '1px solid #E5E5E5',
                 maxWidth: '420px',
               }}
             >
@@ -131,9 +130,9 @@ export default function ReverseDCFSection() {
               >
                 <Link
                   href={`/stock/${stock.ticker}`}
-                  className="group block rounded-2xl bg-white border p-5 transition-all hover:-translate-y-0.5 active:scale-95"
+                  className="group block rounded-2xl bg-white border p-4 sm:p-5 transition-all hover:-translate-y-0.5 active:scale-95"
                   style={{
-                    borderColor: '#E6ECF5',
+                    borderColor: '#E5E5E5',
                     boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 4px 16px rgba(15,23,42,0.05)',
                   }}
                   aria-label={`Analyze ${stock.ticker} — ${stock.company}`}
@@ -141,11 +140,11 @@ export default function ReverseDCFSection() {
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-[14px] font-bold text-[#06101F]">{stock.ticker}</span>
-                        <span className="text-[11px] text-[#8A95A6] min-w-0 truncate">{stock.company}</span>
+                        <span className="text-[14px] font-bold text-[#111111]">{stock.ticker}</span>
+                        <span className="text-[11px] text-[#6B6B6B] min-w-0 truncate">{stock.company}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[16px] font-bold text-[#06101F]" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                        <span className="text-[16px] font-bold text-[#111111]" style={{ fontVariantNumeric: 'tabular-nums' }}>
                           {stock.price}
                         </span>
                         <span
@@ -167,10 +166,10 @@ export default function ReverseDCFSection() {
                   {/* CAGR + sparkline */}
                   <div className="flex items-center gap-4">
                     <div className="shrink-0">
-                      <p className="text-[10px] text-[#8A95A6] mb-0.5">Implied 5Y Revenue CAGR</p>
+                      <p className="text-[10px] text-[#6B6B6B] mb-0.5">Implied 5Y Revenue CAGR</p>
                       <p
                         className="text-[28px] font-bold leading-none"
-                        style={{ color: '#06101F', fontVariantNumeric: 'tabular-nums' }}
+                        style={{ color: '#111111', fontVariantNumeric: 'tabular-nums' }}
                       >
                         {stock.impliedCAGR}%
                       </p>
@@ -198,8 +197,8 @@ export default function ReverseDCFSection() {
                     </div>
                   </div>
 
-                  <p className="mt-2 text-[12px] text-[#566174]">{stock.note}</p>
-                  <p className="mt-2 text-[12px] font-semibold text-[#2563EB] opacity-0 group-hover:opacity-100 transition-opacity">
+                  <p className="mt-2 text-[12px] text-[#6B6B6B]">{stock.note}</p>
+                  <p className="mt-2 text-[12px] font-semibold text-[#5F790B] opacity-0 group-hover:opacity-100 transition-opacity">
                     Analyze →
                   </p>
                 </Link>
