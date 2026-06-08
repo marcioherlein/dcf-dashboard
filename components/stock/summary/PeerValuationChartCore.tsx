@@ -136,12 +136,12 @@ function PeerTooltip({ active, payload }: any) {
       <div className="space-y-1">
         <div className="flex justify-between gap-4">
           <span className="text-[11px] text-[#6B6B6B]">Forward P/E</span>
-          <span className="text-[11px] font-semibold font-mono text-[#111111]">{p.x.toFixed(1)}×</span>
+          <span className="text-[11px] font-semibold font-mono text-[#111111]">{p.x != null ? `${p.x.toFixed(1)}×` : '—'}</span>
         </div>
         <div className="flex justify-between gap-4">
           <span className="text-[11px] text-[#6B6B6B]">NTM EPS growth</span>
           <span className="text-[11px] font-semibold font-mono text-[#111111]">
-            {p.y >= 0 ? '+' : ''}{p.y.toFixed(1)}%
+            {p.y != null ? `${p.y >= 0 ? '+' : ''}${p.y.toFixed(1)}%` : '—'}
           </span>
         </div>
         {pegStr && (
