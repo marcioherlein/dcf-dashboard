@@ -345,7 +345,8 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
           assumptionsPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }}
       />
-      {/* Verdict hero — editorial headline, key numbers, scenario slider */}
+
+      {/* ── 1. VERDICT HERO — headline + confidence + scenario slider ─────────── */}
       <VerdictHero
         output={output}
         currentPrice={currentPrice}
@@ -356,6 +357,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         starRating={starRating}
       />
 
+      {/* Limited history warning */}
       {limitedHistory && (
         <div className="flex items-start gap-2 bg-[#FFF4DA] border border-[#F3D391] rounded-xl px-4 py-3">
           <span className="text-[#B56A00] shrink-0 text-xs mt-0.5">⚠</span>
@@ -366,10 +368,10 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         </div>
       )}
 
-      {/* Collapsible guidance at top */}
+      {/* ── 2. COLLAPSIBLE GUIDANCE ──────────────────────────────────────────── */}
       <GuidanceStrip />
 
-      {/* Assumption Health Panel — cross-validates model assumptions against independent signals */}
+      {/* ── 3. ASSUMPTION HEALTH — cross-validates inputs vs independent signals */}
       {apiData.assumptionAudit && (
         <AssumptionHealthPanel
           audit={apiData.assumptionAudit as AssumptionAudit}
@@ -379,32 +381,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         />
       )}
 
-      {/* Valuation Models — inline assumption editing + mini historical charts */}
-      <div ref={assumptionsPanelRef} id="assumptions-panel">
-        {clampNote && (
-          <p className="mb-2 text-[11px] text-[#D97706] bg-[#FFFBEB] border border-[#FDE68A] rounded-lg px-3 py-2">
-            ⚠ {clampNote}
-          </p>
-        )}
-        <ValuationMethodCards
-          methods={output.methods}
-          currentPrice={currentPrice}
-          currency={currency}
-          fcfMargin={snapshot.fcfMargin}
-          ttmEbitdaDollars={snapshot.ttmEbitdaDollars}
-          assumptions={assumptions}
-          historicalData={historicalData}
-          onChange={handleAssumptionChange}
-          onReset={handleReset}
-          onUndo={handleUndo}
-          canUndo={history.length > 0}
-          sensitivity={sensitivity}
-          sectorBenchmarks={sectorBenchmarks}
-          onScrollToFullDCF={scrollToFullDCF}
-        />
-      </div>
-
-      {/* Business fundamentals — what the market is pricing in vs what the business actually delivers */}
+      {/* ── 4. WHAT THE MARKET IS PRICING IN (reverse DCF / market-implied) ─── */}
       <BusinessChecks
         roic={valueInvestingData.roic}
         roicSpread={valueInvestingData.roicSpread}
@@ -432,7 +409,92 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         countryRisk={valueInvestingData.countryRiskDisclaimer}
       />
 
-      {/* Sensitivity matrix — always visible, updates live with assumption changes */}
+      {/* ── 5. VALUATION MODELS — inline assumption editing ──────────────────── */}
+      <div ref={assumptionsPanelRef} id="assumptions-panel">
+        {clampNote && (
+          <p className="mb-2 text-[11px] text-[#D97706] bg-[#FFFBEB] border border-[#FDE68A] rounded-lg px-3 py-2">
+            ⚠ {clampNote}
+          </p>
+        )}
+        <ValuationMethodCards
+          methods={output.methods}
+          currentPrice={currentPrice}
+          currency={currency}
+          fcfMargin={snapshot.fcfMargin}
+          ttmEbitdaDollars={snapshot.ttmEbitdaDollars}
+          assumptions={assumptions}
+          historicalData={historicalData}
+          onChange={handleAssumptionChange}
+          onReset={handleReset}
+          onUndo={handleUndo}
+          canUndo={history.length > 0}
+          sensitivity={sensitivity}
+          sectorBenchmarks={sectorBenchmarks}
+          onScrollToFullDCF={scrollToFullDCF}
+        />
+      </div>
+
+      {/* ── 6. INDEPENDENT CHECKS (compact) — risk to watch + supporting thesis */}
+      <div className="rounded-xl border border-[#E5E5E5] bg-white overflow-hidden">
+        <div className="px-4 py-3 border-b border-[#E5E5E5] flex items-center justify-between">
+          <p className="text-[13px] font-semibold text-[#111111]">Independent checks</p>
+          <p className="text-[11px] text-[#9B9B9B]">Signals from outside the DCF</p>
+        </div>
+        <div className="divide-y divide-[#F5F5F5]">
+          {/* Structural risk */}
+          {valueInvestingData.structuralRiskDisclaimer && (
+            <div className="px-4 py-3 flex items-start gap-3">
+              <span className="mt-0.5 w-5 h-5 rounded-full bg-[#FFF4DA] flex items-center justify-center shrink-0 text-[10px] font-bold text-[#B56A00]">!</span>
+              <div>
+                <p className="text-[12px] font-semibold text-[#111111] mb-0.5">Risk to watch</p>
+                <p className="text-[12px] text-[#6B6B6B] leading-snug">{valueInvestingData.structuralRiskDisclaimer}</p>
+              </div>
+            </div>
+          )}
+          {/* Country risk */}
+          {valueInvestingData.countryRiskDisclaimer && (
+            <div className="px-4 py-3 flex items-start gap-3">
+              <span className="mt-0.5 w-5 h-5 rounded-full bg-[#FFF4DA] flex items-center justify-center shrink-0 text-[10px] font-bold text-[#B56A00]">!</span>
+              <div>
+                <p className="text-[12px] font-semibold text-[#111111] mb-0.5">Country risk</p>
+                <p className="text-[12px] text-[#6B6B6B] leading-snug">{valueInvestingData.countryRiskDisclaimer}</p>
+              </div>
+            </div>
+          )}
+          {/* ROIC vs WACC — supporting thesis */}
+          {valueInvestingData.roic != null && valueInvestingData.roicSpread != null && (
+            <div className="px-4 py-3 flex items-start gap-3">
+              <span className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${valueInvestingData.roicSpread > 0 ? 'bg-[#E8F7EF] text-[#11875D]' : 'bg-[#FCEAEA] text-[#D83B3B]'}`}>
+                {valueInvestingData.roicSpread > 0 ? '✓' : '✗'}
+              </span>
+              <div>
+                <p className="text-[12px] font-semibold text-[#111111] mb-0.5">
+                  {valueInvestingData.roicSpread > 0 ? 'Supporting thesis' : 'Against thesis'}
+                </p>
+                <p className="text-[12px] text-[#6B6B6B] leading-snug">
+                  ROIC {(valueInvestingData.roic * 100).toFixed(1)}% {valueInvestingData.roicSpread > 0 ? 'exceeds' : 'below'} WACC {(valueInvestingData.wacc * 100).toFixed(1)}% — spread {valueInvestingData.roicSpread > 0 ? '+' : ''}{(valueInvestingData.roicSpread * 100).toFixed(1)}pp
+                </p>
+              </div>
+            </div>
+          )}
+          {/* FCF yield vs risk-free */}
+          {fcfYield != null && rfRate != null && (
+            <div className="px-4 py-3 flex items-start gap-3">
+              <span className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${fcfYield > rfRate ? 'bg-[#E8F7EF] text-[#11875D]' : 'bg-[#FCEAEA] text-[#D83B3B]'}`}>
+                {fcfYield > rfRate ? '✓' : '✗'}
+              </span>
+              <div>
+                <p className="text-[12px] font-semibold text-[#111111] mb-0.5">FCF yield vs risk-free</p>
+                <p className="text-[12px] text-[#6B6B6B] leading-snug">
+                  FCF yield {(fcfYield * 100).toFixed(1)}% {fcfYield > rfRate ? '>' : '<'} risk-free {(rfRate * 100).toFixed(1)}% — {fcfYield > rfRate ? 'equity compensates adequately' : 'risk premium is thin'}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── 7. SENSITIVITY MATRIX ────────────────────────────────────────────── */}
       <SensitivityMatrix
         assumptions={assumptions}
         snapshot={effectiveSnapshot}
@@ -444,7 +506,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         defaultAxisX={defaultAxisX}
       />
 
-      {/* Monte Carlo DCF [BETA] — Markov-chain regime simulation + LS real options */}
+      {/* ── 8. MONTE CARLO ───────────────────────────────────────────────────── */}
       <MonteCarloPanel
         assumptions={assumptions}
         snapshot={effectiveSnapshot}
@@ -465,7 +527,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         lastChange={lastChange}
       />
 
-      {/* Evidence tier — collapsed by default; decision surface above this fold */}
+      {/* ── 9. MODEL EVIDENCE (collapsed) ────────────────────────────────────── */}
       <details className="group" id="model_evidence">
         <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E6ECF5] shadow-sm px-4 sm:px-5 py-3.5 hover:bg-[#F4F3EF] transition-colors select-none">
           <span className="text-[#8A95A6] text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
@@ -488,7 +550,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         </div>
       </details>
 
-      {/* Full DCF Model — blue header, more visible */}
+      {/* ── 10. FULL DCF MODEL (collapsed) ───────────────────────────────────── */}
       <details ref={fullDcfRef} className="group" id="full_dcf">
         <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-blue-100 shadow-sm px-4 sm:px-5 py-3.5 hover:bg-[#EAF1FF] transition-colors select-none">
           <span className="text-[#2563EB] text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
@@ -503,7 +565,6 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
           <span className="ml-auto text-xs text-[#8A95A6] hidden sm:inline">DCF-only estimate · distinct from top blended value</span>
         </summary>
         <div className="mt-2">
-          {/* Best-viewed-on-desktop note for mobile */}
           <p className="sm:hidden text-[11px] text-[#8A95A6] text-center py-2 px-4">
             Best experienced on a wider screen — scroll horizontally to view all columns.
           </p>
@@ -517,8 +578,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         </div>
       </details>
 
-      {/* End-of-page CTA — removed; tab nav handles navigation */}
-      {/* Mobile sticky CTA — hidden on desktop where assumptions are always visible */}
+      {/* Mobile sticky CTA */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] px-4 pt-2" style={{ background: 'linear-gradient(to top, rgba(248,250,252,0.98) 0%, rgba(248,250,252,0) 100%)', paddingBottom: 'calc(56px + env(safe-area-inset-bottom, 0px) + 12px)' }}>
         <button
           onClick={() => assumptionsPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
@@ -531,3 +591,4 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
     </div>
   )
 }
+

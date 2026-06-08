@@ -551,10 +551,14 @@ function StockPageBody() {
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
                   <TabErrorBoundary tabName="Overview">
-                  {/* Summary tab — 5-card strip, insight tri-column, quality grid, bottom row */}
+                  {/* Summary tab */}
                   <SummaryTab
                     ticker={data.ticker}
                     companyName={data.companyName}
+                    description={data.businessProfile?.description ?? undefined}
+                    industry={data.businessProfile?.industry ?? undefined}
+                    country={data.businessProfile?.country ?? undefined}
+                    employees={data.businessProfile?.employees ?? null}
                     price={data.quote.price}
                     change={data.quote.change}
                     changePct={data.quote.changePct}
@@ -610,6 +614,7 @@ function StockPageBody() {
                     userModelFairValue={userModelFairValue}
                     analystRecommendation={data.analystRecommendation ?? ''}
                     onViewValuation={() => handleTabChange('valuation')}
+                    onViewFinancials={() => handleTabChange('financials')}
                     onViewRisks={() => handleTabChange('risks')}
                     onViewAssumptions={() => {
                       handleTabChange('valuation')
