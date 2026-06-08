@@ -95,6 +95,22 @@ const FAQS = [
 export default function PricingPage() {
   const { data: session } = useSession()
   const isPro = (session?.user as { plan?: string } | undefined)?.plan === 'pro'
+  const [upgrading, setUpgrading] = useState(false)
+
+  async function handleUpgrade() {
+    if (!session) {
+      signIn('google', { callbackUrl: '/pricing' })
+      return
+    }
+    setUpgrading(true)
+    try {
+      const res = await fetch('/api/lemonsqueezy/checkout', { method: 'POST' })
+      const json = await res.json()
+      if (json.url) window.location.href = json.url
+    } catch {
+      setUpgrading(false)
+    }
+  }
 
   return (
     <div className="min-h-dvh bg-white">
@@ -192,10 +208,16 @@ export default function PricingPage() {
               </div>
             ) : (
               <button
-                disabled
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-white/10 border border-white/15 py-3.5 text-[13.5px] font-semibold text-white/40 mb-8 min-h-[48px] cursor-not-allowed"
+                onClick={handleUpgrade}
+                disabled={upgrading}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#5F790B] hover:bg-[#526A08] disabled:opacity-60 py-3.5 text-[13.5px] font-bold text-white mb-8 min-h-[48px] shadow-sm transition-colors"
               >
-                Coming soon
+                {upgrading ? (
+                  <>
+                    <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                    Redirecting…
+                  </>
+                ) : session ? 'Start 7-day free trial →' : 'Sign in to start trial →'}
               </button>
             )}
 
