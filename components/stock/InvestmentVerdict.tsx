@@ -317,32 +317,32 @@ export default function InvestmentVerdict({
     // ── MARKET SIGNALS (4 criteria) ───────────────────────────────────────
 
     // c13: Analyst target upside >10%
-    var analystUpside = (analystTargetMean != null && currentPrice != null && currentPrice > 0)
+    const analystUpside = (analystTargetMean != null && currentPrice != null && currentPrice > 0)
       ? (analystTargetMean - currentPrice) / currentPrice
       : null
-    var c13 = criterion("Analyst target upside >10%",
+    const c13 = criterion("Analyst target upside >10%",
       analystUpside != null ? analystUpside > 0.10 : null,
       analystUpside != null ? (analystUpside >= 0 ? "+" : "") + (analystUpside * 100).toFixed(1) + "%" : "N/A"
     )
 
     // c14: Price in lower 70% of 52W range (momentum signal)
-    var range52 = (high52 != null && low52 != null && high52 > low52)
+    const range52 = (high52 != null && low52 != null && high52 > low52)
       ? high52 - low52 : null
-    var rangePos = (range52 != null && currentPrice != null && low52 != null)
+    const rangePos = (range52 != null && currentPrice != null && low52 != null)
       ? (currentPrice - low52) / range52 : null
-    var c14 = criterion("Price within 52W range",
+    const c14 = criterion("Price within 52W range",
       rangePos != null ? rangePos < 0.7 : null,
       rangePos != null ? Math.round(rangePos * 100) + "% of range" : "N/A"
     )
 
     // c15: Insider ownership >5%
-    var c15 = criterion("Insider ownership >5%",
+    const c15 = criterion("Insider ownership >5%",
       insiderPct != null ? insiderPct > 0.05 : null,
       insiderPct != null ? (insiderPct * 100).toFixed(1) + "%" : "N/A"
     )
 
     // c16: Short interest <5%
-    var c16 = criterion("Short interest low (<5%)",
+    const c16 = criterion("Short interest low (<5%)",
       shortPct != null ? shortPct < 0.05 : null,
       shortPct != null ? (shortPct * 100).toFixed(1) + "% short" : "N/A"
     )

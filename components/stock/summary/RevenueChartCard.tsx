@@ -135,13 +135,13 @@ export default function RevenueChartCard({
     // Fallback for foreign stocks: statementsData.annual.incomeStatement
     const annualRows = (statementsData && statementsData.annual && statementsData.annual.incomeStatement) ? statementsData.annual.incomeStatement : []
     const validAnnual = annualRows.filter(function(r: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      var rev = r.totalRevenue != null ? r.totalRevenue : (r.revenue != null ? r.revenue : null)
+      const rev = r.totalRevenue != null ? r.totalRevenue : (r.revenue != null ? r.revenue : null)
       return rev != null && rev > 0
     })
     if (validAnnual.length > 0) {
       return validAnnual.slice(-6).map(function(r: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-        var rev = r.totalRevenue != null ? r.totalRevenue : r.revenue
-        var lbl = String(r.year != null ? r.year : (r.endDate != null ? r.endDate : "")).slice(0, 4)
+        const rev = r.totalRevenue != null ? r.totalRevenue : r.revenue
+        const lbl = String(r.year != null ? r.year : (r.endDate != null ? r.endDate : "")).slice(0, 4)
         return { label: lbl, value: rev, isProjected: false }
       })
     }
