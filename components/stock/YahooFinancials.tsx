@@ -336,7 +336,7 @@ export default function YahooFinancials({ statementsData, currency = '$', report
   const sparseHistory = period === 'annual' && displayPeriods.length < 4
 
   return (
-    <div className="overflow-hidden">
+    <div className="overflow-visible">
       {/* Fix S2: row-flash keyframe animation */}
       <style>{`
         @keyframes row-flash-anim {
@@ -412,19 +412,19 @@ export default function YahooFinancials({ statementsData, currency = '$', report
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="min-w-[480px] w-full text-[12px]">
+        <table className="w-full text-[12px]" style={{ minWidth: `${280 + (showTTM && ttmData ? 1 : 0) * 110 + displayPeriods.length * 110}px` }}>
           <thead>
             <tr className="border-b border-[#E3E1DA] bg-[#F4F3EF]/50">
-              <th className="sticky left-0 z-10 bg-white text-left px-3 sm:px-4 py-2 text-[11px] font-semibold text-[#566174] w-44 min-w-[160px] sm:w-64 sm:min-w-[220px]">
+              <th className="sticky left-0 z-10 bg-[#F7F6F2] text-left px-3 sm:px-4 py-2 text-[11px] font-semibold text-[#566174] w-44 min-w-[160px] sm:w-56 sm:min-w-[200px] shadow-[2px_0_4px_rgba(0,0,0,0.06)]">
                 Breakdown
               </th>
               {showTTM && ttmData && (
-                <th className="text-right px-2 sm:px-3 py-2 text-[11px] font-semibold text-[#B56A00] min-w-[80px] sm:min-w-[100px] whitespace-nowrap">
+                <th className="text-right px-3 py-2 text-[11px] font-semibold text-[#B56A00] min-w-[110px] whitespace-nowrap">
                   TTM
                 </th>
               )}
               {displayPeriods.map((p, i) => (
-                <th key={i} className="text-right px-2 sm:px-3 py-2 text-[11px] font-semibold text-[#566174] min-w-[80px] sm:min-w-[100px] whitespace-nowrap">
+                <th key={i} className="text-right px-3 py-2 text-[11px] font-semibold text-[#566174] min-w-[110px] whitespace-nowrap">
                   {formatDate(p.endDate)}
                 </th>
               ))}
@@ -447,7 +447,7 @@ export default function YahooFinancials({ statementsData, currency = '$', report
                     className={`border-b border-[#E3E1DA] ${isOrphan ? 'bg-[#F4F3EF]/30' : 'bg-[#F4F3EF]/60 hover:bg-[#F4F3EF]/60 cursor-pointer select-none'} ${flashKey === hdr.key ? 'row-flash' : ''}`}
                     onClick={() => !isOrphan && hasChildren && setExpanded(e => ({ ...e, [hdr.key]: !isOpen(hdr.key) }))}
                   >
-                    <td className="sticky left-0 z-10 bg-[#F4F3EF] px-3 sm:px-4 py-2 font-semibold text-[#06101F] whitespace-nowrap flex items-center gap-1.5">
+                    <td className="sticky left-0 z-10 bg-[#F4F3EF] px-3 sm:px-4 py-2 font-semibold text-[#06101F] whitespace-nowrap flex items-center gap-1.5 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">
                       {!isOrphan && hasChildren && (
                         <svg
                           className={`w-3 h-3 text-[#8A95A6] shrink-0 transition-transform ${open ? 'rotate-90' : ''}`}
@@ -463,14 +463,14 @@ export default function YahooFinancials({ statementsData, currency = '$', report
                       </span>
                     </td>
                     {showTTM && ttmData && (
-                      <td className={`text-right px-2 sm:px-3 py-2 tabular-nums font-semibold whitespace-nowrap ${
+                      <td className={`text-right px-3 py-2 tabular-nums font-semibold whitespace-nowrap ${
                         isNegNum(ttmData[hdr.key], vt) ? 'text-[#D83B3B]' : 'text-[#06101F]'
                       }`}>
                         {isOrphan ? '' : fmtValue(ttmData[hdr.key], vt)}
                       </td>
                     )}
                     {displayPeriods.map((p, j) => (
-                      <td key={j} className={`text-right px-2 sm:px-3 py-2 tabular-nums font-semibold whitespace-nowrap ${
+                      <td key={j} className={`text-right px-3 py-2 tabular-nums font-semibold whitespace-nowrap ${
                         isNegNum(p[hdr.key], vt) ? 'text-[#D83B3B]' : 'text-[#06101F]'
                       }`}>
                         {isOrphan ? '' : fmtValue(p[hdr.key], vt)}
@@ -483,18 +483,18 @@ export default function YahooFinancials({ statementsData, currency = '$', report
                   const rvt = row.valueType ?? 'money'
                   return (
                     <tr key={`row-${si}-${ri}`} id={`yfrow-${row.key}`} className={`border-b border-[#F4F3EF] hover:bg-[#F4F3EF]/40 ${flashKey === row.key ? 'row-flash' : ''}`}>
-                      <td className="sticky left-0 z-10 bg-white pl-7 sm:pl-10 pr-3 sm:pr-4 py-1.5 text-[#566174] whitespace-nowrap">
+                      <td className="sticky left-0 z-10 bg-white pl-7 sm:pl-10 pr-3 sm:pr-4 py-1.5 text-[#566174] whitespace-nowrap shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
                         {row.label}
                       </td>
                       {showTTM && ttmData && (
-                        <td className={`text-right px-2 sm:px-3 py-1.5 tabular-nums whitespace-nowrap ${
+                        <td className={`text-right px-3 py-1.5 tabular-nums whitespace-nowrap ${
                           isNegNum(ttmData[row.key], rvt) ? 'text-[#D83B3B]' : 'text-[#566174]'
                         }`}>
                           {fmtValue(ttmData[row.key], rvt)}
                         </td>
                       )}
                       {displayPeriods.map((p, j) => (
-                        <td key={j} className={`text-right px-2 sm:px-3 py-1.5 tabular-nums whitespace-nowrap ${
+                        <td key={j} className={`text-right px-3 py-1.5 tabular-nums whitespace-nowrap ${
                           isNegNum(p[row.key], rvt) ? 'text-[#D83B3B]' : 'text-[#566174]'
                         }`}>
                           {fmtValue(p[row.key], rvt)}
