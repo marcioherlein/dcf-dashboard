@@ -231,7 +231,7 @@ function StockPageBody() {
         setViewCount(res.viewCount)
         setViewGate(res.allowed ? 'allowed' : 'upgrade')
       })
-      .catch(() => setViewGate('allowed')) // fail open
+      .catch(() => setViewGate(session?.user ? 'upgrade' : 'login')) // fail-closed
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, ticker])
 

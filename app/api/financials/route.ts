@@ -30,7 +30,9 @@ export async function GET(req: NextRequest) {
     // Gated by AUDIT_DEV_KEY env var — never set in production.
     const devKey = req.headers.get('x-audit-dev-key')
     const allowedKey = process.env.AUDIT_DEV_KEY
-    if (!allowedKey || devKey !== allowedKey) {
+    // Only allow dev key bypass in non-production environments
+    const isProduction = process.env.NODE_ENV === 'production'
+    if (isProduction || !allowedKey || devKey !== allowedKey) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
   }

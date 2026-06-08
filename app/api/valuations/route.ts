@@ -8,7 +8,7 @@ const FREE_SAVE_LIMIT = 3
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!url || !key) return null
   return createClient(url, key)
 }
@@ -25,7 +25,6 @@ export async function GET(req: NextRequest) {
     const sb = getServiceClient()
     if (!sb) return NextResponse.json([])
 
-    // Look up user id from email
     const { data: userRow } = await sb.from('users').select('id').eq('email', userEmail).single()
     if (!userRow) return NextResponse.json([])
 
@@ -50,21 +49,24 @@ export async function POST(req: NextRequest) {
     const userEmail = session?.user?.email ?? null
     if (!userEmail) return NextResponse.json({ error: 'Login required to save valuations' }, { status: 401 })
 
-    // Check Pro plan and save limit for logged-in users
-    if (userEmail) {
-      const sb = getServiceClient()
-      if (sb) {
-        const { data: userRow } = await sb.from('users').select('id, plan').eq('email', userEmail).single()
-        const isPro = (userRow as { plan?: string } | null)?.plan === 'pro'
-        if (!isPro && userRow) {
-          const { count } = await sb
-            .from('valuations')
-            .select('id', { count: 'exact', head: true })
-            .eq('user_id', (userRow as { id: string }).id)
-          if ((count ?? 0) >= FREE_SAVE_LIMIT) {
-            return NextResponse.json({ error: 'Free limit reached', code: 'LIMIT_REACHED', limit: FREE_SAVE_LIMIT }, { status: 402 })
-          }
-        }
+    // Fail-closed: if service client unavailable, deny the save
+    const sb = getServiceClient()
+    if (!sb) return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 })
+
+    const { data: userRow } = await sb.from('users').select('id, plan').eq('email', userEmail).single()
+
+    // Fail-closed: missing user row is an error state, not a bypass
+    if (!userRow) return NextResponse.json({ error: 'User account not found' }, { status: 403 })
+
+    const isPro = (userRow as { plan?: string }).plan === 'pro'
+
+    if (!isPro) {
+      const { count } = await sb
+        .from('valuations')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', (userRow as { id: string }).id)
+      if ((count ?? 0) >= FREE_SAVE_LIMIT) {
+        return NextResponse.json({ error: 'Free limit reached', code: 'LIMIT_REACHED', limit: FREE_SAVE_LIMIT }, { status: 402 })
       }
     }
 

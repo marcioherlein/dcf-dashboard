@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { createClient } from '@supabase/supabase-js'
 
-const FREE_LIMIT = 3
+export const FREE_LIMIT = 3
 
 function getClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -17,16 +17,24 @@ function monthStart() {
   return new Date(d.getFullYear(), d.getMonth(), 1).toISOString()
 }
 
+// Validate ticker: uppercase alphanumeric + common punctuation, 1-10 chars
+function normalizeTicker(raw: unknown): string | null {
+  const t = String(raw ?? '').trim().toUpperCase()
+  if (!t || !/^[A-Z0-9.\-]{1,10}$/.test(t)) return null
+  return t
+}
+
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
   const userEmail = session?.user?.email
   if (!userEmail) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  // Fail-closed: if Supabase is unavailable, deny access
   const sb = getClient()
-  if (!sb) return NextResponse.json({ allowed: true, isPro: false, viewCount: 0, limit: FREE_LIMIT })
+  if (!sb) return NextResponse.json({ allowed: false, isPro: false, viewCount: 0, limit: FREE_LIMIT }, { status: 503 })
 
-  const { ticker: rawTicker } = await req.json()
-  const ticker = String(rawTicker ?? '').toUpperCase()
+  const body = await req.json().catch(() => ({}))
+  const ticker = normalizeTicker(body?.ticker)
   if (!ticker) return NextResponse.json({ error: 'ticker required' }, { status: 400 })
 
   // Look up user row (includes plan)
@@ -36,19 +44,48 @@ export async function POST(req: NextRequest) {
     .eq('email', userEmail)
     .single()
 
-  if (!userRow) return NextResponse.json({ allowed: true, isPro: false, viewCount: 0, limit: FREE_LIMIT })
+  // Fail-closed: missing user row → deny (user in inconsistent state)
+  if (!userRow) return NextResponse.json({ allowed: false, isPro: false, viewCount: 0, limit: FREE_LIMIT }, { status: 403 })
 
   const { id: userId, plan } = userRow as { id: string; plan: string | null }
 
-  // BETA: all logged-in users get full access
-  if (plan === 'pro' || process.env.NEXT_PUBLIC_BETA_MODE === 'true') {
+  // Pro users always allowed (BETA_MODE removed — was a security risk)
+  if (plan === 'pro') {
     return NextResponse.json({ allowed: true, isPro: true, viewCount: 0, limit: FREE_LIMIT })
   }
 
   const start = monthStart()
 
-  // Check if this ticker was already viewed this month
-  const { data: existingThisMonth } = await sb
+  // Attempt atomic insert with unique constraint (user_id, ticker, month_start)
+  // ON CONFLICT DO NOTHING prevents race conditions — if the row exists, nothing is inserted
+  const { error: insertError } = await sb
+    .from('stock_views')
+    .insert({ user_id: userId, ticker, month_start: start })
+
+  // Count distinct tickers viewed this month (after the attempted insert)
+  const { data: monthRows } = await sb
+    .from('stock_views')
+    .select('ticker')
+    .eq('user_id', userId)
+    .gte('first_viewed_at', start)
+  const monthCount = new Set(monthRows?.map((r: { ticker: string }) => r.ticker) ?? []).size
+
+  // If insert succeeded (no conflict), this is a new ticker — check against limit
+  if (!insertError) {
+    // Insert succeeded = new ticker. If count now exceeds limit, this was the +1 that pushed over.
+    // We allow it if monthCount <= FREE_LIMIT (insert already happened)
+    if (monthCount > FREE_LIMIT) {
+      // Delete the row we just inserted — the limit was already reached
+      await sb.from('stock_views').delete()
+        .eq('user_id', userId).eq('ticker', ticker).eq('month_start', start)
+      return NextResponse.json({ allowed: false, isPro: false, viewCount: FREE_LIMIT, limit: FREE_LIMIT })
+    }
+    return NextResponse.json({ allowed: true, isPro: false, viewCount: monthCount, limit: FREE_LIMIT })
+  }
+
+  // Insert conflict = ticker already viewed this month OR limit exceeded (no insert occurred)
+  // Re-check: does this ticker already exist for this month?
+  const { data: existingRow } = await sb
     .from('stock_views')
     .select('id')
     .eq('user_id', userId)
@@ -56,31 +93,16 @@ export async function POST(req: NextRequest) {
     .gte('first_viewed_at', start)
     .maybeSingle()
 
-  if (existingThisMonth) {
-    // Already unlocked this month — count how many distinct tickers this month
-    const { data: monthRows } = await sb
-      .from('stock_views')
-      .select('ticker')
-      .eq('user_id', userId)
-      .gte('first_viewed_at', start)
-    const monthCount = new Set(monthRows?.map(r => r.ticker) ?? []).size
+  if (existingRow) {
+    // Already viewed — allow re-viewing (doesn't count against limit)
     return NextResponse.json({ allowed: true, isPro: false, viewCount: monthCount, limit: FREE_LIMIT })
   }
 
-  // Count distinct tickers viewed this month
-  const { data: monthRows } = await sb
-    .from('stock_views')
-    .select('ticker')
-    .eq('user_id', userId)
-    .gte('first_viewed_at', start)
-  const monthCount = new Set(monthRows?.map(r => r.ticker) ?? []).size
-
+  // No existing row but insert failed = duplicate key race or limit was hit
   if (monthCount >= FREE_LIMIT) {
     return NextResponse.json({ allowed: false, isPro: false, viewCount: monthCount, limit: FREE_LIMIT })
   }
 
-  // Record the new view
-  await sb.from('stock_views').insert({ user_id: userId, ticker })
-
-  return NextResponse.json({ allowed: true, isPro: false, viewCount: monthCount + 1, limit: FREE_LIMIT })
+  // Fallback: allow (shouldn't reach here in normal operation)
+  return NextResponse.json({ allowed: true, isPro: false, viewCount: monthCount, limit: FREE_LIMIT })
 }

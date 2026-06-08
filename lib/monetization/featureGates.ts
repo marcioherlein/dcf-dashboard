@@ -1,3 +1,7 @@
+'use client'
+
+import { useSession } from 'next-auth/react'
+
 export type PlanTier = 'free' | 'pro'
 
 export type FeatureGate =
@@ -69,7 +73,12 @@ export function getGateConfig(gate: FeatureGate): GateConfig {
   return GATE_CONFIG[gate]
 }
 
+// Returns {allowed, tier} based on the user's plan from their session.
+// This is for UI gating only — server routes must independently enforce plan checks.
 export function useFeatureGate(gate: FeatureGate): { allowed: boolean; tier: PlanTier } {
+  const { data: session } = useSession()
   const required = GATE_CONFIG[gate].tier
-  return { allowed: true, tier: required }
+  const userPlan = (session?.user as { plan?: string } | undefined)?.plan ?? 'free'
+  const allowed = required === 'free' || userPlan === 'pro'
+  return { allowed, tier: required }
 }
