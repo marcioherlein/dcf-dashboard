@@ -102,7 +102,15 @@ async function fetchValuation(ticker) {
   return res.json()
 }
 
-// ─── Mode: earnings ───────────────────────────────────────────────────────────
+// Verdict language: analyst-style, not binary buy/sell signals
+function verdictLabel(upside) {
+  if (upside >  0.25) return { emoji: '🟢', short: 'Attractively priced vs model',    long: 'trades at a meaningful discount to our intrinsic value estimate' }
+  if (upside >  0.10) return { emoji: '🟡', short: 'Moderately below fair value',      long: 'appears modestly underpriced relative to our DCF estimate' }
+  if (upside >  0.00) return { emoji: '🟡', short: 'Near fair value (slight upside)',  long: 'is trading close to our intrinsic value estimate with limited upside' }
+  if (upside > -0.10) return { emoji: '🟡', short: 'Fully valued by our model',        long: 'appears fairly valued — current price reflects our base-case assumptions' }
+  if (upside > -0.25) return { emoji: '🔴', short: 'Trading at a premium to model',    long: 'is trading above our intrinsic value estimate — limited margin of safety' }
+  return                     { emoji: '🔴', short: 'Significant premium to fair value', long: 'is pricing in optimistic assumptions that our model does not fully support' }
+}
 // Finds S&P 500 stocks reporting earnings tomorrow, picks the biggest by market cap,
 // and posts a DCF-based preview.
 
@@ -185,16 +193,17 @@ async function runEarnings() {
     const numAnalysts = data.cagrAnalysis?.numAnalysts ?? 0
     const rec    = data.analystRecommendation ?? ''
     const recLabel = rec === 'strong_buy' ? 'Strong Buy' : rec === 'buy' ? 'Buy' : rec === 'hold' ? 'Hold' : null
-    const verdictEmoji = upside > 0.15 ? '🟢' : upside > 0 ? '🟡' : '🔴'
-    const verdictText  = upside > 0.15 ? 'Undervalued' : upside > -0.05 ? 'Fairly valued' : 'Overvalued'
+    const v = verdictLabel(upside)
+    const verdictEmoji = v.emoji
+    const verdictText  = v.short
 
     if (fair && price) {
       const parts = [
         ``,
         `━━━ DCF SNAPSHOT ━━━`,
-        `Verdict:    ${verdictEmoji} ${verdictText}`,
-        `Price:      ${fmt(price)}`,
-        `Fair Value: ${fmt(fair)}  (${pct(upside)} implied upside)`,
+        `Model view:  ${verdictEmoji} ${verdictText}`,
+        `Price:       ${fmt(price)}`,
+        `Fair Value:  ${fmt(fair)}  (${pct(upside)} vs current price)`,
         ...(bear && bull ? [`Range:      ${fmt(bear)} bear → ${fmt(bull)} bull`] : []),
         ``,
         `Model inputs: WACC ${pct(wacc, false)} · CAGR ${pct(cagr, false)}${analyst1y != null && numAnalysts >= 3 ? ` (analysts: ${pct(analyst1y, false)}, n=${numAnalysts})` : ''}`,
@@ -290,8 +299,7 @@ async function runDcf() {
 
   if (!price || !fair) throw new Error(`No price/fair value data for ${ticker}`)
 
-  const verdictEmoji = upside > 0.15 ? '🟢' : upside > 0 ? '🟡' : '🔴'
-  const verdictText  = upside > 0.15 ? 'Undervalued' : upside > -0.05 ? 'Fairly valued' : 'Overvalued'
+  const v = verdictLabel(upside)
 
   // ── Build insight lines (pick the 2 most interesting signals) ──
 
@@ -349,12 +357,13 @@ async function runDcf() {
     : recommendation === 'sell' ? 'Sell' : null
 
   const lines = [
-    `${verdictEmoji} $${ticker} — DCF Verdict: ${verdictText}`,
+    `${v.emoji} $${ticker} — ${v.short}`,
     ``,
     `━━━ VALUATION ━━━`,
     `Current price:  ${fmt(price)}`,
-    `Fair value:     ${fmt(fair)}`,
-    `Implied upside: ${pct(upside)}`,
+    `Fair value est: ${fmt(fair)}`,
+    `Difference:     ${pct(upside)} vs current price`,
+    `Model view: ${ticker} ${v.long}`,
     ...(bear && bull ? [`Scenario range: ${fmt(bear)} (bear) → ${fmt(bull)} (bull)`] : []),
     ``,
     `━━━ MODEL INPUTS ━━━`,
@@ -378,9 +387,11 @@ async function runDcf() {
     ``,
     `Rating: ${grade} ${label} · ${sector}`,
     ``,
+    `Model view: $${ticker} ${v.long}.`,
+    ``,
     `Full interactive model → ${APP_URL}/stock/${ticker}`,
     `#DCF #Valuation #${ticker} #Investing`,
-  ].filter(l => l !== null && l !== undefined)
+  ].filter(Boolean)
 
   await post(lines.join('\n'))
 }
@@ -950,11 +961,10 @@ async function runWeeklyWrap() {
   ]
 
   for (const s of stocks) {
-    const emoji   = s.upside > 0.15 ? '🟢' : s.upside > -0.05 ? '🟡' : '🔴'
-    const verdict = s.upside > 0.15 ? 'Undervalued' : s.upside > -0.05 ? 'Fairly valued' : 'Overvalued'
-    lines.push(`${emoji} $${s.ticker}`)
-    lines.push(`   Price ${fmt(s.price)} · Fair Value ${fmt(s.fair)} · ${pct(s.upside)} implied upside`)
-    lines.push(`   Verdict: ${verdict}`)
+    const v = verdictLabel(s.upside)
+    lines.push(`${v.emoji} $${s.ticker}`)
+    lines.push(`   Price ${fmt(s.price)} · Fair value est ${fmt(s.fair)} · ${pct(s.upside)} vs current price`)
+    lines.push(`   Model view: ${v.short}`)
     lines.push(``)
   }
 
@@ -999,12 +1009,13 @@ const QUESTIONS = [
     `#Investing #Stocks #RetailInvestors`,
   ],
   [
-    `💭 Do you think $NVDA is overvalued right now?`,
+    `💭 Do you think $NVDA is expensive at current prices?`,
     ``,
-    `Our DCF says: 🔴 Overvalued`,
-    `Wall St says: Strong Buy`,
+    `Our model: 🔴 Trading at a significant premium to fair value`,
+    `Wall St: Strong Buy`,
     ``,
-    `Who's right? Run the model yourself → ${APP_URL}/stock/NVDA`,
+    `Two very different frameworks. Which one are you using?`,
+    `Run the model yourself → ${APP_URL}/stock/NVDA`,
     ``,
     `#NVDA #Nvidia #DCF #Investing`,
   ],
@@ -1066,8 +1077,7 @@ async function runDcfBear() {
 
   if (!price || !fair) throw new Error(`No price/fair value data for ${ticker}`)
 
-  const verdictEmoji = upside > 0.15 ? '🟢' : upside > 0 ? '🟡' : '🔴'
-  const verdictText  = upside > 0.15 ? 'Undervalued' : upside > -0.05 ? 'Fairly valued' : 'Overvalued'
+  const v = verdictLabel(upside)
 
   // Build the contrarian angle
   const recLabel = recommendation === 'strong_buy' ? 'Strong Buy'
@@ -1076,26 +1086,26 @@ async function runDcfBear() {
     : recommendation === 'sell' ? 'Sell' : null
 
   const tensionLine = recLabel && (upside < -0.10)
-    ? `Wall St says: ${recLabel}. Our DCF says: ${verdictText}. Who's right?`
+    ? `Wall St rating: ${recLabel}. Our model: ${v.short}. Worth asking which assumptions differ.`
     : upside < -0.30
-    ? `The model needs ${pct(Math.abs(upside), false)} revenue growth to justify today's price.`
-    : `Price already bakes in a lot of optimism. Model says: ${verdictText}.`
+    ? `The model needs substantial growth delivery to support the current price — the base case does not.`
+    : `Current price appears to reflect an optimistic scenario. Our base-case model suggests limited margin of safety.`
 
   const growthLine = analyst1y != null && numAnalysts >= 3
     ? `Analysts expect ${pct(analyst1y, false)}/yr growth · model uses ${pct(cagr, false)} · WACC ${pct(wacc, false)}`
-    : forwardPE ? `Fwd P/E: ${forwardPE}× · model fair value: ${fmt(fair)}`
-    : `DCF fair value: ${fmt(fair)} · current price: ${fmt(price)}`
+    : forwardPE ? `Fwd P/E: ${forwardPE}× · model fair value est: ${fmt(fair)}`
+    : `Model fair value estimate: ${fmt(fair)} · current price: ${fmt(price)}`
 
   const lines = [
-    `${verdictEmoji} $${ticker} — ${verdictText} by DCF`,
+    `${v.emoji} $${ticker} — ${v.short}`,
     ``,
-    `━━━ THE TENSION ━━━`,
+    `━━━ THE MODEL'S VIEW ━━━`,
     tensionLine,
     ``,
     `━━━ NUMBERS ━━━`,
-    `Price:      ${fmt(price)}`,
-    `Fair Value: ${fmt(fair)}`,
-    `Upside:     ${pct(upside)}`,
+    `Price:           ${fmt(price)}`,
+    `Fair value est:  ${fmt(fair)}`,
+    `Difference:      ${pct(upside)} vs current price`,
     ``,
     growthLine,
     ``,
@@ -1107,7 +1117,7 @@ async function runDcfBear() {
       : `Fairly balanced. Not screaming cheap, not obviously expensive. Worth tracking.`,
     ``,
     `Rating: ${grade} ${label}`,
-    `Run the model yourself → ${APP_URL}/stock/${ticker}`,
+    `Full model → ${APP_URL}/stock/${ticker}`,
     `#DCF #Valuation #${ticker} #Investing`,
   ]
 
