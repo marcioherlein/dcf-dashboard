@@ -41,7 +41,7 @@ const PRO_FEATURES = [
 
 const COMPARISON_ROWS = [
   { label: 'Stocks per month',                             free: '10',  pro: '∞'   },
-  { label: 'Saved analyses (Watchlist)',                   free: '3',   pro: '∞'   },
+  { label: 'Saved analyses (Watchlist)',                   free: '10',  pro: '∞'   },
   { label: 'DCF fair value + grade badge',                 free: true,  pro: true  },
   { label: 'Weighted consensus (5 valuation methods)',     free: true,  pro: true  },
   { label: 'Bear / Base / Bull scenario range',            free: true,  pro: true  },
