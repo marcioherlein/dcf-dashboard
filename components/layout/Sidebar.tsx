@@ -28,47 +28,92 @@ const UTILITY_NAV: Array<{ href: string; label: string; icon: LucideIcon; match:
   { href: '/help',     label: 'Help',      icon: HelpCircle, match: (p) => p.startsWith('/help') },
 ]
 
+const EASE = [0.16, 1, 0.3, 1] as const
+
 function NavItem({
-  href, label, icon: Icon, active,
+  href, label, icon: Icon, active, index, reduced,
 }: {
-  href: string; label: string; icon: LucideIcon; active: boolean
+  href: string; label: string; icon: LucideIcon; active: boolean; index: number; reduced: boolean | null
 }) {
   return (
-    <Link
-      href={href}
-      aria-current={active ? 'page' : undefined}
-      className={cn(
-        'group relative flex items-center gap-2.5 px-3 py-2 rounded-[10px] text-[13.5px] font-medium transition-colors duration-120',
-        active
-          ? 'bg-[rgba(95,121,11,0.20)] text-white'
-          : 'text-[rgba(255,255,255,0.55)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white',
-      )}
+    <motion.li
+      initial={reduced ? false : { opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.28, ease: EASE, delay: index * 0.04 }}
     >
-      {/* Olive left indicator for active state */}
-      {active && (
-        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[18px] rounded-r-full bg-[#7C9A19]" aria-hidden="true" />
-      )}
-      <Icon
-        size={16}
-        strokeWidth={active ? 2.2 : 1.7}
-        aria-hidden="true"
+      <Link
+        href={href}
+        aria-current={active ? 'page' : undefined}
         className={cn(
-          'shrink-0 transition-colors duration-120',
+          'group relative flex items-center gap-2.5 px-3 py-[8px] rounded-[10px] text-[13.5px] font-medium transition-all duration-150',
           active
-            ? 'text-[#7C9A19]'
-            : 'text-[rgba(255,255,255,0.35)] group-hover:text-[#7C9A19]',
+            ? 'text-white'
+            : 'text-[rgba(255,255,255,0.5)] hover:text-[rgba(255,255,255,0.85)]',
         )}
-      />
-      <span className="truncate">{label}</span>
-    </Link>
+      >
+        {/* Glass active pill */}
+        {active && (
+          <motion.span
+            layoutId="sidebar-active-pill"
+            className="absolute inset-0 rounded-[10px]"
+            style={{
+              background: 'linear-gradient(135deg, rgba(124,154,25,0.28) 0%, rgba(95,121,11,0.18) 100%)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              border: '1px solid rgba(124,154,25,0.30)',
+              boxShadow: '0 2px 12px rgba(95,121,11,0.18), inset 0 1px 0 rgba(255,255,255,0.08)',
+            }}
+            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+          />
+        )}
+
+        {/* Hover fill — subtle */}
+        <span
+          className={cn(
+            'absolute inset-0 rounded-[10px] opacity-0 transition-opacity duration-150',
+            !active && 'group-hover:opacity-100',
+          )}
+          style={{ background: 'rgba(255,255,255,0.05)' }}
+          aria-hidden="true"
+        />
+
+        {/* Olive left pill — only when active */}
+        {active && (
+          <motion.span
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-full"
+            initial={reduced ? false : { height: 0, opacity: 0 }}
+            animate={{ height: 18, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 28, delay: 0.05 }}
+            style={{ background: '#7C9A19' }}
+            aria-hidden="true"
+          />
+        )}
+
+        <Icon
+          size={16}
+          strokeWidth={active ? 2.2 : 1.7}
+          aria-hidden="true"
+          className={cn(
+            'relative shrink-0 transition-colors duration-150',
+            active ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.32)] group-hover:text-[rgba(255,255,255,0.7)]',
+          )}
+        />
+        <span className="relative truncate">{label}</span>
+      </Link>
+    </motion.li>
   )
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children, delay, reduced }: { children: React.ReactNode; delay: number; reduced: boolean | null }) {
   return (
-    <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[rgba(255,255,255,0.28)]">
+    <motion.p
+      className="px-3 mb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[rgba(255,255,255,0.22)]"
+      initial={reduced ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3, ease: EASE, delay }}
+    >
       {children}
-    </p>
+    </motion.p>
   )
 }
 
@@ -84,56 +129,99 @@ export default function Sidebar() {
   return (
     <aside
       aria-label="Application sidebar"
-      className="fixed left-0 top-0 bottom-0 w-[240px] z-30 hidden lg:flex flex-col border-r border-[rgba(255,255,255,0.08)] bg-[#111111]"
+      className="fixed left-0 top-0 bottom-0 w-[240px] z-30 hidden lg:flex flex-col overflow-hidden"
+      style={{
+        /* Gradient: pure black top → very subtle warm olive tint at bottom */
+        background: 'linear-gradient(180deg, #0A0A0A 0%, #0D0F0A 60%, #0F1108 100%)',
+        /* Right-edge specular — mimics light catching glass */
+        borderRight: '1px solid rgba(255,255,255,0.07)',
+      }}
     >
+      {/* Specular highlight on right edge */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute right-0 top-0 bottom-0 w-px"
+        style={{
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 40%, rgba(124,154,25,0.12) 100%)',
+        }}
+      />
+
+      {/* Ambient olive glow — bottom corner */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 left-0 right-0 h-48"
+        style={{
+          background: 'radial-gradient(ellipse 180% 80% at 50% 120%, rgba(95,121,11,0.12) 0%, transparent 70%)',
+        }}
+      />
+
       {/* Logo lockup */}
-      <div className="px-4 border-b border-[rgba(255,255,255,0.08)]" style={{ height: '52px', display: 'flex', alignItems: 'center' }}>
+      <motion.div
+        className="relative px-4 flex items-center shrink-0"
+        style={{ height: '52px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}
+        initial={reduced ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.35, ease: EASE }}
+      >
         <Link href={session ? '/analyze' : '/'} className="flex items-center leading-none" aria-label="insic home">
           <InsicLogoLockup size="md" on="dark" />
         </Link>
-      </div>
+      </motion.div>
 
       {/* Navigation */}
-      <nav aria-label="Main navigation" className="flex-1 px-2.5 pt-4 pb-2 overflow-y-auto custom-scrollbar">
+      <nav aria-label="Main navigation" className="relative flex-1 px-2.5 pt-4 pb-2 overflow-y-auto custom-scrollbar">
 
-        <SectionLabel>Workspace</SectionLabel>
+        <SectionLabel delay={0.05} reduced={reduced}>Workspace</SectionLabel>
         <ul className="flex flex-col gap-0.5 mb-4 list-none p-0 m-0">
-          {PRIMARY_NAV.map(({ href, label, icon, match }) => (
-            <li key={href}>
-              <NavItem
-                href={href}
-                label={label}
-                icon={icon}
-                active={match(pathname)}
-              />
-            </li>
+          {PRIMARY_NAV.map(({ href, label, icon, match }, i) => (
+            <NavItem
+              key={href}
+              href={href}
+              label={label}
+              icon={icon}
+              active={match(pathname)}
+              index={i}
+              reduced={reduced}
+            />
           ))}
         </ul>
 
-        <div className="mx-3 mb-3 border-t border-[rgba(255,255,255,0.08)]" />
+        <motion.div
+          className="mx-3 mb-3"
+          style={{ height: '1px', background: 'rgba(255,255,255,0.07)' }}
+          initial={reduced ? false : { scaleX: 0, originX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 0.4, ease: EASE, delay: 0.28 }}
+          aria-hidden="true"
+        />
 
-        <SectionLabel>Tools</SectionLabel>
+        <SectionLabel delay={0.32} reduced={reduced}>Tools</SectionLabel>
         <ul className="flex flex-col gap-0.5 list-none p-0 m-0">
-          {UTILITY_NAV.map(({ href, label, icon, match }) => (
-            <li key={href}>
-              <NavItem
-                href={href}
-                label={label}
-                icon={icon}
-                active={match(pathname)}
-              />
-            </li>
+          {UTILITY_NAV.map(({ href, label, icon, match }, i) => (
+            <NavItem
+              key={href}
+              href={href}
+              label={label}
+              icon={icon}
+              active={match(pathname)}
+              index={PRIMARY_NAV.length + i}
+              reduced={reduced}
+            />
           ))}
         </ul>
       </nav>
 
-      {/* User profile footer */}
+      {/* User profile footer — glass surface */}
       <motion.div
-        className="px-3 py-3.5 border-t border-[rgba(255,255,255,0.08)]"
-        initial={reduced || hasAnimated.current ? false : { opacity: 0 }}
-        animate={{ opacity: 1 }}
+        className="relative px-3 py-3.5 shrink-0"
+        style={{
+          borderTop: '1px solid rgba(255,255,255,0.07)',
+          background: 'rgba(255,255,255,0.02)',
+        }}
+        initial={reduced || hasAnimated.current ? false : { opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
         onAnimationComplete={() => { hasAnimated.current = true }}
-        transition={{ delay: 0.1, duration: 0.24 }}
+        transition={{ delay: 0.38, duration: 0.32, ease: EASE }}
       >
         {session ? (
           <div className="flex items-center gap-2.5">
@@ -143,10 +231,15 @@ export default function Sidebar() {
                 alt={session.user.name ?? ''}
                 width={32}
                 height={32}
-                className="rounded-full ring-2 ring-[rgba(255,255,255,0.12)] shrink-0"
+                className="rounded-full shrink-0"
+                style={{ boxShadow: '0 0 0 2px rgba(255,255,255,0.12)' }}
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-[#5F790B] flex items-center justify-center shrink-0" aria-hidden="true">
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+                style={{ background: 'linear-gradient(135deg, #7C9A19 0%, #5F790B 100%)' }}
+                aria-hidden="true"
+              >
                 <span className="text-[11px] font-bold text-white leading-none">{initials}</span>
               </div>
             )}
@@ -156,7 +249,7 @@ export default function Sidebar() {
               </p>
               <button
                 onClick={() => signOut()}
-                className="shrink-0 text-[11px] text-[rgba(255,255,255,0.35)] hover:text-[#D83B3B] transition-colors leading-tight px-1 py-1 rounded"
+                className="shrink-0 text-[11px] text-[rgba(255,255,255,0.30)] hover:text-[#D83B3B] transition-colors leading-tight px-1 py-1 rounded min-h-[36px]"
               >
                 Sign out
               </button>
@@ -165,7 +258,13 @@ export default function Sidebar() {
         ) : (
           <button
             onClick={() => signIn('google')}
-            className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-[#5F790B] hover:bg-[#536B08] active:bg-[#4A5E07] px-3 py-2.5 text-[12.5px] font-semibold text-white transition-colors"
+            className="flex w-full items-center justify-center gap-2 rounded-[10px] px-3 py-2.5 text-[12.5px] font-semibold text-white transition-all min-h-[44px]"
+            style={{
+              background: 'linear-gradient(135deg, rgba(124,154,25,0.35) 0%, rgba(95,121,11,0.25) 100%)',
+              border: '1px solid rgba(124,154,25,0.35)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+            }}
           >
             Sign in
           </button>
