@@ -55,7 +55,7 @@ function computeVerdict(
   eps: number | null,
   drivers?: string[],
 ): string {
-  if (drivers && drivers.length > 0 && drivers[0].trim()) {
+  if (drivers && drivers.length > 0 && typeof drivers[0] === 'string' && drivers[0].trim()) {
     const first = drivers[0].trim()
     return first.endsWith('.') ? first : first + '.'
   }

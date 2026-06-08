@@ -77,6 +77,7 @@ function companySizeLabel(employees: number | null | undefined): string | null {
 
 /** Initials from company name (up to 2 chars) */
 function initials(name: string): string {
+  if (!name) return '?'
   return name
     .split(/\s+/)
     .filter(Boolean)

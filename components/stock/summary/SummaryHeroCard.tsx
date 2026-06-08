@@ -79,7 +79,7 @@ export default function SummaryHeroCard({
   const ratio       = fairValue != null && fairValue > 0 ? price / fairValue : null
 
   const badgeDrivers = drivers
-    .filter(d => POSITIVE_RE.test(d))
+    .filter(d => typeof d === 'string' && POSITIVE_RE.test(d))
     .slice(0, 5)
     .map(distillDriver)
 
