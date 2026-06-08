@@ -54,16 +54,16 @@ function getVerdict(entry: WatchlistEntry): 'Undervalued' | 'Fair Value' | 'Over
 function tagInfo(tag: ListTag): { label: string; cls: string; dot: string } | null {
   if (!tag) return null
   if (tag === 'buy')   return { label: 'High Conviction', cls: 'bg-[#EAF1FF] text-[#2563EB] border-[#93B4F5]',   dot: 'bg-olive-500' }
-  if (tag === 'watch') return { label: 'Watch',            cls: 'bg-[#FFF4DA] text-[#B56A00] border-[#E3E1DA]', dot: 'bg-[#B56A00]' }
-  if (tag === 'pass')  return { label: 'Avoid',            cls: 'bg-[#FCEAEA] text-[#D83B3B] border-[#E3E1DA]',       dot: 'bg-[#D83B3B]' }
+  if (tag === 'watch') return { label: 'Watch',            cls: 'bg-[#FFF4DA] text-[#B56A00] border-[#E5E5E5]', dot: 'bg-[#B56A00]' }
+  if (tag === 'pass')  return { label: 'Avoid',            cls: 'bg-[#FCEAEA] text-[#D83B3B] border-[#E5E5E5]',       dot: 'bg-[#D83B3B]' }
   return null
 }
 
 function verdictInfo(verdict: ReturnType<typeof getVerdict>): { cls: string } {
   if (verdict === 'Undervalued')  return { cls: 'bg-[#E8F7EF] text-[#11875D] border-[#CDD1C8]' }
-  if (verdict === 'Fair Value')   return { cls: 'bg-[#E3E1DA] text-[#566174] border-[#E3E1DA]' }
-  if (verdict === 'Overvalued')   return { cls: 'bg-[#FCEAEA] text-[#D83B3B] border-[#E3E1DA]' }
-  return { cls: 'bg-[#FFF4DA] text-[#B56A00] border-[#E3E1DA]' }
+  if (verdict === 'Fair Value')   return { cls: 'bg-[#EAF1FF] text-[#2563EB] border-[#BFDBFE]' }
+  if (verdict === 'Overvalued')   return { cls: 'bg-[#FCEAEA] text-[#D83B3B] border-[#E5E5E5]' }
+  return { cls: 'bg-[#FFF4DA] text-[#B56A00] border-[#E5E5E5]' }
 }
 
 function nextTag(tag: ListTag): ListTag {
@@ -120,9 +120,9 @@ function ExpandedNotePanel({ entry, onNoteSave, onClose }: {
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-bold text-[#2563EB] uppercase tracking-wider mb-1">Analyst note</p>
             {text.trim() ? (
-              <p className="text-[12px] text-[#06101F] leading-relaxed mb-2">{text}</p>
+              <p className="text-[12px] text-[#111111] leading-relaxed mb-2">{text}</p>
             ) : (
-              <p className="text-[12px] text-[#8A95A6] italic mb-2">
+              <p className="text-[12px] text-[#9B9B9B] italic mb-2">
                 No note yet. Add one to remember your thesis.
               </p>
             )}
@@ -131,7 +131,7 @@ function ExpandedNotePanel({ entry, onNoteSave, onClose }: {
               onChange={(e) => { setText(e.target.value); setEdited(true) }}
               rows={2}
               placeholder="Write your thesis, key reasons, or what to watch for…"
-              className="w-full text-[12px] text-[#06101F] bg-white border border-[#93B4F5] rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#93B4F5] focus:ring-2 focus:ring-olive-100 resize-none placeholder-slate-300"
+              className="w-full text-[12px] text-[#111111] bg-white border border-[#93B4F5] rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#93B4F5] focus:ring-2 focus:ring-olive-100 resize-none placeholder-slate-300"
             />
             <div className="flex items-center gap-3 mt-1.5">
               {edited && (
@@ -154,7 +154,7 @@ function ExpandedNotePanel({ entry, onNoteSave, onClose }: {
               </Link>
               <button
                 onClick={onClose}
-                className="ml-auto text-[11px] text-[#8A95A6] hover:text-[#566174] transition-colors"
+                className="ml-auto text-[11px] text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors"
               >
                 Close
               </button>
@@ -199,7 +199,7 @@ function ActionsMenu({ entry, groups, onDelete, onTagUpdate, onGroupUpdate }: {
       <button
         onClick={() => { setOpen((v) => !v); setMoveOpen(false) }}
         aria-label="Row actions"
-        className="p-1.5 rounded-lg text-[#8A95A6] hover:text-[#566174] hover:bg-[#E3E1DA] transition-colors sm:opacity-0 sm:group-hover:opacity-100"
+        className="p-1.5 rounded-lg text-[#9B9B9B] hover:text-[#6B6B6B] hover:bg-[#E5E5E5] transition-colors sm:opacity-0 sm:group-hover:opacity-100"
       >
         <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor">
           <circle cx="8" cy="3"  r="1.3" />
@@ -209,48 +209,48 @@ function ActionsMenu({ entry, groups, onDelete, onTagUpdate, onGroupUpdate }: {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-8 w-52 bg-white rounded-xl shadow-xl border border-[#E3E1DA] z-40 py-1 overflow-hidden">
+        <div className="absolute right-0 top-8 w-52 bg-white rounded-xl shadow-xl border border-[#E5E5E5] z-40 py-1 overflow-hidden">
           <Link
             href={`/stock/${entry.ticker}`}
-            className="flex items-center gap-2.5 px-3.5 py-2 text-[12px] text-[#06101F] hover:bg-[#F4F3EF]"
+            className="flex items-center gap-2.5 px-3.5 py-2 text-[12px] text-[#111111] hover:bg-[#F5F5F5]"
             onClick={close}
           >
-            <svg className="w-3.5 h-3.5 text-[#8A95A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-3.5 h-3.5 text-[#9B9B9B]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
             Open analysis
           </Link>
 
           <button
-            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] text-[#06101F] hover:bg-[#F4F3EF]"
+            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] text-[#111111] hover:bg-[#F5F5F5]"
             onClick={() => { onTagUpdate(nextTag(entry.listTag)); close() }}
           >
-            <svg className="w-3.5 h-3.5 text-[#8A95A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-3.5 h-3.5 text-[#9B9B9B]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
             </svg>
             Change tag
           </button>
 
           <button
-            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] text-[#06101F] hover:bg-[#F4F3EF]"
+            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] text-[#111111] hover:bg-[#F5F5F5]"
             onClick={() => setMoveOpen((v) => !v)}
           >
-            <svg className="w-3.5 h-3.5 text-[#8A95A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-3.5 h-3.5 text-[#9B9B9B]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 12h18M3 17h18" />
             </svg>
             Move to group
-            <svg className="w-3 h-3 ml-auto text-[#8A95A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-3 h-3 ml-auto text-[#9B9B9B]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
           </button>
 
           {moveOpen && (
-            <div className="border-t border-[#E3E1DA] bg-[#F4F3EF]/60 py-1">
+            <div className="border-t border-[#E5E5E5] bg-[#F5F5F5]/60 py-1">
               {groups.filter((g) => g !== entry.groupName).map((g) => (
                 <button
                   key={g}
                   onClick={() => { onGroupUpdate(g); close() }}
-                  className="w-full text-left px-5 py-1.5 text-[11px] text-[#566174] hover:bg-white transition-colors"
+                  className="w-full text-left px-5 py-1.5 text-[11px] text-[#6B6B6B] hover:bg-white transition-colors"
                 >
                   {g}
                 </button>
@@ -273,7 +273,7 @@ function ActionsMenu({ entry, groups, onDelete, onTagUpdate, onGroupUpdate }: {
                     if (e.key === 'Escape') setMoveOpen(false)
                   }}
                   placeholder="New group…"
-                  className="flex-1 text-[11px] border border-[#E3E1DA] rounded-md px-2 py-1 outline-none focus:border-[#93B4F5] bg-white"
+                  className="flex-1 text-[11px] border border-[#E5E5E5] rounded-md px-2 py-1 outline-none focus:border-[#93B4F5] bg-white"
                   onClick={(e) => e.stopPropagation()}
                 />
                 {newGroup.trim() && (
@@ -288,10 +288,10 @@ function ActionsMenu({ entry, groups, onDelete, onTagUpdate, onGroupUpdate }: {
             </div>
           )}
 
-          <div className="border-t border-[#E3E1DA] mt-1 pt-1">
+          <div className="border-t border-[#E5E5E5] mt-1 pt-1">
             {confirm ? (
               <div className="px-3.5 py-2">
-                <p className="text-[11px] text-[#566174] mb-2">Remove this analysis?</p>
+                <p className="text-[11px] text-[#6B6B6B] mb-2">Remove this analysis?</p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => { onDelete(); close() }}
@@ -301,7 +301,7 @@ function ActionsMenu({ entry, groups, onDelete, onTagUpdate, onGroupUpdate }: {
                   </button>
                   <button
                     onClick={() => setConfirm(false)}
-                    className="flex-1 py-1 rounded-lg border border-[#E3E1DA] text-[11px] text-[#566174] hover:bg-[#F4F3EF] transition-colors"
+                    className="flex-1 py-1 rounded-lg border border-[#E5E5E5] text-[11px] text-[#6B6B6B] hover:bg-[#F5F5F5] transition-colors"
                   >
                     Cancel
                   </button>
@@ -340,7 +340,7 @@ function Th({ label, sortKey, current, dir, onSort, align = 'right' }: {
     <th
       onClick={() => onSort(sortKey)}
       className={cn(
-        'px-3 py-2 text-[10px] font-semibold text-[#6B6B6B] cursor-pointer select-none hover:text-[#566174] transition-colors whitespace-nowrap',
+        'px-3 py-2 text-[10px] font-semibold text-[#6B6B6B] cursor-pointer select-none hover:text-[#6B6B6B] transition-colors whitespace-nowrap',
         align === 'right' ? 'text-right' : 'text-left',
       )}
     >
@@ -387,7 +387,7 @@ function MobileValuationCard({ entry, sparklines, onDelete, onTagUpdate, onGroup
             <TickerAvatar ticker={entry.ticker} />
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <Link href={`/stock/${entry.ticker}`} className="text-[13px] font-semibold text-[#06101F] font-mono hover:text-olive-700 transition-colors">
+                <Link href={`/stock/${entry.ticker}`} className="text-[13px] font-semibold text-[#111111] font-mono hover:text-olive-700 transition-colors">
                   {entry.ticker}
                 </Link>
                 {tInfo && (
@@ -412,15 +412,15 @@ function MobileValuationCard({ entry, sparklines, onDelete, onTagUpdate, onGroup
         <div className="grid grid-cols-3 gap-2 mt-3">
           <div>
             <p className="text-[10px] text-[#6B6B6B] font-semibold mb-0.5">Price</p>
-            <p className="text-[12px] font-medium text-[#06101F] tabular-nums">{fmtPrice(entry.snapshot.price, 'USD')}</p>
+            <p className="text-[12px] font-medium text-[#111111] tabular-nums">{fmtPrice(entry.snapshot.price, 'USD')}</p>
           </div>
           <div>
             <p className="text-[10px] text-[#6B6B6B] font-semibold mb-0.5">Fair Value</p>
-            <p className="text-[12px] font-medium text-[#566174] tabular-nums">{fmtPrice(entry.snapshot.fairValue, 'USD')}</p>
+            <p className="text-[12px] font-medium text-[#6B6B6B] tabular-nums">{fmtPrice(entry.snapshot.fairValue, 'USD')}</p>
           </div>
           <div>
             <p className="text-[10px] text-[#6B6B6B] font-semibold mb-0.5">Upside</p>
-            <p className={cn('text-[12px] font-semibold tabular-nums', upside == null ? 'text-[#8A95A6]' : upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
+            <p className={cn('text-[12px] font-semibold tabular-nums', upside == null ? 'text-[#9B9B9B]' : upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
               {upside != null ? `${upside >= 0 ? '+' : ''}${(upside * 100).toFixed(1)}%` : '—'}
             </p>
           </div>
@@ -430,7 +430,7 @@ function MobileValuationCard({ entry, sparklines, onDelete, onTagUpdate, onGroup
           <span className={cn('text-[10px] font-semibold rounded-full px-1.5 py-0.5 border', vtInfo.cls)}>
             {verdict}
           </span>
-          <span className="text-[11px] text-[#8A95A6]">{relativeDate(entry.updatedAt)}</span>
+          <span className="text-[11px] text-[#9B9B9B]">{relativeDate(entry.updatedAt)}</span>
           <button
             onClick={() => setExpanded((v) => !v)}
             className="text-[11px] font-semibold text-olive-700 hover:text-[#2563EB] transition-colors"
@@ -473,7 +473,7 @@ function NoteEditorMobile({ entry, onNoteSave }: {
         onChange={(e) => { setText(e.target.value); setEdited(true) }}
         rows={3}
         placeholder="Write your thesis…"
-        className="w-full text-[12px] text-[#06101F] bg-white border border-[#93B4F5] rounded-lg px-3 py-2 focus:outline-none focus:border-[#93B4F5] resize-none placeholder-slate-300"
+        className="w-full text-[12px] text-[#111111] bg-white border border-[#93B4F5] rounded-lg px-3 py-2 focus:outline-none focus:border-[#93B4F5] resize-none placeholder-slate-300"
       />
       <div className="flex items-center gap-3 mt-1.5">
         {edited && (
@@ -522,8 +522,8 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
   if (entries.length === 0) {
     return (
       <div className="bg-white border border-[#E5E5E5] rounded-xl p-8 text-center">
-        <p className="text-[13px] text-[#566174] font-medium">No valuations match your filters.</p>
-        <p className="text-[12px] text-[#8A95A6] mt-1">Try clearing filters or switching tabs.</p>
+        <p className="text-[13px] text-[#6B6B6B] font-medium">No valuations match your filters.</p>
+        <p className="text-[12px] text-[#9B9B9B] mt-1">Try clearing filters or switching tabs.</p>
       </div>
     )
   }
@@ -595,7 +595,7 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                         <button
                           onClick={() => toggleExpand(entry.ticker)}
                           aria-label={isExpanded ? 'Collapse row' : 'Expand row'}
-                          className="text-[#8A95A6] hover:text-[#2563EB] transition-colors"
+                          className="text-[#9B9B9B] hover:text-[#2563EB] transition-colors"
                         >
                           <svg
                             className={cn('w-3.5 h-3.5 transition-transform', isExpanded && 'rotate-90')}
@@ -613,7 +613,7 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                           <div className="min-w-0">
                             <Link
                               href={`/stock/${entry.ticker}`}
-                              className="text-[12px] font-semibold font-mono text-[#06101F] hover:text-olive-700 transition-colors leading-tight block"
+                              className="text-[12px] font-semibold font-mono text-[#111111] hover:text-olive-700 transition-colors leading-tight block"
                             >
                               {entry.ticker}
                             </Link>
@@ -630,7 +630,7 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                             {tInfo.label}
                           </span>
                         ) : (
-                          <span className="text-[#8A95A6] text-[11px]">—</span>
+                          <span className="text-[#9B9B9B] text-[11px]">—</span>
                         )}
                       </td>
 
@@ -642,7 +642,7 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                           ) : prices && prices.length >= 2 ? (
                             <Sparkline prices={prices} up={up} width={80} height={24} />
                           ) : (
-                            <span className="text-[#8A95A6] text-[11px]">—</span>
+                            <span className="text-[#9B9B9B] text-[11px]">—</span>
                           )}
                         </div>
                       </td>
@@ -650,7 +650,7 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                       {/* Price */}
                       <td className="px-3 py-1.5 text-right whitespace-nowrap">
                         <div>
-                          <p className="text-[12px] font-medium text-[#06101F] tabular-nums">
+                          <p className="text-[12px] font-medium text-[#111111] tabular-nums">
                             {fmtPrice(entry.snapshot.price, 'USD')}
                           </p>
                           {(() => {
@@ -671,7 +671,7 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
 
                       {/* Fair Value */}
                       <td className="px-3 py-1.5 text-right whitespace-nowrap">
-                        <p className="text-[12px] font-medium text-[#06101F] tabular-nums">
+                        <p className="text-[12px] font-medium text-[#111111] tabular-nums">
                           {fmtPrice(entry.snapshot.fairValue, 'USD')}
                         </p>
                       </td>
@@ -683,7 +683,7 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                             {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(1)}%
                           </p>
                         ) : (
-                          <span className="text-[#8A95A6] text-[12px]">—</span>
+                          <span className="text-[#9B9B9B] text-[12px]">—</span>
                         )}
                       </td>
 
@@ -709,13 +709,13 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                               {priceDelta >= 0 ? '+' : ''}{(priceDelta * 100).toFixed(1)}%
                             </p>
                             {towardFV != null && (
-                              <p className={cn('text-[10px] font-medium mt-0', towardFV ? 'text-[#11875D]' : 'text-[#8A95A6]')}>
+                              <p className={cn('text-[10px] font-medium mt-0', towardFV ? 'text-[#11875D]' : 'text-[#9B9B9B]')}>
                                 {towardFV ? 'Toward FV' : 'Away from FV'}
                               </p>
                             )}
                           </div>
                         ) : (
-                          <span className="text-[#8A95A6] text-[11px]">—</span>
+                          <span className="text-[#9B9B9B] text-[11px]">—</span>
                         )}
                       </td>
 

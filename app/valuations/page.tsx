@@ -123,7 +123,7 @@ function SegmentTabs({ active, counts, onSelect }: {
     <div
       role="tablist"
       aria-label="Valuation lists"
-      className="flex items-center gap-0 overflow-x-auto scrollbar-hide border-b border-[#E6ECF5]"
+      className="flex items-center gap-0 overflow-x-auto scrollbar-hide border-b border-[#E5E5E5]"
     >
       {TABS.map(({ id, label }) => {
         const isActive = active === id
@@ -138,14 +138,14 @@ function SegmentTabs({ active, counts, onSelect }: {
               'flex items-center gap-1.5 px-4 py-3 text-[13px] font-semibold whitespace-nowrap border-b-2 transition-colors',
               isActive
                 ? 'text-olive-700 border-olive-700'
-                : 'text-[#566174] border-transparent hover:text-[#06101F] hover:border-[#CDD1C8]',
+                : 'text-[#6B6B6B] border-transparent hover:text-[#111111] hover:border-[#CDD1C8]',
             )}
           >
             {label}
             {count > 0 && (
               <span className={cn(
                 'text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center',
-                isActive ? 'bg-olive-100 text-olive-700' : 'bg-[#F4F3EF] text-[#566174]',
+                isActive ? 'bg-olive-100 text-olive-700' : 'bg-[#F5F5F5] text-[#6B6B6B]',
               )}>
                 {count}
               </span>
@@ -170,14 +170,14 @@ function FilterSelect({ label, value, options, onChange }: {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="appearance-none pl-3 pr-7 py-2 text-[12px] font-semibold text-[#566174] bg-white border border-[#DDE6F2] rounded-xl cursor-pointer hover:border-[#93B4F5] focus:outline-none focus:border-[#5F790B] transition-colors min-h-[44px]"
+        className="appearance-none pl-3 pr-7 py-2 text-[12px] font-semibold text-[#6B6B6B] bg-white border border-[#DDE6F2] rounded-xl cursor-pointer hover:border-[#93B4F5] focus:outline-none focus:border-[#5F790B] transition-colors min-h-[44px]"
         style={{ fontSize: '16px' }}
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>{label}: {o.label}</option>
         ))}
       </select>
-      <ChevronDown size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#8A95A6] pointer-events-none" />
+      <ChevronDown size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#9B9B9B] pointer-events-none" />
     </div>
   )
 }
@@ -217,16 +217,16 @@ function SortDropdown({ current, dir, onSort }: {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="listbox"
-        className="flex items-center gap-2 pl-3 pr-2.5 py-2 text-[12px] font-semibold text-[#566174] bg-white border border-[#DDE6F2] rounded-xl hover:border-[#93B4F5] transition-colors min-h-[44px]"
+        className="flex items-center gap-2 pl-3 pr-2.5 py-2 text-[12px] font-semibold text-[#6B6B6B] bg-white border border-[#DDE6F2] rounded-xl hover:border-[#93B4F5] transition-colors min-h-[44px]"
       >
         Sort: {currentLabel}
-        <ChevronDown size={12} className="text-[#8A95A6]" />
+        <ChevronDown size={12} className="text-[#9B9B9B]" />
       </button>
       {open && (
         <div
           role="listbox"
           aria-label="Sort by"
-          className="absolute right-0 top-9 w-44 bg-white rounded-xl border border-[#E3E1DA] shadow-lg z-20 py-1 overflow-hidden"
+          className="absolute right-0 top-9 w-44 bg-white rounded-xl border border-[#E5E5E5] shadow-lg z-20 py-1 overflow-hidden"
           onKeyDown={(e) => { if (e.key === 'Escape') setOpen(false) }}
         >
           {SORT_OPTIONS.map(({ key, label }) => (
@@ -240,7 +240,7 @@ function SortDropdown({ current, dir, onSort }: {
               }}
               className={cn(
                 'w-full flex items-center justify-between px-3.5 py-2 text-[13px] transition-colors',
-                current === key ? 'text-olive-700 bg-olive-50 font-semibold' : 'text-[#06101F] hover:bg-[#F4F3EF]',
+                current === key ? 'text-olive-700 bg-olive-50 font-semibold' : 'text-[#111111] hover:bg-[#F5F5F5]',
               )}
             >
               {label}
@@ -266,16 +266,16 @@ function GridCard({ entry }: { entry: WatchlistEntry }) {
     ? 'bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]'
     : verdict === 'Needs Review'
     ? 'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]'
-    : 'bg-[#F4F3EF] text-[#566174] border-[#E3E1DA]'
+    : 'bg-[#F5F5F5] text-[#6B6B6B] border-[#E5E5E5]'
 
   return (
-    <div className="bg-white border border-[#E6ECF5] rounded-2xl p-5 flex flex-col gap-3 hover:border-[#93B4F5] hover:shadow-md transition-all">
+    <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 flex flex-col gap-3 hover:border-[#93B4F5] hover:shadow-md transition-all">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <Link href={`/stock/${entry.ticker}`} className="text-[15px] font-bold text-[#06101F] font-mono hover:text-[#2563EB] transition-colors">
+          <Link href={`/stock/${entry.ticker}`} className="text-[15px] font-bold text-[#111111] font-mono hover:text-[#2563EB] transition-colors">
             {entry.ticker}
           </Link>
-          <p className="text-[11px] text-[#566174] mt-0.5 truncate">{entry.companyName}</p>
+          <p className="text-[11px] text-[#6B6B6B] mt-0.5 truncate">{entry.companyName}</p>
         </div>
         <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border shrink-0', verdictCls)}>
           {verdict}
@@ -283,15 +283,15 @@ function GridCard({ entry }: { entry: WatchlistEntry }) {
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <div className="bg-[#F4F3EF] rounded-xl px-3 py-2.5">
-          <p className="text-[11px] text-[#566174] font-semibold mb-1">Price</p>
-          <p className="text-[13px] font-bold text-[#06101F] tabular-nums">
+        <div className="bg-[#F5F5F5] rounded-xl px-3 py-2.5">
+          <p className="text-[11px] text-[#6B6B6B] font-semibold mb-1">Price</p>
+          <p className="text-[13px] font-bold text-[#111111] tabular-nums">
             {entry.snapshot.price != null ? `$${entry.snapshot.price.toFixed(2)}` : '—'}
           </p>
         </div>
-        <div className={cn('rounded-xl px-3 py-2.5', upside != null ? (upside >= 0 ? 'bg-[#E8F7EF]' : 'bg-[#FCEAEA]') : 'bg-[#F4F3EF]')}>
-          <p className="text-[11px] text-[#566174] font-semibold mb-1">Fair Value</p>
-          <p className={cn('text-[13px] font-bold tabular-nums', upside != null ? (upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]') : 'text-[#8A95A6]')}>
+        <div className={cn('rounded-xl px-3 py-2.5', upside != null ? (upside >= 0 ? 'bg-[#E8F7EF]' : 'bg-[#FCEAEA]') : 'bg-[#F5F5F5]')}>
+          <p className="text-[11px] text-[#6B6B6B] font-semibold mb-1">Fair Value</p>
+          <p className={cn('text-[13px] font-bold tabular-nums', upside != null ? (upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]') : 'text-[#9B9B9B]')}>
             {entry.snapshot.fairValue != null ? `$${entry.snapshot.fairValue.toFixed(2)}` : '—'}
           </p>
         </div>
@@ -303,8 +303,8 @@ function GridCard({ entry }: { entry: WatchlistEntry }) {
         </p>
       )}
 
-      <div className="flex items-center justify-between pt-2 border-t border-[#E3E1DA] mt-auto">
-        <span className="text-[10px] text-[#8A95A6]">
+      <div className="flex items-center justify-between pt-2 border-t border-[#E5E5E5] mt-auto">
+        <span className="text-[10px] text-[#9B9B9B]">
           {new Date(entry.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
         </span>
         <Link href={`/stock/${entry.ticker}`} className="text-[11px] font-bold text-[#2563EB] hover:text-[#2563EB] transition-colors">
@@ -325,27 +325,27 @@ const GHOST_ENTRIES = [
 
 function EmptyState() {
   return (
-    <div className="rounded-2xl bg-white border border-[#E6ECF5] overflow-hidden">
+    <div className="rounded-xl bg-white border border-[#E5E5E5] overflow-hidden">
       {/* Ghost preview */}
-      <div className="px-5 pt-6 pb-4 border-b border-[#F4F3EF]">
-        <p className="text-[11px] font-semibold text-[#8A95A6] mb-3">
+      <div className="px-5 pt-6 pb-4 border-b border-[#F5F5F5]">
+        <p className="text-[11px] font-semibold text-[#9B9B9B] mb-3">
           Your list will look like this
         </p>
         <div className="space-y-2 opacity-40 pointer-events-none select-none">
           {GHOST_ENTRIES.map((g) => (
             <div
               key={g.ticker}
-              className="flex items-center justify-between gap-3 rounded-xl border border-[#E3E1DA] px-4 py-3"
+              className="flex items-center justify-between gap-3 rounded-xl border border-[#E5E5E5] px-4 py-3"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <span className="text-[11px] font-bold text-[#2563EB] bg-[#EAF1FF] border border-[#93B4F5] rounded px-1.5 py-0.5 font-mono shrink-0">
                   {g.ticker}
                 </span>
-                <span className="text-[13px] text-[#06101F] truncate">{g.company}</span>
+                <span className="text-[13px] text-[#111111] truncate">{g.company}</span>
               </div>
               <div className="flex items-center gap-4 shrink-0">
-                <span className="text-[12px] text-[#566174] tabular-nums hidden sm:block">{g.price}</span>
-                <span className="text-[13px] font-bold tabular-nums text-[#06101F] hidden sm:block">{g.fair}</span>
+                <span className="text-[12px] text-[#6B6B6B] tabular-nums hidden sm:block">{g.price}</span>
+                <span className="text-[13px] font-bold tabular-nums text-[#111111] hidden sm:block">{g.fair}</span>
                 <span className={`text-[12px] font-bold tabular-nums ${g.upCls}`}>{g.upside}</span>
                 <span className={`text-[10px] font-semibold rounded-full px-2 py-0.5 border hidden sm:inline ${g.verdictCls}`}>
                   {g.verdict}
@@ -358,13 +358,13 @@ function EmptyState() {
 
       {/* Activation steps + CTAs */}
       <div className="px-5 py-6 sm:px-8 sm:py-8 flex flex-col items-center text-center gap-5">
-        <div className="w-12 h-12 rounded-2xl bg-[#EAF1FF] border border-blue-100 flex items-center justify-center">
+        <div className="w-12 h-12 rounded-xl bg-[#EAF1FF] border border-blue-100 flex items-center justify-center">
           <Bookmark size={20} className="text-[#2563EB]" />
         </div>
 
         <div>
-          <h2 className="text-[17px] font-bold text-[#06101F]">No saved valuations yet</h2>
-          <p className="text-[13px] text-[#566174] mt-1 max-w-xs leading-relaxed">
+          <h2 className="text-[17px] font-bold text-[#111111]">No saved valuations yet</h2>
+          <p className="text-[13px] text-[#6B6B6B] mt-1 max-w-xs leading-relaxed">
             Analyze a stock, then save the result to track fair value and upside over time.
           </p>
         </div>
@@ -378,14 +378,14 @@ function EmptyState() {
           ].map((step, i) => (
             <div key={step.n} className="flex sm:flex-col items-center sm:items-center gap-3 sm:gap-1.5 flex-1 relative py-2 sm:py-0">
               {i < 2 && (
-                <div className="hidden sm:block absolute top-4 left-[calc(50%+12px)] right-0 h-px bg-[#E3E1DA]" />
+                <div className="hidden sm:block absolute top-4 left-[calc(50%+12px)] right-0 h-px bg-[#E5E5E5]" />
               )}
               <div className="w-7 h-7 rounded-full bg-[#EAF1FF] border border-[#93B4F5] flex items-center justify-center shrink-0 z-10">
                 <span className="text-[11px] font-bold text-[#2563EB]">{step.n}</span>
               </div>
               <div className="sm:text-center">
-                <p className="text-[12px] font-semibold text-[#06101F] leading-tight">{step.label}</p>
-                <p className="text-[11px] text-[#8A95A6] leading-snug mt-0.5">{step.sub}</p>
+                <p className="text-[12px] font-semibold text-[#111111] leading-tight">{step.label}</p>
+                <p className="text-[11px] text-[#9B9B9B] leading-snug mt-0.5">{step.sub}</p>
               </div>
             </div>
           ))}
@@ -400,7 +400,7 @@ function EmptyState() {
           </Link>
           <Link
             href="/analyze"
-            className="w-full sm:w-auto rounded-xl border border-[#DDE6F2] text-[#566174] hover:bg-[#F4F3EF] px-6 py-3 text-[14px] font-semibold transition-colors min-h-[48px] flex items-center justify-center"
+            className="w-full sm:w-auto rounded-xl border border-[#DDE6F2] text-[#6B6B6B] hover:bg-[#F5F5F5] px-6 py-3 text-[14px] font-semibold transition-colors min-h-[48px] flex items-center justify-center"
           >
             Explore popular analyses
           </Link>
@@ -440,7 +440,7 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1 py-1">
-      <p className="text-[12px] text-[#566174]">
+      <p className="text-[12px] text-[#6B6B6B]">
         Showing {start} to {end} of {total} results
       </p>
 
@@ -449,7 +449,7 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
           onClick={() => onPage(page - 1)}
           disabled={page === 1}
           aria-label="Previous page"
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-[#DDE6F2] text-[#566174] hover:bg-[#F4F3EF] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-[#DDE6F2] text-[#6B6B6B] hover:bg-[#F5F5F5] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronLeft size={14} />
         </button>
@@ -461,7 +461,7 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
               'min-w-[44px] h-[44px] rounded-lg text-[12px] font-semibold border transition-colors',
               p === page
                 ? 'bg-olive-700 border-olive-700 text-white'
-                : 'border-[#DDE6F2] text-[#566174] hover:bg-[#F4F3EF]',
+                : 'border-[#DDE6F2] text-[#6B6B6B] hover:bg-[#F5F5F5]',
             )}
           >
             {p}
@@ -471,26 +471,26 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
           onClick={() => onPage(page + 1)}
           disabled={page === totalPages}
           aria-label="Next page"
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-[#DDE6F2] text-[#566174] hover:bg-[#F4F3EF] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-[#DDE6F2] text-[#6B6B6B] hover:bg-[#F5F5F5] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronRight size={14} />
         </button>
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="text-[12px] text-[#566174]">Rows:</span>
+        <span className="text-[12px] text-[#6B6B6B]">Rows:</span>
         <div className="relative">
           <select
             value={pageSize}
             onChange={(e) => { onPageSize(Number(e.target.value)); onPage(1) }}
-            className="appearance-none pl-2.5 pr-6 py-1 text-[12px] font-semibold text-[#566174] bg-white border border-[#DDE6F2] rounded-lg cursor-pointer focus:outline-none"
+            className="appearance-none pl-2.5 pr-6 py-1 text-[12px] font-semibold text-[#6B6B6B] bg-white border border-[#DDE6F2] rounded-lg cursor-pointer focus:outline-none"
             style={{ fontSize: '16px' }}
           >
             {PAGE_SIZE_OPTIONS.map((s) => (
               <option key={s} value={s}>{s} / page</option>
             ))}
           </select>
-          <ChevronDown size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[#8A95A6] pointer-events-none" />
+          <ChevronDown size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[#9B9B9B] pointer-events-none" />
         </div>
       </div>
     </div>
@@ -502,12 +502,12 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
 function LoginWall() {
   return (
     <div className="min-h-dvh bg-background flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white border border-[#E6ECF5] rounded-2xl shadow-sm p-8 text-center">
-        <div className="mx-auto mb-5 w-14 h-14 rounded-2xl bg-olive-100 border border-olive-100 flex items-center justify-center">
+      <div className="w-full max-w-md bg-white border border-[#E5E5E5] rounded-xl shadow-sm p-8 text-center">
+        <div className="mx-auto mb-5 w-14 h-14 rounded-xl bg-olive-100 border border-olive-100 flex items-center justify-center">
           <Bookmark size={24} className="text-olive-700" />
         </div>
-        <h1 className="text-[22px] font-bold text-[#06101F] tracking-tight">My Valuations</h1>
-        <p className="mt-2 text-[14px] text-[#566174] leading-relaxed max-w-xs mx-auto">
+        <h1 className="text-[22px] font-bold text-[#111111] tracking-tight">My Valuations</h1>
+        <p className="mt-2 text-[14px] text-[#6B6B6B] leading-relaxed max-w-xs mx-auto">
           Your saved analyses and watchlist are private. Sign in to access your personal workspace.
         </p>
         <button
@@ -522,7 +522,7 @@ function LoginWall() {
           </svg>
           Continue with Google
         </button>
-        <p className="mt-4 text-[12px] text-[#8A95A6]">Free during beta · No credit card required</p>
+        <p className="mt-4 text-[12px] text-[#9B9B9B]">Free during beta · No credit card required</p>
       </div>
     </div>
   )
@@ -661,17 +661,17 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
       {/* Page header */}
       <div className="flex items-start justify-between gap-4 mb-5">
         <div>
-          <h1 className="text-[28px] sm:text-[32px] font-bold text-[#06101F] tracking-tight leading-none" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+          <h1 className="text-[28px] sm:text-[32px] font-bold text-[#111111] tracking-tight leading-none" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
             My Valuations
           </h1>
-          <p className="mt-1.5 text-[14px] text-[#566174]">Saved analyses and watchlist ideas</p>
+          <p className="mt-1.5 text-[14px] text-[#6B6B6B]">Saved analyses and watchlist ideas</p>
         </div>
-        <div className="flex items-center gap-1 p-1 bg-[#F4F3EF] rounded-xl shrink-0">
+        <div className="flex items-center gap-1 p-1 bg-[#F5F5F5] rounded-xl shrink-0">
           <button
             onClick={() => setView('table')}
             title="Table view"
             aria-label="Table view"
-            className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', view === 'table' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#8A95A6] hover:text-[#566174]')}
+            className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', view === 'table' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}
           >
             <List size={16} />
           </button>
@@ -679,7 +679,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
             onClick={() => setView('grid')}
             title="Grid view"
             aria-label="Grid view"
-            className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', view === 'grid' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#8A95A6] hover:text-[#566174]')}
+            className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', view === 'grid' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}
           >
             <LayoutGrid size={16} />
           </button>
@@ -725,10 +725,10 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
         <div className="space-y-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-24 bg-white border border-[#E6ECF5] rounded-2xl motion-safe:animate-pulse" />
+              <div key={i} className="h-24 bg-white border border-[#E5E5E5] rounded-xl motion-safe:animate-pulse" />
             ))}
           </div>
-          <div className="h-96 bg-white border border-[#E6ECF5] rounded-2xl motion-safe:animate-pulse" />
+          <div className="h-96 bg-white border border-[#E5E5E5] rounded-xl motion-safe:animate-pulse" />
         </div>
       )}
 
@@ -740,7 +740,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
         <div className="space-y-5">
 
           {/* Toolbar */}
-          <div className="bg-white border border-[#E6ECF5] rounded-2xl overflow-hidden shadow-sm">
+          <div className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden shadow-sm">
             {/* Segment tabs */}
             <div className="flex items-center justify-between gap-2 px-4 pt-1">
               <div className="flex-1 min-w-0 overflow-x-auto scrollbar-hide">
@@ -765,11 +765,11 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
                       onChange={(e) => setGroupInputValue(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Escape') { setGroupInputOpen(false); setGroupInputValue('') } }}
                       placeholder="Group name"
-                      className="w-32 px-2.5 py-1.5 text-[12px] text-[#06101F] border border-[#93B4F5] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100"
+                      className="w-32 px-2.5 py-1.5 text-[12px] text-[#111111] border border-[#93B4F5] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100"
                       style={{ fontSize: '16px' }}
                     />
                     <button type="submit" className="text-[12px] font-semibold text-[#2563EB] hover:text-[#2563EB] px-2 py-1.5 min-h-[44px]">Add</button>
-                    <button type="button" onClick={() => { setGroupInputOpen(false); setGroupInputValue('') }} className="text-[12px] text-[#8A95A6] hover:text-[#566174] px-1.5 py-1.5 min-h-[44px]">Cancel</button>
+                    <button type="button" onClick={() => { setGroupInputOpen(false); setGroupInputValue('') }} className="text-[12px] text-[#9B9B9B] hover:text-[#6B6B6B] px-1.5 py-1.5 min-h-[44px]">Cancel</button>
                   </form>
                 ) : (
                   <button
@@ -786,13 +786,13 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
             {/* Search + Sort + Filters */}
             <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 px-4 py-3 border-t border-[#EDF2F7]">
               <div className="relative flex-1 min-w-0 sm:min-w-[180px] sm:max-w-xs">
-                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A95A6] pointer-events-none" />
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] pointer-events-none" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search valuations…"
-                  className="w-full pl-8 pr-3 py-1.5 text-[16px] text-[#06101F] bg-white border border-[#DDE6F2] rounded-xl focus:outline-none focus:border-[#5F790B] focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
+                  className="w-full pl-8 pr-3 py-1.5 text-[16px] text-[#111111] bg-white border border-[#DDE6F2] rounded-xl focus:outline-none focus:border-[#5F790B] focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
                 />
               </div>
               <div className="flex items-center gap-2 flex-wrap overflow-x-auto scrollbar-hide pb-0.5">
@@ -824,7 +824,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
                     'flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold border rounded-xl transition-colors min-h-[44px]',
                     hasFilters
                       ? 'bg-olive-50 border-olive-700 text-olive-700'
-                      : 'bg-white border-[#DDE6F2] text-[#566174] hover:border-[#93B4F5]',
+                      : 'bg-white border-[#DDE6F2] text-[#6B6B6B] hover:border-[#93B4F5]',
                   )}
                   onClick={() => { setFilterUpside('all'); setFilterConfidence('all'); setSearch('') }}
                   title={hasFilters ? 'Clear all filters' : 'Filters'}
@@ -856,8 +856,8 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
                 <GridCard key={entry.ticker} entry={entry} />
               ))}
               {paginatedEntries.length === 0 && (
-                <div className="col-span-full bg-white border border-[#E6ECF5] rounded-2xl p-10 text-center">
-                  <p className="text-[14px] text-[#566174]">No valuations match your filters.</p>
+                <div className="col-span-full bg-white border border-[#E5E5E5] rounded-xl p-10 text-center">
+                  <p className="text-[14px] text-[#6B6B6B]">No valuations match your filters.</p>
                 </div>
               )}
             </div>
@@ -886,13 +886,13 @@ export default function ValuationsPage() {
     return (
       <div className="min-h-dvh bg-background px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div className="space-y-4">
-          <div className="h-10 w-48 bg-white border border-[#E6ECF5] rounded-xl motion-safe:animate-pulse" />
+          <div className="h-10 w-48 bg-white border border-[#E5E5E5] rounded-xl motion-safe:animate-pulse" />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-24 bg-white border border-[#E6ECF5] rounded-2xl motion-safe:animate-pulse" />
+              <div key={i} className="h-24 bg-white border border-[#E5E5E5] rounded-xl motion-safe:animate-pulse" />
             ))}
           </div>
-          <div className="h-96 bg-white border border-[#E6ECF5] rounded-2xl motion-safe:animate-pulse" />
+          <div className="h-96 bg-white border border-[#E5E5E5] rounded-xl motion-safe:animate-pulse" />
         </div>
       </div>
     )
