@@ -1,6 +1,6 @@
 'use client'
 import { useMemo } from 'react'
-import { computeVerdict, type VerdictInputs, type VerdictSignal, type VerdictDimension } from '@/lib/verdict/computeVerdict'
+import { computeVerdict, type VerdictSignal, type VerdictDimension } from '@/lib/verdict/computeVerdict'
 import type { PiotroskiResult, AltmanResult, BeneishResult, ROICResult } from '@/lib/dcf/calculateScores'
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -147,7 +147,7 @@ export default function InvestmentVerdict({
   ticker, upsidePct, scores, analystRecommendation,
   fcfMargin, grossMargin, netMargin, revenueCAGR,
 }: Props) {
-  const inputs: VerdictInputs = {
+  const verdict = useMemo(() => computeVerdict({
     ticker,
     upsidePct,
     roic: scores?.roic,
@@ -159,11 +159,7 @@ export default function InvestmentVerdict({
     grossMargin,
     netMargin,
     revenueCAGR,
-  }
-
-  const verdict = useMemo(() => computeVerdict(inputs), [
-    ticker, upsidePct, scores, analystRecommendation, fcfMargin, grossMargin, netMargin, revenueCAGR,
-  ])
+  }), [ticker, upsidePct, scores, analystRecommendation, fcfMargin, grossMargin, netMargin, revenueCAGR])
 
   // Header palette from DESIGN.md chips
   const headerTok =
