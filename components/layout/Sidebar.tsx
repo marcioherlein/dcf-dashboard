@@ -40,13 +40,13 @@ function NavItem({
       className={cn(
         'group relative flex items-center gap-2.5 px-3 py-2 rounded-[10px] text-[13.5px] font-medium transition-colors duration-120',
         active
-          ? 'bg-[#EDF3DD] text-[#06101F]'
-          : 'text-[#566174] hover:bg-[#F6F9EC] hover:text-[#06101F]',
+          ? 'bg-[rgba(95,121,11,0.20)] text-white'
+          : 'text-[rgba(255,255,255,0.55)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white',
       )}
     >
       {/* Olive left indicator for active state */}
       {active && (
-        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[18px] rounded-r-full bg-[#5F790B]" aria-hidden="true" />
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[18px] rounded-r-full bg-[#7C9A19]" aria-hidden="true" />
       )}
       <Icon
         size={16}
@@ -55,8 +55,8 @@ function NavItem({
         className={cn(
           'shrink-0 transition-colors duration-120',
           active
-            ? 'text-[#5F790B]'
-            : 'text-[#8A95A6] group-hover:text-[#5F790B]',
+            ? 'text-[#7C9A19]'
+            : 'text-[rgba(255,255,255,0.35)] group-hover:text-[#7C9A19]',
         )}
       />
       <span className="truncate">{label}</span>
@@ -66,7 +66,7 @@ function NavItem({
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="px-3 mb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-[#8A95A6]">
+    <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[rgba(255,255,255,0.28)]">
       {children}
     </p>
   )
@@ -84,12 +84,12 @@ export default function Sidebar() {
   return (
     <aside
       aria-label="Application sidebar"
-      className="fixed left-0 top-0 bottom-0 w-[240px] z-30 hidden lg:flex flex-col border-r border-[#E3E1DA] bg-[#FAF9F6]"
+      className="fixed left-0 top-0 bottom-0 w-[240px] z-30 hidden lg:flex flex-col border-r border-[rgba(255,255,255,0.08)] bg-[#111111]"
     >
       {/* Logo lockup */}
-      <div className="px-4 border-b border-[#E3E1DA]" style={{ height: '52px', display: 'flex', alignItems: 'center' }}>
+      <div className="px-4 border-b border-[rgba(255,255,255,0.08)]" style={{ height: '52px', display: 'flex', alignItems: 'center' }}>
         <Link href={session ? '/analyze' : '/'} className="flex items-center leading-none" aria-label="insic home">
-          <InsicLogoLockup size="md" />
+          <InsicLogoLockup size="md" on="dark" />
         </Link>
       </div>
 
@@ -110,7 +110,7 @@ export default function Sidebar() {
           ))}
         </ul>
 
-        <div className="mx-3 mb-3 border-t border-[#E3E1DA]" />
+        <div className="mx-3 mb-3 border-t border-[rgba(255,255,255,0.08)]" />
 
         <SectionLabel>Tools</SectionLabel>
         <ul className="flex flex-col gap-0.5 list-none p-0 m-0">
@@ -129,7 +129,7 @@ export default function Sidebar() {
 
       {/* User profile footer */}
       <motion.div
-        className="px-3 py-3.5 border-t border-[#E3E1DA]"
+        className="px-3 py-3.5 border-t border-[rgba(255,255,255,0.08)]"
         initial={reduced || hasAnimated.current ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         onAnimationComplete={() => { hasAnimated.current = true }}
@@ -143,7 +143,7 @@ export default function Sidebar() {
                 alt={session.user.name ?? ''}
                 width={32}
                 height={32}
-                className="rounded-full ring-2 ring-[#E3E1DA] shrink-0"
+                className="rounded-full ring-2 ring-[rgba(255,255,255,0.12)] shrink-0"
               />
             ) : (
               <div className="w-8 h-8 rounded-full bg-[#5F790B] flex items-center justify-center shrink-0" aria-hidden="true">
@@ -151,12 +151,12 @@ export default function Sidebar() {
               </div>
             )}
             <div className="flex-1 min-w-0 flex items-center justify-between gap-1">
-              <p className="text-[12px] font-semibold text-[#06101F] truncate leading-tight">
+              <p className="text-[12px] font-semibold text-white truncate leading-tight">
                 {session.user?.name ?? 'User'}
               </p>
               <button
                 onClick={() => signOut()}
-                className="shrink-0 text-[11px] text-[#8A95A6] hover:text-[#D83B3B] transition-colors leading-tight px-1 py-1 rounded"
+                className="shrink-0 text-[11px] text-[rgba(255,255,255,0.35)] hover:text-[#D83B3B] transition-colors leading-tight px-1 py-1 rounded"
               >
                 Sign out
               </button>
