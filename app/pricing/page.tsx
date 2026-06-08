@@ -95,22 +95,6 @@ const FAQS = [
 export default function PricingPage() {
   const { data: session } = useSession()
   const isPro = (session?.user as { plan?: string } | undefined)?.plan === 'pro'
-  const [upgrading, setUpgrading] = useState(false)
-
-  async function handleUpgrade() {
-    if (!session) {
-      signIn('google', { callbackUrl: '/pricing' })
-      return
-    }
-    setUpgrading(true)
-    try {
-      const res = await fetch('/api/lemonsqueezy/checkout', { method: 'POST' })
-      const json = await res.json()
-      if (json.url) window.location.href = json.url
-    } catch {
-      setUpgrading(false)
-    }
-  }
 
   return (
     <div className="min-h-dvh bg-white">
