@@ -3,24 +3,24 @@ name: X Auto-Post
 on:
   schedule:
     # ── Weekdays Mon–Fri ──────────────────────────────────────────────────────
-    - cron: '30 12 * * 1-5'  # 09:30 AM ART — Earnings preview
-    - cron: '0  14 * * 1-5'  # 11:00 AM ART — App feature/education
-    - cron: '0  15 * * 1-5'  # 12:00 PM ART — DCF snapshot (bullish)
-    - cron: '0  17 * * 1-5'  # 02:00 PM ART — Macro event/calendar
-    - cron: '30 18 * * 1-5'  # 03:30 PM ART — ETF pulse / sector rotation
-    - cron: '30 19 * * 1-5'  # 04:30 PM ART — DCF bear/overvalued pick
-    - cron: '0  21 * * 1-5'  # 06:00 PM ART — News headline
+    - cron: '0 13 * * 1-5'   # 10:00 AM ART — Earnings preview
+    - cron: '0 14 * * 1-5'   # 11:00 AM ART — App feature/education
+    - cron: '0 15 * * 1-5'   # 12:00 PM ART — DCF snapshot (bullish)
+    - cron: '0 17 * * 1-5'   # 02:00 PM ART — Macro event/calendar
+    - cron: '0 19 * * 1-5'   # 04:00 PM ART — ETF pulse / sector rotation
+    - cron: '0 20 * * 1-5'   # 05:00 PM ART — DCF bear/overvalued pick
+    - cron: '0 21 * * 1-5'   # 06:00 PM ART — News headline
     # ── Saturday ─────────────────────────────────────────────────────────────
-    - cron: '0  13 * * 6'    # 10:00 AM ART — ETF pulse (market recap)
-    - cron: '0  14 * * 6'    # 11:00 AM ART — App feature
-    - cron: '0  15 * * 6'    # 12:00 PM ART — Weekly wrap (top 3 DCF)
-    - cron: '0  16 * * 6'    # 01:00 PM ART — DCF snapshot
-    - cron: '0  17 * * 6'    # 02:00 PM ART — Sentiment / week-in-review
+    - cron: '0 13 * * 6'     # 10:00 AM ART — ETF pulse
+    - cron: '0 14 * * 6'     # 11:00 AM ART — App feature
+    - cron: '0 15 * * 6'     # 12:00 PM ART — Weekly wrap
+    - cron: '0 16 * * 6'     # 01:00 PM ART — DCF snapshot
+    - cron: '0 17 * * 6'     # 02:00 PM ART — Sentiment
     # ── Sunday ───────────────────────────────────────────────────────────────
-    - cron: '0  13 * * 0'    # 10:00 AM ART — Sentiment / what to watch
-    - cron: '0  14 * * 0'    # 11:00 AM ART — App feature
-    - cron: '0  16 * * 0'    # 01:00 PM ART — Engagement question
-    - cron: '0  18 * * 0'    # 03:00 PM ART — ETF pulse (forward look)
+    - cron: '0 13 * * 0'     # 10:00 AM ART — Sentiment
+    - cron: '0 14 * * 0'     # 11:00 AM ART — Question
+    - cron: '0 16 * * 0'     # 01:00 PM ART — ETF pulse
+    - cron: '0 18 * * 0'     # 03:00 PM ART — News
 
   workflow_dispatch:
     inputs:
@@ -64,35 +64,36 @@ jobs:
             echo "DRY_RUN=${{ github.event.inputs.dry_run }}" >> $GITHUB_ENV
           else
             HOUR=$(TZ=UTC date +%H)
-            MIN=$(TZ=UTC date +%M)
             DOW=$(TZ=UTC date +%u)   # 1=Mon … 7=Sun
-            HHMM="${HOUR}${MIN}"
 
-            # Weekdays
-            if   [ "$HHMM" = "1230" ] && [ "$DOW" -le "5" ]; then echo "MODE=earnings"     >> $GITHUB_ENV
-            elif [ "$HHMM" = "1400" ] && [ "$DOW" -le "5" ]; then echo "MODE=feature"      >> $GITHUB_ENV
-            elif [ "$HHMM" = "1500" ] && [ "$DOW" -le "5" ]; then echo "MODE=dcf"          >> $GITHUB_ENV
-            elif [ "$HHMM" = "1700" ] && [ "$DOW" -le "5" ]; then echo "MODE=macro"        >> $GITHUB_ENV
-            elif [ "$HHMM" = "1830" ] && [ "$DOW" -le "5" ]; then echo "MODE=etf_pulse"    >> $GITHUB_ENV
-            elif [ "$HHMM" = "1930" ] && [ "$DOW" -le "5" ]; then echo "MODE=dcf_bear"     >> $GITHUB_ENV
-            elif [ "$HHMM" = "2100" ] && [ "$DOW" -le "5" ]; then echo "MODE=news"         >> $GITHUB_ENV
+            # Weekdays (DOW 1-5)
+            if   [ "$DOW" -le "5" ] && [ "$HOUR" = "13" ]; then echo "MODE=earnings"     >> $GITHUB_ENV
+            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "14" ]; then echo "MODE=feature"      >> $GITHUB_ENV
+            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "15" ]; then echo "MODE=dcf"          >> $GITHUB_ENV
+            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "17" ]; then echo "MODE=macro"        >> $GITHUB_ENV
+            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "19" ]; then echo "MODE=etf_pulse"    >> $GITHUB_ENV
+            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "20" ]; then echo "MODE=dcf_bear"     >> $GITHUB_ENV
+            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "21" ]; then echo "MODE=news"         >> $GITHUB_ENV
             # Saturday (DOW=6)
-            elif [ "$HHMM" = "1300" ] && [ "$DOW" = "6" ];  then echo "MODE=etf_pulse"    >> $GITHUB_ENV
-            elif [ "$HHMM" = "1400" ] && [ "$DOW" = "6" ];  then echo "MODE=feature"      >> $GITHUB_ENV
-            elif [ "$HHMM" = "1500" ] && [ "$DOW" = "6" ];  then echo "MODE=weekly_wrap"  >> $GITHUB_ENV
-            elif [ "$HHMM" = "1600" ] && [ "$DOW" = "6" ];  then echo "MODE=dcf"          >> $GITHUB_ENV
-            elif [ "$HHMM" = "1700" ] && [ "$DOW" = "6" ];  then echo "MODE=sentiment"    >> $GITHUB_ENV
+            elif [ "$DOW" = "6" ] && [ "$HOUR" = "13" ]; then echo "MODE=etf_pulse"    >> $GITHUB_ENV
+            elif [ "$DOW" = "6" ] && [ "$HOUR" = "14" ]; then echo "MODE=feature"      >> $GITHUB_ENV
+            elif [ "$DOW" = "6" ] && [ "$HOUR" = "15" ]; then echo "MODE=weekly_wrap"  >> $GITHUB_ENV
+            elif [ "$DOW" = "6" ] && [ "$HOUR" = "16" ]; then echo "MODE=dcf"          >> $GITHUB_ENV
+            elif [ "$DOW" = "6" ] && [ "$HOUR" = "17" ]; then echo "MODE=sentiment"    >> $GITHUB_ENV
             # Sunday (DOW=7)
-            elif [ "$HHMM" = "1300" ] && [ "$DOW" = "7" ];  then echo "MODE=sentiment"    >> $GITHUB_ENV
-            elif [ "$HHMM" = "1400" ] && [ "$DOW" = "7" ];  then echo "MODE=feature"      >> $GITHUB_ENV
-            elif [ "$HHMM" = "1600" ] && [ "$DOW" = "7" ];  then echo "MODE=question"     >> $GITHUB_ENV
-            elif [ "$HHMM" = "1800" ] && [ "$DOW" = "7" ];  then echo "MODE=etf_pulse"    >> $GITHUB_ENV
-            else                                                   echo "MODE=feature"      >> $GITHUB_ENV
+            elif [ "$DOW" = "7" ] && [ "$HOUR" = "13" ]; then echo "MODE=sentiment"    >> $GITHUB_ENV
+            elif [ "$DOW" = "7" ] && [ "$HOUR" = "14" ]; then echo "MODE=question"     >> $GITHUB_ENV
+            elif [ "$DOW" = "7" ] && [ "$HOUR" = "16" ]; then echo "MODE=etf_pulse"    >> $GITHUB_ENV
+            elif [ "$DOW" = "7" ] && [ "$HOUR" = "18" ]; then echo "MODE=news"         >> $GITHUB_ENV
+            else
+              echo "Unmatched schedule slot: DOW=$DOW HOUR=$HOUR — skipping"
+              echo "MODE=skip" >> $GITHUB_ENV
             fi
             echo "DRY_RUN=false" >> $GITHUB_ENV
           fi
 
       - name: Post to X
+        if: env.MODE != 'skip'
         env:
           MODE:               ${{ env.MODE }}
           TICKER:             ${{ env.TICKER }}
