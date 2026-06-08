@@ -108,6 +108,7 @@ interface SummaryTabProps {
   }>
   roe?: number | null
   roic?: number | null
+  ownership?: { insiderPct: number | null; shortPct: number | null } | null
 }
 
 // ─── Section heading ──────────────────────────────────────────────────────────
@@ -139,7 +140,7 @@ export default function SummaryTab({
   nextEarningsDate: _nextEarningsDate,
   onViewValuation, onViewFinancials: _onViewFinancials, onViewRisks: _onViewRisks,
   onViewAssumptions: _onViewAssumptions, analystRecommendation,
-  analystForwardEstimates, roe, roic,
+  analystForwardEstimates, roe, roic, ownership,
 }: SummaryTabProps) {
 
   const isFinancialSector = ['Financial Services', 'Banks', 'Insurance', 'Financial'].includes(sector)
@@ -190,6 +191,8 @@ export default function SummaryTab({
         beta={beta ?? null}
         dividendYield={dividendYield ?? null}
         fcfMargin={businessProfile?.fcfMargin ?? null}
+        grossMargin={businessProfile?.grossMargin ?? null}
+        netMargin={businessProfile?.netMargin ?? null}
         high52={high52}
         low52={low52}
       />
@@ -198,7 +201,7 @@ export default function SummaryTab({
       <SectionLabel>Fundamentals</SectionLabel>
 
       {/* ── 3. 2-COL: [Revenue + FCF stacked] | [Growth Outlook + Cash Conversion stacked] */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
         {/* Left col: Revenue chart + FCF chart stacked */}
         <div className="flex flex-col gap-4">
           {statementsData && (
@@ -225,15 +228,16 @@ export default function SummaryTab({
       </div>
 
       {/* ── 4. 2×2 GRID: Profitability chart | Profitability text | Peer valuation | Valuation ratios */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
         <ProfitabilityChartCard
-          ratiosQuarterly={statementsData?.quarterly?.ratios ?? undefined}
-          financialStatements={statementsData?.annual?.incomeStatement ?? undefined}
+          statementsData={statementsData}
         />
         <ProfitabilityTextCard
           grossMargin={businessProfile?.grossMargin}
           netMargin={businessProfile?.netMargin}
           fcfMargin={businessProfile?.fcfMargin}
+          roe={roe ?? null}
+          roic={roic ?? null}
           ratingsGrade={ratings?.overall?.grade}
           ratingsSummary={ratings?.overall?.summary}
           ratingsLabel={ratings?.overall?.label}
@@ -274,6 +278,12 @@ export default function SummaryTab({
           revenueCAGR={cagrAnalysis?.historicalCagr3y ?? null}
           pegRatio={quote?.pegRatio ?? null}
           epsGrowthFwd={epsGrowthFwd}
+          currentPrice={price}
+          high52={high52}
+          low52={low52}
+          insiderPct={ownership?.insiderPct ?? null}
+          shortPct={ownership?.shortPct ?? null}
+          analystTargetMean={analystTargetMean ?? null}
         />
       )}
 

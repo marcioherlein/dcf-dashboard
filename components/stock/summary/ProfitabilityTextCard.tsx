@@ -9,6 +9,8 @@ interface Props {
   grossMargin?: number | null
   netMargin?: number | null
   fcfMargin?: number | null
+  roe?: number | null
+  roic?: number | null
   ratingsGrade?: string
   ratingsSummary?: string
   ratingsLabel?: string
@@ -139,6 +141,8 @@ export default function ProfitabilityTextCard({
   grossMargin,
   netMargin,
   fcfMargin,
+  roe,
+  roic,
   ratingsGrade,
   ratingsSummary,
   ratingsLabel,
@@ -156,6 +160,35 @@ export default function ProfitabilityTextCard({
 
   const { verdict, historySentence, trendStyle, positiveDriver } = derived
 
+  // ─── Rating badge styles ──────────────────────────────────────────────────
+  const gradeBadgeClass = useMemo(() => {
+    const g = ratingsGrade?.trim().toUpperCase() ?? ''
+    if (g === 'A+' || g === 'A')
+      return 'bg-[#E8F7EF] text-[#11875D] border border-[#A3D9BE]'
+    if (g === 'B+' || g === 'B')
+      return 'bg-[#EEF4DD] text-[#5F790B] border border-[#C9DC8E]'
+    if (g === 'C' || g === 'D' || g === 'F')
+      return 'bg-[#FFF4DA] text-[#B56A00] border border-[#F3D391]'
+    return null
+  }, [ratingsGrade])
+
+  // ─── Margins row value ─────────────────────────────────────────────────────
+  const marginsValue = useMemo(() => {
+    const parts: string[] = []
+    if (grossMargin != null) parts.push(`GM ${(grossMargin * 100).toFixed(1)}%`)
+    if (netMargin   != null) parts.push(`NM ${(netMargin   * 100).toFixed(1)}%`)
+    if (fcfMargin   != null) parts.push(`FCF ${(fcfMargin  * 100).toFixed(1)}%`)
+    return parts.length > 0 ? parts.join(' · ') : null
+  }, [grossMargin, netMargin, fcfMargin])
+
+  // ─── Returns row value ─────────────────────────────────────────────────────
+  const returnsValue = useMemo(() => {
+    const parts: string[] = []
+    if (roe  != null) parts.push(`ROE ${(roe  * 100).toFixed(1)}%`)
+    if (roic != null) parts.push(`ROIC ${(roic * 100).toFixed(1)}%`)
+    return parts.length > 0 ? parts.join(' · ') : null
+  }, [roe, roic])
+
   if (isLoading) {
     return (
       <div className="bg-white border border-[#E5E5E5] rounded-xl p-4">
@@ -171,10 +204,17 @@ export default function ProfitabilityTextCard({
 
   return (
     <div className="bg-white border border-[#E5E5E5] rounded-xl p-4">
-      {/* Header — fix [1]: sentence-case, remove uppercase/tracking-wider; fix [6]: use h3 for heading hierarchy */}
-      <h3 className="text-[12px] font-medium text-[#6B6B6B] mb-3">
-        Profitability
-      </h3>
+      {/* Header — label left, rating badge right */}
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-[12px] font-medium text-[#6B6B6B]">
+          Profitability
+        </h3>
+        {ratingsGrade && gradeBadgeClass && (
+          <span className={cn('text-[11px] font-semibold px-2 py-0.5 rounded-full leading-none', gradeBadgeClass)}>
+            {ratingsGrade}
+          </span>
+        )}
+      </div>
 
       {/* Bullet list — fix [8]: aria-label */}
       <ul className="space-y-2.5" aria-label="Profitability summary">
@@ -213,6 +253,28 @@ export default function ProfitabilityTextCard({
               ? positiveDriver.slice(0, 157) + '…'
               : positiveDriver}
           </Bullet>
+        )}
+
+        {/* Bullet 5 — Margins metrics row */}
+        {marginsValue && (
+          <li className="flex items-start gap-2">
+            <div aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-[#5F790B] shrink-0 mt-[6px]" />
+            <span className="text-[13px] text-[#111111] leading-relaxed break-words min-w-0">
+              <span className="font-medium">Margins</span>{' '}
+              <span className="font-mono text-[12px] text-[#6B6B6B]">{marginsValue}</span>
+            </span>
+          </li>
+        )}
+
+        {/* Bullet 6 — Returns metrics row */}
+        {returnsValue && (
+          <li className="flex items-start gap-2">
+            <div aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-[#5F790B] shrink-0 mt-[6px]" />
+            <span className="text-[13px] text-[#111111] leading-relaxed break-words min-w-0">
+              <span className="font-medium">Returns</span>{' '}
+              <span className="font-mono text-[12px] text-[#6B6B6B]">{returnsValue}</span>
+            </span>
+          </li>
         )}
       </ul>
     </div>

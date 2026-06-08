@@ -21,6 +21,12 @@ interface Props {
   // New optional props
   pegRatio?: number | null
   epsGrowthFwd?: number | null
+  currentPrice?: number | null
+  high52?: number | null
+  low52?: number | null
+  insiderPct?: number | null
+  shortPct?: number | null
+  analystTargetMean?: number | null
 }
 
 // ─── Criterion types ──────────────────────────────────────────────────────────
@@ -161,6 +167,12 @@ export default function InvestmentVerdict({
   revenueCAGR,
   pegRatio,
   epsGrowthFwd,
+  currentPrice,
+  high52,
+  low52,
+  insiderPct,
+  shortPct,
+  analystTargetMean,
 }: Props) {
 
   const criteria = useMemo(() => {
@@ -302,20 +314,55 @@ export default function InvestmentVerdict({
       analystLabel,
     )
 
+    // ── MARKET SIGNALS (4 criteria) ───────────────────────────────────────
+
+    // c13: Analyst target upside >10%
+    var analystUpside = (analystTargetMean != null && currentPrice != null && currentPrice > 0)
+      ? (analystTargetMean - currentPrice) / currentPrice
+      : null
+    var c13 = criterion("Analyst target upside >10%",
+      analystUpside != null ? analystUpside > 0.10 : null,
+      analystUpside != null ? (analystUpside >= 0 ? "+" : "") + (analystUpside * 100).toFixed(1) + "%" : "N/A"
+    )
+
+    // c14: Price in lower 70% of 52W range (momentum signal)
+    var range52 = (high52 != null && low52 != null && high52 > low52)
+      ? high52 - low52 : null
+    var rangePos = (range52 != null && currentPrice != null && low52 != null)
+      ? (currentPrice - low52) / range52 : null
+    var c14 = criterion("Price within 52W range",
+      rangePos != null ? rangePos < 0.7 : null,
+      rangePos != null ? Math.round(rangePos * 100) + "% of range" : "N/A"
+    )
+
+    // c15: Insider ownership >5%
+    var c15 = criterion("Insider ownership >5%",
+      insiderPct != null ? insiderPct > 0.05 : null,
+      insiderPct != null ? (insiderPct * 100).toFixed(1) + "%" : "N/A"
+    )
+
+    // c16: Short interest <5%
+    var c16 = criterion("Short interest low (<5%)",
+      shortPct != null ? shortPct < 0.05 : null,
+      shortPct != null ? (shortPct * 100).toFixed(1) + "% short" : "N/A"
+    )
+
     // Piotroski leverage flag used by old health section (kept for reference only)
     const _leverageFalling = pioC('leverage')
     void _leverageFalling
 
     return {
-      valuation:    [c1, c2, c3],
-      quality:      [c4, c5, c6, c7],
-      health:       [c8, c9],
-      growth:       [c10, c11, c12],
-      all:          [c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12],
+      valuation:      [c1, c2, c3],
+      quality:        [c4, c5, c6, c7],
+      health:         [c8, c9],
+      growth:         [c10, c11, c12],
+      marketSignals:  [c13, c14, c15, c16],
+      all:            [c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16],
     }
   }, [
     upsidePct, pegRatio, fcfMargin, grossMargin,
     scores, analystRecommendation, revenueCAGR, epsGrowthFwd,
+    currentPrice, high52, low52, insiderPct, shortPct, analystTargetMean,
   ])
 
   // Aggregate counts (N/A excluded from totals per existing logic)
@@ -363,6 +410,10 @@ export default function InvestmentVerdict({
           ))}
           <CategoryHeader label="Financial Health" />
           {criteria.health.map((c, i) => (
+            <CriterionRow key={i} c={c} />
+          ))}
+          <CategoryHeader label="Market Signals" />
+          {criteria.marketSignals.map((c, i) => (
             <CriterionRow key={i} c={c} />
           ))}
         </div>

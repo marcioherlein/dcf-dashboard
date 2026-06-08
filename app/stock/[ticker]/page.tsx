@@ -421,21 +421,7 @@ function StockPageBody() {
 
       <TabNav activeTab={activeTab} onChange={handleTabChange} />
 
-      {/* Company identity — shown at page level, above all tabs */}
-      {data?.businessProfile?.description && (
-        <div className="px-4 sm:px-6 lg:px-8 pt-4">
-          <CompanyCard
-            description={data.businessProfile.description}
-            sector={data.quote.sector ?? ''}
-            industry={data.businessProfile.industry ?? ''}
-            country={data.businessProfile.country ?? ''}
-            employees={data.businessProfile.employees ?? null}
-            ticker={ticker}
-          />
-        </div>
-      )}
-
-      <div className="px-4 sm:px-6 lg:px-8 pb-[calc(120px+env(safe-area-inset-bottom,0px))] lg:pb-16">
+<div className="px-4 sm:px-6 lg:px-8 pb-[calc(120px+env(safe-area-inset-bottom,0px))] lg:pb-16">
         {/* First-visit orientation — shown once, then dismissed to localStorage */}
         <div className="pt-4">
           <StockOrientationStrip />
@@ -615,6 +601,7 @@ function StockPageBody() {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     roe={(data.businessProfile as any)?.roe ?? null}
                     roic={computedScores?.roic?.roic ?? data.scores?.roic?.roic ?? null}
+                    ownership={data.ownership ? { insiderPct: data.ownership.insiderPct ?? null, shortPct: data.ownership.shortPct ?? null } : null}
                     onViewValuation={() => handleTabChange('valuation')}
                     onViewFinancials={() => handleTabChange('financials')}
                     onViewRisks={() => handleTabChange('risks')}

@@ -45,6 +45,8 @@ interface Props {
   beta?: number | null
   dividendYield?: number | null
   fcfMargin?: number | null
+  grossMargin?: number | null
+  netMargin?: number | null
   high52: number
   low52: number
 }
@@ -192,11 +194,16 @@ export default function StockIdentityHeader({
   roic,
   beta,
   dividendYield,
-  fcfMargin: _fcfMargin,
+  fcfMargin,
+  grossMargin,
+  netMargin,
   high52,
   low52,
 }: Props) {
   const [descExpanded, setDescExpanded] = useState(false)
+  const [logoError, setLogoError] = useState(false)
+
+  const logoSrc = "https://financialmodelingprep.com/image-stock/" + ticker + ".png"
 
   const isPositive = change >= 0
   const changeSign = isPositive ? '+' : ''
@@ -221,7 +228,7 @@ export default function StockIdentityHeader({
   )
 
   // Description truncation
-  const DESC_LIMIT = 160
+  const DESC_LIMIT = 300
   const shouldTruncate = description && description.length > DESC_LIMIT
   const displayedDesc =
     shouldTruncate && !descExpanded
@@ -252,14 +259,23 @@ export default function StockIdentityHeader({
         {/* Left col (≈70%) — Identity */}
         <div className="w-full sm:basis-[68%] sm:max-w-[68%] flex-1 min-w-0">
           <div className="flex items-start gap-4">
-            {/* Logo placeholder */}
-            <div
-              role="img"
-              aria-label={companyName + ' logo'}
-              className="flex-shrink-0 flex items-center justify-center rounded-xl bg-[#F4F3EF] border border-[#E5E5E5] text-[#6B6B6B] font-bold select-none w-14 h-14 text-lg tracking-wide"
-            >
-              {initials(companyName)}
-            </div>
+            {/* Company logo / initials fallback */}
+            {!logoError ? (
+              <img
+                src={logoSrc}
+                alt={companyName}
+                onError={() => setLogoError(true)}
+                className="flex-shrink-0 w-14 h-14 rounded-xl object-cover border border-[#E5E5E5]"
+              />
+            ) : (
+              <div
+                role="img"
+                aria-label={companyName + ' logo'}
+                className="flex-shrink-0 flex items-center justify-center rounded-xl bg-[#F4F3EF] border border-[#E5E5E5] text-[#6B6B6B] font-bold select-none w-14 h-14 text-lg tracking-wide"
+              >
+                {initials(companyName)}
+              </div>
+            )}
 
             {/* Name + subtitle */}
             <div className="min-w-0 flex-1">
@@ -441,6 +457,18 @@ export default function StockIdentityHeader({
             <MetricRow
               label="Dividend Yield (TTM)"
               value={divYieldStr}
+            />
+            <MetricRow
+              label="Gross Margin (TTM)"
+              value={grossMargin != null ? (grossMargin * 100).toFixed(1) + '%' : '—'}
+            />
+            <MetricRow
+              label="Net Margin (TTM)"
+              value={netMargin != null ? (netMargin * 100).toFixed(1) + '%' : '—'}
+            />
+            <MetricRow
+              label="FCF Margin (TTM)"
+              value={fcfMargin != null ? (fcfMargin * 100).toFixed(1) + '%' : '—'}
               last
             />
           </div>

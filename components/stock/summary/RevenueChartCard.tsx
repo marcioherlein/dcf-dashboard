@@ -124,12 +124,30 @@ export default function RevenueChartCard({
       .filter((r) => r.revenue != null && !r.isProjected)
       .slice(-6)
 
-    return rows.map((r) => ({
-      label: String(r.year),
-      value: r.revenue as number,
-      isProjected: false,
-    }))
-  }, [financialStatements])
+    if (rows.length > 0) {
+      return rows.map((r) => ({
+        label: String(r.year),
+        value: r.revenue as number,
+        isProjected: false,
+      }))
+    }
+
+    // Fallback for foreign stocks: statementsData.annual.incomeStatement
+    const annualRows = (statementsData && statementsData.annual && statementsData.annual.incomeStatement) ? statementsData.annual.incomeStatement : []
+    const validAnnual = annualRows.filter(function(r: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      var rev = r.totalRevenue != null ? r.totalRevenue : (r.revenue != null ? r.revenue : null)
+      return rev != null && rev > 0
+    })
+    if (validAnnual.length > 0) {
+      return validAnnual.slice(-6).map(function(r: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+        var rev = r.totalRevenue != null ? r.totalRevenue : r.revenue
+        var lbl = String(r.year != null ? r.year : (r.endDate != null ? r.endDate : "")).slice(0, 4)
+        return { label: lbl, value: rev, isProjected: false }
+      })
+    }
+
+    return []
+  }, [financialStatements, statementsData])
 
   // ── Quarterly data ───────────────────────────────────────────────────────────
   const quarterlyChartData = useMemo(() => {
@@ -148,7 +166,7 @@ export default function RevenueChartCard({
   // ── Select active dataset ────────────────────────────────────────────────────
   const chartData = view === 'annual' ? annualChartData : quarterlyChartData
 
-  const maxValue = chartData.length > 0 ? Math.max(...chartData.map((d) => d.value)) : 0
+  const maxValue = chartData.length > 0 ? Math.max(...chartData.map((d: { value: number }) => d.value)) : 0
   const unit = pickUnit(maxValue)
   const currencyCode = (statementsData?.financialCurrency ?? currency ?? 'USD').toUpperCase()
   const unitLabel = `(${unit} ${currencyCode})`

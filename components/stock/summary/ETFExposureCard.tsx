@@ -64,6 +64,10 @@ export function ETFExposureCard({ ticker }: Props) {
     )
   }
 
+  if (!error && data !== null && data.length === 0) {
+    return null
+  }
+
   return (
     <div className="glass-card-light rounded-xl p-4">
       <div className="flex items-baseline gap-2 mb-3">
@@ -85,12 +89,10 @@ export function ETFExposureCard({ ticker }: Props) {
 
       {error ? (
         <p className="text-sm text-[#8A95A6] py-2">{error}</p>
-      ) : !data || data.length === 0 ? (
-        <p className="text-sm text-[#8A95A6] py-2">{ticker} not found in any ETF in our universe.</p>
       ) : (
         <div className="space-y-1.5">
-          {data.map((etf) => {
-            const maxWeight = data[0].weight
+          {(data ?? []).map((etf) => {
+            const maxWeight = (data ?? [])[0].weight
             return (
               <Link
                 key={etf.etfTicker}

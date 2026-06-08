@@ -23,9 +23,14 @@ interface FinancialStatement {
   isProjected: boolean
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type StatementsData = any
+
 interface Props {
   ratiosQuarterly?: RatioQuarter[]
   financialStatements?: FinancialStatement[]
+  /** Raw statementsData from /api/statements — preferred when provided */
+  statementsData?: StatementsData
 }
 
 // ─── Point shape the chart consumes ──────────────────────────────────────────
@@ -48,11 +53,47 @@ const ChartBody = dynamic(() => import('./ProfitabilityChartBody'), {
 
 // ─── Data derivation ──────────────────────────────────────────────────────────
 
+/**
+ * Derive ChartPoints from raw statementsData.annual.incomeStatement rows.
+ * Yahoo Finance rows use endDate (YYYY-MM-DD), totalRevenue, grossProfit,
+ * operatingIncome, netIncome — no isProjected flag on annual rows.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function derivePointsFromRawStatements(rows: any[]): ChartPoint[] {
+  if (!rows || rows.length === 0) return []
+  return [...rows]
+    .filter((r) => r.endDate && r.endDate !== 'TTM' && r.endDate !== 'PRIOR_TTM')
+    .sort((a, b) => String(a.endDate).localeCompare(String(b.endDate)))
+    .slice(-8)
+    .map((r) => {
+      const rev = r.totalRevenue != null && r.totalRevenue !== 0
+        ? (r.totalRevenue as number)
+        : null
+      return {
+        period: String(r.endDate).slice(0, 4), // YYYY
+        grossMargin:
+          rev != null && r.grossProfit != null
+            ? ((r.grossProfit as number) / rev) * 100
+            : null,
+        ebitMargin:
+          rev != null && r.operatingIncome != null
+            ? ((r.operatingIncome as number) / rev) * 100
+            : null,
+        netMargin:
+          rev != null && r.netIncome != null
+            ? ((r.netIncome as number) / rev) * 100
+            : null,
+      }
+    })
+}
+
 function derivePoints(
   ratiosQuarterly?: RatioQuarter[],
   financialStatements?: FinancialStatement[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  statementsData?: any,
 ): ChartPoint[] {
-  // Prefer quarterly ratios — last 12, oldest first
+  // 1. Prefer quarterly ratios — last 12, oldest first
   if (ratiosQuarterly && ratiosQuarterly.length > 0) {
     return [...ratiosQuarterly]
       .filter((r) => typeof r.date === 'string')
@@ -67,7 +108,13 @@ function derivePoints(
       }))
   }
 
-  // Annual fallback — filter out projected, last 8, oldest first
+  // 2. Raw statementsData from /api/statements (Yahoo Finance rows)
+  if (statementsData?.annual?.incomeStatement?.length > 0) {
+    const pts = derivePointsFromRawStatements(statementsData.annual.incomeStatement)
+    if (pts.length > 0) return pts
+  }
+
+  // 3. Pre-mapped financialStatements (FMP-style with year/revenue/isProjected)
   if (financialStatements && financialStatements.length > 0) {
     return [...financialStatements]
       .filter((s) => !s.isProjected && typeof s.year === 'string')
@@ -169,10 +216,11 @@ function InfoTooltip({ text }: { text: string }) {
 export default function ProfitabilityChartCard({
   ratiosQuarterly,
   financialStatements,
+  statementsData,
 }: Props) {
   const points = useMemo(
-    () => derivePoints(ratiosQuarterly, financialStatements),
-    [ratiosQuarterly, financialStatements],
+    () => derivePoints(ratiosQuarterly, financialStatements, statementsData),
+    [ratiosQuarterly, financialStatements, statementsData],
   )
 
   return (
