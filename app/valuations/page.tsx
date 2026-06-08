@@ -91,14 +91,14 @@ function KpiCard({ icon: Icon, iconCls, label, value, sub }: {
   sub?:    string
 }) {
   return (
-    <div className="bg-white border border-[#E6ECF5] rounded-2xl p-5 flex items-start gap-4">
-      <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', iconCls)}>
-        <Icon size={18} />
+    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 flex items-center gap-3">
+      <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', iconCls)}>
+        <Icon size={15} />
       </div>
       <div className="min-w-0">
-        <p className="text-[12px] font-semibold text-[#566174] mb-0.5">{label}</p>
-        <p className="text-[26px] font-bold text-[#06101F] leading-none tabular-nums">{value}</p>
-        {sub && <p className="text-[12px] text-[#566174] mt-1">{sub}</p>}
+        <p className="text-[11px] font-medium text-[#6B6B6B] mb-0">{label}</p>
+        <p className="text-[20px] font-bold text-[#111111] leading-tight tabular-nums">{value}</p>
+        {sub && <p className="text-[11px] text-[#6B6B6B]">{sub}</p>}
       </div>
     </div>
   )
@@ -688,7 +688,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string }) {
 
       {/* KPI cards — own row, not nested inside the header */}
       {!loading && entries.length > 0 && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
           <KpiCard
             icon={Bookmark}
             iconCls="bg-[#EAF1FF] text-[#2563EB]"
