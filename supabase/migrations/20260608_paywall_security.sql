@@ -5,14 +5,12 @@
 -- The anon key is exposed in the client bundle (NEXT_PUBLIC_*).
 -- Without RLS, anyone with the anon key can INSERT/SELECT unlimited rows,
 -- bypassing the FREE_SAVE_LIMIT=3 check in /api/valuations entirely.
+-- NOTE: users.id is stored as text (not uuid), so we cast auth.uid() to text.
 
 alter table if exists valuations enable row level security;
 
--- Drop any existing policies first (idempotent re-run safety)
 drop policy if exists "Users manage own valuations" on valuations;
 
--- Users can only read and write their own rows.
--- user_id is stored as text (UUID string) matching auth.uid()::text
 create policy "Users manage own valuations"
   on valuations
   for all
@@ -46,8 +44,7 @@ begin
   end if;
 end $$;
 
--- Add unique constraint that enforces one row per (user, ticker, month)
--- This is the atomic lock the application code relies on for race-safety.
+-- Add unique constraint: one row per (user, ticker, month)
 alter table stock_views
   drop constraint if exists stock_views_user_ticker_month_unique;
 
@@ -57,12 +54,12 @@ alter table stock_views
 
 
 -- ─── 3. promo_redemptions: track who redeemed which code ─────────────────────
--- Prevents a single promo code from being reused across unlimited accounts
--- and allows per-user redemption deduplication.
+-- users.id is text, not uuid — so user_id here is also text (no FK type mismatch).
+-- promo_codes.id is uuid, so promo_code_id references it directly.
 
 create table if not exists promo_redemptions (
   id             uuid primary key default gen_random_uuid(),
-  user_id        uuid not null references users(id) on delete cascade,
+  user_id        text not null,
   promo_code_id  uuid not null references promo_codes(id) on delete cascade,
   redeemed_at    timestamptz not null default now(),
   -- One redemption per user (across all codes)
@@ -75,7 +72,7 @@ drop policy if exists "Users read own redemptions" on promo_redemptions;
 create policy "Users read own redemptions"
   on promo_redemptions
   for select
-  using (user_id = auth.uid());
+  using (user_id = auth.uid()::text);
 
 -- Add uses_count + max_uses to promo_codes if not present
 do $$
