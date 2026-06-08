@@ -21,6 +21,7 @@ const APP_URL             = (process.env.APP_URL            || 'https://insic.ap
 const DRY_RUN             = process.env.DRY_RUN             === 'true'
 const BUFFER_API_KEY      = process.env.BUFFER_API_KEY      || ''
 const BUFFER_CHANNEL_ID   = process.env.BUFFER_CHANNEL_ID   || ''
+const AUTOMATION_API_KEY = process.env.AUTOMATION_API_KEY || ''
 const ALPHA_VANTAGE_KEY   = process.env.ALPHA_VANTAGE_KEY   || 'demo'
 
 // ─── Buffer API ───────────────────────────────────────────────────────────────
@@ -86,9 +87,11 @@ function pct(n, signed = true) {
 async function fetchValuation(ticker) {
   const url = `${APP_URL}/api/financials?ticker=${ticker}`
   console.log(`Fetching: ${url}`)
+  const headers = { 'Content-Type': 'application/json' }
+  if (AUTOMATION_API_KEY) headers['x-automation-key'] = AUTOMATION_API_KEY
   let res
   try {
-    res = await fetch(url, { signal: AbortSignal.timeout(30000) })
+    res = await fetch(url, { headers, signal: AbortSignal.timeout(30000) })
   } catch (err) {
     throw new Error(`Network error fetching ${url}: ${err.message}`)
   }

@@ -26,14 +26,18 @@ export async function GET(req: NextRequest) {
 
   const session = await getServerSession(authOptions)
   if (!session) {
-    // Dev-only bypass: allows audit scripts to call the route without a browser session.
-    // Gated by AUDIT_DEV_KEY env var — never set in production.
-    const devKey = req.headers.get('x-audit-dev-key')
-    const allowedKey = process.env.AUDIT_DEV_KEY
-    // Only allow dev key bypass in non-production environments
-    const isProduction = process.env.NODE_ENV === 'production'
-    if (isProduction || !allowedKey || devKey !== allowedKey) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const incomingKey = req.headers.get('x-automation-key')
+    const automationKey = process.env.AUTOMATION_API_KEY
+    // Automation key: safe in production — long random secret, server-env only (not NEXT_PUBLIC_)
+    const isAutomation = automationKey && incomingKey === automationKey
+    if (!isAutomation) {
+      // Dev-only fallback for local audit scripts
+      const devKey = req.headers.get('x-audit-dev-key')
+      const allowedKey = process.env.AUDIT_DEV_KEY
+      const isProduction = process.env.NODE_ENV === 'production'
+      if (isProduction || !allowedKey || devKey !== allowedKey) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
     }
   }
 

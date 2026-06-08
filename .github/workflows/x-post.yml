@@ -101,4 +101,5 @@ jobs:
           BUFFER_API_KEY:     ${{ secrets.BUFFER_API_KEY }}
           BUFFER_CHANNEL_ID:  ${{ secrets.BUFFER_CHANNEL_ID }}
           ALPHA_VANTAGE_KEY:  ${{ secrets.ALPHA_VANTAGE_KEY }}
+          AUTOMATION_API_KEY: ${{ secrets.AUTOMATION_API_KEY }}
         run: node scripts/x-post.mjs
