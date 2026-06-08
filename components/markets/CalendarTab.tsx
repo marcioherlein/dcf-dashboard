@@ -83,7 +83,7 @@ const HIGH_IMPORTANCE = new Set([
   'AAPL','MSFT','NVDA','AMZN','GOOGL','META','BRK-B','LLY','JPM','V',
   'XOM','UNH','AVGO','WMT','TSLA','JNJ','MA','PG','HD','ORCL',
   'MRK','COST','ABBV','BAC','KO','CVX','PEP','NFLX','AMD','CSCO',
-  'ADBE','TMO','QCOM','GS','MS','IBM','NFLX',
+  'ADBE','TMO','QCOM','GS','MS','IBM','TXN','ACN','NEE',
 ])
 
 function earningsImportance(ticker: string): 'High' | 'Medium' {
@@ -258,7 +258,7 @@ function EarningsList({ items, loading }: { items: EarningsItem[]; loading: bool
                   {/* Time of day */}
                   {item.timeOfDay && (
                     <span className="shrink-0 text-[10px] text-[#9B9B9B]">
-                      {item.timeOfDay === 'BMO' ? 'Pre-market' : item.timeOfDay === 'AMC' ? 'After hours' : ''}
+                      {item.timeOfDay === 'BMO' ? 'Pre-market' : item.timeOfDay === 'AMC' ? 'After hours' : item.timeOfDay === 'TAS' ? 'Time specified' : ''}
                     </span>
                   )}
                   {/* Importance */}
@@ -283,7 +283,7 @@ function EarningsList({ items, loading }: { items: EarningsItem[]; loading: bool
 
 function EconomicList({ events, loading }: { events: EconomicEvent[]; loading: boolean }) {
   if (loading) return <LoadingRows />
-  if (events.length === 0) return <EmptyState message="No high-impact U.S. economic events this week." />
+  if (events.length === 0) return <EmptyState message="No U.S. high-impact economic events scheduled this week." />
 
   const byDate = events.reduce<Record<string, EconomicEvent[]>>((acc, e) => {
     acc[e.date] ??= []
@@ -305,7 +305,7 @@ function EconomicList({ events, loading }: { events: EconomicEvent[]; loading: b
               {today ? 'TODAY · ' : ''}{d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()}
             </div>
             {group.map((ev, idx) => (
-              <div key={idx} className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#FAFAFA] transition-colors">
+              <div key={`${date}-${ev.event}-${idx}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#FAFAFA] transition-colors">
                 {/* Time */}
                 <span className="shrink-0 w-20 text-[11px] text-[#6B6B6B] tabular-nums">{ev.time || '—'}</span>
                 {/* Event name */}
@@ -393,7 +393,7 @@ function SplitsList({ splits, loading }: { splits: SplitItem[]; loading: boolean
 
 function IposList({ ipos, loading }: { ipos: IpoItem[]; loading: boolean }) {
   if (loading) return <LoadingRows />
-  if (ipos.length === 0) return <EmptyState message="No IPO pricings scheduled this week." />
+  if (ipos.length === 0) return <EmptyState message="No IPO pricings found for this week." />
 
   const byDate = ipos.reduce<Record<string, IpoItem[]>>((acc, e) => {
     acc[e.date] ??= []
@@ -415,7 +415,7 @@ function IposList({ ipos, loading }: { ipos: IpoItem[]; loading: boolean }) {
               {today ? 'TODAY · ' : ''}{d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()}
             </div>
             {group.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#FAFAFA] transition-colors">
+              <div key={`${date}-${item.company}-${idx}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#FAFAFA] transition-colors">
                 <span className="shrink-0 px-2 py-0.5 rounded text-[11px] font-bold bg-[#FAF5FF] border border-[#E9D5FF] text-[#7C3AED]">
                   {item.ticker || 'IPO'}
                 </span>
@@ -519,7 +519,7 @@ export default function CalendarTab() {
             <ChevronLeft size={14} />
           </button>
           <span className="text-[13px] font-semibold text-[#111111]">
-            Events Calendar for: <span className="text-[#6B6B6B] font-normal">{week.label}</span>
+            <span className="text-[#6B6B6B] font-normal">{week.label}</span>
           </span>
           <button
             onClick={() => setOffset(o => o + 1)}
@@ -528,14 +528,18 @@ export default function CalendarTab() {
           >
             <ChevronRight size={14} />
           </button>
-          {weekOffset !== 0 && (
-            <button
-              onClick={() => setOffset(0)}
-              className="text-[11px] font-medium text-[#5F790B] hover:underline"
-            >
-              This week
-            </button>
-          )}
+          <button
+            onClick={() => setOffset(0)}
+            aria-pressed={weekOffset === 0}
+            className={cn(
+              'text-[11px] font-semibold px-2.5 py-1 rounded-md border transition-colors',
+              weekOffset === 0
+                ? 'border-[#5F790B] bg-[#F6FAEA] text-[#5F790B]'
+                : 'border-[#E5E5E5] text-[#6B6B6B] hover:border-[#5F790B] hover:text-[#5F790B]',
+            )}
+          >
+            This week
+          </button>
         </div>
       </div>
 
@@ -543,15 +547,18 @@ export default function CalendarTab() {
       <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden">
 
         {/* Sub-tab nav */}
-        <div className="flex items-center gap-0 border-b border-[#E5E5E5] overflow-x-auto scrollbar-hide">
+        <div role="tablist" aria-label="Calendar event types" className="flex items-center gap-0 border-b border-[#E5E5E5] overflow-x-auto scrollbar-hide">
           {SUB_TABS.map(t => {
             const isActive = sub === t.id
             return (
               <button
                 key={t.id}
+                role="tab"
+                aria-selected={isActive}
+                id={`cal-sub-${t.id}`}
                 onClick={() => setSub(t.id)}
                 className={cn(
-                  'flex items-center gap-1.5 shrink-0 px-4 py-2.5 text-[12px] font-semibold border-b-2 transition-colors',
+                  'flex items-center gap-1.5 shrink-0 px-4 py-2.5 text-[12px] font-semibold border-b-2 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-inset',
                   isActive
                     ? 'border-[#5F790B] text-[#111111]'
                     : 'border-transparent text-[#6B6B6B] hover:text-[#111111]',

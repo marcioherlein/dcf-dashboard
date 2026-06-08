@@ -242,7 +242,7 @@ export default function MarketsPage() {
 
           {/* ── OVERVIEW TAB ─────────────────────────────────────────────── */}
           {activeTab === 'overview' && (
-            <>
+            <div id="markets-panel-overview" role="tabpanel" aria-labelledby="markets-tab-overview">
               {/* Market Snapshot */}
               <div>
                 <SectionHeader
@@ -275,12 +275,12 @@ export default function MarketsPage() {
                   <MarketNewsSection news={mkt.news} />
                 </div>
               )}
-            </>
+            </div>
           )}
 
           {/* ── SECTORS TAB ──────────────────────────────────────────────── */}
           {activeTab === 'sectors' && (
-            <>
+            <div id="markets-panel-sectors" role="tabpanel" aria-labelledby="markets-tab-sectors">
               {/* Heatmap + Rotation */}
               <div>
                 <SectionHeader
@@ -321,17 +321,19 @@ export default function MarketsPage() {
                   </div>
                 </div>
               </div>
-            </>
+            </div>
           )}
 
           {/* ── CALENDAR TAB ─────────────────────────────────────────────── */}
           {activeTab === 'calendar' && (
-            <CalendarTab />
+            <div id="markets-panel-calendar" role="tabpanel" aria-labelledby="markets-tab-calendar">
+              <CalendarTab />
+            </div>
           )}
 
           {/* ── VALUATION CONTEXT TAB ────────────────────────────────────── */}
           {activeTab === 'valuation' && (
-            <div>
+            <div id="markets-panel-valuation" role="tabpanel" aria-labelledby="markets-tab-valuation">
               <SectionHeader
                 title="Valuation Context"
                 subtitle="How current market prices compare to historical ranges — and what it means for your DCF."
