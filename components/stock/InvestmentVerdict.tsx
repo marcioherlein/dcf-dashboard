@@ -1,6 +1,5 @@
 'use client'
 import { useMemo } from 'react'
-import { computeVerdict, type VerdictSignal, type VerdictDimension } from '@/lib/verdict/computeVerdict'
 import type { PiotroskiResult, AltmanResult, BeneishResult, ROICResult } from '@/lib/dcf/calculateScores'
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -19,223 +18,386 @@ interface Props {
   grossMargin: number | null | undefined
   netMargin: number | null | undefined
   revenueCAGR: number | null | undefined
+  // New optional props
+  pegRatio?: number | null
+  epsGrowthFwd?: number | null
 }
 
-// ─── Design tokens (DESIGN.md) ────────────────────────────────────────────────
-// Financial semantics: positive=#11875D soft=#E8F7EF border=#A3D9BE
-//                      negative=#D83B3B soft=#FCEAEA border=#F0B8B8
-//                      warn=#B56A00 soft=#FFF4DA border=#F3D391
-//                      neutral bg=#F5F5F5 text=#6B6B6B border=#E5E5E5
+// ─── Criterion types ──────────────────────────────────────────────────────────
 
-const TOKEN = {
-  pass:       { text: '#11875D', bg: '#E8F7EF', border: '#A3D9BE' },
-  fail:       { text: '#D83B3B', bg: '#FCEAEA', border: '#F0B8B8' },
-  warn:       { text: '#B56A00', bg: '#FFF4DA', border: '#F3D391' },
-  neutral:    { text: '#6B6B6B', bg: '#F5F5F5', border: '#E5E5E5' },
-  brand:      { text: '#5F790B', bg: '#F6FAEA', border: '#d4e2a1' },
+type CriterionStatus = 'pass' | 'fail' | 'na'
+
+interface Criterion {
+  label: string
+  status: CriterionStatus
+  value: string
 }
 
-// ─── Signal row ───────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function SignalRow({ signal }: { signal: VerdictSignal }) {
-  const { status, label: rawLabel, value, detail } = signal
-  const label = SIGNAL_LABEL_OVERRIDES[rawLabel] ?? rawLabel
+function pct(v: number | null | undefined, decimals = 1): string {
+  if (v == null || !isFinite(v)) return 'N/A'
+  return (v * 100).toFixed(decimals) + '%'
+}
 
-  const tok = status === 'pass' ? TOKEN.pass : status === 'fail' ? TOKEN.fail : TOKEN.neutral
+function fmt2(v: number | null | undefined): string {
+  if (v == null || !isFinite(v)) return 'N/A'
+  return v.toFixed(2)
+}
+
+function criterion(
+  label: string,
+  pass: boolean | null,
+  value: string,
+): Criterion {
+  return { label, status: pass === null ? 'na' : pass ? 'pass' : 'fail', value }
+}
+
+// ─── Status icon ──────────────────────────────────────────────────────────────
+
+function StatusIcon({ status }: { status: CriterionStatus }) {
+  if (status === 'pass') {
+    return (
+      <span
+        className="flex items-center justify-center w-[18px] h-[18px] rounded-full shrink-0 text-[10px] font-bold"
+        style={{ background: '#E8F7EF', color: '#11875D' }}
+        aria-label="Pass"
+      >
+        ✓
+      </span>
+    )
+  }
+  if (status === 'fail') {
+    return (
+      <span
+        className="flex items-center justify-center w-[18px] h-[18px] rounded-full shrink-0 text-[10px] font-bold"
+        style={{ background: '#FCEAEA', color: '#D83B3B' }}
+        aria-label="Fail"
+      >
+        ✗
+      </span>
+    )
+  }
+  return (
+    <span
+      className="flex items-center justify-center w-[18px] h-[18px] rounded-full shrink-0 text-[10px] font-bold"
+      style={{ background: '#F5F5F5', color: '#9B9B9B' }}
+      aria-label="Not available"
+    >
+      –
+    </span>
+  )
+}
+
+// ─── Single criterion row ─────────────────────────────────────────────────────
+
+function CriterionRow({ c }: { c: Criterion }) {
+  const valueColor =
+    c.status === 'pass' ? '#11875D' : c.status === 'fail' ? '#D83B3B' : '#9B9B9B'
+  const valueBg =
+    c.status === 'pass' ? '#E8F7EF' : c.status === 'fail' ? '#FCEAEA' : '#F5F5F5'
+  const valueBorder =
+    c.status === 'pass' ? '#A3D9BE' : c.status === 'fail' ? '#F0B8B8' : '#E5E5E5'
 
   return (
     <div
       className="flex items-center justify-between gap-2 py-[7px] border-b last:border-0"
-      style={{ borderColor: '#F5F5F5' }}
-      title={detail}
+      style={{ borderColor: '#F0F0F0' }}
     >
-      <div className="flex items-center gap-2 min-w-0">
+      <div className="flex items-center gap-[7px] min-w-0">
+        <StatusIcon status={c.status} />
         <span
-          className="w-[14px] text-center text-[10px] font-bold shrink-0 leading-none"
-          style={{ color: status === 'na' ? TOKEN.neutral.text : tok.text }}
-          aria-hidden="true"
+          className="text-[12px] leading-tight truncate"
+          style={{ color: '#111111' }}
         >
-          {status === 'pass' ? '✓' : status === 'fail' ? '✗' : '–'}
+          {c.label}
         </span>
-        <span className="text-[12px] truncate" style={{ color: '#111111' }}>{label}</span>
       </div>
       <span
-        className="text-[11px] font-medium px-[6px] py-[2px] rounded border shrink-0"
-        style={{ color: tok.text, background: tok.bg, borderColor: tok.border }}
+        className="text-[11px] font-medium px-[7px] py-[2px] rounded-md border shrink-0 tabular-nums"
+        style={{ color: valueColor, background: valueBg, borderColor: valueBorder }}
       >
-        {value}
+        {c.value}
       </span>
     </div>
   )
 }
 
-// ─── Dimension card ───────────────────────────────────────────────────────────
+// ─── Category header ──────────────────────────────────────────────────────────
 
-const DIMENSION_LABELS: Record<string, string> = {
-  valuation:  'Valuation',
-  quality:    'Business Quality',
-  health:     'Financial Health',
-  integrity:  'Earnings Integrity',
-}
-
-// Plain-English signal label overrides — map from computed label to readable alternative
-const SIGNAL_LABEL_OVERRIDES: Record<string, string> = {
-  'Piotroski F-score':  'Earnings quality score',
-  'Altman Z-score':     'Bankruptcy risk score',
-  'Beneish M-score':    'Earnings manipulation risk',
-  'ROIC > WACC':        'Returns above cost of capital',
-  'ROIC spread':        'Capital return spread',
-}
-
-function DimensionCard({ dim }: { dim: VerdictDimension }) {
-  const total = dim.signals.filter(s => s.status !== 'na').length
-  const passing = dim.passingCount
-  const ratio = total > 0 ? passing / total : 0
-
-  const barColor = ratio === 1 ? TOKEN.pass.text : ratio >= 0.5 ? TOKEN.warn.text : TOKEN.fail.text
-  const dotColor = (s: VerdictSignal) =>
-    s.status === 'pass' ? TOKEN.pass.text : s.status === 'fail' ? TOKEN.fail.text : TOKEN.neutral.border
-
+function CategoryHeader({ label }: { label: string }) {
   return (
-    <div
-      className="rounded-xl p-[14px] flex flex-col gap-0"
-      style={{ background: '#FFFFFF', border: '1px solid #E5E5E5', boxShadow: '0 4px 16px rgba(0,0,0,0.05)' }}
+    <p
+      className="text-[10px] font-[700] uppercase tracking-[0.07em] pt-[6px] pb-[2px]"
+      style={{ color: '#9B9B9B' }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <span
-          className="text-[11px] font-[650]"
-          style={{ color: '#6B6B6B' }}
-        >
-          {DIMENSION_LABELS[dim.id] ?? dim.label}
-        </span>
-        <div className="flex items-center gap-1.5">
-          <span className="text-[11px] font-semibold tabular-nums" style={{ color: '#111111' }}>
-            {passing}/{total}
-          </span>
-          <div className="flex gap-[3px]">
-            {dim.signals.map((s, i) => (
-              <span
-                key={i}
-                className="w-[6px] h-[6px] rounded-full"
-                style={{ background: dotColor(s) }}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
+      {label}
+    </p>
+  )
+}
 
-      {/* Progress bar */}
-      <div className="h-[2px] rounded-full mb-[10px] overflow-hidden" style={{ background: '#F5F5F5' }}>
-        <div
-          className="h-full rounded-full transition-all duration-300"
-          style={{ width: total > 0 ? `${ratio * 100}%` : '0%', background: barColor }}
-        />
-      </div>
+// ─── Info tooltip icon ────────────────────────────────────────────────────────
 
-      {/* Signals */}
-      {dim.signals.map((s, i) => (
-        <SignalRow key={i} signal={s} />
-      ))}
-    </div>
+function InfoIcon() {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden="true"
+      style={{ color: '#C0C0C0', flexShrink: 0 }}
+    >
+      <circle cx="8" cy="8" r="7.25" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="7.25" y="6.75" width="1.5" height="5" rx="0.75" fill="currentColor" />
+      <circle cx="8" cy="4.75" r="0.85" fill="currentColor" />
+    </svg>
   )
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function InvestmentVerdict({
-  ticker, upsidePct, scores, analystRecommendation,
-  fcfMargin, grossMargin, netMargin, revenueCAGR,
+  ticker,
+  upsidePct,
+  scores,
+  analystRecommendation,
+  fcfMargin,
+  grossMargin,
+  netMargin: _netMargin,
+  revenueCAGR,
+  pegRatio,
+  epsGrowthFwd,
 }: Props) {
-  const verdict = useMemo(() => computeVerdict({
+
+  const criteria = useMemo(() => {
+    const piotroski = scores?.piotroski ?? null
+    const altman    = scores?.altman    ?? null
+    const beneish   = scores?.beneish   ?? null
+    const roic      = scores?.roic      ?? null
+
+    // ── Helper: find Piotroski criterion by partial name ───────────────────
+    function pioC(fragment: string): boolean | null {
+      if (!piotroski) return null
+      const c = piotroski.criteria.find(
+        cr => cr.name.toLowerCase().includes(fragment.toLowerCase()),
+      )
+      return c?.pass ?? null
+    }
+
+    // ── Analyst bullish check ──────────────────────────────────────────────
+    const analystBullish: boolean | null = analystRecommendation != null
+      ? ['strongbuy', 'buy', 'strong_buy', 'strong buy'].includes(
+          analystRecommendation.toLowerCase(),
+        )
+      : null
+
+    const analystLabel = analystRecommendation
+      ? analystRecommendation.replace(/([A-Z])/g, ' $1').trim()
+      : 'N/A'
+
+    // ── VALUATION (3 criteria) ─────────────────────────────────────────────
+
+    // 1. DCF upside >= 15%
+    const c1 = criterion(
+      'DCF upside ≥ 15%',
+      upsidePct != null ? upsidePct >= 0.15 : null,
+      upsidePct != null
+        ? (upsidePct >= 0 ? '+' : '') + pct(upsidePct, 1)
+        : 'N/A',
+    )
+
+    // 2. Fair valuation (PEG < 2.0 and > 0)
+    const pegPass: boolean | null =
+      pegRatio != null
+        ? pegRatio > 0 && pegRatio < 2.0
+        : null
+    const c2 = criterion(
+      'Fair valuation (PEG)',
+      pegPass,
+      pegRatio != null ? fmt2(pegRatio) : 'N/A',
+    )
+
+    // 3. P/FCF vs sector — proxy: FCF margin > 5%
+    const pfcfPass: boolean | null =
+      fcfMargin != null ? fcfMargin > 0.05 : null
+    const c3 = criterion(
+      'P/FCF vs sector',
+      pfcfPass,
+      fcfMargin != null ? `FCF ${pct(fcfMargin, 1)}` : 'N/A',
+    )
+
+    // ── BUSINESS QUALITY (4 criteria) ─────────────────────────────────────
+
+    // 4. Positive cash flow (FCF margin > 0)
+    const c4 = criterion(
+      'Positive cash flow',
+      fcfMargin != null ? fcfMargin > 0 : null,
+      pct(fcfMargin, 1),
+    )
+
+    // 5. High ROIC (ROIC > WACC, spread > 0)
+    const roicPass: boolean | null =
+      roic?.dataAvailable && roic.spread != null
+        ? roic.spread > 0
+        : null
+    const roicLabel =
+      roic?.dataAvailable && roic.roic != null && roic.spread != null
+        ? `${pct(roic.roic, 1)} (${roic.spread > 0 ? '+' : ''}${pct(roic.spread, 1)} spread)`
+        : 'N/A'
+    const c5 = criterion('High ROIC (> WACC)', roicPass, roicLabel)
+
+    // 6. Competitive moat (Piotroski >= 6)
+    const fScore = piotroski?.score ?? null
+    const c6 = criterion(
+      'Competitive moat (F-score)',
+      fScore != null ? fScore >= 6 : null,
+      fScore != null
+        ? `${fScore} / 9 (${piotroski!.label})`
+        : 'N/A',
+    )
+
+    // 7. Consistent margins (gross margin > 20%)
+    const c7 = criterion(
+      'Consistent margins',
+      grossMargin != null ? grossMargin > 0.2 : null,
+      grossMargin != null ? `Gross ${pct(grossMargin, 1)}` : 'N/A',
+    )
+
+    // ── FINANCIAL HEALTH (2 criteria) ─────────────────────────────────────
+
+    // 8. Strong balance sheet (Altman Safe zone)
+    const c8 = criterion(
+      'Strong balance sheet',
+      altman != null ? altman.zone === 'Safe' : null,
+      altman != null
+        ? `Z ${fmt2(altman.zScore)} (${altman.zone})`
+        : 'N/A',
+    )
+
+    // 9. Management quality (Beneish not Manipulator)
+    const notManipulator: boolean | null =
+      beneish != null ? beneish.flag !== 'Manipulator' : null
+    const c9 = criterion(
+      'Management quality',
+      notManipulator,
+      beneish != null
+        ? `M ${fmt2(beneish.mScore)} (${beneish.flag})`
+        : 'N/A',
+    )
+
+    // ── GROWTH (3 criteria) ───────────────────────────────────────────────
+
+    // 10. Revenue growth (CAGR > 5%)
+    const c10 = criterion(
+      'Revenue growth (3Y CAGR)',
+      revenueCAGR != null ? revenueCAGR > 0.05 : null,
+      revenueCAGR != null ? pct(revenueCAGR, 1) : 'N/A',
+    )
+
+    // 11. EPS growth outlook (epsGrowthFwd > 0)
+    const c11 = criterion(
+      'EPS growth outlook',
+      epsGrowthFwd != null ? epsGrowthFwd > 0 : null,
+      epsGrowthFwd != null ? pct(epsGrowthFwd, 1) : 'N/A',
+    )
+
+    // 12. Analyst consensus (buy or strongBuy)
+    const c12 = criterion(
+      'Analyst consensus',
+      analystBullish,
+      analystLabel,
+    )
+
+    // Piotroski leverage flag used by old health section (kept for reference only)
+    const _leverageFalling = pioC('leverage')
+    void _leverageFalling
+
+    return {
+      valuation:    [c1, c2, c3],
+      quality:      [c4, c5, c6, c7],
+      health:       [c8, c9],
+      growth:       [c10, c11, c12],
+      all:          [c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12],
+    }
+  }, [
     ticker,
-    upsidePct,
-    roic: scores?.roic,
-    analystRecommendation,
-    piotroski: scores?.piotroski,
-    altman: scores?.altman,
-    beneish: scores?.beneish,
-    fcfMargin,
-    grossMargin,
-    netMargin,
-    revenueCAGR,
-  }), [ticker, upsidePct, scores, analystRecommendation, fcfMargin, grossMargin, netMargin, revenueCAGR])
+    upsidePct, pegRatio, fcfMargin, grossMargin,
+    scores, analystRecommendation, revenueCAGR, epsGrowthFwd,
+  ])
 
-  // Header palette from DESIGN.md chips
-  const headerTok =
-    verdict.color === 'green' ? TOKEN.pass
-    : verdict.color === 'amber' ? TOKEN.warn
-    : TOKEN.fail
+  // Aggregate counts (N/A excluded from totals per existing logic)
+  const totalMet = criteria.all.filter(c => c.status === 'pass').length
+  const totalEligible = criteria.all.filter(c => c.status !== 'na').length
 
-  const labelChipStyle = {
-    color: headerTok.text,
-    background: headerTok.bg,
-    border: `1px solid ${headerTok.border}`,
-  }
+  const ratio = totalEligible > 0 ? totalMet / totalEligible : 0
+  const summaryColor =
+    ratio >= 0.75 ? '#11875D' : ratio >= 0.5 ? '#B56A00' : '#D83B3B'
 
   return (
     <div
-      className="rounded-xl p-4 flex flex-col gap-3 shadow-card"
-      style={{ background: '#FAFAFA', border: '1px solid #E5E5E5' }}
+      className="rounded-xl p-4 flex flex-col gap-0"
+      style={{ background: '#FFFFFF', border: '1px solid #E5E5E5' }}
     >
-      {/* ── Verdict headline ─────────────────────────────────────────────── */}
-      <div
-        className="rounded-xl px-4 py-3 flex items-start justify-between gap-3"
-        style={{ background: headerTok.bg, border: `1px solid ${headerTok.border}` }}
-      >
-        <div className="flex flex-col gap-1 min-w-0">
-          {/* Label */}
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-[6px]">
           <span
-            className="text-[11px] font-[650]"
-            style={{ color: TOKEN.neutral.text }}
+            className="text-[11px] font-[700] uppercase tracking-[0.07em]"
+            style={{ color: '#6B6B6B' }}
           >
             Investment Checklist
           </span>
-          {/* The headline sentence — "MSFT passes 9 of 11 checks — strong fundamentals." */}
-          <p
-            className="text-[13px] font-semibold leading-snug"
-            style={{ color: '#111111' }}
-          >
-            {verdict.headline}
-          </p>
+          <InfoIcon />
         </div>
-
-        {/* Score chip + dot bar */}
-        <div className="flex flex-col items-end gap-1.5 shrink-0">
-          <span
-            className="text-[11px] font-bold px-[8px] py-[3px] rounded-full"
-            style={labelChipStyle}
-          >
-            {verdict.label}
-          </span>
-          <div className="flex gap-[3px]">
-            {Array.from({ length: verdict.totalSignals }).map((_, i) => (
-              <span
-                key={i}
-                className="w-[5px] h-[5px] rounded-full"
-                style={{
-                  background: i < verdict.totalPassing ? headerTok.text : TOKEN.neutral.border,
-                }}
-              />
-            ))}
-          </div>
-          <span className="text-[11px] tabular-nums" style={{ color: TOKEN.neutral.text }}>
-            {verdict.totalPassing} / {verdict.totalSignals} checks
-          </span>
-        </div>
+        <span
+          className="text-[11px] font-bold tabular-nums px-[8px] py-[2px] rounded-full border"
+          style={{
+            color: summaryColor,
+            background: ratio >= 0.75 ? '#E8F7EF' : ratio >= 0.5 ? '#FFF4DA' : '#FCEAEA',
+            borderColor: ratio >= 0.75 ? '#A3D9BE' : ratio >= 0.5 ? '#F3D391' : '#F0B8B8',
+          }}
+        >
+          {totalMet} / {totalEligible} met
+        </span>
       </div>
 
-      {/* ── 2×2 dimension grid ───────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {verdict.dimensions.map(dim => (
-          <DimensionCard key={dim.id} dim={dim} />
-        ))}
+      {/* ── 2-column grid ──────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-0">
+
+        {/* LEFT COLUMN */}
+        <div>
+          <CategoryHeader label="Valuation" />
+          {criteria.valuation.map((c, i) => (
+            <CriterionRow key={i} c={c} />
+          ))}
+          <CategoryHeader label="Financial Health" />
+          {criteria.health.map((c, i) => (
+            <CriterionRow key={i} c={c} />
+          ))}
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <div>
+          <CategoryHeader label="Business Quality" />
+          {criteria.quality.map((c, i) => (
+            <CriterionRow key={i} c={c} />
+          ))}
+          <CategoryHeader label="Growth" />
+          {criteria.growth.map((c, i) => (
+            <CriterionRow key={i} c={c} />
+          ))}
+        </div>
+
       </div>
 
-      {/* ── Footer ───────────────────────────────────────────────────────── */}
-      <p className="text-[11px] text-center leading-relaxed" style={{ color: '#6B6B6B' }}>
-        Scores: Earnings quality, financial distress risk, manipulation risk, ROIC vs WACC, DCF upside.
-        N/A signals excluded from totals.
+      {/* ── Footer ─────────────────────────────────────────────────────────── */}
+      <p
+        className="text-[11px] text-center mt-3 leading-relaxed"
+        style={{ color: '#9B9B9B' }}
+      >
+        {totalMet} of {totalEligible} criteria met
+        {totalEligible < 12 ? ` · ${12 - totalEligible} N/A excluded` : ''}
       </p>
     </div>
   )

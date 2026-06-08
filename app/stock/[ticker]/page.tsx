@@ -168,6 +168,11 @@ interface FinancialsData {
     evToEbitda: number | null
     evToRevenue: number | null
   }>
+  analystForwardEstimates?: Array<{
+    period: string
+    eps?: { growth?: number | null } | null
+    revenue?: { growth?: number | null } | null
+  }>
 }
 
 export default function StockPage() {
@@ -613,6 +618,10 @@ function StockPageBody() {
                     holdingReturns={data.holdingReturns ?? null}
                     userModelFairValue={userModelFairValue}
                     analystRecommendation={data.analystRecommendation ?? ''}
+                    analystForwardEstimates={data.analystForwardEstimates ?? []}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    roe={(data.businessProfile as any)?.roe ?? null}
+                    roic={computedScores?.roic?.roic ?? data.scores?.roic?.roic ?? null}
                     onViewValuation={() => handleTabChange('valuation')}
                     onViewFinancials={() => handleTabChange('financials')}
                     onViewRisks={() => handleTabChange('risks')}
