@@ -443,3 +443,48 @@ where P/FFO from the Cockpit adaptive method is not surfaced; `lib/valuation/coc
 **Suggested check to add:** For `reit` companyType: verify `valuationMethods.effectiveWeights.multiples > 0`. If it's 0 (all multiples inapplicable), flag that P/FFO from the Cockpit is not influencing the triangulated FV. The P/FFO fair value from the Cockpit panel IS computed correctly — note this for the user and cross-reference it against the FCFF-only triangulated number.
 
 ---
+
+### Finding 18: DDM uses 100bps spread cap instead of 200bps — denominator near-zero for low-yield companies
+**Agent:** audit-valuation
+**Date:** 2026-06-08
+**Ticker / Context:** TM (Toyota) — DDM FV=$671/sh (+275% upside) vs price $178.90; ke=8.02%, g caps at 7.02% → ke-g=1.0%
+**Run count:** 1
+**Status:** new
+
+**Observed:** `calculateDDM.ts` line 49: `g = Math.min(g, costOfEquity - 0.01, 0.10)`.
+This enforces a minimum spread of 100bps between ke and g. For TM: ke=8.02%, Toyota's high ROE causes
+g to cap at `ke-0.01 = 7.02%`, leaving a denominator of only 1.0%. Gordon Growth DDM is extremely
+sensitive near this boundary — a 1% denominator produces `D1/0.01 = $671` for Toyota's $6.71 D1.
+The DCF, UFCF, and FCFF models all enforce 200bps minimum spread (`wacc - 0.02`). The DDM uses 100bps.
+This inconsistency causes DDM to produce values ~2× higher than a consistent 200bps guard would give.
+**Expected:** `g = Math.min(g, costOfEquity - 0.02, 0.10)` — same 200bps minimum spread enforced everywhere else.
+At 200bps: g=6.02%, ke-g=2.0%, FV=$336 (+88% upside) — still above market but not explosive.
+**File / location:** `lib/dcf/calculateDDM.ts` line 49
+**Suggested check to add:** In Phase 3 LFCF section: if DDM is applicable and `ke - g < 200bps`, flag that the 100bps DDM cap allows a denominator that is half the minimum used everywhere else in the model. State actual ke-g spread and what FV would be at 200bps minimum. Cross-reference against the dividend triangulation weight (typically 15-25%) to assess contamination.
+
+---
+
+### Finding 19: FCFF and DDM divergence > 400% warrants model-level exclusion flag
+**Agent:** audit-valuation
+**Date:** 2026-06-08
+**Ticker / Context:** TM — FCFF=+229%, DDM=+275%, FCFE=+133% vs price; triangulated=+149%
+**Run count:** 1
+**Status:** new
+
+**Observed:** Multiple valuation models (FCFF, DDM) are producing outputs > 3× current price for Toyota.
+FCFF=$589/sh (root: F4 stale Yahoo FCF inflating baseFCF 18.29×). DDM=$671/sh (root: F18 near-zero spread).
+The triangulated FV=$446 (+149%) blends these inflated outputs with FCFE ($416, +133%) via weights
+(fcff:55%, fcfe:0%, ddm:15%, multiples:30%). Users see "+149% upside" with no warning that two of the
+three contributing models are technically broken for this ticker.
+**Expected:** When any individual model produces FV > 5× current price OR upside > 400%, that model should
+be: (1) excluded from the triangulated blend, OR (2) flagged in the UI with "excluded — extreme outlier"
+and a reason. The triangulated FV should note how many models contributed. The user-facing upside
+percentage should reflect only models within a plausible range.
+**File / location:** `app/api/financials/route.ts` (triangulation logic), `components/valuation/ValuationLab.tsx`
+(display layer — the triangulated value is shown without context when it exceeds 400%)
+**Suggested check to add:** For every ticker, compute `max(|FCFF_upside|, |FCFE_upside|, |DDM_upside|)`.
+If any individual model upside exceeds 400%, flag it in the summary: "Warning: [FCFF/DDM] model
+diverges by [X%] — likely driven by a data quality issue ([F4 stale FCF / F18 DDM spread]).
+Triangulated FV excludes this model." State which models ARE included in the triangulated number.
+
+---

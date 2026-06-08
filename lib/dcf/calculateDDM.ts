@@ -45,8 +45,10 @@ export function calculateDDM(
     ? roe * retention
     : 0.02
 
-  // Cap g so the Gordon Growth denominator stays positive (g must be < Ke)
-  g = Math.min(g, costOfEquity - 0.01, 0.10)
+  // Cap g so the Gordon Growth denominator stays positive with a minimum 200bps spread.
+  // Consistent with the 200bps minimum enforced by UFCF/FCFF/FCFE paths (wacc - 0.02).
+  // Using 100bps (ke - 0.01) created denominators as small as 1% which inflated DDM 2×.
+  g = Math.min(g, costOfEquity - 0.02, 0.10)
   g = Math.max(g, 0.005)  // floor: at least 0.5% growth
 
   const ke = costOfEquity
