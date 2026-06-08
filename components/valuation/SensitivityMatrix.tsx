@@ -45,7 +45,7 @@ function stepsAround(key: keyof ValuationAssumptions, base: number, step: number
 // ── Color helpers ─────────────────────────────────────────────────────────────
 
 function cellColor(upsidePct: number | null): { bg: string; text: string } {
-  if (upsidePct == null) return { bg: 'bg-[#F4F3EF]', text: 'text-[#8A95A6]' }
+  if (upsidePct == null) return { bg: 'bg-[#F5F5F5]', text: 'text-[#9B9B9B]' }
   if (upsidePct >= 0.40) return { bg: 'bg-[#11875D]', text: 'text-white' }
   if (upsidePct >= 0.20) return { bg: 'bg-[#11875D]', text: 'text-white' }
   if (upsidePct >= 0.05) return { bg: 'bg-[#E8F7EF]', text: 'text-[#11875D]' }
@@ -90,14 +90,14 @@ function CellDetail({
   useEffect(() => { closeRef.current?.focus() }, [])
 
   return (
-    <div className="mt-3 rounded-xl border border-[#E3E1DA] bg-[#F4F3EF]/80 p-4 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1 duration-150">
+    <div className="mt-3 rounded-xl border border-[#E5E5E5] bg-[#F5F5F5]/80 p-4 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1 duration-150">
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[13px] font-bold text-[#06101F]">
+          <span className="text-[13px] font-bold text-[#111111]">
             {fieldY.shortLabel} {fieldY.format(yv)}
-            <span className="text-[#8A95A6] mx-1.5">×</span>
+            <span className="text-[#9B9B9B] mx-1.5">×</span>
             {fieldX.shortLabel} {fieldX.format(xv)}
           </span>
           {isBase && (
@@ -110,23 +110,23 @@ function CellDetail({
           onClick={onClose}
           aria-label="Close scenario detail"
           ref={closeRef}
-          className="w-6 h-6 flex items-center justify-center rounded-md text-[#8A95A6] hover:text-[#06101F] hover:bg-[#E3E1DA] transition-colors text-[16px] leading-none shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
+          className="w-6 h-6 flex items-center justify-center rounded-md text-[#9B9B9B] hover:text-[#111111] hover:bg-[#E3E1DA] transition-colors text-[16px] leading-none shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
         >
           ×
         </button>
       </div>
 
       {/* Key metrics */}
-      <div className="flex items-end gap-5 mb-4 pb-3 border-b border-[#E3E1DA]">
+      <div className="flex items-end gap-5 mb-4 pb-3 border-b border-[#E5E5E5]">
         <div>
-          <p className="text-[10px] text-[#8A95A6] mb-0.5">Fair Value</p>
-          <p className="text-[22px] font-[800] tabular-nums leading-none text-[#06101F]">
+          <p className="text-[10px] text-[#9B9B9B] mb-0.5">Fair Value</p>
+          <p className="text-[22px] font-[800] tabular-nums leading-none text-[#111111]">
             {fv != null ? fmtPrice(fv, currency) : '—'}
           </p>
         </div>
         {upside != null && (
           <div>
-            <p className="text-[10px] text-[#8A95A6] mb-0.5">vs Current Price</p>
+            <p className="text-[10px] text-[#9B9B9B] mb-0.5">vs Current Price</p>
             <p className={cn('text-[22px] font-[800] tabular-nums leading-none', upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
               {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(1)}%
             </p>
@@ -134,8 +134,8 @@ function CellDetail({
         )}
         {upside != null && currentPrice > 0 && (
           <div>
-            <p className="text-[10px] text-[#8A95A6] mb-0.5">Implied Price</p>
-            <p className="text-[14px] font-[700] tabular-nums text-[#566174] leading-none">
+            <p className="text-[10px] text-[#9B9B9B] mb-0.5">Implied Price</p>
+            <p className="text-[14px] font-[700] tabular-nums text-[#6B6B6B] leading-none">
               {fmtPrice(currentPrice, currency)} current
             </p>
           </div>
@@ -143,7 +143,7 @@ function CellDetail({
       </div>
 
       {/* All assumptions grid */}
-      <p className="text-[10px] font-[700] uppercase tracking-wide text-[#8A95A6] mb-2">Scenario assumptions</p>
+      <p className="text-[10px] font-[700] text-[#9B9B9B] mb-2">Scenario assumptions</p>
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
         {AXIS_FIELDS.map(f => {
           const val = scenarioAssumptions[f.key] as number
@@ -159,11 +159,11 @@ function CellDetail({
                 'rounded-lg p-2.5 flex flex-col gap-0.5',
                 isVaried
                   ? 'bg-[#EAF1FF] border border-[#93B4F5]'
-                  : 'bg-white border border-[#E3E1DA]',
+                  : 'bg-white border border-[#E5E5E5]',
               )}
             >
-              <p className="text-[11px] text-[#8A95A6] leading-tight">{f.shortLabel}</p>
-              <p className={cn('text-[13px] font-[750] tabular-nums leading-snug', isVaried ? 'text-[#2563EB]' : 'text-[#06101F]')}>
+              <p className="text-[11px] text-[#9B9B9B] leading-tight">{f.shortLabel}</p>
+              <p className={cn('text-[13px] font-[750] tabular-nums leading-snug', isVaried ? 'text-[#2563EB]' : 'text-[#111111]')}>
                 {f.format(val)}
               </p>
               {isVaried && hasDelta && (
@@ -172,7 +172,7 @@ function CellDetail({
                 </p>
               )}
               {(!isVaried || !hasDelta) && (
-                <p className="text-[11px] text-[#8A95A6] tabular-nums">base</p>
+                <p className="text-[11px] text-[#9B9B9B] tabular-nums">base</p>
               )}
             </div>
           )
@@ -197,8 +197,8 @@ function AxisPill({
     ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
     : 'bg-violet-600 border-violet-600 text-white shadow-sm'
   const hoverClass = role === 'row'
-    ? 'bg-white border-[#E3E1DA] text-[#566174] hover:border-[#93B4F5] hover:text-[#2563EB]'
-    : 'bg-white border-[#E3E1DA] text-[#566174] hover:border-violet-300 hover:text-violet-600'
+    ? 'bg-white border-[#E5E5E5] text-[#6B6B6B] hover:border-[#93B4F5] hover:text-[#2563EB]'
+    : 'bg-white border-[#E5E5E5] text-[#6B6B6B] hover:border-violet-300 hover:text-violet-600'
 
   return (
     <button
@@ -211,7 +211,7 @@ function AxisPill({
         'px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all border whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1',
         role === 'row' ? 'focus-visible:ring-blue-500' : 'focus-visible:ring-violet-500',
         isSelected ? activeClass
-          : isBlocked ? 'border-transparent text-[#8A95A6] cursor-not-allowed select-none'
+          : isBlocked ? 'border-transparent text-[#9B9B9B] cursor-not-allowed select-none'
           : hoverClass,
       )}
     >
@@ -283,27 +283,27 @@ export default function SensitivityMatrix({
   }
 
   return (
-    <div className="bg-white rounded-[14px] border border-[#E6ECF5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 sm:p-5">
+    <div className="bg-white rounded-[14px] border border-[#E5E5E5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 sm:p-5">
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3 flex-col sm:flex-row mb-4">
         <div>
           <div className="flex items-center gap-2">
-            <p className="text-[13px] font-bold text-[#06101F]">Sensitivity Analysis</p>
+            <p className="text-[13px] font-bold text-[#111111]">Sensitivity Analysis</p>
             <InfoTooltip text="How fair value changes when you vary two assumptions simultaneously. Click any cell to see the full scenario assumptions. Every other assumption stays at its base value." />
           </div>
-          <p className="text-[11px] text-[#8A95A6] mt-0.5">
+          <p className="text-[11px] text-[#9B9B9B] mt-0.5">
             Click a cell to inspect the scenario — all other assumptions stay at base
           </p>
         </div>
 
         {/* Display mode toggle */}
-        <div className="flex items-center gap-1 rounded-lg border border-[#E3E1DA] p-0.5 bg-[#F4F3EF] shrink-0 self-start sm:self-auto">
+        <div className="flex items-center gap-1 rounded-lg border border-[#E5E5E5] p-0.5 bg-[#F5F5F5] shrink-0 self-start sm:self-auto">
           <button
             onClick={() => setDisplayMode('upside')}
             aria-pressed={displayMode === 'upside'}
             className={cn('text-[11px] font-semibold px-3 py-1 rounded-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1',
-              displayMode === 'upside' ? 'bg-white text-[#06101F] shadow-sm' : 'text-[#8A95A6] hover:text-[#566174]')}
+              displayMode === 'upside' ? 'bg-white text-[#111111] shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}
           >
             % Upside
           </button>
@@ -311,7 +311,7 @@ export default function SensitivityMatrix({
             onClick={() => setDisplayMode('fv')}
             aria-pressed={displayMode === 'fv'}
             className={cn('text-[11px] font-semibold px-3 py-1 rounded-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1',
-              displayMode === 'fv' ? 'bg-white text-[#06101F] shadow-sm' : 'text-[#8A95A6] hover:text-[#566174]')}
+              displayMode === 'fv' ? 'bg-white text-[#111111] shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}
           >
             Fair Value
           </button>
@@ -320,9 +320,9 @@ export default function SensitivityMatrix({
 
       {/* Grid — axis selectors embedded at their axis */}
       {currentPrice <= 0 ? (
-        <div className="py-8 text-center rounded-xl border border-[#E3E1DA] bg-[#F4F3EF]">
-          <p className="text-[12px] font-semibold text-[#566174]">Price unavailable</p>
-          <p className="text-[11px] text-[#8A95A6] mt-1">Upside calculations require a current market price.</p>
+        <div className="py-8 text-center rounded-xl border border-[#E5E5E5] bg-[#F5F5F5]">
+          <p className="text-[12px] font-semibold text-[#6B6B6B]">Price unavailable</p>
+          <p className="text-[11px] text-[#9B9B9B] mt-1">Upside calculations require a current market price.</p>
         </div>
       ) : (
       <div className="overflow-x-auto -mx-1 px-1">
@@ -333,7 +333,7 @@ export default function SensitivityMatrix({
               <th colSpan={2} />
               <th colSpan={xVals.length} className="pb-2 pl-1">
                 <div className="flex items-center gap-1 flex-wrap">
-                  <span className="text-[8px] font-[700] text-violet-500 uppercase tracking-wide shrink-0 mr-0.5">COLS</span>
+                  <span className="text-[8px] font-[700] text-violet-500 shrink-0 mr-0.5">COLS</span>
                   {AXIS_FIELDS.map(f => (
                     <AxisPill
                       key={f.key}
@@ -351,17 +351,17 @@ export default function SensitivityMatrix({
             <tr>
               <th colSpan={2} className="pr-2 pb-2 text-right">
                 <div className="flex flex-col items-end gap-0.5">
-                  <span className="text-[11px] font-[700] text-[#2563EB] uppercase tracking-wide">{fieldY.shortLabel} ↓</span>
-                  <span className="text-[11px] font-[700] text-violet-400 uppercase tracking-wide">{fieldX.shortLabel} →</span>
+                  <span className="text-[11px] font-[700] text-[#2563EB]">{fieldY.shortLabel} ↓</span>
+                  <span className="text-[11px] font-[700] text-violet-400">{fieldX.shortLabel} →</span>
                 </div>
               </th>
               {xVals.map((xv, xi) => (
                 <th key={xi} className="pb-2 text-center">
-                  <div className={cn('text-[11px] font-[700] tabular-nums', xi === baseXIdx ? 'text-violet-600' : 'text-[#566174]')}>
+                  <div className={cn('text-[11px] font-[700] tabular-nums', xi === baseXIdx ? 'text-violet-600' : 'text-[#6B6B6B]')}>
                     {fieldX.format(xv)}
                   </div>
                   {xi === histXIdx && histX != null && (
-                    <div className="text-[10px] text-[#8A95A6] leading-none mt-0.5">hist</div>
+                    <div className="text-[10px] text-[#9B9B9B] leading-none mt-0.5">hist</div>
                   )}
                 </th>
               ))}
@@ -374,7 +374,7 @@ export default function SensitivityMatrix({
                 {yi === 0 && (
                   <td rowSpan={yVals.length} className="align-top pt-0.5 pr-2 w-[90px]">
                     <div className="flex flex-col items-end gap-1">
-                      <span className="text-[8px] font-[700] text-[#2563EB] uppercase tracking-wide mb-0.5">ROWS</span>
+                      <span className="text-[8px] font-[700] text-[#2563EB] mb-0.5">ROWS</span>
                       {AXIS_FIELDS.map(f => (
                         <AxisPill
                           key={f.key}
@@ -391,11 +391,11 @@ export default function SensitivityMatrix({
 
                 {/* Row label */}
                 <td className="pr-2 text-right py-0.5 w-[52px]">
-                  <div className={cn('text-[11px] font-[700] tabular-nums', yi === baseYIdx ? 'text-[#2563EB]' : 'text-[#566174]')}>
+                  <div className={cn('text-[11px] font-[700] tabular-nums', yi === baseYIdx ? 'text-[#2563EB]' : 'text-[#6B6B6B]')}>
                     {fieldY.format(yv)}
                   </div>
                   {yi === histYIdx && histY != null && (
-                    <div className="text-[10px] text-[#8A95A6] leading-none">hist</div>
+                    <div className="text-[10px] text-[#9B9B9B] leading-none">hist</div>
                   )}
                 </td>
 
@@ -467,34 +467,34 @@ export default function SensitivityMatrix({
       {/* Legend + EPV */}
       <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[10px] text-[#8A95A6] font-[600]">Upside vs price:</span>
+          <span className="text-[10px] text-[#9B9B9B] font-[600]">Upside vs price:</span>
           {[
             { bg: 'bg-[#11875D]', label: '≥40%' },
             { bg: 'bg-[#E8F7EF] border border-[#CDD1C8]', label: '5–40%' },
-            { bg: 'bg-[#FFF4DA] border border-[#E3E1DA]', label: '±5%' },
+            { bg: 'bg-[#FFF4DA] border border-[#E5E5E5]', label: '±5%' },
             { bg: 'bg-[#FCEAEA]', label: '−5 to −20%' },
             { bg: 'bg-[#D83B3B]', label: '≤−20%' },
           ].map(({ bg, label }) => (
             <div key={label} className="flex items-center gap-1">
               <div className={cn('w-3 h-3 rounded-sm', bg)} />
-              <span className="text-[11px] text-[#566174]">{label}</span>
+              <span className="text-[11px] text-[#6B6B6B]">{label}</span>
             </div>
           ))}
           <div className="flex items-center gap-1 ml-1">
             <div className="w-3 h-3 rounded-sm ring-2 ring-blue-500" />
-            <span className="text-[11px] text-[#566174]">base</span>
+            <span className="text-[11px] text-[#6B6B6B]">base</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-sm ring-2 ring-slate-900" />
-            <span className="text-[11px] text-[#566174]">selected</span>
+            <span className="text-[11px] text-[#6B6B6B]">selected</span>
           </div>
         </div>
 
         {epvPerShare != null && epvPerShare > 0 && (
-          <div className="text-[10px] text-[#566174] bg-[#F4F3EF] rounded-lg px-3 py-1.5 border border-[#E3E1DA]">
+          <div className="text-[10px] text-[#6B6B6B] bg-[#F5F5F5] rounded-lg px-3 py-1.5 border border-[#E5E5E5]">
             <span className="font-[600]">No-growth floor (EPV):</span>{' '}
-            <span className="font-[750] tabular-nums text-[#06101F]">{fmtPrice(epvPerShare, currency)}</span>
-            <span className="text-[#8A95A6] ml-1">— value if growth stops</span>
+            <span className="font-[750] tabular-nums text-[#111111]">{fmtPrice(epvPerShare, currency)}</span>
+            <span className="text-[#9B9B9B] ml-1">— value if growth stops</span>
           </div>
         )}
       </div>

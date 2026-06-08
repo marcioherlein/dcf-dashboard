@@ -24,7 +24,7 @@ const VERDICT_TAILWIND: Record<CockpitOutput['verdict'], string> = {
   'Undervalued':       'text-[#5F790B]',
   'Fairly Valued':     'text-[#2563EB]',
   'Overvalued':        'text-[#D83B3B]',
-  'Insufficient Data': 'text-[#566174]',
+  'Insufficient Data': 'text-[#6B6B6B]',
 }
 
 const CONVICTION_LABEL: Record<string, string> = {
@@ -130,7 +130,7 @@ export default function VerdictHero({
   const upsideSign = output.upsidePct != null && output.upsidePct >= 0 ? '+' : ''
   const upColor = output.upsidePct != null
     ? (output.upsidePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')
-    : 'text-[#8A95A6]'
+    : 'text-[#9B9B9B]'
 
   return (
     <div className="bg-white rounded-[14px] border border-[#E5E5E5] shadow-[0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden">
@@ -141,7 +141,7 @@ export default function VerdictHero({
 
           {/* Eyebrow + Share button */}
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-[700] uppercase tracking-widest text-[#6B6B6B]">Our Verdict</span>
+            <span className="text-[10px] font-[700] text-[#6B6B6B]">Our Verdict</span>
             <button
               onClick={() => setShareOpen(true)}
               aria-label="Share valuation card"
@@ -161,7 +161,7 @@ export default function VerdictHero({
 
             {/* Conviction line */}
             <div className="flex items-center gap-2 mt-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-[650] text-[#566174]">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-[650] text-[#6B6B6B]">
                 <svg className="w-3 h-3 text-[#C4C4C4]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -236,7 +236,7 @@ export default function VerdictHero({
           {/* Efficiency metric */}
           {efficiency != null && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#FAFAFA] border border-[#E5E5E5]">
-              <svg className="w-3.5 h-3.5 text-[#8A95A6] shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="w-3.5 h-3.5 text-[#9B9B9B] shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="text-[11px] font-[650] text-[#6B6B6B]">

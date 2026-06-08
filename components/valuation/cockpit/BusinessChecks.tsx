@@ -60,10 +60,10 @@ const SIGNAL_STYLES: Record<Signal, { border: string; verdict: string; badge: st
     badgeBg: 'bg-[#FCEAEA] border-[#F0B8B8]',
   },
   slate: {
-    border: 'border-[#E3E1DA]',
-    verdict: 'text-[#566174]',
-    badge: 'text-[#566174]',
-    badgeBg: 'bg-[#F4F3EF] border-[#E3E1DA]',
+    border: 'border-[#E5E5E5]',
+    verdict: 'text-[#6B6B6B]',
+    badge: 'text-[#6B6B6B]',
+    badgeBg: 'bg-[#F5F5F5] border-[#E5E5E5]',
   },
 }
 
@@ -79,7 +79,7 @@ function CheckCard({
   const s = SIGNAL_STYLES[signal]
   return (
     <div className={`bg-white rounded-xl border ${s.border} px-4 py-3.5 flex flex-col gap-2.5`}>
-      <p className="text-[10px] text-[#8A95A6] leading-tight">{question}</p>
+      <p className="text-[10px] text-[#9B9B9B] leading-tight">{question}</p>
       <div>
         <span className={`inline-flex items-center gap-1 text-[10px] font-[700] px-2 py-0.5 rounded-full border ${s.badge} ${s.badgeBg}`}>
           {badge}
@@ -87,11 +87,11 @@ function CheckCard({
       </div>
       <p className={`text-[12px] font-[650] leading-snug ${s.verdict}`}>{verdict}</p>
       {metrics.length > 0 && (
-        <div className="flex flex-wrap gap-x-4 gap-y-1 pt-0.5 border-t border-[#E3E1DA]">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 pt-0.5 border-t border-[#E5E5E5]">
           {metrics.map(m => (
             <div key={m.label}>
-              <p className="text-[11px] text-[#8A95A6] leading-none mb-0.5">{m.label}</p>
-              <p className="text-[11px] font-[650] text-[#06101F] tabular-nums">{m.value}</p>
+              <p className="text-[11px] text-[#9B9B9B] leading-none mb-0.5">{m.label}</p>
+              <p className="text-[11px] font-[650] text-[#111111] tabular-nums">{m.value}</p>
             </div>
           ))}
         </div>
@@ -127,11 +127,11 @@ function StarRow({ starRating, uncertainty }: { starRating: StarRatingResult | n
           </svg>
         ))}
       </div>
-      <span className="text-[11px] font-[650] text-[#06101F]">{starRating.label}</span>
+      <span className="text-[11px] font-[650] text-[#111111]">{starRating.label}</span>
       {uncertainty && (
         <div className="flex items-center gap-1">
           <div className={`w-1.5 h-1.5 rounded-full ${UNCERTAINTY_DOT[uncertainty]}`} />
-          <span className="text-[10px] text-[#566174]">{uncertainty} uncertainty</span>
+          <span className="text-[10px] text-[#6B6B6B]">{uncertainty} uncertainty</span>
         </div>
       )}
     </div>
@@ -361,13 +361,13 @@ export default function BusinessChecks({
     : 'grid-cols-2 lg:grid-cols-4'
 
   return (
-    <div className="bg-white rounded-[20px] border border-[#E6ECF5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] px-5 py-4">
+    <div className="bg-white rounded-[20px] border border-[#E5E5E5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] px-5 py-4">
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
         <div>
-          <p className="text-[12px] font-[650] text-[#566174]">Independent Checks</p>
-          <p className="text-[11px] text-[#566174]">Each check asks a different question. Not blended into the fair value.</p>
+          <p className="text-[12px] font-[650] text-[#6B6B6B]">Independent Checks</p>
+          <p className="text-[11px] text-[#6B6B6B]">Each check asks a different question. Not blended into the fair value.</p>
         </div>
         <StarRow starRating={starRating} uncertainty={uncertainty} />
       </div>

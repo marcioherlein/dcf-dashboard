@@ -126,7 +126,7 @@ const METHOD_CFG: Record<string, {
 const CONFIDENCE_CHIP = {
   high:   { bg: 'bg-[#E8F7EF] border-[#A7D7C0]', text: 'text-[#11875D]', label: 'High confidence'   },
   medium: { bg: 'bg-[#FFF4DA] border-[#F3D391]', text: 'text-[#B56A00]', label: 'Medium confidence' },
-  low:    { bg: 'bg-[#F4F3EF] border-[#C8C8C8]', text: 'text-[#6B6B6B]', label: 'Low confidence'    },
+  low:    { bg: 'bg-[#F5F5F5] border-[#C8C8C8]', text: 'text-[#6B6B6B]', label: 'Low confidence'    },
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -166,9 +166,9 @@ function TinyLineChart({
 
   if (chartData.length < 2) return (
     <div className="flex flex-col" role="img" aria-label={`${title}: no data`}>
-      <p className="text-[10px] font-[600] text-[#566174] mb-2">{title}</p>
-      <div className="flex items-center justify-center rounded-lg bg-[#F4F3EF] border border-[#E3E1DA]" style={{ height: 120 }}>
-        <p className="text-[10px] text-[#8A95A6]">No data</p>
+      <p className="text-[10px] font-[600] text-[#6B6B6B] mb-2">{title}</p>
+      <div className="flex items-center justify-center rounded-lg bg-[#F5F5F5] border border-[#E5E5E5]" style={{ height: 120 }}>
+        <p className="text-[10px] text-[#9B9B9B]">No data</p>
       </div>
     </div>
   )
@@ -196,7 +196,7 @@ function TinyLineChart({
 
   return (
     <div className="flex flex-col" role="img" aria-label={title}>
-      <p className="text-[10px] font-[600] text-[#566174] mb-2">{title}</p>
+      <p className="text-[10px] font-[600] text-[#6B6B6B] mb-2">{title}</p>
       <ResponsiveContainer width="100%" height={120}>
         <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 4, left: 0 }}>
           <XAxis
@@ -271,8 +271,8 @@ function FieldStepper({
   return (
     <div className="flex items-center justify-between gap-2">
       <div className="min-w-0">
-        <p className="text-[10px] text-[#566174] leading-none">{label}</p>
-        {hint && <p className="text-[11px] text-[#8A95A6] mt-0.5 tabular-nums">{hint}</p>}
+        <p className="text-[10px] text-[#6B6B6B] leading-none">{label}</p>
+        {hint && <p className="text-[11px] text-[#9B9B9B] mt-0.5 tabular-nums">{hint}</p>}
       </div>
       <div className="flex items-center gap-0.5 shrink-0">
         <button
@@ -283,14 +283,14 @@ function FieldStepper({
         >
           <span className={`w-6 h-6 rounded-full border flex items-center justify-center text-[13px] font-bold shadow-sm select-none transition-colors ${
             atMin
-              ? 'border-[#E3E1DA] bg-[#F4F3EF] text-[#8A95A6]'
-              : 'border-[#E3E1DA] bg-white text-[#566174] hover:bg-[#F4F3EF]'
+              ? 'border-[#E5E5E5] bg-[#F5F5F5] text-[#9B9B9B]'
+              : 'border-[#E5E5E5] bg-white text-[#6B6B6B] hover:bg-[#F5F5F5]'
           }`}>
             −
           </span>
         </button>
         <span
-          className="text-[13px] font-[750] tabular-nums text-[#06101F] w-[52px] text-center"
+          className="text-[13px] font-[750] tabular-nums text-[#111111] w-[52px] text-center"
           style={{ color: value !== min ? color : undefined }}
         >
           {fmt(value, unit)}
@@ -303,8 +303,8 @@ function FieldStepper({
         >
           <span className={`w-6 h-6 rounded-full border flex items-center justify-center text-[13px] font-bold shadow-sm select-none transition-colors ${
             atMax
-              ? 'border-[#E3E1DA] bg-[#F4F3EF] text-[#8A95A6]'
-              : 'border-[#E3E1DA] bg-white text-[#566174] hover:bg-[#F4F3EF]'
+              ? 'border-[#E5E5E5] bg-[#F5F5F5] text-[#9B9B9B]'
+              : 'border-[#E5E5E5] bg-white text-[#6B6B6B] hover:bg-[#F5F5F5]'
           }`}>
             +
           </span>
@@ -338,13 +338,13 @@ function SharedCAGRPanel({
   const hasAnySeries = (cagrSeries?.length ?? 0) > 0 || (peSeries?.length ?? 0) > 0 || (evRevSeries?.length ?? 0) > 0
 
   return (
-    <div className="rounded-xl border border-[#E3E1DA] bg-white px-5 py-4 mb-3">
+    <div className="rounded-xl border border-[#E5E5E5] bg-white px-5 py-4 mb-3">
 
       {/* Top row: label + stepper */}
       <div className="flex items-center justify-between gap-6 mb-4">
         <div>
-          <p className="text-[12px] font-[650] text-[#06101F]">Revenue CAGR</p>
-          <p className="text-[11px] text-[#8A95A6]">Shared by Forward P/E and Revenue Multiple</p>
+          <p className="text-[12px] font-[650] text-[#111111]">Revenue CAGR</p>
+          <p className="text-[11px] text-[#9B9B9B]">Shared by Forward P/E and Revenue Multiple</p>
         </div>
         <FieldStepper
           label="5Y growth rate"
@@ -399,7 +399,7 @@ function DcfDriverRow({
     <div className="space-y-1.5">
       {fcfMargin != null && fcfMargin > 0 && (
         <div className="flex items-center justify-between">
-          <span className="text-[10px] text-[#566174]">FCF margin (TTM)</span>
+          <span className="text-[10px] text-[#6B6B6B]">FCF margin (TTM)</span>
           <span className="text-[11px] font-[650] text-[#11875D] tabular-nums">
             {(fcfMargin * 100).toFixed(1)}%
           </span>
@@ -407,8 +407,8 @@ function DcfDriverRow({
       )}
       {ttmEbitdaDollars != null && ttmEbitdaDollars > 0 && (
         <div className="flex items-center justify-between">
-          <span className="text-[10px] text-[#566174]">TTM EBITDA</span>
-          <span className="text-[11px] font-[650] text-[#06101F] tabular-nums">
+          <span className="text-[10px] text-[#6B6B6B]">TTM EBITDA</span>
+          <span className="text-[11px] font-[650] text-[#111111] tabular-nums">
             {ttmEbitdaDollars >= 1e9
               ? `$${(ttmEbitdaDollars / 1e9).toFixed(1)}B`
               : `$${(ttmEbitdaDollars / 1e6).toFixed(0)}M`
@@ -444,7 +444,7 @@ export default function ValuationMethodCards({
 
   return (
     <div
-      className="bg-white rounded-xl border border-[#E3E1DA] shadow-sm px-5 py-5"
+      className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm px-5 py-5"
       role="region"
       aria-label="Valuation models"
     >
@@ -452,14 +452,14 @@ export default function ValuationMethodCards({
       {/* Header */}
       <div className="flex items-center justify-between gap-4 mb-4">
         <div>
-          <p className="text-sm font-semibold text-[#06101F] mb-1">Valuation Models</p>
-          <p className="text-xs text-[#8A95A6]">Edit each model&apos;s key inputs directly — fair values update live</p>
+          <p className="text-sm font-semibold text-[#111111] mb-1">Valuation Models</p>
+          <p className="text-xs text-[#9B9B9B]">Edit each model&apos;s key inputs directly — fair values update live</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {canUndo && (
             <button
               onClick={onUndo}
-              className="flex items-center gap-1 text-[11px] text-[#566174] hover:text-[#06101F] px-2.5 py-2.5 min-h-[44px] rounded-lg border border-[#E3E1DA] hover:bg-[#F4F3EF] transition-colors"
+              className="flex items-center gap-1 text-[11px] text-[#6B6B6B] hover:text-[#111111] px-2.5 py-2.5 min-h-[44px] rounded-lg border border-[#E5E5E5] hover:bg-[#F5F5F5] transition-colors"
               aria-label="Undo last change"
             >
               <Undo2 size={11} />
@@ -468,7 +468,7 @@ export default function ValuationMethodCards({
           )}
           <button
             onClick={onReset}
-            className="flex items-center gap-1 text-[11px] text-[#566174] hover:text-[#06101F] px-2.5 py-2.5 min-h-[44px] rounded-lg border border-[#E3E1DA] hover:bg-[#F4F3EF] transition-colors"
+            className="flex items-center gap-1 text-[11px] text-[#6B6B6B] hover:text-[#111111] px-2.5 py-2.5 min-h-[44px] rounded-lg border border-[#E5E5E5] hover:bg-[#F5F5F5] transition-colors"
             aria-label="Reset to defaults"
           >
             <RotateCcw size={11} />
@@ -501,14 +501,14 @@ export default function ValuationMethodCards({
             ? Math.round((m.weight / validTotal) * 100) : 0
           const upColor = m.upsidePct != null
             ? (m.upsidePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')
-            : 'text-[#8A95A6]'
+            : 'text-[#9B9B9B]'
           const isCoreDCF = m.id === 'core_dcf'
 
           return (
             <div
               key={m.id}
               className={`rounded-xl border flex flex-col p-4 gap-3 min-w-[240px] sm:min-w-0 snap-start flex-shrink-0 sm:flex-shrink ${
-                hasValue ? 'border-[#E3E1DA] bg-white' : 'border-[#E3E1DA] bg-[#F4F3EF]/50'
+                hasValue ? 'border-[#E5E5E5] bg-white' : 'border-[#E5E5E5] bg-[#F5F5F5]/50'
               }`}
             >
               {/* Header */}
@@ -519,7 +519,7 @@ export default function ValuationMethodCards({
                       <cfg.Icon size={13} className={cfg.iconText} />
                     </div>
                   )}
-                  <span className={`text-sm font-bold truncate ${hasValue ? 'text-[#06101F]' : 'text-[#8A95A6]'}`}>
+                  <span className={`text-sm font-bold truncate ${hasValue ? 'text-[#111111]' : 'text-[#9B9B9B]'}`}>
                     {m.method}
                   </span>
                 </div>
@@ -528,7 +528,7 @@ export default function ValuationMethodCards({
                     {conf.label}
                   </span>
                 ) : (
-                  <span className="flex items-center gap-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 bg-[#F4F3EF] border-[#E3E1DA] text-[#8A95A6]">
+                  <span className="flex items-center gap-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 bg-[#F5F5F5] border-[#E5E5E5] text-[#9B9B9B]">
                     Unavailable
                     <InfoTooltip content={m.errors[0] ?? 'Insufficient data to compute this model.'} />
                   </span>
@@ -537,9 +537,9 @@ export default function ValuationMethodCards({
 
               {/* Fair value */}
               <div aria-live="polite" aria-atomic="true">
-                <p className="text-[10px] text-[#566174] mb-0.5">Fair Value</p>
+                <p className="text-[10px] text-[#6B6B6B] mb-0.5">Fair Value</p>
                 <div className="flex items-baseline gap-2 flex-wrap">
-                  <span className="text-2xl font-bold tabular-nums text-[#06101F] leading-none">
+                  <span className="text-2xl font-bold tabular-nums text-[#111111] leading-none">
                     {m.fairValue != null ? fmtPrice(m.fairValue, currency) : '—'}
                   </span>
                   {m.upsidePct != null && (
@@ -547,10 +547,10 @@ export default function ValuationMethodCards({
                       <span className={`text-xs font-semibold tabular-nums leading-tight ${upColor}`}>
                         {m.upsidePct >= 0 ? '+' : ''}{(m.upsidePct * 100).toFixed(1)}%
                       </span>
-                      <span className="text-[10px] text-[#8A95A6] leading-tight">vs current price</span>
+                      <span className="text-[10px] text-[#9B9B9B] leading-tight">vs current price</span>
                     </div>
                   )}
-                  {!hasValue && <span className="text-sm text-[#8A95A6]">N/A</span>}
+                  {!hasValue && <span className="text-sm text-[#9B9B9B]">N/A</span>}
                 </div>
               </div>
 
@@ -560,7 +560,7 @@ export default function ValuationMethodCards({
                   <svg className="w-5 h-5 text-[#CDD1C8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <circle cx="12" cy="12" r="9" /><path strokeLinecap="round" d="M12 8v4M12 16h.01" />
                   </svg>
-                  <p className="text-[11px] text-[#8A95A6] italic text-center leading-snug px-2">
+                  <p className="text-[11px] text-[#9B9B9B] italic text-center leading-snug px-2">
                     {m.errors[0] ?? 'Insufficient data. Excluded from the blend.'}
                   </p>
                 </div>
@@ -568,11 +568,11 @@ export default function ValuationMethodCards({
 
               {/* Inputs — editable method cards */}
               {hasValue && !isCoreDCF && fields.length > 0 && (
-                <div className="space-y-1 pt-1 border-t border-[#E3E1DA]">
+                <div className="space-y-1 pt-1 border-t border-[#E5E5E5]">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10px] font-[600] text-[#8A95A6]">Assumptions</p>
+                    <p className="text-[10px] font-[600] text-[#9B9B9B]">Assumptions</p>
                     {fields.some(f => ['exitPE', 'exitMultiple', 'revenueMultiple', 'priceToBookMultiple'].includes(String(f.key))) && (
-                      <span className="text-[10px] text-[#8A95A6]">Damodaran Jan 2025</span>
+                      <span className="text-[10px] text-[#9B9B9B]">Damodaran Jan 2025</span>
                     )}
                   </div>
                   {fields.map(f => {
@@ -599,8 +599,8 @@ export default function ValuationMethodCards({
 
               {/* Core DCF card — link to full model */}
               {isCoreDCF && hasValue && (
-                <div className="pt-1 border-t border-[#E3E1DA] space-y-2">
-                  <p className="text-[10px] text-[#566174] leading-relaxed">
+                <div className="pt-1 border-t border-[#E5E5E5] space-y-2">
+                  <p className="text-[10px] text-[#6B6B6B] leading-relaxed">
                     Uses WACC, CAGR, terminal growth, and net margin. Edit these in the Full DCF Model below.
                   </p>
                   <DcfDriverRow fcfMargin={fcfMargin} ttmEbitdaDollars={ttmEbitdaDollars} />
@@ -617,16 +617,16 @@ export default function ValuationMethodCards({
               {hasValue && <div className="flex-1" />}
 
               {/* Blend weight bar */}
-              <div className="pt-3 border-t border-[#E3E1DA]">
+              <div className="pt-3 border-t border-[#E5E5E5]">
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[10px] text-[#8A95A6]">Effective Blend Weight</span>
+                  <span className="text-[10px] text-[#9B9B9B]">Effective Blend Weight</span>
                   <span className={`text-[11px] font-bold tabular-nums ${
-                    hasValue ? (cfg?.valueText ?? 'text-[#566174]') : 'text-[#8A95A6]'
+                    hasValue ? (cfg?.valueText ?? 'text-[#6B6B6B]') : 'text-[#9B9B9B]'
                   }`}>
                     {effectivePct}%
                   </span>
                 </div>
-                <div className="h-2 rounded-full bg-[#F4F3EF] overflow-hidden">
+                <div className="h-2 rounded-full bg-[#F5F5F5] overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all ${cfg?.barBg ?? 'bg-[#CDD1C8]'}`}
                     style={{ width: `${effectivePct}%` }}
@@ -641,14 +641,14 @@ export default function ValuationMethodCards({
       {/* Footer notes */}
       <div className="mt-4 space-y-1.5">
         {methods.some(m => m.fairValue == null || m.fairValue <= 0) && (
-          <p className="text-[11px] text-[#8A95A6] flex items-center gap-1.5">
+          <p className="text-[11px] text-[#9B9B9B] flex items-center gap-1.5">
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 16v-4M12 8h.01" />
             </svg>
             Unavailable models are excluded from the blend. Remaining weights are redistributed proportionally.
           </p>
         )}
-        <p className="text-[11px] text-[#8A95A6] flex items-center gap-1.5">
+        <p className="text-[11px] text-[#9B9B9B] flex items-center gap-1.5">
           <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 16v-4M12 8h.01" />
           </svg>

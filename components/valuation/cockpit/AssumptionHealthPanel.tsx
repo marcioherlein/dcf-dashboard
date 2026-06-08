@@ -68,7 +68,7 @@ function AuditRow({
   }
 
   return (
-    <div className={`rounded-lg border ${result.severity !== 'ok' ? 'border-[#E3E1DA]' : 'border-transparent'} ${cfg.rowBg} overflow-hidden`}>
+    <div className={`rounded-lg border ${result.severity !== 'ok' ? 'border-[#E5E5E5]' : 'border-transparent'} ${cfg.rowBg} overflow-hidden`}>
       <div className="flex items-start gap-2.5 px-3 py-2.5">
         {/* Icon */}
         <Icon size={14} className={`${cfg.color} mt-0.5 shrink-0`} />
@@ -76,9 +76,9 @@ function AuditRow({
         {/* Label + signal */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[12px] font-semibold text-[#06101F]">{result.label}</span>
+            <span className="text-[12px] font-semibold text-[#111111]">{result.label}</span>
             {result.currentValue != null && (
-              <span className="text-[11px] text-[#566174]">{fmt(result.key, result.currentValue)}</span>
+              <span className="text-[11px] text-[#6B6B6B]">{fmt(result.key, result.currentValue)}</span>
             )}
             <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${cfg.chipBg} ${cfg.chipText}`}>
               {result.signal}
@@ -87,14 +87,14 @@ function AuditRow({
 
           {/* Benchmark reference */}
           {result.benchmark && (
-            <p className="text-[10px] text-[#8A95A6] mt-0.5">
+            <p className="text-[10px] text-[#9B9B9B] mt-0.5">
               vs. {result.benchmark.label}: {fmt(result.key, result.benchmark.value)}
             </p>
           )}
 
           {/* Expanded reason */}
           {expanded && result.reason && (
-            <p className="text-[11px] text-[#566174] mt-1.5 leading-relaxed">
+            <p className="text-[11px] text-[#6B6B6B] mt-1.5 leading-relaxed">
               {result.reason}
             </p>
           )}
@@ -113,7 +113,7 @@ function AuditRow({
           {hasDetail && (
             <button
               onClick={() => setExpanded(e => !e)}
-              className="p-1 rounded text-[#8A95A6] hover:text-[#566174] hover:bg-[#F4F3EF] transition-colors"
+              className="p-1 rounded text-[#9B9B9B] hover:text-[#6B6B6B] hover:bg-[#F5F5F5] transition-colors"
             >
               {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
             </button>
@@ -146,15 +146,15 @@ export default function AssumptionHealthPanel({ audit, assumptions, onChange, an
   }
 
   return (
-    <div className="rounded-xl border border-[#E3E1DA] bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] overflow-hidden mb-4">
+    <div className="rounded-xl border border-[#E5E5E5] bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] overflow-hidden mb-4">
 
       {/* Header */}
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-2.5 px-4 py-3 hover:bg-[#F4F3EF] transition-colors text-left"
+        className="w-full flex items-center gap-2.5 px-4 py-3 hover:bg-[#F5F5F5] transition-colors text-left"
       >
         <Sparkles size={13} className="text-[#2563EB] shrink-0" />
-        <span className="text-[12px] font-semibold text-[#06101F] flex-1">Assumption Check</span>
+        <span className="text-[12px] font-semibold text-[#111111] flex-1">Assumption Check</span>
 
         {/* Grade badge */}
         <div className={`flex items-center gap-1.5 rounded-full border px-2 py-0.5 ${gradeCfg.bg} ${gradeCfg.border}`}>
@@ -166,7 +166,7 @@ export default function AssumptionHealthPanel({ audit, assumptions, onChange, an
 
         {/* Issue counts */}
         {hasIssues && (
-          <span className="text-[10px] text-[#8A95A6]">
+          <span className="text-[10px] text-[#9B9B9B]">
             {audit.errorCount > 0 && `${audit.errorCount} error${audit.errorCount > 1 ? 's' : ''}`}
             {audit.errorCount > 0 && audit.warnCount > 0 && ', '}
             {audit.warnCount > 0 && `${audit.warnCount} warning${audit.warnCount > 1 ? 's' : ''}`}
@@ -176,14 +176,14 @@ export default function AssumptionHealthPanel({ audit, assumptions, onChange, an
         {/* Analyst fwd P/E badge */}
         {analystForwardPE != null && (
           <span
-            className="text-[10px] text-[#8A95A6] hidden sm:inline cursor-help"
+            className="text-[10px] text-[#9B9B9B] hidden sm:inline cursor-help"
             title={`Analyst consensus implies a ${analystForwardPE.toFixed(1)}× 1-year forward P/E based on next-year EPS estimates.`}
           >
             Fwd P/E {analystForwardPE.toFixed(0)}×
           </span>
         )}
 
-        {open ? <ChevronUp size={13} className="text-[#8A95A6] shrink-0" /> : <ChevronDown size={13} className="text-[#8A95A6] shrink-0" />}
+        {open ? <ChevronUp size={13} className="text-[#9B9B9B] shrink-0" /> : <ChevronDown size={13} className="text-[#9B9B9B] shrink-0" />}
       </button>
 
       {/* Body */}
@@ -212,14 +212,14 @@ export default function AssumptionHealthPanel({ audit, assumptions, onChange, an
 
           {/* Apply all button — only if there are suggestions */}
           {issues.some(r => r.suggestedValue != null && r.key !== 'quality') && (
-            <div className="pt-1 border-t border-[#E3E1DA] mt-2">
+            <div className="pt-1 border-t border-[#E5E5E5] mt-2">
               <button
                 onClick={applyAll}
                 className="min-h-[44px] flex items-center px-2 text-[11px] font-semibold text-[#2563EB] hover:text-[#2563EB] transition-colors"
               >
                 Apply all suggestions →
               </button>
-              <span className="text-[10px] text-[#8A95A6] ml-2">Updates the model with suggested values</span>
+              <span className="text-[10px] text-[#9B9B9B] ml-2">Updates the model with suggested values</span>
             </div>
           )}
         </div>

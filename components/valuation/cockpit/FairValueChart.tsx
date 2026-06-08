@@ -50,10 +50,10 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
       : null
 
   return (
-    <div className="bg-white rounded-xl border border-[#E3E1DA] shadow-sm px-3 sm:px-5 py-4 sm:py-5 w-full min-h-[200px]">
+    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm px-3 sm:px-5 py-4 sm:py-5 w-full min-h-[200px]">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <p className="text-[13px] font-[650] text-[#06101F]">Fair Value by Method</p>
-        <div className="flex items-center gap-4 text-[10px] text-[#8A95A6]">
+        <p className="text-[13px] font-[650] text-[#111111]">Fair Value by Method</p>
+        <div className="flex items-center gap-4 text-[10px] text-[#9B9B9B]">
           <span className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-[#11875D] shrink-0" />
             Undervalued
@@ -73,10 +73,10 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
             className="absolute bottom-0 flex flex-col items-center gap-px -translate-x-1/2"
             style={{ left: `${Math.max(5, Math.min(95, pricePct))}%` }}
           >
-            <span className="text-[11px] font-bold tabular-nums text-[#06101F] bg-white px-0.5 leading-tight">
+            <span className="text-[11px] font-bold tabular-nums text-[#111111] bg-white px-0.5 leading-tight">
               {fmtPrice(currentPrice, currency)}
             </span>
-            <span className="text-[11px] font-semibold text-[#566174] leading-tight">
+            <span className="text-[11px] font-semibold text-[#6B6B6B] leading-tight">
               Current
             </span>
           </div>
@@ -100,13 +100,13 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
               <div className={`${LABEL_COL} text-right pr-3 flex flex-col items-end gap-0.5`}>
                 <span
                   className={`text-[11px] font-medium leading-none ${
-                    hasVal ? 'text-[#566174]' : 'text-[#8A95A6]'
+                    hasVal ? 'text-[#6B6B6B]' : 'text-[#9B9B9B]'
                   }`}
                 >
                   {LABEL[m.id] ?? m.method}
                 </span>
                 <span className={`text-[11px] font-semibold leading-none ${
-                  !hasVal ? 'text-[#8A95A6]'
+                  !hasVal ? 'text-[#9B9B9B]'
                   : m.confidence === 'high'   ? 'text-[#11875D]'
                   : m.confidence === 'medium' ? 'text-[#B56A00]'
                   :                             'text-red-400'
@@ -118,7 +118,7 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
               {/* Track */}
               <div className="flex-1 relative flex items-center h-full">
                 {/* Gray baseline */}
-                <div className="w-full h-[5px] bg-[#F4F3EF] rounded-full" />
+                <div className="w-full h-[5px] bg-[#F5F5F5] rounded-full" />
 
                 {hasVal && fv != null && fvPct != null && (
                   <>
@@ -161,7 +161,7 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
               <div className={`${VALUE_COL} pl-3`}>
                 {hasVal && fv != null ? (
                   <div className="flex flex-col gap-[1px]">
-                    <span className="text-xs font-bold tabular-nums text-[#06101F] leading-tight">
+                    <span className="text-xs font-bold tabular-nums text-[#111111] leading-tight">
                       {fmtPrice(fv, currency)}
                     </span>
                     {m.upsidePct != null && (
@@ -176,7 +176,7 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
                     )}
                   </div>
                 ) : (
-                  <span className="text-[10px] text-[#8A95A6]">—</span>
+                  <span className="text-[10px] text-[#9B9B9B]">—</span>
                 )}
               </div>
             </div>
@@ -191,17 +191,17 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
           return (
             <>
               <div
-                className="border-t border-[#E3E1DA] my-0.5 ml-16 sm:ml-[100px]"
+                className="border-t border-[#E5E5E5] my-0.5 ml-16 sm:ml-[100px]"
               />
               <div className="flex items-center h-10">
                 <div className={`${LABEL_COL} text-right pr-3`}>
-                  <span className="text-[10px] font-bold uppercase tracking-wide text-[#2563EB]">
+                  <span className="text-[10px] font-bold text-[#2563EB]">
                     Blended
                   </span>
                 </div>
 
                 <div className="flex-1 relative flex items-center h-full">
-                  <div className="w-full h-[5px] bg-[#F4F3EF] rounded-full" />
+                  <div className="w-full h-[5px] bg-[#F5F5F5] rounded-full" />
 
                   {/* Blue diamond */}
                   <motion.div

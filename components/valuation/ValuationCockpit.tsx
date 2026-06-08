@@ -161,7 +161,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
   const [history, setHistory] = useState<ValuationAssumptions[]>([])
   const [saveOpen, setSaveOpen] = useState(false)
   const [liveDcfFV, setLiveDcfFV] = useState<number | null>(null)
-  const [lastChange, setLastChange] = useState<{
+  const [_lastChange, setLastChange] = useState<{
     label: string; delta: number; unit: '%' | 'x'; fvImpact: number | null
   } | null>(null)
   const [clampNote, setClampNote] = useState<string | null>(null)
@@ -570,7 +570,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] px-4 pt-2" style={{ background: 'linear-gradient(to top, rgba(248,250,252,0.98) 0%, rgba(248,250,252,0) 100%)', paddingBottom: 'calc(56px + env(safe-area-inset-bottom, 0px) + 12px)' }}>
         <button
           onClick={() => assumptionsPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-          className="w-full rounded-2xl py-3.5 text-sm font-bold text-white transition-all active:scale-95"
+          className="w-full rounded-xl py-3.5 text-sm font-bold text-white transition-all active:scale-95"
           style={{ background: '#2563EB', boxShadow: '0 4px 16px rgba(37,99,235,0.35)' }}
         >
           Edit assumptions
