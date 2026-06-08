@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { ChevronLeft, ChevronRight, Calendar, TrendingUp, Landmark, Scissors, Rocket } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
@@ -28,7 +28,8 @@ export interface IpoItem {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function getWeekRange(offset = 0): { start: Date; end: Date; label: string } {
+// Returns ISO strings (stable primitives) for the week at the given offset
+function getWeekRange(offset = 0): { from: string; to: string; label: string } {
   const now = new Date()
   const day = now.getDay()
   const monday = new Date(now)
@@ -44,22 +45,21 @@ function getWeekRange(offset = 0): { start: Date; end: Date; label: string } {
       ? `${fmt(monday)} – ${fmt(sunday)}, ${monday.getFullYear()}`
       : `${fmt(monday)}, ${monday.getFullYear()} – ${fmt(sunday)}, ${sunday.getFullYear()}`
 
-  return { start: monday, end: sunday, label }
+  return {
+    from:  monday.toISOString().split('T')[0],
+    to:    sunday.toISOString().split('T')[0],
+    label,
+  }
 }
 
-function isoDate(d: Date): string {
-  return d.toISOString().split('T')[0]
+function inRange(dateStr: string, from: string, to: string): boolean {
+  return dateStr >= from && dateStr <= to
 }
 
-function inRange(dateStr: string, start: Date, end: Date): boolean {
-  const d = new Date(dateStr + 'T00:00:00')
-  return d >= start && d <= end
-}
-
-function weekDays(start: Date): Date[] {
+function weekDays(from: string): Date[] {
   return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(start)
-    d.setDate(start.getDate() + i)
+    const d = new Date(from + 'T00:00:00')
+    d.setDate(d.getDate() + i)
     return d
   })
 }
@@ -129,7 +129,7 @@ function WeekGrid({ days, earnings, economic, splits, ipos, onSubTab }: WeekGrid
     <div className="overflow-x-auto">
       <div className="grid min-w-[640px]" style={{ gridTemplateColumns: `repeat(${weekdays.length}, 1fr)` }}>
         {weekdays.map(day => {
-          const iso = isoDate(day)
+          const iso = day.toISOString().split('T')[0]
           const earningsDay = earnings.filter(e => e.date === iso)
           const economicDay = economic.filter(e => e.date === iso)
           const splitsDay   = splits.filter(e => e.date === iso)
@@ -459,29 +459,26 @@ export default function CalendarTab() {
   const [loadingS, setLoadingS]   = useState(true)
   const [loadingI, setLoadingI]   = useState(true)
 
-  const week = getWeekRange(weekOffset)
+  // Stable ISO strings — only change when weekOffset changes (integer dep, no Date objects)
+  const week = useMemo(() => getWeekRange(weekOffset), [weekOffset])
 
-  const loadData = useCallback(() => {
-    const from = isoDate(week.start)
-    const to   = isoDate(week.end)
+  useEffect(() => {
+    const { from, to } = week
 
-    // Earnings
     setLoadingE(true)
     fetch('/api/markets/earnings')
       .then(r => r.json())
-      .then(d => setEarnings((d.items ?? []).filter((e: EarningsItem) => inRange(e.date, week.start, week.end))))
+      .then(d => setEarnings((d.items ?? []).filter((e: EarningsItem) => inRange(e.date, from, to))))
       .catch(() => setEarnings([]))
       .finally(() => setLoadingE(false))
 
-    // Economic
     setLoadingEc(true)
     fetch(`/api/markets/economic-calendar?from=${from}&to=${to}`)
       .then(r => r.json())
-      .then(d => setEconomic((d.events ?? []).filter((e: EconomicEvent) => inRange(e.date, week.start, week.end))))
+      .then(d => setEconomic((d.events ?? []).filter((e: EconomicEvent) => inRange(e.date, from, to))))
       .catch(() => setEconomic([]))
       .finally(() => setLoadingEc(false))
 
-    // Splits
     setLoadingS(true)
     fetch(`/api/markets/splits?from=${from}&to=${to}`)
       .then(r => r.json())
@@ -489,18 +486,15 @@ export default function CalendarTab() {
       .catch(() => setSplits([]))
       .finally(() => setLoadingS(false))
 
-    // IPOs
     setLoadingI(true)
     fetch(`/api/markets/ipos?from=${from}&to=${to}`)
       .then(r => r.json())
       .then(d => setIpos(d.ipos ?? []))
       .catch(() => setIpos([]))
       .finally(() => setLoadingI(false))
-  }, [week.start, week.end]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [week]) // week is memoized — only re-runs when weekOffset changes
 
-  useEffect(() => { loadData() }, [loadData])
-
-  const days = weekDays(week.start)
+  const days = weekDays(week.from)
   const anyLoading = loadingE || loadingEc || loadingS || loadingI
 
   // Column header row labels for the list views
@@ -634,18 +628,10 @@ export default function CalendarTab() {
         )}
 
         {/* Footer */}
-        <div className="px-4 py-2.5 border-t border-[#E5E5E5] bg-[#FAFAFA] flex items-center justify-between">
+        <div className="px-4 py-2.5 border-t border-[#E5E5E5] bg-[#FAFAFA]">
           <span className="text-[10px] text-[#9B9B9B]">
-            Earnings: S&P 500 major companies · Economic: US high/medium impact · All times ET
+            Earnings: S&P 500 major companies · Economic: US high/medium impact events · All times ET
           </span>
-          <a
-            href="https://finance.yahoo.com/calendar"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] font-semibold text-[#5F790B] hover:underline"
-          >
-            Full calendar on Yahoo Finance ↗
-          </a>
         </div>
       </div>
     </div>

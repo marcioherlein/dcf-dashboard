@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
-import { RefreshCw, ExternalLink } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 import { useInView, useReducedMotion } from 'motion/react'
 
 import IndexSnapshotGrid     from '@/components/markets/IndexSnapshotGrid'
@@ -271,17 +271,6 @@ export default function MarketsPage() {
                   <SectionHeader
                     title="Market News"
                     subtitle="Recent headlines — for context only, not a trading signal."
-                    right={
-                      <a
-                        href="https://finance.yahoo.com/news"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-[11px] font-semibold text-olive-700 hover:text-olive-600 transition-colors"
-                      >
-                        All news
-                        <ExternalLink size={11} />
-                      </a>
-                    }
                   />
                   <MarketNewsSection news={mkt.news} />
                 </div>

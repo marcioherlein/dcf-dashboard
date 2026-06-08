@@ -108,7 +108,7 @@ const RSS_FEEDS: { url: string; source: string }[] = [
   { url: 'https://feeds.marketwatch.com/marketwatch/realtimeheadlines/',           source: 'MarketWatch RT' },
   { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html',                 source: 'CNBC' },
   { url: 'https://www.cnbc.com/id/10000664/device/rss/rss.html',                  source: 'CNBC Investing' },
-  { url: 'https://finance.yahoo.com/news/rssindex',                                source: 'Yahoo Finance' },
+  { url: 'https://finance.yahoo.com/news/rssindex',                                source: 'Market News' },
   { url: 'https://feeds.a.dj.com/rss/RSSMarketsMain.xml',                         source: 'WSJ Markets' },
   { url: 'https://rss.cnn.com/rss/money_latest.rss',                              source: 'CNN Business' },
   { url: 'https://www.investopedia.com/feedbuilder/feed/getfeed/?feedName=rss_headline', source: 'Investopedia' },
@@ -228,7 +228,7 @@ export async function GET(req: NextRequest) {
   try {
     const symbols = INSTRUMENTS.map(i => i.symbol)
 
-    // Fetch market data, Yahoo news, yield curve, and all RSS feeds in parallel
+    // Fetch market data, news, yield curve, and all RSS feeds in parallel
     const [quoteResults, yfNewsResult, yieldCurve, ...rssResults] = await Promise.all([
       Promise.allSettled(symbols.map(s => yf.quote(s).catch(() => null))),
       yf.search('stock market finance', { newsCount: 20, quotesCount: 0 }).catch(() => ({ news: [] })),
@@ -251,7 +251,7 @@ export async function GET(req: NextRequest) {
     // Collect all news items
     const allItems: RawItem[] = []
 
-    // Yahoo Finance search results
+    // News search results
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rawYf: any[] = (yfNewsResult as any).news ?? []
     rawYf.forEach((n: any) => {
@@ -260,7 +260,7 @@ export async function GET(req: NextRequest) {
       allItems.push({
         title: n.title,
         url: (n.link ?? n.url ?? '') as string,
-        source: (n.publisher ?? n.source ?? 'Yahoo Finance') as string,
+        source: (n.publisher ?? n.source ?? 'Market News') as string,
         time: ts ? formatAge(new Date(ts).toISOString()) : '',
         timestamp: ts,
       })

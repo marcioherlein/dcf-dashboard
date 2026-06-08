@@ -145,17 +145,7 @@ export default function EarningsCalendar() {
           )}
 
           {!expanded && (
-            <div className="px-4 py-2.5 border-t border-[#E5E5E5] flex justify-end">
-              <a
-                href="https://finance.yahoo.com/calendar/earnings"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-[11px] font-semibold text-[#2563EB] hover:text-[#2563EB] transition-colors"
-              >
-                View full earnings calendar
-                <ExternalLink size={10} />
-              </a>
-            </div>
+            <div className="px-4 py-2.5 border-t border-[#E5E5E5]" />
           )}
         </>
       )}
