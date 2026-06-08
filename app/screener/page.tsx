@@ -6,8 +6,15 @@ import { motion, useReducedMotion } from 'motion/react'
 import {
   SlidersHorizontal, ArrowUpDown, ArrowUp, ArrowDown,
   Search, RotateCcw, TrendingUp, ChevronDown,
+  TableProperties, ScatterChart as ScatterIcon,
 } from 'lucide-react'
 import type { ScreenerStock } from '@/app/api/screener/route'
+import dynamic from 'next/dynamic'
+import type { AxisConfig } from '@/components/screener/AxisPicker'
+import { DEFAULT_AXIS_CONFIG } from '@/components/screener/AxisPicker'
+
+const AxisPicker = dynamic(() => import('@/components/screener/AxisPicker'), { ssr: false })
+const ScreenerChartView = dynamic(() => import('@/components/screener/ScreenerChartView'), { ssr: false })
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -166,6 +173,8 @@ export default function ScreenerPage() {
     exchange: 'all',
     dividendsOnly: false,
   })
+  const [view, setView]         = useState<'table' | 'chart'>('table')
+  const [axisConfig, setAxisConfig] = useState<AxisConfig>(DEFAULT_AXIS_CONFIG)
 
   const abortRef = useRef<AbortController | null>(null)
 
@@ -280,10 +289,31 @@ export default function ScreenerPage() {
               </p>
             </div>
             {!loading && !error && (
-              <div className="flex items-center gap-1.5 text-[12px] text-[#8A95A6] mt-1 shrink-0" aria-live="polite" aria-atomic="true">
-                <TrendingUp size={13} />
-                <span className="tabular-nums">{displayed.length.toLocaleString()} stocks</span>
-                {searchQ || hasActiveFilters ? <span>· filtered</span> : <span>· NYSE + NASDAQ</span>}
+              <div className="flex items-center gap-3 mt-1 shrink-0" aria-live="polite" aria-atomic="true">
+                <span className="flex items-center gap-1.5 text-[12px] text-[#8A95A6]">
+                  <TrendingUp size={13} />
+                  <span className="tabular-nums">{displayed.length.toLocaleString()} stocks</span>
+                  {searchQ || hasActiveFilters ? <span>· filtered</span> : <span>· NYSE + NASDAQ</span>}
+                </span>
+                {/* View toggle */}
+                <div className="flex items-center bg-[#F5F5F5] rounded-lg p-0.5 border border-[#E5E5E5]">
+                  <button
+                    onClick={() => setView('table')}
+                    aria-label="Table view"
+                    aria-pressed={view === 'table'}
+                    className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors ${view === 'table' ? 'bg-white text-[#111111] shadow-sm' : 'text-[#6B6B6B] hover:text-[#111111]'}`}
+                  >
+                    <TableProperties size={14} />
+                  </button>
+                  <button
+                    onClick={() => setView('chart')}
+                    aria-label="Chart view"
+                    aria-pressed={view === 'chart'}
+                    className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors ${view === 'chart' ? 'bg-white text-[#111111] shadow-sm' : 'text-[#6B6B6B] hover:text-[#111111]'}`}
+                  >
+                    <ScatterIcon size={14} />
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -399,7 +429,22 @@ export default function ScreenerPage() {
           </div>
         </div>
 
-        {/* ── Results table ───────────────────────────────────────────────────── */}
+        {/* ── Results ─────────────────────────────────────────────────────────── */}
+
+        {/* Axis picker — chart view only */}
+        {view === 'chart' && !loading && !error && (
+          <div className="mb-4">
+            <AxisPicker config={axisConfig} onChange={setAxisConfig} totalCount={displayed.length} />
+          </div>
+        )}
+
+        {/* Chart view */}
+        {view === 'chart' && !loading && !error && (
+          <ScreenerChartView stocks={displayed} config={axisConfig} />
+        )}
+
+        {/* Table view */}
+        {(view === 'table' || loading || error) && (
         <div className="bg-white rounded-xl border border-[#E3E1DA] shadow-sm">
 
           {/* Error state */}
@@ -557,6 +602,7 @@ export default function ScreenerPage() {
             </div>
           )}
         </div>
+        )} {/* end table view conditional */}
 
       </div>
     </div>
