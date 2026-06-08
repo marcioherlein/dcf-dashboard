@@ -518,7 +518,7 @@ export default function LandingHero() {
       />
 
       <div className="relative mx-auto px-4 sm:px-6" style={{ maxWidth: '1200px', zIndex: 1 }}>
-        <div className="grid items-center grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
+        <div className="grid items-start grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
 
           {/* ── Left: Copy ── */}
           <div className="text-left">
