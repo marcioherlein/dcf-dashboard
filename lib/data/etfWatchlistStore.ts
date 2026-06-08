@@ -1,18 +1,8 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import type { ETFEntry } from './etfTypes'
 
 const LOCAL_KEY = 'etf_watchlist'
 
-let _client: SupabaseClient | null = null
 let _localCache: ETFEntry[] | null = null
-
-function getClient(): SupabaseClient | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !key || url === '' || key === '') return null
-  if (!_client) _client = createClient(url, key)
-  return _client
-}
 
 function readLocal(): ETFEntry[] {
   if (typeof window === 'undefined') return []
@@ -20,7 +10,6 @@ function readLocal(): ETFEntry[] {
   try {
     const raw = localStorage.getItem(LOCAL_KEY)
     const parsed = raw ? (JSON.parse(raw) as ETFEntry[]) : []
-    // Backfill new nullable fields for entries saved before the type extension
     _localCache = parsed.map((e) => ({
       ...e,
       price: e.price ?? null,
@@ -38,9 +27,7 @@ function writeLocal(entries: ETFEntry[]): void {
   _localCache = entries
   try {
     localStorage.setItem(LOCAL_KEY, JSON.stringify(entries))
-  } catch {
-    // quota exceeded or SSR — silent fail
-  }
+  } catch { /* quota exceeded — silent */ }
 }
 
 export function readLocalWatchlist(): ETFEntry[] {
@@ -49,47 +36,45 @@ export function readLocalWatchlist(): ETFEntry[] {
 
 export async function loadETFWatchlist(userEmail?: string | null): Promise<ETFEntry[]> {
   const local = readLocal()
-  const client = getClient()
-
-  if (!client || !userEmail) return local
+  if (!userEmail) return local
 
   try {
-    const { data, error } = await client
-      .from('etf_watchlist')
-      .select('*')
-      .eq('user_id', userEmail)
-      .order('added_at', { ascending: false })
-
-    if (error) return local
+    const res = await fetch('/api/etf/watchlist')
+    if (!res.ok) return local
+    const rows: Array<Record<string, unknown>> = await res.json()
+    if (!Array.isArray(rows)) return local
 
     const remoteMap = new Map<string, ETFEntry>()
-    for (const row of data ?? []) {
-      remoteMap.set(row.ticker, rowToEntry(row))
+    for (const row of rows) {
+      remoteMap.set(row.ticker as string, rowToEntry(row))
     }
+    // Merge: remote wins, local fills gaps for anything not yet synced
     for (const entry of local) {
       if (!remoteMap.has(entry.ticker)) remoteMap.set(entry.ticker, entry)
     }
-
-    return Array.from(remoteMap.values())
+    const merged = Array.from(remoteMap.values())
+    writeLocal(merged)
+    return merged
   } catch {
     return local
   }
 }
 
 export async function saveETFEntry(entry: ETFEntry, userEmail?: string | null): Promise<void> {
+  // Always write locally first for instant feedback
   const local = readLocal()
   const idx = local.findIndex((e) => e.ticker === entry.ticker)
   if (idx >= 0) local[idx] = entry
   else local.unshift(entry)
   writeLocal(local)
 
-  const client = getClient()
-  if (!client || !userEmail) return
+  if (!userEmail) return
 
   try {
-    await client.from('etf_watchlist').upsert(
-      {
-        user_id: userEmail,
+    await fetch('/api/etf/watchlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         ticker: entry.ticker,
         name: entry.name ?? null,
         value_score: entry.valueScore ?? null,
@@ -98,30 +83,20 @@ export async function saveETFEntry(entry: ETFEntry, userEmail?: string | null): 
         pe_ratio: entry.peRatio ?? null,
         pb_ratio: entry.pbRatio ?? null,
         total_assets: entry.totalAssets ?? null,
-      },
-      { onConflict: 'user_id,ticker' },
-    )
-  } catch {
-    // silent — data is safe in localStorage
-  }
+      }),
+    })
+  } catch { /* silent — data safe in localStorage */ }
 }
 
 export async function deleteETFEntry(ticker: string, userEmail?: string | null): Promise<void> {
   const local = readLocal().filter((e) => e.ticker !== ticker)
   writeLocal(local)
 
-  const client = getClient()
-  if (!client || !userEmail) return
+  if (!userEmail) return
 
   try {
-    await client
-      .from('etf_watchlist')
-      .delete()
-      .eq('user_id', userEmail)
-      .eq('ticker', ticker)
-  } catch {
-    // silent
-  }
+    await fetch(`/api/etf/watchlist?ticker=${encodeURIComponent(ticker)}`, { method: 'DELETE' })
+  } catch { /* silent */ }
 }
 
 export function getETFEntry(ticker: string): ETFEntry | null {
