@@ -21,7 +21,7 @@ export interface ConvictionSignal {
 }
 
 export interface ConvictionDimension {
-  id: 'valuation' | 'quality' | 'health' | 'growth' | 'integrity' | 'risk'
+  id: 'valuation' | 'quality' | 'health' | 'growth' | 'integrity' | 'risk' | 'sentiment'
   label: string          // plain-English dimension name
   question: string       // plain-English question this dimension answers
   score: number          // 0–100
@@ -49,6 +49,32 @@ export interface ConvictionInputs {
   riskDimensions: RiskDimension[]
   upsidePct: number | null
   ticker?: string | null
+  // ── New optional inputs for expanded scoring ──────────────────────────────
+  analystRatingTrend?: Array<{
+    period?: string
+    strongBuy?: number
+    buy?: number
+    hold?: number
+    sell?: number
+    strongSell?: number
+  }> | null
+  earningsSurprises?: Array<{
+    epsActual?: number
+    epsEstimate?: number
+    surprisePercent?: number
+  }> | null
+  analystTargetMean?: number | null
+  insiderPct?: number | null
+  institutionalPct?: number | null
+  holdingReturns?: {
+    stock1y?: number | null
+    spy1y?: number | null
+    stock3y?: number | null
+    spy3y?: number | null
+  } | null
+  analystForwardPE?: number | null
+  priceToBook?: number | null
+  currentPrice?: number | null
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -316,6 +342,174 @@ function riskSignals(riskDimensions: RiskDimension[]): ConvictionSignal[] {
   return signals
 }
 
+// ─── Sentiment signal builder (Dimension 7) ──────────────────────────────────
+
+function sentimentSignals(inputs: ConvictionInputs): ConvictionSignal[] {
+  const signals: ConvictionSignal[] = []
+
+  // a) Analyst consensus strength
+  const trend = inputs.analystRatingTrend
+  let consensusValue = 'Not available'
+  let consensusStatus: ConvictionSignal['status'] = 'na'
+  if (trend && trend.length > 0) {
+    const latest = trend[0]
+    const sb = latest.strongBuy ?? 0
+    const b  = latest.buy ?? 0
+    const h  = latest.hold ?? 0
+    const s  = latest.sell ?? 0
+    const ss = latest.strongSell ?? 0
+    const total = sb + b + h + s + ss
+    if (total > 0) {
+      const rawConsensus = clamp0100((sb * 2 + b * 1 - s * 1 - ss * 2) / total * 50 + 50)
+      consensusStatus = rawConsensus >= 65 ? 'pass' : rawConsensus < 45 ? 'fail' : 'na'
+      const bullPct = Math.round(((sb + b) / total) * 100)
+      consensusValue = `${bullPct}% bullish (${sb + b} of ${total} analysts)`
+    }
+  }
+  signals.push({
+    label: 'Analyst consensus',
+    status: consensusStatus,
+    value: consensusValue,
+    technicalName: 'Analyst Rating Trend',
+  })
+
+  // b) Earnings beat consistency
+  const surprises = inputs.earningsSurprises
+  let beatValue = 'Not available'
+  let beatStatus: ConvictionSignal['status'] = 'na'
+  if (surprises && surprises.length > 0) {
+    const last4 = surprises.slice(0, 4)
+    const beats = last4.filter(q => {
+      const actual = q.epsActual ?? null
+      const est    = q.epsEstimate ?? null
+      return actual !== null && est !== null && actual > est
+    }).length
+    const beatRate = beats / last4.length
+    beatValue = `${beats} of ${last4.length} quarters beat estimates`
+    beatStatus = beatRate >= 0.75 ? 'pass' : beatRate < 0.50 ? 'fail' : 'na'
+  }
+  signals.push({
+    label: 'Earnings beat record',
+    status: beatStatus,
+    value: beatValue,
+    technicalName: 'EPS Surprise History',
+  })
+
+  // c) Analyst price target upside
+  const targetMean  = inputs.analystTargetMean ?? null
+  const currentPrice = inputs.currentPrice ?? null
+  let targetValue = 'Not available'
+  let targetStatus: ConvictionSignal['status'] = 'na'
+  if (targetMean !== null && currentPrice !== null && currentPrice > 0) {
+    const gap = (targetMean - currentPrice) / currentPrice
+    const gapPct = (gap * 100).toFixed(1)
+    if (targetMean > currentPrice) {
+      targetValue = `${gapPct}% upside to consensus target`
+      targetStatus = gap >= 0.10 ? 'pass' : 'na'
+    } else {
+      targetValue = `${Math.abs(Number(gapPct))}% above consensus target`
+      targetStatus = 'fail'
+    }
+  }
+  signals.push({
+    label: 'Price target gap',
+    status: targetStatus,
+    value: targetValue,
+    technicalName: 'Analyst Price Target',
+  })
+
+  // d) Insider ownership signal
+  const insiderPct = inputs.insiderPct ?? null
+  let insiderValue = 'Not available'
+  let insiderStatus: ConvictionSignal['status'] = 'na'
+  if (insiderPct !== null) {
+    const pct = (insiderPct * 100).toFixed(1)
+    if (insiderPct >= 0.10) {
+      insiderValue = `${pct}% insider-owned — strong alignment`
+      insiderStatus = 'pass'
+    } else if (insiderPct >= 0.05) {
+      insiderValue = `${pct}% insider-owned — moderate alignment`
+      insiderStatus = 'pass'
+    } else if (insiderPct >= 0.01) {
+      insiderValue = `${pct}% insider-owned`
+      insiderStatus = 'na'
+    } else {
+      insiderValue = `${pct}% insider-owned — low alignment`
+      insiderStatus = 'fail'
+    }
+  }
+  signals.push({
+    label: 'Management skin in the game',
+    status: insiderStatus,
+    value: insiderValue,
+    technicalName: 'Insider Ownership',
+  })
+
+  return signals
+}
+
+// ─── Sentiment dimension score ────────────────────────────────────────────────
+
+function computeSentimentDimScore(inputs: ConvictionInputs): number {
+  // a) Analyst consensus strength (40%)
+  let consensusScore = 50
+  const trend = inputs.analystRatingTrend
+  if (trend && trend.length > 0) {
+    const latest = trend[0]
+    const sb = latest.strongBuy ?? 0
+    const b  = latest.buy ?? 0
+    const s  = latest.sell ?? 0
+    const ss = latest.strongSell ?? 0
+    const total = sb + b + (latest.hold ?? 0) + s + ss
+    if (total > 0) {
+      consensusScore = clamp0100((sb * 2 + b * 1 - s * 1 - ss * 2) / total * 50 + 50)
+    }
+  }
+
+  // b) Earnings beat consistency (30%)
+  let beatScore = 50
+  const surprises = inputs.earningsSurprises
+  if (surprises && surprises.length > 0) {
+    const last4 = surprises.slice(0, 4)
+    const beats = last4.filter(q => {
+      const actual = q.epsActual ?? null
+      const est    = q.epsEstimate ?? null
+      return actual !== null && est !== null && actual > est
+    }).length
+    beatScore = (beats / last4.length) * 100
+  }
+
+  // c) Analyst price target upside (20%)
+  let targetScore = 50
+  const targetMean   = inputs.analystTargetMean ?? null
+  const currentPrice = inputs.currentPrice ?? null
+  if (targetMean !== null && currentPrice !== null && currentPrice > 0) {
+    const gap = (targetMean - currentPrice) / currentPrice
+    if (targetMean > currentPrice) {
+      targetScore = clamp0100(gap * 200)
+    } else {
+      targetScore = clamp0100(50 + gap * 100)
+    }
+  }
+
+  // d) Insider ownership signal (10%)
+  let insiderScore = 50
+  const insiderPct = inputs.insiderPct ?? null
+  if (insiderPct !== null) {
+    if (insiderPct >= 0.10)      insiderScore = 85
+    else if (insiderPct >= 0.05) insiderScore = 70
+    else if (insiderPct >= 0.01) insiderScore = 50
+    else                          insiderScore = 35
+  }
+
+  return clamp0100(
+    consensusScore * 0.40 +
+    beatScore      * 0.30 +
+    targetScore    * 0.20 +
+    insiderScore   * 0.10,
+  )
+}
+
 // ─── Grade logic ──────────────────────────────────────────────────────────────
 
 function computeGrade(score: number): { grade: ConvictionScore['grade']; gradeFull: string; label: string } {
@@ -344,7 +538,7 @@ function buildVerdictSentence(grade: ConvictionScore['grade'], ticker?: string |
 export function computeConvictionScore(inputs: ConvictionInputs): ConvictionScore {
   const { ratings, verdict, piotroski, altman, beneish, riskDimensions, upsidePct, ticker } = inputs
 
-  // ── Dimension 1: Valuation Attractiveness (weight 30%) ────────────────────
+  // ── Dimension 1: Valuation Attractiveness (weight 27%) ────────────────────
   const valRatingNorm = normalizeRating(ratings.valuation.score)
   const upsideScore   = upsideSignalScore(upsidePct)
   let valDimScore = valRatingNorm * 0.60 + upsideScore * 0.40
@@ -355,7 +549,28 @@ export function computeConvictionScore(inputs: ConvictionInputs): ConvictionScor
     valDimScore = valRatingNorm * 0.48 + upsideScore * 0.32 + valPassRate * 100 * 0.20
   }
 
-  // ── Dimension 2: Business Quality (weight 25%) ────────────────────────────
+  // Forward PE discount modifier
+  const analystForwardPE = inputs.analystForwardPE ?? null
+  if (analystForwardPE !== null && analystForwardPE > 0 && analystForwardPE < 100) {
+    // Forward PE < 20 (growing earnings) gives a small positive nudge
+    if (analystForwardPE < 20) {
+      valDimScore = clamp0100(valDimScore + 5)
+    } else if (analystForwardPE > 40) {
+      valDimScore = clamp0100(valDimScore - 3)
+    }
+  }
+
+  // Price-to-book modifier
+  const priceToBook = inputs.priceToBook ?? null
+  if (priceToBook !== null && priceToBook > 0) {
+    if (priceToBook < 1) {
+      valDimScore = clamp0100(valDimScore + 5)
+    } else if (priceToBook > 5) {
+      valDimScore = clamp0100(valDimScore - 5)
+    }
+  }
+
+  // ── Dimension 2: Business Quality (weight 23%) ────────────────────────────
   const moatNorm  = normalizeRating(ratings.moat.score)
   const profNorm  = normalizeRating(ratings.profitability.score)
   let qualDimScore = moatNorm * 0.50 + profNorm * 0.50
@@ -366,13 +581,13 @@ export function computeConvictionScore(inputs: ConvictionInputs): ConvictionScor
     else if (qualPassRate < 0.50) qualDimScore = clamp0100(qualDimScore - 5)
   }
 
-  // ── Dimension 3: Financial Health (weight 20%) ────────────────────────────
+  // ── Dimension 3: Financial Health (weight 18%) ────────────────────────────
   const liqNorm     = normalizeRating(ratings.liquidity.score)
   const altmanMod   = altman == null ? 50 : altman.zone === 'Safe' ? 100 : altman.zone === 'Grey' ? 50 : 0
   const pioMod      = piotroski == null ? 50 : (piotroski.score / 9) * 100
   const healthDimScore = liqNorm * 0.50 + altmanMod * 0.30 + pioMod * 0.20
 
-  // ── Dimension 4: Growth Momentum (weight 15%) ─────────────────────────────
+  // ── Dimension 4: Growth Momentum (weight 14%) ─────────────────────────────
   const growthNorm = normalizeRating(ratings.growth.score)
   let growthDimScore: number
 
@@ -383,13 +598,53 @@ export function computeConvictionScore(inputs: ConvictionInputs): ConvictionScor
     growthDimScore = growthNorm
   }
 
+  // Relative performance alpha modifier
+  const holdingReturns = inputs.holdingReturns ?? null
+  if (holdingReturns) {
+    const stock1y = holdingReturns.stock1y ?? null
+    const spy1y   = holdingReturns.spy1y ?? null
+    if (stock1y !== null && spy1y !== null) {
+      const alpha = stock1y - spy1y
+      if (alpha > 0.10) {
+        growthDimScore = clamp0100(growthDimScore + 5)
+      } else if (alpha < -0.10) {
+        growthDimScore = clamp0100(growthDimScore - 5)
+      }
+    }
+  }
+
   // ── Dimension 5: Earnings Integrity (weight 5%) ───────────────────────────
   const beneishMod = beneish == null ? 60 : beneish.flag === 'Clean' ? 100 : beneish.flag === 'Warning' ? 40 : 0
   const accrualCriterion = piotroski?.criteria.find(c => c.name.toLowerCase().includes('accrual'))
   const accrualMod = accrualCriterion == null || accrualCriterion.pass === null
     ? 60
     : accrualCriterion.pass ? 100 : 0
-  const integrityDimScore = beneishMod * 0.50 + accrualMod * 0.50
+  let integrityDimScore = beneishMod * 0.50 + accrualMod * 0.50
+
+  // Earnings surprise magnitude modifier
+  const surprises = inputs.earningsSurprises ?? null
+  if (surprises && surprises.length > 0) {
+    const last4 = surprises.slice(0, 4)
+    // Count negative surprises
+    const negativeBeats = last4.filter(q => {
+      const actual = q.epsActual ?? null
+      const est    = q.epsEstimate ?? null
+      return actual !== null && est !== null && actual < est
+    }).length
+    if (negativeBeats > 2) {
+      integrityDimScore = clamp0100(integrityDimScore - 5)
+    }
+    // Average surprise magnitude boost
+    const validSurprises = last4
+      .map(q => q.surprisePercent ?? null)
+      .filter((v): v is number => v !== null)
+    if (validSurprises.length > 0) {
+      const avgSurprise = validSurprises.reduce((a, b) => a + b, 0) / validSurprises.length
+      if (avgSurprise > 5) {
+        integrityDimScore = clamp0100(integrityDimScore + 3)
+      }
+    }
+  }
 
   // ── Dimension 6: Risk Profile (weight 5%) ─────────────────────────────────
   let riskDimScore = 50
@@ -398,14 +653,18 @@ export function computeConvictionScore(inputs: ConvictionInputs): ConvictionScor
     riskDimScore = (1 - avgRiskScore / 3) * 100
   }
 
-  // ── Weighted conviction score ──────────────────────────────────────────────
+  // ── Dimension 7: Analyst & Market Sentiment (weight 8%) ───────────────────
+  const sentimentDimScore = computeSentimentDimScore(inputs)
+
+  // ── Weighted conviction score (rebalanced) ────────────────────────────────
   const rawScore =
-    valDimScore      * 0.30 +
-    qualDimScore     * 0.25 +
-    healthDimScore   * 0.20 +
-    growthDimScore   * 0.15 +
+    valDimScore       * 0.27 +
+    qualDimScore      * 0.23 +
+    healthDimScore    * 0.18 +
+    growthDimScore    * 0.14 +
     integrityDimScore * 0.05 +
-    riskDimScore     * 0.05
+    riskDimScore      * 0.05 +
+    sentimentDimScore * 0.08
 
   const finalScore = Math.round(clamp0100(rawScore))
   const { grade, gradeFull, label } = computeGrade(finalScore)
@@ -459,6 +718,14 @@ export function computeConvictionScore(inputs: ConvictionInputs): ConvictionScor
       score: Math.round(clamp0100(riskDimScore)),
       color: dimColor(clamp0100(riskDimScore)),
       signals: riskSignals(riskDimensions),
+    },
+    {
+      id: 'sentiment',
+      label: 'Analyst & Market Sentiment',
+      question: 'What do analysts and insiders think?',
+      score: Math.round(clamp0100(sentimentDimScore)),
+      color: dimColor(clamp0100(sentimentDimScore)),
+      signals: sentimentSignals(inputs),
     },
   ]
 

@@ -140,6 +140,15 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
       riskDimensions: riskDims,
       upsidePct: financialsData?.fairValue?.upsidePct ?? null,
       ticker: ticker ?? undefined,
+      analystRatingTrend: financialsData?.analystRatingTrend ?? null,
+      earningsSurprises: financialsData?.earningsSurprises ?? null,
+      analystTargetMean: financialsData?.quote?.analystTargetMean ?? null,
+      insiderPct: financialsData?.ownership?.insiderPct ?? null,
+      institutionalPct: financialsData?.ownership?.institutionalPct ?? null,
+      holdingReturns: financialsData?.holdingReturns ?? null,
+      analystForwardPE: financialsData?.analystForwardPE ?? null,
+      priceToBook: financialsData?.businessProfile?.priceToBook ?? null,
+      currentPrice: financialsData?.quote?.price ?? null,
     })
   }, [ratings, scores, financialsData, ticker])
 
