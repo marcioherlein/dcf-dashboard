@@ -66,7 +66,7 @@ export default function TopMoversCard() {
               key={t}
               onClick={() => setTab(t)}
               className={cn(
-                'px-2.5 py-1 min-h-[44px] capitalize transition-colors',
+                'px-2.5 py-1 h-7 capitalize transition-colors',
                 tab === t
                   ? t === 'gainers' ? 'bg-[#11875D] text-white' : 'bg-[#D83B3B] text-white'
                   : 'bg-white text-[#6B6B6B] hover:bg-[#F5F5F5]'

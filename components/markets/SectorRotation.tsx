@@ -62,10 +62,10 @@ export default function SectorRotation({ sectors }: Props) {
         </div>
 
         {/* Leaders / Laggards */}
-        <div className="xl:w-36 flex xl:flex-col gap-3">
+        <div className="xl:w-40 flex xl:flex-col gap-3">
           <div className="flex-1 xl:flex-none">
             <p className="text-[11px] font-bold text-[#11875D] mb-1.5">Top Leaders</p>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               {top3.map((d, i) => (
                 <div key={d.sector} className="flex items-center gap-1.5">
                   <span className="text-[11px] font-bold text-[#11875D] w-3 shrink-0">{i + 1}</span>
@@ -83,7 +83,7 @@ export default function SectorRotation({ sectors }: Props) {
 
           <div className="flex-1 xl:flex-none">
             <p className="text-[11px] font-bold text-[#D83B3B] mb-1.5">Top Laggards</p>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               {bottom3.map((d, i) => (
                 <div key={d.sector} className="flex items-center gap-1.5">
                   <span className="text-[11px] font-bold text-[#D83B3B] w-3 shrink-0">{i + 1}</span>

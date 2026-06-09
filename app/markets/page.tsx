@@ -62,7 +62,7 @@ function SectionHeader({ title, subtitle, right }: { title: string; subtitle?: s
   const reduced = useReducedMotion()
 
   return (
-    <div ref={ref} className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-2 border-b border-[#E5E5E5] pb-3">
+    <div ref={ref} className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-2 border-b border-[#E5E5E5] pb-2.5">
       <div
         style={{
           clipPath: reduced ? 'none' : inView ? 'inset(0 0% 0 0)' : 'inset(0 100% 0 0)',
@@ -238,7 +238,7 @@ export default function MarketsPage() {
         <MarketsTabNav active={activeTab} onChange={setActiveTab} />
 
         {/* ── Tab panels ───────────────────────────────────────────────────── */}
-        <div className="mt-5 space-y-6">
+        <div className="mt-5 space-y-5">
 
           {/* ── OVERVIEW TAB ─────────────────────────────────────────────── */}
           {activeTab === 'overview' && (
@@ -252,7 +252,7 @@ export default function MarketsPage() {
                     <span className="text-[11px] text-[#6B6B6B]">Data as of {etTime} ET</span>
                   ) : undefined}
                 />
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch mt-4">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch mt-3">
                   <div className="lg:col-span-4 flex flex-col">
                     {ctx ? <MarketPulse pulse={ctx.pulse} /> : <Sk h="h-[280px]" />}
                   </div>
@@ -287,7 +287,7 @@ export default function MarketsPage() {
                   title="Sector Analysis"
                   subtitle="Where market leadership is concentrated and which sectors lead or lag."
                 />
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-4">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-3">
                   <div className="lg:col-span-7 overflow-x-auto">
                     {mkt ? (
                       <div className="overflow-x-auto">
@@ -309,7 +309,7 @@ export default function MarketsPage() {
                   title="Macro Environment"
                   subtitle="Indicators that affect discount rates, risk appetite, and valuation assumptions."
                 />
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-4">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-3">
                   <div className="lg:col-span-5">
                     {ctx ? <MacroSignals signals={ctx.signals} /> : <Sk h="h-64" />}
                   </div>
@@ -338,7 +338,7 @@ export default function MarketsPage() {
                 title="Valuation Context"
                 subtitle="How current market prices compare to historical ranges — and what it means for your DCF."
               />
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3">
                 {ctx ? <ValuationContext valuation={ctx.valuation} /> : <Sk h="h-56" />}
                 {ctx ? (
                   <PortfolioExposure

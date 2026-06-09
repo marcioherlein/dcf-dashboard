@@ -122,7 +122,7 @@ export default function NormalizedPerfChart() {
   return (
     <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden flex flex-col flex-1">
       {/* Header */}
-      <div className="px-4 pt-3 pb-2 border-b border-[#E5E5E5]">
+      <div className="px-4 py-2.5 border-b border-[#E5E5E5]">
         <div className="flex items-center justify-between mb-2">
           <span className="text-[11px] font-bold text-[#6B6B6B] shrink-0">Normalized Performance</span>
           <div className="flex gap-1 overflow-x-auto scrollbar-hide ml-2">
@@ -131,7 +131,7 @@ export default function NormalizedPerfChart() {
                 key={p}
                 onClick={() => setPeriod(p)}
                 className={cn(
-                  'px-2 py-0.5 min-h-[44px] flex items-center text-[11px] font-semibold rounded transition-colors',
+                  'px-2 py-0.5 h-7 flex items-center text-[11px] font-semibold rounded transition-colors',
                   period === p ? 'bg-olive-700 text-white' : 'text-[#6B6B6B] hover:text-[#111111] hover:bg-[#E3E1DA]'
                 )}
               >
@@ -151,7 +151,7 @@ export default function NormalizedPerfChart() {
                 <button
                   onClick={() => toggleSeries(s.symbol)}
                   className={cn(
-                    'flex items-center gap-1.5 px-2 py-0.5 min-h-[44px] rounded-full text-[11px] font-semibold border transition-all',
+                    'flex items-center gap-1.5 px-2 py-1 h-7 rounded-full text-[11px] font-semibold border transition-all',
                     isOn
                       ? 'border-transparent text-white'
                       : 'border-[#E5E5E5] bg-transparent text-[#6B6B6B] opacity-50'
@@ -189,13 +189,13 @@ export default function NormalizedPerfChart() {
                 placeholder="AAPL"
                 className="w-20 px-2 py-0.5 text-[16px] rounded-full border border-[#93B4F5] bg-white text-[#111111] outline-none focus:border-blue-500"
               />
-              <button type="submit" className="text-[11px] font-semibold text-olive-700 hover:text-[#2563EB] min-h-[44px]">Add</button>
-              <button type="button" onClick={() => setShowAddInput(false)} className="text-[11px] text-[#6B6B6B] hover:text-[#6B6B6B] min-h-[44px]">✕</button>
+              <button type="submit" className="text-[11px] font-semibold text-olive-700 hover:text-[#2563EB] py-1">Add</button>
+              <button type="button" onClick={() => setShowAddInput(false)} className="text-[11px] text-[#6B6B6B] hover:text-[#6B6B6B] py-1">✕</button>
             </form>
           ) : (
             <button
               onClick={() => setShowAddInput(true)}
-              className="flex items-center gap-1 px-2 py-0.5 min-h-[44px] rounded-full text-[11px] font-semibold border border-dashed border-[#E5E5E5] text-[#6B6B6B] hover:border-[#93B4F5] hover:text-[#2563EB] transition-colors"
+              className="flex items-center gap-1 px-2 py-0.5 h-7 rounded-full text-[11px] font-semibold border border-dashed border-[#E5E5E5] text-[#6B6B6B] hover:border-[#93B4F5] hover:text-[#2563EB] transition-colors"
             >
               <Plus size={10} /> Add
             </button>

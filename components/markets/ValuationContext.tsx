@@ -86,7 +86,7 @@ export default function ValuationContext({ valuation }: Props) {
       <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#E3E1DA]">
 
         {/* P/E Panel */}
-        <div className="px-5 py-4">
+        <div className="px-4 py-3">
           <p className="text-[10px] font-bold text-[#6B6B6B] mb-2">SPY Forward P/E</p>
           {spyForwardPE != null ? (
             <>
@@ -129,7 +129,7 @@ export default function ValuationContext({ valuation }: Props) {
         </div>
 
         {/* ERP Panel */}
-        <div className="px-5 py-4">
+        <div className="px-4 py-3">
           <p className="text-[10px] font-bold text-[#6B6B6B] mb-2">Equity Risk Premium</p>
           {erp != null ? (
             <>

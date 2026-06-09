@@ -52,11 +52,11 @@ export default function MacroSignals({ signals }: Props) {
             <p className="text-[12px] text-[#6B6B6B]">No macro signals available</p>
           </div>
         ) : (
-        <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 180px), 1fr))' }}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
           {signals.map(sig => {
             const { icon, bg } = iconForSignal(sig.label)
             return (
-              <div key={sig.id} className="rounded-xl bg-[#F5F5F5] border border-[#E5E5E5] px-3 py-2.5 flex flex-col">
+              <div key={sig.id} className="rounded-xl bg-[#F5F5F5] border border-[#E5E5E5] px-2.5 py-2 flex flex-col">
                 <div className="flex items-center gap-2 mb-1.5">
                   <div className={cn('w-6 h-6 rounded-lg flex items-center justify-center shrink-0', bg)}>
                     {icon}

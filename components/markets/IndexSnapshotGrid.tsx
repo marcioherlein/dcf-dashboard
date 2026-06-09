@@ -137,7 +137,7 @@ function IndexCard({ label, value, changePct, sparklineValues, sparkLoading, int
   const changeCls = rateMode ? rateCls(changePct) : equityCls(changePct)
 
   const inner = (
-    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-card px-3 pt-3 pb-3 flex flex-col h-full transition-all hover:shadow-card-md hover:border-[#E5E5E5] cursor-pointer">
+    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-card px-3 pt-3 pb-2 flex flex-col h-full transition-all hover:shadow-card-md hover:border-[#E5E5E5] cursor-pointer">
       {/* Icon + label */}
       <div className="flex items-center gap-2">
         <div className={cn('w-6 h-6 rounded-lg flex items-center justify-center shrink-0', iconBg)}>
@@ -269,7 +269,7 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy }: Prop
   ]
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-3">
       {CARDS.map(c => <IndexCard key={c.label} {...c} />)}
     </div>
   )

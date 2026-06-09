@@ -65,17 +65,17 @@ export default function MarketBreadthCard({ sectors }: Props) {
         <p className="text-[10px] text-[#6B6B6B] mt-0.5">Advancing vs declining sectors today</p>
       </div>
 
-      <div className="px-5 py-4 flex-1 flex flex-col gap-4">
+      <div className="px-4 py-3 flex-1 flex flex-col gap-4">
 
         {/* Stats: Advancing + Declining */}
         <div className="grid grid-cols-2 gap-3 text-center">
           <div>
-            <p className="text-[28px] font-bold tabular-nums text-[#11875D] leading-none">{advPct}%</p>
+            <p className="text-[22px] font-bold tabular-nums text-[#11875D] leading-none">{advPct}%</p>
             <p className="text-[10px] font-bold text-[#6B6B6B] mt-1.5">Advancing</p>
             <p className="text-[10px] text-[#6B6B6B] mt-0.5">{advancing} of {total}</p>
           </div>
           <div>
-            <p className="text-[28px] font-bold tabular-nums text-[#D83B3B] leading-none">{decPct}%</p>
+            <p className="text-[22px] font-bold tabular-nums text-[#D83B3B] leading-none">{decPct}%</p>
             <p className="text-[10px] font-bold text-[#6B6B6B] mt-1.5">Declining</p>
             <p className="text-[10px] text-[#6B6B6B] mt-0.5">{declining} of {total}</p>
           </div>
