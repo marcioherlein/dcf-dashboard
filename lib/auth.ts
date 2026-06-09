@@ -57,6 +57,7 @@ export const authOptions: NextAuthOptions = {
               name: user.name ?? null,
               avatar_url: user.image ?? null,
               last_seen: new Date().toISOString(),
+              ...(isNew ? { terms_accepted_at: new Date().toISOString() } : {}),
             },
             { onConflict: 'email' },
           )

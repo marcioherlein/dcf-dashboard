@@ -248,7 +248,7 @@ export default function PrivacyPage() {
           </section>
 
           {/* ── 8 ── */}
-          <section>
+          <section id="cookies">
             <h2 className="text-base sm:text-lg font-semibold text-[#06101F] mb-2 mt-6">8. Cookies and Tracking</h2>
             <p>
               We use only <strong>strictly necessary cookies</strong> required to operate the Service.

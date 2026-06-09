@@ -32,7 +32,7 @@ const MARKETS_NAV: NavEntry[] = [
 
 const UTILITY_NAV: Array<{ href: string; label: string; icon: LucideIcon; match: (p: string) => boolean }> = [
   { href: '/alerts',   label: 'Alerts',    icon: Bell,       match: (p) => p.startsWith('/alerts') },
-  { href: '/settings', label: 'Settings',  icon: Settings,   match: (p) => p.startsWith('/settings') },
+  { href: '/settings', label: 'Settings',  icon: Settings,   match: (p) => p === '/settings' },
   { href: '/help',     label: 'Help',      icon: HelpCircle, match: (p) => p.startsWith('/help') },
 ]
 

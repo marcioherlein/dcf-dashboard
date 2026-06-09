@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { createClient } from '@supabase/supabase-js'
+import { Resend } from 'resend'
+import ProWelcomeEmail from '@/emails/ProWelcomeEmail'
 
 function getClient() {
   return createClient(
@@ -49,11 +51,37 @@ export async function POST(req: NextRequest) {
     case 'subscription_created':
     case 'subscription_resumed':
       if (email) {
+        const { data: userData } = await sb
+          .from('users')
+          .select('name')
+          .eq('email', email)
+          .maybeSingle()
+
         await sb
           .from('users')
           .update({ plan: 'pro', lemonsqueezy_subscription_id: subscriptionId ?? null })
           .eq('email', email)
         console.log('[lemonsqueezy/webhook] plan set to pro for', email)
+
+        if (eventName === 'subscription_created' && process.env.RESEND_API_KEY) {
+          try {
+            const resend = new Resend(process.env.RESEND_API_KEY)
+            const billingInterval: string | undefined = event.data?.attributes?.billing_anchor
+              ? event.data?.attributes?.renewal_email_enabled
+              : event.data?.attributes?.variant_name
+            const plan = typeof billingInterval === 'string' && billingInterval.toLowerCase().includes('annual')
+              ? 'annual'
+              : 'monthly'
+            await resend.emails.send({
+              from: 'insic <team@insic.app>',
+              to: email,
+              subject: 'Your insic Pro subscription is active',
+              react: ProWelcomeEmail({ name: userData?.name ?? null, plan }),
+            })
+          } catch (err) {
+            console.error('[lemonsqueezy/webhook] pro welcome email failed:', err instanceof Error ? err.message : err)
+          }
+        }
       }
       break
 

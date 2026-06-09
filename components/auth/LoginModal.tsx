@@ -94,7 +94,13 @@ export default function LoginModal({ onClose, intent, headline }: Props) {
           Continue with Google
         </button>
 
-        <p className="mt-5 text-[11px] text-[#6B6B6B]">
+        <p className="mt-4 text-[11px] text-[#9B9B9B] leading-relaxed">
+          By continuing, you agree to our{' '}
+          <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-[#111111]">Terms of Service</a>
+          {' '}and{' '}
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-[#111111]">Privacy Policy</a>.
+        </p>
+        <p className="mt-2 text-[11px] text-[#6B6B6B]">
           insic is free during beta. No credit card required.
         </p>
       </div>
