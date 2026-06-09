@@ -84,7 +84,7 @@ function MetricRow({ label, value }: MetricRowProps) {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[12px] text-[#6B6B6B] leading-snug">{label}</span>
+        <span className="text-[12px] text-[#566174] leading-snug">{label}</span>
         <span
           className={cn(
             'text-[13px] font-[700] tabular-nums shrink-0',
@@ -162,7 +162,7 @@ export default function GrowthOutlookCard({
 
       {/* Footer / Verdict */}
       <div className="pt-1 border-t border-[#E3E1DA] flex flex-col gap-1">
-        <p className="text-[13px] text-[#111111] leading-relaxed">{verdict}</p>
+        <p className="text-[12px] text-[#566174] leading-snug">{verdict}</p>
       </div>
     </div>
   )

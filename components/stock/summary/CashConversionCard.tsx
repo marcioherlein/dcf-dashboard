@@ -115,7 +115,7 @@ function getVerdictBullets(fcfNiRatio: number | null): VerdictBullet[] {
 }
 
 const ICON_COLOR_CLASS: Record<VerdictBullet['iconColor'], string> = {
-  green: 'text-[#059669]',
+  green: 'text-[#11875D]',
   gray:  'text-[#6B6B6B]',
   red:   'text-[#D83B3B]',
 }
@@ -168,7 +168,7 @@ export default function CashConversionCard({
         {/* FCF Margin */}
         <div className="flex items-center justify-between py-2">
           <span className="text-[12px] text-[#6B6B6B]">FCF Margin (TTM)</span>
-          <span className="text-[13px] font-mono font-[650] text-[#111111] tabular-nums">
+          <span className="text-[13px] font-[700] text-[#111111] tabular-nums">
             {resolvedFcfMargin != null ? fmtPct(resolvedFcfMargin) : '—'}
           </span>
         </div>
@@ -176,7 +176,7 @@ export default function CashConversionCard({
         {/* FCF / Net Income */}
         <div className="flex items-center justify-between py-2">
           <span className="text-[12px] text-[#6B6B6B]">FCF / Net Income (TTM)</span>
-          <span className="text-[13px] font-mono font-[650] text-[#111111] tabular-nums">
+          <span className="text-[13px] font-[700] text-[#111111] tabular-nums">
             {fcfNiRatio != null ? fmtMultiple(fcfNiRatio) : '—'}
           </span>
         </div>
@@ -198,7 +198,7 @@ export default function CashConversionCard({
             <span className="sr-only">
               {b.iconColor === 'green' ? 'Positive' : b.iconColor === 'red' ? 'Negative' : 'Neutral'}:
             </span>
-            <p className="text-[12px] text-[#6B6B6B] leading-snug">{b.text}</p>
+            <p className="text-[12px] text-[#566174] leading-snug">{b.text}</p>
           </div>
         ))}
       </div>

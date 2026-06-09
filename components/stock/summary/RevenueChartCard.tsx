@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import dynamic from 'next/dynamic'
-import { CHART_GRID_SOLID } from '@/lib/chartTheme'
+import { CHART_GRID } from '@/lib/chartTheme'
 
 // ─── Dynamic recharts import (SSR: false) ─────────────────────────────────────
 
@@ -20,9 +20,6 @@ const BarChartComponents = dynamic(
         unit: 'B' | 'M'
         height?: number
       }) {
-        const divisor = unit === 'B' ? 1e9 : 1e6
-
-        // Custom label rendered above each bar
         function CustomLabel(props: {
           x?: number
           y?: number
@@ -31,7 +28,9 @@ const BarChartComponents = dynamic(
         }) {
           const { x = 0, y = 0, width = 0, value } = props
           if (value == null) return null
-          const displayVal = (value / divisor).toFixed(1)
+          const displayVal = unit === 'B'
+            ? `${(value / 1e9).toFixed(1)}B`
+            : `${(value / 1e6).toFixed(0)}M`
           return (
             <text
               x={x + width / 2}
@@ -49,7 +48,7 @@ const BarChartComponents = dynamic(
         return (
           <ResponsiveContainer width="100%" height={height}>
             <BarChart data={data} margin={{ top: 24, right: 8, left: 8, bottom: 4 }} barCategoryGap="28%">
-              <CartesianGrid {...CHART_GRID_SOLID} />
+              <CartesianGrid {...CHART_GRID} />
               <XAxis
                 dataKey="label"
                 axisLine={false}
@@ -177,20 +176,18 @@ export default function RevenueChartCard({
   // ── Pill toggle styles ───────────────────────────────────────────────────────
   function pillCls(active: boolean) {
     return [
-      'px-2.5 py-0.5 rounded-full text-[11px] font-semibold leading-none border transition-colors cursor-pointer select-none',
-      'min-h-[44px] min-w-[44px] flex items-center justify-center',
+      'text-[11px] font-[600] min-w-[44px] min-h-[44px] px-2 rounded-md transition-colors',
       'focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-1 focus-visible:outline-none',
-      'active:scale-95 active:opacity-90',
       active
-        ? 'bg-[#5F790B] text-white border-[#5F790B]'
-        : 'bg-white text-text-secondary border-border-warm hover:border-[#5F790B] hover:bg-olive-50 hover:text-olive-600',
+        ? 'bg-white text-[#111111] shadow-sm'
+        : 'text-[#6B6B6B] hover:text-[#111111] active:bg-white/60',
     ].join(' ')
   }
 
   return (
     <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5">
       {/* ── Header ── */}
-      <div className="flex items-start justify-between mb-0.5">
+      <div className="flex items-start justify-between mb-3 gap-2">
         <div>
           <p className="text-[13px] font-[700] text-[#111111] leading-tight">
             Revenue
@@ -198,8 +195,12 @@ export default function RevenueChartCard({
           <p className="text-[11px] text-[#566174] mt-0.5 leading-none">{unitLabel}</p>
         </div>
 
-        {/* Toggle pills */}
-        <div className="flex items-center gap-1.5">
+        {/* Toggle pills — segmented control matching FCF card */}
+        <div
+          role="group"
+          aria-label="Display period"
+          className="flex items-center gap-0.5 bg-[#F5F5F5] rounded-lg p-0.5 shrink-0"
+        >
           <button
             type="button"
             className={pillCls(view === 'quarterly')}

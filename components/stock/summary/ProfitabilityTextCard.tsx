@@ -126,9 +126,8 @@ const TREND_STYLES: Record<Trend, { dot: string; text: string; label: string; ic
 function Bullet({ children }: { children: React.ReactNode }) {
   return (
     <li className="flex items-start gap-2">
-      {/* Olive dot */}
-      <div aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-[#5F790B] shrink-0 mt-[6px]" />
-      <span className="text-[13px] text-[#111111] leading-relaxed break-words min-w-0">
+      <div aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-[#5F790B] shrink-0 mt-[5px]" />
+      <span className="text-[12px] text-[#566174] leading-snug break-words min-w-0">
         {children}
       </span>
     </li>
@@ -220,8 +219,7 @@ export default function ProfitabilityTextCard({
       <ul className="space-y-2.5" aria-label="Profitability summary">
         {/* Bullet 1 — Verdict */}
         <Bullet>
-          {/* fix [10]: font-[600] → font-semibold */}
-          <span className="font-semibold">Verdict: </span>
+          <span className="font-[600]">Verdict: </span>
           {verdict}
         </Bullet>
 
@@ -235,10 +233,9 @@ export default function ProfitabilityTextCard({
         {/* Bullet 3 — Trend / Rate */}
         {/* fix [5]: add icon alongside dot for non-color indicator; fix [7]: aria-hidden on dot */}
         <li className="flex items-start gap-2">
-          <div aria-hidden="true" className={cn('w-1.5 h-1.5 rounded-full shrink-0 mt-[6px]', trendStyle.dot)} />
-          <span className="text-[13px] leading-relaxed">
-            <span className="text-[#111111] font-medium">Trend: </span>
-            {/* fix [9]: font-[650] → font-semibold */}
+          <div aria-hidden="true" className={cn('w-1.5 h-1.5 rounded-full shrink-0 mt-[5px]', trendStyle.dot)} />
+          <span className="text-[12px] leading-snug">
+            <span className="text-[#566174] font-medium">Trend: </span>
             <span className={cn('font-semibold', trendStyle.text)}>
               <span aria-hidden="true" className="mr-0.5">{trendStyle.icon}</span>
               {trendStyle.label}
@@ -258,10 +255,10 @@ export default function ProfitabilityTextCard({
         {/* Bullet 5 — Margins metrics row */}
         {marginsValue && (
           <li className="flex items-start gap-2">
-            <div aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-[#5F790B] shrink-0 mt-[6px]" />
-            <span className="text-[13px] text-[#111111] leading-relaxed break-words min-w-0">
+            <div aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-[#5F790B] shrink-0 mt-[5px]" />
+            <span className="text-[12px] text-[#566174] leading-snug break-words min-w-0">
               <span className="font-medium">Margins</span>{' '}
-              <span className="font-mono text-[12px] text-[#6B6B6B]">{marginsValue}</span>
+              <span className="font-mono">{marginsValue}</span>
             </span>
           </li>
         )}
@@ -269,10 +266,10 @@ export default function ProfitabilityTextCard({
         {/* Bullet 6 — Returns metrics row */}
         {returnsValue && (
           <li className="flex items-start gap-2">
-            <div aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-[#5F790B] shrink-0 mt-[6px]" />
-            <span className="text-[13px] text-[#111111] leading-relaxed break-words min-w-0">
+            <div aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-[#5F790B] shrink-0 mt-[5px]" />
+            <span className="text-[12px] text-[#566174] leading-snug break-words min-w-0">
               <span className="font-medium">Returns</span>{' '}
-              <span className="font-mono text-[12px] text-[#6B6B6B]">{returnsValue}</span>
+              <span className="font-mono">{returnsValue}</span>
             </span>
           </li>
         )}
