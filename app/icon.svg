@@ -1,6 +1,9 @@
 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Rounded square background -->
   <rect width="32" height="32" rx="7" fill="#FFFFFF"/>
+  <!-- Olive dot (centered x, near top) -->
   <circle cx="15.5" cy="6.0" r="3.0" fill="#5F790B"/>
+  <!-- 5 bars: bars 1–2 same width, bar 3 widest, bar 4 slightly shorter, bar 5 shortest -->
   <rect x="8.5" y="12.4" width="12.6" height="2.2" rx="0.4" fill="#06101F"/>
   <rect x="8.5" y="15.8" width="12.6" height="2.2" rx="0.4" fill="#06101F"/>
   <rect x="8.5" y="19.2" width="15.2" height="2.2" rx="0.4" fill="#06101F"/>
