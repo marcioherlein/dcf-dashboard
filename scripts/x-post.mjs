@@ -1380,7 +1380,7 @@ async function runMorningBrief() {
   await new Promise(r => setTimeout(r, 1200))
 
   // Overnight markets + macro instruments via Yahoo Finance v8
-  const [tnx, dax, ftse, nikkei, oil, gold, dxy] = await Promise.all([
+  const [tnx, dax, ftse, nikkei, oil, gold, dxy, sp500, nasdaq] = await Promise.all([
     fetchYahooChart('^TNX'),
     fetchYahooChart('^GDAXI'),
     fetchYahooChart('^FTSE'),
@@ -1388,6 +1388,8 @@ async function runMorningBrief() {
     fetchYahooChart('CL=F'),
     fetchYahooChart('GC=F'),
     fetchYahooChart('DX-Y.NYB'),
+    fetchYahooChart('^GSPC'),
+    fetchYahooChart('^IXIC'),
   ])
 
   // News headlines via Yahoo RSS — filtered for quality
@@ -1491,7 +1493,15 @@ async function runMorningBrief() {
     'What does your model say about the names in focus today?',
   ]
 
+  // US indices line
+  const usIndicesLine = [
+    sp500  ? `S&P 500 ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%` : null,
+    nasdaq ? `Nasdaq ${nasdaq.changePct >= 0 ? '+' : ''}${nasdaq.changePct.toFixed(2)}%` : null,
+    vix    ? `VIX ${vix.price.toFixed(1)}` : null,
+  ].filter(Boolean).join(' · ')
+
   const lines = [`🌅 Good Morning — ${dayName}`, ``, openTone + vixNote]
+  if (usIndicesLine) lines.push(usIndicesLine)
 
   const overnightItems = [
     dax    ? `🇩🇪 DAX ${dax.changePct >= 0 ? '+' : ''}${dax.changePct.toFixed(2)}%` : null,
