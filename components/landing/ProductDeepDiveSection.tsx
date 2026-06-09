@@ -3,162 +3,161 @@ import { useRef } from 'react'
 import { motion, useInView, useReducedMotion } from 'motion/react'
 import { SummaryMockScreen, ValuationMockScreen } from './ProductScreenshots'
 
-const EASE = [0.16, 1, 0.3, 1] as const
+const SPRING = { type: 'spring', stiffness: 300, damping: 30, mass: 0.8 } as const
 
-// Trimmed to 3 most essential bullets per panel
 const SUMMARY_BULLETS = [
-  { label: 'Investment Verdict', desc: 'Undervalued / Fairly Valued / Overvalued' },
-  { label: 'Intrinsic Value', desc: 'Blended fair value estimate' },
-  { label: 'Reverse DCF', desc: 'The growth rate the current price implies' },
+  { label: 'Verdict',       desc: 'Undervalued, fairly valued, or overpriced — at a glance' },
+  { label: 'Fair value',    desc: 'Blended estimate from 4 DCF models' },
+  { label: 'Implied growth','desc': 'The revenue CAGR the current price assumes' },
 ]
 
 const VALUATION_BULLETS = [
-  { label: 'Blended Fair Value', desc: 'vs. current price' },
-  { label: 'Scenario Range', desc: 'Bear / Base / Bull outcomes' },
-  { label: 'Editable Assumptions', desc: 'Growth, margins, WACC, terminal rate' },
+  { label: 'Scenario range',  desc: 'Bear, base, and bull outcomes side by side' },
+  { label: 'Editable inputs', desc: 'Growth, margins, WACC, terminal rate — all live' },
+  { label: 'Model blend',     desc: 'P/E, EV/EBITDA, Revenue multiple, Core DCF' },
 ]
 
-function AnimatedPanel({
+function Panel({
   inView,
   reduced,
   delay,
   dotColor,
+  eyebrow,
   title,
-  subtitle,
-  pullQuote,
   bullets,
   screenshot,
 }: {
-  inView: boolean
-  reduced: boolean | null
-  delay: number
-  dotColor: string
-  title: string
-  subtitle: string
-  pullQuote: string
-  bullets: { label: string; desc: string }[]
+  inView:     boolean
+  reduced:    boolean | null
+  delay:      number
+  dotColor:   string
+  eyebrow:    string
+  title:      string
+  bullets:    { label: string; desc: string }[]
   screenshot: React.ReactNode
 }) {
   return (
-    <div>
-      {/* Copy block */}
+    <div className="flex flex-col gap-8 lg:gap-10">
+      {/* Copy */}
       <motion.div
-        className="mb-5"
-        initial={reduced !== false ? {} : { opacity: 0, y: 20 }}
+        initial={reduced ? {} : { opacity: 0, y: 20 }}
         animate={inView ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.55, ease: EASE, delay }}
+        transition={reduced ? {} : { ...SPRING, delay }}
       >
-        <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#111111', letterSpacing: '-0.015em', marginBottom: '8px' }}>
+        <p
+          className="text-[11px] font-[700] uppercase tracking-[0.1em] mb-3"
+          style={{ color: dotColor }}
+        >
+          {eyebrow}
+        </p>
+        <h3
+          className="text-[22px] sm:text-[26px] font-[700] text-[#111111] leading-tight mb-4"
+          style={{ letterSpacing: '-0.018em' }}
+        >
           {title}
         </h3>
-        <p className="text-base" style={{ color: '#555555', lineHeight: 1.6 }}>
-          {subtitle}
-        </p>
+
+        <div className="space-y-3">
+          {bullets.map((item, i) => (
+            <motion.div
+              key={item.label}
+              className="flex items-start gap-3"
+              initial={reduced ? {} : { opacity: 0, x: -14 }}
+              animate={inView ? { opacity: 1, x: 0 } : {}}
+              transition={reduced ? {} : { ...SPRING, delay: delay + 0.06 + i * 0.05 }}
+            >
+              <div
+                className="w-1.5 h-1.5 rounded-full shrink-0 mt-[7px]"
+                style={{ background: dotColor }}
+              />
+              <p className="text-[14px] leading-snug">
+                <span className="font-[600] text-[#111111]">{item.label}</span>
+                <span className="text-[#566174]"> — {item.desc}</span>
+              </p>
+            </motion.div>
+          ))}
+        </div>
       </motion.div>
 
-      {/* Bullet list — staggered x slide */}
-      <div className="space-y-2 mb-5">
-        {bullets.map((item, i) => (
-          <motion.div
-            key={item.label}
-            initial={reduced !== false ? {} : { opacity: 0, x: -18 }}
-            animate={inView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.45, ease: EASE, delay: delay + 0.08 + i * 0.055 }}
-            className="flex items-start gap-3"
-          >
-            <div
-              className="rounded-full shrink-0"
-              style={{ width: '6px', height: '6px', background: dotColor, marginTop: '7px' }}
-            />
-            <div>
-              <span className="text-sm font-semibold" style={{ color: '#111111' }}>{item.label}</span>
-              <span className="text-sm ml-1.5" style={{ color: '#6B6B6B' }}>{item.desc}</span>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Pull-quote — user-outcome sentence */}
-      <motion.p
-        className="text-[13px] italic mb-6"
-        style={{ color: '#6B6B6B', borderLeft: '2px solid #E5E5E5', paddingLeft: '12px' }}
-        initial={reduced !== false ? {} : { opacity: 0 }}
-        animate={inView ? { opacity: 1 } : {}}
-        transition={{ duration: 0.4, ease: EASE, delay: delay + 0.28 }}
-      >
-        {pullQuote}
-      </motion.p>
-
-      {/* Screenshot — Apple-style zoom in from below */}
+      {/* Screenshot — iOS spring zoom from below */}
       <motion.div
+        initial={reduced ? {} : { opacity: 0, y: 36, scale: 0.94 }}
+        animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
+        transition={reduced ? {} : { ...SPRING, delay: delay + 0.1 }}
         className="relative"
-        initial={reduced !== false ? {} : { opacity: 0, scale: 0.88, y: 40 }}
-        animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
-        transition={{ duration: 0.78, ease: EASE, delay: delay + 0.18 }}
       >
         {screenshot}
+
+        {/* Subtle glow beneath */}
+        <div
+          className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-3/4 h-8 blur-2xl pointer-events-none"
+          style={{ background: dotColor, opacity: 0.15 }}
+        />
       </motion.div>
     </div>
   )
 }
 
 export default function ProductDeepDiveSection() {
-  const ref = useRef<HTMLElement>(null)
-  const inView = useInView(ref, { once: true, margin: '-80px' })
+  const ref     = useRef<HTMLElement>(null)
+  const inView  = useInView(ref, { once: true, margin: '-80px' })
   const reduced = useReducedMotion()
 
   return (
-    <section ref={ref} className="overflow-x-hidden" style={{ background: 'white', borderBottom: '1px solid #E5E5E5' }}>
+    <section
+      ref={ref}
+      className="overflow-x-hidden"
+      style={{ background: '#FAFAF8', borderBottom: '1px solid #E5E5E5' }}
+    >
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 sm:py-24">
 
-        {/* Heading */}
+        {/* Section heading */}
         <motion.div
-          className="text-center mb-10 sm:mb-16"
-          initial={reduced !== false ? {} : { opacity: 0, scale: 0.92, y: 20 }}
-          animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}}
-          transition={{ duration: 0.65, ease: EASE }}
+          className="text-center mb-12 sm:mb-20"
+          initial={reduced ? {} : { opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={reduced ? {} : { ...SPRING }}
         >
-          <h2
-            className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] text-[#111111] [text-wrap:balance]"
-            style={{
-              fontWeight: 700,
-              lineHeight: 1.1,
-              letterSpacing: '-0.025em',
-              marginBottom: '16px',
-            }}
+          <p
+            className="text-[11px] font-[700] uppercase tracking-[0.1em] mb-4"
+            style={{ color: '#5F790B' }}
           >
-            Everything you need. Nothing you don&apos;t.
+            The product
+          </p>
+          <h2
+            className="text-[clamp(28px,5vw,44px)] font-[700] text-[#111111] [text-wrap:balance] mx-auto"
+            style={{ letterSpacing: '-0.028em', lineHeight: 1.08, maxWidth: '640px' }}
+          >
+            Every number that matters.<br className="hidden sm:block" />
+            Nothing that doesn&apos;t.
           </h2>
           <p
-            className="text-base sm:text-[17px] mx-auto"
-            style={{ color: '#555555', lineHeight: 1.6, maxWidth: '560px' }}
+            className="mt-4 text-[15px] sm:text-[17px] text-[#566174] mx-auto leading-relaxed"
+            style={{ maxWidth: '520px' }}
           >
-            insic turns valuation into a structured workflow: price, intrinsic
-            value, reverse DCF, business quality, risks, and assumptions.
+            A structured workflow from price to verdict — with the assumptions you can see and edit.
           </p>
         </motion.div>
 
-        {/* Two-panel layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
-          <AnimatedPanel
+        {/* Two-panel grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-20">
+          <Panel
             inView={inView}
             reduced={reduced}
-            delay={0.10}
+            delay={0.08}
             dotColor="#2563EB"
-            title="Summary at a glance"
-            subtitle="One screen. Price, verdict, implied growth, and quality scores."
-            pullQuote="You know whether the stock is cheap before reading a single analyst note."
+            eyebrow="Summary tab"
+            title="Price, verdict, and implied growth — in seconds."
             bullets={SUMMARY_BULLETS}
             screenshot={<SummaryMockScreen />}
           />
-          <AnimatedPanel
+          <Panel
             inView={inView}
             reduced={reduced}
-            delay={0.20}
+            delay={0.16}
             dotColor="#5F790B"
-            title="Valuation deep dive"
-            subtitle="Bull, base, and bear scenarios. Model weights. Editable assumptions."
-            pullQuote="Change one number and see how far the fair value moves. No spreadsheet needed."
+            eyebrow="Valuation cockpit"
+            title="Four models. One blended answer. Fully editable."
             bullets={VALUATION_BULLETS}
             screenshot={<ValuationMockScreen />}
           />

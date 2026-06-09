@@ -78,20 +78,46 @@ function BrowserChrome({ children }: { children: React.ReactNode }) {
     <div
       className="w-full rounded-xl overflow-hidden"
       style={{
-        boxShadow: '0 24px 64px rgba(0,0,0,0.20), 0 4px 16px rgba(0,0,0,0.10), 0 1px 0 rgba(255,255,255,0.12) inset',
-        border: '1px solid rgba(255,255,255,0.12)',
+        boxShadow:
+          '0 2px 0 rgba(255,255,255,0.10) inset, 0 40px 80px rgba(0,0,0,0.32), 0 16px 32px rgba(0,0,0,0.16), 0 4px 8px rgba(0,0,0,0.08)',
+        border: '1px solid rgba(255,255,255,0.10)',
       }}
     >
-      {/* Title bar */}
+      {/* Title bar — authentic macOS dark */}
       <div
         className="flex items-center gap-2 px-4"
-        style={{ height: '36px', background: '#2A2A2A', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+        style={{
+          height: '38px',
+          background: 'linear-gradient(to bottom, #3C3C3C 0%, #2E2E2E 100%)',
+          borderBottom: '1px solid rgba(0,0,0,0.40)',
+        }}
       >
         {/* Traffic lights */}
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full" style={{ background: '#FF5F56', border: '0.5px solid rgba(0,0,0,0.12)' }} />
-          <div className="w-3 h-3 rounded-full" style={{ background: '#FFBD2E', border: '0.5px solid rgba(0,0,0,0.12)' }} />
-          <div className="w-3 h-3 rounded-full" style={{ background: '#28C840', border: '0.5px solid rgba(0,0,0,0.12)' }} />
+        <div className="flex items-center gap-2">
+          <div
+            className="w-3 h-3 rounded-full"
+            style={{
+              background: 'radial-gradient(circle at 35% 35%, #FF7A74, #FF5F56)',
+              border: '0.5px solid rgba(0,0,0,0.18)',
+              boxShadow: 'inset 0 0.5px 0 rgba(255,255,255,0.25)',
+            }}
+          />
+          <div
+            className="w-3 h-3 rounded-full"
+            style={{
+              background: 'radial-gradient(circle at 35% 35%, #FFCF4A, #FFBD2E)',
+              border: '0.5px solid rgba(0,0,0,0.18)',
+              boxShadow: 'inset 0 0.5px 0 rgba(255,255,255,0.25)',
+            }}
+          />
+          <div
+            className="w-3 h-3 rounded-full"
+            style={{
+              background: 'radial-gradient(circle at 35% 35%, #46D354, #28C840)',
+              border: '0.5px solid rgba(0,0,0,0.18)',
+              boxShadow: 'inset 0 0.5px 0 rgba(255,255,255,0.25)',
+            }}
+          />
         </div>
         {/* Address bar */}
         <div
