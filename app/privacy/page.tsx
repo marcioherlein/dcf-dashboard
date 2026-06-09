@@ -61,9 +61,9 @@ export default function PrivacyPage() {
               <div>
                 <p className="font-medium text-[#566174]">Payment data (if you subscribe to Pro):</p>
                 <ul className="list-disc pl-5 mt-1 space-y-1">
-                  <li>Subscription status and billing history (stored by LemonSqueezy)</li>
-                  <li>Your LemonSqueezy customer and subscription ID (stored by us)</li>
-                  <li>We do not store credit card numbers or full payment details — these are handled exclusively by LemonSqueezy</li>
+                  <li>Subscription status and billing history (stored by our payment processor)</li>
+                  <li>Your payment processor customer and subscription ID (stored by us)</li>
+                  <li>We do not store credit card numbers or full payment details — these are handled exclusively by our payment processor</li>
                 </ul>
               </div>
               <div>
@@ -162,7 +162,7 @@ export default function PrivacyPage() {
                     ['Supabase', 'Database & storage', 'Account data, valuations, portfolio', 'USA/EU (SCCs)'],
                     ['Vercel', 'Hosting & infrastructure', 'Server logs, IP address', 'USA/EU (SCCs)'],
                     ['Resend', 'Transactional email', 'Email address, name', 'USA (SCCs)'],
-                    ['LemonSqueezy', 'Payment processing', 'Email, name, subscription data', 'USA (SCCs)'],
+                    ['Payment processor (TBD)', 'Payment processing', 'Email, name, subscription data', 'TBD'],
                     ['Yahoo Finance', 'Market data (read-only)', 'None — public data fetch only', 'USA'],
                     ['Financial Modeling Prep', 'Financial data (read-only)', 'None — public data fetch only', 'USA'],
                     ['FRED / Federal Reserve', 'Economic data (read-only)', 'None — public data fetch only', 'USA'],

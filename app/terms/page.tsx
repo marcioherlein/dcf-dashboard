@@ -118,9 +118,9 @@ export default function TermsPage() {
             <p className="font-medium text-[#566174] mt-4">Pro Plan — Paid Subscription</p>
             <p>
               The Pro plan is a recurring subscription billed on a monthly or annual basis, as selected at
-              the time of purchase. Subscriptions are processed through LemonSqueezy, our third-party payment
-              processor. By subscribing, you authorize recurring charges to your payment method at the
-              applicable billing interval.
+              the time of purchase. Subscriptions are processed through our third-party payment processor.
+              By subscribing, you authorize recurring charges to your payment method at the applicable
+              billing interval.
             </p>
             <p className="mt-2">
               Prices are displayed at checkout and may be subject to applicable taxes. We reserve the right
