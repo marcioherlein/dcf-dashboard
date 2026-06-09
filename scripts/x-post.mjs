@@ -1434,8 +1434,24 @@ async function runMorningBrief() {
   // News headlines via Yahoo RSS — filtered for quality
   const headlines = await fetchNewsHeadlines(5)
 
-  // Earnings today — large caps only (>$10B market cap)
-  const earningsTickers = []
+  // Earnings today + this week — large caps only (>$10B market cap)
+  // Build date set for Mon–Fri of current week
+  const now = new Date()
+  const dow = now.getUTCDay() // 0=Sun, 1=Mon … 6=Sat
+  const monday = new Date(now)
+  monday.setUTCDate(now.getUTCDate() - (dow === 0 ? 6 : dow - 1))
+  monday.setUTCHours(0, 0, 0, 0)
+  const weekDates = new Set(
+    Array.from({ length: 5 }, (_, i) => {
+      const d = new Date(monday)
+      d.setUTCDate(monday.getUTCDate() + i)
+      return d.toISOString().split('T')[0]
+    })
+  )
+
+  const earningsTickers = []  // reports today
+  const earningsWeek    = []  // reports later this week (not today)
+
   for (let i = 0; i < SP500_SAMPLE.length; i += 8) {
     const batch = SP500_SAMPLE.slice(i, i + 8)
     const settled = await Promise.allSettled(batch.map(async t => {
@@ -1449,12 +1465,18 @@ async function runMorningBrief() {
       if (!meta?.earningsTimestampStart) return null
       if ((meta.marketCap ?? 0) < 10_000_000_000) return null
       const d = new Date(meta.earningsTimestampStart * 1000).toISOString().split('T')[0]
-      return d === todayUtc ? { symbol: t, marketCap: meta.marketCap } : null
+      return weekDates.has(d) ? { symbol: t, marketCap: meta.marketCap, date: d } : null
     }))
-    for (const r of settled) if (r.status === 'fulfilled' && r.value) earningsTickers.push(r.value)
+    for (const r of settled) {
+      if (r.status === 'fulfilled' && r.value) {
+        if (r.value.date === todayUtc) earningsTickers.push(r.value)
+        else earningsWeek.push(r.value)
+      }
+    }
     if (i + 8 < SP500_SAMPLE.length) await new Promise(r => setTimeout(r, 300))
   }
   earningsTickers.sort((a, b) => b.marketCap - a.marketCap)
+  earningsWeek.sort((a, b) => a.date.localeCompare(b.date) || b.marketCap - a.marketCap)
 
   // Macro events today + tomorrow
   const macroToday    = MACRO_CALENDAR.filter(e => e.date === todayUtc)
@@ -1564,6 +1586,21 @@ async function runMorningBrief() {
     lines.push(``, `━━━ TODAY'S EVENTS ━━━`)
     lines.push(...macroNarrative)
     if (earningsNarrative) lines.push(earningsNarrative)
+  }
+
+  // Earnings this week (excluding today)
+  if (earningsWeek.length > 0) {
+    // Group by date
+    const byDate = {}
+    for (const e of earningsWeek.slice(0, 8)) {
+      if (!byDate[e.date]) byDate[e.date] = []
+      byDate[e.date].push(`$${e.symbol}`)
+    }
+    lines.push(``, `━━━ EARNINGS THIS WEEK ━━━`)
+    for (const [date, tickers] of Object.entries(byDate)) {
+      const dayLabel = new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+      lines.push(`${dayLabel}: ${tickers.join(' · ')}`)
+    }
   }
 
   // Headlines always shown
