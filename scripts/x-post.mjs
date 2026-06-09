@@ -346,9 +346,9 @@ async function runDcf() {
   if (!ticker) {
     const day = new Date().getDay() // 0=Sun … 6=Sat
     const pool = ROTATION[day] ?? ROTATION[1]
-    // Pick deterministically based on week-of-year so it rotates weekly
-    const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
-    ticker = pool[weekOfYear % pool.length]
+    // Use day-of-year so the ticker advances daily, not weekly
+    const dayOfYear = Math.floor(Date.now() / 86400000)
+    ticker = pool[dayOfYear % pool.length]
   }
 
   console.log(`Fetching DCF for ${ticker}...`)
@@ -1150,8 +1150,8 @@ const BEAR_ROTATION = {
 async function runDcfBear() {
   const day = new Date().getDay()
   const pool = BEAR_ROTATION[day] ?? BEAR_ROTATION[2]
-  const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
-  const ticker = pool[weekOfYear % pool.length]
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const ticker = pool[dayOfYear % pool.length]
 
   console.log(`Fetching bear DCF for ${ticker}...`)
   const data = await fetchValuation(ticker)
