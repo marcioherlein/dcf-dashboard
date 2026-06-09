@@ -7,24 +7,29 @@ interface NewsItem { title: string; link: string; publisher: string; providerPub
 
 type Sentiment = 'Bullish' | 'Bearish' | 'Earnings' | 'Guidance' | 'Upgrade' | 'Downgrade' | 'Neutral'
 
-const SENTIMENT_RULES: Array<{ pattern: RegExp; label: Sentiment }> = [
-  { pattern: /upgrad|outperform|buy rating|target raise|price target.*(raise|increas|hike|lift|up)/i, label: 'Upgrade' },
-  { pattern: /downgrad|underperform|sell rating|target (cut|lower|decreas|reduc)/i, label: 'Downgrade' },
-  { pattern: /earnings?|eps|quarter(ly)?|profit|revenue\s*(beat|miss|top|top|exceed|surpass)/i, label: 'Earnings' },
-  { pattern: /guidance|outlook|forecast|forward.*(revenue|eps|guidance)/i, label: 'Guidance' },
-  { pattern: /beat|surpass|record|strong|solid|exceed|rally|jump|soar|surge|bull|optimis/i, label: 'Bullish' },
-  { pattern: /miss|warning|slump|plunge|fall|decline|weak|disapp|concern|bear|pessim|layoff|cut|worr/i, label: 'Bearish' },
+const SENTIMENT_CONFIG: Array<{
+  pattern: RegExp
+  label: Sentiment
+  badge: string
+  card: string
+  dot: string
+}> = [
+  { pattern: /upgrad|outperform|buy rating|target raise|price target.*(raise|increas|hike|lift|up)/i, label: 'Upgrade',   badge: 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]', card: 'border-[#A3D9BE] bg-[#E8F7EF]/25', dot: 'bg-[#E8F7EF]0' },
+  { pattern: /downgrad|underperform|sell rating|target (cut|lower|decreas|reduc)/i,                   label: 'Downgrade', badge: 'bg-orange-50 text-orange-700 border-orange-200',    card: 'border-orange-200 bg-orange-50/20',  dot: 'bg-orange-400' },
+  { pattern: /earnings?|eps|quarter(ly)?|profit|revenue\s*(beat|miss|top|top|exceed|surpass)/i,       label: 'Earnings',  badge: 'bg-[#EAF1FF] text-[#2563EB] border-[#93B4F5]',      card: 'border-[#93B4F5] bg-[#EAF1FF]/20',  dot: 'bg-blue-400' },
+  { pattern: /guidance|outlook|forecast|forward.*(revenue|eps|guidance)/i,                            label: 'Guidance',  badge: 'bg-violet-50 text-violet-700 border-violet-200',      card: 'border-violet-200 bg-violet-50/20', dot: 'bg-violet-400' },
+  { pattern: /beat|surpass|record|strong|solid|exceed|rally|jump|soar|surge|bull|optimis/i,           label: 'Bullish',   badge: 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]',      card: 'border-[#A3D9BE] bg-[#E8F7EF]/25',  dot: 'bg-[#11875D]' },
+  { pattern: /miss|warning|slump|plunge|fall|decline|weak|disapp|concern|bear|pessim|layoff|cut|worr/i, label: 'Bearish', badge: 'bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]',      card: 'border-[#F0B8B8] bg-[#FCEAEA]/25',  dot: 'bg-[#D83B3B]' },
 ]
 
-const SENTIMENT_STYLE: Record<Sentiment, { badge: string; card: string; dot: string }> = {
-  Bullish:   { badge: 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]', card: 'border-[#A3D9BE] bg-[#E8F7EF]/25', dot: 'bg-[#11875D]' },
-  Bearish:   { badge: 'bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]',             card: 'border-[#F0B8B8] bg-[#FCEAEA]/25',        dot: 'bg-[#D83B3B]' },
-  Earnings:  { badge: 'bg-[#EAF1FF] text-[#2563EB] border-[#93B4F5]',          card: 'border-[#93B4F5] bg-[#EAF1FF]/20',      dot: 'bg-blue-400' },
-  Guidance:  { badge: 'bg-violet-50 text-violet-700 border-violet-200',    card: 'border-violet-200 bg-violet-50/20',  dot: 'bg-violet-400' },
-  Upgrade:   { badge: 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]', card: 'border-[#A3D9BE] bg-[#E8F7EF]/25',dot: 'bg-[#E8F7EF]0' },
-  Downgrade: { badge: 'bg-orange-50 text-orange-700 border-orange-200',    card: 'border-orange-200 bg-orange-50/20',  dot: 'bg-orange-400' },
-  Neutral:   { badge: 'bg-[#F4F3EF] text-[#566174] border-[#E3E1DA]',      card: 'border-[#E3E1DA] bg-white',          dot: 'bg-[#CDD1C8]' },
-}
+const NEUTRAL_STYLE = { badge: 'bg-[#F4F3EF] text-[#566174] border-[#E3E1DA]', card: 'border-[#E3E1DA] bg-white', dot: 'bg-[#CDD1C8]' }
+
+// Thin shims for call sites expecting the old structures
+const SENTIMENT_RULES = SENTIMENT_CONFIG.map(({ pattern, label }) => ({ pattern, label }))
+const SENTIMENT_STYLE: Record<Sentiment, { badge: string; card: string; dot: string }> = Object.fromEntries(
+  [...SENTIMENT_CONFIG.map(({ label, badge, card, dot }) => [label, { badge, card, dot }]),
+   ['Neutral', NEUTRAL_STYLE]]
+) as Record<Sentiment, { badge: string; card: string; dot: string }>
 
 // Stable color for publisher initial avatar (hashed from publisher name)
 function publisherColor(name: string): string {

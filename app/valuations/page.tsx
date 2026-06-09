@@ -358,6 +358,13 @@ function EmptyState() {
 
       {/* Activation steps + CTAs */}
       <div className="px-5 py-6 sm:px-8 sm:py-8 flex flex-col items-center text-center gap-5">
+        {/* KPI preview — shows what you'll unlock (H8) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full opacity-40 pointer-events-none select-none">
+          <KpiCard icon={Bookmark}    iconCls="bg-[#EAF1FF] text-[#2563EB]" label="Tracked"       value="—"  sub="companies" />
+          <KpiCard icon={TrendingUp}  iconCls="bg-[#E8F7EF] text-[#11875D]" label="Avg Upside"   value="—"  sub="across all" />
+          <KpiCard icon={CheckCircle} iconCls="bg-[#E8F7EF] text-[#11875D]" label="Undervalued"  value="—"  sub="companies" />
+          <KpiCard icon={Clock}       iconCls="bg-[#FFF4DA] text-[#B56A00]" label="Needs Review" value="—"  sub="missing data" />
+        </div>
         <div className="w-12 h-12 rounded-xl bg-[#EAF1FF] border border-blue-100 flex items-center justify-center">
           <Bookmark size={20} className="text-[#2563EB]" />
         </div>
@@ -499,7 +506,8 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
 
 // ── Login Wall ─────────────────────────────────────────────────────────────────
 
-function LoginWall() {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function _LoginWall() {
   return (
     <div className="min-h-dvh bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white border border-[#E5E5E5] rounded-xl shadow-sm p-8 text-center">
@@ -688,7 +696,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
 
       {/* KPI cards — own row, not nested inside the header */}
       {!loading && entries.length > 0 && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
           <KpiCard
             icon={Bookmark}
             iconCls="bg-[#EAF1FF] text-[#2563EB]"

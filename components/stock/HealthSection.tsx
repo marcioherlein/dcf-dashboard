@@ -51,7 +51,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   valuation: 'Valuation',
 }
 
-function ScoreBar({ score, color }: { score: number; color: string }) {
+function ScoreBar({ score, color, label }: { score: number; color: string; label?: string }) {
   const filled = Math.round(Math.min(Math.max(score, 0), 5))
   const barColor =
     color === 'emerald' || color === 'green' ? 'bg-[#E8F7EF]0' :
@@ -60,13 +60,18 @@ function ScoreBar({ score, color }: { score: number; color: string }) {
     'bg-[#FCEAEA]0'
 
   return (
-    <div className="flex items-center gap-1.5 mt-1 w-full max-w-[160px]">
+    <div
+      className="flex items-center gap-1.5 mt-1 w-full max-w-[160px]"
+      aria-label={label ? `${label}: ${filled} out of 5` : `Score: ${filled} out of 5`}
+    >
       {[1, 2, 3, 4, 5].map((i) => (
         <div
           key={i}
+          aria-hidden="true"
           className={`h-2 w-7 sm:w-6 rounded-full transition-colors ${i <= filled ? barColor : 'bg-[#E3E1DA]'}`}
         />
       ))}
+      <span className="sr-only">{filled}/5</span>
     </div>
   )
 }
@@ -78,7 +83,7 @@ function CategoryRow({ catKey, ratings }: { catKey: string; ratings: StockRating
     <div className="flex items-start gap-3 sm:gap-4 py-3 min-h-[44px]">
       <div className="min-w-[6rem] max-w-[9rem] shrink-0">
         <p className="text-[13px] font-medium text-[#566174]">{CATEGORY_LABELS[catKey]}</p>
-        <ScoreBar score={cat.score} color={cat.color} />
+        <ScoreBar score={cat.score} color={cat.color} label={CATEGORY_LABELS[catKey]} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
@@ -114,23 +119,23 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
           className="w-full flex items-center justify-between px-4 sm:px-6 py-4 hover:bg-[#F4F3EF]/60 transition-colors min-h-[44px]"
         >
           <div className="flex items-baseline gap-3 flex-wrap">
-            <h2 className="text-[11px] font-bold uppercase tracking-widest text-[#8A95A6]">Financial Health</h2>
-            <p className="text-[10px] text-[#8A95A6]">
+            <h2 className="text-[11px] font-bold uppercase tracking-widest text-[#566174]">Financial Health</h2>
+            <p className="text-[10px] text-[#566174]">
               <span className="text-[#11875D] font-semibold">A</span> Excellent&nbsp;·&nbsp;
               <span className="text-[#2563EB] font-semibold">B</span> Good&nbsp;·&nbsp;
               <span className="text-[#B56A00] font-semibold">C</span> Average&nbsp;·&nbsp;
               <span className="text-[#D83B3B] font-semibold">D/F</span> Weak
             </p>
           </div>
-          <svg className={`w-4 h-4 text-[#8A95A6] transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className={`w-4 h-4 text-[#566174] transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
       ) : (
         <div className="flex items-start sm:items-center justify-between px-4 sm:px-6 pt-5 pb-1 flex-wrap gap-2">
-          <h2 className="text-[11px] font-bold uppercase tracking-widest text-[#8A95A6]">Financial Health</h2>
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-[#566174]">Financial Health</h2>
           <div className="flex items-center gap-3 flex-wrap">
-            <p className="text-[10px] text-[#8A95A6]">
+            <p className="text-[10px] text-[#566174]">
               <span className="text-[#11875D] font-semibold">A</span> Excellent&nbsp;·&nbsp;
               <span className="text-[#2563EB] font-semibold">B</span> Good&nbsp;·&nbsp;
               <span className="text-[#B56A00] font-semibold">C</span> Average&nbsp;·&nbsp;
@@ -150,16 +155,19 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
         const d = new Date(nextEarningsDate)
         const daysUntil = Math.ceil((d.getTime() - Date.now()) / 86400000)
         if (daysUntil < 0 || daysUntil > 45) return null
-        const label = daysUntil === 0 ? 'Earnings today' : daysUntil === 1 ? 'Earnings tomorrow' : `Earnings in ${daysUntil} days`
+        const label = daysUntil === 0 ? 'Earnings today' : daysUntil === 1 ? 'Earnings tomorrow' : `Earnings in ${daysUntil} day${daysUntil === 1 ? '' : 's'}`
         const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        const guidance = daysUntil <= 3
+          ? 'These scores reflect pre-earnings data. Consider noting this risk in your thesis and revisiting after the report.'
+          : 'Health scores use the most recent filing. New data will be available after earnings.'
         return (
-          <div className="mx-4 sm:mx-6 mt-4 rounded-xl bg-[#FFF4DA] border border-[#F3D391] px-4 py-3 flex items-center gap-3">
-            <svg className="w-4 h-4 text-[#B56A00] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <div className="mx-4 sm:mx-6 mt-4 rounded-xl bg-[#FFF4DA] border border-[#F3D391] px-4 py-3 flex items-start gap-3">
+            <svg className="w-4 h-4 text-[#B56A00] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <div className="min-w-0">
               <p className="text-[12px] font-semibold text-[#854D0E]">{label} — {dateStr}</p>
-              <p className="text-[11px] text-[#B56A00] mt-0.5">Health scores are based on the most recent filing. New data will be available after the report.</p>
+              <p className="text-[11px] text-[#B56A00] mt-0.5 leading-snug">{guidance}</p>
             </div>
           </div>
         )

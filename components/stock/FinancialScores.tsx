@@ -13,23 +13,28 @@ interface Props {
   }
 }
 
-function ScoreColor(value: number, thresholds: [number, number]): string {
-  if (value >= thresholds[1]) return 'text-[#11875D]'
-  if (value >= thresholds[0]) return 'text-[#B56A00]'
-  return 'text-[#D83B3B]'
+function getScoreColorScheme(value: number, thresholds: [number, number]): { text: string; bg: string; badge: string } {
+  if (value >= thresholds[1]) return {
+    text:  'text-[#11875D]',
+    bg:    'bg-[#E8F7EF] border-[#A3D9BE]',
+    badge: 'bg-[#E8F7EF] text-[#0D6B46]',
+  }
+  if (value >= thresholds[0]) return {
+    text:  'text-[#B56A00]',
+    bg:    'bg-[#FFF4DA] border-[#F3D391]',
+    badge: 'bg-[#FFF4DA] text-[#854D0E]',
+  }
+  return {
+    text:  'text-[#D83B3B]',
+    bg:    'bg-[#FCEAEA] border-[#F0B8B8]',
+    badge: 'bg-[#FCEAEA] text-[#991B1B]',
+  }
 }
 
-function BgColor(value: number, thresholds: [number, number]): string {
-  if (value >= thresholds[1]) return 'bg-[#E8F7EF] border-[#A3D9BE]'
-  if (value >= thresholds[0]) return 'bg-[#FFF4DA] border-[#F3D391]'
-  return 'bg-[#FCEAEA] border-[#F0B8B8]'
-}
-
-function BadgeColor(value: number, thresholds: [number, number]): string {
-  if (value >= thresholds[1]) return 'bg-[#E8F7EF] text-[#0D6B46]'
-  if (value >= thresholds[0]) return 'bg-[#FFF4DA] text-[#854D0E]'
-  return 'bg-[#FCEAEA] text-[#991B1B]'
-}
+// Thin shims kept for any existing call sites in this file
+const ScoreColor  = (v: number, t: [number, number]) => getScoreColorScheme(v, t).text
+const BgColor     = (v: number, t: [number, number]) => getScoreColorScheme(v, t).bg
+const BadgeColor  = (v: number, t: [number, number]) => getScoreColorScheme(v, t).badge
 
 // Groups: Profitability (0-3), Leverage/Cash (4-6), Efficiency (7-8)
 const PIOTROSKI_GROUPS = [

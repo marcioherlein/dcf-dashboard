@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -56,9 +56,36 @@ const MORE_ITEMS = [
 export default function BottomNav() {
   const pathname = usePathname()
   const [moreOpen, setMoreOpen] = useState(false)
+  const drawerRef = useRef<HTMLDivElement>(null)
 
   const isMoreActive = MORE_ITEMS.some((item) => pathname.startsWith(item.href.split('?')[0]))
   const isCenterActive = pathname === '/' || pathname.startsWith('/stock') || pathname.startsWith('/analyze')
+
+  // Auto-expand drawer when deep-linked to a "More" item (L8)
+  useEffect(() => {
+    const isInMore = MORE_ITEMS.some(item => pathname.startsWith(item.href.split('?')[0]))
+    if (isInMore) setMoreOpen(true)
+  }, [pathname])
+
+  // Focus trap + Escape key handler (H5)
+  useEffect(() => {
+    if (!moreOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setMoreOpen(false); return }
+      if (e.key === 'Tab' && drawerRef.current) {
+        const focusable = drawerRef.current.querySelectorAll<HTMLElement>('a, button, [tabindex]:not([tabindex="-1"])')
+        const first = focusable[0]
+        const last = focusable[focusable.length - 1]
+        if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus() }
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus() }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    // Focus first item on open
+    const firstFocusable = drawerRef.current?.querySelector<HTMLElement>('a, button')
+    firstFocusable?.focus()
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [moreOpen])
 
   function NavItem({ href, label, match, icon }: { href: string; label: string; match: (p: string) => boolean; icon: (a: boolean) => ReactNode }) {
     const active = match(pathname)
@@ -85,11 +112,17 @@ export default function BottomNav() {
         <div
           className="fixed inset-0 z-40 bg-black/15 lg:hidden"
           onClick={() => setMoreOpen(false)}
+          role="presentation"
+          aria-hidden="true"
         />
       )}
 
       {/* More drawer panel */}
       <div
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="More navigation options"
         className={cn(
           'fixed left-0 right-0 z-50 lg:hidden bg-white rounded-t-2xl shadow-xl border-t border-[#E5E5E5] transition-transform duration-200',
           moreOpen ? 'translate-y-0' : 'translate-y-full',

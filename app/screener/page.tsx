@@ -290,7 +290,7 @@ export default function ScreenerPage() {
             </div>
             {!loading && !error && (
               <div className="flex items-center gap-3 mt-1 shrink-0" aria-live="polite" aria-atomic="true">
-                <span className="flex items-center gap-1.5 text-[12px] text-[#8A95A6]">
+                <span className="flex items-center gap-1.5 text-[12px] text-[#566174]">
                   <TrendingUp size={13} />
                   <span className="tabular-nums">{displayed.length.toLocaleString()} stocks</span>
                   {searchQ || hasActiveFilters ? <span>· filtered</span> : <span>· NYSE + NASDAQ</span>}
@@ -492,11 +492,11 @@ export default function ScreenerPage() {
                     <SkeletonRow key={i} index={i} />
                   ))}
 
-                  {!loading && displayed.length === 0 && (
+                      {!loading && displayed.length === 0 && (
                     <tr>
                       <td colSpan={7} className="px-5 py-14 text-center">
                         <p className="text-[14px] font-medium text-[#06101F] mb-1">No stocks match your filters</p>
-                        <p className="text-[13px] text-[#8A95A6] mb-4">Try broadening your sector, cap tier, or removing the dividend filter.</p>
+                        <p className="text-[13px] text-[#566174] mb-4">Try broadening your sector, cap tier, or removing the dividend filter.</p>
                         <button
                           onClick={resetFilters}
                           className="text-[13px] font-semibold text-olive-700 hover:underline"
@@ -517,10 +517,10 @@ export default function ScreenerPage() {
                           transition={{ duration: 0.15, delay: Math.min(i * 0.012, 0.18) }}
                           className={`border-b border-[#E3E1DA] hover:bg-olive-50/60 cursor-pointer transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-olive-700 ${i % 2 === 1 ? 'bg-[#F4F3EF]/50' : ''}`}
                           onClick={() => router.push(`/stock/${stock.ticker}`)}
-                          role="row"
+                          role="button"
                           tabIndex={0}
                           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push(`/stock/${stock.ticker}`) } }}
-                          aria-label={`${stock.name} (${stock.ticker}) — open full analysis`}
+                          aria-label={`${stock.ticker}: ${stock.name} — Click to open full analysis`}
                         >
                       {/* Company */}
                       <td className="sticky left-0 z-10 bg-inherit group-hover:bg-olive-50/60 transition-colors px-4 py-3.5">
@@ -595,10 +595,10 @@ export default function ScreenerPage() {
           {/* Table footer */}
           {!loading && !error && displayed.length > 0 && (
             <div className="px-4 py-2.5 border-t border-[#E3E1DA] flex items-center justify-between">
-              <p className="text-[11px] text-[#8A95A6]">
+              <p className="text-[11px] text-[#566174]">
                 {displayed.length.toLocaleString()} result{displayed.length !== 1 ? 's' : ''} · Click a row to open the full valuation analysis
               </p>
-              <p className="text-[11px] text-[#8A95A6]">Source: FMP · Data refreshed every 30 minutes</p>
+              <p className="text-[11px] text-[#566174]">Source: FMP · Data refreshed every 30 minutes</p>
             </div>
           )}
         </div>

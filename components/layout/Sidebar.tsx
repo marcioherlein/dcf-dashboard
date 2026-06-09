@@ -216,7 +216,6 @@ export default function Sidebar() {
         className="relative px-3 py-3.5 shrink-0"
         style={{
           borderTop: '1px solid rgba(255,255,255,0.07)',
-          background: 'rgba(255,255,255,0.02)',
         }}
         initial={reduced || hasAnimated.current ? false : { opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}

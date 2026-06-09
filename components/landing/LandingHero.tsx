@@ -161,11 +161,7 @@ function ProductMockCard({ inView, reduced }: { inView: boolean; reduced: boolea
   return (
     <BrowserChrome>
       {/* Mobile height cap: ~340px with fade-out peek effect; full height on sm+ */}
-      <div className="relative mock-card-cap">
-        <style>{`
-          .mock-card-cap { overflow: hidden; max-height: 340px; }
-          @media (min-width: 640px) { .mock-card-cap { overflow: visible; max-height: none; } }
-        `}</style>
+      <div className="relative overflow-hidden max-h-[340px] sm:overflow-visible sm:max-h-none">
       {/* App top bar */}
       <div
         className="flex items-center justify-between px-4"

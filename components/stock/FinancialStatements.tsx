@@ -320,14 +320,9 @@ export default function FinancialStatements({ incomeStatement, balanceSheet, cas
 
       </div>
 
-      {/* Legend */}
-      <div className="border-t border-[#F4F3EF] px-6 py-3 flex items-center gap-4 text-[10px] text-[#8A95A6]">
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-[#8A95A6]" />
-          Historical actuals
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-violet-400" />
+      <div className="border-t border-[#F4F3EF] px-6 py-3 flex items-center gap-4 text-[10px] text-[#566174]">
+        <span>Historical actuals</span>
+        <span>
           Model projections{cagr !== undefined ? ` (based on ${(cagr * 100).toFixed(1)}% CAGR)` : ''}
         </span>
       </div>

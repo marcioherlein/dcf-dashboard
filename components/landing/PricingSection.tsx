@@ -108,7 +108,7 @@ export default function PricingSection() {
           </div>
 
           {/* Pro */}
-          <div className="rounded-2xl border-2 border-[#E5E5E5] bg-white p-6 flex flex-col relative opacity-80">
+          <div className="rounded-2xl border-2 border-[#E5E5E5] bg-white p-6 flex flex-col relative">
             <div className="absolute top-4 right-4 rounded-full bg-[#F4F3EF] border border-[#E3E1DA] text-[#9B9B9B] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1">
               Coming soon
             </div>
@@ -125,6 +125,8 @@ export default function PricingSection() {
             <p className="text-[12px] text-[#6B6B6B] mb-5">For investors who want deeper research.</p>
             <button
               disabled
+              aria-disabled="true"
+              title="Pro plan coming soon — join the waitlist to be notified"
               className="w-full rounded-md py-3 text-[13.5px] font-bold text-[#9B9B9B] mb-5 min-h-[48px] cursor-not-allowed bg-[#F4F3EF] border border-[#E3E1DA]"
             >
               Coming soon
