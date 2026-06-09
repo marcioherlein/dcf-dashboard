@@ -332,13 +332,31 @@ async function runEarnings() {
 // ─── Mode: dcf ────────────────────────────────────────────────────────────────
 // Posts a DCF fair value snapshot for a specified or rotating stock.
 
-// Weekly rotation: different sector each day Mon–Fri
+// DCF rotation — large diverse pool per day so the same stock never repeats within weeks.
+// Monday = Tech/Semis, Tuesday = Mega-cap + Cloud, Wednesday = Financials + Payments,
+// Thursday = Healthcare + Pharma, Friday = Consumer + Energy + Industrials + Mixed
 const ROTATION = {
-  1: ['NVDA','AMD','INTC','QCOM','AVGO'],   // Monday: semiconductors
-  2: ['AAPL','MSFT','GOOGL','META','AMZN'], // Tuesday: mega-cap tech
-  3: ['JPM','BAC','GS','V','MA'],           // Wednesday: financials
-  4: ['JNJ','LLY','ABBV','MRK','AMGN'],    // Thursday: healthcare
-  5: ['TSLA','RIVN','F','GM','TM'],         // Friday: autos/EV
+  1: [ // Monday: Tech & Semiconductors
+    'NVDA','AMD','INTC','QCOM','AVGO','TXN','MU','AMAT','LRCX','KLAC',
+    'TSM','ASML','ARM','MRVL','SMCI','ON','SWKS','MPWR','ENTG','WOLF',
+  ],
+  2: [ // Tuesday: Mega-cap Tech, Cloud & Software
+    'AAPL','MSFT','GOOGL','META','AMZN','NFLX','ADBE','CRM','NOW','INTU',
+    'ORCL','SAP','SNOW','DDOG','ZS','PANW','CRWD','WDAY','TEAM','MDB',
+  ],
+  3: [ // Wednesday: Financials, Payments & Insurance
+    'JPM','BAC','GS','MS','WFC','C','BLK','BX','KKR','AXP',
+    'V','MA','PYPL','SQ','COF','USB','TFC','PNC','SCHW','ICE',
+  ],
+  4: [ // Thursday: Healthcare, Pharma & Biotech
+    'JNJ','LLY','ABBV','MRK','AMGN','BMY','PFE','GILD','REGN','VRTX',
+    'CVS','UNH','CI','HUM','ISRG','MDT','ABT','SYK','EW','IDXX',
+  ],
+  5: [ // Friday: Consumer, Energy, Industrials & Diversified
+    'TSLA','AMZN','WMT','COST','TGT','HD','NKE','SBUX','MCD','YUM',
+    'XOM','CVX','COP','SLB','EOG','NEE','DUK','SO','BA','CAT',
+    'GE','HON','RTX','LMT','DE','UPS','FDX','UBER','ABNB','CMG',
+  ],
 }
 
 async function runDcf() {
@@ -1137,14 +1155,31 @@ async function runQuestion() {
 // Evening slot — always picks an overvalued or controversial stock.
 // Drives debate and retweets more than bullish takes.
 
+// Evening bear/contrarian slot — larger pools, different stocks from the bullish DCF rotation.
+// Focuses on widely-held names where model vs. market price tension drives debate.
+
 const BEAR_ROTATION = {
-  1: ['NVDA', 'INTC', 'QCOM', 'TXN'],   // Monday: semis
-  2: ['AAPL', 'MSFT', 'GOOGL','META'],   // Tuesday: mega-cap tech
-  3: ['JPM',  'BAC',  'GS',   'V'],      // Wednesday: financials
-  4: ['JNJ',  'MRK',  'ABBV', 'AMGN'],  // Thursday: healthcare
-  5: ['AMZN', 'NFLX', 'COST', 'WMT'],   // Friday: consumer/retail
-  6: ['KO',   'PEP',  'MCD',  'HD'],    // Saturday: defensives
-  0: ['AAPL', 'MSFT', 'NVDA', 'AMZN'],  // Sunday: top 4
+  1: [ // Monday: AI darlings & high-multiple semis
+    'NVDA','ARM','SMCI','PLTR','MSTR','COIN','SNOW','AI','IONQ','RGTI',
+  ],
+  2: [ // Tuesday: Big Tech at premium valuations
+    'AAPL','MSFT','GOOGL','META','AMZN','NFLX','SHOP','UBER','LYFT','PINS',
+  ],
+  3: [ // Wednesday: Financials, crypto-adjacent, fintechs
+    'GS','MS','HOOD','SOFI','AFRM','UPST','LC','OPEN','RKT','COOP',
+  ],
+  4: [ // Thursday: Healthcare, biotech & weight-loss hype
+    'LLY','NVO','HIMS','NKTR','SAVA','MRNA','BNTX','NVAX','TDOC','ACMR',
+  ],
+  5: [ // Friday: Consumer, EV, clean energy
+    'TSLA','RIVN','LCID','NIO','XPEV','PLUG','FCEL','ENPH','SEDG','CHPT',
+  ],
+  6: [ // Saturday: Defensives & real estate priced for perfection
+    'KO','PEP','MCD','SBUX','CMG','ABNB','AIRB','BKNG','MAR','HLT',
+  ],
+  0: [ // Sunday: Index heavyweights — broad debate
+    'AAPL','MSFT','NVDA','AMZN','GOOGL','META','TSLA','BRK-B','JPM','V',
+  ],
 }
 
 async function runDcfBear() {
