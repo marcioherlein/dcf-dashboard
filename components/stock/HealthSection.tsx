@@ -1,9 +1,12 @@
 'use client'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { buildHealthInterpretation, buildRiskSummary } from '@/lib/simplifier/summaryBuilder'
 import type { StockRatings } from '@/lib/dcf/calculateRatings'
 import type { PiotroskiResult, AltmanResult, BeneishResult, ROICResult } from '@/lib/dcf/calculateScores'
-import RiskRadar from './RiskRadar'
+import RiskRadar, { computeRiskDimensions } from './RiskRadar'
+import { computeVerdict } from '@/lib/verdict/computeVerdict'
+import { computeConvictionScore } from '@/lib/stock/computeConvictionScore'
+import ConvictionScoreCard from './ConvictionScoreCard'
 
 interface ScoresData {
   piotroski: PiotroskiResult
@@ -19,6 +22,7 @@ interface Props {
   financialsData?: any
   collapsible?: boolean
   nextEarningsDate?: string | null
+  ticker?: string
 }
 
 function InfoTip({ text }: { text: string }) {
@@ -100,7 +104,7 @@ function CategoryRow({ catKey, ratings }: { catKey: string; ratings: StockRating
   )
 }
 
-export default function HealthSection({ ratings, scores, financialsData, collapsible, nextEarningsDate }: Props) {
+export default function HealthSection({ ratings, scores, financialsData, collapsible, nextEarningsDate, ticker }: Props) {
   const [open, setOpen] = useState(true)
   const piotroski       = scores.piotroski?.score ?? null
   const altmanZone      = scores.altman?.zone ?? null
@@ -111,7 +115,41 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
   const healthInterp = buildHealthInterpretation({ piotroski, altmanZone, beneishFlag, overallGrade })
   const riskSummary  = financialsData ? buildRiskSummary('this company', financialsData) : null
 
+  // Compute Conviction Score from all available signals
+  const conviction = useMemo(() => {
+    const riskDims = financialsData ? computeRiskDimensions(financialsData) : []
+    const verdict = computeVerdict({
+      ticker: ticker ?? null,
+      upsidePct: financialsData?.fairValue?.upsidePct ?? null,
+      roic: scores.roic ?? null,
+      analystRecommendation: financialsData?.analystRecommendation ?? null,
+      piotroski: scores.piotroski ?? null,
+      altman: scores.altman ?? null,
+      beneish: scores.beneish ?? null,
+      fcfMargin: financialsData?.businessProfile?.fcfMargin ?? null,
+      grossMargin: financialsData?.businessProfile?.grossMargin ?? null,
+      netMargin: financialsData?.businessProfile?.netMargin ?? null,
+      revenueCAGR: financialsData?.cagrAnalysis?.historicalCagr3y ?? null,
+    })
+    return computeConvictionScore({
+      ratings,
+      verdict,
+      piotroski: scores.piotroski ?? null,
+      altman: scores.altman ?? null,
+      beneish: scores.beneish ?? null,
+      riskDimensions: riskDims,
+      upsidePct: financialsData?.fairValue?.upsidePct ?? null,
+      ticker: ticker ?? undefined,
+    })
+  }, [ratings, scores, financialsData, ticker])
+
   return (
+    <div className="flex flex-col gap-4">
+
+      {/* ── Conviction Score — top of Risks tab ──────────────────────────────── */}
+      <ConvictionScoreCard conviction={conviction} ticker={ticker} />
+
+      {/* ── Legacy health section ─────────────────────────────────────────────── */}
     <div className="rounded-xl card overflow-hidden">
       {collapsible ? (
         <button
@@ -269,6 +307,7 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
       {financialsData && <RiskRadar financialsData={financialsData} />}
 
       </> )} {/* end collapsible content */}
+    </div>
     </div>
   )
 }

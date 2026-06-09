@@ -1,5 +1,7 @@
 'use client'
 import { cn } from '@/lib/utils'
+import ConvictionScoreCard from '@/components/stock/ConvictionScoreCard'
+import type { ConvictionScore } from '@/lib/stock/computeConvictionScore'
 
 interface CategoryRating {
   grade: 'A+' | 'A' | 'B+' | 'B' | 'C' | 'D' | 'F'
@@ -31,6 +33,7 @@ interface Props {
   ratings: Ratings
   scores?: Scores
   ownership?: Ownership
+  convictionScore?: ConvictionScore | null
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -53,7 +56,7 @@ function gradeColor(grade: string): string {
   return 'text-[#D83B3B] bg-[#FCEAEA] border-[#F0B8B8]'
 }
 
-export default function RisksSidebar({ ratings, scores, ownership }: Props) {
+export default function RisksSidebar({ ratings, scores, ownership, convictionScore }: Props) {
   const piotroski = scores?.piotroski
   const altman    = scores?.altman
   const beneish   = scores?.beneish
@@ -76,6 +79,11 @@ export default function RisksSidebar({ ratings, scores, ownership }: Props) {
 
   return (
     <div className="space-y-3">
+
+      {/* Conviction Score */}
+      {convictionScore != null && (
+        <ConvictionScoreCard conviction={convictionScore} />
+      )}
 
       {/* Quality Scores */}
       {(piotroski || altman || beneish) && (

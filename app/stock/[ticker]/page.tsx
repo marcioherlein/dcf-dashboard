@@ -717,6 +717,7 @@ function StockPageBody() {
                       scores={computedScores ?? data.scores}
                       financialsData={{ ...data, scores: computedScores ?? data.scores }}
                       nextEarningsDate={data.quote.nextEarningsDate ?? null}
+                      ticker={ticker}
                     />
                   ) : (
                     <p className="text-sm text-[#8A95A6] text-center py-12">Health data unavailable for this stock.</p>

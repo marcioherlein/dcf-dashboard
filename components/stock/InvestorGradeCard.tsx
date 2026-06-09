@@ -5,6 +5,8 @@ import { motion, useMotionValue, animate } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { fmtPct, fmtPrice, upsideZone, zoneBadgeClass } from '@/lib/formatters'
 import ArcGauge from '@/components/ui/arc-gauge'
+import ConvictionScoreBadge from '@/components/stock/ConvictionScoreBadge'
+import type { ConvictionScore } from '@/lib/stock/computeConvictionScore'
 
 interface Props {
   ticker: string
@@ -42,6 +44,8 @@ interface Props {
   onViewDetails?: () => void
   // Layout variant
   compact?: boolean  // true = 1-line strip (used on valuation tab)
+  // Conviction Score
+  convictionScore?: ConvictionScore | null
 }
 
 function gradeColors(grade: string): { bg: string; text: string; hex: string } {
@@ -76,6 +80,7 @@ export default function InvestorGradeCard({
   grade, gradeLabel, fairValue, upsidePct,
   onSave, onViewDetails, scenarios,
   compact = false,
+  convictionScore,
 }: Props) {
   const up = change >= 0
   const colors = gradeColors(grade)
@@ -194,22 +199,27 @@ export default function InvestorGradeCard({
       <div className="p-4 sm:p-5">
         <div className="flex items-start gap-3 sm:gap-4">
 
-          {/* Grade arc gauge */}
-          <motion.div
-            initial={{ scale: 0.55, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 380, damping: 18, delay: 0.05 }}
-            className="shrink-0 animate-glow-pulse"
-            style={{ borderRadius: '50%' }}
-          >
-            <ArcGauge
-              value={gaugeValue}
-              size={84}
-              strokeWidth={7}
-              color={colors.hex}
-              displayValue={grade}
-            />
-          </motion.div>
+          {/* Grade arc gauge + conviction badge */}
+          <div className="flex flex-col items-center gap-2 shrink-0">
+            <motion.div
+              initial={{ scale: 0.55, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 18, delay: 0.05 }}
+              className="animate-glow-pulse"
+              style={{ borderRadius: '50%' }}
+            >
+              <ArcGauge
+                value={gaugeValue}
+                size={84}
+                strokeWidth={7}
+                color={colors.hex}
+                displayValue={grade}
+              />
+            </motion.div>
+            {convictionScore != null && (
+              <ConvictionScoreBadge score={convictionScore.score} grade={convictionScore.gradeFull} size="md" />
+            )}
+          </div>
 
           {/* Company + price */}
           <div className="flex-1 min-w-0">

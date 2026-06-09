@@ -1,6 +1,8 @@
 'use client'
 import { useMemo } from 'react'
 import type { PiotroskiResult, AltmanResult, BeneishResult, ROICResult } from '@/lib/dcf/calculateScores'
+import type { ConvictionScore } from '@/lib/stock/computeConvictionScore'
+import ConvictionScoreBadge from './ConvictionScoreBadge'
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -27,6 +29,8 @@ interface Props {
   insiderPct?: number | null
   shortPct?: number | null
   analystTargetMean?: number | null
+  // Pre-computed conviction score (optional)
+  conviction?: ConvictionScore | null
 }
 
 // ─── Criterion types ──────────────────────────────────────────────────────────
@@ -173,6 +177,7 @@ export default function InvestmentVerdict({
   insiderPct,
   shortPct,
   analystTargetMean,
+  conviction,
 }: Props) {
 
   const criteria = useMemo(() => {
@@ -378,6 +383,12 @@ export default function InvestmentVerdict({
       className="rounded-xl p-4 sm:p-5 flex flex-col gap-0 bg-white border border-[#E5E5E5]"
     >
       {/* ── Header ─────────────────────────────────────────────────────────── */}
+      {conviction && (
+        <div className="mb-3">
+          <ConvictionScoreBadge score={conviction.score} grade={conviction.gradeFull} size="md" />
+          <p className="text-[11px] text-[#6B6B6B] mt-1">{conviction.verdictSentence}</p>
+        </div>
+      )}
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-[6px]">
           <span

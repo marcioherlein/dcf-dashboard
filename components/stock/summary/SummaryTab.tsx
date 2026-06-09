@@ -15,6 +15,8 @@ import HoldingReturns from '@/components/stock/HoldingReturns'
 import IncomeFlowCard from './IncomeFlowCard'
 import InvestmentVerdict from '@/components/stock/InvestmentVerdict'
 import SeeValuationCTA from './SeeValuationCTA'
+import { computeConvictionScore } from '@/lib/stock/computeConvictionScore'
+import { computeVerdict } from '@/lib/verdict/computeVerdict'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -159,6 +161,34 @@ export default function SummaryTab({
     return 'Fairly Valued'
   }, [upsidePct])
 
+  // Conviction Score — synthesizes all signals into a single 0–100 score
+  const conviction = useMemo(() => {
+    if (!ratings || !scores) return null
+    const verdictResult = computeVerdict({
+      ticker,
+      upsidePct: upsidePct ?? null,
+      roic: scores?.roic ?? null,
+      analystRecommendation: analystRecommendation ?? null,
+      piotroski: scores?.piotroski ?? null,
+      altman: scores?.altman ?? null,
+      beneish: scores?.beneish ?? null,
+      fcfMargin: businessProfile?.fcfMargin ?? null,
+      grossMargin: businessProfile?.grossMargin ?? null,
+      netMargin: businessProfile?.netMargin ?? null,
+      revenueCAGR: cagrAnalysis?.historicalCagr3y ?? null,
+    })
+    return computeConvictionScore({
+      ratings,
+      verdict: verdictResult,
+      piotroski: scores?.piotroski ?? null,
+      altman: scores?.altman ?? null,
+      beneish: scores?.beneish ?? null,
+      riskDimensions: [],
+      upsidePct: upsidePct ?? null,
+      ticker,
+    })
+  }, [ratings, scores, upsidePct, analystRecommendation, businessProfile, cagrAnalysis, ticker])
+
   return (
     <div className="flex flex-col gap-5">
 
@@ -284,6 +314,7 @@ export default function SummaryTab({
           insiderPct={ownership?.insiderPct ?? null}
           shortPct={ownership?.shortPct ?? null}
           analystTargetMean={analystTargetMean ?? null}
+          conviction={conviction}
         />
       )}
 
