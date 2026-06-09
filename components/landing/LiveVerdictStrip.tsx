@@ -12,7 +12,7 @@ interface VerdictData {
   verdict: 'Undervalued' | 'Fairly Valued' | 'Overvalued' | null
 }
 
-const TICKERS = ['SPY', 'QQQ', 'NVDA']
+const TICKERS = ['AAPL', 'MSFT', 'NVDA']
 
 function verdictChipStyle(verdict: VerdictData['verdict']): string {
   if (verdict === 'Undervalued')
@@ -55,7 +55,7 @@ function SkeletonCard() {
 function ErrorCard({ ticker }: { ticker: string }) {
   return (
     <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 shadow-sm">
-      <span className="inline-block bg-[#F5F5F5] text-[#9B9B9B] text-[11px] font-bold tracking-wide px-2 py-0.5 rounded-full mb-3">
+      <span className="inline-block bg-[#F5F5F5] text-[#9B9B9B] text-[11px] font-bold px-2 py-0.5 rounded-full mb-3">
         {ticker}
       </span>
       <p className="text-[#9B9B9B] text-[13px]">Data unavailable</p>
@@ -66,7 +66,7 @@ function ErrorCard({ ticker }: { ticker: string }) {
 function VerdictCard({ data }: { data: VerdictData }) {
   return (
     <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 shadow-sm flex flex-col gap-2">
-      <span className="inline-flex w-fit items-center bg-[#EEF3D8] text-[#5F790B] text-[11px] font-bold tracking-wide px-2 py-0.5 rounded-full">
+      <span className="inline-flex w-fit items-center bg-[#EEF3D8] text-[#5F790B] text-[11px] font-bold px-2 py-0.5 rounded-full">
         {data.ticker}
       </span>
       <p className="text-[#6B6B6B] text-[13px] leading-tight">{data.companyName || data.ticker}</p>
@@ -125,7 +125,7 @@ export default function LiveVerdictStrip() {
           const currentPrice: number | null =
             json?.currentPrice ?? json?.price ?? json?.quote?.price ?? null
           const fairValue: number | null =
-            json?.fairValue ?? json?.intrinsicValue ?? json?.dcfValue ?? null
+            json?.fairValue?.fairValuePerShare ?? json?.intrinsicValue ?? json?.dcfValue ?? null
           const companyName: string =
             json?.companyName ?? json?.name ?? ticker
 
@@ -156,7 +156,7 @@ export default function LiveVerdictStrip() {
     <section className="bg-[#F5F5F5] py-16">
       <div className="max-w-5xl mx-auto px-6">
         <h2 className="text-[28px] font-bold text-[#111111] text-center mb-10">
-          What the model says today
+          What the model says
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
           {cards.map((card) => {

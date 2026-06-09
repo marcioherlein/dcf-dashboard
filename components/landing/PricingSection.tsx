@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 const FREE_FEATURES = [
   'Stock analysis (any ticker)',
   'Fair value summary',
+  'Conviction Score',
   'Market-implied expectations',
   'Essential financials',
   '10 saved analyses',
@@ -17,6 +18,9 @@ const PRO_FEATURES = [
   'Everything in Free',
   'Full valuation models (DCF, RDCF, Multiples)',
   'Sensitivity tables and scenarios',
+  'Conviction Score history',
+  'Screener (filters by fundamentals)',
+  'ETF Tracker',
   'Unlimited saved analyses',
   'PDF export',
   'Portfolio and watchlists',
@@ -25,10 +29,10 @@ const PRO_FEATURES = [
 
 // Four features that differentiate Pro — shown as a quick-diff strip on mobile
 const PRO_DIFF = [
+  'Conviction Score history',
   'Sensitivity tables',
-  'Unlimited saves',
-  'PDF export',
-  'Price alerts',
+  'Screener',
+  'ETF Tracker',
 ]
 
 export default function PricingSection() {

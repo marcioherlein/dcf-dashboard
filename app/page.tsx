@@ -2,12 +2,10 @@ import LandingNavbar from '@/components/landing/LandingNavbar'
 import LandingHero from '@/components/landing/LandingHero'
 import HowItWorksSection from '@/components/landing/HowItWorksSection'
 import LiveVerdictStrip from '@/components/landing/LiveVerdictStrip'
-import MarketTeaserSection from '@/components/landing/MarketTeaserSection'
 import ReverseDCFSection from '@/components/landing/ReverseDCFSection'
+import ConvictionScoreSection from '@/components/landing/ConvictionScoreSection'
 import TestimonialsSection from '@/components/landing/TestimonialsSection'
-import ToolSurfaceSection from '@/components/landing/ToolSurfaceSection'
 import TransparencySection from '@/components/landing/TransparencySection'
-import MethodologySection from '@/components/landing/MethodologySection'
 import PricingSection from '@/components/landing/PricingSection'
 import FinalCTASection from '@/components/landing/FinalCTASection'
 import LandingFooter from '@/components/landing/LandingFooter'
@@ -17,26 +15,23 @@ export default function LandingPage() {
     <div className="min-h-dvh bg-white">
       <LandingNavbar />
       <main>
-        {/* Dark anchor — black hero opens the page */}
+        {/* 1. Dark anchor — hero */}
         <LandingHero />
-        {/* White — how-it-works first so Jordan gets the mental model before the data demo */}
+        {/* 2. White — mental model */}
         <HowItWorksSection />
-        {/* Off-white — live model verdicts for SPY, QQQ, NVDA */}
+        {/* 3. Off-white — live model verdicts */}
         <LiveVerdictStrip />
-        {/* Off-white — data demonstration */}
-        <MarketTeaserSection />
-        {/* Off-white — reverse DCF deepens data demo before social proof */}
+        {/* 4. White — reverse DCF real data examples */}
         <ReverseDCFSection />
-        {/* White — testimonials break the off-white run */}
+        {/* 5. Off-white — Conviction Score differentiator */}
+        <ConvictionScoreSection />
+        {/* 6. White — social proof */}
         <TestimonialsSection />
-        {/* White — tool surface overview */}
-        <ToolSurfaceSection />
-        {/* Off-white structural sections — true alternation */}
+        {/* 7. Off-white — transparency / no black boxes */}
         <TransparencySection />
-        {/* White — methodology transparency */}
-        <MethodologySection />
+        {/* 8. White — pricing */}
         <PricingSection />
-        {/* Dark anchor — black FinalCTA closes the page */}
+        {/* 9. Dark anchor — final CTA closes the page */}
         <FinalCTASection />
       </main>
       <LandingFooter />

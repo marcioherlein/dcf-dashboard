@@ -23,10 +23,10 @@ const TOOL_GROUPS: ToolGroup[] = [
     icon: <BarChart3 size={22} strokeWidth={2} className="text-[#5F790B]" />,
     name: 'Assess',
     description:
-      'Factor rankings, market-implied expectations, and scenario modeling.',
+      'Market-implied expectations, sensitivity tables, and scenario modeling.',
     links: [
-      { label: 'Factor Ranking', href: '/factors' },
-      { label: 'Compare', href: '/compare' },
+      { label: 'Analyze', href: '/analyze' },
+      { label: 'Screener', href: '/screener' },
     ],
   },
   {
