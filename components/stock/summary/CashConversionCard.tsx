@@ -6,12 +6,10 @@ import { cn } from '@/lib/utils'
 
 interface StatementsData {
   ttm?: {
-    cashflowStatement?: { freeCashFlow?: number | null } | null
-    cashFlowStatement?: { freeCashFlow?: number | null } | null
-    incomeStatement?: {
-      totalRevenue?: number | null
-      operatingRevenue?: number | null
-    } | null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    cashFlow?: Record<string, any> | null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    incomeStatement?: Record<string, any> | null
   } | null
 }
 
@@ -45,16 +43,21 @@ function fmtMultiple(v: number): string {
 
 function computeFcfMarginFromStatements(statementsData: StatementsData | null | undefined): number | null {
   if (!statementsData) return null
-
-  const ttmCF = statementsData?.ttm?.cashflowStatement ?? statementsData?.ttm?.cashFlowStatement ?? null
+  const ttmCF = statementsData?.ttm?.cashFlow ?? null
   const ttmIS = statementsData?.ttm?.incomeStatement ?? null
+  const fcf = ttmCF?.freeCashFlow ?? ttmCF?.freeCashFlowAndCapex ?? null
+  const revenue = ttmIS?.totalRevenue ?? ttmIS?.operatingRevenue ?? ttmIS?.revenue ?? null
+  if (fcf != null && revenue != null && revenue > 0) return fcf / revenue
+  return null
+}
 
+function computeFcfNiFromStatements(statementsData: StatementsData | null | undefined): number | null {
+  if (!statementsData) return null
+  const ttmCF = statementsData?.ttm?.cashFlow ?? null
+  const ttmIS = statementsData?.ttm?.incomeStatement ?? null
   const fcf = ttmCF?.freeCashFlow ?? null
-  const revenue = ttmIS?.totalRevenue ?? ttmIS?.operatingRevenue ?? null
-
-  if (fcf != null && revenue != null && revenue > 0) {
-    return fcf / revenue
-  }
+  const netIncome = ttmIS?.netIncome ?? ttmIS?.netIncomeCommonStockholders ?? null
+  if (fcf != null && netIncome != null && netIncome !== 0) return fcf / netIncome
   return null
 }
 
@@ -130,19 +133,19 @@ export default function CashConversionCard({
       ? fcfMarginProp
       : computeFcfMarginFromStatements(statementsData)
 
-  // FCF / Net Income ratio
-  const fcf       = ttmCashFlow?.freeCashFlow ?? null
-  const netIncome = ttmCashFlow?.netIncome ?? null
-  const fcfNiRatio: number | null =
-    fcf != null && netIncome != null && netIncome !== 0
-      ? fcf / netIncome
-      : null
+  // FCF / Net Income ratio — try explicit prop first, then derive from statementsData
+  const fcfNiRatio: number | null = (() => {
+    const fcf = ttmCashFlow?.freeCashFlow ?? null
+    const ni  = ttmCashFlow?.netIncome ?? null
+    if (fcf != null && ni != null && ni !== 0) return fcf / ni
+    return computeFcfNiFromStatements(statementsData)
+  })()
 
   const rating  = getRating(fcfNiRatio, resolvedFcfMargin)
   const bullets = getVerdictBullets(fcfNiRatio)
 
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 flex flex-col gap-3">
+    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 flex flex-col gap-3 flex-1">
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
         <p className="text-[12px] font-[600] text-[#6B6B6B]">

@@ -132,7 +132,7 @@ export default function GrowthOutlookCard({
   const verdict = computeVerdict(revGrowth, epsGrowth, drivers)
 
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 flex flex-col gap-3">
+    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 flex flex-col gap-3 flex-1">
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
         <span className="text-[12px] font-[750] text-[#111111]">

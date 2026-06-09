@@ -173,7 +173,7 @@ export default function ValuationRatiosCard({ estimates, pegRatio, peRatio: _peR
   }
 
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 flex flex-col">
+    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 flex flex-col h-full">
       {/* Header */}
       <p className="text-[13px] font-[700] text-[#111111] mb-3">
         Valuation Ratios

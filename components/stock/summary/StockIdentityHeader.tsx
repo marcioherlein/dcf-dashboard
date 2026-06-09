@@ -109,7 +109,7 @@ function MetricRow({ label, value, last }: MetricRowProps) {
       className={`flex items-center justify-between py-2.5 ${last ? '' : 'border-b border-[#E5E5E5]'}`}
     >
       <span className="text-[12px] text-[#6B6B6B] leading-none">{label}</span>
-      <span className="text-[12px] font-semibold font-mono tabular-nums text-[#111111] leading-none">
+      <span className="text-[12px] font-bold text-[#111111] leading-none tabular-nums">
         {value}
       </span>
     </div>
@@ -295,16 +295,16 @@ export default function StockIdentityHeader({
             <div className="mt-3">
               <p className="text-[13px] text-[#6B6B6B] leading-relaxed">
                 {displayedDesc}
-                {shouldTruncate && (
-                  <button
-                    onClick={() => setDescExpanded((v) => !v)}
-                    aria-expanded={descExpanded}
-                    className="ml-1 inline-flex items-center min-h-[44px] px-1 text-[#5F790B] font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-1 rounded text-[13px]"
-                  >
-                    {descExpanded ? 'Show less' : 'Read more'}
-                  </button>
-                )}
               </p>
+              {shouldTruncate && (
+                <button
+                  onClick={() => setDescExpanded((v) => !v)}
+                  aria-expanded={descExpanded}
+                  className="mt-1 text-[#5F790B] font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-1 rounded text-[13px]"
+                >
+                  {descExpanded ? 'Show less' : 'Read more'}
+                </button>
+              )}
             </div>
           )}
 
@@ -322,10 +322,10 @@ export default function StockIdentityHeader({
         <div
           className="flex-shrink-0 flex flex-col justify-start w-full sm:basis-[30%] sm:max-w-[30%] sm:min-w-[160px]"
         >
-          <p className="text-[12px] font-semibold text-[#6B6B6B] mb-1">
-            Current price
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9B9B9B] mb-1">
+            Current Price
           </p>
-          <p className="text-[32px] font-mono tabular-nums font-bold leading-none text-[#111111]">
+          <p className="text-[34px] font-bold leading-none text-[#111111] tracking-tight">
             {prefix}
             {price.toLocaleString(undefined, {
               minimumFractionDigits: 2,
@@ -333,21 +333,15 @@ export default function StockIdentityHeader({
             })}
           </p>
 
-          {/* 1D change row — changePct is a whole-number % (e.g. 0.97 means 0.97%) */}
+          {/* 1D change row */}
           <div
-            className={`mt-1.5 flex items-center gap-1.5 text-[13px] font-semibold font-mono tabular-nums ${isPositive ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}
+            className={`mt-1.5 flex items-center gap-1 text-[14px] font-semibold ${isPositive ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}
           >
-            <span aria-hidden="true">{isPositive ? '▲' : '▼'}</span>
-            <span className="sr-only">{isPositive ? 'up' : 'down'}</span>
-            <span>
-              {changeSign}
-              {change.toFixed(2)}
+            <span>{isPositive ? '+' : ''}{change.toFixed(2)}</span>
+            <span className="text-[13px] opacity-80">
+              ({isPositive ? '+' : ''}{Math.abs(changePct).toFixed(2)}%)
             </span>
-            <span className="text-[12px] opacity-80">
-              ({changeSign}
-              {Math.abs(changePct).toFixed(2)}%)
-            </span>
-            <span className="text-[12px] font-normal text-[#6B6B6B] ml-0.5">1D</span>
+            <span className="text-[12px] font-normal text-[#9B9B9B] ml-0.5">1D</span>
           </div>
 
           {/* Pre-Market row */}
@@ -356,16 +350,14 @@ export default function StockIdentityHeader({
               <span className="text-[12px] font-semibold text-[#6B6B6B]">
                 Pre-market
               </span>
-              <span className="font-mono tabular-nums text-[12px] font-semibold text-[#111111]">
+              <span className="text-[12px] font-semibold text-[#111111]">
                 {fmtPriceValue(preMarketPrice, currency)}
               </span>
               {preMarketChangePct != null && (
                 <span
-                  className={`font-mono tabular-nums text-[11px] font-semibold ${preMarketChangePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}
+                  className={`text-[12px] font-semibold ${preMarketChangePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}
                 >
-                  <span aria-hidden="true">{preMarketChangePct >= 0 ? '▲' : '▼'}</span>
-                  {preMarketChangePct >= 0 ? '+' : ''}
-                  {Math.abs(preMarketChangePct).toFixed(2)}%
+                  {preMarketChangePct >= 0 ? '+' : ''}{Math.abs(preMarketChangePct).toFixed(2)}%
                 </span>
               )}
             </div>
@@ -377,16 +369,14 @@ export default function StockIdentityHeader({
               <span className="text-[12px] font-semibold text-[#6B6B6B]">
                 After hours
               </span>
-              <span className="font-mono tabular-nums text-[12px] font-semibold text-[#111111]">
+              <span className="text-[12px] font-semibold text-[#111111]">
                 {fmtPriceValue(postMarketPrice, currency)}
               </span>
               {postMarketChangePct != null && (
                 <span
-                  className={`font-mono tabular-nums text-[11px] font-semibold ${postMarketChangePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}
+                  className={`text-[12px] font-semibold ${postMarketChangePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}
                 >
-                  <span aria-hidden="true">{postMarketChangePct >= 0 ? '▲' : '▼'}</span>
-                  {postMarketChangePct >= 0 ? '+' : ''}
-                  {Math.abs(postMarketChangePct).toFixed(2)}%
+                  {postMarketChangePct >= 0 ? '+' : ''}{Math.abs(postMarketChangePct).toFixed(2)}%
                 </span>
               )}
             </div>
