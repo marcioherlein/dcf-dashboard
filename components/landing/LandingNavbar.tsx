@@ -10,7 +10,6 @@ const NAV_LINKS = [
   { label: 'Product',      href: '/analyze'      },
   { label: 'How it works', href: '#how-it-works' },
   { label: 'Pricing',      href: '#pricing'      },
-  { label: 'Markets',      href: '/markets'      },
 ]
 
 export default function LandingNavbar() {

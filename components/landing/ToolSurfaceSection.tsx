@@ -25,18 +25,18 @@ const TOOL_GROUPS: ToolGroup[] = [
     description:
       'Market-implied expectations, sensitivity tables, and scenario modeling.',
     links: [
-      { label: 'Analyze', href: '/analyze' },
-      { label: 'Screener', href: '/screener' },
+      { label: 'Valuation cockpit', href: '/analyze' },
+      { label: 'ETF tracker', href: '/etf' },
     ],
   },
   {
     icon: <Bookmark size={22} strokeWidth={2} className="text-[#5F790B]" />,
     name: 'Track',
     description:
-      'Save valuations, monitor fair value vs price, get email alerts.',
+      'Save valuations, monitor fair value vs price, and follow markets.',
     links: [
       { label: 'My Valuations', href: '/valuations' },
-      { label: 'Portfolio', href: '/portfolio' },
+      { label: 'Markets', href: '/markets' },
     ],
   },
 ]
