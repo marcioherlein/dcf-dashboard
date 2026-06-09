@@ -109,8 +109,8 @@ async function fetchNewsHeadlines(count = 5) {
   ]
 
   const JUNK    = /(reverse split|\d{3,}%|OTC|pink sheet|penny stock|soared \d{3,}%)/i
-  // Skip personal finance, lifestyle, advice columns — keep only market/business news
-  const PERSONAL = /(how much will|I inherited|I'm \d+|my husband|my wife|my golf|my friend|wedding|grandchild|I've been invited|what should I do|here's how I knew|I knew his|I knew her|vulnerable senior|raising their grand|spending their retirement|42,000|financial toll|job training for|budget cut could eliminate|eliminate job)/i
+  // Skip personal finance, lifestyle, government benefits — keep market/business/company news only
+  const PERSONAL = /(how much will|I inherited|I'm \d+|my husband|my wife|my golf|my friend|wedding|grandchild|I've been invited|what should I do|here's how I knew|I knew his|I knew her|vulnerable senior|raising their grand|spending their retirement|financial toll|job training|budget cut could eliminate|Social Security|SSA benefits|COLA increase|retirement benefit|claiming age|insolvency in 20|pay only \d+% of benefits|calculate the exact impact|summer job into|turn a summer|teens can turn|how teens|extra \$\d+,\d+ in savings|grandparents are spending|raising grandkids|federal budget cut)/i
 
   function extractTitles(xml) {
     const results = []
@@ -206,12 +206,27 @@ function verdictLabel(upside) {
 // Finds S&P 500 stocks reporting earnings tomorrow, picks the biggest by market cap,
 // and posts a DCF-based preview.
 
+// Expanded earnings sample — covers S&P 500 + major NASDAQ earners
 const SP500_SAMPLE = [
-  'AAPL','MSFT','NVDA','AMZN','GOOGL','META','TSLA','BRK-B','JPM','V',
-  'UNH','JNJ','XOM','PG','MA','HD','CVX','MRK','ABBV','LLY',
-  'PEP','KO','AVGO','COST','MCD','CSCO','TMO','BAC','ACN','WMT',
-  'ADBE','CRM','AMD','NFLX','INTC','QCOM','TXN','NEE','UPS','RTX',
-  'AMGN','HON','LOW','GS','CAT','BA','SBUX','MMM','IBM','GE',
+  // Mega-cap tech & cloud
+  'AAPL','MSFT','NVDA','AMZN','GOOGL','META','TSLA','ORCL','ADBE','CRM',
+  'NOW','INTU','AMD','NFLX','INTC','QCOM','TXN','AVGO','CSCO','ACN',
+  // Semis & hardware
+  'MU','AMAT','LRCX','KLAC','TER','SNPS','CDNS','ANSS','MRVL','ON',
+  // Cloud/SaaS
+  'SNOW','DDOG','ZS','PANW','CRWD','WDAY','TEAM','MDB','NET','GTLB',
+  // Financials
+  'JPM','BAC','GS','MS','WFC','C','BLK','V','MA','AXP','SCHW','BX',
+  // Healthcare & pharma
+  'UNH','JNJ','LLY','ABBV','MRK','AMGN','BMY','PFE','CVS','CI','ISRG',
+  // Consumer & retail
+  'WMT','COST','HD','TGT','MCD','SBUX','NKE','AMZN','LOW','CMG','YUM',
+  // Energy
+  'XOM','CVX','COP','SLB','EOG','PSX','VLO','MPC',
+  // Industrials & aerospace
+  'BA','CAT','HON','GE','RTX','LMT','UPS','FDX','DE','MMM','EMR',
+  // Other S&P heavyweights
+  'PG','KO','PEP','TMO','ABT','NEE','DUK','BRK-B','PLD','AMT',
 ]
 
 async function runEarnings() {
@@ -741,15 +756,17 @@ async function runMacro() {
 
   const daysAway = Math.round((new Date(upcoming.date) - new Date(todayUtc)) / 86400000)
   const typeEmoji = { CPI: '📊', NFP: '💼', FOMC: '🏦' }
+  const upcomingContext = {
+    CPI:  `CPI inflation data in ${daysAway} day${daysAway > 1 ? 's' : ''}.\n\nThis is the single most market-moving release right now. A hot print keeps rates elevated — which raises WACC and compresses fair values on growth stocks. A cool print opens the door to rate cuts and lifts them.\n\nWatch the core CPI number closely. The headline can be distorted by energy.`,
+    NFP:  `Jobs report in ${daysAway} day${daysAway > 1 ? 's' : ''}.\n\nStrong payrolls = Fed on hold, rates stay elevated. Weak payrolls = rate cuts come sooner, discount rates fall.\n\nThe prior month revision often matters as much as the headline — markets trade the trend, not the single print.`,
+    FOMC: `Federal Reserve rate decision in ${daysAway} day${daysAway > 1 ? 's' : ''}.\n\nThe rate decision itself is usually priced in. The real signal is the dot plot (where committee members expect rates to go) and Powell's language on the timing of cuts.\n\nEvery basis point shift in the path of rates flows directly into WACC — and into every fair value estimate.`,
+  }
   const lines = [
-    `${typeEmoji[upcoming.type] ?? '📅'} Next macro event: ${upcoming.label}`,
-    `📅 ${upcoming.date} — ${daysAway} days away`,
+    `${typeEmoji[upcoming.type] ?? '📅'} ${upcoming.label} — ${daysAway} day${daysAway > 1 ? 's' : ''} away`,
     '',
-    `${upcoming.type === 'FOMC' ? 'Rate decisions move WACC and DCF fair values.' :
-       upcoming.type === 'CPI'  ? 'Inflation data shapes Fed policy and discount rates.' :
-       'Jobs data influences Fed rate expectations.'}`,
+    upcomingContext[upcoming.type] ?? `${upcoming.label} is ${daysAway} days away.`,
     '',
-    `Monitor valuations → ${APP_URL}`,
+    `${APP_URL}`,
     `#${upcoming.type} #Macro #FedWatch`,
   ]
   await post(lines.join('\n'))
@@ -1127,35 +1144,21 @@ async function runQuestion() {
   await post(text)
 }
 
+
 // ─── Mode: dcf_bear ───────────────────────────────────────────────────────────
-// Evening slot — always picks an overvalued or controversial stock.
-// Drives debate and retweets more than bullish takes.
+// Evening DCF — different stock pool from the noon slot, neutral analysis.
+// Picks stocks where model vs market price creates interesting discussion.
+// No bull/bear framing — just the numbers and what they mean.
 
-// Evening bear/contrarian slot — larger pools, different stocks from the bullish DCF rotation.
-// Focuses on widely-held names where model vs. market price tension drives debate.
-
+// Evening rotation — widely followed names across sectors, different from noon pool
 const BEAR_ROTATION = {
-  1: [ // Monday: AI darlings & high-multiple semis
-    'NVDA','ARM','SMCI','PLTR','MSTR','COIN','SNOW','AI','IONQ','RGTI',
-  ],
-  2: [ // Tuesday: Big Tech at premium valuations
-    'AAPL','MSFT','GOOGL','META','AMZN','NFLX','SHOP','UBER','LYFT','PINS',
-  ],
-  3: [ // Wednesday: Financials, crypto-adjacent, fintechs
-    'GS','MS','HOOD','SOFI','AFRM','UPST','LC','OPEN','RKT','COOP',
-  ],
-  4: [ // Thursday: Healthcare, biotech & weight-loss hype
-    'LLY','NVO','HIMS','NKTR','SAVA','MRNA','BNTX','NVAX','TDOC','ACMR',
-  ],
-  5: [ // Friday: Consumer, EV, clean energy
-    'TSLA','RIVN','LCID','NIO','XPEV','PLUG','FCEL','ENPH','SEDG','CHPT',
-  ],
-  6: [ // Saturday: Defensives & real estate priced for perfection
-    'KO','PEP','MCD','SBUX','CMG','ABNB','AIRB','BKNG','MAR','HLT',
-  ],
-  0: [ // Sunday: Index heavyweights — broad debate
-    'AAPL','MSFT','NVDA','AMZN','GOOGL','META','TSLA','BRK-B','JPM','V',
-  ],
+  1: ['NVDA','ARM','PLTR','MU','ON','MRVL','AMAT','LRCX','TER','SMCI'],  // Monday: semis
+  2: ['AAPL','MSFT','GOOGL','META','AMZN','NFLX','SHOP','UBER','ADBE','CRM'], // Tuesday: tech
+  3: ['JPM','GS','MS','BLK','BX','V','MA','AXP','C','WFC'],              // Wednesday: financials
+  4: ['LLY','NVO','UNH','CVS','ISRG','REGN','VRTX','GILD','BMY','AMGN'], // Thursday: healthcare
+  5: ['TSLA','AMZN','WMT','COST','HD','NKE','SBUX','CMG','ABNB','BKNG'], // Friday: consumer
+  6: ['XOM','CVX','COP','NEE','DUK','SLB','EOG','PSX','VLO','MPC'],      // Saturday: energy
+  0: ['AAPL','MSFT','NVDA','AMZN','GOOGL','META','TSLA','JPM','V','UNH'],// Sunday: top 10
 }
 
 async function runDcfBear() {
@@ -1163,13 +1166,13 @@ async function runDcfBear() {
   const pool = BEAR_ROTATION[day] ?? BEAR_ROTATION[2]
   const dayOfYear = Math.floor(Date.now() / 86400000)
 
-  // Try up to 5 tickers until one returns valid data
+  // Try up to 8 tickers — need valid price AND fair value data
   let ticker = null
   let data   = null
-  for (let attempt = 0; attempt < Math.min(5, pool.length); attempt++) {
+  for (let attempt = 0; attempt < Math.min(8, pool.length); attempt++) {
     const candidate = pool[(dayOfYear + attempt) % pool.length]
     try {
-      console.log(`Trying bear DCF for ${candidate}...`)
+      console.log(`Trying evening DCF for ${candidate}...`)
       const result = await fetchValuation(candidate)
       if (result?.quote?.price && appFairValue(result)) {
         ticker = candidate
@@ -1178,68 +1181,89 @@ async function runDcfBear() {
       }
     } catch { /* try next */ }
   }
-  if (!data) throw new Error('No valid DCF bear data found after attempts')
+  if (!data) throw new Error('No valid evening DCF data found after attempts')
 
-  const price  = data.quote?.price
-  const fair   = appFairValue(data)
-  const upside = appUpside(data)
-  const cagr   = data.cagr
-  const wacc   = data.wacc?.wacc
-  const grade  = data.ratings?.overall?.grade ?? ''
-  const label  = data.ratings?.overall?.label ?? ''
+  const price   = data.quote?.price
+  const fair    = appFairValue(data)
+  const upside  = appUpside(data)
+  const cagr    = data.cagr
+  const wacc    = data.wacc?.wacc
+  const terminalG = data.terminalG
+  const grade   = data.ratings?.overall?.grade ?? ''
+  const label   = data.ratings?.overall?.label ?? ''
+  const sector  = data.quote?.sector ?? ''
+  const grossMargin = data.businessProfile?.grossMargin
+  const netMargin   = data.businessProfile?.netMargin
+  const fcfMargin   = data.businessProfile?.fcfMargin
+  const roic        = data.scores?.roic?.roic
+  const roicSpread  = data.scores?.roic?.spread
   const analyst1y   = data.cagrAnalysis?.analystEstimate1y
   const numAnalysts = data.cagrAnalysis?.numAnalysts ?? 0
-  const forwardPE   = data.analystForwardPE
   const recommendation = data.analystRecommendation ?? ''
+  const analystTarget  = data.quote?.analystTargetMean
+  const forwardPE      = data.analystForwardPE
+  const bear = data.scenarios?.bear?.fairValue
+  const bull = data.scenarios?.bull?.fairValue
+  const revenueM = data.businessProfile?.revenueM
+  const surprises  = data.earningsSurprises ?? []
+  const beatCount  = surprises.filter(s => (s.surprisePercent ?? 0) > 0).length
+  const stock1y    = data.holdingReturns?.stock1y
+  const spy1y      = data.holdingReturns?.spy1y
 
   if (!price || !fair) throw new Error(`No price/fair value data for ${ticker}`)
 
   const v = verdictLabel(upside)
-
-  // Build the contrarian angle
   const recLabel = recommendation === 'strong_buy' ? 'Strong Buy'
     : recommendation === 'buy' ? 'Buy'
     : recommendation === 'hold' ? 'Hold'
     : recommendation === 'sell' ? 'Sell' : null
 
-  const tensionLine = recLabel && (upside < -0.10)
-    ? `Wall St rating: ${recLabel}. Our model: ${v.short}. Worth asking which assumptions differ.`
-    : upside < -0.30
-    ? `The model needs substantial growth delivery to support the current price — the base case does not.`
-    : `Current price appears to reflect an optimistic scenario. Our base-case model suggests limited margin of safety.`
-
-  const growthLine = analyst1y != null && numAnalysts >= 3
-    ? `Analysts expect ${pct(analyst1y, false)}/yr growth · model uses ${pct(cagr, false)} · WACC ${pct(wacc, false)}`
-    : forwardPE ? `Fwd P/E: ${forwardPE}× · model fair value est: ${fmt(fair)}`
-    : `Model fair value estimate: ${fmt(fair)} · current price: ${fmt(price)}`
+  // Neutral analysis — no bull/bear label. Just model vs market.
+  const modelVsMarket = recLabel && Math.abs(upside) > 0.15
+    ? `Wall St consensus: ${recLabel}. Model estimate: ${v.short}. The gap is worth understanding.`
+    : Math.abs(upside) > 0.25
+    ? `Model and market price diverge significantly (${pct(upside)}). One of them is wrong.`
+    : `Model and market are broadly aligned on this one.`
 
   const lines = [
     `${v.emoji} $${ticker} — ${v.short}`,
     ``,
-    `━━━ THE MODEL'S VIEW ━━━`,
-    tensionLine,
+    `━━━ VALUATION ━━━`,
+    `Current price:  ${fmt(price)}`,
+    `Fair value est: ${fmt(fair)}`,
+    `Difference:     ${pct(upside)} vs current price`,
+    ...(bear && bull ? [`Scenario range: ${fmt(bear)} (bear) → ${fmt(bull)} (bull)`] : []),
     ``,
-    `━━━ NUMBERS ━━━`,
-    `Price:           ${fmt(price)}`,
-    `Fair value est:  ${fmt(fair)}`,
-    `Difference:      ${pct(upside)} vs current price`,
+    modelVsMarket,
     ``,
-    growthLine,
+    `━━━ MODEL INPUTS ━━━`,
+    `WACC:         ${pct(wacc, false)}`,
+    `Revenue CAGR: ${pct(cagr, false)} (model)${analyst1y != null && numAnalysts >= 3 ? ` · ${pct(analyst1y, false)}/yr analyst est (${numAnalysts})` : ''}`,
+    ...(terminalG ? [`Terminal growth: ${pct(terminalG, false)}`] : []),
     ``,
-    `━━━ WHAT HAS TO BE TRUE ━━━`,
-    upside < -0.30
-      ? `For the current price to be fair, the business needs to deliver on every optimistic assumption in the model — and then some. History says most can't.`
-      : upside < -0.10
-      ? `The market is pricing in a rosier future than the fundamentals currently support. Not necessarily wrong — but the margin of safety is thin.`
-      : `Fairly balanced. Not screaming cheap, not obviously expensive. Worth tracking.`,
+    `━━━ BUSINESS QUALITY ━━━`,
+    ...(grossMargin != null ? [`Gross margin: ${pct(grossMargin, false)}`] : []),
+    ...(netMargin != null ? [`Net margin:   ${pct(netMargin, false)}`] : []),
+    ...(fcfMargin != null ? [`FCF margin:   ${pct(fcfMargin, false)}`] : []),
+    ...(roic != null ? [`ROIC: ${pct(roic, false)}${roicSpread != null ? ` (${roicSpread > 0 ? '+' : ''}${pct(roicSpread, false)} vs WACC)` : ''}`] : []),
+    ...(revenueM ? [`Revenue: ${fmt(revenueM * 1e6)}`] : []),
     ``,
-    `Rating: ${grade} ${label}`,
+    `━━━ ANALYST CONSENSUS ━━━`,
+    ...(recLabel ? [`Wall St: ${recLabel}`] : []),
+    ...(analystTarget ? [`Price target: ${fmt(analystTarget)}`] : []),
+    ...(forwardPE ? [`Forward P/E:  ${forwardPE}×`] : []),
+    ...(beatCount > 0 ? [`EPS beats: ${beatCount}/${surprises.length} last quarters`] : []),
+    ...(stock1y != null && spy1y != null ? [`1Y return: ${pct(stock1y)} vs SPY ${pct(spy1y)}`] : []),
+    ``,
+    `Rating: ${grade} ${label} · ${sector}`,
+    ``,
     `Full model → ${APP_URL}/stock/${ticker}`,
     `#DCF #Valuation #${ticker} #Investing`,
-  ]
+  ].filter(Boolean)
 
   await post(lines.join('\n'))
 }
+
 
 // ─── Mode: etf_pulse ─────────────────────────────────────────────────────────
 // ETF sector snapshot + VIX sentiment — works on weekends too.
@@ -1435,13 +1459,11 @@ async function runMorningBrief() {
   const tomorrowUtc = new Date(Date.now() + 86400000).toISOString().split('T')[0]
   const dayName     = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
 
-  // SPY + VIX via Alpha Vantage (existing helper, 2 requests)
-  const spy = await fetchEtfQuote('SPY').catch(() => null)
-  await new Promise(r => setTimeout(r, 1200))
+  // VIX via Alpha Vantage (Yahoo doesn't support ^VIX well in v8)
   const vix = await fetchEtfQuote('VIX').catch(() => null)
-  await new Promise(r => setTimeout(r, 1200))
+  await new Promise(r => setTimeout(r, 1000))
 
-  // Overnight markets + macro instruments via Yahoo Finance v8
+  // All market data via Yahoo Finance v8 — live, not previous-day close
   const [tnx, dax, ftse, nikkei, oil, gold, dxy, sp500, nasdaq] = await Promise.all([
     fetchYahooChart('^TNX'),
     fetchYahooChart('^GDAXI'),
@@ -1507,7 +1529,8 @@ async function runMorningBrief() {
 
   // ── Narrative ──────────────────────────────────────────────────────────────
 
-  const spyMove  = spy?.changePct ?? 0
+  // Use sp500 (Yahoo v8, live) for opening tone — not stale Alpha Vantage SPY
+  const spyMove  = sp500?.changePct ?? 0
   const vixLevel = vix?.price    ?? 0
 
   // Clean, professional market open language
