@@ -6,7 +6,7 @@ import { useSession, signIn } from 'next-auth/react'
 import {
   Bookmark, TrendingUp, CheckCircle, Clock,
   List, LayoutGrid, Search, ChevronDown, SlidersHorizontal,
-  Plus, ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { loadWatchlist, saveWatchlistEntry, deleteWatchlistEntry } from '@/lib/simplifier/watchlistStore'
 import type { WatchlistEntry, ListTag } from '@/lib/simplifier/types'
@@ -97,7 +97,7 @@ function KpiCard({ icon: Icon, iconCls, label, value, sub }: {
       </div>
       <div className="min-w-0">
         <p className="text-[11px] font-medium text-[#6B6B6B] mb-0">{label}</p>
-        <p className="text-[20px] font-bold text-[#111111] leading-tight tabular-nums">{value}</p>
+        <p className="text-[16px] font-bold text-[#111111] leading-tight tabular-nums">{value}</p>
         {sub && <p className="text-[11px] text-[#6B6B6B]">{sub}</p>}
       </div>
     </div>
@@ -159,6 +159,7 @@ function SegmentTabs({ active, counts, onSelect }: {
 
 // ── Filter Select ──────────────────────────────────────────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function FilterSelect({ label, value, options, onChange }: {
   label:    string
   value:    string
@@ -554,8 +555,6 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
   const [currentPage,       setCurrentPage]       = useState(1)
   const [pageSize,          setPageSize]          = useState(10)
   const [pendingGroups,     setPendingGroups]     = useState<string[]>([])
-  const [groupInputOpen,    setGroupInputOpen]    = useState(false)
-  const [groupInputValue,   setGroupInputValue]   = useState('')
   // Load data
   useEffect(() => {
     setLoading(true)
@@ -667,13 +666,10 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
     <div className="min-h-dvh bg-background px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 
       {/* Page header */}
-      <div className="flex items-start justify-between gap-4 mb-5">
-        <div>
-          <h1 className="text-[28px] sm:text-[32px] font-bold text-[#111111] tracking-tight leading-none" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-            My Valuations
-          </h1>
-          <p className="mt-1.5 text-[14px] text-[#6B6B6B]">Saved analyses and watchlist ideas</p>
-        </div>
+      <div className="flex items-center justify-between gap-4 mb-5">
+        <h1 className="text-[22px] sm:text-[24px] font-bold text-[#111111] tracking-tight leading-none">
+          My Valuations
+        </h1>
         <div className="flex items-center gap-1 p-1 bg-[#F5F5F5] rounded-xl shrink-0">
           <button
             onClick={() => setView('table')}
@@ -750,49 +746,14 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
           {/* Toolbar */}
           <div className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden shadow-sm">
             {/* Segment tabs */}
-            <div className="flex items-center justify-between gap-2 px-4 pt-1">
+            <div className="flex items-center gap-2 px-4 pt-1">
               <div className="flex-1 min-w-0 overflow-x-auto scrollbar-hide">
                 <SegmentTabs active={activeTab} counts={tabCounts} onSelect={setActiveTab} />
               </div>
-              <div className="shrink-0 flex items-center gap-1">
-                {groupInputOpen ? (
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault()
-                      const name = groupInputValue.trim()
-                      if (name && !allGroups.includes(name)) setPendingGroups((prev) => [...prev, name])
-                      setGroupInputValue('')
-                      setGroupInputOpen(false)
-                    }}
-                    className="flex items-center gap-1.5"
-                  >
-                    <input
-                      autoFocus
-                      type="text"
-                      value={groupInputValue}
-                      onChange={(e) => setGroupInputValue(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Escape') { setGroupInputOpen(false); setGroupInputValue('') } }}
-                      placeholder="Group name"
-                      className="w-32 px-2.5 py-1.5 text-[12px] text-[#111111] border border-[#93B4F5] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100"
-                      style={{ fontSize: '16px' }}
-                    />
-                    <button type="submit" className="text-[12px] font-semibold text-[#2563EB] hover:text-[#2563EB] px-2 py-1.5 min-h-[44px]">Add</button>
-                    <button type="button" onClick={() => { setGroupInputOpen(false); setGroupInputValue('') }} className="text-[12px] text-[#9B9B9B] hover:text-[#6B6B6B] px-1.5 py-1.5 min-h-[44px]">Cancel</button>
-                  </form>
-                ) : (
-                  <button
-                    onClick={() => setGroupInputOpen(true)}
-                    className="shrink-0 flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold text-[#2563EB] border border-dashed border-[#93B4F5] bg-white hover:bg-[#EAF1FF] rounded-xl transition-colors whitespace-nowrap min-h-[44px]"
-                  >
-                    <Plus size={13} />
-                    New group
-                  </button>
-                )}
-              </div>
             </div>
 
-            {/* Search + Sort + Filters */}
-            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 px-4 py-3 border-t border-[#EDF2F7]">
+            {/* Search + Sort + Clear */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-4 py-3 border-t border-[#EDF2F7]">
               <div className="relative flex-1 min-w-0 sm:min-w-[180px] sm:max-w-xs">
                 <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] pointer-events-none" />
                 <input
@@ -803,43 +764,17 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
                   className="w-full pl-8 pr-3 py-1.5 text-[16px] text-[#111111] bg-white border border-[#DDE6F2] rounded-xl focus:outline-none focus:border-[#5F790B] focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
                 />
               </div>
-              <div className="flex items-center gap-2 flex-wrap overflow-x-auto scrollbar-hide pb-0.5">
+              <div className="flex items-center gap-2">
                 <SortDropdown current={sortKey} dir={sortDir} onSort={handleSort} />
-                <FilterSelect
-                  label="Upside"
-                  value={filterUpside}
-                  options={[
-                    { value: 'all',         label: 'Any' },
-                    { value: 'undervalued', label: 'Undervalued (≥20%)' },
-                    { value: 'fair',        label: 'Fair Value (0–20%)' },
-                    { value: 'overvalued',  label: 'Overvalued (<0%)' },
-                  ]}
-                  onChange={(v) => setFilterUpside(v as FilterUpside)}
-                />
-                <FilterSelect
-                  label="Confidence"
-                  value={filterConfidence}
-                  options={[
-                    { value: 'all',    label: 'Any' },
-                    { value: 'high',   label: 'High (≥70%)' },
-                    { value: 'medium', label: 'Medium (40–70%)' },
-                    { value: 'low',    label: 'Low (<40%)' },
-                  ]}
-                  onChange={(v) => setFilterConfidence(v as FilterConfidence)}
-                />
-                <button
-                  className={cn(
-                    'flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold border rounded-xl transition-colors min-h-[44px]',
-                    hasFilters
-                      ? 'bg-olive-50 border-olive-700 text-olive-700'
-                      : 'bg-white border-[#DDE6F2] text-[#6B6B6B] hover:border-[#93B4F5]',
-                  )}
-                  onClick={() => { setFilterUpside('all'); setFilterConfidence('all'); setSearch('') }}
-                  title={hasFilters ? 'Clear all filters' : 'Filters'}
-                >
-                  <SlidersHorizontal size={13} />
-                  {hasFilters ? 'Clear filters' : 'Filters'}
-                </button>
+                {hasFilters && (
+                  <button
+                    className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold border rounded-xl transition-colors min-h-[44px] bg-olive-50 border-olive-700 text-olive-700"
+                    onClick={() => { setFilterUpside('all'); setFilterConfidence('all'); setSearch('') }}
+                  >
+                    <SlidersHorizontal size={13} />
+                    Clear filters
+                  </button>
+                )}
               </div>
             </div>
           </div>
