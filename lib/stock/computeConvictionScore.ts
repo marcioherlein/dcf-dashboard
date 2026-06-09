@@ -75,6 +75,9 @@ export interface ConvictionInputs {
   analystForwardPE?: number | null
   priceToBook?: number | null
   currentPrice?: number | null
+  // Gross profitability (Novy-Marx 2013) — gross profit / total assets
+  // Strongest academically validated quality signal beyond Piotroski/Altman/Beneish
+  grossProfitability?: number | null  // decimal, e.g. 0.45 = 45%
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -167,6 +170,7 @@ function valuationSignals(
 function qualitySignals(
   ratings: StockRatings,
   verdict: VerdictResult | null,
+  grossProfitability: number | null,
 ): ConvictionSignal[] {
   const signals: ConvictionSignal[] = []
 
@@ -209,6 +213,21 @@ function qualitySignals(
     value: ratings.profitability.label,
     technicalName: 'Profitability Grade',
   })
+
+  // "Gross profitability" — Novy-Marx (2013) factor: gross profit / total assets
+  // High values predict outperformance independent of value/cheapness screens
+  if (grossProfitability !== null && isFinite(grossProfitability)) {
+    const gpPct = (grossProfitability * 100).toFixed(1) + '%'
+    const gpStatus: ConvictionSignal['status'] = grossProfitability >= 0.25 ? 'pass'
+      : grossProfitability >= 0.10 ? 'na'
+      : 'fail'
+    signals.push({
+      label: 'Asset profitability',
+      status: gpStatus,
+      value: `${gpPct} gross profit per dollar of assets`,
+      technicalName: 'Gross Profitability (Novy-Marx)',
+    })
+  }
 
   return signals
 }
@@ -581,6 +600,15 @@ export function computeConvictionScore(inputs: ConvictionInputs): ConvictionScor
     else if (qualPassRate < 0.50) qualDimScore = clamp0100(qualDimScore - 5)
   }
 
+  // Gross profitability modifier (Novy-Marx 2013) — ±7 pts
+  // GP/Assets ≥ 0.33 (top tercile) → strong quality signal; < 0.10 → weak
+  if (inputs.grossProfitability !== null && inputs.grossProfitability !== undefined && isFinite(inputs.grossProfitability)) {
+    const gp = inputs.grossProfitability
+    if (gp >= 0.33) qualDimScore = clamp0100(qualDimScore + 7)
+    else if (gp >= 0.20) qualDimScore = clamp0100(qualDimScore + 3)
+    else if (gp < 0.10) qualDimScore = clamp0100(qualDimScore - 5)
+  }
+
   // ── Dimension 3: Financial Health (weight 18%) ────────────────────────────
   const liqNorm     = normalizeRating(ratings.liquidity.score)
   const altmanMod   = altman == null ? 50 : altman.zone === 'Safe' ? 100 : altman.zone === 'Grey' ? 50 : 0
@@ -685,7 +713,7 @@ export function computeConvictionScore(inputs: ConvictionInputs): ConvictionScor
       question: 'Is this a good business?',
       score: Math.round(clamp0100(qualDimScore)),
       color: dimColor(clamp0100(qualDimScore)),
-      signals: qualitySignals(ratings, verdict),
+      signals: qualitySignals(ratings, verdict, inputs.grossProfitability ?? null),
     },
     {
       id: 'health',

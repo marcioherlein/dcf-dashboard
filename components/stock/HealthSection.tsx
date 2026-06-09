@@ -149,6 +149,19 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
       analystForwardPE: financialsData?.analystForwardPE ?? null,
       priceToBook: financialsData?.businessProfile?.priceToBook ?? null,
       currentPrice: financialsData?.quote?.price ?? null,
+      // Gross profitability (Novy-Marx): grossProfit / totalAssets
+      grossProfitability: (() => {
+        const is = financialsData?.financialStatements?.incomeStatement
+        const bs = financialsData?.financialStatements?.balanceSheet
+        if (!is?.length || !bs?.length) return null
+        const latestIS = is.filter((r: { isProjected?: boolean }) => !r.isProjected).slice(-1)[0]
+        const latestBS = bs.filter((r: { isProjected?: boolean }) => !r.isProjected).slice(-1)[0]
+        if (!latestIS || !latestBS) return null
+        const gp: number | null = latestIS.grossProfit ?? null
+        const ta: number | null = latestBS.totalAssets ?? null
+        if (gp == null || ta == null || ta <= 0) return null
+        return gp / ta
+      })(),
     })
   }, [ratings, scores, financialsData, ticker])
 
