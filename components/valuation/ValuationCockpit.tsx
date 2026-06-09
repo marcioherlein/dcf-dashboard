@@ -43,7 +43,7 @@ interface Props {
   limitedHistory?: boolean
   historyYears?: number
   onNavigateToFinancials?: (rowKey: string, statement: 'income' | 'balance' | 'cashflow') => void
-  onNavigateToRisks?: () => void
+  onNavigateToConviction?: () => void
   onLiveDcfFVChange?: (fv: number | null) => void
 }
 
@@ -154,7 +154,7 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
   }
 }
 
-export default function ValuationCockpit({ apiData, ticker, statementsData, limitedHistory, historyYears, onNavigateToFinancials: _onNavigateToFinancials, onNavigateToRisks: _onNavigateToRisks, onLiveDcfFVChange }: Props) {
+export default function ValuationCockpit({ apiData, ticker, statementsData, limitedHistory, historyYears, onNavigateToFinancials: _onNavigateToFinancials, onNavigateToConviction: _onNavigateToConviction, onLiveDcfFVChange }: Props) {
   const { data: session } = useSession()
   const isPro = (session?.user as any)?.plan === 'pro'
 

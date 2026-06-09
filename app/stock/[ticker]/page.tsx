@@ -26,6 +26,7 @@ import StockOrientationStrip from '@/components/onboarding/StockOrientationStrip
 import { LoginGateProvider } from '@/components/auth/LoginGateProvider'
 import TabErrorBoundary from '@/components/stock/TabErrorBoundary'
 import GatedTabOverlay from '@/components/stock/GatedTabOverlay'
+import NextTabBanner from '@/components/stock/NextTabBanner'
 
 
 interface CAGRAnalysisData {
@@ -213,7 +214,7 @@ function StockPageBody() {
     const saved = loadPreLoginState()
     if (!saved) return
     clearPreLoginState()
-    if (saved.tab && ['overview', 'valuation', 'financials', 'risks', 'news'].includes(saved.tab)) {
+    if (saved.tab && ['overview', 'valuation', 'financials', 'conviction', 'news'].includes(saved.tab)) {
       setActiveTab(saved.tab as TabId)
     }
     track('saved_after_login', { intent: saved.intent, ticker: saved.ticker ?? ticker })
@@ -247,7 +248,7 @@ function StockPageBody() {
     setFinancialsHighlight({ rowKey, statement })
   }
 
-  const handleNavigateToRisks = () => setActiveTab('risks')
+  const handleNavigateToConviction = () => setActiveTab('conviction')
 
   // Recompute quality scores from Yahoo Finance fundamentalsTimeSeries data when available.
   // The API-route scores use quoteSummary.incomeStatementHistory which is absent for many
@@ -351,7 +352,7 @@ function StockPageBody() {
 
   const currency = data?.quote.currency === 'USD' ? '$' : (data?.quote.currency ?? '$') + ' '
 
-  const TAB_ORDER: TabId[] = ['overview', 'valuation', 'financials', 'risks', 'news']
+  const TAB_ORDER: TabId[] = ['overview', 'valuation', 'financials', 'conviction', 'news']
 
   const handleTabChange = (tab: TabId) => {
     const dir = TAB_ORDER.indexOf(tab) > TAB_ORDER.indexOf(activeTab) ? 1 : -1
@@ -607,7 +608,7 @@ function StockPageBody() {
                     ownership={data.ownership ? { insiderPct: data.ownership.insiderPct ?? null, shortPct: data.ownership.shortPct ?? null } : null}
                     onViewValuation={() => handleTabChange('valuation')}
                     onViewFinancials={() => handleTabChange('financials')}
-                    onViewRisks={() => handleTabChange('risks')}
+                    onViewConviction={() => handleTabChange('conviction')}
                     onViewAssumptions={() => {
                       handleTabChange('valuation')
                       setTimeout(() => {
@@ -616,6 +617,7 @@ function StockPageBody() {
                     }}
                   />
                   </TabErrorBoundary>
+                  <NextTabBanner currentTab="overview" onNavigate={handleTabChange} />
                 </motion.div>
               )}
               {activeTab === 'valuation' && (
@@ -658,12 +660,13 @@ function StockPageBody() {
                       limitedHistory={data.limitedHistory}
                       historyYears={data.historyYears}
                       onNavigateToFinancials={handleNavigateToFinancials}
-                      onNavigateToRisks={handleNavigateToRisks}
+                      onNavigateToConviction={handleNavigateToConviction}
                       onLiveDcfFVChange={setPageLiveDcfFV}
                     />
                   )}
                   </TabErrorBoundary>
                   )}
+                  <NextTabBanner currentTab="valuation" onNavigate={handleTabChange} />
                 </motion.div>
               )}
 
@@ -691,16 +694,17 @@ function StockPageBody() {
                     initialSubTab={financialsSubTab}
                   />
                   </TabErrorBoundary>
+                  <NextTabBanner currentTab="financials" onNavigate={handleTabChange} />
                 </motion.div>
               )}
 
-              {/* ── Risks & Signals tab ── */}
-              {activeTab === 'risks' && (
+              {/* ── Conviction tab ── */}
+              {activeTab === 'conviction' && (
                 <motion.div
-                  key="tab-risks"
-                  id="tabpanel-risks"
+                  key="tab-conviction"
+                  id="tabpanel-conviction"
                   role="tabpanel"
-                  aria-labelledby="tab-risks"
+                  aria-labelledby="tab-conviction"
                   className="space-y-4 pt-5"
                   initial={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * 20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -708,9 +712,9 @@ function StockPageBody() {
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
                   {!session?.user ? (
-                    <GatedTabOverlay tabName="Risks & Signals" />
+                    <GatedTabOverlay tabName="Conviction" />
                   ) : (
-                  <TabErrorBoundary tabName="Risks">
+                  <TabErrorBoundary tabName="Conviction">
                   {data.ratings && data.scores ? (
                     <HealthSection
                       ratings={data.ratings}
@@ -724,6 +728,7 @@ function StockPageBody() {
                   )}
                   </TabErrorBoundary>
                   )}
+                  <NextTabBanner currentTab="conviction" onNavigate={handleTabChange} />
                 </motion.div>
               )}
 

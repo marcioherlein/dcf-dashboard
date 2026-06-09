@@ -149,16 +149,16 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
       {/* ── Conviction Score — top of Risks tab ──────────────────────────────── */}
       <ConvictionScoreCard conviction={conviction} ticker={ticker} />
 
-      {/* ── Legacy health section ─────────────────────────────────────────────── */}
+      {/* ── Evidence — supporting signals ────────────────────────────────────── */}
     <div className="rounded-xl card overflow-hidden">
       {collapsible ? (
         <button
           onClick={() => setOpen(o => !o)}
-          className="w-full flex items-center justify-between px-4 sm:px-6 py-4 hover:bg-[#F4F3EF]/60 transition-colors min-h-[44px]"
+          className="w-full flex items-center justify-between px-4 sm:px-6 py-4 hover:bg-[#F5F5F5]/60 transition-colors min-h-[44px]"
         >
           <div className="flex items-baseline gap-3 flex-wrap">
-            <h2 className="text-[11px] font-bold uppercase tracking-widest text-[#566174]">Financial Health</h2>
-            <p className="text-[10px] text-[#566174]">
+            <h2 className="text-[11px] font-[650] text-[#6B6B6B]">Supporting signals</h2>
+            <p className="text-[10px] text-[#6B6B6B]">
               <span className="text-[#11875D] font-semibold">A</span> Excellent&nbsp;·&nbsp;
               <span className="text-[#2563EB] font-semibold">B</span> Good&nbsp;·&nbsp;
               <span className="text-[#B56A00] font-semibold">C</span> Average&nbsp;·&nbsp;
@@ -171,7 +171,7 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
         </button>
       ) : (
         <div className="flex items-start sm:items-center justify-between px-4 sm:px-6 pt-5 pb-1 flex-wrap gap-2">
-          <h2 className="text-[11px] font-bold uppercase tracking-widest text-[#566174]">Financial Health</h2>
+          <h2 className="text-[11px] font-[650] text-[#6B6B6B]">Supporting signals</h2>
           <div className="flex items-center gap-3 flex-wrap">
             <p className="text-[10px] text-[#566174]">
               <span className="text-[#11875D] font-semibold">A</span> Excellent&nbsp;·&nbsp;

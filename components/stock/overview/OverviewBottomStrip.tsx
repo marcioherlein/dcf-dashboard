@@ -13,7 +13,7 @@ interface Props {
   upsidePct?: number | null
   // Callbacks
   onViewValuation: () => void
-  onViewRisks: () => void
+  onViewConviction: () => void
   onSave?: () => void
 }
 
@@ -67,7 +67,7 @@ function buildRiskBullets(ratings: any, cagrAnalysis: any, upsidePct?: number | 
   return bullets.slice(0, 4)
 }
 
-export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, upsidePct, onViewValuation, onViewRisks, onSave }: Props) {
+export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, upsidePct, onViewValuation, onViewConviction, onSave }: Props) {
   const riskBullets    = buildRiskBullets(ratings, cagrAnalysis, upsidePct)
   const supportBullets = buildSupportBullets(drivers ?? [])
 
@@ -117,7 +117,7 @@ export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, up
           <p className="text-[13px] text-[#8A95A6]">No risk signals from available data.</p>
         )}
         <button
-          onClick={onViewRisks}
+          onClick={onViewConviction}
           className="mt-3.5 min-h-[44px] flex items-center text-[13px] font-medium text-olive-700 hover:text-[#2563EB] transition-colors"
         >
           View full risk analysis →

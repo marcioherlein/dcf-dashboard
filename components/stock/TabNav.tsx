@@ -3,17 +3,17 @@ import { useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { motion, useReducedMotion } from 'motion/react'
 import {
-  BarChart2, DollarSign, Table2, ShieldCheck, Newspaper, Lock,
+  BarChart2, DollarSign, Table2, Award, Newspaper, Lock,
 } from 'lucide-react'
 
-export type TabId = 'overview' | 'valuation' | 'financials' | 'risks' | 'news'
+export type TabId = 'overview' | 'valuation' | 'conviction' | 'financials' | 'news'
 
 const TABS = [
-  { id: 'overview'   as TabId, label: 'Overview',          Icon: BarChart2,   primary: true,  gated: false },
-  { id: 'valuation'  as TabId, label: 'Valuation',         Icon: DollarSign,  primary: true,  gated: true  },
-  { id: 'financials' as TabId, label: 'Financials',        Icon: Table2,      primary: false, gated: false },
-  { id: 'risks'      as TabId, label: 'Risks & Signals',   Icon: ShieldCheck, primary: false, gated: true  },
-  { id: 'news'       as TabId, label: 'News',              Icon: Newspaper,   primary: false, gated: true  },
+  { id: 'overview'   as TabId, label: 'Overview',    Icon: BarChart2,  step: '01', primary: true,  gated: false },
+  { id: 'valuation'  as TabId, label: 'Valuation',   Icon: DollarSign, step: '02', primary: true,  gated: true  },
+  { id: 'conviction' as TabId, label: 'Conviction',  Icon: Award,      step: '03', primary: true,  gated: true  },
+  { id: 'financials' as TabId, label: 'Financials',  Icon: Table2,     step: '04', primary: false, gated: false },
+  { id: 'news'       as TabId, label: 'News',        Icon: Newspaper,  step: '05', primary: false, gated: true  },
 ]
 
 interface Props {
@@ -55,7 +55,7 @@ export default function TabNav({ activeTab, onChange, isAuthed = true }: Props) 
     >
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <div ref={containerRef} className="flex gap-0 overflow-x-auto scrollbar-hide -mb-px">
-          {TABS.map(({ id, label, Icon, primary, gated }, i) => {
+          {TABS.map(({ id, label, Icon, step, primary, gated }, i) => {
             const active = activeTab === id
             const isFirstSecondary = !primary && TABS[i - 1]?.primary
             const showLock = gated && !isAuthed
@@ -69,7 +69,7 @@ export default function TabNav({ activeTab, onChange, isAuthed = true }: Props) 
                 tabIndex={active ? 0 : -1}
                 onClick={() => onChange(id)}
                 className={cn(
-                  'relative flex items-center gap-1.5 px-4 py-3.5 whitespace-nowrap transition-colors border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.55)] focus-visible:ring-offset-2',
+                  'group relative flex items-center gap-1.5 px-4 py-3.5 whitespace-nowrap transition-colors border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.55)] focus-visible:ring-offset-2',
                   primary ? 'text-[13px] font-medium' : 'text-[12px] font-normal',
                   isFirstSecondary ? 'ml-2 pl-5 border-l border-[#E5E5E5]' : '',
                   active
@@ -77,6 +77,19 @@ export default function TabNav({ activeTab, onChange, isAuthed = true }: Props) 
                     : 'border-transparent text-[#6B6B6B] hover:text-[#111111] hover:border-[#C8C8C8]',
                 )}
               >
+                {/* Step number */}
+                <span
+                  className={cn(
+                    'text-[8px] font-bold tabular-nums transition-opacity leading-none',
+                    active
+                      ? 'text-[#5F790B] opacity-100'
+                      : 'text-[#9B9B9B] opacity-60 group-hover:opacity-80',
+                  )}
+                  aria-hidden="true"
+                >
+                  {step}
+                </span>
+
                 <Icon
                   size={primary ? 14 : 13}
                   className={cn('shrink-0', active ? 'text-[#5F790B]' : 'text-[#9B9B9B]')}

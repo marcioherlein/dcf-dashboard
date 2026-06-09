@@ -59,7 +59,7 @@ interface Props {
   businessProfile: BusinessProfile
   cagrAnalysis: CAGRAnalysisData | null
   statementsData: StatementsData | null
-  onViewRisks?: () => void
+  onViewConviction?: () => void
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   valuationMethods?: any
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -479,10 +479,10 @@ function buildRiskBullets(ratings: StockRatings, cagrAnalysis: CAGRAnalysisData 
   return bullets.slice(0, 4)
 }
 
-function RisksGridCard({ ratings, cagrAnalysis, onViewRisks, panel }: {
+function RisksGridCard({ ratings, cagrAnalysis, onViewConviction, panel }: {
   ratings: StockRatings
   cagrAnalysis: CAGRAnalysisData | null
-  onViewRisks?: () => void
+  onViewConviction?: () => void
   panel?: boolean
 }) {
   const risk    = deriveRiskLevel(ratings)
@@ -507,8 +507,8 @@ function RisksGridCard({ ratings, cagrAnalysis, onViewRisks, panel }: {
           </li>
         ))}
       </ul>
-      {onViewRisks && (
-        <button onClick={onViewRisks} className="text-[13px] font-medium text-[#5F790B] hover:text-[#526A08] transition-colors">
+      {onViewConviction && (
+        <button onClick={onViewConviction} className="text-[13px] font-medium text-[#5F790B] hover:text-[#526A08] transition-colors">
           View all risks →
         </button>
       )}
@@ -612,13 +612,13 @@ function RelativeValuationCard({ valuationMethods, quote, panel }: { valuationMe
 
 // ─── Main component ────────────────────────────────────────────────────────
 
-export default function OverviewMetricGrid({ ratings, scores, businessProfile, cagrAnalysis, statementsData, onViewRisks, valuationMethods, quote, panel }: Props) {
+export default function OverviewMetricGrid({ ratings, scores, businessProfile, cagrAnalysis, statementsData, onViewConviction, valuationMethods, quote, panel }: Props) {
   if (!ratings) return null
 
   const lastCard = valuationMethods ? (
     <RelativeValuationCard valuationMethods={valuationMethods} quote={quote} panel={panel} />
   ) : (
-    <RisksGridCard ratings={ratings} cagrAnalysis={cagrAnalysis} onViewRisks={onViewRisks} panel={panel} />
+    <RisksGridCard ratings={ratings} cagrAnalysis={cagrAnalysis} onViewConviction={onViewConviction} panel={panel} />
   )
 
   if (panel) {
@@ -658,7 +658,7 @@ export default function OverviewMetricGrid({ ratings, scores, businessProfile, c
       {valuationMethods ? (
         <RelativeValuationCard valuationMethods={valuationMethods} quote={quote} />
       ) : (
-        <RisksGridCard ratings={ratings} cagrAnalysis={cagrAnalysis} onViewRisks={onViewRisks} />
+        <RisksGridCard ratings={ratings} cagrAnalysis={cagrAnalysis} onViewConviction={onViewConviction} />
       )}
     </div>
   )

@@ -25,7 +25,7 @@ interface CAGRAnalysis {
 interface RisksCardProps {
   ratings: StockRatings
   cagrAnalysis: CAGRAnalysis | null
-  onViewRisks: () => void
+  onViewConviction: () => void
 }
 
 // ── Risk level logic (mirrors existing OverviewMetricGrid logic) ───────────────
@@ -100,7 +100,7 @@ function buildBullets(ratings: StockRatings, cagrAnalysis: CAGRAnalysis | null):
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export default function RisksCard({ ratings, cagrAnalysis, onViewRisks }: RisksCardProps) {
+export default function RisksCard({ ratings, cagrAnalysis, onViewConviction }: RisksCardProps) {
   const risk    = deriveRiskLevel(ratings)
   const bullets = buildBullets(ratings, cagrAnalysis)
 
@@ -138,7 +138,7 @@ export default function RisksCard({ ratings, cagrAnalysis, onViewRisks }: RisksC
 
       {/* CTA */}
       <button
-        onClick={onViewRisks}
+        onClick={onViewConviction}
         className="text-[13px] font-semibold text-[#2563EB] hover:text-[#2563EB] transition-colors min-h-[44px] flex items-center"
       >
         View all risks →

@@ -15,14 +15,14 @@ interface NextStepsCardProps {
   ticker: string
   onViewValuation: () => void
   onViewAssumptions: () => void
-  onViewRisks: () => void
+  onViewConviction: () => void
 }
 
 export default function NextStepsCard({
   ticker,
   onViewValuation,
   onViewAssumptions,
-  onViewRisks,
+  onViewConviction,
 }: NextStepsCardProps) {
   return (
     <div className={cn(CARD, 'p-4 sm:p-5 flex flex-col gap-4')}>
@@ -53,7 +53,7 @@ export default function NextStepsCard({
           Review assumptions
         </button>
         <button
-          onClick={onViewRisks}
+          onClick={onViewConviction}
           className="w-full h-11 rounded-lg bg-white border border-[#E3E1DA] text-[#566174] hover:border-[#CDD1C8] hover:bg-[#F4F3EF] text-[13px] font-medium transition-colors"
         >
           Risks &amp; health scores

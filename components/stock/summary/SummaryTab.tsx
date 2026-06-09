@@ -99,7 +99,7 @@ interface SummaryTabProps {
   // callbacks
   onViewValuation: () => void
   onViewFinancials?: () => void
-  onViewRisks: () => void
+  onViewConviction: () => void
   onViewAssumptions: () => void
   analystRecommendation?: string
   // new props
@@ -140,7 +140,7 @@ export default function SummaryTab({
   marketCap, peRatio, beta, pegRatio: _pegRatio, evToEbitda, dividendYield,
   holdingReturns,
   nextEarningsDate: _nextEarningsDate,
-  onViewValuation, onViewFinancials: _onViewFinancials, onViewRisks: _onViewRisks,
+  onViewValuation, onViewFinancials: _onViewFinancials, onViewConviction: _onViewConviction,
   onViewAssumptions: _onViewAssumptions, analystRecommendation,
   analystForwardEstimates, roe, roic, ownership,
 }: SummaryTabProps) {
