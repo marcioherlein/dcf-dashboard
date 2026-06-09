@@ -1426,71 +1426,72 @@ async function runMorningBrief() {
   const spyMove  = spy?.changePct ?? 0
   const vixLevel = vix?.price    ?? 0
 
+  // Clean, professional market open language
   const openTone = spyMove > 1.5
-    ? `US markets opening strong. SPY +${spyMove.toFixed(1)}% — bulls in control, risk appetite high.`
+    ? `US equities pointing to a strong open. Futures up ${spyMove.toFixed(1)}% — broad-based buying across most sectors.`
     : spyMove > 0.5
-    ? `Positive open setting up. SPY +${spyMove.toFixed(1)}% — cautious optimism.`
+    ? `US futures in positive territory (+${spyMove.toFixed(1)}%). Moderate gains expected at the open.`
     : spyMove > 0.1
-    ? `Markets creeping higher. SPY +${spyMove.toFixed(1)}% — bias is green but conviction is low.`
+    ? `US equities set for a mildly positive open. Futures up ${spyMove.toFixed(1)}%, with no clear directional catalyst yet.`
     : spyMove > -0.1
-    ? `Flat open. SPY barely moving (${spyMove >= 0 ? '+' : ''}${spyMove.toFixed(1)}%) — markets waiting on a catalyst.`
+    ? `US futures near flat (${spyMove >= 0 ? '+' : ''}${spyMove.toFixed(1)}%). Markets in consolidation mode ahead of the open.`
     : spyMove > -0.5
-    ? `Soft open. SPY -${Math.abs(spyMove).toFixed(1)}% — sellers have a slight edge.`
+    ? `US futures pointing slightly lower (${spyMove.toFixed(1)}%). Mild selling pressure, no major catalyst driving it.`
     : spyMove > -1.5
-    ? `Cautious start. SPY -${Math.abs(spyMove).toFixed(1)}% — risk-off tone, defensives in favor.`
-    : `Markets under real pressure. SPY -${Math.abs(spyMove).toFixed(1)}% — risk-off, expect elevated volatility.`
+    ? `US futures under pressure (${spyMove.toFixed(1)}%). Risk-off tone early — defensives and bonds outperforming.`
+    : `Significant pre-market weakness (${spyMove.toFixed(1)}%). Risk-off conditions — elevated volatility expected at the open.`
 
   const vixNote = vixLevel >= 30
-    ? ` VIX ${vixLevel.toFixed(0)} — extreme fear. Historically a contrarian buy signal.`
+    ? ` VIX at ${vixLevel.toFixed(0)} signals elevated fear and uncertainty in the options market.`
     : vixLevel >= 22
-    ? ` VIX ${vixLevel.toFixed(0)} — investors on edge. Options pricing in more volatility.`
+    ? ` VIX ${vixLevel.toFixed(0)} — options market pricing in above-average volatility.`
     : vixLevel >= 15
-    ? ` VIX ${vixLevel.toFixed(0)} — broadly neutral. No major fear signals.`
+    ? ` VIX ${vixLevel.toFixed(0)} — volatility within normal range.`
     : vixLevel > 0
-    ? ` VIX ${vixLevel.toFixed(0)} — complacency territory. Low vol often precedes a move.`
+    ? ` VIX ${vixLevel.toFixed(0)} — low volatility environment.`
     : ''
 
   const yieldNote = tnx ? (() => {
     const y = tnx.price, chg = tnx.changePct
-    const dir = chg > 0.5 ? 'rising' : chg < -0.5 ? 'falling' : 'steady'
-    const context = y >= 4.5 ? 'elevated — headwind for growth and real estate'
-      : y >= 4.0 ? 'mid-range — watch for a break'
-      : 'benign for equities near-term'
-    return `10Y yield ${y.toFixed(2)}% (${dir}) — ${context}.`
+    const dir = chg > 0.5 ? 'rising' : chg < -0.5 ? 'declining' : 'holding steady'
+    const context = y >= 4.5 ? `at ${y.toFixed(2)}% — above 4.5% is historically a headwind for growth equities and real estate`
+      : y >= 4.0 ? `at ${y.toFixed(2)}% — mid-range; direction matters more than level here`
+      : `at ${y.toFixed(2)}% — supportive for equity valuations near-term`
+    return `10Y Treasury yield ${dir} ${context}.`
   })() : null
 
   const dxyNote = dxy ? (() => {
     const chg = dxy.changePct
     const dir = chg > 0.3 ? 'strengthening' : chg < -0.3 ? 'weakening' : 'flat'
-    const impact = chg < -0.3 ? ' Weak dollar tailwind for multinationals and commodities.'
-      : chg > 0.3 ? ' Strong dollar pressures commodities and EM assets.' : ''
-    return `Dollar (DXY) ${dir} at ${dxy.price.toFixed(1)}.${impact}`
+    const impact = chg < -0.3 ? ' A weaker dollar is generally supportive for multinational earnings and commodities.'
+      : chg > 0.3 ? ' Dollar strength typically pressures commodity prices and emerging market assets.' : ''
+    return `US Dollar Index (DXY) ${dir} at ${dxy.price.toFixed(1)}.${impact}`
   })() : null
 
   const macroNarrative = macroToday.map(e => {
-    if (e.type === 'FOMC') return `🏦 Fed decision today. Market pricing in a hold — but Powell's guidance on cut timing is what moves valuations. Every shift in the dot plot changes WACC assumptions across every model.`
-    if (e.type === 'CPI')  return `📊 CPI out today. Hot print = rates stay elevated, DCF fair values compress. Cool print = rate cuts open up, growth gets relief. This reprices every model in real time.`
-    if (e.type === 'NFP')  return `💼 Jobs report this morning. Strong payrolls = Fed holds. Weak print = rate cut timeline accelerates. Watch the revision to last month's number — often the real signal.`
+    if (e.type === 'FOMC') return `🏦 FOMC rate decision today. Consensus expects no change. The key signal will be the dot plot and Powell's language on rate cut timing — any shift directly affects WACC assumptions and equity valuations.`
+    if (e.type === 'CPI')  return `📊 CPI inflation report today. A reading above expectations keeps rates elevated and compresses DCF fair values. A softer print opens the path to rate cuts and benefits growth stocks.`
+    if (e.type === 'NFP')  return `💼 Nonfarm Payrolls report this morning. A strong number reduces the likelihood of near-term rate cuts. Watch the prior month revision — it often tells more than the headline.`
     return `📅 ${e.label} today.`
   })
 
   const earningsNarrative = earningsTickers.length > 0 ? (() => {
     const names = earningsTickers.slice(0, 4).map(t => `$${t.symbol}`)
     const str = names.length === 1 ? names[0] : names.slice(0, -1).join(', ') + ' and ' + names.at(-1)
-    return `📊 ${str} ${names.length === 1 ? 'reports' : 'report'} today. Beat or miss is one thing — whether it justifies current prices is another. Run the model before the numbers drop.`
+    return `📊 ${str} ${names.length === 1 ? 'reports' : 'report'} earnings today. The key question isn't just beat or miss — it's whether results justify the current valuation. Check the model before the number hits.`
   })() : null
 
   const tomorrowNote = macroTomorrow.length > 0
-    ? `Tomorrow: ${macroTomorrow.map(e => e.label).join(' · ')} — plan accordingly.`
+    ? `On the calendar tomorrow: ${macroTomorrow.map(e => e.label).join(' · ')}.`
     : null
 
   // ── Build post ─────────────────────────────────────────────────────────────
   const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
   const hooks = [
     'What are you watching today?',
-    "What's your game plan this morning?",
-    'Any positions reporting? Drop them below 👇',
-    'What does your model say about the names in focus today?',
+    'Which names are on your radar this morning?',
+    'Any positions reporting this week?',
+    'What does the model say about your holdings today?',
   ]
 
   // US indices line
@@ -1502,6 +1503,7 @@ async function runMorningBrief() {
 
   const lines = [`🌅 Good Morning — ${dayName}`, ``, openTone + vixNote]
   if (usIndicesLine) lines.push(usIndicesLine)
+
 
   const overnightItems = [
     dax    ? `🇩🇪 DAX ${dax.changePct >= 0 ? '+' : ''}${dax.changePct.toFixed(2)}%` : null,
@@ -1532,9 +1534,12 @@ async function runMorningBrief() {
     if (earningsNarrative) lines.push(earningsNarrative)
   }
 
+  // Headlines always shown — they are the substance when no events/earnings
+  lines.push(``, `━━━ IN THE NEWS ━━━`)
   if (headlines.length > 0) {
-    lines.push(``, `━━━ THIS MORNING ━━━`)
     headlines.slice(0, 4).forEach(h => lines.push(`• ${h}`))
+  } else {
+    lines.push(`• Markets quiet on the news front this morning.`)
   }
 
   if (tomorrowNote) lines.push(``, tomorrowNote)
