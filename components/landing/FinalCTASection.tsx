@@ -87,8 +87,8 @@ export default function FinalCTASection() {
     const exact = results.find(r => r.symbol === trimmed)
     if (exact) { select(exact.symbol); return }
     if (results.length > 0) { select(results[0].symbol); return }
-    // No results loaded yet — navigate anyway (API will return an error if invalid)
-    // but only if it looks like a plausible ticker (1-5 uppercase letters/digits)
+    // No results loaded yet — navigate only if it looks like a valid ticker format
+    // (1–5 uppercase letters/digits). Show error for company names or invalid formats.
     if (/^[A-Z0-9]{1,5}$/.test(trimmed)) {
       select(trimmed)
     } else {
@@ -152,7 +152,10 @@ export default function FinalCTASection() {
               }}
             >
               {loading
-                ? <div className="h-4 w-4 rounded-full border-2 border-[#9B9B9B] border-t-[#7C9A19] motion-safe:animate-spin shrink-0" />
+                ? <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="h-4 w-4 rounded-full border-2 border-[#9B9B9B] border-t-[#7C9A19] motion-safe:animate-spin" />
+                    <span className="text-[11px] text-[#9B9B9B] hidden sm:block">Searching…</span>
+                  </div>
                 : <Search size={18} className="text-[#9B9B9B] shrink-0" />
               }
               <input
@@ -167,13 +170,13 @@ export default function FinalCTASection() {
                     e.preventDefault()
                     setActiveIndex(i => Math.max(i - 1, -1))
                   } else if (e.key === 'Escape') {
-                    setOpen(false); setNoResults(false)
+                    setOpen(false); setNoResults(false); setActiveIndex(-1)
                   } else if (e.key === 'Enter') {
                     handleSubmit()
                   }
                 }}
-                placeholder="Search any US ticker — NVDA, AAPL, MELI..."
-                className="flex-1 bg-transparent text-[16px] text-[#FFFFFF] placeholder-[#6B6B6B] focus:outline-none"
+                placeholder="US ticker (NYSE/NASDAQ) — NVDA, AAPL, MELI…"
+                className="flex-1 bg-transparent text-[16px] text-[#FFFFFF] placeholder-[#B0B0B0] focus:outline-none focus:ring-2 focus:ring-[#7C9A19] focus:ring-inset focus:rounded-sm"
                 style={{ fontWeight: 500 }}
                 role="combobox"
                 aria-autocomplete="list"
@@ -203,6 +206,7 @@ export default function FinalCTASection() {
                 className="absolute left-0 right-0 top-full mt-2 bg-[#1C1C1C] rounded-xl border border-[rgba(255,255,255,0.10)] overflow-hidden z-50 text-left"
                 style={{ boxShadow: '0 16px 40px rgba(0,0,0,0.28)' }}
                 role="listbox"
+              aria-label="Search results. Use arrow keys to navigate, Enter to select."
               >
                 {results.map((r, i) => (
                   <button
@@ -238,7 +242,7 @@ export default function FinalCTASection() {
                   No results for &ldquo;{query}&rdquo;.{' '}
                   <span className="text-[#C4C4C4]">Try NVDA, AAPL, or MELI.</span>
                 </p>
-                <p className="text-[11px] text-[#6B6B6B] mt-1">insic covers NYSE and NASDAQ-listed stocks.</p>
+                <p className="text-[11px] text-[#6B6B6B] mt-1">insic covers NYSE and NASDAQ-listed stocks. Use the ticker symbol (1–5 letters).</p>
               </div>
             )}
 
@@ -249,10 +253,10 @@ export default function FinalCTASection() {
                 role="alert"
                 style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
               >
-                <svg className="w-3.5 h-3.5 shrink-0 text-[#D83B3B]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-3.5 h-3.5 shrink-0 text-[#C41E1E]" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <circle cx="12" cy="12" r="10" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4M12 16h.01" />
                 </svg>
-                <p className="text-[13px] text-[#D83B3B] leading-snug">Search unavailable. Please try again.</p>
+                <p className="text-[13px] text-[#C41E1E] leading-snug">Search unavailable. Please try again.</p>
               </div>
             )}
           </div>

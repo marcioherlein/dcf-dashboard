@@ -19,8 +19,8 @@ function CAGRBar({ inView, reduced }: { inView: boolean; reduced: boolean | null
     { label: 'Agg',   sub: '15–25%', width: 26 },
     { label: 'V.Agg', sub: '>25%',   width: 20 },
   ]
-  const zoneColors  = ['#E8F7EF', '#EEF4DD', '#FFF4DA', '#FCEAEA']
-  const zoneBorders = ['#A7D7C0', '#BFD2A1', '#F3D391', '#F0B8B8']
+  const zoneColors  = ['#F5F5F5', '#F0F0F0', '#EBEBEB', '#E5E5E5']
+  const zoneBorders = ['#E5E5E5', '#E0E0E0', '#DADADA', '#D5D5D5']
 
   return (
     <div className="mt-5">

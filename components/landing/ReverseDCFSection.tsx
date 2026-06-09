@@ -102,21 +102,6 @@ export default function ReverseDCFSection() {
               Reverse DCF works backward from today&apos;s price to show the growth
               and profitability the market must be right about for you to break even.
             </p>
-            <p
-              className="text-base"
-              style={{
-                lineHeight: 1.6,
-                color: '#6B6B6B',
-                padding: '16px 20px',
-                borderRadius: '12px',
-                background: '#F5F5F5',
-                border: '1px solid #E5E5E5',
-                maxWidth: '420px',
-              }}
-            >
-              Before asking &ldquo;is this stock cheap?&rdquo; — ask what growth rate this
-              price requires to make sense.
-            </p>
           </motion.div>
 
           {/* Right: stock cards — staggered scale zoom */}
@@ -141,7 +126,7 @@ export default function ReverseDCFSection() {
                     <div>
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="text-[14px] font-bold text-[#111111]">{stock.ticker}</span>
-                        <span className="text-[11px] text-[#6B6B6B] min-w-0 truncate">{stock.company}</span>
+                        <span className="text-[11px] text-[#6B6B6B] min-w-0 truncate" title={stock.company}>{stock.company}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-[16px] font-bold text-[#111111]" style={{ fontVariantNumeric: 'tabular-nums' }}>
@@ -198,9 +183,6 @@ export default function ReverseDCFSection() {
                   </div>
 
                   <p className="mt-2 text-[12px] text-[#6B6B6B]">{stock.note}</p>
-                  <p className="mt-2 text-[12px] font-semibold text-[#5F790B] opacity-0 group-hover:opacity-100 transition-opacity">
-                    Analyze →
-                  </p>
                 </Link>
               </motion.div>
             ))}

@@ -15,14 +15,14 @@ const STEPS = [
   {
     n: '2',
     Icon: TrendingUp,
-    title: 'Review fair value & market expectations',
-    body: "Review fair value, upside, and what growth the price requires.",
+    title: 'See what the price is worth — and what it requires',
+    body: 'Compare the price to its estimated fair value. See what growth rate the market is betting on.',
   },
   {
     n: '3',
     Icon: SlidersHorizontal,
-    title: 'Stress-test the assumptions',
-    body: 'Change growth and margin assumptions to test your own thesis.',
+    title: 'Tweak the numbers to test your thesis',
+    body: 'Change growth and margin assumptions to see how the verdict shifts. No spreadsheet needed.',
   },
 ]
 
@@ -91,14 +91,6 @@ export default function HowItWorksSection() {
                   transition={{ duration: 0.4, ease: EASE, delay: 0.28 + i * 0.1, type: 'spring', stiffness: 260, damping: 18 }}
                 >
                   {n}
-                  {i === 0 && inView && !reduced && (
-                    <motion.div
-                      className="absolute inset-0 rounded-full border-2 border-[#5F790B]"
-                      initial={{ scale: 1, opacity: 0.6 }}
-                      animate={{ scale: 1.85, opacity: 0 }}
-                      transition={{ duration: 1.4, ease: 'easeOut', delay: 0.8, repeat: Infinity, repeatDelay: 2.5 }}
-                    />
-                  )}
                 </motion.div>
 
                 <div>
@@ -112,7 +104,7 @@ export default function HowItWorksSection() {
 
         {/* ── Mobile: vertical list, number + text side-by-side ── */}
         <div className="sm:hidden flex flex-col">
-          {STEPS.map(({ n, Icon, title, body }, i) => (
+          {STEPS.map(({ n, Icon: _Icon, title, body }, i) => (
             <motion.div
               key={i}
               initial={reduced ? {} : { opacity: 0, x: -16 }}
@@ -124,14 +116,6 @@ export default function HowItWorksSection() {
               <div className="flex flex-col items-center shrink-0" style={{ width: 40 }}>
                 <div className="w-10 h-10 rounded-full bg-[#5F790B] flex items-center justify-center text-white font-bold text-[15px] shrink-0 z-10 relative">
                   {n}
-                  {i === 0 && inView && !reduced && (
-                    <motion.div
-                      className="absolute inset-0 rounded-full border-2 border-[#5F790B]"
-                      initial={{ scale: 1, opacity: 0.6 }}
-                      animate={{ scale: 1.85, opacity: 0 }}
-                      transition={{ duration: 1.4, ease: 'easeOut', delay: 0.8, repeat: Infinity, repeatDelay: 2.5 }}
-                    />
-                  )}
                 </div>
                 {/* Vertical connector — hidden on last item */}
                 {i < STEPS.length - 1 && (
@@ -148,13 +132,8 @@ export default function HowItWorksSection() {
 
               {/* Right column: icon + text */}
               <div className={i < STEPS.length - 1 ? 'pb-8' : 'pb-0'}>
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div className="w-8 h-8 rounded bg-[#EEF4DD] flex items-center justify-center shrink-0">
-                    <Icon size={15} className="text-[#5F790B]" strokeWidth={1.8} />
-                  </div>
-                  <h3 className="text-[15px] font-bold text-[#111111] leading-snug">{title}</h3>
-                </div>
-                <p className="text-[13px] text-[#6B6B6B] leading-relaxed">{body}</p>
+                <h3 className="text-[15px] font-bold text-[#111111] leading-snug mb-2">{title}</h3>
+                <p className="text-[13px] text-[#566174] leading-relaxed">{body}</p>
               </div>
             </motion.div>
           ))}

@@ -95,7 +95,7 @@ export default function PricingSection() {
               onClick={() => signIn('google')}
               className="w-full rounded-md border border-[#C8C8C8] py-3 text-[13.5px] font-semibold text-[#111111] hover:bg-[#F6FAEA] hover:border-[#5F790B] transition-colors mb-5 min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-2"
             >
-              Get started for free
+              Analyze for free
             </button>
             <ul className="space-y-2.5 flex-1">
               {FREE_FEATURES.map(f => (
@@ -108,7 +108,7 @@ export default function PricingSection() {
           </div>
 
           {/* Pro */}
-          <div className="rounded-2xl border-2 border-[#E5E5E5] bg-white p-6 flex flex-col relative">
+          <div className="rounded-2xl border-2 border-[#E5E5E5] bg-white p-6 flex flex-col relative opacity-75">
             <div className="absolute top-4 right-4 rounded-full bg-[#F4F3EF] border border-[#E3E1DA] text-[#9B9B9B] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1">
               Coming soon
             </div>
@@ -123,14 +123,13 @@ export default function PricingSection() {
               <p className="text-[12px] text-[#6B6B6B] mb-1">Billed as ${annualTotal}/year</p>
             )}
             <p className="text-[12px] text-[#6B6B6B] mb-5">For investors who want deeper research.</p>
-            <button
-              disabled
-              aria-disabled="true"
-              title="Pro plan coming soon — join the waitlist to be notified"
-              className="w-full rounded-md py-3 text-[13.5px] font-bold text-[#9B9B9B] mb-5 min-h-[48px] cursor-not-allowed bg-[#F4F3EF] border border-[#E3E1DA]"
+            <a
+              href="mailto:hello@insic.app?subject=Pro waitlist"
+              className="w-full rounded-md py-3 text-[13.5px] font-bold text-white mb-5 min-h-[48px] flex items-center justify-center transition-all hover:-translate-y-px active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-2"
+              style={{ background: '#5F790B', boxShadow: '0 3px 10px rgba(95,121,11,0.20)' }}
             >
-              Coming soon
-            </button>
+              Join Pro waitlist →
+            </a>
             <ul className="space-y-2.5 flex-1">
               {PRO_FEATURES.map(f => (
                 <li key={f} className="flex items-start gap-2.5">

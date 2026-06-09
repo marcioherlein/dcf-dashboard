@@ -46,7 +46,7 @@ export default function LandingNavbar() {
           >
             {/* ── Col 1: Logo — left edge ── */}
             <div className="flex items-center">
-              <Link href="/" aria-label="insic home" className="flex items-center" style={{ lineHeight: 0 }}>
+              <Link href="/" onClick={() => setMobileOpen(false)} aria-label="insic home" className="flex items-center" style={{ lineHeight: 0 }}>
                 <InsicLogoLockup size="lg" />
               </Link>
             </div>
@@ -57,7 +57,7 @@ export default function LandingNavbar() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="px-4 py-2 rounded-lg text-[14.5px] font-medium text-[#6B6B6B] hover:text-[#111111] hover:bg-[#F5F5F5] transition-all duration-150 whitespace-nowrap"
+                  className="px-4 py-2 rounded-lg text-[14.5px] font-medium text-[#6B6B6B] hover:text-[#111111] hover:bg-[#F5F5F5] transition-all duration-150 whitespace-nowrap min-h-[44px] flex items-center"
                 >
                   {link.label}
                 </Link>
@@ -78,28 +78,21 @@ export default function LandingNavbar() {
                 <>
                   <button
                     onClick={() => signIn('google')}
-                    className="hidden sm:block text-[14px] font-medium text-[#6B6B6B] hover:text-[#111111] transition-colors px-3 whitespace-nowrap"
-                    style={{ minHeight: '44px' }}
-                  >
-                    Sign in
-                  </button>
-                  <button
-                    onClick={() => signIn('google')}
-                    className="hidden sm:inline-flex items-center justify-center rounded-md px-7 text-[14px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95 whitespace-nowrap"
+                    className="hidden sm:inline-flex items-center justify-center rounded-md px-7 text-[14px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-2"
                     style={{ background: '#5F790B', boxShadow: '0 4px 12px rgba(95,121,11,0.25)', minHeight: '44px' }}
                   >
-                    Get started
+                    Analyze for free
                   </button>
                 </>
               )}
               <button
                 onClick={() => setMobileOpen(v => !v)}
-                className="lg:hidden flex items-center justify-center w-10 h-10 rounded-lg text-[#6B6B6B] hover:bg-[#F5F5F5] hover:text-[#111111] transition-colors"
+                className="lg:hidden flex items-center justify-center w-11 h-11 rounded-lg text-[#6B6B6B] hover:bg-[#F5F5F5] hover:text-[#111111] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-2"
                 aria-label="Toggle menu"
                 aria-expanded={mobileOpen}
                 aria-controls="mobile-nav-menu"
               >
-                {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+                {mobileOpen ? <X size={22} /> : <Menu size={22} />}
               </button>
             </div>
           </div>
@@ -148,7 +141,7 @@ export default function LandingNavbar() {
                     className="w-full rounded-md py-3.5 text-[15px] font-semibold text-white"
                     style={{ background: '#5F790B', minHeight: '48px' }}
                   >
-                    Get started free
+                    Analyze for free
                   </button>
                   <button
                     onClick={() => { setMobileOpen(false); signIn('google') }}

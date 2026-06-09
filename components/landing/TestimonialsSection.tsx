@@ -97,11 +97,11 @@ export default function TestimonialsSection() {
             {/* Stat grid */}
             <div className="grid grid-cols-2 gap-4 sm:gap-5 mb-6">
               {[
-                { icon: BarChart2, stat: '50 000+', label: 'DCF analyses run' },
-                { icon: Users, stat: '3 000+', label: 'active investors' },
-                { icon: TrendingUp, stat: '5 000+', label: 'stocks covered' },
-                { icon: BookOpen, stat: '100 %', label: 'formula-transparent' },
-              ].map(({ icon: Icon, stat, label }, i) => (
+                { icon: BarChart2, stat: '50 000+', label: 'DCF analyses run', sub: 'since launch' },
+                { icon: Users, stat: '3 000+', label: 'active investors', sub: '' },
+                { icon: TrendingUp, stat: '5 000+', label: 'stocks covered', sub: 'NYSE & NASDAQ' },
+                { icon: BookOpen, stat: '100 %', label: 'formula-transparent', sub: 'no black boxes' },
+              ].map(({ icon: Icon, stat, label, sub }, i) => (
                 <motion.div
                   key={label}
                   initial={reduced ? {} : { opacity: 0, y: 10 }}
@@ -112,6 +112,7 @@ export default function TestimonialsSection() {
                   <Icon size={15} className="text-[#5F790B]" strokeWidth={1.8} aria-hidden="true" />
                   <span className="text-[22px] font-bold text-[#111111] leading-none" style={{ letterSpacing: '-0.03em' }}>{stat}</span>
                   <span className="text-[12px] text-[#6B6B6B] leading-snug">{label}</span>
+                  {sub && <span className="text-[10px] text-[#9B9B9B] leading-none">{sub}</span>}
                 </motion.div>
               ))}
             </div>

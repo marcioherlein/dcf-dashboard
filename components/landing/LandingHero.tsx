@@ -530,11 +530,7 @@ export default function LandingHero() {
                 border: '1px solid rgba(95,121,11,0.35)',
               }}
             >
-              <motion.div
-                className="w-1.5 h-1.5 rounded-full bg-[#5F790B]"
-                animate={reduced ? {} : { scale: [1, 1.4, 1], opacity: [1, 0.7, 1] }}
-                transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-              />
+              <div className="w-1.5 h-1.5 rounded-full bg-[#5F790B]" />
               <span className="text-[12px] font-semibold text-[#7C9A19]">
                 DCF-grade analysis tools for individual investors
               </span>
@@ -572,7 +568,7 @@ export default function LandingHero() {
               className="text-[14px] sm:text-[16px] leading-relaxed mb-6"
               style={{ maxWidth: '440px', color: 'rgba(255,255,255,0.72)' }}
             >
-              insic computes a fair value estimate for any stock and shows you what growth rate the current price implies. You decide whether the market is right before you commit capital.
+              Instantly see if a stock is undervalued or overpriced. Analyze any ticker in seconds — no spreadsheets required.
             </motion.p>
 
             {/* CTAs */}
@@ -588,7 +584,7 @@ export default function LandingHero() {
                   className="inline-flex items-center justify-center rounded-md px-6 py-3.5 text-[15px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
                   style={{ background: '#5F790B', boxShadow: '0 4px 16px rgba(95,121,11,0.28)', minHeight: '52px' }}
                 >
-                  Start analyzing for free
+                  Analyze for free
                 </Link>
               ) : (
                 <motion.button
@@ -599,7 +595,7 @@ export default function LandingHero() {
                   transition={{ duration: 0.2 }}
                   initial={{ boxShadow: '0 4px 16px rgba(95,121,11,0.28)' }}
                 >
-                  Start analyzing for free
+                  Analyze for free
                 </motion.button>
               )}
               <a
