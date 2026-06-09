@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect } from 'react'
 import dynamic from 'next/dynamic'
+import { useSession } from 'next-auth/react'
 import {
   computeCockpitOutput,
   computeBlendedFV,
@@ -20,6 +21,7 @@ import ModelDivergencePanel from './cockpit/ModelDivergencePanel'
 import MonteCarloPanel from './cockpit/MonteCarloPanel'
 import VerdictHero from './cockpit/VerdictHero'
 import SensitivityMatrix from './SensitivityMatrix'
+import ProGate from '@/components/monetization/ProGate'
 import SaveToWatchlistDialog from '@/components/watchlist/SaveToWatchlistDialog'
 import type { WatchlistSavePayload } from '@/components/watchlist/SaveToWatchlistDialog'
 import { fmtPrice } from '@/lib/formatters'
@@ -153,6 +155,9 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
 }
 
 export default function ValuationCockpit({ apiData, ticker, statementsData, limitedHistory, historyYears, onNavigateToFinancials: _onNavigateToFinancials, onNavigateToRisks: _onNavigateToRisks, onLiveDcfFVChange }: Props) {
+  const { data: session } = useSession()
+  const isPro = (session?.user as any)?.plan === 'pro'
+
   const snapshot       = useMemo(() => buildSnapshot(apiData, statementsData), [apiData, statementsData])
   const defaults       = useMemo(() => seedAssumptions(apiData), [apiData])
   const historicalData = useMemo(() => buildHistoricalData(apiData), [apiData])
@@ -494,16 +499,18 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
       </div>
 
       {/* ── 7. SENSITIVITY MATRIX ────────────────────────────────────────────── */}
-      <SensitivityMatrix
-        assumptions={assumptions}
-        snapshot={effectiveSnapshot}
-        currentPrice={currentPrice}
-        currency={currency}
-        epvPerShare={valueInvestingData.epv.epvPerShare}
-        historicalData={historicalData}
-        defaultAxisY={defaultAxisY}
-        defaultAxisX={defaultAxisX}
-      />
+      <ProGate featureName="Sensitivity table" isPro={isPro}>
+        <SensitivityMatrix
+          assumptions={assumptions}
+          snapshot={effectiveSnapshot}
+          currentPrice={currentPrice}
+          currency={currency}
+          epvPerShare={valueInvestingData.epv.epvPerShare}
+          historicalData={historicalData}
+          defaultAxisY={defaultAxisY}
+          defaultAxisX={defaultAxisX}
+        />
+      </ProGate>
 
       {/* ── 8. MONTE CARLO ───────────────────────────────────────────────────── */}
       <MonteCarloPanel

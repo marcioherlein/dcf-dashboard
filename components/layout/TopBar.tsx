@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import Image from 'next/image'
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
-import { Bookmark, Search, X } from 'lucide-react'
+import { Bookmark, FileText, Search, Share2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { slideDown } from '@/lib/motion'
 import { useStockNav } from '@/contexts/StockNavContext'
@@ -76,7 +76,7 @@ function UserAvatar({ image, name }: { image: string | null; name: string | null
 export default function TopBar() {
   const router = useRouter()
   const { data: session } = useSession()
-  const { stockNav, onSaveRef } = useStockNav()
+  const { stockNav, onSaveRef, onShareRef } = useStockNav()
 
   const [query, setQuery]     = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
@@ -211,6 +211,13 @@ export default function TopBar() {
                   aria-label="Search for a stock"
                 >
                   <Search size={16} strokeWidth={2} />
+                </button>
+                <button
+                  onClick={() => onShareRef.current?.()}
+                  className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-[#E5E5E5] bg-white text-[#6B6B6B] hover:bg-[#F5F5F5] transition-colors"
+                  aria-label="Share analysis"
+                >
+                  <Share2 size={16} strokeWidth={2} />
                 </button>
                 <button
                   onClick={() => onSaveRef.current?.()}
@@ -579,6 +586,30 @@ export default function TopBar() {
                 </div>
               )}
             </div>
+          )}
+
+          {stockNav && (
+            <button
+              onClick={() => onShareRef.current?.()}
+              className="flex items-center gap-1.5 text-[12.5px] font-semibold text-[#6B6B6B] px-3 py-1.5 rounded-lg border border-[#E5E5E5] bg-white hover:bg-[#F5F5F5] transition-colors whitespace-nowrap"
+              aria-label="Share analysis"
+            >
+              <Share2 size={13} strokeWidth={2} />
+              Share
+            </button>
+          )}
+
+          {stockNav && (
+            <a
+              href="/pricing"
+              className="hidden sm:flex items-center gap-1.5 text-[12.5px] font-semibold text-[#6B6B6B] px-3 py-1.5 rounded-lg border border-[#E5E5E5] bg-white hover:bg-[#F5F5F5] transition-colors whitespace-nowrap"
+              aria-label="Export as PDF (Pro feature)"
+              title="Pro feature — upgrade to export"
+            >
+              <FileText size={13} strokeWidth={2} />
+              PDF
+              <span className="ml-1 text-[9px] font-bold bg-[#EEF4DD] text-[#5F790B] px-1 py-0.5 rounded">PRO</span>
+            </a>
           )}
 
           {stockNav && (

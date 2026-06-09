@@ -13,13 +13,21 @@ import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { InsicLogoLockup } from '@/components/ui/InsicLogo'
 
-const PRIMARY_NAV: Array<{ href: string; label: string; icon: LucideIcon; match: (p: string) => boolean }> = [
+type NavEntry = { href: string; label: string; icon: LucideIcon; match: (p: string) => boolean }
+
+const RESEARCH_NAV: NavEntry[] = [
   { href: '/analyze',               label: 'Analyze',       icon: TrendingUp,        match: (p) => p === '/analyze' || p.startsWith('/stock') },
   { href: '/screener',              label: 'Screener',      icon: SlidersHorizontal, match: (p) => p.startsWith('/screener') },
+]
+
+const TRACK_NAV: NavEntry[] = [
   { href: '/valuations',            label: 'My Valuations', icon: Bookmark,          match: (p) => p.startsWith('/valuations') },
-  { href: '/etf',                   label: 'ETF Tracker',   icon: PieChart,          match: (p) => p.startsWith('/etf') },
   { href: '/monitor?tab=portfolio', label: 'Portfolio',     icon: Briefcase,         match: (p) => p.startsWith('/monitor') },
+]
+
+const MARKETS_NAV: NavEntry[] = [
   { href: '/markets',               label: 'Markets',       icon: Globe,             match: (p) => p.startsWith('/markets') },
+  { href: '/etf',                   label: 'ETF Tracker',   icon: PieChart,          match: (p) => p.startsWith('/etf') },
 ]
 
 const UTILITY_NAV: Array<{ href: string; label: string; icon: LucideIcon; match: (p: string) => boolean }> = [
@@ -171,9 +179,10 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav aria-label="Main navigation" className="relative flex-1 px-2.5 pt-4 pb-2 overflow-y-auto custom-scrollbar">
 
-        <SectionLabel delay={0.05} reduced={reduced}>Workspace</SectionLabel>
-        <ul className="flex flex-col gap-0.5 mb-4 list-none p-0 m-0">
-          {PRIMARY_NAV.map(({ href, label, icon, match }, i) => (
+        {/* Group 1 — Research */}
+        <SectionLabel delay={0.05} reduced={reduced}>Research</SectionLabel>
+        <ul className="flex flex-col gap-0.5 mb-3 list-none p-0 m-0">
+          {RESEARCH_NAV.map(({ href, label, icon, match }, i) => (
             <NavItem
               key={href}
               href={href}
@@ -191,7 +200,57 @@ export default function Sidebar() {
           style={{ height: '1px', background: 'rgba(255,255,255,0.07)' }}
           initial={reduced ? false : { scaleX: 0, originX: 0 }}
           animate={{ scaleX: 1 }}
-          transition={{ duration: 0.4, ease: EASE, delay: 0.28 }}
+          transition={{ duration: 0.4, ease: EASE, delay: 0.14 }}
+          aria-hidden="true"
+        />
+
+        {/* Group 2 — Track */}
+        <SectionLabel delay={0.16} reduced={reduced}>Track</SectionLabel>
+        <ul className="flex flex-col gap-0.5 mb-3 list-none p-0 m-0">
+          {TRACK_NAV.map(({ href, label, icon, match }, i) => (
+            <NavItem
+              key={href}
+              href={href}
+              label={label}
+              icon={icon}
+              active={match(pathname)}
+              index={RESEARCH_NAV.length + i}
+              reduced={reduced}
+            />
+          ))}
+        </ul>
+
+        <motion.div
+          className="mx-3 mb-3"
+          style={{ height: '1px', background: 'rgba(255,255,255,0.07)' }}
+          initial={reduced ? false : { scaleX: 0, originX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 0.4, ease: EASE, delay: 0.22 }}
+          aria-hidden="true"
+        />
+
+        {/* Group 3 — Markets */}
+        <SectionLabel delay={0.24} reduced={reduced}>Markets</SectionLabel>
+        <ul className="flex flex-col gap-0.5 mb-4 list-none p-0 m-0">
+          {MARKETS_NAV.map(({ href, label, icon, match }, i) => (
+            <NavItem
+              key={href}
+              href={href}
+              label={label}
+              icon={icon}
+              active={match(pathname)}
+              index={RESEARCH_NAV.length + TRACK_NAV.length + i}
+              reduced={reduced}
+            />
+          ))}
+        </ul>
+
+        <motion.div
+          className="mx-3 mb-3"
+          style={{ height: '1px', background: 'rgba(255,255,255,0.07)' }}
+          initial={reduced ? false : { scaleX: 0, originX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 0.4, ease: EASE, delay: 0.30 }}
           aria-hidden="true"
         />
 
@@ -204,7 +263,7 @@ export default function Sidebar() {
               label={label}
               icon={icon}
               active={match(pathname)}
-              index={PRIMARY_NAV.length + i}
+              index={RESEARCH_NAV.length + TRACK_NAV.length + MARKETS_NAV.length + i}
               reduced={reduced}
             />
           ))}

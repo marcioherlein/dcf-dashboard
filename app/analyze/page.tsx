@@ -15,6 +15,7 @@ import { slideDown, fadeUp } from '@/lib/motion'
 import type { FeaturedQuote } from '@/app/api/analyze/quotes/route'
 
 const ConceptBanner = dynamic(() => import('@/components/onboarding/ConceptBanner'), { ssr: false })
+const FirstRunBanner = dynamic(() => import('@/components/onboarding/FirstRunBanner'), { ssr: false })
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -949,6 +950,8 @@ function AnalyzePageInner() {
         </div>
       )}
       <div id="main-content" className="space-y-8" tabIndex={-1}>
+
+        <FirstRunBanner />
 
         <motion.div
           initial={{ opacity: 0, y: 10 }}

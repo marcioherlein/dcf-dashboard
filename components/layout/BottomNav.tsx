@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Bell, Settings, HelpCircle, PieChart, X, Globe, Bookmark, LayoutDashboard, SlidersHorizontal } from 'lucide-react'
+import { Bell, Settings, HelpCircle, PieChart, X, Globe, Bookmark, Briefcase, SlidersHorizontal } from 'lucide-react'
 
 const LEFT_NAV = [
   {
@@ -46,11 +46,13 @@ const RIGHT_NAV = [
 ]
 
 const MORE_ITEMS = [
-  { href: '/valuations',             label: 'My Valuations',       icon: Bookmark        },
-  { href: '/monitor?tab=portfolio',  label: 'Monitor / Portfolio', icon: LayoutDashboard },
-  { href: '/alerts',                 label: 'Alerts',              icon: Bell            },
-  { href: '/settings',               label: 'Settings',            icon: Settings        },
-  { href: '/help',                   label: 'Help & Support',      icon: HelpCircle      },
+  { href: '/valuations',             label: 'My Valuations', icon: Bookmark  },
+  { href: '/monitor?tab=portfolio',  label: 'Portfolio',     icon: Briefcase },
+  { href: '/markets',                label: 'Markets',       icon: Globe     },
+  { href: '/etf',                    label: 'ETF Tracker',   icon: PieChart  },
+  { href: '/alerts',                 label: 'Alerts',        icon: Bell      },
+  { href: '/settings',               label: 'Settings',      icon: Settings  },
+  { href: '/help',                   label: 'Help & Support', icon: HelpCircle },
 ]
 
 export default function BottomNav() {

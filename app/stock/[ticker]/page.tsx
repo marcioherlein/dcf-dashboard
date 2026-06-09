@@ -19,6 +19,7 @@ import { track } from '@/lib/analytics/events'
 import { loadPreLoginState, clearPreLoginState } from '@/lib/auth/preLoginState'
 import { useSession } from 'next-auth/react'
 import SaveToWatchlistDialog, { type WatchlistSavePayload } from '@/components/watchlist/SaveToWatchlistDialog'
+import ShareCardModal from '@/components/valuation/ShareCardModal'
 import ValuationNotAvailableCard from '@/components/stock/ValuationNotAvailableCard'
 import SummaryTab from '@/components/stock/summary/SummaryTab'
 import StockOrientationStrip from '@/components/onboarding/StockOrientationStrip'
@@ -204,6 +205,7 @@ function StockPageBody() {
   const [viewGate, setViewGate] = useState<'idle' | 'allowed' | 'login' | 'upgrade'>('idle')
   const [viewCount, setViewCount] = useState(0)
   const [loginToSaveOpen, setLoginToSaveOpen] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
 
   // After Google OAuth redirect, restore the user's pre-login state (tab, etc.)
   useEffect(() => {
@@ -417,6 +419,7 @@ function StockPageBody() {
             })
             setSaveDialogOpen(true)
           }}
+        onShare={() => setShareOpen(true)}
       />
 
       <TabNav activeTab={activeTab} onChange={handleTabChange} isAuthed={!!session?.user} />
@@ -782,6 +785,17 @@ function StockPageBody() {
         upsidePct={cockpitOutput?.upsidePct ?? null}
         currency={currency}
         onClose={() => setLoginToSaveOpen(false)}
+      />
+    )}
+    {shareOpen && cockpitOutput && (
+      <ShareCardModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        ticker={ticker}
+        companyName={data?.companyName ?? ticker}
+        output={cockpitOutput}
+        currentPrice={data?.quote?.price ?? 0}
+        currency={currency}
       />
     )}
     </>

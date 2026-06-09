@@ -22,6 +22,7 @@ interface StockNavContextValue {
   setStockNav: (nav: StockNavState | null) => void
   onTabChangeRef: React.MutableRefObject<((tab: TabId) => void) | null>
   onSaveRef: React.MutableRefObject<(() => void) | null>
+  onShareRef: React.MutableRefObject<(() => void) | null>
 }
 
 const StockNavContext = createContext<StockNavContextValue>({
@@ -29,15 +30,17 @@ const StockNavContext = createContext<StockNavContextValue>({
   setStockNav: () => {},
   onTabChangeRef: { current: null },
   onSaveRef: { current: null },
+  onShareRef: { current: null },
 })
 
 export function StockNavProvider({ children }: { children: ReactNode }) {
   const [stockNav, setStockNav] = useState<StockNavState | null>(null)
   const onTabChangeRef = useRef<((tab: TabId) => void) | null>(null)
   const onSaveRef = useRef<(() => void) | null>(null)
+  const onShareRef = useRef<(() => void) | null>(null)
 
   return (
-    <StockNavContext.Provider value={{ stockNav, setStockNav, onTabChangeRef, onSaveRef }}>
+    <StockNavContext.Provider value={{ stockNav, setStockNav, onTabChangeRef, onSaveRef, onShareRef }}>
       {children}
     </StockNavContext.Provider>
   )
