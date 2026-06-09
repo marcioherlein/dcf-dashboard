@@ -188,14 +188,14 @@ export default function RevenueChartCard({
   }
 
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4">
+    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5">
       {/* ── Header ── */}
       <div className="flex items-start justify-between mb-0.5">
         <div>
-          <p className="text-[11px] font-bold text-text-secondary leading-none">
+          <p className="text-[13px] font-[700] text-[#111111] leading-tight">
             Revenue
           </p>
-          <p className="text-xs text-[#8A95A6] mt-1 leading-none">{unitLabel}</p>
+          <p className="text-[11px] text-[#566174] mt-0.5 leading-none">{unitLabel}</p>
         </div>
 
         {/* Toggle pills */}

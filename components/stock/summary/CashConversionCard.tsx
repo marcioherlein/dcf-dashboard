@@ -148,7 +148,7 @@ export default function CashConversionCard({
     <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 flex flex-col gap-3 flex-1">
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[11px] font-[600] text-[#566174]">
+        <p className="text-[13px] font-[700] text-[#111111] leading-tight">
           Cash Conversion
         </p>
         <span
