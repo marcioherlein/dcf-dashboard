@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "./providers";
 import AppShell from "@/components/layout/AppShell";
+import CookieNotice from "@/components/layout/CookieNotice";
 import { Inter, DM_Mono } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -49,6 +50,7 @@ export default function RootLayout({
         <Providers>
           <TooltipProvider>
             <AppShell>{children}</AppShell>
+            <CookieNotice />
           </TooltipProvider>
         </Providers>
       </body>
