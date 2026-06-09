@@ -6,7 +6,6 @@ import BottomNav from './BottomNav'
 import Sidebar from './Sidebar'
 import { StockNavProvider } from '@/contexts/StockNavContext'
 import FeedbackButton from '@/components/ui/FeedbackButton'
-import RouteLoader from '@/components/ui/RouteLoader'
 
 function AppShellInner({ children }: { children: React.ReactNode }) {
   return (
@@ -36,7 +35,6 @@ export default function AppShellClient({ children }: { children: React.ReactNode
         <AppShellInner>{children}</AppShellInner>
         <BottomNav />
         <FeedbackButton />
-        <RouteLoader />
       </div>
     </StockNavProvider>
   )
