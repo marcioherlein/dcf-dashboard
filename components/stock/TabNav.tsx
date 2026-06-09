@@ -3,25 +3,26 @@ import { useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { motion, useReducedMotion } from 'motion/react'
 import {
-  BarChart2, DollarSign, Table2, ShieldCheck, Newspaper,
+  BarChart2, DollarSign, Table2, ShieldCheck, Newspaper, Lock,
 } from 'lucide-react'
 
 export type TabId = 'overview' | 'valuation' | 'financials' | 'risks' | 'news'
 
 const TABS = [
-  { id: 'overview'   as TabId, label: 'Overview',          Icon: BarChart2,   primary: true  },
-  { id: 'valuation'  as TabId, label: 'Valuation',         Icon: DollarSign,  primary: true  },
-  { id: 'financials' as TabId, label: 'Financials',        Icon: Table2,      primary: false },
-  { id: 'risks'      as TabId, label: 'Risks & Signals',   Icon: ShieldCheck, primary: false },
-  { id: 'news'       as TabId, label: 'News',              Icon: Newspaper,   primary: false },
+  { id: 'overview'   as TabId, label: 'Overview',          Icon: BarChart2,   primary: true,  gated: false },
+  { id: 'valuation'  as TabId, label: 'Valuation',         Icon: DollarSign,  primary: true,  gated: true  },
+  { id: 'financials' as TabId, label: 'Financials',        Icon: Table2,      primary: false, gated: false },
+  { id: 'risks'      as TabId, label: 'Risks & Signals',   Icon: ShieldCheck, primary: false, gated: true  },
+  { id: 'news'       as TabId, label: 'News',              Icon: Newspaper,   primary: false, gated: true  },
 ]
 
 interface Props {
   activeTab: TabId
   onChange: (tab: TabId) => void
+  isAuthed?: boolean
 }
 
-export default function TabNav({ activeTab, onChange }: Props) {
+export default function TabNav({ activeTab, onChange, isAuthed = true }: Props) {
   const reduced = useReducedMotion()
   const tabIds = TABS.map(t => t.id)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -54,9 +55,10 @@ export default function TabNav({ activeTab, onChange }: Props) {
     >
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <div ref={containerRef} className="flex gap-0 overflow-x-auto scrollbar-hide -mb-px">
-          {TABS.map(({ id, label, Icon, primary }, i) => {
+          {TABS.map(({ id, label, Icon, primary, gated }, i) => {
             const active = activeTab === id
             const isFirstSecondary = !primary && TABS[i - 1]?.primary
+            const showLock = gated && !isAuthed
             return (
               <button
                 key={id}
@@ -80,6 +82,13 @@ export default function TabNav({ activeTab, onChange }: Props) {
                   className={cn('shrink-0', active ? 'text-[#5F790B]' : 'text-[#9B9B9B]')}
                 />
                 {label}
+                {showLock && (
+                  <Lock
+                    size={10}
+                    className="ml-0.5 text-[#C4C4C4] shrink-0"
+                    aria-label="requires sign in"
+                  />
+                )}
 
                 {active && (
                   <motion.span

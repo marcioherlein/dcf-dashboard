@@ -24,6 +24,7 @@ import SummaryTab from '@/components/stock/summary/SummaryTab'
 import StockOrientationStrip from '@/components/onboarding/StockOrientationStrip'
 import { LoginGateProvider } from '@/components/auth/LoginGateProvider'
 import TabErrorBoundary from '@/components/stock/TabErrorBoundary'
+import GatedTabOverlay from '@/components/stock/GatedTabOverlay'
 
 
 interface CAGRAnalysisData {
@@ -222,7 +223,7 @@ function StockPageBody() {
   useEffect(() => {
     if (session === undefined) return // still loading
     if (!session?.user) {
-      setViewGate('login')
+      setViewGate('allowed') // unauthenticated users see Overview + Financials; other tabs gate individually
       return
     }
     fetch('/api/stock-views', {
@@ -235,7 +236,7 @@ function StockPageBody() {
         setViewCount(res.viewCount)
         setViewGate(res.allowed ? 'allowed' : 'upgrade')
       })
-      .catch(() => setViewGate(session?.user ? 'upgrade' : 'login')) // fail-closed
+      .catch(() => setViewGate(session?.user ? 'upgrade' : 'allowed')) // fail-closed
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, ticker])
 
@@ -418,7 +419,7 @@ function StockPageBody() {
           }}
       />
 
-      <TabNav activeTab={activeTab} onChange={handleTabChange} />
+      <TabNav activeTab={activeTab} onChange={handleTabChange} isAuthed={!!session?.user} />
 
 <div className="px-4 sm:px-6 lg:px-8 pb-[calc(120px+env(safe-area-inset-bottom,0px))] lg:pb-16">
         {/* First-visit orientation — shown once, then dismissed to localStorage */}
@@ -626,6 +627,9 @@ function StockPageBody() {
                   exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
+                  {!session?.user ? (
+                    <GatedTabOverlay tabName="Valuation" />
+                  ) : (
                   <TabErrorBoundary tabName="Valuation">
                   {data.canComputeDCF === false ? (
                     <ValuationNotAvailableCard
@@ -656,6 +660,7 @@ function StockPageBody() {
                     />
                   )}
                   </TabErrorBoundary>
+                  )}
                 </motion.div>
               )}
 
@@ -699,6 +704,9 @@ function StockPageBody() {
                   exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
+                  {!session?.user ? (
+                    <GatedTabOverlay tabName="Risks & Signals" />
+                  ) : (
                   <TabErrorBoundary tabName="Risks">
                   {data.ratings && data.scores ? (
                     <HealthSection
@@ -711,6 +719,7 @@ function StockPageBody() {
                     <p className="text-sm text-[#8A95A6] text-center py-12">Health data unavailable for this stock.</p>
                   )}
                   </TabErrorBoundary>
+                  )}
                 </motion.div>
               )}
 
@@ -728,7 +737,11 @@ function StockPageBody() {
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
                   <TabErrorBoundary tabName="News">
-                  <NewsPanel ticker={ticker} />
+                  {!session?.user ? (
+                    <GatedTabOverlay tabName="News" />
+                  ) : (
+                    <NewsPanel ticker={ticker} />
+                  )}
                   </TabErrorBoundary>
                 </motion.div>
               )}

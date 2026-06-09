@@ -530,7 +530,7 @@ function LoginWall() {
 
 // ── Page content (authenticated only) ─────────────────────────────────────────
 
-function ValuationsPageContent({ userEmail }: { userEmail: string }) {
+function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
   const [entries,    setEntries]    = useState<WatchlistEntry[]>([])
   const [loading,    setLoading]    = useState(true)
   const [sparklines, setSparklines] = useState<Record<string, number[] | null>>({})
@@ -899,7 +899,7 @@ export default function ValuationsPage() {
   }
 
   if (status === 'unauthenticated' || !session?.user?.email) {
-    return <LoginWall />
+    return <ValuationsPageContent userEmail={null} />
   }
 
   return <ValuationsPageContent userEmail={session.user.email} />
