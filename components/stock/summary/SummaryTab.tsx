@@ -81,6 +81,11 @@ interface SummaryTabProps {
   analystTargetMean?: number | null
   analystTargetLow?: number | null
   analystTargetHigh?: number | null
+  // historical multiples for sparkline charts
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ratiosQuarterly?: any[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  historicalMultiples?: any[]
   // quick stats bar
   marketCap?: number | null
   peRatio?: number | null
@@ -134,6 +139,7 @@ export default function SummaryTab({
   revenueHistory: _revenueHistory,
   scenarios: _scenarios, ratings, scores, businessProfile, cagrAnalysis, statementsData,
   valuationMethods, quote, analystTargetMean,
+  ratiosQuarterly, historicalMultiples,
   analystTargetLow: _analystTargetLow, analystTargetHigh: _analystTargetHigh,
   userModelFairValue,
   marketCap, peRatio, beta, pegRatio: _pegRatio, evToEbitda, dividendYield,
@@ -270,6 +276,8 @@ export default function SummaryTab({
           pegRatio={quote?.pegRatio}
           peRatio={peRatio}
           sector={sector}
+          ratiosQuarterly={ratiosQuarterly}
+          historicalMultiples={historicalMultiples}
         />
       </div>
 

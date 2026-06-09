@@ -606,6 +606,10 @@ function StockPageBody() {
                     roe={(data.businessProfile as any)?.roe ?? null}
                     roic={computedScores?.roic?.roic ?? data.scores?.roic?.roic ?? null}
                     ownership={data.ownership ? { insiderPct: data.ownership.insiderPct ?? null, shortPct: data.ownership.shortPct ?? null } : null}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    ratiosQuarterly={(data as any).ratiosQuarterly ?? []}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    historicalMultiples={(data as any).historicalMultiples ?? []}
                     onViewValuation={() => handleTabChange('valuation')}
                     onViewFinancials={() => handleTabChange('financials')}
                     onViewConviction={() => handleTabChange('conviction')}
