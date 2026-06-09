@@ -1525,13 +1525,6 @@ async function runMorningBrief() {
     : null
 
   // ── Build post ─────────────────────────────────────────────────────────────
-  const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
-  const hooks = [
-    'What are you watching today?',
-    'Which names are on your radar this morning?',
-    'Any positions reporting this week?',
-    'What does the model say about your holdings today?',
-  ]
 
   // US indices line
   const usIndicesLine = [
@@ -1581,7 +1574,7 @@ async function runMorningBrief() {
 
   if (tomorrowNote) lines.push(``, tomorrowNote)
 
-  lines.push(``, hooks[weekOfYear % hooks.length], ``, `Run the models → ${APP_URL}`)
+  lines.push(``, `${APP_URL}`)
   lines.push(`#GoodMorning #StockMarket #Investing #WallStreet`)
 
   await post(lines.join('\n'))
