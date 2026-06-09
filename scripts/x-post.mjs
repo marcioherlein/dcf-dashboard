@@ -164,7 +164,7 @@ function fmtChange(data, label, priceDecimals = 2) {
 function pct(n, signed = true) {
   if (n == null || !isFinite(n)) return 'N/A'
   const val = (n * 100).toFixed(1)
-  return signed ? `${n >= 0 ? '+' : ''}${val}%` : `${val}%`
+  return signed ? `${n > 0 ? '+' : ''}${val}%` : `${val}%`
 }
 
 async function fetchValuation(ticker) {
@@ -232,7 +232,8 @@ const SP500_SAMPLE = [
 async function runEarnings() {
   console.log('Fetching earnings calendar...')
 
-  const tomorrow = new Date()
+  const todayStr    = new Date().toISOString().split('T')[0]
+  const tomorrow    = new Date()
   tomorrow.setDate(tomorrow.getDate() + 1)
   const tomorrowStr = tomorrow.toISOString().split('T')[0]
 
@@ -264,14 +265,16 @@ async function runEarnings() {
     if (i + 8 < SP500_SAMPLE.length) await new Promise(res => setTimeout(res, 500))
   }
 
+  // Check today AND tomorrow — catches pre-market and after-hours reports
   const reporting = results.filter(q => {
     if (!q.earningsTimestamp) return false
     const d = new Date(q.earningsTimestamp * 1000).toISOString().split('T')[0]
-    return d === tomorrowStr
+    if (d === todayStr || d === tomorrowStr) { q.date = d; return true }
+    return false
   })
 
   if (reporting.length === 0) {
-    console.log(`No earnings found for ${tomorrowStr} in sample — skipping post`)
+    console.log(`No earnings found for ${todayStr} or ${tomorrowStr} in sample — skipping post`)
     return
   }
 
@@ -327,16 +330,17 @@ async function runEarnings() {
   }
 
   const others = reporting.slice(1, 5).map(q => `$${q.symbol}`)
+  const featuredDate = featured.date ?? tomorrowStr
+  const whenStr = featuredDate === todayStr ? 'today' : 'tomorrow'
 
   const lines = [
-    `📊 Earnings Preview — ${tomorrowStr}`,
+    `📊 Earnings — $${ticker} reports ${whenStr}`,
     ``,
-    `$${ticker} reports tomorrow.`,
     dcfBlock || `Run the valuation → ${APP_URL}/stock/${ticker}`,
     ``,
-    ...(others.length > 0 ? [`Also reporting tomorrow: ${others.join(' · ')}`, ``] : []),
-    `What the market needs to see: does the business justify its current price?`,
-    `Run the model before the number drops → ${APP_URL}/stock/${ticker}`,
+    ...(others.length > 0 ? [`Also reporting ${whenStr}: ${others.join(' · ')}`, ``] : []),
+    `Does the business justify its current price? Run the model before the number drops.`,
+    `${APP_URL}/stock/${ticker}`,
     ``,
     `#Earnings #${ticker} #DCF #StockMarket`,
   ].filter(Boolean)
@@ -699,7 +703,7 @@ async function runMacro() {
       if (!d) throw new Error('No Fed Funds data from Alpha Vantage')
       const chg = d.latestVal - d.previousVal
       const emoji = chg > 0 ? '🔴' : chg < 0 ? '🟢' : '⚪'
-      const action = chg > 0 ? `Hiked +${(chg * 100).toFixed(0)}bps` : chg < 0 ? `Cut ${(chg * 100).toFixed(0)}bps` : 'Held rates'
+      const action = chg > 0 ? `Hiked +${(chg * 100).toFixed(0)}bps` : chg < 0 ? `Cut ${Math.abs(chg * 100).toFixed(0)}bps` : 'Held rates'
       lines = [
         `${emoji} FOMC Decision — Fed ${action}`,
         ``,
@@ -1150,15 +1154,25 @@ async function runQuestion() {
 // Picks stocks where model vs market price creates interesting discussion.
 // No bull/bear framing — just the numbers and what they mean.
 
-// Evening rotation — widely followed names across sectors, different from noon pool
+// Evening rotation — deliberately uses DIFFERENT sectors than the noon ROTATION
+// to guarantee no stock appears twice in the same day.
+// Noon:    Mon=Semis,    Tue=Tech/Cloud, Wed=Financials, Thu=Healthcare, Fri=Consumer/Energy
+// Evening: Mon=Consumer, Tue=Financials, Wed=Healthcare, Thu=Tech,       Fri=Semis+Industrials
 const BEAR_ROTATION = {
-  1: ['NVDA','ARM','PLTR','MU','ON','MRVL','AMAT','LRCX','TER','SMCI'],  // Monday: semis
-  2: ['AAPL','MSFT','GOOGL','META','AMZN','NFLX','SHOP','UBER','ADBE','CRM'], // Tuesday: tech
-  3: ['JPM','GS','MS','BLK','BX','V','MA','AXP','C','WFC'],              // Wednesday: financials
-  4: ['LLY','NVO','UNH','CVS','ISRG','REGN','VRTX','GILD','BMY','AMGN'], // Thursday: healthcare
-  5: ['TSLA','AMZN','WMT','COST','HD','NKE','SBUX','CMG','ABNB','BKNG'], // Friday: consumer
-  6: ['XOM','CVX','COP','NEE','DUK','SLB','EOG','PSX','VLO','MPC'],      // Saturday: energy
-  0: ['AAPL','MSFT','NVDA','AMZN','GOOGL','META','TSLA','JPM','V','UNH'],// Sunday: top 10
+  1: ['WMT','COST','HD','TGT','NKE','SBUX','MCD','CMG','YUM','ABNB',  // Monday evening: consumer (noon=semis)
+      'BKNG','MAR','HLT','DIS','NFLX','AMZN','LVS','MGM','WYNN','RCL'],
+  2: ['JPM','BAC','GS','MS','WFC','C','BLK','BX','KKR','AXP',          // Tuesday evening: financials (noon=tech)
+      'V','MA','COF','USB','TFC','PNC','SCHW','ICE','CME','SPGI'],
+  3: ['LLY','UNH','JNJ','ABBV','MRK','AMGN','BMY','PFE','CVS','CI',    // Wednesday evening: healthcare (noon=financials)
+      'ISRG','MDT','ABT','SYK','EW','IDXX','GILD','REGN','VRTX','BIIB'],
+  4: ['NVDA','MSFT','GOOGL','META','ORCL','ADBE','NOW','INTU','CRM','SAP', // Thursday evening: tech (noon=healthcare)
+      'SNOW','DDOG','ZS','PANW','CRWD','WDAY','TEAM','MDB','NET','GTLB'],
+  5: ['TXN','QCOM','INTC','AMAT','LRCX','MU','KLAC','ON','MRVL','ARM', // Friday evening: semis+industrials (noon=consumer)
+      'BA','CAT','HON','GE','RTX','LMT','UPS','FDX','DE','EMR'],
+  6: ['XOM','CVX','COP','SLB','EOG','PSX','VLO','MPC','NEE','DUK',     // Saturday: energy+utilities
+      'SO','AEP','EXC','PCG','SRE','ETR','WEC','ES','DTE','PPL'],
+  0: ['PG','KO','PEP','TMO','ABT','NEE','PLD','AMT','CCI','EQIX',      // Sunday: defensives+REITs
+      'BRK-B','MMM','EMR','GD','NOC','HII','L','MKC','CLX','CHD'],
 }
 
 async function runDcfBear() {
@@ -1533,18 +1547,20 @@ async function runMorningBrief() {
   const spyMove  = sp500?.changePct ?? 0
   const vixLevel = vix?.price    ?? 0
 
-  // Clean, professional market open language
+  // Clean, professional market language — uses live S&P 500 data (^GSPC via Yahoo Finance)
   const openTone = spyMove > 1.5
-    ? `US equities pointing to a strong open. Futures up ${spyMove.toFixed(1)}% — broad-based buying across most sectors.`
+    ? `US equities opening strongly. S&P 500 ${spyMove >= 0 ? '+' : ''}${spyMove.toFixed(1)}% — broad-based buying, risk appetite high.`
     : spyMove > 0.5
-    ? `US futures in positive territory (+${spyMove.toFixed(1)}%). Moderate gains expected at the open.`
+    ? `US equities in positive territory. S&P 500 ${spyMove >= 0 ? '+' : ''}${spyMove.toFixed(1)}% — moderate gains at the open.`
     : spyMove > 0.1
-    ? `US equities set for a mildly positive open. Futures up ${spyMove.toFixed(1)}%, with no clear directional catalyst yet.`
+    ? `US equities marginally higher. S&P 500 ${spyMove >= 0 ? '+' : ''}${spyMove.toFixed(1)}% — no clear directional catalyst yet.`
     : spyMove > -0.1
-    ? `US futures near flat (${spyMove >= 0 ? '+' : ''}${spyMove.toFixed(1)}%). Markets in consolidation mode ahead of the open.`
+    ? `US equities near flat. S&P 500 ${spyMove >= 0 ? '+' : ''}${spyMove.toFixed(1)}% — markets in consolidation mode.`
     : spyMove > -0.5
-    ? `US futures pointing slightly lower (${spyMove.toFixed(1)}%). Mild selling pressure, no major catalyst driving it.`
+    ? `US equities under mild pressure. S&P 500 ${spyMove.toFixed(1)}% — sellers have a slight edge.`
     : spyMove > -1.5
+    ? `US equities declining. S&P 500 ${spyMove.toFixed(1)}% — risk-off tone, defensives and bonds outperforming.`
+    : `US equities under significant pressure. S&P 500 ${spyMove.toFixed(1)}% — risk-off conditions, elevated volatility.`
     ? `US futures under pressure (${spyMove.toFixed(1)}%). Risk-off tone early — defensives and bonds outperforming.`
     : `Significant pre-market weakness (${spyMove.toFixed(1)}%). Risk-off conditions — elevated volatility expected at the open.`
 
