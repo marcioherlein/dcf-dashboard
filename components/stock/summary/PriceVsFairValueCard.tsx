@@ -62,9 +62,9 @@ export default function PriceVsFairValueCard({
       : null
 
   return (
-    <div className={cn(CARD, 'p-4 flex flex-col gap-3')}>
+    <div className={cn(CARD, 'p-4 sm:p-5 flex flex-col gap-3')}>
       {/* Header */}
-      <p className="text-[13px] font-[700] text-[#06101F]">Price vs Fair Value</p>
+      <p className="text-[13px] font-[700] text-[#111111] leading-tight">Price vs Fair Value</p>
 
       {/* Ratio row */}
       <div className="flex items-center gap-2.5 flex-wrap">
@@ -76,7 +76,7 @@ export default function PriceVsFairValueCard({
           {zone != null && (
             <span
               className={cn(
-                'inline-block mt-0.5 rounded-full border px-2.5 py-0.5 text-[11px] font-[700]',
+                'inline-block mt-0.5 rounded-full border px-2.5 py-0.5 text-[11px] font-[600]',
                 zone.chip,
               )}
             >

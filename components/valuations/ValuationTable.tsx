@@ -427,7 +427,7 @@ function MobileValuationCard({ entry, sparklines, onDelete, onTagUpdate, onGroup
           </div>
         </div>
 
-        <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#F0F0F0]">
+        <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#E3E1DA]">
           <span className={cn('text-[10px] font-semibold rounded-full px-1.5 py-0.5 border', vtInfo.cls)}>
             {verdict}
           </span>
@@ -557,7 +557,7 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                 <th className="px-2 py-2 w-10" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#F0F0F0]">
+            <tbody className="divide-y divide-[#E3E1DA]">
               {sorted.map((entry) => {
                 const prices      = sparklines[entry.ticker]
                 const sparkLoading= !(entry.ticker in sparklines)

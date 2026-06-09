@@ -132,15 +132,15 @@ export default function GrowthOutlookCard({
   const verdict = computeVerdict(revGrowth, epsGrowth, drivers)
 
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 flex flex-col gap-3 flex-1">
+    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 flex flex-col gap-3 flex-1">
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[12px] font-[750] text-[#111111]">
+        <span className="text-[13px] font-[700] text-[#111111]">
           Growth Outlook
         </span>
         <span
           className={cn(
-            'text-[12px] font-[700] px-2 py-0.5 rounded-md leading-none',
+            'rounded-full px-2.5 py-0.5 text-[11px] font-[600] border leading-none',
             ratingBadgeClass(rating),
           )}
         >
@@ -161,7 +161,7 @@ export default function GrowthOutlookCard({
       </div>
 
       {/* Footer / Verdict */}
-      <div className="pt-1 border-t border-[#F0F0F0] flex flex-col gap-1">
+      <div className="pt-1 border-t border-[#E3E1DA] flex flex-col gap-1">
         <p className="text-[13px] text-[#111111] leading-relaxed">{verdict}</p>
       </div>
     </div>

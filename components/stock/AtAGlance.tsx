@@ -85,14 +85,14 @@ export default function AtAGlance({
 
       {/* Sector / country pills */}
       <div className="flex gap-1.5 flex-wrap">
-        {sector  && <span className="rounded-md bg-[#F4F3EF] border border-[#E3E1DA] text-[#06101F] px-2.5 py-1.5 text-[12px] font-medium min-h-[32px] flex items-center">{sector}</span>}
-        {country && <span className="rounded-md bg-[#F4F3EF] border border-[#E3E1DA] text-[#06101F] px-2.5 py-1.5 text-[12px] font-medium min-h-[32px] flex items-center">{country}</span>}
+        {sector  && <span className="rounded-full bg-[#F4F3EF] border border-[#E3E1DA] text-[#06101F] px-2.5 py-0.5 text-[12px] font-medium min-h-[32px] flex items-center">{sector}</span>}
+        {country && <span className="rounded-full bg-[#F4F3EF] border border-[#E3E1DA] text-[#06101F] px-2.5 py-0.5 text-[12px] font-medium min-h-[32px] flex items-center">{country}</span>}
       </div>
 
       {/* TTM Multiples */}
       {showMultiples && (
         <div className="pt-3 border-t border-[#E3E1DA]">
-          <p className="text-[12px] font-semibold text-[#566174] mb-2">TTM Multiples</p>
+          <p className="text-[11px] font-[600] text-[#566174] mb-2">TTM Multiples</p>
           <div className="flex flex-wrap gap-2">
             <MetricChip label="P/E"       value={fmtMultiple(pe)}       tooltip="Price-to-Earnings: how much you're paying for each dollar of profit. Lower = cheaper relative to earnings. Compare to sector peers for context." />
             <MetricChip label="EV/EBITDA" value={fmtMultiple(evEbitda)} tooltip="Enterprise Value to EBITDA: compares the company's total value (including debt) to its operating earnings. Useful for comparing companies with different debt levels." />

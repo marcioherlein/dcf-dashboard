@@ -224,11 +224,11 @@ export default function ProfitabilityChartCard({
   )
 
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4" aria-label="Profitability margins chart">
+    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5" aria-label="Profitability margins chart">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5">
-          <span className="text-sm font-semibold text-[#111111]">
+          <span className="text-[13px] font-[700] text-[#111111] leading-tight">
             Profitability Chart
           </span>
           <InfoTooltip text="Gross, EBIT and Net profit margins as a % of revenue. Quarterly (last 12Q) or annual (last 8Y) data." />

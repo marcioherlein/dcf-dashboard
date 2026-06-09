@@ -24,7 +24,7 @@ const ExpandedPeerChartDialog = dynamic(
 const PEER_TOOLTIP_TEXT =
   "Peers are sourced from Yahoo Finance's 'People also watch' list — stocks frequently viewed together with this one. These are behaviorally similar, not analyst-defined industry peers. Use as a directional comparison, not a precise peer group."
 
-const CARD = 'bg-white border border-[#E5E5E5] rounded-xl shadow-card p-4'
+const CARD = 'bg-white border border-[#E5E5E5] rounded-xl shadow-card p-4 sm:p-5'
 
 interface PeerValuationChartProps {
   ticker: string
@@ -131,7 +131,7 @@ export default function PeerValuationChart({ ticker, isFinancialSector = false }
       <div className={CARD} role="region" aria-label={`P/E vs EPS growth peer comparison for ${ticker}`}>
         {/* Header */}
         <div className="flex items-start justify-between gap-2 mb-1">
-          <p className="text-[13px] font-[700] text-[#06101F] leading-tight flex-1">
+          <p className="text-[13px] font-[700] text-[#111111] leading-tight flex-1">
             P/E vs. next-12-month EPS growth — peer comparison
           </p>
           <div className="flex items-center gap-1 shrink-0">

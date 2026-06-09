@@ -22,7 +22,7 @@ interface ChipProps {
 function Chip({ label, tooltip, children }: ChipProps) {
   return (
     <div className="flex items-center gap-1.5 min-w-0">
-      <span className="text-[10px] font-[700] text-[#8A95A6] uppercase tracking-wide whitespace-nowrap flex items-center gap-0.5">
+      <span className="text-[11px] font-[700] text-[#566174] uppercase tracking-wider whitespace-nowrap flex items-center gap-0.5">
         {label}
         <InfoTooltip text={tooltip} />
       </span>

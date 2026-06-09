@@ -143,7 +143,7 @@ function IndexCard({ label, value, changePct, sparklineValues, sparkLoading, int
         <div className={cn('w-6 h-6 rounded-lg flex items-center justify-center shrink-0', iconBg)}>
           {icon}
         </div>
-        <p className="text-[11px] font-semibold text-[#6B6B6B] leading-tight">{label}</p>
+        <p className="text-[11px] font-[600] text-[#566174] leading-tight">{label}</p>
       </div>
       {/* Value */}
       <p className="text-[20px] font-bold tabular-nums text-[#111111] leading-none mt-2">{value}</p>

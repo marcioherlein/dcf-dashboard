@@ -148,14 +148,14 @@ export default function CashConversionCard({
     <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 flex flex-col gap-3 flex-1">
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[12px] font-[600] text-[#6B6B6B]">
+        <p className="text-[11px] font-[600] text-[#566174]">
           Cash Conversion
         </p>
         <span
           role="status"
           aria-label={`Cash conversion quality rating: ${rating}`}
           className={cn(
-            'inline-block rounded-full px-2.5 py-0.5 text-[12px] font-[700] leading-tight',
+            'inline-block rounded-full px-2.5 py-0.5 text-[11px] font-[600] border leading-tight',
             getBadgeStyle(rating),
           )}
         >
@@ -164,7 +164,7 @@ export default function CashConversionCard({
       </div>
 
       {/* Metric rows */}
-      <div className="flex flex-col divide-y divide-[#F0F0F0]">
+      <div className="flex flex-col divide-y divide-[#E3E1DA]">
         {/* FCF Margin */}
         <div className="flex items-center justify-between py-2">
           <span className="text-[12px] text-[#6B6B6B]">FCF Margin (TTM)</span>

@@ -65,7 +65,7 @@ function PEGBlock({ peg }: { peg: number | null | undefined }) {
       className="flex flex-col gap-0.5"
       aria-label={peg != null ? `PEG Ratio: ${peg.toFixed(2)}` : 'PEG Ratio: Not available'}
     >
-      <span className="text-[11px] font-semibold text-[#6B6B6B]">
+      <span className="text-[11px] font-[600] text-[#6B6B6B]">
         PEG ratio
       </span>
       <span
@@ -107,7 +107,7 @@ function RatioRow({ name, actual, median, isLast }: RatioRowProps) {
   const badge = BADGE_STYLES[variant]
 
   return (
-    <div className={cn('py-2.5', !isLast && 'border-b border-[#E5E5E5]')}>
+    <div className={cn('py-2.5', !isLast && 'border-b border-[#E3E1DA]')}>
       <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
         {/* Ratio name */}
         <span
@@ -125,7 +125,7 @@ function RatioRow({ name, actual, median, isLast }: RatioRowProps) {
         {/* Badge */}
         <span
           className={cn(
-            'inline-block rounded-full px-2.5 py-0.5 text-[11px] font-[600] shrink-0',
+            'inline-block rounded-full px-2.5 py-0.5 text-[11px] font-[600] border shrink-0',
             badge.container,
           )}
         >
@@ -155,14 +155,14 @@ export default function ValuationRatiosCard({ estimates, pegRatio, peRatio: _peR
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 flex flex-col animate-pulse">
+      <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 flex flex-col animate-pulse">
         <div className="h-4 w-32 bg-[#E5E5E5] rounded mb-3" />
         <div className="h-10 w-20 bg-[#E5E5E5] rounded mb-1" />
         <div className="h-3 w-40 bg-[#E5E5E5] rounded mb-1" />
         <div className="h-3 w-32 bg-[#E5E5E5] rounded" />
-        <div className="my-3 border-t border-[#E5E5E5]" />
+        <div className="my-3 border-t border-[#E3E1DA]" />
         {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="py-2.5 flex items-center justify-between gap-2 border-b border-[#E5E5E5] last:border-0">
+          <div key={i} className="py-2.5 flex items-center justify-between gap-2 border-b border-[#E3E1DA] last:border-0">
             <div className="h-3 w-20 bg-[#E5E5E5] rounded" />
             <div className="h-3 w-12 bg-[#E5E5E5] rounded" />
             <div className="h-5 w-24 bg-[#E5E5E5] rounded-full" />
@@ -173,7 +173,7 @@ export default function ValuationRatiosCard({ estimates, pegRatio, peRatio: _peR
   }
 
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 flex flex-col h-full">
+    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 flex flex-col h-full">
       {/* Header */}
       <p className="text-[13px] font-[700] text-[#111111] mb-3">
         Valuation Ratios
@@ -183,7 +183,7 @@ export default function ValuationRatiosCard({ estimates, pegRatio, peRatio: _peR
       <PEGBlock peg={pegRatio} />
 
       {/* Divider */}
-      <div className="my-3 border-t border-[#E5E5E5]" />
+      <div className="my-3 border-t border-[#E3E1DA]" />
 
       {/* Ratio rows */}
       {applicable.length === 0 ? (
@@ -193,12 +193,12 @@ export default function ValuationRatiosCard({ estimates, pegRatio, peRatio: _peR
               key={name}
               className={cn(
                 'py-2.5 flex items-center justify-between',
-                i < arr.length - 1 && 'border-b border-[#E5E5E5]',
+                i < arr.length - 1 && 'border-b border-[#E3E1DA]',
               )}
             >
               <span className="text-[12px] font-[600] text-[#111111] min-w-[64px] w-20 max-w-[80px] shrink-0 truncate" title={name}>{name}</span>
               <span className="text-[13px] font-[700] text-[#6B6B6B] tabular-nums font-mono flex-1 text-center">—</span>
-              <span className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-[600] bg-[#E5E5E5] text-[#6B6B6B] shrink-0">
+              <span className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-[600] border bg-[#E5E5E5] text-[#6B6B6B] shrink-0">
                 No data
               </span>
             </div>

@@ -239,7 +239,7 @@ export default function IncomeFlowCard({ statementsData, currency = 'USD' }: Inc
   return (
     <div className="rounded-2xl overflow-hidden border border-[#E3E1DA] shadow-card">
       <div className="px-5 py-3 bg-white border-b border-[#E3E1DA] flex items-center justify-between">
-        <p className="text-[12px] font-[650] text-[#566174]">Income breakdown · TTM</p>
+        <p className="text-[13px] font-[700] text-[#111111] leading-tight">Income breakdown · TTM</p>
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1.5 text-[11px] text-[#8A95A6]">
             <span className="inline-block w-2 h-2 rounded-sm bg-[#059669]" />

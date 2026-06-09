@@ -86,7 +86,7 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
             )}
             {changeStr && (
               <span className={cn(
-                'text-[13px] font-semibold tabular-nums leading-none px-1.5 py-0.5 rounded-md',
+                'text-[13px] font-semibold tabular-nums leading-none px-1.5 py-0.5 rounded-full',
                 changeUp
                   ? 'text-[#11875D] bg-[#E8F7EF]'
                   : 'text-[#D83B3B] bg-[#FCEAEA]',

@@ -47,7 +47,7 @@ const STAR_COLORS: Record<number, string> = {
 
 function CellLabel({ children, title }: { children: React.ReactNode; title?: string }) {
   return (
-    <p className="text-[11px] font-[650] text-[#566174]" title={title}>
+    <p className="text-[11px] font-[600] text-[#566174]" title={title}>
       {children}
     </p>
   )
@@ -158,7 +158,7 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
 
       {/* Synthesis strip — assembled verdict from existing data */}
       {synthesis && (
-        <div className="border-t border-[#F4F3EF] px-5 py-2.5 flex items-center gap-2.5">
+        <div className="border-t border-[#E3E1DA] px-5 py-2.5 flex items-center gap-2.5">
           <span className={`text-[11px] font-[700] shrink-0 ${vstyle.text}`}>{output.verdict}</span>
           <span className="text-[#CDD1C8] text-[10px] shrink-0">·</span>
           <p className="text-[11px] text-[#566174] leading-snug">{synthesis}</p>

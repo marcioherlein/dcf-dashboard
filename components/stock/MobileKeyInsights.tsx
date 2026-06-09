@@ -56,7 +56,7 @@ export default function MobileKeyInsights({ data, hideBlendedFV = false }: Props
       >
         <div className="flex items-center gap-2 flex-wrap min-w-0">
           <span className="text-[12px] font-semibold text-[#566174] shrink-0">Quick insights</span>
-          <span className={cn('text-[12px] font-bold px-2.5 py-1 rounded-full border shrink-0', recBg)}>
+          <span className={cn('text-[12px] font-bold px-2.5 py-0.5 rounded-full border shrink-0', recBg)}>
             {recLabel}
           </span>
           {analystTargetMean > 0 && (
@@ -88,7 +88,7 @@ export default function MobileKeyInsights({ data, hideBlendedFV = false }: Props
         <div className="border-t border-[#E3E1DA] px-4 pb-4 pt-3 space-y-4">
           {/* 52-week range */}
           <div>
-            <p className="text-[11px] font-[650] text-[#566174] mb-2">52-Week Range</p>
+          <p className="text-[11px] font-[600] text-[#566174] mb-2">52-Week Range</p>
             <div className="relative h-2 rounded-full bg-[#E3E1DA]">
               <div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-red-400/60 via-amber-400/60 to-emerald-400/60 w-full" />
               <div
@@ -106,7 +106,7 @@ export default function MobileKeyInsights({ data, hideBlendedFV = false }: Props
           {/* Financial health grades */}
           {ratings && healthCats.some(({ key }) => !!ratings[key]) && (
             <div>
-              <p className="text-[11px] font-[650] text-[#566174] mb-2">Financial Health</p>
+              <p className="text-[11px] font-[600] text-[#566174] mb-2">Financial Health</p>
               <div className="grid grid-cols-3 gap-2">
                 {healthCats.map(({ label, key }) => {
                   const cat = ratings[key]
@@ -114,7 +114,7 @@ export default function MobileKeyInsights({ data, hideBlendedFV = false }: Props
                   return (
                     <div key={key} className="rounded-lg bg-[#F4F3EF] border border-[#E3E1DA] px-2 py-3 text-center min-h-[60px] flex flex-col items-center justify-center">
                       <p className="text-[11px] text-[#566174] mb-1">{label}</p>
-                      <span className={cn('text-[13px] font-bold px-1.5 py-0.5 rounded border leading-5', gradeChipClass(cat.grade))}>
+                      <span className={cn('text-[11px] font-[600] px-2.5 py-0.5 rounded-full border leading-5', gradeChipClass(cat.grade))}>
                         {cat.grade}
                       </span>
                     </div>

@@ -75,7 +75,7 @@ export default function QuickStatsBar({
             key={stat.label}
             className={i >= 3 ? 'hidden sm:block' : undefined}
           >
-            <p className="text-[11px] font-[600] text-[#6B6B6B] mb-0.5 truncate">{stat.label}</p>
+            <p className="text-[11px] font-[600] text-[#566174] mb-0.5 truncate">{stat.label}</p>
             <p className={`text-[13px] font-semibold tabular-nums leading-tight truncate ${stat.label === 'Next Earnings' ? 'text-[#B56A00]' : 'text-ink-900'}`}>{stat.value}</p>
             {stat.sub && <p className="text-[11px] text-[#6B6B6B] mt-0.5 truncate">{stat.sub}</p>}
           </div>

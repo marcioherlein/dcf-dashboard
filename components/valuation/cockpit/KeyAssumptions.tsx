@@ -23,7 +23,7 @@ export default function KeyAssumptions({ assumptions, defaults, onViewAll }: Pro
   return (
     <div className="bg-white rounded-xl border border-[#E3E1DA] shadow-sm px-5 py-4 flex flex-col h-full">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-[#8A95A6]">Key Assumptions</p>
+        <p className="text-[11px] font-[700] text-[#566174] uppercase tracking-wider">Key Assumptions</p>
         <span className="text-[10px] text-[#8A95A6]">Edit below ↓</span>
       </div>
 
@@ -33,7 +33,7 @@ export default function KeyAssumptions({ assumptions, defaults, onViewAll }: Pro
           const isDirty = Math.abs(val - (defaults[f.key] as number)) > 0.00001
           return (
             <div key={f.key} className="flex items-center justify-between">
-              <span className={`text-[11px] font-semibold ${isDirty ? 'text-[#2563EB]' : 'text-[#566174]'}`}>
+              <span className={`text-[11px] font-[600] ${isDirty ? 'text-[#2563EB]' : 'text-[#566174]'}`}>
                 {f.label}
                 {isDirty && <span className="ml-1 text-[10px] text-[#2563EB]">●</span>}
               </span>

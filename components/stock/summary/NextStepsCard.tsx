@@ -25,13 +25,13 @@ export default function NextStepsCard({
   onViewRisks,
 }: NextStepsCardProps) {
   return (
-    <div className={cn(CARD, 'p-5 flex flex-col gap-4')}>
+    <div className={cn(CARD, 'p-4 sm:p-5 flex flex-col gap-4')}>
       {/* Header */}
       <div className="flex items-center gap-2">
         <div className="w-7 h-7 rounded-full bg-[#EFF6FF] flex items-center justify-center shrink-0">
           <Compass size={15} className="text-[#2563EB]" />
         </div>
-        <p className="text-[14px] font-[750] text-[#06101F]">Next Steps</p>
+        <p className="text-[13px] font-[700] text-[#111111] leading-tight">Next Steps</p>
       </div>
 
       <p className="text-[13px] text-[#566174] leading-relaxed">

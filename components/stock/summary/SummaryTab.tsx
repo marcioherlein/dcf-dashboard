@@ -115,7 +115,7 @@ interface SummaryTabProps {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#6B6B6B] px-0.5">
+    <h2 className="text-[11px] font-[700] text-[#566174] uppercase tracking-wider px-0.5">
       {children}
     </h2>
   )

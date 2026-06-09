@@ -88,7 +88,7 @@ function CategoryCard({ title, rating }: { title: string; rating: CategoryRating
     <div className={`rounded-2xl border ${c.border} ${c.bg} px-4 py-4 sm:p-5`}>
       <div className="flex items-start justify-between mb-3 gap-2">
         <div className="min-w-0 flex-1">
-          <p className="text-[12px] font-semibold uppercase tracking-wide text-[#566174]">{title}</p>
+          <p className="text-[11px] font-[700] uppercase tracking-wider text-[#566174]">{title}</p>
           <p className={`mt-0.5 text-[14px] font-semibold leading-snug ${c.text}`}>{rating.label}</p>
         </div>
         <div className={`rounded-xl px-3 py-1.5 text-[32px] font-bold shrink-0 ${c.badge}`}>
@@ -113,7 +113,7 @@ export default function RatingsPanel({ ratings }: Props) {
   const oc = colorMap[ratings.overall.color] ?? colorMap.blue
 
   return (
-    <div className="rounded-xl card px-4 py-4 sm:p-6">
+    <div className="rounded-xl card p-4 sm:p-5">
       <div className="flex items-start sm:items-center justify-between mb-5 sm:mb-6 gap-3 flex-wrap">
         <div>
           <h2 className="text-[15px] font-headline font-semibold text-[#06101F]">Analysis Ratings</h2>

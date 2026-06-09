@@ -69,13 +69,13 @@ export default function BearCaseCard({
   const bullets = buildRiskBullets(drivers, upsidePct, ratings)
 
   return (
-    <div className={cn(CARD, 'p-5 flex flex-col gap-3')}>
+    <div className={cn(CARD, 'p-4 sm:p-5 flex flex-col gap-3')}>
       {/* Header */}
       <div className="flex items-center gap-2">
         <div className="w-7 h-7 rounded-full bg-[#FEF2F2] flex items-center justify-center shrink-0">
           <AlertCircle size={15} className="text-[#DC2626]" />
         </div>
-        <p className="text-[14px] font-[750] text-[#111111]">
+        <p className="text-[13px] font-[700] text-[#111111]">
           Risks to Watch
         </p>
       </div>

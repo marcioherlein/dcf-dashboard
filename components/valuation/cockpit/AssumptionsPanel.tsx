@@ -374,7 +374,7 @@ function AssumptionRowExpanded({
 
       {/* Exit multiple expansion signal */}
       {expansionSignal && (
-        <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-[600] ${expansionSignal.cls}`}>
+        <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg border text-[10px] font-[600] ${expansionSignal.cls}`}>
           {expansionSignal.text}
         </div>
       )}
@@ -526,7 +526,7 @@ function LargestChangesBar({ assumptions, defaults, sensitivity }: {
         {changes.map(c => {
           const mc = METHOD_CFG[c.methods[0]]
           return (
-            <div key={c.key} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${mc.tagBg}`}>
+            <div key={c.key} className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${mc.tagBg}`}>
               <span className={`text-[10px] font-bold ${mc.tagText}`}>{c.label}</span>
               {c.impactFmt && <span className={`text-[10px] font-bold tabular-nums ${c.netImpact >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>{c.impactFmt}</span>}
               <span className="text-[10px] text-[#566174] tabular-nums">{c.deltaFmt}</span>
@@ -602,7 +602,7 @@ export default function AssumptionsPanel({
       {/* Header strip */}
       <div className="flex items-center justify-between flex-wrap gap-2 px-4 py-3 border-b border-[#E3E1DA]">
         <div className="flex items-center gap-2">
-          <span className="text-[13px] font-bold text-[#06101F]">Assumptions</span>
+          <span className="text-[13px] font-[700] text-[#111111] leading-tight">Assumptions</span>
           {dirtyCount > 0 && (
             <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold bg-[#EAF1FF] text-[#2563EB]">
               {dirtyCount}
@@ -621,7 +621,7 @@ export default function AssumptionsPanel({
 
           {/* FV delta badge */}
           {deltaPct != null && isModified && Math.abs(deltaPct) > 0.001 && (
-            <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold', deltaPct >= 0 ? 'bg-[#E8F7EF] text-[#11875D]' : 'bg-[#FCEAEA] text-[#D83B3B]')}>
+            <span className={cn('inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold', deltaPct >= 0 ? 'bg-[#E8F7EF] text-[#11875D]' : 'bg-[#FCEAEA] text-[#D83B3B]')}>
               {deltaPct >= 0 ? '▲' : '▼'} {Math.abs(deltaPct * 100).toFixed(1)}% FV
             </span>
           )}
@@ -643,7 +643,7 @@ export default function AssumptionsPanel({
           <div key={group.label} className={gi > 0 ? 'border-t border-[#E3E1DA]' : ''}>
             {/* Group label */}
             <div className="flex items-center gap-2 px-4 pt-2 pb-1">
-              <span className="text-[10px] font-[700] uppercase tracking-wide text-[#8A95A6]">{group.label}</span>
+              <span className="text-[11px] font-[700] text-[#566174] uppercase tracking-wider">{group.label}</span>
               {group.label === 'Exit Multiples' && (
                 <span className="text-[10px] text-[#8A95A6] normal-case font-normal tracking-normal">· what the market pays at exit · Damodaran Jan 2025 industry medians</span>
               )}
@@ -656,7 +656,7 @@ export default function AssumptionsPanel({
               const isDirty = Math.abs((assumptions[f.key] as number) - (defaults[f.key] as number)) > 0.00001
 
               return (
-                <div key={f.key} className="border-t border-[#F4F3EF] first:border-t-0">
+                <div key={f.key} className="border-t border-[#E3E1DA] first:border-t-0">
                   <AssumptionRowCollapsed
                     field={f}
                     value={assumptions[f.key] as number}

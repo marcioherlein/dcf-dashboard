@@ -125,7 +125,7 @@ export default function FinancialSnapshotBar({ statementsData, currency = 'USD',
       <div className={`grid gap-x-4 gap-y-2.5 ${stats.length >= 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3'}`}>
         {stats.map((stat) => (
           <div key={stat.label}>
-            <p className="text-[10px] font-semibold text-[#8A95A6] uppercase tracking-wide mb-0.5 truncate">
+            <p className="text-[11px] font-[700] text-[#566174] uppercase tracking-wider mb-0.5 truncate">
               {stat.label}
             </p>
             <div className="flex items-baseline gap-1.5 flex-wrap">

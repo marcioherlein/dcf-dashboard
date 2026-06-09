@@ -156,7 +156,7 @@ export default function ValuationSummary({ methods, currentPrice, currency = 'US
 
   return (
     <div className="rounded-xl glass-card-light p-5">
-      <p className="text-label uppercase tracking-wider text-[#8A95A6] font-bold mb-4">Fair Value by Method</p>
+      <p className="text-[11px] font-[700] text-[#566174] uppercase tracking-wider mb-4">Fair Value by Method</p>
       <MethodDotsChart
         methods={methods}
         currentPrice={currentPrice}

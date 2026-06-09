@@ -75,7 +75,7 @@ export default function FinancialScores({ scores }: Props) {
   if (noData) {
     return (
       <div className="rounded-xl card p-6">
-        <h2 className="mb-4 text-[14px] font-semibold text-[#06101F]">Financial Quality Scores</h2>
+        <h2 className="mb-4 text-[13px] font-[700] text-[#111111] leading-tight">Financial Quality Scores</h2>
         <div className="flex flex-col items-center justify-center py-10 gap-3">
           <div className="w-12 h-12 rounded-full bg-[#F4F3EF] flex items-center justify-center">
             <svg className="w-6 h-6 text-[#8A95A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -117,7 +117,7 @@ export default function FinancialScores({ scores }: Props) {
 
   return (
     <div className="rounded-xl card p-6">
-      <h2 className="mb-5 text-[14px] font-semibold text-[#06101F]">Financial Quality Scores</h2>
+      <h2 className="mb-5 text-[13px] font-[700] text-[#111111] leading-tight">Financial Quality Scores</h2>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
@@ -125,13 +125,13 @@ export default function FinancialScores({ scores }: Props) {
         <div className={`rounded-xl border p-4 ${BgColor(piotroski.score, [4, 8])}`}>
           <div className="flex items-start justify-between mb-1">
             <div>
-              <p className="text-[11px] font-semibold text-[#566174]">Financial Strength</p>
+              <p className="text-[11px] font-[600] text-[#566174]">Financial Strength</p>
               <p className="text-[10px] text-[#8A95A6] mt-0.5">Piotroski F-Score</p>
               <p className={`mt-0.5 text-3xl font-bold tabular-nums ${ScoreColor(piotroski.score, [4, 8])}`}>
                 {piotroski.score}<span className="text-base font-normal text-[#566174]"> / 9</span>
               </p>
             </div>
-            <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${BadgeColor(piotroski.score, [4, 8])}`}>
+            <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${BadgeColor(piotroski.score, [4, 8])}`}>
               {piotroski.label}
             </span>
           </div>
@@ -173,7 +173,7 @@ export default function FinancialScores({ scores }: Props) {
         <div className={`rounded-xl border p-4 ${altmanBg}`}>
           <div className="flex items-start justify-between mb-1">
             <div>
-              <p className="text-[11px] font-semibold text-[#566174]">
+              <p className="text-[11px] font-[600] text-[#566174]">
                 Bankruptcy Risk
                 {altmanSafe && !altmanSafe.isReliable && (
                   <span className="ml-1.5 text-[10px] text-[#B56A00] font-medium">(EM)</span>
@@ -188,7 +188,7 @@ export default function FinancialScores({ scores }: Props) {
                 <p className="mt-0.5 text-sm text-[#566174]">Insufficient data</p>
               )}
             </div>
-            <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${altmanBadge}`}>
+            <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${altmanBadge}`}>
               {altmanZoneLabel}
             </span>
           </div>
@@ -254,7 +254,7 @@ export default function FinancialScores({ scores }: Props) {
         <div className={`rounded-xl border p-4 ${beneish ? beneishBg : 'bg-[#F4F3EF] border-[#E3E1DA]'}`}>
           <div className="flex items-start justify-between mb-1">
             <div>
-              <p className="text-[11px] font-semibold text-[#566174]">Earnings Quality</p>
+              <p className="text-[11px] font-[600] text-[#566174]">Earnings Quality</p>
               <p className="text-[10px] text-[#8A95A6] mt-0.5">Beneish M-Score</p>
               {beneish ? (
                 <p className={`mt-0.5 text-3xl font-bold tabular-nums ${beneishColor}`}>
@@ -265,11 +265,11 @@ export default function FinancialScores({ scores }: Props) {
               )}
             </div>
             {beneish ? (
-              <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${beneishBadge}`}>
+              <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${beneishBadge}`}>
                 {beneishLabel}
               </span>
             ) : (
-              <span className="rounded-full px-2.5 py-1 text-[11px] font-semibold bg-[#F4F3EF] text-[#566174]">
+              <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-[#F4F3EF] text-[#566174]">
                 N/A
               </span>
             )}
@@ -323,14 +323,14 @@ export default function FinancialScores({ scores }: Props) {
           <div className={`rounded-xl border p-4 ${spreadGood ? 'bg-[#E8F7EF] border-[#A3D9BE]' : 'bg-[#FCEAEA] border-[#F0B8B8]'}`}>
             <div className="flex items-start justify-between mb-1">
               <div>
-                <p className="text-[11px] font-semibold text-[#566174]">Value Creation</p>
+                <p className="text-[11px] font-[600] text-[#566174]">Value Creation</p>
                 <p className="text-[10px] text-[#8A95A6] mt-0.5">ROIC vs cost of capital</p>
                 <p className={`mt-0.5 text-3xl font-bold tabular-nums ${spreadGood ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                   {fmtPct(roic.roic)}
                 </p>
                 <p className="text-[11px] text-[#566174]">ROIC</p>
               </div>
-              <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${spreadGood ? 'bg-[#E8F7EF] text-[#0D6B46]' : 'bg-[#FCEAEA] text-[#991B1B]'}`}>
+              <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${spreadGood ? 'bg-[#E8F7EF] text-[#0D6B46]' : 'bg-[#FCEAEA] text-[#991B1B]'}`}>
                 {spreadGood ? 'Value Created' : 'Value Destroyed'}
               </span>
             </div>

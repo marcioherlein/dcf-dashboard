@@ -15,7 +15,7 @@ function Card({ title, subtitle, badge, children }: {
   title: string; subtitle: string; badge?: React.ReactNode; children: React.ReactNode
 }) {
   return (
-    <div className="bg-white rounded-[14px] border border-[#E5E5E5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 flex flex-col gap-3">
+    <div className="bg-white rounded-[14px] border border-[#E5E5E5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 sm:p-5 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-[12px] font-[700] text-[#111111]">{title}</p>
@@ -49,7 +49,7 @@ function EPVCard({ data, currency, currentPrice }: Props) {
       title="No-growth Floor (EPV)"
       subtitle="Greenwald — what the company earns if growth stops"
       badge={epv.isNormalized || epv.isCyclical ? (
-        <span className="text-[10px] font-[600] px-1.5 py-0.5 rounded-full bg-[#FFF4DA] border border-[#F3D391] text-[#B56A00] shrink-0">
+        <span className="text-[10px] font-[600] px-2.5 py-0.5 rounded-full bg-[#FFF4DA] border border-[#F3D391] text-[#B56A00] shrink-0">
           {epv.isNormalized ? 'Normalized' : 'Cyclical'}
         </span>
       ) : undefined}
@@ -101,7 +101,7 @@ function OwnerEarningsCard({ data, currency, currentPrice }: Props) {
       title="Capital Intensity"
       subtitle="How much of reported earnings is real cash for shareholders"
       badge={oe.isNormalized || oe.isCyclical ? (
-        <span className="text-[10px] font-[600] px-1.5 py-0.5 rounded-full bg-[#FFF4DA] border border-[#F3D391] text-[#B56A00] shrink-0">
+        <span className="text-[10px] font-[600] px-2.5 py-0.5 rounded-full bg-[#FFF4DA] border border-[#F3D391] text-[#B56A00] shrink-0">
           {oe.isNormalized ? 'Normalized' : 'Cyclical'}
         </span>
       ) : undefined}
@@ -130,7 +130,7 @@ function OwnerEarningsCard({ data, currency, currentPrice }: Props) {
           )}
 
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <span className={`self-start text-[10px] font-[700] px-2 py-0.5 rounded-full border ${intensityColor}`}>
+            <span className={`self-start text-[10px] font-[700] px-2.5 py-0.5 rounded-full border ${intensityColor}`}>
               {oe.capitalIntensityLabel}
             </span>
             {oe.ownerEarningsYield != null && currentPrice > 0 && (
@@ -140,7 +140,7 @@ function OwnerEarningsCard({ data, currency, currentPrice }: Props) {
             )}
           </div>
 
-          <div className="flex items-baseline gap-2 pt-1 border-t border-[#F4F3EF]">
+          <div className="flex items-baseline gap-2 pt-1 border-t border-[#E3E1DA]">
             <span className="text-[10px] text-[#6B6B6B]">Fair value (Buffett):</span>
             <span className="text-[14px] font-[750] tabular-nums text-[#111111]">{fmtPrice(oe.ownerEarningsFVPerShare, currency)}</span>
             <UpsidePill upsidePct={oe.upsidePct} />
@@ -204,7 +204,7 @@ export default function ValueInvestingPanel({ data, currency, currentPrice }: Pr
 
       {/* Header */}
       <div className="mb-4">
-        <p className="text-sm font-[700] text-[#111111] mb-1">Deep-Dive Checks</p>
+        <p className="text-[13px] font-[700] text-[#111111] leading-tight mb-1">Deep-Dive Checks</p>
         <p className="text-xs text-[#9B9B9B]">
           Independent cross-checks that ask different questions than the main models. Not blended into the fair value — each one reveals a different aspect of business quality or value.
         </p>

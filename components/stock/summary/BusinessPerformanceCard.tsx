@@ -506,7 +506,7 @@ export default function BusinessPerformanceCard({ statementsData, currency = 'US
     <div className="rounded-2xl overflow-hidden border border-[#E5E5E5] shadow-card">
       {/* Header with tab toggle */}
       <div className="px-4 sm:px-5 py-2.5 bg-white border-b border-[#E5E5E5] flex items-center justify-between gap-3">
-        <p className="text-[12px] font-[650] text-[#6B6B6B]">Business Performance</p>
+        <p className="text-[13px] font-[700] text-[#111111] leading-tight">Business Performance</p>
         <div className="flex items-center gap-0.5 bg-[#F5F5F5] rounded-lg p-0.5">
           {tabs.map(t => (
             <button

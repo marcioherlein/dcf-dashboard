@@ -177,8 +177,8 @@ export default function FCFChartCard({ statementsData, currency: _currency = 'US
 
   if (!statementsData || points.length === 0) {
     return (
-      <div className="bg-white border border-[#E5E5E5] rounded-xl p-4">
-        <p className="text-[11px] font-[650] text-[#6B6B6B] mb-2">
+      <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5">
+        <p className="text-[13px] font-[700] text-[#111111] leading-tight mb-2">
           Free cash flow
         </p>
         <p className="text-[12px] text-[#6B6B6B]">No cash flow data available.</p>
@@ -191,11 +191,11 @@ export default function FCFChartCard({ statementsData, currency: _currency = 'US
     : CHART_HEIGHTS.md
 
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4">
+    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5">
       {/* Header */}
       <div className="flex items-center justify-between mb-3 gap-2">
         <div className="flex items-baseline gap-1.5">
-          <span className="text-[11px] font-[650] text-[#6B6B6B]">
+          <span className="text-[13px] font-[700] text-[#111111] leading-tight">
             Free Cash Flow {unitLabel}
           </span>
         </div>

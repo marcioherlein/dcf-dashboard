@@ -176,7 +176,7 @@ export default function InvestorGradeCard({
                 {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
               </span>
               {zone && (
-                <span className={cn('text-[10px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap', zoneBadgeClass(zone))}>
+                <span className={cn('text-[10px] font-semibold rounded-full px-2.5 py-0.5 border whitespace-nowrap', zoneBadgeClass(zone))}>
                   {zone === 'Undervalued' ? 'Attractive' : zone === 'Fairly Valued' ? 'Fair' : 'Expensive'}
                 </span>
               )}
@@ -216,7 +216,7 @@ export default function InvestorGradeCard({
             <div className="flex items-start justify-between gap-2 sm:gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="rounded-md bg-[#EAF1FF] border border-[#93B4F5] px-2 py-0.5 text-xs font-bold text-[#2563EB] tracking-wide">
+                  <span className="rounded-full bg-[#EAF1FF] border border-[#93B4F5] px-2.5 py-0.5 text-xs font-bold text-[#2563EB] tracking-wide">
                     {ticker}
                   </span>
                   {sector && <span className="text-[11px] text-[#566174] truncate">{sector}</span>}
@@ -292,7 +292,7 @@ export default function InvestorGradeCard({
               {/* Upside badge centered */}
               {upsidePct != null && zone && (
                 <div className="flex flex-col items-center gap-1 shrink-0">
-                  <span className={cn('text-sm font-bold tabular-nums px-3 py-1 rounded-full border whitespace-nowrap', zoneBadgeClass(zone))}>
+                  <span className={cn('text-sm font-bold tabular-nums px-2.5 py-0.5 rounded-full border whitespace-nowrap', zoneBadgeClass(zone))}>
                     {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
                   </span>
                   <span className="text-[10px] text-[#8A95A6]">{zone}</span>

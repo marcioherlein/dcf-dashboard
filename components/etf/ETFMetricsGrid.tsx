@@ -150,7 +150,7 @@ function ScoreRationale({ metrics }: { metrics: ETFMetrics }) {
         aria-expanded={open}
       >
         <div className="flex items-center gap-3">
-          <span className="text-[11px] font-bold text-[#6B6B6B] uppercase tracking-[0.06em]">Score Rationale</span>
+          <span className="text-[11px] font-[700] text-[#566174] uppercase tracking-wider">Score Rationale</span>
           <span className={cn('text-[11px] font-semibold px-2 py-0.5 rounded-full', scoreColor(metrics.valueScore))}>
             {metrics.valueScore} · {metrics.valueScoreLabel}
           </span>
@@ -174,7 +174,7 @@ function ScoreRationale({ metrics }: { metrics: ETFMetrics }) {
                   <th className="text-right px-3 py-2 text-[10px] font-semibold text-[#6B6B6B] uppercase tracking-wide w-28">Contribution</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F5F5F5]">
+              <tbody className="divide-y divide-[#E3E1DA]">
                 {rows.map((row) => (
                   <tr key={row.label} className="bg-white">
                     <td className="px-3 py-2.5 text-[12px] text-[#06101F]">{row.label}</td>
@@ -222,9 +222,9 @@ export function ETFMetricsGrid({ metrics }: { metrics: ETFMetrics }) {
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Basket Valuation */}
-        <div className="glass-card-light rounded-xl p-4">
+        <div className="glass-card-light rounded-xl p-4 sm:p-5">
           <div className="flex items-center gap-1.5 mb-3">
-            <p className="text-sm font-semibold text-[#6B6B6B]">Basket valuation</p>
+            <p className="text-[11px] font-[600] text-[#566174]">Basket valuation</p>
             <InfoTooltip text="Weighted average ratios of the ETF's underlying holdings, not the ETF's own trading price." />
           </div>
           <MetricRow label="P/E ratio" value={fmt(metrics.peRatio)} color={peColor(metrics.peRatio)} tooltip="Price-to-Earnings: basket weighted average. Lower = more earnings per dollar paid." />
@@ -234,9 +234,9 @@ export function ETFMetricsGrid({ metrics }: { metrics: ETFMetrics }) {
         </div>
 
         {/* Value Score */}
-        <div className="glass-card-light rounded-xl p-4">
+        <div className="glass-card-light rounded-xl p-4 sm:p-5">
           <div className="flex items-center gap-1.5 mb-3">
-            <p className="text-sm font-semibold text-[#6B6B6B]">Value score</p>
+            <p className="text-[11px] font-[600] text-[#566174]">Value score</p>
             <InfoTooltip text="Score = P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio penalty (20 pts). 70+ = Deep Value." />
           </div>
           <ScoreGauge score={metrics.valueScore} label={metrics.valueScoreLabel} />
@@ -257,8 +257,8 @@ export function ETFMetricsGrid({ metrics }: { metrics: ETFMetrics }) {
         </div>
 
         {/* Fund Profile */}
-        <div className="glass-card-light rounded-xl p-4">
-          <p className="text-sm font-semibold text-[#6B6B6B] mb-3">Fund profile</p>
+        <div className="glass-card-light rounded-xl p-4 sm:p-5">
+          <p className="text-[11px] font-[600] text-[#566174] mb-3">Fund profile</p>
           <MetricRow label="Expense ratio" value={er} />
           <MetricRow label="Issuer" value={metrics.issuer ?? '—'} />
           <MetricRow label="Category" value={metrics.category ?? '—'} />
@@ -266,8 +266,8 @@ export function ETFMetricsGrid({ metrics }: { metrics: ETFMetrics }) {
         </div>
 
         {/* Income */}
-        <div className="glass-card-light rounded-xl p-4">
-          <p className="text-sm font-semibold text-[#6B6B6B] mb-3">Income</p>
+        <div className="glass-card-light rounded-xl p-4 sm:p-5">
+          <p className="text-[11px] font-[600] text-[#566174] mb-3">Income</p>
           <MetricRow label="Trailing yield" value={yld} color={metrics.yield && metrics.yield > 0.02 ? 'text-[#11875D]' : 'text-[#06101F]'} />
           <MetricRow label="Annual dividend" value={metrics.dividendRate != null ? `$${metrics.dividendRate.toFixed(2)}` : '—'} />
         </div>

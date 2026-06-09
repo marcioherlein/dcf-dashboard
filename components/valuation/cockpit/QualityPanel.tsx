@@ -55,7 +55,7 @@ function MoatGauge({ roic, roicSpread, wacc }: { roic: number | null; roicSpread
   if (roic == null) {
     return (
       <div className="flex flex-col gap-1.5">
-        <p className="text-[10px] font-[600] text-[#566174]">ROIC / WACC Spread</p>
+        <p className="text-[11px] font-[600] text-[#566174]">ROIC / WACC Spread</p>
         <p className="text-[11px] text-[#8A95A6]">ROIC data unavailable</p>
       </div>
     )
@@ -86,7 +86,7 @@ function MoatGauge({ roic, roicSpread, wacc }: { roic: number | null; roicSpread
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <p className="text-[10px] font-[600] text-[#566174]">ROIC vs WACC</p>
+        <p className="text-[11px] font-[600] text-[#566174]">ROIC vs WACC</p>
         <span className={`text-[10px] font-[700] ${moatColor}`}>{moatLabel}</span>
       </div>
 
@@ -171,7 +171,7 @@ export default function QualityPanel({
           )}
         </div>
       )}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:divide-x sm:divide-[#F4F3EF]">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:divide-x sm:divide-[#E3E1DA]">
 
         {/* Left: ROIC / WACC moat gauge */}
         <div className="sm:pr-5">
@@ -180,7 +180,7 @@ export default function QualityPanel({
 
         {/* Center: Star rating + conviction */}
         <div className="sm:px-5 flex flex-col gap-2">
-          <p className="text-[10px] font-[600] text-[#566174]">Conviction</p>
+          <p className="text-[11px] font-[600] text-[#566174]">Conviction</p>
           {starRating ? (
             <>
               <Stars count={starRating.stars} />

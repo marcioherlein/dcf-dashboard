@@ -42,7 +42,7 @@ export default function MacroSignals({ signals }: Props) {
   return (
     <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden h-full flex flex-col">
       <div className="px-4 py-2.5 border-b border-[#E5E5E5]">
-        <span className="text-[11px] font-bold text-[#6B6B6B]">Macro Environment</span>
+        <span className="text-[13px] font-[700] text-[#111111] leading-tight">Macro Environment</span>
         <p className="text-[11px] text-[#6B6B6B] mt-0.5">Key signals that influence discount rates, risk appetite, and valuations.</p>
       </div>
 

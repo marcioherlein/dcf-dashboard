@@ -191,7 +191,7 @@ export default function ProfitabilityTextCard({
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#E5E5E5] rounded-xl p-4">
+      <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5">
         <div className="animate-pulse space-y-3">
           <div className="h-3 bg-[#E5E5E5] rounded w-24" />
           <div className="h-3 bg-[#E5E5E5] rounded w-full" />
@@ -203,14 +203,14 @@ export default function ProfitabilityTextCard({
   }
 
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4">
+    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5">
       {/* Header — label left, rating badge right */}
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-[12px] font-medium text-[#6B6B6B]">
+        <h3 className="text-[13px] font-[700] text-[#111111] leading-tight">
           Profitability
         </h3>
         {ratingsGrade && gradeBadgeClass && (
-          <span className={cn('text-[11px] font-semibold px-2 py-0.5 rounded-full leading-none', gradeBadgeClass)}>
+          <span className={cn('text-[11px] font-[600] px-2.5 py-0.5 rounded-full leading-none border', gradeBadgeClass)}>
             {ratingsGrade}
           </span>
         )}

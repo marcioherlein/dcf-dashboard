@@ -87,7 +87,7 @@ export default function SummaryHeroCard({
 
   return (
     <div
-      className={cn('border rounded-xl p-5 overflow-hidden shadow-card', verdict.borderClass)}
+      className={cn('border rounded-xl p-4 sm:p-5 overflow-hidden shadow-card', verdict.borderClass)}
       style={{ background: verdict.bgStyle }}
     >
       <div className="flex flex-col gap-4">
@@ -100,7 +100,7 @@ export default function SummaryHeroCard({
           </p>
           {confidence && (
             <span className={cn(
-              'self-start text-[12px] font-[650] px-[10px] py-[4px] rounded-full border',
+              'self-start text-[12px] font-[600] px-[10px] py-[4px] rounded-full border',
               confidenceChip(confidence),
             )}>
               {confidence} Confidence · {modelCount}/{totalModels} models
@@ -116,14 +116,14 @@ export default function SummaryHeroCard({
         {/* ── Primary metrics ── */}
         <div className="flex flex-wrap items-end gap-5">
           <div>
-            <p className="text-[11px] text-[#6B6B6B] mb-0.5">Fair value</p>
+            <p className="text-[11px] font-[600] text-[#566174] mb-0.5">Fair value</p>
             <p className="text-[26px] font-[750] text-ink-900 tabular-nums leading-none">
               {fairValue != null ? fmtPrice(fairValue, currency) : '—'}
             </p>
           </div>
           <div className="w-px h-7 bg-[#E5E5E5] self-end mb-0.5 shrink-0" />
           <div>
-            <p className="text-[11px] text-[#6B6B6B] mb-0.5">vs current price</p>
+            <p className="text-[11px] font-[600] text-[#566174] mb-0.5">vs current price</p>
             <p className={cn('text-[26px] font-[750] leading-none tabular-nums', verdict.upsideClass)}>
               {upsideDisplay}
             </p>
@@ -185,7 +185,7 @@ export default function SummaryHeroCard({
         {/* ── Key strengths ── */}
         {badgeDrivers.length > 0 && (
           <div>
-            <p className="text-[11px] text-[#6B6B6B] mb-2">Key strengths</p>
+            <p className="text-[11px] font-[600] text-[#566174] mb-2">Key strengths</p>
             <div className="flex flex-wrap gap-1.5">
               {badgeDrivers.map((label, i) => (
                 <span

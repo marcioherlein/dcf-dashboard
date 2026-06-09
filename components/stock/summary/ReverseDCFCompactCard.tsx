@@ -117,7 +117,7 @@ export default function ReverseDCFCompactCard({
     rawBlendedCagr != null && cagrCap != null && rawBlendedCagr > cagrCap + 0.001
 
   return (
-    <div className={cn(CARD, 'p-4 flex flex-col gap-3')}>
+    <div className={cn(CARD, 'p-4 sm:p-5 flex flex-col gap-3')}>
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
         <p className="text-[13px] font-[700] text-[#111111] leading-tight">
@@ -152,7 +152,7 @@ export default function ReverseDCFCompactCard({
       <div className="flex flex-col sm:flex-row gap-4">
         {/* Left */}
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-[650] text-[#6B6B6B] mb-1 flex items-center gap-1">
+          <p className="text-[11px] font-[600] text-[#6B6B6B] mb-1 flex items-center gap-1">
             Implied 5Y Revenue CAGR
             <InfoTooltip content="What annual revenue growth rate does the market assume over the next 5 years to justify today's price? Uses current FCF margins and WACC. A 5-year horizon gives a more demanding (conservative) implied rate than 10 years." />
           </p>
@@ -305,7 +305,7 @@ function HistoricalCAGRBlock({
 
   return (
     <div className="mt-2.5">
-      <p className="text-[11px] font-[650] text-[#6B6B6B] mb-0.5">
+      <p className="text-[11px] font-[600] text-[#6B6B6B] mb-0.5">
         {isFinancialSector ? '3Y Historical Earnings CAGR' : '3Y Historical CAGR'}
       </p>
       <div

@@ -68,7 +68,7 @@ function ScenarioCard({
       <p className="text-[11px] text-[#566174] leading-snug mb-3">{rationale}</p>
       <div className="flex gap-4">
         <div>
-          <p className="text-[11px] text-[#566174] mb-0.5">WACC</p>
+          <p className="text-[11px] font-[600] text-[#566174] mb-0.5">WACC</p>
           <p className="text-[12px] font-[650] text-[#566174] tabular-nums">
             {(wacc * 100).toFixed(1)}%
             {!isBase && Math.abs(waccDelta) > 0.0001 && (
@@ -79,7 +79,7 @@ function ScenarioCard({
           </p>
         </div>
         <div>
-          <p className="text-[11px] text-[#566174] mb-0.5">5Y CAGR</p>
+          <p className="text-[11px] font-[600] text-[#566174] mb-0.5">5Y CAGR</p>
           <p className="text-[12px] font-[650] text-[#566174] tabular-nums">
             {(cagr * 100).toFixed(1)}%
             {!isBase && Math.abs(cagrDelta) > 0.0001 && (
@@ -99,7 +99,7 @@ export default function ScenarioCards({ scenarios, currentPrice, currency }: Pro
   return (
     <div className="bg-white rounded-[20px] border border-[#E6ECF5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] px-5 py-4">
       <div className="flex items-center justify-between mb-1">
-        <p className="text-[12px] font-[650] text-[#566174]">Scenario Analysis</p>
+        <p className="text-[13px] font-[700] text-[#111111] leading-tight">Scenario Analysis</p>
         <span className="text-[11px] text-[#566174]">All four methods re-run at each stress, same blend as Base</span>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">

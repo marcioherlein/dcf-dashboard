@@ -59,7 +59,7 @@ export default function TopMoversCard() {
   return (
     <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden h-full flex flex-col">
       <div className="px-4 py-2.5 border-b border-[#E5E5E5] flex items-center justify-between">
-        <span className="text-[10px] font-bold text-[#6B6B6B]">Top Movers</span>
+        <span className="text-[13px] font-[700] text-[#111111] leading-tight">Top Movers</span>
         <div className="flex rounded-lg overflow-hidden border border-[#E5E5E5] text-[10px] font-bold">
           {(['gainers', 'losers'] as Tab[]).map(t => (
             <button

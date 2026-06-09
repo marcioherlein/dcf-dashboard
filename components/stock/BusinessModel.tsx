@@ -143,7 +143,7 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
 
   return (
     <div className="rounded-xl card px-4 py-4 sm:p-6">
-      <h2 className="text-[11px] font-bold uppercase tracking-widest text-[#8A95A6] mb-4">The Business</h2>
+      <h2 className="text-[11px] font-[700] text-[#566174] uppercase tracking-wider mb-4">The Business</h2>
 
       {/* Context pills */}
       {pills.length > 0 && (

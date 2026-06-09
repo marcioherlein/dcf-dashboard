@@ -93,8 +93,8 @@ export default function CAGRAnalysis({ cagrAnalysis: ca, isNegativeFCF, growthMo
   return (
     <div className="rounded-xl card p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-sm font-headline font-semibold text-[#06101F]">CAGR Analysis</h2>
-        <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${confColor[ca.confidenceLabel]}`}>
+        <h2 className="text-[13px] font-[700] text-[#111111] leading-tight">CAGR Analysis</h2>
+        <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-[600] ${confColor[ca.confidenceLabel]}`}>
           {ca.confidenceLabel} confidence · {Math.round(ca.confidence * 100)}%
         </span>
       </div>
@@ -172,9 +172,9 @@ export default function CAGRAnalysis({ cagrAnalysis: ca, isNegativeFCF, growthMo
         <div className="flex items-center gap-2">
           <p className="text-xs font-semibold text-[#566174]">DCF Growth Model</p>
           {growthModel === 'three-stage' ? (
-            <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold bg-violet-50 text-violet-600">Three-Stage (Damodaran)</span>
+            <span className="rounded-full px-2.5 py-0.5 text-[11px] font-[600] border bg-violet-50 text-violet-600 border-violet-200">Three-Stage (Damodaran)</span>
           ) : (
-            <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold bg-[#F4F3EF] text-[#566174]">Two-Stage (Standard)</span>
+            <span className="rounded-full px-2.5 py-0.5 text-[11px] font-[600] border bg-[#F4F3EF] text-[#566174] border-[#E3E1DA]">Two-Stage (Standard)</span>
           )}
         </div>
         {growthModel === 'three-stage' ? (

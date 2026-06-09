@@ -129,9 +129,9 @@ export default function MarketInterpretationCard({
     reverseDCFInterpretation === 'not_meaningful'
 
   return (
-    <div className={cn(CARD, 'p-4 flex flex-col gap-3')}>
+    <div className={cn(CARD, 'p-4 sm:p-5 flex flex-col gap-3')}>
       {/* Header */}
-      <p className="text-[13px] font-[700] text-[#06101F]">Market Interpretation</p>
+      <p className="text-[13px] font-[700] text-[#111111] leading-tight">Market Interpretation</p>
 
       {/* Interpretation box */}
       <div
@@ -154,7 +154,7 @@ export default function MarketInterpretationCard({
 
       {/* Analyst consensus */}
       {showAnalyst && (
-        <div className="flex flex-col gap-2 border-t border-[#E5E5E5] pt-3 mt-1">
+        <div className="flex flex-col gap-2 border-t border-[#E3E1DA] pt-3 mt-1">
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="text-[11px] font-[600] text-[#566174] mb-0.5">

@@ -50,12 +50,12 @@ function ScenarioCol({
         : 'border-[#E3E1DA] bg-white'
     }`}>
       <div className="flex items-center gap-1.5">
-        <span className={`text-[10px] font-bold uppercase tracking-wider ${
+        <span className={`text-[11px] font-[700] uppercase tracking-wider ${
           label === 'Bull' ? 'text-[#11875D]' :
           label === 'Bear' ? 'text-[#D83B3B]' : 'text-[#2563EB]'
         }`}>{label}</span>
         {isFeatured && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#EAF1FF] text-[#2563EB] font-bold">Base case</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#EAF1FF] text-[#2563EB] font-[600] border border-blue-100">Base case</span>
         )}
       </div>
 
@@ -134,7 +134,7 @@ export default function ScenarioComparisonCard({ scenarios, currentPrice, curren
 
   return (
     <div className="glass-card-light rounded-xl p-5">
-      <h3 className="text-[13px] font-semibold text-[#06101F] mb-3">Scenario analysis</h3>
+      <h3 className="text-[13px] font-[700] text-[#111111] leading-tight mb-3">Scenario analysis</h3>
       <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-1 px-1 sm:grid sm:grid-cols-3 sm:overflow-visible sm:snap-none sm:pb-0 sm:mx-0 sm:px-0">
         <ScenarioCol label="Bear" scenario={scenarios.bear} currentPrice={currentPrice} currency={currency} />
         <ScenarioCol label="Base" scenario={scenarios.base} currentPrice={currentPrice} currency={currency} isFeatured />
@@ -143,7 +143,7 @@ export default function ScenarioComparisonCard({ scenarios, currentPrice, curren
 
       {m && (
         <div className="mt-4 pt-3 border-t border-[#E3E1DA]">
-          <p className="text-[12px] font-semibold text-[#566174] mb-2">Model weights</p>
+          <p className="text-[11px] font-[600] text-[#566174] mb-2">Model weights</p>
           <div className="flex flex-wrap gap-1.5 mb-2">
             {m.weights.ufcfPGM > 0 && (
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#EAF1FF] text-[#2563EB] font-semibold border border-blue-100">

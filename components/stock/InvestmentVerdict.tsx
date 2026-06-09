@@ -106,7 +106,7 @@ function CriterionRow({ c }: { c: Criterion }) {
     <div
       role="row"
       aria-label={`${c.label}: ${c.status} — ${c.value}`}
-      className="flex items-center justify-between gap-2 py-[7px] border-b border-[#F0F0F0] last:border-0"
+      className="flex items-center justify-between gap-2 py-[7px] border-b border-[#E3E1DA] last:border-0"
     >
       <div className="flex items-center gap-[7px] min-w-0">
         <StatusIcon status={c.status} />
@@ -128,7 +128,7 @@ function CriterionRow({ c }: { c: Criterion }) {
 function CategoryHeader({ label }: { label: string }) {
   return (
     <p
-      className="text-[11px] font-[600] pt-[6px] pb-[2px] text-[#6B6B6B]"
+      className="text-[11px] font-[600] pt-[6px] pb-[2px] text-[#566174]"
     >
       {label}
     </p>
@@ -375,20 +375,20 @@ export default function InvestmentVerdict({
 
   return (
     <div
-      className="rounded-xl p-4 flex flex-col gap-0 bg-white border border-[#E5E5E5]"
+      className="rounded-xl p-4 sm:p-5 flex flex-col gap-0 bg-white border border-[#E5E5E5]"
     >
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-[6px]">
           <span
-            className="text-[13px] font-[700] text-[#444444]"
+            className="text-[13px] font-[700] text-[#111111]"
           >
             Investment Checklist
           </span>
           <InfoIcon />
         </div>
         <span
-          className="text-[11px] font-bold tabular-nums px-[8px] py-[2px] rounded-full border"
+          className="text-[11px] font-bold tabular-nums px-2.5 py-0.5 rounded-full border"
           style={{
             color: summaryColor,
             background: ratio >= 0.75 ? '#E8F7EF' : ratio >= 0.5 ? '#FFF4DA' : '#FCEAEA',

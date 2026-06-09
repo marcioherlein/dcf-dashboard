@@ -92,7 +92,7 @@ function initials(name: string): string {
 
 function TagChip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded-full border border-[#E5E5E5] bg-white px-3 py-1 text-[12px] font-semibold text-[#6B6B6B]">
+    <span className="rounded-full border border-[#E5E5E5] bg-white px-2.5 py-0.5 text-[11px] font-[600] text-[#6B6B6B]">
       {children}
     </span>
   )
@@ -106,7 +106,7 @@ interface MetricRowProps {
 function MetricRow({ label, value, last }: MetricRowProps) {
   return (
     <div
-      className={`flex items-center justify-between py-2.5 ${last ? '' : 'border-b border-[#E5E5E5]'}`}
+      className={`flex items-center justify-between py-2.5 ${last ? '' : 'border-b border-[#E3E1DA]'}`}
     >
       <span className="text-[12px] text-[#6B6B6B] leading-none">{label}</span>
       <span className="text-[12px] font-bold text-[#111111] leading-none tabular-nums">
@@ -330,7 +330,7 @@ export default function StockIdentityHeader({
         <div
           className="hidden sm:flex flex-shrink-0 flex-col justify-start sm:basis-[30%] sm:max-w-[30%] sm:min-w-[160px]"
         >
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9B9B9B] mb-1">
+          <p className="text-[11px] font-[700] text-[#566174] uppercase tracking-wider mb-1">
             Current Price
           </p>
           <p className="text-[34px] font-bold leading-none text-[#111111] tracking-tight">
@@ -415,8 +415,8 @@ export default function StockIdentityHeader({
           className="bg-white border border-[#E5E5E5] rounded-xl flex flex-col w-full sm:basis-[30%] sm:max-w-[30%] sm:min-w-[200px]"
           style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
         >
-          <div className="px-4 pt-4 pb-3 border-b border-[#E5E5E5]">
-            <p className="text-[12px] font-semibold text-[#6B6B6B]">
+          <div className="px-4 pt-4 pb-3 border-b border-[#E3E1DA]">
+            <p className="text-[11px] font-[600] text-[#566174]">
               Market metrics
             </p>
           </div>
@@ -466,8 +466,8 @@ export default function StockIdentityHeader({
           </div>
 
           {/* 52-Week Range */}
-          <div className="px-4 pb-4 pt-1 border-t border-[#E5E5E5] mt-1">
-            <p className="text-[12px] font-semibold text-[#6B6B6B] mb-1">
+          <div className="px-4 pb-4 pt-1 border-t border-[#E3E1DA] mt-1">
+            <p className="text-[11px] font-[600] text-[#566174] mb-1">
               52-week range
             </p>
             <RangeSlider
