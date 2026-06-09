@@ -499,7 +499,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
       </div>
 
       {/* ── 7. SENSITIVITY MATRIX ────────────────────────────────────────────── */}
-      <ProGate featureName="Sensitivity table" isPro={isPro}>
+      <ProGate featureName="Sensitivity table" isPro={isPro} placeholderHeight="h-40">
         <SensitivityMatrix
           assumptions={assumptions}
           snapshot={effectiveSnapshot}
