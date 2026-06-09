@@ -1320,7 +1320,185 @@ async function runSentiment() {
   await post(lines.join('\n'))
 }
 
+// ─── Mode: morning_brief ──────────────────────────────────────────────────────
+// Daily 8AM brief — no LLM, pure template logic from free APIs.
+// Covers: market open tone, earnings today, macro calendar, top headline.
 
+async function runMorningBrief() {
+  const todayUtc = new Date().toISOString().split('T')[0]
+  const dayName  = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+
+  // ── 1. Macro events today ──────────────────────────────────────────────────
+  const macroToday = MACRO_CALENDAR.filter(e => e.date === todayUtc)
+
+  // ── 2. ETF snapshot (SPY + VIX only — 2 Alpha Vantage requests) ───────────
+  const spy = await fetchEtfQuote('SPY').catch(() => null)
+  await new Promise(r => setTimeout(r, 1500))
+  const vix = await fetchEtfQuote('VIX').catch(() => null)
+
+  // ── 3. Earnings today ─────────────────────────────────────────────────────
+  const earningsTickers = []
+  for (let i = 0; i < SP500_SAMPLE.length; i += 8) {
+    const batch = SP500_SAMPLE.slice(i, i + 8)
+    const settled = await Promise.allSettled(batch.map(async t => {
+      const res = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1d`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }
+      ).catch(() => null)
+      if (!res?.ok) return null
+      const json = await res.json().catch(() => null)
+      const meta = json?.chart?.result?.[0]?.meta
+      if (!meta) return null
+      const ts = meta.earningsTimestampStart
+      if (!ts) return null
+      const d = new Date(ts * 1000).toISOString().split('T')[0]
+      return d === todayUtc ? { symbol: t, marketCap: meta.marketCap ?? 0 } : null
+    }))
+    for (const r of settled) {
+      if (r.status === 'fulfilled' && r.value) earningsTickers.push(r.value)
+    }
+    if (i + 8 < SP500_SAMPLE.length) await new Promise(r => setTimeout(r, 400))
+  }
+  earningsTickers.sort((a, b) => b.marketCap - a.marketCap)
+
+  // ── 4. Top headline ───────────────────────────────────────────────────────
+  let headline = null
+  let headlineLink = null
+  try {
+    const trendRes = await fetch(
+      'https://query1.finance.yahoo.com/v1/finance/trending/US?count=5',
+      { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+    ).catch(() => null)
+    if (trendRes?.ok) {
+      const trendJson = await trendRes.json().catch(() => null)
+      const trendTicker = trendJson?.finance?.result?.[0]?.quotes?.[0]?.symbol
+      if (trendTicker) {
+        const newsRes = await fetch(
+          `https://query1.finance.yahoo.com/v1/finance/search?q=${trendTicker}&newsCount=3&quotesCount=0`,
+          { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+        ).catch(() => null)
+        if (newsRes?.ok) {
+          const newsJson = await newsRes.json().catch(() => null)
+          const item = (newsJson?.news ?? []).find(n => n.title?.length > 20)
+          headline = item?.title ?? null
+          headlineLink = item?.link ?? null
+        }
+      }
+    }
+  } catch { /* skip headline if unavailable */ }
+
+  // ── 5. Narrative assembly ─────────────────────────────────────────────────
+
+  // Market open tone
+  const spyMove = spy?.changePct ?? 0
+  const vixLevel = vix?.price ?? 0
+  const marketTone = spyMove > 1.0
+    ? `Markets are opening on a strong note. SPY is up ${spyMove.toFixed(1)}% — risk appetite is back.`
+    : spyMove > 0.3
+    ? `A modestly positive open on the cards. SPY +${spyMove.toFixed(1)}%, nothing dramatic, but the bias is green.`
+    : spyMove > -0.3
+    ? `Flat open expected. SPY is barely moving (${spyMove >= 0 ? '+' : ''}${spyMove.toFixed(1)}%) — markets in wait-and-see mode.`
+    : spyMove > -1.0
+    ? `Cautious start this morning. SPY -${Math.abs(spyMove).toFixed(1)}%, sellers have a slight edge early on.`
+    : `Markets are under pressure at the open. SPY -${Math.abs(spyMove).toFixed(1)}% — it's a risk-off morning.`
+
+  const vixContext = vixLevel >= 30
+    ? ` The VIX at ${vixLevel.toFixed(0)} is flashing extreme fear — volatility is elevated and the market is pricing in real uncertainty.`
+    : vixLevel >= 22
+    ? ` VIX at ${vixLevel.toFixed(0)} — investors are on edge. Not panic, but not calm either.`
+    : vixLevel >= 15
+    ? ` VIX sits at ${vixLevel.toFixed(0)}, broadly neutral. No major fear signals.`
+    : vixLevel > 0
+    ? ` VIX at ${vixLevel.toFixed(0)} — complacency territory. Low volatility often precedes a move.`
+    : ''
+
+  // Macro narrative
+  const macroLines = macroToday.length > 0 ? macroToday.map(e => {
+    if (e.type === 'FOMC') return `🏦 Fed rate decision today. The market is largely expecting a hold — but watch Powell's press conference for forward guidance on cuts. Any shift in tone will move WACC assumptions across every valuation model.`
+    if (e.type === 'CPI')  return `📊 CPI inflation print today. This one matters: a hot number keeps rates elevated and compresses DCF fair values; a cool print opens the door to cuts and lifts them.`
+    if (e.type === 'NFP')  return `💼 Jobs report (NFP) out today. Strong payrolls = Fed on hold. Weak payrolls = rate cuts come sooner. Watch the number vs. expectations, not just the absolute figure.`
+    return `📅 ${e.label} today.`
+  }) : []
+
+  // Earnings narrative
+  let earningsLines = []
+  if (earningsTickers.length > 0) {
+    const names = earningsTickers.slice(0, 4).map(t => `$${t.symbol}`)
+    const nameStr = names.length === 1
+      ? names[0]
+      : names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1]
+    earningsLines = [
+      `${nameStr} ${names.length === 1 ? 'reports' : 'report'} today. The question isn't just whether they beat — it's whether the beat is enough to justify current prices. Run the model before the number drops.`,
+    ]
+  }
+
+  // Headline narrative
+  const headlineLines = []
+  if (headline) {
+    // Simple keyword-based framing — no LLM needed
+    const h = headline.toLowerCase()
+    let framing = 'Worth watching for valuation implications.'
+    if (h.includes('acqui') || h.includes('merger') || h.includes('deal'))
+      framing = 'M&A moves the fair value calculus — changes FCF trajectory, leverage, and growth assumptions.'
+    else if (h.includes('layoff') || h.includes('cut') || h.includes('restructur'))
+      framing = 'Cost cuts improve margins near-term but signal demand concerns. Watch the revenue side closely.'
+    else if (h.includes('beat') || h.includes('surpass') || h.includes('record'))
+      framing = 'Strong results — but check whether the price already reflects this. A beat into an expensive valuation is still expensive.'
+    else if (h.includes('miss') || h.includes('disappoint') || h.includes('below'))
+      framing = 'A miss creates volatility. Whether it\'s a buying opportunity depends entirely on what the model says about fair value.'
+    else if (h.includes('rate') || h.includes('fed') || h.includes('inflation'))
+      framing = 'Macro moves discount rates — and discount rates move every valuation. Keep an eye on WACC implications.'
+    else if (h.includes('ai') || h.includes('chip') || h.includes('nvidia') || h.includes('semiconductor'))
+      framing = 'AI infrastructure spending continues to reshape capex cycles. Growth stocks in the space carry premium assumptions — verify the model.'
+
+    headlineLines.push(`"${headline}"`)
+    headlineLines.push(framing)
+    if (headlineLink) headlineLines.push(headlineLink)
+  }
+
+  // Rotating closing hook
+  const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
+  const hooks = [
+    'What are you watching today?',
+    "What's your game plan this morning?",
+    'Any positions reporting today? Drop them below 👇',
+    'What does your model say about the stocks in focus today?',
+  ]
+  const closingHook = hooks[weekOfYear % hooks.length]
+
+  // ── Build final post ───────────────────────────────────────────────────────
+  const sections = [
+    `🌅 Good Morning — ${dayName}`,
+    ``,
+    marketTone + vixContext,
+  ]
+
+  if (macroLines.length > 0) {
+    sections.push(``)
+    sections.push(`━━━ MACRO ━━━`)
+    sections.push(...macroLines)
+  }
+
+  if (earningsLines.length > 0) {
+    sections.push(``)
+    sections.push(`━━━ EARNINGS TODAY ━━━`)
+    sections.push(...earningsLines)
+  }
+
+  if (headlineLines.length > 0) {
+    sections.push(``)
+    sections.push(`━━━ THIS MORNING ━━━`)
+    sections.push(...headlineLines)
+  }
+
+  sections.push(``)
+  sections.push(closingHook)
+  sections.push(``)
+  sections.push(`Run the valuations → ${APP_URL}`)
+  sections.push(`#GoodMorning #StockMarket #Investing #WallStreet`)
+
+  await post(sections.join('\n'))
+}
 
 const MODES = {
   earnings:    runEarnings,
@@ -1331,8 +1509,9 @@ const MODES = {
   feature:     runFeature,
   weekly_wrap: runWeeklyWrap,
   question:    runQuestion,
-  etf_pulse:   runEtfPulse,
-  sentiment:   runSentiment,
+  etf_pulse:      runEtfPulse,
+  sentiment:      runSentiment,
+  morning_brief:  runMorningBrief,
 }
 
 if (!MODES[MODE]) {

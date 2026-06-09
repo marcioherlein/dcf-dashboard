@@ -3,6 +3,7 @@ name: X Auto-Post
 on:
   schedule:
     # ── Weekdays Mon–Fri ──────────────────────────────────────────────────────
+    - cron: '0 11 * * 1-5'   # 08:00 AM ART — Good morning brief
     - cron: '0 13 * * 1-5'   # 10:00 AM ART — Earnings preview
     - cron: '0 14 * * 1-5'   # 11:00 AM ART — App feature/education
     - cron: '0 15 * * 1-5'   # 12:00 PM ART — DCF snapshot (bullish)
@@ -29,7 +30,7 @@ on:
         required: true
         default: 'dcf'
         type: choice
-        options: [earnings, dcf, dcf_bear, macro, news, feature, weekly_wrap, question, etf_pulse, sentiment]
+        options: [earnings, dcf, dcf_bear, macro, news, feature, weekly_wrap, question, etf_pulse, sentiment, morning_brief]
       ticker:
         description: 'Ticker override (dcf / dcf_bear modes only)'
         required: false
@@ -67,7 +68,8 @@ jobs:
             DOW=$(TZ=UTC date +%u)   # 1=Mon … 7=Sun
 
             # Weekdays (DOW 1-5)
-            if   [ "$DOW" -le "5" ] && [ "$HOUR" = "13" ]; then echo "MODE=earnings"     >> $GITHUB_ENV
+            if   [ "$DOW" -le "5" ] && [ "$HOUR" = "11" ]; then echo "MODE=morning_brief" >> $GITHUB_ENV
+            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "13" ]; then echo "MODE=earnings"     >> $GITHUB_ENV
             elif [ "$DOW" -le "5" ] && [ "$HOUR" = "14" ]; then echo "MODE=feature"      >> $GITHUB_ENV
             elif [ "$DOW" -le "5" ] && [ "$HOUR" = "15" ]; then echo "MODE=dcf"          >> $GITHUB_ENV
             elif [ "$DOW" -le "5" ] && [ "$HOUR" = "17" ]; then echo "MODE=macro"        >> $GITHUB_ENV
