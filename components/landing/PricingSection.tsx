@@ -1,9 +1,7 @@
 'use client'
-import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { Check } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 const FREE_FEATURES = [
   'Stock analysis (any ticker)',
@@ -36,11 +34,7 @@ const PRO_DIFF = [
 ]
 
 export default function PricingSection() {
-  const [annual, setAnnual] = useState(false)
-
-  const monthlyPrice  = 17
-  const annualMonthly = 11.33
-  const annualTotal   = 136
+  const monthlyPrice = 17
 
   return (
     <section id="pricing" className="overflow-x-hidden" style={{ background: '#FFFFFF', borderBottom: '1px solid #E5E5E5' }}>
@@ -51,34 +45,6 @@ export default function PricingSection() {
           <h2 className="text-[28px] sm:text-[36px] font-bold text-[#111111] leading-tight mb-3" style={{ letterSpacing: '-0.025em' }}>
             Simple pricing.<br />Everything you need.
           </h2>
-
-          {/* Toggle */}
-          <div className="inline-flex items-center gap-1 rounded-full bg-white border border-[#E5E5E5] p-1 mt-4" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-            <button
-              onClick={() => setAnnual(false)}
-              className={cn(
-                'rounded-full px-5 py-2 text-[13.5px] font-semibold transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-2',
-                !annual ? 'bg-[#5F790B] text-white' : 'text-[#6B6B6B] hover:text-[#111111]',
-              )}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setAnnual(true)}
-              className={cn(
-                'rounded-full px-5 py-2 text-[13.5px] font-semibold transition-colors flex items-center gap-2 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-2',
-                annual ? 'bg-[#5F790B] text-white' : 'text-[#6B6B6B] hover:text-[#111111]',
-              )}
-            >
-              Annual
-              <span className={cn(
-                'text-[10px] font-bold rounded-full px-2 py-0.5',
-                annual ? 'bg-white text-[#5F790B]' : 'bg-[#EEF4DD] text-[#5F790B]',
-              )}>
-                Save 33%
-              </span>
-            </button>
-          </div>
         </div>
 
         {/* Cards */}
@@ -119,13 +85,10 @@ export default function PricingSection() {
             <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#9B9B9B] mb-3">Pro</p>
             <div className="flex items-baseline gap-1 mb-1">
               <span className="text-[44px] font-bold text-[#111111] leading-none tabular-nums">
-                ${annual ? annualMonthly.toFixed(2) : monthlyPrice}
+                ${monthlyPrice}
               </span>
               <span className="text-[13px] text-[#6B6B6B] font-medium">/month</span>
             </div>
-            {annual && (
-              <p className="text-[12px] text-[#6B6B6B] mb-1">Billed as ${annualTotal}/year</p>
-            )}
             <p className="text-[12px] text-[#6B6B6B] mb-5">For investors who want deeper research.</p>
             <a
               href="mailto:hello@insic.app?subject=Pro waitlist"

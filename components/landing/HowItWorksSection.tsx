@@ -9,19 +9,19 @@ const STEPS = [
   {
     n: '1',
     Icon: Search,
-    title: 'Search a ticker',
+    title: 'Search any NYSE or NASDAQ stock',
     body: 'Type a ticker — data loads immediately.',
   },
   {
     n: '2',
     Icon: TrendingUp,
-    title: 'See what the price is worth — and what it requires',
+    title: 'See the fair value and what the price implies',
     body: 'Compare the price to its estimated fair value. See what growth rate the market is betting on.',
   },
   {
     n: '3',
     Icon: SlidersHorizontal,
-    title: 'Tweak the numbers to test your thesis',
+    title: 'Stress-test the model with your own assumptions',
     body: 'Change growth and margin assumptions to see how the verdict shifts. No spreadsheet needed.',
   },
 ]
@@ -48,10 +48,10 @@ export default function HowItWorksSection() {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         >
           <h2 className="text-[24px] sm:text-[32px] font-bold text-[#111111] leading-tight" style={{ letterSpacing: '-0.025em' }}>
-            A first-pass valuation in seconds.
+            From ticker to verdict in under a minute.
           </h2>
           <p className="text-[14px] text-[#6B6B6B] mt-2 leading-relaxed max-w-md">
-            Go from searching a ticker to a clear valuation summary in three simple steps.
+            Type a ticker. See the fair value, the implied growth, and a conviction score — all from one screen.
           </p>
         </motion.div>
 

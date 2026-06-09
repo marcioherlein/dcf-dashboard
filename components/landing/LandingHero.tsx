@@ -94,7 +94,7 @@ export default function LandingHero() {
     <section
       className="overflow-x-hidden relative"
       style={{
-        paddingTop: 'max(72px, calc(60px + 2vh))',
+        paddingTop: 'max(96px, calc(80px + 2vh))',
         paddingBottom: 'clamp(52px, 6vh, 80px)',
         background: '#000000',
       }}

@@ -155,9 +155,12 @@ export default function LiveVerdictStrip() {
   return (
     <section className="bg-[#F5F5F5] py-16">
       <div className="max-w-5xl mx-auto px-6">
-        <h2 className="text-[28px] font-bold text-[#111111] text-center mb-10">
-          What the model says
+        <h2 className="text-[28px] font-bold text-[#111111] text-center mb-2">
+          Live model output — right now
         </h2>
+        <p className="text-[14px] text-[#6B6B6B] text-center mb-10">
+          Three stocks, three verdicts, computed fresh.
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
           {cards.map((card) => {
             if (card.state === 'loading') return <SkeletonCard key={card.ticker} />
