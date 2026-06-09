@@ -141,13 +141,13 @@ function PercentileStrip({
     { label: 'P90',  value: p90,          color: 'text-[#11875D]', sub: 'Best 10%'     },
   ]
   return (
-    <div className="grid grid-cols-5 gap-px bg-[#F5F5F5] rounded-xl overflow-hidden border border-[#E5E5E5]">
+    <div className="grid grid-cols-3 sm:grid-cols-5 gap-px bg-[#F5F5F5] rounded-xl overflow-hidden border border-[#E5E5E5]">
       {items.map(({ label, value, color, sub }) => {
         const upside = currentPrice > 0 ? (value - currentPrice) / currentPrice : null
         return (
-          <div key={label} className="bg-white px-2 py-2.5 flex flex-col items-center gap-0.5">
-            <span className="text-[11px] font-[700] text-[#9B9B9B]">{label}</span>
-            <span className={cn('text-[13px] font-[800] tabular-nums leading-tight', color)}>
+          <div key={label} className="bg-white px-1.5 sm:px-2 py-2 sm:py-2.5 flex flex-col items-center gap-0.5">
+            <span className="text-[10px] sm:text-[11px] font-[700] text-[#9B9B9B]">{label}</span>
+            <span className={cn('text-[12px] sm:text-[13px] font-[800] tabular-nums leading-tight', color)}>
               {fmtPrice(value, currency)}
             </span>
             {upside != null && (
@@ -345,7 +345,7 @@ export default function MonteCarloPanel({
 
       {/* ── Expanded content ── */}
       {expanded && (
-        <div className="px-5 pb-5 space-y-5 border-t border-[#E5E5E5]">
+        <div className="px-3 sm:px-5 pb-3 sm:pb-5 space-y-5 border-t border-[#E5E5E5]">
 
           {/* Onboarding tooltip — first time only */}
           {showOnboard && (

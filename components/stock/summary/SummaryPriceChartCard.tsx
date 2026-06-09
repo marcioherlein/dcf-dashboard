@@ -57,7 +57,7 @@ export default function SummaryPriceChartCard({
     <div className={cn(CARD, 'flex flex-col overflow-hidden')}>
 
       {/* Chart — PriceChart renders its own header with title + legend */}
-      <div className="flex-1 min-h-[220px]">
+      <div className="flex-1 min-h-[160px] sm:min-h-[220px]">
         <PriceChart
           ticker={ticker}
           isDark={false}
@@ -69,7 +69,7 @@ export default function SummaryPriceChartCard({
 
       {/* Footer metrics */}
       <div className="border-t border-[#E5E5E5]">
-        <div className="grid grid-cols-4 divide-x divide-[#E5E5E5]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#E5E5E5]">
           <FooterMetric label="52W Low"    value={fmtPrice(low52, currency)} />
           <FooterMetric label="52W High"   value={fmtPrice(high52, currency)} />
           <FooterMetric label="Market Cap" value={fmtLargeCurrency(marketCap, currency)} />

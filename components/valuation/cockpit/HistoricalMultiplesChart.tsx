@@ -5,6 +5,7 @@ import {
   Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine, Area, ComposedChart,
 } from 'recharts'
+import { CHART_GRID, CHART_AXIS_TICK_SM } from '@/lib/chartTheme'
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -178,17 +179,17 @@ export default function HistoricalMultiplesChart({
             </linearGradient>
           </defs>
 
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
+          <CartesianGrid {...CHART_GRID} />
 
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 10, fill: '#8A95A6' }}
+            tick={CHART_AXIS_TICK_SM}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
             domain={[yMin, yMax]}
-            tick={{ fontSize: 10, fill: '#8A95A6' }}
+            tick={CHART_AXIS_TICK_SM}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v: number) => v.toFixed(0) + '×'}

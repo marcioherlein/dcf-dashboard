@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
+import { CHART_GRID, CHART_AXIS_TICK, CHART_CURSOR } from '@/lib/chartTheme'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -135,11 +136,7 @@ export default function ProfitabilityChartBody({ points }: { points: ChartPoint[
         data={points}
         margin={{ top: 4, right: 8, bottom: 0, left: -8 }}
       >
-        <CartesianGrid
-          strokeDasharray="3 3"
-          stroke="#F0F0F0"
-          vertical={false}
-        />
+        <CartesianGrid {...CHART_GRID} />
 
         <XAxis
           dataKey="period"
@@ -151,7 +148,7 @@ export default function ProfitabilityChartBody({ points }: { points: ChartPoint[
 
         <YAxis
           tickFormatter={(v: number) => `${v.toFixed(0)}%`}
-          tick={{ fill: '#9B9B9B', fontSize: 11, fontWeight: 500 }}
+          tick={{ ...CHART_AXIS_TICK, fontWeight: 500 }}
           axisLine={false}
           tickLine={false}
           width={34}
@@ -159,7 +156,7 @@ export default function ProfitabilityChartBody({ points }: { points: ChartPoint[
 
         <Tooltip
           content={<CustomTooltip />}
-          cursor={{ stroke: '#E5E5E5', strokeWidth: 1 }}
+          cursor={CHART_CURSOR}
         />
 
         {/* Gross Margin — solid olive */}

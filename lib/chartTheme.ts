@@ -38,6 +38,10 @@ export const CHART_COLORS = {
   down:           '#D83B3B',
   warn:           '#B56A00',
 
+  // Semantic aliases (same values as up/down, cleaner naming for non-price contexts)
+  positive:       '#11875D',
+  negative:       '#D83B3B',
+
   // Chart chrome
   grid:           '#E5E5E5',
   axisText:       '#9B9B9B',
@@ -51,7 +55,14 @@ export const CHART_COLORS = {
 // ── Recharts XAxis / YAxis shared tick props ──────────────────────────────────
 
 export const CHART_AXIS_TICK = {
-  fontSize:   12,
+  fontSize:   11,
+  fill:       CHART_COLORS.axisText,
+  fontFamily: 'var(--font-sans, Inter), system-ui, sans-serif',
+  fontVariantNumeric: 'tabular-nums',
+} as const
+
+export const CHART_AXIS_TICK_SM = {
+  fontSize:   10,
   fill:       CHART_COLORS.axisText,
   fontFamily: 'var(--font-sans, Inter), system-ui, sans-serif',
   fontVariantNumeric: 'tabular-nums',
@@ -59,12 +70,24 @@ export const CHART_AXIS_TICK = {
 
 // ── Recharts grid props ───────────────────────────────────────────────────────
 
-export const CHART_GRID_PROPS = {
+/** Dashed grid — standard for line/area/scatter charts */
+export const CHART_GRID = {
+  stroke:          '#F0F0F0',
+  strokeWidth:     1,
+  strokeDasharray: '3 3',
+  vertical:        false,
+} as const
+
+/** Solid grid — for bar charts with tight data */
+export const CHART_GRID_SOLID = {
   stroke:          CHART_COLORS.grid,
   strokeWidth:     1,
   strokeDasharray: undefined,
   vertical:        false,
 } as const
+
+/** @deprecated use CHART_GRID or CHART_GRID_SOLID */
+export const CHART_GRID_PROPS = CHART_GRID
 
 // ── Recharts tooltip contentStyle ─────────────────────────────────────────────
 
@@ -75,8 +98,21 @@ export const chartTooltipStyle: React.CSSProperties = {
   fontSize:      '12px',
   fontFamily:    'var(--font-sans, Inter), system-ui, sans-serif',
   boxShadow:     '0 8px 24px rgba(0, 0, 0, 0.09)',
-  padding:       '8px 12px',
+  padding:       '10px 12px',
   color:         '#111111',
+  maxWidth:      '90vw',
+}
+
+export const chartTooltipStyleDark: React.CSSProperties = {
+  background:    'rgba(10,22,40,0.95)',
+  border:        '1px solid rgba(59,130,246,0.2)',
+  borderRadius:  '10px',
+  fontSize:      '12px',
+  fontFamily:    'var(--font-sans, Inter), system-ui, sans-serif',
+  boxShadow:     '0 4px 20px rgba(0,0,0,0.4)',
+  padding:       '10px 12px',
+  color:         '#F4F3EF',
+  maxWidth:      '90vw',
 }
 
 export const chartTooltipLabelStyle: React.CSSProperties = {
@@ -94,10 +130,19 @@ export const chartTooltipItemStyle: React.CSSProperties = {
 
 // ── Recharts cursor / crosshair ───────────────────────────────────────────────
 
-export const chartCursorStyle = {
+export const CHART_CURSOR = {
   stroke:      CHART_COLORS.crosshair,
   strokeWidth: 1,
 } as const
+
+export const CHART_CURSOR_DASHED = {
+  stroke:          CHART_COLORS.crosshair,
+  strokeWidth:     1,
+  strokeDasharray: '3 3',
+} as const
+
+/** @deprecated use CHART_CURSOR */
+export const chartCursorStyle = CHART_CURSOR
 
 // ── Standard line props ───────────────────────────────────────────────────────
 
@@ -129,6 +174,11 @@ export function sensitivityCellStyle(upsidePct: number): React.CSSProperties {
   if (abs > 0)         return { background: '#D83B3B', color: '#FFFFFF' }
   return { background: '#F5F5F5', color: '#6B6B6B' }
 }
+
+// ── Standard projected bar/line opacity ──────────────────────────────────────
+
+export const CHART_OPACITY_HISTORICAL = 1.0
+export const CHART_OPACITY_PROJECTED  = 0.4   // standardized; was 0.25–0.35 per file
 
 // ── Convenient grouped export ─────────────────────────────────────────────────
 

@@ -1,6 +1,8 @@
 'use client'
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
+import { CHART_GRID, CHART_AXIS_TICK_SM, chartTooltipStyle, chartTooltipStyleDark, CHART_COLORS, CHART_OPACITY_PROJECTED } from '@/lib/chartTheme'
+import { CHART_HEIGHTS } from '@/lib/chartDimensions'
 
 const BarChart        = dynamic(() => import('recharts').then((m) => m.BarChart),        { ssr: false })
 const Bar             = dynamic(() => import('recharts').then((m) => m.Bar),             { ssr: false })
@@ -79,17 +81,14 @@ export default function FinancialCharts({
 }: Props) {
   const [multipleTab, setMultipleTab] = useState<'pe' | 'evEbitda' | 'evRevenue' | 'ps'>('pe')
 
-  const tickFill   = '#8A95A6'
-  const gridStroke = 'rgba(148,163,184,0.08)'
-  const tooltipStyle = isDark
-    ? { background: 'rgba(10,22,40,0.95)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, fontSize: 11, color: '#F4F3EF', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }
-    : { background: '#FFFFFF', border: '1px solid #E3E1DA', borderRadius: 8, fontSize: 11, color: '#06101F', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }
+  const tickFill   = CHART_COLORS.axisText
+  const tooltipStyle = isDark ? chartTooltipStyleDark : chartTooltipStyle
 
   const historicalIS = incomeStatement.filter((r) => !r.isProjected)
   const projectedIS  = incomeStatement.filter((r) => r.isProjected)
   if (historicalIS.length < 2) return null
 
-  const CHART_H  = 168
+  const CHART_H  = CHART_HEIGHTS.md
   const show = chartsToShow ?? (['revNI', 'fcf', 'margins', 'ebitda', 'revGrowth', 'fcfGrowth', 'multiples'] as ChartKey[])
   const isSingle = show.length === 1
   const sectionTitle = 'text-[13px] font-semibold text-[#06101F] mb-3'
@@ -197,8 +196,8 @@ export default function FinancialCharts({
           <p className={sectionTitle}>Revenue &amp; Net Income <span className="normal-case font-normal">({currency}M)</span></p>
           <ResponsiveContainer width="100%" height={CHART_H}>
             <BarChart data={revData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barGap={2}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
-              <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
+              <CartesianGrid {...CHART_GRID} />
+              <XAxis dataKey="year" tick={CHART_AXIS_TICK_SM} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={fmtM} width={44} />
               <Tooltip
                 contentStyle={tooltipStyle} wrapperStyle={{ zIndex: 50 }}
@@ -207,10 +206,10 @@ export default function FinancialCharts({
               />
               <Legend formatter={(v) => v === 'revenue' ? 'Revenue' : 'Net Income'} wrapperStyle={{ fontSize: '10px', color: tickFill }} />
               <Bar dataKey="revenue" name="revenue" fill="#2563EB" radius={[3,3,0,0]} maxBarSize={36} isAnimationActive={false}>
-                {revData.map((d, i) => <Cell key={i} opacity={d.isProjected ? 0.3 : 1} />)}
+                {revData.map((d, i) => <Cell key={i} opacity={d.isProjected ? CHART_OPACITY_PROJECTED : 1} />)}
               </Bar>
-              <Bar dataKey="netIncome" name="netIncome" fill="#059669" radius={[3,3,0,0]} maxBarSize={36} isAnimationActive={false}>
-                {revData.map((d, i) => <Cell key={i} opacity={d.isProjected ? 0.3 : 0.85} fill={(d.netIncome ?? 0) < 0 ? '#DC2626' : '#059669'} />)}
+              <Bar dataKey="netIncome" name="netIncome" fill={CHART_COLORS.positive} radius={[3,3,0,0]} maxBarSize={36} isAnimationActive={false}>
+                {revData.map((d, i) => <Cell key={i} opacity={d.isProjected ? CHART_OPACITY_PROJECTED : 0.85} fill={(d.netIncome ?? 0) < 0 ? CHART_COLORS.negative : CHART_COLORS.positive} />)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -224,8 +223,8 @@ export default function FinancialCharts({
           <p className="text-[11px] text-[#566174] -mt-2 mb-2">Operating CF + Capex (capex negative) = FCF · Faded = projected</p>
           <ResponsiveContainer width="100%" height={CHART_H}>
             <BarChart data={fcfData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barGap={2}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
-              <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
+              <CartesianGrid {...CHART_GRID} />
+              <XAxis dataKey="year" tick={CHART_AXIS_TICK_SM} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={fmtM} width={44} />
               <ReferenceLine y={0} stroke="rgba(148,163,184,0.3)" />
               <Tooltip
@@ -238,13 +237,13 @@ export default function FinancialCharts({
               />
               <Legend formatter={(v) => v === 'opCF' ? 'Operating CF' : v === 'capex' ? 'Capex' : 'FCF'} wrapperStyle={{ fontSize: '10px', color: tickFill }} />
               <Bar dataKey="opCF" name="opCF" fill="#2563EB" radius={[3,3,0,0]} maxBarSize={28} isAnimationActive={false}>
-                {fcfData.map((d, i) => <Cell key={i} fill={(d.opCF ?? 0) >= 0 ? '#2563EB' : '#DC2626'} opacity={d.isProjected ? 0.3 : 0.85} />)}
+                {fcfData.map((d, i) => <Cell key={i} fill={(d.opCF ?? 0) >= 0 ? '#2563EB' : CHART_COLORS.negative} opacity={d.isProjected ? CHART_OPACITY_PROJECTED : 0.85} />)}
               </Bar>
-              <Bar dataKey="capex" name="capex" fill="#DC2626" radius={[0,0,3,3]} maxBarSize={28} isAnimationActive={false}>
-                {fcfData.map((d, i) => <Cell key={i} fill="#DC2626" opacity={d.isProjected ? 0.25 : 0.6} />)}
+              <Bar dataKey="capex" name="capex" fill={CHART_COLORS.negative} radius={[0,0,3,3]} maxBarSize={28} isAnimationActive={false}>
+                {fcfData.map((d, i) => <Cell key={i} fill={CHART_COLORS.negative} opacity={d.isProjected ? CHART_OPACITY_PROJECTED : 0.6} />)}
               </Bar>
-              <Bar dataKey="fcf" name="fcf" fill="#059669" radius={[3,3,0,0]} maxBarSize={16} isAnimationActive={false}>
-                {fcfData.map((d, i) => <Cell key={i} fill={(d.fcf ?? 0) >= 0 ? '#059669' : '#DC2626'} opacity={d.isProjected ? 0.3 : 1} />)}
+              <Bar dataKey="fcf" name="fcf" fill={CHART_COLORS.positive} radius={[3,3,0,0]} maxBarSize={16} isAnimationActive={false}>
+                {fcfData.map((d, i) => <Cell key={i} fill={(d.fcf ?? 0) >= 0 ? CHART_COLORS.positive : CHART_COLORS.negative} opacity={d.isProjected ? CHART_OPACITY_PROJECTED : 1} />)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -257,8 +256,8 @@ export default function FinancialCharts({
             <p className={sectionTitle}>Margin Trends <span className="normal-case font-normal">(%)</span></p>
             <ResponsiveContainer width="100%" height={240}>
               <LineChart data={marginData} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
-                <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
+                <CartesianGrid {...CHART_GRID} />
+                <XAxis dataKey="year" tick={CHART_AXIS_TICK_SM} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={fmtPct} />
                 <Tooltip
                   contentStyle={tooltipStyle} wrapperStyle={{ zIndex: 50 }}
@@ -274,7 +273,7 @@ export default function FinancialCharts({
                 />
                 <Line type="monotone" dataKey="gross"  stroke="#2563EB" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
                 <Line type="monotone" dataKey="opMgn"  stroke="#D97706" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} strokeDasharray="5 2" />
-                <Line type="monotone" dataKey="net"    stroke="#059669" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
+                <Line type="monotone" dataKey="net"    stroke={CHART_COLORS.positive} strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
                 <Line type="monotone" dataKey="fcfMgn" stroke="#7C3AED" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} strokeDasharray="2 3" />
               </LineChart>
             </ResponsiveContainer>
@@ -287,8 +286,8 @@ export default function FinancialCharts({
             <p className={sectionTitle}>EBITDA &amp; Operating Income <span className="normal-case font-normal">({currency}M)</span></p>
             <ResponsiveContainer width="100%" height={CHART_H}>
               <BarChart data={ebitdaData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barGap={2}>
-                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
-                <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
+                <CartesianGrid {...CHART_GRID} />
+                <XAxis dataKey="year" tick={CHART_AXIS_TICK_SM} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={fmtM} width={44} />
                 <ReferenceLine y={0} stroke="rgba(148,163,184,0.3)" />
                 <Tooltip
@@ -298,10 +297,10 @@ export default function FinancialCharts({
                 />
                 <Legend formatter={(v) => v === 'ebitda' ? 'EBITDA' : 'Operating Income'} wrapperStyle={{ fontSize: '10px', color: tickFill }} />
                 <Bar dataKey="ebitda" name="ebitda" fill="#7C3AED" radius={[3,3,0,0]} maxBarSize={36} isAnimationActive={false}>
-                  {ebitdaData.map((d, i) => <Cell key={i} opacity={d.isProjected ? 0.3 : 0.85} />)}
+                  {ebitdaData.map((d, i) => <Cell key={i} opacity={d.isProjected ? CHART_OPACITY_PROJECTED : 0.85} />)}
                 </Bar>
                 <Bar dataKey="opIncome" name="opIncome" fill="#D97706" radius={[3,3,0,0]} maxBarSize={36} isAnimationActive={false}>
-                  {ebitdaData.map((d, i) => <Cell key={i} opacity={d.isProjected ? 0.3 : 0.85} />)}
+                  {ebitdaData.map((d, i) => <Cell key={i} opacity={d.isProjected ? CHART_OPACITY_PROJECTED : 0.85} />)}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -314,8 +313,8 @@ export default function FinancialCharts({
             <p className={sectionTitle}>Revenue YoY Growth <span className="normal-case font-normal">· faded = projected</span></p>
             <ResponsiveContainer width="100%" height={CHART_H}>
               <BarChart data={revGrowthData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
-                <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
+                <CartesianGrid {...CHART_GRID} />
+                <XAxis dataKey="year" tick={CHART_AXIS_TICK_SM} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false}
                   tickFormatter={(v) => `${v > 0 ? '+' : ''}${v.toFixed(0)}%`} />
                 <ReferenceLine y={0} stroke="rgba(148,163,184,0.3)" />
@@ -326,7 +325,7 @@ export default function FinancialCharts({
                 />
                 <Bar dataKey="growth" radius={[3,3,0,0]} maxBarSize={40} isAnimationActive={false}>
                   {revGrowthData.map((d, i) => (
-                    <Cell key={i} fill={(d.growth ?? 0) >= 0 ? '#2563EB' : '#DC2626'} opacity={d.isProjected ? 0.35 : 0.85} />
+                    <Cell key={i} fill={(d.growth ?? 0) >= 0 ? '#2563EB' : CHART_COLORS.negative} opacity={d.isProjected ? CHART_OPACITY_PROJECTED : 0.85} />
                   ))}
                 </Bar>
               </BarChart>
@@ -340,8 +339,8 @@ export default function FinancialCharts({
             <p className={sectionTitle}>FCF YoY Growth <span className="normal-case font-normal">· faded = projected</span></p>
             <ResponsiveContainer width="100%" height={CHART_H}>
               <BarChart data={fcfGrowthData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
-                <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
+                <CartesianGrid {...CHART_GRID} />
+                <XAxis dataKey="year" tick={CHART_AXIS_TICK_SM} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false}
                   tickFormatter={(v) => `${v > 0 ? '+' : ''}${v.toFixed(0)}%`} width={48} />
                 <ReferenceLine y={0} stroke="rgba(148,163,184,0.3)" />
@@ -352,7 +351,7 @@ export default function FinancialCharts({
                 />
                 <Bar dataKey="growth" radius={[3,3,0,0]} maxBarSize={40} isAnimationActive={false}>
                   {fcfGrowthData.map((d, i) => (
-                    <Cell key={i} fill={(d.growth ?? 0) >= 0 ? '#059669' : '#DC2626'} opacity={d.isProjected ? 0.35 : 0.85} />
+                    <Cell key={i} fill={(d.growth ?? 0) >= 0 ? CHART_COLORS.positive : CHART_COLORS.negative} opacity={d.isProjected ? CHART_OPACITY_PROJECTED : 0.85} />
                   ))}
                 </Bar>
               </BarChart>
@@ -366,8 +365,8 @@ export default function FinancialCharts({
             <p className={sectionTitle}>Growth Rate Trends <span className="normal-case font-normal">· YoY %</span></p>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={multiGrowthData} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
-                <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
+                <CartesianGrid {...CHART_GRID} />
+                <XAxis dataKey="year" tick={CHART_AXIS_TICK_SM} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false}
                   tickFormatter={(v) => `${v > 0 ? '+' : ''}${v.toFixed(0)}%`} />
                 <ReferenceLine y={0} stroke="rgba(148,163,184,0.4)" />
@@ -386,7 +385,7 @@ export default function FinancialCharts({
                 <Line type="monotone" dataKey="revenue" stroke="#2563EB" strokeWidth={2} dot={{ r: 3, fill: '#2563EB', strokeWidth: 0 }} connectNulls isAnimationActive={false} />
                 <Line type="monotone" dataKey="ebitda"  stroke="#7C3AED" strokeWidth={2} dot={{ r: 3, fill: '#7C3AED', strokeWidth: 0 }} connectNulls isAnimationActive={false} />
                 <Line type="monotone" dataKey="ebit"    stroke="#D97706" strokeWidth={2} dot={{ r: 3, fill: '#D97706', strokeWidth: 0 }} connectNulls isAnimationActive={false} strokeDasharray="5 2" />
-                <Line type="monotone" dataKey="ni"      stroke="#059669" strokeWidth={2} dot={{ r: 3, fill: '#059669', strokeWidth: 0 }} connectNulls isAnimationActive={false} />
+                <Line type="monotone" dataKey="ni"      stroke={CHART_COLORS.positive} strokeWidth={2} dot={{ r: 3, fill: CHART_COLORS.positive, strokeWidth: 0 }} connectNulls isAnimationActive={false} />
                 <Line type="monotone" dataKey="fcf"     stroke="#06B6D4" strokeWidth={2} dot={{ r: 3, fill: '#06B6D4', strokeWidth: 0 }} connectNulls isAnimationActive={false} strokeDasharray="3 2" />
               </LineChart>
             </ResponsiveContainer>
@@ -399,8 +398,8 @@ export default function FinancialCharts({
             <p className={sectionTitle}>Absolute Values <span className="normal-case font-normal">({currency}M)</span></p>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={multiAbsData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barCategoryGap="20%">
-                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
-                <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
+                <CartesianGrid {...CHART_GRID} />
+                <XAxis dataKey="year" tick={CHART_AXIS_TICK_SM} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false} tickFormatter={fmtM} width={44} />
                 <ReferenceLine y={0} stroke="rgba(148,163,184,0.3)" />
                 <Tooltip
@@ -419,10 +418,10 @@ export default function FinancialCharts({
                 <Bar dataKey="ebitda"  name="ebitda"  fill="#7C3AED" radius={[3,3,0,0]} maxBarSize={20} isAnimationActive={false} />
                 <Bar dataKey="ebit"    name="ebit"    fill="#D97706" radius={[3,3,0,0]} maxBarSize={20} isAnimationActive={false} />
                 <Bar dataKey="ni" name="ni" radius={[3,3,0,0]} maxBarSize={20} isAnimationActive={false}>
-                  {multiAbsData.map((d, i) => <Cell key={i} fill={(d.ni ?? 0) >= 0 ? '#059669' : '#DC2626'} />)}
+                  {multiAbsData.map((d, i) => <Cell key={i} fill={(d.ni ?? 0) >= 0 ? CHART_COLORS.positive : CHART_COLORS.negative} />)}
                 </Bar>
                 <Bar dataKey="fcf" name="fcf" radius={[3,3,0,0]} maxBarSize={20} isAnimationActive={false}>
-                  {multiAbsData.map((d, i) => <Cell key={i} fill={(d.fcf ?? 0) >= 0 ? '#06B6D4' : '#DC2626'} />)}
+                  {multiAbsData.map((d, i) => <Cell key={i} fill={(d.fcf ?? 0) >= 0 ? '#06B6D4' : CHART_COLORS.negative} />)}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -437,7 +436,7 @@ export default function FinancialCharts({
         const TABS: { key: TabKey; label: string; color: string; currentVal: number | null | undefined; description: string }[] = [
           { key: 'pe',        label: 'P/E',        color: '#2563EB', currentVal: currentPE,        description: 'Price ÷ Earnings per share' },
           { key: 'evEbitda',  label: 'EV/EBITDA',  color: '#7C3AED', currentVal: currentEVEbitda,  description: 'Enterprise value ÷ EBITDA' },
-          { key: 'evRevenue', label: 'EV/Revenue', color: '#059669', currentVal: currentEVRevenue, description: 'Enterprise value ÷ Revenue' },
+          { key: 'evRevenue', label: 'EV/Revenue', color: CHART_COLORS.positive, currentVal: currentEVRevenue, description: 'Enterprise value ÷ Revenue' },
           { key: 'ps',        label: 'P/S',        color: '#D97706', currentVal: currentPS,        description: 'Price ÷ Revenue per share' },
         ]
         const active    = TABS.find(t => t.key === multipleTab)!
@@ -503,8 +502,8 @@ export default function FinancialCharts({
 
             <ResponsiveContainer width="100%" height={160}>
               <LineChart data={chartData} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
-                <XAxis dataKey="year" tick={{ fontSize: 10, fill: tickFill }} axisLine={false} tickLine={false} />
+                <CartesianGrid {...CHART_GRID} />
+                <XAxis dataKey="year" tick={CHART_AXIS_TICK_SM} axisLine={false} tickLine={false} />
                 <YAxis
                   tick={{ fontSize: 9, fill: tickFill }} axisLine={false} tickLine={false}
                   domain={[yMin, yMax]}

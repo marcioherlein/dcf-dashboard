@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from 'react'
 import dynamic from 'next/dynamic'
+import { CHART_GRID } from '@/lib/chartTheme'
+import { CHART_HEIGHTS, CHART_MOBILE_BREAKPOINT } from '@/lib/chartDimensions'
 
 // ─── Single dynamic import for all Recharts components (avoids per-component chunking) ──
 
@@ -52,7 +54,6 @@ const FCFBar = dynamic(
         height?: number
       }) {
         const tickFill   = '#6B6B6B'
-        const gridStroke = 'rgba(148,163,184,0.12)'
         return (
           <ResponsiveContainer width="100%" height={height}>
             <BarChart
@@ -60,7 +61,7 @@ const FCFBar = dynamic(
               margin={{ top: 20, right: 4, left: 0, bottom: 0 }}
               barCategoryGap="28%"
             >
-              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
+              <CartesianGrid {...CHART_GRID} />
               <XAxis
                 dataKey="label"
                 tick={{ fontSize: 10, fill: tickFill }}
@@ -185,7 +186,9 @@ export default function FCFChartCard({ statementsData, currency: _currency = 'US
     )
   }
 
-  const chartHeight = typeof window !== 'undefined' && window.innerWidth < 480 ? 140 : 168
+  const chartHeight = typeof window !== 'undefined' && window.innerWidth < CHART_MOBILE_BREAKPOINT
+    ? CHART_HEIGHTS.sm
+    : CHART_HEIGHTS.md
 
   return (
     <div className="bg-white border border-[#E5E5E5] rounded-xl p-4">
@@ -230,7 +233,7 @@ export default function FCFChartCard({ statementsData, currency: _currency = 'US
       </div>
 
       {/* Legend row */}
-      <div className="flex items-center gap-4 mt-1">
+      <div className="flex items-center gap-2 sm:gap-4 mt-1 flex-wrap">
         <span className="flex items-center gap-1.5 text-[10px] text-[#6B6B6B]">
           <span className="inline-block w-2 h-2 rounded-sm bg-[#5F790B]" />
           Positive FCF

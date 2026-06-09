@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import dynamic from 'next/dynamic'
+import { CHART_GRID_SOLID } from '@/lib/chartTheme'
 
 // ─── Dynamic recharts import (SSR: false) ─────────────────────────────────────
 
@@ -48,7 +49,7 @@ const BarChartComponents = dynamic(
         return (
           <ResponsiveContainer width="100%" height={height}>
             <BarChart data={data} margin={{ top: 24, right: 8, left: 8, bottom: 4 }} barCategoryGap="28%">
-              <CartesianGrid vertical={false} stroke="#E5E5E5" strokeDasharray="0" />
+              <CartesianGrid {...CHART_GRID_SOLID} />
               <XAxis
                 dataKey="label"
                 axisLine={false}
