@@ -206,7 +206,6 @@ export default function StockIdentityHeader({
   const logoSrc = "https://financialmodelingprep.com/image-stock/" + ticker + ".png"
 
   const isPositive = change >= 0
-  const changeSign = isPositive ? '+' : ''
 
   const prefix = currencyPrefix(currency)
 
