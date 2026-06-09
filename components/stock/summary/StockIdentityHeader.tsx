@@ -276,9 +276,9 @@ export default function StockIdentityHeader({
               </div>
             )}
 
-            {/* Name + subtitle */}
+            {/* Name + subtitle + mobile price inline */}
             <div className="min-w-0 flex-1">
-              <h1 className="text-[22px] font-bold leading-tight text-[#111111] tracking-tight truncate">
+              <h1 className="text-[20px] sm:text-[22px] font-bold leading-tight text-[#111111] tracking-tight truncate">
                 {companyName}
               </h1>
               <p className="mt-0.5 text-[13px] text-[#6B6B6B] truncate">
@@ -286,6 +286,15 @@ export default function StockIdentityHeader({
                 {companyType ? ` · ${companyType}` : ''}
                 {country ? ` · ${country}` : ''}
               </p>
+              {/* Mobile-only compact price line — visible below sm breakpoint */}
+              <div className="mt-1.5 flex items-baseline gap-2 sm:hidden">
+                <span className="text-[20px] font-bold text-[#111111] tracking-tight leading-none">
+                  {prefix}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+                <span className={`text-[13px] font-semibold ${isPositive ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
+                  {isPositive ? '+' : ''}{Math.abs(changePct).toFixed(2)}%
+                </span>
+              </div>
             </div>
           </div>
 
@@ -317,9 +326,9 @@ export default function StockIdentityHeader({
           )}
         </div>
 
-        {/* Right col (≈30%) — Price */}
+        {/* Right col (≈30%) — Price — HIDDEN on mobile, shown on sm+ */}
         <div
-          className="flex-shrink-0 flex flex-col justify-start w-full sm:basis-[30%] sm:max-w-[30%] sm:min-w-[160px]"
+          className="hidden sm:flex flex-shrink-0 flex-col justify-start sm:basis-[30%] sm:max-w-[30%] sm:min-w-[160px]"
         >
           <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9B9B9B] mb-1">
             Current Price
@@ -390,12 +399,6 @@ export default function StockIdentityHeader({
           className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden flex flex-col w-full sm:basis-[68%] sm:max-w-[68%]"
           style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
         >
-          {/* Card header */}
-          <div className="px-4 pt-4 pb-2 border-b border-[#E5E5E5]">
-            <p className="text-[12px] font-semibold text-[#6B6B6B]">
-              Price chart
-            </p>
-          </div>
           <div className="flex-1 min-h-[220px] sm:min-h-[320px]" role="img" aria-label={`${ticker} price history chart`}>
             <PriceChart
               ticker={ticker}
