@@ -33,8 +33,8 @@ interface Props {
 export function ETFSectorAllocation({ sectorWeights }: Props) {
   if (!sectorWeights.length) {
     return (
-      <div className="glass-card-light rounded-xl p-4">
-        <p className="text-sm font-semibold text-[#06101F] mb-2">Sector Allocation</p>
+      <div className="bg-white border border-[#E3E1DA] rounded-xl p-4">
+        <p className="text-[13px] font-[700] text-[#111111] mb-2">Sector Allocation</p>
         <p className="text-sm text-[#8A95A6]">Sector breakdown not available for this ETF.</p>
       </div>
     )
@@ -43,8 +43,8 @@ export function ETFSectorAllocation({ sectorWeights }: Props) {
   const total = sectorWeights.reduce((sum, s) => sum + s.weight, 0)
 
   return (
-    <div className="glass-card-light rounded-xl p-4">
-      <p className="text-sm font-semibold text-[#06101F] mb-4">Sector Allocation</p>
+    <div className="bg-white border border-[#E3E1DA] rounded-xl p-4">
+      <p className="text-[13px] font-[700] text-[#111111] mb-4">Sector Allocation</p>
 
       {/* Stacked bar */}
       <div className="flex h-3 rounded-full overflow-hidden gap-px mb-4">

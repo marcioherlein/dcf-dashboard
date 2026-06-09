@@ -60,16 +60,16 @@ export function ETFValuationHistory({ ticker }: Props) {
 
   if (loading) {
     return (
-      <div className="glass-card-light rounded-xl p-4">
-        <p className="text-sm font-semibold text-[#06101F] mb-3">Value Score History</p>
+      <div className="bg-white border border-[#E3E1DA] rounded-xl p-4">
+        <p className="text-[13px] font-[700] text-[#111111] mb-3">Value Score History</p>
         <div className="h-[140px] bg-[#F4F3EF] rounded-lg motion-safe:animate-pulse" />
       </div>
     )
   }
 
   return (
-    <div className="glass-card-light rounded-xl p-4">
-      <p className="text-sm font-semibold text-[#06101F] mb-3">Value Score History</p>
+    <div className="bg-white border border-[#E3E1DA] rounded-xl p-4">
+      <p className="text-[13px] font-[700] text-[#111111] mb-3">Value Score History</p>
       {data.length < 7 ? (
         <div className="h-[140px] flex flex-col items-center justify-center gap-2 rounded-lg bg-[#F4F3EF] border border-dashed border-[#E3E1DA]">
           {error ? (

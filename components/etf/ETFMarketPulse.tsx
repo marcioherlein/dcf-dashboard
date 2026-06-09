@@ -111,21 +111,17 @@ export function ETFMarketPulse({ data, loading }: Props) {
   )
 }
 
-function Chip({ label, sub, children, href, borderColor }: {
+function Chip({ label, sub, children, href }: {
   label: string
   sub?: string
   children: React.ReactNode
   href: string
-  borderColor?: string
+  borderColor?: string  // kept for API compat but no longer applied
 }) {
   return (
     <Link
       href={href}
-      className={cn(
-        'block bg-white border border-[#E3E1DA] border-l-[3px] rounded-xl px-4 py-3 flex flex-col gap-1 min-w-0 hover:shadow-sm hover:border-[#E3E1DA] transition-shadow',
-        borderColor,
-      )}
-      style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}
+      className="block bg-white border border-[#E3E1DA] rounded-xl px-4 py-3 flex flex-col gap-1 min-w-0 hover:border-[#BFD2A1] hover:shadow-sm transition-all"
     >
       <span className="text-[10px] font-semibold text-[#8A95A6] truncate uppercase tracking-[0.08em]">{label}</span>
       <div className="flex items-baseline gap-1.5 flex-wrap">{children}</div>

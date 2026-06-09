@@ -17,8 +17,8 @@ interface Props {
 export function ETFHoldingsTable({ holdings }: Props) {
   if (!holdings.length) {
     return (
-      <div className="glass-card-light rounded-xl p-4">
-        <p className="text-sm font-semibold text-[#06101F] mb-2">Top Holdings</p>
+      <div className="bg-white border border-[#E3E1DA] rounded-xl p-4">
+        <p className="text-[13px] font-[700] text-[#111111] mb-2">Top Holdings</p>
         <p className="text-sm text-[#8A95A6] py-2">Holdings data unavailable.</p>
       </div>
     )
@@ -27,9 +27,9 @@ export function ETFHoldingsTable({ holdings }: Props) {
   const maxWeight = Math.max(...holdings.map((h) => h.weight ?? 0), 0.001)
 
   return (
-    <div className="glass-card-light rounded-xl">
+    <div className="bg-white border border-[#E3E1DA] rounded-xl">
       <div className="px-4 py-3 border-b border-[#E3E1DA]/60">
-        <p className="text-sm font-semibold text-[#06101F]">Top Holdings</p>
+        <p className="text-[13px] font-[700] text-[#111111]">Top Holdings</p>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">

@@ -115,7 +115,7 @@ function Leaderboard({
     <section>
       <div className="flex items-center justify-between gap-4 flex-wrap mb-1">
         <div>
-          <h2 className="text-[18px] font-bold text-[#06101F]">Rankings</h2>
+          <h2 className="text-[13px] font-[700] text-[#111111]">Rankings</h2>
           <p className="text-[12px] text-[#8A95A6] mt-0.5">All ETFs ranked — click any column header to sort</p>
         </div>
         <div className="flex gap-1.5 flex-wrap">
@@ -258,7 +258,7 @@ function EmptyWatchlistCTA({
 
   return (
     <section>
-      <h2 className="text-[18px] font-bold text-[#06101F] mb-5">My Watchlist</h2>
+      <h2 className="text-[13px] font-[700] text-[#111111] mb-5">My Watchlist</h2>
       <div className="bg-white border border-[#E3E1DA] rounded-2xl p-8 flex flex-col items-center text-center" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
         <div className="w-12 h-12 rounded-xl bg-[#F4F3EF] flex items-center justify-center mb-4">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8A95A6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -357,7 +357,7 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
       {/* Heatmap grids */}
       <section>
         <div className="mb-3">
-          <h2 className="text-[18px] font-bold text-[#06101F]">Sectors</h2>
+          <h2 className="text-[13px] font-[700] text-[#111111]">Sectors</h2>
           <p className="text-[12px] text-[#8A95A6] mt-0.5">US SPDR sector ETFs (GICS)</p>
         </div>
         <ETFHeatmapGrid
@@ -372,7 +372,7 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
 
       <section>
         <div className="mb-3">
-          <h2 className="text-[18px] font-bold text-[#06101F]">Geographies</h2>
+          <h2 className="text-[13px] font-[700] text-[#111111]">Geographies</h2>
           <p className="text-[12px] text-[#8A95A6] mt-0.5">Regional and country exposure</p>
         </div>
         <ETFHeatmapGrid
@@ -387,7 +387,7 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
 
       <section>
         <div className="mb-3">
-          <h2 className="text-[18px] font-bold text-[#06101F]">Styles</h2>
+          <h2 className="text-[13px] font-[700] text-[#111111]">Styles</h2>
           <p className="text-[12px] text-[#8A95A6] mt-0.5">Factor tilts and smart beta</p>
         </div>
         <ETFHeatmapGrid

@@ -60,7 +60,7 @@ function ScoreGauge({ score, label }: { score: number; label: string }) {
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <div className={cn('text-4xl font-bold font-sans', textColor)}>{score}</div>
+      <div className={cn('text-[28px] font-bold font-sans', textColor)}>{score}</div>
       <div className={cn('text-xs font-semibold px-2 py-0.5 rounded-full', barColor, badgeTextColor)}>{label}</div>
       <div className="w-full h-3 bg-[#E3E1DA] rounded-md overflow-hidden mt-1">
         <div
@@ -143,7 +143,7 @@ function ScoreRationale({ metrics }: { metrics: ETFMetrics }) {
   ]
 
   return (
-    <div className="glass-card-light rounded-xl overflow-hidden">
+    <div className="bg-white border border-[#E3E1DA] rounded-xl overflow-hidden">
       <button
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F5F5F5] transition-colors focus-visible:ring-2 focus-visible:ring-olive-700 focus-visible:ring-inset focus-visible:outline-none"
@@ -222,7 +222,7 @@ export function ETFMetricsGrid({ metrics }: { metrics: ETFMetrics }) {
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Basket Valuation */}
-        <div className="glass-card-light rounded-xl p-4 sm:p-5">
+        <div className="bg-white border border-[#E3E1DA] rounded-xl p-4 sm:p-5">
           <div className="flex items-center gap-1.5 mb-3">
             <p className="text-[11px] font-[600] text-[#566174]">Basket valuation</p>
             <InfoTooltip text="Weighted average ratios of the ETF's underlying holdings, not the ETF's own trading price." />
@@ -234,7 +234,7 @@ export function ETFMetricsGrid({ metrics }: { metrics: ETFMetrics }) {
         </div>
 
         {/* Value Score */}
-        <div className="glass-card-light rounded-xl p-4 sm:p-5">
+        <div className="bg-white border border-[#E3E1DA] rounded-xl p-4 sm:p-5">
           <div className="flex items-center gap-1.5 mb-3">
             <p className="text-[11px] font-[600] text-[#566174]">Value score</p>
             <InfoTooltip text="Score = P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio penalty (20 pts). 70+ = Deep Value." />
@@ -257,7 +257,7 @@ export function ETFMetricsGrid({ metrics }: { metrics: ETFMetrics }) {
         </div>
 
         {/* Fund Profile */}
-        <div className="glass-card-light rounded-xl p-4 sm:p-5">
+        <div className="bg-white border border-[#E3E1DA] rounded-xl p-4 sm:p-5">
           <p className="text-[11px] font-[600] text-[#566174] mb-3">Fund profile</p>
           <MetricRow label="Expense ratio" value={er} />
           <MetricRow label="Issuer" value={metrics.issuer ?? '—'} />
@@ -266,7 +266,7 @@ export function ETFMetricsGrid({ metrics }: { metrics: ETFMetrics }) {
         </div>
 
         {/* Income */}
-        <div className="glass-card-light rounded-xl p-4 sm:p-5">
+        <div className="bg-white border border-[#E3E1DA] rounded-xl p-4 sm:p-5">
           <p className="text-[11px] font-[600] text-[#566174] mb-3">Income</p>
           <MetricRow label="Trailing yield" value={yld} color={metrics.yield && metrics.yield > 0.02 ? 'text-[#11875D]' : 'text-[#06101F]'} />
           <MetricRow label="Annual dividend" value={metrics.dividendRate != null ? `$${metrics.dividendRate.toFixed(2)}` : '—'} />

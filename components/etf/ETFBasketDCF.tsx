@@ -64,7 +64,7 @@ export function ETFBasketDCF({ holdings }: Props) {
 
   if (loading) {
     return (
-      <div className="glass-card-light rounded-xl p-4">
+      <div className="bg-white border border-[#E3E1DA] rounded-xl p-4">
         <p className="text-sm font-semibold text-[#06101F] mb-3">Basket DCF Signal</p>
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
@@ -82,7 +82,7 @@ export function ETFBasketDCF({ holdings }: Props) {
 
   if (!userEmail) {
     return (
-      <div className="glass-card-light rounded-xl p-4">
+      <div className="bg-white border border-[#E3E1DA] rounded-xl p-4">
         <p className="text-sm font-semibold text-[#06101F] mb-2">Basket DCF Signal</p>
         <p className="text-sm text-[#8A95A6]">Sign in to see DCF upside signals for this ETF&apos;s holdings.</p>
       </div>
@@ -90,7 +90,7 @@ export function ETFBasketDCF({ holdings }: Props) {
   }
 
   return (
-    <div className="glass-card-light rounded-xl p-4">
+    <div className="bg-white border border-[#E3E1DA] rounded-xl p-4">
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
           <p className="text-sm font-semibold text-[#06101F]">Basket DCF Signal</p>

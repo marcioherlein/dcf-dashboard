@@ -238,7 +238,7 @@ export function ETFMetricHistory({ ticker }: Props) {
 
   if (loading) {
     return (
-      <div className="glass-card-light rounded-xl p-4">
+      <div className="bg-white border border-[#E3E1DA] rounded-xl p-4">
         <div className="h-6 w-40 bg-[#E3E1DA] rounded mb-4 motion-safe:animate-pulse" />
         <div className="grid grid-cols-2 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -271,9 +271,9 @@ export function ETFMetricHistory({ ticker }: Props) {
   const RANGES: Range[] = ['3M', '6M', '1Y', 'All']
 
   return (
-    <div className="glass-card-light rounded-xl p-4">
+    <div className="bg-white border border-[#E3E1DA] rounded-xl p-4">
       <div className="flex items-center justify-between gap-4 mb-4">
-        <p className="text-sm font-semibold text-[#06101F]">Metric History</p>
+        <p className="text-[13px] font-[700] text-[#111111]">Metric History</p>
         <div className="flex items-center gap-1">
           {RANGES.map((r) => (
             <button
