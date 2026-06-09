@@ -14,7 +14,6 @@ import { ETFExposureCard } from './ETFExposureCard'
 import HoldingReturns from '@/components/stock/HoldingReturns'
 import IncomeFlowCard from './IncomeFlowCard'
 import InvestmentVerdict from '@/components/stock/InvestmentVerdict'
-import SeeValuationCTA from './SeeValuationCTA'
 import { computeConvictionScore } from '@/lib/stock/computeConvictionScore'
 import { computeVerdict } from '@/lib/verdict/computeVerdict'
 
@@ -140,7 +139,7 @@ export default function SummaryTab({
   marketCap, peRatio, beta, pegRatio: _pegRatio, evToEbitda, dividendYield,
   holdingReturns,
   nextEarningsDate: _nextEarningsDate,
-  onViewValuation, onViewFinancials: _onViewFinancials, onViewConviction: _onViewConviction,
+  onViewValuation: _onViewValuation, onViewFinancials: _onViewFinancials, onViewConviction: _onViewConviction,
   onViewAssumptions: _onViewAssumptions, analystRecommendation,
   analystForwardEstimates, roe, roic, ownership,
 }: SummaryTabProps) {
@@ -152,14 +151,6 @@ export default function SummaryTab({
     () => analystForwardEstimates?.find((e) => e.period === '+1y')?.eps?.growth ?? null,
     [analystForwardEstimates],
   )
-
-  // Verdict derivation for SeeValuationCTA
-  const verdict = useMemo((): 'Undervalued' | 'Fairly Valued' | 'Overvalued' | 'Insufficient Data' | null => {
-    if (upsidePct == null) return null
-    if (upsidePct >= 15) return 'Undervalued'
-    if (upsidePct <= -10) return 'Overvalued'
-    return 'Fairly Valued'
-  }, [upsidePct])
 
   // Conviction Score — synthesizes all signals into a single 0–100 score
   const conviction = useMemo(() => {
@@ -317,15 +308,6 @@ export default function SummaryTab({
           conviction={conviction}
         />
       )}
-
-      {/* ── 8. SEE VALUATION CTA (full width bottom) ────────────────────────── */}
-      <SeeValuationCTA
-        onViewValuation={onViewValuation}
-        fairValue={fairValue}
-        upsidePct={upsidePct}
-        currency={currency}
-        verdict={verdict}
-      />
 
     </div>
   )
