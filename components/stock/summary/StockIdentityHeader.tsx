@@ -276,7 +276,7 @@ export default function StockIdentityHeader({
               </div>
             )}
 
-            {/* Name + subtitle + mobile price inline */}
+            {/* Name + subtitle + tags + mobile price inline */}
             <div className="min-w-0 flex-1">
               <h1 className="text-[20px] sm:text-[22px] font-bold leading-tight text-[#111111] tracking-tight truncate">
                 {companyName}
@@ -286,6 +286,16 @@ export default function StockIdentityHeader({
                 {companyType ? ` · ${companyType}` : ''}
                 {country ? ` · ${country}` : ''}
               </p>
+
+              {/* Tag chips — inline under ticker, matching screenshot layout */}
+              {tags.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {tags.map((tag) => (
+                    <TagChip key={tag}>{tag}</TagChip>
+                  ))}
+                </div>
+              )}
+
               {/* Mobile-only compact price line — visible below sm breakpoint */}
               <div className="mt-1.5 flex items-baseline gap-2 sm:hidden">
                 <span className="text-[20px] font-bold text-[#111111] tracking-tight leading-none">
@@ -313,15 +323,6 @@ export default function StockIdentityHeader({
                   {descExpanded ? 'Show less' : 'Read more'}
                 </button>
               )}
-            </div>
-          )}
-
-          {/* Tag chips */}
-          {tags.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {tags.map((tag) => (
-                <TagChip key={tag}>{tag}</TagChip>
-              ))}
             </div>
           )}
         </div>
