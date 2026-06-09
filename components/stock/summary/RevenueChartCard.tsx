@@ -15,48 +15,80 @@ const BarChartComponents = dynamic(
         data,
         unit,
         height = 180,
+        periodMode = 'annual',
       }: {
         data: Array<{ label: string; value: number; isProjected?: boolean }>
         unit: 'B' | 'M'
         height?: number
+        periodMode?: 'annual' | 'quarterly'
       }) {
+        // YoY lookback: 1 for annual, 4 for quarterly (same quarter last year)
+        const yoyLookback = periodMode === 'quarterly' ? 4 : 1
+
         function CustomLabel(props: {
           x?: number
           y?: number
           width?: number
           value?: number
+          index?: number
         }) {
-          const { x = 0, y = 0, width = 0, value } = props
+          const { x = 0, y = 0, width = 0, value, index = 0 } = props
           if (value == null) return null
+
           const displayVal = unit === 'B'
             ? `${(value / 1e9).toFixed(1)}B`
             : `${(value / 1e6).toFixed(0)}M`
+
+          // YoY growth
+          const prev = data[index - yoyLookback]?.value
+          const yoy = (prev != null && prev !== 0)
+            ? ((value - prev) / Math.abs(prev)) * 100
+            : null
+          const yoyText = yoy != null ? `${yoy >= 0 ? '+' : ''}${yoy.toFixed(0)}%` : null
+          const yoyColor = yoy == null ? '#9B9B9B' : yoy >= 0 ? '#5F790B' : '#D83B3B'
+
           return (
-            <text
-              x={x + width / 2}
-              y={y - 4}
-              fill="var(--color-text-secondary)"
-              textAnchor="middle"
-              fontSize={10}
-              fontWeight={600}
-            >
-              {displayVal}
-            </text>
+            <g>
+              {yoyText && (
+                <text
+                  x={x + width / 2}
+                  y={y - 17}
+                  fill={yoyColor}
+                  textAnchor="middle"
+                  fontSize={9}
+                  fontWeight={600}
+                  fontFamily="Inter, system-ui, sans-serif"
+                >
+                  {yoyText}
+                </text>
+              )}
+              <text
+                x={x + width / 2}
+                y={y - 5}
+                fill="#566174"
+                textAnchor="middle"
+                fontSize={10}
+                fontWeight={600}
+                fontFamily="Inter, system-ui, sans-serif"
+              >
+                {displayVal}
+              </text>
+            </g>
           )
         }
 
         return (
           <ResponsiveContainer width="100%" height={height}>
-            <BarChart data={data} margin={{ top: 24, right: 8, left: 8, bottom: 4 }} barCategoryGap="28%">
+            <BarChart data={data} margin={{ top: 34, right: 8, left: 8, bottom: 4 }} barCategoryGap="28%">
               <CartesianGrid {...CHART_GRID} />
               <XAxis
                 dataKey="label"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
+                tick={{ fontSize: 10, fill: '#6B6B6B', fontFamily: 'Inter, system-ui, sans-serif' }}
               />
-              <Bar dataKey="value" radius={[3, 3, 0, 0]} maxBarSize={48}>
-                <LabelList content={<CustomLabel />} />
+              <Bar dataKey="value" radius={[3, 3, 0, 0]} maxBarSize={48} isAnimationActive={false}>
+                <LabelList content={(props: any) => <CustomLabel {...props} />} />
                 {data.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
@@ -229,7 +261,7 @@ export default function RevenueChartCard({
           role="img"
           aria-label={`Revenue bar chart, ${view} view, values in ${unitLabel}`}
         >
-          <BarChartComponents data={chartData} unit={unit} />
+          <BarChartComponents data={chartData} unit={unit} periodMode={view} />
         </div>
       ) : (
         <div role="status" aria-live="polite">

@@ -13,32 +13,55 @@ const FCFBar = dynamic(
       const { BarChart, Bar, XAxis, CartesianGrid, Cell, LabelList, ResponsiveContainer, ReferenceLine } = mod
 
       function ValueLabel(props: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-        const { x, y, width, value, useB } = props
+        const { x, y, width, value, useB, index, allPoints } = props
         if (value == null) return null
         const isNeg = (value as number) < 0
         const fmtV = (v: number, useB: boolean) => {
-          if (useB) {
-            const b = v / 1e9
-            return `${b >= 0 ? '' : '-'}${Math.abs(b).toFixed(1)}B`
-          }
-          const m = v / 1e6
-          return `${m >= 0 ? '' : '-'}${Math.abs(m).toFixed(0)}M`
+          if (useB) return `${Math.abs(v / 1e9).toFixed(1)}B`
+          return `${Math.abs(v / 1e6).toFixed(0)}M`
         }
-        const text = (isNeg ? '−' : '+') + fmtV(value as number, useB)
-        const labelY = isNeg ? y + 14 : y - 5
+        // Main value label — always gray, no sign prefix on bars
+        const displayVal = (isNeg ? '−' : '+') + fmtV(value as number, useB)
+        const labelY = isNeg ? (y as number) + 14 : (y as number) - 5
+
+        // YoY: annual = index-1, quarterly = index-4
+        const lookback = (allPoints?.length ?? 0) > 6 ? 4 : 1
+        const prev = allPoints?.[index - lookback]?.fcf
+        const yoy = (prev != null && prev !== 0)
+          ? ((value - prev) / Math.abs(prev)) * 100
+          : null
+        const yoyText = yoy != null ? `${yoy >= 0 ? '+' : ''}${yoy.toFixed(0)}%` : null
+        const yoyColor = yoy == null ? '#9B9B9B' : yoy >= 0 ? '#5F790B' : '#D83B3B'
+
         return (
-          <text
-            x={x + width / 2}
-            y={labelY}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fontSize={9}
-            fontWeight={600}
-            fill={isNeg ? '#D83B3B' : '#5F790B'}
-            fontFamily="Inter, system-ui, sans-serif"
-          >
-            {text}
-          </text>
+          <g>
+            {yoyText && !isNeg && (
+              <text
+                x={(x as number) + (width as number) / 2}
+                y={(y as number) - 17}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontSize={9}
+                fontWeight={600}
+                fill={yoyColor}
+                fontFamily="Inter, system-ui, sans-serif"
+              >
+                {yoyText}
+              </text>
+            )}
+            <text
+              x={(x as number) + (width as number) / 2}
+              y={labelY}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fontSize={10}
+              fontWeight={600}
+              fill="#566174"
+              fontFamily="Inter, system-ui, sans-serif"
+            >
+              {displayVal}
+            </text>
+          </g>
         )
       }
 
@@ -53,18 +76,17 @@ const FCFBar = dynamic(
         hasNeg: boolean
         height?: number
       }) {
-        const tickFill   = '#6B6B6B'
         return (
           <ResponsiveContainer width="100%" height={height}>
             <BarChart
               data={points}
-              margin={{ top: 20, right: 4, left: 0, bottom: 0 }}
+              margin={{ top: 34, right: 4, left: 0, bottom: 0 }}
               barCategoryGap="28%"
             >
               <CartesianGrid {...CHART_GRID} />
               <XAxis
                 dataKey="label"
-                tick={{ fontSize: 10, fill: tickFill }}
+                tick={{ fontSize: 10, fill: '#6B6B6B', fontFamily: 'Inter, system-ui, sans-serif' }}
                 axisLine={false}
                 tickLine={false}
               />
@@ -75,7 +97,12 @@ const FCFBar = dynamic(
                 {points.map((p, i) => (
                   <Cell key={i} fill={p.fcf >= 0 ? '#5F790B' : '#D83B3B'} fillOpacity={0.88} />
                 ))}
-                <LabelList dataKey="fcf" content={(props) => <ValueLabel {...props} useB={useB} />} />
+                <LabelList
+                  dataKey="fcf"
+                  content={(props: any) => (
+                    <ValueLabel {...props} useB={useB} allPoints={points} />
+                  )}
+                />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
