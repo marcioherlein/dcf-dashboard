@@ -109,8 +109,8 @@ async function fetchNewsHeadlines(count = 5) {
   ]
 
   const JUNK    = /(reverse split|\d{3,}%|OTC|pink sheet|penny stock|soared \d{3,}%)/i
-  // Skip personal finance, lifestyle, and non-market content
-  const PERSONAL = /(how much will|I inherited|I'm \d+|my husband|my wife|my golf|my friend|wedding|retirement tax-free from birth|grandchild|I've been invited|what should I do|here's how I knew|here is how I knew|I knew his|I knew her)/i
+  // Skip personal finance, lifestyle, advice columns — keep only market/business news
+  const PERSONAL = /(how much will|I inherited|I'm \d+|my husband|my wife|my golf|my friend|wedding|grandchild|I've been invited|what should I do|here's how I knew|I knew his|I knew her|vulnerable senior|raising their grand|spending their retirement|42,000|financial toll|job training for|budget cut could eliminate|eliminate job)/i
 
   function extractTitles(xml) {
     const results = []
@@ -359,18 +359,28 @@ const ROTATION = {
   ],
 }
 
-async function runDcf() {
-  let ticker = TICKER
-  if (!ticker) {
-    const day = new Date().getDay() // 0=Sun … 6=Sat
-    const pool = ROTATION[day] ?? ROTATION[1]
-    // Use day-of-year so the ticker advances daily, not weekly
-    const dayOfYear = Math.floor(Date.now() / 86400000)
-    ticker = pool[dayOfYear % pool.length]
-  }
 
-  console.log(`Fetching DCF for ${ticker}...`)
-  const data = await fetchValuation(ticker)
+async function runDcf() {
+  // Try up to 5 tickers from the pool — skip any that fail or return no data
+  const day = new Date().getDay()
+  const pool = TICKER ? [TICKER] : (ROTATION[day] ?? ROTATION[1])
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+
+  let ticker = null
+  let data   = null
+  for (let attempt = 0; attempt < Math.min(5, pool.length); attempt++) {
+    const candidate = pool[(dayOfYear + attempt) % pool.length]
+    try {
+      console.log(`Trying DCF for ${candidate}...`)
+      const result = await fetchValuation(candidate)
+      if (result?.quote?.price && appFairValue(result)) {
+        ticker = candidate
+        data   = result
+        break
+      }
+    } catch { /* try next */ }
+  }
+  if (!data) throw new Error('No valid DCF data found after attempts')
 
   const price      = data.quote?.price
   const fair       = appFairValue(data)
@@ -380,30 +390,18 @@ async function runDcf() {
   const label      = data.ratings?.overall?.label ?? ''
   const sector     = data.quote?.sector ?? ''
 
-  // Business quality signals
   const grossMargin  = data.businessProfile?.grossMargin
   const netMargin    = data.businessProfile?.netMargin
   const fcfMargin    = data.businessProfile?.fcfMargin
   const roic         = data.scores?.roic?.roic
-  const roicSpread   = data.scores?.roic?.spread   // ROIC - WACC: positive = value creation
-  const piotroski    = data.scores?.piotroski?.score
-
-  // Growth signals
-  const hist3y       = data.cagrAnalysis?.historicalCagr3y
+  const roicSpread   = data.scores?.roic?.spread
   const analyst1y    = data.cagrAnalysis?.analystEstimate1y
   const numAnalysts  = data.cagrAnalysis?.numAnalysts ?? 0
-
-  // Analyst consensus
   const recommendation = data.analystRecommendation ?? ''
   const analystTarget  = data.quote?.analystTargetMean
   const forwardPE      = data.analystForwardPE
-
-  // Price performance vs SPY
   const stock1y = data.holdingReturns?.stock1y
   const spy1y   = data.holdingReturns?.spy1y
-  const stock5y = data.holdingReturns?.stock5y
-
-  // EPS beat streak
   const surprises = data.earningsSurprises ?? []
   const beatCount = surprises.filter(s => (s.surprisePercent ?? 0) > 0).length
 
@@ -411,19 +409,13 @@ async function runDcf() {
 
   const v = verdictLabel(upside)
 
-  // ── Build insight lines (pick the 2 most interesting signals) ──
-
   const insights = []
-
-  // 1. Growth narrative
   if (analyst1y != null && numAnalysts >= 3) {
     const growthVerb = analyst1y >= 0.20 ? 'accelerating' : analyst1y >= 0.08 ? 'growing' : 'slowing'
     insights.push(`Revenue ${growthVerb} at ${pct(analyst1y, false)}/yr (${numAnalysts} analysts) · model uses ${pct(cagr, false)}`)
-  } else if (hist3y != null) {
-    insights.push(`3Y revenue CAGR: ${pct(hist3y, false)} · model assumes ${pct(cagr, false)} going forward`)
+  } else if (data.cagrAnalysis?.historicalCagr3y != null) {
+    insights.push(`3Y revenue CAGR: ${pct(data.cagrAnalysis.historicalCagr3y, false)} · model assumes ${pct(cagr, false)} going forward`)
   }
-
-  // 2. Profitability / moat signal
   if (roicSpread != null && roicSpread > 0.05) {
     insights.push(`ROIC ${pct(roic, false)} vs WACC — ${pct(roicSpread, false)} value spread (creating value)`)
   } else if (grossMargin != null && grossMargin > 0.50) {
@@ -431,40 +423,23 @@ async function runDcf() {
   } else if (fcfMargin != null && fcfMargin > 0.15) {
     insights.push(`FCF margin: ${pct(fcfMargin, false)} — cash-generative business`)
   }
-
-  // 3. Analyst consensus angle (only if not already 2 insights)
   if (insights.length < 2 && analystTarget && forwardPE) {
-    const recLabel = recommendation === 'strong_buy' ? 'Strong Buy'
-      : recommendation === 'buy' ? 'Buy'
-      : recommendation === 'hold' ? 'Hold'
-      : recommendation === 'sell' ? 'Sell' : null
+    const recLabel = recommendation === 'strong_buy' ? 'Strong Buy' : recommendation === 'buy' ? 'Buy' : recommendation === 'hold' ? 'Hold' : null
     if (recLabel) insights.push(`Wall St: ${recLabel} · target ${fmt(analystTarget)} · fwd P/E ${forwardPE}×`)
   }
-
-  // 4. Performance vs SPY fallback
   if (insights.length < 2 && stock1y != null && spy1y != null) {
-    const vsSpyStr = stock1y > spy1y
-      ? `+${((stock1y - spy1y) * 100).toFixed(0)}pp ahead of S&P 500`
-      : `${((stock1y - spy1y) * 100).toFixed(0)}pp vs S&P 500`
+    const vsSpyStr = stock1y > spy1y ? `+${((stock1y - spy1y) * 100).toFixed(0)}pp ahead of S&P 500` : `${((stock1y - spy1y) * 100).toFixed(0)}pp vs S&P 500`
     insights.push(`1Y return: ${pct(stock1y)} (${vsSpyStr})`)
   }
-
-  // 5. EPS beats fallback
   if (insights.length < 2 && beatCount >= 3) {
     insights.push(`Beat EPS estimates ${beatCount} of last ${surprises.length} quarters`)
   }
 
-  // ── Assemble post — full mini-report format ──
-  const wacc    = data.wacc?.wacc
+  const wacc      = data.wacc?.wacc
   const terminalG = data.terminalG
-  const bear    = data.scenarios?.bear?.fairValue
-  const bull    = data.scenarios?.bull?.fairValue
-  const revenueM = data.businessProfile?.revenueM
-
-  const recLabel = recommendation === 'strong_buy' ? 'Strong Buy'
-    : recommendation === 'buy' ? 'Buy'
-    : recommendation === 'hold' ? 'Hold'
-    : recommendation === 'sell' ? 'Sell' : null
+  const bear      = data.scenarios?.bear?.fairValue
+  const bull      = data.scenarios?.bull?.fairValue
+  const revenueM  = data.businessProfile?.revenueM
 
   const lines = [
     `${v.emoji} $${ticker} — ${v.short}`,
@@ -489,9 +464,9 @@ async function runDcf() {
     ...(revenueM ? [`Revenue: ${fmt(revenueM * 1e6)}`] : []),
     ``,
     `━━━ ANALYST CONSENSUS ━━━`,
-    ...(recLabel ? [`Wall St rating: ${recLabel}`] : []),
-    ...(analystTarget ? [`Price target:   ${fmt(analystTarget)}`] : []),
-    ...(forwardPE ? [`Forward P/E:    ${forwardPE}×`] : []),
+    ...(recommendation ? [`Wall St: ${recommendation === 'strong_buy' ? 'Strong Buy' : recommendation === 'buy' ? 'Buy' : recommendation === 'hold' ? 'Hold' : recommendation === 'sell' ? 'Sell' : recommendation}`] : []),
+    ...(analystTarget ? [`Price target: ${fmt(analystTarget)}`] : []),
+    ...(forwardPE ? [`Forward P/E:  ${forwardPE}×`] : []),
     ...(beatCount > 0 ? [`EPS beats: ${beatCount}/${surprises.length} last quarters`] : []),
     ...(stock1y != null && spy1y != null ? [`1Y return: ${pct(stock1y)} vs SPY ${pct(spy1y)}`] : []),
     ``,
@@ -505,6 +480,7 @@ async function runDcf() {
 
   await post(lines.join('\n'))
 }
+
 
 // ─── Mode: news ───────────────────────────────────────────────────────────────
 // Pulls top market news headline from Yahoo Finance and posts it with a brief take.
@@ -1186,10 +1162,23 @@ async function runDcfBear() {
   const day = new Date().getDay()
   const pool = BEAR_ROTATION[day] ?? BEAR_ROTATION[2]
   const dayOfYear = Math.floor(Date.now() / 86400000)
-  const ticker = pool[dayOfYear % pool.length]
 
-  console.log(`Fetching bear DCF for ${ticker}...`)
-  const data = await fetchValuation(ticker)
+  // Try up to 5 tickers until one returns valid data
+  let ticker = null
+  let data   = null
+  for (let attempt = 0; attempt < Math.min(5, pool.length); attempt++) {
+    const candidate = pool[(dayOfYear + attempt) % pool.length]
+    try {
+      console.log(`Trying bear DCF for ${candidate}...`)
+      const result = await fetchValuation(candidate)
+      if (result?.quote?.price && appFairValue(result)) {
+        ticker = candidate
+        data   = result
+        break
+      }
+    } catch { /* try next */ }
+  }
+  if (!data) throw new Error('No valid DCF bear data found after attempts')
 
   const price  = data.quote?.price
   const fair   = appFairValue(data)
@@ -1299,13 +1288,14 @@ async function runEtfPulse() {
   const useTemplate = weekOfYear % 2 === 0 ? 'A' : 'B'
 
   if (useTemplate === 'A') {
-    // ── Template A: Broad market + VIX ──
-    const spy = await fetchEtfQuote('SPY')
-    await new Promise(r => setTimeout(r, 1500))
-    const qqq = await fetchEtfQuote('QQQ')
-    await new Promise(r => setTimeout(r, 1500))
-    const iwm = await fetchEtfQuote('IWM')
-    await new Promise(r => setTimeout(r, 1500))
+    // ── Template A: Broad market — use Yahoo v8 for live data ──
+    const [spy, qqq, iwm] = await Promise.all([
+      fetchYahooChart('SPY'),
+      fetchYahooChart('QQQ'),
+      fetchYahooChart('IWM'),
+    ])
+    // VIX still via Alpha Vantage (Yahoo doesn't support ^VIX well in v8)
+    await new Promise(r => setTimeout(r, 1000))
     const vix = await fetchEtfQuote('VIX').catch(() => null)
 
     const fmtEtf = (q) => {
@@ -1315,8 +1305,9 @@ async function runEtfPulse() {
     }
 
     const sentiment = vix ? vixSentiment(vix.price) : null
+    const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     const lines = [
-      `📊 Market Pulse — ${spy.date}`,
+      `📊 Market Pulse — ${today}`,
       ``,
       fmtEtf(spy),
       fmtEtf(qqq),
@@ -1334,23 +1325,20 @@ async function runEtfPulse() {
     await post(lines.join('\n'))
 
   } else {
-    // ── Template B: Sector rotation ──
-    const sectorSymbols = ['XLK', 'XLF', 'XLE', 'XLV']
-    const sectors = []
-    for (const sym of sectorSymbols) {
-      const q = await fetchEtfQuote(sym).catch(() => null)
-      if (q) sectors.push(q)
-      await new Promise(r => setTimeout(r, 1500)) // avoid per-minute rate limit
-    }
+    // ── Template B: Sector rotation — use Yahoo v8 for live data ──
+    const sectorSymbols = ['XLK', 'XLF', 'XLE', 'XLV', 'XLU', 'XLI']
+    const sectors = (await Promise.all(sectorSymbols.map(s => fetchYahooChart(s).catch(() => null))))
+      .filter(Boolean)
     sectors.sort((a, b) => b.changePct - a.changePct)
 
     if (sectors.length < 2) throw new Error('Not enough sector ETF data')
 
     const best  = sectors[0]
     const worst = sectors[sectors.length - 1]
+    const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
     const lines = [
-      `🔄 Sector Rotation — ${best.date}`,
+      `🔄 Sector Rotation — ${today}`,
       ``,
       `🏆 Best: ${ETF_NAMES[best.symbol]} (${best.symbol}) ${best.changePct >= 0 ? '+' : ''}${best.changePct.toFixed(2)}%`,
       `📉 Worst: ${ETF_NAMES[worst.symbol]} (${worst.symbol}) ${worst.changePct >= 0 ? '+' : ''}${worst.changePct.toFixed(2)}%`,
