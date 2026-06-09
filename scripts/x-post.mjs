@@ -97,21 +97,60 @@ async function fetchYahooChart(symbol) {
 }
 
 // Fetch real market headlines from Yahoo Finance RSS.
-// Filters out penny stocks, reverse splits, meme pumps.
+// Fetch real financial news headlines from multiple RSS sources.
+// Falls back through sources until enough headlines are found.
 async function fetchNewsHeadlines(count = 5) {
-  const res = await fetch(
+  const FEEDS = [
+    'https://feeds.reuters.com/reuters/businessNews',
+    'https://feeds.marketwatch.com/marketwatch/topstories/',
+    'https://www.cnbc.com/id/100003114/device/rss/rss.html',
+    'https://finance.yahoo.com/news/rssindex',
     'https://feeds.finance.yahoo.com/rss/2.0/headline?s=SPY&region=US&lang=en-US',
-    { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
-  ).catch(() => null)
-  if (!res?.ok) return []
-  const xml = await res.text().catch(() => '')
-  const titles = [...xml.matchAll(/<title><!\[CDATA\[(.*?)\]\]><\/title>/g)]
-    .map(m => m[1].trim())
-    .filter(t => t.length > 40)
-    .filter(t => !/(reverse split|\d{3,}%|OTC|pink sheet|penny|soar[eds]* \d{3,}%|moon|🚀)/i.test(t))
-    .filter(t => !/Yahoo! Finance/i.test(t))
-    .slice(0, count)
-  return titles
+  ]
+
+  const JUNK    = /(reverse split|\d{3,}%|OTC|pink sheet|penny stock|soared \d{3,}%)/i
+  // Skip personal finance, lifestyle, and non-market content
+  const PERSONAL = /(how much will|I inherited|I'm \d+|my husband|my wife|my golf|my friend|wedding|retirement tax-free from birth|grandchild|I've been invited|what should I do|here's how I knew|here is how I knew|I knew his|I knew her)/i
+
+  function extractTitles(xml) {
+    const results = []
+    const itemBlocks = xml.match(/<item[\s\S]*?<\/item>/gi) ?? []
+    for (const block of itemBlocks) {
+      // Handle both CDATA and plain-text title formats
+      const cdataMatch = block.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/)
+      const plainMatch = block.match(/<title>([^<]{10,}?)<\/title>/)
+      const raw = (cdataMatch?.[1] ?? plainMatch?.[1] ?? '').trim()
+      const title = raw
+        .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+        .replace(/&#39;/g, "'").replace(/&quot;/g, '"')
+        .replace(/&#x2018;/g, "'").replace(/&#x2019;/g, "'")
+        .replace(/&#x201C;/g, '"').replace(/&#x201D;/g, '"')
+        .replace(/&#x2014;/g, '—').replace(/&#x2013;/g, '–')
+        .replace(/&#\d+;/g, '').trim()
+      if (title.length > 25 && !JUNK.test(title) && !PERSONAL.test(title)) results.push(title)
+    }
+    return results
+  }
+
+  const seen = new Set()
+  const headlines = []
+
+  for (const url of FEEDS) {
+    if (headlines.length >= count) break
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+      signal: AbortSignal.timeout(8000),
+    }).catch(() => null)
+    if (!res?.ok) continue
+    const xml = await res.text().catch(() => '')
+    for (const title of extractTitles(xml)) {
+      if (headlines.length >= count) break
+      const key = title.slice(0, 50).toLowerCase()
+      if (!seen.has(key)) { seen.add(key); headlines.push(title) }
+    }
+  }
+
+  return headlines
 }
 
 // Format a price change line: symbol, price, pct
@@ -1534,12 +1573,10 @@ async function runMorningBrief() {
     if (earningsNarrative) lines.push(earningsNarrative)
   }
 
-  // Headlines always shown — they are the substance when no events/earnings
-  lines.push(``, `━━━ IN THE NEWS ━━━`)
+  // Headlines always shown
   if (headlines.length > 0) {
+    lines.push(``, `━━━ IN THE NEWS ━━━`)
     headlines.slice(0, 4).forEach(h => lines.push(`• ${h}`))
-  } else {
-    lines.push(`• Markets quiet on the news front this morning.`)
   }
 
   if (tomorrowNote) lines.push(``, tomorrowNote)
