@@ -78,6 +78,50 @@ function fmt(n, digits = 2) {
   return `$${n.toFixed(digits)}`
 }
 
+// Fetch price + % change from Yahoo Finance v8 chart API.
+// Works for indices (^TNX, ^GSPC), ETFs, commodities (CL=F, GC=F), forex (DX-Y.NYB).
+async function fetchYahooChart(symbol) {
+  const encoded = encodeURIComponent(symbol)
+  const res = await fetch(
+    `https://query1.finance.yahoo.com/v8/finance/chart/${encoded}?interval=1d&range=5d`,
+    { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+  ).catch(() => null)
+  if (!res?.ok) return null
+  const json = await res.json().catch(() => null)
+  const closes = json?.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.filter(v => v != null)
+  if (!closes || closes.length < 2) return null
+  const price = closes[closes.length - 1]
+  const prev  = closes[closes.length - 2]
+  const changePct = ((price - prev) / prev) * 100
+  return { symbol, price, prev, changePct }
+}
+
+// Fetch real market headlines from Yahoo Finance RSS.
+// Filters out penny stocks, reverse splits, meme pumps.
+async function fetchNewsHeadlines(count = 5) {
+  const res = await fetch(
+    'https://feeds.finance.yahoo.com/rss/2.0/headline?s=SPY&region=US&lang=en-US',
+    { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+  ).catch(() => null)
+  if (!res?.ok) return []
+  const xml = await res.text().catch(() => '')
+  const titles = [...xml.matchAll(/<title><!\[CDATA\[(.*?)\]\]><\/title>/g)]
+    .map(m => m[1].trim())
+    .filter(t => t.length > 40)
+    .filter(t => !/(reverse split|\d{3,}%|OTC|pink sheet|penny|soar[eds]* \d{3,}%|moon|🚀)/i.test(t))
+    .filter(t => !/Yahoo! Finance/i.test(t))
+    .slice(0, count)
+  return titles
+}
+
+// Format a price change line: symbol, price, pct
+function fmtChange(data, label, priceDecimals = 2) {
+  if (!data) return null
+  const sign = data.changePct >= 0 ? '+' : ''
+  const emoji = data.changePct >= 1 ? '🟢' : data.changePct <= -1 ? '🔴' : '🟡'
+  return `${emoji} ${label}: ${data.price.toFixed(priceDecimals)} (${sign}${data.changePct.toFixed(2)}%)`
+}
+
 function pct(n, signed = true) {
   if (n == null || !isFinite(n)) return 'N/A'
   const val = (n * 100).toFixed(1)
@@ -1320,198 +1364,436 @@ async function runSentiment() {
   await post(lines.join('\n'))
 }
 
+
 // ─── Mode: morning_brief ──────────────────────────────────────────────────────
-// Daily 8AM brief — no LLM, pure template logic from free APIs.
-// Covers: market open tone, earnings today, macro calendar, top headline.
+// Daily 8AM brief. Full macro picture: overnight markets, key events, real headlines.
 
 async function runMorningBrief() {
-  const todayUtc = new Date().toISOString().split('T')[0]
-  const dayName  = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+  const todayUtc    = new Date().toISOString().split('T')[0]
+  const tomorrowUtc = new Date(Date.now() + 86400000).toISOString().split('T')[0]
+  const dayName     = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
 
-  // ── 1. Macro events today ──────────────────────────────────────────────────
-  const macroToday = MACRO_CALENDAR.filter(e => e.date === todayUtc)
-
-  // ── 2. ETF snapshot (SPY + VIX only — 2 Alpha Vantage requests) ───────────
+  // SPY + VIX via Alpha Vantage (existing helper, 2 requests)
   const spy = await fetchEtfQuote('SPY').catch(() => null)
-  await new Promise(r => setTimeout(r, 1500))
+  await new Promise(r => setTimeout(r, 1200))
   const vix = await fetchEtfQuote('VIX').catch(() => null)
+  await new Promise(r => setTimeout(r, 1200))
 
-  // ── 3. Earnings today ─────────────────────────────────────────────────────
+  // Overnight markets + macro instruments via Yahoo Finance v8
+  const [tnx, dax, ftse, nikkei, oil, gold, dxy] = await Promise.all([
+    fetchYahooChart('^TNX'),
+    fetchYahooChart('^GDAXI'),
+    fetchYahooChart('^FTSE'),
+    fetchYahooChart('^N225'),
+    fetchYahooChart('CL=F'),
+    fetchYahooChart('GC=F'),
+    fetchYahooChart('DX-Y.NYB'),
+  ])
+
+  // News headlines via Yahoo RSS — filtered for quality
+  const headlines = await fetchNewsHeadlines(5)
+
+  // Earnings today — large caps only (>$10B market cap)
   const earningsTickers = []
   for (let i = 0; i < SP500_SAMPLE.length; i += 8) {
     const batch = SP500_SAMPLE.slice(i, i + 8)
     const settled = await Promise.allSettled(batch.map(async t => {
-      const res = await fetch(
+      const res2 = await fetch(
         `https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1d`,
         { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }
       ).catch(() => null)
-      if (!res?.ok) return null
-      const json = await res.json().catch(() => null)
+      if (!res2?.ok) return null
+      const json = await res2.json().catch(() => null)
       const meta = json?.chart?.result?.[0]?.meta
-      if (!meta) return null
-      const ts = meta.earningsTimestampStart
-      if (!ts) return null
-      const d = new Date(ts * 1000).toISOString().split('T')[0]
-      return d === todayUtc ? { symbol: t, marketCap: meta.marketCap ?? 0 } : null
+      if (!meta?.earningsTimestampStart) return null
+      if ((meta.marketCap ?? 0) < 10_000_000_000) return null
+      const d = new Date(meta.earningsTimestampStart * 1000).toISOString().split('T')[0]
+      return d === todayUtc ? { symbol: t, marketCap: meta.marketCap } : null
     }))
-    for (const r of settled) {
-      if (r.status === 'fulfilled' && r.value) earningsTickers.push(r.value)
-    }
-    if (i + 8 < SP500_SAMPLE.length) await new Promise(r => setTimeout(r, 400))
+    for (const r of settled) if (r.status === 'fulfilled' && r.value) earningsTickers.push(r.value)
+    if (i + 8 < SP500_SAMPLE.length) await new Promise(r => setTimeout(r, 300))
   }
   earningsTickers.sort((a, b) => b.marketCap - a.marketCap)
 
-  // ── 4. Top headline ───────────────────────────────────────────────────────
-  let headline = null
-  let headlineLink = null
-  try {
-    const trendRes = await fetch(
-      'https://query1.finance.yahoo.com/v1/finance/trending/US?count=5',
-      { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
-    ).catch(() => null)
-    if (trendRes?.ok) {
-      const trendJson = await trendRes.json().catch(() => null)
-      const trendTicker = trendJson?.finance?.result?.[0]?.quotes?.[0]?.symbol
-      if (trendTicker) {
-        const newsRes = await fetch(
-          `https://query1.finance.yahoo.com/v1/finance/search?q=${trendTicker}&newsCount=3&quotesCount=0`,
-          { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
-        ).catch(() => null)
-        if (newsRes?.ok) {
-          const newsJson = await newsRes.json().catch(() => null)
-          const item = (newsJson?.news ?? []).find(n => n.title?.length > 20)
-          headline = item?.title ?? null
-          headlineLink = item?.link ?? null
-        }
-      }
-    }
-  } catch { /* skip headline if unavailable */ }
+  // Macro events today + tomorrow
+  const macroToday    = MACRO_CALENDAR.filter(e => e.date === todayUtc)
+  const macroTomorrow = MACRO_CALENDAR.filter(e => e.date === tomorrowUtc)
 
-  // ── 5. Narrative assembly ─────────────────────────────────────────────────
+  // ── Narrative ──────────────────────────────────────────────────────────────
 
-  // Market open tone
-  const spyMove = spy?.changePct ?? 0
-  const vixLevel = vix?.price ?? 0
-  const marketTone = spyMove > 1.0
-    ? `Markets are opening on a strong note. SPY is up ${spyMove.toFixed(1)}% — risk appetite is back.`
-    : spyMove > 0.3
-    ? `A modestly positive open on the cards. SPY +${spyMove.toFixed(1)}%, nothing dramatic, but the bias is green.`
-    : spyMove > -0.3
-    ? `Flat open expected. SPY is barely moving (${spyMove >= 0 ? '+' : ''}${spyMove.toFixed(1)}%) — markets in wait-and-see mode.`
-    : spyMove > -1.0
-    ? `Cautious start this morning. SPY -${Math.abs(spyMove).toFixed(1)}%, sellers have a slight edge early on.`
-    : `Markets are under pressure at the open. SPY -${Math.abs(spyMove).toFixed(1)}% — it's a risk-off morning.`
+  const spyMove  = spy?.changePct ?? 0
+  const vixLevel = vix?.price    ?? 0
 
-  const vixContext = vixLevel >= 30
-    ? ` The VIX at ${vixLevel.toFixed(0)} is flashing extreme fear — volatility is elevated and the market is pricing in real uncertainty.`
+  const openTone = spyMove > 1.5
+    ? `US markets opening strong. SPY +${spyMove.toFixed(1)}% — bulls in control, risk appetite high.`
+    : spyMove > 0.5
+    ? `Positive open setting up. SPY +${spyMove.toFixed(1)}% — cautious optimism.`
+    : spyMove > 0.1
+    ? `Markets creeping higher. SPY +${spyMove.toFixed(1)}% — bias is green but conviction is low.`
+    : spyMove > -0.1
+    ? `Flat open. SPY barely moving (${spyMove >= 0 ? '+' : ''}${spyMove.toFixed(1)}%) — markets waiting on a catalyst.`
+    : spyMove > -0.5
+    ? `Soft open. SPY -${Math.abs(spyMove).toFixed(1)}% — sellers have a slight edge.`
+    : spyMove > -1.5
+    ? `Cautious start. SPY -${Math.abs(spyMove).toFixed(1)}% — risk-off tone, defensives in favor.`
+    : `Markets under real pressure. SPY -${Math.abs(spyMove).toFixed(1)}% — risk-off, expect elevated volatility.`
+
+  const vixNote = vixLevel >= 30
+    ? ` VIX ${vixLevel.toFixed(0)} — extreme fear. Historically a contrarian buy signal.`
     : vixLevel >= 22
-    ? ` VIX at ${vixLevel.toFixed(0)} — investors are on edge. Not panic, but not calm either.`
+    ? ` VIX ${vixLevel.toFixed(0)} — investors on edge. Options pricing in more volatility.`
     : vixLevel >= 15
-    ? ` VIX sits at ${vixLevel.toFixed(0)}, broadly neutral. No major fear signals.`
+    ? ` VIX ${vixLevel.toFixed(0)} — broadly neutral. No major fear signals.`
     : vixLevel > 0
-    ? ` VIX at ${vixLevel.toFixed(0)} — complacency territory. Low volatility often precedes a move.`
+    ? ` VIX ${vixLevel.toFixed(0)} — complacency territory. Low vol often precedes a move.`
     : ''
 
-  // Macro narrative
-  const macroLines = macroToday.length > 0 ? macroToday.map(e => {
-    if (e.type === 'FOMC') return `🏦 Fed rate decision today. The market is largely expecting a hold — but watch Powell's press conference for forward guidance on cuts. Any shift in tone will move WACC assumptions across every valuation model.`
-    if (e.type === 'CPI')  return `📊 CPI inflation print today. This one matters: a hot number keeps rates elevated and compresses DCF fair values; a cool print opens the door to cuts and lifts them.`
-    if (e.type === 'NFP')  return `💼 Jobs report (NFP) out today. Strong payrolls = Fed on hold. Weak payrolls = rate cuts come sooner. Watch the number vs. expectations, not just the absolute figure.`
+  const yieldNote = tnx ? (() => {
+    const y = tnx.price, chg = tnx.changePct
+    const dir = chg > 0.5 ? 'rising' : chg < -0.5 ? 'falling' : 'steady'
+    const context = y >= 4.5 ? 'elevated — headwind for growth and real estate'
+      : y >= 4.0 ? 'mid-range — watch for a break'
+      : 'benign for equities near-term'
+    return `10Y yield ${y.toFixed(2)}% (${dir}) — ${context}.`
+  })() : null
+
+  const dxyNote = dxy ? (() => {
+    const chg = dxy.changePct
+    const dir = chg > 0.3 ? 'strengthening' : chg < -0.3 ? 'weakening' : 'flat'
+    const impact = chg < -0.3 ? ' Weak dollar tailwind for multinationals and commodities.'
+      : chg > 0.3 ? ' Strong dollar pressures commodities and EM assets.' : ''
+    return `Dollar (DXY) ${dir} at ${dxy.price.toFixed(1)}.${impact}`
+  })() : null
+
+  const macroNarrative = macroToday.map(e => {
+    if (e.type === 'FOMC') return `🏦 Fed decision today. Market pricing in a hold — but Powell's guidance on cut timing is what moves valuations. Every shift in the dot plot changes WACC assumptions across every model.`
+    if (e.type === 'CPI')  return `📊 CPI out today. Hot print = rates stay elevated, DCF fair values compress. Cool print = rate cuts open up, growth gets relief. This reprices every model in real time.`
+    if (e.type === 'NFP')  return `💼 Jobs report this morning. Strong payrolls = Fed holds. Weak print = rate cut timeline accelerates. Watch the revision to last month's number — often the real signal.`
     return `📅 ${e.label} today.`
-  }) : []
+  })
 
-  // Earnings narrative
-  let earningsLines = []
-  if (earningsTickers.length > 0) {
+  const earningsNarrative = earningsTickers.length > 0 ? (() => {
     const names = earningsTickers.slice(0, 4).map(t => `$${t.symbol}`)
-    const nameStr = names.length === 1
-      ? names[0]
-      : names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1]
-    earningsLines = [
-      `${nameStr} ${names.length === 1 ? 'reports' : 'report'} today. The question isn't just whether they beat — it's whether the beat is enough to justify current prices. Run the model before the number drops.`,
-    ]
-  }
+    const str = names.length === 1 ? names[0] : names.slice(0, -1).join(', ') + ' and ' + names.at(-1)
+    return `📊 ${str} ${names.length === 1 ? 'reports' : 'report'} today. Beat or miss is one thing — whether it justifies current prices is another. Run the model before the numbers drop.`
+  })() : null
 
-  // Headline narrative
-  const headlineLines = []
-  if (headline) {
-    // Simple keyword-based framing — no LLM needed
-    const h = headline.toLowerCase()
-    let framing = 'Worth watching for valuation implications.'
-    if (h.includes('acqui') || h.includes('merger') || h.includes('deal'))
-      framing = 'M&A moves the fair value calculus — changes FCF trajectory, leverage, and growth assumptions.'
-    else if (h.includes('layoff') || h.includes('cut') || h.includes('restructur'))
-      framing = 'Cost cuts improve margins near-term but signal demand concerns. Watch the revenue side closely.'
-    else if (h.includes('beat') || h.includes('surpass') || h.includes('record'))
-      framing = 'Strong results — but check whether the price already reflects this. A beat into an expensive valuation is still expensive.'
-    else if (h.includes('miss') || h.includes('disappoint') || h.includes('below'))
-      framing = 'A miss creates volatility. Whether it\'s a buying opportunity depends entirely on what the model says about fair value.'
-    else if (h.includes('rate') || h.includes('fed') || h.includes('inflation'))
-      framing = 'Macro moves discount rates — and discount rates move every valuation. Keep an eye on WACC implications.'
-    else if (h.includes('ai') || h.includes('chip') || h.includes('nvidia') || h.includes('semiconductor'))
-      framing = 'AI infrastructure spending continues to reshape capex cycles. Growth stocks in the space carry premium assumptions — verify the model.'
+  const tomorrowNote = macroTomorrow.length > 0
+    ? `Tomorrow: ${macroTomorrow.map(e => e.label).join(' · ')} — plan accordingly.`
+    : null
 
-    headlineLines.push(`"${headline}"`)
-    headlineLines.push(framing)
-    if (headlineLink) headlineLines.push(headlineLink)
-  }
-
-  // Rotating closing hook
+  // ── Build post ─────────────────────────────────────────────────────────────
   const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
   const hooks = [
     'What are you watching today?',
     "What's your game plan this morning?",
-    'Any positions reporting today? Drop them below 👇',
-    'What does your model say about the stocks in focus today?',
-  ]
-  const closingHook = hooks[weekOfYear % hooks.length]
-
-  // ── Build final post ───────────────────────────────────────────────────────
-  const sections = [
-    `🌅 Good Morning — ${dayName}`,
-    ``,
-    marketTone + vixContext,
+    'Any positions reporting? Drop them below 👇',
+    'What does your model say about the names in focus today?',
   ]
 
-  if (macroLines.length > 0) {
-    sections.push(``)
-    sections.push(`━━━ MACRO ━━━`)
-    sections.push(...macroLines)
+  const lines = [`🌅 Good Morning — ${dayName}`, ``, openTone + vixNote]
+
+  const overnightItems = [
+    dax    ? `🇩🇪 DAX ${dax.changePct >= 0 ? '+' : ''}${dax.changePct.toFixed(2)}%` : null,
+    ftse   ? `🇬🇧 FTSE ${ftse.changePct >= 0 ? '+' : ''}${ftse.changePct.toFixed(2)}%` : null,
+    nikkei ? `🇯🇵 Nikkei ${nikkei.changePct >= 0 ? '+' : ''}${nikkei.changePct.toFixed(2)}%` : null,
+  ].filter(Boolean)
+  const commodityItems = [
+    oil  ? `Oil (WTI) $${oil.price.toFixed(2)} ${oil.changePct >= 0 ? '+' : ''}${oil.changePct.toFixed(2)}%` : null,
+    gold ? `Gold $${gold.price.toFixed(0)} ${gold.changePct >= 0 ? '+' : ''}${gold.changePct.toFixed(2)}%` : null,
+  ].filter(Boolean)
+
+  if (overnightItems.length > 0 || commodityItems.length > 0) {
+    lines.push(``, `━━━ OVERNIGHT ━━━`)
+    if (overnightItems.length > 0) lines.push(overnightItems.join('  '))
+    if (commodityItems.length > 0) lines.push(commodityItems.join(' · '))
   }
 
-  if (earningsLines.length > 0) {
-    sections.push(``)
-    sections.push(`━━━ EARNINGS TODAY ━━━`)
-    sections.push(...earningsLines)
+  if (yieldNote || dxyNote) {
+    lines.push(``)
+    if (yieldNote) lines.push(yieldNote)
+    if (dxyNote)   lines.push(dxyNote)
   }
 
-  if (headlineLines.length > 0) {
-    sections.push(``)
-    sections.push(`━━━ THIS MORNING ━━━`)
-    sections.push(...headlineLines)
+  const hasEvents = macroNarrative.length > 0 || earningsNarrative
+  if (hasEvents) {
+    lines.push(``, `━━━ TODAY'S EVENTS ━━━`)
+    lines.push(...macroNarrative)
+    if (earningsNarrative) lines.push(earningsNarrative)
   }
 
-  sections.push(``)
-  sections.push(closingHook)
-  sections.push(``)
-  sections.push(`Run the valuations → ${APP_URL}`)
-  sections.push(`#GoodMorning #StockMarket #Investing #WallStreet`)
+  if (headlines.length > 0) {
+    lines.push(``, `━━━ THIS MORNING ━━━`)
+    headlines.slice(0, 4).forEach(h => lines.push(`• ${h}`))
+  }
 
-  await post(sections.join('\n'))
+  if (tomorrowNote) lines.push(``, tomorrowNote)
+
+  lines.push(``, hooks[weekOfYear % hooks.length], ``, `Run the models → ${APP_URL}`)
+  lines.push(`#GoodMorning #StockMarket #Investing #WallStreet`)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: midday_pulse ───────────────────────────────────────────────────────
+// 1:00 PM ART — full mid-session snapshot: indices, sectors, macro, rotation narrative.
+
+async function runMiddayPulse() {
+  const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+  const todayUtc = new Date().toISOString().split('T')[0]
+
+  // US indices
+  const [sp500, nasdaq, dow] = await Promise.all([
+    fetchYahooChart('^GSPC'), fetchYahooChart('^IXIC'), fetchYahooChart('^DJI'),
+  ])
+  await new Promise(r => setTimeout(r, 800))
+
+  // Macro instruments
+  const [tnx, oil, gold, dxy] = await Promise.all([
+    fetchYahooChart('^TNX'), fetchYahooChart('CL=F'),
+    fetchYahooChart('GC=F'), fetchYahooChart('DX-Y.NYB'),
+  ])
+  await new Promise(r => setTimeout(r, 800))
+
+  // All 6 sector ETFs (sequential to avoid rate limits)
+  const sectorSymbols = [
+    { sym: 'XLK', name: 'Tech' }, { sym: 'XLE', name: 'Energy' },
+    { sym: 'XLF', name: 'Financials' }, { sym: 'XLV', name: 'Healthcare' },
+    { sym: 'XLU', name: 'Utilities' }, { sym: 'XLI', name: 'Industrials' },
+  ]
+  const sectorData = []
+  for (const { sym, name } of sectorSymbols) {
+    const d = await fetchYahooChart(sym).catch(() => null)
+    if (d) sectorData.push({ ...d, name })
+    await new Promise(r => setTimeout(r, 300))
+  }
+  sectorData.sort((a, b) => b.changePct - a.changePct)
+
+  const vix = await fetchEtfQuote('VIX').catch(() => null)
+  const headlines = await fetchNewsHeadlines(4)
+  const macroToday = MACRO_CALENDAR.filter(e => e.date === todayUtc)
+
+  // ── Narrative ──────────────────────────────────────────────────────────────
+  const indexLine = [
+    sp500  ? `S&P 500 ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%` : null,
+    nasdaq ? `Nasdaq ${nasdaq.changePct >= 0 ? '+' : ''}${nasdaq.changePct.toFixed(2)}%` : null,
+    dow    ? `Dow ${dow.changePct >= 0 ? '+' : ''}${dow.changePct.toFixed(2)}%` : null,
+  ].filter(Boolean).join(' · ')
+
+  const best  = sectorData[0]
+  const worst = sectorData[sectorData.length - 1]
+  const rotationNote = best && worst ? (() => {
+    const riskOn = ['Tech', 'Energy', 'Industrials'].includes(best.name)
+    const defBad = ['Utilities', 'Healthcare'].includes(worst.name)
+    if (riskOn && defBad) return `Money rotating INTO ${best.name.toLowerCase()}, OUT OF defensives. Classic risk-on signal.`
+    if (!riskOn && defBad === false) return `Defensive rotation underway — ${best.name} leads while ${worst.name} lags. Market hedging.`
+    return `${best.name} leads (+${best.changePct.toFixed(1)}%), ${worst.name} lags (${worst.changePct.toFixed(1)}%).`
+  })() : null
+
+  const yieldNote = tnx ? (() => {
+    const y = tnx.price, chg = tnx.changePct
+    const dir = chg > 0.5 ? 'ticking up' : chg < -0.5 ? 'easing' : 'steady'
+    const context = y >= 4.5 ? 'headwind for growth stocks' : y >= 4.0 ? 'watch for breakout' : 'benign near-term'
+    return `10Y yield ${y.toFixed(3)}% (${dir}) — ${context}.`
+  })() : null
+
+  const energySector = sectorData.find(s => s.name === 'Energy')
+  const oilEnergyNote = oil && energySector
+    ? (oil.changePct < -1.0 && energySector.changePct > 0.5
+        ? `Note: oil down ${Math.abs(oil.changePct).toFixed(1)}% but energy stocks holding — sector has its own momentum.`
+        : oil.changePct > 1.0 && energySector.changePct < 0
+        ? `Energy stocks lagging despite oil strength — watch for catch-up or continued divergence.`
+        : null)
+    : null
+
+  const macroNote = macroToday.map(e => {
+    if (e.type === 'FOMC') return `🏦 Fed decision this afternoon — market on hold until Powell speaks.`
+    if (e.type === 'CPI')  return `📊 CPI data is in — have you updated your WACC assumptions?`
+    if (e.type === 'NFP')  return `💼 Jobs data out this morning — rate cut path updated.`
+    return `📅 ${e.label} today.`
+  })
+
+  const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
+  const hooks = [
+    "What's moving in your portfolio right now?",
+    'Which sector are you watching this afternoon?',
+    'Where are you seeing opportunity mid-session?',
+    "What's your read on the rotation today?",
+  ]
+
+  const lines = [`📊 Midday Pulse — ${dayName}`, ``, indexLine]
+  if (vix) lines.push(`VIX: ${vix.price.toFixed(1)} — ${vixSentiment(vix.price).label}`)
+
+  if (sectorData.length > 0) {
+    lines.push(``, `━━━ SECTORS ━━━`)
+    sectorData.forEach(s => {
+      const emoji = s.changePct >= 1 ? '🟢' : s.changePct <= -1 ? '🔴' : '🟡'
+      lines.push(`${emoji} ${s.name}: ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`)
+    })
+    if (rotationNote) lines.push(``, `→ ${rotationNote}`)
+  }
+
+  if (tnx || oil || gold || dxy) {
+    lines.push(``, `━━━ MACRO ━━━`)
+    if (yieldNote) lines.push(yieldNote)
+    if (oil)  lines.push(`Oil (WTI): $${oil.price.toFixed(2)} ${oil.changePct >= 0 ? '+' : ''}${oil.changePct.toFixed(2)}%${oil.changePct < -1 ? ' — energy under pressure' : oil.changePct > 1 ? ' — crude rallying' : ''}`)
+    if (gold) lines.push(`Gold: $${gold.price.toFixed(0)} ${gold.changePct >= 0 ? '+' : ''}${gold.changePct.toFixed(2)}%${gold.changePct > 0.5 ? ' — safe-haven demand intact' : ''}`)
+    if (dxy)  lines.push(`Dollar (DXY): ${dxy.price.toFixed(1)} ${dxy.changePct >= 0 ? '+' : ''}${dxy.changePct.toFixed(2)}%${dxy.changePct < -0.3 ? ' — weak dollar helps multinationals' : ''}`)
+    if (oilEnergyNote) lines.push(oilEnergyNote)
+  }
+
+  if (macroNote.length > 0) lines.push(``, `━━━ EVENTS ━━━`, ...macroNote)
+
+  if (headlines.length > 0) {
+    lines.push(``, `━━━ MIDDAY HEADLINES ━━━`)
+    headlines.slice(0, 3).forEach(h => lines.push(`• ${h}`))
+  }
+
+  lines.push(``, hooks[weekOfYear % hooks.length], ``, `Run the valuations → ${APP_URL}`)
+  lines.push(`#Midday #StockMarket #Investing #WallStreet`)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: market_close ───────────────────────────────────────────────────────
+// 7:00 PM ART — EOD recap: final close, sector scorecard, what drove it, what to watch.
+
+async function runMarketClose() {
+  const dayName     = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+  const tomorrowUtc = new Date(Date.now() + 86400000).toISOString().split('T')[0]
+
+  // Final close data
+  const [sp500, nasdaq, dow] = await Promise.all([
+    fetchYahooChart('^GSPC'), fetchYahooChart('^IXIC'), fetchYahooChart('^DJI'),
+  ])
+  await new Promise(r => setTimeout(r, 800))
+
+  const [tnx, oil, gold, dxy] = await Promise.all([
+    fetchYahooChart('^TNX'), fetchYahooChart('CL=F'),
+    fetchYahooChart('GC=F'), fetchYahooChart('DX-Y.NYB'),
+  ])
+  await new Promise(r => setTimeout(r, 800))
+
+  // All sectors
+  const sectorSymbols = [
+    { sym: 'XLK', name: 'Tech' }, { sym: 'XLE', name: 'Energy' },
+    { sym: 'XLF', name: 'Financials' }, { sym: 'XLV', name: 'Healthcare' },
+    { sym: 'XLU', name: 'Utilities' }, { sym: 'XLI', name: 'Industrials' },
+  ]
+  const sectorData = []
+  for (const { sym, name } of sectorSymbols) {
+    const d = await fetchYahooChart(sym).catch(() => null)
+    if (d) sectorData.push({ ...d, name })
+    await new Promise(r => setTimeout(r, 300))
+  }
+  sectorData.sort((a, b) => b.changePct - a.changePct)
+
+  const vix = await fetchEtfQuote('VIX').catch(() => null)
+  const headlines = await fetchNewsHeadlines(5)
+  const macroTomorrow = MACRO_CALENDAR.filter(e => e.date === tomorrowUtc)
+
+  // ── Narrative ──────────────────────────────────────────────────────────────
+  const best  = sectorData[0]
+  const worst = sectorData[sectorData.length - 1]
+
+  const whatDroveIt = (() => {
+    const out = []
+    if (best && Math.abs(best.changePct) > 0.5) {
+      const riskOn = ['Tech', 'Energy', 'Industrials'].includes(best.name)
+      out.push(riskOn
+        ? `${best.name} led the session (+${best.changePct.toFixed(1)}%) — risk appetite was the theme.`
+        : `${best.name} led (+${best.changePct.toFixed(1)}%) as investors rotated into defensives.`)
+    }
+    if (worst && Math.abs(worst.changePct) > 0.5) out.push(`${worst.name} was the laggard (${worst.changePct.toFixed(1)}%).`)
+    if (tnx && Math.abs(tnx.changePct) > 0.5) out.push(tnx.changePct > 0
+      ? `Rising yields (+${tnx.changePct.toFixed(1)}bps) added pressure on rate-sensitive assets.`
+      : `Falling yields (${tnx.changePct.toFixed(1)}bps) provided relief for growth stocks.`)
+    if (oil && Math.abs(oil.changePct) > 1.0) out.push(oil.changePct < 0
+      ? `Oil fell ${Math.abs(oil.changePct).toFixed(1)}% — macro demand concerns in play.`
+      : `Oil surged ${oil.changePct.toFixed(1)}% — energy complex outperformed.`)
+    if (out.length === 0) out.push((sp500?.changePct ?? 0) > 0
+      ? 'Buyers maintained control through the close.'
+      : 'Sellers in control — broad-based pressure.')
+    return out
+  })()
+
+  const watchTomorrow = (() => {
+    const items = []
+    macroTomorrow.forEach(e => {
+      if (e.type === 'FOMC') items.push(`🏦 Fed rate decision — most important event for equity valuations`)
+      if (e.type === 'CPI')  items.push(`📊 CPI inflation print — will move WACC assumptions across the board`)
+      if (e.type === 'NFP')  items.push(`💼 Jobs report — key input for Fed rate path and discount rates`)
+    })
+    if (tnx && tnx.price >= 4.4) items.push(`10Y at ${tnx.price.toFixed(2)}% — if it breaks ${(Math.ceil(tnx.price * 10) / 10).toFixed(1)}%, growth stocks will feel it`)
+    if (vix && vix.price >= 20)  items.push(`VIX ${vix.price.toFixed(1)} — elevated volatility, position sizing matters tomorrow`)
+    if (items.length === 0) items.push(`Watch premarket futures for overnight direction`)
+    return items
+  })()
+
+  const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
+  const hooks = [
+    'What was your read on today?',
+    'How did you play it today?',
+    "Any setups you're watching for tomorrow?",
+    'Biggest lesson from today\'s session?',
+  ]
+
+  const lines = [
+    `🔔 Markets Closed — ${dayName}`, ``,
+    `━━━ FINAL CLOSE ━━━`,
+    sp500  ? `S&P 500: ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}% · ${sp500.price.toFixed(0)}` : null,
+    nasdaq ? `Nasdaq:  ${nasdaq.changePct >= 0 ? '+' : ''}${nasdaq.changePct.toFixed(2)}% · ${nasdaq.price.toFixed(0)}` : null,
+    dow    ? `Dow:     ${dow.changePct >= 0 ? '+' : ''}${dow.changePct.toFixed(2)}% · ${dow.price.toFixed(0)}` : null,
+    vix    ? `VIX: ${vix.price.toFixed(1)} — ${vixSentiment(vix.price).label}` : null,
+  ].filter(Boolean)
+
+  if (sectorData.length > 0) {
+    lines.push(``, `━━━ SECTOR SCORECARD ━━━`)
+    sectorData.forEach((s, i) => {
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : s.changePct < 0 ? '📉' : '  '
+      lines.push(`${medal} ${s.name} ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`)
+    })
+  }
+
+  if (tnx || oil || gold || dxy) {
+    lines.push(``, `━━━ COMMODITIES & RATES ━━━`)
+    if (tnx)  lines.push(`10Y Yield: ${tnx.price.toFixed(3)}% (${tnx.changePct >= 0 ? '+' : ''}${tnx.changePct.toFixed(2)}%)`)
+    if (oil)  lines.push(`Oil (WTI): $${oil.price.toFixed(2)} (${oil.changePct >= 0 ? '+' : ''}${oil.changePct.toFixed(2)}%)`)
+    if (gold) lines.push(`Gold: $${gold.price.toFixed(0)} (${gold.changePct >= 0 ? '+' : ''}${gold.changePct.toFixed(2)}%)`)
+    if (dxy)  lines.push(`Dollar (DXY): ${dxy.price.toFixed(1)} (${dxy.changePct >= 0 ? '+' : ''}${dxy.changePct.toFixed(2)}%)`)
+  }
+
+  lines.push(``, `━━━ WHAT DROVE IT ━━━`)
+  whatDroveIt.forEach(l => lines.push(l))
+
+  if (headlines.length > 0) {
+    lines.push(``, `━━━ TODAY'S HEADLINES ━━━`)
+    headlines.slice(0, 3).forEach(h => lines.push(`• ${h}`))
+  }
+
+  lines.push(``, `━━━ WHAT TO WATCH TOMORROW ━━━`)
+  watchTomorrow.forEach(w => lines.push(`→ ${w}`))
+
+  lines.push(``, hooks[weekOfYear % hooks.length], ``, `Run the valuations → ${APP_URL}`)
+  lines.push(`#MarketClose #Investing #WallStreet #StockMarket`)
+
+  await post(lines.join('\n'))
 }
 
 const MODES = {
-  earnings:    runEarnings,
-  dcf:         runDcf,
-  dcf_bear:    runDcfBear,
-  news:        runNews,
-  macro:       runMacro,
-  feature:     runFeature,
-  weekly_wrap: runWeeklyWrap,
-  question:    runQuestion,
+  earnings:       runEarnings,
+  dcf:            runDcf,
+  dcf_bear:       runDcfBear,
+  news:           runNews,
+  macro:          runMacro,
+  feature:        runFeature,
+  weekly_wrap:    runWeeklyWrap,
+  question:       runQuestion,
   etf_pulse:      runEtfPulse,
   sentiment:      runSentiment,
   morning_brief:  runMorningBrief,
+  midday_pulse:   runMiddayPulse,
+  market_close:   runMarketClose,
 }
 
 if (!MODES[MODE]) {

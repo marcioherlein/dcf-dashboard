@@ -3,14 +3,15 @@ name: X Auto-Post
 on:
   schedule:
     # ── Weekdays Mon–Fri ──────────────────────────────────────────────────────
-    - cron: '0 11 * * 1-5'   # 08:00 AM ART — Good morning brief
+    - cron: '0 11 * * 1-5'   # 08:00 AM ART — Morning brief (macro + overnight + earnings + headlines)
     - cron: '0 13 * * 1-5'   # 10:00 AM ART — Earnings preview
     - cron: '0 14 * * 1-5'   # 11:00 AM ART — App feature/education
     - cron: '0 15 * * 1-5'   # 12:00 PM ART — DCF snapshot (bullish)
+    - cron: '0 16 * * 1-5'   # 01:00 PM ART — Midday pulse (sectors + indices + rotation)
     - cron: '0 17 * * 1-5'   # 02:00 PM ART — Macro event/calendar
     - cron: '0 19 * * 1-5'   # 04:00 PM ART — ETF pulse / sector rotation
     - cron: '0 20 * * 1-5'   # 05:00 PM ART — DCF bear/overvalued pick
-    - cron: '0 21 * * 1-5'   # 06:00 PM ART — News headline
+    - cron: '0 22 * * 1-5'   # 07:00 PM ART — Market close recap
     # ── Saturday ─────────────────────────────────────────────────────────────
     - cron: '0 13 * * 6'     # 10:00 AM ART — ETF pulse
     - cron: '0 14 * * 6'     # 11:00 AM ART — App feature
@@ -30,7 +31,7 @@ on:
         required: true
         default: 'dcf'
         type: choice
-        options: [earnings, dcf, dcf_bear, macro, news, feature, weekly_wrap, question, etf_pulse, sentiment, morning_brief]
+        options: [earnings, dcf, dcf_bear, macro, news, feature, weekly_wrap, question, etf_pulse, sentiment, morning_brief, midday_pulse, market_close]
       ticker:
         description: 'Ticker override (dcf / dcf_bear modes only)'
         required: false
@@ -69,13 +70,14 @@ jobs:
 
             # Weekdays (DOW 1-5)
             if   [ "$DOW" -le "5" ] && [ "$HOUR" = "11" ]; then echo "MODE=morning_brief" >> $GITHUB_ENV
-            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "13" ]; then echo "MODE=earnings"     >> $GITHUB_ENV
-            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "14" ]; then echo "MODE=feature"      >> $GITHUB_ENV
-            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "15" ]; then echo "MODE=dcf"          >> $GITHUB_ENV
-            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "17" ]; then echo "MODE=macro"        >> $GITHUB_ENV
-            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "19" ]; then echo "MODE=etf_pulse"    >> $GITHUB_ENV
-            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "20" ]; then echo "MODE=dcf_bear"     >> $GITHUB_ENV
-            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "21" ]; then echo "MODE=news"         >> $GITHUB_ENV
+            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "13" ]; then echo "MODE=earnings"      >> $GITHUB_ENV
+            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "14" ]; then echo "MODE=feature"       >> $GITHUB_ENV
+            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "15" ]; then echo "MODE=dcf"           >> $GITHUB_ENV
+            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "16" ]; then echo "MODE=midday_pulse"  >> $GITHUB_ENV
+            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "17" ]; then echo "MODE=macro"         >> $GITHUB_ENV
+            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "19" ]; then echo "MODE=etf_pulse"     >> $GITHUB_ENV
+            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "20" ]; then echo "MODE=dcf_bear"      >> $GITHUB_ENV
+            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "22" ]; then echo "MODE=market_close"  >> $GITHUB_ENV
             # Saturday (DOW=6)
             elif [ "$DOW" = "6" ] && [ "$HOUR" = "13" ]; then echo "MODE=etf_pulse"    >> $GITHUB_ENV
             elif [ "$DOW" = "6" ] && [ "$HOUR" = "14" ]; then echo "MODE=feature"      >> $GITHUB_ENV
