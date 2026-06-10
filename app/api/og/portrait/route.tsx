@@ -47,7 +47,7 @@ const CRITERION_PLAIN: Record<string, string> = {
   'Short interest low (<5%)':    'Low short-seller pressure',
 }
 
-function toPlain(label: string): string {
+function _toPlain(label: string): string {
   return CRITERION_PLAIN[label] ?? label
 }
 
