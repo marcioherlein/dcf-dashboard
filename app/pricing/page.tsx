@@ -203,6 +203,13 @@ export default function PricingPage() {
                   onSignInRequired={() => signIn('google', { callbackUrl: '/pricing' })}
                 />
                 <p className="text-center text-[11px] text-gray-500 mt-2">Cancel anytime · No contracts</p>
+                <p className="text-center text-[11px] text-gray-500 mt-1.5">
+                  By subscribing you agree to our{' '}
+                  <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-300">Terms of Service</a>
+                  {' '}and{' '}
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-300">Privacy Policy</a>.
+                  Not financial advice.
+                </p>
               </div>
             )}
 
