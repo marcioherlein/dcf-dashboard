@@ -5,22 +5,23 @@ import { cn } from '@/lib/utils'
 import { scoreColor, scoreLabel } from '@/lib/data/etfScore'
 import { fmtPctAbs } from '@/lib/formatters'
 import { SECTOR_META, GEO_META, ALL_META } from '@/lib/data/etfUniverse'
+import { Sparkline } from '@/components/ui/Sparkline'
 import type { ETFBatchItem } from '@/lib/data/etfTypes'
 
-// Historical S&P 500 P/E average for context
 const SP500_HIST_AVG_PE = 18
 
 interface Props {
   data: Record<string, ETFBatchItem | null>
   loading: boolean
+  sparklines?: Record<string, number[] | null>
 }
 
-export function ETFMarketPulse({ data, loading }: Props) {
+export function ETFMarketPulse({ data, loading, sparklines = {} }: Props) {
   if (loading) {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-[88px] rounded-xl border border-[#E3E1DA] bg-[#F4F3EF] motion-safe:animate-pulse" />
+          <div key={i} className="h-[100px] rounded-xl border border-[#E5E5E5] bg-[#F5F5F5] motion-safe:animate-pulse" />
         ))}
       </div>
     )
@@ -32,7 +33,6 @@ export function ETFMarketPulse({ data, loading }: Props) {
   const spyPE = data['SPY']?.peRatio ?? null
   const spyPEColor = spyPE == null ? '' : spyPE <= 16 ? 'text-[#11875D]' : spyPE <= 22 ? 'text-[#B56A00]' : 'text-[#D83B3B]'
   const spyPELabel = spyPE == null ? '' : spyPE <= 16 ? 'Cheap' : spyPE <= 22 ? 'Fair' : 'Stretched'
-  const spyBorderColor = spyPE == null ? '' : spyPE <= 16 ? 'border-l-[#11875D]' : spyPE <= 22 ? 'border-l-[#B56A00]' : 'border-l-[#D83B3B]'
   const spyPEContext = spyPE != null
     ? spyPE > SP500_HIST_AVG_PE
       ? `${((spyPE / SP500_HIST_AVG_PE - 1) * 100).toFixed(0)}% above historical avg`
@@ -40,18 +40,18 @@ export function ETFMarketPulse({ data, loading }: Props) {
     : null
 
   const cheapestSector = SECTOR_META
-    .map((m) => ({ meta: m, item: data[m.ticker], score: data[m.ticker]?.valueScore ?? null }))
-    .filter((x) => x.score != null)
+    .map(m => ({ meta: m, item: data[m.ticker], score: data[m.ticker]?.valueScore ?? null }))
+    .filter(x => x.score != null)
     .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0] ?? null
 
   const topYield = ALL_META
-    .map((m) => ({ meta: m, item: data[m.ticker], yld: data[m.ticker]?.yield ?? null }))
-    .filter((x) => x.yld != null && x.yld > 0)
+    .map(m => ({ meta: m, item: data[m.ticker], yld: data[m.ticker]?.yield ?? null }))
+    .filter(x => x.yld != null && x.yld > 0)
     .sort((a, b) => (b.yld ?? 0) - (a.yld ?? 0))[0] ?? null
 
   const bestValue = ALL_META
-    .map((m) => ({ meta: m, item: data[m.ticker], score: data[m.ticker]?.valueScore ?? null }))
-    .filter((x) => x.score != null)
+    .map(m => ({ meta: m, item: data[m.ticker], score: data[m.ticker]?.valueScore ?? null }))
+    .filter(x => x.score != null)
     .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0] ?? null
 
   const fundName = (ticker: string, apiName: string | null | undefined) =>
@@ -62,70 +62,89 @@ export function ETFMarketPulse({ data, loading }: Props) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {spyPE != null && (
-        <Chip label="S&P 500 P/E" sub={spyPEContext ?? undefined} href="/etf/SPY" borderColor={spyBorderColor}>
+        <PulseChip label="S&P 500 P/E" sub={spyPEContext ?? undefined} href="/etf/SPY" sparkPrices={sparklines['SPY']} changePct={data['SPY']?.priceChangePct ?? null}>
           <span className={cn('font-[700] text-[20px] tabular-nums leading-none', spyPEColor)}>{spyPE.toFixed(1)}×</span>
           <Badge color={spyPEColor} bgClass={spyPE <= 16 ? 'bg-[#E8F7EF]' : spyPE <= 22 ? 'bg-[#FFF4DA]' : 'bg-[#FCEAEA]'}>{spyPELabel}</Badge>
-        </Chip>
+        </PulseChip>
       )}
 
       {cheapestSector && (
-        <Chip
+        <PulseChip
           label="Best value sector"
           sub={fundName(cheapestSector.meta.ticker, cheapestSector.item?.name)}
           href={`/etf/${cheapestSector.meta.ticker}`}
-          borderColor={cheapestSector.score && cheapestSector.score >= 70 ? 'border-l-[#11875D]' : cheapestSector.score && cheapestSector.score >= 50 ? 'border-l-[#2563EB]' : 'border-l-[#B56A00]'}
+          sparkPrices={sparklines[cheapestSector.meta.ticker]}
+          changePct={cheapestSector.item?.priceChangePct ?? null}
         >
-          <span className="font-[700] text-[20px] tabular-nums leading-none text-[#06101F]">{cheapestSector.meta.ticker}</span>
+          <span className="font-[700] text-[20px] tabular-nums leading-none text-[#111111]">{cheapestSector.meta.ticker}</span>
           <Badge color={scoreColor(cheapestSector.score ?? 0)} bgClass={cheapestSector.score && cheapestSector.score >= 70 ? 'bg-[#E8F7EF]' : 'bg-[#EAF1FF]'}>
             {cheapestSector.score} · {scoreLabel(cheapestSector.score ?? 0)}
           </Badge>
-        </Chip>
+        </PulseChip>
       )}
 
       {topYield && (
-        <Chip
+        <PulseChip
           label="Highest yield"
           sub={fundName(topYield.meta.ticker, topYield.item?.name)}
           href={`/etf/${topYield.meta.ticker}`}
-          borderColor="border-l-[#11875D]"
+          sparkPrices={sparklines[topYield.meta.ticker]}
+          changePct={topYield.item?.priceChangePct ?? null}
         >
-          <span className="font-[700] text-[20px] tabular-nums leading-none text-[#06101F]">{topYield.meta.ticker}</span>
+          <span className="font-[700] text-[20px] tabular-nums leading-none text-[#111111]">{topYield.meta.ticker}</span>
           <Badge color="text-[#11875D]" bgClass="bg-[#E8F7EF]">{fmtPctAbs(topYield.yld ?? 0)}</Badge>
-        </Chip>
+        </PulseChip>
       )}
 
       {bestValue && (
-        <Chip
+        <PulseChip
           label="Best value pick"
           sub={fundName(bestValue.meta.ticker, bestValue.item?.name)}
           href={`/etf/${bestValue.meta.ticker}`}
-          borderColor={bestValue.score && bestValue.score >= 70 ? 'border-l-[#11875D]' : 'border-l-[#2563EB]'}
+          sparkPrices={sparklines[bestValue.meta.ticker]}
+          changePct={bestValue.item?.priceChangePct ?? null}
         >
-          <span className="font-[700] text-[20px] tabular-nums leading-none text-[#06101F]">{bestValue.meta.ticker}</span>
+          <span className="font-[700] text-[20px] tabular-nums leading-none text-[#111111]">{bestValue.meta.ticker}</span>
           <Badge color={scoreColor(bestValue.score ?? 0)} bgClass={bestValue.score && bestValue.score >= 70 ? 'bg-[#E8F7EF]' : 'bg-[#EAF1FF]'}>
             {bestValue.score} · {scoreLabel(bestValue.score ?? 0)}
           </Badge>
-        </Chip>
+        </PulseChip>
       )}
     </div>
   )
 }
 
-function Chip({ label, sub, children, href }: {
+function PulseChip({ label, sub, children, href, sparkPrices, changePct }: {
   label: string
   sub?: string
   children: React.ReactNode
   href: string
-  borderColor?: string  // kept for API compat but no longer applied
+  sparkPrices?: number[] | null
+  changePct?: number | null
 }) {
+  const hasChart = sparkPrices != null && sparkPrices.length >= 2
+  const up = hasChart ? sparkPrices![sparkPrices!.length - 1] >= sparkPrices![0] : (changePct ?? 0) >= 0
+
   return (
     <Link
       href={href}
-      className="block bg-white border border-[#E3E1DA] rounded-xl px-4 py-3 flex flex-col gap-1 min-w-0 hover:border-[#BFD2A1] hover:shadow-sm transition-all"
+      className="block bg-white border border-[#E5E5E5] rounded-xl overflow-hidden hover:border-[#BFD2A1] hover:shadow-sm transition-all"
     >
-      <span className="text-[10px] font-semibold text-[#8A95A6] truncate uppercase tracking-[0.08em]">{label}</span>
-      <div className="flex items-baseline gap-1.5 flex-wrap">{children}</div>
-      {sub && <span className="text-[10px] text-[#9B9B9B] truncate mt-0.5">{sub}</span>}
+      {/* Top: label + metric */}
+      <div className="px-4 pt-3 pb-1">
+        <span className="text-[10px] font-[600] text-[#9B9B9B] truncate block mb-1.5">{label}</span>
+        <div className="flex items-baseline gap-1.5 flex-wrap">{children}</div>
+        {sub && <span className="text-[10px] text-[#9B9B9B] truncate block mt-0.5">{sub}</span>}
+      </div>
+
+      {/* Bottom: sparkline */}
+      {hasChart ? (
+        <div className="h-[40px] mt-1">
+          <Sparkline prices={sparkPrices!} up={up} className="w-full h-[40px]" width={200} height={40} />
+        </div>
+      ) : (
+        <div className="h-[40px] mt-1" />
+      )}
     </Link>
   )
 }
@@ -135,3 +154,4 @@ function Badge({ color, bgClass, children }: { color: string; bgClass: string; c
     <span className={cn('text-[10px] font-semibold px-1.5 py-0.5 rounded-full', color, bgClass)}>{children}</span>
   )
 }
+

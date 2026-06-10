@@ -347,6 +347,31 @@ export default function ETFTrackerPage() {
   const [batchLoading, setBatchLoading] = useState(true)
   const [batchError, setBatchError]     = useState<string | null>(null)
   const [batchFetched, setBatchFetched] = useState(false)
+  const [pulseSparklines, setPulseSparklines] = useState<Record<string, number[] | null>>({})
+
+  // Fetch sparklines for the 4 pulse card tickers (SPY + derived from batch)
+  useEffect(() => {
+    const tickers = ['SPY', 'XLF', 'EWZ', 'AGG', 'QQQ', 'VTI', 'XLE', 'XLK', 'VNQ', 'GLD']
+    Promise.allSettled(
+      tickers.map(t =>
+        fetch(`/api/historical?ticker=${t}&period=1mo`)
+          .then(r => r.json())
+          .then((bars: Array<{ close: number }>) => ({
+            ticker: t,
+            prices: bars.map(b => b.close).filter(v => typeof v === 'number' && isFinite(v)),
+          }))
+          .catch(() => ({ ticker: t, prices: [] as number[] }))
+      )
+    ).then(results => {
+      const map: Record<string, number[] | null> = {}
+      for (const r of results) {
+        if (r.status === 'fulfilled') {
+          map[r.value.ticker] = r.value.prices.length >= 2 ? r.value.prices : null
+        }
+      }
+      setPulseSparklines(map)
+    })
+  }, [])
 
   const fetchBatch = useCallback(async () => {
     if (batchFetched) return
@@ -547,7 +572,7 @@ export default function ETFTrackerPage() {
         {activeTab === 'overview' && (
           <>
             {/* Market Pulse */}
-            {!batchError && <ETFMarketPulse data={batchData} loading={batchLoading} />}
+            {!batchError && <ETFMarketPulse data={batchData} loading={batchLoading} sparklines={pulseSparklines} />}
 
             {/* My Watchlist */}
             {hasWatchlist && (
