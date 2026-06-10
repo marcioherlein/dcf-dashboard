@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
   const ticker   = (p.get('ticker') ?? 'TICKER').toUpperCase()
   const name     = p.get('name') ?? ''
   const verdict  = (p.get('verdict') ?? 'Insufficient Data') as VerdictKey
-  const conv     = p.get('conviction') ?? ''
+  const _conv    = p.get('conviction') ?? ''
   const currency = p.get('currency') ?? 'USD'
 
   const priceRaw  = parseFloat(p.get('price')  ?? '0')
