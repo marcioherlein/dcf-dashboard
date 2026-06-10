@@ -61,15 +61,9 @@ export default function StockUpgradeWall({ ticker, companyName, price, currency,
   const isUndervalued = upside > 0
   const used = Math.min(viewCount, LIMIT)
 
-  async function handleUpgrade() {
+  function handleUpgrade() {
     setUpgrading(true)
-    try {
-      const res = await fetch('/api/lemonsqueezy/checkout', { method: 'POST' })
-      const json = await res.json()
-      if (json.url) window.location.href = json.url
-    } catch {
-      setUpgrading(false)
-    }
+    router.push('/pricing#pro')
   }
 
   return (

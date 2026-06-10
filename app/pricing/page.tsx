@@ -3,6 +3,12 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { signIn, useSession } from 'next-auth/react'
+import dynamic from 'next/dynamic'
+
+const PayPalSubscribeButton = dynamic(
+  () => import('@/components/payments/PayPalSubscribeButton'),
+  { ssr: false, loading: () => <div className="h-12 rounded-xl bg-gray-100 animate-pulse" /> }
+)
 import { Check, X, ChevronDown, Zap, BarChart2, Bell, FileText, Users, TrendingUp, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { InsicLogoLockup } from '@/components/ui/InsicLogo'
@@ -95,22 +101,6 @@ const FAQS = [
 export default function PricingPage() {
   const { data: session } = useSession()
   const isPro = (session?.user as { plan?: string } | undefined)?.plan === 'pro'
-  const [upgrading, setUpgrading] = useState(false)
-
-  async function handleUpgrade() {
-    if (!session) {
-      signIn('google', { callbackUrl: '/pricing' })
-      return
-    }
-    setUpgrading(true)
-    try {
-      const res = await fetch('/api/lemonsqueezy/checkout', { method: 'POST' })
-      const json = await res.json()
-      if (json.url) window.location.href = json.url
-    } catch {
-      setUpgrading(false)
-    }
-  }
 
   return (
     <div className="min-h-dvh bg-white">
@@ -187,8 +177,8 @@ export default function PricingPage() {
             <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-[#5F790B] opacity-[0.06] blur-3xl pointer-events-none" />
 
             <div className="absolute top-5 right-5">
-              <span className="rounded-full bg-white/10 border border-white/20 text-white/60 text-[10px] font-bold uppercase tracking-wider px-3 py-1">
-                Coming soon
+              <span className="rounded-full bg-[#5F790B] text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1">
+                Most popular
               </span>
             </div>
 
@@ -207,18 +197,13 @@ export default function PricingPage() {
                 You&apos;re on Pro
               </div>
             ) : (
-              <button
-                onClick={handleUpgrade}
-                disabled={upgrading}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#5F790B] hover:bg-[#526A08] disabled:opacity-60 py-3.5 text-[13.5px] font-bold text-white mb-8 min-h-[48px] shadow-sm transition-colors"
-              >
-                {upgrading ? (
-                  <>
-                    <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                    Redirecting…
-                  </>
-                ) : session ? 'Start 7-day free trial →' : 'Sign in to start trial →'}
-              </button>
+              <div className="mb-8">
+                <PayPalSubscribeButton
+                  userEmail={session?.user?.email}
+                  onSignInRequired={() => signIn('google', { callbackUrl: '/pricing' })}
+                />
+                <p className="text-center text-[11px] text-gray-500 mt-2">Cancel anytime · No contracts</p>
+              </div>
             )}
 
             <ul className="space-y-3 flex-1 relative">
