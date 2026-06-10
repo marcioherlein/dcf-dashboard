@@ -70,18 +70,21 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
           </span>
         </div>
 
-        {/* Center column: sparkline */}
-        <div className="flex-1 min-w-0 h-[48px]">
+        {/* Center column: sparkline with YTD label */}
+        <div className="relative flex-1 min-w-0 h-[48px]">
           {sparklineData === undefined ? (
             <SparklineSkeleton width={200} height={48} />
           ) : sparklineData && sparklineData.length >= 2 ? (
-            <Sparkline
-              prices={sparklineData}
-              up={sparkUp}
-              width={200}
-              height={48}
-              className="w-full h-[48px]"
-            />
+            <>
+              <Sparkline
+                prices={sparklineData}
+                up={sparkUp}
+                width={200}
+                height={48}
+                className="w-full h-[48px]"
+              />
+              <span className="absolute bottom-0 right-0 text-[9px] font-[650] text-[#9B9B9B] bg-white/80 rounded px-1 leading-none">YTD</span>
+            </>
           ) : (
             <div className="w-full h-[48px] flex items-center justify-center">
               <span className="text-[11px] text-[#9B9B9B]">No data</span>

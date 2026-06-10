@@ -280,7 +280,7 @@ export default function ETFTrackerPage() {
 
     Promise.allSettled(
       newTickers.map((e) =>
-        fetch(`/api/historical?ticker=${e.ticker}&period=1mo`)
+        fetch(`/api/historical?ticker=${e.ticker}&period=ytd`)
           .then((r) => r.json())
           .then((bars: Array<{ close: number }>) => ({
             ticker: e.ticker,
@@ -349,12 +349,14 @@ export default function ETFTrackerPage() {
   const [batchFetched, setBatchFetched] = useState(false)
   const [pulseSparklines, setPulseSparklines] = useState<Record<string, number[] | null>>({})
 
-  // Fetch sparklines for the 4 pulse card tickers (SPY + derived from batch)
+  // Fetch YTD sparklines for the pulse card tickers
   useEffect(() => {
-    const tickers = ['SPY', 'XLF', 'EWZ', 'AGG', 'QQQ', 'VTI', 'XLE', 'XLK', 'VNQ', 'GLD']
+    const tickers = ['SPY', 'XLF', 'EWZ', 'AGG', 'QQQ', 'VTI', 'XLE', 'XLK', 'VNQ', 'GLD',
+      'XLV', 'XLY', 'XLP', 'XLI', 'XLB', 'XLU', 'XLRE', 'XLC',
+      'EFA', 'EEM', 'VEA', 'VWO', 'IWM', 'IJR', 'IVV']
     Promise.allSettled(
       tickers.map(t =>
-        fetch(`/api/historical?ticker=${t}&period=1mo`)
+        fetch(`/api/historical?ticker=${t}&period=ytd`)
           .then(r => r.json())
           .then((bars: Array<{ close: number }>) => ({
             ticker: t,
@@ -708,6 +710,7 @@ export default function ETFTrackerPage() {
               onAdd={handleQuickAdd}
               cols={4}
               hasError={!!batchError}
+              sparklines={pulseSparklines}
             />
           </section>
         )}
@@ -723,6 +726,7 @@ export default function ETFTrackerPage() {
               onAdd={handleQuickAdd}
               cols={3}
               hasError={!!batchError}
+              sparklines={pulseSparklines}
             />
           </section>
         )}
@@ -738,6 +742,7 @@ export default function ETFTrackerPage() {
               onAdd={handleQuickAdd}
               cols={4}
               hasError={!!batchError}
+              sparklines={pulseSparklines}
             />
           </section>
         )}

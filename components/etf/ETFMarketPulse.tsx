@@ -124,27 +124,49 @@ function PulseChip({ label, sub, children, href, sparkPrices, changePct }: {
 }) {
   const hasChart = sparkPrices != null && sparkPrices.length >= 2
   const up = hasChart ? sparkPrices![sparkPrices!.length - 1] >= sparkPrices![0] : (changePct ?? 0) >= 0
+  const changeUp = (changePct ?? 0) >= 0
+  const changeStr = changePct != null
+    ? `${changeUp ? '+' : ''}${changePct.toFixed(2)}%`
+    : null
 
   return (
     <Link
       href={href}
       className="block bg-white border border-[#E5E5E5] rounded-xl overflow-hidden hover:border-[#BFD2A1] hover:shadow-sm transition-all"
     >
-      {/* Top: label + metric */}
-      <div className="px-4 pt-3 pb-1">
-        <span className="text-[10px] font-[600] text-[#9B9B9B] truncate block mb-1.5">{label}</span>
-        <div className="flex items-baseline gap-1.5 flex-wrap">{children}</div>
+      {/* Top: eyebrow label */}
+      <div className="px-3 pt-2.5 pb-0">
+        <span className="text-[10px] font-[600] text-[#9B9B9B] truncate block">{label}</span>
+      </div>
+
+      {/* Middle: metric + fund name */}
+      <div className="px-3 pt-1 pb-0">
+        <div className="flex items-center justify-between gap-1 flex-wrap">
+          <div className="flex items-baseline gap-1.5 flex-wrap">{children}</div>
+          {/* % change today pill — right side, like Apple Stocks */}
+          {changeStr && (
+            <span className={cn(
+              'text-[11px] font-[700] px-2 py-0.5 rounded-full tabular-nums shrink-0',
+              changeUp ? 'bg-[#E8F7EF] text-[#11875D]' : 'bg-[#FCEAEA] text-[#D83B3B]',
+            )}>
+              {changeStr}
+            </span>
+          )}
+        </div>
         {sub && <span className="text-[10px] text-[#9B9B9B] truncate block mt-0.5">{sub}</span>}
       </div>
 
-      {/* Bottom: sparkline */}
-      {hasChart ? (
-        <div className="h-[40px] mt-1">
-          <Sparkline prices={sparkPrices!} up={up} className="w-full h-[40px]" width={200} height={40} />
-        </div>
-      ) : (
-        <div className="h-[40px] mt-1" />
-      )}
+      {/* Bottom: sparkline with YTD label */}
+      <div className="relative h-[44px] mt-1.5">
+        {hasChart ? (
+          <>
+            <Sparkline prices={sparkPrices!} up={up} className="w-full h-[44px]" width={200} height={44} />
+            <span className="absolute bottom-1 right-2 text-[9px] font-[650] text-[#9B9B9B] bg-white/80 rounded px-1 leading-none">YTD</span>
+          </>
+        ) : (
+          <div className="w-full h-[44px]" />
+        )}
+      </div>
     </Link>
   )
 }
