@@ -80,7 +80,7 @@ export function ETFSectorAllocation({ sectorWeights }: Props) {
                     }}
                   />
                 </div>
-                <span className="text-xs font-mono font-semibold text-[#06101F] w-10 text-right">
+                <span className="text-xs font-[600] tabular-nums text-[#06101F] w-10 text-right">
                   {(s.weight * 100).toFixed(1)}%
                 </span>
               </div>

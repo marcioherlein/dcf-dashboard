@@ -46,7 +46,7 @@ export function ETFProfileCard({ profile, isWatchlisted, onWatchlist }: Props) {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <div className="flex items-baseline gap-3 flex-wrap">
-            <span className="text-[20px] sm:text-[22px] font-bold font-sans text-[#111111] leading-tight tracking-tight">{profile.ticker}</span>
+            <span className="text-[20px] sm:text-[22px] font-[700] text-[#111111] leading-tight tracking-tight">{profile.ticker}</span>
             {profile.price != null && (
               <span className="text-[20px] font-bold text-[#111111] leading-tight">{fmtPrice(profile.price, 'USD')}</span>
             )}
@@ -92,7 +92,7 @@ export function ETFProfileCard({ profile, isWatchlisted, onWatchlist }: Props) {
         {chips.map((c) => (
           <div key={c.label} className="bg-[#F5F5F5] border border-[#E3E1DA] rounded-lg px-3 py-2">
             <p className="text-[11px] font-[600] text-[#566174]">{c.label}</p>
-            <p className="text-[12px] font-[700] font-mono text-[#111111] mt-0.5">{c.value}</p>
+            <p className="text-[12px] font-[700] tabular-nums text-[#111111] mt-0.5">{c.value}</p>
           </div>
         ))}
       </div>

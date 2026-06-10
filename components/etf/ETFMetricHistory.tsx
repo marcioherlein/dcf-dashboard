@@ -205,7 +205,7 @@ function ChartPanel({
         <div className="flex items-center gap-2">
           <span className="text-[11px] font-semibold text-[#6B6B6B] uppercase tracking-[0.06em]">{config.label}</span>
           {latest != null && (
-            <span className="text-[12px] font-mono font-semibold text-[#06101F]">{config.formatter(latest)}</span>
+            <span className="text-[12px] font-[600] tabular-nums text-[#06101F]">{config.formatter(latest)}</span>
           )}
         </div>
         {deltaStr && delta !== 0 && (

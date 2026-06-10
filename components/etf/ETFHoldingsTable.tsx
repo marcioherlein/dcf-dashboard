@@ -45,7 +45,7 @@ export function ETFHoldingsTable({ holdings }: Props) {
           <tbody>
             {holdings.map((h) => (
               <tr key={h.symbol} className="border-b border-[#F4F3EF] last:border-0 hover:bg-[#F4F3EF]/60 transition-colors group">
-                <td className="px-4 py-2.5 text-xs text-[#8A95A6] font-mono">{h.rank}</td>
+                <td className="px-4 py-2.5 text-xs text-[#8A95A6] tabular-nums">{h.rank}</td>
                 <td className="px-4 py-2.5">
                   <span className="font-bold font-sans text-[#06101F] text-xs">{h.symbol}</span>
                 </td>
@@ -59,7 +59,7 @@ export function ETFHoldingsTable({ holdings }: Props) {
                           style={{ width: `${(h.weight / maxWeight) * 100}%` }}
                         />
                       </div>
-                      <span className="text-xs font-mono font-semibold text-[#06101F]">
+                      <span className="text-xs font-[600] tabular-nums text-[#06101F]">
                         {(h.weight * 100).toFixed(2)}%
                       </span>
                     </div>

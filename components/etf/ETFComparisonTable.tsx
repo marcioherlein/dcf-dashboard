@@ -52,7 +52,7 @@ export function ETFComparisonTable({ profiles }: Props) {
               <th className="text-left px-4 py-3 text-xs font-semibold text-[#566174] w-32">Metric</th>
               {profiles.map((p) => (
                 <th key={p.ticker} className="px-4 py-3 text-center">
-                  <span className="font-bold font-sans text-[#06101F] text-sm">{p.ticker}</span>
+                  <span className="font-[700] text-[#06101F] text-sm">{p.ticker}</span>
                   <span className="block text-[10px] text-[#8A95A6] mt-0.5 truncate max-w-[120px] mx-auto">{p.name}</span>
                 </th>
               ))}
@@ -72,7 +72,7 @@ export function ETFComparisonTable({ profiles }: Props) {
                       <td
                         key={p.ticker}
                         className={cn(
-                          'px-4 py-3 text-center font-mono text-xs font-semibold tabular-nums',
+                          'px-4 py-3 text-center tabular-nums text-xs font-semibold tabular-nums',
                           isBest && 'bg-[#E8F7EF]',
                           isScore && raw != null ? scoreColor(raw as number) : 'text-[#06101F]',
                         )}

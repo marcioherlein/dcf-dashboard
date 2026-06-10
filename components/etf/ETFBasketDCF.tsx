@@ -112,17 +112,17 @@ export function ETFBasketDCF({ holdings }: Props) {
           <div key={r.holding.symbol} className="flex items-center gap-3">
             <Link
               href={`/stock/${r.holding.symbol}`}
-              className="font-sans font-bold text-xs text-[#06101F] hover:text-[#2563EB] transition-colors w-12 shrink-0"
+              className="font-[700] text-xs text-[#06101F] hover:text-[#2563EB] transition-colors w-12 shrink-0"
             >
               {r.holding.symbol}
             </Link>
             <div className="flex-1 min-w-0">
               <span className="text-[10px] text-[#8A95A6] truncate block">{r.holding.name}</span>
             </div>
-            <span className="text-[10px] font-mono text-[#8A95A6] shrink-0 w-10 text-right">
+            <span className="text-[10px] tabular-nums text-[#8A95A6] shrink-0 w-10 text-right">
               {r.holding.weight != null ? (r.holding.weight * 100).toFixed(1) + '%' : '—'}
             </span>
-            <span className={cn('text-xs font-semibold font-mono shrink-0 w-16 text-right', r.upside == null ? 'text-[#8A95A6]' : r.upside > 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
+            <span className={cn('text-xs font-[600] tabular-nums shrink-0 w-16 text-right', r.upside == null ? 'text-[#8A95A6]' : r.upside > 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
               {r.upside == null ? (
                 <Link href={`/stock/${r.holding.symbol}`} className="text-[#2563EB] hover:text-[#2563EB] transition-colors">Run DCF</Link>
               ) : (

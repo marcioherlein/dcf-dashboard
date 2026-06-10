@@ -63,7 +63,7 @@ export function ETFMarketPulse({ data, loading }: Props) {
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {spyPE != null && (
         <Chip label="S&P 500 P/E" sub={spyPEContext ?? undefined} href="/etf/SPY" borderColor={spyBorderColor}>
-          <span className={cn('font-mono text-[20px] font-bold leading-none', spyPEColor)}>{spyPE.toFixed(1)}×</span>
+          <span className={cn('font-[700] text-[20px] tabular-nums leading-none', spyPEColor)}>{spyPE.toFixed(1)}×</span>
           <Badge color={spyPEColor} bgClass={spyPE <= 16 ? 'bg-[#E8F7EF]' : spyPE <= 22 ? 'bg-[#FFF4DA]' : 'bg-[#FCEAEA]'}>{spyPELabel}</Badge>
         </Chip>
       )}
@@ -75,7 +75,7 @@ export function ETFMarketPulse({ data, loading }: Props) {
           href={`/etf/${cheapestSector.meta.ticker}`}
           borderColor={cheapestSector.score && cheapestSector.score >= 70 ? 'border-l-[#11875D]' : cheapestSector.score && cheapestSector.score >= 50 ? 'border-l-[#2563EB]' : 'border-l-[#B56A00]'}
         >
-          <span className="font-mono text-[20px] font-bold leading-none text-[#06101F]">{cheapestSector.meta.ticker}</span>
+          <span className="font-[700] text-[20px] tabular-nums leading-none text-[#06101F]">{cheapestSector.meta.ticker}</span>
           <Badge color={scoreColor(cheapestSector.score ?? 0)} bgClass={cheapestSector.score && cheapestSector.score >= 70 ? 'bg-[#E8F7EF]' : 'bg-[#EAF1FF]'}>
             {cheapestSector.score} · {scoreLabel(cheapestSector.score ?? 0)}
           </Badge>
@@ -89,7 +89,7 @@ export function ETFMarketPulse({ data, loading }: Props) {
           href={`/etf/${topYield.meta.ticker}`}
           borderColor="border-l-[#11875D]"
         >
-          <span className="font-mono text-[20px] font-bold leading-none text-[#06101F]">{topYield.meta.ticker}</span>
+          <span className="font-[700] text-[20px] tabular-nums leading-none text-[#06101F]">{topYield.meta.ticker}</span>
           <Badge color="text-[#11875D]" bgClass="bg-[#E8F7EF]">{fmtPctAbs(topYield.yld ?? 0)}</Badge>
         </Chip>
       )}
@@ -101,7 +101,7 @@ export function ETFMarketPulse({ data, loading }: Props) {
           href={`/etf/${bestValue.meta.ticker}`}
           borderColor={bestValue.score && bestValue.score >= 70 ? 'border-l-[#11875D]' : 'border-l-[#2563EB]'}
         >
-          <span className="font-mono text-[20px] font-bold leading-none text-[#06101F]">{bestValue.meta.ticker}</span>
+          <span className="font-[700] text-[20px] tabular-nums leading-none text-[#06101F]">{bestValue.meta.ticker}</span>
           <Badge color={scoreColor(bestValue.score ?? 0)} bgClass={bestValue.score && bestValue.score >= 70 ? 'bg-[#E8F7EF]' : 'bg-[#EAF1FF]'}>
             {bestValue.score} · {scoreLabel(bestValue.score ?? 0)}
           </Badge>

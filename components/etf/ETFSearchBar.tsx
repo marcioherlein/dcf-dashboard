@@ -143,7 +143,7 @@ export function ETFSearchBar({ onAdd, watchlistedTickers }: Props) {
                     onMouseDown={() => handleSelect(r.symbol)}
                     className="flex items-center gap-3 flex-1 text-left"
                   >
-                    <span className="text-[14px] font-bold text-[#06101F] font-mono w-14 shrink-0">{r.symbol}</span>
+                    <span className="text-[14px] font-bold text-[#06101F] tabular-nums w-14 shrink-0">{r.symbol}</span>
                     <span className="text-[14px] text-[#6B6B6B] truncate">{r.name}</span>
                   </button>
                   <div className="flex items-center gap-2 shrink-0 ml-2">

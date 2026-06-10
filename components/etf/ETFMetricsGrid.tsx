@@ -35,7 +35,7 @@ function MetricRow({ label, value, color, tooltip }: { label: string; value: str
         <span className="text-[12px] text-[#6B6B6B]">{label}</span>
         {tooltip && <InfoTooltip text={tooltip} side="top" />}
       </div>
-      <span className={cn('text-[12px] font-semibold font-mono', color ?? 'text-[#06101F]')}>{value}</span>
+      <span className={cn('text-[12px] font-[600] tabular-nums', color ?? 'text-[#06101F]')}>{value}</span>
     </div>
   )
 }
@@ -60,7 +60,7 @@ function ScoreGauge({ score, label }: { score: number; label: string }) {
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <div className={cn('text-[28px] font-bold font-sans', textColor)}>{score}</div>
+      <div className={cn('text-[28px] font-[700]', textColor)}>{score}</div>
       <div className={cn('text-xs font-semibold px-2 py-0.5 rounded-full', barColor, badgeTextColor)}>{label}</div>
       <div className="w-full h-3 bg-[#E3E1DA] rounded-md overflow-hidden mt-1">
         <div
@@ -178,7 +178,7 @@ function ScoreRationale({ metrics }: { metrics: ETFMetrics }) {
                 {rows.map((row) => (
                   <tr key={row.label} className="bg-white">
                     <td className="px-3 py-2.5 text-[12px] text-[#06101F]">{row.label}</td>
-                    <td className="px-3 py-2.5 text-right font-mono text-[12px] font-semibold text-[#06101F]">{row.thisETF}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-[12px] font-semibold text-[#06101F]">{row.thisETF}</td>
                     <td className="px-3 py-2.5 text-right text-[11px] text-[#8A95A6] hidden sm:table-cell">{row.ideal}</td>
                     <td className="px-3 py-2.5">
                       <div className="flex items-center justify-end gap-2">
@@ -188,7 +188,7 @@ function ScoreRationale({ metrics }: { metrics: ETFMetrics }) {
                             style={{ width: `${(row.pts / row.max) * 100}%` }}
                           />
                         </div>
-                        <span className={cn('text-[11px] font-mono font-semibold w-10 text-right', row.isPenalty ? 'text-[#D83B3B]' : 'text-[#06101F]')}>
+                        <span className={cn('text-[11px] font-[600] tabular-nums w-10 text-right', row.isPenalty ? 'text-[#D83B3B]' : 'text-[#06101F]')}>
                           {row.isPenalty ? `−${row.pts}` : `${row.pts}/${row.max}`}
                         </span>
                       </div>
@@ -242,16 +242,16 @@ export function ETFMetricsGrid({ metrics }: { metrics: ETFMetrics }) {
           <ScoreGauge score={metrics.valueScore} label={metrics.valueScoreLabel} />
           <div className="mt-3 space-y-1">
             <div className="flex justify-between text-xs text-[#6B6B6B]">
-              <span>P/E contribution</span><span className="font-mono">{metrics.scoreBreakdown.pe}/30</span>
+              <span>P/E contribution</span><span className="tabular-nums">{metrics.scoreBreakdown.pe}/30</span>
             </div>
             <div className="flex justify-between text-xs text-[#6B6B6B]">
-              <span>P/B contribution</span><span className="font-mono">{metrics.scoreBreakdown.pb}/25</span>
+              <span>P/B contribution</span><span className="tabular-nums">{metrics.scoreBreakdown.pb}/25</span>
             </div>
             <div className="flex justify-between text-xs text-[#6B6B6B]">
-              <span>Yield contribution</span><span className="font-mono">{metrics.scoreBreakdown.yieldPts}/25</span>
+              <span>Yield contribution</span><span className="tabular-nums">{metrics.scoreBreakdown.yieldPts}/25</span>
             </div>
             <div className="flex justify-between text-xs text-[#6B6B6B]">
-              <span>Expense penalty</span><span className="font-mono text-red-400">−{metrics.scoreBreakdown.expensePenalty}</span>
+              <span>Expense penalty</span><span className="tabular-nums text-red-400">−{metrics.scoreBreakdown.expensePenalty}</span>
             </div>
           </div>
         </div>

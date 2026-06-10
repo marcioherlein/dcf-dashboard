@@ -177,7 +177,7 @@ function Leaderboard({
                   <tr key={meta.ticker} className="hover:bg-[#F4F3EF] transition-colors group">
                     <td className="pl-4 pr-3 py-3 sticky left-0 bg-white group-hover:bg-[#F4F3EF] transition-colors">
                       <Link href={`/etf/${meta.ticker}`} className="block">
-                        <span className="font-sans font-bold text-[13px] text-[#06101F] hover:text-olive-700 transition-colors">
+                        <span className="font-[700] text-[13px] text-[#06101F] hover:text-olive-700 transition-colors">
                           {meta.ticker}
                         </span>
                         <span className="block text-[11px] text-[#8A95A6] mt-0.5 truncate max-w-[160px]">
@@ -190,27 +190,27 @@ function Leaderboard({
                         {groupLabel[meta.group]}
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-right font-mono text-[12px] text-[#06101F]">
+                    <td className="px-3 py-3 text-right tabular-nums text-[12px] text-[#06101F]">
                       {item?.peRatio != null ? fmtMultiple(item.peRatio) : <span className="text-[#8A95A6]">—</span>}
                     </td>
-                    <td className="px-3 py-3 text-right font-mono text-[12px] text-[#06101F]">
+                    <td className="px-3 py-3 text-right tabular-nums text-[12px] text-[#06101F]">
                       {item?.pbRatio != null ? fmtMultiple(item.pbRatio) : <span className="text-[#8A95A6]">—</span>}
                     </td>
-                    <td className="px-3 py-3 text-right font-mono text-[12px] text-[#06101F]">
+                    <td className="px-3 py-3 text-right tabular-nums text-[12px] text-[#06101F]">
                       {item?.expenseRatio != null
                         ? (item.expenseRatio * 100).toFixed(2) + '%'
                         : <span className="text-[#8A95A6]">—</span>}
                     </td>
-                    <td className="px-3 py-3 text-right font-mono text-[12px] text-[#06101F]">
+                    <td className="px-3 py-3 text-right tabular-nums text-[12px] text-[#06101F]">
                       {item?.yield != null ? fmtPctAbs(item.yield) : <span className="text-[#8A95A6]">—</span>}
                     </td>
-                    <td className="px-3 py-3 text-right font-mono text-[12px] text-[#06101F]">
+                    <td className="px-3 py-3 text-right tabular-nums text-[12px] text-[#06101F]">
                       {item?.aum != null ? fmtLarge(item.aum) : <span className="text-[#8A95A6]">—</span>}
                     </td>
                     <td className="px-3 py-3 text-right">
                       {score != null ? (
                         <div className="inline-flex items-center gap-1.5 justify-end">
-                          <span className={cn('text-[13px] font-bold font-sans', scoreColor(score))}>{score}</span>
+                          <span className={cn('text-[13px] font-[700]', scoreColor(score))}>{score}</span>
                           <span className={cn('text-[10px] font-semibold', scoreColor(score))}>{scoreLabel(score)}</span>
                           <InfoTooltip text="Score = P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio penalty (20 pts). 70+ = Deep Value." side="top" />
                         </div>

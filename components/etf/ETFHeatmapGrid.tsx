@@ -77,7 +77,7 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
             <div className="relative z-10 flex items-baseline gap-1.5 mb-1.5">
               {score != null ? (
                 <>
-                  <span className={cn('font-sans font-bold text-[26px] leading-none', scoreColor(score))}>
+                  <span className={cn('font-[700] text-[26px] leading-none', scoreColor(score))}>
                     {score}
                   </span>
                   <div className="flex items-center gap-0.5">
@@ -96,7 +96,7 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
             {/* Ticker row */}
             <div className="relative z-10 flex items-start justify-between gap-1 mb-1">
               <Link href={`/etf/${meta.ticker}`} tabIndex={0} className="min-w-0 flex-1">
-                <span className="block font-sans font-bold text-[13px] text-[#06101F] leading-none group-hover:text-olive-700 transition-colors">
+                <span className="block font-[700] text-[13px] text-[#06101F] leading-none group-hover:text-olive-700 transition-colors">
                   {meta.ticker}
                 </span>
                 <span className="block text-[11px] text-[#6B6B6B] mt-0.5 leading-tight truncate">
@@ -121,12 +121,12 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
             <div className="relative z-10 flex items-center gap-3 text-[11px]">
               {item?.peRatio != null && (
                 <span className="text-[#6B6B6B]">
-                  P/E <span className="font-mono font-semibold text-[#06101F]">{fmtMultiple(item.peRatio)}</span>
+                  P/E <span className="font-[600] tabular-nums text-[#06101F]">{fmtMultiple(item.peRatio)}</span>
                 </span>
               )}
               {item?.expenseRatio != null && (
                 <span className="text-[#6B6B6B]">
-                  ER <span className="font-mono font-semibold text-[#06101F]">{(item.expenseRatio * 100).toFixed(2)}%</span>
+                  ER <span className="font-[600] tabular-nums text-[#06101F]">{(item.expenseRatio * 100).toFixed(2)}%</span>
                 </span>
               )}
             </div>

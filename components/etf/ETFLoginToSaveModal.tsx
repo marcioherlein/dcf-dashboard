@@ -42,13 +42,13 @@ export default function ETFLoginToSaveModal({ ticker, name, valueScore, onClose 
         <div className="px-5 pb-4">
           <div className="rounded-xl bg-[#F4F3EF] border border-[#E3E1DA] px-4 py-3 flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[13px] font-bold text-[#06101F] font-mono">{ticker}</p>
+              <p className="text-[13px] font-bold text-[#06101F] tabular-nums">{ticker}</p>
               {name && <p className="text-[11px] text-[#566174] truncate">{name}</p>}
             </div>
             {valueScore != null && (
               <div className="text-right shrink-0">
                 <p className="text-[11px] text-[#566174]">Value Score</p>
-                <p className="text-[20px] font-black font-mono leading-none" style={{ color: scoreColor }}>{valueScore}</p>
+                <p className="text-[20px] font-[800] tabular-nums leading-none" style={{ color: scoreColor }}>{valueScore}</p>
                 <p className="text-[11px] font-semibold" style={{ color: scoreColor }}>{scoreText}</p>
               </div>
             )}

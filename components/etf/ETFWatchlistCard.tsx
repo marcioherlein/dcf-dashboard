@@ -66,7 +66,7 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
 
         {/* Header: ticker + name */}
         <div className="pr-10 mb-3">
-          <span className="block font-sans font-bold text-[20px] text-[#06101F] leading-none tracking-tight">
+          <span className="block font-[700] text-[20px] text-[#06101F] leading-none tracking-tight">
             {entry.ticker}
           </span>
           {entry.name && (
@@ -80,7 +80,7 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
         {(price || changeStr) && (
           <div className="flex items-baseline gap-2 mb-3">
             {price && (
-              <span className="text-[16px] font-semibold font-mono text-[#06101F] tabular-nums leading-none">
+              <span className="text-[16px] font-[600] tabular-nums text-[#06101F] tabular-nums leading-none">
                 {price}
               </span>
             )}
@@ -117,7 +117,7 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
         <div className="flex items-start gap-4 mb-3">
           <div className="shrink-0">
             <div className="flex items-baseline gap-1.5">
-              <span className={cn('font-sans font-bold text-[44px] leading-[1] tabular-nums', scoreColor(score))}>
+              <span className={cn('font-[700] text-[44px] leading-[1] tabular-nums', scoreColor(score))}>
                 {score}
               </span>
               <span className="text-[11px] text-[#8A95A6] font-medium self-end pb-1">/100</span>
@@ -146,19 +146,19 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
             <div className="grid grid-cols-4 gap-0 mt-1.5">
               <div>
                 <p className="text-[9px] text-[#8A95A6] leading-none">P/E</p>
-                <p className="text-[10px] font-mono font-semibold text-[#2563EB] mt-0.5">{breakdown.pe}/30</p>
+                <p className="text-[10px] font-[600] tabular-nums text-[#2563EB] mt-0.5">{breakdown.pe}/30</p>
               </div>
               <div>
                 <p className="text-[9px] text-[#8A95A6] leading-none">P/B</p>
-                <p className="text-[10px] font-mono font-semibold text-[#2563EB] mt-0.5">{breakdown.pb}/25</p>
+                <p className="text-[10px] font-[600] tabular-nums text-[#2563EB] mt-0.5">{breakdown.pb}/25</p>
               </div>
               <div>
                 <p className="text-[9px] text-[#8A95A6] leading-none">Yield</p>
-                <p className="text-[10px] font-mono font-semibold text-[#11875D] mt-0.5">{breakdown.yieldPts}/25</p>
+                <p className="text-[10px] font-[600] tabular-nums text-[#11875D] mt-0.5">{breakdown.yieldPts}/25</p>
               </div>
               <div>
                 <p className="text-[9px] text-[#8A95A6] leading-none">Exp.</p>
-                <p className="text-[10px] font-mono font-semibold text-[#D83B3B] mt-0.5">−{breakdown.expensePenalty}</p>
+                <p className="text-[10px] font-[600] tabular-nums text-[#D83B3B] mt-0.5">−{breakdown.expensePenalty}</p>
               </div>
             </div>
           </div>
@@ -174,7 +174,7 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
           ].map(({ label, value }) => (
             <div key={label} className="px-2 first:pl-0 last:pr-0">
               <p className="text-[10px] font-semibold text-[#8A95A6]">{label}</p>
-              <p className="text-[12px] font-semibold font-mono text-[#06101F] mt-0.5 tabular-nums">{value}</p>
+              <p className="text-[12px] font-[600] tabular-nums text-[#06101F] mt-0.5 tabular-nums">{value}</p>
             </div>
           ))}
         </div>
