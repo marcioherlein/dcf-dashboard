@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { computeETFScore, scoreColor, scoreLabel, scoreBadge } from '@/lib/data/etfScore'
+import { computeETFScore, scoreLabel, scoreBadge } from '@/lib/data/etfScore'
 import { Sparkline, SparklineSkeleton } from '@/components/ui/Sparkline'
 import type { ETFEntry } from '@/lib/data/etfTypes'
 
