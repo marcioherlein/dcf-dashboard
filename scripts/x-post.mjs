@@ -581,7 +581,7 @@ const MACRO_CALENDAR = [
   { date: '2026-03-12', type: 'CPI',   label: 'CPI Inflation Report' },
   { date: '2026-04-10', type: 'CPI',   label: 'CPI Inflation Report' },
   { date: '2026-05-13', type: 'CPI',   label: 'CPI Inflation Report' },
-  { date: '2026-06-11', type: 'CPI',   label: 'CPI Inflation Report' },
+  { date: '2026-06-10', type: 'CPI',   label: 'CPI Inflation Report' },
   { date: '2026-07-15', type: 'CPI',   label: 'CPI Inflation Report' },
   { date: '2026-08-12', type: 'CPI',   label: 'CPI Inflation Report' },
   { date: '2026-09-11', type: 'CPI',   label: 'CPI Inflation Report' },
