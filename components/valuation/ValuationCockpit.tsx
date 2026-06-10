@@ -156,7 +156,15 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
 
 export default function ValuationCockpit({ apiData, ticker, statementsData, limitedHistory, historyYears, onNavigateToFinancials: _onNavigateToFinancials, onNavigateToConviction: _onNavigateToConviction, onLiveDcfFVChange }: Props) {
   const { data: session } = useSession()
-  const isPro = (session?.user as any)?.plan === 'pro'
+  const [isPro, setIsPro] = useState(false)
+
+  useEffect(() => {
+    if (!session?.user?.email) return
+    fetch('/api/user/plan')
+      .then(r => r.json())
+      .then(d => setIsPro(d?.plan === 'pro'))
+      .catch(() => {})
+  }, [session?.user?.email])
 
   const snapshot       = useMemo(() => buildSnapshot(apiData, statementsData), [apiData, statementsData])
   const defaults       = useMemo(() => seedAssumptions(apiData), [apiData])

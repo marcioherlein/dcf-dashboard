@@ -638,7 +638,7 @@ export default function TopBar() {
               )}
               <button
                 onClick={() => signOut()}
-                className="text-[12px] text-[#6B6B6B] hover:text-[#111111] transition-colors whitespace-nowrap hidden sm:block"
+                className="text-[12px] text-[#6B6B6B] hover:text-[#111111] transition-colors whitespace-nowrap"
               >
                 Sign out
               </button>

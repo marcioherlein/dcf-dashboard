@@ -15,7 +15,7 @@ function getClient(): SupabaseClient | null {
   return _client
 }
 
-// ── localStorage helpers ──────────────────────────────────────────────────────
+// ── localStorage helpers (anonymous users only) ───────────────────────────────
 
 function readLocal(): WatchlistEntry[] {
   if (typeof window === 'undefined') return []
@@ -32,7 +32,7 @@ function writeLocal(entries: WatchlistEntry[]): void {
   try {
     localStorage.setItem(LOCAL_KEY, JSON.stringify(entries))
   } catch {
-    // localStorage quota exceeded or SSR — silent fail
+    // quota exceeded or SSR
   }
 }
 
@@ -40,57 +40,45 @@ function writeLocal(entries: WatchlistEntry[]): void {
 
 /**
  * Load the full watchlist.
- * Tries Supabase first; merges with any localStorage entries not yet synced.
+ * Logged-in: Supabase only (cross-device consistent).
+ * Anonymous: localStorage only.
  */
 export async function loadWatchlist(userEmail?: string | null): Promise<WatchlistEntry[]> {
-  const local = readLocal()
   const client = getClient()
 
-  if (!client || !userEmail) return local
+  // Logged-in user — Supabase is the only source of truth
+  if (client && userEmail) {
+    try {
+      const { data, error } = await client
+        .from('simplifier_watchlist')
+        .select('*')
+        .eq('user_id', userEmail)
+        .order('updated_at', { ascending: false })
 
-  try {
-    const { data, error } = await client
-      .from('simplifier_watchlist')
-      .select('*')
-      .eq('user_id', userEmail)
-      .order('updated_at', { ascending: false })
-
-    if (error) return local
-
-    // Merge: remote wins; any local ticker not yet on remote stays
-    const remoteMap = new Map<string, WatchlistEntry>()
-    for (const row of data ?? []) {
-      remoteMap.set(row.ticker, rowToEntry(row))
+      if (error) return readLocal() // fallback on error only
+      return (data ?? []).map(rowToEntry)
+    } catch {
+      return readLocal()
     }
-    for (const entry of local) {
-      if (!remoteMap.has(entry.ticker)) remoteMap.set(entry.ticker, entry)
-    }
-
-    return Array.from(remoteMap.values())
-  } catch {
-    return local
   }
+
+  // Anonymous user — localStorage only
+  return readLocal()
 }
 
 /**
  * Save or update a watchlist entry.
- * Always writes localStorage; also syncs to Supabase if available.
+ * Logged-in: Supabase only.
+ * Anonymous: localStorage only.
  */
 export async function saveWatchlistEntry(
   entry: WatchlistEntry,
   userEmail?: string | null,
 ): Promise<void> {
-  // Always persist locally first
-  const local = readLocal()
-  const idx = local.findIndex((e) => e.ticker === entry.ticker)
-  if (idx >= 0) local[idx] = entry
-  else local.unshift(entry)
-  writeLocal(local)
-
   const client = getClient()
-  if (!client || !userEmail) return
 
-  try {
+  if (client && userEmail) {
+    // Logged-in: write only to Supabase
     await client.from('simplifier_watchlist').upsert(
       {
         user_id: userEmail,
@@ -108,9 +96,15 @@ export async function saveWatchlistEntry(
       },
       { onConflict: 'user_id,ticker' },
     )
-  } catch {
-    // Silent — data is safe in localStorage
+    return
   }
+
+  // Anonymous: localStorage only
+  const local = readLocal()
+  const idx = local.findIndex((e) => e.ticker === entry.ticker)
+  if (idx >= 0) local[idx] = entry
+  else local.unshift(entry)
+  writeLocal(local)
 }
 
 /**
@@ -120,88 +114,73 @@ export async function deleteWatchlistEntry(
   ticker: string,
   userEmail?: string | null,
 ): Promise<void> {
-  const local = readLocal().filter((e) => e.ticker !== ticker)
-  writeLocal(local)
-
   const client = getClient()
-  if (!client || !userEmail) return
 
-  try {
+  if (client && userEmail) {
     await client
       .from('simplifier_watchlist')
       .delete()
       .eq('user_id', userEmail)
       .eq('ticker', ticker)
-  } catch {
-    // Silent
+    return
   }
+
+  writeLocal(readLocal().filter((e) => e.ticker !== ticker))
 }
 
 /**
- * Get a single entry from localStorage.
+ * Get a single entry from localStorage (used for anonymous pre-fill only).
  */
 export function getWatchlistEntry(ticker: string): WatchlistEntry | null {
-  const entries = readLocal()
-  return entries.find((e) => e.ticker === ticker) ?? null
+  return readLocal().find((e) => e.ticker === ticker) ?? null
 }
 
 /**
- * Update only the listTag for an entry (local + Supabase).
+ * Update only the listTag for an entry.
  */
 export async function updateListTag(
   ticker: string,
   listTag: WatchlistEntry['listTag'],
   userEmail?: string | null,
 ): Promise<void> {
-  // Update localStorage
-  const local = readLocal()
-  const idx = local.findIndex((e) => e.ticker === ticker)
-  if (idx >= 0) {
-    local[idx] = { ...local[idx], listTag }
-    writeLocal(local)
-  }
-
   const client = getClient()
-  if (!client || !userEmail) return
 
-  try {
+  if (client && userEmail) {
     await client
       .from('simplifier_watchlist')
       .update({ list_tag: listTag })
       .eq('user_id', userEmail)
       .eq('ticker', ticker)
-  } catch {
-    // Silent — data is safe in localStorage
+    return
   }
+
+  const local = readLocal()
+  const idx = local.findIndex((e) => e.ticker === ticker)
+  if (idx >= 0) { local[idx] = { ...local[idx], listTag }; writeLocal(local) }
 }
 
 /**
- * Update only the groupName for an entry (local + Supabase).
+ * Update only the groupName for an entry.
  */
 export async function updateGroupName(
   ticker: string,
   groupName: string | null,
   userEmail?: string | null,
 ): Promise<void> {
-  const local = readLocal()
-  const idx = local.findIndex((e) => e.ticker === ticker)
-  if (idx >= 0) {
-    local[idx] = { ...local[idx], groupName: groupName ?? undefined }
-    writeLocal(local)
-  }
-
   const client = getClient()
-  if (!client || !userEmail) return
 
-  try {
+  if (client && userEmail) {
     await client
       .from('simplifier_watchlist')
       .update({ group_name: groupName })
       .eq('user_id', userEmail)
       .eq('ticker', ticker)
-  } catch {
-    // Silent — data is safe in localStorage
+    return
   }
+
+  const local = readLocal()
+  const idx = local.findIndex((e) => e.ticker === ticker)
+  if (idx >= 0) { local[idx] = { ...local[idx], groupName: groupName ?? undefined }; writeLocal(local) }
 }
 
 // ── Shape conversion ──────────────────────────────────────────────────────────
