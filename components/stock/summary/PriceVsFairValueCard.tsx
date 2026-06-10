@@ -68,7 +68,7 @@ export default function PriceVsFairValueCard({
 
       {/* Ratio row */}
       <div className="flex items-center gap-2.5 flex-wrap">
-        <span className="text-[32px] font-[800] text-[#06101F] leading-none tabular-nums">
+        <span className="text-[44px] sm:text-[32px] font-[800] text-[#06101F] leading-none tabular-nums">
           {ratio != null ? `${ratio.toFixed(2)}×` : '—'}
         </span>
         <div>
@@ -89,7 +89,7 @@ export default function PriceVsFairValueCard({
       {/* Spectrum bar */}
       <div className="relative mt-1">
         <div
-          className="h-2 rounded-full w-full"
+          className="h-3 sm:h-2 rounded-full w-full"
           style={{
             background:
               'linear-gradient(90deg, #10B981 0%, #34D399 25%, #3B82F6 45%, #FBBF24 62%, #F97316 76%, #EF4444 100%)',
@@ -103,7 +103,7 @@ export default function PriceVsFairValueCard({
         {/* Dot marker */}
         {markerLeft != null && (
           <div
-            className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#06101F] border-2 border-white shadow-sm"
+            className="absolute top-1/2 -translate-y-1/2 w-5 h-5 sm:w-3.5 sm:h-3.5 rounded-full bg-[#06101F] border-2 border-white shadow-sm"
             style={{ left: markerLeft }}
           />
         )}

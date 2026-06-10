@@ -94,7 +94,7 @@ export default function SummaryHeroCard({
 
         {/* ── Headline block ── */}
         <div className="flex flex-col gap-1.5">
-          <p className="text-[26px] sm:text-[30px] font-[800] text-ink-900 leading-tight tracking-tight [text-wrap:balance] break-words">
+          <p className="text-[32px] sm:text-[30px] font-[800] text-ink-900 leading-tight tracking-tight [text-wrap:balance] break-words">
             {ticker.length > 8 ? ticker.slice(0, 8) + '…' : ticker} looks{' '}
             <span className={verdict.headingClass}>{verdict.word}</span>
           </p>
@@ -114,17 +114,17 @@ export default function SummaryHeroCard({
         </p>
 
         {/* ── Primary metrics ── */}
-        <div className="flex flex-wrap items-end gap-5">
+        <div className="flex flex-wrap items-end gap-5 sm:gap-5">
           <div>
             <p className="text-[11px] font-[600] text-[#566174] mb-0.5">Fair value</p>
-            <p className="text-[26px] font-[750] text-ink-900 tabular-nums leading-none">
+            <p className="text-[36px] sm:text-[26px] font-[750] text-ink-900 tabular-nums leading-none">
               {fairValue != null ? fmtPrice(fairValue, currency) : '—'}
             </p>
           </div>
           <div className="w-px h-7 bg-[#E5E5E5] self-end mb-0.5 shrink-0" />
           <div>
             <p className="text-[11px] font-[600] text-[#566174] mb-0.5">vs current price</p>
-            <p className={cn('text-[26px] font-[750] leading-none tabular-nums', verdict.upsideClass)}>
+            <p className={cn('text-[36px] sm:text-[26px] font-[750] leading-none tabular-nums', verdict.upsideClass)}>
               {upsideDisplay}
             </p>
           </div>

@@ -5,7 +5,7 @@
 
 export const CHART_HEIGHTS = {
   xs:  100,
-  sm:  140,
+  sm:  180,
   md:  160,
   lg:  180,
   xl:  220,

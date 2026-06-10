@@ -188,7 +188,7 @@ export default function SummaryTab({
   }, [ratings, scores, upsidePct, analystRecommendation, businessProfile, cagrAnalysis, ticker])
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-3 sm:gap-5">
 
       {/* ── 1. STOCK IDENTITY HEADER (Sections A + B) ───────────────────────── */}
       <StockIdentityHeader
@@ -229,7 +229,7 @@ export default function SummaryTab({
       <SectionLabel>Fundamentals</SectionLabel>
 
       {/* ── 3. 2-COL: [Revenue + FCF stacked] | [Growth Outlook + Cash Conversion stacked] */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-stretch">
         {/* Left col: Revenue chart + FCF chart stacked */}
         <div className="flex flex-col gap-4">
           {statementsData && (
@@ -274,7 +274,7 @@ export default function SummaryTab({
       />
 
       {/* ── 5. 2×2 GRID: Profitability chart | Profitability text | Peer valuation | Valuation ratios */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 items-stretch">
         <ProfitabilityChartCard
           statementsData={statementsData}
         />
@@ -301,7 +301,7 @@ export default function SummaryTab({
       </div>
 
       {/* ── 5. 2-COL: ETF Exposure | Holding Returns (if present) ──────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 items-start">
         <ETFExposureCard ticker={ticker} />
         {holdingReturns && (
           <HoldingReturns returns={holdingReturns} ticker={ticker} />

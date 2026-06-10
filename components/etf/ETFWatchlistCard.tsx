@@ -117,7 +117,7 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
         <div className="flex items-start gap-4 mb-3">
           <div className="shrink-0">
             <div className="flex items-baseline gap-1.5">
-              <span className={cn('font-[700] text-[44px] leading-[1] tabular-nums', scoreColor(score))}>
+              <span className={cn('font-[700] text-[52px] sm:text-[44px] leading-[1] tabular-nums', scoreColor(score))}>
                 {score}
               </span>
               <span className="text-[11px] text-[#8A95A6] font-medium self-end pb-1">/100</span>
