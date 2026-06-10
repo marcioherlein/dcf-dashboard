@@ -24,9 +24,65 @@ const BUFFER_CHANNEL_ID   = process.env.BUFFER_CHANNEL_ID   || ''
 const AUTOMATION_API_KEY = process.env.AUTOMATION_API_KEY || ''
 const ALPHA_VANTAGE_KEY   = process.env.ALPHA_VANTAGE_KEY   || 'demo'
 
+// ─── Post Validator ───────────────────────────────────────────────────────────
+// Runs before every post. Throws if the content fails quality checks.
+// This is the last line of defense before anything hits Twitter.
+
+function validatePost(text) {
+  const issues = []
+
+  // 1. NaN anywhere — means a numeric computation failed
+  if (/\bNaN\b/.test(text)) {
+    issues.push('Contains NaN — a numeric value failed to compute')
+  }
+
+  // 2. undefined or [object Object] leaked into output
+  if (/\bundefined\b|\[object Object\]/.test(text)) {
+    issues.push('Contains undefined or [object Object] — a variable was not resolved')
+  }
+
+  // 3. Suspiciously short post (less than 80 chars means something is missing)
+  if (text.trim().length < 80) {
+    issues.push(`Post is too short (${text.trim().length} chars) — likely missing sections`)
+  }
+
+  // 4. Price values must look like real numbers — not 0, not 999, not absurd
+  const prices = [...text.matchAll(/\$(\d+(?:\.\d+)?)/g)].map(m => parseFloat(m[1]))
+  for (const p of prices) {
+    if (p === 0) issues.push(`Price value $0 found — data likely missing`)
+    if (p > 100000) issues.push(`Price value $${p} looks unrealistic`)
+  }
+
+  // 5. Percentage values sanity — nothing above ±200% in a single move
+  const pcts = [...text.matchAll(/([-+]?\d+\.?\d*)%/g)].map(m => parseFloat(m[1]))
+  for (const p of pcts) {
+    if (Math.abs(p) > 200) issues.push(`Percentage ${p}% looks unrealistic`)
+  }
+
+  // 6. Date "999" or single/double digit dates that look like index leakage
+  if (/— \d{1,3}$/.test(text.split('\n')[0])) {
+    issues.push('First line ends with a suspicious short number — possible index/date error')
+  }
+
+  // 7. Must contain at least one real data point (number)
+  if (!/\d/.test(text)) {
+    issues.push('Post contains no numbers — no data')
+  }
+
+  if (issues.length > 0) {
+    const report = issues.map(i => `  ✗ ${i}`).join('\n')
+    throw new Error(`POST REJECTED by validator:\n${report}\n\nContent:\n${text.slice(0, 300)}`)
+  }
+
+  console.log('✓ Validator passed')
+}
+
 // ─── Buffer API ───────────────────────────────────────────────────────────────
 
 async function post(text) {
+  // Validate before posting — throws if content is broken
+  validatePost(text)
+
   if (DRY_RUN) {
     console.log('--- DRY RUN ---')
     console.log(text)
@@ -617,14 +673,30 @@ async function fetchAlphaVantage(fn, params = {}) {
   return json
 }
 
-// Returns the two most recent data points for a series: { latest, previous }
+// Returns the two most recent data points for a series.
+// Handles both Alpha Vantage formats:
+//   Array: [{date, value}, ...] (CPI, NFP, Fed Funds Rate)
+//   Object: {"2026-04-01": "333.020", ...} (legacy)
 function latestTwo(data) {
-  const entries = Object.entries(data).sort((a, b) => b[0].localeCompare(a[0]))
-  if (entries.length < 2) return null
+  let pairs // [{date, value}]
+  if (Array.isArray(data)) {
+    pairs = data
+      .filter(r => r.date && r.value !== undefined && r.value !== '.')
+      .sort((a, b) => b.date.localeCompare(a.date))
+  } else {
+    pairs = Object.entries(data)
+      .filter(([, v]) => v !== '.')
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([date, value]) => ({ date, value }))
+  }
+  if (pairs.length < 2) return null
+  const latestVal   = parseFloat(pairs[0].value)
+  const previousVal = parseFloat(pairs[1].value)
+  if (!isFinite(latestVal) || !isFinite(previousVal)) return null
   return {
-    latestDate:  entries[0][0],
-    latestVal:   parseFloat(entries[0][1]),
-    previousVal: parseFloat(entries[1][1]),
+    latestDate:  pairs[0].date,
+    latestVal,
+    previousVal,
   }
 }
 
