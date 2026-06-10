@@ -58,14 +58,20 @@ jobs:
         working-directory: scripts
 
       - name: Set mode
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
+          EVENT: ${{ github.event_name }}
+          INPUT_MODE: ${{ github.event.inputs.mode }}
+          INPUT_TICKER: ${{ github.event.inputs.ticker }}
+          INPUT_DRY_RUN: ${{ github.event.inputs.dry_run }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "MODE=${{ github.event.inputs.mode }}"       >> $GITHUB_ENV
-            echo "TICKER=${{ github.event.inputs.ticker }}"   >> $GITHUB_ENV
-            echo "DRY_RUN=${{ github.event.inputs.dry_run }}" >> $GITHUB_ENV
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            echo "MODE=$INPUT_MODE"     >> $GITHUB_ENV
+            echo "TICKER=$INPUT_TICKER" >> $GITHUB_ENV
+            echo "DRY_RUN=$INPUT_DRY_RUN" >> $GITHUB_ENV
           else
-            # Use the cron expression itself — immune to GitHub firing late
-            case "${{ github.event.schedule }}" in
+            echo "Cron schedule: [$SCHEDULE]"
+            case "$SCHEDULE" in
               "0 11 * * 1-5")  echo "MODE=morning_brief" >> $GITHUB_ENV ;;
               "0 13 * * 1-5")  echo "MODE=earnings"      >> $GITHUB_ENV ;;
               "0 14 * * 1-5")  echo "MODE=feature"       >> $GITHUB_ENV ;;
@@ -85,7 +91,7 @@ jobs:
               "0 16 * * 0")    echo "MODE=etf_pulse"     >> $GITHUB_ENV ;;
               "0 18 * * 0")    echo "MODE=news"          >> $GITHUB_ENV ;;
               *)
-                echo "Unknown schedule: ${{ github.event.schedule }} — skipping"
+                echo "No match for schedule [$SCHEDULE] — skipping"
                 echo "MODE=skip" >> $GITHUB_ENV
                 ;;
             esac
