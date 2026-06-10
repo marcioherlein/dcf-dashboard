@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import Image from 'next/image'
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
@@ -10,6 +10,28 @@ import { cn } from '@/lib/utils'
 import { slideDown } from '@/lib/motion'
 import { useStockNav } from '@/contexts/StockNavContext'
 import { InsicLogoLockup, InsicAppIcon } from '@/components/ui/InsicLogo'
+
+// ── Page title map — shown in TopBar when not on a stock page ─────────────────
+const PAGE_TITLES: Array<{ match: (p: string) => boolean; title: string; sub?: string }> = [
+  { match: (p) => p.startsWith('/markets'),    title: 'Markets',       sub: 'Indices, sectors, macro' },
+  { match: (p) => p.startsWith('/etf'),        title: 'ETF Tracker',   sub: 'Value-oriented ETF lens' },
+  { match: (p) => p.startsWith('/screener'),   title: 'Screener',      sub: 'NYSE & NASDAQ' },
+  { match: (p) => p.startsWith('/valuations'), title: 'My Valuations', sub: 'Saved analyses' },
+  { match: (p) => p.startsWith('/monitor'),    title: 'Portfolio',     sub: 'Holdings & returns' },
+  { match: (p) => p.startsWith('/alerts'),     title: 'Alerts',        sub: undefined },
+  { match: (p) => p === '/analyze' || p.startsWith('/analyze'), title: 'Analyze', sub: 'Stock research' },
+  { match: (p) => p.startsWith('/simplifier'), title: 'Simplifier',    sub: undefined },
+  { match: (p) => p.startsWith('/factor'),     title: 'Factor Ranking', sub: undefined },
+  { match: (p) => p.startsWith('/compare'),    title: 'Compare',       sub: undefined },
+  { match: (p) => p.startsWith('/strategies'), title: 'Strategies',    sub: undefined },
+]
+
+function getPageTitle(pathname: string): { title: string; sub?: string } | null {
+  for (const entry of PAGE_TITLES) {
+    if (entry.match(pathname)) return { title: entry.title, sub: entry.sub }
+  }
+  return null
+}
 
 interface SearchResult {
   symbol: string
@@ -75,8 +97,11 @@ function UserAvatar({ image, name }: { image: string | null; name: string | null
 
 export default function TopBar() {
   const router = useRouter()
+  const pathname = usePathname()
   const { data: session } = useSession()
   const { stockNav, onSaveRef, onShareRef } = useStockNav()
+
+  const pageTitle = !stockNav ? getPageTitle(pathname) : null
 
   const [query, setQuery]     = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
@@ -150,6 +175,35 @@ export default function TopBar() {
 
   return (
     <header className="fixed top-0 left-0 lg:left-[240px] right-0 z-40 glass-toolbar" data-topbar>
+
+      {/* ── Mobile page-title search overlay ── */}
+      {pageTitle && !stockNav && mobileSearchOpen && (
+        <div className="sm:hidden flex items-center justify-between px-3 gap-2 border-t border-[#E5E5E5] bg-white" style={{ height: '52px' }}>
+          <Search size={14} className="text-[#9B9B9B] shrink-0" />
+          <input
+            type="text"
+            value={query}
+            onChange={e => { setQuery(e.target.value); setUnsupportedError(null) }}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && query.trim()) { handleSubmit(query); setMobileSearchOpen(false) }
+              if (e.key === 'Escape') { setMobileSearchOpen(false); setQuery(''); setOpen(false) }
+            }}
+            placeholder="Search ticker or company…"
+            className="flex-1 text-[16px] bg-transparent text-[#111111] placeholder-[#9B9B9B] focus:outline-none"
+            autoFocus
+            autoCorrect="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+          />
+          <button
+            onClick={() => { setMobileSearchOpen(false); setQuery(''); setOpen(false) }}
+            className="text-[#9B9B9B] hover:text-[#111111] min-w-[44px] min-h-[44px] flex items-center justify-center"
+            aria-label="Close search"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       {/* ── Mobile stock header: single row (tabs live in TabNav below) ── */}
       {stockNav && (
@@ -431,8 +485,21 @@ export default function TopBar() {
               </div>
             </div>
           </>
+        ) : pageTitle ? (
+          /* Page title — shown on named pages (Markets, ETF Tracker, etc.) */
+          <div className="flex items-center gap-3 min-w-0 pl-1">
+            <div className="min-w-0">
+              <p className="text-[14px] font-[700] text-[#111111] leading-tight tracking-tight">
+                {pageTitle.title}
+              </p>
+              {pageTitle.sub && (
+                <p className="text-[11px] text-[#8A95A6] leading-none mt-0.5 hidden sm:block">
+                  {pageTitle.sub}
+                </p>
+              )}
+            </div>
+          </div>
         ) : (
-          /* Wide centered search for non-stock pages */
           <div className="flex justify-center w-full">
             <div className="relative w-full max-w-[calc(100vw-120px)] sm:w-auto sm:max-w-[480px]" ref={searchRef}>
               <div
@@ -560,8 +627,19 @@ export default function TopBar() {
           </div>
         )}
 
-        {/* ── Column 3: stock identity (lg only) + save + auth ── */}
+        {/* ── Column 3: stock identity (lg only) + save + auth + search (page-title mode) ── */}
         <div className="flex items-center gap-2 sm:gap-3 justify-end min-w-0">
+
+          {/* Search icon — shown on page-title pages so user can still search on mobile */}
+          {pageTitle && !stockNav && (
+            <button
+              onClick={() => setMobileSearchOpen((v) => !v)}
+              aria-label="Search stocks"
+              className="flex items-center justify-center min-w-[44px] min-h-[44px] text-[#6B6B6B] hover:text-[#111111] transition-colors"
+            >
+              <Search size={16} />
+            </button>
+          )}
 
           {/* On desktop, show stock identity here (search is in col 2 instead) */}
           {stockNav && (
