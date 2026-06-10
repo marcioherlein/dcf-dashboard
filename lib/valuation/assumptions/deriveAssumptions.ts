@@ -448,10 +448,48 @@ export function deriveForwardPEAssumptions(data: {
   }
 
   const marginDerived   = deriveNetMargin(incomeRows, effectiveCagr)
-  const trailingMargin  = incomeRows
+
+  // trailingMargin: the most-recent actual NI/Rev ratio, used for the thin-margin P/E cap.
+  // Extract in the same newest-first-safe way as deriveNetMargin.
+  const actualRows = incomeRows
     .filter(r => !r.isProjected && r.netIncome != null && r.revenue != null && r.revenue! > 0)
-    .map(r => r.netIncome! / r.revenue!).slice(-1)[0] ?? null
-  const peDerived       = deriveExitPE(sector, industry, data.quote?.peRatio ?? null, crp, trailingMargin, data)
+    .sort((a, b) => String(b.year ?? '').slice(0, 4).localeCompare(String(a.year ?? '').slice(0, 4)))
+  const trailingMargin = actualRows.length > 0 ? actualRows[0].netIncome! / actualRows[0].revenue! : null
+
+  // Normalize the current P/E when the spot P/E is distorted by a one-time item.
+  // Scenario A — one-time gain: NI temporarily high → P/E compressed (looks cheap).
+  //   EW FY2024: NI%=76.7% inflated EPS → P/E=46.7× even though normal EPS-based P/E ~30×.
+  // Scenario B — one-time loss: NI depressed → P/E inflated (looks expensive).
+  // Both distort the exit P/E blend which anchors 55% to the spot P/E.
+  //
+  // Fix: when the trailing margin used for the spot P/E differs materially from the
+  // median (>2.5× or <0.4× the median), derive a normalizedPE using the median margin.
+  //   normalizedPE = currentPrice / (medianMargin × TTMrevenue / shares)
+  //                = (currentPrice × shares) / (medianMargin × TTMrevenue)
+  //                = currentPE × (trailingMargin / medianMargin)
+  const spotPE = data.quote?.peRatio ?? null
+  let effectivePEForBlend = spotPE
+  if (
+    spotPE != null && spotPE > 0 &&
+    trailingMargin != null && trailingMargin > 0 &&
+    marginDerived.margin > 0
+  ) {
+    // Compute the median net margin from the same rows
+    const allMargins = actualRows.map(r => r.netIncome! / r.revenue!)
+    const medianNetMargin = [...allMargins].sort((a, b) => a - b)[Math.floor(allMargins.length / 2)]
+    if (medianNetMargin > 0) {
+      const ratio = trailingMargin / medianNetMargin
+      // Only normalize when the current year is materially distorted vs the median:
+      // ratio > 2.5 = one-time gain inflating NI (P/E too low)
+      // ratio < 0.4 = one-time loss deflating NI (P/E too high)
+      if (ratio > 2.5 || ratio < 0.4) {
+        effectivePEForBlend = spotPE * (medianNetMargin / trailingMargin)
+        effectivePEForBlend = Math.max(1, Math.round(effectivePEForBlend * 10) / 10)
+      }
+    }
+  }
+
+  const peDerived       = deriveExitPE(sector, industry, effectivePEForBlend, crp, trailingMargin, data)
   const dilutionDerived = deriveDilution(sector, marginDerived.margin, data)
   const waccEvidence    = deriveWACCEvidence(data.wacc?.inputs ?? {}, wacc)
   const ltmRev          = ltmRevenue(incomeRows)
