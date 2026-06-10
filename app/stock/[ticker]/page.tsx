@@ -797,17 +797,51 @@ function StockPageBody() {
         onClose={() => setLoginToSaveOpen(false)}
       />
     )}
-    {shareOpen && cockpitOutput && (
-      <ShareCardModal
-        open={shareOpen}
-        onClose={() => setShareOpen(false)}
-        ticker={ticker}
-        companyName={data?.companyName ?? ticker}
-        output={cockpitOutput}
-        currentPrice={data?.quote?.price ?? 0}
-        currency={currency}
-      />
-    )}
+    {shareOpen && cockpitOutput && (() => {
+      // Compute conviction data inline from the same inputs InvestmentVerdict uses
+      const scores = computedScores ?? data?.scores ?? null
+      const upsidePct = cockpitOutput.upsidePct
+      const fcfM = data?.businessProfile?.fcfMargin ?? null
+      const grossM = data?.businessProfile?.grossMargin ?? null
+      const revenueCAGR = data?.cagrAnalysis?.historicalCagr3y ?? null
+      const analystRec = data?.analystRecommendation ?? ''
+      const isBuy = ['strongbuy','buy','strong_buy','strong buy'].includes((analystRec).toLowerCase())
+
+      // Quick pass/fail for top signals — plain English
+      type Signal = { label: string; pass: boolean | null }
+      const signals: Signal[] = [
+        { label: 'Trading below DCF estimate',    pass: upsidePct != null ? upsidePct >= 0.15 : null },
+        { label: 'Generating free cash flow',     pass: fcfM != null ? fcfM > 0 : null },
+        { label: 'Earning above cost of capital', pass: scores?.roic?.spread != null ? scores.roic.spread > 0 : null },
+        { label: 'Margins stable or growing',     pass: grossM != null ? grossM > 0.2 : null },
+        { label: 'Low insolvency risk',           pass: scores?.altman?.zone === 'Safe' ? true : scores?.altman?.zone != null ? false : null },
+        { label: 'No accounting red flags',       pass: scores?.beneish?.flag != null ? scores.beneish.flag !== 'Manipulator' : null },
+        { label: 'Revenue growing steadily',      pass: revenueCAGR != null ? revenueCAGR > 0.05 : null },
+        { label: 'Analysts recommend buying',     pass: analystRec ? isBuy : null },
+      ]
+      const eligible = signals.filter(s => s.pass !== null)
+      const passed   = eligible.filter(s => s.pass === true)
+      const failed   = eligible.filter(s => s.pass === false)
+      const ratio    = eligible.length > 0 ? passed.length / eligible.length : 0
+      const checkLabel = ratio >= 0.75 ? 'Strong' : ratio >= 0.5 ? 'Mixed' : 'Weak'
+
+      return (
+        <ShareCardModal
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          ticker={ticker}
+          companyName={data?.companyName ?? ticker}
+          output={cockpitOutput}
+          currentPrice={data?.quote?.price ?? 0}
+          currency={currency}
+          checkPassed={passed.length}
+          checkTotal={eligible.length}
+          checkLabel={checkLabel}
+          passBullets={passed.slice(0, 3).map(s => s.label)}
+          failBullets={failed.slice(0, 1).map(s => s.label)}
+        />
+      )
+    })()}
     </>
   )
 }
