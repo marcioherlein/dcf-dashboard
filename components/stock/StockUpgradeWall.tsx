@@ -171,7 +171,7 @@ export default function StockUpgradeWall({ ticker, companyName, price, currency,
             ) : (
               <>
                 <Zap size={15} aria-hidden="true" />
-                Upgrade to Pro — $17/mo
+                Upgrade to Pro — $19/mo
               </>
             )}
           </button>

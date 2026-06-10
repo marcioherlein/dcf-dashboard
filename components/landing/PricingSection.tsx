@@ -41,7 +41,7 @@ const PRO_DIFF = [
 export default function PricingSection() {
   const { data: session } = useSession()
   const isPro = (session?.user as { plan?: string } | undefined)?.plan === 'pro'
-  const monthlyPrice = 17
+  const monthlyPrice = 19
 
   return (
     <section id="pricing" className="overflow-x-hidden" style={{ background: '#FFFFFF', borderBottom: '1px solid #E5E5E5' }}>
