@@ -6,7 +6,7 @@ import { useSession, signIn, signOut } from 'next-auth/react'
 import Image from 'next/image'
 import { motion, useReducedMotion } from 'motion/react'
 import {
-  TrendingUp, Bookmark, Briefcase, Globe,
+  TrendingUp, Bookmark, Globe,
   Bell, Settings, HelpCircle, PieChart, SlidersHorizontal,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -22,7 +22,6 @@ const RESEARCH_NAV: NavEntry[] = [
 
 const TRACK_NAV: NavEntry[] = [
   { href: '/valuations',            label: 'My Valuations', icon: Bookmark,          match: (p) => p.startsWith('/valuations') },
-  { href: '/monitor?tab=portfolio', label: 'Portfolio',     icon: Briefcase,         match: (p) => p.startsWith('/monitor') },
 ]
 
 const MARKETS_NAV: NavEntry[] = [

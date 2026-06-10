@@ -17,7 +17,6 @@ const PAGE_TITLES: Array<{ match: (p: string) => boolean; title: string; sub?: s
   { match: (p) => p.startsWith('/etf'),        title: 'ETF Tracker',   sub: 'Value-oriented ETF lens' },
   { match: (p) => p.startsWith('/screener'),   title: 'Screener',      sub: 'NYSE & NASDAQ' },
   { match: (p) => p.startsWith('/valuations'), title: 'My Valuations', sub: 'Saved analyses' },
-  { match: (p) => p.startsWith('/monitor'),    title: 'Portfolio',     sub: 'Holdings & returns' },
   { match: (p) => p.startsWith('/alerts'),     title: 'Alerts',        sub: undefined },
   { match: (p) => p === '/analyze' || p.startsWith('/analyze'), title: 'Analyze', sub: 'Stock research' },
   { match: (p) => p.startsWith('/simplifier'), title: 'Simplifier',    sub: undefined },
