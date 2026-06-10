@@ -391,12 +391,29 @@ export async function GET(req: NextRequest) {
     }
 
     // Ratings
+    // Resolve ROE: Yahoo financialData is the primary source but frequently returns null
+    // for companies with distorted book equity (buybacks, stock-based comp, negative equity).
+    // Fallback chain: FMP keyMetrics → computed from FMP net income / shareholders equity.
+    const roeYahoo = (fd.returnOnEquity ?? null) as number | null
+    const roeFmpKm = (fmp.keyMetrics[0]?.returnOnEquity ?? null) as number | null
+    // Computed ROE from FMP balance sheet + income statement (most recent annual)
+    const roeFmpComputed: number | null = (() => {
+      const bs = fmp.balanceSheets?.[0]
+      const is = fmp.incomeStatements?.[0]
+      if (!bs || !is) return null
+      const equity = bs.totalStockholdersEquity ?? null
+      const ni = is.netIncome ?? null
+      if (equity == null || ni == null || equity <= 0) return null
+      return ni / equity
+    })()
+    const resolvedRoe: number | null = roeYahoo ?? roeFmpKm ?? roeFmpComputed
+
     const ratings = calculateRatings({
       grossMargin: (fd.grossMargins ?? null) as number | null,
       netMargin: (fd.profitMargins ?? null) as number | null,
       fcfMargin: rawRevMLocal > 0 ? annualFCFLocal / rawRevMLocal : null,
       operatingMargin: (fd.operatingMargins ?? null) as number | null,
-      roe: (fd.returnOnEquity ?? null) as number | null,
+      roe: resolvedRoe,
       roa: (fd.returnOnAssets ?? null) as number | null,
       currentRatio: (fd.currentRatio ?? null) as number | null,
       quickRatio: (fd.quickRatio ?? null) as number | null,
@@ -523,7 +540,14 @@ export async function GET(req: NextRequest) {
 
     // Compute EV/EBITDA from FMP statements when Yahoo doesn't provide it
     if (evToEbitda === null && fmp.incomeStatements[0] != null) {
-      const fmpEbitda = fmp.incomeStatements[0].ebitda
+      const stmt = fmp.incomeStatements[0]
+      // Try explicit ebitda field first
+      let fmpEbitda = stmt.ebitda != null && stmt.ebitda > 0 ? stmt.ebitda : null
+      // Fallback: operatingIncome + D&A (standard EBITDA proxy)
+      if (fmpEbitda == null && stmt.operatingIncome != null && stmt.operatingIncome > 0) {
+        const da = stmt.depreciationAndAmortization ?? 0
+        fmpEbitda = stmt.operatingIncome + Math.abs(da as number)
+      }
       if (fmpEbitda != null && fmpEbitda > 0) {
         const evM = marketCapM + debtM - cashM
         const ebitdaM = fmpEbitda / 1e6
@@ -614,7 +638,7 @@ export async function GET(req: NextRequest) {
       : null
 
     // DDM
-    const roe = (fd.returnOnEquity ?? null) as number | null
+    const roe = resolvedRoe
     const ddmResult = calculateDDM(dividendPerShare, waccResult.costOfEquity, roe, payoutRatio, currentPrice)
 
     // FCFE
@@ -840,6 +864,7 @@ export async function GET(req: NextRequest) {
     ;(businessProfile as Record<string, unknown>).evToRevenue  = evToRevenue
     ;(businessProfile as Record<string, unknown>).priceToBook  = priceToBook
     ;(businessProfile as Record<string, unknown>).priceToSales = priceToSales
+    ;(businessProfile as Record<string, unknown>).roe          = resolvedRoe
 
     // FCF margin from FMP cash flows — capped at same ceiling as baseFCF to prevent
     // loan-distorted OCF (e.g. MELI Mercado Crédito) from inflating the reverse DCF model.
