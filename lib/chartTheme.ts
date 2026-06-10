@@ -14,7 +14,7 @@
 export const CHART_COLORS = {
   // Primary data series
   marketPrice:    '#111111',   // near-black — market price line
-  fairValue:      '#5F790B',   // olive-700 — intrinsic / fair value
+  fairValue:      '#4A6109',   // olive-700 — intrinsic / fair value
   analystTarget:  '#2563EB',   // blue-600 — analyst price target (dashed)
 
   // Financial statement series
@@ -22,11 +22,11 @@ export const CHART_COLORS = {
   netIncome:      '#11875D',   // positive green
   fcf:            '#11875D',   // positive green (same as net income)
   costs:          '#D83B3B',   // negative red
-  ebitda:         '#6F8F12',   // olive-600
+  ebitda:         '#5C7410',   // olive-600
 
   // Scenario fills
   bull:           '#11875D',
-  base:           '#5F790B',
+  base:           '#4A6109',
   bear:           '#D83B3B',
 
   // Neutral / benchmarks

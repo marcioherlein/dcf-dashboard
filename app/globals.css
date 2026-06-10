@@ -17,23 +17,23 @@
     --card-foreground:     218 73% 7%;
     --popover:             0 0% 100%;
     --popover-foreground:  218 73% 7%;
-    --primary:             82 80% 23%;      /* #5F790B olive-600 */
+    --primary:             76 83% 21%;      /* #4A6109 olive-600 */
     --primary-foreground:  0 0% 100%;
     --secondary:           36 14% 95%;      /* #F4F3EF */
     --secondary-foreground:218 73% 7%;
     --muted:               36 14% 95%;      /* #F4F3EF */
     --muted-foreground:    220 15% 40%;     /* #566174 */
-    --accent:              82 80% 23%;      /* olive-600 */
+    --accent:              76 83% 21%;      /* olive-600 */
     --accent-foreground:   0 0% 100%;
     --destructive:         0 68% 52%;       /* #D83B3B */
     --destructive-foreground: 0 0% 100%;
     --border:              36 14% 87%;      /* #E3E1DA warm border */
     --input:               36 14% 87%;
-    --ring:                82 80% 23%;      /* olive-600 focus ring */
+    --ring:                76 83% 21%;      /* olive-600 focus ring */
     --radius:              0.625rem;        /* 10px base control radius */
 
     /* ── Chart palette ───────────────────────────────────────────────────── */
-    --chart-1: 78 82% 25%;    /* #5F790B olive — primary series */
+    --chart-1: 76 83% 21%;    /* #4A6109 olive — primary series */
     --chart-2: 0 0% 12%;      /* #1F1F1F near-black */
     --chart-3: 0 68% 52%;     /* #D83B3B negative red — financial semantic */
     --chart-4: 0 0% 45%;      /* #737373 mid gray */
@@ -108,11 +108,11 @@
   --color-text-faint:      #C4C4C4;
 
   /* Brand olive — primary CTA, selected nav, fair value accent */
-  --color-olive-700:  #536B08;
-  --color-olive-600:  #5F790B;
-  --color-olive-500:  #718E14;
-  --color-olive-100:  #EDF3DD;
-  --color-olive-50:   #F6F9EC;
+  --color-olive-700:  #3E5206;
+  --color-olive-600:  #4A6109;
+  --color-olive-500:  #5C7410;
+  --color-olive-100:  #E6F0D4;
+  --color-olive-50:   #F1F7E5;
 
   /* Supporting blue — secondary actions, links, info */
   --color-blue-600:   #2563EB;
@@ -168,12 +168,12 @@
   --dcf-text-dim:    #6B6B6B;
   --dcf-text-muted:  #9B9B9B;
   --dcf-text-faint:  #C4C4C4;
-  --dcf-accent:      #5F790B;
+  --dcf-accent:      #4A6109;
   --dcf-amber:       #B56A00;
 
   /* Glass nav (hero/landing sections — pure black) */
   --glass-bg:     rgba(0, 0, 0, 0.65);
-  --glass-border: rgba(95, 121, 11, 0.18);
+  --glass-border: rgba(74, 97, 9, 0.18);
 }
 
 /* ── Typography ──────────────────────────────────────────────────────────────── */
@@ -391,11 +391,11 @@ h3 {
 
   /* Olive glow (for focus, CTAs) */
   .glow-border {
-    border-color: rgba(95, 121, 11, 0.5) !important;
-    box-shadow: 0 0 0 3px rgba(95, 121, 11, 0.10);
+    border-color: rgba(74, 97, 9, 0.5) !important;
+    box-shadow: 0 0 0 3px rgba(74, 97, 9, 0.10);
   }
   .glow-text {
-    text-shadow: 0 0 16px rgba(95, 121, 11, 0.35);
+    text-shadow: 0 0 16px rgba(74, 97, 9, 0.35);
   }
 
   /* Financial status text utilities */
@@ -459,8 +459,8 @@ h3 {
 
 /* Olive-toned glow pulse (arc gauge, grade badge) */
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(95, 121, 11, 0.20), 0 0 20px rgba(95, 121, 11, 0.07); }
-  50%       { box-shadow: 0 0 18px rgba(95, 121, 11, 0.38), 0 0 36px rgba(95, 121, 11, 0.12); }
+  0%, 100% { box-shadow: 0 0 10px rgba(74, 97, 9, 0.20), 0 0 20px rgba(74, 97, 9, 0.07); }
+  50%       { box-shadow: 0 0 18px rgba(74, 97, 9, 0.38), 0 0 36px rgba(74, 97, 9, 0.12); }
 }
 .animate-glow-pulse {
   animation: glow-pulse 2.5s ease-in-out infinite;
@@ -485,7 +485,7 @@ h3 {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 0%, rgba(95, 121, 11, 0.03) 50%, transparent 100%);
+  background: linear-gradient(180deg, transparent 0%, rgba(74, 97, 9, 0.03) 50%, transparent 100%);
   height: 40%;
   animation: scan-line 4s ease-in-out infinite;
   pointer-events: none;
@@ -504,18 +504,18 @@ h3 {
   border: 1px solid transparent;
   background:
     linear-gradient(white, white) padding-box,
-    conic-gradient(from var(--border-angle), #5F790B 0%, #2563EB 25%, #5F790B 50%, #11875D 75%, #5F790B 100%) border-box;
+    conic-gradient(from var(--border-angle), #4A6109 0%, #2563EB 25%, #4A6109 50%, #11875D 75%, #4A6109 100%) border-box;
   animation: border-rotate 4s linear infinite;
 }
 
 @keyframes row-flash {
-  0%, 40% { background-color: rgba(95, 121, 11, 0.06); }
+  0%, 40% { background-color: rgba(74, 97, 9, 0.06); }
   100%     { background-color: transparent; }
 }
 .row-flash { animation: row-flash 2.2s ease-out forwards; }
 
 @keyframes value-flash {
-  0%   { background-color: rgba(95, 121, 11, 0.10); }
+  0%   { background-color: rgba(74, 97, 9, 0.10); }
   100% { background-color: transparent; }
 }
 .value-flash { animation: value-flash 0.55s cubic-bezier(0.25, 1, 0.5, 1) both; }
@@ -597,7 +597,7 @@ h3 {
 
 /* Warm editorial radial backgrounds */
 .bg-radial-olive {
-  background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(95, 121, 11, 0.14) 0%, transparent 60%);
+  background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(74, 97, 9, 0.14) 0%, transparent 60%);
 }
 .bg-radial-blue {
   background: radial-gradient(ellipse 60% 60% at 80% 20%, rgba(0, 0, 0, 0.04) 0%, transparent 60%);
@@ -623,7 +623,7 @@ h3 {
   }
   /* Olive focus ring — WCAG AA compliant */
   .focus-olive:focus-visible {
-    outline: 2px solid rgba(95, 121, 11, 0.55);
+    outline: 2px solid rgba(74, 97, 9, 0.55);
     outline-offset: 2px;
   }
   /* Tabular numbers utility */

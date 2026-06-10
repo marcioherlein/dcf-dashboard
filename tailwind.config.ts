@@ -34,11 +34,11 @@ const config: Config = {
 
         // ── insic Brand: Olive (primary brand accent) ─────────────────────
         olive: {
-          700: "#536B08",
-          600: "#5F790B",
-          500: "#718E14",
-          100: "#EDF3DD",
-          50:  "#F6F9EC",
+          700: "#3E5206",
+          600: "#4A6109",
+          500: "#5C7410",
+          100: "#E6F0D4",
+          50:  "#F1F7E5",
         },
 
         // ── insic Brand: Neutral surfaces (warm off-white) ────────────────
