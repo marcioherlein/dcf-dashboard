@@ -13,8 +13,9 @@ interface ProGateProps {
 }
 
 export default function ProGate({ children, featureName, isPro, placeholderHeight = 'h-48' }: ProGateProps) {
-  // Pro users: render children with no wrapper overhead
-  if (isPro) return <>{children}</>
+  // Beta mode: all logged-in users get full access
+  const betaMode = process.env.NEXT_PUBLIC_BETA_MODE === 'true'
+  if (isPro || betaMode) return <>{children}</>
 
   // Free users: show a placeholder — do NOT render children at all.
   // Rendering children and blurring them costs full component mount time

@@ -185,10 +185,10 @@ export default function PricingPage() {
             <div className="mb-8 relative">
               <p className="text-[11px] font-bold uppercase tracking-widest text-[#5F790B] mb-4">Pro</p>
               <div className="flex items-baseline gap-1.5 mb-2">
-                <span className="text-5xl font-bold text-white tabular-nums">$19</span>
+                <span className="text-5xl font-bold text-white tabular-nums">$17</span>
                 <span className="text-gray-500 text-sm">/month</span>
               </div>
-              <p className="text-[13px] text-gray-400">7-day free trial · Cancel anytime · No contracts</p>
+              <p className="text-[13px] text-gray-400">Cancel anytime · No contracts</p>
             </div>
 
             {isPro ? (

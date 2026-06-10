@@ -183,7 +183,9 @@ export default function SettingsPage() {
           </div>
           {(session.user as { plan?: string }).plan === 'pro' ? (
             <a
-              href="/api/lemonsqueezy/portal"
+              href="https://www.paypal.com/myaccount/autopay"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-xs font-semibold text-[#2563EB] hover:underline"
             >
               Manage billing →
@@ -250,7 +252,7 @@ export default function SettingsPage() {
           {(session.user as { plan?: string }).plan === 'pro' && (
             <p className="text-xs text-[#B56A00] mt-1.5 font-medium">
               You have an active Pro subscription. Please cancel it via{' '}
-              <a href="/api/lemonsqueezy/portal" className="underline underline-offset-2">
+              <a href="https://www.paypal.com/myaccount/autopay" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
                 billing settings
               </a>{' '}
               before deleting your account to avoid further charges.

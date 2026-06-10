@@ -124,9 +124,7 @@ export default function TopBar() {
   }, [session?.user?.email])
 
   async function openBillingPortal() {
-    const res = await fetch('/api/lemonsqueezy/portal', { method: 'POST' })
-    const { url } = await res.json()
-    if (url) window.location.href = url
+    window.open('https://www.paypal.com/myaccount/autopay', '_blank', 'noopener,noreferrer')
   }
 
   useEffect(() => {

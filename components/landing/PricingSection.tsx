@@ -1,7 +1,13 @@
 'use client'
-import { signIn } from 'next-auth/react'
+import { signIn, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { Check } from 'lucide-react'
+import dynamic from 'next/dynamic'
+
+const PayPalSubscribeButton = dynamic(
+  () => import('@/components/payments/PayPalSubscribeButton'),
+  { ssr: false, loading: () => <div className="h-12 rounded-xl bg-[#EEF4DD] animate-pulse" /> }
+)
 
 const FREE_FEATURES = [
   'Stock analysis (any ticker)',
@@ -13,7 +19,7 @@ const FREE_FEATURES = [
 ]
 
 const PRO_FEATURES = [
-  'Everything in Free',
+  'Everything in Free, unlimited',
   'Full valuation models (DCF, RDCF, Multiples)',
   'Sensitivity tables and scenarios',
   'Conviction Score history',
@@ -25,7 +31,6 @@ const PRO_FEATURES = [
   'Priority support',
 ]
 
-// Four features that differentiate Pro — shown as a quick-diff strip on mobile
 const PRO_DIFF = [
   'Conviction Score history',
   'Sensitivity tables',
@@ -34,6 +39,8 @@ const PRO_DIFF = [
 ]
 
 export default function PricingSection() {
+  const { data: session } = useSession()
+  const isPro = (session?.user as { plan?: string } | undefined)?.plan === 'pro'
   const monthlyPrice = 17
 
   return (
@@ -78,30 +85,36 @@ export default function PricingSection() {
           </div>
 
           {/* Pro */}
-          <div className="rounded-2xl border-2 border-[#E5E5E5] bg-white p-6 flex flex-col relative opacity-75">
-            <div className="absolute top-4 right-4 rounded-full bg-[#F4F3EF] border border-[#E3E1DA] text-[#9B9B9B] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1">
-              Coming soon
+          <div className="rounded-2xl border-2 border-[#5F790B] bg-white p-6 flex flex-col relative" style={{ boxShadow: '0 4px 20px rgba(95,121,11,0.14)' }}>
+            <div className="absolute top-4 right-4 rounded-full bg-[#5F790B] text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1">
+              Most popular
             </div>
-            <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#9B9B9B] mb-3">Pro</p>
+            <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#5F790B] mb-3">Pro</p>
             <div className="flex items-baseline gap-1 mb-1">
-              <span className="text-[44px] font-bold text-[#111111] leading-none tabular-nums">
-                ${monthlyPrice}
-              </span>
+              <span className="text-[44px] font-bold text-[#111111] leading-none tabular-nums">${monthlyPrice}</span>
               <span className="text-[13px] text-[#6B6B6B] font-medium">/month</span>
             </div>
-            <p className="text-[12px] text-[#6B6B6B] mb-5">For investors who want deeper research.</p>
-            <a
-              href="mailto:hello@insic.app?subject=Pro waitlist"
-              className="w-full rounded-md py-3 text-[13.5px] font-bold text-white mb-5 min-h-[48px] flex items-center justify-center transition-all hover:-translate-y-px active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-2"
-              style={{ background: '#5F790B', boxShadow: '0 3px 10px rgba(95,121,11,0.20)' }}
-            >
-              Join Pro waitlist →
-            </a>
+            <p className="text-[12px] text-[#6B6B6B] mb-5">Cancel anytime · No contracts.</p>
+
+            {isPro ? (
+              <div className="w-full flex items-center justify-center gap-2 rounded-md py-3 text-[13.5px] font-semibold text-[#5F790B] bg-[#EEF4DD] border border-[#BFD2A1] mb-5 min-h-[48px]">
+                <Check size={14} strokeWidth={2.5} />
+                You&apos;re on Pro
+              </div>
+            ) : (
+              <div className="mb-5">
+                <PayPalSubscribeButton
+                  userEmail={session?.user?.email}
+                  onSignInRequired={() => signIn('google', { callbackUrl: '/pricing' })}
+                />
+              </div>
+            )}
+
             <ul className="space-y-2.5 flex-1">
               {PRO_FEATURES.map(f => (
                 <li key={f} className="flex items-start gap-2.5">
-                  <Check size={14} className="text-[#C4C4C4] shrink-0 mt-0.5" strokeWidth={2.5} />
-                  <span className="text-[13px] text-[#9B9B9B] leading-snug">{f}</span>
+                  <Check size={14} className="text-[#5F790B] shrink-0 mt-0.5" strokeWidth={2.5} />
+                  <span className="text-[13px] text-[#111111] leading-snug">{f}</span>
                 </li>
               ))}
             </ul>

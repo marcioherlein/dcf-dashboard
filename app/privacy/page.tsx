@@ -126,7 +126,7 @@ export default function PrivacyPage() {
               <li>To create and maintain your account</li>
               <li>To authenticate you and manage your session</li>
               <li>To save and retrieve your valuations, watchlist, and portfolio</li>
-              <li>To process and manage your subscription through LemonSqueezy</li>
+              <li>To process and manage your subscription through PayPal</li>
               <li>To send you transactional emails (welcome, subscription confirmation, billing notifications)</li>
               <li>To send you the weekly earnings digest, if and only if you explicitly opted in</li>
               <li>To detect fraud and protect the security of the Service</li>
