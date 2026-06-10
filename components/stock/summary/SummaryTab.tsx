@@ -146,7 +146,7 @@ export default function SummaryTab({
   marketCap, peRatio, beta, pegRatio: _pegRatio, evToEbitda, dividendYield,
   holdingReturns,
   nextEarningsDate: _nextEarningsDate,
-  onViewValuation: _onViewValuation, onViewFinancials: _onViewFinancials, onViewConviction: _onViewConviction,
+  onViewValuation, onViewFinancials: _onViewFinancials, onViewConviction,
   onViewAssumptions: _onViewAssumptions, analystRecommendation,
   analystForwardEstimates, roe, roic, ownership,
 }: SummaryTabProps) {
@@ -225,6 +225,8 @@ export default function SummaryTab({
         low52={low52}
         nextEarningsDate={_nextEarningsDate ?? null}
         revenueGrowth={cagrAnalysis?.historicalCagr3y ?? null}
+        onViewValuation={onViewValuation}
+        onViewConviction={onViewConviction}
       />
 
       {/* ── 2. FUNDAMENTALS SECTION LABEL ──────────────────────────────────── */}
