@@ -14,6 +14,7 @@ import { ETFExposureCard } from './ETFExposureCard'
 import HoldingReturns from '@/components/stock/HoldingReturns'
 import IncomeFlowCard from './IncomeFlowCard'
 import InvestmentVerdict from '@/components/stock/InvestmentVerdict'
+import ReverseDCFCompactCard from './ReverseDCFCompactCard'
 import { computeConvictionScore } from '@/lib/stock/computeConvictionScore'
 import { computeVerdict } from '@/lib/verdict/computeVerdict'
 
@@ -134,9 +135,9 @@ export default function SummaryTab({
   description, industry, country, employees,
   price, change, changePct, high52, low52,
   fairValue, upsidePct,
-  sharesM: _sharesM, cashM: _cashM, debtM: _debtM, revenueM: _revenueM, fcfMargin: _fcfMarginProp,
-  wacc: _wacc, terminalG: _terminalG, historicalCAGR: _historicalCAGR, analystCAGR: _analystCAGR, isEmergingMarket: _isEmergingMarket,
-  revenueHistory: _revenueHistory,
+  sharesM, cashM, debtM, revenueM, fcfMargin: fcfMarginProp,
+  wacc, terminalG, historicalCAGR, analystCAGR, isEmergingMarket,
+  revenueHistory,
   scenarios: _scenarios, ratings, scores, businessProfile, cagrAnalysis, statementsData,
   valuationMethods, quote, analystTargetMean,
   ratiosQuarterly, historicalMultiples,
@@ -254,7 +255,25 @@ export default function SummaryTab({
         </div>
       </div>
 
-      {/* ── 4. 2×2 GRID: Profitability chart | Profitability text | Peer valuation | Valuation ratios */}
+      {/* ── 4. REVERSE DCF — What the market is pricing in (full width) ─────── */}
+      <ReverseDCFCompactCard
+        price={price}
+        currency={currency}
+        sharesM={sharesM}
+        cashM={cashM}
+        debtM={debtM}
+        revenueM={revenueM}
+        fcfMargin={fcfMarginProp ?? businessProfile?.fcfMargin ?? null}
+        wacc={wacc}
+        terminalG={terminalG}
+        historicalCAGR={historicalCAGR ?? cagrAnalysis?.historicalCagr3y ?? null}
+        analystCAGR={analystCAGR ?? cagrAnalysis?.analystEstimate1y ?? null}
+        isEmergingMarket={isEmergingMarket}
+        isFinancialSector={isFinancialSector}
+        revenueHistory={revenueHistory}
+      />
+
+      {/* ── 5. 2×2 GRID: Profitability chart | Profitability text | Peer valuation | Valuation ratios */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
         <ProfitabilityChartCard
           statementsData={statementsData}
