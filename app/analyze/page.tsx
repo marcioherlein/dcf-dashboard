@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import dynamic from 'next/dynamic'
 import { motion, AnimatePresence, useReducedMotion, useInView } from 'motion/react'
 import {
   Search, Bookmark, ChevronRight,
@@ -13,9 +12,6 @@ import { fmtPrice, fmtPct, upsideZone } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import { slideDown, fadeUp } from '@/lib/motion'
 import type { FeaturedQuote } from '@/app/api/analyze/quotes/route'
-
-const ConceptBanner = dynamic(() => import('@/components/onboarding/ConceptBanner'), { ssr: false })
-const FirstRunBanner = dynamic(() => import('@/components/onboarding/FirstRunBanner'), { ssr: false })
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -169,69 +165,17 @@ function SearchHero() {
   }
 
   return (
-    <div className="glass-card-light rounded-2xl px-6 py-6 sm:px-8 sm:py-7">
-      {/* Headline + subtitle */}
-      <div className="mb-5">
-        <h1 className="text-[28px] font-bold sm:text-[32px] text-ink-900 leading-tight tracking-tight" style={{ textWrap: 'balance' }}>
-          What do you want to analyze today?
-        </h1>
-        <p className="mt-2 text-[14px] text-[#6B6B6B] leading-relaxed">
-          Search any company to see intrinsic value, market-implied growth, business quality, and valuation risk.{' '}
-          <button
-            type="button"
-            onClick={() => setShowExplainer(v => !v)}
-            aria-expanded={showExplainer}
-            className="text-[#5F790B] hover:text-[#526A08] font-medium transition-colors hover:underline underline-offset-2 min-h-[44px] inline-flex items-center"
-          >
-            How to read this
-          </button>
-        </p>
-
-        <AnimatePresence>
-          {showExplainer && (
-            <motion.div
-              key="concept-explainer"
-              initial={reduced ? {} : { opacity: 0, height: 0 }}
-              animate={reduced ? {} : { opacity: 1, height: 'auto' }}
-              exit={reduced ? {} : { opacity: 0, height: 0 }}
-              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-              className="overflow-hidden"
-            >
-              <div className="mt-3 rounded-xl bg-[#FAFAFA] border border-[#E5E5E5] p-4 text-[12px] leading-relaxed text-[#6B6B6B]">
-                <p className="font-semibold text-[13px] text-ink-900 mb-2">What insic measures</p>
-                <p>Every stock price implies a 5-year revenue growth rate the market is betting on. insic calls this the <strong>implied CAGR</strong> and compares it to the company&apos;s 3-year historical growth rate. The gap is where the signal lives.</p>
-                <div className="mt-3 space-y-2">
-                  <p className="font-semibold text-ink-900 mb-1">Expectation labels:</p>
-                  <div className="flex items-start gap-2.5">
-                    <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-olive-50 text-[#5F790B] border-[#BFD2A1]">Conservative</span>
-                    <span className="text-[#6B6B6B]">Implied growth is well below historical. Market is pricing in a slowdown or headwinds.</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]">Moderate</span>
-                    <span className="text-[#6B6B6B]">Implied growth roughly matches historical. Expectations are broadly in line with the past.</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]">Aggressive</span>
-                    <span className="text-[#6B6B6B]">Implied growth significantly exceeds historical. Market is betting on a major acceleration.</span>
-                  </div>
-                </div>
-                <p className="mt-3 text-[#6B6B6B] text-[11px]">Intrinsic value is a DCF-based model estimate. All outputs are not financial advice.</p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
+    <div className="glass-card-light rounded-xl px-4 py-4 sm:px-5">
       {/* Search input */}
       <div className="relative" ref={searchRef}>
         <div className={cn(
           'flex items-center gap-2.5 rounded-lg border px-3.5 py-2.5 transition-all bg-white',
           open || query
-            ? 'border-[#5F790B] ring-2 ring-[rgba(95,121,11,0.10)]'
+            ? 'border-olive-700 ring-2 ring-[rgba(74,97,9,0.10)]'
             : 'border-[#E5E5E5] hover:border-[#C8C8C8]',
         )}>
           {loading ? (
-            <div className="h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-[#E5E5E5] border-t-[#5F790B] shrink-0" />
+            <div className="h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-[#E5E5E5] border-t-olive-700 shrink-0" />
           ) : (
             <Search size={15} className="text-[#6B6B6B] shrink-0" />
           )}
@@ -259,7 +203,7 @@ function SearchHero() {
           <button
             onClick={() => query.trim() && select(query.trim().toUpperCase())}
             disabled={!query.trim()}
-            className="shrink-0 rounded-lg bg-olive-700 hover:bg-[#526A08] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 transition-all px-4 py-1.5 text-[13px] font-semibold text-white min-h-[44px]"
+            className="shrink-0 rounded-lg bg-olive-700 hover:bg-olive-600 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 transition-all px-4 py-1.5 text-[13px] font-semibold text-white min-h-[44px]"
           >
             Analyze
           </button>
@@ -303,7 +247,7 @@ function SearchHero() {
                   </div>
                   {r.supported ? (
                     r.quoteType && (
-                      <span className="shrink-0 text-[11px] font-semibold text-[#5F790B] bg-[#EEF4DD] border border-[#BFD2A1] px-2 py-0.5 rounded-md">
+                      <span className="shrink-0 text-[11px] font-semibold text-olive-700 bg-olive-50 border border-[#BFD2A1] px-2 py-0.5 rounded-md">
                         {r.quoteType === 'EQUITY' ? 'Equity' : r.quoteType === 'ETF' ? 'ETF' : r.quoteType}
                       </span>
                     )
@@ -325,29 +269,72 @@ function SearchHero() {
         </AnimatePresence>
       </div>
 
-      {/* Popular ticker chips */}
-      <div className="mt-3 flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-1">
-        <span className="text-[11px] font-semibold text-[#6B6B6B] shrink-0 mr-0.5">Popular:</span>
+      {/* Popular chips + explainer toggle */}
+      <div className="mt-2.5 flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-0.5">
+        <span className="text-[11px] font-[600] text-[#8A95A6] shrink-0 mr-0.5">Popular:</span>
         {POPULAR_CHIPS.map((t) => (
           <Link
             key={t}
             href={`/stock/${t}`}
-            className="text-[12px] font-semibold text-[#5F790B] bg-[#EEF4DD] hover:bg-[#E5F0CC] active:bg-[#D4E8A8] hover:scale-105 active:scale-95 border border-[#BFD2A1] rounded-full px-3 py-1 transition-all whitespace-nowrap shrink-0 min-h-[32px] flex items-center"
+            className="text-[12px] font-[600] text-olive-700 bg-olive-50 hover:bg-olive-100 border border-[#BFD2A1] rounded-full px-3 py-1 transition-colors whitespace-nowrap shrink-0 min-h-[32px] flex items-center"
           >
             {t}
           </Link>
         ))}
-        <span className="text-[#E5E5E5] shrink-0">|</span>
+        <span className="text-[#E5E5E5] shrink-0 mx-0.5">|</span>
         <Link
           href="/screener"
-          className="text-[12px] font-semibold text-[#6B6B6B] hover:text-[#5F790B] bg-white hover:bg-olive-50 border border-[#E5E5E5] hover:border-[#BFD2A1] rounded-full px-3 py-1 transition-all whitespace-nowrap shrink-0 min-h-[32px] flex items-center gap-1.5"
+          className="text-[12px] font-[600] text-[#566174] hover:text-olive-700 bg-white hover:bg-olive-50 border border-[#E5E5E5] hover:border-[#BFD2A1] rounded-full px-3 py-1 transition-colors whitespace-nowrap shrink-0 min-h-[32px] flex items-center gap-1.5"
         >
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 9m0 0L21 12.75M17.25 9v12" />
           </svg>
           Screener
         </Link>
+        <button
+          type="button"
+          onClick={() => setShowExplainer(v => !v)}
+          aria-expanded={showExplainer}
+          className="shrink-0 ml-auto text-[11px] text-[#8A95A6] hover:text-[#566174] transition-colors whitespace-nowrap min-h-[32px] flex items-center gap-1"
+        >
+          {showExplainer ? 'Hide guide' : 'How to read this →'}
+        </button>
       </div>
+
+      {/* Inline explainer — collapsed by default */}
+      <AnimatePresence>
+        {showExplainer && (
+          <motion.div
+            key="concept-explainer"
+            initial={reduced ? {} : { opacity: 0, height: 0 }}
+            animate={reduced ? {} : { opacity: 1, height: 'auto' }}
+            exit={reduced ? {} : { opacity: 0, height: 0 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="mt-3 rounded-xl bg-[#FAFAFA] border border-[#E5E5E5] p-4 text-[12px] leading-relaxed text-[#6B6B6B]">
+              <p className="font-semibold text-[13px] text-ink-900 mb-2">What insic measures</p>
+              <p>Every stock price implies a 5-year revenue growth rate the market is betting on. insic calls this the <strong>implied CAGR</strong> and compares it to the company&apos;s 3-year historical growth rate.</p>
+              <div className="mt-3 space-y-2">
+                <p className="font-semibold text-ink-900 mb-1">Expectation labels:</p>
+                <div className="flex items-start gap-2.5">
+                  <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-olive-50 text-olive-700 border-[#BFD2A1]">Conservative</span>
+                  <span>Implied growth is well below historical. Market is pricing in a slowdown.</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]">Moderate</span>
+                  <span>Implied growth roughly matches historical. Expectations are in line.</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]">Aggressive</span>
+                  <span>Implied growth far exceeds historical. Market is betting on a major acceleration.</span>
+                </div>
+              </div>
+              <p className="mt-3 text-[11px]">Intrinsic value is a DCF-based model estimate. Not financial advice.</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -896,16 +883,6 @@ function AnalyzePageInner() {
   const [dataStale, setDataStale] = useState(false)
   const [showUpgradeToast, setShowUpgradeToast] = useState(false)
 
-  const bannerLiveData = useMemo(() => {
-    const nvda = quotes.find(q => q.ticker === 'NVDA')
-    const aapl = quotes.find(q => q.ticker === 'AAPL')
-    if (!nvda || !aapl) return undefined
-    return [
-      { ticker: nvda.ticker, impliedCagr: nvda.impliedCagr, historicalCagr3y: nvda.historicalCagr3y },
-      { ticker: aapl.ticker, impliedCagr: aapl.impliedCagr, historicalCagr3y: aapl.historicalCagr3y },
-    ]
-  }, [quotes])
-
   useEffect(() => {
     if (searchParams.get('upgraded') === 'true') {
       setShowUpgradeToast(true)
@@ -949,19 +926,16 @@ function AnalyzePageInner() {
           </button>
         </div>
       )}
-      <div id="main-content" className="space-y-8" tabIndex={-1}>
-
-        <FirstRunBanner />
+      <div id="main-content" className="space-y-6" tabIndex={-1}>
 
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
         >
           <SearchHero />
         </motion.div>
 
-        <ConceptBanner liveData={bannerLiveData} />
         <PopularAnalysesSection quotes={quotes} dataStale={dataStale} />
         <MarketPricingLeaderboard quotes={quotes} />
         <QuickActions />
