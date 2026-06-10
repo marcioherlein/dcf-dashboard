@@ -3,20 +3,20 @@ name: X Auto-Post
 on:
   schedule:
     # ── Weekdays Mon–Fri ──────────────────────────────────────────────────────
-    - cron: '0 11 * * 1-5'   # 08:00 AM ART — Morning brief (macro + overnight + earnings + headlines)
+    - cron: '0 11 * * 1-5'   # 08:00 AM ART — Morning brief
     - cron: '0 13 * * 1-5'   # 10:00 AM ART — Earnings preview
-    - cron: '0 14 * * 1-5'   # 11:00 AM ART — App feature/education
-    - cron: '0 15 * * 1-5'   # 12:00 PM ART — DCF snapshot (bullish)
-    - cron: '0 16 * * 1-5'   # 01:00 PM ART — Midday pulse (sectors + indices + rotation)
-    - cron: '0 17 * * 1-5'   # 02:00 PM ART — Macro event/calendar
-    - cron: '0 19 * * 1-5'   # 04:00 PM ART — ETF pulse / sector rotation
-    - cron: '0 20 * * 1-5'   # 05:00 PM ART — DCF bear/overvalued pick
-    - cron: '0 22 * * 1-5'   # 07:00 PM ART — Market close recap
+    - cron: '0 14 * * 1-5'   # 11:00 AM ART — Feature/education
+    - cron: '0 15 * * 1-5'   # 12:00 PM ART — DCF snapshot
+    - cron: '0 16 * * 1-5'   # 01:00 PM ART — Midday pulse
+    - cron: '0 17 * * 1-5'   # 02:00 PM ART — Macro
+    - cron: '0 19 * * 1-5'   # 04:00 PM ART — ETF pulse
+    - cron: '0 20 * * 1-5'   # 05:00 PM ART — DCF bear
+    - cron: '0 22 * * 1-5'   # 07:00 PM ART — Market close
     # ── Saturday ─────────────────────────────────────────────────────────────
     - cron: '0 13 * * 6'     # 10:00 AM ART — ETF pulse
-    - cron: '0 14 * * 6'     # 11:00 AM ART — App feature
+    - cron: '0 14 * * 6'     # 11:00 AM ART — Feature
     - cron: '0 15 * * 6'     # 12:00 PM ART — Weekly wrap
-    - cron: '0 16 * * 6'     # 01:00 PM ART — DCF snapshot
+    - cron: '0 16 * * 6'     # 01:00 PM ART — DCF
     - cron: '0 17 * * 6'     # 02:00 PM ART — Sentiment
     # ── Sunday ───────────────────────────────────────────────────────────────
     - cron: '0 13 * * 0'     # 10:00 AM ART — Sentiment
@@ -57,42 +57,38 @@ jobs:
         run: npm install
         working-directory: scripts
 
-      - name: Set mode from schedule
-        id: set-mode
+      - name: Set mode
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "MODE=${{ github.event.inputs.mode }}"       >> $GITHUB_ENV
             echo "TICKER=${{ github.event.inputs.ticker }}"   >> $GITHUB_ENV
             echo "DRY_RUN=${{ github.event.inputs.dry_run }}" >> $GITHUB_ENV
           else
-            HOUR=$(TZ=UTC date +%H)
-            DOW=$(TZ=UTC date +%u)   # 1=Mon … 7=Sun
-
-            # Weekdays (DOW 1-5)
-            if   [ "$DOW" -le "5" ] && [ "$HOUR" = "11" ]; then echo "MODE=morning_brief" >> $GITHUB_ENV
-            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "13" ]; then echo "MODE=earnings"      >> $GITHUB_ENV
-            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "14" ]; then echo "MODE=feature"       >> $GITHUB_ENV
-            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "15" ]; then echo "MODE=dcf"           >> $GITHUB_ENV
-            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "16" ]; then echo "MODE=midday_pulse"  >> $GITHUB_ENV
-            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "17" ]; then echo "MODE=macro"         >> $GITHUB_ENV
-            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "19" ]; then echo "MODE=etf_pulse"     >> $GITHUB_ENV
-            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "20" ]; then echo "MODE=dcf_bear"      >> $GITHUB_ENV
-            elif [ "$DOW" -le "5" ] && [ "$HOUR" = "22" ]; then echo "MODE=market_close"  >> $GITHUB_ENV
-            # Saturday (DOW=6)
-            elif [ "$DOW" = "6" ] && [ "$HOUR" = "13" ]; then echo "MODE=etf_pulse"    >> $GITHUB_ENV
-            elif [ "$DOW" = "6" ] && [ "$HOUR" = "14" ]; then echo "MODE=feature"      >> $GITHUB_ENV
-            elif [ "$DOW" = "6" ] && [ "$HOUR" = "15" ]; then echo "MODE=weekly_wrap"  >> $GITHUB_ENV
-            elif [ "$DOW" = "6" ] && [ "$HOUR" = "16" ]; then echo "MODE=dcf"          >> $GITHUB_ENV
-            elif [ "$DOW" = "6" ] && [ "$HOUR" = "17" ]; then echo "MODE=sentiment"    >> $GITHUB_ENV
-            # Sunday (DOW=7)
-            elif [ "$DOW" = "7" ] && [ "$HOUR" = "13" ]; then echo "MODE=sentiment"    >> $GITHUB_ENV
-            elif [ "$DOW" = "7" ] && [ "$HOUR" = "14" ]; then echo "MODE=question"     >> $GITHUB_ENV
-            elif [ "$DOW" = "7" ] && [ "$HOUR" = "16" ]; then echo "MODE=etf_pulse"    >> $GITHUB_ENV
-            elif [ "$DOW" = "7" ] && [ "$HOUR" = "18" ]; then echo "MODE=news"         >> $GITHUB_ENV
-            else
-              echo "Unmatched schedule slot: DOW=$DOW HOUR=$HOUR — skipping"
-              echo "MODE=skip" >> $GITHUB_ENV
-            fi
+            # Use the cron expression itself — immune to GitHub firing late
+            case "${{ github.event.schedule }}" in
+              "0 11 * * 1-5")  echo "MODE=morning_brief" >> $GITHUB_ENV ;;
+              "0 13 * * 1-5")  echo "MODE=earnings"      >> $GITHUB_ENV ;;
+              "0 14 * * 1-5")  echo "MODE=feature"       >> $GITHUB_ENV ;;
+              "0 15 * * 1-5")  echo "MODE=dcf"           >> $GITHUB_ENV ;;
+              "0 16 * * 1-5")  echo "MODE=midday_pulse"  >> $GITHUB_ENV ;;
+              "0 17 * * 1-5")  echo "MODE=macro"         >> $GITHUB_ENV ;;
+              "0 19 * * 1-5")  echo "MODE=etf_pulse"     >> $GITHUB_ENV ;;
+              "0 20 * * 1-5")  echo "MODE=dcf_bear"      >> $GITHUB_ENV ;;
+              "0 22 * * 1-5")  echo "MODE=market_close"  >> $GITHUB_ENV ;;
+              "0 13 * * 6")    echo "MODE=etf_pulse"     >> $GITHUB_ENV ;;
+              "0 14 * * 6")    echo "MODE=feature"       >> $GITHUB_ENV ;;
+              "0 15 * * 6")    echo "MODE=weekly_wrap"   >> $GITHUB_ENV ;;
+              "0 16 * * 6")    echo "MODE=dcf"           >> $GITHUB_ENV ;;
+              "0 17 * * 6")    echo "MODE=sentiment"     >> $GITHUB_ENV ;;
+              "0 13 * * 0")    echo "MODE=sentiment"     >> $GITHUB_ENV ;;
+              "0 14 * * 0")    echo "MODE=question"      >> $GITHUB_ENV ;;
+              "0 16 * * 0")    echo "MODE=etf_pulse"     >> $GITHUB_ENV ;;
+              "0 18 * * 0")    echo "MODE=news"          >> $GITHUB_ENV ;;
+              *)
+                echo "Unknown schedule: ${{ github.event.schedule }} — skipping"
+                echo "MODE=skip" >> $GITHUB_ENV
+                ;;
+            esac
             echo "DRY_RUN=false" >> $GITHUB_ENV
           fi
 
