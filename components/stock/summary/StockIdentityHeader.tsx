@@ -174,11 +174,11 @@ function RangeSlider({ low, high, current, currency }: RangeSliderProps) {
 export default function StockIdentityHeader({
   ticker,
   companyName,
-  description,
+  description: _description,
   sector,
   industry,
   country,
-  employees,
+  employees: _employees,
   currency,
   price,
   change,
