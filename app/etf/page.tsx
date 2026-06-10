@@ -1,26 +1,26 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { RefreshCw, GitCompare, CheckSquare, Square } from 'lucide-react'
+import { RefreshCw, ChevronDown, ChevronRight, Plus, ArrowUpRight, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { useSession, signIn } from 'next-auth/react'
 import { ETFSearchBar } from '@/components/etf/ETFSearchBar'
-import { ETFWatchlistCard } from '@/components/etf/ETFWatchlistCard'
 import { ETFMarketPulse } from '@/components/etf/ETFMarketPulse'
 import { ETFHeatmapGrid } from '@/components/etf/ETFHeatmapGrid'
 import { ETFHelpButton } from '@/components/etf/ETFOnboardBanner'
 import ETFLoginToSaveModal from '@/components/etf/ETFLoginToSaveModal'
+import { Sparkline, SparklineSkeleton } from '@/components/ui/Sparkline'
 import { loadETFWatchlist, deleteETFEntry, saveETFEntry, readLocalWatchlist } from '@/lib/data/etfWatchlistStore'
 import { ALL_TICKERS, SECTOR_META, GEO_META, STYLE_META, ALL_META } from '@/lib/data/etfUniverse'
 import { fmtLarge, fmtPctAbs, fmtMultiple } from '@/lib/formatters'
-import { scoreColor, scoreLabel } from '@/lib/data/etfScore'
+import { scoreColor, scoreLabel, scoreBadge, computeETFScore } from '@/lib/data/etfScore'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
-import { ChevronUp, ChevronDown, ChevronsUpDown, Plus, Check } from 'lucide-react'
+import { ChevronUp, ChevronsUpDown, Check } from 'lucide-react'
 import type { ETFMeta, ETFGroup } from '@/lib/data/etfUniverse'
 import type { ETFEntry, ETFBatchItem } from '@/lib/data/etfTypes'
 
-// ── Inline Rankings table (replaces ETFUniverseSection's Leaderboard) ────────
+// ── Inline Rankings table ─────────────────────────────────────────────────────
 
 type SortKey = 'valueScore' | 'peRatio' | 'pbRatio' | 'expenseRatio' | 'yield' | 'aum'
 type SortDir = 'asc' | 'desc'
@@ -44,15 +44,20 @@ function Rankings({
   data,
   watchlistedTickers,
   onAdd,
+  initialFilter,
 }: {
   data: Record<string, ETFBatchItem | null>
   watchlistedTickers: Set<string>
   onAdd: (ticker: string) => void
+  initialFilter?: FilterGroup
 }) {
-  const [filter, setFilter] = useState<FilterGroup>('all')
+  const [filter, setFilter] = useState<FilterGroup>(initialFilter ?? 'all')
   const [sortKey, setSortKey] = useState<SortKey>('valueScore')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [showAll, setShowAll] = useState(false)
+
+  // Sync initialFilter if it changes (e.g. from overview deep-link)
+  useEffect(() => { if (initialFilter) setFilter(initialFilter) }, [initialFilter])
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir((d) => d === 'desc' ? 'asc' : 'desc')
@@ -207,6 +212,156 @@ function Rankings({
   )
 }
 
+// ── Collapsible section ───────────────────────────────────────────────────────
+
+function CollapsibleSection({
+  title,
+  description,
+  onViewAll,
+  defaultOpen = true,
+  children,
+}: {
+  title: string
+  description: string
+  onViewAll: () => void
+  defaultOpen?: boolean
+  children: React.ReactNode
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+
+  return (
+    <section>
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <button
+            onClick={() => setOpen((v) => !v)}
+            className="flex items-center gap-1.5 group"
+            aria-expanded={open}
+          >
+            <h2 className="text-[13px] font-[700] text-[#111111] group-hover:text-olive-700 transition-colors">
+              {title}
+            </h2>
+            {open
+              ? <ChevronDown size={14} className="text-[#8A95A6] group-hover:text-olive-700 transition-colors" />
+              : <ChevronRight size={14} className="text-[#8A95A6] group-hover:text-olive-700 transition-colors" />
+            }
+          </button>
+          {!open && (
+            <span className="text-[11px] text-[#8A95A6] truncate hidden sm:block">{description}</span>
+          )}
+        </div>
+        <button
+          onClick={onViewAll}
+          className="shrink-0 flex items-center gap-1 text-[11px] font-[600] text-[#566174] hover:text-olive-700 transition-colors"
+        >
+          Full table
+          <ArrowUpRight size={11} />
+        </button>
+      </div>
+      {open && children}
+    </section>
+  )
+}
+
+// ── Watchlist row (My Valuations style) ──────────────────────────────────────
+
+function WatchlistRow({
+  entry,
+  sparklineData,
+  onDelete,
+}: {
+  entry: ETFEntry
+  sparklineData: number[] | null | undefined
+  onDelete: (ticker: string) => void
+}) {
+  const { score } = computeETFScore(entry.peRatio, entry.pbRatio, entry.yield, entry.expenseRatio)
+
+  const sparkUp =
+    sparklineData != null && sparklineData.length >= 2
+      ? sparklineData[sparklineData.length - 1] >= sparklineData[0]
+      : true
+
+  const price     = entry.price != null ? `$${entry.price.toFixed(2)}` : null
+  const changePct = entry.priceChangePct
+  const changeUp  = (changePct ?? 0) >= 0
+  const changeStr = changePct != null
+    ? `${changeUp ? '+' : ''}${changePct.toFixed(2)}%`
+    : null
+
+  return (
+    <div className="relative bg-white border border-[#E5E5E5] rounded-xl overflow-hidden hover:border-[#BFD2A1] hover:shadow-sm transition-all group">
+      {/* Delete button */}
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(entry.ticker) }}
+        aria-label={`Remove ${entry.ticker} from watchlist`}
+        className="absolute top-1/2 -translate-y-1/2 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-lg text-transparent group-hover:text-[#9B9B9B] hover:!text-[#D83B3B] hover:bg-[#FCEAEA] transition-all focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:outline-none"
+      >
+        <Trash2 size={13} />
+      </button>
+
+      {/* Row link */}
+      <Link
+        href={`/etf/${entry.ticker}`}
+        className="flex items-center gap-3 px-4 py-3 pr-12 focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-inset focus-visible:outline-none"
+      >
+        {/* Left: ticker + name + score */}
+        <div className="w-[130px] shrink-0 min-w-0">
+          <p className="text-[15px] font-[800] text-[#111111] leading-tight tracking-tight">
+            {entry.ticker}
+          </p>
+          {entry.name && (
+            <p className="text-[11px] text-[#6B6B6B] truncate mt-0.5 leading-snug">
+              {entry.name}
+            </p>
+          )}
+        </div>
+
+        {/* Center: sparkline */}
+        <div className="relative flex-1 min-w-0 h-[44px]">
+          {sparklineData === undefined ? (
+            <SparklineSkeleton width={200} height={44} />
+          ) : sparklineData && sparklineData.length >= 2 ? (
+            <>
+              <Sparkline
+                prices={sparklineData}
+                up={sparkUp}
+                width={200}
+                height={44}
+                className="w-full h-[44px]"
+              />
+              <span className="absolute bottom-0 right-0 text-[9px] font-[650] text-[#9B9B9B] bg-white/80 rounded px-1 leading-none">YTD</span>
+            </>
+          ) : (
+            <div className="w-full h-[44px]" />
+          )}
+        </div>
+
+        {/* Right: score chip + price + change */}
+        <div className="w-[100px] shrink-0 text-right flex flex-col items-end gap-0.5">
+          <span className={cn('inline-flex text-[10px] font-[650] px-1.5 py-0.5 rounded-full leading-none', scoreBadge(score))}>
+            {score} · {scoreLabel(score)}
+          </span>
+          {price && (
+            <p className="text-[14px] font-[700] text-[#111111] tabular-nums leading-tight mt-0.5">
+              {price}
+            </p>
+          )}
+          {changeStr && (
+            <span className={cn(
+              'inline-flex text-[10px] font-[650] px-1.5 py-0.5 rounded-full leading-none tabular-nums',
+              changeUp ? 'text-[#11875D] bg-[#E8F7EF]' : 'text-[#D83B3B] bg-[#FCEAEA]',
+            )}>
+              {changeStr}
+            </span>
+          )}
+        </div>
+      </Link>
+    </div>
+  )
+}
+
+// ── Session cache ─────────────────────────────────────────────────────────────
+
 const SESSION_CACHE_KEY = 'etf_batch_v1'
 const SESSION_CACHE_TTL = 30 * 60 * 1000
 
@@ -218,51 +373,39 @@ function readBatchCache(): Record<string, ETFBatchItem | null> | null {
     const { data, ts } = JSON.parse(raw) as { data: Record<string, ETFBatchItem | null>; ts: number }
     if (Date.now() - ts > SESSION_CACHE_TTL) return null
     return data
-  } catch {
-    return null
-  }
+  } catch { return null }
 }
 
 function writeBatchCache(data: Record<string, ETFBatchItem | null>): void {
   if (typeof window === 'undefined') return
-  try {
-    sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({ data, ts: Date.now() }))
-  } catch {}
+  try { sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({ data, ts: Date.now() })) } catch {}
 }
 
 // ── Undo toast ────────────────────────────────────────────────────────────────
 
-interface UndoToast {
-  ticker: string
-  entry: ETFEntry
-  timer: ReturnType<typeof setTimeout>
-}
+interface UndoToast { ticker: string; entry: ETFEntry; timer: ReturnType<typeof setTimeout> }
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ETFTrackerPage() {
   const { data: session } = useSession()
   const userEmail = session?.user?.email ?? null
 
-  // ── Login-to-save gate ───────────────────────────────────────────────────────
   const [loginModal, setLoginModal] = useState<{ ticker: string; name: string | null; valueScore: number | null } | null>(null)
 
-  // After sign-in: sync any locally-saved entries to Supabase
   useEffect(() => {
     if (!userEmail) return
     const local = readLocalWatchlist()
     if (local.length === 0) return
-    local.forEach((entry) => {
-      saveETFEntry(entry, userEmail).catch(() => {})
-    })
+    local.forEach((entry) => { saveETFEntry(entry, userEmail).catch(() => {}) })
   }, [userEmail])
 
-  // ── Watchlist state ──────────────────────────────────────────────────────────
+  // ── Watchlist ────────────────────────────────────────────────────────────────
   const [watchlist, setWatchlist]   = useState<ETFEntry[]>([])
   const [wlLoading, setWlLoading]   = useState(true)
   const [sparklines, setSparklines] = useState<Record<string, number[] | null>>({})
   const fetchedSparklines = useRef<Set<string>>(new Set())
-
-  // Undo-delete toast
-  const [undoToast, setUndoToast] = useState<UndoToast | null>(null)
+  const [undoToast, setUndoToast]   = useState<UndoToast | null>(null)
 
   const loadWatchlist = useCallback(async () => {
     setWlLoading(true)
@@ -277,7 +420,6 @@ export default function ETFTrackerPage() {
     if (watchlist.length === 0) { setSparklines({}); return }
     const newTickers = watchlist.filter((e) => !fetchedSparklines.current.has(e.ticker))
     if (newTickers.length === 0) return
-
     Promise.allSettled(
       newTickers.map((e) =>
         fetch(`/api/historical?ticker=${e.ticker}&period=ytd`)
@@ -292,8 +434,7 @@ export default function ETFTrackerPage() {
       const map: Record<string, number[] | null> = {}
       for (const r of results) {
         if (r.status === 'fulfilled') {
-          const prices = r.value.prices.length >= 2 ? r.value.prices : null
-          map[r.value.ticker] = prices
+          map[r.value.ticker] = r.value.prices.length >= 2 ? r.value.prices : null
           fetchedSparklines.current.add(r.value.ticker)
         }
       }
@@ -304,20 +445,13 @@ export default function ETFTrackerPage() {
   function handleDelete(ticker: string) {
     const entry = watchlist.find((e) => e.ticker === ticker)
     if (!entry) return
-
-    // Clear any existing toast
     if (undoToast) {
       clearTimeout(undoToast.timer)
       deleteETFEntry(undoToast.ticker, userEmail).catch(() => {})
     }
-
-    // Optimistically remove
     setWatchlist((current) => current.filter((e) => e.ticker !== ticker))
-
-    // Schedule permanent deletion after 5s
     const timer = setTimeout(() => {
       deleteETFEntry(ticker, userEmail).catch(() => {
-        // If delete fails, silently restore
         setWatchlist((prev) => {
           const has = prev.some((e) => e.ticker === ticker)
           return has ? prev : [entry, ...prev]
@@ -325,7 +459,6 @@ export default function ETFTrackerPage() {
       })
       setUndoToast(null)
     }, 5000)
-
     setUndoToast({ ticker, entry, timer })
   }
 
@@ -339,17 +472,15 @@ export default function ETFTrackerPage() {
     setUndoToast(null)
   }
 
-  // Dismiss toast without undoing (user navigated away, etc.)
   useEffect(() => () => { if (undoToast) clearTimeout(undoToast.timer) }, [undoToast])
 
-  // ── Batch / universe state ───────────────────────────────────────────────────
+  // ── Batch data ───────────────────────────────────────────────────────────────
   const [batchData, setBatchData]       = useState<Record<string, ETFBatchItem | null>>({})
   const [batchLoading, setBatchLoading] = useState(true)
   const [batchError, setBatchError]     = useState<string | null>(null)
   const [batchFetched, setBatchFetched] = useState(false)
   const [pulseSparklines, setPulseSparklines] = useState<Record<string, number[] | null>>({})
 
-  // Fetch YTD sparklines for the pulse card tickers
   useEffect(() => {
     const tickers = ['SPY', 'XLF', 'EWZ', 'AGG', 'QQQ', 'VTI', 'XLE', 'XLK', 'VNQ', 'GLD',
       'XLV', 'XLY', 'XLP', 'XLI', 'XLB', 'XLU', 'XLRE', 'XLC',
@@ -378,12 +509,7 @@ export default function ETFTrackerPage() {
   const fetchBatch = useCallback(async () => {
     if (batchFetched) return
     const cached = readBatchCache()
-    if (cached) {
-      setBatchData(cached)
-      setBatchFetched(true)
-      setBatchLoading(false)
-      return
-    }
+    if (cached) { setBatchData(cached); setBatchFetched(true); setBatchLoading(false); return }
     setBatchLoading(true)
     setBatchError(null)
     try {
@@ -392,38 +518,24 @@ export default function ETFTrackerPage() {
       const json = await res.json()
       setBatchData(json)
       const hasData = Object.values(json).some((v) => v !== null)
-      if (hasData) {
-        setBatchFetched(true)
-        writeBatchCache(json)
-      }
+      if (hasData) { setBatchFetched(true); writeBatchCache(json) }
     } catch (e) {
       console.error('ETF batch fetch failed:', e)
       setBatchError('Failed to load ETF data.')
-    } finally {
-      setBatchLoading(false)
-    }
+    } finally { setBatchLoading(false) }
   }, [batchFetched])
 
   useEffect(() => { fetchBatch() }, [fetchBatch])
 
-  // When batch data arrives, merge live price/metrics into watchlist entries
   useEffect(() => {
     if (Object.keys(batchData).length === 0) return
     setWatchlist((prev) =>
       prev.map((entry) => {
         const live = batchData[entry.ticker]
         if (!live) return entry
-        return {
-          ...entry,
-          peRatio: live.peRatio,
-          pbRatio: live.pbRatio,
-          yield: live.yield,
-          expenseRatio: live.expenseRatio,
-          valueScore: live.valueScore,
-          price: live.price,
-          priceChangePct: live.priceChangePct,
-          metricsUpdatedAt: new Date().toISOString(),
-        }
+        return { ...entry, peRatio: live.peRatio, pbRatio: live.pbRatio, yield: live.yield,
+          expenseRatio: live.expenseRatio, valueScore: live.valueScore, price: live.price,
+          priceChangePct: live.priceChangePct, metricsUpdatedAt: new Date().toISOString() }
       }),
     )
   }, [batchData])
@@ -434,14 +546,8 @@ export default function ETFTrackerPage() {
     entry: Omit<ETFEntry, 'ticker' | 'name' | 'addedAt'> & { ticker?: string; name?: string | null; addedAt?: string },
     valueScore: number | null,
   ) {
-    if (!userEmail) {
-      setLoginModal({ ticker, name, valueScore })
-      return
-    }
-    await saveETFEntry(
-      { ticker, name, addedAt: new Date().toISOString(), ...entry },
-      userEmail,
-    )
+    if (!userEmail) { setLoginModal({ ticker, name, valueScore }); return }
+    await saveETFEntry({ ticker, name, addedAt: new Date().toISOString(), ...entry }, userEmail)
     loadWatchlist()
   }
 
@@ -449,51 +555,33 @@ export default function ETFTrackerPage() {
     const item = batchData[ticker]
     if (!item) return
     await handleSaveWithGate(ticker, item.name, {
-      valueScore: item.valueScore,
-      expenseRatio: item.expenseRatio,
-      yield: item.yield,
-      peRatio: item.peRatio,
-      pbRatio: item.pbRatio,
-      totalAssets: item.aum,
-      price: item.price,
-      priceChangePct: item.priceChangePct,
-      metricsUpdatedAt: new Date().toISOString(),
+      valueScore: item.valueScore, expenseRatio: item.expenseRatio, yield: item.yield,
+      peRatio: item.peRatio, pbRatio: item.pbRatio, totalAssets: item.aum,
+      price: item.price, priceChangePct: item.priceChangePct, metricsUpdatedAt: new Date().toISOString(),
     }, item.valueScore)
   }
 
   const hasWatchlist = !wlLoading && watchlist.length > 0
 
-  // ── Compare mode ──────────────────────────────────────────────────────────
-  const [compareMode, setCompareMode] = useState(false)
-  const [compareSelected, setCompareSelected] = useState<Set<string>>(new Set())
+  // ── Tab state (2 tabs only) ──────────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState<'overview' | 'rankings'>('overview')
+  const [rankingsFilter, setRankingsFilter] = useState<FilterGroup>('all')
 
-  function toggleCompareSelect(ticker: string) {
-    setCompareSelected((prev) => {
-      const next = new Set(prev)
-      if (next.has(ticker)) next.delete(ticker)
-      else if (next.size < 4) next.add(ticker)
-      return next
-    })
+  function goToRankings(filter: FilterGroup = 'all') {
+    setRankingsFilter(filter)
+    setActiveTab('rankings')
   }
 
-  const compareUrl = compareSelected.size >= 2
-    ? `/etf/compare?symbols=${Array.from(compareSelected).join(',')}`
-    : null
-
-  // ── Subtab state ──────────────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState<'overview' | 'sectors' | 'geographies' | 'styles'>('overview')
-
   const TABS = [
-    { id: 'overview' as const,     label: 'Overview'     },
-    { id: 'sectors' as const,      label: 'Sectors'      },
-    { id: 'geographies' as const,  label: 'Geographies'  },
-    { id: 'styles' as const,       label: 'Styles'       },
+    { id: 'overview' as const,  label: 'Overview'  },
+    { id: 'rankings' as const,  label: 'Rankings'  },
   ]
+
+  const watchlistTickers = new Set(watchlist.map((e) => e.ticker))
 
   return (
     <div className="min-h-dvh bg-[#F9F8F5]">
 
-      {/* ── Login-to-save modal ──────────────────────────────────────────────── */}
       {loginModal && (
         <ETFLoginToSaveModal
           ticker={loginModal.ticker}
@@ -503,7 +591,7 @@ export default function ETFTrackerPage() {
         />
       )}
 
-      {/* ── Compact page header ─────────────────────────────────────────────── */}
+      {/* ── Page header ─────────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-[#E3E1DA] px-4 sm:px-8 pt-4 pb-3">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
@@ -511,31 +599,24 @@ export default function ETFTrackerPage() {
               onAdd={async (symbol, name) => {
                 const item = batchData[symbol]
                 await handleSaveWithGate(symbol, item?.name ?? name, {
-                  valueScore: item?.valueScore ?? null,
-                  expenseRatio: item?.expenseRatio ?? null,
-                  yield: item?.yield ?? null,
-                  peRatio: item?.peRatio ?? null,
-                  pbRatio: item?.pbRatio ?? null,
-                  totalAssets: item?.aum ?? null,
-                  price: item?.price ?? null,
-                  priceChangePct: item?.priceChangePct ?? null,
-                  metricsUpdatedAt: new Date().toISOString(),
+                  valueScore: item?.valueScore ?? null, expenseRatio: item?.expenseRatio ?? null,
+                  yield: item?.yield ?? null, peRatio: item?.peRatio ?? null, pbRatio: item?.pbRatio ?? null,
+                  totalAssets: item?.aum ?? null, price: item?.price ?? null,
+                  priceChangePct: item?.priceChangePct ?? null, metricsUpdatedAt: new Date().toISOString(),
                 }, item?.valueScore ?? null)
               }}
-              watchlistedTickers={new Set(watchlist.map((e) => e.ticker))}
+              watchlistedTickers={watchlistTickers}
             />
             <Link
               href="/etf/compare"
               className="shrink-0 hidden sm:flex items-center gap-1.5 text-[12px] font-[600] text-[#566174] hover:text-olive-700 border border-[#E3E1DA] hover:border-[#BFD2A1] rounded-lg px-3 py-2.5 transition-colors bg-white whitespace-nowrap"
             >
-              <GitCompare size={13} />
               Compare
             </Link>
             <ETFHelpButton />
           </div>
 
-          {/* Subtab nav */}
-          <div className="flex gap-0 mt-3 overflow-x-auto scrollbar-hide border-b-0 -mb-px">
+          <div className="flex gap-0 mt-3 -mb-px">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -557,7 +638,6 @@ export default function ETFTrackerPage() {
       {/* ── Content ─────────────────────────────────────────────────────────── */}
       <div className="px-4 sm:px-8 py-5 sm:py-6 max-w-7xl mx-auto space-y-6">
 
-        {/* Error banner */}
         {batchError && (
           <div className="bg-white border border-[#E3E1DA] rounded-xl p-4 flex items-center justify-between gap-4">
             <p className="text-sm text-[#566174]">{batchError}</p>
@@ -573,77 +653,38 @@ export default function ETFTrackerPage() {
         {/* ── OVERVIEW TAB ─────────────────────────────────────────────────── */}
         {activeTab === 'overview' && (
           <>
-            {/* Market Pulse */}
-            {!batchError && <ETFMarketPulse data={batchData} loading={batchLoading} sparklines={pulseSparklines} />}
+            {/* Market Pulse — 4 summary cards */}
+            {!batchError && (
+              <ETFMarketPulse data={batchData} loading={batchLoading} sparklines={pulseSparklines} />
+            )}
 
             {/* My Watchlist */}
             {hasWatchlist && (
               <section>
-                <div className="flex items-center gap-2 mb-3 flex-wrap">
-                  <h2 className="text-[13px] font-[700] text-[#111111]">My Watchlist</h2>
-                  <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-[700] bg-olive-100 text-olive-700">
-                    {watchlist.length}
-                  </span>
-                  <div className="ml-auto flex items-center gap-2">
-                    {!userEmail && (
-                      <button
-                        onClick={() => signIn('google', { callbackUrl: window.location.href })}
-                        className="text-[11px] font-[600] text-olive-700 hover:text-olive-600 transition-colors"
-                      >
-                        Sign in to sync
-                      </button>
-                    )}
-                    {compareMode && compareSelected.size > 0 && (
-                      <span className="text-[11px] text-[#6B6B6B]">{compareSelected.size}/4 selected</span>
-                    )}
-                    {compareMode && compareUrl && (
-                      <Link
-                        href={compareUrl}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-[600] bg-olive-700 text-white rounded-lg hover:bg-olive-600 transition-colors"
-                      >
-                        <GitCompare size={12} />
-                        Compare {compareSelected.size}
-                      </Link>
-                    )}
-                    {watchlist.length >= 2 && (
-                      <button
-                        onClick={() => { setCompareMode((v) => !v); setCompareSelected(new Set()) }}
-                        className={cn(
-                          'flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-[600] rounded-lg border transition-colors',
-                          compareMode
-                            ? 'bg-olive-50 border-[#BFD2A1] text-olive-700'
-                            : 'bg-white border-[#E3E1DA] text-[#6B6B6B] hover:border-[#BFD2A1] hover:text-olive-700',
-                        )}
-                      >
-                        <GitCompare size={12} />
-                        {compareMode ? 'Cancel' : 'Compare'}
-                      </button>
-                    )}
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-[13px] font-[700] text-[#111111]">My Watchlist</h2>
+                    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-[700] bg-olive-100 text-olive-700">
+                      {watchlist.length}
+                    </span>
                   </div>
+                  {!userEmail && (
+                    <button
+                      onClick={() => signIn('google', { callbackUrl: window.location.href })}
+                      className="text-[11px] font-[600] text-olive-700 hover:text-olive-600 transition-colors"
+                    >
+                      Sign in to sync
+                    </button>
+                  )}
                 </div>
                 <div className="flex flex-col gap-2">
                   {watchlist.map((entry) => (
-                    <div key={entry.ticker} className="relative">
-                      {compareMode && (
-                        <button
-                          onClick={() => toggleCompareSelect(entry.ticker)}
-                          aria-label={compareSelected.has(entry.ticker) ? `Deselect ${entry.ticker}` : `Select ${entry.ticker} for comparison`}
-                          className="absolute top-3 left-3 z-20 w-9 h-9 flex items-center justify-center rounded-md bg-white border border-[#E3E1DA] shadow-sm transition-colors hover:border-olive-700"
-                        >
-                          {compareSelected.has(entry.ticker)
-                            ? <CheckSquare size={15} className="text-olive-700" />
-                            : <Square size={15} className="text-[#8A95A6]" />
-                          }
-                        </button>
-                      )}
-                      <div className={cn('transition-opacity', compareMode && compareSelected.size >= 4 && !compareSelected.has(entry.ticker) ? 'opacity-40' : 'opacity-100')}>
-                        <ETFWatchlistCard
-                          entry={entry}
-                          sparklineData={entry.ticker in sparklines ? sparklines[entry.ticker] : undefined}
-                          onDelete={handleDelete}
-                        />
-                      </div>
-                    </div>
+                    <WatchlistRow
+                      key={entry.ticker}
+                      entry={entry}
+                      sparklineData={entry.ticker in sparklines ? sparklines[entry.ticker] : undefined}
+                      onDelete={handleDelete}
+                    />
                   ))}
                 </div>
               </section>
@@ -652,16 +693,15 @@ export default function ETFTrackerPage() {
             {wlLoading && (
               <div className="flex flex-col gap-2">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-[80px] bg-white rounded-xl border border-[#E5E5E5] motion-safe:animate-pulse" />
+                  <div key={i} className="h-[72px] bg-white rounded-xl border border-[#E5E5E5] motion-safe:animate-pulse" />
                 ))}
               </div>
             )}
 
-            {/* Empty watchlist prompt */}
             {!hasWatchlist && !wlLoading && (
-              <div className="bg-white border border-[#E3E1DA] rounded-xl p-6 flex flex-col items-center text-center gap-3">
-                <p className="text-[14px] font-[600] text-[#111111]">Track ETFs by what they&apos;re actually worth</p>
-                <p className="text-[13px] text-[#8A95A6] max-w-xs">Search above or add from Sectors, Geographies, or Styles tabs.</p>
+              <div className="bg-white border border-[#E3E1DA] rounded-xl p-5 flex flex-col items-center text-center gap-3">
+                <p className="text-[13px] font-[600] text-[#111111]">Track ETFs by what they&apos;re actually worth</p>
+                <p className="text-[12px] text-[#8A95A6] max-w-xs">Search above or add from any section below.</p>
                 <div className="flex gap-2 flex-wrap justify-center">
                   {['SPY', 'VTV', 'VYM'].map((t) => {
                     const item = batchData[t]
@@ -672,9 +712,9 @@ export default function ETFTrackerPage() {
                         onClick={() => handleQuickAdd(t)}
                         className="flex flex-col items-center px-4 py-2 rounded-xl border border-[#E3E1DA] bg-white hover:border-[#BFD2A1] hover:bg-olive-50 transition-colors"
                       >
-                        <span className="text-[13px] font-[700] text-[#111111]">+ {t}</span>
+                        <span className="text-[12px] font-[700] text-[#111111]">+ {t}</span>
                         {score != null && (
-                          <span className={cn('text-[11px] font-[600] mt-0.5', scoreColor(score))}>
+                          <span className={cn('text-[10px] font-[600] mt-0.5', scoreColor(score))}>
                             {score} · {scoreLabel(score)}
                           </span>
                         )}
@@ -685,73 +725,79 @@ export default function ETFTrackerPage() {
               </div>
             )}
 
-            {/* Rankings */}
-            <section>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-[13px] font-[700] text-[#111111]">Rankings</h2>
-              </div>
-              <Rankings
+            {/* Sectors */}
+            <CollapsibleSection
+              title="Sectors"
+              description="US SPDR sector ETFs"
+              onViewAll={() => goToRankings('sector')}
+            >
+              <ETFHeatmapGrid
+                metas={SECTOR_META}
                 data={batchData}
-                watchlistedTickers={new Set(watchlist.map((e) => e.ticker))}
+                watchlistedTickers={watchlistTickers}
                 onAdd={handleQuickAdd}
+                cols={4}
+                hasError={!!batchError}
+                sparklines={pulseSparklines}
               />
-            </section>
+            </CollapsibleSection>
+
+            {/* Geographies */}
+            <CollapsibleSection
+              title="Geographies"
+              description="Regional and country exposure"
+              onViewAll={() => goToRankings('geo')}
+              defaultOpen={false}
+            >
+              <ETFHeatmapGrid
+                metas={GEO_META}
+                data={batchData}
+                watchlistedTickers={watchlistTickers}
+                onAdd={handleQuickAdd}
+                cols={3}
+                hasError={!!batchError}
+                sparklines={pulseSparklines}
+              />
+            </CollapsibleSection>
+
+            {/* Styles */}
+            <CollapsibleSection
+              title="Styles"
+              description="Factor tilts and smart beta"
+              onViewAll={() => goToRankings('style')}
+              defaultOpen={false}
+            >
+              <ETFHeatmapGrid
+                metas={STYLE_META}
+                data={batchData}
+                watchlistedTickers={watchlistTickers}
+                onAdd={handleQuickAdd}
+                cols={4}
+                hasError={!!batchError}
+                sparklines={pulseSparklines}
+              />
+            </CollapsibleSection>
           </>
         )}
 
-        {/* ── SECTORS TAB ──────────────────────────────────────────────────── */}
-        {activeTab === 'sectors' && (
-          <section>
-            <p className="text-[12px] text-[#8A95A6] mb-3">US SPDR sector ETFs (GICS) — click a card to analyze, + to track</p>
-            <ETFHeatmapGrid
-              metas={SECTOR_META}
-              data={batchData}
-              watchlistedTickers={new Set(watchlist.map((e) => e.ticker))}
-              onAdd={handleQuickAdd}
-              cols={4}
-              hasError={!!batchError}
-              sparklines={pulseSparklines}
-            />
-          </section>
-        )}
-
-        {/* ── GEOGRAPHIES TAB ──────────────────────────────────────────────── */}
-        {activeTab === 'geographies' && (
-          <section>
-            <p className="text-[12px] text-[#8A95A6] mb-3">Regional and country exposure</p>
-            <ETFHeatmapGrid
-              metas={GEO_META}
-              data={batchData}
-              watchlistedTickers={new Set(watchlist.map((e) => e.ticker))}
-              onAdd={handleQuickAdd}
-              cols={3}
-              hasError={!!batchError}
-              sparklines={pulseSparklines}
-            />
-          </section>
-        )}
-
-        {/* ── STYLES TAB ───────────────────────────────────────────────────── */}
-        {activeTab === 'styles' && (
-          <section>
-            <p className="text-[12px] text-[#8A95A6] mb-3">Factor tilts and smart beta</p>
-            <ETFHeatmapGrid
-              metas={STYLE_META}
-              data={batchData}
-              watchlistedTickers={new Set(watchlist.map((e) => e.ticker))}
-              onAdd={handleQuickAdd}
-              cols={4}
-              hasError={!!batchError}
-              sparklines={pulseSparklines}
-            />
-          </section>
+        {/* ── RANKINGS TAB ─────────────────────────────────────────────────── */}
+        {activeTab === 'rankings' && (
+          <Rankings
+            data={batchData}
+            watchlistedTickers={watchlistTickers}
+            onAdd={handleQuickAdd}
+            initialFilter={rankingsFilter}
+          />
         )}
 
       </div>
 
       {/* ── Undo toast ───────────────────────────────────────────────────────── */}
       {undoToast && (
-        <div className="fixed left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[#06101F] text-white rounded-xl px-4 py-3 shadow-lg text-[13px] font-medium whitespace-nowrap" style={{ bottom: 'calc(56px + env(safe-area-inset-bottom, 0px) + 12px)' }}>
+        <div
+          className="fixed left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[#06101F] text-white rounded-xl px-4 py-3 shadow-lg text-[13px] font-medium whitespace-nowrap"
+          style={{ bottom: 'calc(56px + env(safe-area-inset-bottom, 0px) + 12px)' }}
+        >
           <span>{undoToast.ticker} removed from watchlist</span>
           <button
             onClick={handleUndo}
