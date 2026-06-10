@@ -78,8 +78,25 @@ function deriveNetMargin(
   }
 
   const margins = withBoth.map(r => r.netIncome! / r.revenue!)
-  const median  = margins.sort((a, b) => a - b)[Math.floor(margins.length / 2)]
-  const last    = margins[margins.length - 1]
+  const median  = [...margins].sort((a, b) => a - b)[Math.floor(margins.length / 2)]
+
+  // F13 guard: auditBundle IS rows may arrive newest-first; ensure we always read
+  // the most-recent actual year as `last`, not the oldest.
+  // Sort withBoth by year descending so withBoth[0] = most recent regardless of input order.
+  const sortedDesc = [...withBoth].sort((a, b) => {
+    const ya = String(a.year ?? '').slice(0, 4)
+    const yb = String(b.year ?? '').slice(0, 4)
+    return yb.localeCompare(ya)
+  })
+  const rawLast = sortedDesc[0].netIncome! / sortedDesc[0].revenue!
+
+  // One-time gain guard: if the most recent year's margin is > 3× the median
+  // AND > 0.25 (i.e., 25%+), it is almost certainly a one-time event (tax reversal,
+  // asset sale, warrant gain). Use the median as the `last` anchor instead so the
+  // projection is grounded in operating reality.
+  // EW FY2024: NI%=76.7% (one-time gain) vs median ~23% → clamp to median.
+  const isOneTimeGain = rawLast > 0.25 && median > 0 && rawLast > median * 3
+  const last = isOneTimeGain ? median : rawLast
   const source: AssumptionSource = withBoth.length >= 3 ? 'historical_3y_median' : 'historical_5y_median'
 
   const grossMargins = actuals.filter(r => r.grossProfit != null && r.revenue != null && r.revenue > 0)
@@ -94,7 +111,13 @@ function deriveNetMargin(
   // SaaS convergence formula instead of the generic improvement path.
   const isHighGrowthSaaS = cagr > 0.15 && lastGM != null && lastGM > 0.60 && last > 0 && last < 0.15
 
-  const isHighGrowth = margins.length >= 2 && (last - margins[0]) / Math.abs(margins[0] || 1) > 0.02
+  // isHighGrowth: compare the most-recent year against the second-most-recent to detect
+  // a genuine upward trend — not the cumulative swing from oldest to newest which fires
+  // spuriously when a one-time gain year is the oldest point in the array.
+  const secondLast = sortedDesc.length >= 2 ? sortedDesc[1].netIncome! / sortedDesc[1].revenue! : null
+  const isHighGrowth = secondLast != null && secondLast !== 0
+    ? (last - secondLast) / Math.abs(secondLast) > 0.02
+    : false
   const hasMoat      = lastGM != null && lastGM > 0.40
   const improvement  = (isHighGrowth && hasMoat) ? 0.03 : (isHighGrowth || hasMoat) ? 0.015 : 0.005
 
@@ -127,7 +150,7 @@ function deriveNetMargin(
 
   return {
     margin: projectedMargin,
-    evidence: `${withBoth.length}Y median ${pct(median)}, last ${pct(last)}; ${reason}`,
+    evidence: `${withBoth.length}Y median ${pct(median)}, last ${pct(rawLast)}${isOneTimeGain ? ` [one-time gain clamped to median ${pct(median)}]` : ''}; ${reason}`,
     source,
   }
 }
