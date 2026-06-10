@@ -118,22 +118,6 @@ export default function LandingHero() {
           {/* ── Left: Copy ── */}
           <div className="text-left">
 
-            {/* Badge */}
-            <motion.div
-              initial={reduced ? {} : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, ease: EASE }}
-              className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 mb-5"
-              style={{
-                background: 'rgba(95,121,11,0.15)',
-                border: '1px solid rgba(95,121,11,0.35)',
-              }}
-            >
-              <div className="w-1.5 h-1.5 rounded-full bg-[#5F790B]" />
-              <span className="text-[12px] font-semibold text-[#7C9A19]">
-                DCF-grade analysis tools for individual investors
-              </span>
-            </motion.div>
 
             {/* Headline — line-by-line stagger */}
             <div className="mb-3 sm:mb-4" style={{ lineHeight: 1.05, letterSpacing: '-0.035em' }}>
