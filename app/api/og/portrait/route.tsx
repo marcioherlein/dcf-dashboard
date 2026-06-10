@@ -136,7 +136,7 @@ export async function GET(req: NextRequest) {
           display: 'flex', flexDirection: 'column',
           width: 1080, height: 1350,
           background: '#FFFFFF',
-          fontFamily: 'Inter, system-ui, sans-serif',
+          fontFamily: 'system-ui,-apple-system,sans-serif',
           padding: '52px 64px 44px',
           gap: 0,
         }}
@@ -206,7 +206,7 @@ export async function GET(req: NextRequest) {
               background: '#F9F8F6', borderRadius: 12, padding: '16px 20px',
             }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: '#9B9B9B', letterSpacing: '0.07em', textTransform: 'uppercase' }}>Fair Value</span>
-              <span style={{ fontSize: 30, fontWeight: 800, color: '#111111', fontFamily: 'DM Mono, monospace', letterSpacing: '-0.02em' }}>
+              <span style={{ fontSize: 30, fontWeight: 800, color: '#111111', fontFamily: 'monospace', letterSpacing: '-0.02em' }}>
                 {fmt(fv, currency)}
               </span>
             </div>
@@ -217,7 +217,7 @@ export async function GET(req: NextRequest) {
               background: '#F9F8F6', borderRadius: 12, padding: '16px 20px',
             }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: '#9B9B9B', letterSpacing: '0.07em', textTransform: 'uppercase' }}>Price</span>
-              <span style={{ fontSize: 30, fontWeight: 800, color: '#111111', fontFamily: 'DM Mono, monospace', letterSpacing: '-0.02em' }}>
+              <span style={{ fontSize: 30, fontWeight: 800, color: '#111111', fontFamily: 'monospace', letterSpacing: '-0.02em' }}>
                 {fmt(price, currency)}
               </span>
             </div>
@@ -228,7 +228,7 @@ export async function GET(req: NextRequest) {
               background: upBg, borderRadius: 12, padding: '16px 20px',
             }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: '#9B9B9B', letterSpacing: '0.07em', textTransform: 'uppercase' }}>Upside</span>
-              <span style={{ fontSize: 30, fontWeight: 800, color: upsideColor, fontFamily: 'DM Mono, monospace', letterSpacing: '-0.02em' }}>
+              <span style={{ fontSize: 30, fontWeight: 800, color: upsideColor, fontFamily: 'monospace', letterSpacing: '-0.02em' }}>
                 {upsideStr}
               </span>
             </div>
@@ -247,8 +247,8 @@ export async function GET(req: NextRequest) {
               )}
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', width: TRACK_W }}>
-              <span style={{ fontSize: 13, color: BRAND.negative, fontFamily: 'DM Mono, monospace', fontWeight: 600 }}>↓ Bear {fmt(bear, currency)}</span>
-              <span style={{ fontSize: 13, color: BRAND.olive700, fontFamily: 'DM Mono, monospace', fontWeight: 600 }}>↑ Bull {fmt(bull, currency)}</span>
+              <span style={{ fontSize: 13, color: BRAND.negative, fontFamily: 'monospace', fontWeight: 600 }}>↓ Bear {fmt(bear, currency)}</span>
+              <span style={{ fontSize: 13, color: BRAND.olive700, fontFamily: 'monospace', fontWeight: 600 }}>↑ Bull {fmt(bull, currency)}</span>
             </div>
           </div>
         )}
@@ -274,7 +274,7 @@ export async function GET(req: NextRequest) {
                   <span style={{ fontSize: 11, color: '#9B9B9B', fontWeight: 600, letterSpacing: '0.03em' }}>
                     {m.label.replace('Forward ', '').replace(' Multiple', '')}
                   </span>
-                  <span style={{ fontSize: 20, fontWeight: 700, color: '#111111', fontFamily: 'DM Mono, monospace' }}>
+                  <span style={{ fontSize: 20, fontWeight: 700, color: '#111111', fontFamily: 'monospace' }}>
                     {fmt(m.fv, currency)}
                   </span>
                 </div>
