@@ -845,6 +845,7 @@ function StockPageBody() {
           checkLabel={checkLabel}
           passBullets={passed.slice(0, 3).map(s => s.label)}
           failBullets={failed.slice(0, 1).map(s => s.label)}
+          peRatio={data?.quote?.peRatio ?? null}
         />
       )
     })()}
