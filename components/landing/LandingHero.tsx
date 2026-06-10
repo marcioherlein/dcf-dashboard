@@ -8,71 +8,6 @@ import ProductAnimation from './ProductAnimation'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
-// ── Animated financial background ────────────────────────────────────────────
-function HeroBackground({ reduced }: { reduced: boolean | null }) {
-  const animStyle = reduced
-    ? {}
-    : {
-        animation: 'chartDrift 7s ease-in-out infinite alternate',
-        willChange: 'transform',
-        transform: 'translateZ(0)',
-      }
-
-  return (
-    <div
-      aria-hidden="true"
-      className="absolute inset-0 pointer-events-none overflow-hidden"
-      style={{ zIndex: 0 }}
-    >
-      <style>{`
-        @keyframes chartDrift {
-          0%   { transform: translateY(0px); }
-          100% { transform: translateY(-12px); }
-        }
-      `}</style>
-      <svg width="100%" height="100%" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Horizontal grid lines at 20%, 40%, 60%, 80% */}
-        <line x1="0" y1="20%" x2="100%" y2="20%" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
-        <line x1="0" y1="40%" x2="100%" y2="40%" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
-        <line x1="0" y1="60%" x2="100%" y2="60%" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
-        <line x1="0" y1="80%" x2="100%" y2="80%" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
-
-        {/* Vertical tick marks every ~10% of width */}
-        {[10, 20, 30, 40, 50, 60, 70, 80, 90].map((x) => (
-          <line
-            key={x}
-            x1={`${x}%`} y1="0"
-            x2={`${x}%`} y2="100%"
-            stroke="rgba(255,255,255,0.04)"
-            strokeWidth="0.5"
-          />
-        ))}
-
-        {/* Price lines — wrapped in a group so animation applies to both */}
-        <g style={animStyle}>
-          {/* Primary olive price line — slow-rising curved path */}
-          <path
-            d="M -5% 85% C 15% 78%, 30% 65%, 50% 52% C 65% 42%, 78% 32%, 105% 18%"
-            stroke="rgba(95,121,11,0.22)"
-            strokeWidth="1.5"
-            fill="none"
-          />
-          {/* Secondary white price line */}
-          <path
-            d="M -5% 92% C 10% 85%, 28% 76%, 48% 68% C 62% 62%, 80% 55%, 105% 44%"
-            stroke="rgba(255,255,255,0.06)"
-            strokeWidth="1"
-            fill="none"
-          />
-        </g>
-      </svg>
-    </div>
-  )
-}
-
-// ── Market pricing teaser ────────────────────────────────────────────────────
-// Now lives in MarketTeaserSection.tsx (extracted from hero for clean narrative boundary)
-
 // ── Main component ───────────────────────────────────────────────────────────
 export default function LandingHero() {
   const { data: session } = useSession()
@@ -96,23 +31,33 @@ export default function LandingHero() {
       style={{
         paddingTop: 'max(96px, calc(80px + 2vh))',
         paddingBottom: 'clamp(52px, 6vh, 80px)',
-        background: '#000000',
       }}
     >
-      {/* Animated financial chart background */}
-      <HeroBackground reduced={reduced} />
-
-      {/* Subtle radial olive aurora — behind content */}
+      {/* Photo background */}
       <div
         aria-hidden="true"
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse 60% 55% at 70% 45%, rgba(95,121,11,0.12) 0%, transparent 65%)',
+          backgroundImage: 'url(/hero-bg.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center 40%',
           zIndex: 0,
         }}
       />
 
-      <div className="relative mx-auto px-4 sm:px-6" style={{ maxWidth: '1200px', zIndex: 1 }}>
+      {/* Dark overlay + subtle blur scrim so text stays readable */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'linear-gradient(135deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.45) 100%)',
+          backdropFilter: 'blur(1px)',
+          WebkitBackdropFilter: 'blur(1px)',
+          zIndex: 1,
+        }}
+      />
+
+      <div className="relative mx-auto px-4 sm:px-6" style={{ maxWidth: '1200px', zIndex: 2 }}>
         <div className="grid items-start grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
 
           {/* ── Left: Copy ── */}
