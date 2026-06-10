@@ -15,13 +15,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   let ogParams: Record<string, string> = { ticker: t }
   try {
     const res = await fetch(`${BASE}/api/financials?ticker=${t}`, {
-      next: { revalidate: 1800 }, // cache 30 min — same as the API itself
+      next: { revalidate: 1800 },
+      headers: {
+        // Automation key allows server-side OG metadata fetch without a user session
+        'x-automation-key': process.env.AUTOMATION_API_KEY ?? '',
+      },
     })
     if (res.ok) {
       const d = await res.json()
       const price   = d.quote?.price
-      const fv      = d.valuationMethods?.triangulatedFairValue
-      const upside  = d.valuationMethods?.triangulatedUpsidePct
+      const fv      = d.valuationMethods?.cockpitFairValue ?? d.valuationMethods?.triangulatedFairValue
+      const upside  = d.valuationMethods?.cockpitUpsidePct ?? d.valuationMethods?.triangulatedUpsidePct
       const bear    = d.scenarios?.bear?.fairValue
       const bull    = d.scenarios?.bull?.fairValue
       const currency = d.quote?.currency ?? 'USD'
