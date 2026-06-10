@@ -63,7 +63,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // fallback to ticker-only OG card
   }
 
-  const ogUrl = `${BASE}/api/og?${new URLSearchParams(ogParams).toString()}`
+  // Add a weekly cache-bust so X/Twitter re-fetches the card when data changes
+  const weekStamp = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000))
+  const ogUrl = `${BASE}/api/og?${new URLSearchParams(ogParams).toString()}&v=${weekStamp}`
   const pageUrl = `${BASE}/stock/${t}`
 
   const upside = ogParams.upside ? parseFloat(ogParams.upside) : null

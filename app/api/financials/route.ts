@@ -21,7 +21,7 @@ import { seedAssumptions, buildSnapshot } from '@/lib/valuation/cockpitBuilders'
 import { computeCockpitOutput } from '@/lib/valuation/cockpit'
 
 export async function GET(req: NextRequest) {
-  const limited = rateLimit(req, 3, 60_000, 'financials')
+  const limited = rateLimit(req, 30, 60_000, 'financials')
   if (limited) return limited
 
   const session = await getServerSession(authOptions)
